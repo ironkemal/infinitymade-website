@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InfinityMade – Ihr digitaler Partner in Deutschland</title>
+  <meta name="description" content="InfinityMade hilft kleinen und mittelständischen Unternehmen, digital sichtbar zu werden." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ===== LOADER ===== -->
+<div id="loader">
+  <div class="loader-logo">InfinityMade</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="loader-text">Initialisierung...</div>
+</div>
+
+<!-- ===== CUSTOM CURSOR ===== -->
+<div id="cursor"></div>
+<div id="cursor-follower"></div>
+
+<!-- ===== SCROLL TO TOP ===== -->
+<!-- ===== WHATSAPP BUTTON ===== -->
+<a href="https://wa.me/49" id="whatsappBtn" class="whatsapp-btn" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.867-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.345.223-.643.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+</a>
+
+<button id="scrollTop" aria-label="Scroll to top">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="#" class="logo">InfinityMade</a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#services" id="nav_s">Leistungen</a></li>
+      <li><a href="#why" id="nav_w">Über uns</a></li>
+      <li><a href="#target" id="nav_t">Für wen?</a></li>
+      <li><a href="#process" id="nav_p">Ablauf</a></li>
+      <li><a href="#pricing" id="nav_pr">Preise</a></li>
+      <li><a href="#testimonials" id="nav_te">Bewertungen</a></li>
+      <li><a href="#contact" id="nav_c">Kontakt</a></li>
+      <li>
+        <div class="lang-switcher">
+          <button class="lang-btn active" data-lang="de" onclick="setLanguage('de')">DE</button>
+          <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+          <button class="lang-btn" data-lang="tr" onclick="setLanguage('tr')">TR</button>
+        </div>
+      </li>
+      <li><a href="#contact" class="nav-cta" id="nav_cta">Kostenlos anfragen</a></li>
+    </ul>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="home">
+  <canvas id="particles-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+  <div class="hero-glow hero-glow-3"></div>
+
+  <div class="hero-inner">
+    <!-- Content -->
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        <span id="eyebrow">Ihr digitaler Partner · Deutschland</span>
+      </div>
+
+      <h1>
+        <span id="h1a" style="display:block;color:#fff;">Ihr lokales Unternehmen.</span>
+        <span id="h1b" class="gradient-text" style="display:block;">Digital sichtbar.</span>
+      </h1>
+
+      <p class="hero-desc" id="hero_desc">
+        Wir helfen kleinen und mittelständischen Betrieben, im Internet sichtbar zu werden – einfach, schnell und ohne technischen Aufwand.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="#contact" class="btn-glow" id="hero_cta1">
+          Kostenlos anfragen
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#services" class="btn-ghost" id="hero_cta2">
+          Leistungen entdecken
+        </a>
+      </div>
+
+      <div class="hero-trust">
+        <div class="hero-avatars">
+          <div class="hero-avatar">👨‍💼</div>
+          <div class="hero-avatar">👩‍🍳</div>
+          <div class="hero-avatar">🧑‍🔧</div>
+          <div class="hero-avatar">👩‍⚕️</div>
+        </div>
+        <div class="trust-text" id="hero_trust">
+          Bereits <strong>50+ Unternehmen</strong> vertrauen uns
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual -->
+    <div class="hero-visual">
+      <div class="hero-badge-float badge-float-1">
+        <div class="badge-icon">✅</div>
+        <div class="badge-text">
+          <strong id="c1t">Website live</strong>
+          <span id="c1s">Modern & mobilfreundlich</span>
+        </div>
+      </div>
+
+      <div class="hero-mockup">
+        <div class="mockup-bar">
+          <div class="mockup-dots">
+            <div class="mockup-dot"></div>
+            <div class="mockup-dot"></div>
+            <div class="mockup-dot"></div>
+          </div>
+          <div class="mockup-url">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            infinitymade.de
+          </div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-header-img"></div>
+          <div class="mockup-cards">
+            <div class="mockup-card-mini"><span>🌐</span><span>Web</span></div>
+            <div class="mockup-card-mini"><span>📅</span><span>Booking</span></div>
+            <div class="mockup-card-mini"><span>📍</span><span>GMB</span></div>
+          </div>
+          <div class="mockup-lines">
+            <div class="mockup-line"></div>
+            <div class="mockup-line"></div>
+            <div class="mockup-line"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-badge-float badge-float-2">
+        <div class="badge-icon">📅</div>
+        <div class="badge-text">
+          <strong id="c2t">Online-Buchung</strong>
+          <span id="c2s">24/7 Terminvereinbarung</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MARQUEE ===== -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <div class="marquee-item"><span>🌐</span> Websiteerstellung</div>
+    <div class="marquee-item"><span>📅</span> Online-Buchung</div>
+    <div class="marquee-item"><span>📍</span> Google My Business</div>
+    <div class="marquee-item"><span>📱</span> Digitale Speisekarte</div>
+    <div class="marquee-item"><span>📸</span> Social Media</div>
+    <div class="marquee-item"><span>💬</span> Chatbot & Formular</div>
+    <div class="marquee-item"><span>⚡</span> 48h Lieferzeit</div>
+    <div class="marquee-item"><span>🇩🇪</span> Made in Germany</div>
+    <!-- repeat -->
+    <div class="marquee-item"><span>🌐</span> Websiteerstellung</div>
+    <div class="marquee-item"><span>📅</span> Online-Buchung</div>
+    <div class="marquee-item"><span>📍</span> Google My Business</div>
+    <div class="marquee-item"><span>📱</span> Digitale Speisekarte</div>
+    <div class="marquee-item"><span>📸</span> Social Media</div>
+    <div class="marquee-item"><span>💬</span> Chatbot & Formular</div>
+    <div class="marquee-item"><span>⚡</span> 48h Lieferzeit</div>
+    <div class="marquee-item"><span>🇩🇪</span> Made in Germany</div>
+  </div>
+</div>
+
+<!-- ===== STATS ===== -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card" data-animate>
+        <span class="stat-number" data-count="50+">50+</span>
+        <span class="stat-label">Zufriedene Kunden</span>
+      </div>
+      <div class="stat-card" data-animate data-delay="1">
+        <span class="stat-number" data-count="48h">48h</span>
+        <span class="stat-label">Durchschn. Lieferzeit</span>
+      </div>
+      <div class="stat-card" data-animate data-delay="2">
+        <span class="stat-number" data-count="100%">100%</span>
+        <span class="stat-label">Kundenzufriedenheit</span>
+      </div>
+      <div class="stat-card" data-animate data-delay="3">
+        <span class="stat-number" data-count="3">3</span>
+        <span class="stat-label">Sprachen</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BEFORE / AFTER ===== -->
+<section class="section ba-section" id="before-after">
+  <div class="container">
+    <div class="section-header" data-animate>
+      <div class="section-label" id="ba_tag">Vorher / Nachher</div>
+      <h2 class="section-title" id="ba_title">So ändert sich Ihr Alltag</h2>
+    </div>
+    <div class="ba-grid" data-animate data-delay="1">
+      <div class="ba-col ba-before">
+        <div class="ba-col-head" id="ba_before_head">Vorher</div>
+        <ul class="ba-list" id="ba_before_list">
+          <li>Kunde ruft an — besetzt oder keine Antwort</li>
+          <li>Kein Google-Auftritt, unsichtbar für Neukunden</li>
+          <li>Termin vergessen → leerer Stuhl, kein Umsatz</li>
+          <li>Speisekarte ausgedruckt, veraltet, teuer</li>
+          <li>Kein Profil oder verwaistes Instagram</li>
+        </ul>
+      </div>
+      <div class="ba-col ba-after">
+        <div class="ba-col-head" id="ba_after_head">Nachher</div>
+        <ul class="ba-list" id="ba_after_list">
+          <li>Kunde bucht online, 24/7, ohne Anruf</li>
+          <li>Ganz oben bei lokaler Suche</li>
+          <li>Automatische Erinnerung → voller Kalender</li>
+          <li>QR-Code, immer aktuell, null Druckkosten</li>
+          <li>Professioneller Auftritt, neues Vertrauen</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section class="section" id="services">
+  <div class="container">
+    <div class="section-header" data-animate>
+      <div class="section-label" id="srv_tag">Unsere Leistungen</div>
+      <h2 class="section-title" id="srv_title">Was wir für Sie tun</h2>
+      <p class="section-sub" id="srv_sub">Alles aus einer Hand – von der Website bis zur digitalen Visitenkarte.</p>
+    </div>
+
+    <div class="services-bento">
+      <div class="service-tile featured" data-animate data-delay="1">
+        <div class="tile-number">01</div>
+        <div class="tile-icon">🌐</div>
+        <h3 id="s1t">Websiteerstellung</h3>
+        <p id="s1d">Moderne, schnell ladende & mobilfreundliche Website. Ihre Kunden finden Sie jederzeit online.</p>
+        <div class="tile-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+        </div>
+      </div>
+
+      <div class="service-tile tall recommended" data-animate data-delay="2">
+        <div class="tile-recommended-badge">Empfohlen</div>
+        <div class="tile-number">02</div>
+        <div class="tile-icon">🤖</div>
+        <h3 id="s2t">KI-Assistent & Online-Buchung</h3>
+        <p id="s2d">Ihr Assistent nimmt Termine an, erinnert Kunden und antwortet auf Fragen – rund um die Uhr, auf WhatsApp, auf Deutsch, Türkisch, Arabisch.</p>
+        <div class="tile-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+        </div>
+      </div>
+
+      <div class="service-tile" data-animate data-delay="3">
+        <div class="tile-number">03</div>
+        <div class="tile-icon">📍</div>
+        <h3 id="s3t">Google My Business</h3>
+        <p id="s3d">Lokal bei Suchanfragen ganz oben erscheinen und neue Kunden gewinnen.</p>
+        <div class="tile-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+        </div>
+      </div>
+
+      <div class="service-tile" data-animate data-delay="2">
+        <div class="tile-number">04</div>
+        <div class="tile-icon">📱</div>
+        <h3 id="s4t">Digitale Speisekarte</h3>
+        <p id="s4d">QR-Code-basierter Katalog – immer aktuell, kein Druck mehr nötig.</p>
+        <div class="tile-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+        </div>
+      </div>
+
+      <div class="service-tile" data-animate data-delay="3">
+        <div class="tile-number">05</div>
+        <div class="tile-icon">📸</div>
+        <h3 id="s5t">Social-Media-Optimierung</h3>
+        <p id="s5d">Instagram & Facebook professionell aufstellen und mehr Reichweite erzielen.</p>
+        <div class="tile-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+        </div>
+      </div>
+
+      <div class="service-tile" data-animate data-delay="4">
+        <div class="tile-number">06</div>
+        <div class="tile-icon">💬</div>
+        <h3 id="s6t">Kontaktformular & Chatbot</h3>
+        <p id="s6d">Kein Lead geht verloren – einfaches Formular oder Chatbot für Ihre Seite.</p>
+        <div class="tile-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHY US ===== -->
+<section class="section why-section" id="why">
+  <div class="container">
+    <div class="section-header" data-animate>
+      <div class="section-label" id="why_tag">Warum wir?</div>
+      <h2 class="section-title" id="why_title">Warum InfinityMade?</h2>
+      <p class="section-sub" id="why_sub">Wir kennen den deutschen Markt und verstehen die Bedürfnisse kleiner Betriebe.</p>
+    </div>
+
+    <div class="why-grid">
+      <div class="why-card" data-animate data-delay="1">
+        <div class="why-icon-wrap">⚡</div>
+        <div>
+          <h3 id="w1t">Blitzschnelle Umsetzung</h3>
+          <p id="w1d">Website und digitale Lösungen in kürzester Zeit – Sie sind schnell online.</p>
+        </div>
+      </div>
+      <div class="why-card" data-animate data-delay="2">
+        <div class="why-icon-wrap">💶</div>
+        <div>
+          <h3 id="w2t">Faire & transparente Preise</h3>
+          <p id="w2d">Keine versteckten Kosten. Klare Angebote, die zu kleinen Budgets passen.</p>
+        </div>
+      </div>
+      <div class="why-card" data-animate data-delay="3">
+        <div class="why-icon-wrap">🤝</div>
+        <div>
+          <h3 id="w3t">Persönliche Betreuung</h3>
+          <p id="w3d">Bei uns sind Sie keine Nummer. Wir sind jederzeit erreichbar und erklären alles.</p>
+        </div>
+      </div>
+      <div class="why-card" data-animate data-delay="4">
+        <div class="why-icon-wrap">🇩🇪</div>
+        <div>
+          <h3 id="w4t">Deutschland im Fokus</h3>
+          <p id="w4d">Wir kennen den deutschen Markt und gestalten Lösungen für lokale Betriebe.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TARGET ===== -->
+<section class="section target-section" id="target">
+  <div class="container">
+    <div class="section-header" data-animate>
+      <div class="section-label" id="tgt_tag">Zielgruppe</div>
+      <h2 class="section-title" id="tgt_title">Für wen ist InfinityMade?</h2>
+      <p class="section-sub" id="tgt_sub">Für lokale Unternehmen mit wenig oder keiner digitalen Präsenz.</p>
+    </div>
+
+    <div class="target-scroll-container" data-animate data-delay="1">
+      <div class="target-card"><div class="target-emoji">🍽️</div><h4>Restaurants & Cafés</h4></div>
+      <div class="target-card"><div class="target-emoji">🔧</div><h4>Handwerksbetriebe</h4></div>
+      <div class="target-card"><div class="target-emoji">✂️</div><h4>Friseure & Kosmetik</h4></div>
+      <div class="target-card"><div class="target-emoji">🛍️</div><h4>Einzelhändler</h4></div>
+      <div class="target-card"><div class="target-emoji">🏥</div><h4>Ärzte & Kliniken</h4></div>
+      <div class="target-card"><div class="target-emoji">💪</div><h4>Fitnessstudios</h4></div>
+      <div class="target-card"><div class="target-emoji">⚖️</div><h4>Anwälte & Notare</h4></div>
+      <div class="target-card"><div class="target-emoji">🏢</div><h4>Dienstleister</h4></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROCESS ===== -->
+<section class="section process-section" id="process">
+  <div class="container">
+    <div class="section-header" data-animate style="text-align:center;">
+      <div class="section-label" id="pro_tag">Ablauf</div>
+      <h2 class="section-title" id="pro_title">In 4 Schritten online</h2>
+      <p class="section-sub" id="pro_sub" style="margin:0 auto;">Unkomplizierter Prozess – wir kümmern uns um alles.</p>
+    </div>
+
+    <div class="process-timeline">
+      <div class="process-step" data-animate data-delay="1">
+        <div class="step-circle">1</div>
+        <h3 id="p1t">Kontakt aufnehmen</h3>
+        <p id="p1d">Kostenlose Erstberatung.</p>
+      </div>
+      <div class="process-step" data-animate data-delay="2">
+        <div class="step-circle">2</div>
+        <h3 id="p2t">Angebot erhalten</h3>
+        <p id="p2d">Individuell auf Sie zugeschnitten.</p>
+      </div>
+      <div class="process-step" data-animate data-delay="3">
+        <div class="step-circle">3</div>
+        <h3 id="p3t">Wir bauen alles</h3>
+        <p id="p3d">Kein technisches Wissen nötig.</p>
+      </div>
+      <div class="process-step" data-animate data-delay="4">
+        <div class="step-circle">4</div>
+        <h3 id="p4t">Online gehen</h3>
+        <p id="p4d">Sie sind live. Wir bleiben dabei.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="section pricing-section" id="pricing">
+  <div class="container">
+    <div class="section-header" data-animate style="text-align:center;">
+      <div class="section-label" id="pri_tag">Preise</div>
+      <h2 class="section-title" id="pri_title">Transparente Preise. Kein Kleingedrucktes.</h2>
+      <p class="section-sub" id="pri_sub" style="margin:0 auto;">Jährlich zahlen = 2 Monate geschenkt</p>
+    </div>
+
+    <!-- Billing toggle -->
+    <div class="pricing-toggle-wrap" data-animate>
+      <span class="toggle-label" id="pri_monthly">Monatlich</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="annualToggle" onchange="setPricingBilling(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">
+        <span id="pri_annually">Jährlich</span>
+        <span class="toggle-save-badge" id="toggle_badge">2 Monate gratis</span>
+      </span>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="pricing-card" data-animate data-delay="1">
+        <div class="pricing-tier" id="pt1">Starter</div>
+        <p class="pricing-for" id="pfor1">Für Einzelbetriebe die gerade starten — ein Standort, ein Kalender.</p>
+        <div class="pricing-price-row">
+          <span class="price-amount" id="pp1">89</span>
+          <span class="price-currency">€</span>
+          <span class="price-per" id="ppd1">/Monat</span>
+        </div>
+        <div class="pricing-annual-info" id="pan1">oder €74/Monat jährlich</div>
+        <div class="pricing-setup-fee" id="psu1">+ €399 Einrichtungsgebühr (einmalig)</div>
+        <ul class="pricing-features" id="pf1">
+          <li><span class="feat-check">✓</span><span>WhatsApp KI-Assistent (24/7) — Randevu, Bestätigung, Storno</span></li>
+          <li><span class="feat-check">✓</span><span>Automatische Erinnerungen (24h + 2h vor Termin)</span></li>
+          <li><span class="feat-check">✓</span><span>Warteliste-Automation</span></li>
+          <li><span class="feat-check">✓</span><span>SSS-Antworten (Öffnungszeiten, Adresse, Preise)</span></li>
+          <li><span class="feat-check">✓</span><span>2 Sprachen (z.B. DE + TR)</span></li>
+          <li><span class="feat-check">✓</span><span>Google Bewertung nach Termin</span></li>
+          <li><span class="feat-check">✓</span><span>Cal.com Kalenderintegration</span></li>
+          <li><span class="feat-check">✓</span><span>DSGVO-konform + AV-Vertrag</span></li>
+          <li><span class="feat-check">✓</span><span>Onboarding in 7 Tagen</span></li>
+        </ul>
+        <a href="#contact" class="pricing-cta btn-ghost">Jetzt anfragen</a>
+      </div>
+
+      <!-- Professional -->
+      <div class="pricing-card featured" data-animate data-delay="2">
+        <div class="pricing-badge" id="pbadge">Empfohlen</div>
+        <div class="pricing-tier" id="pt2">Professional</div>
+        <p class="pricing-for" id="pfor2">Für wachsende Betriebe, die nicht nur Termine wollen — sondern auch Stammkunden behalten und Neubewertungen sammeln.</p>
+        <div class="pricing-price-row">
+          <span class="price-amount" id="pp2">149</span>
+          <span class="price-currency">€</span>
+          <span class="price-per" id="ppd2">/Monat</span>
+        </div>
+        <div class="pricing-annual-info" id="pan2">oder €124/Monat jährlich</div>
+        <div class="pricing-setup-fee" id="psu2">+ €599 Einrichtungsgebühr (einmalig)</div>
+        <ul class="pricing-features" id="pf2">
+          <li><span class="feat-check">✓</span><span>Alles aus Starter, plus:</span></li>
+          <li><span class="feat-check">✓</span><span>Reaktivierungskampagne — 60 Tage kein Besuch → automatische WhatsApp-Nachricht</span></li>
+          <li><span class="feat-check">✓</span><span>Upsell-Vorschläge nach Termin</span></li>
+          <li><span class="feat-check">✓</span><span>Auslastungs-Dashboard + wöchentlicher Report per E-Mail</span></li>
+          <li><span class="feat-check">✓</span><span>Bis zu 4 Sprachen</span></li>
+          <li><span class="feat-check">✓</span><span>Mitarbeiter-Routing</span></li>
+          <li><span class="feat-check">✓</span><span>Kampagnen-Publisher (WhatsApp-Broadcast)</span></li>
+        </ul>
+        <a href="#contact" class="pricing-cta btn-glow">Jetzt anfragen</a>
+      </div>
+
+      <!-- Klinik -->
+      <div class="pricing-card" data-animate data-delay="3">
+        <div class="pricing-tier" id="pt3">Klinik</div>
+        <p class="pricing-for" id="pfor3">Für Arztpraxen, Zahnarztpraxen und Physiotherapeuten — weniger Telefon, weniger Papier, keine verpassten Patienten.</p>
+        <div class="pricing-price-row">
+          <span class="price-amount" id="pp3">219</span>
+          <span class="price-currency">€</span>
+          <span class="price-per" id="ppd3">/Monat</span>
+        </div>
+        <div class="pricing-annual-info" id="pan3">oder €182/Monat jährlich</div>
+        <div class="pricing-setup-fee" id="psu3">+ €899 Einrichtungsgebühr (einmalig)</div>
+        <ul class="pricing-features" id="pf3">
+          <li><span class="feat-check">✓</span><span>Alles aus Professional, plus:</span></li>
+          <li><span class="feat-check">✓</span><span>Digitales Anamnese-Formular (24h vor Termin per WhatsApp)</span></li>
+          <li><span class="feat-check">✓</span><span>Verpasster Anruf → Assistent übernimmt automatisch</span></li>
+          <li><span class="feat-check">✓</span><span>Medizinische Erinnerungen</span></li>
+          <li><span class="feat-check">✓</span><span>Rezept &amp; AU-Schein Workflow</span></li>
+          <li><span class="feat-check">✓</span><span>Unbegrenzte Sprachen</span></li>
+        </ul>
+        <a href="#contact" class="pricing-cta btn-ghost">Jetzt anfragen</a>
+      </div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="pricing-compare-wrap" data-animate>
+      <table class="pricing-compare">
+        <thead>
+          <tr>
+            <th id="cmp_feat">Funktion</th>
+            <th>Starter</th>
+            <th class="cmp-featured">Professional</th>
+            <th>Klinik</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td id="cmp_f1">WhatsApp KI-Assistent 24/7</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
+          <tr><td id="cmp_f2">Erinnerungen + Warteliste</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
+          <tr><td id="cmp_f3">Google Bewertung</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
+          <tr><td id="cmp_f4">DSGVO + AV-Vertrag</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
+          <tr><td id="cmp_f5">Dashboard + Wochenbericht</td><td>—</td><td class="cmp-featured">✓</td><td>✓</td></tr>
+          <tr><td id="cmp_f6">Reaktivierung (60 Tage)</td><td>—</td><td class="cmp-featured">✓</td><td>✓</td></tr>
+          <tr><td id="cmp_f7">Kampagnen-Broadcast</td><td>—</td><td class="cmp-featured">✓</td><td>—</td></tr>
+          <tr><td id="cmp_f8">Upsell-Vorschläge</td><td>—</td><td class="cmp-featured">✓</td><td>—</td></tr>
+          <tr><td id="cmp_f9">Digitales Anamnese-Formular</td><td>—</td><td class="cmp-featured">—</td><td>✓</td></tr>
+          <tr><td id="cmp_f10">Rezept / AU-Schein Workflow</td><td>—</td><td class="cmp-featured">—</td><td>✓</td></tr>
+          <tr><td id="cmp_f11">Medizinische Erinnerungen</td><td>—</td><td class="cmp-featured">—</td><td>✓</td></tr>
+          <tr class="cmp-price-row"><td id="cmp_monthly">Monatlich</td><td>€89</td><td class="cmp-featured">€149</td><td>€219</td></tr>
+          <tr class="cmp-price-row"><td id="cmp_annually">Jährlich (pro Monat)</td><td>€74</td><td class="cmp-featured">€124</td><td>€182</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pricing FAQ -->
+    <div class="pricing-faq" data-animate>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="pfq1">Gibt es versteckte Kosten?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="pfa1">Nein. Einrichtungsgebühr einmalig, dann monatlich oder jährlich — fertig. WhatsApp-Nachrichtenkosten (Meta) sind im Paket enthalten.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="pfq2">Kann ich jederzeit kündigen?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="pfa2">Monatspakete: monatlich kündbar. Jahrespakete: zum Ende der Laufzeit.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="pfq3">Was ist in der Einrichtungsgebühr enthalten?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="pfa3">Komplettes Onboarding: WhatsApp Business API Einrichtung, Kalenderintegration, Assistent-Konfiguration, DSGVO-Dokumentation, Testphase und Liveschaltung.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="pfq4">Kann ich das Paket wechseln?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="pfa4">Ja, jederzeit. Upgrade sofort, Downgrade zum nächsten Monat.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="section testimonials-section" id="testimonials">
+  <div class="container">
+    <div class="section-header" data-animate>
+      <div class="section-label" id="tes_tag">Bewertungen</div>
+      <h2 class="section-title" id="tes_title">Was unsere Kunden sagen</h2>
+      <p class="section-sub" id="tes_sub">Echte Erfahrungen von echten Unternehmen.</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card" data-animate data-delay="1">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text" id="tt1">"InfinityMade hat unsere Bäckerei in weniger als 48 Stunden online gebracht. Wir bekommen jetzt täglich neue Anfragen über die Website!"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">🧑‍🍳</div>
+          <div>
+            <strong id="ta1n">Klaus Müller</strong>
+            <span id="ta1c">Bäckerei Müller, München</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card" data-animate data-delay="2">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text" id="tt2">"Das Online-Buchungssystem hat meinen Alltag komplett verändert. Keine Anrufe mehr – alle Termine laufen automatisch rein."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">💇‍♀️</div>
+          <div>
+            <strong id="ta2n">Ayşe Kaya</strong>
+            <span id="ta2c">Hair Studio Kaya, Berlin</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card" data-animate data-delay="3">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text" id="tt3">"Professionell, schnell und günstig. Unsere Google-Bewertungen sind seitdem deutlich gestiegen. Absolute Weiterempfehlung!"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">🔧</div>
+          <div>
+            <strong id="ta3n">Marco Schneider</strong>
+            <span id="ta3c">Sanitär Schneider, Hamburg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="section faq-section" id="faq">
+  <div class="container">
+    <div class="faq-inner">
+      <div class="section-header" data-animate>
+        <div class="section-label" id="faq_tag">FAQ</div>
+        <h2 class="section-title" id="faq_title">Häufige Fragen</h2>
+        <p class="section-sub" id="faq_sub">Alles, was Sie vor dem Start wissen müssen.</p>
+      </div>
+
+      <div class="faq-list" data-animate data-delay="1">
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="fq1">Wie lange dauert die Erstellung meiner Website?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="fa1">In der Regel ist Ihre Website innerhalb von 24–48 Stunden fertig. Bei größeren Projekten mit individuellen Anforderungen kann es bis zu 5 Werktage dauern.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="fq2">Brauche ich technische Kenntnisse?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="fa2">Nein. Wir kümmern uns um alles – von der Einrichtung bis zur Veröffentlichung. Sie müssen sich um keine technischen Details kümmern.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="fq3">Was passiert nach der Fertigstellung?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="fa3">Je nach Paket erhalten Sie 3 oder 6 Monate kostenlosen Support. Danach bieten wir günstige Wartungspakete an. Sie sind nie allein.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="fq4">Kann ich meine Website später selbst bearbeiten?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="fa4">Ja. Wir bauen Ihre Website so, dass Sie Texte und Bilder selbst aktualisieren können – ohne Programmierkenntnisse. Auf Wunsch schulen wir Sie darin.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span id="fq5">Gibt es versteckte Kosten?</span>
+            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer"><p id="fa5">Nein. Unsere Preise sind transparent und vollständig. Mögliche externe Kosten (z. B. Domain, Hosting) besprechen wir vorher klar mit Ihnen.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section class="section contact-section" id="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <!-- Info -->
+      <div data-animate>
+        <div class="section-label" id="con_tag">Kontakt</div>
+        <h2 class="contact-info-title" id="con_title">Bereit für Ihre digitale Präsenz?</h2>
+        <p class="contact-info-sub" id="con_sub">Schreiben Sie uns – Antwort innerhalb von 24 Stunden.</p>
+
+        <div class="contact-detail">
+          <div class="contact-detail-icon">🌐</div>
+          <div>
+            <small id="ci1">Website</small>
+            <strong>infinitymade.de</strong>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">✉️</div>
+          <div>
+            <small id="ci2">E-Mail</small>
+            <strong>info@infinitymade.de</strong>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">📞</div>
+          <div>
+            <small id="ci3">Telefon</small>
+            <strong>+49 ___ _______</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="contact-form-card" data-animate data-delay="2">
+        <form id="contactForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f_name">Vor- und Nachname</label>
+              <input id="f_name" type="text" placeholder="Vor- und Nachname" required />
+            </div>
+            <div class="form-group">
+              <label for="f_email">E-Mail-Adresse</label>
+              <input id="f_email" type="email" placeholder="E-Mail-Adresse" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="f_biz">Unternehmensname</label>
+            <input id="f_biz" type="text" placeholder="Unternehmensname" />
+          </div>
+          <div class="form-group">
+            <label for="f_service">Gewünschte Leistung</label>
+            <select id="f_service">
+              <option>Leistung auswählen…</option>
+              <option>Websiteerstellung</option>
+              <option>Online-Buchungssystem</option>
+              <option>Google My Business</option>
+              <option>Digitale Speisekarte</option>
+              <option>Social Media</option>
+              <option>Kontaktformular & Chatbot</option>
+              <option>Komplettpaket</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="f_msg">Ihre Nachricht</label>
+            <textarea id="f_msg" placeholder="Ihre Nachricht"></textarea>
+          </div>
+          <button type="submit" class="form-submit" id="f_submit">
+            Nachricht senden
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          </button>
+        </form>
+
+        <div class="form-success" id="formSuccess">
+          <div class="success-icon-wrap">✅</div>
+          <h3 id="ok_t">Vielen Dank!</h3>
+          <p id="ok_s">Wir melden uns innerhalb von 24 Stunden.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="logo">InfinityMade</a>
+        <p id="ft_desc">Ihr digitaler Partner für KMU in Deutschland.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social" aria-label="Instagram">📸</a>
+          <a href="#" class="footer-social" aria-label="Facebook">📘</a>
+          <a href="#" class="footer-social" aria-label="LinkedIn">💼</a>
+          <a href="#" class="footer-social" aria-label="WhatsApp">💬</a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h5 id="ft_s_head">Leistungen</h5>
+        <ul id="ft_links1">
+          <li><a href="#services">Websiteerstellung</a></li>
+          <li><a href="#services">Online-Buchung</a></li>
+          <li><a href="#services">Google My Business</a></li>
+          <li><a href="#services">Digitale Speisekarte</a></li>
+          <li><a href="#services">Social Media</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5 id="ft_c_head">Unternehmen</h5>
+        <ul id="ft_links2">
+          <li><a href="#why">Über uns</a></li>
+          <li><a href="#contact">Kontakt</a></li>
+          <li><a href="#">Impressum</a></li>
+          <li><a href="#">Datenschutz</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p id="ft_cp">© 2025 InfinityMade · Alle Rechte vorbehalten.</p>
+      <div class="footer-bottom-links">
+        <a href="#">Impressum</a>
+        <a href="#">Datenschutz</a>
+        <a href="#">AGB</a>
+      </div>
+      <p id="ft_made">Made with ❤️ in Germany</p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
