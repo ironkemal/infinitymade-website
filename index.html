@@ -44,6 +44,7 @@
       <li><a href="#process" id="nav_p">Ablauf</a></li>
       <li><a href="#pricing" id="nav_pr">Preise</a></li>
       <li><a href="#testimonials" id="nav_te">Bewertungen</a></li>
+      <li><a href="#booking" id="nav_book">Demo buchen</a></li>
       <li><a href="#contact" id="nav_c">Kontakt</a></li>
       <li>
         <div class="lang-switcher">
@@ -452,7 +453,7 @@
           <li><span class="feat-check">✓</span><span>DSGVO-konform + AV-Vertrag</span></li>
           <li><span class="feat-check">✓</span><span>Onboarding in 7 Tagen</span></li>
         </ul>
-        <a href="#contact" class="pricing-cta btn-ghost">Jetzt anfragen</a>
+        <a href="#booking" class="pricing-cta btn-ghost">Demo buchen</a>
       </div>
 
       <!-- Professional -->
@@ -476,7 +477,7 @@
           <li><span class="feat-check">✓</span><span>Mitarbeiter-Routing</span></li>
           <li><span class="feat-check">✓</span><span>Kampagnen-Publisher (WhatsApp-Broadcast)</span></li>
         </ul>
-        <a href="#contact" class="pricing-cta btn-glow">Jetzt anfragen</a>
+        <a href="#booking" class="pricing-cta btn-glow">Demo buchen</a>
       </div>
 
       <!-- Klinik -->
@@ -498,7 +499,7 @@
           <li><span class="feat-check">✓</span><span>Rezept &amp; AU-Schein Workflow</span></li>
           <li><span class="feat-check">✓</span><span>Unbegrenzte Sprachen</span></li>
         </ul>
-        <a href="#contact" class="pricing-cta btn-ghost">Jetzt anfragen</a>
+        <a href="#booking" class="pricing-cta btn-ghost">Demo buchen</a>
       </div>
     </div>
 
@@ -667,6 +668,16 @@
   </div>
 </section>
 
+<!-- ===== BOOK A DEMO ===== -->
+<section class="section booking-section" id="booking">
+  <div class="container">
+    <div class="section-label" id="book_tag">Demo</div>
+    <h2 class="section-title" id="book_title">Kostenloses Demo-Gespräch buchen</h2>
+    <p class="section-sub" id="book_sub">Wählen Sie einen Termin — wir zeigen Ihnen live, wie der KI-Assistent für Ihren Betrieb funktioniert.</p>
+    <div id="my-cal-inline" class="cal-embed-wrap"></div>
+  </div>
+</section>
+
 <!-- ===== CONTACT ===== -->
 <section class="section contact-section" id="contact">
   <div class="container">
@@ -800,5 +811,17 @@
 </footer>
 
 <script src="script.js"></script>
+
+<!-- Cal.com inline embed -->
+<script type="text/javascript">
+(function(C,A,L){let p=function(a,ar){a.q.push(ar)};let d=C.document;C.Cal=C.Cal||function(){let cal=C.Cal;let ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){const api=function(){p(api,arguments)};const namespace=ar[1];api.q=api.q||[];typeof namespace==="string"?(cal.ns[namespace]=api)&&p(api,ar):p(cal,ar);return}p(cal,ar)};})(window,"https://app.cal.com/embed/embed.js","init");
+Cal("init",{origin:"https://cal.com"});
+Cal("inline",{
+  elementOrSelector:"#my-cal-inline",
+  config:{layout:"month_view"},
+  calLink:"yavuz-kemal-demir-rmnjrz/infinitymade"
+});
+Cal("ui",{"styles":{"branding":{"brandColor":"#00c853"}},"hideEventTypeDetails":false,"layout":"month_view"});
+</script>
 </body>
 </html>

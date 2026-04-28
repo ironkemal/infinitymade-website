@@ -1,8 +1,9 @@
 /* ===== TRANSLATIONS ===== */
 const T = {
   de: {
-    nav_s:"Leistungen", nav_w:"Über uns", nav_t:"Für wen?", nav_p:"Ablauf", nav_c:"Kontakt",
+    nav_s:"Leistungen", nav_w:"Über uns", nav_t:"Für wen?", nav_p:"Ablauf", nav_book:"Demo buchen", nav_c:"Kontakt",
     nav_cta:"Kostenlos anfragen",
+    book_tag:"Demo", book_title:"Kostenloses Demo-Gespräch buchen", book_sub:"Wählen Sie einen Termin — wir zeigen Ihnen live, wie der KI-Assistent für Ihren Betrieb funktioniert.",
     eyebrow:"Ihr digitaler Partner · Deutschland",
     h1a:"Ihr Telefon klingelt.",
     h1b:"Niemand geht ran.",
@@ -100,8 +101,9 @@ const T = {
     fa5:"Nein. Unsere Preise sind transparent und vollständig. Mögliche externe Kosten (z. B. Domain, Hosting) besprechen wir vorher klar mit Ihnen."
   },
   en: {
-    nav_s:"Services", nav_w:"About", nav_t:"Who?", nav_p:"Process", nav_c:"Contact",
+    nav_s:"Services", nav_w:"About", nav_t:"Who?", nav_p:"Process", nav_book:"Book a Demo", nav_c:"Contact",
     nav_cta:"Get a free quote",
+    book_tag:"Demo", book_title:"Book a free demo call", book_sub:"Pick a time — we'll show you live how the AI assistant works for your business.",
     eyebrow:"Your digital partner · Germany",
     h1a:"Your phone rings.",
     h1b:"Nobody answers.",
@@ -199,8 +201,9 @@ const T = {
     fa5:"No. Our prices are transparent and complete. Any potential external costs (e.g. domain, hosting) are discussed with you clearly in advance."
   },
   tr: {
-    nav_s:"Hizmetler", nav_w:"Hakkımızda", nav_t:"Kimler için?", nav_p:"Süreç", nav_c:"İletişim",
+    nav_s:"Hizmetler", nav_w:"Hakkımızda", nav_t:"Kimler için?", nav_p:"Süreç", nav_book:"Demo Rezervasyonu", nav_c:"İletişim",
     nav_cta:"Ücretsiz teklif al",
+    book_tag:"Demo", book_title:"Ücretsiz demo görüşmesi rezerve edin", book_sub:"Bir zaman seçin — KI asistanının işletmeniz için nasıl çalıştığını canlı gösterelim.",
     eyebrow:"Dijital partneriniz · Almanya",
     h1a:"Telefonunuz çalıyor.",
     h1b:"Kimse açmıyor.",
@@ -541,6 +544,7 @@ function setLanguage(lang) {
   q('#nav_w').innerHTML = t.nav_w;
   q('#nav_t').innerHTML = t.nav_t;
   q('#nav_p').innerHTML = t.nav_p;
+  q('#nav_book').innerHTML = t.nav_book;
   q('#nav_c').innerHTML = t.nav_c;
   q('#nav_cta').innerHTML = t.nav_cta;
 
@@ -607,6 +611,11 @@ function setLanguage(lang) {
     q(`#p${i}t`).innerHTML = t[`p${i}t`];
     q(`#p${i}d`).innerHTML = t[`p${i}d`];
   }
+
+  // Booking
+  q('#book_tag').innerHTML = t.book_tag;
+  q('#book_title').innerHTML = t.book_title;
+  q('#book_sub').innerHTML = t.book_sub;
 
   // Contact
   q('#con_tag').innerHTML = t.con_tag;

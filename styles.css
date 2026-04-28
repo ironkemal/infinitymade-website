@@ -1943,6 +1943,32 @@ footer {
   box-shadow: 0 0 30px rgba(16, 185, 129, 0.08);
 }
 
+/* ===== BOOKING SECTION ===== */
+.booking-section {
+  background: var(--surface);
+}
+
+.booking-section .section-title {
+  max-width: 600px;
+  margin: 0 auto 12px;
+  text-align: center;
+}
+
+.booking-section .section-sub {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin: 0 auto 40px;
+}
+
+.cal-embed-wrap {
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 600px;
+  border: 1px solid var(--glass-border);
+}
+
 @media (max-width: 768px) {
   .ba-grid { grid-template-columns: 1fr; }
+  .cal-embed-wrap { min-height: 500px; }
 }
