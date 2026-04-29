@@ -227,8 +227,9 @@ function renderOverview() {
 function renderCalendar() {
   const frame = document.getElementById('cal-frame');
   const empty = document.getElementById('cal-empty');
-  if (currentProfile.cal_link) {
-    frame.src = currentProfile.cal_link;
+  const url = (currentProfile.cal_link || '').trim();
+  if (url) {
+    frame.src = url;
     frame.style.display = 'block';
     empty.hidden = true;
   } else {
@@ -245,8 +246,9 @@ function renderLeads() {
   if (!isLocked) {
     const frame = document.getElementById('airtable-frame');
     const empty = document.getElementById('airtable-empty');
-    if (currentProfile.airtable_link) {
-      frame.src = currentProfile.airtable_link;
+    const url = (currentProfile.airtable_link || '').trim();
+    if (url) {
+      frame.src = url;
       frame.style.display = 'block';
       empty.hidden = true;
     } else {
