@@ -1,4 +1,5 @@
 *.md
+*.pdf
 .agents/
 .claude/
 .mcp.json

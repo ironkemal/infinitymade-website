@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – InfinityMade</title>
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="loading" class="loading-screen">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="app" style="display:none;">
+    <!-- HEADER -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <a href="/" class="brand">InfinityMade</a>
+      </div>
+      <div class="topbar-right">
+        <span class="biz-name" id="bizName">—</span>
+        <select id="langSelect" class="lang-select">
+          <option value="de">DE</option>
+          <option value="en">EN</option>
+          <option value="tr">TR</option>
+        </select>
+        <button class="logout-btn" id="logoutBtn" data-i18n="logout">Abmelden</button>
+      </div>
+    </header>
+
+    <div class="dashboard-layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <nav id="sidebarNav"></nav>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main-area">
+        <!-- ÜBERSICHT -->
+        <section class="panel" id="panel-overview">
+          <h2 data-i18n="overview_title">Übersicht</h2>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi_plan">Paket</div>
+              <div class="kpi-value" id="kpi-plan">—</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi_status">Status</div>
+              <div class="kpi-value" id="kpi-status">—</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi_since">Aktiv seit</div>
+              <div class="kpi-value" id="kpi-since">—</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi_support">Support</div>
+              <div class="kpi-value support-mail">info@infinitymade.de</div>
+            </div>
+          </div>
+
+          <div class="card features-card">
+            <h3 data-i18n="features_title">Was ist in Ihrem Paket enthalten?</h3>
+            <ul id="featureList" class="feature-list"></ul>
+          </div>
+        </section>
+
+        <!-- KALENDER -->
+        <section class="panel" id="panel-calendar" hidden>
+          <h2 data-i18n="calendar_title">Kalender</h2>
+          <p class="panel-sub" data-i18n="calendar_sub">Ihre Buchungen über Cal.com</p>
+          <div class="iframe-wrap">
+            <iframe id="cal-frame" src="" frameborder="0"></iframe>
+            <div id="cal-empty" class="empty-state" hidden>
+              <p data-i18n="cal_empty">Ihr Kalender wird gerade eingerichtet. Bitte kontaktieren Sie uns.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- LEADS -->
+        <section class="panel" id="panel-leads" hidden>
+          <h2 data-i18n="leads_title">Leads</h2>
+          <p class="panel-sub" data-i18n="leads_sub">Ihre Leads aus Airtable</p>
+          <div id="leads-content">
+            <div class="iframe-wrap">
+              <iframe id="airtable-frame" src="" frameborder="0"></iframe>
+              <div id="airtable-empty" class="empty-state" hidden>
+                <p data-i18n="airtable_empty">Ihre Lead-Datenbank wird gerade eingerichtet.</p>
+              </div>
+            </div>
+          </div>
+          <div id="leads-upgrade" class="upgrade-card" hidden>
+            <div class="upgrade-icon">🔒</div>
+            <h3 data-i18n="upgrade_title">Verfügbar ab Professional</h3>
+            <p data-i18n="upgrade_msg">Das Leads-Dashboard ist Teil der Professional- und Klinik-Pakete.</p>
+            <a href="/#pricing" class="btn-primary" data-i18n="upgrade_cta">Paket upgraden</a>
+          </div>
+        </section>
+
+        <!-- WHATSAPP -->
+        <section class="panel" id="panel-whatsapp" hidden>
+          <h2 data-i18n="wa_title">WhatsApp Bot</h2>
+          <div class="card wa-card">
+            <div class="wa-status">
+              <span class="wa-dot"></span>
+              <span data-i18n="wa_active">Bot Aktiv</span>
+            </div>
+            <div class="wa-number">
+              <small data-i18n="wa_number">Nummer</small>
+              <strong id="wa-number-val">—</strong>
+            </div>
+            <div class="wa-stats">
+              <h4 data-i18n="wa_last7">Letzte 7 Tage</h4>
+              <ul>
+                <li><span class="wa-num">34</span> <span data-i18n="wa_msgs">Nachrichten beantwortet</span></li>
+                <li><span class="wa-num">8</span> <span data-i18n="wa_appts">Termine vereinbart</span></li>
+                <li><span class="wa-num">2</span> <span data-i18n="wa_cancels">Stornierungen bearbeitet</span></li>
+              </ul>
+            </div>
+            <a id="wa-link" href="#" target="_blank" class="btn-primary" data-i18n="wa_open">WhatsApp öffnen</a>
+          </div>
+        </section>
+
+        <!-- EINSTELLUNGEN -->
+        <section class="panel" id="panel-settings" hidden>
+          <h2 data-i18n="settings_title">Einstellungen</h2>
+
+          <div class="card">
+            <h3 data-i18n="set_profile">Profil</h3>
+            <form id="profileForm">
+              <label data-i18n="set_biz">Unternehmensname</label>
+              <input type="text" id="set-biz" />
+
+              <label data-i18n="set_lang">Sprache</label>
+              <select id="set-lang">
+                <option value="de">Deutsch</option>
+                <option value="en">English</option>
+                <option value="tr">Türkçe</option>
+              </select>
+
+              <button type="submit" class="btn-primary" data-i18n="set_save">Speichern</button>
+              <div id="profileMsg" class="msg"></div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="set_password">Passwort ändern</h3>
+            <form id="passwordForm">
+              <label data-i18n="set_new_pw">Neues Passwort</label>
+              <input type="password" id="set-pw" minlength="6" required />
+
+              <button type="submit" class="btn-primary" data-i18n="set_change">Passwort ändern</button>
+              <div id="passwordMsg" class="msg"></div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 data-i18n="set_account">Konto</h3>
+            <p class="account-email"><strong id="acc-email">—</strong></p>
+            <p class="account-plan" id="acc-plan-line">—</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
