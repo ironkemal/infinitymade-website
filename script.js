@@ -2,7 +2,7 @@
 const T = {
   de: {
     nav_s:"Leistungen", nav_w:"Über uns", nav_t:"Für wen?", nav_p:"Ablauf", nav_book:"Demo buchen", nav_c:"Kontakt",
-    nav_cta:"Kostenlos anfragen",
+    nav_login:"Anmelden", nav_cta:"Kostenlos anfragen",
     book_tag:"Demo", book_title:"Kostenloses Demo-Gespräch buchen", book_sub:"Wählen Sie einen Termin — wir zeigen Ihnen live, wie der KI-Assistent für Ihren Betrieb funktioniert.",
     eyebrow:"Ihr digitaler Partner · Deutschland",
     h1a:"Ihr Telefon klingelt.",
@@ -102,7 +102,7 @@ const T = {
   },
   en: {
     nav_s:"Services", nav_w:"About", nav_t:"Who?", nav_p:"Process", nav_book:"Book a Demo", nav_c:"Contact",
-    nav_cta:"Get a free quote",
+    nav_login:"Sign in", nav_cta:"Get a free quote",
     book_tag:"Demo", book_title:"Book a free demo call", book_sub:"Pick a time — we'll show you live how the AI assistant works for your business.",
     eyebrow:"Your digital partner · Germany",
     h1a:"Your phone rings.",
@@ -202,7 +202,7 @@ const T = {
   },
   tr: {
     nav_s:"Hizmetler", nav_w:"Hakkımızda", nav_t:"Kimler için?", nav_p:"Süreç", nav_book:"Demo Rezervasyonu", nav_c:"İletişim",
-    nav_cta:"Ücretsiz teklif al",
+    nav_login:"Giriş Yap", nav_cta:"Ücretsiz teklif al",
     book_tag:"Demo", book_title:"Ücretsiz demo görüşmesi rezerve edin", book_sub:"Bir zaman seçin — KI asistanının işletmeniz için nasıl çalıştığını canlı gösterelim.",
     eyebrow:"Dijital partneriniz · Almanya",
     h1a:"Telefonunuz çalıyor.",
@@ -546,6 +546,7 @@ function setLanguage(lang) {
   q('#nav_p').innerHTML = t.nav_p;
   q('#nav_book').innerHTML = t.nav_book;
   q('#nav_c').innerHTML = t.nav_c;
+  q('#nav_login').innerHTML = t.nav_login;
   q('#nav_cta').innerHTML = t.nav_cta;
 
   // Hero

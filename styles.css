@@ -199,6 +199,21 @@ body::before {
 .lang-btn.active { background: var(--primary); color: #fff; }
 .lang-btn:hover:not(.active) { color: #fff; }
 
+.nav-login {
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  padding: 8px 18px !important;
+  border-radius: 100px;
+  font-weight: 600;
+  transition: var(--transition) !important;
+}
+
+.nav-login:hover {
+  border-color: rgba(255,255,255,0.4) !important;
+  background: rgba(255,255,255,0.05);
+}
+
+.nav-login::after { display: none !important; }
+
 .nav-cta {
   background: linear-gradient(135deg, var(--primary), #9333ea);
   color: #fff !important;
