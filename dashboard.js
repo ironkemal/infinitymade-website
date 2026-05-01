@@ -492,6 +492,22 @@ async function handleCsvFile(file) {
       .map((h, i) => h.startsWith('categories/') ? i : -1)
       .filter(i => i >= 0);
 
+    // Email — Apify çeşitli formatlarda gönderir: emails, emails/0, additionalEmails, ...
+    const emailIdxs = headers
+      .map((h, i) => /^(emails?|additionalEmails?)(\/\d+)?$/i.test(h) ? i : -1)
+      .filter(i => i >= 0);
+
+    const extractEmail = (row) => {
+      for (const i of emailIdxs) {
+        const val = (row[i] || '').trim();
+        if (!val) continue;
+        // virgülle ayrılmış olabilir
+        const first = val.split(/[,;]/)[0].trim();
+        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(first)) return first;
+      }
+      return null;
+    };
+
     const records = [];
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r];
@@ -512,6 +528,7 @@ async function handleCsvFile(file) {
         country_code: row[idx('countryCode')] || null,
         website: row[idx('website')] || null,
         phone: row[idx('phone')] || null,
+        email: extractEmail(row),
         categories: cats.length ? cats : null,
         category_name: row[idx('categoryName')] || null,
         google_url: row[idx('url')] || null,
