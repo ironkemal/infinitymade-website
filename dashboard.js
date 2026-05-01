@@ -21,7 +21,7 @@ const T = {
     qa_bookings: 'Alle Buchungen', qa_settings: 'Cal.com Einstellungen',
 
     leads_title: 'Leads', leads_sub: 'Verwalten Sie Ihre Anfragen',
-    leads_add: '+ Neuer Lead', leads_import: 'CSV importieren',
+    leads_add: '+ Neuer Lead', leads_import: 'CSV / JSON importieren',
     leads_empty: 'Noch keine Leads. Klicken Sie auf "Neuer Lead" oder "CSV importieren", um zu starten.',
     lf_all: 'Alle', lf_new: 'Neu', lf_contacted: 'Kontaktiert', lf_booked: 'Termin', lf_won: 'Gewonnen', lf_lost: 'Verloren',
     lead_title: 'Titel', lead_category_name: 'Kategorie', lead_categories: 'Alle Kategorien (Komma-getrennt)',
@@ -65,7 +65,7 @@ const T = {
     qa_bookings: 'All bookings', qa_settings: 'Cal.com settings',
 
     leads_title: 'Leads', leads_sub: 'Manage your enquiries',
-    leads_add: '+ New lead', leads_import: 'Import CSV',
+    leads_add: '+ New lead', leads_import: 'Import CSV / JSON',
     leads_empty: 'No leads yet. Click "New lead" or "Import CSV" to start.',
     lf_all: 'All', lf_new: 'New', lf_contacted: 'Contacted', lf_booked: 'Booked', lf_won: 'Won', lf_lost: 'Lost',
     lead_title: 'Title', lead_category_name: 'Category', lead_categories: 'All categories (comma-separated)',
@@ -109,7 +109,7 @@ const T = {
     qa_bookings: 'Tüm randevular', qa_settings: 'Cal.com ayarları',
 
     leads_title: 'Leadler', leads_sub: 'Müşteri taleplerini yönetin',
-    leads_add: '+ Yeni Lead', leads_import: 'CSV içe aktar',
+    leads_add: '+ Yeni Lead', leads_import: 'CSV / JSON içe aktar',
     leads_empty: 'Henüz lead yok. "Yeni Lead" veya "CSV içe aktar" ile başlayın.',
     lf_all: 'Tümü', lf_new: 'Yeni', lf_contacted: 'İletişime geçildi', lf_booked: 'Randevu', lf_won: 'Kazanıldı', lf_lost: 'Kaybedildi',
     lead_title: 'Başlık', lead_category_name: 'Kategori', lead_categories: 'Tüm kategoriler (virgülle)',
@@ -478,67 +478,109 @@ function parseCSV(text) {
   return rows;
 }
 
+function pickFirstEmail(item) {
+  // JSON: emails array, additionalEmails array, email string
+  const candidates = [];
+  if (Array.isArray(item.emails)) candidates.push(...item.emails);
+  if (Array.isArray(item.additionalEmails)) candidates.push(...item.additionalEmails);
+  if (typeof item.emails === 'string') candidates.push(...item.emails.split(/[,;]/));
+  if (typeof item.email === 'string') candidates.push(item.email);
+  for (const c of candidates) {
+    const v = String(c || '').trim();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return v;
+  }
+  return null;
+}
+
+function jsonItemToRecord(item) {
+  const title = (item.title || item.name || '').trim();
+  if (!title) return null;
+  let cats = null;
+  if (Array.isArray(item.categories)) cats = item.categories.filter(Boolean);
+  return {
+    owner_id: currentSession.user.id,
+    title,
+    total_score: item.totalScore ?? null,
+    reviews_count: item.reviewsCount ?? null,
+    street: item.street || null,
+    city: item.city || null,
+    state: item.state || null,
+    country_code: item.countryCode || null,
+    website: item.website || null,
+    phone: item.phone || null,
+    email: pickFirstEmail(item),
+    categories: cats && cats.length ? cats : null,
+    category_name: item.categoryName || null,
+    google_url: item.url || null,
+    status: 'new'
+  };
+}
+
 async function handleCsvFile(file) {
   const t = T[currentLang];
   try {
     const text = await file.text();
-    const rows = parseCSV(text);
-    if (rows.length < 2) throw new Error('Empty CSV');
+    let records = [];
 
-    const headers = rows[0].map(h => h.trim());
-    const idx = (name) => headers.indexOf(name);
+    const isJson = file.name.toLowerCase().endsWith('.json') || text.trim().startsWith('[') || text.trim().startsWith('{');
 
-    const categoryIdxs = headers
-      .map((h, i) => h.startsWith('categories/') ? i : -1)
-      .filter(i => i >= 0);
+    if (isJson) {
+      const parsed = JSON.parse(text);
+      const items = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.items) ? parsed.items : [parsed]);
+      records = items.map(jsonItemToRecord).filter(Boolean);
+    } else {
+      const rows = parseCSV(text);
+      if (rows.length < 2) throw new Error('Empty CSV');
 
-    // Email — Apify çeşitli formatlarda gönderir: emails, emails/0, additionalEmails, ...
-    const emailIdxs = headers
-      .map((h, i) => /^(emails?|additionalEmails?)(\/\d+)?$/i.test(h) ? i : -1)
-      .filter(i => i >= 0);
+      const headers = rows[0].map(h => h.trim());
+      const idx = (name) => headers.indexOf(name);
 
-    const extractEmail = (row) => {
-      for (const i of emailIdxs) {
-        const val = (row[i] || '').trim();
-        if (!val) continue;
-        // virgülle ayrılmış olabilir
-        const first = val.split(/[,;]/)[0].trim();
-        if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(first)) return first;
+      const categoryIdxs = headers
+        .map((h, i) => h.startsWith('categories/') ? i : -1)
+        .filter(i => i >= 0);
+
+      const emailIdxs = headers
+        .map((h, i) => /^(emails?|additionalEmails?)(\/\d+)?$/i.test(h) ? i : -1)
+        .filter(i => i >= 0);
+
+      const extractEmail = (row) => {
+        for (const i of emailIdxs) {
+          const val = (row[i] || '').trim();
+          if (!val) continue;
+          const first = val.split(/[,;]/)[0].trim();
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(first)) return first;
+        }
+        return null;
+      };
+
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || row.every(c => !c)) continue;
+        const title = (row[idx('title')] || '').trim();
+        if (!title) continue;
+        const cats = categoryIdxs.map(i => row[i]?.trim()).filter(Boolean);
+        records.push({
+          owner_id: currentSession.user.id,
+          title,
+          total_score: row[idx('totalScore')] ? Number(row[idx('totalScore')]) : null,
+          reviews_count: row[idx('reviewsCount')] ? parseInt(row[idx('reviewsCount')], 10) : null,
+          street: row[idx('street')] || null,
+          city: row[idx('city')] || null,
+          state: row[idx('state')] || null,
+          country_code: row[idx('countryCode')] || null,
+          website: row[idx('website')] || null,
+          phone: row[idx('phone')] || null,
+          email: extractEmail(row),
+          categories: cats.length ? cats : null,
+          category_name: row[idx('categoryName')] || null,
+          google_url: row[idx('url')] || null,
+          status: 'new'
+        });
       }
-      return null;
-    };
-
-    const records = [];
-    for (let r = 1; r < rows.length; r++) {
-      const row = rows[r];
-      if (!row || row.every(c => !c)) continue;
-      const title = (row[idx('title')] || '').trim();
-      if (!title) continue;
-
-      const cats = categoryIdxs.map(i => row[i]?.trim()).filter(Boolean);
-
-      records.push({
-        owner_id: currentSession.user.id,
-        title,
-        total_score: row[idx('totalScore')] ? Number(row[idx('totalScore')]) : null,
-        reviews_count: row[idx('reviewsCount')] ? parseInt(row[idx('reviewsCount')], 10) : null,
-        street: row[idx('street')] || null,
-        city: row[idx('city')] || null,
-        state: row[idx('state')] || null,
-        country_code: row[idx('countryCode')] || null,
-        website: row[idx('website')] || null,
-        phone: row[idx('phone')] || null,
-        email: extractEmail(row),
-        categories: cats.length ? cats : null,
-        category_name: row[idx('categoryName')] || null,
-        google_url: row[idx('url')] || null,
-        status: 'new'
-      });
     }
 
     if (records.length === 0) throw new Error('No valid rows');
 
-    // Supabase'e batch insert (1000'lik gruplar)
     for (let i = 0; i < records.length; i += 1000) {
       const chunk = records.slice(i, i + 1000);
       const { error } = await supabase.from('leads').insert(chunk);
