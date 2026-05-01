@@ -289,6 +289,10 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg-card);
 }
 
+.empty-state[hidden] {
+  display: none !important;
+}
+
 /* UPGRADE CARD */
 .upgrade-card {
   background: var(--bg-card);
