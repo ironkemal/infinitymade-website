@@ -103,16 +103,47 @@
 
         <!-- LEADS -->
         <section class="panel" id="panel-leads" hidden>
-          <h2 data-i18n="leads_title">Leads</h2>
-          <p class="panel-sub" data-i18n="leads_sub">Ihre Leads aus Airtable</p>
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="leads_title">Leads</h2>
+              <p class="panel-sub" data-i18n="leads_sub">Verwalten Sie Ihre Anfragen</p>
+            </div>
+            <button class="btn-primary" id="leadAddBtn" data-i18n="leads_add">+ Neuer Lead</button>
+          </div>
+
           <div id="leads-content">
-            <div class="iframe-wrap">
-              <iframe id="airtable-frame" src="" frameborder="0"></iframe>
-              <div id="airtable-empty" class="empty-state" hidden>
-                <p data-i18n="airtable_empty">Ihre Lead-Datenbank wird gerade eingerichtet.</p>
+            <div class="lead-filters">
+              <button class="lf-btn active" data-status="all" data-i18n="lf_all">Alle</button>
+              <button class="lf-btn" data-status="new" data-i18n="lf_new">Neu</button>
+              <button class="lf-btn" data-status="contacted" data-i18n="lf_contacted">Kontaktiert</button>
+              <button class="lf-btn" data-status="booked" data-i18n="lf_booked">Termin</button>
+              <button class="lf-btn" data-status="won" data-i18n="lf_won">Gewonnen</button>
+              <button class="lf-btn" data-status="lost" data-i18n="lf_lost">Verloren</button>
+            </div>
+
+            <div class="card lead-table-card">
+              <div class="table-wrap">
+                <table class="lead-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="lead_name">Name</th>
+                      <th data-i18n="lead_phone">Telefon</th>
+                      <th data-i18n="lead_email">E-Mail</th>
+                      <th data-i18n="lead_service">Leistung</th>
+                      <th data-i18n="lead_status">Status</th>
+                      <th data-i18n="lead_date">Datum</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="leadTableBody"></tbody>
+                </table>
+              </div>
+              <div id="leadEmpty" class="lead-empty" hidden>
+                <p data-i18n="leads_empty">Noch keine Leads. Klicken Sie auf "Neuer Lead", um zu starten.</p>
               </div>
             </div>
           </div>
+
           <div id="leads-upgrade" class="upgrade-card" hidden>
             <div class="upgrade-icon">🔒</div>
             <h3 data-i18n="upgrade_title">Verfügbar ab Professional</h3>
@@ -120,6 +151,52 @@
             <a href="/#pricing" class="btn-primary" data-i18n="upgrade_cta">Paket upgraden</a>
           </div>
         </section>
+
+        <!-- LEAD MODAL -->
+        <div class="modal-backdrop" id="leadModal" hidden>
+          <div class="modal-card">
+            <div class="modal-head">
+              <h3 id="leadModalTitle" data-i18n="lead_modal_new">Neuer Lead</h3>
+              <button class="modal-close" id="leadModalClose">×</button>
+            </div>
+            <form id="leadForm">
+              <input type="hidden" id="lead-id" />
+              <label data-i18n="lead_name">Name</label>
+              <input type="text" id="lead-name" required />
+
+              <div class="form-row-2">
+                <div>
+                  <label data-i18n="lead_phone">Telefon</label>
+                  <input type="text" id="lead-phone" />
+                </div>
+                <div>
+                  <label data-i18n="lead_email">E-Mail</label>
+                  <input type="email" id="lead-email" />
+                </div>
+              </div>
+
+              <label data-i18n="lead_service">Leistung</label>
+              <input type="text" id="lead-service" />
+
+              <label data-i18n="lead_status">Status</label>
+              <select id="lead-status">
+                <option value="new" data-i18n="lf_new">Neu</option>
+                <option value="contacted" data-i18n="lf_contacted">Kontaktiert</option>
+                <option value="booked" data-i18n="lf_booked">Termin</option>
+                <option value="won" data-i18n="lf_won">Gewonnen</option>
+                <option value="lost" data-i18n="lf_lost">Verloren</option>
+              </select>
+
+              <label data-i18n="lead_notes">Notizen</label>
+              <textarea id="lead-notes" rows="3"></textarea>
+
+              <div class="modal-actions">
+                <button type="button" class="btn-ghost" id="leadModalCancel" data-i18n="lead_cancel">Abbrechen</button>
+                <button type="submit" class="btn-primary" data-i18n="lead_save">Speichern</button>
+              </div>
+            </form>
+          </div>
+        </div>
 
         <!-- WHATSAPP -->
         <section class="panel" id="panel-whatsapp" hidden>

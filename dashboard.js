@@ -20,8 +20,14 @@ const T = {
     qa_hours: 'Verfügbarkeit ändern', qa_events: 'Event-Types bearbeiten',
     qa_bookings: 'Alle Buchungen', qa_settings: 'Cal.com Einstellungen',
 
-    leads_title: 'Leads', leads_sub: 'Ihre Leads aus Airtable',
-    airtable_empty: 'Ihre Lead-Datenbank wird gerade eingerichtet.',
+    leads_title: 'Leads', leads_sub: 'Verwalten Sie Ihre Anfragen',
+    leads_add: '+ Neuer Lead', leads_empty: 'Noch keine Leads. Klicken Sie auf "Neuer Lead", um zu starten.',
+    lf_all: 'Alle', lf_new: 'Neu', lf_contacted: 'Kontaktiert', lf_booked: 'Termin', lf_won: 'Gewonnen', lf_lost: 'Verloren',
+    lead_name: 'Name', lead_phone: 'Telefon', lead_email: 'E-Mail', lead_service: 'Leistung',
+    lead_status: 'Status', lead_date: 'Datum', lead_notes: 'Notizen',
+    lead_modal_new: 'Neuer Lead', lead_modal_edit: 'Lead bearbeiten',
+    lead_save: 'Speichern', lead_cancel: 'Abbrechen', lead_edit: 'Bearbeiten', lead_delete: 'Löschen',
+    lead_confirm_delete: 'Diesen Lead wirklich löschen?',
     upgrade_title: 'Verfügbar ab Professional',
     upgrade_msg: 'Das Leads-Dashboard ist Teil der Professional- und Klinik-Pakete.',
     upgrade_cta: 'Paket upgraden',
@@ -53,8 +59,14 @@ const T = {
     qa_hours: 'Manage availability', qa_events: 'Edit event types',
     qa_bookings: 'All bookings', qa_settings: 'Cal.com settings',
 
-    leads_title: 'Leads', leads_sub: 'Your leads from Airtable',
-    airtable_empty: 'Your lead database is being set up.',
+    leads_title: 'Leads', leads_sub: 'Manage your enquiries',
+    leads_add: '+ New lead', leads_empty: 'No leads yet. Click "New lead" to start.',
+    lf_all: 'All', lf_new: 'New', lf_contacted: 'Contacted', lf_booked: 'Booked', lf_won: 'Won', lf_lost: 'Lost',
+    lead_name: 'Name', lead_phone: 'Phone', lead_email: 'Email', lead_service: 'Service',
+    lead_status: 'Status', lead_date: 'Date', lead_notes: 'Notes',
+    lead_modal_new: 'New lead', lead_modal_edit: 'Edit lead',
+    lead_save: 'Save', lead_cancel: 'Cancel', lead_edit: 'Edit', lead_delete: 'Delete',
+    lead_confirm_delete: 'Delete this lead?',
     upgrade_title: 'Available from Professional',
     upgrade_msg: 'The Leads dashboard is part of the Professional and Klinik plans.',
     upgrade_cta: 'Upgrade plan',
@@ -86,8 +98,14 @@ const T = {
     qa_hours: 'Müsaitlik saatleri', qa_events: 'Randevu türleri',
     qa_bookings: 'Tüm randevular', qa_settings: 'Cal.com ayarları',
 
-    leads_title: 'Leadler', leads_sub: 'Airtable üzerinden leadleriniz',
-    airtable_empty: 'Lead veritabanınız hazırlanıyor.',
+    leads_title: 'Leadler', leads_sub: 'Müşteri taleplerini yönetin',
+    leads_add: '+ Yeni Lead', leads_empty: 'Henüz lead yok. "Yeni Lead"e tıklayarak başlayın.',
+    lf_all: 'Tümü', lf_new: 'Yeni', lf_contacted: 'İletişime geçildi', lf_booked: 'Randevu', lf_won: 'Kazanıldı', lf_lost: 'Kaybedildi',
+    lead_name: 'İsim', lead_phone: 'Telefon', lead_email: 'E-posta', lead_service: 'Hizmet',
+    lead_status: 'Durum', lead_date: 'Tarih', lead_notes: 'Notlar',
+    lead_modal_new: 'Yeni Lead', lead_modal_edit: 'Lead düzenle',
+    lead_save: 'Kaydet', lead_cancel: 'İptal', lead_edit: 'Düzenle', lead_delete: 'Sil',
+    lead_confirm_delete: 'Bu lead silinsin mi?',
     upgrade_title: 'Professional paketten itibaren',
     upgrade_msg: 'Leadler paneli Professional ve Klinik paketlerinde mevcuttur.',
     upgrade_cta: 'Paketi yükselt',
@@ -267,24 +285,168 @@ function renderCalendar() {
   }
 }
 
-function renderLeads() {
+/* ============ LEADS CRUD ============ */
+let leadsCache = [];
+let leadStatusFilter = 'all';
+
+async function loadLeads() {
+  const { data, error } = await supabase
+    .from('leads')
+    .select('*')
+    .eq('owner_id', currentSession.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Load leads error:', error);
+    leadsCache = [];
+    return;
+  }
+  leadsCache = data || [];
+}
+
+function paintLeads() {
+  const t = T[currentLang];
+  const tbody = document.getElementById('leadTableBody');
+  const empty = document.getElementById('leadEmpty');
+  if (!tbody) return;
+
+  const filtered = leadStatusFilter === 'all'
+    ? leadsCache
+    : leadsCache.filter(l => l.status === leadStatusFilter);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+
+  empty.hidden = true;
+  const locale = currentLang === 'de' ? 'de-DE' : currentLang === 'tr' ? 'tr-TR' : 'en-US';
+
+  tbody.innerHTML = filtered.map(l => {
+    const date = l.created_at ? new Date(l.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short' }) : '';
+    const statusLabel = t['lf_' + l.status] || l.status;
+    return `
+      <tr data-id="${l.id}">
+        <td class="lead-name-cell">${escapeHtml(l.name || '')}</td>
+        <td class="lead-cell-muted">${escapeHtml(l.phone || '—')}</td>
+        <td class="lead-cell-muted">${escapeHtml(l.email || '—')}</td>
+        <td class="lead-cell-muted">${escapeHtml(l.service || '—')}</td>
+        <td><span class="status-badge status-${l.status}">${statusLabel}</span></td>
+        <td class="lead-cell-muted">${date}</td>
+        <td>
+          <div class="lead-actions">
+            <button class="lead-action-btn" data-act="edit" data-id="${l.id}">${t.lead_edit}</button>
+            <button class="lead-action-btn danger" data-act="del" data-id="${l.id}">${t.lead_delete}</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function renderLeads() {
   const isLocked = currentProfile.plan === 'starter';
   document.getElementById('leads-content').hidden = isLocked;
   document.getElementById('leads-upgrade').hidden = !isLocked;
+  if (isLocked) return;
 
-  if (!isLocked) {
-    const frame = document.getElementById('airtable-frame');
-    const empty = document.getElementById('airtable-empty');
-    const url = (currentProfile.airtable_link || '').trim();
-    if (url) {
-      frame.src = url;
-      frame.style.display = 'block';
-      empty.hidden = true;
-    } else {
-      frame.style.display = 'none';
-      empty.hidden = false;
-    }
+  await loadLeads();
+  paintLeads();
+}
+
+function openLeadModal(lead) {
+  const t = T[currentLang];
+  document.getElementById('leadModalTitle').textContent = lead ? t.lead_modal_edit : t.lead_modal_new;
+  document.getElementById('lead-id').value = lead?.id || '';
+  document.getElementById('lead-name').value = lead?.name || '';
+  document.getElementById('lead-phone').value = lead?.phone || '';
+  document.getElementById('lead-email').value = lead?.email || '';
+  document.getElementById('lead-service').value = lead?.service || '';
+  document.getElementById('lead-status').value = lead?.status || 'new';
+  document.getElementById('lead-notes').value = lead?.notes || '';
+  document.getElementById('leadModal').hidden = false;
+}
+
+function closeLeadModal() {
+  document.getElementById('leadModal').hidden = true;
+}
+
+async function saveLead(e) {
+  e.preventDefault();
+  const id = document.getElementById('lead-id').value;
+  const payload = {
+    owner_id: currentSession.user.id,
+    name: document.getElementById('lead-name').value.trim(),
+    phone: document.getElementById('lead-phone').value.trim() || null,
+    email: document.getElementById('lead-email').value.trim() || null,
+    service: document.getElementById('lead-service').value.trim() || null,
+    status: document.getElementById('lead-status').value,
+    notes: document.getElementById('lead-notes').value.trim() || null,
+    updated_at: new Date().toISOString()
+  };
+
+  let error;
+  if (id) {
+    ({ error } = await supabase.from('leads').update(payload).eq('id', id));
+  } else {
+    ({ error } = await supabase.from('leads').insert(payload));
   }
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  closeLeadModal();
+  await renderLeads();
+}
+
+async function deleteLead(id) {
+  const t = T[currentLang];
+  if (!confirm(t.lead_confirm_delete)) return;
+  const { error } = await supabase.from('leads').delete().eq('id', id);
+  if (error) { alert(error.message); return; }
+  await renderLeads();
+}
+
+// Event listener'ları bir kere bağla
+function bindLeadEvents() {
+  document.getElementById('leadAddBtn')?.addEventListener('click', () => openLeadModal(null));
+  document.getElementById('leadModalClose')?.addEventListener('click', closeLeadModal);
+  document.getElementById('leadModalCancel')?.addEventListener('click', closeLeadModal);
+  document.getElementById('leadForm')?.addEventListener('submit', saveLead);
+
+  // Filter pills
+  document.querySelectorAll('.lf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      leadStatusFilter = btn.dataset.status;
+      document.querySelectorAll('.lf-btn').forEach(b => b.classList.toggle('active', b === btn));
+      paintLeads();
+    });
+  });
+
+  // Row actions (event delegation)
+  document.getElementById('leadTableBody')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.dataset.act === 'edit') {
+      const lead = leadsCache.find(l => l.id === id);
+      if (lead) openLeadModal(lead);
+    } else if (btn.dataset.act === 'del') {
+      deleteLead(id);
+    }
+  });
+
+  // Modal backdrop click → close
+  document.getElementById('leadModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'leadModal') closeLeadModal();
+  });
 }
 
 function renderWhatsApp() {
@@ -414,6 +576,7 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
 
 /* ============ INIT ============ */
 applyI18n();
+bindLeadEvents();
 switchPanel('overview');
 
 document.getElementById('loading').style.display = 'none';
