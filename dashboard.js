@@ -17,6 +17,8 @@ const T = {
 
     calendar_title: 'Kalender', calendar_sub: 'Ihre Buchungen über Cal.com',
     cal_empty: 'Ihr Kalender wird gerade eingerichtet. Bitte kontaktieren Sie uns.',
+    qa_hours: 'Verfügbarkeit ändern', qa_events: 'Event-Types bearbeiten',
+    qa_bookings: 'Alle Buchungen', qa_settings: 'Cal.com Einstellungen',
 
     leads_title: 'Leads', leads_sub: 'Ihre Leads aus Airtable',
     airtable_empty: 'Ihre Lead-Datenbank wird gerade eingerichtet.',
@@ -48,6 +50,8 @@ const T = {
 
     calendar_title: 'Calendar', calendar_sub: 'Your bookings via Cal.com',
     cal_empty: 'Your calendar is being set up. Please contact us.',
+    qa_hours: 'Manage availability', qa_events: 'Edit event types',
+    qa_bookings: 'All bookings', qa_settings: 'Cal.com settings',
 
     leads_title: 'Leads', leads_sub: 'Your leads from Airtable',
     airtable_empty: 'Your lead database is being set up.',
@@ -79,6 +83,8 @@ const T = {
 
     calendar_title: 'Takvim', calendar_sub: 'Cal.com üzerinden randevularınız',
     cal_empty: 'Takviminiz hazırlanıyor. Lütfen bizimle iletişime geçin.',
+    qa_hours: 'Müsaitlik saatleri', qa_events: 'Randevu türleri',
+    qa_bookings: 'Tüm randevular', qa_settings: 'Cal.com ayarları',
 
     leads_title: 'Leadler', leads_sub: 'Airtable üzerinden leadleriniz',
     airtable_empty: 'Lead veritabanınız hazırlanıyor.',
