@@ -108,7 +108,11 @@
               <h2 data-i18n="leads_title">Leads</h2>
               <p class="panel-sub" data-i18n="leads_sub">Verwalten Sie Ihre Anfragen</p>
             </div>
-            <button class="btn-primary" id="leadAddBtn" data-i18n="leads_add">+ Neuer Lead</button>
+            <div class="panel-actions">
+              <input type="file" id="csvFile" accept=".csv" hidden />
+              <button class="btn-ghost" id="csvImportBtn" data-i18n="leads_import">CSV importieren</button>
+              <button class="btn-primary" id="leadAddBtn" data-i18n="leads_add">+ Neuer Lead</button>
+            </div>
           </div>
 
           <div id="leads-content">
@@ -126,12 +130,12 @@
                 <table class="lead-table">
                   <thead>
                     <tr>
-                      <th data-i18n="lead_name">Name</th>
+                      <th data-i18n="lead_title">Titel</th>
+                      <th data-i18n="lead_city">Stadt</th>
                       <th data-i18n="lead_phone">Telefon</th>
-                      <th data-i18n="lead_email">E-Mail</th>
-                      <th data-i18n="lead_service">Leistung</th>
+                      <th data-i18n="lead_website">Website</th>
+                      <th data-i18n="lead_rating">Bewertung</th>
                       <th data-i18n="lead_status">Status</th>
-                      <th data-i18n="lead_date">Datum</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -139,7 +143,7 @@
                 </table>
               </div>
               <div id="leadEmpty" class="lead-empty" hidden>
-                <p data-i18n="leads_empty">Noch keine Leads. Klicken Sie auf "Neuer Lead", um zu starten.</p>
+                <p data-i18n="leads_empty">Noch keine Leads. Klicken Sie auf "Neuer Lead" oder "CSV importieren", um zu starten.</p>
               </div>
             </div>
           </div>
@@ -161,8 +165,12 @@
             </div>
             <form id="leadForm">
               <input type="hidden" id="lead-id" />
-              <label data-i18n="lead_name">Name</label>
-              <input type="text" id="lead-name" required />
+
+              <label data-i18n="lead_title">Titel</label>
+              <input type="text" id="lead-title" required />
+
+              <label data-i18n="lead_category_name">Kategorie</label>
+              <input type="text" id="lead-category-name" />
 
               <div class="form-row-2">
                 <div>
@@ -175,8 +183,42 @@
                 </div>
               </div>
 
-              <label data-i18n="lead_service">Leistung</label>
-              <input type="text" id="lead-service" />
+              <label data-i18n="lead_website">Website</label>
+              <input type="url" id="lead-website" placeholder="https://..." />
+
+              <label data-i18n="lead_street">Straße</label>
+              <input type="text" id="lead-street" />
+
+              <div class="form-row-2">
+                <div>
+                  <label data-i18n="lead_city">Stadt</label>
+                  <input type="text" id="lead-city" />
+                </div>
+                <div>
+                  <label data-i18n="lead_state">Bundesland</label>
+                  <input type="text" id="lead-state" />
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div>
+                  <label data-i18n="lead_country_code">Land</label>
+                  <input type="text" id="lead-country" placeholder="DE" maxlength="2" />
+                </div>
+                <div>
+                  <label data-i18n="lead_rating">Google Bewertung</label>
+                  <input type="number" id="lead-score" step="0.1" min="0" max="5" />
+                </div>
+              </div>
+
+              <label data-i18n="lead_reviews">Anzahl Bewertungen</label>
+              <input type="number" id="lead-reviews" min="0" />
+
+              <label data-i18n="lead_categories">Alle Kategorien (Komma-getrennt)</label>
+              <input type="text" id="lead-categories" placeholder="Zahnarzt, Endodontologe, ..." />
+
+              <label data-i18n="lead_google_url">Google Maps URL</label>
+              <input type="url" id="lead-google-url" />
 
               <label data-i18n="lead_status">Status</label>
               <select id="lead-status">

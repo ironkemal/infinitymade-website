@@ -346,6 +346,28 @@ a { color: inherit; text-decoration: none; }
 .panel-header h2 { margin-bottom: 4px; }
 .panel-header .panel-sub { margin-bottom: 0; }
 
+.panel-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lead-website-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.lead-website-link:hover { text-decoration: underline; }
+
+.lead-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+.lead-rating-star { color: #fbbf24; }
+
 .lead-filters {
   display: flex;
   flex-wrap: wrap;

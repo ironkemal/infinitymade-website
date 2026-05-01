@@ -21,13 +21,18 @@ const T = {
     qa_bookings: 'Alle Buchungen', qa_settings: 'Cal.com Einstellungen',
 
     leads_title: 'Leads', leads_sub: 'Verwalten Sie Ihre Anfragen',
-    leads_add: '+ Neuer Lead', leads_empty: 'Noch keine Leads. Klicken Sie auf "Neuer Lead", um zu starten.',
+    leads_add: '+ Neuer Lead', leads_import: 'CSV importieren',
+    leads_empty: 'Noch keine Leads. Klicken Sie auf "Neuer Lead" oder "CSV importieren", um zu starten.',
     lf_all: 'Alle', lf_new: 'Neu', lf_contacted: 'Kontaktiert', lf_booked: 'Termin', lf_won: 'Gewonnen', lf_lost: 'Verloren',
-    lead_name: 'Name', lead_phone: 'Telefon', lead_email: 'E-Mail', lead_service: 'Leistung',
-    lead_status: 'Status', lead_date: 'Datum', lead_notes: 'Notizen',
+    lead_title: 'Titel', lead_category_name: 'Kategorie', lead_categories: 'Alle Kategorien (Komma-getrennt)',
+    lead_phone: 'Telefon', lead_email: 'E-Mail', lead_website: 'Website',
+    lead_street: 'Straße', lead_city: 'Stadt', lead_state: 'Bundesland', lead_country_code: 'Land',
+    lead_rating: 'Bewertung', lead_reviews: 'Anzahl Bewertungen', lead_google_url: 'Google Maps URL',
+    lead_status: 'Status', lead_notes: 'Notizen',
     lead_modal_new: 'Neuer Lead', lead_modal_edit: 'Lead bearbeiten',
     lead_save: 'Speichern', lead_cancel: 'Abbrechen', lead_edit: 'Bearbeiten', lead_delete: 'Löschen',
     lead_confirm_delete: 'Diesen Lead wirklich löschen?',
+    csv_imported: 'Leads importiert: ', csv_error: 'CSV-Import fehlgeschlagen: ',
     upgrade_title: 'Verfügbar ab Professional',
     upgrade_msg: 'Das Leads-Dashboard ist Teil der Professional- und Klinik-Pakete.',
     upgrade_cta: 'Paket upgraden',
@@ -60,13 +65,18 @@ const T = {
     qa_bookings: 'All bookings', qa_settings: 'Cal.com settings',
 
     leads_title: 'Leads', leads_sub: 'Manage your enquiries',
-    leads_add: '+ New lead', leads_empty: 'No leads yet. Click "New lead" to start.',
+    leads_add: '+ New lead', leads_import: 'Import CSV',
+    leads_empty: 'No leads yet. Click "New lead" or "Import CSV" to start.',
     lf_all: 'All', lf_new: 'New', lf_contacted: 'Contacted', lf_booked: 'Booked', lf_won: 'Won', lf_lost: 'Lost',
-    lead_name: 'Name', lead_phone: 'Phone', lead_email: 'Email', lead_service: 'Service',
-    lead_status: 'Status', lead_date: 'Date', lead_notes: 'Notes',
+    lead_title: 'Title', lead_category_name: 'Category', lead_categories: 'All categories (comma-separated)',
+    lead_phone: 'Phone', lead_email: 'Email', lead_website: 'Website',
+    lead_street: 'Street', lead_city: 'City', lead_state: 'State', lead_country_code: 'Country',
+    lead_rating: 'Rating', lead_reviews: 'Review count', lead_google_url: 'Google Maps URL',
+    lead_status: 'Status', lead_notes: 'Notes',
     lead_modal_new: 'New lead', lead_modal_edit: 'Edit lead',
     lead_save: 'Save', lead_cancel: 'Cancel', lead_edit: 'Edit', lead_delete: 'Delete',
     lead_confirm_delete: 'Delete this lead?',
+    csv_imported: 'Leads imported: ', csv_error: 'CSV import failed: ',
     upgrade_title: 'Available from Professional',
     upgrade_msg: 'The Leads dashboard is part of the Professional and Klinik plans.',
     upgrade_cta: 'Upgrade plan',
@@ -99,13 +109,18 @@ const T = {
     qa_bookings: 'Tüm randevular', qa_settings: 'Cal.com ayarları',
 
     leads_title: 'Leadler', leads_sub: 'Müşteri taleplerini yönetin',
-    leads_add: '+ Yeni Lead', leads_empty: 'Henüz lead yok. "Yeni Lead"e tıklayarak başlayın.',
+    leads_add: '+ Yeni Lead', leads_import: 'CSV içe aktar',
+    leads_empty: 'Henüz lead yok. "Yeni Lead" veya "CSV içe aktar" ile başlayın.',
     lf_all: 'Tümü', lf_new: 'Yeni', lf_contacted: 'İletişime geçildi', lf_booked: 'Randevu', lf_won: 'Kazanıldı', lf_lost: 'Kaybedildi',
-    lead_name: 'İsim', lead_phone: 'Telefon', lead_email: 'E-posta', lead_service: 'Hizmet',
-    lead_status: 'Durum', lead_date: 'Tarih', lead_notes: 'Notlar',
+    lead_title: 'Başlık', lead_category_name: 'Kategori', lead_categories: 'Tüm kategoriler (virgülle)',
+    lead_phone: 'Telefon', lead_email: 'E-posta', lead_website: 'Website',
+    lead_street: 'Sokak', lead_city: 'Şehir', lead_state: 'Eyalet', lead_country_code: 'Ülke',
+    lead_rating: 'Puan', lead_reviews: 'Yorum sayısı', lead_google_url: 'Google Maps URL',
+    lead_status: 'Durum', lead_notes: 'Notlar',
     lead_modal_new: 'Yeni Lead', lead_modal_edit: 'Lead düzenle',
     lead_save: 'Kaydet', lead_cancel: 'İptal', lead_edit: 'Düzenle', lead_delete: 'Sil',
     lead_confirm_delete: 'Bu lead silinsin mi?',
+    csv_imported: 'Yüklenen lead sayısı: ', csv_error: 'CSV içe aktarma hatası: ',
     upgrade_title: 'Professional paketten itibaren',
     upgrade_msg: 'Leadler paneli Professional ve Klinik paketlerinde mevcuttur.',
     upgrade_cta: 'Paketi yükselt',
@@ -321,19 +336,23 @@ function paintLeads() {
   }
 
   empty.hidden = true;
-  const locale = currentLang === 'de' ? 'de-DE' : currentLang === 'tr' ? 'tr-TR' : 'en-US';
 
   tbody.innerHTML = filtered.map(l => {
-    const date = l.created_at ? new Date(l.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short' }) : '';
     const statusLabel = t['lf_' + l.status] || l.status;
+    const websiteCell = l.website
+      ? `<a href="${escapeHtml(l.website)}" target="_blank" rel="noopener" class="lead-website-link">${escapeHtml(shortUrl(l.website))}</a>`
+      : '<span class="lead-cell-muted">—</span>';
+    const ratingCell = l.total_score
+      ? `<span class="lead-rating"><span class="lead-rating-star">★</span>${l.total_score}${l.reviews_count ? ` <span class="lead-cell-muted">(${l.reviews_count})</span>` : ''}</span>`
+      : '<span class="lead-cell-muted">—</span>';
     return `
       <tr data-id="${l.id}">
-        <td class="lead-name-cell">${escapeHtml(l.name || '')}</td>
+        <td class="lead-name-cell">${escapeHtml(l.title || '')}<div class="lead-cell-muted" style="font-size:.78rem;margin-top:2px;">${escapeHtml(l.category_name || '')}</div></td>
+        <td class="lead-cell-muted">${escapeHtml(l.city || '—')}</td>
         <td class="lead-cell-muted">${escapeHtml(l.phone || '—')}</td>
-        <td class="lead-cell-muted">${escapeHtml(l.email || '—')}</td>
-        <td class="lead-cell-muted">${escapeHtml(l.service || '—')}</td>
+        <td>${websiteCell}</td>
+        <td>${ratingCell}</td>
         <td><span class="status-badge status-${l.status}">${statusLabel}</span></td>
-        <td class="lead-cell-muted">${date}</td>
         <td>
           <div class="lead-actions">
             <button class="lead-action-btn" data-act="edit" data-id="${l.id}">${t.lead_edit}</button>
@@ -343,6 +362,11 @@ function paintLeads() {
       </tr>
     `;
   }).join('');
+}
+
+function shortUrl(u) {
+  try { return new URL(u).hostname.replace(/^www\./, ''); }
+  catch { return u; }
 }
 
 function escapeHtml(s) {
@@ -362,13 +386,23 @@ async function renderLeads() {
 function openLeadModal(lead) {
   const t = T[currentLang];
   document.getElementById('leadModalTitle').textContent = lead ? t.lead_modal_edit : t.lead_modal_new;
-  document.getElementById('lead-id').value = lead?.id || '';
-  document.getElementById('lead-name').value = lead?.name || '';
-  document.getElementById('lead-phone').value = lead?.phone || '';
-  document.getElementById('lead-email').value = lead?.email || '';
-  document.getElementById('lead-service').value = lead?.service || '';
-  document.getElementById('lead-status').value = lead?.status || 'new';
-  document.getElementById('lead-notes').value = lead?.notes || '';
+  const v = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+  v('lead-id', lead?.id);
+  v('lead-title', lead?.title);
+  v('lead-category-name', lead?.category_name);
+  v('lead-phone', lead?.phone);
+  v('lead-email', lead?.email);
+  v('lead-website', lead?.website);
+  v('lead-street', lead?.street);
+  v('lead-city', lead?.city);
+  v('lead-state', lead?.state);
+  v('lead-country', lead?.country_code);
+  v('lead-score', lead?.total_score);
+  v('lead-reviews', lead?.reviews_count);
+  v('lead-categories', Array.isArray(lead?.categories) ? lead.categories.join(', ') : '');
+  v('lead-google-url', lead?.google_url);
+  v('lead-status', lead?.status || 'new');
+  v('lead-notes', lead?.notes);
   document.getElementById('leadModal').hidden = false;
 }
 
@@ -379,14 +413,28 @@ function closeLeadModal() {
 async function saveLead(e) {
   e.preventDefault();
   const id = document.getElementById('lead-id').value;
+  const get = (i) => document.getElementById(i)?.value.trim() || null;
+  const num = (i) => { const v = document.getElementById(i)?.value; return v ? Number(v) : null; };
+  const cats = (document.getElementById('lead-categories')?.value || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+
   const payload = {
     owner_id: currentSession.user.id,
-    name: document.getElementById('lead-name').value.trim(),
-    phone: document.getElementById('lead-phone').value.trim() || null,
-    email: document.getElementById('lead-email').value.trim() || null,
-    service: document.getElementById('lead-service').value.trim() || null,
+    title: get('lead-title'),
+    category_name: get('lead-category-name'),
+    phone: get('lead-phone'),
+    email: get('lead-email'),
+    website: get('lead-website'),
+    street: get('lead-street'),
+    city: get('lead-city'),
+    state: get('lead-state'),
+    country_code: get('lead-country'),
+    total_score: num('lead-score'),
+    reviews_count: num('lead-reviews'),
+    categories: cats.length ? cats : null,
+    google_url: get('lead-google-url'),
     status: document.getElementById('lead-status').value,
-    notes: document.getElementById('lead-notes').value.trim() || null,
+    notes: get('lead-notes'),
     updated_at: new Date().toISOString()
   };
 
@@ -406,6 +454,87 @@ async function saveLead(e) {
   await renderLeads();
 }
 
+/* ============ CSV IMPORT ============ */
+function parseCSV(text) {
+  // BOM temizle
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], n = text[i + 1];
+    if (inQuotes) {
+      if (c === '"' && n === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuotes = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') { inQuotes = true; }
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\r') { /* skip */ }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else { field += c; }
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+async function handleCsvFile(file) {
+  const t = T[currentLang];
+  try {
+    const text = await file.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) throw new Error('Empty CSV');
+
+    const headers = rows[0].map(h => h.trim());
+    const idx = (name) => headers.indexOf(name);
+
+    const categoryIdxs = headers
+      .map((h, i) => h.startsWith('categories/') ? i : -1)
+      .filter(i => i >= 0);
+
+    const records = [];
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row || row.every(c => !c)) continue;
+      const title = (row[idx('title')] || '').trim();
+      if (!title) continue;
+
+      const cats = categoryIdxs.map(i => row[i]?.trim()).filter(Boolean);
+
+      records.push({
+        owner_id: currentSession.user.id,
+        title,
+        total_score: row[idx('totalScore')] ? Number(row[idx('totalScore')]) : null,
+        reviews_count: row[idx('reviewsCount')] ? parseInt(row[idx('reviewsCount')], 10) : null,
+        street: row[idx('street')] || null,
+        city: row[idx('city')] || null,
+        state: row[idx('state')] || null,
+        country_code: row[idx('countryCode')] || null,
+        website: row[idx('website')] || null,
+        phone: row[idx('phone')] || null,
+        categories: cats.length ? cats : null,
+        category_name: row[idx('categoryName')] || null,
+        google_url: row[idx('url')] || null,
+        status: 'new'
+      });
+    }
+
+    if (records.length === 0) throw new Error('No valid rows');
+
+    // Supabase'e batch insert (1000'lik gruplar)
+    for (let i = 0; i < records.length; i += 1000) {
+      const chunk = records.slice(i, i + 1000);
+      const { error } = await supabase.from('leads').insert(chunk);
+      if (error) throw error;
+    }
+
+    alert(t.csv_imported + records.length);
+    await renderLeads();
+  } catch (err) {
+    alert(t.csv_error + (err.message || err));
+  }
+}
+
 async function deleteLead(id) {
   const t = T[currentLang];
   if (!confirm(t.lead_confirm_delete)) return;
@@ -420,6 +549,18 @@ function bindLeadEvents() {
   document.getElementById('leadModalClose')?.addEventListener('click', closeLeadModal);
   document.getElementById('leadModalCancel')?.addEventListener('click', closeLeadModal);
   document.getElementById('leadForm')?.addEventListener('submit', saveLead);
+
+  // CSV import
+  const csvBtn = document.getElementById('csvImportBtn');
+  const csvFile = document.getElementById('csvFile');
+  csvBtn?.addEventListener('click', () => csvFile?.click());
+  csvFile?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await handleCsvFile(file);
+      e.target.value = '';
+    }
+  });
 
   // Filter pills
   document.querySelectorAll('.lf-btn').forEach(btn => {
