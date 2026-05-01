@@ -304,6 +304,45 @@ function renderCalendar() {
 let leadsCache = [];
 let leadStatusFilter = 'all';
 
+// Tablo kolonları — her birinin tek render fonksiyonu var.
+// Sıra localStorage'da saklanır, kullanıcı drag ile değiştirir.
+const LEAD_COLUMNS = {
+  title: {
+    i18n: 'lead_title',
+    render: (l) => `<td class="lead-name-cell">${escapeHtml(l.title || '')}<div class="lead-cell-muted" style="font-size:.78rem;margin-top:2px;">${escapeHtml(l.category_name || '')}</div></td>`
+  },
+  city:    { i18n: 'lead_city',    render: (l) => `<td class="lead-cell-muted">${escapeHtml(l.city || '—')}</td>` },
+  phone:   { i18n: 'lead_phone',   render: (l) => `<td class="lead-cell-muted">${escapeHtml(l.phone || '—')}</td>` },
+  email:   { i18n: 'lead_email',   render: (l) => l.email
+                                              ? `<td><a href="mailto:${escapeHtml(l.email)}" class="lead-website-link">${escapeHtml(l.email)}</a></td>`
+                                              : `<td class="lead-cell-muted">—</td>` },
+  website: { i18n: 'lead_website', render: (l) => l.website
+                                              ? `<td><a href="${escapeHtml(l.website)}" target="_blank" rel="noopener" class="lead-website-link">${escapeHtml(shortUrl(l.website))}</a></td>`
+                                              : `<td class="lead-cell-muted">—</td>` },
+  rating:  { i18n: 'lead_rating',  render: (l) => l.total_score
+                                              ? `<td><span class="lead-rating"><span class="lead-rating-star">★</span>${l.total_score}${l.reviews_count ? ` <span class="lead-cell-muted">(${l.reviews_count})</span>` : ''}</span></td>`
+                                              : `<td class="lead-cell-muted">—</td>` },
+  status:  { i18n: 'lead_status',  render: (l, t) => `<td><span class="status-badge status-${l.status}">${t['lf_' + l.status] || l.status}</span></td>` },
+};
+
+const DEFAULT_COL_ORDER = ['title', 'city', 'phone', 'email', 'website', 'rating', 'status'];
+
+function getColumnOrder() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('infinity_lead_cols') || 'null');
+    if (Array.isArray(saved) && saved.length && saved.every(k => LEAD_COLUMNS[k])) {
+      // Yeni eklenen kolonları sona ekle
+      const missing = DEFAULT_COL_ORDER.filter(k => !saved.includes(k));
+      return [...saved, ...missing];
+    }
+  } catch {}
+  return DEFAULT_COL_ORDER.slice();
+}
+
+function saveColumnOrder(order) {
+  localStorage.setItem('infinity_lead_cols', JSON.stringify(order));
+}
+
 async function loadLeads() {
   const { data, error } = await supabase
     .from('leads')
@@ -319,11 +358,30 @@ async function loadLeads() {
   leadsCache = data || [];
 }
 
+function shortUrl(u) {
+  try { return new URL(u).hostname.replace(/^www\./, ''); }
+  catch { return u; }
+}
+
+function paintLeadHead() {
+  const t = T[currentLang];
+  const thead = document.getElementById('leadTableHead');
+  if (!thead) return;
+  const order = getColumnOrder();
+  const ths = order.map(key =>
+    `<th draggable="true" data-col="${key}">${t[LEAD_COLUMNS[key].i18n] || key}</th>`
+  ).join('');
+  thead.innerHTML = `<tr>${ths}<th></th></tr>`;
+  bindHeaderDrag();
+}
+
 function paintLeads() {
   const t = T[currentLang];
   const tbody = document.getElementById('leadTableBody');
   const empty = document.getElementById('leadEmpty');
   if (!tbody) return;
+
+  paintLeadHead();
 
   const filtered = leadStatusFilter === 'all'
     ? leadsCache
@@ -336,23 +394,13 @@ function paintLeads() {
   }
 
   empty.hidden = true;
+  const order = getColumnOrder();
 
   tbody.innerHTML = filtered.map(l => {
-    const statusLabel = t['lf_' + l.status] || l.status;
-    const websiteCell = l.website
-      ? `<a href="${escapeHtml(l.website)}" target="_blank" rel="noopener" class="lead-website-link">${escapeHtml(shortUrl(l.website))}</a>`
-      : '<span class="lead-cell-muted">—</span>';
-    const ratingCell = l.total_score
-      ? `<span class="lead-rating"><span class="lead-rating-star">★</span>${l.total_score}${l.reviews_count ? ` <span class="lead-cell-muted">(${l.reviews_count})</span>` : ''}</span>`
-      : '<span class="lead-cell-muted">—</span>';
+    const cells = order.map(key => LEAD_COLUMNS[key].render(l, t)).join('');
     return `
       <tr data-id="${l.id}">
-        <td class="lead-name-cell">${escapeHtml(l.title || '')}<div class="lead-cell-muted" style="font-size:.78rem;margin-top:2px;">${escapeHtml(l.category_name || '')}</div></td>
-        <td class="lead-cell-muted">${escapeHtml(l.city || '—')}</td>
-        <td class="lead-cell-muted">${escapeHtml(l.phone || '—')}</td>
-        <td>${websiteCell}</td>
-        <td>${ratingCell}</td>
-        <td><span class="status-badge status-${l.status}">${statusLabel}</span></td>
+        ${cells}
         <td>
           <div class="lead-actions">
             <button class="lead-action-btn" data-act="edit" data-id="${l.id}">${t.lead_edit}</button>
@@ -364,9 +412,44 @@ function paintLeads() {
   }).join('');
 }
 
-function shortUrl(u) {
-  try { return new URL(u).hostname.replace(/^www\./, ''); }
-  catch { return u; }
+/* ============ COLUMN DRAG-AND-DROP ============ */
+let dragSrcCol = null;
+
+function bindHeaderDrag() {
+  const ths = document.querySelectorAll('#leadTableHead th[data-col]');
+  ths.forEach(th => {
+    th.addEventListener('dragstart', (e) => {
+      dragSrcCol = th.dataset.col;
+      th.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragSrcCol);
+    });
+    th.addEventListener('dragend', () => {
+      th.classList.remove('dragging');
+      document.querySelectorAll('#leadTableHead th').forEach(x => x.classList.remove('drag-over'));
+    });
+    th.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (th.dataset.col && th.dataset.col !== dragSrcCol) th.classList.add('drag-over');
+    });
+    th.addEventListener('dragleave', () => th.classList.remove('drag-over'));
+    th.addEventListener('drop', (e) => {
+      e.preventDefault();
+      th.classList.remove('drag-over');
+      const targetCol = th.dataset.col;
+      if (!targetCol || !dragSrcCol || targetCol === dragSrcCol) return;
+
+      const order = getColumnOrder();
+      const from = order.indexOf(dragSrcCol);
+      const to = order.indexOf(targetCol);
+      if (from < 0 || to < 0) return;
+      order.splice(from, 1);
+      order.splice(to, 0, dragSrcCol);
+      saveColumnOrder(order);
+      paintLeads();
+    });
+  });
 }
 
 function escapeHtml(s) {
