@@ -224,17 +224,40 @@ function renderOverview() {
   });
 }
 
+let calRendered = false;
 function renderCalendar() {
-  const frame = document.getElementById('cal-frame');
+  const container = document.getElementById('cal-inline');
   const empty = document.getElementById('cal-empty');
   const url = (currentProfile.cal_link || '').trim();
-  if (url) {
-    frame.src = url;
-    frame.style.display = 'block';
-    empty.hidden = true;
-  } else {
-    frame.style.display = 'none';
+
+  // URL'den Cal kullanıcı/event slug'ını çıkar
+  // Örn: "https://cal.com/yavuz-kemal-demir-rmnjrz/infinitymade/embed"
+  //   → "yavuz-kemal-demir-rmnjrz/infinitymade"
+  const match = url.match(/cal\.com\/([^?#]+)/);
+  let calLink = match ? match[1].replace(/\/embed\/?$/, '').replace(/\/$/, '') : '';
+
+  if (!calLink) {
+    container.style.display = 'none';
     empty.hidden = false;
+    return;
+  }
+
+  container.style.display = 'block';
+  empty.hidden = true;
+
+  // Sadece bir kere init et
+  if (!calRendered && typeof window.Cal === 'function') {
+    window.Cal("inline", {
+      elementOrSelector: "#cal-inline",
+      config: { layout: "month_view" },
+      calLink
+    });
+    window.Cal("ui", {
+      styles: { branding: { brandColor: "#22c55e" } },
+      hideEventTypeDetails: false,
+      layout: "month_view"
+    });
+    calRendered = true;
   }
 }
 
