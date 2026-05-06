@@ -1,10 +1,10 @@
 // POST /api/cal/create-event-types
 // Auth: Bearer <supabase_user_jwt>
-// For the authenticated user, reads `business_services` rows that don't yet
-// have `cal_event_type_id`, creates Cal.com event-types for each, and saves
-// the returned IDs back. Idempotent: re-running only handles new rows.
+// Cal.com v2: POST /v2/event-types with Bearer auth.
 
 import { getAuthedUser, adminFetch, getBusinessSecret, json } from '../_lib/auth.js';
+
+const CAL_API_VERSION = '2024-06-14';
 
 function slugify(text) {
   return String(text || '')
@@ -25,7 +25,6 @@ export default async function handler(req, res) {
 
   const userId = user.id;
 
-  // Load profile (need cal_username + business_name for slug)
   const { ok: pOk, data: profileRows } = await adminFetch(
     `/profiles?id=eq.${userId}&select=business_name,cal_username`
   );
@@ -36,7 +35,6 @@ export default async function handler(req, res) {
   const apiKey = await getBusinessSecret(userId, 'cal_api_key');
   if (!apiKey) return json(res, 400, { error: 'Cal.com API key not configured' });
 
-  // Load services that need event-types
   const { ok: sOk, data: services } = await adminFetch(
     `/business_services?business_id=eq.${userId}&is_active=eq.true&select=*`
   );
@@ -56,16 +54,18 @@ export default async function handler(req, res) {
     const body = {
       title: svc.name,
       slug,
-      length: svc.duration_minutes || 30,
+      lengthInMinutes: svc.duration_minutes || 30,
       description: svc.description || '',
-      hidden: true, // not listed on cal.com/<username>
-      schedulingType: null,
-      requiresConfirmation: false,
+      hidden: true,
     };
 
-    const calRes = await fetch(`https://api.cal.com/v1/event-types?apiKey=${encodeURIComponent(apiKey)}`, {
+    const calRes = await fetch('https://api.cal.com/v2/event-types', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'cal-api-version': CAL_API_VERSION,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(body),
     });
 
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       continue;
     }
     const calData = await calRes.json();
-    const eventTypeId = calData.event_type?.id || calData.id;
+    const eventTypeId = calData?.data?.id || calData?.event_type?.id || calData?.id;
 
     if (eventTypeId) {
       await adminFetch(

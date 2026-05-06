@@ -312,7 +312,8 @@ function bindCalendar() {
 
   testBtn.addEventListener('click', async () => {
     const apiKey = apiInput.value.trim();
-    const username = userInput.value.trim();
+    const username = cleanCalUsername(userInput.value);
+    userInput.value = username; // normalize visible value
     if (!apiKey || !username) return showError('Username und API-Key bitte ausfüllen');
 
     testBtn.disabled = true;
@@ -346,7 +347,7 @@ function bindCalendar() {
   document.getElementById('calendarForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const apiKey = apiInput.value.trim();
-    const username = userInput.value.trim();
+    const username = cleanCalUsername(userInput.value);
 
     saveBtn.disabled = true;
     saveBtn.textContent = 'Speichern…';
@@ -571,6 +572,17 @@ function bindWhatsapp() {
 
 function normalizePhone(input) {
   return (input || '').replace(/[\s\-()]/g, '');
+}
+
+// Strip cal.com/ prefix, leading @, trailing slashes, lowercase
+function cleanCalUsername(input) {
+  return (input || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^cal\.com\//i, '')
+    .replace(/^@/, '')
+    .replace(/\/.*$/, '')
+    .toLowerCase();
 }
 
 // ---- Step 6: Templates ----

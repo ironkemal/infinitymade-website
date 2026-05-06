@@ -125,9 +125,11 @@
         <li>Registrieren Sie sich mit Ihrer geschäftlichen E-Mail.</li>
         <li>Wählen Sie einen Username (wird Teil Ihrer Booking-URL: <code>cal.com/&lt;username&gt;</code>).</li>
         <li>Bestätigen Sie die Bestätigungs-E-Mail.</li>
-        <li>Im Cal.com Dashboard: <strong>Settings → Developer → API Keys → Create new API Key</strong>.</li>
-        <li>Kopieren Sie den API-Key (beginnt mit <code>cal_live_...</code>).</li>
-        <li>Kommen Sie hierhin zurück und klicken Sie auf "Habe ich gemacht ↓".</li>
+        <li>Im Cal.com Dashboard: <strong>Settings → Developer → API Keys → Add</strong>.</li>
+        <li><strong>Wichtig:</strong> Bei „Expires in" → <code>Never</code> wählen (sonst läuft der Bot nach 30 Tagen ab).</li>
+        <li>Name: z.B. „InfinityMade Integration".</li>
+        <li>Kopieren Sie den API-Key (beginnt mit <code>cal_live_...</code>) — er wird nur einmal angezeigt.</li>
+        <li>Kommen Sie hierhin zurück und klicken Sie auf „Habe ich gemacht ↓".</li>
       </ol>
       <button type="button" class="ob-btn ghost" id="calNoDone">Habe ich gemacht ↓</button>
     </div>
@@ -135,13 +137,13 @@
     <form class="ob-form" id="calendarForm" hidden>
       <label>
         <span>Cal.com Username</span>
-        <input type="text" id="calUsername" required placeholder="z.B. blackbox2-barber" />
-        <small class="ob-input-hint">Teil von <code>cal.com/&lt;username&gt;</code></small>
+        <input type="text" id="calUsername" required placeholder="z.B. mustermann" />
+        <small class="ob-input-hint">Nur den Username, nicht die ganze URL — z.B. bei <code>cal.com/mustermann</code> tragen Sie nur <code>mustermann</code> ein.</small>
       </label>
       <label>
         <span>API-Key</span>
         <input type="password" id="calApiKey" required placeholder="cal_live_..." autocomplete="off" />
-        <small class="ob-input-hint">Wird verschlüsselt gespeichert (Vault)</small>
+        <small class="ob-input-hint">Wird verschlüsselt gespeichert (Supabase Vault). Stellen Sie sicher, dass „Never Expires" gewählt wurde.</small>
       </label>
       <div class="ob-test-result" id="calTestResult"></div>
       <div class="ob-actions">
