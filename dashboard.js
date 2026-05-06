@@ -270,8 +270,8 @@ function renderCalendar() {
   const url = (currentProfile.cal_link || '').trim();
 
   // URL'den Cal kullanıcı/event slug'ını çıkar
-  // Örn: "https://cal.com/yavuz-kemal-demir-rmnjrz/infinitymade/embed"
-  //   → "yavuz-kemal-demir-rmnjrz/infinitymade"
+  // Örn: "https://cal.com/infinitymade/infinitymade/embed"
+  //   → "infinitymade/infinitymade"
   const match = url.match(/cal\.com\/([^?#]+)/);
   let calLink = match ? match[1].replace(/\/embed\/?$/, '').replace(/\/$/, '') : '';
 

@@ -363,14 +363,14 @@
     </div>
 
     <div class="target-scroll-container" data-animate data-delay="1">
-      <div class="target-card"><div class="target-emoji">🍽️</div><h4>Restaurants & Cafés</h4></div>
-      <div class="target-card"><div class="target-emoji">🔧</div><h4>Handwerksbetriebe</h4></div>
-      <div class="target-card"><div class="target-emoji">✂️</div><h4>Friseure & Kosmetik</h4></div>
-      <div class="target-card"><div class="target-emoji">🛍️</div><h4>Einzelhändler</h4></div>
-      <div class="target-card"><div class="target-emoji">🏥</div><h4>Ärzte & Kliniken</h4></div>
-      <div class="target-card"><div class="target-emoji">💪</div><h4>Fitnessstudios</h4></div>
-      <div class="target-card"><div class="target-emoji">⚖️</div><h4>Anwälte & Notare</h4></div>
-      <div class="target-card"><div class="target-emoji">🏢</div><h4>Dienstleister</h4></div>
+      <a href="/pakete/salon.html" class="target-card"><div class="target-emoji">✂️</div><h4>Friseure & Kosmetik</h4><span class="target-price">ab 39€/Monat</span></a>
+      <a href="/pakete/gastro.html" class="target-card"><div class="target-emoji">🍽️</div><h4>Restaurants & Cafés</h4><span class="target-price">ab 39€/Monat</span></a>
+      <a href="/pakete/handwerker.html" class="target-card"><div class="target-emoji">🔧</div><h4>Handwerksbetriebe</h4><span class="target-price">ab 49€/Monat</span></a>
+      <a href="/pakete/fitness.html" class="target-card"><div class="target-emoji">💪</div><h4>Fitnessstudios</h4><span class="target-price">ab 2€/Mitglied</span></a>
+      <a href="/pakete/coming-soon.html?s=einzelhaendler" class="target-card"><div class="target-emoji">🛍️</div><h4>Einzelhändler</h4><span class="target-price target-soon">Website ✓ · KI-System bald</span></a>
+      <a href="/pakete/coming-soon.html?s=aerzte" class="target-card"><div class="target-emoji">🏥</div><h4>Ärzte & Kliniken</h4><span class="target-price target-soon">Website ✓ · KI-System bald</span></a>
+      <a href="/pakete/coming-soon.html?s=anwaelte" class="target-card"><div class="target-emoji">⚖️</div><h4>Anwälte & Notare</h4><span class="target-price target-soon">Website ✓ · KI-System bald</span></a>
+      <a href="/pakete/coming-soon.html?s=dienstleister" class="target-card"><div class="target-emoji">🏢</div><h4>Dienstleister</h4><span class="target-price target-soon">Website ✓ · KI-System bald</span></a>
     </div>
   </div>
 </section>
@@ -409,165 +409,70 @@
   </div>
 </section>
 
-<!-- ===== PRICING ===== -->
+<!-- ===== PRICING HUB ===== -->
 <section class="section pricing-section" id="pricing">
   <div class="container">
     <div class="section-header" data-animate style="text-align:center;">
-      <div class="section-label" id="pri_tag">Preise</div>
-      <h2 class="section-title" id="pri_title">Transparente Preise. Kein Kleingedrucktes.</h2>
-      <p class="section-sub" id="pri_sub" style="margin:0 auto;">Jährlich zahlen = 2 Monate geschenkt</p>
+      <div class="section-label" id="pri_tag">Pakete</div>
+      <h2 class="section-title" id="pri_title">Wählen Sie Ihre Branche</h2>
+      <p class="section-sub" id="pri_sub" style="margin:0 auto;">Maßgeschneiderte Lösungen pro Sektor — keine Standardpakete.</p>
     </div>
 
-    <!-- Billing toggle -->
-    <div class="pricing-toggle-wrap" data-animate>
-      <span class="toggle-label" id="pri_monthly">Monatlich</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="annualToggle" onchange="setPricingBilling(this.checked)">
-        <span class="toggle-slider"></span>
-      </label>
-      <span class="toggle-label">
-        <span id="pri_annually">Jährlich</span>
-        <span class="toggle-save-badge" id="toggle_badge">2 Monate gratis</span>
-      </span>
+    <div class="industry-hub-grid" data-animate>
+      <a href="/pakete/salon.html" class="industry-card">
+        <div class="industry-emoji">✂️</div>
+        <h3>Friseure & Kosmetik</h3>
+        <p>WhatsApp-Termine, Reaktivierung, Geburtstags-Coupons</p>
+        <div class="industry-price">ab <strong>39€</strong>/Monat</div>
+        <span class="industry-cta">Pakete ansehen →</span>
+      </a>
+      <a href="/pakete/gastro.html" class="industry-card">
+        <div class="industry-emoji">🍽️</div>
+        <h3>Restaurants & Cafés</h3>
+        <p>QR-Menü, Reservierungen, Smart Recall, KDS-Integration</p>
+        <div class="industry-price">ab <strong>39€</strong>/Monat</div>
+        <span class="industry-cta">Pakete ansehen →</span>
+      </a>
+      <a href="/pakete/handwerker.html" class="industry-card">
+        <div class="industry-emoji">🔧</div>
+        <h3>Handwerksbetriebe</h3>
+        <p>Angebote, GoBD-konforme Doku, Sprachassistent für Baustellen</p>
+        <div class="industry-price">ab <strong>49€</strong>/Monat</div>
+        <span class="industry-cta">Pakete ansehen →</span>
+      </a>
+      <a href="/pakete/fitness.html" class="industry-card">
+        <div class="industry-emoji">💪</div>
+        <h3>Fitnessstudios</h3>
+        <p>FitTrack AI App — Salon-Partnerschaft mit 2€/Mitglied</p>
+        <div class="industry-price">ab <strong>2€</strong>/Mitglied</div>
+        <span class="industry-cta">Pakete ansehen →</span>
+      </a>
+      <a href="/pakete/coming-soon.html?s=einzelhaendler" class="industry-card industry-soon">
+        <div class="industry-emoji">🛍️</div>
+        <h3>Einzelhändler</h3>
+        <p>Website schon jetzt — KI-System für Click&Collect, Lager-Sync &amp; Treueprogramm in Entwicklung</p>
+        <div class="industry-price industry-price-soon">Website ab 199€ · KI-Module bald</div>
+        <span class="industry-cta">Mehr erfahren →</span>
+      </a>
+      <a href="/pakete/coming-soon.html?s=anwaelte" class="industry-card industry-soon">
+        <div class="industry-emoji">⚖️</div>
+        <h3>Anwälte & Notare</h3>
+        <p>Website schon jetzt — Mandanten-Bot &amp; Fristmanagement in Entwicklung</p>
+        <div class="industry-price industry-price-soon">Website ab 199€ · KI-Module bald</div>
+        <span class="industry-cta">Mehr erfahren →</span>
+      </a>
     </div>
 
-    <div class="pricing-grid">
-      <!-- Starter -->
-      <div class="pricing-card" data-animate data-delay="1">
-        <div class="pricing-tier" id="pt1">Starter</div>
-        <p class="pricing-for" id="pfor1">Für Einzelbetriebe die gerade starten — ein Standort, ein Kalender.</p>
-        <div class="pricing-price-row">
-          <span class="price-amount" id="pp1">89</span>
-          <span class="price-currency">€</span>
-          <span class="price-per" id="ppd1">/Monat</span>
-        </div>
-        <div class="pricing-annual-info" id="pan1">oder €74/Monat jährlich</div>
-        <div class="pricing-setup-fee" id="psu1">+ €399 Einrichtungsgebühr (einmalig)</div>
-        <ul class="pricing-features" id="pf1">
-          <li><span class="feat-check">✓</span><span>WhatsApp KI-Assistent (24/7) — Randevu, Bestätigung, Storno</span></li>
-          <li><span class="feat-check">✓</span><span>Automatische Erinnerungen (24h + 2h vor Termin)</span></li>
-          <li><span class="feat-check">✓</span><span>Warteliste-Automation</span></li>
-          <li><span class="feat-check">✓</span><span>SSS-Antworten (Öffnungszeiten, Adresse, Preise)</span></li>
-          <li><span class="feat-check">✓</span><span>2 Sprachen (z.B. DE + TR)</span></li>
-          <li><span class="feat-check">✓</span><span>Google Bewertung nach Termin</span></li>
-          <li><span class="feat-check">✓</span><span>Cal.com Kalenderintegration</span></li>
-          <li><span class="feat-check">✓</span><span>DSGVO-konform + AV-Vertrag</span></li>
-          <li><span class="feat-check">✓</span><span>Onboarding in 7 Tagen</span></li>
-        </ul>
-        <a href="#booking" class="pricing-cta btn-ghost">Demo buchen</a>
-      </div>
-
-      <!-- Professional -->
-      <div class="pricing-card featured" data-animate data-delay="2">
-        <div class="pricing-badge" id="pbadge">Empfohlen</div>
-        <div class="pricing-tier" id="pt2">Professional</div>
-        <p class="pricing-for" id="pfor2">Für wachsende Betriebe, die nicht nur Termine wollen — sondern auch Stammkunden behalten und Neubewertungen sammeln.</p>
-        <div class="pricing-price-row">
-          <span class="price-amount" id="pp2">149</span>
-          <span class="price-currency">€</span>
-          <span class="price-per" id="ppd2">/Monat</span>
-        </div>
-        <div class="pricing-annual-info" id="pan2">oder €124/Monat jährlich</div>
-        <div class="pricing-setup-fee" id="psu2">+ €599 Einrichtungsgebühr (einmalig)</div>
-        <ul class="pricing-features" id="pf2">
-          <li><span class="feat-check">✓</span><span>Alles aus Starter, plus:</span></li>
-          <li><span class="feat-check">✓</span><span>Reaktivierungskampagne — 60 Tage kein Besuch → automatische WhatsApp-Nachricht</span></li>
-          <li><span class="feat-check">✓</span><span>Upsell-Vorschläge nach Termin</span></li>
-          <li><span class="feat-check">✓</span><span>Auslastungs-Dashboard + wöchentlicher Report per E-Mail</span></li>
-          <li><span class="feat-check">✓</span><span>Bis zu 4 Sprachen</span></li>
-          <li><span class="feat-check">✓</span><span>Mitarbeiter-Routing</span></li>
-          <li><span class="feat-check">✓</span><span>Kampagnen-Publisher (WhatsApp-Broadcast)</span></li>
-        </ul>
-        <a href="#booking" class="pricing-cta btn-glow">Demo buchen</a>
-      </div>
-
-      <!-- Klinik -->
-      <div class="pricing-card" data-animate data-delay="3">
-        <div class="pricing-tier" id="pt3">Klinik</div>
-        <p class="pricing-for" id="pfor3">Für Arztpraxen, Zahnarztpraxen und Physiotherapeuten — weniger Telefon, weniger Papier, keine verpassten Patienten.</p>
-        <div class="pricing-price-row">
-          <span class="price-amount" id="pp3">219</span>
-          <span class="price-currency">€</span>
-          <span class="price-per" id="ppd3">/Monat</span>
-        </div>
-        <div class="pricing-annual-info" id="pan3">oder €182/Monat jährlich</div>
-        <div class="pricing-setup-fee" id="psu3">+ €899 Einrichtungsgebühr (einmalig)</div>
-        <ul class="pricing-features" id="pf3">
-          <li><span class="feat-check">✓</span><span>Alles aus Professional, plus:</span></li>
-          <li><span class="feat-check">✓</span><span>Digitales Anamnese-Formular (24h vor Termin per WhatsApp)</span></li>
-          <li><span class="feat-check">✓</span><span>Verpasster Anruf → Assistent übernimmt automatisch</span></li>
-          <li><span class="feat-check">✓</span><span>Medizinische Erinnerungen</span></li>
-          <li><span class="feat-check">✓</span><span>Rezept &amp; AU-Schein Workflow</span></li>
-          <li><span class="feat-check">✓</span><span>Unbegrenzte Sprachen</span></li>
-        </ul>
-        <a href="#booking" class="pricing-cta btn-ghost">Demo buchen</a>
-      </div>
-    </div>
-
-    <!-- Comparison table -->
-    <div class="pricing-compare-wrap" data-animate>
-      <table class="pricing-compare">
-        <thead>
-          <tr>
-            <th id="cmp_feat">Funktion</th>
-            <th>Starter</th>
-            <th class="cmp-featured">Professional</th>
-            <th>Klinik</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td id="cmp_f1">WhatsApp KI-Assistent 24/7</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
-          <tr><td id="cmp_f2">Erinnerungen + Warteliste</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
-          <tr><td id="cmp_f3">Google Bewertung</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
-          <tr><td id="cmp_f4">DSGVO + AV-Vertrag</td><td>✓</td><td class="cmp-featured">✓</td><td>✓</td></tr>
-          <tr><td id="cmp_f5">Dashboard + Wochenbericht</td><td>—</td><td class="cmp-featured">✓</td><td>✓</td></tr>
-          <tr><td id="cmp_f6">Reaktivierung (60 Tage)</td><td>—</td><td class="cmp-featured">✓</td><td>✓</td></tr>
-          <tr><td id="cmp_f7">Kampagnen-Broadcast</td><td>—</td><td class="cmp-featured">✓</td><td>—</td></tr>
-          <tr><td id="cmp_f8">Upsell-Vorschläge</td><td>—</td><td class="cmp-featured">✓</td><td>—</td></tr>
-          <tr><td id="cmp_f9">Digitales Anamnese-Formular</td><td>—</td><td class="cmp-featured">—</td><td>✓</td></tr>
-          <tr><td id="cmp_f10">Rezept / AU-Schein Workflow</td><td>—</td><td class="cmp-featured">—</td><td>✓</td></tr>
-          <tr><td id="cmp_f11">Medizinische Erinnerungen</td><td>—</td><td class="cmp-featured">—</td><td>✓</td></tr>
-          <tr class="cmp-price-row"><td id="cmp_monthly">Monatlich</td><td>€89</td><td class="cmp-featured">€149</td><td>€219</td></tr>
-          <tr class="cmp-price-row"><td id="cmp_annually">Jährlich (pro Monat)</td><td>€74</td><td class="cmp-featured">€124</td><td>€182</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pricing FAQ -->
-    <div class="pricing-faq" data-animate>
-      <div class="faq-list">
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            <span id="pfq1">Gibt es versteckte Kosten?</span>
-            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="faq-answer"><p id="pfa1">Nein. Einrichtungsgebühr einmalig, dann monatlich oder jährlich — fertig. WhatsApp-Nachrichtenkosten (Meta) sind im Paket enthalten.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            <span id="pfq2">Kann ich jederzeit kündigen?</span>
-            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="faq-answer"><p id="pfa2">Monatspakete: monatlich kündbar. Jahrespakete: zum Ende der Laufzeit.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            <span id="pfq3">Was ist in der Einrichtungsgebühr enthalten?</span>
-            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="faq-answer"><p id="pfa3">Komplettes Onboarding: WhatsApp Business API Einrichtung, Kalenderintegration, Assistent-Konfiguration, DSGVO-Dokumentation, Testphase und Liveschaltung.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-question" onclick="toggleFaq(this)">
-            <span id="pfq4">Kann ich das Paket wechseln?</span>
-            <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="faq-answer"><p id="pfa4">Ja, jederzeit. Upgrade sofort, Downgrade zum nächsten Monat.</p></div>
-        </div>
+    <div class="hub-website-callout" data-animate>
+      <div class="hub-website-icon">🌐</div>
+      <div class="hub-website-content">
+        <h3>Website-Sonderpreis für Abonnenten</h3>
+        <p>Mit jedem Abo bekommen Sie Ihre professionelle Website für <strong>99€</strong> (Salons & Gastro) bzw. <strong>199€</strong> (Handwerker) — statt Normalpreis <s>399–699€</s>.</p>
       </div>
     </div>
   </div>
 </section>
+
 
 <!-- ===== TESTIMONIALS ===== -->
 <section class="section testimonials-section" id="testimonials">
@@ -581,36 +486,36 @@
     <div class="testimonials-grid">
       <div class="testimonial-card" data-animate data-delay="1">
         <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text" id="tt1">"InfinityMade hat unsere Bäckerei in weniger als 48 Stunden online gebracht. Wir bekommen jetzt täglich neue Anfragen über die Website!"</p>
+        <p class="testimonial-text" id="tt1">„Ehrlich gesagt war ich am Anfang skeptisch. Nach drei Wochen hatten wir 47 Termine über WhatsApp — die ich sonst alle verpasst hätte. Samstags ist endlich kein Telefonstress mehr."</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">🧑‍🍳</div>
+          <div class="testimonial-avatar">💈</div>
           <div>
-            <strong id="ta1n">Klaus Müller</strong>
-            <span id="ta1c">Bäckerei Müller, München</span>
+            <strong id="ta1n">Sido A.</strong>
+            <span id="ta1c">BlackBox2 Barbershop · Koblenz-Lützel</span>
           </div>
         </div>
       </div>
 
       <div class="testimonial-card" data-animate data-delay="2">
         <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text" id="tt2">"Das Online-Buchungssystem hat meinen Alltag komplett verändert. Keine Anrufe mehr – alle Termine laufen automatisch rein."</p>
+        <p class="testimonial-text" id="tt2">„Wir reservieren jetzt 80% über WhatsApp, das spart uns gut zwei Stunden am Abend. Plus: die Geburtstags-Coupons holen wirklich Stammgäste zurück, hätte ich nie gedacht."</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">💇‍♀️</div>
+          <div class="testimonial-avatar">☕</div>
           <div>
-            <strong id="ta2n">Ayşe Kaya</strong>
-            <span id="ta2c">Hair Studio Kaya, Berlin</span>
+            <strong id="ta2n">Andrea B.</strong>
+            <span id="ta2c">Café Crema · Wuppertal-Elberfeld</span>
           </div>
         </div>
       </div>
 
       <div class="testimonial-card" data-animate data-delay="3">
         <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text" id="tt3">"Professionell, schnell und günstig. Unsere Google-Bewertungen sind seitdem deutlich gestiegen. Absolute Weiterempfehlung!"</p>
+        <p class="testimonial-text" id="tt3">„Was mich überzeugt hat: kein Schnickschnack, läuft einfach. Mein Steuerberater fragt nur noch wegen GoBD-Export — der Rest läuft im Hintergrund."</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">🔧</div>
+          <div class="testimonial-avatar">⚡</div>
           <div>
-            <strong id="ta3n">Marco Schneider</strong>
-            <span id="ta3c">Sanitär Schneider, Hamburg</span>
+            <strong id="ta3n">Sven K.</strong>
+            <span id="ta3c">Elektro Wagner GmbH · Düren-Birkesdorf</span>
           </div>
         </div>
       </div>
@@ -707,7 +612,7 @@
           <div class="contact-detail-icon">📞</div>
           <div>
             <small id="ci3">Telefon</small>
-            <strong>+49 ___ _______</strong>
+            <strong><a href="tel:+4915228033834" style="color:inherit; text-decoration:none;">+49 1522 8033834</a></strong>
           </div>
         </div>
       </div>
@@ -820,7 +725,7 @@ Cal("init",{origin:"https://cal.com"});
 Cal("inline",{
   elementOrSelector:"#my-cal-inline",
   config:{layout:"month_view"},
-  calLink:"yavuz-kemal-demir-rmnjrz/infinitymade"
+  calLink:"infinitymade/infinitymade"
 });
 Cal("ui",{"styles":{"branding":{"brandColor":"#00c853"}},"hideEventTypeDetails":false,"layout":"month_view"});
 </script>
