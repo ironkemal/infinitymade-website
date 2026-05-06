@@ -1,0 +1,9 @@
+{
+  "name": "infinitymade-website",
+  "version": "1.0.0",
+  "description": "InfinityMade — landing + dashboard + onboarding + Vercel API functions",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}

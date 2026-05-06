@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Onboarding – InfinityMade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="onboarding.css" />
+</head>
+<body>
+
+<header class="ob-topbar">
+  <a href="/index.html" class="ob-brand">infinity<span class="ob-brand-accent">made</span></a>
+  <div class="ob-progress">
+    <div class="ob-progress-bar"><div class="ob-progress-fill" id="progressFill"></div></div>
+    <span class="ob-progress-label"><span id="stepNum">1</span> / 7</span>
+  </div>
+  <button class="ob-logout" id="logoutBtn" hidden>Abmelden</button>
+</header>
+
+<main class="ob-main">
+
+  <!-- Step 0: Account -->
+  <section class="ob-step" data-step="account">
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 1 / 7</span>
+      <h1>Konto erstellen</h1>
+      <p>Sie melden sich später mit E-Mail und Passwort in Ihrem Dashboard an.</p>
+    </div>
+    <form class="ob-form" id="accountForm">
+      <div id="accountToggle" class="ob-toggle">
+        <button type="button" class="ob-toggle-btn active" data-mode="signup">Neues Konto</button>
+        <button type="button" class="ob-toggle-btn" data-mode="signin">Ich habe bereits ein Konto</button>
+      </div>
+      <label>
+        <span>E-Mail</span>
+        <input type="email" id="accountEmail" required autocomplete="email" placeholder="ihr@firma.de" />
+      </label>
+      <label>
+        <span>Passwort</span>
+        <input type="password" id="accountPassword" required minlength="8" autocomplete="new-password" placeholder="Mindestens 8 Zeichen" />
+      </label>
+      <p class="ob-hint">Mit dem Erstellen akzeptieren Sie unsere AGB &amp; Datenschutzerklärung.</p>
+      <div class="ob-actions">
+        <button type="submit" class="ob-btn primary" id="accountSubmit">Konto erstellen &amp; weiter →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Step 1: Business -->
+  <section class="ob-step" data-step="business" hidden>
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 2 / 7</span>
+      <h1>Über Ihr Unternehmen</h1>
+      <p>Diese Daten erscheinen im KI-Assistenten — er stellt sich Ihren Kunden mit dem richtigen Namen vor.</p>
+    </div>
+    <form class="ob-form" id="businessForm">
+      <label>
+        <span>Geschäftsname</span>
+        <input type="text" id="bizName" required placeholder="z.B. BlackBox2 Barbershop" />
+      </label>
+      <label>
+        <span>Branche</span>
+        <select id="bizSector" required>
+          <option value="">Bitte wählen…</option>
+          <option value="barber">Friseur / Barbershop</option>
+          <option value="beauty">Kosmetikstudio</option>
+          <option value="nails">Nagelstudio</option>
+          <option value="tattoo">Tattoostudio</option>
+          <option value="spa">Spa / Wellness</option>
+          <option value="massage">Massagestudio</option>
+          <option value="gym">Fitnessstudio</option>
+          <option value="other">Sonstiges</option>
+        </select>
+      </label>
+      <div class="ob-row-2">
+        <label>
+          <span>Stadt</span>
+          <input type="text" id="bizCity" required placeholder="z.B. Koblenz" />
+        </label>
+        <label>
+          <span>Sprache des Bots</span>
+          <select id="bizLanguage" required>
+            <option value="de" selected>Deutsch</option>
+            <option value="tr">Türkçe</option>
+            <option value="ar">العربية</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+      </div>
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Step 2: Cal.com -->
+  <section class="ob-step" data-step="calendar" hidden>
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 3 / 7</span>
+      <h1>Cal.com Verbindung</h1>
+      <p>Hier verbindet der Assistent Ihren Online-Kalender. Buchungen werden automatisch eingetragen.</p>
+    </div>
+
+    <div class="ob-decision">
+      <button type="button" class="ob-decision-btn" data-decision="yes">
+        <span class="ob-decision-icon">✓</span>
+        <strong>Ich habe ein Cal.com Konto</strong>
+        <small>API-Key &amp; Username eintragen</small>
+      </button>
+      <button type="button" class="ob-decision-btn" data-decision="no">
+        <span class="ob-decision-icon">＋</span>
+        <strong>Cal.com Konto erstellen</strong>
+        <small>Schritt-für-Schritt-Anleitung</small>
+      </button>
+    </div>
+
+    <div class="ob-decision-content" id="calNo" hidden>
+      <h3>So erstellen Sie ein kostenloses Cal.com Konto</h3>
+      <ol class="ob-steps-list">
+        <li>Öffnen Sie <a href="https://cal.com/signup" target="_blank" rel="noopener">cal.com/signup</a> in einem neuen Tab.</li>
+        <li>Registrieren Sie sich mit Ihrer geschäftlichen E-Mail.</li>
+        <li>Wählen Sie einen Username (wird Teil Ihrer Booking-URL: <code>cal.com/&lt;username&gt;</code>).</li>
+        <li>Bestätigen Sie die Bestätigungs-E-Mail.</li>
+        <li>Im Cal.com Dashboard: <strong>Settings → Developer → API Keys → Create new API Key</strong>.</li>
+        <li>Kopieren Sie den API-Key (beginnt mit <code>cal_live_...</code>).</li>
+        <li>Kommen Sie hierhin zurück und klicken Sie auf "Habe ich gemacht ↓".</li>
+      </ol>
+      <button type="button" class="ob-btn ghost" id="calNoDone">Habe ich gemacht ↓</button>
+    </div>
+
+    <form class="ob-form" id="calendarForm" hidden>
+      <label>
+        <span>Cal.com Username</span>
+        <input type="text" id="calUsername" required placeholder="z.B. blackbox2-barber" />
+        <small class="ob-input-hint">Teil von <code>cal.com/&lt;username&gt;</code></small>
+      </label>
+      <label>
+        <span>API-Key</span>
+        <input type="password" id="calApiKey" required placeholder="cal_live_..." autocomplete="off" />
+        <small class="ob-input-hint">Wird verschlüsselt gespeichert (Vault)</small>
+      </label>
+      <div class="ob-test-result" id="calTestResult"></div>
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="button" class="ob-btn ghost" id="calTestBtn">Verbindung testen</button>
+        <button type="submit" class="ob-btn primary" id="calSaveBtn" disabled>Speichern &amp; weiter →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Step 3: Services -->
+  <section class="ob-step" data-step="services" hidden>
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 4 / 7</span>
+      <h1>Ihre Dienstleistungen</h1>
+      <p>Welche Termine kann der Bot buchen? Sie können später jederzeit bearbeiten.</p>
+    </div>
+    <form class="ob-form" id="servicesForm">
+      <div class="ob-services-list" id="servicesList">
+        <!-- populated by JS based on sector -->
+      </div>
+      <button type="button" class="ob-link-btn" id="addServiceBtn">+ Eigene Dienstleistung hinzufügen</button>
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Step 4: Hours -->
+  <section class="ob-step" data-step="hours" hidden>
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 5 / 7</span>
+      <h1>Öffnungszeiten</h1>
+      <p>Diese Zeiten gelten für die KI — außerhalb dieser Stunden bietet der Bot keine Termine an.</p>
+    </div>
+    <form class="ob-form" id="hoursForm">
+      <div class="ob-hours-grid" id="hoursGrid">
+        <!-- populated by JS: 7 days -->
+      </div>
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Step 5: WhatsApp -->
+  <section class="ob-step" data-step="whatsapp" hidden>
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 6 / 7</span>
+      <h1>WhatsApp Verbindung</h1>
+      <p>Wir nutzen Twilio (oder WhatsApp Business Cloud API). Im einfachsten Fall: nur die Geschäfts-Telefonnummer.</p>
+    </div>
+
+    <form class="ob-form" id="whatsappForm">
+      <label>
+        <span>Geschäfts-Telefonnummer (mit +49…)</span>
+        <input type="tel" id="waNumber" required placeholder="+49 1522 8033834" />
+        <small class="ob-input-hint">Diese Nummer wird Ihr Bot-Eingang. Falls noch nicht bei Twilio registriert: nehmen Sie Kontakt auf — wir richten es im Onboarding-Call ein.</small>
+      </label>
+
+      <details class="ob-collapse">
+        <summary>Erweiterte WhatsApp Cloud API Felder (optional, für Fortgeschrittene)</summary>
+        <label>
+          <span>Phone Number ID</span>
+          <input type="text" id="waPhoneNumberId" placeholder="Meta Business → WhatsApp → Phone Number ID" />
+        </label>
+        <label>
+          <span>WABA ID</span>
+          <input type="text" id="waBaId" placeholder="WhatsApp Business Account ID" />
+        </label>
+        <label>
+          <span>Permanent Access Token</span>
+          <input type="password" id="waAccessToken" placeholder="EAAxxx..." autocomplete="off" />
+        </label>
+      </details>
+
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Step 6: Templates -->
+  <section class="ob-step" data-step="templates" hidden>
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 7 / 7</span>
+      <h1>Nachrichten anpassen</h1>
+      <p>Diese Texte verwendet der Bot. Sie können sie jetzt oder später ändern.</p>
+    </div>
+    <form class="ob-form" id="templatesForm">
+      <label>
+        <span>Begrüßung</span>
+        <textarea id="tplGreeting" rows="2">Hallo {{name}}! Wie kann ich Ihnen helfen? 😊</textarea>
+      </label>
+      <label>
+        <span>Opt-in Aufforderung (DSGVO)</span>
+        <textarea id="tplOptIn" rows="3">Hallo! Damit wir Ihnen automatisch antworten dürfen, bestätigen Sie bitte mit "JA". Sie können jederzeit widerrufen mit "STOP".</textarea>
+      </label>
+      <label>
+        <span>Erinnerung (24h vor Termin)</span>
+        <textarea id="tplReminder" rows="2">Hallo {{name}}, wir freuen uns auf Sie morgen um {{time}} bei {{business}}. Antworten Sie mit "OK" zur Bestätigung.</textarea>
+      </label>
+      <label>
+        <span>Reaktivierung (60 Tage)</span>
+        <textarea id="tplReactivation" rows="2">Hallo {{name}}, lange nichts gehört. Sollen wir wieder einen Termin vereinbaren?</textarea>
+      </label>
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="submit" class="ob-btn primary">Fertig — zum Dashboard →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Done -->
+  <section class="ob-step" data-step="done" hidden>
+    <div class="ob-done">
+      <div class="ob-done-emoji">🎉</div>
+      <h1>Willkommen bei InfinityMade!</h1>
+      <p>Ihr KI-Assistent ist konfiguriert. Wir richten jetzt im Hintergrund den WhatsApp-Webhook ein und melden uns innerhalb 24h für den Test-Anruf.</p>
+      <p class="ob-done-info">
+        <strong>Was passiert als Nächstes?</strong><br>
+        1. Sie bekommen eine E-Mail mit dem Onboarding-Plan.<br>
+        2. Wir testen den Bot mit Ihnen live (15 Min Anruf).<br>
+        3. Aktivierung — Ihr Bot ist live.
+      </p>
+      <div class="ob-actions" style="justify-content:center;">
+        <a href="/dashboard.html" class="ob-btn primary">Dashboard öffnen →</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="ob-error" id="errorBox" hidden></div>
+
+<script type="module" src="onboarding.js"></script>
+</body>
+</html>
