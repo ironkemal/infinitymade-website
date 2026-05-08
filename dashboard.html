@@ -58,6 +58,16 @@
           <button class="dash-banner-close" onclick="document.getElementById('welcome-banner').hidden=true">✕</button>
         </div>
 
+        <!-- No-plan banner (pending, no subscription yet) -->
+        <div id="noplan-banner" class="dash-banner pending" hidden>
+          <div class="dash-banner-icon">📦</div>
+          <div class="dash-banner-content">
+            <strong>Wählen Sie Ihren Plan</strong>
+            <p>Sie haben noch keinen Plan aktiviert. Wählen Sie jetzt einen Plan und starten Sie 14 Tage kostenlos.</p>
+          </div>
+          <a id="noplan-btn" href="/onboarding.html?step=plan" class="dash-banner-action">Plan wählen</a>
+        </div>
+
         <!-- Trial countdown banner -->
         <div id="trial-banner" class="dash-banner trial" hidden>
           <div class="dash-banner-icon">⏱️</div>

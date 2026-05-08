@@ -815,3 +815,5 @@ form select:focus {
   font-weight: 600; cursor: pointer; white-space: nowrap;
 }
 @media (max-width: 600px) { #cookie-banner { flex-direction: column; align-items: stretch; text-align: center; } #cookie-banner button { width: 100%; } }
+.dash-banner.pending { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.4); }
+.dash-banner-action { text-decoration: none; display: inline-flex; align-items: center; }

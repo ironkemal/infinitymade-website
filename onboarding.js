@@ -105,7 +105,14 @@ async function init() {
     userId = session.user.id;
     document.getElementById('logoutBtn').hidden = false;
     await loadProfile();
-    const stepName = profile?.onboarding_step || 'business';
+    // Allow ?step=<name> to jump directly (e.g. from dashboard "Plan wählen")
+    const requestedStep = new URLSearchParams(location.search).get('step');
+    let stepName;
+    if (requestedStep && STEPS.includes(requestedStep)) {
+      stepName = requestedStep;
+    } else {
+      stepName = profile?.onboarding_step || 'business';
+    }
     if (stepName === 'done') {
       window.location.href = '/dashboard.html';
       return;
