@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard – InfinityMade</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="dashboard.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -41,6 +48,36 @@
 
       <!-- MAIN -->
       <main class="main-area">
+        <!-- Welcome banner (after Stripe success) -->
+        <div id="welcome-banner" class="dash-banner welcome" hidden>
+          <div class="dash-banner-icon">🎉</div>
+          <div class="dash-banner-content">
+            <strong>Willkommen bei InfinityMade!</strong>
+            <p>Ihr 14-tägiger Test läuft. Wir richten gerade Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.</p>
+          </div>
+          <button class="dash-banner-close" onclick="document.getElementById('welcome-banner').hidden=true">✕</button>
+        </div>
+
+        <!-- Trial countdown banner -->
+        <div id="trial-banner" class="dash-banner trial" hidden>
+          <div class="dash-banner-icon">⏱️</div>
+          <div class="dash-banner-content">
+            <strong>Test-Phase: <span id="trial-days-left">—</span> Tage übrig</strong>
+            <p>Nach Ablauf der Testphase wird Ihre Karte mit dem gewählten Plan belastet. Sie können jederzeit kündigen.</p>
+          </div>
+          <button id="trial-manage-btn" class="dash-banner-action">Abo verwalten</button>
+        </div>
+
+        <!-- Past-due banner -->
+        <div id="pastdue-banner" class="dash-banner pastdue" hidden>
+          <div class="dash-banner-icon">⚠️</div>
+          <div class="dash-banner-content">
+            <strong>Zahlung fehlgeschlagen</strong>
+            <p>Ihre letzte Zahlung konnte nicht abgebucht werden. Bitte aktualisieren Sie Ihre Zahlungsmethode, sonst wird der Account in Kürze deaktiviert.</p>
+          </div>
+          <button id="pastdue-fix-btn" class="dash-banner-action">Karte aktualisieren</button>
+        </div>
+
         <!-- ÜBERSICHT -->
         <section class="panel" id="panel-overview">
           <h2 data-i18n="overview_title">Übersicht</h2>

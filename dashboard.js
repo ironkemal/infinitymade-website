@@ -244,6 +244,35 @@ function renderOverview() {
   document.getElementById('kpi-plan').textContent = planName;
   document.getElementById('kpi-status').textContent = currentProfile.is_active ? t.status_active : t.status_inactive;
 
+  // ===== Banners (welcome / trial / past-due) =====
+  const params = new URLSearchParams(location.search);
+  if (params.get('welcome') === '1') {
+    document.getElementById('welcome-banner').hidden = false;
+    history.replaceState({}, '', location.pathname);
+  }
+  if (currentProfile.plan_status === 'trial' && currentProfile.trial_ends_at) {
+    const days = Math.max(0, Math.ceil((new Date(currentProfile.trial_ends_at) - Date.now()) / 86400000));
+    document.getElementById('trial-days-left').textContent = days;
+    document.getElementById('trial-banner').hidden = false;
+  }
+  if (currentProfile.plan_status === 'past_due') {
+    document.getElementById('pastdue-banner').hidden = false;
+  }
+  // Stripe portal handlers
+  const openPortal = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/stripe/portal-session', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      const d = await res.json();
+      if (d.url) window.location.href = d.url;
+    } catch (e) { alert('Portal-Sitzung konnte nicht geöffnet werden.'); }
+  };
+  document.getElementById('trial-manage-btn')?.addEventListener('click', openPortal);
+  document.getElementById('pastdue-fix-btn')?.addEventListener('click', openPortal);
+
   if (currentProfile.activated_at) {
     const d = new Date(currentProfile.activated_at);
     const locale = currentLang === 'de' ? 'de-DE' : currentLang === 'tr' ? 'tr-TR' : 'en-US';

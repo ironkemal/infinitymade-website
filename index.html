@@ -832,6 +832,24 @@
 
 <script src="script.js"></script>
 
+<!-- Cookie consent banner (technical cookies only — DSGVO Art. 6 lit. f) -->
+<div id="cookie-banner" hidden>
+  <p>Wir verwenden ausschließlich technisch notwendige Cookies, um die Funktion der Seite sicherzustellen. Keine Tracking- oder Marketing-Cookies. Mehr in der <a href="/datenschutz.html">Datenschutzerklärung</a>.</p>
+  <button id="cookie-accept">Verstanden</button>
+</div>
+<script>
+  (function(){
+    if (localStorage.getItem('cookie-acked') === '1') return;
+    var b = document.getElementById('cookie-banner');
+    if (!b) return;
+    b.hidden = false;
+    document.getElementById('cookie-accept').addEventListener('click', function(){
+      localStorage.setItem('cookie-acked', '1');
+      b.remove();
+    });
+  })();
+</script>
+
 <!-- Cal.com inline embed -->
 <script type="text/javascript">
 (function(C,A,L){let p=function(a,ar){a.q.push(ar)};let d=C.document;C.Cal=C.Cal||function(){let cal=C.Cal;let ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){const api=function(){p(api,arguments)};const namespace=ar[1];api.q=api.q||[];typeof namespace==="string"?(cal.ns[namespace]=api)&&p(api,ar):p(cal,ar);return}p(cal,ar)};})(window,"https://app.cal.com/embed/embed.js","init");
