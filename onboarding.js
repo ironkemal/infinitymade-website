@@ -4,7 +4,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const STEPS = ['account', 'business', 'calendar', 'services', 'hours', 'whatsapp', 'templates', 'done'];
+const STEPS = ['account', 'business', 'calendar', 'services', 'hours', 'whatsapp', 'templates', 'plan', 'done'];
 
 const SERVICE_TEMPLATES = {
   barber: [
@@ -98,6 +98,7 @@ async function init() {
   bindHours();
   bindWhatsapp();
   bindTemplates();
+  bindPlan();
 
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
@@ -598,13 +599,71 @@ function bindTemplates() {
 
     const { error } = await supabase.from('profiles').update({
       message_templates,
-      onboarding_step: 'done',
-      // is_active stays false until manual activation by admin (Yavuz) after webhook setup
+      onboarding_step: 'plan',
     }).eq('id', userId);
     if (error) return showError(error.message);
 
-    profile = { ...profile, message_templates, onboarding_step: 'done' };
-    goToStep(7); // done
+    profile = { ...profile, message_templates, onboarding_step: 'plan' };
+    goToStep(7); // plan
+  });
+}
+
+// ---- Step 8: Plan & Payment ----
+function bindPlan() {
+  const intervalBtns = document.querySelectorAll('.plan-toggle-btn');
+  let currentInterval = 'month';
+
+  intervalBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      intervalBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentInterval = btn.dataset.interval;
+      // Update prices + billing label
+      document.querySelectorAll('.plan-price-num').forEach(el => {
+        el.textContent = currentInterval === 'year' ? el.dataset.year : el.dataset.month;
+      });
+      document.querySelectorAll('[data-billing]').forEach(el => {
+        el.textContent = currentInterval === 'year'
+          ? 'jährlich abgerechnet · 15% gespart'
+          : 'monatlich abgerechnet';
+      });
+    });
+  });
+
+  document.querySelectorAll('.plan-select').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const planSlug = btn.dataset.plan;
+      btn.disabled = true;
+      btn.textContent = 'Weiterleitung...';
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('/api/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ planSlug, interval: currentInterval }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) {
+          showError(data.error || 'Checkout konnte nicht gestartet werden.');
+          btn.disabled = false;
+          btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
+          return;
+        }
+        // Save chosen plan in profile before redirect (so we have it if checkout abandoned)
+        await supabase.from('profiles').update({
+          plan: planSlug,
+          billing_interval: currentInterval,
+        }).eq('id', userId);
+        window.location.href = data.url;
+      } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
+      }
+    });
   });
 }
 
