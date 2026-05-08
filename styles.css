@@ -2127,3 +2127,43 @@ footer {
   .industry-hub-grid { grid-template-columns: 1fr; }
   .hub-website-callout { flex-direction: column; text-align: center; padding: 24px; }
 }
+
+/* ===== Local landing pages (city / sector SEO) ===== */
+.local-page { padding-top: 90px; background: var(--dark); color: var(--text); min-height: 100vh; }
+.local-page .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.local-page .badge { display: inline-block; padding: 6px 14px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-border); font-size: 0.85rem; color: var(--accent); font-weight: 600; letter-spacing: 0.04em; margin-bottom: 18px; }
+.local-page h1 { font-size: clamp(2rem, 4vw, 3.4rem); font-weight: 800; line-height: 1.15; margin-bottom: 22px; background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.local-page h2 { font-size: clamp(1.5rem, 2.6vw, 2.1rem); font-weight: 700; margin: 0 0 22px; color: var(--text); }
+.local-page h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+.local-page p { color: var(--text-muted); line-height: 1.7; }
+.local-page .lead { font-size: 1.15rem; color: var(--text-muted); max-width: 760px; margin-bottom: 32px; line-height: 1.65; }
+.local-page a { color: var(--accent); text-decoration: none; transition: var(--transition); }
+.local-page a:hover { color: var(--text); }
+
+.local-hero { padding: 80px 0 60px; }
+.local-section { padding: 60px 0; border-top: 1px solid var(--glass-border); }
+.local-cta { padding: 80px 0; text-align: center; background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(245,158,11,0.08)); border-top: 1px solid var(--glass-border); }
+.local-cta h2 { font-size: clamp(1.5rem, 3vw, 2.4rem); margin-bottom: 14px; }
+.local-cta p { font-size: 1.1rem; margin-bottom: 28px; }
+
+.local-page .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.local-page .btn-primary { display: inline-flex; align-items: center; padding: 14px 28px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; font-weight: 600; border: none; cursor: pointer; transition: var(--transition); text-decoration: none; }
+.local-page .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(124,58,237,0.35); color: #fff; }
+.local-page .btn-ghost { display: inline-flex; align-items: center; padding: 14px 28px; border-radius: 12px; background: var(--glass); border: 1px solid var(--glass-border); color: var(--text); font-weight: 600; transition: var(--transition); text-decoration: none; }
+.local-page .btn-ghost:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+.local-page ul.bullets, .local-page ol.bullets { list-style: none; padding: 0; display: grid; gap: 12px; }
+.local-page ul.bullets li, .local-page ol.bullets li { padding: 14px 18px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-muted); }
+.local-page ul.bullets li strong, .local-page ol.bullets li strong { color: var(--text); font-weight: 600; }
+
+.local-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 24px; }
+.local-card { padding: 22px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); transition: var(--transition); }
+.local-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+
+.city-links { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.city-links li a { display: inline-block; padding: 10px 18px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 999px; color: var(--text); font-size: 0.95rem; }
+.city-links li a:hover { border-color: var(--accent); color: var(--accent); }
+
+.footer { padding: 32px 0; border-top: 1px solid var(--glass-border); text-align: center; color: var(--text-dim); font-size: 0.9rem; }
+.footer a { color: var(--text-muted); margin: 0 6px; }
+.footer a:hover { color: var(--accent); }

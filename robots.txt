@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /login.html
+Disallow: /supabase-config.js
+
+Sitemap: https://infinitymade.de/sitemap.xml

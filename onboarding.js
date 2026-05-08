@@ -412,8 +412,8 @@ function createServiceRow(r = {}) {
   div.innerHTML = `
     <input type="checkbox" class="svc-active" ${r.checked !== false ? 'checked' : ''} />
     <input type="text" class="svc-name" placeholder="Dienstleistung" value="${escapeAttr(r.name || '')}" />
-    <input type="number" class="svc-duration" placeholder="Min" min="5" max="480" step="5" value="${r.duration || 30}" />
-    <input type="number" class="svc-price" placeholder="€" min="0" max="9999" step="1" value="${r.price ?? ''}" />
+    <input type="number" class="svc-duration" placeholder="Min" min="5" max="480" step="1" value="${r.duration || 30}" />
+    <input type="number" class="svc-price" placeholder="€" min="0" max="9999" step="0.01" value="${r.price ?? ''}" />
     <button type="button" class="ob-service-remove" title="Entfernen">×</button>
   `;
   if (r.id) div.dataset.svcId = r.id;
@@ -434,7 +434,7 @@ function bindServices() {
       business_id: userId,
       name: row.querySelector('.svc-name').value.trim(),
       duration_minutes: parseInt(row.querySelector('.svc-duration').value, 10) || 30,
-      price_eur: parseFloat(row.querySelector('.svc-price').value) || null,
+      price_eur: parseFloat(String(row.querySelector('.svc-price').value).replace(',', '.')) || null,
       is_active: row.querySelector('.svc-active').checked,
       display_order: i,
     })).filter(s => s.name);
