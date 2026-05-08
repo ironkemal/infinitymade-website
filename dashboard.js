@@ -252,22 +252,20 @@ function renderOverview() {
 
   const params = new URLSearchParams(location.search);
   const justWelcomed = params.get('welcome') === '1';
+  const hasSubscription = !!currentProfile.stripe_subscription_id;
+  const status = currentProfile.plan_status || 'pending';
+
   if (justWelcomed) {
     history.replaceState({}, '', location.pathname);
     document.getElementById('welcome-banner').hidden = false;
-  } else {
-    const hasSubscription = !!currentProfile.stripe_subscription_id;
-    const status = currentProfile.plan_status || 'pending';
-
-    if (status === 'pending' && !hasSubscription) {
-      document.getElementById('noplan-banner').hidden = false;
-    } else if (status === 'trial' && currentProfile.trial_ends_at) {
-      const days = Math.max(0, Math.ceil((new Date(currentProfile.trial_ends_at) - Date.now()) / 86400000));
-      document.getElementById('trial-days-left').textContent = days;
-      document.getElementById('trial-banner').hidden = false;
-    } else if (status === 'past_due') {
-      document.getElementById('pastdue-banner').hidden = false;
-    }
+  } else if (status === 'pending' && !hasSubscription) {
+    document.getElementById('noplan-banner').hidden = false;
+  } else if (status === 'trial' && currentProfile.trial_ends_at) {
+    const days = Math.max(0, Math.ceil((new Date(currentProfile.trial_ends_at) - Date.now()) / 86400000));
+    document.getElementById('trial-days-left').textContent = days;
+    document.getElementById('trial-banner').hidden = false;
+  } else if (status === 'past_due') {
+    document.getElementById('pastdue-banner').hidden = false;
   }
 
   // Open Stripe portal — falls back to plan selection if user has no subscription yet
