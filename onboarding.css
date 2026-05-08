@@ -287,6 +287,18 @@ body {
 }
 
 /* Services list */
+.ob-services-header {
+  display: grid;
+  grid-template-columns: 24px 1fr 100px 100px 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 0 12px 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 .ob-services-list {
   display: flex;
   flex-direction: column;
@@ -294,7 +306,7 @@ body {
 }
 .ob-service-row {
   display: grid;
-  grid-template-columns: 24px 1fr 90px 90px 28px;
+  grid-template-columns: 24px 1fr 100px 100px 28px;
   gap: 10px;
   align-items: center;
   background: var(--bg-card);
@@ -337,7 +349,7 @@ body {
 }
 .ob-hours-row {
   display: grid;
-  grid-template-columns: 90px 1fr 100px 12px 100px;
+  grid-template-columns: 100px 1fr 140px 14px 140px;
   gap: 12px;
   align-items: center;
   font-size: 0.92rem;
@@ -356,10 +368,12 @@ body {
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 6px 8px;
+  padding: 8px 10px;
   color: var(--text);
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
+  width: 100%;
+  min-width: 0;
 }
 .ob-hours-row .day-name { font-weight: 600; color: var(--text); }
 .ob-hours-row .ob-dash { text-align: center; color: var(--muted); }
@@ -383,6 +397,34 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .ob-collapse > label { margin-top: 10px; }
+
+/* Callout (info note above/below forms) */
+.ob-callout {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 0.92rem;
+  color: var(--text);
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+.ob-callout strong { color: var(--accent); margin-right: 4px; }
+.ob-callout code {
+  background: var(--bg-input);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.86em;
+  color: var(--accent);
+}
+.ob-callout em { color: var(--muted); font-style: normal; font-weight: 600; }
+.ob-callout-ai {
+  border-left-color: #8b5cf6;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.ob-callout-ai strong { color: #a78bfa; }
 
 /* Done */
 .ob-done {
@@ -428,6 +470,7 @@ body {
   .ob-progress-label { display: none; }
   .ob-row-2 { grid-template-columns: 1fr; }
   .ob-decision { grid-template-columns: 1fr; }
+  .ob-services-header { display: none; }
   .ob-service-row { grid-template-columns: 24px 1fr; gap: 8px; }
   .ob-service-row > *:nth-child(n+3) {
     grid-column: 2 / -1;

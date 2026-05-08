@@ -267,13 +267,15 @@ let calRendered = false;
 function renderCalendar() {
   const container = document.getElementById('cal-inline');
   const empty = document.getElementById('cal-empty');
-  const url = (currentProfile.cal_link || '').trim();
 
-  // URL'den Cal kullanıcı/event slug'ını çıkar
-  // Örn: "https://cal.com/infinitymade/infinitymade/embed"
-  //   → "infinitymade/infinitymade"
-  const match = url.match(/cal\.com\/([^?#]+)/);
-  let calLink = match ? match[1].replace(/\/embed\/?$/, '').replace(/\/$/, '') : '';
+  // Multi-tenant: cal_username (preferred). Fallback: cal_link (legacy single-tenant).
+  let calLink = '';
+  if (currentProfile.cal_username) {
+    calLink = String(currentProfile.cal_username).trim().replace(/^\/+|\/+$/g, '');
+  } else if (currentProfile.cal_link) {
+    const m = currentProfile.cal_link.match(/cal\.com\/([^?#]+)/);
+    if (m) calLink = m[1].replace(/\/embed\/?$/, '').replace(/\/$/, '');
+  }
 
   if (!calLink) {
     container.style.display = 'none';
@@ -284,7 +286,7 @@ function renderCalendar() {
   container.style.display = 'block';
   empty.hidden = true;
 
-  // Sadece bir kere init et
+  // Cal.com embed.js — init only once
   if (!calRendered && typeof window.Cal === 'function') {
     window.Cal("inline", {
       elementOrSelector: "#cal-inline",

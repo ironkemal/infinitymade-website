@@ -162,6 +162,13 @@
       <p>Welche Termine kann der Bot buchen? Sie können später jederzeit bearbeiten.</p>
     </div>
     <form class="ob-form" id="servicesForm">
+      <div class="ob-services-header">
+        <span></span>
+        <span>Dienstleistung</span>
+        <span>Dauer (Min)</span>
+        <span>Preis (€)</span>
+        <span></span>
+      </div>
       <div class="ob-services-list" id="servicesList">
         <!-- populated by JS based on sector -->
       </div>
@@ -202,7 +209,7 @@
     <form class="ob-form" id="whatsappForm">
       <label>
         <span>Geschäfts-Telefonnummer (mit +49…)</span>
-        <input type="tel" id="waNumber" required placeholder="+49 1522 8033834" />
+        <input type="tel" id="waNumber" required placeholder="+49 123 4567890" />
         <small class="ob-input-hint">Diese Nummer wird Ihr Bot-Eingang. Falls noch nicht bei Twilio registriert: nehmen Sie Kontakt auf — wir richten es im Onboarding-Call ein.</small>
       </label>
 
@@ -236,6 +243,11 @@
       <h1>Nachrichten anpassen</h1>
       <p>Diese Texte verwendet der Bot. Sie können sie jetzt oder später ändern.</p>
     </div>
+    <div class="ob-callout">
+      <strong>💡 Hinweis zu Variablen:</strong>
+      Bitte lassen Sie Platzhalter wie <code>{{name}}</code>, <code>{{time}}</code> oder <code>{{business}}</code> stehen — diese werden vom System automatisch durch den Namen des Kunden, die Termin-Uhrzeit oder Ihren Geschäftsnamen ersetzt.
+    </div>
+
     <form class="ob-form" id="templatesForm">
       <label>
         <span>Begrüßung</span>
@@ -253,6 +265,12 @@
         <span>Reaktivierung (60 Tage)</span>
         <textarea id="tplReactivation" rows="2">Hallo {{name}}, lange nichts gehört. Sollen wir wieder einen Termin vereinbaren?</textarea>
       </label>
+
+      <div class="ob-callout ob-callout-ai">
+        <strong>🤖 So funktioniert der Bot:</strong>
+        Diese Texte sind nur die <em>Eröffnungs-</em> und <em>Systemnachrichten</em>. Sobald ein Kunde antwortet, übernimmt die KI und führt das Gespräch in natürlicher Sprache weiter — sie bucht Termine, beantwortet Fragen und passt sich an den Tonfall des Kunden an.
+      </div>
+
       <div class="ob-actions">
         <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
         <button type="submit" class="ob-btn primary">Fertig — zum Dashboard →</button>
