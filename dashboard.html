@@ -339,6 +339,33 @@
             <p class="account-email"><strong id="acc-email">—</strong></p>
             <p class="account-plan" id="acc-plan-line">—</p>
           </div>
+
+          <!-- Abonnement -->
+          <div class="card">
+            <h3>Abonnement</h3>
+            <div id="sub-info" class="sub-info">
+              <p><span class="sub-label">Aktueller Plan:</span> <strong id="sub-plan">—</strong></p>
+              <p><span class="sub-label">Status:</span> <strong id="sub-status">—</strong></p>
+              <p><span class="sub-label">Abrechnungs-Intervall:</span> <strong id="sub-interval">—</strong></p>
+              <p id="sub-next-line"><span class="sub-label">Nächste Abrechnung:</span> <strong id="sub-next">—</strong></p>
+              <p id="sub-trial-line" hidden><span class="sub-label">Test-Phase endet:</span> <strong id="sub-trial">—</strong></p>
+            </div>
+            <div class="sub-actions">
+              <button type="button" id="sub-upgrade-btn" class="btn-primary">Plan ändern / Upgrade</button>
+              <button type="button" id="sub-portal-btn" class="btn-ghost">Karte / Rechnungen verwalten</button>
+              <button type="button" id="sub-cancel-btn" class="btn-danger">Abo kündigen</button>
+            </div>
+          </div>
+
+          <!-- Theme -->
+          <div class="card">
+            <h3>Erscheinungsbild</h3>
+            <div class="theme-toggle-row">
+              <button type="button" class="theme-opt" data-theme="dark"><span>🌙</span> Dunkel</button>
+              <button type="button" class="theme-opt" data-theme="light"><span>☀️</span> Hell</button>
+              <button type="button" class="theme-opt" data-theme="auto"><span>🖥️</span> System</button>
+            </div>
+          </div>
         </section>
       </main>
     </div>

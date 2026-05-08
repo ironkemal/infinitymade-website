@@ -801,6 +801,78 @@ function renderSettings() {
   const billingLabel = currentProfile.billing === 'annual' ? t.billing_annual : t.billing_monthly;
   const planName = currentProfile.plan ? currentProfile.plan.charAt(0).toUpperCase() + currentProfile.plan.slice(1) : '—';
   document.getElementById('acc-plan-line').textContent = `${t.plan_label} ${planName} (${billingLabel})`;
+
+  // Subscription block
+  const status = currentProfile.plan_status || 'pending';
+  const statusLabels = { pending: '⚠️ Kein Plan aktiviert', trial: '🟡 Test-Phase', active: '✓ Aktiv', past_due: '⚠️ Zahlung überfällig', canceled: '✗ Gekündigt', expired: '✗ Abgelaufen' };
+  document.getElementById('sub-plan').textContent = planName;
+  document.getElementById('sub-status').textContent = statusLabels[status] || status;
+  document.getElementById('sub-interval').textContent = currentProfile.billing_interval === 'year' ? 'Jährlich' : currentProfile.billing_interval === 'month' ? 'Monatlich' : '—';
+
+  const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+  const trialEl = document.getElementById('sub-trial-line');
+  const nextEl = document.getElementById('sub-next-line');
+  if (status === 'trial' && currentProfile.trial_ends_at) {
+    trialEl.hidden = false;
+    document.getElementById('sub-trial').textContent = fmt(currentProfile.trial_ends_at);
+    document.getElementById('sub-next').textContent = `Nach Test-Ende automatisch (${fmt(currentProfile.trial_ends_at)})`;
+  } else {
+    trialEl.hidden = true;
+    document.getElementById('sub-next').textContent = fmt(currentProfile.current_period_end);
+  }
+
+  // Action buttons visibility
+  const hasSub = !!currentProfile.stripe_subscription_id;
+  document.getElementById('sub-portal-btn').hidden = !hasSub;
+  document.getElementById('sub-cancel-btn').hidden = !hasSub || status === 'canceled';
+}
+
+async function openStripePortal() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch('/api/stripe/portal-session', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+    const d = await res.json();
+    if (d.url) window.location.href = d.url;
+    else alert('Portal-Sitzung konnte nicht geöffnet werden: ' + (d.error || 'Unbekannter Fehler'));
+  } catch (e) {
+    alert('Fehler: ' + e.message);
+  }
+}
+
+function bindSubscriptionActions() {
+  document.getElementById('sub-upgrade-btn')?.addEventListener('click', () => {
+    window.location.href = '/onboarding.html?step=plan';
+  });
+  document.getElementById('sub-portal-btn')?.addEventListener('click', openStripePortal);
+  document.getElementById('sub-cancel-btn')?.addEventListener('click', () => {
+    if (confirm('Möchten Sie Ihr Abo wirklich kündigen? Sie können bis zum Ende des Abrechnungszeitraums weiternutzen.')) {
+      openStripePortal(); // Stripe Portal handles cancellation
+    }
+  });
+}
+
+// Theme switcher
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === 'auto') {
+    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'dark' : 'light';
+  } else {
+    root.dataset.theme = theme;
+  }
+  localStorage.setItem('theme', theme);
+  document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+}
+
+function bindThemeToggle() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  applyTheme(saved);
+  document.querySelectorAll('.theme-opt').forEach(btn => {
+    btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+  });
 }
 
 /* ============ PANEL SWITCHING ============ */
@@ -910,6 +982,8 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
 /* ============ INIT ============ */
 applyI18n();
 bindLeadEvents();
+bindSubscriptionActions();
+bindThemeToggle();
 switchPanel('overview');
 
 document.getElementById('loading').style.display = 'none';
