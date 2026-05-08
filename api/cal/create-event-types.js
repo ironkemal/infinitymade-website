@@ -50,13 +50,13 @@ export default async function handler(req, res) {
       continue;
     }
 
-    const slug = `${businessSlug}-${slugify(svc.name)}`.slice(0, 80);
+    const slug = slugify(svc.name).slice(0, 80);
     const body = {
       title: svc.name,
       slug,
       lengthInMinutes: svc.duration_minutes || 30,
       description: svc.description || '',
-      hidden: true,
+      hidden: false, // visible on the customer's own cal.com profile page
     };
 
     const calRes = await fetch('https://api.cal.com/v2/event-types', {
