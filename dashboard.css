@@ -772,6 +772,7 @@ form select:focus {
 }
 
 /* ===== Dashboard banners ===== */
+.dash-banner[hidden], [hidden] { display: none !important; }
 .dash-banner {
   display: flex;
   align-items: center;
