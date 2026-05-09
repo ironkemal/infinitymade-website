@@ -59,7 +59,8 @@ services:
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      # Match only OUR calendar-api routes — leave /api/v1/* (n8n REST), /rest/* etc. for n8n itself.
+      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/booking`) || PathPrefix(`/api/calendar`) || PathPrefix(`/api/team`) || PathPrefix(`/api/verify-code`) || PathPrefix(`/api/health`))"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls=true"
       - "traefik.http.routers.api.tls.certresolver=le"
