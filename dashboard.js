@@ -173,7 +173,7 @@ let currentSession = null;
 /* ============ AUTH GUARD ============ */
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) {
-  window.location.href = '/login.html';
+  window.location.href = 'login.html';
   throw new Error('redirect');
 }
 currentSession = session;
@@ -271,7 +271,7 @@ function renderOverview() {
   // Open Stripe portal — falls back to plan selection if user has no subscription yet
   const openPortalOrUpgrade = async () => {
     if (!hasSubscription) {
-      window.location.href = '/onboarding.html?step=plan';
+      window.location.href = 'onboarding.html?step=plan';
       return;
     }
     try {
@@ -309,44 +309,7 @@ function renderOverview() {
   });
 }
 
-let calRendered = false;
-function renderCalendar() {
-  const container = document.getElementById('cal-inline');
-  const empty = document.getElementById('cal-empty');
-
-  // Multi-tenant: cal_username (preferred). Fallback: cal_link (legacy single-tenant).
-  let calLink = '';
-  if (currentProfile.cal_username) {
-    calLink = String(currentProfile.cal_username).trim().replace(/^\/+|\/+$/g, '');
-  } else if (currentProfile.cal_link) {
-    const m = currentProfile.cal_link.match(/cal\.com\/([^?#]+)/);
-    if (m) calLink = m[1].replace(/\/embed\/?$/, '').replace(/\/$/, '');
-  }
-
-  if (!calLink) {
-    container.style.display = 'none';
-    empty.hidden = false;
-    return;
-  }
-
-  container.style.display = 'block';
-  empty.hidden = true;
-
-  // Cal.com embed.js — init only once
-  if (!calRendered && typeof window.Cal === 'function') {
-    window.Cal("inline", {
-      elementOrSelector: "#cal-inline",
-      config: { layout: "month_view" },
-      calLink
-    });
-    window.Cal("ui", {
-      styles: { branding: { brandColor: "#22c55e" } },
-      hideEventTypeDetails: false,
-      layout: "month_view"
-    });
-    calRendered = true;
-  }
-}
+// Old Calendar code moved to kalender.js
 
 /* ============ LEADS CRUD ============ */
 let leadsCache = [];
@@ -842,7 +805,7 @@ async function openStripePortal() {
 
 function bindSubscriptionActions() {
   document.getElementById('sub-upgrade-btn')?.addEventListener('click', () => {
-    window.location.href = '/onboarding.html?step=plan';
+    window.location.href = 'onboarding.html?step=plan';
   });
   document.getElementById('sub-portal-btn')?.addEventListener('click', openStripePortal);
   document.getElementById('sub-cancel-btn')?.addEventListener('click', () => {
@@ -892,7 +855,7 @@ function switchPanel(id) {
     b.classList.toggle('active', b.dataset.panel === id);
   });
 
-  if (id === 'calendar') renderCalendar();
+  if (id === 'calendar') {} // Handled via link in HTML
   if (id === 'leads') renderLeads();
   if (id === 'whatsapp') renderWhatsApp();
   if (id === 'settings') renderSettings();
@@ -914,7 +877,7 @@ document.getElementById('langSelect').addEventListener('change', (e) => {
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await supabase.auth.signOut();
-  window.location.href = '/login.html';
+  window.location.href = 'login.html';
 });
 
 document.getElementById('hamburger').addEventListener('click', () => {

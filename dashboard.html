@@ -118,33 +118,8 @@
 
         <!-- KALENDER -->
         <section class="panel" id="panel-calendar" hidden>
-          <h2 data-i18n="calendar_title">Kalender</h2>
-          <p class="panel-sub" data-i18n="calendar_sub">Ihre Buchungen über Cal.com</p>
-
-          <div class="quick-actions">
-            <a href="https://app.cal.com/availability" target="_blank" rel="noopener" class="qa-btn">
-              <span class="qa-icon">🕒</span>
-              <span class="qa-label" data-i18n="qa_hours">Verfügbarkeit ändern</span>
-            </a>
-            <a href="https://app.cal.com/event-types" target="_blank" rel="noopener" class="qa-btn">
-              <span class="qa-icon">📝</span>
-              <span class="qa-label" data-i18n="qa_events">Event-Types bearbeiten</span>
-            </a>
-            <a href="https://app.cal.com/bookings" target="_blank" rel="noopener" class="qa-btn">
-              <span class="qa-icon">📋</span>
-              <span class="qa-label" data-i18n="qa_bookings">Alle Buchungen</span>
-            </a>
-            <a href="https://app.cal.com/settings/my-account/general" target="_blank" rel="noopener" class="qa-btn">
-              <span class="qa-icon">⚙️</span>
-              <span class="qa-label" data-i18n="qa_settings">Cal.com Einstellungen</span>
-            </a>
-          </div>
-
-          <div class="iframe-wrap">
-            <div id="cal-inline" style="width:100%;min-height:720px;"></div>
-            <div id="cal-empty" class="empty-state" hidden>
-              <p data-i18n="cal_empty">Ihr Kalender wird gerade eingerichtet. Bitte kontaktieren Sie uns.</p>
-            </div>
+          <div style="height: calc(100vh - 100px); width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            <iframe src="kalender.html" style="width: 100%; height: 100%; border: none;"></iframe>
           </div>
         </section>
 
@@ -371,11 +346,7 @@
     </div>
   </div>
 
-  <!-- Cal.com embed script (loaded once, used by dashboard.js when Kalender panel opens) -->
-  <script type="text/javascript">
-  (function(C,A,L){let p=function(a,ar){a.q.push(ar)};let d=C.document;C.Cal=C.Cal||function(){let cal=C.Cal;let ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){const api=function(){p(api,arguments)};const namespace=ar[1];api.q=api.q||[];typeof namespace==="string"?(cal.ns[namespace]=api)&&p(api,ar):p(cal,ar);return}p(cal,ar)};})(window,"https://app.cal.com/embed/embed.js","init");
-  Cal("init",{origin:"https://cal.com"});
-  </script>
+  <!-- Calendar API handled via custom Node.js Backend -->
 
   <script type="module" src="dashboard.js?v=20260509c"></script>
 </body>

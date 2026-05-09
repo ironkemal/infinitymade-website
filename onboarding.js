@@ -114,7 +114,7 @@ async function init() {
       stepName = profile?.onboarding_step || 'business';
     }
     if (stepName === 'done') {
-      window.location.href = '/dashboard.html';
+      window.location.href = 'dashboard.html';
       return;
     }
     goToStep(STEPS.indexOf(stepName));
@@ -677,7 +677,7 @@ function bindPlan() {
 // ---- Helpers ----
 async function logout() {
   await supabase.auth.signOut();
-  window.location.href = '/index.html';
+  window.location.href = 'index.html';
 }
 
 function showError(msg) {

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infinity Calendar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.11/index.global.min.js'></script>
+  <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js'></script>
+  <style>
+    :root {
+      --bg-main: #0f1115; --bg-card: rgba(25, 28, 36, 0.6); --primary: #22c55e;
+      --primary-glow: rgba(34, 197, 94, 0.3); --text-main: #f8fafc; --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08); --danger: #ef4444; --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Outfit', sans-serif; background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 15% 50%, rgba(34, 197, 94, 0.08), transparent 25%), radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.05), transparent 25%); }
+    .sidebar { width: 260px; background: rgba(15, 17, 21, 0.8); backdrop-filter: blur(20px); border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; z-index: 10; }
+    .brand { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+    .brand span { color: var(--primary); }
+    .nav-item { padding: 12px 16px; border-radius: 10px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; transition: all 0.3s ease; cursor: pointer; font-weight: 500; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .nav-item.active { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
+    .main { flex: 1; padding: 40px; overflow-y: auto; position: relative; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+    .header h1 { font-size: 32px; font-weight: 600; }
+    .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
+    .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .glass-card { background: var(--bg-card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
+    .card-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .card-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+    .btn { padding: 10px 20px; border-radius: 8px; font-family: inherit; font-weight: 500; cursor: pointer; border: none; font-size: 14px; transition: all 0.2s;}
+    .btn-primary { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--primary-glow); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
+    .btn-outline:hover { background: rgba(255,255,255,0.05); }
+    .btn-danger { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); text-transform: uppercase; }
+    .input-control { width: 100%; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; outline: none; }
+    #loader { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid { border-color: var(--border); }
+    .fc-col-header-cell { background: rgba(0,0,0,0.2); padding: 10px 0; }
+    .fc .fc-button-primary { background-color: var(--primary); border-color: var(--primary); color: #000; font-family: 'Outfit'; font-weight: 600; text-transform: capitalize;}
+    .fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled).fc-button-active { background-color: #16a34a; border-color: #16a34a; color:#000; }
+    .fc-event { border-radius: 6px; border: none; padding: 2px 4px; font-size: 12px; cursor: pointer;}
+    .fc-event-title { font-weight: 600; }
+    .fc-timegrid-slot { height: 40px; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 50; display: none; justify-content: center; align-items: center; }
+    .modal-backdrop.show { display: flex; }
+    .modal-card { background: #1a1d24; border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; width: 100%; max-width: 500px; }
+    .lang-switch { display: flex; gap: 10px; margin-bottom: 20px; }
+    .lang-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 12px; }
+    .lang-btn.active { background: var(--primary); color: #000; border-color: var(--primary); font-weight: bold; }
+    
+    /* Custom Checkboxes */
+    input[type="checkbox"] { appearance: none; background-color: rgba(0,0,0,0.3); margin: 0; font: inherit; color: currentColor; width: 1.3em; height: 1.3em; border: 1px solid var(--border); border-radius: 4px; display: grid; place-content: center; cursor: pointer; transition: 0.2s; }
+    input[type="checkbox"]::before { content: ""; width: 0.75em; height: 0.75em; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em #000; background-color: #000; transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+    input[type="checkbox"]:checked { background-color: var(--primary); border-color: var(--primary); }
+    input[type="checkbox"]:checked::before { transform: scale(1); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      body { flex-direction: column; height: 100vh; overflow: auto; }
+      .sidebar { width: 100%; padding: 20px; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+      .brand { margin-bottom: 0; width: 100%; text-align: center; justify-content: center; }
+      .lang-switch { margin-bottom: 0; }
+      .nav-item { margin-bottom: 0; padding: 8px 12px; }
+      .nav-item span { display: none; } /* Hide text on mobile nav */
+      .main { padding: 20px; overflow-y: visible; flex: none; height: auto; }
+      .header { flex-direction: column; gap: 15px; align-items: flex-start; }
+      .fc-toolbar { flex-direction: column; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <div class="spinner"></div>
+    <div style="margin-top:20px; color:var(--text-muted); font-size:14px; letter-spacing:1px;" id="lbl-loading">LÄDT...</div>
+  </div>
+
+  <div class="sidebar">
+    <div class="brand">Infinity <span>Calendar</span></div>
+    
+    <div class="lang-switch">
+      <button class="lang-btn active" data-lang="de">DE</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="tr">TR</button>
+    </div>
+    
+    <div class="nav-item active" data-target="view-calendar">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      <span id="nav-calendar">Kalender</span>
+    </div>
+    
+    <div class="nav-item owner-only" data-target="view-team" style="display:none;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <span id="nav-team">Mitarbeiter</span>
+    </div>
+
+    <div class="nav-item owner-only" data-target="view-services" style="display:none;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      <span id="nav-services">Dienstleistungen</span>
+    </div>
+    
+    <div class="nav-item" data-target="view-hours">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+      <span id="nav-hours">Meine Arbeitszeiten</span>
+    </div>
+
+    <div class="nav-item" data-target="view-integrations">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+      <span id="nav-integrations">Integrationen</span>
+    </div>
+
+    <div class="nav-item" data-target="view-booking">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      <span>Buchungsseite</span>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);">
+      <div style="padding: 10px 15px; margin-bottom: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+        <div style="font-size: 13px; color: var(--text-muted);">Eingeloggt als</div>
+        <div id="sidebar-user-name" style="font-weight: 600; color: #fff; font-size: 14px; margin-top: 2px;">Laden...</div>
+        <div id="sidebar-user-role" style="font-size: 11px; color: var(--primary); text-transform: uppercase; margin-top: 2px;">Role</div>
+      </div>
+      
+      <a href="dashboard.html" class="nav-item" style="color:var(--text-muted); margin-bottom: 5px;">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span id="nav-dashboard">Zum Dashboard</span>
+      </a>
+      
+      <div class="nav-item" id="btn-logout" style="color:#ef4444; margin-bottom: 0;">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span>Abmelden</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- CALENDAR VIEW -->
+    <div id="view-calendar" class="view-section active">
+      <div class="header">
+        <div>
+          <h1 id="title-calendar">Kalender</h1>
+          <p class="card-sub" style="margin:0;" id="sub-calendar">Klicken Sie in den Kalender, um einen Termin zu erstellen.</p>
+        </div>
+        <div>
+           <button class="btn btn-primary" id="btn-add-leave">Abwesenheit (Urlaub) eintragen</button>
+        </div>
+      </div>
+      <div class="glass-card" style="padding: 10px;">
+        <div id="fullcalendar"></div>
+      </div>
+    </div>
+
+    <!-- TEAM VIEW -->
+    <div id="view-team" class="view-section">
+      <div class="header">
+        <div>
+          <h1 id="title-team">Team</h1>
+        </div>
+      </div>
+      <div class="glass-card" style="background: rgba(34, 197, 94, 0.1); border-color: var(--primary);">
+        <h3 class="card-title" style="color:var(--primary);" id="lbl-invite-code">Unternehmens-Code</h3>
+        <p class="card-sub" id="sub-invite-code">Mitarbeiter können sich mit diesem Code registrieren.</p>
+        <div style="font-size: 32px; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px;" id="company-code-display">...</div>
+      </div>
+      <div class="glass-card">
+        <h3 class="card-title" id="lbl-emp-list">Ihre Mitarbeiter</h3>
+        <div id="team-list">Lädt...</div>
+      </div>
+    </div>
+
+    <!-- SERVICES VIEW -->
+    <div id="view-services" class="view-section">
+      <div class="header"><div><h1 id="title-services">Dienstleistungen</h1></div></div>
+      <div class="glass-card">
+        <h3 class="card-title" id="lbl-add-service">Neue Dienstleistung</h3>
+        <form id="form-service">
+          <div class="input-group">
+            <label id="lbl-srv-title">Name der Dienstleistung</label>
+            <input type="text" id="srv-title" class="input-control" required>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div class="input-group"><label id="lbl-srv-dur">Dauer (Minuten)</label><input type="number" id="srv-duration" class="input-control" value="30" required></div>
+            <div class="input-group"><label id="lbl-srv-price">Preis</label><input type="text" id="srv-price" class="input-control"></div>
+          </div>
+          <div class="input-group">
+            <label id="lbl-srv-emps">Welche Mitarbeiter bieten das an?</label>
+            <div id="service-employee-checkboxes" style="background:rgba(0,0,0,0.3); padding:15px; border-radius:8px; border:1px solid var(--border);"></div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-srv-save">Speichern</button>
+        </form>
+      </div>
+      <div class="glass-card">
+        <h3 class="card-title" id="lbl-srv-list">Gespeicherte Dienstleistungen</h3>
+        <div id="services-list">Lädt...</div>
+      </div>
+    </div>
+
+    <!-- HOURS VIEW -->
+    <div id="view-hours" class="view-section">
+      <div class="header">
+        <div><h1 id="title-hours">Arbeitszeiten</h1></div>
+        <button id="btn-save-hours" class="btn btn-primary">Speichern</button>
+      </div>
+      <div class="glass-card"><div id="hours-container"></div></div>
+    </div>
+
+    <!-- INTEGRATIONS VIEW -->
+    <div id="view-integrations" class="view-section">
+      <div class="header"><div><h1 id="title-integrations">Integrationen</h1></div></div>
+      <div class="glass-card">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div style="width: 48px; height: 48px; background: #fff; border-radius: 12px; display: flex; justify-content: center; align-items: center;">
+            <svg width="24" height="24" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
+          </div>
+          <div style="flex:1;">
+            <h3 style="font-size:18px; margin-bottom:4px;">Google Calendar & Meet</h3>
+            <p style="font-size:13px; color:var(--text-muted);" id="sub-google">Termine werden synchronisiert und Google Meet Links automatisch erstellt.</p>
+          </div>
+          <div>
+            <div id="google-status" style="display:inline-block; margin-right:10px; padding: 5px 12px; border-radius: 20px; font-size:12px;">Getrennt</div>
+            <button id="google-connect-btn" class="btn btn-outline">Verbinden</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKING PAGE VIEW -->
+    <div id="view-booking" class="view-section">
+      <div class="header">
+        <div>
+          <h1>Buchungsseite</h1>
+          <p class="card-sub" style="margin:0;">Hier können Sie Ihren Buchungslink sehen und kopieren.</p>
+        </div>
+      </div>
+      
+      <div class="glass-card" style="padding: 20px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center;">
+        <input type="text" id="booking-url-input" readonly style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-family: inherit;">
+        <button class="btn btn-primary" id="btn-copy-link">Link kopieren</button>
+        <a href="#" id="btn-open-link" target="_blank" class="btn btn-outline" style="text-decoration:none;">Im neuen Tab öffnen ↗</a>
+      </div>
+
+      <div class="glass-card" style="padding: 0; overflow: hidden; height: 700px;">
+        <iframe id="booking-preview-iframe" src="" style="width: 100%; height: 100%; border: none; background: #0f1115;"></iframe>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LEAVE MODAL -->
+  <div class="modal-backdrop" id="leave-modal">
+    <div class="modal-card">
+      <h3 style="margin-bottom:20px;" id="lbl-leave-title">Abwesenheit (Urlaub) eintragen</h3>
+      <form id="leave-form">
+        <div class="input-group">
+          <label id="lbl-leave-emp">Für wen?</label>
+          <select id="leave-employee" class="input-control" required></select>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+          <div class="input-group"><label id="lbl-leave-start">Start</label><input type="date" id="leave-start" class="input-control" required></div>
+          <div class="input-group"><label id="lbl-leave-end">Ende</label><input type="date" id="leave-end" class="input-control" required></div>
+        </div>
+        <div class="input-group"><label id="lbl-leave-reason">Grund</label><input type="text" id="leave-reason" class="input-control" placeholder="z.B. Urlaub, Krank"></div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-outline" id="btn-leave-cancel" onclick="document.getElementById('leave-modal').classList.remove('show')">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" id="btn-leave-save">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MANUAL BOOKING MODAL -->
+  <div class="modal-backdrop" id="manual-modal">
+    <div class="modal-card">
+      <h3 style="margin-bottom:20px;" id="lbl-manual-title">Neuer Termin</h3>
+      <form id="manual-form">
+        <div class="input-group">
+          <label id="lbl-manual-emp">Mitarbeiter</label>
+          <select id="manual-employee" class="input-control" required></select>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+          <div class="input-group"><label id="lbl-manual-start">Von</label><input type="time" id="manual-start" class="input-control" required></div>
+          <div class="input-group"><label id="lbl-manual-end">Bis</label><input type="time" id="manual-end" class="input-control" required></div>
+        </div>
+        <div class="input-group">
+          <label id="lbl-manual-cust">Kundenname</label>
+          <input type="text" id="manual-customer" class="input-control" required>
+        </div>
+        <div class="input-group">
+          <label id="lbl-manual-phone">Telefon</label>
+          <input type="text" id="manual-phone" class="input-control">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" class="btn btn-outline" id="btn-manual-cancel" onclick="document.getElementById('manual-modal').classList.remove('show')">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" id="btn-manual-save">Termin eintragen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="kalender.js?v=20260509_v3"></script>
+</body>
+</html>
