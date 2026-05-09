@@ -52,21 +52,42 @@ services:
     networks:
       - web
 
-  api-proxy:
-    image: alpine/socat
-    container_name: api-proxy
-    command: tcp-listen:3000,fork,reuseaddr tcp-connect:172.17.0.1:3000
+  calendar-api:
+    image: ghcr.io/ironkemal/infinitymade-website/calendar-api:latest
+    container_name: calendar-api
     restart: unless-stopped
+    pull_policy: always
+    env_file:
+      - ./.env.calendar
     labels:
       - traefik.enable=true
-      # Match only OUR calendar-api routes — leave /api/v1/* (n8n REST), /rest/* etc. for n8n itself.
+      # Only our calendar-api paths — leave the rest (incl. /api/v1/* for n8n REST) to n8n.
       - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/booking`) || PathPrefix(`/api/calendar`) || PathPrefix(`/api/team`) || PathPrefix(`/api/verify-code`) || PathPrefix(`/api/health`))"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls=true"
       - "traefik.http.routers.api.tls.certresolver=le"
       - "traefik.http.services.api.loadbalancer.server.port=3000"
+      - com.centurylinklabs.watchtower.enable=true
     networks:
       - web
+
+  # Auto-redeploy: polls GHCR every 60s, pulls new image, restarts container.
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - --interval=60
+      - --cleanup
+      - --label-enable
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+    networks:
+      - web
+
+# Tag containers we want auto-updated; n8n stays manual.
 
 networks:
   web:
