@@ -8,6 +8,7 @@ const urlParams = new URLSearchParams(window.location.search);
 let identifier = urlParams.get('u') || urlParams.get('c'); 
 
 let state = {
+  ownerId: null,
   companyName: null,
   employeeId: null,
   employeeName: null,
@@ -45,17 +46,17 @@ async function init() {
     return;
   }
 
-  // Load Company Profile by slug or ID
-  let query = supabase.from('profiles').select('id, business_name, cal_username');
+  // Load Company Profile by UUID or company_code
+  let query = supabase.from('profiles').select('id, business_name, company_code');
   if (isUUID(identifier)) {
     query = query.eq('id', identifier);
   } else {
-    query = query.eq('cal_username', identifier);
+    query = query.eq('company_code', identifier.toUpperCase());
   }
-  
-  const { data: profile } = await query.single();
-  let actualCompanyId = profile ? profile.id : null;
+
+  const { data: profile } = await query.maybeSingle();
   if (profile && profile.business_name) {
+    state.ownerId = profile.id;
     state.companyName = profile.business_name;
     document.getElementById('bizName').textContent = profile.business_name;
     document.getElementById('bizLogo').textContent = profile.business_name.charAt(0).toUpperCase();
@@ -67,7 +68,7 @@ async function init() {
   // Load Employees (Owner + their employees)
   const { data: employees, error } = await supabase.from('profiles')
     .select('id, business_name, email, role')
-    .or(`id.eq.${actualCompanyId},owner_id.eq.${actualCompanyId}`);
+    .or(`id.eq.${state.ownerId},owner_id.eq.${state.ownerId}`);
     
   const eList = document.getElementById('publicEmployeeList');
   if (error || !employees || employees.length === 0) {
@@ -234,7 +235,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (e) => {
   submitBtn.textContent = 'Wird gebucht...';
   
   const payload = {
-    ownerId: actualCompanyId,
+    ownerId: state.ownerId,
     userId: state.employeeId,
     serviceId: state.serviceId,
     date: state.selectedDate,
