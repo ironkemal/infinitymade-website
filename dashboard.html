@@ -8,12 +8,13 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#7c3aed" />
+  <meta name="theme-color" content="#22c55e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="dashboard.css?v=20260509b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260510b" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
 </head>
 <body>
   <div id="loading" class="loading-screen">
@@ -21,16 +22,15 @@
   </div>
 
   <div id="app" style="display:none;">
-    <!-- HEADER -->
     <header class="topbar">
       <div class="topbar-left">
-        <button class="hamburger" id="hamburger" aria-label="Menu">
+        <button class="hamburger" id="hamburger" aria-label="Menü">
           <span></span><span></span><span></span>
         </button>
         <a href="/" class="brand">InfinityMade</a>
+        <span class="biz-name" id="bizName"></span>
       </div>
       <div class="topbar-right">
-        <span class="biz-name" id="bizName">—</span>
         <select id="langSelect" class="lang-select">
           <option value="de">DE</option>
           <option value="en">EN</option>
@@ -41,56 +41,59 @@
     </header>
 
     <div class="dashboard-layout">
-      <!-- SIDEBAR -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
       <aside class="sidebar" id="sidebar">
         <nav id="sidebarNav"></nav>
       </aside>
 
-      <!-- MAIN -->
-      <main class="main-area">
-        <!-- Welcome banner (after Stripe success) -->
+      <main class="main-area" id="mainArea">
+
         <div id="welcome-banner" class="dash-banner welcome" hidden>
           <div class="dash-banner-icon">🎉</div>
           <div class="dash-banner-content">
             <strong>Willkommen bei InfinityMade!</strong>
-            <p>Ihr 14-tägiger Test läuft. Wir richten gerade Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.</p>
+            <p>Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.</p>
           </div>
-          <button class="dash-banner-close" onclick="document.getElementById('welcome-banner').hidden=true">✕</button>
+          <button class="dash-banner-close" onclick="this.closest('.dash-banner').hidden=true">✕</button>
         </div>
 
-        <!-- No-plan banner (pending, no subscription yet) -->
         <div id="noplan-banner" class="dash-banner pending" hidden>
           <div class="dash-banner-icon">📦</div>
           <div class="dash-banner-content">
             <strong>Wählen Sie Ihren Plan</strong>
-            <p>Sie haben noch keinen Plan aktiviert. Wählen Sie jetzt einen Plan und starten Sie 14 Tage kostenlos.</p>
+            <p>Noch kein Plan aktiviert. Starten Sie 14 Tage kostenlos.</p>
           </div>
-          <a id="noplan-btn" href="/onboarding.html?step=plan" class="dash-banner-action">Plan wählen</a>
+          <a href="/onboarding.html?step=plan" class="dash-banner-action">Plan wählen</a>
         </div>
 
-        <!-- Trial countdown banner -->
         <div id="trial-banner" class="dash-banner trial" hidden>
           <div class="dash-banner-icon">⏱️</div>
           <div class="dash-banner-content">
             <strong>Test-Phase: <span id="trial-days-left">—</span> Tage übrig</strong>
-            <p>Nach Ablauf der Testphase wird Ihre Karte mit dem gewählten Plan belastet. Sie können jederzeit kündigen.</p>
+            <p>Nach Ablauf der Testphase wird Ihre Karte belastet. Jederzeit kündbar.</p>
           </div>
-          <button id="trial-manage-btn" class="dash-banner-action">Abo verwalten</button>
+          <button class="dash-banner-action" id="trial-manage-btn">Abo verwalten</button>
         </div>
 
-        <!-- Past-due banner -->
         <div id="pastdue-banner" class="dash-banner pastdue" hidden>
           <div class="dash-banner-icon">⚠️</div>
           <div class="dash-banner-content">
             <strong>Zahlung fehlgeschlagen</strong>
-            <p>Ihre letzte Zahlung konnte nicht abgebucht werden. Bitte aktualisieren Sie Ihre Zahlungsmethode, sonst wird der Account in Kürze deaktiviert.</p>
+            <p>Bitte aktualisieren Sie Ihre Zahlungsmethode.</p>
           </div>
-          <button id="pastdue-fix-btn" class="dash-banner-action">Karte aktualisieren</button>
+          <button class="dash-banner-action" id="pastdue-fix-btn">Karte aktualisieren</button>
         </div>
 
-        <!-- ÜBERSICHT -->
-        <section class="panel" id="panel-overview">
-          <h2 data-i18n="overview_title">Übersicht</h2>
+        <!-- ===== PANEL 1: ÜBERSICHT ===== -->
+        <section class="panel active" id="panel-overview">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_overview">Übersicht</h2>
+              <p class="panel-sub" data-i18n="overview_sub">Ihr heutiger Überblick</p>
+            </div>
+          </div>
+
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label" data-i18n="kpi_plan">Paket</div>
@@ -101,8 +104,9 @@
               <div class="kpi-value" id="kpi-status">—</div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label" data-i18n="kpi_since">Aktiv seit</div>
-              <div class="kpi-value" id="kpi-since">—</div>
+              <div class="kpi-label" data-i18n="kpi_today_bookings">Heute</div>
+              <div class="kpi-value kpi-green" id="kpi-today">—</div>
+              <div class="kpi-sub" data-i18n="kpi_today_sub">Termine</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label" data-i18n="kpi_support">Support</div>
@@ -110,244 +114,557 @@
             </div>
           </div>
 
-          <div class="card features-card">
-            <h3 data-i18n="features_title">Was ist in Ihrem Paket enthalten?</h3>
+          <div class="today-section">
+            <div class="section-title" data-i18n="today_bookings">Heutige Termine</div>
+            <div class="card upcoming-bookings-card">
+              <div id="upcoming-bookings-loading" class="upcoming-loading"><div class="spinner-sm"></div></div>
+              <div id="upcoming-bookings-empty" class="upcoming-empty" hidden>
+                <p data-i18n="upcoming_empty">Heute keine Termine.</p>
+              </div>
+              <ul id="upcoming-bookings-list" class="upcoming-list" hidden></ul>
+            </div>
+          </div>
+
+          <div class="card features-card" style="margin-top:20px;">
+            <div class="card-title" data-i18n="features_title">Was ist in Ihrem Paket enthalten?</div>
             <ul id="featureList" class="feature-list"></ul>
           </div>
         </section>
 
-        <!-- KALENDER -->
-        <section class="panel" id="panel-calendar" hidden>
-          <div style="height: calc(100vh - 100px); width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
-            <iframe src="kalender.html" style="width: 100%; height: 100%; border: none;"></iframe>
+        <!-- ===== PANEL 2: KALENDER ===== -->
+        <section class="panel" id="panel-calendar">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_calendar">Kalender</h2>
+              <p class="panel-sub" data-i18n="calendar_sub">Klicken Sie auf einen Tag für Slots</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-ghost" id="calAddLeaveBtn" data-i18n="btn_add_leave">Abwesenheit eintragen</button>
+              <button class="btn-primary" id="calAddBookingBtn" data-i18n="btn_add_booking">+ Termin</button>
+            </div>
+          </div>
+
+          <div class="calendar-wrap">
+            <div class="calendar-main">
+              <div id="calendarEl"></div>
+            </div>
+            <div class="slot-panel" id="slotPanel">
+              <div class="slot-panel-inner">
+                <div class="slot-panel-header">
+                  <span class="slot-panel-date" id="slotDate"></span>
+                  <button class="btn-icon" id="slotPanelClose">✕</button>
+                </div>
+                <div id="slotList"></div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- LEADS -->
-        <section class="panel" id="panel-leads" hidden>
+        <!-- ===== PANEL 3: KUNDEN INFO ===== -->
+        <section class="panel" id="panel-kunden">
           <div class="panel-header">
             <div>
-              <h2 data-i18n="leads_title">Leads</h2>
-              <p class="panel-sub" data-i18n="leads_sub">Verwalten Sie Ihre Anfragen</p>
+              <h2 data-i18n="nav_kunden">Kunden Info</h2>
+              <p class="panel-sub" data-i18n="kunden_sub">Leads & Kundeninformationen</p>
             </div>
             <div class="panel-actions">
               <input type="file" id="csvFile" accept=".csv,.json" hidden />
-              <button class="btn-ghost" id="csvImportBtn" data-i18n="leads_import">CSV / JSON importieren</button>
+              <button class="btn-ghost" id="csvImportBtn" data-i18n="leads_import">CSV importieren</button>
               <button class="btn-primary" id="leadAddBtn" data-i18n="leads_add">+ Neuer Lead</button>
             </div>
           </div>
 
-          <div id="leads-content">
-            <div class="lead-filters">
-              <button class="lf-btn active" data-status="all" data-i18n="lf_all">Alle</button>
-              <button class="lf-btn" data-status="new" data-i18n="lf_new">Neu</button>
-              <button class="lf-btn" data-status="contacted" data-i18n="lf_contacted">Kontaktiert</button>
-              <button class="lf-btn" data-status="booked" data-i18n="lf_booked">Termin</button>
-              <button class="lf-btn" data-status="won" data-i18n="lf_won">Gewonnen</button>
-              <button class="lf-btn" data-status="lost" data-i18n="lf_lost">Verloren</button>
-            </div>
+          <div class="apify-bar">
+            <span class="apify-label" data-i18n="apify_label">Google Maps Scraper:</span>
+            <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt Berlin" />
+            <input class="form-input" style="width:100px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
+            <button class="btn-primary" id="apifyRunBtn" data-i18n="apify_run">Suchen</button>
+          </div>
 
-            <div class="card lead-table-card">
+          <div class="filter-bar">
+            <button class="filter-btn active" data-status="all" data-i18n="lf_all">Alle</button>
+            <button class="filter-btn" data-status="new" data-i18n="lf_new">Neu</button>
+            <button class="filter-btn" data-status="contacted" data-i18n="lf_contacted">Kontaktiert</button>
+            <button class="filter-btn" data-status="booked" data-i18n="lf_booked">Termin</button>
+            <button class="filter-btn" data-status="won" data-i18n="lf_won">Gewonnen</button>
+            <button class="filter-btn" data-status="lost" data-i18n="lf_lost">Verloren</button>
+            <input class="search-input" id="leadSearch" type="text" placeholder="Suchen..." />
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="lead_title">Name</th>
+                  <th data-i18n="lead_city">Stadt</th>
+                  <th data-i18n="lead_phone">Telefon</th>
+                  <th data-i18n="lead_rating">Bewertung</th>
+                  <th data-i18n="lead_status">Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="leadTableBody"></tbody>
+            </table>
+            <div id="leadEmpty" class="table-empty" hidden data-i18n="leads_empty">Noch keine Leads.</div>
+          </div>
+        </section>
+
+        <!-- ===== PANEL 4: DIENSTLEISTUNGEN ===== -->
+        <section class="panel" id="panel-services">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_services">Dienstleistungen</h2>
+              <p class="panel-sub" data-i18n="services_sub">Angebotene Leistungen verwalten</p>
+            </div>
+          </div>
+
+          <div id="servicesGrid" class="services-grid"></div>
+
+          <div class="add-service-form" id="addServiceForm">
+            <h3 data-i18n="lbl_add_service">Neue Dienstleistung</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_srv_title">Name</label>
+                <input class="form-input" id="srvTitle" type="text" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_srv_dur">Dauer (Min)</label>
+                <input class="form-input" id="srvDur" type="number" value="30" min="5" step="5" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_srv_price">Preis (€)</label>
+                <input class="form-input" id="srvPrice" type="number" value="0" min="0" step="0.5" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_srv_color">Farbe</label>
+                <input class="form-input" id="srvColor" type="color" value="#22c55e" style="height:38px;padding:2px 4px;" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_srv_emps">Mitarbeiter</label>
+              <div id="srvEmpCheckboxes" class="employee-checkboxes"></div>
+            </div>
+            <button class="btn-primary" id="srvSaveBtn" data-i18n="btn_srv_save">Speichern</button>
+          </div>
+        </section>
+
+        <!-- ===== PANEL 5: ARBEITSZEITEN ===== -->
+        <section class="panel" id="panel-hours">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_hours">Arbeitszeiten</h2>
+              <p class="panel-sub" data-i18n="hours_sub">Öffnungszeiten je Mitarbeiter</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-primary" id="hoursSaveBtn" data-i18n="btn_save_hours">Speichern</button>
+            </div>
+          </div>
+
+          <div class="hours-employee-select">
+            <span data-i18n="hours_for">Für:</span>
+            <select class="form-select" id="hoursEmpSelect"></select>
+          </div>
+
+          <div class="hours-grid" id="hoursGrid"></div>
+        </section>
+
+        <!-- ===== PANEL 6: MITARBEITER ===== -->
+        <section class="panel" id="panel-team">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_team">Mitarbeiter</h2>
+              <p class="panel-sub" data-i18n="team_sub">Team verwalten</p>
+            </div>
+          </div>
+
+          <div class="card invite-card" style="margin-bottom:16px;">
+            <div>
+              <div class="kpi-label" data-i18n="lbl_invite_code">Unternehmens-Code</div>
+              <div class="invite-code" id="inviteCode">—</div>
+              <div class="invite-hint" data-i18n="sub_invite_code">Mitarbeiter können sich mit diesem Code registrieren.</div>
+            </div>
+            <button class="btn-ghost" id="copyInviteBtn" style="margin-left:auto;" data-i18n="btn_copy">Kopieren</button>
+          </div>
+
+          <div id="teamListView">
+            <div id="employeeList" class="employee-list"></div>
+          </div>
+
+          <div id="teamDetailView" hidden>
+            <div class="emp-detail">
+              <div class="emp-detail-header">
+                <button class="emp-detail-back btn-icon" id="empDetailBack">←</button>
+                <div class="emp-avatar" id="empDetailAvatar"></div>
+                <div class="emp-info">
+                  <div class="emp-name" id="empDetailName"></div>
+                  <div class="emp-role" id="empDetailRole"></div>
+                </div>
+                <button class="btn-danger" id="empRemoveBtn" style="margin-left:auto;" data-i18n="btn_remove">Entfernen</button>
+              </div>
+              <div class="tab-bar">
+                <button class="tab-btn active" data-tab="info" data-i18n="tab_info">Info</button>
+                <button class="tab-btn" data-tab="hours" data-i18n="nav_hours">Arbeitszeiten</button>
+                <button class="tab-btn" data-tab="services" data-i18n="nav_services">Dienstleistungen</button>
+              </div>
+              <div class="tab-content active" id="tab-info">
+                <div class="form-group">
+                  <label class="form-label">E-Mail</label>
+                  <div id="empDetailEmail" style="color:var(--text-muted);font-size:14px;"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" data-i18n="lbl_google_cal">Google Kalender</label>
+                  <div id="empGoogleStatus" style="font-size:13px;color:var(--text-muted);"></div>
+                </div>
+              </div>
+              <div class="tab-content" id="tab-hours">
+                <div class="hours-grid" id="empHoursGrid"></div>
+                <button class="btn-primary" id="empHoursSaveBtn" data-i18n="btn_save_hours">Speichern</button>
+              </div>
+              <div class="tab-content" id="tab-services">
+                <div id="empServicesGrid" class="employee-checkboxes"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PANEL 7: B2B ===== -->
+        <section class="panel" id="panel-b2b">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_b2b">B2B</h2>
+              <p class="panel-sub" data-i18n="b2b_sub">Geschäftskontakte & KI-Assistent</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-primary" id="b2bAddBtn" data-i18n="b2b_add">+ Kontakt</button>
+            </div>
+          </div>
+
+          <div class="b2b-layout">
+            <div>
+              <div class="filter-bar" style="margin-bottom:12px;">
+                <input class="search-input" id="b2bSearch" type="text" placeholder="Suchen..." style="margin-left:0;width:220px;" />
+              </div>
               <div class="table-wrap">
-                <table class="lead-table">
-                  <thead id="leadTableHead"></thead>
-                  <tbody id="leadTableBody"></tbody>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="b2b_company">Unternehmen</th>
+                      <th data-i18n="b2b_contact">Ansprechpartner</th>
+                      <th data-i18n="lead_phone">Telefon</th>
+                      <th data-i18n="b2b_status">Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="b2bTableBody"></tbody>
                 </table>
-              </div>
-              <div id="leadEmpty" class="lead-empty" hidden>
-                <p data-i18n="leads_empty">Noch keine Leads. Klicken Sie auf "Neuer Lead" oder "CSV importieren", um zu starten.</p>
+                <div id="b2bEmpty" class="table-empty" hidden data-i18n="b2b_empty">Noch keine B2B-Kontakte.</div>
               </div>
             </div>
-          </div>
 
-          <div id="leads-upgrade" class="upgrade-card" hidden>
-            <div class="upgrade-icon">🔒</div>
-            <h3 data-i18n="upgrade_title">Verfügbar ab Professional</h3>
-            <p data-i18n="upgrade_msg">Das Leads-Dashboard ist Teil der Professional- und Klinik-Pakete.</p>
-            <a href="/#pricing" class="btn-primary" data-i18n="upgrade_cta">Paket upgraden</a>
+            <div class="ai-chat-card">
+              <div class="ai-chat-header">
+                <div class="ai-dot"></div>
+                <span data-i18n="b2b_ai_title">KI-Assistent</span>
+              </div>
+              <div class="ai-messages" id="aiMessages">
+                <div class="msg-bubble ai" data-i18n="b2b_ai_welcome">Hallo! Ich helfe Ihnen bei B2B-Anfragen. Fügen Sie einen Kontakt ein oder stellen Sie eine Frage.</div>
+              </div>
+              <div class="ai-input-row">
+                <textarea id="aiInput" placeholder="Nachricht..." rows="1"></textarea>
+                <button class="btn-primary" id="aiSendBtn">→</button>
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- LEAD MODAL -->
-        <div class="modal-backdrop" id="leadModal" hidden>
-          <div class="modal-card">
-            <div class="modal-head">
-              <h3 id="leadModalTitle" data-i18n="lead_modal_new">Neuer Lead</h3>
-              <button class="modal-close" id="leadModalClose">×</button>
+        <!-- ===== PANEL 8: EINSTELLUNGEN ===== -->
+        <section class="panel" id="panel-settings">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_settings">Einstellungen</h2>
             </div>
-            <form id="leadForm">
-              <input type="hidden" id="lead-id" />
-
-              <label data-i18n="lead_title">Titel</label>
-              <input type="text" id="lead-title" required />
-
-              <label data-i18n="lead_category_name">Kategorie</label>
-              <input type="text" id="lead-category-name" />
-
-              <div class="form-row-2">
-                <div>
-                  <label data-i18n="lead_phone">Telefon</label>
-                  <input type="text" id="lead-phone" />
-                </div>
-                <div>
-                  <label data-i18n="lead_email">E-Mail</label>
-                  <input type="email" id="lead-email" />
-                </div>
-              </div>
-
-              <label data-i18n="lead_website">Website</label>
-              <input type="url" id="lead-website" placeholder="https://..." />
-
-              <label data-i18n="lead_street">Straße</label>
-              <input type="text" id="lead-street" />
-
-              <div class="form-row-2">
-                <div>
-                  <label data-i18n="lead_city">Stadt</label>
-                  <input type="text" id="lead-city" />
-                </div>
-                <div>
-                  <label data-i18n="lead_state">Bundesland</label>
-                  <input type="text" id="lead-state" />
-                </div>
-              </div>
-
-              <div class="form-row-2">
-                <div>
-                  <label data-i18n="lead_country_code">Land</label>
-                  <input type="text" id="lead-country" placeholder="DE" maxlength="2" />
-                </div>
-                <div>
-                  <label data-i18n="lead_rating">Google Bewertung</label>
-                  <input type="number" id="lead-score" step="0.1" min="0" max="5" />
-                </div>
-              </div>
-
-              <label data-i18n="lead_reviews">Anzahl Bewertungen</label>
-              <input type="number" id="lead-reviews" min="0" />
-
-              <label data-i18n="lead_categories">Alle Kategorien (Komma-getrennt)</label>
-              <input type="text" id="lead-categories" placeholder="Zahnarzt, Endodontologe, ..." />
-
-              <label data-i18n="lead_google_url">Google Maps URL</label>
-              <input type="url" id="lead-google-url" />
-
-              <label data-i18n="lead_status">Status</label>
-              <select id="lead-status">
-                <option value="new" data-i18n="lf_new">Neu</option>
-                <option value="contacted" data-i18n="lf_contacted">Kontaktiert</option>
-                <option value="booked" data-i18n="lf_booked">Termin</option>
-                <option value="won" data-i18n="lf_won">Gewonnen</option>
-                <option value="lost" data-i18n="lf_lost">Verloren</option>
-              </select>
-
-              <label data-i18n="lead_notes">Notizen</label>
-              <textarea id="lead-notes" rows="3"></textarea>
-
-              <div class="modal-actions">
-                <button type="button" class="btn-ghost" id="leadModalCancel" data-i18n="lead_cancel">Abbrechen</button>
-                <button type="submit" class="btn-primary" data-i18n="lead_save">Speichern</button>
-              </div>
-            </form>
           </div>
-        </div>
 
-        <!-- WHATSAPP -->
-        <section class="panel" id="panel-whatsapp" hidden>
-          <h2 data-i18n="wa_title">WhatsApp Bot</h2>
-          <div class="card wa-card">
-            <div class="wa-status">
-              <span class="wa-dot"></span>
-              <span data-i18n="wa_active">Bot Aktiv</span>
+          <div class="settings-sections">
+            <div class="settings-section">
+              <div class="settings-section-title" data-i18n="set_profile">Profil</div>
+              <div class="settings-section-body">
+                <div class="form-group">
+                  <label class="form-label" data-i18n="set_biz">Unternehmensname</label>
+                  <input class="form-input" id="setBiz" type="text" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" data-i18n="set_lang">Sprache</label>
+                  <select class="form-select" id="setLang">
+                    <option value="de">Deutsch</option>
+                    <option value="en">English</option>
+                    <option value="tr">Türkçe</option>
+                  </select>
+                </div>
+                <button class="btn-primary" id="profileSaveBtn" data-i18n="set_save">Speichern</button>
+              </div>
             </div>
-            <div class="wa-number">
-              <small data-i18n="wa_number">Nummer</small>
-              <strong id="wa-number-val">—</strong>
+
+            <div class="settings-section">
+              <div class="settings-section-title" data-i18n="set_account">Konto</div>
+              <div class="settings-section-body">
+                <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;" id="accEmail"></div>
+                <div class="plan-badge" id="accPlanBadge">—</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                  <button class="btn-ghost" id="subPortalBtn" data-i18n="sub_portal">Abonnement verwalten</button>
+                  <button class="btn-primary" id="subUpgradeBtn" data-i18n="sub_upgrade">Upgrade</button>
+                </div>
+              </div>
             </div>
-            <div class="wa-stats">
-              <h4 data-i18n="wa_last7">Letzte 7 Tage</h4>
-              <ul>
-                <li><span class="wa-num">34</span> <span data-i18n="wa_msgs">Nachrichten beantwortet</span></li>
-                <li><span class="wa-num">8</span> <span data-i18n="wa_appts">Termine vereinbart</span></li>
-                <li><span class="wa-num">2</span> <span data-i18n="wa_cancels">Stornierungen bearbeitet</span></li>
-              </ul>
+
+            <div class="settings-section">
+              <div class="settings-section-title" data-i18n="set_password">Passwort</div>
+              <div class="settings-section-body">
+                <div class="form-group">
+                  <label class="form-label" data-i18n="set_new_pw">Neues Passwort</label>
+                  <input class="form-input" id="setPw" type="password" minlength="6" />
+                </div>
+                <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort ändern</button>
+              </div>
             </div>
-            <a id="wa-link" href="#" target="_blank" class="btn-primary" data-i18n="wa_open">WhatsApp öffnen</a>
+
+            <div class="settings-section">
+              <div class="settings-section-title" data-i18n="set_integrations">Integrationen</div>
+              <div class="settings-section-body">
+                <div class="integration-row">
+                  <span class="integration-icon">🗓️</span>
+                  <div class="integration-info">
+                    <div class="integration-name">Google Calendar</div>
+                    <div class="integration-status" id="googleCalStatus" data-i18n="status_disconnected">Nicht verbunden</div>
+                  </div>
+                  <button class="btn-ghost" id="googleCalBtn" data-i18n="btn_connect">Verbinden</button>
+                </div>
+                <div class="integration-row">
+                  <span class="integration-icon">💬</span>
+                  <div class="integration-info">
+                    <div class="integration-name">WhatsApp</div>
+                    <div class="integration-status" id="waStatus">Twilio Sandbox</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- EINSTELLUNGEN -->
-        <section class="panel" id="panel-settings" hidden>
-          <h2 data-i18n="settings_title">Einstellungen</h2>
-
-          <div class="card">
-            <h3 data-i18n="set_profile">Profil</h3>
-            <form id="profileForm">
-              <label data-i18n="set_biz">Unternehmensname</label>
-              <input type="text" id="set-biz" />
-
-              <label data-i18n="set_lang">Sprache</label>
-              <select id="set-lang">
-                <option value="de">Deutsch</option>
-                <option value="en">English</option>
-                <option value="tr">Türkçe</option>
-              </select>
-
-              <button type="submit" class="btn-primary" data-i18n="set_save">Speichern</button>
-              <div id="profileMsg" class="msg"></div>
-            </form>
-          </div>
-
-          <div class="card">
-            <h3 data-i18n="set_password">Passwort ändern</h3>
-            <form id="passwordForm">
-              <label data-i18n="set_new_pw">Neues Passwort</label>
-              <input type="password" id="set-pw" minlength="6" required />
-
-              <button type="submit" class="btn-primary" data-i18n="set_change">Passwort ändern</button>
-              <div id="passwordMsg" class="msg"></div>
-            </form>
-          </div>
-
-          <div class="card">
-            <h3 data-i18n="set_account">Konto</h3>
-            <p class="account-email"><strong id="acc-email">—</strong></p>
-            <p class="account-plan" id="acc-plan-line">—</p>
-          </div>
-
-          <!-- Abonnement -->
-          <div class="card">
-            <h3>Abonnement</h3>
-            <div id="sub-info" class="sub-info">
-              <p><span class="sub-label">Aktueller Plan:</span> <strong id="sub-plan">—</strong></p>
-              <p><span class="sub-label">Status:</span> <strong id="sub-status">—</strong></p>
-              <p><span class="sub-label">Abrechnungs-Intervall:</span> <strong id="sub-interval">—</strong></p>
-              <p id="sub-next-line"><span class="sub-label">Nächste Abrechnung:</span> <strong id="sub-next">—</strong></p>
-              <p id="sub-trial-line" hidden><span class="sub-label">Test-Phase endet:</span> <strong id="sub-trial">—</strong></p>
-            </div>
-            <div class="sub-actions">
-              <button type="button" id="sub-upgrade-btn" class="btn-primary">Plan ändern / Upgrade</button>
-              <button type="button" id="sub-portal-btn" class="btn-ghost">Karte / Rechnungen verwalten</button>
-              <button type="button" id="sub-cancel-btn" class="btn-danger">Abo kündigen</button>
-            </div>
-          </div>
-
-          <!-- Theme -->
-          <div class="card">
-            <h3>Erscheinungsbild</h3>
-            <div class="theme-toggle-row">
-              <button type="button" class="theme-opt" data-theme="dark"><span>🌙</span> Dunkel</button>
-              <button type="button" class="theme-opt" data-theme="light"><span>☀️</span> Hell</button>
-              <button type="button" class="theme-opt" data-theme="auto"><span>🖥️</span> System</button>
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   </div>
 
-  <!-- Calendar API handled via custom Node.js Backend -->
+  <!-- ===== MODAL: NEUER TERMIN ===== -->
+  <div class="modal-overlay" id="bookingModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="bookingModalTitle" data-i18n="lbl_manual_title">Neuer Termin</span>
+        <button class="modal-close" data-modal="bookingModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="bk-id" />
+        <div class="form-group">
+          <label class="form-label" data-i18n="lbl_manual_emp">Mitarbeiter</label>
+          <select class="form-select" id="bkEmployee"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
+          <select class="form-select" id="bkService"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_manual_start">Von</label>
+            <input class="form-input" id="bkStart" type="datetime-local" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_manual_end">Bis</label>
+            <input class="form-input" id="bkEnd" type="datetime-local" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lbl_manual_cust">Kundenname</label>
+          <input class="form-input" id="bkCustomer" type="text" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lead_phone">Telefon</label>
+          <input class="form-input" id="bkPhone" type="tel" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lead_notes">Notizen</label>
+          <textarea class="form-textarea" id="bkNotes"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-danger" id="bkDeleteBtn" hidden data-i18n="lead_delete">Löschen</button>
+        <button class="btn-ghost" data-modal="bookingModal" data-i18n="lead_cancel">Abbrechen</button>
+        <button class="btn-primary" id="bkSaveBtn" data-i18n="lead_save">Speichern</button>
+      </div>
+    </div>
+  </div>
 
-  <script type="module" src="dashboard.js?v=20260509c"></script>
+  <!-- ===== MODAL: ABWESENHEIT ===== -->
+  <div class="modal-overlay" id="leaveModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" data-i18n="lbl_leave_title">Abwesenheit eintragen</span>
+        <button class="modal-close" data-modal="leaveModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" data-i18n="lbl_leave_emp">Für wen?</label>
+          <select class="form-select" id="leaveEmployee"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_leave_start">Start</label>
+            <input class="form-input" id="leaveStart" type="date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_leave_end">Ende</label>
+            <input class="form-input" id="leaveEnd" type="date" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lbl_leave_reason">Grund</label>
+          <input class="form-input" id="leaveReason" type="text" placeholder="Urlaub, Krank, ..." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="leaveModal" data-i18n="btn_leave_cancel">Abbrechen</button>
+        <button class="btn-primary" id="leaveSaveBtn" data-i18n="btn_leave_save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: LEAD ===== -->
+  <div class="modal-overlay" id="leadModal" hidden>
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title" id="leadModalTitle" data-i18n="lead_modal_new">Neuer Lead</span>
+        <button class="modal-close" data-modal="leadModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="lead-id" />
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_title">Name / Titel</label>
+            <input class="form-input" id="lead-title" type="text" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_category_name">Kategorie</label>
+            <input class="form-input" id="lead-category-name" type="text" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_phone">Telefon</label>
+            <input class="form-input" id="lead-phone" type="text" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_email">E-Mail</label>
+            <input class="form-input" id="lead-email" type="email" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lead_website">Website</label>
+          <input class="form-input" id="lead-website" type="url" placeholder="https://..." />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_city">Stadt</label>
+            <input class="form-input" id="lead-city" type="text" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_country_code">Land</label>
+            <input class="form-input" id="lead-country" type="text" placeholder="DE" maxlength="2" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_rating">Bewertung</label>
+            <input class="form-input" id="lead-score" type="number" step="0.1" min="0" max="5" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_status">Status</label>
+            <select class="form-select" id="lead-status">
+              <option value="new" data-i18n="lf_new">Neu</option>
+              <option value="contacted" data-i18n="lf_contacted">Kontaktiert</option>
+              <option value="booked" data-i18n="lf_booked">Termin</option>
+              <option value="won" data-i18n="lf_won">Gewonnen</option>
+              <option value="lost" data-i18n="lf_lost">Verloren</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lead_google_url">Google Maps URL</label>
+          <input class="form-input" id="lead-google-url" type="url" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lead_notes">Notizen</label>
+          <textarea class="form-textarea" id="lead-notes"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="leadModal" data-i18n="lead_cancel">Abbrechen</button>
+        <button class="btn-primary" id="leadSaveBtn" data-i18n="lead_save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: B2B KONTAKT ===== -->
+  <div class="modal-overlay" id="b2bModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="b2bModalTitle" data-i18n="b2b_add">Neuer Kontakt</span>
+        <button class="modal-close" data-modal="b2bModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="b2b-id" />
+        <div class="form-group">
+          <label class="form-label" data-i18n="b2b_company">Unternehmen</label>
+          <input class="form-input" id="b2b-company" type="text" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="b2b_contact">Ansprechpartner</label>
+          <input class="form-input" id="b2b-contact" type="text" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_phone">Telefon</label>
+            <input class="form-input" id="b2b-phone" type="text" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lead_email">E-Mail</label>
+            <input class="form-input" id="b2b-email" type="email" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="b2b_status">Status</label>
+          <select class="form-select" id="b2b-status">
+            <option value="prospect">Prospect</option>
+            <option value="contacted">Kontaktiert</option>
+            <option value="partner">Partner</option>
+            <option value="inactive">Inaktiv</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="lead_notes">Notizen</label>
+          <textarea class="form-textarea" id="b2b-notes"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="b2bModal" data-i18n="lead_cancel">Abbrechen</button>
+        <button class="btn-primary" id="b2bSaveBtn" data-i18n="lead_save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script type="module" src="dashboard.js?v=20260510b"></script>
 </body>
 </html>
