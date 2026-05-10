@@ -19,6 +19,14 @@
   <url><loc>https://infinitymade.de/whatsapp-bot-physiotherapie.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://infinitymade.de/whatsapp-bot-fitness.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
 
+  <!-- Blog -->
+  <url><loc>https://infinitymade.de/blog/</loc><changefreq>weekly</changefreq><priority>0.9</priority><lastmod>2025-05-10</lastmod></url>
+  <url><loc>https://infinitymade.de/blog/friseur-whatsapp-terminbuchung.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2025-05-10</lastmod></url>
+  <url><loc>https://infinitymade.de/blog/restaurant-online-reservierung.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2025-05-08</lastmod></url>
+  <url><loc>https://infinitymade.de/blog/handwerker-website-kosten-2025.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2025-05-05</lastmod></url>
+  <url><loc>https://infinitymade.de/blog/fitnessstudio-mitglieder-digital.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2025-05-03</lastmod></url>
+  <url><loc>https://infinitymade.de/blog/webdesign-kosten-kmu-nrw.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2025-05-01</lastmod></url>
+
   <!-- Bestehende Paket-Seiten -->
   <url><loc>https://infinitymade.de/pakete/handwerker.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://infinitymade.de/pakete/gastro.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Blog – Digitalisierung für KMU | InfinityMade</title>
+  <meta name="description" content="Praxistipps zur Digitalisierung kleiner und mittelständischer Betriebe in NRW: WhatsApp Buchungssysteme, Webdesign Kosten, Google-Sichtbarkeit für Friseure, Restaurants, Handwerker & Fitnessstudios." />
+  <meta name="keywords" content="Digitalisierung KMU, WhatsApp Buchungssystem, Webdesign Kosten, Friseur App, Restaurant Online Reservierung, Handwerker Website, Fitnessstudio Software NRW" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://infinitymade.de/blog/" />
+  <meta name="author" content="InfinityMade Redaktion" />
+
+  <!-- OG -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="de_DE" />
+  <meta property="og:site_name" content="InfinityMade" />
+  <meta property="og:title" content="InfinityMade Blog – Digitalisierungstipps für lokale Unternehmen" />
+  <meta property="og:description" content="Praxistipps zur Digitalisierung: WhatsApp Buchungssysteme, Webdesign Kosten, Google-Sichtbarkeit für Friseure, Restaurants & Handwerker." />
+  <meta property="og:url" content="https://infinitymade.de/blog/" />
+  <meta property="og:image" content="https://infinitymade.de/og-image.png" />
+
+  <!-- Fonts & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="blog.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#7c3aed" />
+
+  <!-- Schema: Blog -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": "https://infinitymade.de/blog/#blog",
+    "name": "InfinityMade Blog",
+    "description": "Praxistipps zur Digitalisierung kleiner und mittelständischer Unternehmen in NRW",
+    "url": "https://infinitymade.de/blog/",
+    "inLanguage": "de-DE",
+    "publisher": {
+      "@type": "Organization",
+      "name": "InfinityMade",
+      "url": "https://infinitymade.de",
+      "logo": "https://infinitymade.de/og-image.png"
+    }
+  }
+  </script>
+
+  <!-- Schema: Breadcrumb -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://infinitymade.de/" },
+      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://infinitymade.de/blog/" }
+    ]
+  }
+  </script>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="blog-nav">
+  <div class="blog-nav-inner">
+    <a href="/" class="blog-logo">InfinityMade</a>
+    <ul class="blog-nav-links">
+      <li><a href="/#services">Leistungen</a></li>
+      <li><a href="/#pricing">Preise</a></li>
+      <li><a href="/blog/" class="active">Blog</a></li>
+      <li><a href="/#contact">Kontakt</a></li>
+      <li><a href="/#booking" class="blog-nav-cta">Demo buchen</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="blog-index-hero">
+  <div class="blog-container">
+    <div class="blog-eyebrow">📚 Wissen &amp; Tipps</div>
+    <h1 class="blog-index-title">
+      Digitalisierung leicht gemacht –<br />
+      <span>für Ihren lokalen Betrieb</span>
+    </h1>
+    <p class="blog-index-sub">
+      Praxisnahe Anleitungen, Kosten-Breakdowns und Erfolgsbeispiele
+      für Friseure, Restaurants, Handwerker und Fitnessstudios in NRW.
+    </p>
+  </div>
+</section>
+
+<!-- FILTER -->
+<div class="blog-container">
+  <div class="blog-filters" id="filterBtns">
+    <button class="blog-filter-btn active" data-filter="all" onclick="filterPosts('all', this)">Alle Themen</button>
+    <button class="blog-filter-btn" data-filter="friseur" onclick="filterPosts('friseur', this)">✂️ Friseur</button>
+    <button class="blog-filter-btn" data-filter="gastro" onclick="filterPosts('gastro', this)">🍽️ Restaurant</button>
+    <button class="blog-filter-btn" data-filter="handwerk" onclick="filterPosts('handwerk', this)">🔧 Handwerk</button>
+    <button class="blog-filter-btn" data-filter="fitness" onclick="filterPosts('fitness', this)">💪 Fitness</button>
+    <button class="blog-filter-btn" data-filter="webdesign" onclick="filterPosts('webdesign', this)">🌐 Webdesign</button>
+  </div>
+</div>
+
+<!-- BLOG GRID -->
+<div class="blog-container">
+  <div class="blog-grid" id="blogGrid">
+
+    <!-- FEATURED: Friseur -->
+    <a href="/blog/friseur-whatsapp-terminbuchung.html" class="blog-card featured" data-cat="friseur" id="card-1">
+      <div class="blog-card-img">✂️</div>
+      <div class="blog-card-body">
+        <div class="blog-card-meta">
+          <span class="blog-cat-badge">✂️ Friseur</span>
+          <span class="blog-read-time">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            7 Min. Lesezeit
+          </span>
+        </div>
+        <h2 class="blog-card-title">WhatsApp Terminbuchung für Friseure: Mehr Buchungen, weniger Telefonstress – der komplette Guide 2025</h2>
+        <p class="blog-card-excerpt">40% aller Terminanfragen gehen verloren, weil das Telefon besetzt ist. So richtet Ihr Friseursalon WhatsApp-Automatisierung in 7 Tagen ein – inklusive Kosten-Vergleich der besten Systeme.</p>
+        <div class="blog-card-footer">
+          <span class="blog-card-date">10. Mai 2025</span>
+          <span class="blog-card-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Restaurant -->
+    <a href="/blog/restaurant-online-reservierung.html" class="blog-card" data-cat="gastro" id="card-2">
+      <div class="blog-card-img">🍽️</div>
+      <div class="blog-card-body">
+        <div class="blog-card-meta">
+          <span class="blog-cat-badge" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.25);color:#fbbf24;">🍽️ Restaurant</span>
+          <span class="blog-read-time">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            6 Min.
+          </span>
+        </div>
+        <h2 class="blog-card-title">No-Shows im Restaurant: Wie WhatsApp-Reservierungen Ihre Ausfallrate um 60% senken</h2>
+        <p class="blog-card-excerpt">Ein leerer Tisch kostet Sie 40–80€ pro Abend. Mit automatischen Erinnerungen und smarter Reservierungslogik halten Sie Ihren Saal voll – ohne Mehraufwand.</p>
+        <div class="blog-card-footer">
+          <span class="blog-card-date">8. Mai 2025</span>
+          <span class="blog-card-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Handwerker -->
+    <a href="/blog/handwerker-website-kosten-2025.html" class="blog-card" data-cat="handwerk" id="card-3">
+      <div class="blog-card-img">🔧</div>
+      <div class="blog-card-body">
+        <div class="blog-card-meta">
+          <span class="blog-cat-badge" style="background:rgba(6,182,212,0.15);border-color:rgba(6,182,212,0.25);color:#22d3ee;">🔧 Handwerk</span>
+          <span class="blog-read-time">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            8 Min.
+          </span>
+        </div>
+        <h2 class="blog-card-title">Website für Handwerker: Realistische Kosten 2025 und was Sie wirklich brauchen</h2>
+        <p class="blog-card-excerpt">Von 99€ bis 5.000€+ – der Preisunterschied ist riesig. Wir erklären, was eine Handwerker-Website kosten sollte, welche Features wirklich wichtig sind und worauf Sie achten müssen.</p>
+        <div class="blog-card-footer">
+          <span class="blog-card-date">5. Mai 2025</span>
+          <span class="blog-card-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Fitness -->
+    <a href="/blog/fitnessstudio-mitglieder-digital.html" class="blog-card" data-cat="fitness" id="card-4">
+      <div class="blog-card-img">💪</div>
+      <div class="blog-card-body">
+        <div class="blog-card-meta">
+          <span class="blog-cat-badge" style="background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.25);color:#4ade80;">💪 Fitness</span>
+          <span class="blog-read-time">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            6 Min.
+          </span>
+        </div>
+        <h2 class="blog-card-title">Fitnessstudio Mitglieder gewinnen: 5 digitale Strategien die 2025 wirklich funktionieren</h2>
+        <p class="blog-card-excerpt">Die meisten Studios verlieren monatlich 5–10% ihrer Mitglieder. Wie Sie mit digitalen Tools die Fluktuation stoppen und neue Mitglieder günstiger gewinnen als durch klassische Werbung.</p>
+        <div class="blog-card-footer">
+          <span class="blog-card-date">3. Mai 2025</span>
+          <span class="blog-card-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Webdesign NRW -->
+    <a href="/blog/webdesign-kosten-kmu-nrw.html" class="blog-card" data-cat="webdesign" id="card-5">
+      <div class="blog-card-img">🌐</div>
+      <div class="blog-card-body">
+        <div class="blog-card-meta">
+          <span class="blog-cat-badge" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.25);color:#f87171;">🌐 Webdesign</span>
+          <span class="blog-read-time">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            9 Min.
+          </span>
+        </div>
+        <h2 class="blog-card-title">Webdesign Kosten für kleine Unternehmen in NRW: Was kostet eine professionelle Website wirklich?</h2>
+        <p class="blog-card-excerpt">Preisvergleich: Freelancer vs. Agentur vs. Baukastensysteme. Welche Lösung sich für Ihr Budget in Siegburg, Köln, Bonn oder Troisdorf lohnt – mit echten Zahlen.</p>
+        <div class="blog-card-footer">
+          <span class="blog-card-date">1. Mai 2025</span>
+          <span class="blog-card-arrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- NEWSLETTER CTA -->
+<div class="blog-container" style="margin-bottom:80px;">
+  <div class="article-cta">
+    <div class="article-cta-emoji">🚀</div>
+    <h3>Bereit, Ihren Betrieb zu digitalisieren?</h3>
+    <p>Vereinbaren Sie ein kostenloses 15-Minuten Demo-Gespräch. Wir zeigen Ihnen live, was für Ihren Betrieb möglich ist.</p>
+    <div class="article-cta-buttons">
+      <a href="/#booking" class="btn-primary-blog">
+        Demo buchen
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="/#contact" class="btn-ghost-blog">Kontakt aufnehmen</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="blog-footer">
+  <div class="blog-container">
+    <p>© <span id="yr"></span> InfinityMade · Siegburg, NRW ·
+      <a href="/impressum.html">Impressum</a> ·
+      <a href="/datenschutz.html">Datenschutz</a> ·
+      <a href="/agb.html">AGB</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+function filterPosts(cat, btn) {
+  // Update buttons
+  document.querySelectorAll('.blog-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Filter cards
+  document.querySelectorAll('.blog-card').forEach(card => {
+    if (cat === 'all' || card.dataset.cat === cat) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  // Fix featured span for single column
+  const featured = document.querySelector('.blog-card.featured');
+  if (featured && featured.style.display !== 'none') {
+    featured.style.gridColumn = 'span 2';
+  }
+}
+</script>
+</body>
+</html>
