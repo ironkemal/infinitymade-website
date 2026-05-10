@@ -130,14 +130,56 @@ app.get('/api/calendar/google-auth', (req, res) => {
   res.redirect(url);
 });
 
+app.get('/api/gmail/connect', (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+  const url = newOAuthClient().generateAuthUrl({
+    access_type: 'online',
+    prompt: 'select_account',
+    scope: ['email', 'profile', 'openid'],
+    state: JSON.stringify({ userId, type: 'gmail' })
+  });
+
+  res.redirect(url);
+});
+
 app.get('/api/calendar/google-callback', async (req, res) => {
-  const { code, state: userId } = req.query;
+  const { code, state: rawState } = req.query;
   if (!code) return res.status(400).json({ error: 'No code provided' });
-  
+
+  let userId, flowType;
+  try {
+    const parsed = JSON.parse(rawState);
+    userId   = parsed.userId;
+    flowType = parsed.type || 'calendar';
+  } catch {
+    userId   = rawState;
+    flowType = 'calendar';
+  }
+
   try {
     const { tokens } = await newOAuthClient().getToken(code);
-    
-    // Save tokens to Supabase calendar_integrations
+
+    if (flowType === 'gmail') {
+      const uRes  = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: 'Bearer ' + tokens.access_token }
+      });
+      const uinfo = await uRes.json();
+      if (!uinfo.email) throw new Error('No email from Google');
+
+      const { error } = await supabase.from('calendar_integrations').upsert({
+        user_id: userId, provider: 'gmail',
+        email: uinfo.email,
+        access_token: tokens.access_token,
+        refresh_token: null,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,provider' });
+      if (error) throw error;
+
+      return res.redirect('https://infinitymade.de/dashboard.html?gmail_ok=1#b2b');
+    }
+
     const { error } = await supabase
       .from('calendar_integrations')
       .upsert({
@@ -150,7 +192,6 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       
     if (error) throw error;
     
-    // Redirect back to dashboard calendar tab
     res.redirect('https://infinitymade.de/dashboard.html#calendar?success=google_connected');
   } catch (error) {
     console.error('OAuth callback error:', error);

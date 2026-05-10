@@ -1281,22 +1281,12 @@ document.getElementById('b2bSaveBtn').addEventListener('click', async () => {
 });
 
 const B2B_AGENT_URL = 'https://n8n.infinitymade.de/webhook/b2b-mail-agent';
-const GMAIL_CLIENT_ID = '336001691467-1hba3p0g46t8r0gjqoddap8f5khu05gq.apps.googleusercontent.com';
-const GMAIL_REDIRECT  = window.location.origin + '/dashboard.html';
 let gmailConnectedEmail = null;
 let currentDraftContactId = null;
 
-function startGmailOAuth(context) {
+function startGmailOAuth() {
   const userId = currentSession.user.id;
-  const scope = encodeURIComponent('email profile');
-  const state = encodeURIComponent(JSON.stringify({user_id: userId, ctx: context}));
-  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
-    + '?client_id=' + GMAIL_CLIENT_ID
-    + '&redirect_uri=' + encodeURIComponent(GMAIL_REDIRECT)
-    + '&response_type=token'
-    + '&scope=' + scope
-    + '&prompt=select_account'
-    + '&state=' + state;
+  window.location.href = 'https://n8n.infinitymade.de/api/gmail/connect?userId=' + encodeURIComponent(userId);
 }
 
 function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
@@ -1569,39 +1559,10 @@ async function ensureCompanyCode() {
 }
 
 async function handleGmailCallback() {
-  if (!window.location.hash.includes('access_token') && !window.location.hash.includes('error')) return;
-  const hash = new URLSearchParams(window.location.hash.replace('#',''));
-  const accessToken = hash.get('access_token');
-  const stateRaw    = hash.get('state');
-  if (!accessToken) {
-    const err = hash.get('error');
-    if (err) showToast('Google Fehler: ' + err, 'error');
-    window.history.replaceState({}, '', window.location.pathname);
-    return;
-  }
-  let userId = null;
-  try { userId = JSON.parse(decodeURIComponent(stateRaw)).user_id; } catch(e) {}
-  if (!userId) { window.history.replaceState({}, '', window.location.pathname); return; }
-  try {
-    const res   = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: {'Authorization': 'Bearer ' + accessToken}
-    });
-    const uinfo = await res.json();
-    if (!uinfo.email) throw new Error('Keine E-Mail erhalten');
-    await supabase.from('calendar_integrations').upsert({
-      user_id: userId, provider: 'gmail',
-      email: uinfo.email,
-      access_token: accessToken,
-      refresh_token: null,
-      expires_at: new Date(Date.now() + 3600 * 1000).toISOString()
-    }, {onConflict: 'user_id,provider'});
-    gmailConnectedEmail = uinfo.email;
-    showToast('Gmail verbunden: ' + uinfo.email);
-  } catch(e) {
-    console.error('[gmail callback]', e);
-    showToast('Verbindung fehlgeschlagen: ' + e.message, 'error');
-  }
+  const qp = new URLSearchParams(window.location.search);
+  if (!qp.get('gmail_ok')) return;
   window.history.replaceState({}, '', window.location.pathname);
+  showToast('Gmail erfolgreich verbunden!');
   switchPanel('b2b');
 }
 
