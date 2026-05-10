@@ -135,9 +135,9 @@ app.get('/api/gmail/connect', (req, res) => {
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
   const url = newOAuthClient().generateAuthUrl({
-    access_type: 'online',
-    prompt: 'select_account',
-    scope: ['email', 'profile', 'openid'],
+    access_type: 'offline',
+    prompt: 'consent select_account',
+    scope: ['email', 'profile', 'openid', 'https://www.googleapis.com/auth/gmail.send'],
     state: JSON.stringify({ userId, type: 'gmail' })
   });
 
@@ -169,7 +169,10 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       if (!uinfo.email) throw new Error('No email from Google');
 
       const { error } = await supabase.from('profiles')
-        .update({ b2b_from_email: uinfo.email })
+        .update({
+          b2b_from_email: uinfo.email,
+          b2b_gmail_refresh_token: tokens.refresh_token || null
+        })
         .eq('id', userId);
       if (error) throw error;
 
@@ -193,6 +196,49 @@ app.get('/api/calendar/google-callback', async (req, res) => {
   } catch (error) {
     console.error('OAuth callback error:', error);
     res.redirect('https://infinitymade.de/dashboard.html#calendar?error=google_failed');
+  }
+});
+
+app.post('/api/gmail/send', async (req, res) => {
+  const { userId, to_email, to_name, subject, body, sender_name } = req.body;
+  if (!userId || !to_email || !subject || !body) return res.status(400).json({ error: 'Missing params' });
+
+  try {
+    const { data: profile, error: pErr } = await supabase
+      .from('profiles').select('b2b_gmail_refresh_token, b2b_from_email').eq('id', userId).single();
+    if (pErr || !profile) throw new Error('Profile not found');
+    if (!profile.b2b_gmail_refresh_token) throw new Error('No Gmail token — please reconnect Gmail in B2B setup');
+
+    const oauth = newOAuthClient();
+    oauth.setCredentials({ refresh_token: profile.b2b_gmail_refresh_token });
+    const { credentials } = await oauth.refreshAccessToken();
+
+    const fromLabel = sender_name ? `${sender_name} <${profile.b2b_from_email}>` : profile.b2b_from_email;
+    const toLabel   = to_name ? `${to_name} <${to_email}>` : to_email;
+    const rawEmail  = [
+      `From: ${fromLabel}`,
+      `To: ${toLabel}`,
+      `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      Buffer.from(body).toString('base64')
+    ].join('\r\n');
+    const encoded = Buffer.from(rawEmail).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+
+    const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + credentials.access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: encoded })
+    });
+    const gmailJson = await gmailRes.json();
+    if (!gmailRes.ok) throw new Error(gmailJson.error?.message || 'Gmail API error');
+
+    res.json({ success: true, messageId: gmailJson.id });
+  } catch (e) {
+    console.error('[gmail/send]', e.message);
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 

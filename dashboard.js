@@ -1411,25 +1411,34 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   const body    = document.getElementById('composeBody').value.trim();
   if (!toEmail || !subject || !body) { showToast(t('err_generic'), 'error'); return; }
 
-  const gmailAccount = gmailConnectedEmail || '';
-  const gmailBase = gmailAccount
-    ? 'https://mail.google.com/mail/u/' + encodeURIComponent(gmailAccount) + '/'
-    : 'https://mail.google.com/mail/';
-  const gmailUrl = gmailBase + '?view=cm&fs=1'
-    + '&to=' + encodeURIComponent(toEmail)
-    + '&su=' + encodeURIComponent(subject)
-    + '&body=' + encodeURIComponent(body);
-  window.open(gmailUrl, '_blank');
-
-  await supabase.from('email_logs').insert({
-    owner_id: getOwnerId(),
-    contact_id: currentDraftContactId || null,
-    to_email: toEmail, to_name: toName,
-    subject, body, status: 'sent'
-  });
-  closeModal('emailComposeModal');
-  aiAddMsg('Gmail geöffnet für ' + toEmail + ' — bitte dort senden.', 'ai');
-  showToast('Gmail geöffnet ✓');
+  const btn = document.getElementById('composeSendBtn');
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const res = await fetch('https://n8n.infinitymade.de/api/gmail/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        userId: currentSession.user.id,
+        to_email: toEmail, to_name: toName,
+        subject, body,
+        sender_name: currentProfile.b2b_sender_name || ''
+      })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Senden fehlgeschlagen');
+    await supabase.from('email_logs').insert({
+      owner_id: getOwnerId(),
+      contact_id: currentDraftContactId || null,
+      to_email: toEmail, to_name: toName,
+      subject, body, status: 'sent'
+    });
+    closeModal('emailComposeModal');
+    aiAddMsg('E-Mail gesendet an ' + toEmail + ' ✓', 'ai');
+    showToast('E-Mail gesendet ✓');
+  } catch(e) {
+    showToast('Fehler: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = '✉ Senden';
 });
 
 function aiAddMsg(text, role) {
