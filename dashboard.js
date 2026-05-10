@@ -519,6 +519,23 @@ function populateSrvSelect(selectedId=null) {
   });
 }
 
+document.getElementById('bkPhone').addEventListener('blur', async () => {
+  const phone = document.getElementById('bkPhone').value.trim();
+  const hint  = document.getElementById('bkWaHint');
+  if (!hint||!phone) { if(hint) hint.hidden=true; return; }
+  const norm = normalize_phone_js(phone);
+  if (!norm) { hint.hidden=true; return; }
+  const {data:wa} = await supabase.from('wa_contacts')
+    .select('wa_id,customer_name').eq('business_id',getOwnerId()).eq('phone',norm).maybeSingle();
+  if (wa) {
+    hint.textContent = `💬 WhatsApp bekannt: ${wa.customer_name||wa.wa_id}`;
+    hint.hidden = false;
+    if (!document.getElementById('bkCustomer').value) document.getElementById('bkCustomer').value = wa.customer_name||'';
+  } else {
+    hint.hidden = true;
+  }
+});
+
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const id      = document.getElementById('bk-id').value;
   const empId   = document.getElementById('bkEmployee').value;
@@ -577,13 +594,44 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
 });
 
 let leadsCache = [];
+let leadsMeta = {};
 
 async function loadLeads() {
   const ownerId = getOwnerId();
   const {data} = await supabase.from('leads')
     .select('*').eq('owner_id',ownerId).order('created_at',{ascending:false});
   leadsCache = data||[];
+  const phones = leadsCache.map(l=>l.phone_normalized).filter(Boolean);
+  leadsMeta = {};
+  if (phones.length) {
+    const [bkRes, waRes] = await Promise.all([
+      supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
+        .eq('owner_id',ownerId).in('customer_phone_normalized',phones),
+      supabase.from('wa_contacts').select('wa_id,phone,customer_name')
+        .eq('business_id',ownerId).in('phone',phones)
+    ]);
+    (bkRes.data||[]).forEach(b => {
+      if (!leadsMeta[b.customer_phone_normalized]) leadsMeta[b.customer_phone_normalized] = {bookings:[],wa:null};
+      leadsMeta[b.customer_phone_normalized].bookings.push(b);
+    });
+    (waRes.data||[]).forEach(w => {
+      const norm = normalize_phone_js(w.phone);
+      if (!leadsMeta[norm]) leadsMeta[norm] = {bookings:[],wa:null};
+      leadsMeta[norm].wa = w;
+    });
+  }
   renderLeads();
+}
+
+function normalize_phone_js(p) {
+  if (!p) return null;
+  let c = p.replace(/[^0-9+]/g,'');
+  if (c.startsWith('+')) return c;
+  if (c.startsWith('00')) return '+'+c.slice(2);
+  if (c.startsWith('0')) return '+49'+c.slice(1);
+  if (c.length===11 && c.startsWith('49')) return '+'+c;
+  if (c.length>=10) return '+'+c;
+  return c;
 }
 
 function renderLeads() {
@@ -597,15 +645,22 @@ function renderLeads() {
   }
   if (rows.length===0) { tbody.innerHTML=''; emptyEl.hidden=false; return; }
   emptyEl.hidden = true;
-  tbody.innerHTML = rows.map(r=>`
-    <tr>
+  tbody.innerHTML = rows.map(r=>{
+    const meta = leadsMeta[r.phone_normalized]||{};
+    const bkCount = meta.bookings?.length||0;
+    const hasWa   = !!meta.wa;
+    return `<tr>
       <td>${r.title||'—'}</td>
       <td>${r.city||'—'}</td>
       <td>${r.phone||'—'}</td>
       <td>${r.total_score??r.rating??'—'}</td>
-      <td><span class="badge ${leadStatusBadge(r.status)}">${r.status||'—'}</span></td>
+      <td>
+        ${bkCount?`<span class="badge badge-blue" title="Termine">📅 ${bkCount}</span> `:''}${hasWa?'<span class="badge badge-green" title="WhatsApp">💬</span> ':''}
+        <span class="badge ${leadStatusBadge(r.status)}">${r.status||'—'}</span>
+      </td>
       <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit">✏️</button></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
   tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
     btn.addEventListener('click', () => {
       const lead = leadsCache.find(l=>l.id===btn.dataset.leadId);
@@ -640,7 +695,7 @@ document.getElementById('leadSearch').addEventListener('input', e => {
 
 document.getElementById('leadAddBtn').addEventListener('click', () => openLeadModal(null));
 
-function openLeadModal(lead) {
+async function openLeadModal(lead) {
   document.getElementById('lead-id').value        = lead?.id||'';
   document.getElementById('lead-title').value     = lead?.title||'';
   document.getElementById('lead-category-name').value = lead?.category_name||'';
@@ -654,6 +709,23 @@ function openLeadModal(lead) {
   document.getElementById('lead-status').value    = lead?.status||'new';
   document.getElementById('lead-notes').value     = lead?.notes||'';
   document.getElementById('leadModalTitle').textContent = lead ? t('lead_modal_edit') : t('lead_modal_new');
+
+  const histEl = document.getElementById('leadHistory');
+  if (histEl) {
+    histEl.innerHTML = '';
+    if (lead?.phone_normalized) {
+      const meta = leadsMeta[lead.phone_normalized]||{};
+      const bks  = meta.bookings||[];
+      const wa   = meta.wa;
+      let html = '';
+      if (wa) html += `<div class="lead-hist-item lead-hist-wa">💬 WhatsApp: ${wa.customer_name||wa.wa_id}</div>`;
+      if (bks.length) {
+        html += bks.slice(0,5).map(b=>`<div class="lead-hist-item lead-hist-bk">📅 ${fmtDate(b.start_time)} — <span class="badge ${statusBadge(b.status)}">${b.status}</span></div>`).join('');
+        if (bks.length>5) html += `<div class="lead-hist-item" style="color:var(--text-muted)">+${bks.length-5} weitere</div>`;
+      }
+      if (html) histEl.innerHTML = '<div class="lead-hist-title">Verlauf</div>'+html;
+    }
+  }
   openModal('leadModal');
 }
 

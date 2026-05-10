@@ -1207,6 +1207,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 [hidden] { display: none !important; }
 
+.lead-history { margin-top: 12px; }
+.lead-hist-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.lead-hist-item { font-size: 12px; color: var(--text-sub); padding: 5px 10px; border-radius: var(--radius-sm); background: var(--bg-input); margin-bottom: 4px; }
+.lead-hist-wa  { border-left: 3px solid #25d366; }
+.lead-hist-bk  { border-left: 3px solid var(--primary); }
+.bk-wa-hint { font-size: 12px; color: #25d366; background: rgba(37,211,102,0.08); border: 1px solid rgba(37,211,102,0.25); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 10px; }
+
 /* ============================
    MODALS
    ============================ */
