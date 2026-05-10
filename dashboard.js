@@ -1385,42 +1385,47 @@ document.getElementById('composeDiscardBtn').addEventListener('click', () => {
   aiAddMsg('Entwurf verworfen.', 'ai');
 });
 
+function copyWithFeedback(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = orig; }, 1500);
+  });
+}
+
+document.getElementById('copyToEmailBtn').addEventListener('click', () => {
+  copyWithFeedback(document.getElementById('copyToEmailBtn'), document.getElementById('composeToEmail').value);
+});
+document.getElementById('copySubjectBtn').addEventListener('click', () => {
+  copyWithFeedback(document.getElementById('copySubjectBtn'), document.getElementById('composeSubject').value);
+});
+document.getElementById('copyBodyBtn').addEventListener('click', () => {
+  copyWithFeedback(document.getElementById('copyBodyBtn'), document.getElementById('composeBody').value);
+});
+
 document.getElementById('composeSendBtn').addEventListener('click', async () => {
-  const toEmail  = document.getElementById('composeToEmail').value.trim();
-  const toName   = document.getElementById('composeToName').value.trim();
-  const subject  = document.getElementById('composeSubject').value.trim();
-  const body     = document.getElementById('composeBody').value.trim();
+  const toEmail = document.getElementById('composeToEmail').value.trim();
+  const toName  = document.getElementById('composeToName').value.trim();
+  const subject = document.getElementById('composeSubject').value.trim();
+  const body    = document.getElementById('composeBody').value.trim();
   if (!toEmail || !subject || !body) { showToast(t('err_generic'), 'error'); return; }
-  const btn = document.getElementById('composeSendBtn');
-  btn.disabled = true; btn.textContent = '⏳';
-  try {
-    const res = await fetch(B2B_AGENT_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        action: 'send',
-        to_email: toEmail, to_name: toName, subject, body,
-        from_email: gmailConnectedEmail || currentSession.user.email,
-        sender_name: currentProfile.b2b_sender_name || ''
-      })
-    });
-    const rawText = await res.text();
-    let json = {};
-    try { json = rawText ? JSON.parse(rawText) : {}; } catch(_) {}
-    if (!res.ok && json.success === false) throw new Error(json.error || 'Senden fehlgeschlagen');
-    await supabase.from('email_logs').insert({
-      owner_id: getOwnerId(),
-      contact_id: currentDraftContactId || null,
-      to_email: toEmail, to_name: toName,
-      subject, body, status: 'sent'
-    });
-    closeModal('emailComposeModal');
-    aiAddMsg('E-Mail erfolgreich gesendet an ' + toEmail, 'ai');
-    showToast('E-Mail gesendet');
-  } catch(e) {
-    showToast('Fehler: ' + e.message, 'error');
-  }
-  btn.disabled = false; btn.textContent = '📧 Senden';
+
+  const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
+    + '&to=' + encodeURIComponent(toEmail)
+    + '&su=' + encodeURIComponent(subject)
+    + '&body=' + encodeURIComponent(body);
+  window.open(gmailUrl, '_blank');
+
+  await supabase.from('email_logs').insert({
+    owner_id: getOwnerId(),
+    contact_id: currentDraftContactId || null,
+    to_email: toEmail, to_name: toName,
+    subject, body, status: 'sent'
+  });
+  closeModal('emailComposeModal');
+  aiAddMsg('Gmail geöffnet für ' + toEmail + ' — bitte dort senden.', 'ai');
+  showToast('Gmail geöffnet ✓');
 });
 
 function aiAddMsg(text, role) {

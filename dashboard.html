@@ -724,16 +724,21 @@
           <span class="compose-field-label">An:</span>
           <input class="compose-field-input" id="composeToName" placeholder="Name" style="width:170px;" />
           <input class="compose-field-input" id="composeToEmail" placeholder="E-Mail" type="email" style="flex:1;" />
+          <button class="copy-btn" id="copyToEmailBtn" title="E-Mail kopieren">⎘</button>
         </div>
         <div class="compose-field-row">
           <span class="compose-field-label">Betreff:</span>
           <input class="compose-field-input" id="composeSubject" placeholder="Betreff" style="flex:1;" />
+          <button class="copy-btn" id="copySubjectBtn" title="Betreff kopieren">⎘</button>
         </div>
       </div>
-      <textarea class="compose-body" id="composeBody" placeholder="E-Mail-Inhalt..."></textarea>
+      <div class="compose-body-wrap">
+        <textarea class="compose-body" id="composeBody" placeholder="E-Mail-Inhalt..."></textarea>
+        <button class="copy-btn copy-body-btn" id="copyBodyBtn" title="Text kopieren">⎘ Text kopieren</button>
+      </div>
       <div class="compose-footer">
         <button class="btn-ghost" id="composeDiscardBtn">Verwerfen</button>
-        <button class="btn-primary" id="composeSendBtn">📧 Senden</button>
+        <button class="btn-primary" id="composeSendBtn">✉ In Gmail öffnen</button>
       </div>
     </div>
   </div>
