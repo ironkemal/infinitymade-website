@@ -1400,11 +1400,14 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
       body: JSON.stringify({
         action: 'send',
         to_email: toEmail, to_name: toName, subject, body,
-        from_email: gmailConnectedEmail || currentSession.user.email
+        from_email: gmailConnectedEmail || currentSession.user.email,
+        sender_name: currentProfile.b2b_sender_name || ''
       })
     });
-    const json = await res.json();
-    if (!json.success) throw new Error('Senden fehlgeschlagen');
+    const rawText = await res.text();
+    let json = {};
+    try { json = rawText ? JSON.parse(rawText) : {}; } catch(_) {}
+    if (!res.ok && json.success === false) throw new Error(json.error || 'Senden fehlgeschlagen');
     await supabase.from('email_logs').insert({
       owner_id: getOwnerId(),
       contact_id: currentDraftContactId || null,
@@ -1449,6 +1452,7 @@ async function runMailDraft(intent) {
         })),
         owner_info: {
           business_name: currentProfile.business_name,
+          sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
           city: currentProfile.city || ''
         }
       })
