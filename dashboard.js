@@ -1302,9 +1302,7 @@ function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
 }
 
 async function checkB2bSetup() {
-  const {data: gmailInt} = await supabase.from('calendar_integrations')
-    .select('email').eq('user_id', currentSession.user.id).eq('provider','gmail').maybeSingle();
-  gmailConnectedEmail = gmailInt?.email || null;
+  gmailConnectedEmail = currentProfile.b2b_from_email || null;
 
   const setupDone = currentProfile.b2b_setup_done && gmailConnectedEmail;
   document.getElementById('b2bSetupCard').hidden    = !!setupDone;
@@ -1561,8 +1559,13 @@ async function ensureCompanyCode() {
 async function handleGmailCallback() {
   const qp = new URLSearchParams(window.location.search);
   if (!qp.get('gmail_ok')) return;
+  const email = qp.get('gmail_email') || '';
+  if (email) {
+    currentProfile.b2b_from_email = decodeURIComponent(email);
+    gmailConnectedEmail = currentProfile.b2b_from_email;
+  }
   window.history.replaceState({}, '', window.location.pathname);
-  showToast('Gmail erfolgreich verbunden!');
+  showToast('Gmail verbunden: ' + (gmailConnectedEmail || ''));
   switchPanel('b2b');
 }
 

@@ -168,16 +168,13 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       const uinfo = await uRes.json();
       if (!uinfo.email) throw new Error('No email from Google');
 
-      const { error } = await supabase.from('calendar_integrations').upsert({
-        user_id: userId, provider: 'gmail',
-        email: uinfo.email,
-        access_token: tokens.access_token,
-        refresh_token: null,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id,provider' });
+      const { error } = await supabase.from('profiles')
+        .update({ b2b_from_email: uinfo.email })
+        .eq('id', userId);
       if (error) throw error;
 
-      return res.redirect('https://infinitymade.de/dashboard.html?gmail_ok=1#b2b');
+      const emailEnc = encodeURIComponent(uinfo.email);
+      return res.redirect(`https://infinitymade.de/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}#b2b`);
     }
 
     const { error } = await supabase
