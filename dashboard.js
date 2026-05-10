@@ -1282,20 +1282,19 @@ document.getElementById('b2bSaveBtn').addEventListener('click', async () => {
 
 const B2B_AGENT_URL = 'https://n8n.infinitymade.de/webhook/b2b-mail-agent';
 const GMAIL_CLIENT_ID = '336001691467-1hba3p0g46t8r0gjqoddap8f5khu05gq.apps.googleusercontent.com';
-const GMAIL_REDIRECT  = window.location.origin + '/dashboard.html?gmail_callback=1';
+const GMAIL_REDIRECT  = window.location.origin + '/dashboard.html';
 let gmailConnectedEmail = null;
 let currentDraftContactId = null;
 
 function startGmailOAuth(context) {
   const userId = currentSession.user.id;
-  const scope = encodeURIComponent('https://www.googleapis.com/auth/gmail.send email profile');
+  const scope = encodeURIComponent('email profile');
   const state = encodeURIComponent(JSON.stringify({user_id: userId, ctx: context}));
   window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
     + '?client_id=' + GMAIL_CLIENT_ID
     + '&redirect_uri=' + encodeURIComponent(GMAIL_REDIRECT)
-    + '&response_type=code'
+    + '&response_type=token'
     + '&scope=' + scope
-    + '&access_type=offline'
     + '&prompt=select_account'
     + '&state=' + state;
 }
@@ -1570,41 +1569,40 @@ async function ensureCompanyCode() {
 }
 
 async function handleGmailCallback() {
-  const params = new URLSearchParams(window.location.search);
-  if (!params.get('gmail_callback') || !params.get('code')) return;
-  const code  = params.get('code');
-  const state = params.get('state');
+  if (!window.location.hash.includes('access_token') && !window.location.hash.includes('error')) return;
+  const hash = new URLSearchParams(window.location.hash.replace('#',''));
+  const accessToken = hash.get('access_token');
+  const stateRaw    = hash.get('state');
+  if (!accessToken) {
+    const err = hash.get('error');
+    if (err) showToast('Google Fehler: ' + err, 'error');
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
   let userId = null;
-  try { userId = JSON.parse(decodeURIComponent(state)).user_id; } catch(e) {}
-  if (!userId) return;
+  try { userId = JSON.parse(decodeURIComponent(stateRaw)).user_id; } catch(e) {}
+  if (!userId) { window.history.replaceState({}, '', window.location.pathname); return; }
   try {
-    const res = await fetch('https://n8n.infinitymade.de/webhook/gmail-oauth-callback', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({code, user_id: userId, redirect_uri: window.location.origin + '/dashboard.html?gmail_callback=1'})
+    const res   = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {'Authorization': 'Bearer ' + accessToken}
     });
-    const json = await res.json();
-    if (json.email) {
-      await supabase.from('calendar_integrations').upsert({
-        user_id: userId, provider: 'gmail',
-        email: json.email,
-        access_token: json.access_token,
-        refresh_token: json.refresh_token || null,
-        expires_at: json.expires_in ? new Date(Date.now() + json.expires_in * 1000).toISOString() : null
-      }, {onConflict: 'user_id,provider'});
-      gmailConnectedEmail = json.email;
-      showToast('Gmail verbunden: ' + json.email);
-      switchPanel('b2b');
-    }
+    const uinfo = await res.json();
+    if (!uinfo.email) throw new Error('Keine E-Mail erhalten');
+    await supabase.from('calendar_integrations').upsert({
+      user_id: userId, provider: 'gmail',
+      email: uinfo.email,
+      access_token: accessToken,
+      refresh_token: null,
+      expires_at: new Date(Date.now() + 3600 * 1000).toISOString()
+    }, {onConflict: 'user_id,provider'});
+    gmailConnectedEmail = uinfo.email;
+    showToast('Gmail verbunden: ' + uinfo.email);
   } catch(e) {
     console.error('[gmail callback]', e);
+    showToast('Verbindung fehlgeschlagen: ' + e.message, 'error');
   }
-  const url = new URL(window.location.href);
-  url.searchParams.delete('gmail_callback');
-  url.searchParams.delete('code');
-  url.searchParams.delete('state');
-  url.searchParams.delete('scope');
-  window.history.replaceState({}, '', url.toString());
+  window.history.replaceState({}, '', window.location.pathname);
+  switchPanel('b2b');
 }
 
 async function init() {
