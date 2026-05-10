@@ -297,7 +297,7 @@ app.post('/api/booking/create', async (req, res) => {
       start_time: start_time.toISOString(),
       end_time: end_time.toISOString(),
       customer_name: customerName,
-      customer_email: customerEmail,
+      customer_email: customerEmail || `wa${(customerPhone || 'anon').replace(/\D/g, '')}@whatsapp.local`,
       customer_phone: customerPhone,
       status: 'confirmed'
     }).select().single();
