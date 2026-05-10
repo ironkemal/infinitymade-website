@@ -383,20 +383,10 @@
             </div>
 
             <div class="apify-bar" style="margin-bottom:16px;">
-              <span class="apify-label">Google Maps Scraper:</span>
-              <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt München" />
-              <select class="form-select" id="apifySector" style="width:150px;">
-                <option value="">Branche wählen</option>
-                <option value="Zahnarzt">Zahnarzt</option>
-                <option value="Arzt">Arzt</option>
-                <option value="Physiotherapie">Physiotherapie</option>
-                <option value="Apotheke">Apotheke</option>
-                <option value="Friseur">Friseur</option>
-                <option value="Kosmetik">Kosmetik</option>
-                <option value="Fitnessstudio">Fitnessstudio</option>
-                <option value="Restaurant">Restaurant</option>
-              </select>
-              <input class="form-input" style="width:80px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
+              <span class="apify-label">🔍 Google Maps:</span>
+              <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt" style="flex:2;" />
+              <input class="form-input" id="apifyCity" type="text" placeholder="Stadt / Region" style="flex:1;" />
+              <input class="form-input" style="width:72px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
               <button class="btn-primary" id="apifyRunBtn">Suchen</button>
             </div>
 
@@ -699,6 +689,11 @@
             </div>
             <button class="btn-outline-sm" id="cfgGmailBtn">Konto wechseln</button>
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apify API Token</label>
+          <input class="form-input" id="cfgApifyToken" type="password" placeholder="apify_api_..." />
+          <div class="form-hint">Für Google Maps Leads-Suche. Token unter apify.com/account → Integrations.</div>
         </div>
       </div>
       <div class="modal-footer">

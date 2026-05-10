@@ -799,49 +799,46 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 });
 
 document.getElementById('apifyRunBtn').addEventListener('click', async () => {
-  const sectorEl = document.getElementById('apifySector');
-  const sector   = sectorEl?.value||'';
   const rawQuery = document.getElementById('apifyQuery').value.trim();
-  const query    = sector && rawQuery ? `${sector} ${rawQuery}` : sector||rawQuery;
+  const city     = document.getElementById('apifyCity').value.trim();
+  const query    = city ? `${rawQuery} ${city}` : rawQuery;
   const limit    = parseInt(document.getElementById('apifyLimit').value)||20;
-  const token    = localStorage.getItem('apify_token') || prompt('Apify API Token:');
-  if (!query||!token) return;
-  localStorage.setItem('apify_token', token);
+  const token    = localStorage.getItem('apify_token');
+  if (!query) { showToast('Bitte Suchbegriff eingeben', 'error'); return; }
+  if (!token) { showToast('Apify Token fehlt — bitte in Konfiguration eintragen', 'error'); openModal('b2bConfigModal'); return; }
   const btn = document.getElementById('apifyRunBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳';
+  btn.disabled = true; btn.textContent = '⏳';
   try {
     const res = await fetch(
       `https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${token}&timeout=120&memory=512`,
-      {method:'POST',headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({searchStringsArray:[query],maxCrawledPlacesPerSearch:limit,language:'de',includeHistogram:false})}
+      {method:'POST', headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({searchStringsArray:[query], maxCrawledPlacesPerSearch:limit, language:'de', includeHistogram:false, includeImages:false})}
     );
     if (!res.ok) throw new Error('HTTP '+res.status);
     const items = await res.json();
     const ownerId = getOwnerId();
     const inserts = (items||[]).map(p=>({
-      owner_id:ownerId,
-      company_name:p.title||p.name||'—',
-      contact_name:null,
-      phone:p.phone||p.phoneNumber||null,
-      email:p.email||null,
-      website:p.website||null,
-      status:'prospect',
-      notes:[
-        sector?`Branche: ${sector}`:null,
-        p.address?.street?`Adresse: ${p.address.street}, ${p.address.city||''}`:null,
-        p.totalScore?`Bewertung: ${p.totalScore} ⭐ (${p.reviewsCount||0} Rezensionen)`:null,
-        p.url?`Google Maps: ${p.url}`:null
+      owner_id: ownerId,
+      company_name: p.title||p.name||'—',
+      contact_name: null,
+      phone: p.phone||p.phoneNumber||null,
+      email: p.email||null,
+      website: p.website||null,
+      status: 'prospect',
+      notes: [
+        p.categoryName ? `Branche: ${p.categoryName}` : null,
+        p.address?.street ? `Adresse: ${p.address.street}, ${p.address.city||''}` : null,
+        p.totalScore ? `Bewertung: ${p.totalScore} ⭐ (${p.reviewsCount||0} Rezensionen)` : null,
+        p.url ? `Google Maps: ${p.url}` : null
       ].filter(Boolean).join('\n')||null
     }));
     if (inserts.length>0) await supabase.from('b2b_contacts').insert(inserts);
     await loadB2B();
-    showToast(t('apify_done')+inserts.length);
+    showToast(`✓ ${inserts.length} Kontakte importiert`);
   } catch(err) {
-    showToast(t('apify_error')+err.message,'error');
+    showToast('Fehler: '+err.message, 'error');
   }
-  btn.disabled=false;
-  btn.textContent = 'Suchen';
+  btn.disabled=false; btn.textContent = 'Suchen';
 });
 
 let servicesCache = [];
@@ -1349,6 +1346,7 @@ document.getElementById('b2bSetupFinishBtn').addEventListener('click', async () 
 
 document.getElementById('b2bConfigBtn').addEventListener('click', () => {
   document.getElementById('cfgSenderName').value = currentProfile.b2b_sender_name || '';
+  document.getElementById('cfgApifyToken').value = localStorage.getItem('apify_token') || '';
   setGmailUI(gmailConnectedEmail,
     document.getElementById('cfgGmailDot'),
     document.getElementById('cfgGmailLabel'),
@@ -1361,6 +1359,8 @@ document.getElementById('cfgGmailBtn').addEventListener('click', () => startGmai
 document.getElementById('b2bConfigSaveBtn').addEventListener('click', async () => {
   const name = document.getElementById('cfgSenderName').value.trim();
   if (!name) { showToast(t('err_generic'), 'error'); return; }
+  const apifyToken = document.getElementById('cfgApifyToken').value.trim();
+  if (apifyToken) localStorage.setItem('apify_token', apifyToken);
   const {error} = await supabase.from('profiles')
     .update({b2b_sender_name: name}).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
