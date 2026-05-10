@@ -1,9 +1,10 @@
 FROM node:22-alpine
 WORKDIR /app
 
-# Install deps first for better layer caching
+# Install deps first for better layer caching.
+# Using npm install (not ci) so a slightly out-of-sync lockfile doesn't break the build.
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
 # Then copy source
 COPY server.js ./
