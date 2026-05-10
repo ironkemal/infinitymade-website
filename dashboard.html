@@ -344,6 +344,14 @@
             </div>
           </div>
 
+          <div class="b2b-from-bar" id="b2bFromBar">
+            <span class="from-bar-label">Absender:</span>
+            <span class="from-bar-email" id="b2bFromEmail">—</span>
+            <span class="from-bar-status" id="b2bFromStatus"></span>
+            <button class="btn-outline-sm" id="b2bGmailConnectBtn" hidden>Mit Google verbinden</button>
+            <button class="btn-ghost-sm" id="b2bGmailDisconnectBtn" hidden>Trennen</button>
+          </div>
+
           <div class="apify-bar" style="margin-bottom:16px;">
             <span class="apify-label">Google Maps Scraper:</span>
             <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt München" />
@@ -392,22 +400,6 @@
               </div>
               <div class="ai-messages" id="aiMessages">
                 <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
-              </div>
-              <div class="email-draft-preview" id="emailDraftPreview" hidden>
-                <div class="draft-to-row">
-                  <span class="draft-label">An:</span>
-                  <input class="form-input" id="draftToName" placeholder="Name" style="width:140px;" />
-                  <input class="form-input" id="draftToEmail" placeholder="E-Mail" type="email" style="flex:1;" />
-                </div>
-                <div class="draft-subj-row">
-                  <span class="draft-label">Betreff:</span>
-                  <input class="form-input" id="draftSubject" placeholder="Betreff" style="flex:1;" />
-                </div>
-                <textarea class="form-textarea" id="draftBody" rows="6" style="margin-top:8px;"></textarea>
-                <div class="draft-actions">
-                  <button class="btn-ghost" id="draftDiscardBtn">Verwerfen</button>
-                  <button class="btn-primary" id="draftSendBtn">📧 Senden</button>
-                </div>
               </div>
               <div class="ai-input-row">
                 <button class="btn-icon" id="aiVoiceBtn" title="Spracheingabe">🎤</button>
@@ -651,6 +643,36 @@
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="leadModal" data-i18n="lead_cancel">Abbrechen</button>
         <button class="btn-primary" id="leadSaveBtn" data-i18n="lead_save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: EMAIL COMPOSE ===== -->
+  <div class="modal-overlay" id="emailComposeModal" hidden>
+    <div class="email-compose-window">
+      <div class="compose-titlebar">
+        <span class="compose-title">E-Mail verfassen</span>
+        <button class="modal-close" data-modal="emailComposeModal">✕</button>
+      </div>
+      <div class="compose-meta">
+        <div class="compose-field-row">
+          <span class="compose-field-label">Von:</span>
+          <span class="compose-from-val" id="composeFromDisplay">—</span>
+        </div>
+        <div class="compose-field-row">
+          <span class="compose-field-label">An:</span>
+          <input class="compose-field-input" id="composeToName" placeholder="Name" style="width:170px;" />
+          <input class="compose-field-input" id="composeToEmail" placeholder="E-Mail" type="email" style="flex:1;" />
+        </div>
+        <div class="compose-field-row">
+          <span class="compose-field-label">Betreff:</span>
+          <input class="compose-field-input" id="composeSubject" placeholder="Betreff" style="flex:1;" />
+        </div>
+      </div>
+      <textarea class="compose-body" id="composeBody" placeholder="E-Mail-Inhalt..."></textarea>
+      <div class="compose-footer">
+        <button class="btn-ghost" id="composeDiscardBtn">Verwerfen</button>
+        <button class="btn-primary" id="composeSendBtn">📧 Senden</button>
       </div>
     </div>
   </div>
