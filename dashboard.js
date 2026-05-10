@@ -1411,7 +1411,11 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   const body    = document.getElementById('composeBody').value.trim();
   if (!toEmail || !subject || !body) { showToast(t('err_generic'), 'error'); return; }
 
-  const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
+  const gmailAccount = gmailConnectedEmail || '';
+  const gmailBase = gmailAccount
+    ? 'https://mail.google.com/mail/u/' + encodeURIComponent(gmailAccount) + '/'
+    : 'https://mail.google.com/mail/';
+  const gmailUrl = gmailBase + '?view=cm&fs=1'
     + '&to=' + encodeURIComponent(toEmail)
     + '&su=' + encodeURIComponent(subject)
     + '&body=' + encodeURIComponent(body);
