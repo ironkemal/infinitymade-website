@@ -346,7 +346,7 @@ async function loadTodayBookings() {
   const ownerId = getOwnerId();
 
   let q = supabase.from('bookings')
-    .select('*,services(title,color),profiles!bookings_user_id_fkey(business_name)')
+    .select('*,services(title,color)')
     .eq('owner_id',ownerId)
     .gte('start_time',todayStart).lte('start_time',todayEnd)
     .neq('status','cancelled').order('start_time').limit(25);
@@ -357,13 +357,15 @@ async function loadTodayBookings() {
   document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
   if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
-  listEl.innerHTML = bookings.map(b=>`
-    <li class="upcoming-item">
+  listEl.innerHTML = bookings.map(b=>{
+    const emp = teamMembers.find(m=>m.id===b.user_id);
+    return `<li class="upcoming-item">
       <span class="upcoming-time">${fmtTime(b.start_time)}</span>
       <div><div class="upcoming-customer">${b.customer_name||'—'}</div><div class="upcoming-service">${b.services?.title||'—'}</div></div>
-      <span class="upcoming-staff">${b.profiles?.business_name||''}</span>
+      <span class="upcoming-staff">${emp?.business_name||emp?.email?.split('@')[0]||''}</span>
       <span class="badge ${statusBadge(b.status)}">${b.status||''}</span>
-    </li>`).join('');
+    </li>`;
+  }).join('');
   listEl.hidden = false;
 }
 
@@ -392,25 +394,28 @@ async function initCalendar() {
     events: async (info,ok,fail) => {
       try {
         let q = supabase.from('bookings')
-          .select('*,services(title,color),profiles!bookings_user_id_fkey(business_name)')
+          .select('*,services(title,color)')
           .eq('owner_id',ownerId).gte('start_time',info.startStr).lte('start_time',info.endStr);
         if (currentProfile.role!=='owner') q = q.eq('user_id',currentSession.user.id);
         const {data:bks} = await q;
 
         const {data:leaves} = await supabase.from('time_offs')
-          .select('*,profiles!time_offs_employee_id_fkey(business_name)')
+          .select('*')
           .in('employee_id',teamMembers.map(m=>m.id))
           .lte('start_date',info.endStr).gte('end_date',info.startStr);
 
         const evts = [];
-        (bks||[]).forEach(b => evts.push({
-          id:b.id,title:`${b.services?.title||'Termin'} – ${b.customer_name}`,
-          start:b.start_time,end:b.end_time,
-          backgroundColor:b.services?.color||'#22c55e',borderColor:b.services?.color||'#22c55e',
-          textColor:'#0a0a0a',extendedProps:b
-        }));
+        (bks||[]).forEach(b => {
+          const emp = teamMembers.find(m=>m.id===b.user_id);
+          evts.push({
+            id:b.id,title:`${b.services?.title||'Termin'} – ${b.customer_name}`,
+            start:b.start_time,end:b.end_time,
+            backgroundColor:b.services?.color||'#22c55e',borderColor:b.services?.color||'#22c55e',
+            textColor:'#0a0a0a',extendedProps:{...b,_empName:emp?.business_name||''}
+          });
+        });
         (leaves||[]).forEach(l => evts.push({
-          id:'leave_'+l.id,title:`❌ ${l.reason||'Beurlaubt'} – ${l.profiles?.business_name||''}`,
+          id:'leave_'+l.id,title:`❌ ${l.reason||'Beurlaubt'}`,
           start:l.start_date,end:l.end_date,allDay:true,
           backgroundColor:'#ef4444',borderColor:'#ef4444',textColor:'#fff'
         }));
@@ -1105,14 +1110,19 @@ async function ensureCompanyCode() {
 }
 
 async function init() {
-  await ensureCompanyCode();
-  applyI18n();
-  renderSidebar();
-  await renderOverview();
-  await loadTeam();
-  await initCalendar();
-  document.getElementById('loading').hidden = true;
-  document.getElementById('app').style.display = '';
+  try {
+    await ensureCompanyCode();
+    applyI18n();
+    renderSidebar();
+    await loadTeam();
+    await renderOverview();
+    await initCalendar();
+  } catch(e) {
+    console.error('[dashboard init]', e);
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = '';
+  }
 }
 
 init();
