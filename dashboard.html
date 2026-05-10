@@ -344,67 +344,97 @@
             </div>
           </div>
 
-          <div class="b2b-from-bar" id="b2bFromBar">
-            <span class="from-bar-label">Absender:</span>
-            <span class="from-bar-email" id="b2bFromEmail">—</span>
-            <span class="from-bar-status" id="b2bFromStatus"></span>
-            <button class="btn-outline-sm" id="b2bGmailConnectBtn" hidden>Mit Google verbinden</button>
-            <button class="btn-ghost-sm" id="b2bGmailDisconnectBtn" hidden>Trennen</button>
-          </div>
-
-          <div class="apify-bar" style="margin-bottom:16px;">
-            <span class="apify-label">Google Maps Scraper:</span>
-            <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt München" />
-            <select class="form-select" id="apifySector" style="width:150px;">
-              <option value="">Branche wählen</option>
-              <option value="Zahnarzt">Zahnarzt</option>
-              <option value="Arzt">Arzt</option>
-              <option value="Physiotherapie">Physiotherapie</option>
-              <option value="Apotheke">Apotheke</option>
-              <option value="Friseur">Friseur</option>
-              <option value="Kosmetik">Kosmetik</option>
-              <option value="Fitnessstudio">Fitnessstudio</option>
-              <option value="Restaurant">Restaurant</option>
-            </select>
-            <input class="form-input" style="width:80px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
-            <button class="btn-primary" id="apifyRunBtn">Suchen</button>
-          </div>
-
-          <div class="b2b-layout">
-            <div>
-              <div class="filter-bar" style="margin-bottom:12px;">
-                <input class="search-input" id="b2bSearch" type="text" placeholder="Suchen..." style="margin-left:0;width:220px;" />
+          <!-- SETUP WIZARD -->
+          <div class="b2b-setup-card" id="b2bSetupCard" hidden>
+            <div class="setup-icon">📧</div>
+            <h3 class="setup-heading">E-Mail-Absender einrichten</h3>
+            <p class="setup-sub">Bevor Sie E-Mails versenden können, richten Sie bitte Ihr Absenderprofil ein.</p>
+            <div class="setup-fields">
+              <div class="form-group">
+                <label class="form-label">Absendername <span class="req">*</span></label>
+                <input class="form-input" id="setupSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
+                <div class="form-hint">Dieser Name erscheint als Absender in der E-Mail.</div>
               </div>
-              <div class="table-wrap">
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th data-i18n="b2b_company">Unternehmen</th>
-                      <th data-i18n="b2b_contact">Ansprechpartner</th>
-                      <th data-i18n="lead_phone">Telefon</th>
-                      <th data-i18n="b2b_status">Status</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody id="b2bTableBody"></tbody>
-                </table>
-                <div id="b2bEmpty" class="table-empty" hidden data-i18n="b2b_empty">Noch keine B2B-Kontakte.</div>
+              <div class="form-group">
+                <label class="form-label">Gmail-Konto <span class="req">*</span></label>
+                <div class="setup-gmail-row">
+                  <div class="setup-gmail-status" id="setupGmailStatus">
+                    <span class="status-dot" id="setupGmailDot"></span>
+                    <span id="setupGmailLabel">Kein Konto verbunden</span>
+                  </div>
+                  <button class="btn-outline-sm" id="setupGmailBtn">Mit Google verbinden</button>
+                </div>
               </div>
             </div>
+            <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
+          </div>
 
-            <div class="ai-chat-card">
-              <div class="ai-chat-header">
-                <div class="ai-dot"></div>
-                <span>KI Mail-Assistent</span>
-                <span class="ai-from-badge" id="aiFromBadge">noreply@infinitymade.de</span>
+          <!-- MAIN CONTENT -->
+          <div id="b2bMainContent" hidden>
+            <div class="b2b-from-bar">
+              <div class="from-bar-info">
+                <span class="from-bar-name" id="b2bFromName">—</span>
+                <span class="from-bar-sep">·</span>
+                <span class="from-bar-email" id="b2bFromEmail">—</span>
+                <span class="from-bar-badge">✓ Bereit</span>
               </div>
-              <div class="ai-messages" id="aiMessages">
-                <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
+              <button class="btn-ghost-sm" id="b2bConfigBtn">⚙ Konfiguration</button>
+            </div>
+
+            <div class="apify-bar" style="margin-bottom:16px;">
+              <span class="apify-label">Google Maps Scraper:</span>
+              <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt München" />
+              <select class="form-select" id="apifySector" style="width:150px;">
+                <option value="">Branche wählen</option>
+                <option value="Zahnarzt">Zahnarzt</option>
+                <option value="Arzt">Arzt</option>
+                <option value="Physiotherapie">Physiotherapie</option>
+                <option value="Apotheke">Apotheke</option>
+                <option value="Friseur">Friseur</option>
+                <option value="Kosmetik">Kosmetik</option>
+                <option value="Fitnessstudio">Fitnessstudio</option>
+                <option value="Restaurant">Restaurant</option>
+              </select>
+              <input class="form-input" style="width:80px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
+              <button class="btn-primary" id="apifyRunBtn">Suchen</button>
+            </div>
+
+            <div class="b2b-layout">
+              <div>
+                <div class="filter-bar" style="margin-bottom:12px;">
+                  <input class="search-input" id="b2bSearch" type="text" placeholder="Suchen..." style="margin-left:0;width:220px;" />
+                </div>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="b2b_company">Unternehmen</th>
+                        <th data-i18n="b2b_contact">Ansprechpartner</th>
+                        <th data-i18n="lead_phone">Telefon</th>
+                        <th data-i18n="b2b_status">Status</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="b2bTableBody"></tbody>
+                  </table>
+                  <div id="b2bEmpty" class="table-empty" hidden data-i18n="b2b_empty">Noch keine B2B-Kontakte.</div>
+                </div>
               </div>
-              <div class="ai-input-row">
-                <button class="btn-icon" id="aiVoiceBtn" title="Spracheingabe">🎤</button>
-                <textarea id="aiInput" placeholder="Befehl eingeben oder Mikrofon drücken..." rows="1"></textarea>
-                <button class="btn-primary" id="aiSendBtn">→</button>
+
+              <div class="ai-chat-card">
+                <div class="ai-chat-header">
+                  <div class="ai-dot"></div>
+                  <span>KI Mail-Assistent</span>
+                  <span class="ai-from-badge" id="aiFromBadge"></span>
+                </div>
+                <div class="ai-messages" id="aiMessages">
+                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
+                </div>
+                <div class="ai-input-row">
+                  <button class="btn-icon" id="aiVoiceBtn" title="Spracheingabe">🎤</button>
+                  <textarea id="aiInput" placeholder="Befehl eingeben oder Mikrofon drücken..." rows="1"></textarea>
+                  <button class="btn-primary" id="aiSendBtn">→</button>
+                </div>
               </div>
             </div>
           </div>
@@ -643,6 +673,36 @@
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="leadModal" data-i18n="lead_cancel">Abbrechen</button>
         <button class="btn-primary" id="leadSaveBtn" data-i18n="lead_save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: B2B CONFIG ===== -->
+  <div class="modal-overlay" id="b2bConfigModal" hidden>
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-header">
+        <span class="modal-title">E-Mail Konfiguration</span>
+        <button class="modal-close" data-modal="b2bConfigModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Absendername</label>
+          <input class="form-input" id="cfgSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gmail-Konto</label>
+          <div class="setup-gmail-row">
+            <div class="setup-gmail-status" id="cfgGmailStatus">
+              <span class="status-dot" id="cfgGmailDot"></span>
+              <span id="cfgGmailLabel">—</span>
+            </div>
+            <button class="btn-outline-sm" id="cfgGmailBtn">Konto wechseln</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="b2bConfigModal">Abbrechen</button>
+        <button class="btn-primary" id="b2bConfigSaveBtn">Speichern</button>
       </div>
     </div>
   </div>

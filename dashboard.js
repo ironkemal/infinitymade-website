@@ -233,7 +233,7 @@ function switchPanel(id) {
   if (id==='services') loadServices();
   if (id==='hours') loadHoursPanel();
   if (id==='team') loadTeam();
-  if (id==='b2b') { loadB2B(); initB2bFromBar(); }
+  if (id==='b2b') { loadB2B(); checkB2bSetup(); }
   if (id==='settings') loadSettings();
 }
 
@@ -1281,59 +1281,106 @@ document.getElementById('b2bSaveBtn').addEventListener('click', async () => {
 });
 
 const B2B_AGENT_URL = 'https://n8n.infinitymade.de/webhook/b2b-mail-agent';
-const GMAIL_OAUTH_START = 'https://n8n.infinitymade.de/api/gmail-oauth/start';
+const GMAIL_CLIENT_ID = '336001691467-1hba3p0g46t8r0gjqoddap8f5khu05gq.apps.googleusercontent.com';
+const GMAIL_REDIRECT  = window.location.origin + '/dashboard.html?gmail_callback=1';
 let gmailConnectedEmail = null;
 let currentDraftContactId = null;
 
-async function initB2bFromBar() {
-  const emailEl  = document.getElementById('b2bFromEmail');
-  const statusEl = document.getElementById('b2bFromStatus');
-  const connectBtn    = document.getElementById('b2bGmailConnectBtn');
-  const disconnectBtn = document.getElementById('b2bGmailDisconnectBtn');
-
-  const {data: gmailInt} = await supabase.from('calendar_integrations')
-    .select('email').eq('user_id', currentSession.user.id).eq('provider','gmail').maybeSingle();
-
-  if (gmailInt?.email) {
-    gmailConnectedEmail = gmailInt.email;
-    emailEl.textContent  = gmailInt.email;
-    statusEl.textContent = '✓ Gmail verbunden';
-    statusEl.className   = 'from-bar-status connected';
-    connectBtn.hidden    = true;
-    disconnectBtn.hidden = false;
-    document.getElementById('composeFromDisplay').textContent = gmailInt.email;
-  } else {
-    gmailConnectedEmail = null;
-    emailEl.textContent  = currentSession.user.email;
-    statusEl.textContent = 'Gmail nicht verbunden';
-    statusEl.className   = 'from-bar-status disconnected';
-    connectBtn.hidden    = false;
-    disconnectBtn.hidden = true;
-    document.getElementById('composeFromDisplay').textContent = currentSession.user.email;
-  }
-  document.getElementById('aiFromBadge').textContent = gmailConnectedEmail || currentSession.user.email;
-}
-
-document.getElementById('b2bGmailConnectBtn').addEventListener('click', () => {
+function startGmailOAuth(context) {
   const userId = currentSession.user.id;
-  const redirectUri = encodeURIComponent(window.location.origin + '/dashboard.html?gmail_callback=1');
-  const scope = encodeURIComponent('https://www.googleapis.com/auth/gmail.send');
-  const clientId = '336001691467-1hba3p0g46t8r0gjqoddap8f5khu05gq.apps.googleusercontent.com';
-  const state = encodeURIComponent(JSON.stringify({user_id: userId}));
+  const scope = encodeURIComponent('https://www.googleapis.com/auth/gmail.send email profile');
+  const state = encodeURIComponent(JSON.stringify({user_id: userId, ctx: context}));
   window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
-    + '?client_id=' + clientId
-    + '&redirect_uri=' + redirectUri
+    + '?client_id=' + GMAIL_CLIENT_ID
+    + '&redirect_uri=' + encodeURIComponent(GMAIL_REDIRECT)
     + '&response_type=code'
     + '&scope=' + scope
-    + '&access_type=offline&prompt=consent'
+    + '&access_type=offline'
+    + '&prompt=select_account'
     + '&state=' + state;
+}
+
+function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
+  if (email) {
+    dotEl.className   = 'status-dot connected';
+    labelEl.textContent = email;
+    connectBtnEl.textContent = 'Konto wechseln';
+  } else {
+    dotEl.className   = 'status-dot';
+    labelEl.textContent = 'Kein Konto verbunden';
+    connectBtnEl.textContent = 'Mit Google verbinden';
+  }
+}
+
+async function checkB2bSetup() {
+  const {data: gmailInt} = await supabase.from('calendar_integrations')
+    .select('email').eq('user_id', currentSession.user.id).eq('provider','gmail').maybeSingle();
+  gmailConnectedEmail = gmailInt?.email || null;
+
+  const setupDone = currentProfile.b2b_setup_done && gmailConnectedEmail;
+  document.getElementById('b2bSetupCard').hidden    = !!setupDone;
+  document.getElementById('b2bMainContent').hidden  = !setupDone;
+
+  if (setupDone) {
+    document.getElementById('b2bFromName').textContent  = currentProfile.b2b_sender_name || '—';
+    document.getElementById('b2bFromEmail').textContent = gmailConnectedEmail;
+    document.getElementById('aiFromBadge').textContent  = gmailConnectedEmail;
+    document.getElementById('composeFromDisplay').textContent = gmailConnectedEmail;
+  } else {
+    const nameInput = document.getElementById('setupSenderName');
+    if (currentProfile.b2b_sender_name) nameInput.value = currentProfile.b2b_sender_name;
+    setGmailUI(gmailConnectedEmail,
+      document.getElementById('setupGmailDot'),
+      document.getElementById('setupGmailLabel'),
+      document.getElementById('setupGmailBtn'));
+    updateSetupFinishBtn();
+  }
+}
+
+function updateSetupFinishBtn() {
+  const nameOk  = document.getElementById('setupSenderName').value.trim().length > 0;
+  const gmailOk = !!gmailConnectedEmail;
+  document.getElementById('b2bSetupFinishBtn').disabled = !(nameOk && gmailOk);
+}
+
+document.getElementById('setupSenderName').addEventListener('input', updateSetupFinishBtn);
+
+document.getElementById('setupGmailBtn').addEventListener('click', () => startGmailOAuth('setup'));
+
+document.getElementById('b2bSetupFinishBtn').addEventListener('click', async () => {
+  const name = document.getElementById('setupSenderName').value.trim();
+  if (!name || !gmailConnectedEmail) return;
+  const {error} = await supabase.from('profiles')
+    .update({b2b_sender_name: name, b2b_setup_done: true})
+    .eq('id', currentSession.user.id);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  currentProfile.b2b_sender_name = name;
+  currentProfile.b2b_setup_done  = true;
+  await checkB2bSetup();
+  showToast('E-Mail-Einrichtung abgeschlossen ✓');
 });
 
-document.getElementById('b2bGmailDisconnectBtn').addEventListener('click', async () => {
-  if (!confirm('Gmail-Verbindung trennen?')) return;
-  await supabase.from('calendar_integrations').delete()
-    .eq('user_id', currentSession.user.id).eq('provider','gmail');
-  await initB2bFromBar();
+document.getElementById('b2bConfigBtn').addEventListener('click', () => {
+  document.getElementById('cfgSenderName').value = currentProfile.b2b_sender_name || '';
+  setGmailUI(gmailConnectedEmail,
+    document.getElementById('cfgGmailDot'),
+    document.getElementById('cfgGmailLabel'),
+    document.getElementById('cfgGmailBtn'));
+  openModal('b2bConfigModal');
+});
+
+document.getElementById('cfgGmailBtn').addEventListener('click', () => startGmailOAuth('config'));
+
+document.getElementById('b2bConfigSaveBtn').addEventListener('click', async () => {
+  const name = document.getElementById('cfgSenderName').value.trim();
+  if (!name) { showToast(t('err_generic'), 'error'); return; }
+  const {error} = await supabase.from('profiles')
+    .update({b2b_sender_name: name}).eq('id', currentSession.user.id);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  currentProfile.b2b_sender_name = name;
+  document.getElementById('b2bFromName').textContent = name;
+  closeModal('b2bConfigModal');
+  showToast(t('saved'));
 });
 
 function openComposeModal(draft) {
@@ -1545,7 +1592,9 @@ async function handleGmailCallback() {
         refresh_token: json.refresh_token || null,
         expires_at: json.expires_in ? new Date(Date.now() + json.expires_in * 1000).toISOString() : null
       }, {onConflict: 'user_id,provider'});
-      showToast('Gmail erfolgreich verbunden: ' + json.email);
+      gmailConnectedEmail = json.email;
+      showToast('Gmail verbunden: ' + json.email);
+      switchPanel('b2b');
     }
   } catch(e) {
     console.error('[gmail callback]', e);
