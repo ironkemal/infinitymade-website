@@ -298,6 +298,7 @@
               </div>
               <div class="tab-bar">
                 <button class="tab-btn active" data-tab="info" data-i18n="tab_info">Info</button>
+                <button class="tab-btn" data-tab="kalender">Kalender</button>
                 <button class="tab-btn" data-tab="hours" data-i18n="nav_hours">Arbeitszeiten</button>
                 <button class="tab-btn" data-tab="services" data-i18n="nav_services">Dienstleistungen</button>
               </div>
@@ -310,6 +311,15 @@
                   <label class="form-label" data-i18n="lbl_google_cal">Google Kalender</label>
                   <div id="empGoogleStatus" style="font-size:13px;color:var(--text-muted);"></div>
                 </div>
+              </div>
+              <div class="tab-content" id="tab-kalender">
+                <div class="emp-cal-toolbar">
+                  <button class="btn-icon" id="empCalPrev">‹</button>
+                  <input class="form-input" id="empCalDate" type="date" style="width:160px;" />
+                  <button class="btn-icon" id="empCalNext">›</button>
+                  <button class="btn-primary" id="empCalAddBtn" style="margin-left:auto;">+ Termin</button>
+                </div>
+                <div id="empDaySchedule" class="emp-day-schedule"></div>
               </div>
               <div class="tab-content" id="tab-hours">
                 <div class="hours-grid" id="empHoursGrid"></div>

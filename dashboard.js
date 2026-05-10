@@ -923,27 +923,54 @@ async function loadTeam() {
   });
 }
 
+let detailEmpId = null;
+
 function openEmpDetail(empId) {
-  const m = teamMembers.find(t=>t.id===empId);
+  const m = teamMembers.find(tm=>tm.id===empId);
   if (!m) return;
-  document.getElementById('empDetailName').textContent = m.business_name||m.email?.split('@')[0]||'—';
-  document.getElementById('empDetailRole').textContent = m.role||'employee';
+  detailEmpId = empId;
+
+  document.getElementById('empDetailName').textContent  = m.business_name||m.email?.split('@')[0]||'—';
+  document.getElementById('empDetailRole').textContent  = m.role||'employee';
   document.getElementById('empDetailEmail').textContent = m.email||'—';
   document.getElementById('empDetailAvatar').textContent = (m.business_name||m.email||'?')[0].toUpperCase();
-  document.getElementById('teamListView').hidden = true;
+  document.getElementById('teamListView').hidden  = true;
   document.getElementById('teamDetailView').hidden = false;
 
+  const detail = document.getElementById('teamDetailView');
+
+  detail.querySelectorAll('.tab-btn').forEach(btn => {
+    const clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+  });
+  detail.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      detail.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      detail.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      const tc = document.getElementById('tab-'+btn.dataset.tab);
+      if (tc) tc.classList.add('active');
+      if (btn.dataset.tab==='kalender') initEmpCalTab(empId);
+      if (btn.dataset.tab==='hours') loadEmpHours(empId);
+      if (btn.dataset.tab==='services') loadEmpServices(empId);
+    });
+  });
+  detail.querySelector('.tab-btn[data-tab="info"]')?.classList.add('active');
+  document.getElementById('tab-info')?.classList.add('active');
+
   document.getElementById('empDetailBack').onclick = () => {
-    document.getElementById('teamListView').hidden = false;
+    document.getElementById('teamListView').hidden  = false;
     document.getElementById('teamDetailView').hidden = true;
+    detailEmpId = null;
   };
 
-  document.getElementById('empRemoveBtn').hidden = m.id===currentSession.user.id;
+  const isOwn = m.id===currentSession.user.id;
+  document.getElementById('empRemoveBtn').hidden = isOwn;
   document.getElementById('empRemoveBtn').onclick = async () => {
     if (!confirm(t('btn_remove')+'?')) return;
     await supabase.from('profiles').update({owner_id:null,role:'owner'}).eq('id',m.id);
     await loadTeam();
-    document.getElementById('teamListView').hidden = false;
+    document.getElementById('teamListView').hidden  = false;
     document.getElementById('teamDetailView').hidden = true;
   };
 
@@ -951,13 +978,156 @@ function openEmpDetail(empId) {
     .then(({data}) => {
       document.getElementById('empGoogleStatus').textContent = data?.access_token ? t('status_connected') : t('status_disconnected');
     });
+}
 
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-'+btn.dataset.tab)?.classList.add('active');
+function initEmpCalTab(empId) {
+  const tz = 'Europe/Berlin';
+  const todayStr = new Date().toLocaleDateString('sv-SE',{timeZone:tz});
+  const dateInput = document.getElementById('empCalDate');
+  if (!dateInput.value) dateInput.value = todayStr;
+
+  const canEdit = currentProfile.role==='owner' || empId===currentSession.user.id;
+  document.getElementById('empCalAddBtn').style.display = canEdit ? '' : 'none';
+
+  loadEmpDaySchedule(empId, dateInput.value);
+
+  dateInput.onchange = () => loadEmpDaySchedule(empId, dateInput.value);
+
+  document.getElementById('empCalPrev').onclick = () => {
+    const d = new Date(dateInput.value+'T12:00:00');
+    d.setDate(d.getDate()-1);
+    dateInput.value = d.toISOString().substring(0,10);
+    loadEmpDaySchedule(empId, dateInput.value);
+  };
+  document.getElementById('empCalNext').onclick = () => {
+    const d = new Date(dateInput.value+'T12:00:00');
+    d.setDate(d.getDate()+1);
+    dateInput.value = d.toISOString().substring(0,10);
+    loadEmpDaySchedule(empId, dateInput.value);
+  };
+  document.getElementById('empCalAddBtn').onclick = () => {
+    const dateVal = dateInput.value;
+    prefillBookingModal(dateVal+'T09:00', dateVal+'T09:30');
+    document.getElementById('bkEmployee').value = empId;
+  };
+}
+
+async function loadEmpDaySchedule(empId, dateStr) {
+  const list = document.getElementById('empDaySchedule');
+  list.innerHTML = '<div class="emp-day-empty">Lädt…</div>';
+
+  const dayStart = dateStr+'T00:00:00';
+  const dayEnd   = dateStr+'T23:59:59';
+
+  const [{data:bks},{data:leaves}] = await Promise.all([
+    supabase.from('bookings').select('*,services(title,color)')
+      .eq('user_id',empId)
+      .gte('start_time',new Date(dayStart).toISOString())
+      .lte('start_time',new Date(dayEnd).toISOString())
+      .neq('status','cancelled').order('start_time'),
+    supabase.from('time_offs').select('*')
+      .eq('employee_id',empId)
+      .lte('start_date',new Date(dayEnd).toISOString())
+      .gte('end_date',new Date(dayStart).toISOString())
+  ]);
+
+  const items = [];
+  (bks||[]).forEach(b => items.push({type:'booking',sort:b.start_time,data:b}));
+  (leaves||[]).forEach(l => items.push({type:'leave',sort:l.start_date,data:l}));
+  items.sort((a,b)=>a.sort.localeCompare(b.sort));
+
+  if (!items.length) { list.innerHTML='<div class="emp-day-empty">Keine Termine</div>'; return; }
+
+  const canEdit = currentProfile.role==='owner' || empId===currentSession.user.id;
+
+  list.innerHTML = items.map(item => {
+    if (item.type==='leave') {
+      const l = item.data;
+      return `<div class="emp-slot emp-slot-leave">
+        <span class="emp-slot-time">❌ Ganztags</span>
+        <div class="emp-slot-info">
+          <div class="emp-slot-customer">${l.reason||'Abwesenheit'}</div>
+        </div>
+      </div>`;
+    }
+    const b = item.data;
+    const color = b.services?.color||'var(--primary)';
+    return `<div class="emp-slot" data-bk-id="${b.id}" style="border-left:3px solid ${color};">
+      <span class="emp-slot-time">${fmtTime(b.start_time)}${b.end_time?' – '+fmtTime(b.end_time):''}</span>
+      <div class="emp-slot-info">
+        <div class="emp-slot-customer">${b.customer_name||'—'}</div>
+        <div class="emp-slot-service">${b.services?.title||'—'}</div>
+      </div>
+      ${canEdit?`<span class="btn-icon" style="opacity:.5;font-size:12px;">✏️</span>`:''}
+    </div>`;
+  }).join('');
+
+  if (canEdit) {
+    list.querySelectorAll('[data-bk-id]').forEach(el => {
+      el.addEventListener('click', () => {
+        const bk = (bks||[]).find(b=>b.id===el.dataset.bkId);
+        if (bk) openBookingModal(bk);
+      });
+    });
+  }
+}
+
+async function loadEmpHours(empId) {
+  const {data:hours} = await supabase.from('working_hours').select('*').eq('user_id',empId);
+  const dayLabels = DAYS[currentLang]||DAYS.de;
+  const grid = document.getElementById('empHoursGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i=0;i<7;i++) {
+    const h = hours?.find(x=>x.day_of_week===i)||{start_time:'09:00:00',end_time:'17:00:00',is_active:(i>0&&i<6)};
+    const row = document.createElement('div');
+    row.className = 'hours-row';
+    row.innerHTML = `
+      <label class="hours-day">
+        <input type="checkbox" id="ewh-active-${i}" ${h.is_active?'checked':''}> ${dayLabels[i]}
+      </label>
+      <input class="form-input" id="ewh-start-${i}" type="time" value="${h.start_time.substring(0,5)}" style="width:110px;">
+      <span>—</span>
+      <input class="form-input" id="ewh-end-${i}" type="time" value="${h.end_time.substring(0,5)}" style="width:110px;">`;
+    grid.appendChild(row);
+  }
+  const saveBtn = document.getElementById('empHoursSaveBtn');
+  if (saveBtn) saveBtn.onclick = async () => {
+    const payload = [];
+    for(let i=0;i<7;i++) {
+      payload.push({
+        user_id:empId,day_of_week:i,
+        start_time:document.getElementById(`ewh-start-${i}`).value+':00',
+        end_time:document.getElementById(`ewh-end-${i}`).value+':00',
+        is_active:document.getElementById(`ewh-active-${i}`).checked
+      });
+    }
+    const {error} = await supabase.from('working_hours').upsert(payload,{onConflict:'user_id,day_of_week'});
+    if (error) { showToast(t('err_generic'),'error'); return; }
+    showToast(t('alert_hours_saved'));
+  };
+}
+
+async function loadEmpServices(empId) {
+  const grid = document.getElementById('empServicesGrid');
+  if (!grid) return;
+  const [{data:all},{data:assigned}] = await Promise.all([
+    supabase.from('services').select('id,title').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`),
+    supabase.from('employee_services').select('service_id').eq('employee_id',empId)
+  ]);
+  const assignedIds = new Set((assigned||[]).map(x=>x.service_id));
+  grid.innerHTML = (all||[]).map(s=>`
+    <label class="checkbox-label">
+      <input type="checkbox" class="emp-srv-chk" data-srv="${s.id}" ${assignedIds.has(s.id)?'checked':''}>
+      ${s.title}
+    </label>`).join('');
+  grid.querySelectorAll('.emp-srv-chk').forEach(chk => {
+    chk.addEventListener('change', async () => {
+      if (chk.checked) {
+        await supabase.from('employee_services').insert({employee_id:empId,service_id:chk.dataset.srv});
+      } else {
+        await supabase.from('employee_services').delete().eq('employee_id',empId).eq('service_id',chk.dataset.srv);
+      }
     });
   });
 }

@@ -1020,6 +1020,42 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .tab-content { display: none; padding: 20px; }
 .tab-content.active { display: block; }
 
+.emp-cal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.emp-day-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.emp-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.emp-slot:hover { border-color: var(--primary); background: var(--primary-dim); }
+.emp-slot-time { font-size: 13px; font-weight: 700; color: var(--primary); min-width: 95px; }
+.emp-slot-info { flex: 1; }
+.emp-slot-customer { font-size: 13px; font-weight: 600; color: var(--text-main); }
+.emp-slot-service  { font-size: 12px; color: var(--text-muted); }
+.emp-slot-leave {
+  border-color: #ef4444;
+  background: rgba(239,68,68,0.07);
+}
+.emp-slot-leave .emp-slot-time { color: #ef4444; }
+.emp-day-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 32px 0; }
+
 /* ============================
    PANEL 7: B2B
    ============================ */
