@@ -516,7 +516,11 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
-  overflow: hidden;
+  overflow-y: auto;
+  min-height: 600px;
+}
+#calendarEl {
+  min-height: 560px;
 }
 
 .calendar-toolbar {

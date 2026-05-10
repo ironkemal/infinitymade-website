@@ -174,13 +174,6 @@
             </div>
           </div>
 
-          <div class="apify-bar">
-            <span class="apify-label" data-i18n="apify_label">Google Maps Scraper:</span>
-            <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt Berlin" />
-            <input class="form-input" style="width:100px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
-            <button class="btn-primary" id="apifyRunBtn" data-i18n="apify_run">Suchen</button>
-          </div>
-
           <div class="filter-bar">
             <button class="filter-btn active" data-status="all" data-i18n="lf_all">Alle</button>
             <button class="filter-btn" data-status="new" data-i18n="lf_new">Neu</button>
@@ -339,6 +332,24 @@
             <div class="panel-actions">
               <button class="btn-primary" id="b2bAddBtn" data-i18n="b2b_add">+ Kontakt</button>
             </div>
+          </div>
+
+          <div class="apify-bar" style="margin-bottom:16px;">
+            <span class="apify-label">Google Maps Scraper:</span>
+            <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt München" />
+            <select class="form-select" id="apifySector" style="width:150px;">
+              <option value="">Branche wählen</option>
+              <option value="Zahnarzt">Zahnarzt</option>
+              <option value="Arzt">Arzt</option>
+              <option value="Physiotherapie">Physiotherapie</option>
+              <option value="Apotheke">Apotheke</option>
+              <option value="Friseur">Friseur</option>
+              <option value="Kosmetik">Kosmetik</option>
+              <option value="Fitnessstudio">Fitnessstudio</option>
+              <option value="Restaurant">Restaurant</option>
+            </select>
+            <input class="form-input" style="width:80px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
+            <button class="btn-primary" id="apifyRunBtn">Suchen</button>
           </div>
 
           <div class="b2b-layout">

@@ -228,7 +228,7 @@ function switchPanel(id) {
   if (target) target.classList.add('active');
   renderSidebar();
   closeSidebar();
-  if (id==='calendar' && calendar) setTimeout(() => calendar.updateSize(), 50);
+  if (id==='calendar' && calendar) { setTimeout(() => calendar.updateSize(), 50); setTimeout(() => calendar.updateSize(), 300); }
   if (id==='kunden') loadLeads();
   if (id==='services') loadServices();
   if (id==='hours') loadHoursPanel();
@@ -727,9 +727,12 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 });
 
 document.getElementById('apifyRunBtn').addEventListener('click', async () => {
-  const query  = document.getElementById('apifyQuery').value.trim();
-  const limit  = parseInt(document.getElementById('apifyLimit').value)||20;
-  const token  = localStorage.getItem('apify_token') || prompt('Apify API Token:');
+  const sectorEl = document.getElementById('apifySector');
+  const sector   = sectorEl?.value||'';
+  const rawQuery = document.getElementById('apifyQuery').value.trim();
+  const query    = sector && rawQuery ? `${sector} ${rawQuery}` : sector||rawQuery;
+  const limit    = parseInt(document.getElementById('apifyLimit').value)||20;
+  const token    = localStorage.getItem('apify_token') || prompt('Apify API Token:');
   if (!query||!token) return;
   localStorage.setItem('apify_token', token);
   const btn = document.getElementById('apifyRunBtn');
@@ -746,26 +749,27 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
     const ownerId = getOwnerId();
     const inserts = (items||[]).map(p=>({
       owner_id:ownerId,
-      title:p.title||p.name||'—',
-      category_name:p.categoryName||null,
+      company_name:p.title||p.name||'—',
+      contact_name:null,
       phone:p.phone||p.phoneNumber||null,
+      email:p.email||null,
       website:p.website||null,
-      city:p.address?.city||p.city||null,
-      country_code:p.address?.countryCode||'DE',
-      total_score:p.totalScore||p.rating||null,
-      reviews_count:p.reviewsCount||null,
-      google_url:p.url||null,
-      categories:Array.isArray(p.categories)?p.categories:(p.categories?[p.categories]:null),
-      status:'new'
+      status:'prospect',
+      notes:[
+        sector?`Branche: ${sector}`:null,
+        p.address?.street?`Adresse: ${p.address.street}, ${p.address.city||''}`:null,
+        p.totalScore?`Bewertung: ${p.totalScore} ⭐ (${p.reviewsCount||0} Rezensionen)`:null,
+        p.url?`Google Maps: ${p.url}`:null
+      ].filter(Boolean).join('\n')||null
     }));
-    if (inserts.length>0) await supabase.from('leads').insert(inserts);
-    await loadLeads();
+    if (inserts.length>0) await supabase.from('b2b_contacts').insert(inserts);
+    await loadB2B();
     showToast(t('apify_done')+inserts.length);
   } catch(err) {
     showToast(t('apify_error')+err.message,'error');
   }
   btn.disabled=false;
-  btn.textContent = t('apify_run');
+  btn.textContent = 'Suchen';
 });
 
 let servicesCache = [];
