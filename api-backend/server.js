@@ -11,6 +11,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Request logger — used to debug what the n8n bot is actually sending.
+app.use((req, _res, next) => {
+  if (req.path !== '/health') {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} body=${JSON.stringify(req.body)}`);
+  }
+  next();
+});
+
 // Supabase setup
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
