@@ -1280,22 +1280,129 @@ document.getElementById('b2bSaveBtn').addEventListener('click', async () => {
   showToast(t('saved'));
 });
 
-document.getElementById('aiSendBtn').addEventListener('click', async () => {
+const B2B_AGENT_URL = 'https://n8n.infinitymade.de/webhook/b2b-mail-agent';
+
+function aiAddMsg(text, role) {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'msg-bubble ' + role;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function runMailDraft(intent) {
+  aiAddMsg(intent, 'user');
+  aiAddMsg('⏳ KI bereitet E-Mail vor…', 'ai');
+  const msgs = document.getElementById('aiMessages');
+  try {
+    const res = await fetch(B2B_AGENT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        action: 'draft',
+        intent,
+        contacts: b2bCache.slice(0,30).map(c=>({
+          id:c.id, company_name:c.company_name, contact_name:c.contact_name,
+          email:c.email, phone:c.phone, notes:c.notes
+        })),
+        owner_info: {
+          business_name: currentProfile.business_name,
+          city: currentProfile.city || ''
+        }
+      })
+    });
+    const json = await res.json();
+    msgs.lastChild.remove();
+    if (!json.success || !json.draft) throw new Error(json.error||'Fehler');
+    const d = json.draft;
+    document.getElementById('draftToName').value  = d.to_name||'';
+    document.getElementById('draftToEmail').value = d.to_email||'';
+    document.getElementById('draftSubject').value  = d.subject||'';
+    document.getElementById('draftBody').value     = d.body||'';
+    document.getElementById('emailDraftPreview').dataset.contactId = d.contact_id||'';
+    document.getElementById('emailDraftPreview').hidden = false;
+    aiAddMsg('E-Mail-Entwurf erstellt. Bitte prüfen und senden.', 'ai');
+  } catch(e) {
+    msgs.lastChild.remove();
+    aiAddMsg('Fehler: ' + e.message, 'ai');
+  }
+}
+
+document.getElementById('aiSendBtn').addEventListener('click', () => {
   const input = document.getElementById('aiInput');
   const msg = input.value.trim();
   if (!msg) return;
-  const msgs = document.getElementById('aiMessages');
-  msgs.innerHTML += `<div class="msg-bubble user">${msg}</div>`;
   input.value = '';
-  msgs.scrollTop = msgs.scrollHeight;
-  setTimeout(() => {
-    msgs.innerHTML += `<div class="msg-bubble ai">Funktion in Kürze verfügbar.</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-  }, 600);
+  runMailDraft(msg);
 });
+
 document.getElementById('aiInput').addEventListener('keydown', e => {
   if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); document.getElementById('aiSendBtn').click(); }
 });
+
+document.getElementById('draftDiscardBtn').addEventListener('click', () => {
+  document.getElementById('emailDraftPreview').hidden = true;
+  aiAddMsg('Entwurf verworfen.', 'ai');
+});
+
+document.getElementById('draftSendBtn').addEventListener('click', async () => {
+  const toEmail  = document.getElementById('draftToEmail').value.trim();
+  const toName   = document.getElementById('draftToName').value.trim();
+  const subject  = document.getElementById('draftSubject').value.trim();
+  const body     = document.getElementById('draftBody').value.trim();
+  const contactId = document.getElementById('emailDraftPreview').dataset.contactId||null;
+  if (!toEmail||!subject||!body) { showToast(t('err_generic'),'error'); return; }
+  const btn = document.getElementById('draftSendBtn');
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const res = await fetch(B2B_AGENT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        action: 'send',
+        to_email: toEmail, to_name: toName, subject, body,
+        from_email: currentSession.user.email
+      })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error('Senden fehlgeschlagen');
+    await supabase.from('email_logs').insert({
+      owner_id: getOwnerId(),
+      contact_id: contactId||null,
+      to_email: toEmail, to_name: toName,
+      subject, body, status: 'sent'
+    });
+    document.getElementById('emailDraftPreview').hidden = true;
+    aiAddMsg('E-Mail erfolgreich gesendet an ' + toEmail, 'ai');
+    showToast('E-Mail gesendet');
+  } catch(e) {
+    showToast('Fehler: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = '📧 Senden';
+});
+
+(function initVoiceInput() {
+  const btn = document.getElementById('aiVoiceBtn');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { btn.hidden = true; return; }
+  const recog = new SpeechRecognition();
+  recog.lang = 'de-DE'; recog.continuous = false; recog.interimResults = false;
+  let active = false;
+  btn.addEventListener('click', () => {
+    if (active) { recog.stop(); return; }
+    recog.start();
+    active = true; btn.textContent = '🔴';
+  });
+  recog.onresult = e => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('aiInput').value = text;
+    active = false; btn.textContent = '🎤';
+    runMailDraft(text);
+  };
+  recog.onend = () => { active = false; btn.textContent = '🎤'; };
+  recog.onerror = () => { active = false; btn.textContent = '🎤'; };
+})();
 
 async function loadSettings() {
   document.getElementById('setBiz').value  = currentProfile.business_name||'';

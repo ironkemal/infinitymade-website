@@ -387,13 +387,31 @@
             <div class="ai-chat-card">
               <div class="ai-chat-header">
                 <div class="ai-dot"></div>
-                <span data-i18n="b2b_ai_title">KI-Assistent</span>
+                <span>KI Mail-Assistent</span>
+                <span class="ai-from-badge" id="aiFromBadge">noreply@infinitymade.de</span>
               </div>
               <div class="ai-messages" id="aiMessages">
-                <div class="msg-bubble ai" data-i18n="b2b_ai_welcome">Hallo! Ich helfe Ihnen bei B2B-Anfragen. Fügen Sie einen Kontakt ein oder stellen Sie eine Frage.</div>
+                <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
+              </div>
+              <div class="email-draft-preview" id="emailDraftPreview" hidden>
+                <div class="draft-to-row">
+                  <span class="draft-label">An:</span>
+                  <input class="form-input" id="draftToName" placeholder="Name" style="width:140px;" />
+                  <input class="form-input" id="draftToEmail" placeholder="E-Mail" type="email" style="flex:1;" />
+                </div>
+                <div class="draft-subj-row">
+                  <span class="draft-label">Betreff:</span>
+                  <input class="form-input" id="draftSubject" placeholder="Betreff" style="flex:1;" />
+                </div>
+                <textarea class="form-textarea" id="draftBody" rows="6" style="margin-top:8px;"></textarea>
+                <div class="draft-actions">
+                  <button class="btn-ghost" id="draftDiscardBtn">Verwerfen</button>
+                  <button class="btn-primary" id="draftSendBtn">📧 Senden</button>
+                </div>
               </div>
               <div class="ai-input-row">
-                <textarea id="aiInput" placeholder="Nachricht..." rows="1"></textarea>
+                <button class="btn-icon" id="aiVoiceBtn" title="Spracheingabe">🎤</button>
+                <textarea id="aiInput" placeholder="Befehl eingeben oder Mikrofon drücken..." rows="1"></textarea>
                 <button class="btn-primary" id="aiSendBtn">→</button>
               </div>
             </div>
