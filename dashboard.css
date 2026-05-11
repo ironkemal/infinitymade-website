@@ -822,6 +822,41 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   transition: border-color var(--transition);
 }
 .service-card:hover { border-color: var(--border-strong); }
+.service-card.add-service-card {
+  border-style: dashed;
+  border-color: var(--border-strong);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  min-height: 120px;
+}
+.service-card.add-service-card:hover {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+}
+.add-service-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 300;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+.service-card.add-service-card:hover .add-service-icon {
+  background: var(--primary-dim);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.add-service-label {
+  font-size: 13px; font-weight: 500;
+  color: var(--text-muted);
+}
+.service-card.add-service-card:hover .add-service-label {
+  color: var(--primary);
+}
 
 .service-name { font-size: 15px; font-weight: 600; color: var(--text-main); }
 .service-meta {
@@ -856,17 +891,46 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .emp-checkbox-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
   color: var(--text-main);
   cursor: pointer;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: var(--transition);
+  background: var(--bg-input);
+  user-select: none;
 }
 .emp-checkbox-item:hover { border-color: var(--primary); }
-.emp-checkbox-item input { accent-color: var(--primary); cursor: pointer; }
+.emp-checkbox-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-card);
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.emp-checkbox-item input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.emp-checkbox-item input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px; top: 1px;
+  width: 5px; height: 10px;
+  border: solid #0a0a0a;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.emp-checkbox-item input[type="checkbox"]:focus {
+  box-shadow: 0 0 0 2px var(--primary-dim);
+}
 .emp-checkbox-item:has(input:checked) {
   background: var(--primary-dim);
   border-color: var(--primary);
@@ -1122,6 +1186,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.booking-link-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.booking-link-wrap .form-input {
+  flex: 1;
+  background: var(--bg-main);
 }
 .avatar-remove-btn {
   font-size: 12px;
