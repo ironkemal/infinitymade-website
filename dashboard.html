@@ -498,7 +498,11 @@
           </div>
           <div class="form-group">
             <label class="form-label" data-i18n="lbl_select_patient">Patient wählen</label>
-            <select class="form-select" id="notesPatient"></select>
+            <div class="patient-search-wrap" id="notesPatientWrap">
+              <input class="form-input" id="notesPatientInput" type="text" placeholder="Hasta ara…" autocomplete="off" />
+              <ul class="patient-search-list" id="notesPatientList" hidden></ul>
+              <input type="hidden" id="notesPatient" />
+            </div>
           </div>
           <div id="notesForm" class="card" style="margin-top:16px;" hidden>
             <div class="form-group">
@@ -1059,6 +1063,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260511k"></script>
+  <script type="module" src="dashboard.js?v=20260511l"></script>
 </body>
 </html>

@@ -1010,11 +1010,10 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = '⏳';
   const ownerId = getOwnerId();
   try {
-    const dbFilter = city
-      ? `company_name.ilike.%${rawQuery}%,notes.ilike.%${rawQuery} ${city}%,notes.ilike.%${city}%`
-      : `company_name.ilike.%${rawQuery}%,notes.ilike.%${rawQuery}%`;
-    const { data: dbHits } = await supabase.from('scraper_data')
-      .select('id').eq('owner_id', ownerId).or(dbFilter).limit(limit);
+    let dbq = supabase.from('scraper_data').select('id').eq('owner_id', ownerId);
+    if (rawQuery) dbq = dbq.or(`company_name.ilike.%${rawQuery}%,name.ilike.%${rawQuery}%,category.ilike.%${rawQuery}%`);
+    if (city) dbq = dbq.ilike('city', `%${city}%`);
+    const { data: dbHits } = await dbq.limit(limit);
     if (dbHits && dbHits.length >= 5) {
       document.getElementById('b2bSearch').value = rawQuery;
       renderB2B();
@@ -2112,11 +2111,10 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const ownerId = getOwnerId();
 
   // 1) Önce veritabanında ara — zaten varsa Apify'a gitme
-  const dbFilter = city
-    ? `company_name.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%,city.ilike.%${city}%,notes.ilike.%${city}%`
-    : `company_name.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%`;
-  const { data: dbHits } = await supabase.from('scraper_data')
-    .select('*').eq('owner_id', ownerId).or(dbFilter).limit(limit);
+  let dbq = supabase.from('scraper_data').select('*').eq('owner_id', ownerId);
+  if (query) dbq = dbq.or(`company_name.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%`);
+  if (city) dbq = dbq.ilike('city', `%${city}%`);
+  const { data: dbHits } = await dbq.limit(limit);
   if (dbHits && dbHits.length >= 3) {
     docsCache = dbHits;
     const filterText = document.getElementById('docFilterInput').value.trim();
@@ -2195,20 +2193,55 @@ function loadBeispielmodus() {
 }
 
 async function loadNotizen() {
-  const select = document.getElementById('notesPatient');
+  const input = document.getElementById('notesPatientInput');
+  const list = document.getElementById('notesPatientList');
+  const hidden = document.getElementById('notesPatient');
   const form = document.getElementById('notesForm');
   const empty = document.getElementById('notesEmpty');
   const ownerId = getOwnerId();
 
   const { data: leads } = await supabase.from('leads').select('id,title,first_name,last_name').eq('owner_id', ownerId).order('title');
-  select.innerHTML = '<option value="">Bitte wählen…</option>' + (leads || []).map(l => `<option value="${l.id}">${displayName(l)}</option>`).join('');
+  const allLeads = leads || [];
 
-  if (!select.value) { form.hidden = true; empty.hidden = false; }
+  input.value = '';
+  hidden.value = '';
+  list.hidden = true;
+  if (!hidden.value) { form.hidden = true; empty.hidden = false; }
 
-  select.onchange = async () => {
-    if (!select.value) { form.hidden = true; empty.hidden = false; return; }
+  let activeIndex = -1;
+
+  function renderList(filter) {
+    activeIndex = -1;
+    const q = filter.trim().toLowerCase();
+    if (!q) { list.hidden = true; return; }
+    const filtered = allLeads.filter(l => displayName(l).toLowerCase().includes(q));
+    if (filtered.length === 0) {
+      list.innerHTML = '<li class="empty-item">Keine Treffer</li>';
+      list.hidden = false;
+      return;
+    }
+    list.innerHTML = filtered.map((l, i) => {
+      const name = displayName(l);
+      const esc = q.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+      const hl = name.replace(new RegExp(`(${esc})`, 'gi'), '<span class="match-hl">$1</span>');
+      return `<li data-id="${l.id}" data-index="${i}">${hl}</li>`;
+    }).join('');
+    list.hidden = false;
+  }
+
+  function selectPatient(id) {
+    const lead = allLeads.find(l => l.id === id);
+    if (!lead) return;
+    input.value = displayName(lead);
+    hidden.value = id;
+    list.hidden = true;
+    activeIndex = -1;
+    loadPatientNotes(id);
+  }
+
+  async function loadPatientNotes(leadId) {
     form.hidden = false; empty.hidden = true;
-    const { data: rec } = await supabase.from('patient_notes').select('*').eq('lead_id', select.value).eq('owner_id', ownerId).maybeSingle();
+    const { data: rec } = await supabase.from('patient_notes').select('*').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
     document.getElementById('notesDoctor').value = rec?.doctor_notes || '';
     document.getElementById('notesTherapist').value = rec?.therapist_notes || '';
     const aiBox = document.getElementById('aiReportBox');
@@ -2218,7 +2251,45 @@ async function loadNotizen() {
     } else {
       aiBox.style.display = 'none';
     }
+  }
+
+  input.oninput = () => {
+    if (hidden.value) { hidden.value = ''; form.hidden = true; empty.hidden = false; }
+    renderList(input.value);
   };
+
+  input.onkeydown = (e) => {
+    const items = list.querySelectorAll('li:not(.empty-item)');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, items.length - 1);
+      items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const active = items[activeIndex];
+      if (active) selectPatient(active.dataset.id);
+    } else if (e.key === 'Escape') {
+      list.hidden = true;
+      activeIndex = -1;
+    }
+  };
+
+  list.onclick = (e) => {
+    const li = e.target.closest('li[data-id]');
+    if (li) selectPatient(li.dataset.id);
+  };
+
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('notesPatientWrap').contains(e.target)) {
+      list.hidden = true;
+    }
+  });
 }
 
 document.getElementById('notesSaveBtn').addEventListener('click', async () => {
