@@ -3,6 +3,39 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+function renderWorkingHours() {
+  const container = document.getElementById('workingHoursList');
+  container.innerHTML = DAYS.map((label, i) => `
+    <div class="wh-row" data-day="${i}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;min-width:80px;">
+        <input type="checkbox" class="wh-active" checked />
+        <span style="font-size:14px;font-weight:500;">${label}</span>
+      </label>
+      <div class="wh-times" style="display:flex;align-items:center;gap:6px;flex:1;">
+        <input type="time" class="wh-start" value="09:00" required style="flex:1;min-width:90px;" />
+        <span style="color:var(--text-muted);">–</span>
+        <input type="time" class="wh-end" value="18:00" required style="flex:1;min-width:90px;" />
+      </div>
+    </div>
+  `).join('');
+}
+renderWorkingHours();
+
+function collectWorkingHours() {
+  const rows = document.querySelectorAll('.wh-row');
+  const hours = [];
+  rows.forEach(row => {
+    const day = parseInt(row.dataset.day);
+    const isActive = row.querySelector('.wh-active').checked;
+    const start = row.querySelector('.wh-start').value;
+    const end = row.querySelector('.wh-end').value;
+    hours.push({ day_of_week: day, is_active: isActive, start_time: start, end_time: end });
+  });
+  return hours;
+}
+
 const msg = document.getElementById('message');
 function showMsg(text, type) {
   msg.textContent = text;
@@ -62,12 +95,26 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       if (profileErr) {
         console.error('Profile update failed:', profileErr);
       }
+
+      // 4. Save working hours
+      const wh = collectWorkingHours();
+      const whRows = wh.map(h => ({
+        user_id: authData.user.id,
+        day_of_week: h.day_of_week,
+        start_time: h.start_time,
+        end_time: h.end_time,
+        is_active: h.is_active
+      }));
+      const { error: whErr } = await supabase.from('working_hours').insert(whRows);
+      if (whErr) {
+        console.error('Working hours insert failed:', whErr);
+      }
     }
 
     showMsg('Konto erfolgreich erstellt! Sie werden weitergeleitet...', 'success');
     
     setTimeout(() => {
-      window.location.href = 'kalender.html';
+      window.location.href = 'dashboard.html';
     }, 2000);
 
   } catch (error) {
