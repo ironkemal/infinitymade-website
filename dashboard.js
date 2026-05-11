@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260512f';
+import { mountCalendar } from './calendar-widget.js?v=20260512g';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -407,16 +407,23 @@ function renderCalEmpList() {
   });
 }
 
-async function updateCalendarForEmployee(empId) {
-  if (!calendar) return;
+async function getEmployeeWorkingHours(empId) {
   const { data: wh } = await supabase.from('working_hours')
     .select('day_of_week, is_active').eq('user_id', empId);
+  if ((wh || []).length > 0) return wh;
+  const ownerId = getOwnerId();
+  const { data: ownerWh } = await supabase.from('working_hours')
+    .select('day_of_week, is_active').eq('user_id', ownerId);
+  return ownerWh || [];
+}
+
+async function updateCalendarForEmployee(empId) {
+  if (!calendar) return;
+  const wh = await getEmployeeWorkingHours(empId);
   const offWeekdays = [];
-  if ((wh || []).length > 0) {
-    for (let d = 0; d < 7; d++) {
-      const row = wh.find(w => w.day_of_week === d);
-      if (!row || !row.is_active) offWeekdays.push(d);
-    }
+  for (let d = 0; d < 7; d++) {
+    const row = wh.find(w => w.day_of_week === d);
+    if (!row || !row.is_active) offWeekdays.push(d);
   }
   calendar.setDisabled({ weekdays: offWeekdays });
   await calendar.reloadMonth();
@@ -494,14 +501,11 @@ async function initCalendar() {
 
   renderCalEmpList();
 
-  const { data: wh } = await supabase.from('working_hours')
-    .select('day_of_week, is_active').eq('user_id', selectedEmployeeId);
+  const wh = await getEmployeeWorkingHours(selectedEmployeeId);
   const offWeekdays = [];
-  if ((wh || []).length > 0) {
-    for (let d = 0; d < 7; d++) {
-      const row = wh.find(w => w.day_of_week === d);
-      if (!row || !row.is_active) offWeekdays.push(d);
-    }
+  for (let d = 0; d < 7; d++) {
+    const row = wh.find(w => w.day_of_week === d);
+    if (!row || !row.is_active) offWeekdays.push(d);
   }
 
   calendar = mountCalendar(calEl, {

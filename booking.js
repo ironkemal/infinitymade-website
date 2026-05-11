@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260512f';
+import { mountCalendar } from './calendar-widget.js?v=20260512g';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de';
@@ -129,8 +129,13 @@ async function mountBookingCalendar() {
   const container = document.getElementById('calMount');
   container.innerHTML = '';
 
-  const { data: wh } = await supabase.from('working_hours')
+  let { data: wh } = await supabase.from('working_hours')
     .select('day_of_week,is_active').eq('user_id', state.employeeId);
+  if ((wh || []).length === 0) {
+    const { data: ownerWh } = await supabase.from('working_hours')
+      .select('day_of_week,is_active').eq('user_id', state.ownerId);
+    wh = ownerWh || [];
+  }
   const offWeekdays = [];
   if ((wh || []).length > 0) {
     for (let d = 0; d < 7; d++) {
