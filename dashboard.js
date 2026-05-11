@@ -168,9 +168,9 @@ const T = {
 
 const PLAN_FEATURES = {
   starter: {
-    de:['WhatsApp KI-Assistent (24/7)','Automatische Erinnerungen','Warteliste-Automation','Cal.com Kalenderintegration','DSGVO-konform'],
-    en:['WhatsApp AI Assistant (24/7)','Automatic reminders','Waitlist automation','Cal.com calendar integration','GDPR-compliant'],
-    tr:['WhatsApp KI Asistanı (7/24)','Otomatik hatırlatmalar','Bekleme listesi otomasyonu','Cal.com takvim entegrasyonu','DSGVO uyumlu']
+    de:['WhatsApp KI-Assistent (24/7)','Automatische Erinnerungen','Warteliste-Automation','InfinityMade Online-Terminbuchung','DSGVO-konform'],
+    en:['WhatsApp AI Assistant (24/7)','Automatic reminders','Waitlist automation','InfinityMade online booking','GDPR-compliant'],
+    tr:['WhatsApp KI Asistanı (7/24)','Otomatik hatırlatmalar','Bekleme listesi otomasyonu','InfinityMade online randevu','DSGVO uyumlu']
   },
   professional: {
     de:['Alles aus Starter','Reaktivierungskampagne','Upsell-Vorschläge','Auslastungs-Dashboard','Mitarbeiter-Routing'],
@@ -181,6 +181,11 @@ const PLAN_FEATURES = {
     de:['Alles aus Professional','Digitales Anamnese-Formular','Verpasster Anruf → Assistent','Medizinische Erinnerungen','Rezept-Workflow'],
     en:['Everything in Professional','Digital intake form','Missed call → Assistant','Medical reminders','Prescription workflow'],
     tr:["Professional'daki her şey",'Dijital anamnez formu','Cevapsız çağrı → Asistan','Tıbbi hatırlatmalar','Reçete iş akışı']
+  },
+  mitarbeiter: {
+    de:['Online-Terminbuchung','Kalender-Synchronisation','Arbeitszeiten-Verwaltung','DSGVO-konform'],
+    en:['Online booking','Calendar sync','Working hours management','GDPR-compliant'],
+    tr:['Online randevu','Takvim senkronizasyonu','Çalışma saatleri yönetimi','DSGVO uyumlu']
   }
 };
 
@@ -1073,7 +1078,11 @@ async function loadServices() {
 
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
-  if (!servicesCache.length) { grid.innerHTML='<div class="table-empty">Noch keine Dienstleistungen.</div>'; return; }
+  const addCard = `<div class="service-card add-service-card" id="addServiceCard">
+      <div class="add-service-icon">+</div>
+      <div class="add-service-label">Neue Dienstleistung</div>
+    </div>`;
+  if (!servicesCache.length) { grid.innerHTML = addCard; bindAddServiceCard(); return; }
   grid.innerHTML = servicesCache.map(s=>{
     const empNames = (s.employee_services||[]).map(es=>{
       const m = teamMembers.find(tm=>tm.id===es.employee_id);
@@ -1088,13 +1097,24 @@ function renderServices() {
       </div>
       <button class="btn-icon" data-srv-del="${s.id}">🗑️</button>
     </div>`;
-  }).join('');
+  }).join('') + addCard;
   grid.querySelectorAll('[data-srv-del]').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!confirm(t('alert_service_delete'))) return;
       await supabase.from('services').delete().eq('id',btn.dataset.srvDel);
       await loadServices();
     });
+  });
+  bindAddServiceCard();
+}
+
+function bindAddServiceCard() {
+  const card = document.getElementById('addServiceCard');
+  if (!card) return;
+  card.addEventListener('click', () => {
+    const form = document.getElementById('addServiceForm');
+    form.hidden = false;
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
 
@@ -1110,31 +1130,23 @@ function renderSrvEmpCheckboxes() {
   }).join('');
 }
 
-document.getElementById('toggleAddServiceBtn').addEventListener('click', () => {
-  const form = document.getElementById('addServiceForm');
-  form.hidden = !form.hidden;
-  document.getElementById('toggleAddServiceBtn').textContent = form.hidden ? '+ Neue Dienstleistung' : 'Formular schließen';
-});
-
 document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const title = document.getElementById('srvTitle').value.trim();
-  const dur   = parseInt(document.getElementById('srvDur').value)||30;
+  const duration = parseInt(document.getElementById('srvDur').value,10)||30;
   const price = parseFloat(document.getElementById('srvPrice').value)||0;
   const color = document.getElementById('srvColor').value;
   if (!title) { showToast(t('err_generic'),'error'); return; }
-  const {data:srv,error} = await supabase.from('services').insert({
-    owner_id:getOwnerId(),title,duration_minutes:dur,price,color
-  }).select().single();
+  const empIds = [...document.querySelectorAll('input[name="srv_emp"]:checked')].map(cb=>cb.value);
+  const ownerId = getOwnerId();
+  const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, title, duration_minutes: duration, price, color }).select().single();
   if (error) { showToast(t('err_generic'),'error'); return; }
-  const selected = Array.from(document.querySelectorAll('input[name="srv_emp"]:checked')).map(el=>el.value);
-  if (selected.length>0) {
-    await supabase.from('employee_services').insert(selected.map(eid=>({employee_id:eid,service_id:srv.id})));
+  if (empIds.length) {
+    await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: srv.id })));
   }
   document.getElementById('srvTitle').value='';
   await loadServices();
   showToast(t('saved'));
   document.getElementById('addServiceForm').hidden = true;
-  document.getElementById('toggleAddServiceBtn').textContent = '+ Neue Dienstleistung';
 });
 
 let hoursEmpId = null;
@@ -1267,6 +1279,16 @@ function openEmpDetail(empId) {
   document.getElementById('empDetailEmail').textContent = m.email||'—';
   renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
   renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
+
+  const bookingLink = m.booking_slug ? (window.location.origin + '/booking.html?u=' + m.booking_slug) : '';
+  const linkInput = document.getElementById('empBookingLink');
+  linkInput.value = bookingLink;
+  document.getElementById('empCopyLinkBtn').onclick = () => {
+    if (!bookingLink) return;
+    navigator.clipboard.writeText(bookingLink);
+    showToast('Link kopiert');
+  };
+
   document.getElementById('teamListView').hidden  = true;
   document.getElementById('teamDetailView').hidden = false;
 
@@ -1678,6 +1700,7 @@ async function checkB2cSetup() {
   if (setupDone) {
     document.getElementById('b2cFromName').textContent = currentProfile.b2b_sender_name || '—';
     document.getElementById('b2cFromEmail').textContent = gmailConnectedEmail || '—';
+    document.getElementById('b2cAiFromBadge').textContent = gmailConnectedEmail || '';
   } else {
     const nameInput = document.getElementById('b2cSetupSenderName');
     if (currentProfile.b2b_sender_name) nameInput.value = currentProfile.b2b_sender_name;
@@ -1879,33 +1902,28 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   btn.disabled = false; btn.textContent = '✉ Senden';
 });
 
-function aiAddMsg(text, role) {
-  const msgs = document.getElementById('aiMessages');
-  const div = document.createElement('div');
-  div.className = 'msg-bubble ' + role;
-  div.textContent = text;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-async function runMailDraft(intent) {
-  aiAddMsg(intent, 'user');
+async function runMailDraft(intent, contactsCache, containerId = 'aiMessages', mapContactFn = null) {
+  aiAddMsg(intent, 'user', containerId);
+  const msgsEl = document.getElementById(containerId);
+  if (!msgsEl) return;
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'msg-bubble ai';
   loadingDiv.textContent = '⏳ KI bereitet E-Mail vor…';
-  document.getElementById('aiMessages').appendChild(loadingDiv);
-  document.getElementById('aiMessages').scrollTop = 9999;
+  msgsEl.appendChild(loadingDiv);
+  msgsEl.scrollTop = 9999;
   try {
+    const cache = contactsCache || b2bCache;
+    const contacts = cache.slice(0,30).map(c => mapContactFn ? mapContactFn(c) : ({
+      id:c.id, company_name:c.company_name, contact_name:c.contact_name,
+      email:c.email, phone:c.phone, notes:c.notes
+    }));
     const res = await fetch(B2B_AGENT_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         action: 'draft',
         intent,
-        contacts: b2bCache.slice(0,30).map(c=>({
-          id:c.id, company_name:c.company_name, contact_name:c.contact_name,
-          email:c.email, phone:c.phone, notes:c.notes
-        })),
+        contacts,
         owner_info: {
           business_name: currentProfile.business_name,
           sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
@@ -1918,11 +1936,11 @@ async function runMailDraft(intent) {
     const json = await res.json();
     loadingDiv.remove();
     if (!json.success || !json.draft) throw new Error(json.error || 'Fehler');
-    aiAddMsg('E-Mail-Entwurf erstellt — bitte prüfen und senden.', 'ai');
+    aiAddMsg('E-Mail-Entwurf erstellt — bitte prüfen und senden.', 'ai', containerId);
     openComposeModal(json.draft);
   } catch(e) {
     loadingDiv.remove();
-    aiAddMsg('Fehler: ' + e.message, 'ai');
+    aiAddMsg('Fehler: ' + e.message, 'ai', containerId);
   }
 }
 
@@ -1955,6 +1973,46 @@ document.getElementById('aiInput').addEventListener('keydown', e => {
     document.getElementById('aiInput').value = text;
     active = false; btn.textContent = '🎤';
     runMailDraft(text);
+  };
+  recog.onend = () => { active = false; btn.textContent = '🎤'; };
+  recog.onerror = () => { active = false; btn.textContent = '🎤'; };
+})();
+
+document.getElementById('b2cAiSendBtn').addEventListener('click', () => {
+  const input = document.getElementById('b2cAiInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  runMailDraft(msg, b2cCache, 'b2cAiMessages', c => ({
+    id:c.id, company_name:c.title, contact_name:c.title,
+    email:c.email, phone:c.phone, notes:''
+  }));
+});
+
+document.getElementById('b2cAiInput').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('b2cAiSendBtn').click(); }
+});
+
+(function initB2cVoiceInput() {
+  const btn = document.getElementById('b2cAiVoiceBtn');
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { btn.hidden = true; return; }
+  const recog = new SpeechRecognition();
+  recog.lang = 'de-DE'; recog.continuous = false; recog.interimResults = false;
+  let active = false;
+  btn.addEventListener('click', () => {
+    if (active) { recog.stop(); return; }
+    recog.start();
+    active = true; btn.textContent = '🔴';
+  });
+  recog.onresult = e => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('b2cAiInput').value = text;
+    active = false; btn.textContent = '🎤';
+    runMailDraft(text, b2cCache, 'b2cAiMessages', c => ({
+      id:c.id, company_name:c.title, contact_name:c.title,
+      email:c.email, phone:c.phone, notes:''
+    }));
   };
   recog.onend = () => { active = false; btn.textContent = '🎤'; };
   recog.onerror = () => { active = false; btn.textContent = '🎤'; };
@@ -2024,6 +2082,23 @@ async function ensureCompanyCode() {
   const code = 'INF-'+base;
   await supabase.from('profiles').update({company_code:code}).eq('id',currentSession.user.id);
   currentProfile.company_code = code;
+}
+
+function cleanBookingSlug(input) {
+  return (input || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+async function ensureBookingSlug() {
+  if (currentProfile.booking_slug) return;
+  const base = cleanBookingSlug(currentProfile.business_name) || cleanBookingSlug(currentSession.user.email.split('@')[0]) || cleanBookingSlug(currentSession.user.id);
+  const slug = base || 'user';
+  await supabase.from('profiles').update({booking_slug:slug}).eq('id',currentSession.user.id);
+  currentProfile.booking_slug = slug;
 }
 
 let docsCache = [];
@@ -2490,6 +2565,10 @@ async function saveEmployee() {
     }
 
     const newUserId = data.user.id;
+    const ownerSlug = currentProfile.booking_slug || cleanBookingSlug(currentProfile.business_name) || currentProfile.company_code?.toLowerCase() || cleanBookingSlug(ownerId);
+    const empSlug = cleanBookingSlug(businessName);
+    const booking_slug = ownerSlug + '-' + empSlug;
+
     const { error: profileError } = await supabase.from('profiles').insert({
       id: newUserId,
       email: email,
@@ -2500,7 +2579,8 @@ async function saveEmployee() {
       is_active: true,
       language: currentLang,
       plan: currentProfile.plan || 'starter',
-      sector: currentProfile.sector || 'default'
+      sector: currentProfile.sector || 'default',
+      booking_slug
     });
     if (profileError) throw profileError;
 
@@ -2550,6 +2630,7 @@ document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 async function init() {
   try {
     await ensureCompanyCode();
+    await ensureBookingSlug();
     applyI18n();
     renderSidebar();
     await loadTeam();
@@ -2564,4 +2645,5 @@ async function init() {
   }
 }
 
+init();
 init();

@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260512h" />
+  <link rel="stylesheet" href="dashboard.css?v=20260511n" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -203,7 +203,6 @@
               <h2 data-i18n="nav_services">Dienstleistungen</h2>
               <p class="panel-sub" data-i18n="services_sub">Angebotene Leistungen verwalten</p>
             </div>
-            <button class="btn-primary" id="toggleAddServiceBtn" type="button">+ Neue Dienstleistung</button>
           </div>
 
           <div id="servicesGrid" class="services-grid"></div>
@@ -222,7 +221,7 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" data-i18n="lbl_srv_price">Preis (€)</label>
+                <label class="form-label" data-i18n="lbl_srv_price">Preis (&euro;)</label>
                 <input class="form-input" id="srvPrice" type="number" value="0" min="0" step="0.5" />
               </div>
               <div class="form-group">
@@ -317,6 +316,13 @@
                 <div class="form-group">
                   <label class="form-label">E-Mail</label>
                   <div id="empDetailEmail" style="color:var(--text-muted);font-size:14px;"></div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Buchungsseite</label>
+                  <div class="booking-link-wrap">
+                    <input class="form-input" id="empBookingLink" type="text" readonly style="font-size:13px;cursor:pointer;" onclick="this.select()" />
+                    <button class="btn-ghost" id="empCopyLinkBtn" type="button">📋 Kopieren</button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label" data-i18n="lbl_google_cal">Google Kalender</label>
@@ -1064,6 +1070,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260511m"></script>
+  <script type="module" src="dashboard.js?v=20260511n"></script>
 </body>
 </html>
