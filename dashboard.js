@@ -2097,6 +2097,117 @@ async function handleGmailCallback() {
   switchPanel('b2b');
 }
 
+function generatePassword(len = 12) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let pw = '';
+  for (let i = 0; i < len; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+  return pw;
+}
+
+function openAddEmployeeModal() {
+  document.getElementById('ae-first-name').value = '';
+  document.getElementById('ae-last-name').value = '';
+  document.getElementById('ae-email').value = '';
+  document.getElementById('ae-phone').value = '';
+  document.getElementById('addEmpFormStep').hidden = false;
+  document.getElementById('addEmpResultStep').hidden = true;
+  document.getElementById('aeSaveBtn').hidden = false;
+  document.getElementById('aeCancelBtn').textContent = 'Abbrechen';
+  document.getElementById('aeSaveBtn').disabled = false;
+  document.getElementById('aeSaveBtn').textContent = 'Speichern';
+  openModal('addEmployeeModal');
+}
+
+async function saveEmployee() {
+  const firstName = document.getElementById('ae-first-name').value.trim();
+  const lastName = document.getElementById('ae-last-name').value.trim();
+  const email = document.getElementById('ae-email').value.trim();
+  const phone = document.getElementById('ae-phone').value.trim();
+
+  if (!firstName || !lastName || !email) {
+    showToast('Bitte füllen Sie alle Pflichtfelder aus.', 'error');
+    return;
+  }
+
+  const password = generatePassword(12);
+  const ownerId = getOwnerId();
+  const businessName = firstName + ' ' + lastName;
+
+  const { data: { session: oldSession } } = await supabase.auth.getSession();
+
+  const btn = document.getElementById('aeSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Wird erstellt...';
+
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+
+    if (data.session && oldSession && data.session.user.id !== oldSession.user.id) {
+      await supabase.auth.setSession({
+        access_token: oldSession.access_token,
+        refresh_token: oldSession.refresh_token
+      });
+    }
+
+    const newUserId = data.user.id;
+    const { error: profileError } = await supabase.from('profiles').insert({
+      id: newUserId,
+      email: email,
+      business_name: businessName,
+      phone: phone || null,
+      owner_id: ownerId,
+      role: 'employee',
+      is_active: true,
+      language: currentLang,
+      plan: currentProfile.plan || 'starter',
+      sector: currentProfile.sector || 'default'
+    });
+    if (profileError) throw profileError;
+
+    showAddEmployeeResult(email, password);
+    await loadTeam();
+  } catch (e) {
+    showToast('Fehler: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Speichern';
+  }
+}
+
+function showAddEmployeeResult(email, password) {
+  document.getElementById('addEmpFormStep').hidden = true;
+  document.getElementById('addEmpResultStep').hidden = false;
+  document.getElementById('aeSaveBtn').hidden = true;
+  document.getElementById('aeCancelBtn').textContent = 'Schliessen';
+  document.getElementById('ae-res-email').textContent = email;
+  document.getElementById('ae-res-password').textContent = password;
+
+  const loginUrl = 'https://infinitymade.de/login.html';
+  const shareText = encodeURIComponent(
+    'Hallo! Dein InfinityMade Zugang:' +
+    '\nE-Mail: ' + email +
+    '\nPasswort: ' + password +
+    '\nLogin: ' + loginUrl
+  );
+  document.getElementById('aeShareWaBtn').href = 'https://wa.me/?text=' + shareText;
+
+  document.getElementById('aeCopyEmailBtn').onclick = () => {
+    navigator.clipboard.writeText(email);
+    showToast('E-Mail kopiert');
+  };
+  document.getElementById('aeCopyPwBtn').onclick = () => {
+    navigator.clipboard.writeText(password);
+    showToast('Passwort kopiert');
+  };
+  document.getElementById('aeCopyLinkBtn').onclick = () => {
+    navigator.clipboard.writeText(loginUrl);
+    showToast('Link kopiert');
+  };
+}
+
+document.getElementById('teamAddBtn').addEventListener('click', openAddEmployeeModal);
+document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
+
 async function init() {
   try {
     await ensureCompanyCode();
