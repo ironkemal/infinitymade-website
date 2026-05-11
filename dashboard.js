@@ -1908,24 +1908,19 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const city = document.getElementById('docCity').value.trim();
   const limit = parseInt(document.getElementById('docLimit').value, 10) || 20;
   const fullQuery = city ? `${query} ${city}` : query;
-  const apifyToken = ['apify','api','uZqwvyIcdDdiwuFVQoT6uCSSOVHGdO0VLHx4'].join('_');
+  const btn = document.getElementById('docSearchBtn');
+  btn.disabled = true; btn.textContent = '⏳';
   try {
-    const res = await fetch('https://api.apify.com/v2/acts/apify~google-maps-scraper/run-sync-get-dataset-items', {
+    const res = await fetch('https://n8n.infinitymade.de/api/apify/search', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apifyToken}`
-      },
-      body: JSON.stringify({
-        queries: [fullQuery],
-        maxCrawledPlaces: limit,
-        language: 'de'
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: fullQuery, limit, userId: currentSession.user.id })
     });
-    const items = await res.json();
-    if (!res.ok) throw new Error(items.error?.message || 'Apify-Fehler');
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Apify-Fehler');
+    const items = data.items || [];
     const ownerId = getOwnerId();
-    const inserts = (items || []).filter(i => i.title).map(i => ({
+    const inserts = items.filter(i => i.title).map(i => ({
       owner_id: ownerId,
       name: i.title,
       category: query,
@@ -1943,12 +1938,22 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
     showToast(t('apify_done') + inserts.length);
   } catch (e) {
     showToast(t('apify_error') + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Suchen';
   }
 });
 
 function loadBeispielmodus() {
   const frame = document.getElementById('zygoteFrame');
   if (frame && !frame.src) frame.src = 'https://www.zygotebody.com/';
+  const fsBtn = document.getElementById('zygoteFsBtn');
+  if (fsBtn && !fsBtn.dataset.bound) {
+    fsBtn.dataset.bound = '1';
+    fsBtn.addEventListener('click', () => {
+      if (frame?.requestFullscreen) frame.requestFullscreen();
+      else if (frame?.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+    });
+  }
 }
 
 async function loadNotizen() {
