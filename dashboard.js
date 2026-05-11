@@ -1204,15 +1204,17 @@ async function loadTeam() {
   };
 
   const list = document.getElementById('employeeList');
-  list.innerHTML = data.map(m=>`
-    <div class="emp-card" data-emp-id="${m.id}">
-      <div class="emp-avatar">${(m.business_name||m.email||'?')[0].toUpperCase()}</div>
-      <div class="emp-info">
-        <div class="emp-name">${m.business_name||m.email?.split('@')[0]} ${m.id===currentSession.user.id?t('me'):''}</div>
-        <div class="emp-role">${m.role||'employee'}</div>
-      </div>
-      <span class="emp-arrow">›</span>
-    </div>`).join('');
+  list.innerHTML = data.map(m=>{
+    const name = m.business_name || m.email?.split('@')[0] || '—';
+    const initial = (name[0]||'?').toUpperCase();
+    const avatar = m.avatar_url ? `<img src="${m.avatar_url}" alt="">` : initial;
+    return `<div class="emp-card" data-emp-id="${m.id}">
+      <div class="emp-avatar">${avatar}</div>
+      <div class="emp-name">${name} ${m.id===currentSession.user.id?t('me'):''}</div>
+      <div class="emp-role">${m.role==='owner'?'Geschäftsführung':'Mitarbeiter'}</div>
+      ${m.id===currentSession.user.id?'<div class="emp-badge" title="Sie"></div>':''}
+    </div>`;
+  }).join('');
   list.querySelectorAll('.emp-card').forEach(card => {
     card.addEventListener('click', () => openEmpDetail(card.dataset.empId));
   });
