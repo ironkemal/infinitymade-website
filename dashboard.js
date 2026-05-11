@@ -1036,6 +1036,7 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
     const items = data.items || [];
     const inserts = items.filter(i => i.title).map(i => ({
       owner_id: ownerId,
+      company_name: i.title,
       name: i.title,
       category: rawQuery,
       city: i.city || city || '',
@@ -1046,7 +1047,8 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
       notes: i.address || ''
     }));
     if (inserts.length > 0) {
-      await supabase.from('b2b_contacts').insert(inserts);
+      const { error: insErr } = await supabase.from('b2b_contacts').insert(inserts);
+      if (insErr) { console.error('[apifyRun insert]', insErr); throw new Error('DB-Fehler: ' + insErr.message); }
     }
     document.getElementById('b2bSearch').value = rawQuery;
     await loadB2B();
@@ -1913,17 +1915,21 @@ async function loadDoctors() {
   tbody.innerHTML = '';
   empty.hidden = true;
   const ownerId = getOwnerId();
-  const { data: docs } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).or('category.ilike.%arzt%,category.ilike.%praxis%,category.ilike.%doktor%').order('name');
+  const { data: docs, error } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  if (error) { console.error('[loadDoctors]', error); empty.hidden = false; return; }
   if (!docs || docs.length === 0) { empty.hidden = false; return; }
-  tbody.innerHTML = docs.map(d => `<tr>
-    <td>${d.name}</td>
-    <td>${d.category || '—'}</td>
-    <td>${d.city || '—'}</td>
-    <td>${d.email ? `<a href="mailto:${d.email}">${d.email}</a>` : '—'}</td>
-    <td>${d.phone || '—'}</td>
-    <td>${d.notes || '—'}</td>
-    <td>${d.website ? `<a href="https://${d.website.replace(/^https?:\/\//,'')}" target="_blank" rel="noopener">${d.website}</a>` : '—'}</td>
-  </tr>`).join('');
+  tbody.innerHTML = docs.map(d => {
+    const displayName = d.name || d.company_name || '—';
+    return `<tr>
+      <td>${displayName}</td>
+      <td>${d.category || '—'}</td>
+      <td>${d.city || '—'}</td>
+      <td>${d.email ? `<a href="mailto:${d.email}">${d.email}</a>` : '—'}</td>
+      <td>${d.phone || '—'}</td>
+      <td>${d.notes || '—'}</td>
+      <td>${d.website ? `<a href="https://${d.website.replace(/^https?:\/\//,'')}" target="_blank" rel="noopener">${d.website}</a>` : '—'}</td>
+    </tr>`;
+  }).join('');
 }
 
 function setDocProgress(text, pct) {
@@ -1974,6 +1980,7 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
     const ownerId = getOwnerId();
     const inserts = items.filter(i => i.title).map(i => ({
       owner_id: ownerId,
+      company_name: i.title,
       name: i.title,
       category: query,
       city: i.city || city || '',
@@ -1984,7 +1991,8 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
       notes: i.address || ''
     }));
     if (inserts.length > 0) {
-      await supabase.from('b2b_contacts').insert(inserts);
+      const { error: insErr } = await supabase.from('b2b_contacts').insert(inserts);
+      if (insErr) { console.error('[docSearch insert]', insErr); throw new Error('DB-Fehler: ' + insErr.message); }
     }
     setDocProgress(`<b>${inserts.length}</b> Praxen importiert — Tabelle wird geladen...`, 100);
     await loadDoctors();
