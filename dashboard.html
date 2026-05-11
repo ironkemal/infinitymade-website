@@ -538,13 +538,17 @@
             <div class="search-progress-info" id="docProgressInfo">Google Maps wird durchsucht...</div>
             <div class="search-progress-bar"><div class="search-progress-fill" id="docProgressFill"></div></div>
           </div>
+          <div class="filter-bar" style="margin-bottom:12px;">
+            <input class="form-input" id="docFilterInput" type="text" placeholder="🔍 In Lead-Datenbank suchen..." style="flex:1;" />
+            <span class="filter-hint" id="docFilterHint"></span>
+          </div>
           <div class="table-wrap">
-            <table class="data-table">
+            <table class="data-table" id="docTable">
               <thead>
                 <tr>
                   <th>Praxis</th>
                   <th>Fachrichtung</th>
-                  <th>Stadt</th>
+                  <th class="sortable" data-sort="city" id="docSortCity">Stadt <span class="sort-icon">↕</span></th>
                   <th>E-Mail</th>
                   <th>Telefon</th>
                   <th>Adresse</th>

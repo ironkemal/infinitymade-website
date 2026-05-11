@@ -1986,16 +1986,18 @@ async function ensureCompanyCode() {
   currentProfile.company_code = code;
 }
 
-async function loadDoctors() {
+let docsCache = [];
+let docsSort = { key: 'created_at', dir: 'desc' };
+
+function renderDocTable(rows) {
   const tbody = document.getElementById('docTableBody');
   const empty = document.getElementById('docEmpty');
+  const hint = document.getElementById('docFilterHint');
   tbody.innerHTML = '';
+  if (!rows || rows.length === 0) { empty.hidden = false; hint.textContent = ''; return; }
   empty.hidden = true;
-  const ownerId = getOwnerId();
-  const { data: docs, error } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
-  if (error) { console.error('[loadDoctors]', error); empty.hidden = false; return; }
-  if (!docs || docs.length === 0) { empty.hidden = false; return; }
-  tbody.innerHTML = docs.map(d => {
+  hint.textContent = rows.length + ' Einträge';
+  tbody.innerHTML = rows.map(d => {
     const displayName = d.name || d.company_name || '—';
     return `<tr>
       <td>${displayName}</td>
@@ -2007,6 +2009,42 @@ async function loadDoctors() {
       <td>${d.website ? `<a href="https://${d.website.replace(/^https?:\/\//,'')}" target="_blank" rel="noopener">${d.website}</a>` : '—'}</td>
     </tr>`;
   }).join('');
+}
+
+function filterDocsCache(text) {
+  const t = text.toLowerCase();
+  return docsCache.filter(d => {
+    const name = (d.name || d.company_name || '').toLowerCase();
+    const cat = (d.category || '').toLowerCase();
+    const city = (d.city || '').toLowerCase();
+    const phone = (d.phone || '').toLowerCase();
+    const email = (d.email || '').toLowerCase();
+    const notes = (d.notes || '').toLowerCase();
+    return name.includes(t) || cat.includes(t) || city.includes(t) || phone.includes(t) || email.includes(t) || notes.includes(t);
+  });
+}
+
+function sortDocsCache(rows, key, dir) {
+  return [...rows].sort((a, b) => {
+    const av = (a[key] || '').toLowerCase();
+    const bv = (b[key] || '').toLowerCase();
+    if (av < bv) return dir === 'asc' ? -1 : 1;
+    if (av > bv) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+async function loadDoctors() {
+  const empty = document.getElementById('docEmpty');
+  empty.hidden = true;
+  const ownerId = getOwnerId();
+  const { data: docs, error } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  if (error) { console.error('[loadDoctors]', error); empty.hidden = false; return; }
+  docsCache = docs || [];
+  const filterText = document.getElementById('docFilterInput').value.trim();
+  let rows = filterText ? filterDocsCache(filterText) : docsCache;
+  rows = sortDocsCache(rows, docsSort.key, docsSort.dir);
+  renderDocTable(rows);
 }
 
 function setDocProgress(text, pct) {
@@ -2022,6 +2060,32 @@ function hideDocProgress() {
   document.getElementById('docProgressFill').style.width = '0%';
 }
 
+document.getElementById('docFilterInput').addEventListener('input', () => {
+  const filterText = document.getElementById('docFilterInput').value.trim();
+  let rows = filterText ? filterDocsCache(filterText) : docsCache;
+  rows = sortDocsCache(rows, docsSort.key, docsSort.dir);
+  renderDocTable(rows);
+});
+
+document.getElementById('docSortCity').addEventListener('click', () => {
+  const th = document.getElementById('docSortCity');
+  const icon = th.querySelector('.sort-icon');
+  th.classList.remove('asc', 'desc');
+  if (docsSort.key === 'city' && docsSort.dir === 'asc') {
+    docsSort = { key: 'city', dir: 'desc' };
+    th.classList.add('desc');
+    icon.textContent = '↓';
+  } else {
+    docsSort = { key: 'city', dir: 'asc' };
+    th.classList.add('asc');
+    icon.textContent = '↑';
+  }
+  const filterText = document.getElementById('docFilterInput').value.trim();
+  let rows = filterText ? filterDocsCache(filterText) : docsCache;
+  rows = sortDocsCache(rows, docsSort.key, docsSort.dir);
+  renderDocTable(rows);
+});
+
 document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const query = document.getElementById('docQuery').value.trim() || 'Arzt';
   const city = document.getElementById('docCity').value.trim();
@@ -2029,8 +2093,27 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const fullQuery = city ? `${query} ${city}` : query;
   const btn = document.getElementById('docSearchBtn');
   btn.disabled = true; btn.textContent = '⏳';
-  const startTime = Date.now();
+  const ownerId = getOwnerId();
 
+  // 1) Önce veritabanında ara — zaten varsa Apify'a gitme
+  const dbFilter = city
+    ? `company_name.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%,city.ilike.%${city}%,notes.ilike.%${city}%`
+    : `company_name.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%`;
+  const { data: dbHits } = await supabase.from('b2b_contacts')
+    .select('*').eq('owner_id', ownerId).or(dbFilter).limit(limit);
+  if (dbHits && dbHits.length >= 3) {
+    docsCache = dbHits;
+    const filterText = document.getElementById('docFilterInput').value.trim();
+    let rows = filterText ? filterDocsCache(filterText) : docsCache;
+    rows = sortDocsCache(rows, docsSort.key, docsSort.dir);
+    renderDocTable(rows);
+    showToast(`${dbHits.length} Treffer aus Datenbank geladen`);
+    btn.disabled = false; btn.textContent = 'Suchen';
+    return;
+  }
+
+  // 2) DB'de yoksa Apify'dan çek
+  const startTime = Date.now();
   const ticker = setInterval(() => {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const phase = elapsed < 8 ? 'Google Maps wird durchsucht...'
@@ -2054,7 +2137,6 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || 'Apify-Fehler');
     const items = data.items || [];
-    const ownerId = getOwnerId();
     const inserts = items.filter(i => i.title).map(i => ({
       owner_id: ownerId,
       company_name: i.title,
