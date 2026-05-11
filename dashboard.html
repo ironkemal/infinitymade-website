@@ -17,6 +17,8 @@
   <link rel="stylesheet" href="dashboard.css?v=20260512h" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 </head>
 <body>
   <div id="loading" class="loading-screen">
@@ -1027,6 +1029,23 @@
       <div class="modal-footer" id="addEmpFooter">
         <button class="btn-ghost" data-modal="addEmployeeModal" id="aeCancelBtn">Abbrechen</button>
         <button class="btn-primary" id="aeSaveBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AVATAR CROP MODAL ===== -->
+  <div class="modal-overlay" id="avatarCropModal" hidden>
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <span class="modal-title">Profilbild zuschneiden</span>
+        <button class="modal-close" id="cropModalClose">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0;display:flex;justify-content:center;background:#000;">
+        <img id="cropImage" style="max-width:100%;max-height:420px;display:block;" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="cropCancelBtn">Abbrechen</button>
+        <button class="btn-primary" id="cropSaveBtn">Speichern</button>
       </div>
     </div>
   </div>
