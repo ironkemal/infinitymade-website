@@ -1224,6 +1224,15 @@ async function loadTeam() {
 
 let detailEmpId = null;
 
+function renderEmpAvatar(el, m) {
+  const name = m.business_name || m.email?.split('@')[0] || '?';
+  if (m.avatar_url) {
+    el.innerHTML = `<img src="${m.avatar_url}" alt="">`;
+  } else {
+    el.textContent = name[0].toUpperCase();
+  }
+}
+
 function openEmpDetail(empId) {
   const m = teamMembers.find(tm=>tm.id===empId);
   if (!m) return;
@@ -1232,9 +1241,37 @@ function openEmpDetail(empId) {
   document.getElementById('empDetailName').textContent  = m.business_name||m.email?.split('@')[0]||'—';
   document.getElementById('empDetailRole').textContent  = m.role||'employee';
   document.getElementById('empDetailEmail').textContent = m.email||'—';
-  document.getElementById('empDetailAvatar').textContent = (m.business_name||m.email||'?')[0].toUpperCase();
+  renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
+  renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
   document.getElementById('teamListView').hidden  = true;
   document.getElementById('teamDetailView').hidden = false;
+
+  // Avatar upload
+  const fileInput = document.getElementById('empAvatarInput');
+  fileInput.onchange = async (ev) => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop();
+    const path = `${empId}/${Date.now()}.${ext}`;
+    showToast('Bild wird hochgeladen…');
+    try {
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      const avatarUrl = urlData?.publicUrl;
+      if (!avatarUrl) throw new Error('URL fehlgeschlagen');
+      const { error: dbErr } = await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', empId);
+      if (dbErr) throw dbErr;
+      m.avatar_url = avatarUrl;
+      renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
+      renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
+      await loadTeam();
+      showToast('Profilbild gespeichert');
+    } catch (e) {
+      showToast('Fehler: ' + e.message, 'error');
+    }
+    fileInput.value = '';
+  };
 
   const detail = document.getElementById('teamDetailView');
 
