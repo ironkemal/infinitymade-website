@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260512d';
+import { mountCalendar } from './calendar-widget.js?v=20260512e';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -525,8 +525,9 @@ async function initCalendar() {
       const empServices = ownerServices.filter(s =>
         (s.employee_services || []).some(es => es.employee_id === selectedEmployeeId)
       );
+      const displayServices = empServices.length > 0 ? empServices : ownerServices;
       const items = [];
-      empServices.forEach(s => {
+      displayServices.forEach(s => {
         items.push({
           label: s.title,
           meta: `${s.duration_minutes || 30} min`,
