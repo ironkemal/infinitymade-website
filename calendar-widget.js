@@ -103,7 +103,16 @@ export function mountCalendar(container, opts = {}) {
   const sideHead   = container.querySelector('.cw-side-head');
   const sideList   = container.querySelector('.cw-side-list');
 
-  function toStr(date) { return date.toISOString().split('T')[0]; }
+  function toStr(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  function parseStr(s) {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
 
   async function loadMonthDots() {
     if (!opts.onMonthChange) return;
@@ -162,7 +171,7 @@ export function mountCalendar(container, opts = {}) {
     selectedDate = dateStr;
     render();
 
-    const date = new Date(dateStr);
+    const date = parseStr(dateStr);
     sideHead.textContent = `${daysShort[date.getDay()]} ${date.getDate()}`;
     sideHead.classList.add('show');
     sideList.innerHTML = '<div class="cw-empty">Lade…</div>';
@@ -240,7 +249,7 @@ export function mountCalendar(container, opts = {}) {
     setDisabled: ({ weekdays, dates } = {}) => {
       if (weekdays) disabledWeekdays = weekdays;
       if (dates)    disabledDates    = new Set(dates);
-      const wasSelOff = selectedDate && (disabledWeekdays.includes(new Date(selectedDate).getDay()) || disabledDates.has(selectedDate));
+      const wasSelOff = selectedDate && (disabledWeekdays.includes(parseStr(selectedDate).getDay()) || disabledDates.has(selectedDate));
       if (wasSelOff) {
         selectedDate = null;
         const first = findFirstAvailable();
