@@ -11,10 +11,9 @@
   <meta name="theme-color" content="#22c55e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="dashboard.css?v=20260510b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260511a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
 </head>
 <body>
   <div id="loading" class="loading-screen">
@@ -144,20 +143,7 @@
             </div>
           </div>
 
-          <div class="calendar-wrap">
-            <div class="calendar-main">
-              <div id="calendarEl"></div>
-            </div>
-            <div class="slot-panel" id="slotPanel">
-              <div class="slot-panel-inner">
-                <div class="slot-panel-header">
-                  <span class="slot-panel-date" id="slotDate"></span>
-                  <button class="btn-icon" id="slotPanelClose">✕</button>
-                </div>
-                <div id="slotList"></div>
-              </div>
-            </div>
-          </div>
+          <div id="calendarEl"></div>
         </section>
 
         <!-- ===== PANEL 3: KUNDEN INFO ===== -->
@@ -777,7 +763,6 @@
 
   <div id="toastContainer"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script type="module" src="dashboard.js?v=20260510b"></script>
+  <script type="module" src="dashboard.js?v=20260511a"></script>
 </body>
 </html>

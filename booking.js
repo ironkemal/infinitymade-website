@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { mountCalendar } from './calendar-widget.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de';
@@ -14,10 +15,7 @@ const state = {
   selectedDate: null, selectedTime: null
 };
 
-let calYear, calMonth;
-
-const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-const DAYS_SHORT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+let calWidget = null;
 
 function goStep(id) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
@@ -33,14 +31,12 @@ function updateSidebar() {
   const hasSel = state.employeeName || state.serviceTitle || state.selectedTime;
   document.getElementById('selDivider').style.display = hasSel ? 'block' : 'none';
 
-  const empBlock = document.getElementById('selEmpBlock');
   if (state.employeeName) {
-    empBlock.classList.add('show');
+    document.getElementById('selEmpBlock').classList.add('show');
     document.getElementById('selEmpVal').textContent = state.employeeName;
   }
-  const srvBlock = document.getElementById('selSrvBlock');
   if (state.serviceTitle) {
-    srvBlock.classList.add('show');
+    document.getElementById('selSrvBlock').classList.add('show');
     document.getElementById('selSrvVal').textContent = `${state.serviceTitle} (${state.durationMinutes} Min)`;
     document.getElementById('bizDuration').textContent = state.durationMinutes + ' Min';
   }
@@ -66,7 +62,6 @@ async function init() {
   state.companyName = profile.business_name;
   document.getElementById('bizAvatar').textContent = profile.business_name.charAt(0).toUpperCase();
   document.getElementById('bizName').textContent   = profile.business_name;
-  document.getElementById('bizOwner').textContent  = '';
 
   const { data: employees } = await supabase.from('profiles')
     .select('id,business_name,email,role')
@@ -124,127 +119,52 @@ async function loadServices(empId) {
       state.selectedDate    = null;
       state.selectedTime    = null;
       updateSidebar();
-      initCalendar();
+      mountBookingCalendar();
       goStep('datetime');
     });
   });
 }
 
-function initCalendar() {
-  const today = new Date();
-  calYear  = today.getFullYear();
-  calMonth = today.getMonth();
+function mountBookingCalendar() {
+  const container = document.getElementById('calMount');
+  container.innerHTML = '';
   document.getElementById('btnToForm').disabled = true;
-  document.getElementById('slotsDayLabel').style.display = 'none';
-  document.getElementById('slotsList').innerHTML = '<div class="slots-empty">Bitte Datum wählen</div>';
 
-  document.getElementById('calPrev').onclick = () => {
-    const now = new Date();
-    if (calYear === now.getFullYear() && calMonth <= now.getMonth()) return;
-    calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
-    renderCalendar();
-  };
-  document.getElementById('calNext').onclick = () => {
-    calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
-    renderCalendar();
-  };
-
-  renderCalendar();
-  const todayStr = today.toISOString().split('T')[0];
-  selectDay(todayStr);
-}
-
-function renderCalendar() {
-  document.getElementById('calMonthLabel').innerHTML =
-    `${MONTHS[calMonth]} <em>${calYear}</em>`;
-
-  const today = new Date(); today.setHours(0,0,0,0);
-  const firstDow = new Date(calYear, calMonth, 1).getDay();
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  const grid = document.getElementById('calGrid');
-  grid.innerHTML = '';
-
-  for (let i = 0; i < firstDow; i++) {
-    const el = document.createElement('div');
-    el.className = 'cal-cell empty';
-    grid.appendChild(el);
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date    = new Date(calYear, calMonth, d);
-    const dateStr = date.toISOString().split('T')[0];
-    const isPast  = date < today;
-    const isToday = date.getTime() === today.getTime();
-    const isSel   = dateStr === state.selectedDate;
-
-    const btn = document.createElement('button');
-    btn.className = 'cal-cell';
-    btn.textContent = d;
-
-    if (isPast) {
-      btn.classList.add('past');
-    } else {
-      btn.classList.add('avail');
-      if (isToday) btn.classList.add('today');
-      if (isSel)   btn.classList.add('selected');
-      if (isSel)   btn.classList.add('has-dot');
-      btn.addEventListener('click', () => selectDay(dateStr));
-    }
-    grid.appendChild(btn);
-  }
-}
-
-async function selectDay(dateStr) {
-  state.selectedDate = dateStr;
-  state.selectedTime = null;
-  document.getElementById('btnToForm').disabled = true;
-  renderCalendar();
-
-  const date = new Date(dateStr);
-  const label = `${DAYS_SHORT[date.getDay()]} ${date.getDate()}`;
-  const dayLabelEl = document.getElementById('slotsDayLabel');
-  dayLabelEl.textContent = label;
-  dayLabelEl.style.display = 'block';
-
-  const list = document.getElementById('slotsList');
-  list.innerHTML = '<div class="slots-empty">Lade…</div>';
-
-  try {
-    const res = await fetch(`${API}/api/booking/get-slots`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId:   state.employeeId,
-        date:     dateStr,
-        duration: state.durationMinutes,
-        buffer:   state.bufferMinutes,
-        step:     30
-      })
-    });
-    const data = await res.json();
-    list.innerHTML = '';
-
-    if (data.slots && data.slots.length) {
-      data.slots.forEach(slot => {
-        const btn = document.createElement('button');
-        btn.className = 'slot-btn';
-        btn.innerHTML = `<span class="slot-dot"></span>${slot}`;
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('picked'));
-          btn.classList.add('picked');
-          state.selectedTime = slot;
-          document.getElementById('btnToForm').disabled = false;
-          updateSidebar();
+  calWidget = mountCalendar(container, {
+    minDate: new Date(),
+    emptyText: 'Keine Termine verfügbar.',
+    placeholder: 'Bitte Datum wählen',
+    onDaySelect: async (dateStr) => {
+      state.selectedDate = dateStr;
+      state.selectedTime = null;
+      document.getElementById('btnToForm').disabled = true;
+      updateSidebar();
+      try {
+        const res = await fetch(`${API}/api/booking/get-slots`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId:   state.employeeId,
+            date:     dateStr,
+            duration: state.durationMinutes,
+            buffer:   state.bufferMinutes,
+            step:     30
+          })
         });
-        list.appendChild(btn);
-      });
-    } else {
-      list.innerHTML = '<div class="slots-empty">Keine Termine verfügbar.</div>';
+        const data = await res.json();
+        return (data.slots || []).map(slot => ({
+          label: slot,
+          onClick: () => {
+            state.selectedTime = slot;
+            document.getElementById('btnToForm').disabled = false;
+            updateSidebar();
+          }
+        }));
+      } catch(e) {
+        return [];
+      }
     }
-  } catch(e) {
-    list.innerHTML = '<div class="slots-empty" style="color:#ef4444;">Fehler beim Laden.</div>';
-  }
-  updateSidebar();
+  });
 }
 
 document.getElementById('backToEmp').addEventListener('click', () => goStep('employees'));

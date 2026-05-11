@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { mountCalendar } from './calendar-widget.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -228,7 +229,7 @@ function switchPanel(id) {
   if (target) target.classList.add('active');
   renderSidebar();
   closeSidebar();
-  if (id==='calendar' && calendar) { setTimeout(() => calendar.updateSize(), 50); setTimeout(() => calendar.updateSize(), 300); }
+  if (id==='calendar' && calendar) calendar.reloadMonth();
   if (id==='kunden') loadLeads();
   if (id==='services') loadServices();
   if (id==='hours') loadHoursPanel();
@@ -382,87 +383,58 @@ async function openStripePortal() {
 async function initCalendar() {
   const ownerId = getOwnerId();
   const calEl = document.getElementById('calendarEl');
-  calendar = new FullCalendar.Calendar(calEl, {
-    initialView: window.innerWidth<768 ? 'timeGridDay' : 'timeGridWeek',
-    headerToolbar: {left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,timeGridDay'},
-    locale: currentLang,
-    height: 'auto',
-    slotMinTime:'06:00:00',slotMaxTime:'23:00:00',
-    allDaySlot:true,selectable:true,
-    dateClick(info) { openSlotPanel(info.dateStr); },
-    select(info) { prefillBookingModal(info.startStr, info.endStr); },
-    events: async (info,ok,fail) => {
-      try {
-        let q = supabase.from('bookings')
-          .select('*,services(title,color)')
-          .eq('owner_id',ownerId).gte('start_time',info.startStr).lte('start_time',info.endStr);
-        if (currentProfile.role!=='owner') q = q.eq('user_id',currentSession.user.id);
-        const {data:bks} = await q;
+  calEl.innerHTML = '';
 
-        const {data:leaves} = await supabase.from('time_offs')
-          .select('*')
-          .in('employee_id',teamMembers.map(m=>m.id))
-          .lte('start_date',info.endStr).gte('end_date',info.startStr);
+  const oldPanel = document.getElementById('slotPanel');
+  if (oldPanel) oldPanel.style.display = 'none';
 
-        const evts = [];
-        (bks||[]).forEach(b => {
-          const emp = teamMembers.find(m=>m.id===b.user_id);
-          evts.push({
-            id:b.id,title:`${b.services?.title||'Termin'} – ${b.customer_name}`,
-            start:b.start_time,end:b.end_time,
-            backgroundColor:b.services?.color||'#22c55e',borderColor:b.services?.color||'#22c55e',
-            textColor:'#0a0a0a',extendedProps:{...b,_empName:emp?.business_name||''}
-          });
-        });
-        (leaves||[]).forEach(l => evts.push({
-          id:'leave_'+l.id,title:`❌ ${l.reason||'Beurlaubt'}`,
-          start:l.start_date,end:l.end_date,allDay:true,
-          backgroundColor:'#ef4444',borderColor:'#ef4444',textColor:'#fff'
-        }));
-        ok(evts);
-      } catch(e) { fail(e); }
+  calendar = mountCalendar(calEl, {
+    emptyText: 'Keine Termine an diesem Tag.',
+    placeholder: 'Bitte Datum wählen',
+    onMonthChange: async (year, month) => {
+      const start = new Date(year, month, 1).toISOString().split('T')[0];
+      const end   = new Date(year, month + 1, 0).toISOString().split('T')[0] + 'T23:59:59';
+      let q = supabase.from('bookings').select('start_time')
+        .eq('owner_id', ownerId).neq('status','cancelled')
+        .gte('start_time', start).lte('start_time', end);
+      if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
+      const { data } = await q;
+      const dots = {};
+      (data||[]).forEach(b => { dots[b.start_time.split('T')[0]] = true; });
+      return dots;
     },
-    eventClick(info) {
-      const b = info.event.extendedProps;
-      if (b.customer_name) openBookingModal(b);
+    onDaySelect: async (dateStr) => {
+      let q = supabase.from('bookings')
+        .select('*,services(title,color)')
+        .eq('owner_id', ownerId).neq('status','cancelled')
+        .gte('start_time', dateStr+'T00:00:00').lte('start_time', dateStr+'T23:59:59')
+        .order('start_time');
+      if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
+      const { data: bks } = await q;
+
+      const { data: leaves } = await supabase.from('time_offs')
+        .select('*')
+        .in('employee_id', teamMembers.map(m => m.id))
+        .lte('start_date', dateStr+'T23:59:59').gte('end_date', dateStr+'T00:00:00');
+
+      const items = [];
+      (bks||[]).forEach(b => {
+        const emp = teamMembers.find(m => m.id === b.user_id);
+        items.push({
+          label: `${fmtTime(b.start_time)} – ${fmtTime(b.end_time)}`,
+          meta:  `${b.customer_name} · ${b.services?.title||'Termin'}${emp ? ' · ' + (emp.business_name||'') : ''}`,
+          color: b.services?.color || '#22c55e',
+          onClick: () => openBookingModal(b)
+        });
+      });
+      (leaves||[]).forEach(l => items.push({
+        label: '❌ ' + (l.reason || 'Beurlaubt'),
+        color: '#ef4444'
+      }));
+      return items;
     }
   });
-  calendar.render();
 }
-
-async function openSlotPanel(dateStr) {
-  const panel = document.getElementById('slotPanel');
-  const list  = document.getElementById('slotList');
-  document.getElementById('slotDate').textContent = fmtDate(dateStr+'T12:00:00');
-  panel.classList.add('open');
-
-  const ownerId = getOwnerId();
-  const {data:bks} = await supabase.from('bookings')
-    .select('*,services(title),profiles!bookings_user_id_fkey(business_name)')
-    .eq('owner_id',ownerId)
-    .gte('start_time',dateStr+'T00:00:00').lte('start_time',dateStr+'T23:59:59')
-    .neq('status','cancelled').order('start_time');
-
-  if (!bks||bks.length===0) {
-    list.innerHTML = `<div class="slot-item slot-free"><span>Keine Termine</span></div>`;
-    return;
-  }
-  list.innerHTML = bks.map(b=>`
-    <div class="slot-item slot-busy" data-id="${b.id}">
-      <span class="slot-time">${fmtTime(b.start_time)} – ${fmtTime(b.end_time)}</span>
-      <span class="slot-customer">${b.customer_name} · ${b.services?.title||''}</span>
-    </div>`).join('');
-  list.querySelectorAll('.slot-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const bk = bks.find(b=>b.id===el.dataset.id);
-      if (bk) openBookingModal(bk);
-    });
-  });
-}
-
-document.getElementById('slotPanelClose').addEventListener('click', () => {
-  document.getElementById('slotPanel').classList.remove('open');
-});
 
 document.getElementById('calAddBookingBtn').addEventListener('click', () => openBookingModal(null));
 document.getElementById('calAddLeaveBtn').addEventListener('click', () => {
@@ -559,7 +531,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     : await supabase.from('bookings').insert(payload);
   if (error) { showToast(t('err_generic'),'error'); return; }
   closeModal('bookingModal');
-  calendar?.refetchEvents();
+  if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel==='overview') await loadTodayBookings();
   showToast(t('saved'));
 });
@@ -569,7 +541,7 @@ document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   if (!id||!confirm(t('lead_confirm_delete'))) return;
   await supabase.from('bookings').delete().eq('id',id);
   closeModal('bookingModal');
-  calendar?.refetchEvents();
+  if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel==='overview') await loadTodayBookings();
   showToast(t('saved'));
 });
@@ -589,7 +561,7 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   if (error) { showToast(t('err_generic'),'error'); return; }
   closeModal('leaveModal');
   document.getElementById('leaveReason').value = '';
-  calendar?.refetchEvents();
+  if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   showToast(t('saved'));
 });
 

@@ -278,33 +278,10 @@
       <div id="srvList"></div>
     </div>
 
-    <!-- Step 3: Calendar + Slots -->
+    <!-- Step 3: Calendar + Slots (via shared widget) -->
     <div class="step" id="step-datetime">
       <button class="btn-back" id="backToSrv">&#8592; Zurück</button>
-
-      <div class="cal-layout">
-        <!-- Calendar -->
-        <div>
-          <div class="cal-head">
-            <div class="cal-month" id="calMonthLabel"></div>
-            <div class="cal-nav-wrap">
-              <button class="cal-nav-btn" id="calPrev">&#8249;</button>
-              <button class="cal-nav-btn" id="calNext">&#8250;</button>
-            </div>
-          </div>
-          <div class="cal-dow">
-            <span>SO</span><span>MO</span><span>DI</span><span>MI</span><span>DO</span><span>FR</span><span>SA</span>
-          </div>
-          <div class="cal-grid" id="calGrid"></div>
-        </div>
-
-        <!-- Slots -->
-        <div class="slots-panel">
-          <div class="slots-day-label" id="slotsDayLabel" style="display:none;"></div>
-          <div id="slotsList"><div class="slots-empty">Bitte Datum wählen</div></div>
-        </div>
-      </div>
-
+      <div id="calMount"></div>
       <div class="step-footer">
         <button class="btn-primary" id="btnToForm" disabled>Weiter &#8594;</button>
       </div>
@@ -339,6 +316,6 @@
   </main>
 </div>
 
-<script type="module" src="booking.js?v=20260511b"></script>
+<script type="module" src="booking.js?v=20260511c"></script>
 </body>
 </html>
