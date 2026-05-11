@@ -33,9 +33,9 @@
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 16px;
       width: 100%;
-      max-width: 960px;
+      max-width: 780px;
       display: flex;
       overflow: hidden;
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -43,9 +43,9 @@
 
     /* ── Sidebar ── */
     .sidebar {
-      width: 230px;
+      width: 200px;
       flex-shrink: 0;
-      padding: 28px 24px;
+      padding: 22px 20px;
       border-right: 1px solid var(--border);
       background: var(--panel);
       display: flex;
@@ -77,8 +77,9 @@
     /* ── Main ── */
     .main {
       flex: 1;
-      padding: 28px;
+      padding: 22px 22px 18px;
       overflow-y: auto;
+      min-width: 0;
     }
 
     /* ── Steps ── */
@@ -282,9 +283,6 @@
     <div class="step" id="step-datetime">
       <button class="btn-back" id="backToSrv">&#8592; Zurück</button>
       <div id="calMount"></div>
-      <div class="step-footer">
-        <button class="btn-primary" id="btnToForm" disabled>Weiter &#8594;</button>
-      </div>
     </div>
 
     <!-- Step 4: Form -->
@@ -316,6 +314,6 @@
   </main>
 </div>
 
-<script type="module" src="booking.js?v=20260511c"></script>
+<script type="module" src="booking.js?v=20260511d"></script>
 </body>
 </html>

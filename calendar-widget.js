@@ -14,38 +14,40 @@ const DAYS_DE   = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 
 const CSS = `
 .cw-root { font-family:'Inter',sans-serif; color:var(--cw-text,#f1f5f9); }
-.cw-layout { display:grid; grid-template-columns:1fr 220px; gap:24px; align-items:start; }
-.cw-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-.cw-month-lbl { font-size:16px; font-weight:700; }
-.cw-month-lbl em { font-style:normal; color:var(--cw-accent,#22c55e); font-weight:500; margin-left:4px; }
-.cw-nav { display:flex; gap:6px; }
-.cw-nav-btn { width:28px; height:28px; background:none; border:1px solid var(--cw-border,rgba(255,255,255,.08)); border-radius:8px; color:inherit; font-size:15px; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; transition:border-color .12s; }
-.cw-nav-btn:hover:not(:disabled) { border-color:var(--cw-accent,#22c55e); color:var(--cw-accent,#22c55e); }
+.cw-layout { display:grid; grid-template-columns:minmax(0,1fr) 160px; gap:20px; align-items:start; }
+.cw-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.cw-month-lbl { font-size:14px; font-weight:700; }
+.cw-month-lbl em { font-style:normal; color:var(--cw-muted,#94a3b8); font-weight:400; margin-left:4px; }
+.cw-nav { display:flex; gap:4px; }
+.cw-nav-btn { width:24px; height:24px; background:none; border:none; color:var(--cw-muted,#94a3b8); font-size:14px; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; border-radius:4px; transition:background .12s; }
+.cw-nav-btn:hover:not(:disabled) { background:var(--cw-panel,#1a1d24); color:var(--cw-text,#f1f5f9); }
 .cw-nav-btn:disabled { opacity:.25; cursor:not-allowed; }
-.cw-dow { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-bottom:6px; }
-.cw-dow span { font-size:11px; font-weight:600; color:var(--cw-muted,#94a3b8); padding:4px 0; }
-.cw-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-.cw-cell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:13px; font-weight:500; background:none; border:none; color:inherit; font-family:inherit; cursor:pointer; transition:background .1s; position:relative; }
+.cw-dow { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-bottom:4px; }
+.cw-dow span { font-size:10px; font-weight:600; color:var(--cw-muted,#94a3b8); padding:2px 0; letter-spacing:.5px; }
+.cw-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.cw-cell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; font-weight:500; background:none; border:none; color:inherit; font-family:inherit; cursor:pointer; transition:background .1s; position:relative; padding:0; }
 .cw-cell.avail { background:var(--cw-panel,#1a1d24); }
 .cw-cell.avail:hover { background:rgba(34,197,94,.14); color:var(--cw-accent,#22c55e); }
-.cw-cell.today { box-shadow:inset 0 0 0 2px var(--cw-accent,#22c55e); }
+.cw-cell.today::after { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:3px; height:3px; background:var(--cw-accent,#22c55e); border-radius:50%; }
 .cw-cell.selected { background:var(--cw-accent,#22c55e) !important; color:#000 !important; font-weight:700; }
-.cw-cell.has-items::after { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; background:var(--cw-accent,#22c55e); border-radius:50%; }
-.cw-cell.selected.has-items::after { background:#000; }
-.cw-cell.past { color:rgba(255,255,255,.18); pointer-events:none; }
+.cw-cell.has-items::after { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:3px; height:3px; background:var(--cw-accent,#22c55e); border-radius:50%; }
+.cw-cell.selected.today::after, .cw-cell.selected.has-items::after { background:#000; }
+.cw-cell.past, .cw-cell.off { color:rgba(255,255,255,.16); pointer-events:none; background:none; }
 .cw-cell.empty { pointer-events:none; }
 
-.cw-side { min-height:200px; }
-.cw-side-head { font-size:14px; font-weight:700; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--cw-border,rgba(255,255,255,.08)); display:none; }
+.cw-side { min-height:200px; max-height:340px; overflow-y:auto; padding-right:4px; }
+.cw-side::-webkit-scrollbar { width:4px; }
+.cw-side::-webkit-scrollbar-thumb { background:var(--cw-border,rgba(255,255,255,.1)); border-radius:2px; }
+.cw-side-head { font-size:13px; font-weight:700; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--cw-border,rgba(255,255,255,.08)); display:none; }
 .cw-side-head.show { display:block; }
-.cw-item { display:flex; align-items:center; gap:10px; width:100%; padding:11px 14px; background:var(--cw-panel,#1a1d24); border:1px solid var(--cw-border,rgba(255,255,255,.08)); border-radius:8px; color:inherit; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; margin-bottom:8px; transition:border-color .12s; text-align:left; }
+.cw-item { display:flex; align-items:center; gap:8px; width:100%; padding:9px 12px; background:var(--cw-panel,#1a1d24); border:1px solid var(--cw-border,rgba(255,255,255,.08)); border-radius:6px; color:inherit; font-family:inherit; font-size:12px; font-weight:500; cursor:pointer; margin-bottom:6px; transition:border-color .12s; text-align:left; }
 .cw-item:hover { border-color:var(--cw-accent,#22c55e); }
 .cw-item.picked { background:var(--cw-accent,#22c55e); color:#000; border-color:var(--cw-accent,#22c55e); }
-.cw-item-dot { width:8px; height:8px; background:var(--cw-accent,#22c55e); border-radius:50%; flex-shrink:0; }
+.cw-item-dot { width:6px; height:6px; background:var(--cw-accent,#22c55e); border-radius:50%; flex-shrink:0; }
 .cw-item.picked .cw-item-dot { background:#000; }
-.cw-item-body { flex:1; display:flex; flex-direction:column; gap:2px; }
-.cw-item-meta { font-size:11px; opacity:.7; }
-.cw-empty { font-size:12px; color:var(--cw-muted,#94a3b8); padding-top:8px; }
+.cw-item-body { flex:1; display:flex; flex-direction:column; gap:1px; min-width:0; }
+.cw-item-meta { font-size:10px; opacity:.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cw-empty { font-size:11px; color:var(--cw-muted,#94a3b8); padding-top:6px; }
 
 @media (max-width:740px) { .cw-layout { grid-template-columns:1fr; } }
 `;
@@ -65,6 +67,8 @@ export function mountCalendar(container, opts = {}) {
   if (minDate) minDate.setHours(0,0,0,0);
   const monthsLabels = opts.months || MONTHS_DE;
   const daysShort    = opts.daysShort || DAYS_DE;
+  let disabledWeekdays = opts.disabledWeekdays || [];
+  let disabledDates    = new Set(opts.disabledDates || []);
 
   const today = new Date(); today.setHours(0,0,0,0);
   let curYear  = today.getFullYear();
@@ -133,6 +137,7 @@ export function mountCalendar(container, opts = {}) {
       const isToday = date.getTime() === today.getTime();
       const isSel   = dateStr === selectedDate;
       const hasItems = !!monthDots[dateStr];
+      const isOff   = disabledWeekdays.includes(date.getDay()) || disabledDates.has(dateStr);
 
       const btn = document.createElement('button');
       btn.className = 'cw-cell';
@@ -140,6 +145,8 @@ export function mountCalendar(container, opts = {}) {
 
       if (isPast) {
         btn.classList.add('past');
+      } else if (isOff) {
+        btn.classList.add('off');
       } else {
         btn.classList.add('avail');
         if (isToday)   btn.classList.add('today');
@@ -206,12 +213,22 @@ export function mountCalendar(container, opts = {}) {
     render();
   });
 
+  function findFirstAvailable() {
+    const start = !minDate || today >= minDate ? today : new Date(minDate);
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(start); d.setDate(d.getDate() + i);
+      const ds = toStr(d);
+      if (!disabledWeekdays.includes(d.getDay()) && !disabledDates.has(ds)) return ds;
+    }
+    return null;
+  }
+
   (async () => {
     await loadMonthDots();
     render();
     if (opts.autoSelectToday !== false) {
-      const validDate = !minDate || today >= minDate ? today : minDate;
-      selectDate(toStr(validDate));
+      const first = findFirstAvailable();
+      if (first) selectDate(first);
     }
   })();
 
@@ -219,6 +236,17 @@ export function mountCalendar(container, opts = {}) {
     refresh: () => selectedDate && selectDate(selectedDate),
     selectDate,
     getSelectedDate: () => selectedDate,
-    reloadMonth: async () => { await loadMonthDots(); render(); }
+    reloadMonth: async () => { await loadMonthDots(); render(); },
+    setDisabled: ({ weekdays, dates } = {}) => {
+      if (weekdays) disabledWeekdays = weekdays;
+      if (dates)    disabledDates    = new Set(dates);
+      const wasSelOff = selectedDate && (disabledWeekdays.includes(new Date(selectedDate).getDay()) || disabledDates.has(selectedDate));
+      if (wasSelOff) {
+        selectedDate = null;
+        const first = findFirstAvailable();
+        if (first) { selectDate(first); return; }
+      }
+      render();
+    }
   };
 }

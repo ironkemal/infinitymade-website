@@ -125,19 +125,26 @@ async function loadServices(empId) {
   });
 }
 
-function mountBookingCalendar() {
+async function mountBookingCalendar() {
   const container = document.getElementById('calMount');
   container.innerHTML = '';
-  document.getElementById('btnToForm').disabled = true;
+
+  const { data: wh } = await supabase.from('working_hours')
+    .select('day_of_week,is_active').eq('user_id', state.employeeId);
+  const offWeekdays = [];
+  for (let d = 0; d < 7; d++) {
+    const row = (wh || []).find(w => w.day_of_week === d);
+    if (!row || !row.is_active) offWeekdays.push(d);
+  }
 
   calWidget = mountCalendar(container, {
     minDate: new Date(),
+    disabledWeekdays: offWeekdays,
     emptyText: 'Keine Termine verfügbar.',
     placeholder: 'Bitte Datum wählen',
     onDaySelect: async (dateStr) => {
       state.selectedDate = dateStr;
       state.selectedTime = null;
-      document.getElementById('btnToForm').disabled = true;
       updateSidebar();
       try {
         const res = await fetch(`${API}/api/booking/get-slots`, {
@@ -156,8 +163,8 @@ function mountBookingCalendar() {
           label: slot,
           onClick: () => {
             state.selectedTime = slot;
-            document.getElementById('btnToForm').disabled = false;
             updateSidebar();
+            goStep('form');
           }
         }));
       } catch(e) {
@@ -170,7 +177,6 @@ function mountBookingCalendar() {
 document.getElementById('backToEmp').addEventListener('click', () => goStep('employees'));
 document.getElementById('backToSrv').addEventListener('click', () => goStep('services'));
 document.getElementById('backToCal').addEventListener('click', () => goStep('datetime'));
-document.getElementById('btnToForm').addEventListener('click', () => goStep('form'));
 
 document.getElementById('bookingForm').addEventListener('submit', async e => {
   e.preventDefault();
