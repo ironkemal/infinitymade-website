@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260512g';
+import { mountCalendar } from './calendar-widget.js?v=20260512h';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -1606,9 +1606,16 @@ document.getElementById('aiInput').addEventListener('keydown', e => {
 async function loadSettings() {
   document.getElementById('setBiz').value  = currentProfile.business_name||'';
   document.getElementById('setLang').value = currentLang;
-  document.getElementById('accEmail').textContent = currentSession.user.email||'—';
-  const planName = currentProfile.plan ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
-  document.getElementById('accPlanBadge').textContent = planName;
+
+  const isEmployee = currentProfile.role !== 'owner';
+  const accSection = document.getElementById('settingsAccountSection');
+  if (accSection) accSection.hidden = isEmployee;
+
+  if (!isEmployee) {
+    document.getElementById('accEmail').textContent = currentSession.user.email||'—';
+    const planName = currentProfile.plan ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
+    document.getElementById('accPlanBadge').textContent = planName;
+  }
 
   const {data:integ} = await supabase.from('calendar_integrations')
     .select('*').eq('user_id',currentSession.user.id).eq('provider','google').single();
