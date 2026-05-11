@@ -262,6 +262,9 @@
               <h2 data-i18n="nav_team">Mitarbeiter</h2>
               <p class="panel-sub" data-i18n="team_sub">Team verwalten</p>
             </div>
+            <div class="panel-actions">
+              <button class="btn-primary" id="teamAddBtn">+ Mitarbeiter</button>
+            </div>
           </div>
 
           <div class="card invite-card" style="margin-bottom:16px;">
@@ -946,6 +949,67 @@
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="mailPreviewModal">Abbrechen</button>
         <button class="btn-primary" id="mailPreviewSendBtn">✉ Senden</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: MITARBEITER HINZUFÜGEN ===== -->
+  <div class="modal-overlay" id="addEmployeeModal" hidden>
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <span class="modal-title" id="addEmpModalTitle">Mitarbeiter hinzufügen</span>
+        <button class="modal-close" data-modal="addEmployeeModal">✕</button>
+      </div>
+      <div class="modal-body" id="addEmpFormStep">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Vorname <span class="req">*</span></label>
+            <input class="form-input" id="ae-first-name" type="text" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nachname <span class="req">*</span></label>
+            <input class="form-input" id="ae-last-name" type="text" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-Mail <span class="req">*</span></label>
+          <input class="form-input" id="ae-email" type="email" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefon</label>
+          <input class="form-input" id="ae-phone" type="tel" />
+        </div>
+      </div>
+      <div class="modal-body" id="addEmpResultStep" hidden>
+        <div class="emp-result-card">
+          <div class="emp-result-icon">✓</div>
+          <div class="emp-result-title">Konto erstellt</div>
+          <div class="emp-result-sub">Teilen Sie die Zugangsdaten mit Ihrem Mitarbeiter.</div>
+          <div class="emp-result-box">
+            <div class="emp-result-row">
+              <span class="emp-result-label">E-Mail</span>
+              <span class="emp-result-val" id="ae-res-email">—</span>
+              <button class="btn-icon" id="aeCopyEmailBtn" title="Kopieren">⎘</button>
+            </div>
+            <div class="emp-result-row">
+              <span class="emp-result-label">Passwort</span>
+              <span class="emp-result-val" id="ae-res-password">—</span>
+              <button class="btn-icon" id="aeCopyPwBtn" title="Kopieren">⎘</button>
+            </div>
+            <div class="emp-result-row">
+              <span class="emp-result-label">Login-Link</span>
+              <span class="emp-result-val" id="ae-res-link">infinitymade.de/login.html</span>
+              <button class="btn-icon" id="aeCopyLinkBtn" title="Kopieren">⎘</button>
+            </div>
+          </div>
+          <a class="btn-primary" id="aeShareWaBtn" href="#" target="_blank" style="width:100%;justify-content:center;margin-top:12px;">
+            <span>💬</span> Via WhatsApp teilen
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer" id="addEmpFooter">
+        <button class="btn-ghost" data-modal="addEmployeeModal" id="aeCancelBtn">Abbrechen</button>
+        <button class="btn-primary" id="aeSaveBtn">Speichern</button>
       </div>
     </div>
   </div>

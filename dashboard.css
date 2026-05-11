@@ -1451,6 +1451,46 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   border-top: 1px solid var(--border);
 }
 
+.emp-result-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+.emp-result-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary-dim);
+  color: var(--primary);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.emp-result-title { font-size: 16px; font-weight: 700; color: var(--text-main); }
+.emp-result-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.emp-result-box {
+  width: 100%;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.emp-result-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.emp-result-label { color: var(--text-muted); text-align: left; }
+.emp-result-val { color: var(--text-main); font-weight: 600; word-break: break-all; text-align: left; }
+
 /* ============================
    TOAST / SNACKBAR
    ============================ */
