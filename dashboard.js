@@ -1013,7 +1013,7 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
     const dbFilter = city
       ? `company_name.ilike.%${rawQuery}%,notes.ilike.%${rawQuery} ${city}%,notes.ilike.%${city}%`
       : `company_name.ilike.%${rawQuery}%,notes.ilike.%${rawQuery}%`;
-    const { data: dbHits } = await supabase.from('b2b_contacts')
+    const { data: dbHits } = await supabase.from('scraper_data')
       .select('id').eq('owner_id', ownerId).or(dbFilter).limit(limit);
     if (dbHits && dbHits.length >= 5) {
       document.getElementById('b2bSearch').value = rawQuery;
@@ -1047,7 +1047,7 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
       notes: i.address || ''
     }));
     if (inserts.length > 0) {
-      const { error: insErr } = await supabase.from('b2b_contacts').insert(inserts);
+      const { error: insErr } = await supabase.from('scraper_data').insert(inserts);
       if (insErr) { console.error('[apifyRun insert]', insErr); throw new Error('DB-Fehler: ' + insErr.message); }
     }
     document.getElementById('b2bSearch').value = rawQuery;
@@ -2054,7 +2054,7 @@ async function loadDoctors() {
   const empty = document.getElementById('docEmpty');
   empty.hidden = true;
   const ownerId = getOwnerId();
-  const { data: docs, error } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  const { data: docs, error } = await supabase.from('scraper_data').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
   if (error) { console.error('[loadDoctors]', error); empty.hidden = false; return; }
   docsCache = docs || [];
   const filterText = document.getElementById('docFilterInput').value.trim();
@@ -2115,7 +2115,7 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const dbFilter = city
     ? `company_name.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%,city.ilike.%${city}%,notes.ilike.%${city}%`
     : `company_name.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%`;
-  const { data: dbHits } = await supabase.from('b2b_contacts')
+  const { data: dbHits } = await supabase.from('scraper_data')
     .select('*').eq('owner_id', ownerId).or(dbFilter).limit(limit);
   if (dbHits && dbHits.length >= 3) {
     docsCache = dbHits;
@@ -2166,7 +2166,7 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
       notes: i.address || ''
     }));
     if (inserts.length > 0) {
-      const { error: insErr } = await supabase.from('b2b_contacts').insert(inserts);
+      const { error: insErr } = await supabase.from('scraper_data').insert(inserts);
       if (insErr) { console.error('[docSearch insert]', insErr); throw new Error('DB-Fehler: ' + insErr.message); }
     }
     setDocProgress(`<b>${inserts.length}</b> Praxen importiert — Tabelle wird geladen...`, 100);
