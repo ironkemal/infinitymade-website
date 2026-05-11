@@ -1648,15 +1648,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 @media (max-width: 768px) {
   .body-map-wrap {
-    height: 64vh;
-    min-height: 340px;
+    height: 62vh;
+    min-height: 320px;
   }
-  /* Kenarlari kirp: sadece ortadaki 3D model alani görünsün */
+  /* Daha agresif kirpma: sol panel + sag reklamlar + ust toolbar gizleniyor */
   .body-map-wrap iframe {
-    width: 130%;
-    height: 130%;
-    top: -15%;
-    left: -15%;
+    width: 350%;
+    height: 160%;
+    top: -30%;
+    left: -125%;
   }
   .zygote-fs-btn {
     bottom: 8px;
@@ -1664,5 +1664,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
     padding: 6px 10px;
     font-size: 11px;
   }
+  #zygoteFsBtn { display: none; }
+  #zygoteNewTabBtn { display: flex !important; left: 8px !important; }
 }
 
