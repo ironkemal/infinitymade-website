@@ -1313,6 +1313,22 @@ function openEmpDetail(empId) {
     }
   };
 
+  document.getElementById('empAvatarRemoveBtn').onclick = async () => {
+    if (!m.avatar_url) { showToast('Kein Bild vorhanden'); return; }
+    if (!confirm('Profilbild entfernen?')) return;
+    try {
+      const { error: dbErr } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', empId);
+      if (dbErr) throw dbErr;
+      m.avatar_url = null;
+      renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
+      renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
+      await loadTeam();
+      showToast('Profilbild entfernt');
+    } catch (e) {
+      showToast('Fehler: ' + e.message, 'error');
+    }
+  };
+
   const detail = document.getElementById('teamDetailView');
 
   detail.querySelectorAll('.tab-btn').forEach(btn => {
