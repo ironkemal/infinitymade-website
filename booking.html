@@ -3,167 +3,342 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Termin Buchen - Infinity Calendar</title>
-  <link rel="stylesheet" href="dashboard.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>Termin Buchen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --bg-primary: #0f1115; --bg-card: #16181d; --bg-secondary: #1a1d24; --text-primary: #f8fafc; --text-secondary: #94a3b8; --border: rgba(255,255,255,0.08); --accent: #22c55e; }
-    body { font-family: 'Outfit', sans-serif; background-color: var(--bg-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; color: var(--text-primary); }
-    .booking-container { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 980px; display: flex; overflow: hidden; min-height: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-    .sidebar { width: 260px; padding: 30px; border-right: 1px solid var(--border); background: var(--bg-secondary); flex-shrink: 0; }
-    .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0f1115;
+      --card:    #16181d;
+      --panel:   #1a1d24;
+      --border:  rgba(255,255,255,0.08);
+      --text:    #f1f5f9;
+      --muted:   #94a3b8;
+      --green:   #22c55e;
+      --green-bg: rgba(34,197,94,0.10);
+      --radius:  12px;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
 
-    .list-btn { display: block; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; color: var(--text-primary); transition: all 0.2s; font-family: inherit; }
-    .list-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .list-btn.active { border-color: var(--accent); background-color: rgba(34, 197, 94, 0.1); }
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
 
-    .step { display: none; animation: fadeIn 0.3s ease; }
-    .step.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 230px;
+      flex-shrink: 0;
+      padding: 28px 24px;
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .biz-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #000;
+      font-size: 20px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .biz-owner  { font-size: 13px; color: var(--muted); margin-bottom: 2px; }
+    .biz-name   { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .biz-meta   { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .biz-meta svg { flex-shrink: 0; }
 
-    .biz-logo { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: #000; margin-bottom: 14px; }
-    .biz-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-top: 10px; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 18px 0; }
 
-    .sel-info { margin-top: 28px; display: none; padding-top:18px; border-top:1px solid var(--border); }
-    .sel-info h4 { margin-bottom: 12px; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-    .sel-row { margin-bottom: 10px; display: flex; flex-direction: column; }
-    .sel-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
-    .sel-val { font-weight: 600; color: #fff; font-size: 14px; }
+    .sel-block { display: none; }
+    .sel-block.show { display: block; }
+    .sel-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 3px; }
+    .sel-val   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
 
-    input.form-control { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-family: inherit; width: 100%; box-sizing:border-box; margin-bottom: 20px; font-size: 14px; }
-    input.form-control:focus { outline: none; border-color: var(--accent); }
-    label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary); }
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      padding: 28px;
+      overflow-y: auto;
+    }
 
-    .btn-primary { background: var(--accent); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-family:inherit; font-size: 14px; }
-    .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-ghost { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 5px 0; font-family:inherit; font-size: 14px; }
-    .btn-ghost:hover { color: #fff; }
+    /* ── Steps ── */
+    .step { display: none; }
+    .step.active { display: block; animation: fadeUp .2s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-    /* ── Calendar ── */
-    .cal-wrap { display: grid; grid-template-columns: 1fr 200px; gap: 28px; align-items: start; }
-    .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-    .cal-month-label { font-size: 17px; font-weight: 700; }
-    .cal-month-label span { color: var(--accent); font-weight: 400; }
-    .cal-nav-btns { display: flex; gap: 6px; }
-    .cal-nav-btn { background: none; border: 1px solid var(--border); color: var(--text-primary); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
-    .cal-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: .5px; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-    .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 13px; font-weight: 500; background: none; border: none; color: var(--text-primary); cursor: pointer; font-family: inherit; transition: background .12s; }
-    .cal-day-available { background: var(--bg-secondary); }
-    .cal-day-available:hover { background: rgba(34,197,94,0.12); color: var(--accent); }
-    .cal-day-today { outline: 2px solid var(--accent); outline-offset: -2px; }
-    .cal-day-selected { background: var(--accent) !important; color: #000 !important; font-weight: 700; }
-    .cal-day-past { color: rgba(255,255,255,0.2); pointer-events: none; }
-    .cal-day-empty { pointer-events: none; }
+    .step-title { font-size: 15px; font-weight: 600; margin-bottom: 18px; }
+
+    .btn-back {
+      background: none; border: none; color: var(--muted);
+      font-family: inherit; font-size: 13px; cursor: pointer;
+      padding: 0; margin-bottom: 18px; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-back:hover { color: var(--text); }
+
+    /* ── List buttons (employee / service) ── */
+    .list-btn {
+      display: block; width: 100%;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      text-align: left; color: var(--text);
+      font-family: inherit; cursor: pointer;
+      margin-bottom: 10px; transition: border-color .15s;
+    }
+    .list-btn:hover  { border-color: var(--green); }
+    .list-btn.active { border-color: var(--green); background: var(--green-bg); }
+    .list-btn-title  { font-size: 15px; font-weight: 600; }
+    .list-btn-sub    { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Calendar layout ── */
+    .cal-layout {
+      display: grid;
+      grid-template-columns: 1fr 210px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Calendar nav */
+    .cal-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 18px;
+    }
+    .cal-month { font-size: 16px; font-weight: 700; }
+    .cal-month em { font-style: normal; color: var(--green); font-weight: 500; margin-left: 4px; }
+    .cal-nav-wrap { display: flex; gap: 6px; }
+    .cal-nav-btn {
+      width: 28px; height: 28px;
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-size: 15px; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .12s;
+    }
+    .cal-nav-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* Day-of-week header */
+    .cal-dow {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      text-align: center; margin-bottom: 6px;
+    }
+    .cal-dow span { font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 0; }
+
+    /* Grid */
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+    }
+    .cal-cell {
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      background: none; border: none;
+      color: var(--text); font-family: inherit;
+      cursor: pointer; transition: background .1s;
+      position: relative;
+    }
+    .cal-cell.avail       { background: var(--panel); }
+    .cal-cell.avail:hover { background: rgba(34,197,94,.14); color: var(--green); }
+    .cal-cell.today       { box-shadow: inset 0 0 0 2px var(--green); }
+    .cal-cell.selected    { background: var(--green) !important; color: #000 !important; font-weight: 700; }
+    .cal-cell.has-dot::after {
+      content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 4px; background: var(--green); border-radius: 50%;
+    }
+    .cal-cell.selected.has-dot::after { background: #000; }
+    .cal-cell.past { color: rgba(255,255,255,0.18); pointer-events: none; }
+    .cal-cell.empty { pointer-events: none; }
 
     /* ── Slots panel ── */
-    .cal-slots-header { font-size: 14px; font-weight: 700; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-    .cal-slot-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; margin-bottom: 8px; transition: border-color .15s; text-align: left; }
-    .cal-slot-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
-    .cal-slot-btn:hover { border-color: var(--accent); }
-    .cal-slot-btn.selected { background: var(--accent); color: #000; border-color: var(--accent); }
-    .cal-slot-btn.selected .cal-slot-dot { background: #000; }
-    .cal-no-slots { font-size: 13px; color: var(--text-secondary); padding: 8px 0; }
+    .slots-panel { min-height: 200px; }
+    .slots-day-label {
+      font-size: 14px; font-weight: 700;
+      margin-bottom: 12px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .slot-btn {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 11px 14px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      cursor: pointer; margin-bottom: 8px;
+      transition: border-color .12s; text-align: left;
+    }
+    .slot-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; flex-shrink: 0; }
+    .slot-btn:hover   { border-color: var(--green); }
+    .slot-btn.picked  { background: var(--green); color: #000; border-color: var(--green); }
+    .slot-btn.picked .slot-dot { background: #000; }
+    .slots-empty { font-size: 12px; color: var(--muted); padding-top: 8px; }
 
-    @media (max-width: 800px) { .booking-container { flex-direction: column; } .sidebar { width: 100%; flex-shrink: unset; border-right: none; border-bottom: 1px solid var(--border); } .cal-wrap { grid-template-columns: 1fr; } }
+    /* ── Form ── */
+    .form-label  { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .form-input  {
+      width: 100%; padding: 11px 14px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px;
+      margin-bottom: 16px; transition: border-color .12s;
+    }
+    .form-input:focus { outline: none; border-color: var(--green); }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: var(--green); color: #000; border: none;
+      padding: 12px 24px; border-radius: 8px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary:hover:not(:disabled) { opacity: .88; }
+
+    /* ── Footer row ── */
+    .step-footer { margin-top: 24px; display: flex; justify-content: flex-end; }
+
+    /* ── Success ── */
+    .success-wrap { text-align: center; padding: 48px 0; }
+    .success-icon { font-size: 56px; margin-bottom: 16px; }
+    .success-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .success-sub { font-size: 14px; color: var(--muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 740px) {
+      .card { flex-direction: column; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+      .cal-layout { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
+<div class="card">
 
-  <div class="booking-container">
-    <div class="sidebar">
-      <div class="biz-logo" id="bizLogo">?</div>
-      <h2 id="bizName" style="margin-top:0; font-weight:600;">Laden...</h2>
-      <p class="text-muted" style="color:var(--text-secondary); font-size:14px;">Buchen Sie Ihren Termin in wenigen Schritten.</p>
-      
-      <div id="selectedInfo" class="sel-info">
-        <h4>Ihre Auswahl</h4>
-        <div class="sel-row" id="row-emp" style="display:none;"><span class="sel-label">Mitarbeiter</span><span class="sel-val" id="selEmp"></span></div>
-        <div class="sel-row" id="row-srv" style="display:none;"><span class="sel-label">Dienstleistung</span><span class="sel-val" id="selServiceTitle"></span></div>
-        <div class="sel-row" id="row-date" style="display:none;"><span class="sel-label">Zeitpunkt</span><span class="sel-val" id="selDate"></span></div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="biz-avatar" id="bizAvatar">?</div>
+    <div class="biz-owner" id="bizOwner"></div>
+    <div class="biz-name"  id="bizName">Laden…</div>
+
+    <div class="biz-meta">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="bizDuration">—</span>
+    </div>
+    <div class="biz-meta">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+      <span>Europe/Berlin</span>
+    </div>
+
+    <div class="sidebar-divider" id="selDivider" style="display:none;"></div>
+
+    <div class="sel-block" id="selEmpBlock">
+      <div class="sel-label">Mitarbeiter</div>
+      <div class="sel-val" id="selEmpVal">—</div>
+    </div>
+    <div class="sel-block" id="selSrvBlock">
+      <div class="sel-label">Dienstleistung</div>
+      <div class="sel-val" id="selSrvVal">—</div>
+    </div>
+    <div class="sel-block" id="selDateBlock">
+      <div class="sel-label">Termin</div>
+      <div class="sel-val" id="selDateVal">—</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- Step 1: Employee -->
+    <div class="step active" id="step-employees">
+      <div class="step-title">Person auswählen</div>
+      <div id="empList"><div class="slots-empty">Mitarbeiter werden geladen…</div></div>
+    </div>
+
+    <!-- Step 2: Service -->
+    <div class="step" id="step-services">
+      <button class="btn-back" id="backToEmp">&#8592; Zurück</button>
+      <div class="step-title">Dienstleistung wählen</div>
+      <div id="srvList"></div>
+    </div>
+
+    <!-- Step 3: Calendar + Slots -->
+    <div class="step" id="step-datetime">
+      <button class="btn-back" id="backToSrv">&#8592; Zurück</button>
+
+      <div class="cal-layout">
+        <!-- Calendar -->
+        <div>
+          <div class="cal-head">
+            <div class="cal-month" id="calMonthLabel"></div>
+            <div class="cal-nav-wrap">
+              <button class="cal-nav-btn" id="calPrev">&#8249;</button>
+              <button class="cal-nav-btn" id="calNext">&#8250;</button>
+            </div>
+          </div>
+          <div class="cal-dow">
+            <span>SO</span><span>MO</span><span>DI</span><span>MI</span><span>DO</span><span>FR</span><span>SA</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+
+        <!-- Slots -->
+        <div class="slots-panel">
+          <div class="slots-day-label" id="slotsDayLabel" style="display:none;"></div>
+          <div id="slotsList"><div class="slots-empty">Bitte Datum wählen</div></div>
+        </div>
+      </div>
+
+      <div class="step-footer">
+        <button class="btn-primary" id="btnToForm" disabled>Weiter &#8594;</button>
       </div>
     </div>
 
-    <div class="main-content">
-      
-      <!-- Step 1: Employee Selection -->
-      <div id="step-employees" class="step active">
-        <h3 style="margin-bottom:20px; font-weight:500;">1. Person auswählen</h3>
-        <div id="publicEmployeeList">
-          <p style="color:var(--text-secondary);">Mitarbeiter werden geladen...</p>
+    <!-- Step 4: Form -->
+    <div class="step" id="step-form">
+      <button class="btn-back" id="backToCal">&#8592; Zurück</button>
+      <div class="step-title">Ihre Kontaktdaten</div>
+      <form id="bookingForm">
+        <label class="form-label">Vollständiger Name</label>
+        <input class="form-input" id="custName" type="text" required />
+        <label class="form-label">E-Mail Adresse</label>
+        <input class="form-input" id="custEmail" type="email" required />
+        <label class="form-label">Telefonnummer</label>
+        <input class="form-input" id="custPhone" type="tel" required />
+        <div class="step-footer">
+          <button class="btn-primary" type="submit">Termin verbindlich buchen</button>
         </div>
-      </div>
-
-      <!-- Step 2: Service Selection -->
-      <div id="step-services" class="step">
-        <button class="btn-ghost" onclick="goStep('employees')" style="margin-bottom:20px;">&larr; Zurück</button>
-        <h3 style="margin-bottom:20px; font-weight:500;">2. Dienstleistung wählen</h3>
-        <div id="publicServicesList"></div>
-      </div>
-
-      <!-- Step 3: Date & Time Selection -->
-      <div id="step-datetime" class="step">
-        <button class="btn-ghost" onclick="goStep('services')" style="margin-bottom:20px;">&larr; Zurück</button>
-
-        <div class="cal-wrap">
-          <div>
-            <div class="cal-nav">
-              <div class="cal-month-label" id="calMonthLabel"></div>
-              <div class="cal-nav-btns">
-                <button class="cal-nav-btn" id="calPrevBtn">&#8249;</button>
-                <button class="cal-nav-btn" id="calNextBtn">&#8250;</button>
-              </div>
-            </div>
-            <div class="cal-dow">
-              <span>SO</span><span>MO</span><span>DI</span><span>MI</span><span>DO</span><span>FR</span><span>SA</span>
-            </div>
-            <div class="cal-grid" id="calGrid"></div>
-          </div>
-
-          <div id="calSlotsPanel" style="display:none;">
-            <div class="cal-slots-header" id="calSlotsHeader"></div>
-            <div id="calSlotsList"></div>
-          </div>
-        </div>
-
-        <div style="margin-top:24px; text-align:right;">
-          <button class="btn-primary" id="btnNextToForm" disabled>Weiter &rarr;</button>
-        </div>
-      </div>
-
-      <!-- Step 4: Customer Details Form -->
-      <div id="step-form" class="step">
-        <button class="btn-ghost" onclick="goStep('datetime')" style="margin-bottom:20px;">&larr; Zurück</button>
-        <h3 style="margin-bottom:20px; font-weight:500;">4. Ihre Kontaktdaten</h3>
-        
-        <form id="bookingForm">
-          <label>Vollständiger Name</label>
-          <input type="text" id="custName" class="form-control" required />
-          
-          <label>E-Mail Adresse</label>
-          <input type="email" id="custEmail" class="form-control" required />
-          
-          <label>Telefonnummer</label>
-          <input type="tel" id="custPhone" class="form-control" required />
-          
-          <div style="margin-top:30px;">
-            <button type="submit" class="btn-primary" style="width:100%;">Termin verbindlich buchen</button>
-          </div>
-        </form>
-      </div>
-      
-      <!-- Step 5: Success -->
-      <div id="step-success" class="step" style="text-align:center; padding-top:60px;">
-        <div style="font-size:70px; margin-bottom:20px;">✨</div>
-        <h2 style="font-weight:600; margin-bottom:10px;">Termin bestätigt!</h2>
-        <p style="color:var(--text-secondary);">Wir freuen uns auf Sie. Sie erhalten in Kürze eine Bestätigung per E-Mail.</p>
-      </div>
-
+      </form>
     </div>
-  </div>
 
-  <script type="module" src="booking.js?v=20260511a"></script>
+    <!-- Step 5: Success -->
+    <div class="step" id="step-success">
+      <div class="success-wrap">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Termin bestätigt!</div>
+        <div class="success-sub">Wir freuen uns auf Sie. Eine Bestätigung wird in Kürze gesendet.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module" src="booking.js?v=20260511b"></script>
 </body>
 </html>

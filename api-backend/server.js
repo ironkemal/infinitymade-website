@@ -382,19 +382,16 @@ app.post('/api/booking/get-slots', async (req, res) => {
     }
 
     // 4. Generate available slots
+    const buffer = parseInt(req.body.buffer) || 0;
+    const step   = parseInt(req.body.step)   || 30;
+    const totalBlock = parseInt(duration) + buffer;
     const slots = [];
     let currentMins = startMinutes;
-    while (currentMins + duration <= endMinutes) {
-      const slotEnd = currentMins + duration;
-      
-      const hasOverlap = bookedIntervals.some(b => {
-        return currentMins < b.end && slotEnd > b.start;
-      });
-
-      if (!hasOverlap) {
-        slots.push(minsToTime(currentMins));
-      }
-      currentMins += duration; // can also step by 15 or 30 mins
+    while (currentMins + totalBlock <= endMinutes) {
+      const slotEnd = currentMins + totalBlock;
+      const hasOverlap = bookedIntervals.some(b => currentMins < b.end && slotEnd > b.start);
+      if (!hasOverlap) slots.push(minsToTime(currentMins));
+      currentMins += step;
     }
 
     res.json({ slots });
