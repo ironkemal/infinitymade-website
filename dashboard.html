@@ -544,40 +544,12 @@
               <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomie-Haritas für Patientengespräche</p>
             </div>
           </div>
-          <div class="body-map-tabs">
-            <button class="body-tab active" data-map="skeleton">Skelett</button>
-            <button class="body-tab" data-map="muscles">Muskeln</button>
-            <button class="body-tab" data-map="nerves">Nerven</button>
-          </div>
-          <div class="body-map-wrap">
-            <div class="body-map" id="bodyMap">
-              <div class="body-silhouette"></div>
-              <button class="body-dot" data-region="kopf" style="top:4%;left:50%;" title="Kopf"></button>
-              <button class="body-dot" data-region="nacken" style="top:12%;left:50%;" title="Nacken"></button>
-              <button class="body-dot" data-region="schulter-l" style="top:22%;left:35%;" title="Schulter links"></button>
-              <button class="body-dot" data-region="schulter-r" style="top:22%;left:65%;" title="Schulter rechts"></button>
-              <button class="body-dot" data-region="brust" style="top:30%;left:50%;" title="Brustkorb"></button>
-              <button class="body-dot" data-region="ruecken" style="top:35%;left:50%;" title="Rücken"></button>
-              <button class="body-dot" data-region="lende" style="top:45%;left:50%;" title="Lendenwirbelsäule"></button>
-              <button class="body-dot" data-region="huefte-l" style="top:52%;left:42%;" title="Hüfte links"></button>
-              <button class="body-dot" data-region="huefte-r" style="top:52%;left:58%;" title="Hüfte rechts"></button>
-              <button class="body-dot" data-region="oberschenkel-l" style="top:62%;left:40%;" title="Oberschenkel links"></button>
-              <button class="body-dot" data-region="oberschenkel-r" style="top:62%;left:60%;" title="Oberschenkel rechts"></button>
-              <button class="body-dot" data-region="knie-l" style="top:72%;left:40%;" title="Knie links"></button>
-              <button class="body-dot" data-region="knie-r" style="top:72%;left:60%;" title="Knie rechts"></button>
-              <button class="body-dot" data-region="wade-l" style="top:82%;left:40%;" title="Wade links"></button>
-              <button class="body-dot" data-region="wade-r" style="top:82%;left:60%;" title="Wade rechts"></button>
-              <button class="body-dot" data-region="fuss-l" style="top:94%;left:40%;" title="Fuß links"></button>
-              <button class="body-dot" data-region="fuss-r" style="top:94%;left:60%;" title="Fuß rechts"></button>
-              <button class="body-dot" data-region="ellenbogen-l" style="top:38%;left:30%;" title="Ellenbogen links"></button>
-              <button class="body-dot" data-region="ellenbogen-r" style="top:38%;left:70%;" title="Ellenbogen rechts"></button>
-              <button class="body-dot" data-region="hand-l" style="top:48%;left:25%;" title="Hand links"></button>
-              <button class="body-dot" data-region="hand-r" style="top:48%;left:75%;" title="Hand rechts"></button>
-            </div>
+          <div class="body-map-wrap" style="background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+            <iframe id="zygoteFrame" src="https://www.zygotebody.com/" width="100%" height="560" frameborder="0" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" loading="lazy" style="display:block;"></iframe>
           </div>
           <div class="body-info-card" id="bodyInfoCard">
-            <div class="body-info-title" id="bodyInfoTitle">Region wählen</div>
-            <div class="body-info-text" id="bodyInfoText">Tippen Sie auf einen Punkt, um Details zum Skelett-System anzuzeigen.</div>
+            <div class="body-info-title" id="bodyInfoTitle">3D-Anatomie — Zygote Body</div>
+            <div class="body-info-text" id="bodyInfoText">Klicken und ziehen Sie mit der Maus, um das Modell zu drehen. Scrollen zum Zoomen. Klicken Sie auf ein Körperteil, um Details anzuzeigen. Verwenden Sie den Regler links, um Systeme (Skelett, Muskeln, Nerven, Kreislauf) ein- oder auszublenden.</div>
           </div>
         </section>
 
