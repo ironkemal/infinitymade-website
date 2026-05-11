@@ -544,8 +544,9 @@
               <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomie-Haritas für Patientengespräche</p>
             </div>
           </div>
-          <div class="body-map-wrap" style="background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,0.12);">
-            <iframe id="zygoteFrame" src="https://www.zygotebody.com/" width="100%" height="560" frameborder="0" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" loading="lazy" style="display:block;"></iframe>
+          <div class="body-map-wrap">
+            <iframe id="zygoteFrame" src="https://www.zygotebody.com/" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-fullscreen" loading="lazy"></iframe>
+            <button class="zygote-fs-btn" id="zygoteFsBtn" type="button" title="Vollbild">⛶ Vollbild</button>
           </div>
           <div class="body-info-card" id="bodyInfoCard">
             <div class="body-info-title" id="bodyInfoTitle">3D-Anatomie — Zygote Body</div>

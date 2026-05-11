@@ -1550,61 +1550,23 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 /* ============================
-   BODY MAP — Beispielmodus
+   BEISPIELMODUS — 3D Anatomie
    ============================ */
-.body-map-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-.body-tab {
-  padding: 8px 18px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  border: 1px solid var(--border);
-  transition: var(--transition);
-}
-.body-tab.active {
-  background: var(--primary-dim);
-  color: var(--primary);
-  border-color: var(--primary);
-}
 .body-map-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+  position: relative;
+  overflow: hidden;
   background: var(--bg-card);
   border-radius: var(--radius);
   border: 1px solid var(--border);
+  height: 560px;
 }
-.body-map {
-  position: relative;
-  width: 280px;
-  height: 500px;
-}
-.body-silhouette {
+.body-map-wrap iframe {
   position: absolute;
   inset: 0;
-  background: var(--bg-main);
-  border-radius: 50% 50% 45% 45% / 18% 18% 82% 82%;
-  opacity: 0.5;
-}
-.body-dot {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--primary);
-  border: 2px solid var(--bg-main);
-  cursor: pointer;
-  transform: translate(-50%, -50%);
-  transition: var(--transition);
-  z-index: 2;
-}
-.body-dot:hover {
-  width: 18px;
-  height: 18px;
-  background: var(--primary-hover);
-  box-shadow: 0 0 0 4px var(--primary-dim);
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
 }
 .body-info-card {
   margin-top: 16px;
@@ -1624,9 +1586,43 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   color: var(--text-muted);
   line-height: 1.6;
 }
+.zygote-fs-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 10;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.zygote-fs-btn:hover { background: var(--primary-dim); color: var(--primary); }
 
 @media (max-width: 768px) {
-  .body-map { width: 220px; height: 400px; }
-  .body-dot { width: 12px; height: 12px; }
+  .body-map-wrap {
+    height: 64vh;
+    min-height: 340px;
+  }
+  /* Kenarlari kirp: sadece ortadaki 3D model alani görünsün */
+  .body-map-wrap iframe {
+    width: 130%;
+    height: 130%;
+    top: -15%;
+    left: -15%;
+  }
+  .zygote-fs-btn {
+    bottom: 8px;
+    right: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
 }
 
