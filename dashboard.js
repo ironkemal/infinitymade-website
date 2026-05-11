@@ -1131,14 +1131,20 @@ async function renderHoursGrid() {
   for (let i=0;i<7;i++) {
     const h = hours?.find(x=>x.day_of_week===i)||{start_time:'09:00:00',end_time:'17:00:00',is_active:(i>0&&i<6)};
     const row = document.createElement('div');
-    row.className = 'hours-row';
+    row.className = 'hours-row' + (h.is_active?'':' inactive');
     row.innerHTML = `
-      <label class="hours-day">
-        <input type="checkbox" id="wh-active-${i}" ${h.is_active?'checked':''}> ${dayLabels[i]}
-      </label>
-      <input class="form-input" id="wh-start-${i}" type="time" value="${h.start_time.substring(0,5)}" style="width:110px;">
-      <span>—</span>
-      <input class="form-input" id="wh-end-${i}" type="time" value="${h.end_time.substring(0,5)}" style="width:110px;">`;
+      <div class="hours-day">
+        <label class="toggle-switch">
+          <input type="checkbox" id="wh-active-${i}" ${h.is_active?'checked':''}>
+          <span class="toggle-slider"></span>
+        </label>
+        <span>${dayLabels[i]}</span>
+      </div>
+      <div></div>
+      <div class="hours-times">
+        <input class="form-input" id="wh-start-${i}" type="time" value="${h.start_time.substring(0,5)}">
+        <input class="form-input" id="wh-end-${i}" type="time" value="${h.end_time.substring(0,5)}">
+      </div>`;
     grid.appendChild(row);
   }
 }
@@ -1351,14 +1357,20 @@ async function loadEmpHours(empId) {
   for (let i=0;i<7;i++) {
     const h = hours?.find(x=>x.day_of_week===i)||{start_time:'09:00:00',end_time:'17:00:00',is_active:(i>0&&i<6)};
     const row = document.createElement('div');
-    row.className = 'hours-row';
+    row.className = 'hours-row' + (h.is_active?'':' inactive');
     row.innerHTML = `
-      <label class="hours-day">
-        <input type="checkbox" id="ewh-active-${i}" ${h.is_active?'checked':''}> ${dayLabels[i]}
-      </label>
-      <input class="form-input" id="ewh-start-${i}" type="time" value="${h.start_time.substring(0,5)}" style="width:110px;">
-      <span>—</span>
-      <input class="form-input" id="ewh-end-${i}" type="time" value="${h.end_time.substring(0,5)}" style="width:110px;">`;
+      <div class="hours-day">
+        <label class="toggle-switch">
+          <input type="checkbox" id="ewh-active-${i}" ${h.is_active?'checked':''}>
+          <span class="toggle-slider"></span>
+        </label>
+        <span>${dayLabels[i]}</span>
+      </div>
+      <div></div>
+      <div class="hours-times">
+        <input class="form-input" id="ewh-start-${i}" type="time" value="${h.start_time.substring(0,5)}">
+        <input class="form-input" id="ewh-end-${i}" type="time" value="${h.end_time.substring(0,5)}">
+      </div>`;
     grid.appendChild(row);
   }
   const saveBtn = document.getElementById('empHoursSaveBtn');
