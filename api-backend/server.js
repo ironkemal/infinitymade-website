@@ -242,6 +242,52 @@ app.post('/api/gmail/send', async (req, res) => {
   }
 });
 
+app.post('/api/apify/search', async (req, res) => {
+  const { query, limit, userId } = req.body;
+  if (!query || !userId) return res.status(400).json({ error: 'Missing params' });
+  const safeLimit = Math.min(parseInt(limit)||20, 50);
+  const token = process.env.APIFY_TOKEN;
+  if (!token) return res.status(500).json({ error: 'Apify not configured' });
+  try {
+    const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    const { count: weekCount } = await supabase.from('b2b_contacts')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId).eq('source', 'apify').gte('created_at', weekAgo);
+    const WEEKLY_LIMIT = 100;
+    if ((weekCount||0) >= WEEKLY_LIMIT)
+      return res.status(429).json({ success: false, error: `Wöchentliches Limit von ${WEEKLY_LIMIT} erreicht (Reset in 7 Tagen)` });
+    const allowed = Math.min(safeLimit, WEEKLY_LIMIT - (weekCount||0));
+    const apifyRes = await fetch(
+      `https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${token}&timeout=120&memory=512`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchStringsArray: [query], maxCrawledPlacesPerSearch: allowed, language: 'de', includeHistogram: false, includeImages: false }) }
+    );
+    if (!apifyRes.ok) throw new Error('Apify HTTP ' + apifyRes.status);
+    const items = await apifyRes.json();
+    const contacts = (items||[]).map(p => ({
+      owner_id: userId,
+      company_name: p.title||p.name||'—',
+      contact_name: null,
+      phone: p.phone||p.phoneNumber||null,
+      email: p.email||null,
+      website: p.website||null,
+      status: 'prospect',
+      source: 'apify',
+      notes: [
+        p.categoryName ? `Branche: ${p.categoryName}` : null,
+        p.address?.street ? `Adresse: ${p.address.street}, ${p.address.city||''}` : null,
+        p.totalScore ? `Bewertung: ${p.totalScore} ⭐ (${p.reviewsCount||0} Rezensionen)` : null,
+        p.url ? `Google Maps: ${p.url}` : null
+      ].filter(Boolean).join('\n')||null
+    }));
+    if (contacts.length > 0) await supabase.from('b2b_contacts').insert(contacts);
+    res.json({ success: true, count: contacts.length, remaining: WEEKLY_LIMIT - (weekCount||0) - contacts.length });
+  } catch(e) {
+    console.error('[apify/search]', e.message);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // 2. Booking Routes (Get Slots & Create)
 app.post('/api/booking/get-slots', async (req, res) => {
   const { userId, date, duration } = req.body; // date: YYYY-MM-DD

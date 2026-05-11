@@ -347,24 +347,13 @@
           <!-- SETUP WIZARD -->
           <div class="b2b-setup-card" id="b2bSetupCard" hidden>
             <div class="setup-icon">📧</div>
-            <h3 class="setup-heading">E-Mail-Absender einrichten</h3>
-            <p class="setup-sub">Bevor Sie E-Mails versenden können, richten Sie bitte Ihr Absenderprofil ein.</p>
+            <h3 class="setup-heading">B2B E-Mail einrichten</h3>
+            <p class="setup-sub">Geben Sie Ihren Absendernamen ein, um den KI-Assistenten zu nutzen.</p>
             <div class="setup-fields">
               <div class="form-group">
                 <label class="form-label">Absendername <span class="req">*</span></label>
                 <input class="form-input" id="setupSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
-                <div class="form-hint">Dieser Name erscheint als Absender in der E-Mail.</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Gmail-Konto <span class="req">*</span></label>
-                <div class="setup-gmail-row">
-                  <div class="setup-gmail-status" id="setupGmailStatus">
-                    <span class="status-dot" id="setupGmailDot"></span>
-                    <span id="setupGmailLabel">Kein Konto verbunden</span>
-                  </div>
-                  <button class="btn-outline-sm" id="setupGmailBtn">Mit Google verbinden</button>
-                </div>
-                <div class="form-hint">Sie können jedes Google-Konto wählen – unabhängig vom angemeldeten Browser-Konto.</div>
+                <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
               </div>
             </div>
             <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
@@ -386,7 +375,7 @@
               <span class="apify-label">🔍 Google Maps:</span>
               <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt" style="flex:2;" />
               <input class="form-input" id="apifyCity" type="text" placeholder="Stadt / Region" style="flex:1;" />
-              <input class="form-input" style="width:72px;" id="apifyLimit" type="number" value="20" min="1" max="100" />
+              <input class="form-input" style="width:72px;" id="apifyLimit" type="number" value="20" min="1" max="50" />
               <button class="btn-primary" id="apifyRunBtn">Suchen</button>
             </div>
 

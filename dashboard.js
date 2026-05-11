@@ -801,44 +801,38 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
 document.getElementById('apifyRunBtn').addEventListener('click', async () => {
   const rawQuery = document.getElementById('apifyQuery').value.trim();
   const city     = document.getElementById('apifyCity').value.trim();
-  const query    = city ? `${rawQuery} ${city}` : rawQuery;
-  const limit    = parseInt(document.getElementById('apifyLimit').value)||20;
-  const token    = localStorage.getItem('apify_token');
-  if (!query) { showToast('Bitte Suchbegriff eingeben', 'error'); return; }
-  if (!token) { showToast('Apify Token fehlt — bitte in Konfiguration eintragen', 'error'); openModal('b2bConfigModal'); return; }
+  const limit    = Math.min(parseInt(document.getElementById('apifyLimit').value)||20, 50);
+  if (!rawQuery) { showToast('Bitte Suchbegriff eingeben', 'error'); return; }
   const btn = document.getElementById('apifyRunBtn');
   btn.disabled = true; btn.textContent = '⏳';
+  const ownerId = getOwnerId();
   try {
-    const res = await fetch(
-      `https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${token}&timeout=120&memory=512`,
-      {method:'POST', headers:{'Content-Type':'application/json'},
-       body:JSON.stringify({searchStringsArray:[query], maxCrawledPlacesPerSearch:limit, language:'de', includeHistogram:false, includeImages:false})}
-    );
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const items = await res.json();
-    const ownerId = getOwnerId();
-    const inserts = (items||[]).map(p=>({
-      owner_id: ownerId,
-      company_name: p.title||p.name||'—',
-      contact_name: null,
-      phone: p.phone||p.phoneNumber||null,
-      email: p.email||null,
-      website: p.website||null,
-      status: 'prospect',
-      notes: [
-        p.categoryName ? `Branche: ${p.categoryName}` : null,
-        p.address?.street ? `Adresse: ${p.address.street}, ${p.address.city||''}` : null,
-        p.totalScore ? `Bewertung: ${p.totalScore} ⭐ (${p.reviewsCount||0} Rezensionen)` : null,
-        p.url ? `Google Maps: ${p.url}` : null
-      ].filter(Boolean).join('\n')||null
-    }));
-    if (inserts.length>0) await supabase.from('b2b_contacts').insert(inserts);
+    const dbFilter = city
+      ? `company_name.ilike.%${rawQuery}%,notes.ilike.%${rawQuery} ${city}%,notes.ilike.%${city}%`
+      : `company_name.ilike.%${rawQuery}%,notes.ilike.%${rawQuery}%`;
+    const { data: dbHits } = await supabase.from('b2b_contacts')
+      .select('id').eq('owner_id', ownerId).or(dbFilter).limit(limit);
+    if (dbHits && dbHits.length >= 5) {
+      document.getElementById('b2bSearch').value = rawQuery;
+      renderB2B();
+      showToast(`${dbHits.length} Treffer aus Datenbank geladen`);
+      btn.disabled=false; btn.textContent='Suchen'; return;
+    }
+    const searchQuery = city ? `${rawQuery} ${city}` : rawQuery;
+    const res = await fetch('https://n8n.infinitymade.de/api/apify/search', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ query: searchQuery, limit, userId: currentSession.user.id })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Suche fehlgeschlagen');
+    document.getElementById('b2bSearch').value = rawQuery;
     await loadB2B();
-    showToast(`✓ ${inserts.length} Kontakte importiert`);
+    showToast(`✓ ${json.count} Kontakte importiert — ${json.remaining} diese Woche noch verfügbar`);
   } catch(err) {
     showToast('Fehler: '+err.message, 'error');
   }
-  btn.disabled=false; btn.textContent = 'Suchen';
+  btn.disabled=false; btn.textContent='Suchen';
 });
 
 let servicesCache = [];
@@ -1300,40 +1294,31 @@ function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
 
 async function checkB2bSetup() {
   gmailConnectedEmail = currentProfile.b2b_from_email || null;
-
-  const setupDone = currentProfile.b2b_setup_done && gmailConnectedEmail;
-  document.getElementById('b2bSetupCard').hidden    = !!setupDone;
-  document.getElementById('b2bMainContent').hidden  = !setupDone;
-
+  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name;
+  document.getElementById('b2bSetupCard').hidden   = !!setupDone;
+  document.getElementById('b2bMainContent').hidden = !setupDone;
   if (setupDone) {
     document.getElementById('b2bFromName').textContent  = currentProfile.b2b_sender_name || '—';
-    document.getElementById('b2bFromEmail').textContent = gmailConnectedEmail;
-    document.getElementById('aiFromBadge').textContent  = gmailConnectedEmail;
-    document.getElementById('composeFromDisplay').textContent = gmailConnectedEmail;
+    document.getElementById('b2bFromEmail').textContent = gmailConnectedEmail || '—';
+    document.getElementById('aiFromBadge').textContent  = gmailConnectedEmail || '';
+    document.getElementById('composeFromDisplay').textContent = gmailConnectedEmail || currentProfile.b2b_sender_name || '—';
   } else {
     const nameInput = document.getElementById('setupSenderName');
     if (currentProfile.b2b_sender_name) nameInput.value = currentProfile.b2b_sender_name;
-    setGmailUI(gmailConnectedEmail,
-      document.getElementById('setupGmailDot'),
-      document.getElementById('setupGmailLabel'),
-      document.getElementById('setupGmailBtn'));
     updateSetupFinishBtn();
   }
 }
 
 function updateSetupFinishBtn() {
-  const nameOk  = document.getElementById('setupSenderName').value.trim().length > 0;
-  const gmailOk = !!gmailConnectedEmail;
-  document.getElementById('b2bSetupFinishBtn').disabled = !(nameOk && gmailOk);
+  const nameOk = document.getElementById('setupSenderName').value.trim().length > 0;
+  document.getElementById('b2bSetupFinishBtn').disabled = !nameOk;
 }
 
 document.getElementById('setupSenderName').addEventListener('input', updateSetupFinishBtn);
 
-document.getElementById('setupGmailBtn').addEventListener('click', () => startGmailOAuth('setup'));
-
 document.getElementById('b2bSetupFinishBtn').addEventListener('click', async () => {
   const name = document.getElementById('setupSenderName').value.trim();
-  if (!name || !gmailConnectedEmail) return;
+  if (!name) return;
   const {error} = await supabase.from('profiles')
     .update({b2b_sender_name: name, b2b_setup_done: true})
     .eq('id', currentSession.user.id);

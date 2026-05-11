@@ -62,7 +62,7 @@ services:
     labels:
       - traefik.enable=true
       # Only our calendar-api paths — leave the rest (incl. /api/v1/* for n8n REST) to n8n.
-      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/booking`) || PathPrefix(`/api/calendar`) || PathPrefix(`/api/team`) || PathPrefix(`/api/verify-code`) || PathPrefix(`/api/health`) || PathPrefix(`/api/gmail`))"
+      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/booking`) || PathPrefix(`/api/calendar`) || PathPrefix(`/api/team`) || PathPrefix(`/api/verify-code`) || PathPrefix(`/api/health`) || PathPrefix(`/api/gmail`) || PathPrefix(`/api/apify`))"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls=true"
       - "traefik.http.routers.api.tls.certresolver=le"
