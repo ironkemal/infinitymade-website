@@ -1031,20 +1031,23 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
       body: JSON.stringify({ query: searchQuery, limit })
     });
     const data = await res.json();
+    console.log('[apifyRun] API status:', res.status, 'items:', data.items?.length, 'error:', data.error);
     if (!res.ok || data.error) throw new Error(data.error || 'Suche fehlgeschlagen');
     const items = data.items || [];
-    const inserts = items.filter(i => i.title).map(i => ({
+    console.log('[apifyRun] first item keys:', items[0] ? Object.keys(items[0]).join(', ') : 'none');
+    const inserts = items.filter(i => i.title || i.name || i.placeName).map(i => ({
       owner_id: ownerId,
-      company_name: i.title,
-      name: i.title,
+      company_name: i.title || i.name || i.placeName,
+      name: i.title || i.name || i.placeName,
       category: rawQuery,
-      city: i.city || city || '',
+      city: i.city || city || i.address?.split(',').pop()?.trim() || '',
       phone: i.phone || '',
       email: i.email || '',
       website: i.website || '',
       status: 'new',
       notes: i.address || ''
     }));
+    console.log('[apifyRun] inserts count:', inserts.length);
     if (inserts.length > 0) {
       const { error: insErr } = await supabase.from('scraper_data').insert(inserts);
       if (insErr) { console.error('[apifyRun insert]', insErr); throw new Error('DB-Fehler: ' + insErr.message); }
@@ -1098,12 +1101,20 @@ function renderServices() {
 function renderSrvEmpCheckboxes() {
   const container = document.getElementById('srvEmpCheckboxes');
   if (!container) return;
-  container.innerHTML = teamMembers.map(m=>`
-    <label class="checkbox-label">
+  container.innerHTML = teamMembers.map(m=>{
+    const name = m.business_name||m.email?.split('@')[0];
+    return `<label class="emp-checkbox-item">
       <input type="checkbox" name="srv_emp" value="${m.id}" checked>
-      ${m.business_name||m.email?.split('@')[0]}
-    </label>`).join('');
+      <span>${name}</span>
+    </label>`;
+  }).join('');
 }
+
+document.getElementById('toggleAddServiceBtn').addEventListener('click', () => {
+  const form = document.getElementById('addServiceForm');
+  form.hidden = !form.hidden;
+  document.getElementById('toggleAddServiceBtn').textContent = form.hidden ? '+ Neue Dienstleistung' : 'Formular schließen';
+});
 
 document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const title = document.getElementById('srvTitle').value.trim();
@@ -1122,6 +1133,8 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   document.getElementById('srvTitle').value='';
   await loadServices();
   showToast(t('saved'));
+  document.getElementById('addServiceForm').hidden = true;
+  document.getElementById('toggleAddServiceBtn').textContent = '+ Neue Dienstleistung';
 });
 
 let hoursEmpId = null;
@@ -2066,6 +2079,7 @@ async function loadDoctors() {
   empty.hidden = true;
   const ownerId = getOwnerId();
   const { data: docs, error } = await supabase.from('scraper_data').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  console.log('[loadDoctors] rows:', docs?.length, 'error:', error);
   if (error) { console.error('[loadDoctors]', error); empty.hidden = false; return; }
   docsCache = docs || [];
   const filterText = document.getElementById('docFilterInput').value.trim();
@@ -2161,20 +2175,24 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
       body: JSON.stringify({ query: fullQuery, limit, language: 'de', countryCode: 'de' })
     });
     const data = await res.json();
+    console.log('[docSearch] API status:', res.status, 'items:', data.items?.length, 'error:', data.error);
     if (!res.ok || data.error) throw new Error(data.error || 'Apify-Fehler');
     const items = data.items || [];
-    const inserts = items.filter(i => i.title).map(i => ({
+    console.log('[docSearch] first item keys:', items[0] ? Object.keys(items[0]).join(', ') : 'none');
+    const ownerId = getOwnerId();
+    const inserts = items.filter(i => i.title || i.name || i.placeName).map(i => ({
       owner_id: ownerId,
-      company_name: i.title,
-      name: i.title,
+      company_name: i.title || i.name || i.placeName,
+      name: i.title || i.name || i.placeName,
       category: query,
-      city: i.city || city || '',
+      city: i.city || city || i.address?.split(',').pop()?.trim() || '',
       phone: i.phone || '',
       email: i.email || '',
       website: i.website || '',
       status: 'new',
       notes: i.address || ''
     }));
+    console.log('[docSearch] inserts count:', inserts.length);
     if (inserts.length > 0) {
       const { error: insErr } = await supabase.from('scraper_data').insert(inserts);
       if (insErr) { console.error('[docSearch insert]', insErr); throw new Error('DB-Fehler: ' + insErr.message); }
