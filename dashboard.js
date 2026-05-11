@@ -1246,16 +1246,56 @@ function openEmpDetail(empId) {
   document.getElementById('teamListView').hidden  = true;
   document.getElementById('teamDetailView').hidden = false;
 
-  // Avatar upload
+  // Avatar upload with crop
+  let cropper = null;
   const fileInput = document.getElementById('empAvatarInput');
-  fileInput.onchange = async (ev) => {
+  const cropModal = document.getElementById('avatarCropModal');
+  const cropImage = document.getElementById('cropImage');
+
+  function closeCropModal() {
+    cropModal.hidden = true;
+    if (cropper) { cropper.destroy(); cropper = null; }
+    cropImage.src = '';
+    fileInput.value = '';
+  }
+
+  fileInput.onchange = (ev) => {
     const file = ev.target.files[0];
     if (!file) return;
-    const ext = file.name.split('.').pop();
-    const path = `${empId}/${Date.now()}.${ext}`;
+    const url = URL.createObjectURL(file);
+    cropImage.src = url;
+    cropModal.hidden = false;
+    if (cropper) cropper.destroy();
+    cropper = new Cropper(cropImage, {
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 0.9,
+      dragMode: 'move',
+      guides: false,
+      center: false,
+      highlight: false,
+      background: false,
+      scalable: false,
+      zoomable: true,
+      cropBoxMovable: true,
+      cropBoxResizable: false,
+      minCropBoxWidth: 120,
+      minCropBoxHeight: 120,
+    });
+  };
+
+  document.getElementById('cropCancelBtn').onclick = closeCropModal;
+  document.getElementById('cropModalClose').onclick = closeCropModal;
+
+  document.getElementById('cropSaveBtn').onclick = async () => {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.85));
+    if (!blob) { showToast('Bildverarbeitung fehlgeschlagen', 'error'); return; }
+    const path = `${empId}/${Date.now()}.jpg`;
     showToast('Bild wird hochgeladen…');
     try {
-      const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
       const avatarUrl = urlData?.publicUrl;
@@ -1267,10 +1307,10 @@ function openEmpDetail(empId) {
       renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
       await loadTeam();
       showToast('Profilbild gespeichert');
+      closeCropModal();
     } catch (e) {
       showToast('Fehler: ' + e.message, 'error');
     }
-    fileInput.value = '';
   };
 
   const detail = document.getElementById('teamDetailView');
