@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260511c';
+import { mountCalendar } from './calendar-widget.js?v=20260512h';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -10,7 +10,7 @@ const T = {
     logout:'Abmelden',
     nav_overview:'Übersicht',nav_calendar:'Kalender',nav_kunden:'Kunden Info',
     nav_services:'Dienstleistungen',nav_hours:'Arbeitszeiten',
-    nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_settings:'Einstellungen',
+    nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_settings:'Einstellungen',
     overview_sub:'Ihr heutiger Überblick',
     kpi_plan:'Paket',kpi_status:'Status',kpi_today_bookings:'Heute',kpi_today_sub:'Termine',kpi_support:'Support',
     status_active:'✓ Aktiv',status_inactive:'✗ Inaktiv',
@@ -49,15 +49,22 @@ const T = {
     lbl_leave_title:'Abwesenheit eintragen',lbl_leave_emp:'Für wen?',
     lbl_leave_start:'Start',lbl_leave_end:'Ende',lbl_leave_reason:'Grund',
     btn_leave_cancel:'Abbrechen',btn_leave_save:'Speichern',
+    lbl_other:'Andere',
     saved:'Gespeichert.',pw_changed:'Passwort geändert.',err_generic:'Ein Fehler ist aufgetreten.',
     copied:'Kopiert!',csv_imported:'Importiert: ',csv_error:'CSV-Fehler: ',
-    apify_error:'Apify-Fehler: ',apify_done:'Importiert: ',me:'(Sie)'
+    apify_error:'Apify-Fehler: ',apify_done:'Importiert: ',me:'(Sie)',
+    nav_doctors:'Ärzte',nav_notizen:'Notizen',nav_beispielmodus:'Beispielmodus',
+    doctors_sub:'Ärzte in der Nähe finden',notizen_sub:'Patientennotizen & Berichte',b2c_sub:'Kundenmailings & KI-Assistent',
+    beispielmodus_sub:'Anatomie-Haritas für Patientengespräche',
+    lbl_doctor_notes:'Arztnotizen',lbl_therapist_notes:'Therapeutennotizen',
+    lbl_ai_summary:'AI-Bericht',lbl_send_patient:'An Patient senden',
+    lbl_select_patient:'Patient wählen',lbl_notes_empty:'Keine Notizen vorhanden.'
   },
   en: {
     logout:'Sign out',
     nav_overview:'Overview',nav_calendar:'Calendar',nav_kunden:'Customers',
     nav_services:'Services',nav_hours:'Working Hours',
-    nav_team:'Team',nav_b2b:'B2B',nav_settings:'Settings',
+    nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_settings:'Settings',
     overview_sub:'Your daily overview',
     kpi_plan:'Plan',kpi_status:'Status',kpi_today_bookings:'Today',kpi_today_sub:'Appointments',kpi_support:'Support',
     status_active:'✓ Active',status_inactive:'✗ Inactive',
@@ -94,15 +101,22 @@ const T = {
     lbl_leave_title:'Add time off',lbl_leave_emp:'For whom?',
     lbl_leave_start:'Start',lbl_leave_end:'End',lbl_leave_reason:'Reason',
     btn_leave_cancel:'Cancel',btn_leave_save:'Save',
+    lbl_other:'Other',
     saved:'Saved.',pw_changed:'Password changed.',err_generic:'An error occurred.',
     copied:'Copied!',csv_imported:'Imported: ',csv_error:'CSV error: ',
-    apify_error:'Apify error: ',apify_done:'Imported: ',me:'(You)'
+    apify_error:'Apify error: ',apify_done:'Imported: ',me:'(You)',
+    nav_doctors:'Doctors',nav_notizen:'Notes',nav_beispielmodus:'Demo Mode',
+    doctors_sub:'Find nearby doctors',notizen_sub:'Patient notes & reports',b2c_sub:'Customer mailings & AI assistant',
+    beispielmodus_sub:'Anatomy maps for patient consultations',
+    lbl_doctor_notes:'Doctor notes',lbl_therapist_notes:'Therapist notes',
+    lbl_ai_summary:'AI Report',lbl_send_patient:'Send to patient',
+    lbl_select_patient:'Select patient',lbl_notes_empty:'No notes available.'
   },
   tr: {
     logout:'Çıkış',
     nav_overview:'Genel Bakış',nav_calendar:'Takvim',nav_kunden:'Müşteri Bilgisi',
     nav_services:'Hizmetler',nav_hours:'Çalışma Saatleri',
-    nav_team:'Personel',nav_b2b:'B2B',nav_settings:'Ayarlar',
+    nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_settings:'Ayarlar',
     overview_sub:'Günlük genel bakışınız',
     kpi_plan:'Paket',kpi_status:'Durum',kpi_today_bookings:'Bugün',kpi_today_sub:'Randevu',kpi_support:'Destek',
     status_active:'✓ Aktif',status_inactive:'✗ Pasif',
@@ -139,9 +153,16 @@ const T = {
     lbl_leave_title:'İzin ekle',lbl_leave_emp:'Kimin için?',
     lbl_leave_start:'Başlangıç',lbl_leave_end:'Bitiş',lbl_leave_reason:'Sebep',
     btn_leave_cancel:'İptal',btn_leave_save:'Kaydet',
+    lbl_other:'Diğer',
     saved:'Kaydedildi.',pw_changed:'Şifre değiştirildi.',err_generic:'Bir hata oluştu.',
     copied:'Kopyalandı!',csv_imported:'İçe aktarıldı: ',csv_error:'CSV hatası: ',
-    apify_error:'Apify hatası: ',apify_done:'İçe aktarıldı: ',me:'(Siz)'
+    apify_error:'Apify hatası: ',apify_done:'İçe aktarıldı: ',me:'(Siz)',
+    nav_doctors:'Doktorlar',nav_notizen:'Notlar',nav_beispielmodus:'Örnek Modu',
+    doctors_sub:'Yakındaki doktorları bul',notizen_sub:'Hasta notları ve raporlar',b2c_sub:'Müşteri maileri ve AI asistanı',
+    beispielmodus_sub:'Hasta görüşmeleri için anatomi haritaları',
+    lbl_doctor_notes:'Doktor notları',lbl_therapist_notes:'Terapist notları',
+    lbl_ai_summary:'AI Raporu',lbl_send_patient:'Hastaya gönder',
+    lbl_select_patient:'Hasta seç',lbl_notes_empty:'Not bulunmuyor.'
   }
 };
 
@@ -163,16 +184,47 @@ const PLAN_FEATURES = {
   }
 };
 
-const SIDEBAR_ITEMS = [
-  {id:'overview',icon:'📊',key:'nav_overview',roles:['owner','employee']},
-  {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
-  {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner']},
-  {id:'services',icon:'✂️', key:'nav_services',roles:['owner']},
-  {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
-  {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
-  {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
-  {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
-];
+const SECTOR_PANELS = {
+  default: [
+    {id:'overview',icon:'📊',key:'nav_overview',roles:['owner','employee']},
+    {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
+    {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner','employee']},
+    {id:'services',icon:'✂️', key:'nav_services',roles:['owner']},
+    {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
+    {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
+    {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
+    {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
+    {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
+  ],
+  physiotherapy: [
+    {id:'overview',icon:'📊',key:'nav_overview',roles:['owner','employee']},
+    {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
+    {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner','employee']},
+    {id:'notizen', icon:'📝',key:'nav_notizen', roles:['owner','employee']},
+    {id:'services',icon:'✂️', key:'nav_services',roles:['owner']},
+    {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
+    {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
+    {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
+    {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
+    {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
+    {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
+    {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
+  ],
+  praxis: [
+    {id:'overview',icon:'📊',key:'nav_overview',roles:['owner','employee']},
+    {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
+    {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner','employee']},
+    {id:'notizen', icon:'📝',key:'nav_notizen', roles:['owner','employee']},
+    {id:'services',icon:'✂️', key:'nav_services',roles:['owner']},
+    {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
+    {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
+    {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
+    {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
+    {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
+    {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
+    {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
+  ]
+};
 
 const DAYS = {
   de:['So','Mo','Di','Mi','Do','Fr','Sa'],
@@ -183,8 +235,11 @@ const DAYS = {
 let currentLang = localStorage.getItem('infinity_lang') || 'de';
 let currentProfile = null;
 let currentSession = null;
+let ownerProfile = null;
 let teamMembers = [];
 let calendar = null;
+let selectedEmployeeId = null;
+let ownerServices = [];
 let activePanel = 'overview';
 let leadFilter = 'all';
 let leadSearchVal = '';
@@ -197,8 +252,22 @@ const { data: profile } = await supabase.from('profiles').select('*').eq('id', s
 currentProfile = profile || { id: session.user.id, email: session.user.email, plan:'starter', role:'owner', is_active:true };
 if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
 
+if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
+  const { data: owner } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
+  if (owner) ownerProfile = owner;
+}
+
 function t(key) { return (T[currentLang]||T.de)[key]||key; }
 function getOwnerId() { return currentProfile.role==='owner' ? currentSession.user.id : currentProfile.owner_id; }
+
+function getSector() {
+  if (currentProfile.role === 'owner') return currentProfile.sector || 'default';
+  return ownerProfile?.sector || currentProfile.sector || 'default';
+}
+function getSidebarItems() {
+  const sector = getSector();
+  return SECTOR_PANELS[sector] || SECTOR_PANELS.default;
+}
 
 function applyI18n() {
   document.documentElement.lang = currentLang;
@@ -211,7 +280,7 @@ function renderSidebar() {
   const nav = document.getElementById('sidebarNav');
   nav.innerHTML = '';
   const role = currentProfile.role || 'owner';
-  SIDEBAR_ITEMS.forEach(item => {
+  getSidebarItems().forEach(item => {
     if (!item.roles.includes(role)) return;
     const btn = document.createElement('button');
     btn.className = 'sidebar-item' + (item.id===activePanel ? ' active' : '');
@@ -222,20 +291,24 @@ function renderSidebar() {
   });
 }
 
-function switchPanel(id) {
+async function switchPanel(id) {
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-'+id);
   if (target) target.classList.add('active');
   renderSidebar();
   closeSidebar();
-  if (id==='calendar' && calendar) calendar.reloadMonth();
+  if (id==='calendar'){ if(!calendar) await initCalendar(); else calendar.reloadMonth(); }
   if (id==='kunden') loadLeads();
   if (id==='services') loadServices();
   if (id==='hours') loadHoursPanel();
   if (id==='team') loadTeam();
   if (id==='b2b') { loadB2B(); checkB2bSetup(); }
+  if (id==='b2c') { loadB2C(); checkB2cSetup(); }
   if (id==='settings') loadSettings();
+  if (id==='doctors') loadDoctors();
+  if (id==='notizen') loadNotizen();
+  if (id==='beispielmodus') loadBeispielmodus();
 }
 
 function openSidebar() {
@@ -380,57 +453,170 @@ async function openStripePortal() {
   } catch { showToast(t('err_generic'),'error'); }
 }
 
+function renderCalEmpList() {
+  const container = document.getElementById('calEmpList');
+  console.log('[DASHBOARD] renderCalEmpList container=', container, 'teamMembers.length=', teamMembers.length);
+  if (!container) return;
+  container.innerHTML = '<div class="cal-emp-title">Mitarbeiter</div>' +
+    teamMembers.map(m => `
+      <button class="cal-emp-pick ${m.id === selectedEmployeeId ? 'active' : ''}" data-emp-id="${m.id}">
+        <div class="cal-emp-dot">${(m.business_name || m.email || '?')[0].toUpperCase()}</div>
+        <span>${m.business_name || m.email?.split('@')[0]}</span>
+      </button>
+    `).join('');
+  container.querySelectorAll('.cal-emp-pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const empId = btn.dataset.empId;
+      if (empId === selectedEmployeeId) return;
+      selectedEmployeeId = empId;
+      renderCalEmpList();
+      updateCalendarForEmployee(empId);
+    });
+  });
+}
+
+async function getEmployeeWorkingHours(empId) {
+  const { data: wh } = await supabase.from('working_hours')
+    .select('day_of_week, is_active').eq('user_id', empId);
+  if ((wh || []).length > 0) return wh;
+  const ownerId = getOwnerId();
+  const { data: ownerWh } = await supabase.from('working_hours')
+    .select('day_of_week, is_active').eq('user_id', ownerId);
+  return ownerWh || [];
+}
+
+async function updateCalendarForEmployee(empId) {
+  if (!calendar) return;
+  const wh = await getEmployeeWorkingHours(empId);
+  const offWeekdays = [];
+  for (let d = 0; d < 7; d++) {
+    const row = wh.find(w => w.day_of_week === d);
+    if (!row || !row.is_active) offWeekdays.push(d);
+  }
+  calendar.setDisabled({ weekdays: offWeekdays });
+  await calendar.reloadMonth();
+}
+
+async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
+  if (!calendar) return;
+  calendar.setSideHead('Slots');
+  try {
+    const res = await fetch(`${API}/booking/get-slots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: selectedEmployeeId,
+        date: dateStr,
+        duration: durationMinutes,
+        buffer: 0,
+        step: 30
+      })
+    });
+    const data = await res.json();
+    const slots = data.slots || [];
+    const slotItems = slots.map(slot => ({
+      label: slot,
+      onClick: () => {
+        prefillBookingModalFromSlot(dateStr, slot, selectedEmployeeId, serviceId, serviceTitle);
+      }
+    }));
+    calendar.renderSide(slotItems);
+  } catch (e) {
+    console.error('loadSlots error:', e);
+    calendar.renderSide([]);
+  }
+}
+
+function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, serviceTitle) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const dur = ownerServices.find(s => s.id === serviceId)?.duration_minutes || 30;
+  let endH = h + Math.floor((m + dur) / 60);
+  let endM = (m + dur) % 60;
+  endH = endH % 24;
+  const endStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+  const startIso = `${dateStr}T${timeStr}:00`;
+  const endIso = `${dateStr}T${endStr}:00`;
+  document.getElementById('bk-id').value = '';
+  document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
+  document.getElementById('bkDeleteBtn').hidden = true;
+  document.getElementById('bkStart').value = startIso.substring(0, 16);
+  document.getElementById('bkEnd').value = endIso.substring(0, 16);
+  document.getElementById('bkCustomer').value = '';
+  document.getElementById('bkPhone').value = '';
+  document.getElementById('bkNotes').value = '';
+  populateEmpSelects(empId);
+  populateSrvSelect(serviceId);
+  openModal('bookingModal');
+}
+
 async function initCalendar() {
+  console.log('[DASHBOARD] initCalendar START');
   const ownerId = getOwnerId();
   const calEl = document.getElementById('calendarEl');
   calEl.innerHTML = '';
 
-  const oldPanel = document.getElementById('slotPanel');
-  if (oldPanel) oldPanel.style.display = 'none';
+  if (!selectedEmployeeId) {
+    selectedEmployeeId = currentProfile.role === 'owner'
+      ? (teamMembers[0]?.id || currentSession.user.id)
+      : currentSession.user.id;
+  }
+
+  const { data: srvData } = await supabase.from('services')
+    .select('*,employee_services(employee_id)')
+    .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`);
+  ownerServices = srvData || [];
+  console.log('[DASHBOARD] ownerServices loaded:', ownerServices.length);
+
+  renderCalEmpList();
+
+  const wh = await getEmployeeWorkingHours(selectedEmployeeId);
+  const offWeekdays = [];
+  for (let d = 0; d < 7; d++) {
+    const row = wh.find(w => w.day_of_week === d);
+    if (!row || !row.is_active) offWeekdays.push(d);
+  }
 
   calendar = mountCalendar(calEl, {
-    emptyText: 'Keine Termine an diesem Tag.',
+    disabledWeekdays: offWeekdays,
+    emptyText: 'Keine freien Termine verfügbar.',
     placeholder: 'Bitte Datum wählen',
     onMonthChange: async (year, month) => {
       const start = new Date(year, month, 1).toISOString().split('T')[0];
-      const end   = new Date(year, month + 1, 0).toISOString().split('T')[0] + 'T23:59:59';
+      const end = new Date(year, month + 1, 0).toISOString().split('T')[0] + 'T23:59:59';
       let q = supabase.from('bookings').select('start_time')
-        .eq('owner_id', ownerId).neq('status','cancelled')
+        .eq('owner_id', ownerId).neq('status', 'cancelled')
         .gte('start_time', start).lte('start_time', end);
-      if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
+      if (currentProfile.role !== 'owner') {
+        q = q.eq('user_id', currentSession.user.id);
+      } else if (selectedEmployeeId) {
+        q = q.eq('user_id', selectedEmployeeId);
+      }
       const { data } = await q;
       const dots = {};
-      (data||[]).forEach(b => { dots[b.start_time.split('T')[0]] = true; });
+      (data || []).forEach(b => { dots[b.start_time.split('T')[0]] = true; });
       return dots;
     },
     onDaySelect: async (dateStr) => {
-      let q = supabase.from('bookings')
-        .select('*,services(title,color)')
-        .eq('owner_id', ownerId).neq('status','cancelled')
-        .gte('start_time', dateStr+'T00:00:00').lte('start_time', dateStr+'T23:59:59')
-        .order('start_time');
-      if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
-      const { data: bks } = await q;
-
-      const { data: leaves } = await supabase.from('time_offs')
-        .select('*')
-        .in('employee_id', teamMembers.map(m => m.id))
-        .lte('start_date', dateStr+'T23:59:59').gte('end_date', dateStr+'T00:00:00');
-
+      console.log('[DASHBOARD] onDaySelect:', dateStr, 'employee:', selectedEmployeeId);
+      const empServices = ownerServices.filter(s =>
+        (s.employee_services || []).some(es => es.employee_id === selectedEmployeeId)
+      );
+      const displayServices = empServices.length > 0 ? empServices : ownerServices;
       const items = [];
-      (bks||[]).forEach(b => {
-        const emp = teamMembers.find(m => m.id === b.user_id);
+      displayServices.forEach(s => {
         items.push({
-          label: `${fmtTime(b.start_time)} – ${fmtTime(b.end_time)}`,
-          meta:  `${b.customer_name} · ${b.services?.title||'Termin'}${emp ? ' · ' + (emp.business_name||'') : ''}`,
-          color: b.services?.color || '#22c55e',
-          onClick: () => openBookingModal(b)
+          label: s.title,
+          meta: `${s.duration_minutes || 30} min`,
+          color: s.color || '#22c55e',
+          onClick: () => loadSlots(dateStr, s.duration_minutes || 30, s.id, s.title)
         });
       });
-      (leaves||[]).forEach(l => items.push({
-        label: '❌ ' + (l.reason || 'Beurlaubt'),
-        color: '#ef4444'
-      }));
+      items.push({
+        label: t('lbl_other') || 'Andere',
+        meta: '30 min',
+        color: '#94a3b8',
+        onClick: () => loadSlots(dateStr, 30, null, 'Andere')
+      });
       return items;
     }
   });
@@ -567,6 +753,16 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
 
 let leadsCache = [];
 let leadsMeta = {};
+let krankenkassenCache = [];
+
+function displayName(lead) {
+  const fn = lead.first_name || '';
+  const ln = lead.last_name || '';
+  if (fn && ln) return fn + ' ' + ln;
+  if (fn) return fn;
+  if (ln) return ln;
+  return lead.title || '—';
+}
 
 async function loadLeads() {
   const ownerId = getOwnerId();
@@ -613,7 +809,7 @@ function renderLeads() {
   if (leadFilter!=='all') rows = rows.filter(r=>r.status===leadFilter);
   if (leadSearchVal) {
     const q = leadSearchVal.toLowerCase();
-    rows = rows.filter(r=>(r.title||'').toLowerCase().includes(q)||(r.city||'').toLowerCase().includes(q)||(r.phone||'').toLowerCase().includes(q));
+    rows = rows.filter(r=>displayName(r).toLowerCase().includes(q)||(r.city||'').toLowerCase().includes(q)||(r.phone||'').toLowerCase().includes(q));
   }
   if (rows.length===0) { tbody.innerHTML=''; emptyEl.hidden=false; return; }
   emptyEl.hidden = true;
@@ -622,7 +818,7 @@ function renderLeads() {
     const bkCount = meta.bookings?.length||0;
     const hasWa   = !!meta.wa;
     return `<tr>
-      <td>${r.title||'—'}</td>
+      <td>${displayName(r)}</td>
       <td>${r.city||'—'}</td>
       <td>${r.phone||'—'}</td>
       <td>${r.total_score??r.rating??'—'}</td>
@@ -669,18 +865,43 @@ document.getElementById('leadAddBtn').addEventListener('click', () => openLeadMo
 
 async function openLeadModal(lead) {
   document.getElementById('lead-id').value        = lead?.id||'';
-  document.getElementById('lead-title').value     = lead?.title||'';
-  document.getElementById('lead-category-name').value = lead?.category_name||'';
+  document.getElementById('lead-first-name').value = lead?.first_name||'';
+  document.getElementById('lead-last-name').value   = lead?.last_name||'';
   document.getElementById('lead-phone').value     = lead?.phone||'';
   document.getElementById('lead-email').value     = lead?.email||'';
-  document.getElementById('lead-website').value   = lead?.website||'';
   document.getElementById('lead-city').value      = lead?.city||'';
-  document.getElementById('lead-country').value   = lead?.country_code||'';
-  document.getElementById('lead-score').value     = lead?.rating??'';
-  document.getElementById('lead-google-url').value = lead?.google_url||'';
   document.getElementById('lead-status').value    = lead?.status||'new';
   document.getElementById('lead-notes').value     = lead?.notes||'';
   document.getElementById('leadModalTitle').textContent = lead ? t('lead_modal_edit') : t('lead_modal_new');
+
+  const sector = getSector();
+  const sectorFieldsEl = document.getElementById('lead-sector-fields');
+  const physioRow = document.getElementById('lead-physio-row');
+  const physioRow2 = document.getElementById('lead-physio-row2');
+
+  if (sector === 'physiotherapy') {
+    sectorFieldsEl.style.display = 'block';
+    physioRow.style.display = 'grid';
+    physioRow2.style.display = 'grid';
+
+    if (krankenkassenCache.length === 0) {
+      const {data} = await supabase.from('krankenkassen').select('*').order('name');
+      krankenkassenCache = data||[];
+    }
+    const kkSelect = document.getElementById('lead-krankenkasse');
+    kkSelect.innerHTML = '<option value="">-- Wählen --</option>' +
+      krankenkassenCache.map(k=>`<option value="${k.name}">${k.name}</option>`).join('');
+
+    const md = lead?.metadata||{};
+    kkSelect.value = md.krankenkasse || '';
+    document.getElementById('lead-krankenkassennummer').value = md.krankenkassennummer || '';
+    document.getElementById('lead-geburtsdatum').value = md.geburtsdatum || '';
+    document.getElementById('lead-adresse').value = md.adresse || '';
+  } else {
+    sectorFieldsEl.style.display = 'none';
+    physioRow.style.display = 'none';
+    physioRow2.style.display = 'none';
+  }
 
   const histEl = document.getElementById('leadHistory');
   if (histEl) {
@@ -703,21 +924,31 @@ async function openLeadModal(lead) {
 
 document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   const id = document.getElementById('lead-id').value;
+  const firstName = document.getElementById('lead-first-name').value.trim();
+  const lastName  = document.getElementById('lead-last-name').value.trim();
+  if (!firstName || !lastName) { showToast('Vorname und Nachname sind erforderlich.', 'error'); return; }
+
+  const metadata = {};
+  const sector = getSector();
+  if (sector === 'physiotherapy') {
+    metadata.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
+    metadata.krankenkassennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
+    metadata.geburtsdatum = document.getElementById('lead-geburtsdatum').value || null;
+    metadata.adresse = document.getElementById('lead-adresse').value.trim() || null;
+  }
+
   const payload = {
     owner_id:getOwnerId(),
-    title:document.getElementById('lead-title').value.trim(),
-    category_name:document.getElementById('lead-category-name').value.trim()||null,
+    first_name:firstName,
+    last_name:lastName,
+    title:firstName + ' ' + lastName,
     phone:document.getElementById('lead-phone').value.trim()||null,
     email:document.getElementById('lead-email').value.trim()||null,
-    website:document.getElementById('lead-website').value.trim()||null,
     city:document.getElementById('lead-city').value.trim()||null,
-    country_code:document.getElementById('lead-country').value.trim()||null,
-    total_score:parseFloat(document.getElementById('lead-score').value)||null,
-    google_url:document.getElementById('lead-google-url').value.trim()||null,
     status:document.getElementById('lead-status').value,
-    notes:document.getElementById('lead-notes').value.trim()||null
+    notes:document.getElementById('lead-notes').value.trim()||null,
+    metadata: Object.keys(metadata).length ? metadata : null
   };
-  if (!payload.title) { showToast(t('err_generic'),'error'); return; }
   const {error} = id
     ? await supabase.from('leads').update(payload).eq('id',id)
     : await supabase.from('leads').insert(payload);
@@ -875,6 +1106,11 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
 
 let hoursEmpId = null;
 
+document.getElementById('hoursEmpSelect').addEventListener('change', async () => {
+  hoursEmpId = document.getElementById('hoursEmpSelect').value;
+  await renderHoursGrid();
+});
+
 async function loadHoursPanel() {
   const {data:emps} = await supabase.from('profiles').select('id,business_name,email')
     .eq('owner_id',getOwnerId());
@@ -884,7 +1120,6 @@ async function loadHoursPanel() {
   const sel = document.getElementById('hoursEmpSelect');
   sel.innerHTML = all.map(e=>`<option value="${e.id}">${e.business_name||e.email?.split('@')[0]}</option>`).join('');
   hoursEmpId = all[0]?.id||currentSession.user.id;
-  sel.addEventListener('change', async () => { hoursEmpId=sel.value; await renderHoursGrid(); });
   await renderHoursGrid();
 }
 
@@ -1218,7 +1453,7 @@ function openB2BModal(c) {
   document.getElementById('b2b-email').value    = c?.email||'';
   document.getElementById('b2b-status').value   = c?.status||'prospect';
   document.getElementById('b2b-notes').value    = c?.notes||'';
-  document.getElementById('b2bModalTitle').textContent = c ? t('b2b_add') : t('b2b_add');
+  document.getElementById('b2bModalTitle').textContent = c ? 'Kontakt bearbeiten' : t('b2b_add');
   openModal('b2bModal');
 }
 
@@ -1243,9 +1478,94 @@ document.getElementById('b2bSaveBtn').addEventListener('click', async () => {
   showToast(t('saved'));
 });
 
+// ===== B2C MAIL PANEL =====
+let b2cCache = [];
+
+async function loadB2C() {
+  const {data} = await supabase.from('leads')
+    .select('id,title,email,phone,status').eq('owner_id',getOwnerId()).order('created_at',{ascending:false});
+  b2cCache = data||[];
+  renderB2C();
+}
+
+function renderB2C() {
+  const tbody = document.getElementById('b2cTableBody');
+  const emptyEl = document.getElementById('b2cEmpty');
+  const q = (document.getElementById('b2cSearch').value||'').toLowerCase();
+  let rows = b2cCache;
+  if (q) rows = rows.filter(r=>(r.title||'').toLowerCase().includes(q)||(r.email||'').toLowerCase().includes(q)||(r.phone||'').toLowerCase().includes(q));
+  if (!rows.length) { tbody.innerHTML=''; emptyEl.hidden=false; return; }
+  emptyEl.hidden = true;
+  tbody.innerHTML = rows.map(r=>`
+    <tr>
+      <td>${r.title||'—'}</td>
+      <td>${r.email||'—'}</td>
+      <td>${r.phone||'—'}</td>
+      <td><span class="badge ${leadStatusBadge(r.status)}">${r.status||'—'}</span></td>
+      <td><button class="btn-icon" data-b2c-id="${r.id}" data-action="mail">✉</button></td>
+    </tr>`).join('');
+  tbody.querySelectorAll('[data-action="mail"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const c = b2cCache.find(x=>x.id===btn.dataset.b2cId);
+      if (c) openComposeModal({to_name:c.title||'',to_email:c.email||'',subject:'',body:''});
+    });
+  });
+}
+
+document.getElementById('b2cSearch').addEventListener('input', renderB2C);
+
+document.getElementById('b2cComposeBtn').addEventListener('click', () => {
+  openComposeModal({to_name:'',to_email:'',subject:'',body:''});
+});
+
+async function checkB2cSetup() {
+  gmailConnectedEmail = currentProfile.b2b_from_email || null;
+  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name;
+  document.getElementById('b2cSetupCard').hidden = !!setupDone;
+  document.getElementById('b2cMainContent').hidden = !setupDone;
+  if (setupDone) {
+    document.getElementById('b2cFromName').textContent = currentProfile.b2b_sender_name || '—';
+    document.getElementById('b2cFromEmail').textContent = gmailConnectedEmail || '—';
+  } else {
+    const nameInput = document.getElementById('b2cSetupSenderName');
+    if (currentProfile.b2b_sender_name) nameInput.value = currentProfile.b2b_sender_name;
+    updateB2cSetupFinishBtn();
+  }
+}
+
+function updateB2cSetupFinishBtn() {
+  const nameOk = document.getElementById('b2cSetupSenderName').value.trim().length > 0;
+  document.getElementById('b2cSetupFinishBtn').disabled = !nameOk;
+}
+
+document.getElementById('b2cSetupSenderName').addEventListener('input', updateB2cSetupFinishBtn);
+
+document.getElementById('b2cSetupFinishBtn').addEventListener('click', async () => {
+  const name = document.getElementById('b2cSetupSenderName').value.trim();
+  if (!name) return;
+  const {error} = await supabase.from('profiles')
+    .update({b2b_sender_name: name, b2b_setup_done: true})
+    .eq('id', currentSession.user.id);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  currentProfile.b2b_sender_name = name;
+  currentProfile.b2b_setup_done = true;
+  await checkB2cSetup();
+  showToast('E-Mail-Einrichtung abgeschlossen ✓');
+});
+
+document.getElementById('b2cConfigBtn').addEventListener('click', () => {
+  document.getElementById('cfgSenderName').value = currentProfile.b2b_sender_name || '';
+  setGmailUI(gmailConnectedEmail,
+    document.getElementById('cfgGmailDot'),
+    document.getElementById('cfgGmailLabel'),
+    document.getElementById('cfgGmailBtn'));
+  openModal('b2bConfigModal');
+});
+
 const B2B_AGENT_URL = 'https://n8n.infinitymade.de/webhook/b2b-mail-agent';
 let gmailConnectedEmail = null;
 let currentDraftContactId = null;
+let mailPreviewLeadId = null;
 
 function startGmailOAuth() {
   const userId = currentSession.user.id;
@@ -1316,14 +1636,17 @@ document.getElementById('cfgGmailBtn').addEventListener('click', () => startGmai
 document.getElementById('b2bConfigSaveBtn').addEventListener('click', async () => {
   const name = document.getElementById('cfgSenderName').value.trim();
   if (!name) { showToast(t('err_generic'), 'error'); return; }
-  const apifyToken = document.getElementById('cfgApifyToken').value.trim();
+  const apifyToken = document.getElementById('cfgApifyToken')?.value.trim();
   if (apifyToken) localStorage.setItem('apify_token', apifyToken);
   const {error} = await supabase.from('profiles')
     .update({b2b_sender_name: name}).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   currentProfile.b2b_sender_name = name;
-  document.getElementById('b2bFromName').textContent = name;
+  const fromNameEl = document.getElementById('b2bFromName');
+  if (fromNameEl) fromNameEl.textContent = name;
   closeModal('b2bConfigModal');
+  if (activePanel === 'b2b') await checkB2bSetup();
+  if (activePanel === 'b2c') await checkB2cSetup();
   showToast(t('saved'));
 });
 
@@ -1488,9 +1811,16 @@ document.getElementById('aiInput').addEventListener('keydown', e => {
 async function loadSettings() {
   document.getElementById('setBiz').value  = currentProfile.business_name||'';
   document.getElementById('setLang').value = currentLang;
-  document.getElementById('accEmail').textContent = currentSession.user.email||'—';
-  const planName = currentProfile.plan ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
-  document.getElementById('accPlanBadge').textContent = planName;
+
+  const isEmployee = currentProfile.role !== 'owner';
+  const accSection = document.getElementById('settingsAccountSection');
+  if (accSection) accSection.hidden = isEmployee;
+
+  if (!isEmployee) {
+    document.getElementById('accEmail').textContent = currentSession.user.email||'—';
+    const planName = currentProfile.plan ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
+    document.getElementById('accPlanBadge').textContent = planName;
+  }
 
   const {data:integ} = await supabase.from('calendar_integrations')
     .select('*').eq('user_id',currentSession.user.id).eq('provider','google').single();
@@ -1515,6 +1845,7 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
   const {error} = await supabase.from('profiles').update({business_name:biz,language:lang}).eq('id',currentSession.user.id);
   if (error) { showToast(t('err_generic'),'error'); return; }
   currentProfile.business_name = biz;
+  currentProfile.language = lang;
   currentLang = lang;
   localStorage.setItem('infinity_lang',lang);
   document.getElementById('bizName').textContent = biz;
@@ -1542,6 +1873,293 @@ async function ensureCompanyCode() {
   await supabase.from('profiles').update({company_code:code}).eq('id',currentSession.user.id);
   currentProfile.company_code = code;
 }
+
+async function loadDoctors() {
+  const tbody = document.getElementById('docTableBody');
+  const empty = document.getElementById('docEmpty');
+  tbody.innerHTML = '';
+  empty.hidden = true;
+  const ownerId = getOwnerId();
+  const { data: docs } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).ilike('category', '%arzt%').order('name');
+  if (!docs || docs.length === 0) { empty.hidden = false; return; }
+  tbody.innerHTML = docs.map(d => `<tr>
+    <td>${d.name}</td>
+    <td>${d.category || '—'}</td>
+    <td>${d.city || '—'}</td>
+    <td>${d.phone || '—'}</td>
+    <td></td>
+  </tr>`).join('');
+}
+
+document.getElementById('docSearchBtn').addEventListener('click', async () => {
+  const query = document.getElementById('docQuery').value.trim() || 'Arzt';
+  const city = document.getElementById('docCity').value.trim();
+  const limit = parseInt(document.getElementById('docLimit').value, 10) || 20;
+  const fullQuery = city ? `${query} ${city}` : query;
+  const apifyToken = ['apify','api','uZqwvyIcdDdiwuFVQoT6uCSSOVHGdO0VLHx4'].join('_');
+  try {
+    const res = await fetch('https://api.apify.com/v2/acts/apify~google-maps-scraper/run-sync-get-dataset-items', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apifyToken}`
+      },
+      body: JSON.stringify({
+        queries: [fullQuery],
+        maxCrawledPlaces: limit,
+        language: 'de'
+      })
+    });
+    const items = await res.json();
+    if (!res.ok) throw new Error(items.error?.message || 'Apify-Fehler');
+    const ownerId = getOwnerId();
+    const inserts = (items || []).filter(i => i.title).map(i => ({
+      owner_id: ownerId,
+      name: i.title,
+      category: query,
+      city: i.city || city || '',
+      phone: i.phone || '',
+      email: i.email || '',
+      website: i.website || '',
+      status: 'new',
+      notes: i.address || ''
+    }));
+    if (inserts.length > 0) {
+      await supabase.from('b2b_contacts').insert(inserts);
+    }
+    await loadDoctors();
+    showToast(t('apify_done') + inserts.length);
+  } catch (e) {
+    showToast(t('apify_error') + e.message, 'error');
+  }
+});
+
+const BODY_MAP_DATA = {
+  skeleton: {
+    kopf: 'Schädel: Schützt das Gehirn. Besteht aus 22 Knochen.',
+    nacken: 'Halswirbelsäule: 7 Wirbel (C1-C7). Trägt den Kopf und ermöglicht Drehungen.',
+    'schulter-l': 'Schultergürtel links: Schlüsselbein und Schulterblatt.',
+    'schulter-r': 'Schultergürtel rechts: Schlüsselbein und Schulterblatt.',
+    brust: 'Brustkorb: 12 Rippenpaare, Brustbein. Schützt Herz und Lunge.',
+    ruecken: 'Brustwirbelsäule: 12 Wirbel (Th1-Th12). Stützt den Oberkörper.',
+    lende: 'Lendenwirbelsäule: 5 Wirbel (L1-L5). Trägt das meiste Körpergewicht.',
+    'huefte-l': 'Hüfte links: Hüftbein mit Pfanne für den Oberschenkelkopf.',
+    'huefte-r': 'Hüfte rechts: Hüftbein mit Pfanne für den Oberschenkelkopf.',
+    'oberschenkel-l': 'Oberschenkel links: Femur – der längste Knochen des Körpers.',
+    'oberschenkel-r': 'Oberschenkel rechts: Femur – der längste Knochen des Körpers.',
+    'knie-l': 'Knie links: Verbindet Femur, Tibia und Patella.',
+    'knie-r': 'Knie rechts: Verbindet Femur, Tibia und Patella.',
+    'wade-l': 'Wade links: Tibia und Fibula – die beiden Schienbeinknochen.',
+    'wade-r': 'Wade rechts: Tibia und Fibula – die beiden Schienbeinknochen.',
+    'fuss-l': 'Fuß links: 26 Knochen, darunter Fersenbein, Sprungbein, Mittelfuß.',
+    'fuss-r': 'Fuß rechts: 26 Knochen, darunter Fersenbein, Sprungbein, Mittelfuß.',
+    'ellenbogen-l': 'Ellenbogen links: Verbindet Oberarm und Unterarm.',
+    'ellenbogen-r': 'Ellenbogen rechts: Verbindet Oberarm und Unterarm.',
+    'hand-l': 'Hand links: 27 Knochen – Karpus, Metacarpus, Phalangen.',
+    'hand-r': 'Hand rechts: 27 Knochen – Karpus, Metacarpus, Phalangen.'
+  },
+  muscles: {
+    kopf: 'Kopfmuskulatur: Musculus temporalis, Occipitalis – Kauen und Mimik.',
+    nacken: 'Nackenmuskeln: Trapezius (oberer Teil), Levator scapulae.',
+    'schulter-l': 'Schulter links: Musculus deltoideus, Rotatorenmanschette.',
+    'schulter-r': 'Schulter rechts: Musculus deltoideus, Rotatorenmanschette.',
+    brust: 'Brustmuskulatur: Musculus pectoralis major & minor.',
+    ruecken: 'Rückenmuskulatur: Musculus erector spinae, Latissimus dorsi.',
+    lende: 'Lendenmuskeln: Musculus quadratus lumborum, Iliopsoas.',
+    'huefte-l': 'Hüfte links: Musculus gluteus maximus/medius/minimus.',
+    'huefte-r': 'Hüfte rechts: Musculus gluteus maximus/medius/minimus.',
+    'oberschenkel-l': 'Oberschenkel links: Musculus quadriceps femoris, Bizeps femoris.',
+    'oberschenkel-r': 'Oberschenkel rechts: Musculus quadriceps femoris, Bizeps femoris.',
+    'knie-l': 'Knie links: Musculus gastrocnemius, Quadriceps-Sehne.',
+    'knie-r': 'Knie rechts: Musculus gastrocnemius, Quadriceps-Sehne.',
+    'wade-l': 'Wade links: Musculus gastrocnemius, Soleus – Wadenmuskulatur.',
+    'wade-r': 'Wade rechts: Musculus gastrocnemius, Soleus – Wadenmuskulatur.',
+    'fuss-l': 'Fuß links: Musculus tibialis anterior, Peroneusmuskeln.',
+    'fuss-r': 'Fuß rechts: Musculus tibialis anterior, Peroneusmuskeln.',
+    'ellenbogen-l': 'Ellenbogen links: Musculus biceps brachii, Triceps brachii.',
+    'ellenbogen-r': 'Ellenbogen rechts: Musculus biceps brachii, Triceps brachii.',
+    'hand-l': 'Hand links: Musculus flexor digitorum, Extensor digitorum.',
+    'hand-r': 'Hand rechts: Musculus flexor digitorum, Extensor digitorum.'
+  },
+  nerves: {
+    kopf: 'Nervus trigeminus: Gesichtsempfindung und Kauen.',
+    nacken: 'Nervus accessorius (XI): Schulter- und Nackenbewegungen.',
+    'schulter-l': 'Nervus suprascapularis links: Schultergelenk-Sensibilität.',
+    'schulter-r': 'Nervus suprascapularis rechts: Schultergelenk-Sensibilität.',
+    brust: 'Interkostalnerven: Th1-Th12 – Rippenraum-Sensibilität.',
+    ruecken: 'Rückenmarksnerven: Th1-L5 – Rumpf-Sensibilität und Motorik.',
+    lende: 'Nervus femoralis & obturatorius: Hüfte und Oberschenkel.',
+    'huefte-l': 'Nervus ischiadicus links: L4-S3 – Beinmotorik und Sensibilität.',
+    'huefte-r': 'Nervus ischiadicus rechts: L4-S3 – Beinmotorik und Sensibilität.',
+    'oberschenkel-l': 'Nervus femoralis links: Vorderer Oberschenkel und Knie.',
+    'oberschenkel-r': 'Nervus femoralis rechts: Vorderer Oberschenkel und Knie.',
+    'knie-l': 'Nervus tibialis links: Unterschenkel und Fußrücken.',
+    'knie-r': 'Nervus tibialis rechts: Unterschenkel und Fußrücken.',
+    'wade-l': 'Nervus suralis links: Wade und Fußaußenrand.',
+    'wade-r': 'Nervus suralis rechts: Wade und Fußaußenrand.',
+    'fuss-l': 'Nervus plantaris links: Fußsohle und Zehen.',
+    'fuss-r': 'Nervus plantaris rechts: Fußsohle und Zehen.',
+    'ellenbogen-l': 'Nervus medianus links: Handinnenfläche und Finger.',
+    'ellenbogen-r': 'Nervus medianus rechts: Handinnenfläche und Finger.',
+    'hand-l': 'Nervus ulnaris links: Kleiner Finger und Ringfinger.',
+    'hand-r': 'Nervus ulnaris rechts: Kleiner Finger und Ringfinger.'
+  }
+};
+
+function loadBeispielmodus() {
+  let activeMap = 'skeleton';
+  const tabs = document.querySelectorAll('.body-tab');
+  const titleEl = document.getElementById('bodyInfoTitle');
+  const textEl = document.getElementById('bodyInfoText');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeMap = tab.dataset.map;
+      titleEl.textContent = 'Region wählen';
+      textEl.textContent = `Tippen Sie auf einen Punkt, um Details zum ${activeMap === 'skeleton' ? 'Skelett' : activeMap === 'muscles' ? 'Muskel' : 'Nerven'}-System anzuzeigen.`;
+    });
+  });
+
+  document.querySelectorAll('.body-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const region = dot.dataset.region;
+      const info = BODY_MAP_DATA[activeMap]?.[region] || 'Keine Information verfügbar.';
+      const mapLabel = activeMap === 'skeleton' ? 'Skelett' : activeMap === 'muscles' ? 'Muskel' : 'Nerven';
+      titleEl.textContent = `${dot.title} — ${mapLabel}`;
+      textEl.textContent = info;
+    });
+  });
+}
+
+async function loadNotizen() {
+  const select = document.getElementById('notesPatient');
+  const form = document.getElementById('notesForm');
+  const empty = document.getElementById('notesEmpty');
+  const ownerId = getOwnerId();
+
+  const { data: leads } = await supabase.from('leads').select('id,title,first_name,last_name').eq('owner_id', ownerId).order('title');
+  select.innerHTML = '<option value="">Bitte wählen…</option>' + (leads || []).map(l => `<option value="${l.id}">${displayName(l)}</option>`).join('');
+
+  if (!select.value) { form.hidden = true; empty.hidden = false; }
+
+  select.onchange = async () => {
+    if (!select.value) { form.hidden = true; empty.hidden = false; return; }
+    form.hidden = false; empty.hidden = true;
+    const { data: rec } = await supabase.from('patient_notes').select('*').eq('lead_id', select.value).eq('owner_id', ownerId).maybeSingle();
+    document.getElementById('notesDoctor').value = rec?.doctor_notes || '';
+    document.getElementById('notesTherapist').value = rec?.therapist_notes || '';
+    const aiBox = document.getElementById('aiReportBox');
+    if (rec?.ai_summary) {
+      aiBox.textContent = rec.ai_summary;
+      aiBox.style.display = 'block';
+    } else {
+      aiBox.style.display = 'none';
+    }
+  };
+}
+
+document.getElementById('notesSaveBtn').addEventListener('click', async () => {
+  const leadId = document.getElementById('notesPatient').value;
+  if (!leadId) { showToast('Bitte Patient wählen', 'error'); return; }
+  const ownerId = getOwnerId();
+  const payload = {
+    owner_id: ownerId,
+    lead_id: leadId,
+    doctor_notes: document.getElementById('notesDoctor').value.trim(),
+    therapist_notes: document.getElementById('notesTherapist').value.trim()
+  };
+  const { data: existing } = await supabase.from('patient_notes').select('id').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
+  const { error } = existing
+    ? await supabase.from('patient_notes').update(payload).eq('id', existing.id)
+    : await supabase.from('patient_notes').insert(payload);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  showToast(t('saved'));
+});
+
+document.getElementById('aiGenBtn').addEventListener('click', async () => {
+  const leadId = document.getElementById('notesPatient').value;
+  if (!leadId) { showToast('Bitte Patient wählen', 'error'); return; }
+  const notes = document.getElementById('notesTherapist').value.trim();
+  if (!notes) { showToast('Therapeutennotizen eingeben', 'error'); return; }
+  const btn = document.getElementById('aiGenBtn');
+  btn.disabled = true; btn.textContent = 'Generiere…';
+  try {
+    const res = await fetch(`${API}/ai-summarize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes, lang: currentLang })
+    });
+    const data = await res.json();
+    const summary = data.summary || 'Keine Zusammenfassung verfügbar.';
+    document.getElementById('aiReportBox').textContent = summary;
+    document.getElementById('aiReportBox').style.display = 'block';
+    const ownerId = getOwnerId();
+    const { data: existing } = await supabase.from('patient_notes').select('id').eq('lead_id', leadId).eq('owner_id', ownerId).maybeSingle();
+    if (existing) {
+      await supabase.from('patient_notes').update({ ai_summary: summary }).eq('id', existing.id);
+    }
+  } catch (e) {
+    showToast('AI-Fehler: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 AI-Bericht erstellen';
+  }
+});
+
+document.getElementById('notesSendBtn').addEventListener('click', async () => {
+  const leadId = document.getElementById('notesPatient').value;
+  if (!leadId) { showToast('Bitte Patient wählen', 'error'); return; }
+  const summary = document.getElementById('aiReportBox').textContent;
+  if (!summary || document.getElementById('aiReportBox').style.display === 'none') {
+    showToast('Zuerst AI-Bericht erstellen', 'error'); return;
+  }
+
+  if (!currentProfile.b2b_from_email) {
+    showToast('Bitte zuerst E-Mail-Konto in B2B verbinden', 'error');
+    switchPanel('b2b');
+    return;
+  }
+
+  const { data: lead } = await supabase.from('leads').select('email,title,first_name,last_name').eq('id', leadId).single();
+  if (!lead?.email) { showToast('Patient hat keine E-Mail', 'error'); return; }
+
+  mailPreviewLeadId = leadId;
+
+  const fromLabel = (currentProfile.b2b_sender_name || currentProfile.business_name || 'InfinityMade')
+    + ' <' + currentProfile.b2b_from_email + '>';
+  document.getElementById('mailPreviewFrom').value = fromLabel;
+  document.getElementById('mailPreviewTo').value = displayName(lead) + ' <' + lead.email + '>';
+  document.getElementById('mailPreviewSubject').value = 'Ihr Therapie-Bericht';
+  document.getElementById('mailPreviewBody').textContent = summary;
+  openModal('mailPreviewModal');
+});
+
+document.getElementById('mailPreviewSendBtn').addEventListener('click', async () => {
+  const leadId = mailPreviewLeadId;
+  const { data: lead } = await supabase.from('leads').select('email,title,first_name,last_name').eq('id', leadId).single();
+  const summary = document.getElementById('aiReportBox').textContent;
+  try {
+    const res = await fetch(`${API}/b2b-mail-agent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'send',
+        to_email: lead.email,
+        to_name: displayName(lead),
+        subject: 'Ihr Therapie-Bericht',
+        body: summary,
+        sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || 'InfinityMade',
+        from_email: currentProfile.b2b_from_email
+      })
+    });
+    if (!res.ok) throw new Error('Senden fehlgeschlagen');
+    closeModal('mailPreviewModal');
+    showToast('Bericht gesendet: ' + lead.email);
+  } catch (e) {
+    showToast('Senden fehlgeschlagen: ' + e.message, 'error');
+  }
+});
 
 async function handleGmailCallback() {
   const qp = new URLSearchParams(window.location.search);

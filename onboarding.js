@@ -4,7 +4,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const STEPS = ['account', 'business', 'calendar', 'services', 'hours', 'whatsapp', 'templates', 'plan', 'done'];
+const STEPS = ['account', 'business', 'owner', 'services', 'hours', 'whatsapp', 'templates', 'plan', 'done'];
 
 const SERVICE_TEMPLATES = {
   barber: [
@@ -48,6 +48,23 @@ const SERVICE_TEMPLATES = {
     { name: 'Ganzkörper',      duration: 60, price: 75 },
     { name: 'Fußmassage',      duration: 30, price: 40 },
     { name: 'Sportmassage',    duration: 60, price: 85 },
+  ],
+  physiotherapy: [
+    { name: 'Erstberatung',         duration: 30, price: 0 },
+    { name: 'Physiotherapie 30 Min', duration: 30, price: 45 },
+    { name: 'Physiotherapie 45 Min', duration: 45, price: 65 },
+    { name: 'Physiotherapie 60 Min', duration: 60, price: 85 },
+    { name: 'Manuelle Therapie',    duration: 45, price: 75 },
+    { name: 'Kräftigungstraining',  duration: 30, price: 40 },
+    { name: 'Lymphdrainage',        duration: 45, price: 70 },
+  ],
+  praxis: [
+    { name: 'Allgemeine Beratung',   duration: 30, price: 0 },
+    { name: 'Vorsorgeuntersuchung',  duration: 30, price: 0 },
+    { name: 'Behandlung 30 Min',     duration: 30, price: 45 },
+    { name: 'Behandlung 45 Min',     duration: 45, price: 65 },
+    { name: 'Behandlung 60 Min',     duration: 60, price: 85 },
+    { name: 'Sprechstunde',          duration: 15, price: 0 },
   ],
   gym: [
     { name: 'Probetraining',    duration: 60, price: 0 },
@@ -93,7 +110,7 @@ async function init() {
 
   bindAccount();
   bindBusiness();
-  bindCalendar();
+  bindOwner();
   bindServices();
   bindHours();
   bindWhatsapp();
@@ -167,6 +184,16 @@ function prefillForms() {
   if (profile.sector) document.getElementById('bizSector').value = profile.sector;
   if (profile.city) document.getElementById('bizCity').value = profile.city;
   if (profile.language) document.getElementById('bizLanguage').value = profile.language;
+  if (profile.zip) document.getElementById('bizZip').value = profile.zip;
+  if (profile.street) document.getElementById('bizStreet').value = profile.street;
+  if (profile.house_number) document.getElementById('bizHouse').value = profile.house_number;
+  if (profile.owner_first_name) document.getElementById('ownerFirstName').value = profile.owner_first_name;
+  if (profile.owner_last_name) document.getElementById('ownerLastName').value = profile.owner_last_name;
+  if (profile.accepts_bookings === false) {
+    document.querySelectorAll('#bookingsToggle .ob-toggle-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#bookingsToggle .ob-toggle-btn[data-value="false"]').classList.add('active');
+  }
+
   if (profile.cal_username) document.getElementById('calUsername').value = profile.cal_username;
 
   if (profile.whatsapp_number) document.getElementById('waNumber').value = profile.whatsapp_number;
@@ -213,6 +240,7 @@ async function saveStepProgress(nextStepName) {
 // ---- Step 0: Account ----
 function bindAccount() {
   let mode = 'signup';
+  const acceptWrap = document.querySelector('#accountForm .ob-accept');
   document.querySelectorAll('#accountToggle .ob-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#accountToggle .ob-toggle-btn').forEach(b => b.classList.remove('active'));
@@ -223,11 +251,16 @@ function bindAccount() {
         : 'Anmelden & weiter →';
       const pwInput = document.getElementById('accountPassword');
       pwInput.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+      if (acceptWrap) acceptWrap.style.display = mode === 'signup' ? 'flex' : 'none';
     });
   });
 
   document.getElementById('accountForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (mode === 'signup') {
+      const accepted = document.getElementById('accountAccept')?.checked;
+      if (!accepted) { showError('Bitte akzeptieren Sie die AGB und die Datenschutzerklärung.'); return; }
+    }
     const submit = document.getElementById('accountSubmit');
     submit.disabled = true;
     const orig = submit.textContent;
@@ -275,113 +308,44 @@ function bindBusiness() {
     const sector = document.getElementById('bizSector').value;
     const city = document.getElementById('bizCity').value.trim();
     const language = document.getElementById('bizLanguage').value;
+    const zip = document.getElementById('bizZip').value.trim();
+    const street = document.getElementById('bizStreet').value.trim();
+    const house_number = document.getElementById('bizHouse').value.trim();
 
     const { error } = await supabase.from('profiles').update({
-      business_name, sector, city, language, onboarding_step: 'calendar'
+      business_name, sector, city, language, zip, street, house_number, onboarding_step: 'owner'
     }).eq('id', userId);
 
     if (error) return showError(error.message);
-    profile = { ...profile, business_name, sector, city, language, onboarding_step: 'calendar' };
+    profile = { ...profile, business_name, sector, city, language, zip, street, house_number, onboarding_step: 'owner' };
     goToStep(2);
   });
 }
 
-// ---- Step 2: Calendar (Cal.com) ----
-function bindCalendar() {
-  document.querySelectorAll('#calendar .ob-decision-btn, [data-step="calendar"] .ob-decision-btn').forEach(btn => {
+// ---- Step 2: Owner Info ----
+function bindOwner() {
+  let acceptsBookings = true;
+  document.querySelectorAll('#bookingsToggle .ob-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const decision = btn.dataset.decision;
-      calMode = decision;
-      document.querySelectorAll('[data-step="calendar"] .ob-decision-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#bookingsToggle .ob-toggle-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('calNo').hidden = decision !== 'no';
-      document.getElementById('calendarForm').hidden = decision !== 'yes';
+      acceptsBookings = btn.dataset.value === 'true';
     });
   });
 
-  document.getElementById('calNoDone').addEventListener('click', () => {
-    document.getElementById('calNo').hidden = true;
-    document.getElementById('calendarForm').hidden = false;
-  });
-
-  const apiInput = document.getElementById('calApiKey');
-  const userInput = document.getElementById('calUsername');
-  const testBtn = document.getElementById('calTestBtn');
-  const saveBtn = document.getElementById('calSaveBtn');
-  const result = document.getElementById('calTestResult');
-
-  function invalidate() {
-    saveBtn.disabled = true;
-    result.className = 'ob-test-result';
-    result.textContent = '';
-  }
-  apiInput.addEventListener('input', invalidate);
-  userInput.addEventListener('input', invalidate);
-
-  testBtn.addEventListener('click', async () => {
-    const apiKey = apiInput.value.trim();
-    const username = cleanCalUsername(userInput.value);
-    userInput.value = username; // normalize visible value
-    if (!apiKey || !username) return showError('Username und API-Key bitte ausfüllen');
-
-    testBtn.disabled = true;
-    result.className = 'ob-test-result';
-    result.textContent = 'Teste…';
-
-    try {
-      // Use Vercel proxy to avoid CORS
-      const res = await fetch('/api/cal/test-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey, username }),
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        result.className = 'ob-test-result error';
-        result.textContent = '✗ ' + (data.error || 'Verbindung fehlgeschlagen');
-        return;
-      }
-      result.className = 'ob-test-result success';
-      result.textContent = '✓ Verbindung erfolgreich — ' + (data.username || username);
-      saveBtn.disabled = false;
-    } catch (err) {
-      result.className = 'ob-test-result error';
-      result.textContent = '✗ ' + err.message;
-    } finally {
-      testBtn.disabled = false;
-    }
-  });
-
-  document.getElementById('calendarForm').addEventListener('submit', async (e) => {
+  document.getElementById('ownerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const apiKey = apiInput.value.trim();
-    const username = cleanCalUsername(userInput.value);
+    const owner_first_name = document.getElementById('ownerFirstName').value.trim();
+    const owner_last_name = document.getElementById('ownerLastName').value.trim();
+    if (!owner_first_name || !owner_last_name) return showError('Vorname und Nachname sind erforderlich.');
 
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Speichern…';
+    const { error } = await supabase.from('profiles').update({
+      owner_first_name, owner_last_name, accepts_bookings: acceptsBookings, onboarding_step: 'services'
+    }).eq('id', userId);
 
-    try {
-      // Save secret via Vault RPC
-      const { error: rpcErr } = await supabase.rpc('business_save_secret', {
-        p_user_id: userId,
-        p_secret_kind: 'cal_api_key',
-        p_secret_value: apiKey,
-      });
-      if (rpcErr) throw rpcErr;
-
-      const { error } = await supabase.from('profiles').update({
-        cal_username: username,
-        onboarding_step: 'services',
-      }).eq('id', userId);
-      if (error) throw error;
-
-      profile = { ...profile, cal_username: username, onboarding_step: 'services' };
-      goToStep(3);
-    } catch (err) {
-      showError(err.message);
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Speichern & weiter →';
-    }
+    if (error) return showError(error.message);
+    profile = { ...profile, owner_first_name, owner_last_name, accepts_bookings: acceptsBookings, onboarding_step: 'services' };
+    goToStep(3);
   });
 }
 

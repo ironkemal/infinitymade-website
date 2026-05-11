@@ -503,16 +503,48 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 /* ============================
    PANEL 2: KALENDER
    ============================ */
-#calendarEl {
+.cal-3col {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
-  max-width: 560px;
-  margin: 0 auto;
+  padding: 18px;
 }
-@media (max-width: 540px) {
-  #calendarEl { padding: 14px; }
+.cal-emp-list { display: flex; flex-direction: column; gap: 4px; }
+.cal-emp-title {
+  font-size: 10px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .8px;
+  padding: 4px 8px; margin-bottom: 4px;
+}
+.cal-emp-pick {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 6px;
+  background: var(--bg-panel, #1a1d24);
+  border: 1px solid var(--border);
+  color: var(--text-main); font-size: 12px; font-weight: 500;
+  cursor: pointer; text-align: left; font-family: inherit;
+  transition: border-color .12s, background .12s;
+}
+.cal-emp-pick:hover { border-color: var(--primary); }
+.cal-emp-pick.active { background: var(--primary); color: #000; border-color: var(--primary); }
+.cal-emp-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--primary); color: #000;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cal-emp-pick.active .cal-emp-dot { background: rgba(0,0,0,.2); color: #000; }
+
+@media (max-width: 600px) {
+  .cal-3col { grid-template-columns: 1fr; padding: 14px; }
+  .cal-emp-list { flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+  .cal-emp-list .cal-emp-title { display: none; }
+  .cal-emp-pick { flex-shrink: 0; }
 }
 
 .calendar-toolbar {
@@ -1495,5 +1527,86 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   .filter-btn { font-size: 11px; padding: 4px 8px; }
   .modal { max-width: 100%; margin: 0; border-radius: var(--radius) var(--radius) 0 0; }
   .modal-overlay { align-items: flex-end; padding: 0; }
+}
+
+/* ============================
+   BODY MAP — Beispielmodus
+   ============================ */
+.body-map-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.body-tab {
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.body-tab.active {
+  background: var(--primary-dim);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.body-map-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.body-map {
+  position: relative;
+  width: 280px;
+  height: 500px;
+}
+.body-silhouette {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-main);
+  border-radius: 50% 50% 45% 45% / 18% 18% 82% 82%;
+  opacity: 0.5;
+}
+.body-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--bg-main);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: var(--transition);
+  z-index: 2;
+}
+.body-dot:hover {
+  width: 18px;
+  height: 18px;
+  background: var(--primary-hover);
+  box-shadow: 0 0 0 4px var(--primary-dim);
+}
+.body-info-card {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.body-info-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+.body-info-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .body-map { width: 220px; height: 400px; }
+  .body-dot { width: 12px; height: 12px; }
 }
 
