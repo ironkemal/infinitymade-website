@@ -304,10 +304,13 @@
                   <label class="form-label">Profilbild</label>
                   <div class="avatar-upload-wrap">
                     <div class="avatar-preview" id="empAvatarPreview"></div>
-                    <label class="btn-ghost avatar-upload-btn">
-                      <input type="file" id="empAvatarInput" accept="image/*" hidden />
-                      📷 Bild ändern
-                    </label>
+                    <div class="avatar-actions">
+                      <label class="btn-ghost avatar-upload-btn">
+                        <input type="file" id="empAvatarInput" accept="image/*" hidden />
+                        📷 Bild ändern
+                      </label>
+                      <button class="btn-ghost avatar-remove-btn" id="empAvatarRemoveBtn" type="button">🗑️ Bild entfernen</button>
+                    </div>
                   </div>
                 </div>
                 <div class="form-group">
