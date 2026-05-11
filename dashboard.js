@@ -1913,15 +1913,30 @@ async function loadDoctors() {
   tbody.innerHTML = '';
   empty.hidden = true;
   const ownerId = getOwnerId();
-  const { data: docs } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).ilike('category', '%arzt%').order('name');
+  const { data: docs } = await supabase.from('b2b_contacts').select('*').eq('owner_id', ownerId).or('category.ilike.%arzt%,category.ilike.%praxis%,category.ilike.%doktor%').order('name');
   if (!docs || docs.length === 0) { empty.hidden = false; return; }
   tbody.innerHTML = docs.map(d => `<tr>
     <td>${d.name}</td>
     <td>${d.category || '—'}</td>
     <td>${d.city || '—'}</td>
+    <td>${d.email ? `<a href="mailto:${d.email}">${d.email}</a>` : '—'}</td>
     <td>${d.phone || '—'}</td>
-    <td></td>
+    <td>${d.notes || '—'}</td>
+    <td>${d.website ? `<a href="https://${d.website.replace(/^https?:\/\//,'')}" target="_blank" rel="noopener">${d.website}</a>` : '—'}</td>
   </tr>`).join('');
+}
+
+function setDocProgress(text, pct) {
+  const wrap = document.getElementById('docProgressWrap');
+  const info = document.getElementById('docProgressInfo');
+  const fill = document.getElementById('docProgressFill');
+  wrap.hidden = false;
+  info.innerHTML = text;
+  fill.style.width = pct + '%';
+}
+function hideDocProgress() {
+  document.getElementById('docProgressWrap').hidden = true;
+  document.getElementById('docProgressFill').style.width = '0%';
 }
 
 document.getElementById('docSearchBtn').addEventListener('click', async () => {
@@ -1931,6 +1946,18 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const fullQuery = city ? `${query} ${city}` : query;
   const btn = document.getElementById('docSearchBtn');
   btn.disabled = true; btn.textContent = '⏳';
+  const startTime = Date.now();
+
+  const ticker = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const phase = elapsed < 8 ? 'Google Maps wird durchsucht...'
+               : elapsed < 25 ? 'Praxisdetails werden extrahiert...'
+               : elapsed < 50 ? 'Kontaktdaten werden aufbereitet...'
+               : 'Daten werden verarbeitet...';
+    const pct = Math.min(95, (elapsed / 120) * 95);
+    setDocProgress(`${phase} <b>${elapsed}s</b>`, pct);
+  }, 1000);
+
   try {
     const { data: { session: s } } = await supabase.auth.getSession();
     const res = await fetch('/api/apify/search', {
@@ -1959,11 +1986,14 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
     if (inserts.length > 0) {
       await supabase.from('b2b_contacts').insert(inserts);
     }
+    setDocProgress(`<b>${inserts.length}</b> Praxen importiert — Tabelle wird geladen...`, 100);
     await loadDoctors();
     showToast(t('apify_done') + inserts.length);
   } catch (e) {
     showToast(t('apify_error') + e.message, 'error');
   } finally {
+    clearInterval(ticker);
+    setTimeout(hideDocProgress, 800);
     btn.disabled = false; btn.textContent = 'Suchen';
   }
 });
