@@ -486,22 +486,30 @@ function bindHours() {
         : { open: null, close: null, closed: true };
     });
 
+    const dayMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
+    const whRows = [];
+    Object.entries(out).forEach(([key, val]) => {
+      if (dayMap[key] === undefined) return;
+      whRows.push({
+        user_id: userId,
+        day_of_week: dayMap[key],
+        start_time: val.closed ? null : val.open,
+        end_time: val.closed ? null : val.close,
+        is_active: !val.closed,
+      });
+    });
+
+    await supabase.from('working_hours').delete().eq('user_id', userId);
+    if (whRows.length) {
+      const { error: whErr } = await supabase.from('working_hours').insert(whRows);
+      if (whErr) console.error('working_hours insert', whErr);
+    }
+
     const { error } = await supabase.from('profiles').update({
       working_hours: out, onboarding_step: 'whatsapp',
     }).eq('id', userId);
     if (error) return showError(error.message);
     profile = { ...profile, working_hours: out, onboarding_step: 'whatsapp' };
-
-    // Auto-sync working hours to Cal.com (best-effort)
-    try {
-      const session = (await supabase.auth.getSession()).data.session;
-      if (session) {
-        fetch('/api/cal/set-schedule', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        }).catch(() => {});
-      }
-    } catch {}
 
     goToStep(5);
   });

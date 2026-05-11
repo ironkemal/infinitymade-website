@@ -881,27 +881,37 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .hours-row {
   display: grid;
-  grid-template-columns: 120px 50px 1fr;
+  grid-template-columns: 72px 44px 1fr;
   align-items: center;
   gap: 16px;
-  padding: 14px 20px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--border);
   transition: background var(--transition);
+  min-height: 56px;
 }
 .hours-row:last-child { border-bottom: none; }
 .hours-row:hover { background: var(--bg-hover); }
 .hours-row.inactive { opacity: 0.4; }
 
-.hours-day { font-weight: 600; font-size: 14px; color: var(--text-main); }
+.hours-day {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 .toggle-switch {
   position: relative;
-  width: 38px; height: 22px;
+  width: 38px;
+  height: 22px;
   flex-shrink: 0;
 }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .toggle-slider {
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: 0;
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 11px;
@@ -911,8 +921,10 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .toggle-slider::before {
   content: '';
   position: absolute;
-  left: 3px; top: 3px;
-  width: 14px; height: 14px;
+  left: 3px;
+  top: 3px;
+  width: 14px;
+  height: 14px;
   background: var(--text-faint);
   border-radius: 50%;
   transition: var(--transition);
@@ -921,9 +933,11 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); background: var(--primary); }
 
 .hours-times {
-  display: flex;
+  display: grid;
+  grid-template-columns: 110px 110px;
+  gap: 12px;
   align-items: center;
-  gap: 8px;
+  justify-content: start;
   font-size: 13px;
   color: var(--text-muted);
 }
@@ -931,22 +945,28 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   background: var(--bg-input);
   border: 1px solid var(--border);
   color: var(--text-main);
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   font-size: 13px;
   outline: none;
+  width: 110px;
+  text-align: center;
+  height: 36px;
 }
 .hours-times input[type=time]:focus { border-color: var(--primary); }
 
 .hours-employee-select {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 13px;
   color: var(--text-muted);
 }
-.hours-employee-select .form-select { width: auto; }
+.hours-employee-select .form-select {
+  width: auto;
+  min-width: 180px;
+}
 
 /* ============================
    PANEL 6: MITARBEITER
