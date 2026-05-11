@@ -104,13 +104,12 @@ async function init() {
 async function loadServicesForEmployee(empId) {
   const sList = document.getElementById('publicServicesList');
   sList.innerHTML = '<p style="color:var(--text-secondary)">Dienstleistungen werden geladen...</p>';
-  
-  // Fetch services assigned to this employee
+
   const { data, error } = await supabase
     .from('employee_services')
     .select('services(*)')
     .eq('employee_id', empId);
-    
+
   if (error || !data || data.length === 0) {
     sList.innerHTML = '<p style="color:var(--text-secondary)">Keine Dienstleistungen für diese Person verfügbar.</p>';
     window.goStep('services');
@@ -123,32 +122,25 @@ async function loadServicesForEmployee(empId) {
     <button class="list-btn service-btn" id="srv-${s.id}">
       <div style="font-weight:600; font-size:16px;">${s.title}</div>
       <div style="font-size:13px; color:var(--text-secondary); margin-top:4px;">
-        ${s.duration_minutes} Minuten ${s.price ? '• ' + s.price : ''}
+        ${s.duration_minutes} Minuten${s.price ? ' · ' + s.price : ''}
       </div>
-    </button>
-  `}).join('');
+    </button>`;
+  }).join('');
 
   data.forEach(d => {
     const s = d.services;
     document.getElementById(`srv-${s.id}`).addEventListener('click', (e) => {
       document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
       e.currentTarget.classList.add('active');
-      
-      state.serviceId = s.id;
-      state.serviceTitle = s.title;
+      state.serviceId      = s.id;
+      state.serviceTitle   = s.title;
       state.durationMinutes = s.duration_minutes;
-      
       updateSelectedInfo();
-      
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('datePicker').min = today;
-      if (!state.selectedDate) document.getElementById('datePicker').value = today;
-      
-      fetchSlots();
+      initCalendar();
       window.goStep('datetime');
     });
   });
-  
+
   window.goStep('services');
 }
 
@@ -175,53 +167,108 @@ function updateSelectedInfo() {
   }
 }
 
-document.getElementById('datePicker').addEventListener('change', (e) => {
-  state.selectedDate = e.target.value;
+let calYear, calMonth;
+const CAL_MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const CAL_DAYS_SHORT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+function initCalendar() {
+  const today = new Date();
+  calYear  = today.getFullYear();
+  calMonth = today.getMonth();
+  state.selectedDate = null;
   state.selectedTime = null;
   document.getElementById('btnNextToForm').disabled = true;
-  updateSelectedInfo();
-  fetchSlots();
-});
+  document.getElementById('calSlotsPanel').style.display = 'none';
+  renderCalendar();
+  const todayStr = today.toISOString().split('T')[0];
+  selectCalDay(todayStr);
+  document.getElementById('calPrevBtn').onclick = () => {
+    calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  };
+  document.getElementById('calNextBtn').onclick = () => {
+    calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  };
+}
 
-async function fetchSlots() {
-  const date = document.getElementById('datePicker').value;
-  if (!date) return;
-  state.selectedDate = date;
+function renderCalendar() {
+  const monthStr = CAL_MONTHS[calMonth];
+  document.getElementById('calMonthLabel').innerHTML = `${monthStr} <span>${calYear}</span>`;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+  const startDow = firstDay.getDay();
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < startDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day cal-day-empty';
+    grid.appendChild(el);
+  }
+  for (let d = 1; d <= lastDate; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const dateStr = date.toISOString().split('T')[0];
+    const isPast = date < today;
+    const isToday = date.getTime() === today.getTime();
+    const isSelected = dateStr === state.selectedDate;
+    const btn = document.createElement('button');
+    btn.className = 'cal-day';
+    btn.textContent = d;
+    if (isPast) {
+      btn.classList.add('cal-day-past');
+    } else {
+      btn.classList.add('cal-day-available');
+      if (isToday)    btn.classList.add('cal-day-today');
+      if (isSelected) btn.classList.add('cal-day-selected');
+      btn.addEventListener('click', () => selectCalDay(dateStr));
+    }
+    grid.appendChild(btn);
+  }
+}
 
-  const container = document.getElementById('slotsContainer');
-  container.innerHTML = '<p style="color:var(--text-secondary)">Zeiten werden berechnet...</p>';
-  
+async function selectCalDay(dateStr) {
+  state.selectedDate = dateStr;
+  state.selectedTime = null;
+  document.getElementById('btnNextToForm').disabled = true;
+  renderCalendar();
+  const date = new Date(dateStr);
+  document.getElementById('calSlotsHeader').textContent = `${CAL_DAYS_SHORT[date.getDay()]} ${date.getDate()}`;
+  const panel = document.getElementById('calSlotsPanel');
+  const list  = document.getElementById('calSlotsList');
+  panel.style.display = 'block';
+  list.innerHTML = '<p class="cal-no-slots">Lade...</p>';
   try {
     const res = await fetch(`${API_URL}/api/booking/get-slots`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: state.employeeId, date: date, duration: state.durationMinutes })
+      body: JSON.stringify({ userId: state.employeeId, date: dateStr, duration: state.durationMinutes })
     });
-    
-    if(!res.ok) throw new Error('API Error');
+    if (!res.ok) throw new Error('API Error');
     const data = await res.json();
-    
+    list.innerHTML = '';
     if (data.slots && data.slots.length > 0) {
-      container.innerHTML = data.slots.map(slot => `
-        <button class="slot-btn" onclick="selectTime('${slot}')">${slot}</button>
-      `).join('');
+      data.slots.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.className = 'cal-slot-btn';
+        btn.innerHTML = `<span class="cal-slot-dot"></span>${slot}`;
+        btn.addEventListener('click', () => {
+          state.selectedTime = slot;
+          document.querySelectorAll('.cal-slot-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          document.getElementById('btnNextToForm').disabled = false;
+          updateSelectedInfo();
+        });
+        list.appendChild(btn);
+      });
     } else {
-      container.innerHTML = '<p style="grid-column: 1/-1; color:var(--text-secondary);">An diesem Tag sind keine Termine verfügbar.</p>';
+      list.innerHTML = '<p class="cal-no-slots">Keine Termine verfügbar.</p>';
     }
-  } catch (err) {
-    container.innerHTML = '<p style="color:var(--danger)">Fehler beim Laden der Zeiten.</p>';
+  } catch(e) {
+    list.innerHTML = '<p class="cal-no-slots" style="color:#ef4444;">Fehler beim Laden.</p>';
   }
-}
-
-window.selectTime = function(time) {
-  state.selectedTime = time;
-  document.querySelectorAll('.slot-btn').forEach(b => {
-    if (b.textContent === time) b.classList.add('selected');
-    else b.classList.remove('selected');
-  });
-  document.getElementById('btnNextToForm').disabled = false;
   updateSelectedInfo();
-};
+}
 
 document.getElementById('btnNextToForm').addEventListener('click', () => {
   window.goStep('form');

@@ -9,42 +9,65 @@
   <style>
     :root { --bg-primary: #0f1115; --bg-card: #16181d; --bg-secondary: #1a1d24; --text-primary: #f8fafc; --text-secondary: #94a3b8; --border: rgba(255,255,255,0.08); --accent: #22c55e; }
     body { font-family: 'Outfit', sans-serif; background-color: var(--bg-primary); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; color: var(--text-primary); }
-    .booking-container { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 900px; display: flex; overflow: hidden; min-height: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-    .sidebar { width: 300px; padding: 30px; border-right: 1px solid var(--border); background: var(--bg-secondary); }
+    .booking-container { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 980px; display: flex; overflow: hidden; min-height: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+    .sidebar { width: 260px; padding: 30px; border-right: 1px solid var(--border); background: var(--bg-secondary); flex-shrink: 0; }
     .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-    
-    .list-btn { display: block; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; color: var(--text-primary); transition: all 0.2s; }
+
+    .list-btn { display: block; width: 100%; text-align: left; background: var(--bg-card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; color: var(--text-primary); transition: all 0.2s; font-family: inherit; }
     .list-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .list-btn.active { border-color: var(--accent); background-color: rgba(34, 197, 94, 0.1); box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1); }
-    
-    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 20px; }
-    .slot-btn { background: var(--bg-secondary); border: 1px solid var(--border); padding: 12px 10px; border-radius: 8px; color: var(--text-primary); cursor: pointer; text-align: center; font-weight: 500; font-family:inherit; transition: 0.2s; }
-    .slot-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .slot-btn.selected { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-    
+    .list-btn.active { border-color: var(--accent); background-color: rgba(34, 197, 94, 0.1); }
+
     .step { display: none; animation: fadeIn 0.3s ease; }
     .step.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .biz-logo { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; color: #000; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3); }
-    
-    .sel-info { margin-top: 30px; display: none; padding-top:20px; border-top:1px solid var(--border); }
-    .sel-info h4 { margin-bottom: 15px; color: var(--text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
-    .sel-row { margin-bottom: 12px; display: flex; flex-direction: column; }
-    .sel-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
-    .sel-val { font-weight: 600; color: #fff; font-size: 15px; }
 
-    input.form-control { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-family: inherit; width: 100%; box-sizing:border-box; margin-bottom: 20px;}
+    .biz-logo { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: #000; margin-bottom: 14px; }
+    .biz-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-top: 10px; }
+
+    .sel-info { margin-top: 28px; display: none; padding-top:18px; border-top:1px solid var(--border); }
+    .sel-info h4 { margin-bottom: 12px; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .sel-row { margin-bottom: 10px; display: flex; flex-direction: column; }
+    .sel-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
+    .sel-val { font-weight: 600; color: #fff; font-size: 14px; }
+
+    input.form-control { background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; font-family: inherit; width: 100%; box-sizing:border-box; margin-bottom: 20px; font-size: 14px; }
     input.form-control:focus { outline: none; border-color: var(--accent); }
     label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary); }
 
-    .btn-primary { background: var(--accent); color: #000; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-family:inherit; }
-    .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); transform: translateY(-2px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-ghost { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 5px 0; font-family:inherit;}
+    .btn-primary { background: var(--accent); color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-family:inherit; font-size: 14px; }
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: none; cursor: pointer; padding: 5px 0; font-family:inherit; font-size: 14px; }
     .btn-ghost:hover { color: #fff; }
 
-    @media (max-width: 768px) { .booking-container { flex-direction: column; } .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); } }
+    /* ── Calendar ── */
+    .cal-wrap { display: grid; grid-template-columns: 1fr 200px; gap: 28px; align-items: start; }
+    .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .cal-month-label { font-size: 17px; font-weight: 700; }
+    .cal-month-label span { color: var(--accent); font-weight: 400; }
+    .cal-nav-btns { display: flex; gap: 6px; }
+    .cal-nav-btn { background: none; border: 1px solid var(--border); color: var(--text-primary); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; font-family: inherit; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
+    .cal-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: .5px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 13px; font-weight: 500; background: none; border: none; color: var(--text-primary); cursor: pointer; font-family: inherit; transition: background .12s; }
+    .cal-day-available { background: var(--bg-secondary); }
+    .cal-day-available:hover { background: rgba(34,197,94,0.12); color: var(--accent); }
+    .cal-day-today { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .cal-day-selected { background: var(--accent) !important; color: #000 !important; font-weight: 700; }
+    .cal-day-past { color: rgba(255,255,255,0.2); pointer-events: none; }
+    .cal-day-empty { pointer-events: none; }
+
+    /* ── Slots panel ── */
+    .cal-slots-header { font-size: 14px; font-weight: 700; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .cal-slot-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; margin-bottom: 8px; transition: border-color .15s; text-align: left; }
+    .cal-slot-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+    .cal-slot-btn:hover { border-color: var(--accent); }
+    .cal-slot-btn.selected { background: var(--accent); color: #000; border-color: var(--accent); }
+    .cal-slot-btn.selected .cal-slot-dot { background: #000; }
+    .cal-no-slots { font-size: 13px; color: var(--text-secondary); padding: 8px 0; }
+
+    @media (max-width: 800px) { .booking-container { flex-direction: column; } .sidebar { width: 100%; flex-shrink: unset; border-right: none; border-bottom: 1px solid var(--border); } .cal-wrap { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -83,14 +106,30 @@
       <!-- Step 3: Date & Time Selection -->
       <div id="step-datetime" class="step">
         <button class="btn-ghost" onclick="goStep('services')" style="margin-bottom:20px;">&larr; Zurück</button>
-        <h3 style="margin-bottom:20px; font-weight:500;">3. Datum & Uhrzeit wählen</h3>
-        
-        <input type="date" id="datePicker" class="form-control" />
-        
-        <div id="slotsContainer" class="slots-grid"></div>
-        
-        <div style="margin-top:40px; text-align:right;">
-          <button class="btn-primary" id="btnNextToForm" disabled>Weiter zu Schritt 4 &rarr;</button>
+
+        <div class="cal-wrap">
+          <div>
+            <div class="cal-nav">
+              <div class="cal-month-label" id="calMonthLabel"></div>
+              <div class="cal-nav-btns">
+                <button class="cal-nav-btn" id="calPrevBtn">&#8249;</button>
+                <button class="cal-nav-btn" id="calNextBtn">&#8250;</button>
+              </div>
+            </div>
+            <div class="cal-dow">
+              <span>SO</span><span>MO</span><span>DI</span><span>MI</span><span>DO</span><span>FR</span><span>SA</span>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+          </div>
+
+          <div id="calSlotsPanel" style="display:none;">
+            <div class="cal-slots-header" id="calSlotsHeader"></div>
+            <div id="calSlotsList"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px; text-align:right;">
+          <button class="btn-primary" id="btnNextToForm" disabled>Weiter &rarr;</button>
         </div>
       </div>
 
@@ -125,6 +164,6 @@
     </div>
   </div>
 
-  <script type="module" src="booking.js?v=20260509"></script>
+  <script type="module" src="booking.js?v=20260511a"></script>
 </body>
 </html>
