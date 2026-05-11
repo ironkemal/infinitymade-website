@@ -1194,6 +1194,18 @@ async function loadTeam() {
   if (data.length===0) {
     data = [{id:currentSession.user.id,email:currentSession.user.email,business_name:currentProfile.business_name||currentSession.user.email.split('@')[0],role:currentProfile.role}];
   }
+  // API avatar_url döndürmüyorsa Supabase'den al
+  if (data.length > 0) {
+    const ids = data.map(d => d.id).filter(Boolean);
+    if (ids.length) {
+      const { data: avatars } = await supabase.from('profiles').select('id,avatar_url').in('id', ids);
+      if (avatars) {
+        const map = {};
+        avatars.forEach(a => map[a.id] = a.avatar_url);
+        data.forEach(d => { if (map[d.id]) d.avatar_url = map[d.id]; });
+      }
+    }
+  }
   teamMembers = data;
 
   if (currentProfile.role!=='owner') return;
