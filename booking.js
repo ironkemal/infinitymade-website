@@ -74,7 +74,7 @@ async function init() {
   }
 
   const { data: employees } = await supabase.from('profiles')
-    .select('id,business_name,email,role')
+    .select('id,business_name,email,role,avatar_url')
     .or(`id.eq.${state.ownerId},owner_id.eq.${state.ownerId}`);
 
   if (!employees || !employees.length) {
@@ -82,11 +82,16 @@ async function init() {
     return;
   }
 
-  document.getElementById('empList').innerHTML = employees.map(e => `
-    <button class="list-btn emp-btn" data-id="${e.id}" data-name="${e.business_name || e.email.split('@')[0]}">
-      <div class="list-btn-title">${e.business_name || e.email.split('@')[0]}</div>
+  document.getElementById('empList').innerHTML = employees.map(e => {
+    const name = e.business_name || e.email.split('@')[0];
+    const initial = (name[0] || '?').toUpperCase();
+    const avatar = e.avatar_url ? `<img src="${e.avatar_url}" alt="">` : initial;
+    return `<button class="list-btn emp-btn" data-id="${e.id}" data-name="${name}">
+      <div class="emp-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--green-dim);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;overflow:hidden;margin:0 auto 8px;">${avatar}</div>
+      <div class="list-btn-title">${name}</div>
       <div class="list-btn-sub">${e.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
-    </button>`).join('');
+    </button>`;
+  }).join('');
 
   document.querySelectorAll('.emp-btn').forEach(btn => {
     btn.addEventListener('click', () => {
