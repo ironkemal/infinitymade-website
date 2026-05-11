@@ -171,6 +171,37 @@ export function mountCalendar(container, opts = {}) {
     }
   }
 
+  function renderSideItems(items) {
+    sideList.innerHTML = '';
+    if (!items || !items.length) {
+      sideList.innerHTML = `<div class="cw-empty">${opts.emptyText || 'Keine Einträge.'}</div>`;
+      return;
+    }
+    items.forEach(item => {
+      const el = document.createElement('button');
+      el.className = 'cw-item' + (item.picked ? ' picked' : '');
+      el.innerHTML = `
+        <span class="cw-item-dot" style="${item.color ? 'background:' + item.color : ''}"></span>
+        <div class="cw-item-body">
+          <span>${item.label}</span>
+          ${item.meta ? `<span class="cw-item-meta">${item.meta}</span>` : ''}
+        </div>`;
+      if (item.onClick) {
+        el.addEventListener('click', () => {
+          sideList.querySelectorAll('.cw-item').forEach(b => b.classList.remove('picked'));
+          el.classList.add('picked');
+          item.onClick(item);
+        });
+      }
+      sideList.appendChild(el);
+    });
+  }
+
+  function setSideHead(text) {
+    sideHead.textContent = text;
+    sideHead.classList.add('show');
+  }
+
   async function selectDate(dateStr) {
     selectedDate = dateStr;
     render();
@@ -189,29 +220,7 @@ export function mountCalendar(container, opts = {}) {
       console.log('[cw] day selected:', dateStr);
       const items = await opts.onDaySelect(dateStr);
       console.log('[cw] got', items?.length || 0, 'items');
-      sideList.innerHTML = '';
-      if (!items || !items.length) {
-        sideList.innerHTML = `<div class="cw-empty">${opts.emptyText || 'Keine Einträge.'}</div>`;
-        return;
-      }
-      items.forEach(item => {
-        const el = document.createElement('button');
-        el.className = 'cw-item' + (item.picked ? ' picked' : '');
-        el.innerHTML = `
-          <span class="cw-item-dot" style="${item.color ? 'background:' + item.color : ''}"></span>
-          <div class="cw-item-body">
-            <span>${item.label}</span>
-            ${item.meta ? `<span class="cw-item-meta">${item.meta}</span>` : ''}
-          </div>`;
-        if (item.onClick) {
-          el.addEventListener('click', () => {
-            sideList.querySelectorAll('.cw-item').forEach(b => b.classList.remove('picked'));
-            el.classList.add('picked');
-            item.onClick(item);
-          });
-        }
-        sideList.appendChild(el);
-      });
+      renderSideItems(items);
     } catch(e) {
       console.error('[cw] onDaySelect error:', e);
       sideList.innerHTML = `<div class="cw-error">Fehler: ${e.message || e}</div>`;
@@ -253,6 +262,8 @@ export function mountCalendar(container, opts = {}) {
     selectDate,
     getSelectedDate: () => selectedDate,
     reloadMonth: async () => { await loadMonthDots(); render(); },
+    renderSide: renderSideItems,
+    setSideHead,
     setDisabled: ({ weekdays, dates } = {}) => {
       if (weekdays) disabledWeekdays = weekdays;
       if (dates)    disabledDates    = new Set(dates);

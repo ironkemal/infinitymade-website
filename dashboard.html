@@ -11,7 +11,10 @@
   <meta name="theme-color" content="#22c55e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="dashboard.css?v=20260511c" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="dashboard.css?v=20260512h" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -143,7 +146,10 @@
             </div>
           </div>
 
-          <div id="calendarEl"></div>
+          <div class="cal-3col">
+            <aside class="cal-emp-list" id="calEmpList"></aside>
+            <div id="calendarEl"></div>
+          </div>
         </section>
 
         <!-- ===== PANEL 3: KUNDEN INFO ===== -->
@@ -406,6 +412,175 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: B2C MAIL ===== -->
+        <section class="panel" id="panel-b2c">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_b2c">B2C Mail</h2>
+              <p class="panel-sub" data-i18n="b2c_sub">Kundenmailings & KI-Assistent</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-primary" id="b2cComposeBtn">✉ Neue Mail</button>
+            </div>
+          </div>
+
+          <div class="b2b-setup-card" id="b2cSetupCard" hidden>
+            <div class="setup-icon">📧</div>
+            <h3 class="setup-heading">E-Mail einrichten</h3>
+            <p class="setup-sub">Geben Sie Ihren Absendernamen ein und verbinden Sie Ihr E-Mail-Konto.</p>
+            <div class="setup-fields">
+              <div class="form-group">
+                <label class="form-label">Absendername <span class="req">*</span></label>
+                <input class="form-input" id="b2cSetupSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
+                <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
+              </div>
+            </div>
+            <button class="btn-primary setup-finish-btn" id="b2cSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
+          </div>
+
+          <div id="b2cMainContent" hidden>
+            <div class="b2b-from-bar">
+              <div class="from-bar-info">
+                <span class="from-bar-name" id="b2cFromName">—</span>
+                <span class="from-bar-sep">·</span>
+                <span class="from-bar-email" id="b2cFromEmail">—</span>
+                <span class="from-bar-badge">✓ Bereit</span>
+              </div>
+              <button class="btn-ghost-sm" id="b2cConfigBtn">⚙ Konfiguration</button>
+            </div>
+
+            <div class="filter-bar" style="margin-bottom:12px;margin-top:16px;">
+              <input class="search-input" id="b2cSearch" type="text" placeholder="Kunden suchen…" style="margin-left:0;width:260px;" />
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="lead_title">Name</th>
+                    <th data-i18n="lead_email">E-Mail</th>
+                    <th data-i18n="lead_phone">Telefon</th>
+                    <th data-i18n="lead_status">Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="b2cTableBody"></tbody>
+              </table>
+              <div id="b2cEmpty" class="table-empty" hidden>Noch keine Kunden vorhanden.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PANEL: NOTIZEN ===== -->
+        <section class="panel" id="panel-notizen">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_notizen">Notizen</h2>
+              <p class="panel-sub" data-i18n="notizen_sub">Patientennotizen &amp; Berichte</p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_select_patient">Patient wählen</label>
+            <select class="form-select" id="notesPatient"></select>
+          </div>
+          <div id="notesForm" class="card" style="margin-top:16px;" hidden>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_doctor_notes">Arztnotizen</label>
+              <textarea class="form-textarea" id="notesDoctor" rows="3" placeholder="Vom Arzt übermittelte Diagnosen…"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_therapist_notes">Therapeutennotizen</label>
+              <textarea class="form-textarea" id="notesTherapist" rows="4" placeholder="Beobachtungen während der Sitzung…"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_ai_summary">AI-Bericht</label>
+              <div id="aiReportBox" class="ai-report-box" style="display:none;min-height:60px;padding:12px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:13px;"></div>
+              <button class="btn-ghost" id="aiGenBtn" style="margin-top:8px;">🤖 AI-Bericht erstellen</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+              <button class="btn-primary" id="notesSaveBtn">Speichern</button>
+              <button class="btn-primary" id="notesSendBtn" data-i18n="lbl_send_patient">An Patient senden</button>
+            </div>
+          </div>
+          <div id="notesEmpty" class="table-empty" style="margin-top:40px;" data-i18n="lbl_notes_empty">Keine Notizen vorhanden.</div>
+        </section>
+
+        <!-- ===== PANEL: ÄRZTE ===== -->
+        <section class="panel" id="panel-doctors">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_doctors">Ärzte</h2>
+              <p class="panel-sub" data-i18n="doctors_sub">Ärzte in der Nähe finden</p>
+            </div>
+          </div>
+          <div class="apify-bar" style="margin-bottom:16px;">
+            <span class="apify-label">Fachrichtung:</span>
+            <input class="form-input" id="docQuery" type="text" placeholder="z.B. Orthopäde" style="flex:2;" />
+            <input class="form-input" id="docCity" type="text" placeholder="Stadt" style="flex:1;" />
+            <input class="form-input" style="width:72px;" id="docLimit" type="number" value="20" min="1" max="50" />
+            <button class="btn-primary" id="docSearchBtn">Suchen</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Praxis</th>
+                  <th>Fachrichtung</th>
+                  <th>Stadt</th>
+                  <th>Telefon</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="docTableBody"></tbody>
+            </table>
+            <div id="docEmpty" class="table-empty" hidden>Noch keine Ärzte gesucht.</div>
+          </div>
+        </section>
+
+        <!-- ===== PANEL: BEISPIELMODUS ===== -->
+        <section class="panel" id="panel-beispielmodus">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_beispielmodus">Beispielmodus</h2>
+              <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomie-Haritas für Patientengespräche</p>
+            </div>
+          </div>
+          <div class="body-map-tabs">
+            <button class="body-tab active" data-map="skeleton">Skelett</button>
+            <button class="body-tab" data-map="muscles">Muskeln</button>
+            <button class="body-tab" data-map="nerves">Nerven</button>
+          </div>
+          <div class="body-map-wrap">
+            <div class="body-map" id="bodyMap">
+              <div class="body-silhouette"></div>
+              <button class="body-dot" data-region="kopf" style="top:4%;left:50%;" title="Kopf"></button>
+              <button class="body-dot" data-region="nacken" style="top:12%;left:50%;" title="Nacken"></button>
+              <button class="body-dot" data-region="schulter-l" style="top:22%;left:35%;" title="Schulter links"></button>
+              <button class="body-dot" data-region="schulter-r" style="top:22%;left:65%;" title="Schulter rechts"></button>
+              <button class="body-dot" data-region="brust" style="top:30%;left:50%;" title="Brustkorb"></button>
+              <button class="body-dot" data-region="ruecken" style="top:35%;left:50%;" title="Rücken"></button>
+              <button class="body-dot" data-region="lende" style="top:45%;left:50%;" title="Lendenwirbelsäule"></button>
+              <button class="body-dot" data-region="huefte-l" style="top:52%;left:42%;" title="Hüfte links"></button>
+              <button class="body-dot" data-region="huefte-r" style="top:52%;left:58%;" title="Hüfte rechts"></button>
+              <button class="body-dot" data-region="oberschenkel-l" style="top:62%;left:40%;" title="Oberschenkel links"></button>
+              <button class="body-dot" data-region="oberschenkel-r" style="top:62%;left:60%;" title="Oberschenkel rechts"></button>
+              <button class="body-dot" data-region="knie-l" style="top:72%;left:40%;" title="Knie links"></button>
+              <button class="body-dot" data-region="knie-r" style="top:72%;left:60%;" title="Knie rechts"></button>
+              <button class="body-dot" data-region="wade-l" style="top:82%;left:40%;" title="Wade links"></button>
+              <button class="body-dot" data-region="wade-r" style="top:82%;left:60%;" title="Wade rechts"></button>
+              <button class="body-dot" data-region="fuss-l" style="top:94%;left:40%;" title="Fuß links"></button>
+              <button class="body-dot" data-region="fuss-r" style="top:94%;left:60%;" title="Fuß rechts"></button>
+              <button class="body-dot" data-region="ellenbogen-l" style="top:38%;left:30%;" title="Ellenbogen links"></button>
+              <button class="body-dot" data-region="ellenbogen-r" style="top:38%;left:70%;" title="Ellenbogen rechts"></button>
+              <button class="body-dot" data-region="hand-l" style="top:48%;left:25%;" title="Hand links"></button>
+              <button class="body-dot" data-region="hand-r" style="top:48%;left:75%;" title="Hand rechts"></button>
+            </div>
+          </div>
+          <div class="body-info-card" id="bodyInfoCard">
+            <div class="body-info-title" id="bodyInfoTitle">Region wählen</div>
+            <div class="body-info-text" id="bodyInfoText">Tippen Sie auf einen Punkt, um Details zum Skelett-System anzuzeigen.</div>
+          </div>
+        </section>
+
         <!-- ===== PANEL 8: EINSTELLUNGEN ===== -->
         <section class="panel" id="panel-settings">
           <div class="panel-header">
@@ -434,7 +609,7 @@
               </div>
             </div>
 
-            <div class="settings-section">
+            <div class="settings-section" id="settingsAccountSection">
               <div class="settings-section-title" data-i18n="set_account">Konto</div>
               <div class="settings-section-body">
                 <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;" id="accEmail"></div>
@@ -578,12 +753,12 @@
         <input type="hidden" id="lead-id" />
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" data-i18n="lead_title">Name / Titel</label>
-            <input class="form-input" id="lead-title" type="text" required />
+            <label class="form-label">Vorname <span class="req">*</span></label>
+            <input class="form-input" id="lead-first-name" type="text" required />
           </div>
           <div class="form-group">
-            <label class="form-label" data-i18n="lead_category_name">Kategorie</label>
-            <input class="form-input" id="lead-category-name" type="text" />
+            <label class="form-label">Nachname <span class="req">*</span></label>
+            <input class="form-input" id="lead-last-name" type="text" required />
           </div>
         </div>
         <div class="form-row">
@@ -596,24 +771,10 @@
             <input class="form-input" id="lead-email" type="email" />
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" data-i18n="lead_website">Website</label>
-          <input class="form-input" id="lead-website" type="url" placeholder="https://..." />
-        </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" data-i18n="lead_city">Stadt</label>
             <input class="form-input" id="lead-city" type="text" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" data-i18n="lead_country_code">Land</label>
-            <input class="form-input" id="lead-country" type="text" placeholder="DE" maxlength="2" />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" data-i18n="lead_rating">Bewertung</label>
-            <input class="form-input" id="lead-score" type="number" step="0.1" min="0" max="5" />
           </div>
           <div class="form-group">
             <label class="form-label" data-i18n="lead_status">Status</label>
@@ -626,10 +787,33 @@
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" data-i18n="lead_google_url">Google Maps URL</label>
-          <input class="form-input" id="lead-google-url" type="url" />
+
+        <!-- Sector-specific fields -->
+        <div id="lead-sector-fields" style="display:none;">
+          <div class="form-row" id="lead-physio-row" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Krankenkasse</label>
+              <select class="form-select" id="lead-krankenkasse">
+                <option value="">-- Wählen --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Krankenkassennummer</label>
+              <input class="form-input" id="lead-krankenkassennummer" type="text" placeholder="z.B. 123456789" />
+            </div>
+          </div>
+          <div class="form-row" id="lead-physio-row2" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Geburtsdatum</label>
+              <input class="form-input" id="lead-geburtsdatum" type="date" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Adresse</label>
+              <input class="form-input" id="lead-adresse" type="text" placeholder="Strasse, Hausnummer" />
+            </div>
+          </div>
         </div>
+
         <div class="form-group">
           <label class="form-label" data-i18n="lead_notes">Notizen</label>
           <textarea class="form-textarea" id="lead-notes"></textarea>
@@ -761,8 +945,40 @@
     </div>
   </div>
 
+  <!-- ===== MODAL: MAIL VORSCHAU ===== -->
+  <div class="modal-overlay" id="mailPreviewModal" hidden>
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-header">
+        <span class="modal-title">E-Mail Vorschau</span>
+        <button class="modal-close" data-modal="mailPreviewModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Von</label>
+          <input class="form-input" id="mailPreviewFrom" type="text" readonly style="opacity:0.8;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">An</label>
+          <input class="form-input" id="mailPreviewTo" type="text" readonly style="opacity:0.8;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Betreff</label>
+          <input class="form-input" id="mailPreviewSubject" type="text" readonly style="opacity:0.8;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nachricht</label>
+          <div id="mailPreviewBody" style="padding:12px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:13px;line-height:1.6;min-height:80px;white-space:pre-wrap;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="mailPreviewModal">Abbrechen</button>
+        <button class="btn-primary" id="mailPreviewSendBtn">✉ Senden</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260511c"></script>
+  <script type="module" src="dashboard.js?v=20260512h"></script>
 </body>
 </html>

@@ -44,7 +44,10 @@
         <span>Passwort</span>
         <input type="password" id="accountPassword" required minlength="8" autocomplete="new-password" placeholder="Mindestens 8 Zeichen" />
       </label>
-      <p class="ob-hint">Mit dem Erstellen akzeptieren Sie unsere AGB &amp; Datenschutzerklärung.</p>
+      <label class="ob-accept" style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;cursor:pointer;font-size:14px;line-height:1.5;">
+        <input type="checkbox" id="accountAccept" required style="width:18px;height:18px;accent-color:var(--accent);margin-top:2px;flex-shrink:0;" />
+        <span>Ich habe die <a href="/agb.html" target="_blank" rel="noopener">AGB</a> und die <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
+      </label>
       <div class="ob-actions">
         <button type="submit" class="ob-btn primary" id="accountSubmit">Konto erstellen &amp; weiter →</button>
       </div>
@@ -73,6 +76,8 @@
           <option value="tattoo">Tattoostudio</option>
           <option value="spa">Spa / Wellness</option>
           <option value="massage">Massagestudio</option>
+          <option value="physiotherapy">Physiotherapie</option>
+          <option value="praxis">Praxis / Klinik</option>
           <option value="gym">Fitnessstudio</option>
           <option value="other">Sonstiges</option>
         </select>
@@ -92,6 +97,21 @@
           </select>
         </label>
       </div>
+      <div style="margin:16px 0 8px;font-weight:600;font-size:0.9rem;color:var(--text-muted, #94a3b8);">Adresse</div>
+      <div class="ob-row-2">
+        <label>
+          <span>PLZ</span>
+          <input type="text" id="bizZip" required placeholder="z.B. 56068" maxlength="10" />
+        </label>
+        <label>
+          <span>Hausnummer</span>
+          <input type="text" id="bizHouse" required placeholder="z.B. 12a" />
+        </label>
+      </div>
+      <label>
+        <span>Straße</span>
+        <input type="text" id="bizStreet" required placeholder="z.B. Hauptstraße" />
+      </label>
       <div class="ob-actions">
         <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
         <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
@@ -99,59 +119,35 @@
     </form>
   </section>
 
-  <!-- Step 2: Cal.com -->
-  <section class="ob-step" data-step="calendar" hidden>
+  <!-- Step 2: Owner Info -->
+  <section class="ob-step" data-step="owner" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 3 / 8</span>
-      <h1>Cal.com Verbindung</h1>
-      <p>Hier verbindet der Assistent Ihren Online-Kalender. Buchungen werden automatisch eingetragen.</p>
+      <h1>Inhaberdaten</h1>
+      <p>Wer führt die Termine durch? Ihre Kunden sehen diesen Namen bei der Online-Buchung.</p>
     </div>
-
-    <div class="ob-decision">
-      <button type="button" class="ob-decision-btn" data-decision="yes">
-        <span class="ob-decision-icon">✓</span>
-        <strong>Ich habe ein Cal.com Konto</strong>
-        <small>API-Key &amp; Username eintragen</small>
-      </button>
-      <button type="button" class="ob-decision-btn" data-decision="no">
-        <span class="ob-decision-icon">＋</span>
-        <strong>Cal.com Konto erstellen</strong>
-        <small>Schritt-für-Schritt-Anleitung</small>
-      </button>
-    </div>
-
-    <div class="ob-decision-content" id="calNo" hidden>
-      <h3>So erstellen Sie ein kostenloses Cal.com Konto</h3>
-      <ol class="ob-steps-list">
-        <li>Öffnen Sie <a href="https://cal.com/signup" target="_blank" rel="noopener">cal.com/signup</a> in einem neuen Tab.</li>
-        <li>Registrieren Sie sich mit Ihrer geschäftlichen E-Mail.</li>
-        <li>Wählen Sie einen Username (wird Teil Ihrer Booking-URL: <code>cal.com/&lt;username&gt;</code>).</li>
-        <li>Bestätigen Sie die Bestätigungs-E-Mail.</li>
-        <li>Im Cal.com Dashboard: <strong>Settings → Developer → API Keys → Add</strong>.</li>
-        <li><strong>Wichtig:</strong> Bei „Expires in" → <code>Never</code> wählen (sonst läuft der Bot nach 30 Tagen ab).</li>
-        <li>Name: z.B. „InfinityMade Integration".</li>
-        <li>Kopieren Sie den API-Key (beginnt mit <code>cal_live_...</code>) — er wird nur einmal angezeigt.</li>
-        <li>Kommen Sie hierhin zurück und klicken Sie auf „Habe ich gemacht ↓".</li>
-      </ol>
-      <button type="button" class="ob-btn ghost" id="calNoDone">Habe ich gemacht ↓</button>
-    </div>
-
-    <form class="ob-form" id="calendarForm" hidden>
-      <label>
-        <span>Cal.com Username</span>
-        <input type="text" id="calUsername" required placeholder="z.B. mustermann" />
-        <small class="ob-input-hint">Nur den Username, nicht die ganze URL — z.B. bei <code>cal.com/mustermann</code> tragen Sie nur <code>mustermann</code> ein.</small>
-      </label>
-      <label>
-        <span>API-Key</span>
-        <input type="password" id="calApiKey" required placeholder="cal_live_..." autocomplete="off" />
-        <small class="ob-input-hint">Wird verschlüsselt gespeichert (Supabase Vault). Stellen Sie sicher, dass „Never Expires" gewählt wurde.</small>
-      </label>
-      <div class="ob-test-result" id="calTestResult"></div>
+    <form class="ob-form" id="ownerForm">
+      <div class="ob-row-2">
+        <label>
+          <span>Vorname</span>
+          <input type="text" id="ownerFirstName" required placeholder="z.B. Mustafa" />
+        </label>
+        <label>
+          <span>Nachname</span>
+          <input type="text" id="ownerLastName" required placeholder="z.B. Yilmaz" />
+        </label>
+      </div>
+      <div class="ob-callout" style="margin-top:20px;">
+        <strong>Online-Terminbuchung aktivieren?</strong>
+        <p style="margin:8px 0 0;font-size:0.9rem;color:var(--text-muted);">Sollen Kunden über Ihre Website direkt Termine bei Ihnen buchen können?</p>
+      </div>
+      <div class="ob-toggle" id="bookingsToggle" style="margin-top:12px;">
+        <button type="button" class="ob-toggle-btn active" data-value="true">Ja, Terminbuchung erlauben</button>
+        <button type="button" class="ob-toggle-btn" data-value="false">Nein, nur Anfragen</button>
+      </div>
       <div class="ob-actions">
         <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
-        <button type="button" class="ob-btn ghost" id="calTestBtn">Verbindung testen</button>
-        <button type="submit" class="ob-btn primary" id="calSaveBtn" disabled>Speichern &amp; weiter →</button>
+        <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
       </div>
     </form>
   </section>
@@ -373,6 +369,6 @@
 
 <div class="ob-error" id="errorBox" hidden></div>
 
-<script type="module" src="onboarding.js?v=20260509"></script>
+<script type="module" src="onboarding.js?v=20260511a"></script>
 </body>
 </html>

@@ -32,6 +32,15 @@
         <input type="text" id="company_code" required placeholder="z.B. INF-12345" style="text-transform: uppercase;" />
         <small style="color:var(--text-muted); display:block; margin-top:-10px; margin-bottom:15px; font-size:12px;">Diesen Code erhalten Sie von Ihrem Arbeitgeber.</small>
 
+        <div style="border-top:1px solid var(--border); padding-top:18px; margin-top:18px;">
+          <label style="font-weight:600; margin-bottom:4px;">Ihre Arbeitszeiten</label>
+          <small style="color:var(--text-muted); display:block; margin-bottom:12px; font-size:12px;">Dies sind <strong>Ihre persönlichen</strong> Arbeitszeiten — nicht die des Ladens. Kunden buchen Termine bei Ihnen genau innerhalb dieser Zeiten.</small>
+
+          <div id="workingHoursList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+            <!-- JS injects rows -->
+          </div>
+        </div>
+
         <button type="submit" class="btn-primary" id="submitBtn">Konto erstellen</button>
 
         <div id="message" class="msg"></div>
@@ -43,6 +52,6 @@
     </div>
   </main>
 
-  <script type="module" src="employee-signup.js?v=20260509"></script>
+  <script type="module" src="employee-signup.js?v=20260512h"></script>
 </body>
 </html>

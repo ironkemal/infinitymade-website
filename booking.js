@@ -1,9 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260511b';
+import { mountCalendar } from './calendar-widget.js?v=20260512h';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const API = 'https://n8n.infinitymade.de';
+const API = 'https://n8n.infinitymade.de/api';
 
 const params = new URLSearchParams(location.search);
 const identifier = (params.get('u') || params.get('c') || '').trim();
@@ -53,7 +53,7 @@ function updateSidebar() {
 async function init() {
   if (!identifier) { showError('Ungültiger Buchungslink.'); return; }
   const isUUID = s => s.length === 36 && s.includes('-');
-  let q = supabase.from('profiles').select('id,business_name,company_code');
+  let q = supabase.from('profiles').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings');
   q = isUUID(identifier) ? q.eq('id', identifier) : q.eq('company_code', identifier.toUpperCase());
   const { data: profile } = await q.maybeSingle();
   if (!profile) { showError('Unternehmen nicht gefunden.'); return; }
@@ -62,6 +62,16 @@ async function init() {
   state.companyName = profile.business_name;
   document.getElementById('bizAvatar').textContent = profile.business_name.charAt(0).toUpperCase();
   document.getElementById('bizName').textContent   = profile.business_name;
+
+  const ownerName = profile.owner_first_name && profile.owner_last_name
+    ? profile.owner_first_name + ' ' + profile.owner_last_name
+    : '';
+  document.getElementById('bizOwner').textContent = ownerName;
+
+  if (profile.accepts_bookings === false) {
+    document.getElementById('empList').innerHTML = '<div class="slots-empty">Dieses Unternehmen nimmt derzeit keine Online-Termine an.<br>Bitte kontaktieren Sie uns telefonisch.</div>';
+    return;
+  }
 
   const { data: employees } = await supabase.from('profiles')
     .select('id,business_name,email,role')
@@ -129,12 +139,19 @@ async function mountBookingCalendar() {
   const container = document.getElementById('calMount');
   container.innerHTML = '';
 
-  const { data: wh } = await supabase.from('working_hours')
+  let { data: wh } = await supabase.from('working_hours')
     .select('day_of_week,is_active').eq('user_id', state.employeeId);
+  if ((wh || []).length === 0) {
+    const { data: ownerWh } = await supabase.from('working_hours')
+      .select('day_of_week,is_active').eq('user_id', state.ownerId);
+    wh = ownerWh || [];
+  }
   const offWeekdays = [];
-  for (let d = 0; d < 7; d++) {
-    const row = (wh || []).find(w => w.day_of_week === d);
-    if (!row || !row.is_active) offWeekdays.push(d);
+  if ((wh || []).length > 0) {
+    for (let d = 0; d < 7; d++) {
+      const row = wh.find(w => w.day_of_week === d);
+      if (!row || !row.is_active) offWeekdays.push(d);
+    }
   }
 
   calWidget = mountCalendar(container, {
@@ -147,7 +164,7 @@ async function mountBookingCalendar() {
       state.selectedTime = null;
       updateSidebar();
       try {
-        const res = await fetch(`${API}/api/booking/get-slots`, {
+        const res = await fetch(`${API}/booking/get-slots`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -183,7 +200,7 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true; btn.textContent = 'Wird gebucht…';
   try {
-    const res = await fetch(`${API}/api/booking/create`, {
+    const res = await fetch(`${API}/booking/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
