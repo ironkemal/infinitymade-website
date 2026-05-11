@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260511c';
+import { mountCalendar } from './calendar-widget.js?v=20260512c';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -49,6 +49,7 @@ const T = {
     lbl_leave_title:'Abwesenheit eintragen',lbl_leave_emp:'Für wen?',
     lbl_leave_start:'Start',lbl_leave_end:'Ende',lbl_leave_reason:'Grund',
     btn_leave_cancel:'Abbrechen',btn_leave_save:'Speichern',
+    lbl_other:'Andere',
     saved:'Gespeichert.',pw_changed:'Passwort geändert.',err_generic:'Ein Fehler ist aufgetreten.',
     copied:'Kopiert!',csv_imported:'Importiert: ',csv_error:'CSV-Fehler: ',
     apify_error:'Apify-Fehler: ',apify_done:'Importiert: ',me:'(Sie)'
@@ -94,6 +95,7 @@ const T = {
     lbl_leave_title:'Add time off',lbl_leave_emp:'For whom?',
     lbl_leave_start:'Start',lbl_leave_end:'End',lbl_leave_reason:'Reason',
     btn_leave_cancel:'Cancel',btn_leave_save:'Save',
+    lbl_other:'Other',
     saved:'Saved.',pw_changed:'Password changed.',err_generic:'An error occurred.',
     copied:'Copied!',csv_imported:'Imported: ',csv_error:'CSV error: ',
     apify_error:'Apify error: ',apify_done:'Imported: ',me:'(You)'
@@ -139,6 +141,7 @@ const T = {
     lbl_leave_title:'İzin ekle',lbl_leave_emp:'Kimin için?',
     lbl_leave_start:'Başlangıç',lbl_leave_end:'Bitiş',lbl_leave_reason:'Sebep',
     btn_leave_cancel:'İptal',btn_leave_save:'Kaydet',
+    lbl_other:'Diğer',
     saved:'Kaydedildi.',pw_changed:'Şifre değiştirildi.',err_generic:'Bir hata oluştu.',
     copied:'Kopyalandı!',csv_imported:'İçe aktarıldı: ',csv_error:'CSV hatası: ',
     apify_error:'Apify hatası: ',apify_done:'İçe aktarıldı: ',me:'(Siz)'
@@ -185,6 +188,8 @@ let currentProfile = null;
 let currentSession = null;
 let teamMembers = [];
 let calendar = null;
+let selectedEmployeeId = null;
+let ownerServices = [];
 let activePanel = 'overview';
 let leadFilter = 'all';
 let leadSearchVal = '';
@@ -380,57 +385,161 @@ async function openStripePortal() {
   } catch { showToast(t('err_generic'),'error'); }
 }
 
+function renderCalEmpList() {
+  const container = document.getElementById('calEmpList');
+  console.log('[DASHBOARD] renderCalEmpList container=', container, 'teamMembers.length=', teamMembers.length);
+  if (!container) return;
+  container.innerHTML = '<div class="cal-emp-title">Mitarbeiter</div>' +
+    teamMembers.map(m => `
+      <button class="cal-emp-pick ${m.id === selectedEmployeeId ? 'active' : ''}" data-emp-id="${m.id}">
+        <div class="cal-emp-dot">${(m.business_name || m.email || '?')[0].toUpperCase()}</div>
+        <span>${m.business_name || m.email?.split('@')[0]}</span>
+      </button>
+    `).join('');
+  container.querySelectorAll('.cal-emp-pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const empId = btn.dataset.empId;
+      if (empId === selectedEmployeeId) return;
+      selectedEmployeeId = empId;
+      renderCalEmpList();
+      updateCalendarForEmployee(empId);
+    });
+  });
+}
+
+async function updateCalendarForEmployee(empId) {
+  if (!calendar) return;
+  const { data: wh } = await supabase.from('working_hours')
+    .select('day_of_week, is_active').eq('user_id', empId);
+  const offWeekdays = [];
+  for (let d = 0; d < 7; d++) {
+    const row = (wh || []).find(w => w.day_of_week === d);
+    if (!row || !row.is_active) offWeekdays.push(d);
+  }
+  calendar.setDisabled({ weekdays: offWeekdays });
+  await calendar.reloadMonth();
+}
+
+async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
+  if (!calendar) return;
+  calendar.setSideHead('Slots');
+  try {
+    const res = await fetch(`${API}/booking/get-slots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: selectedEmployeeId,
+        date: dateStr,
+        duration: durationMinutes,
+        buffer: 0,
+        step: 30
+      })
+    });
+    const data = await res.json();
+    const slots = data.slots || [];
+    const slotItems = slots.map(slot => ({
+      label: slot,
+      onClick: () => {
+        prefillBookingModalFromSlot(dateStr, slot, selectedEmployeeId, serviceId, serviceTitle);
+      }
+    }));
+    calendar.renderSide(slotItems);
+  } catch (e) {
+    console.error('loadSlots error:', e);
+    calendar.renderSide([]);
+  }
+}
+
+function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, serviceTitle) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const dur = ownerServices.find(s => s.id === serviceId)?.duration_minutes || 30;
+  let endH = h + Math.floor((m + dur) / 60);
+  let endM = (m + dur) % 60;
+  endH = endH % 24;
+  const endStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+  const startIso = `${dateStr}T${timeStr}:00`;
+  const endIso = `${dateStr}T${endStr}:00`;
+  document.getElementById('bk-id').value = '';
+  document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
+  document.getElementById('bkDeleteBtn').hidden = true;
+  document.getElementById('bkStart').value = startIso.substring(0, 16);
+  document.getElementById('bkEnd').value = endIso.substring(0, 16);
+  document.getElementById('bkCustomer').value = '';
+  document.getElementById('bkPhone').value = '';
+  document.getElementById('bkNotes').value = '';
+  populateEmpSelects(empId);
+  populateSrvSelect(serviceId);
+  openModal('bookingModal');
+}
+
 async function initCalendar() {
+  console.log('[DASHBOARD] initCalendar START');
   const ownerId = getOwnerId();
   const calEl = document.getElementById('calendarEl');
   calEl.innerHTML = '';
 
-  const oldPanel = document.getElementById('slotPanel');
-  if (oldPanel) oldPanel.style.display = 'none';
+  if (!selectedEmployeeId) {
+    selectedEmployeeId = currentProfile.role === 'owner'
+      ? (teamMembers[0]?.id || currentSession.user.id)
+      : currentSession.user.id;
+  }
+
+  const { data: srvData } = await supabase.from('services')
+    .select('*,employee_services(employee_id)')
+    .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`);
+  ownerServices = srvData || [];
+  console.log('[DASHBOARD] ownerServices loaded:', ownerServices.length);
+
+  renderCalEmpList();
+
+  const { data: wh } = await supabase.from('working_hours')
+    .select('day_of_week, is_active').eq('user_id', selectedEmployeeId);
+  const offWeekdays = [];
+  for (let d = 0; d < 7; d++) {
+    const row = (wh || []).find(w => w.day_of_week === d);
+    if (!row || !row.is_active) offWeekdays.push(d);
+  }
 
   calendar = mountCalendar(calEl, {
-    emptyText: 'Keine Termine an diesem Tag.',
+    disabledWeekdays: offWeekdays,
+    emptyText: 'Keine freien Termine verfügbar.',
     placeholder: 'Bitte Datum wählen',
     onMonthChange: async (year, month) => {
       const start = new Date(year, month, 1).toISOString().split('T')[0];
-      const end   = new Date(year, month + 1, 0).toISOString().split('T')[0] + 'T23:59:59';
+      const end = new Date(year, month + 1, 0).toISOString().split('T')[0] + 'T23:59:59';
       let q = supabase.from('bookings').select('start_time')
-        .eq('owner_id', ownerId).neq('status','cancelled')
+        .eq('owner_id', ownerId).neq('status', 'cancelled')
         .gte('start_time', start).lte('start_time', end);
-      if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
+      if (currentProfile.role !== 'owner') {
+        q = q.eq('user_id', currentSession.user.id);
+      } else if (selectedEmployeeId) {
+        q = q.eq('user_id', selectedEmployeeId);
+      }
       const { data } = await q;
       const dots = {};
-      (data||[]).forEach(b => { dots[b.start_time.split('T')[0]] = true; });
+      (data || []).forEach(b => { dots[b.start_time.split('T')[0]] = true; });
       return dots;
     },
     onDaySelect: async (dateStr) => {
-      let q = supabase.from('bookings')
-        .select('*,services(title,color)')
-        .eq('owner_id', ownerId).neq('status','cancelled')
-        .gte('start_time', dateStr+'T00:00:00').lte('start_time', dateStr+'T23:59:59')
-        .order('start_time');
-      if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
-      const { data: bks } = await q;
-
-      const { data: leaves } = await supabase.from('time_offs')
-        .select('*')
-        .in('employee_id', teamMembers.map(m => m.id))
-        .lte('start_date', dateStr+'T23:59:59').gte('end_date', dateStr+'T00:00:00');
-
+      console.log('[DASHBOARD] onDaySelect:', dateStr, 'employee:', selectedEmployeeId);
+      const empServices = ownerServices.filter(s =>
+        (s.employee_services || []).some(es => es.employee_id === selectedEmployeeId)
+      );
       const items = [];
-      (bks||[]).forEach(b => {
-        const emp = teamMembers.find(m => m.id === b.user_id);
+      empServices.forEach(s => {
         items.push({
-          label: `${fmtTime(b.start_time)} – ${fmtTime(b.end_time)}`,
-          meta:  `${b.customer_name} · ${b.services?.title||'Termin'}${emp ? ' · ' + (emp.business_name||'') : ''}`,
-          color: b.services?.color || '#22c55e',
-          onClick: () => openBookingModal(b)
+          label: s.title,
+          meta: `${s.duration_minutes || 30} min`,
+          color: s.color || '#22c55e',
+          onClick: () => loadSlots(dateStr, s.duration_minutes || 30, s.id, s.title)
         });
       });
-      (leaves||[]).forEach(l => items.push({
-        label: '❌ ' + (l.reason || 'Beurlaubt'),
-        color: '#ef4444'
-      }));
+      items.push({
+        label: t('lbl_other') || 'Andere',
+        meta: '30 min',
+        color: '#94a3b8',
+        onClick: () => loadSlots(dateStr, 30, null, 'Andere')
+      });
       return items;
     }
   });

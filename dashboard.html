@@ -11,7 +11,10 @@
   <meta name="theme-color" content="#22c55e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="dashboard.css?v=20260511c" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="dashboard.css?v=20260512c" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -143,7 +146,10 @@
             </div>
           </div>
 
-          <div id="calendarEl"></div>
+          <div class="cal-3col">
+            <aside class="cal-emp-list" id="calEmpList"></aside>
+            <div id="calendarEl"></div>
+          </div>
         </section>
 
         <!-- ===== PANEL 3: KUNDEN INFO ===== -->
@@ -763,6 +769,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260511c"></script>
+  <script type="module" src="dashboard.js?v=20260512c"></script>
 </body>
 </html>
