@@ -1849,3 +1849,41 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   #zygoteNewTabBtn { display: flex !important; left: 8px !important; }
 }
 
+/* ============================
+   PATIENT SEARCH AUTOCOMPLETE
+   ============================ */
+.patient-search-wrap { position: relative; }
+.patient-search-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 50;
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+}
+.patient-search-list li {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.patient-search-list li:hover,
+.patient-search-list li.active {
+  background: var(--bg-hover);
+}
+.patient-search-list li .match-hl {
+  color: var(--primary);
+  font-weight: 600;
+}
+.patient-search-list .empty-item {
+  color: var(--text-faint);
+  cursor: default;
+}
+.patient-search-list .empty-item:hover { background: transparent; }
