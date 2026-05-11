@@ -866,7 +866,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   transition: var(--transition);
 }
 .emp-checkbox-item:hover { border-color: var(--primary); }
-.emp-checkbox-item input { accent-color: var(--primary); }
+.emp-checkbox-item input { accent-color: var(--primary); cursor: pointer; }
+.emp-checkbox-item:has(input:checked) {
+  background: var(--primary-dim);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.emp-checkbox-item:has(input:checked) span { font-weight: 600; }
 
 /* ============================
    PANEL 5: ARBEITSZEITEN
