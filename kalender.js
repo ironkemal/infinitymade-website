@@ -102,22 +102,16 @@ async function init() {
     profile.company_code = code;
   }
 
-  // Generate cal_username for owner if missing
-  let companySlug = profile.cal_username;
-  if (profile.role === 'owner' && !companySlug) {
-    const baseSlug = (profile.business_name || session.user.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '-');
-    companySlug = baseSlug + '-' + Math.floor(Math.random() * 1000);
-    await supabase.from('profiles').update({ cal_username: companySlug }).eq('id', session.user.id);
-    profile.cal_username = companySlug;
-  } else if (profile.role !== 'owner') {
-    const { data: ownerProf } = await supabase.from('profiles').select('cal_username').eq('id', profile.owner_id).single();
-    if (ownerProf && ownerProf.cal_username) {
-      companySlug = ownerProf.cal_username;
-    }
+  // Booking URL uses company_code (owner) or owner's company_code (employee)
+  let bookingId = profile.company_code;
+  if (profile.role !== 'owner' && profile.owner_id) {
+    const { data: ownerProf } = await supabase.from('profiles').select('company_code').eq('id', profile.owner_id).single();
+    if (ownerProf && ownerProf.company_code) bookingId = ownerProf.company_code;
   }
+  if (!bookingId) bookingId = profile.id;
 
   // Populate Buchungsseite (Booking Preview)
-  const bookingUrl = window.location.origin + '/booking.html?u=' + companySlug;
+  const bookingUrl = window.location.origin + '/booking.html?u=' + bookingId;
   const bookingInput = document.getElementById('booking-url-input');
   if (bookingInput) bookingInput.value = bookingUrl;
   const iframe = document.getElementById('booking-preview-iframe');

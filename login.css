@@ -177,3 +177,38 @@ input:focus {
 }
 
 .back-home a:hover { color: var(--text-primary); }
+
+.register-block {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.register-text {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.btn-register {
+  display: inline-block;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-register:hover {
+  background: var(--accent);
+  color: #052e16;
+}

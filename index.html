@@ -96,7 +96,7 @@
       "itemListElement": [
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Webdesign", "description": "Moderne, responsive Websites für KMU" } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "WhatsApp Business Bot", "description": "KI-gestützte Rezeption und Terminbuchung über WhatsApp" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Online-Buchungssystem", "description": "Cal.com Integration für automatische Terminverwaltung" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Online-Buchungssystem", "description": "InfinityMade Online-Terminbuchung mit KI-Assistent" } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "SEO & lokale Sichtbarkeit", "description": "Suchmaschinenoptimierung für lokale Geschäfte in NRW" } }
       ]
     }
@@ -930,16 +930,6 @@
   })();
 </script>
 
-<!-- Cal.com inline embed -->
-<script type="text/javascript">
-(function(C,A,L){let p=function(a,ar){a.q.push(ar)};let d=C.document;C.Cal=C.Cal||function(){let cal=C.Cal;let ar=arguments;if(!cal.loaded){cal.ns={};cal.q=cal.q||[];d.head.appendChild(d.createElement("script")).src=A;cal.loaded=true}if(ar[0]===L){const api=function(){p(api,arguments)};const namespace=ar[1];api.q=api.q||[];typeof namespace==="string"?(cal.ns[namespace]=api)&&p(api,ar):p(cal,ar);return}p(cal,ar)};})(window,"https://app.cal.com/embed/embed.js","init");
-Cal("init",{origin:"https://cal.com"});
-Cal("inline",{
-  elementOrSelector:"#my-cal-inline",
-  config:{layout:"month_view"},
-  calLink:"infinitymade/infinitymade"
-});
-Cal("ui",{"styles":{"branding":{"brandColor":"#00c853"}},"hideEventTypeDetails":false,"layout":"month_view"});
-</script>
+<!-- InfinityMade Booking embed removed — uses native booking.html -->
 </body>
 </html>

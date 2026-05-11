@@ -194,7 +194,7 @@ function prefillForms() {
     document.querySelector('#bookingsToggle .ob-toggle-btn[data-value="false"]').classList.add('active');
   }
 
-  if (profile.cal_username) document.getElementById('calUsername').value = profile.cal_username;
+  if (profile.booking_slug) document.getElementById('bookingSlug').value = profile.booking_slug;
 
   if (profile.whatsapp_number) document.getElementById('waNumber').value = profile.whatsapp_number;
   if (profile.whatsapp_phone_number_id) document.getElementById('waPhoneNumberId').value = profile.whatsapp_phone_number_id;
@@ -312,12 +312,14 @@ function bindBusiness() {
     const street = document.getElementById('bizStreet').value.trim();
     const house_number = document.getElementById('bizHouse').value.trim();
 
+    const booking_slug = cleanBookingSlug(business_name) || cleanBookingSlug(userId.toString().slice(0, 8));
+
     const { error } = await supabase.from('profiles').update({
-      business_name, sector, city, language, zip, street, house_number, onboarding_step: 'owner'
+      business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner'
     }).eq('id', userId);
 
     if (error) return showError(error.message);
-    profile = { ...profile, business_name, sector, city, language, zip, street, house_number, onboarding_step: 'owner' };
+    profile = { ...profile, business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner' };
     goToStep(2);
   });
 }
@@ -445,17 +447,6 @@ function bindServices() {
 
       services = items;
 
-      // Auto-provision event-types in Cal.com (best-effort, non-blocking)
-      try {
-        const session = (await supabase.auth.getSession()).data.session;
-        if (session) {
-          fetch('/api/cal/create-event-types', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          }).catch(() => {}); // fire-and-forget; errors surface in dashboard later
-        }
-      } catch {}
-
       await saveStepProgress('hours');
       goToStep(4);
     } catch (err) {
@@ -574,15 +565,13 @@ function normalizePhone(input) {
   return (input || '').replace(/[\s\-()]/g, '');
 }
 
-// Strip cal.com/ prefix, leading @, trailing slashes, lowercase
-function cleanCalUsername(input) {
+function cleanBookingSlug(input) {
   return (input || '')
     .trim()
-    .replace(/^https?:\/\//i, '')
-    .replace(/^cal\.com\//i, '')
-    .replace(/^@/, '')
-    .replace(/\/.*$/, '')
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 // ---- Step 6: Templates ----

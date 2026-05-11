@@ -53,12 +53,20 @@ function updateSidebar() {
 async function init() {
   if (!identifier) { showError('Ungültiger Buchungslink.'); return; }
   const isUUID = s => s.length === 36 && s.includes('-');
-  let q = supabase.from('profiles').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings');
-  q = isUUID(identifier) ? q.eq('id', identifier) : q.eq('company_code', identifier.toUpperCase());
+  let q = supabase.from('profiles').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
+  if (isUUID(identifier)) {
+    q = q.eq('id', identifier);
+  } else if (identifier.toUpperCase().startsWith('INF-')) {
+    q = q.eq('company_code', identifier.toUpperCase());
+  } else {
+    q = q.eq('booking_slug', identifier.toLowerCase());
+  }
   const { data: profile } = await q.maybeSingle();
   if (!profile) { showError('Unternehmen nicht gefunden.'); return; }
 
-  state.ownerId    = profile.id;
+  const isEmployee = profile.role === 'employee' && profile.owner_id;
+  state.ownerId    = isEmployee ? profile.owner_id : profile.id;
+  state.employeeId = isEmployee ? profile.id : null;
   state.companyName = profile.business_name;
   document.getElementById('bizAvatar').textContent = profile.business_name.charAt(0).toUpperCase();
   document.getElementById('bizName').textContent   = profile.business_name;

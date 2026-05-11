@@ -1219,15 +1219,20 @@ async function loadTeam() {
   if (data.length===0) {
     data = [{id:currentSession.user.id,email:currentSession.user.email,business_name:currentProfile.business_name||currentSession.user.email.split('@')[0],role:currentProfile.role}];
   }
-  // API avatar_url döndürmüyorsa Supabase'den al
+  // API avatar_url ve booking_slug döndürmüyorsa Supabase'den al
   if (data.length > 0) {
     const ids = data.map(d => d.id).filter(Boolean);
     if (ids.length) {
-      const { data: avatars } = await supabase.from('profiles').select('id,avatar_url').in('id', ids);
-      if (avatars) {
+      const { data: profiles } = await supabase.from('profiles').select('id,avatar_url,booking_slug').in('id', ids);
+      if (profiles) {
         const map = {};
-        avatars.forEach(a => map[a.id] = a.avatar_url);
-        data.forEach(d => { if (map[d.id]) d.avatar_url = map[d.id]; });
+        profiles.forEach(p => map[p.id] = p);
+        data.forEach(d => {
+          if (map[d.id]) {
+            if (map[d.id].avatar_url) d.avatar_url = map[d.id].avatar_url;
+            if (map[d.id].booking_slug) d.booking_slug = map[d.id].booking_slug;
+          }
+        });
       }
     }
   }

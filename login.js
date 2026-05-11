@@ -16,7 +16,9 @@ const T = {
     err_generic: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
     reset_prompt: 'Bitte geben Sie Ihre E-Mail-Adresse ein:',
     reset_success: 'Wir haben Ihnen eine E-Mail mit Anweisungen geschickt.',
-    loading: 'Wird geladen…'
+    loading: 'Wird geladen…',
+    reg_text: 'Noch kein Konto?',
+    reg_btn: 'Get Started'
   },
   en: {
     title: 'Sign in',
@@ -30,7 +32,9 @@ const T = {
     err_generic: 'Something went wrong. Please try again.',
     reset_prompt: 'Please enter your email address:',
     reset_success: 'We have sent you an email with instructions.',
-    loading: 'Loading…'
+    loading: 'Loading…',
+    reg_text: 'No account yet?',
+    reg_btn: 'Get Started'
   },
   tr: {
     title: 'Giriş Yap',
@@ -44,7 +48,9 @@ const T = {
     err_generic: 'Bir hata oluştu. Lütfen tekrar deneyin.',
     reset_prompt: 'Lütfen e-posta adresinizi girin:',
     reset_success: 'Yönergeleri içeren bir e-posta gönderdik.',
-    loading: 'Yükleniyor…'
+    loading: 'Yükleniyor…',
+    reg_text: 'Henüz hesabın yok mu?',
+    reg_btn: 'Get Started'
   }
 };
 
@@ -60,6 +66,8 @@ function applyLang() {
   document.getElementById('submitBtn').textContent = t.submit;
   document.getElementById('forgotLink').textContent = t.forgot;
   document.getElementById('backLink').textContent = t.back;
+  document.getElementById('regText').textContent = t.reg_text;
+  document.getElementById('regBtn').textContent = t.reg_btn;
   document.querySelectorAll('.lang-switch button').forEach(b => {
     b.classList.toggle('active', b.dataset.lang === lang);
   });
