@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260512e';
+import { mountCalendar } from './calendar-widget.js?v=20260512f';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -412,9 +412,11 @@ async function updateCalendarForEmployee(empId) {
   const { data: wh } = await supabase.from('working_hours')
     .select('day_of_week, is_active').eq('user_id', empId);
   const offWeekdays = [];
-  for (let d = 0; d < 7; d++) {
-    const row = (wh || []).find(w => w.day_of_week === d);
-    if (!row || !row.is_active) offWeekdays.push(d);
+  if ((wh || []).length > 0) {
+    for (let d = 0; d < 7; d++) {
+      const row = wh.find(w => w.day_of_week === d);
+      if (!row || !row.is_active) offWeekdays.push(d);
+    }
   }
   calendar.setDisabled({ weekdays: offWeekdays });
   await calendar.reloadMonth();
@@ -495,9 +497,11 @@ async function initCalendar() {
   const { data: wh } = await supabase.from('working_hours')
     .select('day_of_week, is_active').eq('user_id', selectedEmployeeId);
   const offWeekdays = [];
-  for (let d = 0; d < 7; d++) {
-    const row = (wh || []).find(w => w.day_of_week === d);
-    if (!row || !row.is_active) offWeekdays.push(d);
+  if ((wh || []).length > 0) {
+    for (let d = 0; d < 7; d++) {
+      const row = wh.find(w => w.day_of_week === d);
+      if (!row || !row.is_active) offWeekdays.push(d);
+    }
   }
 
   calendar = mountCalendar(calEl, {
