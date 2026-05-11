@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260512c';
+import { mountCalendar } from './calendar-widget.js?v=20260512d';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de';
