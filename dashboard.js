@@ -1022,16 +1022,35 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
       btn.disabled=false; btn.textContent='Suchen'; return;
     }
     const searchQuery = city ? `${rawQuery} ${city}` : rawQuery;
-    const res = await fetch('https://n8n.infinitymade.de/api/apify/search', {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch('/api/apify/search', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ query: searchQuery, limit, userId: currentSession.user.id })
+      headers: {
+        'Content-Type':'application/json',
+        'Authorization': 'Bearer ' + s.access_token
+      },
+      body: JSON.stringify({ query: searchQuery, limit })
     });
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'Suche fehlgeschlagen');
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Suche fehlgeschlagen');
+    const items = data.items || [];
+    const inserts = items.filter(i => i.title).map(i => ({
+      owner_id: ownerId,
+      name: i.title,
+      category: rawQuery,
+      city: i.city || city || '',
+      phone: i.phone || '',
+      email: i.email || '',
+      website: i.website || '',
+      status: 'new',
+      notes: i.address || ''
+    }));
+    if (inserts.length > 0) {
+      await supabase.from('b2b_contacts').insert(inserts);
+    }
     document.getElementById('b2bSearch').value = rawQuery;
     await loadB2B();
-    showToast(`✓ ${json.count} Kontakte importiert — ${json.remaining} diese Woche noch verfügbar`);
+    showToast(`✓ ${inserts.length} Kontakte importiert`);
   } catch(err) {
     showToast('Fehler: '+err.message, 'error');
   }
@@ -1911,10 +1930,14 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const btn = document.getElementById('docSearchBtn');
   btn.disabled = true; btn.textContent = '⏳';
   try {
-    const res = await fetch('https://n8n.infinitymade.de/api/apify/search', {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch('/api/apify/search', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: fullQuery, limit, userId: currentSession.user.id })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + s.access_token
+      },
+      body: JSON.stringify({ query: fullQuery, limit, language: 'de', countryCode: 'de' })
     });
     const data = await res.json();
     if (!res.ok || data.error) throw new Error(data.error || 'Apify-Fehler');
