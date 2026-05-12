@@ -115,6 +115,16 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 12px;
 }
 
+.live-clock {
+  font-family: 'Inter', ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  min-width: 44px;
+  text-align: center;
+}
+
 .brand {
   font-size: 17px;
   font-weight: 700;

@@ -670,19 +670,23 @@ async function loadScheduleBookings(date) {
 
   const {data:bookings} = await q;
   loadingEl.hidden = true;
-  if (isToday) document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
-  if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
-  const fallbackColors = ['#f97316','#3b82f6','#ec4899','#a855f7','#ef4444'];
   const nowIso = new Date().toISOString();
+  let displayBookings = bookings || [];
+  if (isToday) {
+    displayBookings = displayBookings.filter(b => b.start_time >= nowIso);
+  }
+  if (isToday) document.getElementById('kpi-today').textContent = displayBookings.length;
+
+  if (displayBookings.length===0) { emptyEl.hidden=false; return; }
+  const fallbackColors = ['#f97316','#3b82f6','#ec4899','#a855f7','#ef4444'];
   const greenIndices = new Set();
   if (isToday) {
-    const idx = bookings.findIndex(b => b.start_time >= nowIso);
-    if (idx !== -1) greenIndices.add(idx);
+    greenIndices.add(0);
   } else {
     greenIndices.add(0);
   }
-  listEl.innerHTML = bookings.map((b,i)=>{
+  listEl.innerHTML = displayBookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
     const dur = b.end_time
       ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' min'
@@ -2987,6 +2991,16 @@ document.getElementById('fbSendBtn')?.addEventListener('click', async () => {
   await loadFeedbacks();
 });
 
+function startClock() {
+  const el = document.getElementById('liveClock');
+  if (!el) return;
+  function tick() {
+    el.textContent = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Berlin'});
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
 async function init() {
   try {
     console.log('[init] start');
@@ -3017,6 +3031,7 @@ async function init() {
   } finally {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = '';
+    startClock();
   }
 }
 

@@ -314,14 +314,29 @@
 
     <!-- Step 3: Schedule (dashboard-style) -->
     <div class="step" id="step-datetime">
-      <button class="btn-back" id="backToSrv">&#8592; ZurÃ¼ck</button>
-      <div class="schedule-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <button class="btn-icon" id="bkPrev">&#8249;</button>
-        <span class="schedule-title" id="bkDateLabel" style="font-size:15px;font-weight:600;">Termin wÃ¤hlen</span>
-        <button class="btn-icon" id="bkNext">&#8250;</button>
-        <button class="btn-ghost" id="bkToday" type="button" style="margin-left:auto;font-size:12px;">Heute</button>
+      <button class="btn-back" id="backToSrv">&#8592; Zurück</button>
+      <div class="step-title">Termin wählen</div>
+      <div class="cal-layout">
+        <!-- Sol: Mini takvim -->
+        <div class="cal-left">
+          <div class="cal-head">
+            <span class="cal-month" id="calMonthLabel"></span>
+            <div class="cal-nav-wrap">
+              <button class="cal-nav-btn" id="calPrevMonth">&#8249;</button>
+              <button class="cal-nav-btn" id="calNextMonth">&#8250;</button>
+            </div>
+          </div>
+          <div class="cal-dow">
+            <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+          </div>
+          <div class="cal-grid" id="bkCalGrid"></div>
+        </div>
+        <!-- Sağ: Slot listesi -->
+        <div class="cal-right">
+          <div class="slots-day-label" id="bkDateLabel"></div>
+          <div id="bkSlotsList"></div>
+        </div>
       </div>
-      <div id="bkSlotsList"></div>
     </div>
 
     <!-- Step 4: Form -->
