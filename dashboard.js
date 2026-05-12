@@ -12,6 +12,7 @@ const T = {
     nav_services:'Dienstleistungen',nav_hours:'Arbeitszeiten',
     nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Feedback',nav_settings:'Einstellungen',
     overview_sub:'Ihr heutiger Überblick',
+    welcome_text:'Willkommen',
     kpi_plan:'Paket',kpi_status:'Status',kpi_today_bookings:'Heute',kpi_today_sub:'Termine',kpi_support:'Support',
     status_active:'✓ Aktiv',status_inactive:'✗ Inaktiv',
     today_bookings:'Heutige Termine',upcoming_empty:'Heute keine Termine.',features_title:'Paketinhalt',
@@ -66,6 +67,7 @@ const T = {
     nav_services:'Services',nav_hours:'Working Hours',
     nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Feedback',nav_settings:'Settings',
     overview_sub:'Your daily overview',
+    welcome_text:'Welcome',
     kpi_plan:'Plan',kpi_status:'Status',kpi_today_bookings:'Today',kpi_today_sub:'Appointments',kpi_support:'Support',
     status_active:'✓ Active',status_inactive:'✗ Inactive',
     today_bookings:"Today's Appointments",upcoming_empty:'No appointments today.',features_title:"Plan contents",
@@ -1638,12 +1640,12 @@ document.getElementById('hoursCalNext').addEventListener('click', () => {
 
 function renderSpecialDaysList() {
   const list = document.getElementById('specialDaysList');
-  if (!hoursCustomDays.length) { list.innerHTML = '<div style="color:var(--text-faint);font-size:13px;">Henüz özel gün eklenmemiş.</div>'; return; }
+  if (!hoursCustomDays.length) { list.innerHTML = '<div style="color:var(--text-faint);font-size:13px;">Keine Sondertage vorhanden.</div>'; return; }
   const sorted = [...hoursCustomDays].sort((a, b) => a.date.localeCompare(b.date));
   list.innerHTML = sorted.map(d => `
     <div class="special-day-item">
       <span class="sd-date">${d.date}</span>
-      <span class="sd-badge ${d.type}">${d.type === 'closed' ? 'Kapalı' : d.type === 'holiday' ? 'Tatil' : 'Özel'}</span>
+      <span class="sd-badge ${d.type}">${d.type === 'closed' ? 'Geschlossen' : d.type === 'holiday' ? 'Feiertag' : 'Sondertermin'}</span>
       <span class="sd-note">${d.note || ''}</span>
       <button onclick="deleteSpecialDay('${d.id}')">×</button>
     </div>
@@ -1653,22 +1655,35 @@ function renderSpecialDaysList() {
 window.deleteSpecialDay = async function(id) {
   const { error } = await supabase.from('custom_days').delete().eq('id', id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
-  showToast('Silindi');
+  showToast('Gelöscht');
   await renderHoursMiniCal();
 };
 
 document.getElementById('sdAddBtn').addEventListener('click', async () => {
-  const date = document.getElementById('sdDate').value;
+  const von = document.getElementById('sdDate').value;
+  const bis = document.getElementById('sdBis').value;
   const type = document.getElementById('sdType').value;
   const note = document.getElementById('sdNote').value.trim();
-  if (!date) { showToast('Tarih seçin', 'error'); return; }
-  const { error } = await supabase.from('custom_days').upsert({
-    user_id: hoursEmpId || currentSession.user.id,
-    date, type, note
-  }, { onConflict: 'user_id,date' });
+  if (!von) { showToast('Von Datum wählen', 'error'); return; }
+
+  const end = bis || von;
+  const startDate = new Date(von);
+  const endDate = new Date(end);
+  if (endDate < startDate) { showToast('Bis darf nicht vor Von liegen', 'error'); return; }
+
+  const userId = hoursEmpId || currentSession.user.id;
+  const rows = [];
+  const d = new Date(startDate);
+  while (d <= endDate) {
+    rows.push({ user_id: userId, date: d.toISOString().split('T')[0], type, note });
+    d.setDate(d.getDate() + 1);
+  }
+
+  const { error } = await supabase.from('custom_days').upsert(rows, { onConflict: 'user_id,date' });
   if (error) { showToast(t('err_generic'), 'error'); return; }
-  showToast('Eklendi');
+  showToast(rows.length > 1 ? `${rows.length} Tage hinzugefügt` : '1 Tag hinzugefügt');
   document.getElementById('sdNote').value = '';
+  document.getElementById('sdBis').value = '';
   await renderHoursMiniCal();
 });
 
@@ -3099,7 +3114,12 @@ function showAddEmployeeResult(email, password) {
   };
 }
 
-document.getElementById('teamAddBtn').addEventListener('click', openAddEmployeeModal);
+document.getElementById('teamAddBtn').addEventListener('click', () => {
+  const code = currentProfile?.company_code;
+  if (!code) { showToast('Kein Unternehmens-Code verfügbar', 'error'); return; }
+  const inviteUrl = `${location.origin}/employee-signup.html?code=${encodeURIComponent(code)}`;
+  window.open(inviteUrl, '_blank');
+});
 document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 
 function setupScheduleNav() {

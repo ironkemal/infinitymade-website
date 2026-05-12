@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513c" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -273,27 +273,35 @@
               </div>
               <div class="hours-cal-grid" id="hoursMiniCal"></div>
               <div class="hours-cal-legend">
-                <span><span class="dot open"></span> Açık</span>
-                <span><span class="dot closed"></span> Kapalı</span>
-                <span><span class="dot holiday"></span> Tatil</span>
-                <span><span class="dot special"></span> Özel</span>
+                <span><span class="dot open"></span> Geöffnet</span>
+                <span><span class="dot closed"></span> Geschlossen</span>
+                <span><span class="dot holiday"></span> Feiertag</span>
+                <span><span class="dot special"></span> Sondertermin</span>
               </div>
             </div>
             <div class="hours-cal-right">
-              <h3>Özel Günler</h3>
+              <h3>Sondertage</h3>
               <div id="specialDaysList" class="special-days-list"></div>
               <div class="special-day-form">
-                <label class="form-label">Tarih</label>
-                <input type="date" class="form-input" id="sdDate" />
-                <label class="form-label">Tür</label>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Von</label>
+                    <input type="date" class="form-input" id="sdDate" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Bis</label>
+                    <input type="date" class="form-input" id="sdBis" />
+                  </div>
+                </div>
+                <label class="form-label">Typ</label>
                 <select class="form-select" id="sdType">
-                  <option value="closed">Kapalı</option>
-                  <option value="holiday">Tatil</option>
-                  <option value="special">Özel / Kutlama</option>
+                  <option value="closed">Geschlossen</option>
+                  <option value="holiday">Feiertag</option>
+                  <option value="special">Sondertermin</option>
                 </select>
-                <label class="form-label">Not</label>
-                <input type="text" class="form-input" id="sdNote" placeholder="Örn: Bayram, Doğum günü..." />
-                <button class="btn-primary" id="sdAddBtn" style="margin-top:12px;">Ekle</button>
+                <label class="form-label">Notiz</label>
+                <input type="text" class="form-input" id="sdNote" placeholder="z. B. Urlaub, Geburtstag..." />
+                <button class="btn-primary" id="sdAddBtn" style="margin-top:12px;">Hinzufügen</button>
               </div>
             </div>
           </div>
@@ -1196,6 +1204,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513b"></script>
+  <script type="module" src="dashboard.js?v=20260513c"></script>
 </body>
 </html>
