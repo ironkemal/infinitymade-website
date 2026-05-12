@@ -63,7 +63,7 @@ export async function adminRpc(fn, body) {
 
 /**
  * Get decrypted secret for a business via Vault helper.
- * kind: 'cal_api_key' | 'whatsapp_access_token'
+ * kind: 'whatsapp_access_token'
  */
 export async function getBusinessSecret(userId, kind) {
   const { ok, data } = await adminRpc('business_get_secret', {
