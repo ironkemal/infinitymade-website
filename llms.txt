@@ -4,6 +4,7 @@
 
 # Entity
 InfinityMade is a German SaaS company based in Siegburg, NRW. It provides an all-in-one digital platform for small and medium-sized businesses (KMU) including website creation, WhatsApp AI receptionist, online booking system, and Google Business Profile optimization.
+Wikidata: https://www.wikidata.org/wiki/Q139764488
 
 # Sectors served
 - Hairdressers / Barbers (Friseur)
