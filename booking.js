@@ -1,6 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
-import { mountCalendar } from './calendar-widget.js?v=20260512h';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = 'https://n8n.infinitymade.de/api';
@@ -14,8 +13,6 @@ const state = {
   serviceId: null, serviceTitle: null, durationMinutes: null, bufferMinutes: 0,
   selectedDate: null, selectedTime: null
 };
-
-let calWidget = null;
 
 function goStep(id) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
@@ -153,60 +150,75 @@ async function loadServices(empId) {
   });
 }
 
+let bkScheduleDate = new Date();
+
+async function loadBookingSlots(date) {
+  bkScheduleDate = date;
+  const labelEl = document.getElementById('bkDateLabel');
+  const listEl  = document.getElementById('bkSlotsList');
+  const today = new Date();
+  const dayDiff = Math.round((date - new Date(today.toDateString())) / 86400000);
+  const isToday = dayDiff === 0;
+  const fmtDate = new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'numeric',month:'long'}).format(date);
+  labelEl.textContent = isToday ? `Heute, ${fmtDate}` : fmtDate;
+  listEl.innerHTML = '<div class="slots-empty">Laden…</div>';
+
+  const tz = 'Europe/Berlin';
+  const dStr = date.toLocaleDateString('sv-SE',{timeZone:tz});
+  state.selectedDate = dStr;
+  state.selectedTime = null;
+  updateSidebar();
+
+  try {
+    const res = await fetch(`${API}/booking/get-slots`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId:   state.employeeId,
+        date:     dStr,
+        duration: state.durationMinutes,
+        buffer:   state.bufferMinutes,
+        step:     30
+      })
+    });
+    const data = await res.json();
+    const slots = data.slots || [];
+    if (!slots.length) {
+      listEl.innerHTML = '<div class="slots-empty">Keine Termine verfügbar.</div>';
+      return;
+    }
+    const colors = ['#ff8c42','#06d6a0','#118ab2','#ef476f','#9b5de5'];
+    listEl.innerHTML = slots.map((slot, i) => {
+      const color = colors[i % colors.length];
+      return `<button class="slot-card" data-time="${slot}" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:${color}22;border:1px solid ${color}55;border-radius:12px;color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left;transition:border-color .12s;">
+        <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+        <span>${slot} Uhr</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:500;">${state.durationMinutes} Min</span>
+      </button>`;
+    }).join('');
+    listEl.querySelectorAll('.slot-card').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.selectedTime = btn.dataset.time;
+        updateSidebar();
+        goStep('form');
+      });
+    });
+  } catch(e) {
+    listEl.innerHTML = '<div class="slots-empty">Fehler beim Laden.</div>';
+  }
+}
+
+document.getElementById('bkPrev').addEventListener('click', () => {
+  const d = new Date(bkScheduleDate); d.setDate(d.getDate()-1); loadBookingSlots(d);
+});
+document.getElementById('bkNext').addEventListener('click', () => {
+  const d = new Date(bkScheduleDate); d.setDate(d.getDate()+1); loadBookingSlots(d);
+});
+document.getElementById('bkToday').addEventListener('click', () => loadBookingSlots(new Date()));
+
 async function mountBookingCalendar() {
-  const container = document.getElementById('calMount');
-  container.innerHTML = '';
-
-  let { data: wh } = await supabase.from('working_hours')
-    .select('day_of_week,is_active').eq('user_id', state.employeeId);
-  if ((wh || []).length === 0) {
-    const { data: ownerWh } = await supabase.from('working_hours')
-      .select('day_of_week,is_active').eq('user_id', state.ownerId);
-    wh = ownerWh || [];
-  }
-  const offWeekdays = [];
-  if ((wh || []).length > 0) {
-    for (let d = 0; d < 7; d++) {
-      const row = wh.find(w => w.day_of_week === d);
-      if (!row || !row.is_active) offWeekdays.push(d);
-    }
-  }
-
-  calWidget = mountCalendar(container, {
-    minDate: new Date(),
-    disabledWeekdays: offWeekdays,
-    emptyText: 'Keine Termine verfügbar.',
-    placeholder: 'Bitte Datum wählen',
-    onDaySelect: async (dateStr) => {
-      state.selectedDate = dateStr;
-      state.selectedTime = null;
-      updateSidebar();
-      try {
-        const res = await fetch(`${API}/booking/get-slots`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId:   state.employeeId,
-            date:     dateStr,
-            duration: state.durationMinutes,
-            buffer:   state.bufferMinutes,
-            step:     30
-          })
-        });
-        const data = await res.json();
-        return (data.slots || []).map(slot => ({
-          label: slot,
-          onClick: () => {
-            state.selectedTime = slot;
-            updateSidebar();
-            goStep('form');
-          }
-        }));
-      } catch(e) {
-        return [];
-      }
-    }
-  });
+  bkScheduleDate = new Date();
+  await loadBookingSlots(bkScheduleDate);
 }
 
 document.getElementById('backToEmp').addEventListener('click', () => goStep('employees'));
