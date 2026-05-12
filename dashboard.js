@@ -2994,8 +2994,19 @@ document.getElementById('fbSendBtn')?.addEventListener('click', async () => {
 function startClock() {
   const el = document.getElementById('liveClock');
   if (!el) return;
+  let lastMinute = -1;
   function tick() {
-    el.textContent = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Berlin'});
+    const now = new Date();
+    el.textContent = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Berlin'});
+    const currentMinute = now.getMinutes();
+    if (currentMinute !== lastMinute) {
+      lastMinute = currentMinute;
+      if (scheduleDate) {
+        const today = new Date();
+        const dayDiff = Math.round((scheduleDate - new Date(today.toDateString())) / 86400000);
+        if (dayDiff === 0) loadScheduleBookings(scheduleDate);
+      }
+    }
   }
   tick();
   setInterval(tick, 1000);
