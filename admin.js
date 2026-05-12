@@ -135,9 +135,14 @@ document.getElementById('logoutBtn').addEventListener('click', async ()=>{
 
 async function boot() {
   const { data: { session }, error } = await supabase.auth.getSession();
+  console.log('[admin] session', session);
+  console.log('[admin] session.user.id', session?.user?.id);
+  console.log('[admin] ADMIN_UUID', ADMIN_UUID);
+  console.log('[admin] match?', session?.user?.id === ADMIN_UUID);
+  console.log('[admin] match lower?', String(session?.user?.id).toLowerCase() === String(ADMIN_UUID).toLowerCase());
   if (error||!session) { window.location.href='login.html'; return; }
   currentSession = session;
-  if (session.user.id !== ADMIN_UUID) {
+  if (String(session.user.id).toLowerCase() !== String(ADMIN_UUID).toLowerCase()) {
     window.location.href = 'dashboard.html';
     return;
   }
