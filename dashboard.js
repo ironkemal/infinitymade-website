@@ -1551,9 +1551,10 @@ async function renderHoursGrid() {
 
 document.getElementById('hoursSaveBtn').addEventListener('click', async () => {
   const payload = [];
+  const ownerId = getOwnerId();
   for(let i=0;i<7;i++) {
     payload.push({
-      user_id:hoursEmpId,day_of_week:i,
+      user_id:hoursEmpId,owner_id:ownerId,day_of_week:i,
       start_time:document.getElementById(`wh-start-${i}`).value+':00',
       end_time:document.getElementById(`wh-end-${i}`).value+':00',
       is_active:document.getElementById(`wh-active-${i}`).checked
@@ -2014,9 +2015,10 @@ async function loadEmpHours(empId) {
   const saveBtn = document.getElementById('empHoursSaveBtn');
   if (saveBtn) saveBtn.onclick = async () => {
     const payload = [];
+    const ownerId = getOwnerId();
     for(let i=0;i<7;i++) {
       payload.push({
-        user_id:empId,day_of_week:i,
+        user_id:empId,owner_id:ownerId,day_of_week:i,
         start_time:document.getElementById(`ewh-start-${i}`).value+':00',
         end_time:document.getElementById(`ewh-end-${i}`).value+':00',
         is_active:document.getElementById(`ewh-active-${i}`).checked
