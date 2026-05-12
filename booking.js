@@ -188,12 +188,13 @@ async function loadBookingSlots(date) {
   updateSidebar();
 
   const { data: customDay } = await supabase.from('custom_days')
-    .select('type,note')
+    .select('type,note,start_time,end_time')
     .eq('owner_id', state.ownerId)
     .eq('date', dStr)
     .maybeSingle();
 
-  if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday')) {
+  const isFullDay = customDay && !customDay.start_time && !customDay.end_time;
+  if (isFullDay && (customDay.type === 'closed' || customDay.type === 'holiday')) {
     listEl.innerHTML = `<div class="slots-empty">Geschlossen${customDay.note ? ': ' + customDay.note : ''}</div>`;
     return;
   }

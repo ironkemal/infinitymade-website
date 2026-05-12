@@ -345,6 +345,21 @@ async function renderSidebar() {
   });
 }
 
+function showMyBookingLink() {
+  const wrap = document.getElementById('myBookingLink');
+  const urlEl = document.getElementById('myBookingUrl');
+  const btn = document.getElementById('myBookingCopy');
+  if (!wrap || !currentProfile) return;
+  const link = currentProfile.booking_slug || (window.location.origin + '/booking.html?u=' + currentProfile.id);
+  urlEl.textContent = link;
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(link);
+    showToast(t('copied'));
+  };
+  wrap.style.display = 'flex';
+}
+
 async function switchPanel(id) {
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -352,7 +367,7 @@ async function switchPanel(id) {
   if (target) target.classList.add('active');
   await renderSidebar();
   closeSidebar();
-  if (id==='calendar'){ if(!calendar) await initCalendar(); else calendar.reloadMonth(); }
+  if (id==='calendar'){ if(!calendar) await initCalendar(); else calendar.reloadMonth(); showMyBookingLink(); }
   if (id==='kunden') loadLeads();
   if (id==='services') loadServices();
   if (id==='hours') loadHoursPanel();
@@ -1674,14 +1689,17 @@ function renderSpecialDaysList() {
   const list = document.getElementById('specialDaysList');
   if (!hoursCustomDays.length) { list.innerHTML = '<div style="color:var(--text-faint);font-size:13px;">Keine Sondertage vorhanden.</div>'; return; }
   const sorted = [...hoursCustomDays].sort((a, b) => a.date.localeCompare(b.date));
-  list.innerHTML = sorted.map(d => `
+  list.innerHTML = sorted.map(d => {
+    const timeRange = d.start_time && d.end_time ? ` ${d.start_time.substring(0,5)}–${d.end_time.substring(0,5)}` : '';
+    return `
     <div class="special-day-item">
       <span class="sd-date">${d.date}</span>
-      <span class="sd-badge ${d.type}">${d.type === 'closed' ? 'Geschlossen' : d.type === 'holiday' ? 'Feiertag' : 'Sondertermin'}</span>
+      <span class="sd-badge ${d.type}">${d.type === 'closed' ? 'Geschlossen' : d.type === 'holiday' ? 'Feiertag' : 'Sondertermin'}${timeRange}</span>
       <span class="sd-note">${d.note || ''}</span>
       <button onclick="deleteSpecialDay('${d.id}')">×</button>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 window.deleteSpecialDay = async function(id) {
@@ -1694,6 +1712,8 @@ window.deleteSpecialDay = async function(id) {
 document.getElementById('sdAddBtn').addEventListener('click', async () => {
   const von = document.getElementById('sdDate').value;
   const bis = document.getElementById('sdBis').value;
+  const startTime = document.getElementById('sdStartTime').value;
+  const endTime = document.getElementById('sdEndTime').value;
   const type = document.getElementById('sdType').value;
   const note = document.getElementById('sdNote').value.trim();
   if (!von) { showToast('Von Datum wählen', 'error'); return; }
@@ -1707,7 +1727,13 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
   const rows = [];
   const d = new Date(startDate);
   while (d <= endDate) {
-    rows.push({ owner_id: ownerId, date: d.toISOString().split('T')[0], type, note });
+    rows.push({
+      owner_id: ownerId,
+      date: d.toISOString().split('T')[0],
+      type, note,
+      start_time: startTime || null,
+      end_time: endTime || null
+    });
     d.setDate(d.getDate() + 1);
   }
 
@@ -1716,6 +1742,8 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
   showToast(rows.length > 1 ? `${rows.length} Tage hinzugefügt` : '1 Tag hinzugefügt');
   document.getElementById('sdNote').value = '';
   document.getElementById('sdBis').value = '';
+  document.getElementById('sdStartTime').value = '';
+  document.getElementById('sdEndTime').value = '';
   await renderHoursMiniCal();
 });
 
