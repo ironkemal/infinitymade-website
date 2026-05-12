@@ -36,6 +36,13 @@ function collectWorkingHours() {
   return hours;
 }
 
+// Auto-fill company code from URL
+const params = new URLSearchParams(location.search);
+const urlCode = params.get('code');
+if (urlCode) {
+  document.getElementById('company_code').value = urlCode.toUpperCase();
+}
+
 const msg = document.getElementById('message');
 function showMsg(text, type) {
   msg.textContent = text;

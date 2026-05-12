@@ -1568,30 +1568,19 @@ async function loadTeam() {
   if (data.length===0) {
     data = [{id:currentSession.user.id,email:currentSession.user.email,business_name:currentProfile.business_name||currentSession.user.email.split('@')[0],role:currentProfile.role}];
   }
-  // API avatar_url ve booking_slug döndürmüyorsa Supabase'den al
-  if (data.length > 0) {
-    const ids = data.map(d => d.id).filter(Boolean);
-    if (ids.length) {
-      const { data: profiles } = await supabase.from('profiles').select('id,avatar_url,booking_slug').in('id', ids);
-      if (profiles) {
-        const map = {};
-        profiles.forEach(p => map[p.id] = p);
-        data.forEach(d => {
-          if (map[d.id]) {
-            if (map[d.id].avatar_url) d.avatar_url = map[d.id].avatar_url;
-            if (map[d.id].booking_slug) d.booking_slug = map[d.id].booking_slug;
-          }
-        });
-      }
-    }
-  }
   teamMembers = data;
 
   if (currentProfile.role!=='owner') return;
   const code = currentProfile.company_code||'—';
   document.getElementById('inviteCode').textContent = code;
+  const inviteUrl = code === '—' ? '—' : `${location.origin}/employee-signup.html?code=${encodeURIComponent(code)}`;
+  document.getElementById('inviteLink').textContent = inviteUrl;
   document.getElementById('copyInviteBtn').onclick = () => {
     navigator.clipboard.writeText(code);
+    showToast(t('copied'));
+  };
+  document.getElementById('copyInviteLinkBtn').onclick = () => {
+    navigator.clipboard.writeText(inviteUrl);
     showToast(t('copied'));
   };
 
