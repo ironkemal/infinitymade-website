@@ -458,12 +458,8 @@ function hslToHex(h,s,l){
 }
 function shiftColorForTime(hex, hour){
   if (!hex || hex==='null') return null;
-  const hsl = hexToHSL(hex);
-  const hueShift = Math.max(0, (hour - 8)) * 25;
-  hsl.h = (hsl.h + hueShift) % 360;
-  hsl.l = Math.max(42, Math.min(62, hsl.l));
-  hsl.s = Math.max(55, Math.min(85, hsl.s));
-  return hslToHex(hsl.h, hsl.s, hsl.l);
+  const l = Math.max(36, Math.min(60, 60 - Math.max(0, Math.min(1, (hour - 8) / 12)) * 24));
+  return hslToHex(120, 65, l);
 }
 
 function findGaps(whStart, whEnd, bookings) {
@@ -558,13 +554,88 @@ async function renderGaps() {
       const durMin = Math.round((new Date('2000-01-01T' + g.end) - new Date('2000-01-01T' + g.start)) / 60000);
       return `<div class="gap-card">
         <div class="gap-card-top">
-          <span class="gap-card-day">${g.day}</span>
           <span class="gap-card-dur">${durMin} min</span>
         </div>
         <div class="gap-card-time">${g.start} - ${g.end}</div>
       </div>`;
     }).join('');
   } catch(e) { console.error('[renderGaps]', e); }
+}
+
+async function renderGapsForDate(date) {
+  try {
+    const tz = 'Europe/Berlin';
+    const container = document.getElementById('gapsList');
+    if (!container) return;
+    if (!date) date = scheduleDate;
+
+    const dateStr = date.toLocaleDateString('sv-SE',{timeZone:tz});
+    const dayStart = new Date(dateStr + 'T00:00:00');
+    const dayDow = dayStart.getDay();
+
+    const labelEl = document.getElementById('gapsDateLabel');
+    if (labelEl) {
+      const todayStr = new Date().toLocaleDateString('sv-SE',{timeZone:tz});
+      const isToday = dateStr === todayStr;
+      const fmt = new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'numeric',month:'short'}).format(dayStart);
+      labelEl.textContent = isToday ? 'Freie Zeiten' : fmt;
+    }
+
+    const ownerId = getOwnerId();
+    const { data: whAll } = await supabase.from('working_hours')
+      .select('day_of_week,start_time,end_time,is_active')
+      .eq('user_id', ownerId)
+      .eq('is_active', true);
+    const whMap = {};
+    whAll?.forEach(r => whMap[r.day_of_week] = r);
+
+    const dayEndIso = new Date(dayStart.getTime() + 86399000).toISOString();
+    let q = supabase.from('bookings')
+      .select('start_time,end_time,services(duration_minutes),status')
+      .eq('owner_id', ownerId)
+      .gte('start_time', dayStart.toISOString()).lte('start_time', dayEndIso)
+      .neq('status','cancelled').order('start_time');
+    if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
+    const { data: bookings } = await q;
+
+    const totalEl = document.getElementById('gapsTotal');
+    const wh = whMap[dayDow];
+    if (!wh) {
+      container.innerHTML = '<div class="gap-empty">Keine Arbeitszeiten für diesen Tag.</div>';
+      if (totalEl) totalEl.textContent = '0 min';
+      return;
+    }
+
+    const dayBookings = (bookings||[]).filter(b => {
+      const d = new Date(b.start_time);
+      return d >= dayStart && d < new Date(dayStart.getTime() + 86400000);
+    });
+    const allGaps = findGaps(wh.start_time, wh.end_time, dayBookings).map(g => ({day: 'Heute', start: g.start, end: g.end}));
+
+    if (allGaps.length === 0) {
+      container.innerHTML = '<div class="gap-empty">Keine freien Zeiten.</div>';
+      if (totalEl) totalEl.textContent = '0 min';
+      return;
+    }
+    const totalFreeMin = allGaps.reduce((sum, g) => {
+      const s = parseInt(g.start.split(':')[0])*60 + parseInt(g.start.split(':')[1]);
+      const e = parseInt(g.end.split(':')[0])*60 + parseInt(g.end.split(':')[1]);
+      return sum + (e - s);
+    }, 0);
+    const totalH = Math.floor(totalFreeMin / 60);
+    const totalM = totalFreeMin % 60;
+    if (totalEl) totalEl.textContent = totalH > 0 ? `${totalH}h ${totalM}min` : `${totalM}min`;
+
+    container.innerHTML = allGaps.map(g => {
+      const durMin = Math.round((new Date('2000-01-01T' + g.end) - new Date('2000-01-01T' + g.start)) / 60000);
+      return `<div class="gap-card">
+        <div class="gap-card-top">
+          <span class="gap-card-dur">${durMin} min</span>
+        </div>
+        <div class="gap-card-time">${g.start} - ${g.end}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('[renderGapsForDate]', e); }
 }
 
 async function loadScheduleBookings(date) {
@@ -599,7 +670,6 @@ async function loadScheduleBookings(date) {
   if (isToday) document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
   if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
-  const timeColors = ['#f97316','#22c55e','#3b82f6','#ec4899','#a855f7','#ef4444'];
   listEl.innerHTML = bookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
     const dur = b.end_time
@@ -607,9 +677,7 @@ async function loadScheduleBookings(date) {
       : (b.services?.duration_minutes ? b.services.duration_minutes+' min' : '—');
     const hourStr = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
     const hour = parseInt(hourStr.split(':')[0]) + parseInt(hourStr.split(':')[1])/60;
-    const hourIdx = Math.max(0, Math.min(timeColors.length-1, Math.floor((hour - 8) / 2)));
-    const baseColor = b.services?.color || timeColors[hourIdx];
-    const color = shiftColorForTime(baseColor, hour) || baseColor;
+    const color = shiftColorForTime('#22c55e', hour);
     const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
     const isOwner = currentProfile.role==='owner';
     return `<div class="schedule-card" style="background:${color};">
@@ -2816,24 +2884,47 @@ function showAddEmployeeResult(email, password) {
 document.getElementById('teamAddBtn').addEventListener('click', openAddEmployeeModal);
 document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 
-document.getElementById('schedulePrev')?.addEventListener('click', async () => {
-  console.log('[schedule] prev clicked');
-  const d = new Date(scheduleDate);
-  d.setDate(d.getDate()-1);
-  console.log('[schedule] loading prev', d);
-  try { await loadScheduleBookings(d); } catch(e) { console.error('[schedule] prev error', e); }
-});
-document.getElementById('scheduleNext')?.addEventListener('click', async () => {
-  console.log('[schedule] next clicked');
-  const d = new Date(scheduleDate);
-  d.setDate(d.getDate()+1);
-  console.log('[schedule] loading next', d);
-  try { await loadScheduleBookings(d); } catch(e) { console.error('[schedule] next error', e); }
-});
-document.getElementById('scheduleToday')?.addEventListener('click', async () => {
-  console.log('[schedule] today clicked');
-  try { await loadScheduleBookings(new Date()); } catch(e) { console.error('[schedule] today error', e); }
-});
+function setupScheduleNav() {
+  const prev = document.getElementById('schedulePrev');
+  const next = document.getElementById('scheduleNext');
+  const today = document.getElementById('scheduleToday');
+  if (prev) prev.addEventListener('click', async () => {
+    const d = new Date(scheduleDate);
+    d.setDate(d.getDate()-1);
+    await loadScheduleBookings(d);
+    await renderGapsForDate(d);
+  });
+  if (next) next.addEventListener('click', async () => {
+    const d = new Date(scheduleDate);
+    d.setDate(d.getDate()+1);
+    await loadScheduleBookings(d);
+    await renderGapsForDate(d);
+  });
+  if (today) today.addEventListener('click', async () => {
+    await loadScheduleBookings(new Date());
+    await renderGapsForDate(new Date());
+  });
+
+  const gPrev = document.getElementById('gapsPrev');
+  const gNext = document.getElementById('gapsNext');
+  const gToday = document.getElementById('gapsToday');
+  if (gPrev) gPrev.addEventListener('click', async () => {
+    const d = new Date(scheduleDate);
+    d.setDate(d.getDate()-1);
+    await loadScheduleBookings(d);
+    await renderGapsForDate(d);
+  });
+  if (gNext) gNext.addEventListener('click', async () => {
+    const d = new Date(scheduleDate);
+    d.setDate(d.getDate()+1);
+    await loadScheduleBookings(d);
+    await renderGapsForDate(d);
+  });
+  if (gToday) gToday.addEventListener('click', async () => {
+    await loadScheduleBookings(new Date());
+    await renderGapsForDate(new Date());
+  });
+}
 
 async function loadFeedbacks() {
   const list = document.getElementById('fbList');
@@ -2898,6 +2989,8 @@ async function init() {
     await renderOverview();
     console.log('[init] overview ok');
     try { await renderGaps(); console.log('[init] gaps ok'); } catch(e) { console.error('[init] renderGaps error', e); }
+    try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch(e) { console.error('[init] renderGapsForDate error', e); }
+    setupScheduleNav();
     await initCalendar();
     console.log('[init] calendar ok');
     await handleGmailCallback();

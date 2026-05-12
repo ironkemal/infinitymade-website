@@ -120,9 +120,9 @@
 
           <div class="today-section">
             <div class="schedule-header">
-              <button class="btn-icon" id="schedulePrev">‹</button>
+              <button class="btn-icon" id="schedulePrev" type="button">‹</button>
               <span class="schedule-title" id="scheduleDateLabel">Heutige Termine</span>
-              <button class="btn-icon" id="scheduleNext">›</button>
+              <button class="btn-icon" id="scheduleNext" type="button">›</button>
               <button class="btn-ghost schedule-today-btn" id="scheduleToday" type="button">Heute</button>
             </div>
             <div class="card upcoming-bookings-card">
@@ -136,8 +136,10 @@
 
           <div class="gaps-section">
             <div class="gaps-header">
-              <span class="gaps-icon">📅</span>
-              <span class="gaps-title">Freie Zeiten im Kalender</span>
+              <button class="btn-icon" id="gapsPrev" type="button">‹</button>
+              <span class="gaps-title" id="gapsDateLabel">Freie Zeiten</span>
+              <button class="btn-icon" id="gapsNext" type="button">›</button>
+              <button class="btn-ghost schedule-today-btn" id="gapsToday" type="button">Heute</button>
               <span class="gaps-total" id="gapsTotal"></span>
             </div>
             <div class="gaps-list" id="gapsList">
