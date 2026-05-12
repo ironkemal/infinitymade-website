@@ -297,6 +297,17 @@ app.post('/api/booking/get-slots', async (req, res) => {
     const dayOfWeek = berlinDayOfWeek(date);
     const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
 
+    // Reject past dates entirely
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+    if (date < todayStr) return res.json({ slots: [] });
+
+    // For today, compute current Berlin minute for filtering below
+    let nowBerlinMinutes = null;
+    if (date === todayStr) {
+      nowBerlinMinutes = utcToBerlinMinutes(now);
+    }
+
     // 1. Get Working Hours — employee first, fallback to owner
     let wh = (await supabase
       .from('working_hours')
