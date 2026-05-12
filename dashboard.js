@@ -650,8 +650,7 @@ async function loadScheduleBookings(date) {
   loadingEl.hidden=false; emptyEl.hidden=true; listEl.hidden=true;
 
   const today = new Date();
-  const dayDiff = Math.round((date - new Date(today.toDateString())) / 86400000);
-  const isToday = dayDiff===0;
+  const isToday = date.toDateString() === today.toDateString();
   const fmtDate = new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'numeric',month:'short'}).format(date);
   labelEl.textContent = isToday ? 'Heutige Termine' : fmtDate;
 
@@ -3003,8 +3002,7 @@ function startClock() {
       lastMinute = currentMinute;
       if (scheduleDate) {
         const today = new Date();
-        const dayDiff = Math.round((scheduleDate - new Date(today.toDateString())) / 86400000);
-        if (dayDiff === 0) loadScheduleBookings(scheduleDate);
+        if (scheduleDate.toDateString() === today.toDateString()) loadScheduleBookings(scheduleDate);
       }
     }
   }
