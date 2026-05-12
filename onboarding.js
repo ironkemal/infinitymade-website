@@ -558,7 +558,7 @@ function bindWhatsapp() {
     const accessToken = document.getElementById('waAccessToken').value.trim();
 
     try {
-      if (accessToken) {
+      if (userId && accessToken) {
         const { error: rpcErr } = await supabase.rpc('business_save_secret', {
           p_user_id: userId,
           p_secret_kind: 'whatsapp_access_token',
@@ -567,15 +567,18 @@ function bindWhatsapp() {
         if (rpcErr) throw rpcErr;
       }
 
-      const { error } = await supabase.from('profiles').update({
-        whatsapp_number: number,
-        whatsapp_phone_number_id: phoneNumberId,
-        whatsapp_waba_id: wabaId,
-        onboarding_step: 'templates',
-      }).eq('id', userId);
-      if (error) throw error;
+      if (userId) {
+        const { error } = await supabase.from('profiles').update({
+          whatsapp_number: number,
+          whatsapp_phone_number_id: phoneNumberId,
+          whatsapp_waba_id: wabaId,
+          onboarding_step: 'templates',
+        }).eq('id', userId);
+        if (error) throw error;
+      }
 
-      profile = { ...profile, whatsapp_number: number, whatsapp_phone_number_id: phoneNumberId, whatsapp_waba_id: wabaId, onboarding_step: 'templates' };
+      profile = { ...profile, whatsapp_number: number, whatsapp_phone_number_id: phoneNumberId, whatsapp_waba_id: wabaId, whatsapp_access_token: accessToken || null, onboarding_step: 'templates' };
+      saveSessionProfile();
       goToStep(6);
     } catch (err) {
       showError(err.message);
@@ -607,14 +610,17 @@ function bindTemplates() {
       reactivation: document.getElementById('tplReactivation').value,
     };
 
-    const { error } = await supabase.from('profiles').update({
-      message_templates,
-      onboarding_step: 'plan',
-    }).eq('id', userId);
-    if (error) return showError(error.message);
+    if (userId) {
+      const { error } = await supabase.from('profiles').update({
+        message_templates,
+        onboarding_step: 'plan',
+      }).eq('id', userId);
+      if (error) return showError(error.message);
+    }
 
     profile = { ...profile, message_templates, onboarding_step: 'plan' };
-    goToStep(7); // plan
+    saveSessionProfile();
+    goToStep(7);
   });
 }
 
@@ -646,28 +652,87 @@ function bindPlan() {
       btn.disabled = true;
       btn.textContent = 'Weiterleitung...';
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const res = await fetch('/api/stripe/create-checkout-session', {
+        if (userId) {
+          // Existing user flow
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch('/api/stripe/create-checkout-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ planSlug, interval: currentInterval }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.url) {
+            showError(data.error || 'Checkout konnte nicht gestartet werden.');
+            btn.disabled = false;
+            btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
+            return;
+          }
+          await supabase.from('profiles').update({
+            plan: planSlug,
+            billing_interval: currentInterval,
+          }).eq('id', userId);
+          window.location.href = data.url;
+          return;
+        }
+
+        // New user flow: gather sessionStorage data, send to pending endpoint, then checkout
+        const email = sessionStorage.getItem('onboarding_email');
+        const password = sessionStorage.getItem('onboarding_password');
+        if (!email || !password) { showError('Kontodaten fehlen. Bitte starten Sie von Schritt 1.'); btn.disabled = false; return; }
+
+        const onboarding_data = {
+          business_name: profile.business_name || null,
+          sector: profile.sector || null,
+          city: profile.city || null,
+          language: profile.language || null,
+          zip: profile.zip || null,
+          street: profile.street || null,
+          house_number: profile.house_number || null,
+          owner_first_name: profile.owner_first_name || null,
+          owner_last_name: profile.owner_last_name || null,
+          accepts_bookings: profile.accepts_bookings !== false,
+          booking_slug: profile.booking_slug || null,
+          whatsapp_number: profile.whatsapp_number || null,
+          whatsapp_phone_number_id: profile.whatsapp_phone_number_id || null,
+          whatsapp_waba_id: profile.whatsapp_waba_id || null,
+          whatsapp_access_token: profile.whatsapp_access_token || null,
+          message_templates: profile.message_templates || null,
+          working_hours: profile.working_hours || null,
+          working_hours_rows: profile.working_hours_rows || null,
+          services: services || [],
+          plan: planSlug,
+          billing_interval: currentInterval,
+        };
+
+        const pendingRes = await fetch('/api/onboarding/pending', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ planSlug, interval: currentInterval }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, onboarding_data }),
         });
-        const data = await res.json();
-        if (!res.ok || !data.url) {
-          showError(data.error || 'Checkout konnte nicht gestartet werden.');
+        const pendingData = await pendingRes.json();
+        if (!pendingRes.ok || !pendingData.pending_id) {
+          showError(pendingData.error || 'Vorbereitung fehlgeschlagen.');
           btn.disabled = false;
           btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
           return;
         }
-        // Save chosen plan in profile before redirect (so we have it if checkout abandoned)
-        await supabase.from('profiles').update({
-          plan: planSlug,
-          billing_interval: currentInterval,
-        }).eq('id', userId);
-        window.location.href = data.url;
+
+        const checkoutRes = await fetch('/api/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pending_id: pendingData.pending_id, planSlug, interval: currentInterval }),
+        });
+        const checkoutData = await checkoutRes.json();
+        if (!checkoutRes.ok || !checkoutData.url) {
+          showError(checkoutData.error || 'Checkout konnte nicht gestartet werden.');
+          btn.disabled = false;
+          btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
+          return;
+        }
+        window.location.href = checkoutData.url;
       } catch (err) {
         showError(err.message);
         btn.disabled = false;
