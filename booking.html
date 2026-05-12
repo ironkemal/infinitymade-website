@@ -186,20 +186,29 @@
       margin-bottom: 12px; padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
     }
-    .slot-btn {
-      display: flex; align-items: center; gap: 10px;
-      width: 100%; padding: 11px 14px;
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 8px; color: var(--text);
-      font-family: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer; margin-bottom: 8px;
-      transition: border-color .12s; text-align: left;
-    }
-    .slot-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; flex-shrink: 0; }
-    .slot-btn:hover   { border-color: var(--green); }
-    .slot-btn.picked  { background: var(--green); color: #000; border-color: var(--green); }
-    .slot-btn.picked .slot-dot { background: #000; }
     .slots-empty { font-size: 12px; color: var(--muted); padding-top: 8px; }
+    .gap-card {
+      background: linear-gradient(135deg, rgba(34,197,94,0.20), rgba(34,197,94,0.05));
+      border: 1px dashed rgba(34,197,94,0.35);
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s, border-color .12s;
+      width: 100%;
+      margin-bottom: 10px;
+      text-align: left;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .gap-card:hover { opacity: 0.92; transform: translateY(-1px); border-color: var(--green); }
+    .gap-card.picked {
+      background: linear-gradient(135deg, rgba(34,197,94,0.45), rgba(34,197,94,0.15));
+      border: 1px solid var(--green);
+      box-shadow: 0 0 15px rgba(34,197,94,0.2);
+    }
+    .gap-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .gap-card-dur { background: rgba(0,0,0,0.25); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; }
+    .gap-card-time { font-size: 1rem; color: rgba(255,255,255,0.95); font-weight: 600; }
 
     /* â”€â”€ Form â”€â”€ */
     .form-label  { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
@@ -235,7 +244,6 @@
       padding: 5px 10px; transition: border-color .12s, color .12s;
     }
     .btn-ghost:hover { border-color: var(--green); color: var(--green); }
-    .slot-card:hover { border-color: var(--green) !important; }
 
     /* â”€â”€ Footer row â”€â”€ */
     .step-footer { margin-top: 24px; display: flex; justify-content: flex-end; }
@@ -345,6 +353,6 @@
   </main>
 </div>
 
-<script type="module" src="booking.js?v=20260512f"></script>
+<script type="module" src="booking.js?v=20260512g"></script>
 </body>
 </html>

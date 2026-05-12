@@ -194,20 +194,21 @@ async function loadBookingSlots(date) {
       listEl.innerHTML = '<div class="slots-empty">Keine Termine verfügbar.</div>';
       return;
     }
-    const colors = ['#ff8c42','#06d6a0','#118ab2','#ef476f','#9b5de5'];
-    listEl.innerHTML = slots.map((slot, i) => {
-      const color = colors[i % colors.length];
-      return `<button class="slot-card" data-time="${slot}" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:${color}22;border:1px solid ${color}55;border-radius:12px;color:var(--text);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left;transition:border-color .12s;">
-        <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></span>
-        <span>${slot} Uhr</span>
-        <span style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:500;">${state.durationMinutes} Min</span>
+    listEl.innerHTML = slots.map((slot) => {
+      return `<button class="gap-card" data-time="${slot}">
+        <div class="gap-card-top">
+          <span class="gap-card-dur">${state.durationMinutes} Min</span>
+        </div>
+        <div class="gap-card-time">${slot} Uhr</div>
       </button>`;
     }).join('');
-    listEl.querySelectorAll('.slot-card').forEach(btn => {
+    listEl.querySelectorAll('.gap-card').forEach(btn => {
       btn.addEventListener('click', () => {
+        listEl.querySelectorAll('.gap-card').forEach(b => b.classList.remove('picked'));
+        btn.classList.add('picked');
         state.selectedTime = btn.dataset.time;
         updateSidebar();
-        goStep('form');
+        setTimeout(() => goStep('form'), 200);
       });
     });
   } catch(e) {
