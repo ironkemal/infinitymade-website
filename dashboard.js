@@ -472,9 +472,6 @@ async function renderOverview() {
 
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
 
-  const features = (PLAN_FEATURES[currentProfile.plan]||PLAN_FEATURES.starter)[currentLang]||[];
-  document.getElementById('featureList').innerHTML = features.map(f=>`<li>${f}</li>`).join('');
-
   await loadTodayBookings();
 }
 
@@ -2600,6 +2597,10 @@ async function loadSettings() {
     calBtn.textContent = t('btn_connect');
     calBtn.onclick = () => { window.location.href=`${API}/calendar/google-auth?userId=${currentSession.user.id}`; };
   }
+
+  const features = (PLAN_FEATURES[currentProfile.plan]||PLAN_FEATURES.starter)[currentLang]||[];
+  const sfList = document.getElementById('settingsFeatureList');
+  if (sfList) sfList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
 }
 
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {

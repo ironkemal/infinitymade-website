@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513f" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513g" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -120,10 +120,6 @@
             </div>
           </div>
 
-          <div class="card features-card" style="margin-top:20px;">
-            <div class="card-title" data-i18n="features_title">Was ist in Ihrem Paket enthalten?</div>
-            <ul id="featureList" class="feature-list"></ul>
-          </div>
         </section>
 
         <!-- ===== PANEL 2: KALENDER ===== -->
@@ -776,6 +772,13 @@
             </div>
 
             <div class="settings-section">
+              <div class="settings-section-title" data-i18n="features_title">Paketinhalt</div>
+              <div class="settings-section-body">
+                <ul id="settingsFeatureList" class="feature-list"></ul>
+              </div>
+            </div>
+
+            <div class="settings-section">
               <div class="settings-section-title" data-i18n="set_password">Passwort</div>
               <div class="settings-section-body">
                 <div class="form-group">
@@ -1211,6 +1214,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513h"></script>
+  <script type="module" src="dashboard.js?v=20260513i"></script>
 </body>
 </html>
