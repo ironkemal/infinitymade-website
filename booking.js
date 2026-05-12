@@ -59,7 +59,7 @@ async function init() {
   } else if (identifier.toUpperCase().startsWith('INF-')) {
     q = q.eq('company_code', identifier.toUpperCase());
   } else {
-    q = q.eq('booking_slug', identifier.toLowerCase());
+    q = q.ilike('booking_slug', `%/booking.html?u=${identifier.toLowerCase()}`);
   }
   const { data: profile } = await q.maybeSingle();
   if (!profile) { showError('Unternehmen nicht gefunden.'); return; }

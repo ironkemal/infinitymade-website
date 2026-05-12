@@ -89,7 +89,9 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
           role: 'employee',
           owner_id: ownerId,
           business_name: name,
-          plan: 'mitarbeiter'
+          plan: 'mitarbeiter',
+          billing: null,
+          plan_status: 'active'
         })
         .eq('id', authData.user.id);
         
