@@ -28,15 +28,24 @@ function updateSidebar() {
   const hasSel = state.employeeName || state.serviceTitle || state.selectedTime;
   document.getElementById('selDivider').style.display = hasSel ? 'block' : 'none';
 
+  const empBlock = document.getElementById('selEmpBlock');
   if (state.employeeName) {
-    document.getElementById('selEmpBlock').classList.add('show');
+    empBlock.classList.add('show');
     document.getElementById('selEmpVal').textContent = state.employeeName;
+  } else {
+    empBlock.classList.remove('show');
   }
+
+  const srvBlock = document.getElementById('selSrvBlock');
   if (state.serviceTitle) {
-    document.getElementById('selSrvBlock').classList.add('show');
+    srvBlock.classList.add('show');
     document.getElementById('selSrvVal').textContent = `${state.serviceTitle} (${state.durationMinutes} Min)`;
     document.getElementById('bizDuration').textContent = state.durationMinutes + ' Min';
+  } else {
+    srvBlock.classList.remove('show');
+    document.getElementById('bizDuration').textContent = '–';
   }
+
   const dateBlock = document.getElementById('selDateBlock');
   if (state.selectedDate && state.selectedTime) {
     dateBlock.classList.add('show');
@@ -84,11 +93,14 @@ async function init() {
 
   if (isEmployee) {
     state.employeeName = profile.business_name || profile.email?.split('@')[0] || 'Mitarbeiter';
+    state.ownerId = profile.owner_id || profile.id;
     updateSidebar();
     document.getElementById('backToEmp').style.display = 'none';
     await loadServices(state.employeeId);
     return;
   }
+
+  updateSidebar();
 
   const { data: employees } = await supabase.from('profiles_public')
     .select('id,business_name,email,role,avatar_url')
