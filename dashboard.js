@@ -400,7 +400,7 @@ async function renderOverview() {
     ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
   document.getElementById('kpi-status').textContent = currentProfile.is_active ? t('status_active') : t('status_inactive');
 
-  ['welcome-banner','noplan-banner','trial-banner','pastdue-banner'].forEach(id => {
+  ['welcome-banner','trial-banner','pastdue-banner'].forEach(id => {
     const el=document.getElementById(id); if(el) el.hidden=true;
   });
   const params = new URLSearchParams(location.search);
@@ -409,8 +409,6 @@ async function renderOverview() {
   if (params.get('welcome')==='1') {
     history.replaceState({},'' ,location.pathname);
     document.getElementById('welcome-banner').hidden = false;
-  } else if (status==='pending' && !hasSub) {
-    document.getElementById('noplan-banner').hidden = false;
   } else if (status==='trial' && currentProfile.trial_ends_at) {
     const days = Math.max(0,Math.ceil((new Date(currentProfile.trial_ends_at)-Date.now())/86400000));
     document.getElementById('trial-days-left').textContent = days;

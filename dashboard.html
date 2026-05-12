@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard â€“ InfinityMade</title>
+  <title>Dashboard – InfinityMade</title>
   <meta name="robots" content="noindex" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/favicon.svg" />
@@ -14,8 +14,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260512l" />
-  
+  <link rel="stylesheet" href="dashboard.css?v=20260511n" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -28,7 +28,7 @@
   <div id="app" style="display:none;">
     <header class="topbar">
       <div class="topbar-left">
-        <button class="hamburger" id="hamburger" aria-label="MenÃ¼">
+        <button class="hamburger" id="hamburger" aria-label="Menü">
           <span></span><span></span><span></span>
         </button>
         <a href="/" class="brand">InfinityMade</a>
@@ -56,34 +56,34 @@
       <main class="main-area" id="mainArea">
 
         <div id="welcome-banner" class="dash-banner welcome" hidden>
-          <div class="dash-banner-icon">ðŸŽ‰</div>
+          <div class="dash-banner-icon">🎉</div>
           <div class="dash-banner-content">
             <strong>Willkommen bei InfinityMade!</strong>
-            <p>Ihr 14-tÃ¤giger Test lÃ¤uft. Wir richten Ihren WhatsApp-Webhook ein â€” Sie hÃ¶ren in den nÃ¤chsten 24 Stunden von uns.</p>
+            <p>Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.</p>
           </div>
-          <button class="dash-banner-close" onclick="this.closest('.dash-banner').hidden=true">âœ•</button>
+          <button class="dash-banner-close" onclick="this.closest('.dash-banner').hidden=true">✕</button>
         </div>
 
         <div id="noplan-banner" class="dash-banner pending" hidden>
-          <div class="dash-banner-icon">ðŸ“¦</div>
+          <div class="dash-banner-icon">📦</div>
           <div class="dash-banner-content">
-            <strong>WÃ¤hlen Sie Ihren Plan</strong>
+            <strong>Wählen Sie Ihren Plan</strong>
             <p>Noch kein Plan aktiviert. Starten Sie 14 Tage kostenlos.</p>
           </div>
-          <a href="/onboarding.html?step=plan" class="dash-banner-action">Plan wÃ¤hlen</a>
+          <a href="/onboarding.html?step=plan" class="dash-banner-action">Plan wählen</a>
         </div>
 
         <div id="trial-banner" class="dash-banner trial" hidden>
-          <div class="dash-banner-icon">â±ï¸</div>
+          <div class="dash-banner-icon">⏱️</div>
           <div class="dash-banner-content">
-            <strong>Test-Phase: <span id="trial-days-left">â€”</span> Tage Ã¼brig</strong>
-            <p>Nach Ablauf der Testphase wird Ihre Karte belastet. Jederzeit kÃ¼ndbar.</p>
+            <strong>Test-Phase: <span id="trial-days-left">—</span> Tage übrig</strong>
+            <p>Nach Ablauf der Testphase wird Ihre Karte belastet. Jederzeit kündbar.</p>
           </div>
           <button class="dash-banner-action" id="trial-manage-btn">Abo verwalten</button>
         </div>
 
         <div id="pastdue-banner" class="dash-banner pastdue" hidden>
-          <div class="dash-banner-icon">âš ï¸</div>
+          <div class="dash-banner-icon">⚠️</div>
           <div class="dash-banner-content">
             <strong>Zahlung fehlgeschlagen</strong>
             <p>Bitte aktualisieren Sie Ihre Zahlungsmethode.</p>
@@ -91,27 +91,27 @@
           <button class="dash-banner-action" id="pastdue-fix-btn">Karte aktualisieren</button>
         </div>
 
-        <!-- ===== PANEL 1: ÃœBERSICHT ===== -->
+        <!-- ===== PANEL 1: ÜBERSICHT ===== -->
         <section class="panel active" id="panel-overview">
           <div class="panel-header">
             <div>
-              <h2 data-i18n="nav_overview">Ãœbersicht</h2>
-              <p class="panel-sub" data-i18n="overview_sub">Ihr heutiger Ãœberblick</p>
+              <h2 data-i18n="nav_overview">Übersicht</h2>
+              <p class="panel-sub" data-i18n="overview_sub">Ihr heutiger Überblick</p>
             </div>
           </div>
 
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label" data-i18n="kpi_plan">Paket</div>
-              <div class="kpi-value" id="kpi-plan">â€”</div>
+              <div class="kpi-value" id="kpi-plan">—</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label" data-i18n="kpi_status">Status</div>
-              <div class="kpi-value" id="kpi-status">â€”</div>
+              <div class="kpi-value" id="kpi-status">—</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label" data-i18n="kpi_today_bookings">Heute</div>
-              <div class="kpi-value kpi-green" id="kpi-today">â€”</div>
+              <div class="kpi-value kpi-green" id="kpi-today">—</div>
               <div class="kpi-sub" data-i18n="kpi_today_sub">Termine</div>
             </div>
             <div class="kpi-card">
@@ -122,9 +122,9 @@
 
           <div class="today-section">
             <div class="schedule-header">
-              <button class="btn-icon" id="schedulePrev" type="button">â€¹</button>
+              <button class="btn-icon" id="schedulePrev" type="button">‹</button>
               <span class="schedule-title" id="scheduleDateLabel">Heutige Termine</span>
-              <button class="btn-icon" id="scheduleNext" type="button">â€º</button>
+              <button class="btn-icon" id="scheduleNext" type="button">›</button>
               <button class="btn-ghost schedule-today-btn" id="scheduleToday" type="button">Heute</button>
             </div>
             <div class="card upcoming-bookings-card">
@@ -138,9 +138,9 @@
 
           <div class="gaps-section">
             <div class="gaps-header">
-              <button class="btn-icon" id="gapsPrev" type="button">â€¹</button>
+              <button class="btn-icon" id="gapsPrev" type="button">‹</button>
               <span class="gaps-title" id="gapsDateLabel">Freie Zeiten</span>
-              <button class="btn-icon" id="gapsNext" type="button">â€º</button>
+              <button class="btn-icon" id="gapsNext" type="button">›</button>
               <button class="btn-ghost schedule-today-btn" id="gapsToday" type="button">Heute</button>
               <span class="gaps-total" id="gapsTotal"></span>
             </div>
@@ -160,7 +160,7 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_calendar">Kalender</h2>
-              <p class="panel-sub" data-i18n="calendar_sub">Klicken Sie auf einen Tag fÃ¼r Slots</p>
+              <p class="panel-sub" data-i18n="calendar_sub">Klicken Sie auf einen Tag für Slots</p>
             </div>
             <div class="panel-actions">
               <button class="btn-ghost" id="calAddLeaveBtn" data-i18n="btn_add_leave">Abwesenheit eintragen</button>
@@ -227,9 +227,8 @@
 
           <div id="servicesGrid" class="services-grid"></div>
 
-          <div class="add-service-form" id="addServiceForm" hidden data-mode="add">
-            <h3 id="srvFormTitle" data-i18n="lbl_add_service">Neue Dienstleistung</h3>
-            <input type="hidden" id="srvEditId" />
+          <div class="add-service-form" id="addServiceForm" hidden>
+            <h3 data-i18n="lbl_add_service">Neue Dienstleistung</h3>
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" data-i18n="lbl_srv_title">Name</label>
@@ -252,16 +251,9 @@
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_srv_emps">Mitarbeiter</label>
-              <label class="emp-checkbox-item" style="margin-bottom:10px;">
-                <input type="checkbox" id="srvEmpAll" checked>
-                <span><strong>Hepsi</strong></span>
-              </label>
               <div id="srvEmpCheckboxes" class="employee-checkboxes"></div>
             </div>
-            <div class="form-row" style="gap:10px;">
-              <button class="btn-primary" id="srvSaveBtn" data-i18n="btn_srv_save">Speichern</button>
-              <button class="btn-ghost" id="srvCancelBtn" type="button">Abbrechen</button>
-            </div>
+            <button class="btn-primary" id="srvSaveBtn" data-i18n="btn_srv_save">Speichern</button>
           </div>
         </section>
 
@@ -270,7 +262,7 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_hours">Arbeitszeiten</h2>
-              <p class="panel-sub" data-i18n="hours_sub">Ã–ffnungszeiten je Mitarbeiter</p>
+              <p class="panel-sub" data-i18n="hours_sub">Öffnungszeiten je Mitarbeiter</p>
             </div>
             <div class="panel-actions">
               <button class="btn-primary" id="hoursSaveBtn" data-i18n="btn_save_hours">Speichern</button>
@@ -278,7 +270,7 @@
           </div>
 
           <div class="hours-employee-select">
-            <span data-i18n="hours_for">FÃ¼r:</span>
+            <span data-i18n="hours_for">Für:</span>
             <select class="form-select" id="hoursEmpSelect"></select>
           </div>
 
@@ -300,8 +292,8 @@
           <div class="card invite-card" style="margin-bottom:16px;">
             <div>
               <div class="kpi-label" data-i18n="lbl_invite_code">Unternehmens-Code</div>
-              <div class="invite-code" id="inviteCode">â€”</div>
-              <div class="invite-hint" data-i18n="sub_invite_code">Mitarbeiter kÃ¶nnen sich mit diesem Code registrieren.</div>
+              <div class="invite-code" id="inviteCode">—</div>
+              <div class="invite-hint" data-i18n="sub_invite_code">Mitarbeiter können sich mit diesem Code registrieren.</div>
             </div>
             <button class="btn-ghost" id="copyInviteBtn" style="margin-left:auto;" data-i18n="btn_copy">Kopieren</button>
           </div>
@@ -313,7 +305,7 @@
           <div id="teamDetailView" hidden>
             <div class="emp-detail">
               <div class="emp-detail-header">
-                <button class="emp-detail-back btn-icon" id="empDetailBack">â†</button>
+                <button class="emp-detail-back btn-icon" id="empDetailBack">←</button>
                 <div class="emp-avatar" id="empDetailAvatar"></div>
                 <div class="emp-info">
                   <div class="emp-name" id="empDetailName"></div>
@@ -335,9 +327,9 @@
                     <div class="avatar-actions">
                       <label class="btn-ghost avatar-upload-btn">
                         <input type="file" id="empAvatarInput" accept="image/*" hidden />
-                        ðŸ“· Bild Ã¤ndern
+                        📷 Bild ändern
                       </label>
-                      <button class="btn-ghost avatar-remove-btn" id="empAvatarRemoveBtn" type="button">ðŸ—‘ï¸ Bild entfernen</button>
+                      <button class="btn-ghost avatar-remove-btn" id="empAvatarRemoveBtn" type="button">🗑️ Bild entfernen</button>
                     </div>
                   </div>
                 </div>
@@ -349,7 +341,7 @@
                   <label class="form-label">Buchungsseite</label>
                   <div class="booking-link-wrap">
                     <input class="form-input" id="empBookingLink" type="text" readonly style="font-size:13px;cursor:pointer;" onclick="this.select()" />
-                    <button class="btn-ghost" id="empCopyLinkBtn" type="button">ðŸ“‹ Kopieren</button>
+                    <button class="btn-ghost" id="empCopyLinkBtn" type="button">📋 Kopieren</button>
                   </div>
                 </div>
                 <div class="form-group">
@@ -359,9 +351,9 @@
               </div>
               <div class="tab-content" id="tab-kalender">
                 <div class="emp-cal-toolbar">
-                  <button class="btn-icon" id="empCalPrev">â€¹</button>
+                  <button class="btn-icon" id="empCalPrev">‹</button>
                   <input class="form-input" id="empCalDate" type="date" style="width:160px;" />
-                  <button class="btn-icon" id="empCalNext">â€º</button>
+                  <button class="btn-icon" id="empCalNext">›</button>
                   <button class="btn-primary" id="empCalAddBtn" style="margin-left:auto;">+ Termin</button>
                 </div>
                 <div id="empDaySchedule" class="emp-day-schedule"></div>
@@ -382,7 +374,7 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_b2b">B2B</h2>
-              <p class="panel-sub" data-i18n="b2b_sub">GeschÃ¤ftskontakte & KI-Assistent</p>
+              <p class="panel-sub" data-i18n="b2b_sub">Geschäftskontakte & KI-Assistent</p>
             </div>
             <div class="panel-actions">
               <button class="btn-primary" id="b2bAddBtn" data-i18n="b2b_add">+ Kontakt</button>
@@ -391,33 +383,33 @@
 
           <!-- SETUP WIZARD -->
           <div class="b2b-setup-card" id="b2bSetupCard" hidden>
-            <div class="setup-icon">ðŸ“§</div>
+            <div class="setup-icon">📧</div>
             <h3 class="setup-heading">B2B E-Mail einrichten</h3>
             <p class="setup-sub">Geben Sie Ihren Absendernamen ein, um den KI-Assistenten zu nutzen.</p>
             <div class="setup-fields">
               <div class="form-group">
                 <label class="form-label">Absendername <span class="req">*</span></label>
-                <input class="form-input" id="setupSenderName" type="text" placeholder="z.B. Max MÃ¼ller / Muster GmbH" />
+                <input class="form-input" id="setupSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
                 <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
               </div>
             </div>
-            <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschlieÃŸen âœ“</button>
+            <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
           </div>
 
           <!-- MAIN CONTENT -->
           <div id="b2bMainContent" hidden>
             <div class="b2b-from-bar">
               <div class="from-bar-info">
-                <span class="from-bar-name" id="b2bFromName">â€”</span>
-                <span class="from-bar-sep">Â·</span>
-                <span class="from-bar-email" id="b2bFromEmail">â€”</span>
-                <span class="from-bar-badge">âœ“ Bereit</span>
+                <span class="from-bar-name" id="b2bFromName">—</span>
+                <span class="from-bar-sep">·</span>
+                <span class="from-bar-email" id="b2bFromEmail">—</span>
+                <span class="from-bar-badge">✓ Bereit</span>
               </div>
-              <button class="btn-ghost-sm" id="b2bConfigBtn">âš™ Konfiguration</button>
+              <button class="btn-ghost-sm" id="b2bConfigBtn">⚙ Konfiguration</button>
             </div>
 
             <div class="apify-bar" style="margin-bottom:16px;">
-              <span class="apify-label">ðŸ” Google Maps:</span>
+              <span class="apify-label">🔍 Google Maps:</span>
               <input class="form-input" id="apifyQuery" type="text" placeholder="z.B. Zahnarzt" style="flex:2;" />
               <input class="form-input" id="apifyCity" type="text" placeholder="Stadt / Region" style="flex:1;" />
               <input class="form-input" style="width:72px;" id="apifyLimit" type="number" value="20" min="1" max="50" />
@@ -453,12 +445,12 @@
                   <span class="ai-from-badge" id="aiFromBadge"></span>
                 </div>
                 <div class="ai-messages" id="aiMessages">
-                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun mÃ¶chten, z.B.: "Bestelle 50 StÃ¼ck Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
+                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
                 </div>
                 <div class="ai-input-row">
-                  <button class="btn-icon" id="aiVoiceBtn" title="Spracheingabe">ðŸŽ¤</button>
-                  <textarea id="aiInput" placeholder="Befehl eingeben oder Mikrofon drÃ¼cken..." rows="1"></textarea>
-                  <button class="btn-primary" id="aiSendBtn">â†’</button>
+                  <button class="btn-icon" id="aiVoiceBtn" title="Spracheingabe">🎤</button>
+                  <textarea id="aiInput" placeholder="Befehl eingeben oder Mikrofon drücken..." rows="1"></textarea>
+                  <button class="btn-primary" id="aiSendBtn">→</button>
                 </div>
               </div>
             </div>
@@ -473,37 +465,37 @@
               <p class="panel-sub" data-i18n="b2c_sub">Kundenmailings & KI-Assistent</p>
             </div>
             <div class="panel-actions">
-              <button class="btn-primary" id="b2cComposeBtn">âœ‰ Neue Mail</button>
+              <button class="btn-primary" id="b2cComposeBtn">✉ Neue Mail</button>
             </div>
           </div>
 
           <div class="b2b-setup-card" id="b2cSetupCard" hidden>
-            <div class="setup-icon">ðŸ“§</div>
+            <div class="setup-icon">📧</div>
             <h3 class="setup-heading">E-Mail einrichten</h3>
             <p class="setup-sub">Geben Sie Ihren Absendernamen ein und verbinden Sie Ihr E-Mail-Konto.</p>
             <div class="setup-fields">
               <div class="form-group">
                 <label class="form-label">Absendername <span class="req">*</span></label>
-                <input class="form-input" id="b2cSetupSenderName" type="text" placeholder="z.B. Max MÃ¼ller / Muster GmbH" />
+                <input class="form-input" id="b2cSetupSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
                 <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
               </div>
             </div>
-            <button class="btn-primary setup-finish-btn" id="b2cSetupFinishBtn" disabled>Einrichtung abschlieÃŸen âœ“</button>
+            <button class="btn-primary setup-finish-btn" id="b2cSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
           </div>
 
           <div id="b2cMainContent" hidden>
             <div class="b2b-from-bar">
               <div class="from-bar-info">
-                <span class="from-bar-name" id="b2cFromName">â€”</span>
-                <span class="from-bar-sep">Â·</span>
-                <span class="from-bar-email" id="b2cFromEmail">â€”</span>
-                <span class="from-bar-badge">âœ“ Bereit</span>
+                <span class="from-bar-name" id="b2cFromName">—</span>
+                <span class="from-bar-sep">·</span>
+                <span class="from-bar-email" id="b2cFromEmail">—</span>
+                <span class="from-bar-badge">✓ Bereit</span>
               </div>
-              <button class="btn-ghost-sm" id="b2cConfigBtn">âš™ Konfiguration</button>
+              <button class="btn-ghost-sm" id="b2cConfigBtn">⚙ Konfiguration</button>
             </div>
 
             <div class="filter-bar" style="margin-bottom:12px;margin-top:16px;">
-              <input class="search-input" id="b2cSearch" type="text" placeholder="Kunden suchenâ€¦" style="margin-left:0;width:260px;" />
+              <input class="search-input" id="b2cSearch" type="text" placeholder="Kunden suchen…" style="margin-left:0;width:260px;" />
             </div>
             <div class="b2b-layout" style="margin-top:16px;">
               <div>
@@ -530,12 +522,12 @@
                   <span class="ai-from-badge" id="b2cAiFromBadge"></span>
                 </div>
                 <div class="ai-messages" id="b2cAiMessages">
-                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun mÃ¶chten, z.B.: "Schicke eine Erinnerungsmail an alle Kunden die noch nicht gebucht haben."</div>
+                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Schicke eine Erinnerungsmail an alle Kunden die noch nicht gebucht haben."</div>
                 </div>
                 <div class="ai-input-row">
-                  <button class="btn-icon" id="b2cAiVoiceBtn" title="Spracheingabe">ðŸŽ¤</button>
-                  <textarea id="b2cAiInput" placeholder="Befehl eingeben oder Mikrofon drÃ¼cken..." rows="1"></textarea>
-                  <button class="btn-primary" id="b2cAiSendBtn">â†’</button>
+                  <button class="btn-icon" id="b2cAiVoiceBtn" title="Spracheingabe">🎤</button>
+                  <textarea id="b2cAiInput" placeholder="Befehl eingeben oder Mikrofon drücken..." rows="1"></textarea>
+                  <button class="btn-primary" id="b2cAiSendBtn">→</button>
                 </div>
               </div>
             </div>
@@ -551,9 +543,9 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label" data-i18n="lbl_select_patient">Patient wÃ¤hlen</label>
+            <label class="form-label" data-i18n="lbl_select_patient">Patient wählen</label>
             <div class="patient-search-wrap" id="notesPatientWrap">
-              <input class="form-input" id="notesPatientInput" type="text" placeholder="Hasta araâ€¦" autocomplete="off" />
+              <input class="form-input" id="notesPatientInput" type="text" placeholder="Hasta ara…" autocomplete="off" />
               <ul class="patient-search-list" id="notesPatientList" hidden></ul>
               <input type="hidden" id="notesPatient" />
             </div>
@@ -561,16 +553,16 @@
           <div id="notesForm" class="card" style="margin-top:16px;" hidden>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_doctor_notes">Arztnotizen</label>
-              <textarea class="form-textarea" id="notesDoctor" rows="3" placeholder="Vom Arzt Ã¼bermittelte Diagnosenâ€¦"></textarea>
+              <textarea class="form-textarea" id="notesDoctor" rows="3" placeholder="Vom Arzt übermittelte Diagnosen…"></textarea>
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_therapist_notes">Therapeutennotizen</label>
-              <textarea class="form-textarea" id="notesTherapist" rows="4" placeholder="Beobachtungen wÃ¤hrend der Sitzungâ€¦"></textarea>
+              <textarea class="form-textarea" id="notesTherapist" rows="4" placeholder="Beobachtungen während der Sitzung…"></textarea>
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_ai_summary">AI-Bericht</label>
               <div id="aiReportBox" class="ai-report-box" style="display:none;min-height:60px;padding:12px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:13px;"></div>
-              <button class="btn-ghost" id="aiGenBtn" style="margin-top:8px;">ðŸ¤– AI-Bericht erstellen</button>
+              <button class="btn-ghost" id="aiGenBtn" style="margin-top:8px;">🤖 AI-Bericht erstellen</button>
             </div>
             <div style="display:flex;gap:8px;margin-top:16px;">
               <button class="btn-primary" id="notesSaveBtn">Speichern</button>
@@ -580,17 +572,17 @@
           <div id="notesEmpty" class="table-empty" style="margin-top:40px;" data-i18n="lbl_notes_empty">Keine Notizen vorhanden.</div>
         </section>
 
-        <!-- ===== PANEL: Ã„RZTE ===== -->
+        <!-- ===== PANEL: ÄRZTE ===== -->
         <section class="panel" id="panel-doctors">
           <div class="panel-header">
             <div>
-              <h2 data-i18n="nav_doctors">Ã„rzte</h2>
-              <p class="panel-sub" data-i18n="doctors_sub">Ã„rzte in der NÃ¤he finden</p>
+              <h2 data-i18n="nav_doctors">Ärzte</h2>
+              <p class="panel-sub" data-i18n="doctors_sub">Ärzte in der Nähe finden</p>
             </div>
           </div>
           <div class="apify-bar" style="margin-bottom:12px;">
             <span class="apify-label">Fachrichtung:</span>
-            <input class="form-input" id="docQuery" type="text" placeholder="z.B. OrthopÃ¤de" style="flex:2;" />
+            <input class="form-input" id="docQuery" type="text" placeholder="z.B. Orthopäde" style="flex:2;" />
             <input class="form-input" id="docCity" type="text" placeholder="Stadt" style="flex:1;" />
             <input class="form-input" style="width:72px;" id="docLimit" type="number" value="20" min="1" max="50" />
             <button class="btn-primary" id="docSearchBtn">Suchen</button>
@@ -600,7 +592,7 @@
             <div class="search-progress-bar"><div class="search-progress-fill" id="docProgressFill"></div></div>
           </div>
           <div class="filter-bar" style="margin-bottom:12px;">
-            <input class="form-input" id="docFilterInput" type="text" placeholder="ðŸ” In Lead-Datenbank suchen..." style="flex:1;" />
+            <input class="form-input" id="docFilterInput" type="text" placeholder="🔍 In Lead-Datenbank suchen..." style="flex:1;" />
             <span class="filter-hint" id="docFilterHint"></span>
           </div>
           <div class="table-wrap">
@@ -609,7 +601,7 @@
                 <tr>
                   <th>Praxis</th>
                   <th>Fachrichtung</th>
-                  <th class="sortable" data-sort="city" id="docSortCity">Stadt <span class="sort-icon">â†•</span></th>
+                  <th class="sortable" data-sort="city" id="docSortCity">Stadt <span class="sort-icon">↕</span></th>
                   <th>E-Mail</th>
                   <th>Telefon</th>
                   <th>Adresse</th>
@@ -618,7 +610,7 @@
               </thead>
               <tbody id="docTableBody"></tbody>
             </table>
-            <div id="docEmpty" class="table-empty" hidden>Noch keine Ã„rzte gesucht.</div>
+            <div id="docEmpty" class="table-empty" hidden>Noch keine Ärzte gesucht.</div>
           </div>
         </section>
 
@@ -627,17 +619,17 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_beispielmodus">Beispielmodus</h2>
-              <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomie-Haritas fÃ¼r PatientengesprÃ¤che</p>
+              <p class="panel-sub" data-i18n="beispielmodus_sub">Anatomie-Haritas für Patientengespräche</p>
             </div>
           </div>
           <div class="body-map-wrap">
             <iframe id="zygoteFrame" src="https://www.zygotebody.com/" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-fullscreen" loading="lazy"></iframe>
-            <button class="zygote-fs-btn" id="zygoteFsBtn" type="button" title="Vollbild">â›¶ Vollbild</button>
-            <a class="zygote-fs-btn" id="zygoteNewTabBtn" href="https://www.zygotebody.com/" target="_blank" rel="noopener" style="right:auto;left:12px;display:none;" type="button">â†— Neuer Tab</a>
+            <button class="zygote-fs-btn" id="zygoteFsBtn" type="button" title="Vollbild">⛶ Vollbild</button>
+            <a class="zygote-fs-btn" id="zygoteNewTabBtn" href="https://www.zygotebody.com/" target="_blank" rel="noopener" style="right:auto;left:12px;display:none;" type="button">↗ Neuer Tab</a>
           </div>
           <div class="body-info-card" id="bodyInfoCard">
-            <div class="body-info-title" id="bodyInfoTitle">3D-Anatomie â€” Zygote Body</div>
-            <div class="body-info-text" id="bodyInfoText">Klicken und ziehen Sie mit der Maus, um das Modell zu drehen. Scrollen zum Zoomen. Klicken Sie auf ein KÃ¶rperteil, um Details anzuzeigen. Verwenden Sie den Regler links, um Systeme (Skelett, Muskeln, Nerven, Kreislauf) ein- oder auszublenden. <strong>Auf MobilgerÃ¤ten empfehlen wir â€žNeuer Tabâ€œ oder â€žVollbildâ€œ.</strong></div>
+            <div class="body-info-title" id="bodyInfoTitle">3D-Anatomie — Zygote Body</div>
+            <div class="body-info-text" id="bodyInfoText">Klicken und ziehen Sie mit der Maus, um das Modell zu drehen. Scrollen zum Zoomen. Klicken Sie auf ein Körperteil, um Details anzuzeigen. Verwenden Sie den Regler links, um Systeme (Skelett, Muskeln, Nerven, Kreislauf) ein- oder auszublenden. <strong>Auf Mobilgeräten empfehlen wir „Neuer Tab“ oder „Vollbild“.</strong></div>
           </div>
         </section>
 
@@ -663,7 +655,7 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">PrioritÃ¤t</label>
+                <label class="form-label">Priorität</label>
                 <select class="form-select" id="fbPriority">
                   <option value="low">Niedrig</option>
                   <option value="medium" selected>Mittel</option>
@@ -710,7 +702,7 @@
                   <select class="form-select" id="setLang">
                     <option value="de">Deutsch</option>
                     <option value="en">English</option>
-                    <option value="tr">TÃ¼rkÃ§e</option>
+                    <option value="tr">Türkçe</option>
                   </select>
                 </div>
                 <button class="btn-primary" id="profileSaveBtn" data-i18n="set_save">Speichern</button>
@@ -721,7 +713,7 @@
               <div class="settings-section-title" data-i18n="set_account">Konto</div>
               <div class="settings-section-body">
                 <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;" id="accEmail"></div>
-                <div class="plan-badge" id="accPlanBadge">â€”</div>
+                <div class="plan-badge" id="accPlanBadge">—</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
                   <button class="btn-ghost" id="subPortalBtn" data-i18n="sub_portal">Abonnement verwalten</button>
                   <button class="btn-primary" id="subUpgradeBtn" data-i18n="sub_upgrade">Upgrade</button>
@@ -736,7 +728,7 @@
                   <label class="form-label" data-i18n="set_new_pw">Neues Passwort</label>
                   <input class="form-input" id="setPw" type="password" minlength="6" />
                 </div>
-                <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort Ã¤ndern</button>
+                <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort ändern</button>
               </div>
             </div>
 
@@ -744,7 +736,7 @@
               <div class="settings-section-title" data-i18n="set_integrations">Integrationen</div>
               <div class="settings-section-body">
                 <div class="integration-row">
-                  <span class="integration-icon">ðŸ—“ï¸</span>
+                  <span class="integration-icon">🗓️</span>
                   <div class="integration-info">
                     <div class="integration-name">Google Calendar</div>
                     <div class="integration-status" id="googleCalStatus" data-i18n="status_disconnected">Nicht verbunden</div>
@@ -752,7 +744,7 @@
                   <button class="btn-ghost" id="googleCalBtn" data-i18n="btn_connect">Verbinden</button>
                 </div>
                 <div class="integration-row">
-                  <span class="integration-icon">ðŸ’¬</span>
+                  <span class="integration-icon">💬</span>
                   <div class="integration-info">
                     <div class="integration-name">WhatsApp</div>
                     <div class="integration-status" id="waStatus">Twilio Sandbox</div>
@@ -772,7 +764,7 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title" id="bookingModalTitle" data-i18n="lbl_manual_title">Neuer Termin</span>
-        <button class="modal-close" data-modal="bookingModal">âœ•</button>
+        <button class="modal-close" data-modal="bookingModal">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="bk-id" />
@@ -809,7 +801,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-danger" id="bkDeleteBtn" hidden data-i18n="lead_delete">LÃ¶schen</button>
+        <button class="btn-danger" id="bkDeleteBtn" hidden data-i18n="lead_delete">Löschen</button>
         <button class="btn-ghost" data-modal="bookingModal" data-i18n="lead_cancel">Abbrechen</button>
         <button class="btn-primary" id="bkSaveBtn" data-i18n="lead_save">Speichern</button>
       </div>
@@ -821,11 +813,11 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title" data-i18n="lbl_leave_title">Abwesenheit eintragen</span>
-        <button class="modal-close" data-modal="leaveModal">âœ•</button>
+        <button class="modal-close" data-modal="leaveModal">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label" data-i18n="lbl_leave_emp">FÃ¼r wen?</label>
+          <label class="form-label" data-i18n="lbl_leave_emp">Für wen?</label>
           <select class="form-select" id="leaveEmployee"></select>
         </div>
         <div class="form-row">
@@ -855,7 +847,7 @@
     <div class="modal modal-lg">
       <div class="modal-header">
         <span class="modal-title" id="leadModalTitle" data-i18n="lead_modal_new">Neuer Lead</span>
-        <button class="modal-close" data-modal="leadModal">âœ•</button>
+        <button class="modal-close" data-modal="leadModal">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="lead-id" />
@@ -902,7 +894,7 @@
             <div class="form-group">
               <label class="form-label">Krankenkasse</label>
               <select class="form-select" id="lead-krankenkasse">
-                <option value="">-- WÃ¤hlen --</option>
+                <option value="">-- Wählen --</option>
               </select>
             </div>
             <div class="form-group">
@@ -940,19 +932,19 @@
     <div class="modal" style="max-width:460px;">
       <div class="modal-header">
         <span class="modal-title">E-Mail Konfiguration</span>
-        <button class="modal-close" data-modal="b2bConfigModal">âœ•</button>
+        <button class="modal-close" data-modal="b2bConfigModal">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">Absendername</label>
-          <input class="form-input" id="cfgSenderName" type="text" placeholder="z.B. Max MÃ¼ller / Muster GmbH" />
+          <input class="form-input" id="cfgSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
         </div>
         <div class="form-group">
           <label class="form-label">Gmail-Konto</label>
           <div class="setup-gmail-row">
             <div class="setup-gmail-status" id="cfgGmailStatus">
               <span class="status-dot" id="cfgGmailDot"></span>
-              <span id="cfgGmailLabel">â€”</span>
+              <span id="cfgGmailLabel">—</span>
             </div>
             <button class="btn-outline-sm" id="cfgGmailBtn">Konto wechseln</button>
           </div>
@@ -960,7 +952,7 @@
         <div class="form-group">
           <label class="form-label">Apify API Token</label>
           <input class="form-input" id="cfgApifyToken" type="password" placeholder="apify_api_..." />
-          <div class="form-hint">FÃ¼r Google Maps Leads-Suche. Token unter apify.com/account â†’ Integrations.</div>
+          <div class="form-hint">Für Google Maps Leads-Suche. Token unter apify.com/account → Integrations.</div>
         </div>
       </div>
       <div class="modal-footer">
@@ -975,32 +967,32 @@
     <div class="email-compose-window">
       <div class="compose-titlebar">
         <span class="compose-title">E-Mail verfassen</span>
-        <button class="modal-close" data-modal="emailComposeModal">âœ•</button>
+        <button class="modal-close" data-modal="emailComposeModal">✕</button>
       </div>
       <div class="compose-meta">
         <div class="compose-field-row">
           <span class="compose-field-label">Von:</span>
-          <span class="compose-from-val" id="composeFromDisplay">â€”</span>
+          <span class="compose-from-val" id="composeFromDisplay">—</span>
         </div>
         <div class="compose-field-row">
           <span class="compose-field-label">An:</span>
           <input class="compose-field-input" id="composeToName" placeholder="Name" style="width:170px;" />
           <input class="compose-field-input" id="composeToEmail" placeholder="E-Mail" type="email" style="flex:1;" />
-          <button class="copy-btn" id="copyToEmailBtn" title="E-Mail kopieren">âŽ˜</button>
+          <button class="copy-btn" id="copyToEmailBtn" title="E-Mail kopieren">⎘</button>
         </div>
         <div class="compose-field-row">
           <span class="compose-field-label">Betreff:</span>
           <input class="compose-field-input" id="composeSubject" placeholder="Betreff" style="flex:1;" />
-          <button class="copy-btn" id="copySubjectBtn" title="Betreff kopieren">âŽ˜</button>
+          <button class="copy-btn" id="copySubjectBtn" title="Betreff kopieren">⎘</button>
         </div>
       </div>
       <div class="compose-body-wrap">
         <textarea class="compose-body" id="composeBody" placeholder="E-Mail-Inhalt..."></textarea>
-        <button class="copy-btn copy-body-btn" id="copyBodyBtn" title="Text kopieren">âŽ˜ Text kopieren</button>
+        <button class="copy-btn copy-body-btn" id="copyBodyBtn" title="Text kopieren">⎘ Text kopieren</button>
       </div>
       <div class="compose-footer">
         <button class="btn-ghost" id="composeDiscardBtn">Verwerfen</button>
-        <button class="btn-primary" id="composeSendBtn">âœ‰ Senden</button>
+        <button class="btn-primary" id="composeSendBtn">✉ Senden</button>
       </div>
     </div>
   </div>
@@ -1010,7 +1002,7 @@
     <div class="modal">
       <div class="modal-header">
         <span class="modal-title" id="b2bModalTitle" data-i18n="b2b_add">Neuer Kontakt</span>
-        <button class="modal-close" data-modal="b2bModal">âœ•</button>
+        <button class="modal-close" data-modal="b2bModal">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="b2b-id" />
@@ -1058,7 +1050,7 @@
     <div class="modal" style="max-width:540px;">
       <div class="modal-header">
         <span class="modal-title">E-Mail Vorschau</span>
-        <button class="modal-close" data-modal="mailPreviewModal">âœ•</button>
+        <button class="modal-close" data-modal="mailPreviewModal">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -1080,17 +1072,17 @@
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="mailPreviewModal">Abbrechen</button>
-        <button class="btn-primary" id="mailPreviewSendBtn">âœ‰ Senden</button>
+        <button class="btn-primary" id="mailPreviewSendBtn">✉ Senden</button>
       </div>
     </div>
   </div>
 
-  <!-- ===== MODAL: MITARBEITER HINZUFÃœGEN ===== -->
+  <!-- ===== MODAL: MITARBEITER HINZUFÜGEN ===== -->
   <div class="modal-overlay" id="addEmployeeModal" hidden>
     <div class="modal" style="max-width:480px;">
       <div class="modal-header">
-        <span class="modal-title" id="addEmpModalTitle">Mitarbeiter hinzufÃ¼gen</span>
-        <button class="modal-close" data-modal="addEmployeeModal">âœ•</button>
+        <span class="modal-title" id="addEmpModalTitle">Mitarbeiter hinzufügen</span>
+        <button class="modal-close" data-modal="addEmployeeModal">✕</button>
       </div>
       <div class="modal-body" id="addEmpFormStep">
         <div class="form-row">
@@ -1114,28 +1106,28 @@
       </div>
       <div class="modal-body" id="addEmpResultStep" hidden>
         <div class="emp-result-card">
-          <div class="emp-result-icon">âœ“</div>
+          <div class="emp-result-icon">✓</div>
           <div class="emp-result-title">Konto erstellt</div>
           <div class="emp-result-sub">Teilen Sie die Zugangsdaten mit Ihrem Mitarbeiter.</div>
           <div class="emp-result-box">
             <div class="emp-result-row">
               <span class="emp-result-label">E-Mail</span>
-              <span class="emp-result-val" id="ae-res-email">â€”</span>
-              <button class="btn-icon" id="aeCopyEmailBtn" title="Kopieren">âŽ˜</button>
+              <span class="emp-result-val" id="ae-res-email">—</span>
+              <button class="btn-icon" id="aeCopyEmailBtn" title="Kopieren">⎘</button>
             </div>
             <div class="emp-result-row">
               <span class="emp-result-label">Passwort</span>
-              <span class="emp-result-val" id="ae-res-password">â€”</span>
-              <button class="btn-icon" id="aeCopyPwBtn" title="Kopieren">âŽ˜</button>
+              <span class="emp-result-val" id="ae-res-password">—</span>
+              <button class="btn-icon" id="aeCopyPwBtn" title="Kopieren">⎘</button>
             </div>
             <div class="emp-result-row">
               <span class="emp-result-label">Login-Link</span>
               <span class="emp-result-val" id="ae-res-link">infinitymade.de/login.html</span>
-              <button class="btn-icon" id="aeCopyLinkBtn" title="Kopieren">âŽ˜</button>
+              <button class="btn-icon" id="aeCopyLinkBtn" title="Kopieren">⎘</button>
             </div>
           </div>
           <a class="btn-primary" id="aeShareWaBtn" href="#" target="_blank" style="width:100%;justify-content:center;margin-top:12px;">
-            <span>ðŸ’¬</span> Via WhatsApp teilen
+            <span>💬</span> Via WhatsApp teilen
           </a>
         </div>
       </div>
@@ -1151,7 +1143,7 @@
     <div class="modal" style="max-width:420px;">
       <div class="modal-header">
         <span class="modal-title">Profilbild zuschneiden</span>
-        <button class="modal-close" id="cropModalClose">âœ•</button>
+        <button class="modal-close" id="cropModalClose">✕</button>
       </div>
       <div class="modal-body" style="padding:0;display:flex;justify-content:center;background:#000;">
         <img id="cropImage" style="max-width:100%;max-height:420px;display:block;" />
@@ -1165,6 +1157,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260512l"></script>
+  <script type="module" src="dashboard.js?v=20260512c"></script>
 </body>
 </html>
