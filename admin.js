@@ -34,34 +34,23 @@ async function apiPatch(path, body) {
 }
 
 async function loadKpis() {
-  const { data: owners } = await supabase.from('profiles').select('id,plan,plan_status').eq('role','owner');
-  const { data: emps } = await supabase.from('profiles').select('id').eq('role','employee');
-  const { data: bookings } = await supabase.from('bookings').select('id', { count: 'exact', head: true });
-  const { data: fb } = await apiGet('/api/admin/feedbacks');
+  const stats = await apiGet('/api/admin/data?type=stats');
   const grid = document.getElementById('adminKpi');
-  const trialCount = (owners||[]).filter(o=>o.plan_status==='trial').length;
   grid.innerHTML = `
-    <div class="admin-kpi"><div class="label">Kunden</div><div class="value">${(owners||[]).length}</div></div>
-    <div class="admin-kpi"><div class="label">Mitarbeiter</div><div class="value">${(emps||[]).length}</div></div>
-    <div class="admin-kpi"><div class="label">Termine</div><div class="value">${bookings?.length ?? 0}</div></div>
-    <div class="admin-kpi"><div class="label">Feedback</div><div class="value">${fb?.items?.length ?? 0}</div></div>
-    <div class="admin-kpi"><div class="label">Trial läuft</div><div class="value">${trialCount}</div></div>
-    <div class="admin-kpi"><div class="label">Starter</div><div class="value">${(owners||[]).filter(o=>o.plan==='starter').length}</div></div>
-    <div class="admin-kpi"><div class="label">Professional</div><div class="value">${(owners||[]).filter(o=>o.plan==='professional').length}</div></div>
+    <div class="admin-kpi"><div class="label">Kunden</div><div class="value">${stats.totalOwners}</div></div>
+    <div class="admin-kpi"><div class="label">Mitarbeiter</div><div class="value">${stats.totalEmployees}</div></div>
+    <div class="admin-kpi"><div class="label">Termine</div><div class="value">${stats.totalBookings}</div></div>
+    <div class="admin-kpi"><div class="label">Feedback</div><div class="value">${stats.totalFeedbacks}</div></div>
+    <div class="admin-kpi"><div class="label">Trial läuft</div><div class="value">${stats.trialCount}</div></div>
+    <div class="admin-kpi"><div class="label">Starter</div><div class="value">${stats.starterCount}</div></div>
+    <div class="admin-kpi"><div class="label">Professional</div><div class="value">${stats.professionalCount}</div></div>
+    <div class="admin-kpi"><div class="label">Klinik</div><div class="value">${stats.klinikCount}</div></div>
   `;
 }
 
 async function loadCustomers() {
-  const { data } = await supabase.from('profiles').select('id,email,business_name,plan,plan_status,created_at,city,role').eq('role','owner').order('created_at',{ascending:false});
-  const owners = data || [];
-  const ids = owners.map(o=>o.id);
-  let bookingsMap = {}, leadsMap = {};
-  if (ids.length) {
-    const { data: bk } = await supabase.from('bookings').select('owner_id').in('owner_id',ids);
-    (bk||[]).forEach(b=>{ bookingsMap[b.owner_id]=(bookingsMap[b.owner_id]||0)+1; });
-    const { data: ld } = await supabase.from('leads').select('owner_id').in('owner_id',ids);
-    (ld||[]).forEach(l=>{ leadsMap[l.owner_id]=(leadsMap[l.owner_id]||0)+1; });
-  }
+  const { items } = await apiGet('/api/admin/data?type=customers');
+  const owners = items || [];
   const tbody = document.getElementById('custTable');
   const planFilter = document.getElementById('custFilterPlan').value;
   const statusFilter = document.getElementById('custFilterStatus').value;
@@ -72,16 +61,19 @@ async function loadCustomers() {
     if (search && !(o.business_name||'').toLowerCase().includes(search) && !o.email.toLowerCase().includes(search)) return false;
     return true;
   });
-  tbody.innerHTML = rows.map(o=>`
+  tbody.innerHTML = rows.map(o=>{
+    const bkCount = o.bookings?.[0]?.count ?? o.bookings ?? 0;
+    const ldCount = o.leads?.[0]?.count ?? o.leads ?? 0;
+    return `
     <tr>
       <td>${o.business_name||'—'}</td>
       <td class="td-muted">${o.email}</td>
       <td><span class="badge badge-${o.plan==='starter'?'yellow':o.plan==='professional'?'green':'gray'}">${o.plan||'—'}</span></td>
       <td><span class="badge badge-${o.plan_status==='active'?'green':o.plan_status==='trial'?'blue':o.plan_status==='past_due'?'red':'gray'}">${o.plan_status||'—'}</span></td>
-      <td>${bookingsMap[o.id]||0}</td>
-      <td>${leadsMap[o.id]||0}</td>
+      <td>${typeof bkCount === 'number' ? bkCount : 0}</td>
+      <td>${typeof ldCount === 'number' ? ldCount : 0}</td>
     </tr>
-  `).join('');
+  `}).join('');
 }
 
 async function loadAdminFeedbacks() {
@@ -135,11 +127,6 @@ document.getElementById('logoutBtn').addEventListener('click', async ()=>{
 
 async function boot() {
   const { data: { session }, error } = await supabase.auth.getSession();
-  console.log('[admin] session', session);
-  console.log('[admin] session.user.id', session?.user?.id);
-  console.log('[admin] ADMIN_UUID', ADMIN_UUID);
-  console.log('[admin] match?', session?.user?.id === ADMIN_UUID);
-  console.log('[admin] match lower?', String(session?.user?.id).toLowerCase() === String(ADMIN_UUID).toLowerCase());
   if (error||!session) { window.location.href='login.html'; return; }
   currentSession = session;
   if (String(session.user.id).toLowerCase() !== String(ADMIN_UUID).toLowerCase()) {

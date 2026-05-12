@@ -431,7 +431,7 @@ app.post('/api/booking/create', async (req, res) => {
     // Save Booking FIRST — exclusion constraint (no_overlapping_bookings) atomically rejects
     // double-bookings. Doing this before any external side-effects (Google Meet) avoids
     // orphaned calendar events when two clients race for the same slot.
-    const owner_id = req.body.ownerId || userId; // solopreneur fallback
+    const owner_id = (req.body.ownerId != null) ? req.body.ownerId : userId; // solopreneur fallback
 
     const { data: booking, error: dbErr } = await supabase.from('bookings').insert({
       user_id: userId,
