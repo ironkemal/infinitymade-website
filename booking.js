@@ -82,6 +82,14 @@ async function init() {
     return;
   }
 
+  if (isEmployee) {
+    state.employeeName = profile.business_name || profile.email?.split('@')[0] || 'Mitarbeiter';
+    updateSidebar();
+    document.getElementById('backToEmp').style.display = 'none';
+    await loadServices(state.employeeId);
+    return;
+  }
+
   const { data: employees } = await supabase.from('profiles_public')
     .select('id,business_name,email,role,avatar_url')
     .or(`id.eq.${state.ownerId},owner_id.eq.${state.ownerId}`);
@@ -112,11 +120,6 @@ async function init() {
       loadServices(btn.dataset.id);
     });
   });
-
-  if (isEmployee && state.employeeId) {
-    const autoBtn = document.querySelector(`.emp-btn[data-id="${state.employeeId}"]`);
-    if (autoBtn) autoBtn.click();
-  }
 }
 
 async function loadServices(empId) {
