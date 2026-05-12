@@ -308,7 +308,27 @@ app.post('/api/booking/get-slots', async (req, res) => {
       nowBerlinMinutes = utcToBerlinMinutes(now);
     }
 
-    // 1. Get Working Hours — employee first, fallback to owner
+    // 1. Resolve owner_id
+    let ownerId = userId;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('owner_id')
+      .eq('id', userId)
+      .single();
+    if (profile?.owner_id) ownerId = profile.owner_id;
+
+    // 1.5 Check custom_days (shop-wide closed/holiday)
+    const { data: customDay } = await supabase
+      .from('custom_days')
+      .select('type')
+      .eq('owner_id', ownerId)
+      .eq('date', date)
+      .maybeSingle();
+    if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday')) {
+      return res.json({ slots: [] });
+    }
+
+    // 2. Get Working Hours — employee first, fallback to owner
     let wh = (await supabase
       .from('working_hours')
       .select('*')
@@ -317,11 +337,6 @@ app.post('/api/booking/get-slots', async (req, res) => {
       .single()).data;
 
     if (!wh || !wh.is_active) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('owner_id')
-        .eq('id', userId)
-        .single();
       if (profile?.owner_id) {
         wh = (await supabase
           .from('working_hours')

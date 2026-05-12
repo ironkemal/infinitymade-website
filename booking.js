@@ -187,6 +187,17 @@ async function loadBookingSlots(date) {
   state.selectedTime = null;
   updateSidebar();
 
+  const { data: customDay } = await supabase.from('custom_days')
+    .select('type,note')
+    .eq('owner_id', state.ownerId)
+    .eq('date', dStr)
+    .maybeSingle();
+
+  if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday')) {
+    listEl.innerHTML = `<div class="slots-empty">Geschlossen${customDay.note ? ': ' + customDay.note : ''}</div>`;
+    return;
+  }
+
   try {
     const res = await fetch(`${API}/booking/get-slots`, {
       method: 'POST',

@@ -75,6 +75,25 @@ export async function getBusinessSecret(userId, kind) {
 }
 
 /**
+ * Service-role fetch for Supabase Auth Admin endpoints (e.g. /auth/v1/admin/users).
+ */
+export async function adminAuthFetch(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1${path}`, {
+    ...options,
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  return { ok: res.ok, status: res.status, data };
+}
+
+/**
  * JSON response shortcut.
  */
 export function json(res, status, body) {
