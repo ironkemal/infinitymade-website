@@ -1515,6 +1515,7 @@ async function loadHoursPanel() {
   sel.innerHTML = all.map(e=>`<option value="${e.id}">${e.business_name||e.email?.split('@')[0]}</option>`).join('');
   hoursEmpId = all[0]?.id||currentSession.user.id;
   await renderHoursGrid();
+  await renderHoursMiniCal();
 }
 
 async function renderHoursGrid() {
@@ -1556,6 +1557,119 @@ document.getElementById('hoursSaveBtn').addEventListener('click', async () => {
   const {error} = await supabase.from('working_hours').upsert(payload,{onConflict:'user_id,day_of_week'});
   if (error) { showToast(t('err_generic'),'error'); return; }
   showToast(t('alert_hours_saved'));
+});
+
+let hoursCalDate = new Date();
+let hoursCustomDays = [];
+
+async function renderHoursMiniCal() {
+  const userId = hoursEmpId || currentSession.user.id;
+  const [{ data: wh }, { data: cd }] = await Promise.all([
+    supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', userId),
+    supabase.from('custom_days').select('*').eq('user_id', userId)
+  ]);
+  hoursCustomDays = cd || [];
+  const openDays = new Set((wh || []).filter(w => w.is_active).map(w => w.day_of_week));
+
+  const year = hoursCalDate.getFullYear();
+  const month = hoursCalDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+  const today = new Date();
+
+  document.getElementById('hoursCalTitle').textContent =
+    hoursCalDate.toLocaleString(currentLang === 'tr' ? 'tr-TR' : 'de-DE', { month: 'long', year: 'numeric' });
+
+  const grid = document.getElementById('hoursMiniCal');
+  grid.innerHTML = '';
+  const wdays = currentLang === 'tr'
+    ? ['Pz','Pt','Sa','Ça','Pe','Cu','Ct']
+    : ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  wdays.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-weekday';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  for (let i = 0; i < startOffset; i++) {
+    const empty = document.createElement('div');
+    grid.appendChild(empty);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const dow = date.getDay();
+    const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    const dateStr = date.toISOString().split('T')[0];
+    const custom = hoursCustomDays.find(c => c.date === dateStr);
+
+    const cell = document.createElement('div');
+    cell.className = 'cal-day' + (isPast ? ' past' : '') + (isToday ? ' today' : '');
+    cell.textContent = d;
+
+    const dot = document.createElement('span');
+    dot.className = 'dot ' + (custom ? custom.type : (openDays.has(dow) ? 'open' : 'closed'));
+    cell.appendChild(dot);
+
+    if (!isPast) {
+      cell.addEventListener('click', () => {
+        document.querySelectorAll('#hoursMiniCal .cal-day').forEach(el => el.classList.remove('selected'));
+        cell.classList.add('selected');
+        document.getElementById('sdDate').value = dateStr;
+      });
+    }
+    grid.appendChild(cell);
+  }
+  renderSpecialDaysList();
+}
+
+document.getElementById('hoursCalPrev').addEventListener('click', () => {
+  hoursCalDate.setMonth(hoursCalDate.getMonth() - 1);
+  renderHoursMiniCal();
+});
+document.getElementById('hoursCalNext').addEventListener('click', () => {
+  hoursCalDate.setMonth(hoursCalDate.getMonth() + 1);
+  renderHoursMiniCal();
+});
+
+function renderSpecialDaysList() {
+  const list = document.getElementById('specialDaysList');
+  if (!hoursCustomDays.length) { list.innerHTML = '<div style="color:var(--text-faint);font-size:13px;">Henüz özel gün eklenmemiş.</div>'; return; }
+  const sorted = [...hoursCustomDays].sort((a, b) => a.date.localeCompare(b.date));
+  list.innerHTML = sorted.map(d => `
+    <div class="special-day-item">
+      <span class="sd-date">${d.date}</span>
+      <span class="sd-badge ${d.type}">${d.type === 'closed' ? 'Kapalı' : d.type === 'holiday' ? 'Tatil' : 'Özel'}</span>
+      <span class="sd-note">${d.note || ''}</span>
+      <button onclick="deleteSpecialDay('${d.id}')">×</button>
+    </div>
+  `).join('');
+}
+
+window.deleteSpecialDay = async function(id) {
+  const { error } = await supabase.from('custom_days').delete().eq('id', id);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  showToast('Silindi');
+  await renderHoursMiniCal();
+};
+
+document.getElementById('sdAddBtn').addEventListener('click', async () => {
+  const date = document.getElementById('sdDate').value;
+  const type = document.getElementById('sdType').value;
+  const note = document.getElementById('sdNote').value.trim();
+  if (!date) { showToast('Tarih seçin', 'error'); return; }
+  const { error } = await supabase.from('custom_days').upsert({
+    user_id: hoursEmpId || currentSession.user.id,
+    date, type, note
+  }, { onConflict: 'user_id,date' });
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  showToast('Eklendi');
+  document.getElementById('sdNote').value = '';
+  await renderHoursMiniCal();
 });
 
 async function loadTeam() {

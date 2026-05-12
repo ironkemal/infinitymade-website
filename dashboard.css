@@ -1100,6 +1100,51 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .toggle-switch input:checked + .toggle-slider { background: var(--primary-dim); border-color: var(--primary); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); background: var(--primary); }
 
+/* Mini calendar in hours panel */
+.hours-calendar-section { display: grid; grid-template-columns: 320px 1fr; gap: 24px; margin-top: 24px; }
+.hours-cal-left { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.hours-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.hours-cal-title { font-weight: 700; font-size: 15px; color: var(--text-main); }
+.hours-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.hours-cal-grid .cal-weekday { font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center; padding: 4px 0; }
+.hours-cal-grid .cal-day {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text-main);
+  cursor: pointer; position: relative; background: var(--bg-main); border: 1px solid transparent;
+}
+.hours-cal-grid .cal-day:hover { background: var(--bg-hover); }
+.hours-cal-grid .cal-day.past { color: var(--text-faint); cursor: default; }
+.hours-cal-grid .cal-day.today { border-color: var(--primary); font-weight: 700; }
+.hours-cal-grid .cal-day.selected { background: var(--primary-dim); }
+.hours-cal-grid .cal-day .dot {
+  position: absolute; bottom: 3px; width: 6px; height: 6px; border-radius: 50%;
+}
+.hours-cal-grid .cal-day .dot.open { background: #22c55e; }
+.hours-cal-grid .cal-day .dot.closed { background: #ef4444; }
+.hours-cal-grid .cal-day .dot.holiday { background: #f59e0b; }
+.hours-cal-grid .cal-day .dot.special { background: #3b82f6; }
+.hours-cal-legend { display: flex; gap: 12px; margin-top: 12px; font-size: 12px; color: var(--text-muted); }
+.hours-cal-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.hours-cal-legend .dot.open { background: #22c55e; }
+.hours-cal-legend .dot.closed { background: #ef4444; }
+.hours-cal-legend .dot.holiday { background: #f59e0b; }
+.hours-cal-legend .dot.special { background: #3b82f6; }
+.hours-cal-right { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.special-days-list { max-height: 220px; overflow-y: auto; margin-bottom: 16px; }
+.special-day-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px; background: var(--bg-main); margin-bottom: 6px; font-size: 13px; }
+.special-day-item .sd-date { font-weight: 600; color: var(--text-main); min-width: 90px; }
+.special-day-item .sd-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+.special-day-item .sd-badge.closed { background: rgba(239,68,68,0.15); color: #ef4444; }
+.special-day-item .sd-badge.holiday { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.special-day-item .sd-badge.special { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.special-day-item .sd-note { color: var(--text-muted); flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.special-day-item button { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 16px; }
+.special-day-item button:hover { color: #ef4444; }
+.special-day-form label { display: block; margin-bottom: 4px; margin-top: 10px; }
+@media (max-width: 860px) {
+  .hours-calendar-section { grid-template-columns: 1fr; }
+}
+
 .hours-times {
   display: grid;
   grid-template-columns: 110px 110px;
