@@ -297,13 +297,29 @@ app.post('/api/booking/get-slots', async (req, res) => {
     const dayOfWeek = berlinDayOfWeek(date);
     const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
 
-    // 1. Get Working Hours (HH:MM strings stored in Berlin local time)
-    const { data: wh } = await supabase
+    // 1. Get Working Hours — employee first, fallback to owner
+    let wh = (await supabase
       .from('working_hours')
       .select('*')
       .eq('user_id', userId)
       .eq('day_of_week', dayOfWeek)
-      .single();
+      .single()).data;
+
+    if (!wh || !wh.is_active) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('owner_id')
+        .eq('id', userId)
+        .single();
+      if (profile?.owner_id) {
+        wh = (await supabase
+          .from('working_hours')
+          .select('*')
+          .eq('user_id', profile.owner_id)
+          .eq('day_of_week', dayOfWeek)
+          .single()).data;
+      }
+    }
 
     if (!wh || !wh.is_active) {
       return res.json({ slots: [] });
