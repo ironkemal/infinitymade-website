@@ -497,20 +497,39 @@
             <div class="filter-bar" style="margin-bottom:12px;margin-top:16px;">
               <input class="search-input" id="b2cSearch" type="text" placeholder="Kunden suchen…" style="margin-left:0;width:260px;" />
             </div>
-            <div class="table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th data-i18n="lead_title">Name</th>
-                    <th data-i18n="lead_email">E-Mail</th>
-                    <th data-i18n="lead_phone">Telefon</th>
-                    <th data-i18n="lead_status">Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="b2cTableBody"></tbody>
-              </table>
-              <div id="b2cEmpty" class="table-empty" hidden>Noch keine Kunden vorhanden.</div>
+            <div class="b2b-layout" style="margin-top:16px;">
+              <div>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="lead_title">Name</th>
+                        <th data-i18n="lead_email">E-Mail</th>
+                        <th data-i18n="lead_phone">Telefon</th>
+                        <th data-i18n="lead_status">Status</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="b2cTableBody"></tbody>
+                  </table>
+                  <div id="b2cEmpty" class="table-empty" hidden>Noch keine Kunden vorhanden.</div>
+                </div>
+              </div>
+              <div class="ai-chat-card">
+                <div class="ai-chat-header">
+                  <div class="ai-dot"></div>
+                  <span>KI Mail-Assistent</span>
+                  <span class="ai-from-badge" id="b2cAiFromBadge"></span>
+                </div>
+                <div class="ai-messages" id="b2cAiMessages">
+                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Schicke eine Erinnerungsmail an alle Kunden die noch nicht gebucht haben."</div>
+                </div>
+                <div class="ai-input-row">
+                  <button class="btn-icon" id="b2cAiVoiceBtn" title="Spracheingabe">🎤</button>
+                  <textarea id="b2cAiInput" placeholder="Befehl eingeben oder Mikrofon drücken..." rows="1"></textarea>
+                  <button class="btn-primary" id="b2cAiSendBtn">→</button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
