@@ -464,6 +464,91 @@ function shiftColorForDay(hex, dayOffset){
   return hslToHex(hsl.h, hsl.s, hsl.l);
 }
 
+function findGaps(whStart, whEnd, bookings) {
+  let current = (whStart || '09:00:00').substring(0,5);
+  const end   = (whEnd   || '18:00:00').substring(0,5);
+  if (!current || !end) return [];
+  const gaps = [];
+  const sorted = [...bookings].sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+  for (const b of sorted) {
+    const bStart = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
+    const bEndRaw = b.end_time ? new Date(b.end_time) : new Date(new Date(b.start_time).getTime() + (b.services?.duration_minutes || 30)*60000);
+    const bEnd = bEndRaw.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
+    if (bStart > current) gaps.push({start: current, end: bStart});
+    if (bEnd > current) current = bEnd;
+  }
+  if (current < end) gaps.push({start: current, end});
+  return gaps;
+}
+
+async function renderGaps() {
+  const tz = 'Europe/Berlin';
+  const container = document.getElementById('gapsList');
+  if (!container) return;
+
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
+  const today = new Date(todayStr + 'T00:00:00');
+  const tomorrow = new Date(today.getTime() + 86400000);
+  const todayDow = today.getDay();
+  const tomorrowDow = tomorrow.getDay();
+
+  const ownerId = getOwnerId();
+  const { data: whAll } = await supabase.from('working_hours')
+    .select('day_of_week,start_time,end_time,is_active')
+    .eq('user_id', ownerId)
+    .eq('is_active', true);
+  const whMap = {};
+  whAll?.forEach(r => whMap[r.day_of_week] = r);
+
+  const todayEndIso = new Date(today.getTime() + 86399000).toISOString();
+  const tomorrowEndIso = new Date(tomorrow.getTime() + 86399000).toISOString();
+  let q = supabase.from('bookings')
+    .select('start_time,end_time,services(duration_minutes),status')
+    .eq('owner_id', ownerId)
+    .gte('start_time', today.toISOString()).lte('start_time', tomorrowEndIso)
+    .neq('status','cancelled').order('start_time');
+  if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
+  const { data: bookings } = await q;
+
+  const allGaps = [];
+  const whToday = whMap[todayDow];
+  if (whToday) {
+    const todayBookings = (bookings||[]).filter(b => {
+      const d = new Date(b.start_time);
+      return d >= today && d < new Date(today.getTime() + 86400000);
+    });
+    findGaps(whToday.start_time, whToday.end_time, todayBookings).forEach(g =>
+      allGaps.push({day: 'Heute', start: g.start, end: g.end})
+    );
+  }
+  const whTom = whMap[tomorrowDow];
+  if (whTom) {
+    const tomBookings = (bookings||[]).filter(b => {
+      const d = new Date(b.start_time);
+      return d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000);
+    });
+    findGaps(whTom.start_time, whTom.end_time, tomBookings).forEach(g =>
+      allGaps.push({day: 'Morgen', start: g.start, end: g.end})
+    );
+  }
+
+  if (allGaps.length === 0) {
+    container.innerHTML = '<div class="gap-empty">Keine freien Zeiten.</div>';
+    return;
+  }
+  container.innerHTML = allGaps.map(g => {
+    const durMin = Math.round((new Date('2000-01-01T' + g.end) - new Date('2000-01-01T' + g.start)) / 60000);
+    return `<div class="gap-card">
+      <div class="gap-card-top">
+        <span class="gap-card-day">${g.day}</span>
+        <span class="gap-card-dur">${durMin} min</span>
+      </div>
+      <div class="gap-card-time">${g.start} - ${g.end}</div>
+    </div>`;
+  }).join('');
+}
+
 async function loadScheduleBookings(date) {
   scheduleDate = date;
   const loadingEl = document.getElementById('upcoming-bookings-loading');
@@ -2737,6 +2822,8 @@ async function init() {
     console.log('[init] team ok');
     await renderOverview();
     console.log('[init] overview ok');
+    await renderGaps();
+    console.log('[init] gaps ok');
     await initCalendar();
     console.log('[init] calendar ok');
     await handleGmailCallback();
