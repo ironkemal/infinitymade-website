@@ -610,6 +610,54 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: FEEDBACK ===== -->
+        <section class="panel" id="panel-feedback">
+          <div class="panel-header">
+            <div>
+              <h2>Feedback &amp; Support</h2>
+              <p class="panel-sub">Bugs melden oder Ideen teilen</p>
+            </div>
+          </div>
+
+          <div class="feedback-form card">
+            <h3>Neues Ticket</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Typ</label>
+                <select class="form-select" id="fbType">
+                  <option value="bug">Bug</option>
+                  <option value="feature_request">Feature Wunsch</option>
+                  <option value="feedback">Feedback</option>
+                  <option value="support">Support</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Priorität</label>
+                <select class="form-select" id="fbPriority">
+                  <option value="low">Niedrig</option>
+                  <option value="medium" selected>Mittel</option>
+                  <option value="high">Hoch</option>
+                  <option value="critical">Kritisch</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Titel</label>
+              <input class="form-input" id="fbTitle" type="text" placeholder="Kurze Beschreibung..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Beschreibung</label>
+              <textarea class="form-textarea" id="fbDesc" rows="4" placeholder="Details..."></textarea>
+            </div>
+            <button class="btn-primary" id="fbSendBtn">Absenden</button>
+          </div>
+
+          <h3 class="section-title" style="margin-top:24px;">Meine Tickets</h3>
+          <div class="feedback-list" id="fbList">
+            <div class="table-empty">Noch keine Tickets.</div>
+          </div>
+        </section>
+
         <!-- ===== PANEL 8: EINSTELLUNGEN ===== -->
         <section class="panel" id="panel-settings">
           <div class="panel-header">

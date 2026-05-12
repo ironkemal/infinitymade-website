@@ -48,6 +48,7 @@ function updateSidebar() {
 }
 
 async function init() {
+  console.log('[booking] identifier:', identifier);
   if (!identifier) { showError('Ungültiger Buchungslink.'); return; }
   const isUUID = s => s.length === 36 && s.includes('-');
   let q = supabase.from('profiles').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
@@ -55,10 +56,13 @@ async function init() {
     q = q.eq('id', identifier);
   } else if (identifier.toUpperCase().startsWith('INF-')) {
     q = q.eq('company_code', identifier.toUpperCase());
+  } else if (identifier.toLowerCase().includes('booking.html?u=')) {
+    q = q.ilike('booking_slug', `%${identifier.toLowerCase().split('booking.html?u=')[1]}`);
   } else {
     q = q.ilike('booking_slug', `%/booking.html?u=${identifier.toLowerCase()}`);
   }
-  const { data: profile } = await q.maybeSingle();
+  const { data: profile, error } = await q.maybeSingle();
+  if (error) console.error('[booking] supabase error:', error);
   if (!profile) { showError('Unternehmen nicht gefunden.'); return; }
 
   const isEmployee = profile.role === 'employee' && profile.owner_id;

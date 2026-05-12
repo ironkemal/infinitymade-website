@@ -199,6 +199,7 @@ const SECTOR_PANELS = {
     {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
     {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
     {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
+    {id:'feedback',icon:'💬',key:'nav_feedback',roles:['owner','employee']},
     {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
   ],
   physiotherapy: [
@@ -213,6 +214,7 @@ const SECTOR_PANELS = {
     {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
     {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
     {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
+    {id:'feedback',icon:'💬',key:'nav_feedback',roles:['owner','employee']},
     {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
   ],
   praxis: [
