@@ -317,14 +317,15 @@ app.post('/api/booking/get-slots', async (req, res) => {
       .single();
     if (profile?.owner_id) ownerId = profile.owner_id;
 
-    // 1.5 Check custom_days (shop-wide closed/holiday)
+    // 1.5 Check custom_days (shop-wide closed/holiday/special)
     const { data: customDay } = await supabase
       .from('custom_days')
-      .select('type')
+      .select('type,start_time,end_time')
       .eq('owner_id', ownerId)
       .eq('date', date)
       .maybeSingle();
-    if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday')) {
+
+    if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && !customDay.start_time && !customDay.end_time) {
       return res.json({ slots: [] });
     }
 
@@ -347,6 +348,10 @@ app.post('/api/booking/get-slots', async (req, res) => {
       }
     }
 
+    if (customDay && customDay.type === 'special' && customDay.start_time && customDay.end_time) {
+      wh = { start_time: customDay.start_time, end_time: customDay.end_time, is_active: true };
+    }
+
     if (!wh || !wh.is_active) {
       return res.json({ slots: [] });
     }
@@ -367,6 +372,13 @@ app.post('/api/booking/get-slots', async (req, res) => {
       start: utcToBerlinMinutes(new Date(b.start_time)),
       end: utcToBerlinMinutes(new Date(b.end_time))
     }));
+
+    if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && customDay.start_time && customDay.end_time) {
+      bookedIntervals.push({
+        start: timeToMins(customDay.start_time),
+        end: timeToMins(customDay.end_time)
+      });
+    }
 
     // 2.5 Get Time Offs (Beurlaubt) for this employee
     const { data: timeOffs } = await supabase
