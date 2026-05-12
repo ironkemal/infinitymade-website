@@ -2050,3 +2050,29 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .gap-card-time { font-size: 0.85rem; color: rgba(255,255,255,0.85); font-weight: 500; }
 .gaps-loading { display: flex; justify-content: center; padding: 20px; }
 .gap-empty { color: var(--text-muted); font-size: 0.9rem; padding: 12px 0; }
+
+/* ===== FEEDBACK ===== */
+.feedback-form h3 { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; }
+.feedback-list { display: flex; flex-direction: column; gap: 10px; }
+.feedback-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: border-color var(--transition);
+}
+.feedback-item:hover { border-color: var(--border-strong); }
+.feedback-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.feedback-title { font-weight: 600; font-size: 14px; color: var(--text-main); }
+.feedback-badges { display: flex; gap: 6px; flex-shrink: 0; }
+.feedback-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.feedback-desc { font-size: 13px; color: var(--text-main); line-height: 1.5; }
+.feedback-admin-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--primary-dim);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-main);
+}
