@@ -277,13 +277,22 @@
             </div>
           </div>
 
-          <div class="card invite-card" style="margin-bottom:16px;">
-            <div>
-              <div class="kpi-label" data-i18n="lbl_invite_code">Unternehmens-Code</div>
-              <div class="invite-code" id="inviteCode">—</div>
-              <div class="invite-hint" data-i18n="sub_invite_code">Mitarbeiter können sich mit diesem Code registrieren.</div>
+          <div class="card invite-card" style="margin-bottom:16px;flex-direction:column;align-items:flex-start;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;width:100%;">
+              <div style="flex:1;">
+                <div class="kpi-label" data-i18n="lbl_invite_code">Unternehmens-Code</div>
+                <div class="invite-code" id="inviteCode">—</div>
+              </div>
+              <button class="btn-ghost" id="copyInviteBtn" data-i18n="btn_copy">Kopieren</button>
             </div>
-            <button class="btn-ghost" id="copyInviteBtn" style="margin-left:auto;" data-i18n="btn_copy">Kopieren</button>
+            <div style="display:flex;align-items:center;gap:12px;width:100%;">
+              <div style="flex:1;min-width:0;">
+                <div class="kpi-label">Registrierungs-Link</div>
+                <div class="invite-link" id="inviteLink">—</div>
+                <div class="invite-hint">Mitarbeiter können sich direkt über diesen Link registrieren.</div>
+              </div>
+              <button class="btn-ghost" id="copyInviteLinkBtn">Kopieren</button>
+            </div>
           </div>
 
           <div id="teamListView">

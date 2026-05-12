@@ -1343,6 +1343,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   font-family: monospace;
 }
 .invite-hint { font-size: 12px; color: var(--text-muted); }
+.invite-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  word-break: break-all;
+  line-height: 1.4;
+}
 
 .emp-detail {
   background: var(--bg-card);

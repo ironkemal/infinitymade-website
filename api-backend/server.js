@@ -566,7 +566,7 @@ app.get('/api/team', async (req, res) => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, business_name, role')
+      .select('id, email, business_name, role, booking_slug, avatar_url')
       .or(`id.eq.${owner_id},owner_id.eq.${owner_id}`);
 
     if (error) throw error;
