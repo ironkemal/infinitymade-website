@@ -1,6 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9HFT4S0LTX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9HFT4S0LTX');
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -30,7 +38,7 @@
       padding: 24px;
     }
 
-    /* ── Card ── */
+    /* â”€â”€ Card â”€â”€ */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -42,7 +50,7 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
 
-    /* ── Sidebar ── */
+    /* â”€â”€ Sidebar â”€â”€ */
     .sidebar {
       width: 200px;
       flex-shrink: 0;
@@ -75,7 +83,7 @@
     .sel-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 3px; }
     .sel-val   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
 
-    /* ── Main ── */
+    /* â”€â”€ Main â”€â”€ */
     .main {
       flex: 1;
       padding: 22px 22px 18px;
@@ -83,7 +91,7 @@
       min-width: 0;
     }
 
-    /* ── Steps ── */
+    /* â”€â”€ Steps â”€â”€ */
     .step { display: none; }
     .step.active { display: block; animation: fadeUp .2s ease; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
@@ -97,7 +105,7 @@
     }
     .btn-back:hover { color: var(--text); }
 
-    /* ── List buttons (employee / service) ── */
+    /* â”€â”€ List buttons (employee / service) â”€â”€ */
     .list-btn {
       display: block; width: 100%;
       background: var(--panel); border: 1px solid var(--border);
@@ -111,7 +119,7 @@
     .list-btn-title  { font-size: 15px; font-weight: 600; }
     .list-btn-sub    { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
-    /* ── Calendar layout ── */
+    /* â”€â”€ Calendar layout â”€â”€ */
     .cal-layout {
       display: grid;
       grid-template-columns: 1fr 210px;
@@ -171,7 +179,7 @@
     .cal-cell.past { color: rgba(255,255,255,0.18); pointer-events: none; }
     .cal-cell.empty { pointer-events: none; }
 
-    /* ── Slots panel ── */
+    /* â”€â”€ Slots panel â”€â”€ */
     .slots-panel { min-height: 200px; }
     .slots-day-label {
       font-size: 14px; font-weight: 700;
@@ -193,7 +201,7 @@
     .slot-btn.picked .slot-dot { background: #000; }
     .slots-empty { font-size: 12px; color: var(--muted); padding-top: 8px; }
 
-    /* ── Form ── */
+    /* â”€â”€ Form â”€â”€ */
     .form-label  { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
     .form-input  {
       width: 100%; padding: 11px 14px;
@@ -203,7 +211,7 @@
     }
     .form-input:focus { outline: none; border-color: var(--green); }
 
-    /* ── Buttons ── */
+    /* â”€â”€ Buttons â”€â”€ */
     .btn-primary {
       background: var(--green); color: #000; border: none;
       padding: 12px 24px; border-radius: 8px;
@@ -213,7 +221,7 @@
     .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
     .btn-primary:hover:not(:disabled) { opacity: .88; }
 
-    /* ── Schedule nav ── */
+    /* â”€â”€ Schedule nav â”€â”€ */
     .btn-icon {
       width: 28px; height: 28px; background: none; border: 1px solid var(--border);
       border-radius: 8px; color: var(--text); font-size: 15px; cursor: pointer;
@@ -229,16 +237,16 @@
     .btn-ghost:hover { border-color: var(--green); color: var(--green); }
     .slot-card:hover { border-color: var(--green) !important; }
 
-    /* ── Footer row ── */
+    /* â”€â”€ Footer row â”€â”€ */
     .step-footer { margin-top: 24px; display: flex; justify-content: flex-end; }
 
-    /* ── Success ── */
+    /* â”€â”€ Success â”€â”€ */
     .success-wrap { text-align: center; padding: 48px 0; }
     .success-icon { font-size: 56px; margin-bottom: 16px; }
     .success-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
     .success-sub { font-size: 14px; color: var(--muted); }
 
-    /* ── Responsive ── */
+    /* â”€â”€ Responsive â”€â”€ */
     @media (max-width: 740px) {
       .card { flex-direction: column; }
       .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
@@ -253,11 +261,11 @@
   <aside class="sidebar">
     <div class="biz-avatar" id="bizAvatar">?</div>
     <div class="biz-owner" id="bizOwner"></div>
-    <div class="biz-name"  id="bizName">Laden…</div>
+    <div class="biz-name"  id="bizName">Ladenâ€¦</div>
 
     <div class="biz-meta">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span id="bizDuration">—</span>
+      <span id="bizDuration">â€”</span>
     </div>
     <div class="biz-meta">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
@@ -268,15 +276,15 @@
 
     <div class="sel-block" id="selEmpBlock">
       <div class="sel-label">Mitarbeiter</div>
-      <div class="sel-val" id="selEmpVal">—</div>
+      <div class="sel-val" id="selEmpVal">â€”</div>
     </div>
     <div class="sel-block" id="selSrvBlock">
       <div class="sel-label">Dienstleistung</div>
-      <div class="sel-val" id="selSrvVal">—</div>
+      <div class="sel-val" id="selSrvVal">â€”</div>
     </div>
     <div class="sel-block" id="selDateBlock">
       <div class="sel-label">Termin</div>
-      <div class="sel-val" id="selDateVal">—</div>
+      <div class="sel-val" id="selDateVal">â€”</div>
     </div>
   </aside>
 
@@ -285,23 +293,23 @@
 
     <!-- Step 1: Employee -->
     <div class="step active" id="step-employees">
-      <div class="step-title">Person auswählen</div>
-      <div id="empList"><div class="slots-empty">Mitarbeiter werden geladen…</div></div>
+      <div class="step-title">Person auswÃ¤hlen</div>
+      <div id="empList"><div class="slots-empty">Mitarbeiter werden geladenâ€¦</div></div>
     </div>
 
     <!-- Step 2: Service -->
     <div class="step" id="step-services">
-      <button class="btn-back" id="backToEmp">&#8592; Zurück</button>
-      <div class="step-title">Dienstleistung wählen</div>
+      <button class="btn-back" id="backToEmp">&#8592; ZurÃ¼ck</button>
+      <div class="step-title">Dienstleistung wÃ¤hlen</div>
       <div id="srvList"></div>
     </div>
 
     <!-- Step 3: Schedule (dashboard-style) -->
     <div class="step" id="step-datetime">
-      <button class="btn-back" id="backToSrv">&#8592; Zurück</button>
+      <button class="btn-back" id="backToSrv">&#8592; ZurÃ¼ck</button>
       <div class="schedule-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
         <button class="btn-icon" id="bkPrev">&#8249;</button>
-        <span class="schedule-title" id="bkDateLabel" style="font-size:15px;font-weight:600;">Termin wählen</span>
+        <span class="schedule-title" id="bkDateLabel" style="font-size:15px;font-weight:600;">Termin wÃ¤hlen</span>
         <button class="btn-icon" id="bkNext">&#8250;</button>
         <button class="btn-ghost" id="bkToday" type="button" style="margin-left:auto;font-size:12px;">Heute</button>
       </div>
@@ -310,10 +318,10 @@
 
     <!-- Step 4: Form -->
     <div class="step" id="step-form">
-      <button class="btn-back" id="backToCal">&#8592; Zurück</button>
+      <button class="btn-back" id="backToCal">&#8592; ZurÃ¼ck</button>
       <div class="step-title">Ihre Kontaktdaten</div>
       <form id="bookingForm">
-        <label class="form-label">Vollständiger Name</label>
+        <label class="form-label">VollstÃ¤ndiger Name</label>
         <input class="form-input" id="custName" type="text" required />
         <label class="form-label">E-Mail Adresse</label>
         <input class="form-input" id="custEmail" type="email" required />
@@ -328,9 +336,9 @@
     <!-- Step 5: Success -->
     <div class="step" id="step-success">
       <div class="success-wrap">
-        <div class="success-icon">✅</div>
-        <div class="success-title">Termin bestätigt!</div>
-        <div class="success-sub">Wir freuen uns auf Sie. Eine Bestätigung wird in Kürze gesendet.</div>
+        <div class="success-icon">âœ…</div>
+        <div class="success-title">Termin bestÃ¤tigt!</div>
+        <div class="success-sub">Wir freuen uns auf Sie. Eine BestÃ¤tigung wird in KÃ¼rze gesendet.</div>
       </div>
     </div>
 
