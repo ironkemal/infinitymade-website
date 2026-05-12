@@ -202,7 +202,7 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* Decision (Cal.com / WhatsApp Yes/No) */
+/* Decision (InfinityBooking / WhatsApp Yes/No) */
 .ob-decision {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -1,4 +1,4 @@
-// Reusable Cal.com style calendar widget
+// Reusable calendar widget
 // Usage:
 //   const cal = mountCalendar(containerEl, {
 //     minDate:       new Date(),                // optional, disable past
