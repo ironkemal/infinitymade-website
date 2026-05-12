@@ -457,12 +457,7 @@ function hslToHex(h,s,l){
   return '#'+toHex(f(0))+toHex(f(8))+toHex(f(4));
 }
 function shiftColorForTime(hex, hour){
-  if (!hex || hex==='null') return null;
-  const hsl = hexToHSL(hex);
-  const factor = Math.max(0, Math.min(1, (hour - 8) / 12));
-  hsl.l = Math.max(38, Math.min(68, hsl.l - factor * 18));
-  hsl.s = Math.max(40, Math.min(95, hsl.s - factor * 22));
-  return hslToHex(hsl.h, hsl.s, hsl.l);
+  return hex;
 }
 
 function findGaps(whStart, whEnd, bookings) {
@@ -688,7 +683,7 @@ async function loadScheduleBookings(date) {
     const hourStr = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
     const hour = parseInt(hourStr.split(':')[0]) + parseInt(hourStr.split(':')[1])/60;
     const isClose = greenIndices.has(i);
-    const baseColor = isClose ? '#22c55e' : (b.services?.color || fallbackColors[i % fallbackColors.length]);
+    const baseColor = isClose ? '#f59e0b' : (b.services?.color || fallbackColors[i % fallbackColors.length]);
     const color = shiftColorForTime(baseColor, hour);
     const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
     const isOwner = currentProfile.role==='owner';
