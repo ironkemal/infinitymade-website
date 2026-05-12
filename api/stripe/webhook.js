@@ -97,18 +97,95 @@ export default async function handler(req, res) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        // Bind subscription_id back to user immediately (faster than waiting for sub.created)
         const session = event.data.object;
-        const userId = session.metadata?.supabase_user_id;
-        if (userId && session.subscription) {
-          await adminFetch(`/profiles?id=eq.${userId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-              stripe_subscription_id: session.subscription,
-              stripe_customer_id: session.customer,
-            }),
+        const pendingId = session.metadata?.pending_id;
+        if (!pendingId) break;
+
+        const { ok: pOk, data: pRows } = await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}&select=*`);
+        if (!pOk || !pRows?.[0]) { console.error('[webhook] pending signup not found', pendingId); break; }
+        const pending = pRows[0];
+
+        // 1. Create Supabase auth user
+        const { ok: uOk, data: uData } = await adminAuthFetch('/admin/users', {
+          method: 'POST',
+          body: JSON.stringify({ email: pending.email, password: pending.password, email_confirm: true }),
+        });
+        if (!uOk) { console.error('[webhook] user creation failed', uData); break; }
+        const userId = uData.id;
+
+        const od = pending.onboarding_data || {};
+
+        // 2. Insert profile
+        const profilePayload = {
+          id: userId,
+          email: pending.email,
+          business_name: od.business_name || null,
+          sector: od.sector || null,
+          city: od.city || null,
+          language: od.language || null,
+          zip: od.zip || null,
+          street: od.street || null,
+          house_number: od.house_number || null,
+          owner_first_name: od.owner_first_name || null,
+          owner_last_name: od.owner_last_name || null,
+          accepts_bookings: od.accepts_bookings !== false,
+          booking_slug: od.booking_slug || null,
+          whatsapp_number: od.whatsapp_number || null,
+          whatsapp_phone_number_id: od.whatsapp_phone_number_id || null,
+          whatsapp_waba_id: od.whatsapp_waba_id || null,
+          message_templates: od.message_templates || null,
+          working_hours: od.working_hours || null,
+          plan: od.plan || null,
+          billing_interval: od.billing_interval || null,
+          stripe_customer_id: session.customer,
+          stripe_subscription_id: session.subscription,
+          plan_status: 'trial',
+          is_active: true,
+          onboarding_step: 'done',
+        };
+        await adminFetch('/profiles', { method: 'POST', body: JSON.stringify(profilePayload) });
+
+        // 3. Insert services + link employee
+        if (Array.isArray(od.services) && od.services.length) {
+          const svcInserts = od.services.map(s => ({
+            owner_id: userId,
+            title: s.name,
+            duration_minutes: s.duration_minutes || 30,
+            price: s.price_eur || null,
+            buffer_time: 0,
+            is_online_meeting: false,
+          }));
+          const { data: inserted } = await adminFetch('/services', { method: 'POST', body: JSON.stringify(svcInserts) });
+          if (inserted?.length) {
+            const empRows = inserted.map(s => ({ employee_id: userId, service_id: s.id }));
+            await adminFetch('/employee_services', { method: 'POST', body: JSON.stringify(empRows) });
+            const bsInserts = od.services.map((s, i) => ({
+              business_id: userId,
+              name: s.name,
+              duration_minutes: s.duration_minutes || 30,
+              price_eur: s.price_eur || null,
+              is_active: s.is_active !== false,
+              display_order: i,
+            }));
+            await adminFetch('/business_services', { method: 'POST', body: JSON.stringify(bsInserts) });
+          }
+        }
+
+        // 4. Insert working_hours
+        if (Array.isArray(od.working_hours_rows) && od.working_hours_rows.length) {
+          await adminFetch('/working_hours', { method: 'POST', body: JSON.stringify(od.working_hours_rows) });
+        }
+
+        // 5. Save WhatsApp secret if present
+        if (od.whatsapp_access_token) {
+          await adminFetch('/rpc/business_save_secret', {
+            method: 'POST',
+            body: JSON.stringify({ p_user_id: userId, p_secret_kind: 'whatsapp_access_token', p_secret_value: od.whatsapp_access_token }),
           });
         }
+
+        // 6. Delete pending signup
+        await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}`, { method: 'DELETE' });
         break;
       }
 
