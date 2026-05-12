@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513e" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513f" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -62,15 +62,6 @@
             <p>{{ 'Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.' | encodeURI }}</p>
           </div>
           <button class="dash-banner-close" onclick="this.closest('.dash-banner').hidden=true">✕</button>
-        </div>
-
-        <div id="trial-banner" class="dash-banner trial" hidden>
-          <div class="dash-banner-icon">⏱️</div>
-          <div class="dash-banner-content">
-            <strong>Test-Phase: <span id="trial-days-left">—</span> Tage übrig</strong>
-            <p>Nach Ablauf der Testphase wird Ihre Karte belastet. Jederzeit kündbar.</p>
-          </div>
-          <button class="dash-banner-action" id="trial-manage-btn">Abo verwalten</button>
         </div>
 
         <div id="pastdue-banner" class="dash-banner pastdue" hidden>
@@ -1220,6 +1211,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513g"></script>
+  <script type="module" src="dashboard.js?v=20260513h"></script>
 </body>
 </html>

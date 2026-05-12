@@ -457,24 +457,19 @@ async function renderOverview() {
     ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
   document.getElementById('setStatusValue').textContent = currentProfile.is_active ? t('status_active') : t('status_inactive');
 
-  ['welcome-banner','trial-banner','pastdue-banner'].forEach(id => {
+  ['welcome-banner','pastdue-banner'].forEach(id => {
     const el=document.getElementById(id); if(el) el.hidden=true;
   });
   const params = new URLSearchParams(location.search);
-  const status = currentProfile.plan_status||'pending';
-  const hasSub = !!currentProfile.stripe_subscription_id;
+  const status = currentProfile.plan_status;
+
   if (params.get('welcome')==='1') {
     history.replaceState({},'' ,location.pathname);
     document.getElementById('welcome-banner').hidden = false;
-  } else if (status==='trial' && currentProfile.trial_ends_at) {
-    const days = Math.max(0,Math.ceil((new Date(currentProfile.trial_ends_at)-Date.now())/86400000));
-    document.getElementById('trial-days-left').textContent = days;
-    document.getElementById('trial-banner').hidden = false;
   } else if (status==='past_due') {
     document.getElementById('pastdue-banner').hidden = false;
   }
 
-  document.getElementById('trial-manage-btn')?.addEventListener('click', openStripePortal);
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
 
   const features = (PLAN_FEATURES[currentProfile.plan]||PLAN_FEATURES.starter)[currentLang]||[];
