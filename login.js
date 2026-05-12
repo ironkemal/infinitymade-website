@@ -89,7 +89,7 @@ if (session) {
   if (session.user.id === ADMIN_UUID) { window.location.href = 'admin.html'; }
   else {
     const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
-    if (data && data.role === 'employee') window.location.href = 'kalender.html';
+    if (data && data.role === 'employee') window.location.href = 'dashboard.html';
     else window.location.href = 'dashboard.html';
   }
 }
@@ -127,7 +127,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const { data } = await supabase.from('profiles').select('role').eq('id', (await supabase.auth.getUser()).data.user.id).single();
   const user = (await supabase.auth.getUser()).data.user;
   if (user && user.id === ADMIN_UUID) { window.location.href = 'admin.html'; return; }
-  if (data && data.role === 'employee') window.location.href = 'kalender.html';
+  if (data && data.role === 'employee') window.location.href = 'dashboard.html';
   else window.location.href = 'dashboard.html';
 });
 
