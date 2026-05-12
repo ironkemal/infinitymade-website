@@ -2168,6 +2168,16 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   btn.disabled = false; btn.textContent = '✉ Senden';
 });
 
+function aiAddMsg(text, role, containerId = 'aiMessages') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'msg-bubble ' + role;
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
 async function runMailDraft(intent, contactsCache, containerId = 'aiMessages', mapContactFn = null) {
   aiAddMsg(intent, 'user', containerId);
   const msgsEl = document.getElementById(containerId);
