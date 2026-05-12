@@ -431,43 +431,47 @@ function bindServices() {
 
     if (items.length === 0) return showError('Mindestens eine Dienstleistung wird benötigt.');
 
-    try {
-      const { error: delBs } = await supabase.from('business_services').delete().eq('business_id', userId);
-      if (delBs) throw delBs;
-      const { error: delEs } = await supabase.from('employee_services').delete().eq('employee_id', userId);
-      if (delEs) throw delEs;
-      const { data: oldSvcs } = await supabase.from('services').select('id').eq('owner_id', userId);
-      if (oldSvcs?.length) {
-        const { error: delSvc } = await supabase.from('services').delete().in('id', oldSvcs.map(s => s.id));
-        if (delSvc) throw delSvc;
+    if (userId) {
+      try {
+        const { error: delBs } = await supabase.from('business_services').delete().eq('business_id', userId);
+        if (delBs) throw delBs;
+        const { error: delEs } = await supabase.from('employee_services').delete().eq('employee_id', userId);
+        if (delEs) throw delEs;
+        const { data: oldSvcs } = await supabase.from('services').select('id').eq('owner_id', userId);
+        if (oldSvcs?.length) {
+          const { error: delSvc } = await supabase.from('services').delete().in('id', oldSvcs.map(s => s.id));
+          if (delSvc) throw delSvc;
+        }
+
+        const svcInserts = items.map(s => ({
+          owner_id: userId,
+          title: s.name,
+          duration_minutes: s.duration_minutes,
+          price: s.price_eur,
+          buffer_time: 0,
+          is_online_meeting: false,
+        }));
+        const { data: inserted, error: svcErr } = await supabase.from('services').insert(svcInserts).select();
+        if (svcErr) throw svcErr;
+
+        const empRows = inserted.map(s => ({ employee_id: userId, service_id: s.id }));
+        const { error: empErr } = await supabase.from('employee_services').insert(empRows);
+        if (empErr) throw empErr;
+
+        const bsInserts = items.map(({ id, ...rest }) => rest);
+        const { error: bsErr } = await supabase.from('business_services').insert(bsInserts);
+        if (bsErr) throw bsErr;
+
+        await saveStepProgress('hours');
+      } catch (err) {
+        showError(err.message);
+        return;
       }
-
-      const svcInserts = items.map(s => ({
-        owner_id: userId,
-        title: s.name,
-        duration_minutes: s.duration_minutes,
-        price: s.price_eur,
-        buffer_time: 0,
-        is_online_meeting: false,
-      }));
-      const { data: inserted, error: svcErr } = await supabase.from('services').insert(svcInserts).select();
-      if (svcErr) throw svcErr;
-
-      const empRows = inserted.map(s => ({ employee_id: userId, service_id: s.id }));
-      const { error: empErr } = await supabase.from('employee_services').insert(empRows);
-      if (empErr) throw empErr;
-
-      const bsInserts = items.map(({ id, ...rest }) => rest);
-      const { error: bsErr } = await supabase.from('business_services').insert(bsInserts);
-      if (bsErr) throw bsErr;
-
-      services = items;
-
-      await saveStepProgress('hours');
-      goToStep(4);
-    } catch (err) {
-      showError(err.message);
     }
+
+    services = items;
+    saveSessionProfile();
+    goToStep(4);
   });
 }
 
