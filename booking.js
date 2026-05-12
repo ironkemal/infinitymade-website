@@ -216,16 +216,69 @@ async function loadBookingSlots(date) {
   }
 }
 
-document.getElementById('bkPrev').addEventListener('click', () => {
-  const d = new Date(bkScheduleDate); d.setDate(d.getDate()-1); loadBookingSlots(d);
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function renderBookingCalendar(year, month) {
+  const grid = document.getElementById('bkCalGrid');
+  const label = document.getElementById('calMonthLabel');
+  if (!grid || !label) return;
+
+  const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  label.innerHTML = `${monthNames[month]} <em>${year}</em>`;
+
+  const firstDay = new Date(year, month, 1);
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toDateString();
+
+  let html = '';
+  for (let i = 0; i < startOffset; i++) html += '<div class="cal-cell empty"></div>';
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(year, month, d);
+    const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isToday = dateObj.toDateString() === todayStr;
+    const isSelected = bkScheduleDate && dateObj.toDateString() === new Date(bkScheduleDate.getFullYear(), bkScheduleDate.getMonth(), bkScheduleDate.getDate()).toDateString();
+
+    let cls = 'cal-cell';
+    if (isPast) cls += ' past';
+    else cls += ' avail';
+    if (isToday) cls += ' today';
+    if (isSelected) cls += ' selected';
+
+    html += `<button class="${cls}" data-day="${d}" type="button">${d}</button>`;
+  }
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.cal-cell.avail, .cal-cell.today').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const day = parseInt(btn.dataset.day);
+      const selected = new Date(year, month, day);
+      grid.querySelectorAll('.cal-cell').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      loadBookingSlots(selected);
+    });
+  });
+}
+
+document.getElementById('calPrevMonth').addEventListener('click', () => {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderBookingCalendar(calYear, calMonth);
 });
-document.getElementById('bkNext').addEventListener('click', () => {
-  const d = new Date(bkScheduleDate); d.setDate(d.getDate()+1); loadBookingSlots(d);
+document.getElementById('calNextMonth').addEventListener('click', () => {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderBookingCalendar(calYear, calMonth);
 });
-document.getElementById('bkToday').addEventListener('click', () => loadBookingSlots(new Date()));
 
 async function mountBookingCalendar() {
   bkScheduleDate = new Date();
+  calYear = bkScheduleDate.getFullYear();
+  calMonth = bkScheduleDate.getMonth();
+  renderBookingCalendar(calYear, calMonth);
   await loadBookingSlots(bkScheduleDate);
 }
 
