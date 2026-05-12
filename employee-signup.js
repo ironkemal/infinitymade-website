@@ -26,7 +26,7 @@ function showFieldErr(id, show) {
   if (inp) inp.classList.toggle('error', show);
 }
 function clearStep1Errors() {
-  ['name','email','password','password2'].forEach(id => showFieldErr(id, false));
+  ['vorname','nachname','email','password','password2'].forEach(id => showFieldErr(id, false));
 }
 function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
@@ -78,12 +78,14 @@ function showMsg(text, type) {
 function validateStep1() {
   clearStep1Errors();
   let ok = true;
-  const name = $('name').value.trim();
+  const vorname = $('vorname').value.trim();
+  const nachname = $('nachname').value.trim();
   const email = $('email').value.trim();
   const pw = $('password').value;
   const pw2 = $('password2').value;
 
-  if (!name) { showFieldErr('name', true); ok = false; }
+  if (!vorname) { showFieldErr('vorname', true); ok = false; }
+  if (!nachname) { showFieldErr('nachname', true); ok = false; }
   if (!isValidEmail(email)) { showFieldErr('email', true); ok = false; }
   if (pw.length < 8) { showFieldErr('password', true); ok = false; }
   if (pw !== pw2 || !pw2) { showFieldErr('password2', true); ok = false; }
@@ -105,7 +107,8 @@ function validateStep2() {
 /* ─── Step 3 summary ─── */
 function updateSummary() {
   $('badgeCode').textContent = $('company_code').value || '—';
-  $('sumName').textContent = $('name').value.trim();
+  const fullName = ($('vorname').value.trim() + ' ' + $('nachname').value.trim()).trim();
+  $('sumName').textContent = fullName;
   $('sumEmail').textContent = $('email').value.trim();
   const activeDays = collectWorkingHours().filter(h => h.is_active).length;
   $('sumDays').textContent = activeDays + ' / 7 Tagen';
@@ -126,12 +129,21 @@ $('btnStep2').addEventListener('click', () => {
 
 $('backStep3').addEventListener('click', () => showStep(2));
 
+/* ─── Enter key navigation ─── */
+function handleEnter(e, btnId) {
+  if (e.key === 'Enter') { e.preventDefault(); $(btnId).click(); }
+}
+['vorname','nachname','email','password','password2'].forEach(id => {
+  $(id).addEventListener('keydown', e => handleEnter(e, 'btnStep1'));
+});
+
 /* ─── Final Submit ─── */
 $('signupForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  if (currentStep !== 3) return;
   msg.className = 'msg';
 
-  const name = $('name').value.trim();
+  const name = ($('vorname').value.trim() + ' ' + $('nachname').value.trim()).trim();
   const email = $('email').value.trim();
   const password = $('password').value;
   const companyCode = $('company_code').value.trim().toUpperCase();
