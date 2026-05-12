@@ -1242,8 +1242,22 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   position: absolute;
   top: 8px; right: 8px;
   width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--primary);
+}
+.emp-card .emp-link-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+}
+.emp-card .emp-link-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  text-align: left;
 }
 
 /* List view fallback */

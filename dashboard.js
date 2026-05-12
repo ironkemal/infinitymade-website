@@ -272,7 +272,12 @@ let leadSearchVal = '';
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
       const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
       if (ownerErr) console.error('[ownerProfile]', ownerErr);
-      if (owner) ownerProfile = owner;
+      if (owner) {
+        ownerProfile = owner;
+        if (!currentProfile.sector || currentProfile.sector === 'default') {
+          currentProfile.sector = owner.sector || 'default';
+        }
+      }
       console.log('[boot] owner_id=', currentProfile.owner_id, 'ownerProfile=', ownerProfile, 'currentProfile.sector=', currentProfile.sector);
     } else {
       console.log('[boot] skipping owner fetch. role=', currentProfile.role, 'owner_id=', currentProfile.owner_id);
@@ -318,7 +323,13 @@ async function renderSidebar() {
   if (role === 'employee' && !ownerProfile && currentProfile.owner_id) {
     const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
     if (ownerErr) console.error('[renderSidebar ownerProfile]', ownerErr);
-    if (owner) { ownerProfile = owner; console.log('[renderSidebar] fetched ownerProfile late', ownerProfile); }
+    if (owner) {
+      ownerProfile = owner;
+      if (!currentProfile.sector || currentProfile.sector === 'default') {
+        currentProfile.sector = owner.sector || 'default';
+      }
+      console.log('[renderSidebar] fetched ownerProfile late', ownerProfile);
+    }
   }
 
   const items = getSidebarItems();
@@ -1739,15 +1750,27 @@ async function loadTeam() {
     const name = m.business_name || m.email?.split('@')[0] || '—';
     const initial = (name[0]||'?').toUpperCase();
     const avatar = m.avatar_url ? `<img src="${m.avatar_url}" alt="">` : initial;
+    const bookingLink = m.booking_slug || (window.location.origin + '/booking.html?u=' + m.id);
     return `<div class="emp-card" data-emp-id="${m.id}">
       <div class="emp-avatar">${avatar}</div>
       <div class="emp-name">${name} ${m.id===currentSession.user.id?t('me'):''}</div>
       <div class="emp-role">${m.role==='owner'?'Geschäftsführung':'Mitarbeiter'}</div>
       ${m.id===currentSession.user.id?'<div class="emp-badge" title="Sie"></div>':''}
+      <div class="emp-link-row">
+        <span class="emp-link-text">${bookingLink}</span>
+        <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}">📋</button>
+      </div>
     </div>`;
   }).join('');
   list.querySelectorAll('.emp-card').forEach(card => {
     card.addEventListener('click', () => openEmpDetail(card.dataset.empId));
+  });
+  list.querySelectorAll('.emp-copy-link').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(btn.dataset.link);
+      showToast(t('copied'));
+    });
   });
 }
 
