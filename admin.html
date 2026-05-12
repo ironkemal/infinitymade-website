@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin – InfinityMade</title>
+  <title>Admin â€“ InfinityMade</title>
   <meta name="robots" content="noindex" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="dashboard.css?v=20260511n" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     .admin-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
@@ -29,24 +29,24 @@
     <div class="dashboard-layout">
       <aside class="sidebar" id="sidebar">
         <nav>
-          <a class="nav-item active" data-panel="overview"><span>📊</span> Übersicht</a>
-          <a class="nav-item" data-panel="customers"><span>👥</span> Kunden</a>
-          <a class="nav-item" data-panel="bookings"><span>📅</span> Termine</a>
-          <a class="nav-item" data-panel="feedbacks"><span>💬</span> Feedback</a>
-          <a class="nav-item" href="dashboard.html"><span>🔙</span> Dashboard</a>
+          <a class="nav-item active" data-panel="overview"><span>ðŸ“Š</span> Ãœbersicht</a>
+          <a class="nav-item" data-panel="customers"><span>ðŸ‘¥</span> Kunden</a>
+          <a class="nav-item" data-panel="bookings"><span>ðŸ“…</span> Termine</a>
+          <a class="nav-item" data-panel="feedbacks"><span>ðŸ’¬</span> Feedback</a>
+          <a class="nav-item" href="dashboard.html"><span>ðŸ”™</span> Dashboard</a>
         </nav>
       </aside>
       <main class="main-area" id="mainArea">
 
         <section class="panel active" id="panel-overview">
-          <div class="panel-header"><div><h2>Übersicht</h2></div></div>
+          <div class="panel-header"><div><h2>Ãœbersicht</h2></div></div>
           <div class="admin-kpi-grid" id="adminKpi"></div>
         </section>
 
         <section class="panel" id="panel-customers">
           <div class="panel-header"><div><h2>Kunden</h2></div></div>
           <div class="admin-filter-bar">
-            <select class="form-select" id="custFilterPlan"><option value="">Alle Pläne</option><option value="starter">Starter</option><option value="professional">Professional</option><option value="klinik">Klinik</option><option value="mitarbeiter">Mitarbeiter</option></select>
+            <select class="form-select" id="custFilterPlan"><option value="">Alle PlÃ¤ne</option><option value="starter">Starter</option><option value="professional">Professional</option><option value="klinik">Klinik</option><option value="mitarbeiter">Mitarbeiter</option></select>
             <select class="form-select" id="custFilterStatus"><option value="">Alle Status</option><option value="trial">Trial</option><option value="active">Aktiv</option><option value="past_due">Past Due</option><option value="canceled">Canceled</option></select>
             <input class="search-input" id="custSearch" placeholder="Suchen..." />
           </div>
@@ -58,7 +58,7 @@
         <section class="panel" id="panel-feedbacks">
           <div class="panel-header"><div><h2>Feedback & Bugs</h2></div></div>
           <div class="admin-table-wrap">
-            <table class="data-table"><thead><tr><th>Datum</th><th>Kunde</th><th>Typ</th><th>Titel</th><th>Status</th><th>Priorität</th><th>Admin Notiz</th></tr></thead><tbody id="fbAdminTable"></tbody></table>
+            <table class="data-table"><thead><tr><th>Datum</th><th>Kunde</th><th>Typ</th><th>Titel</th><th>Status</th><th>PrioritÃ¤t</th><th>Admin Notiz</th></tr></thead><tbody id="fbAdminTable"></tbody></table>
           </div>
         </section>
 

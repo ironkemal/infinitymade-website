@@ -511,9 +511,9 @@ async function renderGaps() {
     let q = supabase.from('bookings')
       .select('start_time,end_time,services(duration_minutes),status')
       .eq('owner_id', ownerId)
+      .eq('user_id', currentSession.user.id)
       .gte('start_time', today.toISOString()).lte('start_time', tomorrowEndIso)
       .neq('status','cancelled').order('start_time');
-    if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
     const { data: bookings } = await q;
 
     const allGaps = [];
@@ -596,9 +596,9 @@ async function renderGapsForDate(date) {
     let q = supabase.from('bookings')
       .select('start_time,end_time,services(duration_minutes),status')
       .eq('owner_id', ownerId)
+      .eq('user_id', currentSession.user.id)
       .gte('start_time', dayStart.toISOString()).lte('start_time', dayEndIso)
       .neq('status','cancelled').order('start_time');
-    if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
     const { data: bookings } = await q;
 
     const totalEl = document.getElementById('gapsTotal');
@@ -663,9 +663,9 @@ async function loadScheduleBookings(date) {
   let q = supabase.from('bookings')
     .select('*,services(title,color)')
     .eq('owner_id',ownerId)
+    .eq('user_id',currentSession.user.id)
     .gte('start_time',dStart).lte('start_time',dEnd)
     .neq('status','cancelled').order('start_time').limit(25);
-  if (currentProfile.role!=='owner') q = q.eq('user_id',currentSession.user.id);
 
   const {data:bookings} = await q;
   loadingEl.hidden = true;
