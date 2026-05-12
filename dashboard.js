@@ -267,8 +267,12 @@ let leadSearchVal = '';
     if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-      const { data: owner } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
+      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
+      if (ownerErr) console.error('[ownerProfile]', ownerErr);
       if (owner) ownerProfile = owner;
+      console.log('[boot] owner_id=', currentProfile.owner_id, 'ownerProfile=', ownerProfile, 'currentProfile.sector=', currentProfile.sector);
+    } else {
+      console.log('[boot] skipping owner fetch. role=', currentProfile.role, 'owner_id=', currentProfile.owner_id);
     }
 
     await init();
@@ -287,7 +291,9 @@ function getOwnerId() { return currentProfile.role==='owner' ? currentSession.us
 
 function getSector() {
   if (currentProfile.role === 'owner') return currentProfile.sector || 'default';
-  return ownerProfile?.sector || currentProfile.sector || 'default';
+  const s = ownerProfile?.sector || currentProfile.sector || 'default';
+  console.log('[getSector]', s, { role: currentProfile.role, owner_id: currentProfile.owner_id, ownerProfile, currentProfileSector: currentProfile.sector });
+  return s;
 }
 function getSidebarItems() {
   const sector = getSector();
@@ -301,11 +307,20 @@ function applyI18n() {
   if (ls) ls.value = currentLang;
 }
 
-function renderSidebar() {
+async function renderSidebar() {
   const nav = document.getElementById('sidebarNav');
   nav.innerHTML = '';
   const role = currentProfile.role || 'owner';
-  getSidebarItems().forEach(item => {
+
+  if (role === 'employee' && !ownerProfile && currentProfile.owner_id) {
+    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
+    if (ownerErr) console.error('[renderSidebar ownerProfile]', ownerErr);
+    if (owner) { ownerProfile = owner; console.log('[renderSidebar] fetched ownerProfile late', ownerProfile); }
+  }
+
+  const items = getSidebarItems();
+  console.log('[renderSidebar] items count=', items.length, items.map(i=>i.id));
+  items.forEach(item => {
     if (!item.roles.includes(role)) return;
     const btn = document.createElement('button');
     btn.className = 'sidebar-item' + (item.id===activePanel ? ' active' : '');
@@ -321,7 +336,7 @@ async function switchPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-'+id);
   if (target) target.classList.add('active');
-  renderSidebar();
+  await renderSidebar();
   closeSidebar();
   if (id==='calendar'){ if(!calendar) await initCalendar(); else calendar.reloadMonth(); }
   if (id==='kunden') loadLeads();
@@ -353,7 +368,7 @@ document.getElementById('langSelect').addEventListener('change', async (e) => {
   currentLang = e.target.value;
   localStorage.setItem('infinity_lang', currentLang);
   applyI18n();
-  renderSidebar();
+  await renderSidebar();
   await supabase.from('profiles').update({language:currentLang}).eq('id',currentSession.user.id);
 });
 document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -2546,7 +2561,7 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
   localStorage.setItem('infinity_lang',lang);
   document.getElementById('bizName').textContent = biz;
   applyI18n();
-  renderSidebar();
+  await renderSidebar();
   showToast(t('saved'));
 });
 
@@ -3244,7 +3259,7 @@ async function init() {
     console.log('[init] bookingSlug ok');
     applyI18n();
     console.log('[init] i18n ok');
-    renderSidebar();
+    await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();
     console.log('[init] team ok');
