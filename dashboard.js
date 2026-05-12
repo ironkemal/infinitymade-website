@@ -210,11 +210,8 @@ const SECTOR_PANELS = {
     {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
     {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner','employee']},
     {id:'notizen', icon:'📝',key:'nav_notizen', roles:['owner','employee']},
-    {id:'services',icon:'✂️', key:'nav_services',roles:['owner']},
-    {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
-    {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
+    {id:'services',icon:'✂️', key:'nav_services',roles:['owner','employee']},
     {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
-    {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
     {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
     {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
     {id:'feedback',icon:'💬',key:'nav_feedback',roles:['owner','employee']},
@@ -407,8 +404,9 @@ async function renderOverview() {
   // Welcome banner
   const welcomeEl = document.getElementById('welcomeText');
   if (welcomeEl) {
-    const name = currentProfile.business_name || currentSession.user.email?.split('@')[0] || '';
-    welcomeEl.innerHTML = `Hoşgeldin <span>${escapeHtml(name)}</span> ${currentProfile.business_name ? '- ' + escapeHtml(currentProfile.business_name) : ''}`;
+    const firstName = currentProfile.first_name || currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || '';
+    const bizName   = currentProfile.business_name || '';
+    welcomeEl.innerHTML = `${t('welcome_text')} <span>${escapeHtml(firstName)}</span>${bizName ? ' – ' + escapeHtml(bizName) : ''}`;
   }
 
   // Settings Paket & Status
@@ -1518,7 +1516,11 @@ async function loadHoursPanel() {
   sel.innerHTML = all.map(e=>`<option value="${e.id}">${e.business_name||e.email?.split('@')[0]}</option>`).join('');
   hoursEmpId = all[0]?.id||currentSession.user.id;
   await renderHoursGrid();
-  await renderHoursMiniCal();
+  const calSection = document.querySelector('.hours-calendar-section');
+  if (calSection) {
+    calSection.hidden = currentProfile.role !== 'owner';
+    if (currentProfile.role === 'owner') await renderHoursMiniCal();
+  }
 }
 
 async function renderHoursGrid() {
@@ -1567,9 +1569,10 @@ let hoursCustomDays = [];
 
 async function renderHoursMiniCal() {
   const userId = hoursEmpId || currentSession.user.id;
+  const ownerId = getOwnerId();
   const [{ data: wh }, { data: cd }] = await Promise.all([
     supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', userId),
-    supabase.from('custom_days').select('*').eq('user_id', userId)
+    supabase.from('custom_days').select('*').eq('owner_id', ownerId)
   ]);
   hoursCustomDays = cd || [];
   const openDays = new Set((wh || []).filter(w => w.is_active).map(w => w.day_of_week));
@@ -1672,15 +1675,15 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
   const endDate = new Date(end);
   if (endDate < startDate) { showToast('Bis darf nicht vor Von liegen', 'error'); return; }
 
-  const userId = hoursEmpId || currentSession.user.id;
+  const ownerId = getOwnerId();
   const rows = [];
   const d = new Date(startDate);
   while (d <= endDate) {
-    rows.push({ user_id: userId, date: d.toISOString().split('T')[0], type, note });
+    rows.push({ owner_id: ownerId, date: d.toISOString().split('T')[0], type, note });
     d.setDate(d.getDate() + 1);
   }
 
-  const { error } = await supabase.from('custom_days').upsert(rows, { onConflict: 'user_id,date' });
+  const { error } = await supabase.from('custom_days').upsert(rows, { onConflict: 'owner_id,date' });
   if (error) { showToast(t('err_generic'), 'error'); return; }
   showToast(rows.length > 1 ? `${rows.length} Tage hinzugefügt` : '1 Tag hinzugefügt');
   document.getElementById('sdNote').value = '';

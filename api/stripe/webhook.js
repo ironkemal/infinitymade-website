@@ -7,7 +7,7 @@
 //   - invoice.payment_failed
 //   - checkout.session.completed (initial bind)
 
-import { adminFetch, json } from '../_lib/auth.js';
+import { adminFetch, adminAuthFetch, json } from '../_lib/auth.js';
 import { verifyWebhook } from '../_lib/stripe.js';
 
 const SECRET = process.env.STRIPE_WEBHOOK_SECRET;
@@ -31,9 +31,24 @@ function planSlugFromMetadata(meta) {
 }
 
 async function updateProfileBySubscription(sub, overrides = {}) {
-  const meta = sub.metadata || {};
-  const userId = meta.supabase_user_id;
-  if (!userId) return { skipped: 'no supabase_user_id in subscription metadata' };
+  // Lookup profile by stripe_subscription_id (set during checkout.session.completed)
+  const { ok: fOk, data: profiles } = await adminFetch(`/profiles?stripe_subscription_id=eq.${sub.id}&select=id`);
+  let userId = null;
+  if (fOk && profiles?.[0]) {
+    userId = profiles[0].id;
+  }
+  // Fallback: lookup by pending_id -> email -> profile
+  if (!userId) {
+    const pendingId = sub.metadata?.pending_id;
+    if (pendingId) {
+      const { ok: pOk, data: pRows } = await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}&select=email`);
+      if (pOk && pRows?.[0]) {
+        const { ok: uOk, data: uRows } = await adminFetch(`/profiles?email=eq.${encodeURIComponent(pRows[0].email)}&select=id`);
+        if (uOk && uRows?.[0]) userId = uRows[0].id;
+      }
+    }
+  }
+  if (!userId) return { skipped: 'no profile found for subscription' };
 
   const status = sub.status; // trialing | active | past_due | canceled | incomplete | unpaid
   const planStatus =
@@ -45,7 +60,7 @@ async function updateProfileBySubscription(sub, overrides = {}) {
 
   const interval = sub.items?.data?.[0]?.price?.recurring?.interval || null;
   const priceId = sub.items?.data?.[0]?.price?.id || null;
-  const planSlug = planSlugFromMetadata(meta);
+  const planSlug = planSlugFromMetadata(sub.metadata || {});
 
   const patch = {
     plan_status: planStatus,
