@@ -1558,13 +1558,20 @@ async function loadHoursPanel() {
   }
 }
 
+let hoursBreaks = [];
+
 async function renderHoursGrid() {
-  const {data:hours} = await supabase.from('working_hours').select('*').eq('user_id',hoursEmpId);
+  const [{data:hours},{data:breaks}] = await Promise.all([
+    supabase.from('working_hours').select('*').eq('user_id',hoursEmpId),
+    supabase.from('breaks').select('*').eq('user_id',hoursEmpId)
+  ]);
+  hoursBreaks = breaks || [];
   const dayLabels = DAYS[currentLang]||DAYS.de;
   const grid = document.getElementById('hoursGrid');
   grid.innerHTML = '';
   for (let i=0;i<7;i++) {
     const h = hours?.find(x=>x.day_of_week===i)||{start_time:'09:00:00',end_time:'17:00:00',is_active:(i>0&&i<6)};
+    const dayBreaks = hoursBreaks.filter(b=>b.day_of_week===i).sort((a,b)=>a.start_time.localeCompare(b.start_time));
     const row = document.createElement('div');
     row.className = 'hours-row' + (h.is_active?'':' inactive');
     row.innerHTML = `
@@ -1581,7 +1588,51 @@ async function renderHoursGrid() {
         <input class="form-input" id="wh-end-${i}" type="time" value="${h.end_time.substring(0,5)}">
       </div>`;
     grid.appendChild(row);
+
+    const breakWrap = document.createElement('div');
+    breakWrap.className = 'hours-breaks-wrap';
+    breakWrap.style.cssText = 'grid-column:1/-1;padding-left:44px;margin-bottom:8px;';
+    breakWrap.innerHTML = dayBreaks.map(b=>`
+      <span class="break-chip">${b.start_time.substring(0,5)}–${b.end_time.substring(0,5)}
+        <button class="break-del" data-id="${b.id}" title="Entfernen">×</button>
+      </span>
+    `).join('') + `
+      <button class="btn-ghost-sm break-add-btn" data-day="${i}" style="font-size:12px;padding:4px 10px;">+ Pause</button>
+      <span class="break-form" id="break-form-${i}" style="display:none;gap:6px;align-items:center;">
+        <input type="time" class="form-input" id="break-start-${i}" style="width:100px;padding:4px 8px;font-size:13px;">
+        <input type="time" class="form-input" id="break-end-${i}" style="width:100px;padding:4px 8px;font-size:13px;">
+        <button class="btn-primary break-confirm" data-day="${i}" style="font-size:12px;padding:4px 10px;">Hinzufügen</button>
+      </span>
+    `;
+    grid.appendChild(breakWrap);
   }
+
+  grid.querySelectorAll('.break-add-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const d=btn.dataset.day;
+      const form=document.getElementById(`break-form-${d}`);
+      form.style.display=form.style.display==='none'?'inline-flex':'none';
+    });
+  });
+  grid.querySelectorAll('.break-confirm').forEach(btn=>{
+    btn.addEventListener('click',async ()=>{
+      const d=parseInt(btn.dataset.day);
+      const s=document.getElementById(`break-start-${d}`).value;
+      const e=document.getElementById(`break-end-${d}`).value;
+      if(!s||!e){showToast('Zeiten auswählen','error');return;}
+      if(s>=e){showToast('Ende muss nach Start liegen','error');return;}
+      const {error}=await supabase.from('breaks').insert({user_id:hoursEmpId,day_of_week:d,start_time:s+':00',end_time:e+':00'});
+      if(error){showToast(t('err_generic'),'error');return;}
+      await renderHoursGrid();
+    });
+  });
+  grid.querySelectorAll('.break-del').forEach(btn=>{
+    btn.addEventListener('click',async ()=>{
+      const {error}=await supabase.from('breaks').delete().eq('id',btn.dataset.id);
+      if(error){showToast(t('err_generic'),'error');return;}
+      await renderHoursGrid();
+    });
+  });
 }
 
 document.getElementById('hoursSaveBtn').addEventListener('click', async () => {
@@ -1645,7 +1696,7 @@ async function renderHoursMiniCal() {
     const dow = date.getDay();
     const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const custom = hoursCustomDays.find(c => c.date === dateStr);
 
     const cell = document.createElement('div');

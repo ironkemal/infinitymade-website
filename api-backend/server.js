@@ -380,6 +380,20 @@ app.post('/api/booking/get-slots', async (req, res) => {
       });
     }
 
+    // 2.6 Get Breaks/Pauses for this employee
+    const { data: breaksData } = await supabase
+      .from('breaks')
+      .select('start_time, end_time')
+      .eq('user_id', userId)
+      .eq('day_of_week', dayOfWeek);
+
+    (breaksData || []).forEach(b => {
+      bookedIntervals.push({
+        start: timeToMins(b.start_time),
+        end: timeToMins(b.end_time)
+      });
+    });
+
     // 2.5 Get Time Offs (Beurlaubt) for this employee
     const { data: timeOffs } = await supabase
       .from('time_offs')
