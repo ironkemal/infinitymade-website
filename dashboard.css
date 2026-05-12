@@ -688,6 +688,24 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .upcoming-service { color: var(--text-muted); font-size: 12px; }
 .upcoming-staff { color: var(--text-muted); font-size: 12px; text-align: right; }
 
+.schedule-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.schedule-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.schedule-today-btn {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 4px 10px;
+}
 .schedule-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
 .schedule-card {
   border-radius: 12px;
