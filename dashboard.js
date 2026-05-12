@@ -249,17 +249,28 @@ let activePanel = 'overview';
 let leadFilter = 'all';
 let leadSearchVal = '';
 
-const { data: { session } } = await supabase.auth.getSession();
-if (!session) { window.location.href = 'login.html'; throw new Error('no session'); }
-currentSession = session;
+try {
+  const { data: authData } = await supabase.auth.getSession();
+  const session = authData?.session;
+  if (!session) {
+    window.location.href = 'login.html';
+    return;
+  }
+  currentSession = session;
 
-const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-currentProfile = profile || { id: session.user.id, email: session.user.email, plan:'starter', role:'owner', is_active:true };
-if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
+  const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+  if (profErr) console.error('[profile]', profErr);
+  currentProfile = profile || { id: session.user.id, email: session.user.email, plan:'starter', role:'owner', is_active:true };
+  if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
 
-if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-  const { data: owner } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
-  if (owner) ownerProfile = owner;
+  if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
+    const { data: owner } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
+    if (owner) ownerProfile = owner;
+  }
+} catch (e) {
+  console.error('[boot]', e);
+  window.location.href = 'login.html';
+  return;
 }
 
 function t(key) { return (T[currentLang]||T.de)[key]||key; }
@@ -2640,14 +2651,23 @@ document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 
 async function init() {
   try {
+    console.log('[init] start');
     await ensureCompanyCode();
+    console.log('[init] companyCode ok');
     await ensureBookingSlug();
+    console.log('[init] bookingSlug ok');
     applyI18n();
+    console.log('[init] i18n ok');
     renderSidebar();
+    console.log('[init] sidebar ok');
     await loadTeam();
+    console.log('[init] team ok');
     await renderOverview();
+    console.log('[init] overview ok');
     await initCalendar();
+    console.log('[init] calendar ok');
     await handleGmailCallback();
+    console.log('[init] gmail ok');
   } catch(e) {
     console.error('[dashboard init]', e);
   } finally {
