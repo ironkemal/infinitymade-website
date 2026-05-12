@@ -51,7 +51,7 @@ async function init() {
   console.log('[booking] identifier:', identifier);
   if (!identifier) { showError('Ungültiger Buchungslink.'); return; }
   const isUUID = s => s.length === 36 && s.includes('-');
-  let q = supabase.from('profiles').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
+  let q = supabase.from('profiles_public').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
   if (isUUID(identifier)) {
     q = q.eq('id', identifier);
   } else if (identifier.toUpperCase().startsWith('INF-')) {
@@ -82,7 +82,7 @@ async function init() {
     return;
   }
 
-  const { data: employees } = await supabase.from('profiles')
+  const { data: employees } = await supabase.from('profiles_public')
     .select('id,business_name,email,role,avatar_url')
     .or(`id.eq.${state.ownerId},owner_id.eq.${state.ownerId}`);
 

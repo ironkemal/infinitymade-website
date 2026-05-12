@@ -10,7 +10,7 @@ const T = {
     logout:'Abmelden',
     nav_overview:'Übersicht',nav_calendar:'Kalender',nav_kunden:'Kunden Info',
     nav_services:'Dienstleistungen',nav_hours:'Arbeitszeiten',
-    nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_settings:'Einstellungen',
+    nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Feedback',nav_settings:'Einstellungen',
     overview_sub:'Ihr heutiger Überblick',
     kpi_plan:'Paket',kpi_status:'Status',kpi_today_bookings:'Heute',kpi_today_sub:'Termine',kpi_support:'Support',
     status_active:'✓ Aktiv',status_inactive:'✗ Inaktiv',
@@ -64,7 +64,7 @@ const T = {
     logout:'Sign out',
     nav_overview:'Overview',nav_calendar:'Calendar',nav_kunden:'Customers',
     nav_services:'Services',nav_hours:'Working Hours',
-    nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_settings:'Settings',
+    nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Feedback',nav_settings:'Settings',
     overview_sub:'Your daily overview',
     kpi_plan:'Plan',kpi_status:'Status',kpi_today_bookings:'Today',kpi_today_sub:'Appointments',kpi_support:'Support',
     status_active:'✓ Active',status_inactive:'✗ Inactive',
@@ -116,7 +116,7 @@ const T = {
     logout:'Çıkış',
     nav_overview:'Genel Bakış',nav_calendar:'Takvim',nav_kunden:'Müşteri Bilgisi',
     nav_services:'Hizmetler',nav_hours:'Çalışma Saatleri',
-    nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_settings:'Ayarlar',
+    nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Geri Bildirim',nav_settings:'Ayarlar',
     overview_sub:'Günlük genel bakışınız',
     kpi_plan:'Paket',kpi_status:'Durum',kpi_today_bookings:'Bugün',kpi_today_sub:'Randevu',kpi_support:'Destek',
     status_active:'✓ Aktif',status_inactive:'✗ Pasif',
@@ -2833,6 +2833,53 @@ document.getElementById('scheduleNext')?.addEventListener('click', async () => {
 document.getElementById('scheduleToday')?.addEventListener('click', async () => {
   console.log('[schedule] today clicked');
   try { await loadScheduleBookings(new Date()); } catch(e) { console.error('[schedule] today error', e); }
+});
+
+async function loadFeedbacks() {
+  const list = document.getElementById('fbList');
+  if (!list) return;
+  list.innerHTML = '<div class="gaps-loading"><div class="spinner-sm"></div></div>';
+  const { data, error } = await supabase.from('feedbacks').select('*').eq('user_id', currentSession.user.id).order('created_at', { ascending: false });
+  if (error) { list.innerHTML = '<div class="table-empty">Fehler beim Laden.</div>'; return; }
+  if (!data || data.length === 0) { list.innerHTML = '<div class="table-empty">Noch keine Tickets.</div>'; return; }
+  list.innerHTML = data.map(f => {
+    const statusColors = { open:'badge-yellow', in_progress:'badge-blue', resolved:'badge-green', closed:'badge-gray' };
+    const priorityColors = { low:'badge-gray', medium:'badge-yellow', high:'badge-red', critical:'badge-red' };
+    const st = f.status || 'open';
+    const pr = f.priority || 'medium';
+    const date = new Date(f.created_at).toLocaleDateString('de-DE');
+    return `<div class="feedback-item">
+      <div class="feedback-header">
+        <span class="feedback-title">${f.title}</span>
+        <div class="feedback-badges">
+          <span class="badge ${statusColors[st]||'badge-gray'}">${st}</span>
+          <span class="badge ${priorityColors[pr]||'badge-gray'}">${pr}</span>
+        </div>
+      </div>
+      <div class="feedback-meta">${f.type} · ${date}</div>
+      <div class="feedback-desc">${f.description || ''}</div>
+      ${f.admin_notes ? `<div class="feedback-admin-note"><strong>Admin:</strong> ${f.admin_notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('fbSendBtn')?.addEventListener('click', async () => {
+  const type = document.getElementById('fbType').value;
+  const priority = document.getElementById('fbPriority').value;
+  const title = document.getElementById('fbTitle').value.trim();
+  const description = document.getElementById('fbDesc').value.trim();
+  if (!title) { showToast('Titel ist erforderlich.', 'error'); return; }
+  const ownerId = getOwnerId();
+  const { error } = await supabase.from('feedbacks').insert({
+    user_id: currentSession.user.id,
+    owner_id: ownerId,
+    type, priority, title, description
+  });
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  document.getElementById('fbTitle').value = '';
+  document.getElementById('fbDesc').value = '';
+  showToast('Ticket erstellt.');
+  await loadFeedbacks();
 });
 
 async function init() {
