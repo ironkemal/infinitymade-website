@@ -1349,7 +1349,7 @@ function renderServices() {
       const m = teamMembers.find(tm=>tm.id===es.employee_id);
       return m ? (m.business_name||m.email?.split('@')[0]) : null;
     }).filter(Boolean).join(', ');
-    return `<div class="service-card">
+    return `<div class="service-card" data-srv-id="${s.id}">
       <div class="service-color" style="background:${s.color||'#22c55e'}"></div>
       <div class="service-info">
         <div class="service-title">${s.title}</div>
@@ -1359,8 +1359,15 @@ function renderServices() {
       <button class="btn-icon" data-srv-del="${s.id}">🗑️</button>
     </div>`;
   }).join('') + addCard;
+  grid.querySelectorAll('.service-card[data-srv-id]').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('[data-srv-del]')) return;
+      openServiceEdit(card.dataset.srvId);
+    });
+  });
   grid.querySelectorAll('[data-srv-del]').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       if (!confirm(t('alert_service_delete'))) return;
       await supabase.from('services').delete().eq('id',btn.dataset.srvDel);
       await loadServices();
@@ -1373,9 +1380,58 @@ function bindAddServiceCard() {
   const card = document.getElementById('addServiceCard');
   if (!card) return;
   card.addEventListener('click', () => {
+    resetServiceForm();
     const form = document.getElementById('addServiceForm');
     form.hidden = false;
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function resetServiceForm() {
+  const form = document.getElementById('addServiceForm');
+  form.dataset.mode = 'add';
+  document.getElementById('srvFormTitle').textContent = t('lbl_add_service') || 'Neue Dienstleistung';
+  document.getElementById('srvEditId').value = '';
+  document.getElementById('srvTitle').value = '';
+  document.getElementById('srvDur').value = '30';
+  document.getElementById('srvPrice').value = '0';
+  document.getElementById('srvColor').value = '#22c55e';
+  document.getElementById('srvEmpAll').checked = true;
+  renderSrvEmpCheckboxes();
+  toggleEmpCheckboxes(true);
+}
+
+function openServiceEdit(id) {
+  const s = servicesCache.find(x => x.id === id);
+  if (!s) return;
+  resetServiceForm();
+  const form = document.getElementById('addServiceForm');
+  form.dataset.mode = 'edit';
+  document.getElementById('srvFormTitle').textContent = 'Dienstleistung bearbeiten';
+  document.getElementById('srvEditId').value = s.id;
+  document.getElementById('srvTitle').value = s.title;
+  document.getElementById('srvDur').value = s.duration_minutes;
+  document.getElementById('srvPrice').value = s.price || 0;
+  document.getElementById('srvColor').value = s.color || '#22c55e';
+
+  const assignedIds = new Set((s.employee_services||[]).map(es => es.employee_id));
+  const allChecked = assignedIds.size === 0 || assignedIds.size === teamMembers.length;
+  document.getElementById('srvEmpAll').checked = allChecked;
+  toggleEmpCheckboxes(allChecked);
+  if (!allChecked) {
+    document.querySelectorAll('input[name="srv_emp"]').forEach(cb => {
+      cb.checked = assignedIds.has(cb.value);
+    });
+  }
+  form.hidden = false;
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleEmpCheckboxes(disabled) {
+  document.querySelectorAll('input[name="srv_emp"]').forEach(cb => {
+    cb.disabled = disabled;
+    cb.checked = disabled ? true : cb.checked;
+    cb.closest('.emp-checkbox-item').style.opacity = disabled ? '0.5' : '1';
   });
 }
 
@@ -1391,6 +1447,14 @@ function renderSrvEmpCheckboxes() {
   }).join('');
 }
 
+document.getElementById('srvEmpAll').addEventListener('change', (e) => {
+  toggleEmpCheckboxes(e.target.checked);
+});
+
+document.getElementById('srvCancelBtn').addEventListener('click', () => {
+  document.getElementById('addServiceForm').hidden = true;
+});
+
 document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const title = document.getElementById('srvTitle').value.trim();
   const duration = parseInt(document.getElementById('srvDur').value,10)||30;
@@ -1398,15 +1462,28 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const color = document.getElementById('srvColor').value;
   if (!title) { showToast(t('err_generic'),'error'); return; }
   const empIds = [...document.querySelectorAll('input[name="srv_emp"]:checked')].map(cb=>cb.value);
-  const ownerId = getOwnerId();
-  const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, title, duration_minutes: duration, price, color }).select().single();
-  if (error) { showToast(t('err_generic'),'error'); return; }
-  if (empIds.length) {
-    await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: srv.id })));
+  const mode = document.getElementById('addServiceForm').dataset.mode;
+
+  if (mode === 'edit') {
+    const editId = document.getElementById('srvEditId').value;
+    const { error } = await supabase.from('services').update({ title, duration_minutes: duration, price, color }).eq('id', editId);
+    if (error) { showToast(t('err_generic'),'error'); return; }
+    await supabase.from('employee_services').delete().eq('service_id', editId);
+    if (empIds.length) {
+      await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: editId })));
+    }
+    showToast(t('saved'));
+  } else {
+    const ownerId = getOwnerId();
+    const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, title, duration_minutes: duration, price, color }).select().single();
+    if (error) { showToast(t('err_generic'),'error'); return; }
+    if (empIds.length) {
+      await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: srv.id })));
+    }
+    showToast(t('saved'));
   }
   document.getElementById('srvTitle').value='';
   await loadServices();
-  showToast(t('saved'));
   document.getElementById('addServiceForm').hidden = true;
 });
 

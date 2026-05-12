@@ -884,6 +884,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   gap: 8px;
   transition: border-color var(--transition);
 }
+.service-card { cursor: pointer; }
 .service-card:hover { border-color: var(--border-strong); }
 .service-card.add-service-card {
   border-style: dashed;
