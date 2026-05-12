@@ -7,8 +7,44 @@
   <meta name="googlebot" content="noindex, nofollow" />
   <title>Mitarbeiter Registrierung — InfinityMade</title>
   <link rel="stylesheet" href="login.css" />
-  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .step { display: none; animation: fadeIn .25s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform: translateY(0);} }
+
+    .progress-bar { display:flex; gap:8px; margin-bottom:24px; }
+    .progress-step { flex:1; height:4px; border-radius:2px; background:var(--border); transition:.3s; }
+    .progress-step.done { background:var(--accent); }
+    .progress-step.current { background:var(--accent-hover); }
+
+    .step-title { font-size:18px; font-weight:700; margin-bottom:4px; }
+    .step-sub { font-size:13px; color:var(--text-secondary); margin-bottom:18px; }
+
+    .step-actions { display:flex; gap:10px; margin-top:24px; }
+    .step-actions .btn-secondary {
+      background:transparent; border:1px solid var(--border); color:var(--text-primary);
+      padding:12px 20px; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px;
+    }
+    .step-actions .btn-secondary:hover { border-color:var(--border-strong); }
+
+    .field-error { color:var(--danger); font-size:12px; margin-top:-10px; margin-bottom:12px; display:none; }
+    input.error { border-color:var(--danger) !important; }
+
+    .wh-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 0; border-bottom:1px solid var(--border); }
+    .wh-row:last-child { border-bottom:none; }
+    .wh-row label { display:flex; align-items:center; gap:6px; cursor:pointer; min-width:70px; font-size:14px; }
+    .wh-row .wh-times { display:flex; align-items:center; gap:6px; flex:1; }
+    .wh-row input[type="time"] { flex:1; min-width:90px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); padding:8px 10px; border-radius:6px; font-size:14px; }
+    .wh-row input[type="time"]:disabled { opacity:.4; cursor:not-allowed; }
+
+    .summary-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; }
+    .summary-row:last-child { border-bottom:none; }
+    .summary-label { color:var(--text-secondary); }
+    .summary-value { font-weight:600; }
+
+    .company-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(34,197,94,.12); color:var(--accent); padding:6px 12px; border-radius:20px; font-size:13px; font-weight:600; margin-bottom:16px; }
+  </style>
 </head>
 <body>
   <main class="login-wrap">
@@ -16,32 +52,74 @@
 
     <div class="login-card">
       <h1 id="title">Mitarbeiter Konto</h1>
-      <p class="sub" id="sub">Erstellen Sie Ihr Konto und verbinden Sie sich mit Ihrem Arbeitgeber.</p>
+      <p class="sub" id="sub">Erstellen Sie Ihr Konto in 3 Schritten.</p>
 
-      <form id="signupForm">
-        <label>Name</label>
-        <input type="text" id="name" required placeholder="Ihr Vor- und Nachname" />
+      <div class="progress-bar">
+        <div class="progress-step current" id="p1"></div>
+        <div class="progress-step" id="p2"></div>
+        <div class="progress-step" id="p3"></div>
+      </div>
 
-        <label>E-Mail</label>
-        <input type="email" id="email" required autocomplete="email" placeholder="ihre@email.de" />
+      <form id="signupForm" novalidate>
 
-        <label>Passwort</label>
-        <input type="password" id="password" required minlength="8" placeholder="Mindestens 8 Zeichen" />
+        <!-- STEP 1: Persönliche Daten -->
+        <div class="step active" data-step="1">
+          <div class="step-title">Persönliche Daten</div>
+          <div class="step-sub">Geben Sie Ihre Kontaktinformationen ein.</div>
 
-        <label>Unternehmens-Code (Company Code)</label>
-        <input type="text" id="company_code" required placeholder="z.B. INF-12345" style="text-transform: uppercase;" />
-        <small style="color:var(--text-muted); display:block; margin-top:-10px; margin-bottom:15px; font-size:12px;">Diesen Code erhalten Sie von Ihrem Arbeitgeber.</small>
+          <label>Name</label>
+          <input type="text" id="name" placeholder="Ihr Vor- und Nachname" />
+          <div class="field-error" id="err-name">Bitte geben Sie Ihren Namen ein.</div>
 
-        <div style="border-top:1px solid var(--border); padding-top:18px; margin-top:18px;">
-          <label style="font-weight:600; margin-bottom:4px;">Ihre Arbeitszeiten</label>
-          <small style="color:var(--text-muted); display:block; margin-bottom:12px; font-size:12px;">Dies sind <strong>Ihre persönlichen</strong> Arbeitszeiten — nicht die des Ladens. Kunden buchen Termine bei Ihnen genau innerhalb dieser Zeiten.</small>
+          <label>E-Mail</label>
+          <input type="email" id="email" autocomplete="email" placeholder="ihre@email.de" />
+          <div class="field-error" id="err-email">Bitte geben Sie eine gültige E-Mail-Adresse ein.</div>
 
-          <div id="workingHoursList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
-            <!-- JS injects rows -->
+          <label>Passwort</label>
+          <input type="password" id="password" placeholder="Mindestens 8 Zeichen" />
+          <div class="field-error" id="err-password">Das Passwort muss mindestens 8 Zeichen lang sein.</div>
+
+          <label>Passwort wiederholen</label>
+          <input type="password" id="password2" placeholder="Passwort bestätigen" />
+          <div class="field-error" id="err-password2">Die Passwörter stimmen nicht überein.</div>
+
+          <input type="hidden" id="company_code" />
+
+          <div class="step-actions">
+            <button type="button" class="btn-primary" id="btnStep1" style="margin-left:auto;">Weiter</button>
           </div>
         </div>
 
-        <button type="submit" class="btn-primary" id="submitBtn">Konto erstellen</button>
+        <!-- STEP 2: Arbeitszeiten -->
+        <div class="step" data-step="2">
+          <div class="step-title">Arbeitszeiten</div>
+          <div class="step-sub">Legen Sie fest, an welchen Tagen und zu welchen Zeiten Kunden Sie buchen können.</div>
+
+          <div id="workingHoursList"></div>
+          <div class="field-error" id="err-wh">Bitte aktivieren Sie mindestens einen Tag mit gültigen Zeiten.</div>
+
+          <div class="step-actions">
+            <button type="button" class="btn-secondary" id="backStep2">Zurück</button>
+            <button type="button" class="btn-primary" id="btnStep2">Weiter</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Bestätigung -->
+        <div class="step" data-step="3">
+          <div class="step-title">Zusammenfassung</div>
+          <div class="step-sub">Überprüfen Sie Ihre Angaben und erstellen Sie Ihr Konto.</div>
+
+          <div class="company-badge" id="companyBadge">Unternehmens-Code: <span id="badgeCode">—</span></div>
+
+          <div class="summary-row"><span class="summary-label">Name</span><span class="summary-value" id="sumName">—</span></div>
+          <div class="summary-row"><span class="summary-label">E-Mail</span><span class="summary-value" id="sumEmail">—</span></div>
+          <div class="summary-row"><span class="summary-label">Arbeitstage</span><span class="summary-value" id="sumDays">—</span></div>
+
+          <div class="step-actions">
+            <button type="button" class="btn-secondary" id="backStep3">Zurück</button>
+            <button type="submit" class="btn-primary" id="submitBtn">Konto erstellen</button>
+          </div>
+        </div>
 
         <div id="message" class="msg"></div>
 
@@ -52,6 +130,6 @@
     </div>
   </main>
 
-  <script type="module" src="employee-signup.js?v=20260512m"></script>
+  <script type="module" src="employee-signup.js?v=20260513a"></script>
 </body>
 </html>
