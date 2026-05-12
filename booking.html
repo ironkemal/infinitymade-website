@@ -41,7 +41,7 @@
       padding: 24px;
     }
 
-    /* â”€â”€ Card â”€â”€ */
+    /* ── Card ── */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -53,7 +53,7 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
 
-    /* â”€â”€ Sidebar â”€â”€ */
+    /* ── Sidebar ── */
     .sidebar {
       width: 200px;
       flex-shrink: 0;
@@ -86,7 +86,7 @@
     .sel-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 3px; }
     .sel-val   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
 
-    /* â”€â”€ Main â”€â”€ */
+    /* ── Main ── */
     .main {
       flex: 1;
       padding: 22px 22px 18px;
@@ -94,7 +94,7 @@
       min-width: 0;
     }
 
-    /* â”€â”€ Steps â”€â”€ */
+    /* ── Steps ── */
     .step { display: none; }
     .step.active { display: block; animation: fadeUp .2s ease; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
@@ -108,7 +108,7 @@
     }
     .btn-back:hover { color: var(--text); }
 
-    /* â”€â”€ List buttons (employee / service) â”€â”€ */
+    /* ── List buttons (employee / service) ── */
     .list-btn {
       display: block; width: 100%;
       background: var(--panel); border: 1px solid var(--border);
@@ -122,7 +122,7 @@
     .list-btn-title  { font-size: 15px; font-weight: 600; }
     .list-btn-sub    { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
-    /* â”€â”€ Calendar layout â”€â”€ */
+    /* ── Calendar layout ── */
     .cal-layout {
       display: grid;
       grid-template-columns: 1fr 210px;
@@ -182,7 +182,7 @@
     .cal-cell.past { color: rgba(255,255,255,0.18); pointer-events: none; }
     .cal-cell.empty { pointer-events: none; }
 
-    /* â”€â”€ Slots panel â”€â”€ */
+    /* ── Slots panel ── */
     .slots-panel { min-height: 200px; }
     .slots-day-label {
       font-size: 14px; font-weight: 700;
@@ -216,7 +216,7 @@
     .gap-card-dur { background: rgba(0,0,0,0.25); color: #fff; padding: 3px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; }
     .gap-card-time { font-size: 1rem; color: rgba(255,255,255,0.95); font-weight: 600; }
 
-    /* â”€â”€ Form â”€â”€ */
+    /* ── Form ── */
     .form-label  { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
     .form-input  {
       width: 100%; padding: 11px 14px;
@@ -226,7 +226,7 @@
     }
     .form-input:focus { outline: none; border-color: var(--green); }
 
-    /* â”€â”€ Buttons â”€â”€ */
+    /* ── Buttons ── */
     .btn-primary {
       background: var(--green); color: #000; border: none;
       padding: 12px 24px; border-radius: 8px;
@@ -236,7 +236,7 @@
     .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
     .btn-primary:hover:not(:disabled) { opacity: .88; }
 
-    /* â”€â”€ Schedule nav â”€â”€ */
+    /* ── Schedule nav ── */
     .btn-icon {
       width: 28px; height: 28px; background: none; border: 1px solid var(--border);
       border-radius: 8px; color: var(--text); font-size: 15px; cursor: pointer;
@@ -251,16 +251,16 @@
     }
     .btn-ghost:hover { border-color: var(--green); color: var(--green); }
 
-    /* â”€â”€ Footer row â”€â”€ */
+    /* ── Footer row ── */
     .step-footer { margin-top: 24px; display: flex; justify-content: flex-end; }
 
-    /* â”€â”€ Success â”€â”€ */
+    /* ── Success ── */
     .success-wrap { text-align: center; padding: 48px 0; }
     .success-icon { font-size: 56px; margin-bottom: 16px; }
     .success-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
     .success-sub { font-size: 14px; color: var(--muted); }
 
-    /* â”€â”€ Responsive â”€â”€ */
+    /* ── Responsive ── */
     @media (max-width: 740px) {
       .card { flex-direction: column; }
       .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
