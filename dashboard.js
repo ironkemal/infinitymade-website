@@ -423,8 +423,7 @@ async function renderOverview() {
   const welcomeEl = document.getElementById('welcomeText');
   if (welcomeEl) {
     const firstName = currentProfile.first_name || currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || '';
-    const bizName   = currentProfile.business_name || '';
-    welcomeEl.innerHTML = `${t('welcome_text')} <span>${escapeHtml(firstName)}</span>${bizName ? ' – ' + escapeHtml(bizName) : ''}`;
+    welcomeEl.innerHTML = `<span>${escapeHtml(firstName)}</span>`;
   }
 
   // Settings Paket & Status
