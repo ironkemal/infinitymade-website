@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513d" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513e" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -146,6 +146,12 @@
               <button class="btn-ghost" id="calAddLeaveBtn" data-i18n="btn_add_leave">Abwesenheit eintragen</button>
               <button class="btn-primary" id="calAddBookingBtn" data-i18n="btn_add_booking">+ Termin</button>
             </div>
+          </div>
+
+          <div class="my-booking-link" id="myBookingLink" style="display:none;">
+            <span class="my-booking-label">Ihr persönlicher Buchungslink:</span>
+            <span class="my-booking-url" id="myBookingUrl"></span>
+            <button class="btn-icon" id="myBookingCopy" title="Link kopieren">📋</button>
           </div>
 
           <div class="cal-3col">
@@ -291,6 +297,16 @@
                   <div class="form-group">
                     <label class="form-label">Bis</label>
                     <input type="date" class="form-input" id="sdBis" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Von Zeit <span style="color:var(--text-faint);font-size:11px;">(optional)</span></label>
+                    <input type="time" class="form-input" id="sdStartTime" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Bis Zeit <span style="color:var(--text-faint);font-size:11px;">(optional)</span></label>
+                    <input type="time" class="form-input" id="sdEndTime" />
                   </div>
                 </div>
                 <label class="form-label">Typ</label>
@@ -1204,6 +1220,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513f"></script>
+  <script type="module" src="dashboard.js?v=20260513g"></script>
 </body>
 </html>
