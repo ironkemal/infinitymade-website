@@ -458,8 +458,11 @@ function hslToHex(h,s,l){
 }
 function shiftColorForTime(hex, hour){
   if (!hex || hex==='null') return null;
-  const l = Math.max(36, Math.min(60, 60 - Math.max(0, Math.min(1, (hour - 8) / 12)) * 24));
-  return hslToHex(120, 65, l);
+  const hsl = hexToHSL(hex);
+  const factor = Math.max(0, Math.min(1, (hour - 8) / 12));
+  hsl.l = Math.max(38, Math.min(68, hsl.l - factor * 18));
+  hsl.s = Math.max(40, Math.min(95, hsl.s - factor * 22));
+  return hslToHex(hsl.h, hsl.s, hsl.l);
 }
 
 function findGaps(whStart, whEnd, bookings) {
@@ -670,6 +673,15 @@ async function loadScheduleBookings(date) {
   if (isToday) document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
   if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
+  const fallbackColors = ['#f97316','#3b82f6','#ec4899','#a855f7','#ef4444'];
+  const nowIso = new Date().toISOString();
+  const greenIndices = new Set();
+  if (isToday) {
+    const idx = bookings.findIndex(b => b.start_time >= nowIso);
+    if (idx !== -1) { greenIndices.add(idx); if (idx + 1 < bookings.length) greenIndices.add(idx + 1); }
+  } else {
+    greenIndices.add(0); if (bookings.length > 1) greenIndices.add(1);
+  }
   listEl.innerHTML = bookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
     const dur = b.end_time
@@ -677,7 +689,9 @@ async function loadScheduleBookings(date) {
       : (b.services?.duration_minutes ? b.services.duration_minutes+' min' : '—');
     const hourStr = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
     const hour = parseInt(hourStr.split(':')[0]) + parseInt(hourStr.split(':')[1])/60;
-    const color = shiftColorForTime('#22c55e', hour);
+    const isClose = greenIndices.has(i);
+    const baseColor = isClose ? '#22c55e' : (b.services?.color || fallbackColors[i % fallbackColors.length]);
+    const color = shiftColorForTime(baseColor, hour);
     const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
     const isOwner = currentProfile.role==='owner';
     return `<div class="schedule-card" style="background:${color};">
