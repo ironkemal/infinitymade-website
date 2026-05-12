@@ -212,6 +212,22 @@
     .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
     .btn-primary:hover:not(:disabled) { opacity: .88; }
 
+    /* ── Schedule nav ── */
+    .btn-icon {
+      width: 28px; height: 28px; background: none; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 15px; cursor: pointer;
+      font-family: inherit; display: flex; align-items: center; justify-content: center;
+      transition: border-color .12s;
+    }
+    .btn-icon:hover { border-color: var(--green); color: var(--green); }
+    .btn-ghost {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-family: inherit; font-size: 12px; cursor: pointer;
+      padding: 5px 10px; transition: border-color .12s, color .12s;
+    }
+    .btn-ghost:hover { border-color: var(--green); color: var(--green); }
+    .slot-card:hover { border-color: var(--green) !important; }
+
     /* ── Footer row ── */
     .step-footer { margin-top: 24px; display: flex; justify-content: flex-end; }
 
@@ -320,6 +336,6 @@
   </main>
 </div>
 
-<script type="module" src="booking.js?v=20260512b"></script>
+<script type="module" src="booking.js?v=20260512c"></script>
 </body>
 </html>
