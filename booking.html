@@ -279,10 +279,16 @@
       <div id="srvList"></div>
     </div>
 
-    <!-- Step 3: Calendar + Slots (via shared widget) -->
+    <!-- Step 3: Schedule (dashboard-style) -->
     <div class="step" id="step-datetime">
       <button class="btn-back" id="backToSrv">&#8592; Zurück</button>
-      <div id="calMount"></div>
+      <div class="schedule-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <button class="btn-icon" id="bkPrev">&#8249;</button>
+        <span class="schedule-title" id="bkDateLabel" style="font-size:15px;font-weight:600;">Termin wählen</span>
+        <button class="btn-icon" id="bkNext">&#8250;</button>
+        <button class="btn-ghost" id="bkToday" type="button" style="margin-left:auto;font-size:12px;">Heute</button>
+      </div>
+      <div id="bkSlotsList"></div>
     </div>
 
     <!-- Step 4: Form -->
