@@ -457,9 +457,10 @@ function hslToHex(h,s,l){
 function shiftColorForTime(hex, hour){
   if (!hex || hex==='null') return null;
   const hsl = hexToHSL(hex);
-  const factor = Math.max(0, Math.min(1, (hour - 8) / 12));
-  hsl.l = Math.max(38, Math.min(68, hsl.l - factor * 18));
-  hsl.s = Math.max(40, Math.min(95, hsl.s - factor * 22));
+  const hueShift = Math.max(0, (hour - 8)) * 25;
+  hsl.h = (hsl.h + hueShift) % 360;
+  hsl.l = Math.max(42, Math.min(62, hsl.l));
+  hsl.s = Math.max(55, Math.min(85, hsl.s));
   return hslToHex(hsl.h, hsl.s, hsl.l);
 }
 
@@ -536,10 +537,21 @@ async function renderGaps() {
       );
     }
 
+    const totalEl = document.getElementById('gapsTotal');
     if (allGaps.length === 0) {
       container.innerHTML = '<div class="gap-empty">Keine freien Zeiten.</div>';
+      if (totalEl) totalEl.textContent = '0 min';
       return;
     }
+    const totalFreeMin = allGaps.reduce((sum, g) => {
+      const s = parseInt(g.start.split(':')[0])*60 + parseInt(g.start.split(':')[1]);
+      const e = parseInt(g.end.split(':')[0])*60 + parseInt(g.end.split(':')[1]);
+      return sum + (e - s);
+    }, 0);
+    const totalH = Math.floor(totalFreeMin / 60);
+    const totalM = totalFreeMin % 60;
+    if (totalEl) totalEl.textContent = totalH > 0 ? `${totalH}h ${totalM}min` : `${totalM}min`;
+
     container.innerHTML = allGaps.map(g => {
       const durMin = Math.round((new Date('2000-01-01T' + g.end) - new Date('2000-01-01T' + g.start)) / 60000);
       return `<div class="gap-card">
@@ -585,15 +597,16 @@ async function loadScheduleBookings(date) {
   if (isToday) document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
   if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
-  const fallbackColors = ['#f97316','#22c55e','#3b82f6','#ec4899','#a855f7'];
+  const timeColors = ['#f97316','#22c55e','#3b82f6','#ec4899','#a855f7','#ef4444'];
   listEl.innerHTML = bookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
     const dur = b.end_time
       ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' min'
       : (b.services?.duration_minutes ? b.services.duration_minutes+' min' : '—');
-    const baseColor = b.services?.color || fallbackColors[i % fallbackColors.length];
     const hourStr = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
     const hour = parseInt(hourStr.split(':')[0]) + parseInt(hourStr.split(':')[1])/60;
+    const hourIdx = Math.max(0, Math.min(timeColors.length-1, Math.floor((hour - 8) / 2)));
+    const baseColor = b.services?.color || timeColors[hourIdx];
     const color = shiftColorForTime(baseColor, hour) || baseColor;
     const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
     const isOwner = currentProfile.role==='owner';
