@@ -83,11 +83,15 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
 
 applyLang();
 
+const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
 const { data: { session } } = await supabase.auth.getSession();
 if (session) {
-  const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
-  if (data && data.role === 'employee') window.location.href = 'kalender.html';
-  else window.location.href = 'dashboard.html';
+  if (session.user.id === ADMIN_UUID) { window.location.href = 'admin.html'; }
+  else {
+    const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    if (data && data.role === 'employee') window.location.href = 'kalender.html';
+    else window.location.href = 'dashboard.html';
+  }
 }
 const msg = document.getElementById('message');
 function showMsg(text, type) {
@@ -121,6 +125,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   }
 
   const { data } = await supabase.from('profiles').select('role').eq('id', (await supabase.auth.getUser()).data.user.id).single();
+  const user = (await supabase.auth.getUser()).data.user;
+  if (user && user.id === ADMIN_UUID) { window.location.href = 'admin.html'; return; }
   if (data && data.role === 'employee') window.location.href = 'kalender.html';
   else window.location.href = 'dashboard.html';
 });

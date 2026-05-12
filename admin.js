@@ -138,7 +138,7 @@ async function boot() {
   if (error||!session) { window.location.href='login.html'; return; }
   currentSession = session;
   if (session.user.id !== ADMIN_UUID) {
-    document.body.innerHTML = '<div class="admin-access-denied">Zugriff verweigert. Nur für Admin.</div>';
+    window.location.href = 'dashboard.html';
     return;
   }
   document.getElementById('loading').style.display='none';
