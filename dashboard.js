@@ -3009,6 +3009,9 @@ async function init() {
     console.log('[init] calendar ok');
     await handleGmailCallback();
     console.log('[init] gmail ok');
+    const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
+    const adminLink = document.getElementById('topbarAdminLink');
+    if (currentSession?.user?.id === ADMIN_UUID && adminLink) adminLink.style.display = '';
   } catch(e) {
     console.error('[dashboard init]', e);
   } finally {
