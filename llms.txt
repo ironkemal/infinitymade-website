@@ -1,0 +1,67 @@
+# llms.txt — InfinityMade
+# https://infinitymade.de/llms.txt
+# A machine-readable overview of InfinityMade for AI crawlers and LLMs.
+
+# Entity
+InfinityMade is a German SaaS company based in Siegburg, NRW. It provides an all-in-one digital platform for small and medium-sized businesses (KMU) including website creation, WhatsApp AI receptionist, online booking system, and Google Business Profile optimization.
+
+# Sectors served
+- Hairdressers / Barbers (Friseur)
+- Restaurants & Cafés (Gastronomie)
+- Physiotherapy practices (Physiotherapie)
+- Medical practices (Praxis)
+- Fitness studios (Fitnessstudio)
+- Nail salons (Nagelstudio)
+- Tattoo studios (Tattoo)
+- Spas & Wellness (Spa)
+- Craftsmen / Handwerker
+- Other small businesses
+
+# Key products & services
+1. Website creation — modern, responsive, fast-loading websites
+2. WhatsApp AI Receptionist — 24/7 automated booking and customer communication via WhatsApp Business API
+3. Online booking system — calendar widget with working hours, employee selection, service selection
+4. Google Business Profile optimization — local SEO for Google Maps
+5. Digital menu (QR code) — for restaurants
+6. Social media management support
+
+# Languages supported
+German (de), English (en), Turkish (tr), Arabic (ar)
+
+# Geographic focus
+Primary: Siegburg, Köln, Bonn, Troisdorf, Hennef, Sankt Augustin, Lohmar (NRW, Germany)
+Nationwide: Remote support available across Germany via cloud-based SaaS
+
+# Pricing model
+Subscription-based SaaS with tiered plans (Starter, Professional, Enterprise). One-time setup fees for web design.
+
+# Contact
+- Website: https://infinitymade.de
+- Email: kontakt@infinitymade.de
+- Phone: +49 152 28033834
+- Address: Industriestraße 33, 53721 Siegburg, Germany
+
+# Technical stack
+- Frontend: Vanilla HTML/CSS/JS
+- Hosting: Vercel
+- Database & Auth: Supabase
+- AI / Automation: n8n workflows on Hetzner VPS
+- WhatsApp: Twilio WhatsApp Business API
+- Payments: Stripe
+- Calendar API: Custom Node.js/Express on Hetzner VPS
+
+# Important pages
+/                           — Homepage
+/webdesign-siegburg.html    — Local webdesign landing page (Siegburg)
+/webdesign-koeln.html       — Local webdesign landing page (Köln)
+/webdesign-bonn.html        — Local webdesign landing page (Bonn)
+/webdesign-troisdorf.html   — Local webdesign landing page (Troisdorf)
+/webdesign-hennef.html      — Local webdesign landing page (Hennef)
+/whatsapp-bot-friseur.html      — Sector landing page (hairdresser)
+/whatsapp-bot-restaurant.html   — Sector landing page (restaurant)
+/whatsapp-bot-physiotherapie.html — Sector landing page (physiotherapy)
+/whatsapp-bot-fitness.html      — Sector landing page (fitness)
+/blog/                      — Blog with guides for SMBs
+
+# Last updated
+2026-05-12
