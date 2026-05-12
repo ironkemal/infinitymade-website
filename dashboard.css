@@ -688,6 +688,41 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .upcoming-service { color: var(--text-muted); font-size: 12px; }
 .upcoming-staff { color: var(--text-muted); font-size: 12px; text-align: right; }
 
+.schedule-list { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
+.schedule-card {
+  border-radius: 12px;
+  padding: 14px 16px;
+  position: relative;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.schedule-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+.schedule-card-name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.schedule-card-time { font-size: 12px; color: rgba(255,255,255,0.85); }
+.schedule-card-dur {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.schedule-card-staff {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-size: 10px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+}
+
 /* ============================
    STATUS BADGES
    ============================ */

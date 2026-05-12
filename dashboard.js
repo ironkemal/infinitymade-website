@@ -450,14 +450,21 @@ async function loadTodayBookings() {
   document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
   if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
-  listEl.innerHTML = bookings.map(b=>{
+  const fallbackColors = ['#c4761a','#1a5c5c','#1a5c1a','#3c3c5c','#5c1a3c'];
+  listEl.innerHTML = bookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
-    return `<li class="upcoming-item">
-      <span class="upcoming-time">${fmtTime(b.start_time)}</span>
-      <div><div class="upcoming-customer">${b.customer_name||'—'}</div><div class="upcoming-service">${b.services?.title||'—'}</div></div>
-      <span class="upcoming-staff">${emp?.business_name||emp?.email?.split('@')[0]||''}</span>
-      <span class="badge ${statusBadge(b.status)}">${b.status||''}</span>
-    </li>`;
+    const dur = b.end_time
+      ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' min'
+      : (b.services?.duration_minutes ? b.services.duration_minutes+' min' : '—');
+    const color = b.services?.color || fallbackColors[i % fallbackColors.length];
+    const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
+    const isOwner = currentProfile.role==='owner';
+    return `<div class="schedule-card" style="background:${color};">
+      <div class="schedule-card-dur">${dur}</div>
+      <div class="schedule-card-name">${b.customer_name||'—'}</div>
+      <div class="schedule-card-time">${fmtTime(b.start_time)}</div>
+      ${isOwner && staff ? `<div class="schedule-card-staff">${staff}</div>` : ''}
+    </div>`;
   }).join('');
   listEl.hidden = false;
 }
