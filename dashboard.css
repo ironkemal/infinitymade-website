@@ -1168,6 +1168,38 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 .hours-times input[type=time]:focus { border-color: var(--primary); }
 
+#hoursGrid { display: grid; grid-template-columns: 1fr; }
+
+.hours-breaks-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  grid-column: 1 / -1;
+}
+
+.break-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.break-del {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
 .hours-employee-select {
   margin-bottom: 20px;
   display: flex;
