@@ -189,7 +189,18 @@ async function loadBookingSlots(date) {
       })
     });
     const data = await res.json();
-    const slots = data.slots || [];
+    let slots = data.slots || [];
+    const tz = 'Europe/Berlin';
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
+    const nowTimeStr = now.toLocaleTimeString('sv-SE',{timeZone:tz,hour12:false});
+    const [nh,nm] = nowTimeStr.split(':').map(Number);
+    const minTotalMin = nh * 60 + nm + 30;
+    slots = slots.filter(slot => {
+      if (dStr !== todayStr) return true;
+      const [sh,sm] = slot.split(':').map(Number);
+      return sh * 60 + sm >= minTotalMin;
+    });
     if (!slots.length) {
       listEl.innerHTML = '<div class="slots-empty">Keine Termine verfügbar.</div>';
       return;
@@ -291,6 +302,18 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true; btn.textContent = 'Wird gebucht…';
   try {
+    const tz = 'Europe/Berlin';
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
+    const nowTimeStr = now.toLocaleTimeString('sv-SE',{timeZone:tz,hour12:false});
+    const [nh,nm] = nowTimeStr.split(':').map(Number);
+    const minTotalMin = nh * 60 + nm + 30;
+    const [sh,sm] = state.selectedTime.split(':').map(Number);
+    if (state.selectedDate === todayStr && sh * 60 + sm < minTotalMin) {
+      alert('Bitte wählen Sie einen Termin mindestens 30 Minuten in der Zukunft.');
+      btn.disabled = false; btn.textContent = 'Termin verbindlich buchen';
+      return;
+    }
     const res = await fetch(`${API}/booking/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
