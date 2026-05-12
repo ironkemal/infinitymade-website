@@ -88,7 +88,8 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
         .update({
           role: 'employee',
           owner_id: ownerId,
-          business_name: name // Use business_name as display name for simplicity in existing UI
+          business_name: name,
+          plan: 'mitarbeiter'
         })
         .eq('id', authData.user.id);
         
