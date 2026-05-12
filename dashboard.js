@@ -120,6 +120,7 @@ const T = {
     nav_services:'Hizmetler',nav_hours:'Çalışma Saatleri',
     nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Geri Bildirim',nav_settings:'Ayarlar',
     overview_sub:'Günlük genel bakışınız',
+    welcome_text:'Hoşgeldin',
     kpi_plan:'Paket',kpi_status:'Durum',kpi_today_bookings:'Bugün',kpi_today_sub:'Randevu',kpi_support:'Destek',
     status_active:'✓ Aktif',status_inactive:'✗ Pasif',
     today_bookings:'Bugünkü randevularınız',upcoming_empty:'Bugün randevu yok.',features_title:'Paket içeriği',
