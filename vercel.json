@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/**/*.js": {
+      "regions": ["fra1"]
+    }
+  },
   "headers": [
     {
       "source": "/(.*)\\.js",
