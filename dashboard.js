@@ -2246,6 +2246,7 @@ document.getElementById('b2cSetupFinishBtn').addEventListener('click', async () 
 
 document.getElementById('b2cConfigBtn').addEventListener('click', () => {
   document.getElementById('cfgSenderName').value = currentProfile.b2b_sender_name || '';
+  document.getElementById('cfgSystemPrompt').value = currentProfile.system_prompt || '';
   setGmailUI(gmailConnectedEmail,
     document.getElementById('cfgGmailDot'),
     document.getElementById('cfgGmailLabel'),
@@ -2314,7 +2315,7 @@ document.getElementById('b2bSetupFinishBtn').addEventListener('click', async () 
 
 document.getElementById('b2bConfigBtn').addEventListener('click', () => {
   document.getElementById('cfgSenderName').value = currentProfile.b2b_sender_name || '';
-  document.getElementById('cfgApifyToken').value = localStorage.getItem('apify_token') || '';
+  document.getElementById('cfgSystemPrompt').value = currentProfile.system_prompt || '';
   setGmailUI(gmailConnectedEmail,
     document.getElementById('cfgGmailDot'),
     document.getElementById('cfgGmailLabel'),
@@ -2327,12 +2328,12 @@ document.getElementById('cfgGmailBtn').addEventListener('click', () => startGmai
 document.getElementById('b2bConfigSaveBtn').addEventListener('click', async () => {
   const name = document.getElementById('cfgSenderName').value.trim();
   if (!name) { showToast(t('err_generic'), 'error'); return; }
-  const apifyToken = document.getElementById('cfgApifyToken')?.value.trim();
-  if (apifyToken) localStorage.setItem('apify_token', apifyToken);
+  const systemPrompt = document.getElementById('cfgSystemPrompt')?.value.trim() || '';
   const {error} = await supabase.from('profiles')
-    .update({b2b_sender_name: name}).eq('id', currentSession.user.id);
+    .update({b2b_sender_name: name, system_prompt: systemPrompt}).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   currentProfile.b2b_sender_name = name;
+  currentProfile.system_prompt = systemPrompt;
   const fromNameEl = document.getElementById('b2bFromName');
   if (fromNameEl) fromNameEl.textContent = name;
   closeModal('b2bConfigModal');
@@ -2382,6 +2383,9 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   const body    = document.getElementById('composeBody').value.trim();
   if (!toEmail || !subject || !body) { showToast(t('err_generic'), 'error'); return; }
 
+  const systemPrompt = currentProfile.system_prompt?.trim();
+  const fullBody = systemPrompt ? body + '\n\n---\n' + systemPrompt : body;
+
   const btn = document.getElementById('composeSendBtn');
   btn.disabled = true; btn.textContent = '⏳';
   try {
@@ -2391,7 +2395,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
       body: JSON.stringify({
         userId: currentSession.user.id,
         to_email: toEmail, to_name: toName,
-        subject, body,
+        subject, body: fullBody,
         sender_name: currentProfile.b2b_sender_name || ''
       })
     });
