@@ -119,7 +119,12 @@
           </div>
 
           <div class="today-section">
-            <div class="section-title" data-i18n="today_bookings">Heutige Termine</div>
+            <div class="schedule-header">
+              <button class="btn-icon" id="schedulePrev">‹</button>
+              <span class="schedule-title" id="scheduleDateLabel">Heutige Termine</span>
+              <button class="btn-icon" id="scheduleNext">›</button>
+              <button class="btn-ghost schedule-today-btn" id="scheduleToday" type="button">Heute</button>
+            </div>
             <div class="card upcoming-bookings-card">
               <div id="upcoming-bookings-loading" class="upcoming-loading"><div class="spinner-sm"></div></div>
               <div id="upcoming-bookings-empty" class="upcoming-empty" hidden>
