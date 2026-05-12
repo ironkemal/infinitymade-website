@@ -122,7 +122,6 @@ async function init() {
     userId = session.user.id;
     document.getElementById('logoutBtn').hidden = false;
     await loadProfile();
-    // Allow ?step=<name> to jump directly (e.g. from dashboard "Plan wählen")
     const requestedStep = new URLSearchParams(location.search).get('step');
     let stepName;
     if (requestedStep && STEPS.includes(requestedStep)) {
@@ -136,6 +135,8 @@ async function init() {
     }
     goToStep(STEPS.indexOf(stepName));
   } else {
+    // New onboarding flow: no auth yet, load from sessionStorage
+    loadSessionProfile();
     goToStep(0);
   }
 }
@@ -154,7 +155,6 @@ async function loadProfile() {
   profile = data || null;
 
   if (!profile) {
-    // First-time: create skeleton row
     const { data: created, error: insertErr } = await supabase
       .from('profiles')
       .insert({ id: userId, onboarding_step: 'business' })
@@ -167,7 +167,6 @@ async function loadProfile() {
     profile = created;
   }
 
-  // load services (may exist if user is editing later)
   const { data: svcs } = await supabase
     .from('business_services')
     .select('*')
@@ -176,6 +175,18 @@ async function loadProfile() {
   services = svcs || [];
 
   prefillForms();
+}
+
+function loadSessionProfile() {
+  const sp = sessionStorage.getItem('onboarding_profile');
+  profile = sp ? JSON.parse(sp) : {};
+  const ss = sessionStorage.getItem('onboarding_services');
+  services = ss ? JSON.parse(ss) : [];
+}
+
+function saveSessionProfile() {
+  sessionStorage.setItem('onboarding_profile', JSON.stringify(profile || {}));
+  sessionStorage.setItem('onboarding_services', JSON.stringify(services || []));
 }
 
 function prefillForms() {
@@ -270,28 +281,29 @@ function bindAccount() {
     const password = document.getElementById('accountPassword').value;
 
     try {
-      let result;
       if (mode === 'signup') {
-        result = await supabase.auth.signUp({ email, password });
+        // New flow: store in sessionStorage, create Supabase user after payment
+        sessionStorage.setItem('onboarding_email', email);
+        sessionStorage.setItem('onboarding_password', password);
+        profile = { ...profile, email };
+        saveSessionProfile();
+        goToStep(1);
       } else {
-        result = await supabase.auth.signInWithPassword({ email, password });
+        // Existing user sign in
+        const result = await supabase.auth.signInWithPassword({ email, password });
+        if (result.error) throw result.error;
+        const session = result.data.session || (await supabase.auth.getSession()).data.session;
+        if (!session?.user) {
+          showError('Bitte bestätigen Sie Ihre E-Mail (Posteingang prüfen) und melden Sie sich anschließend an.');
+          submit.disabled = false;
+          submit.textContent = orig;
+          return;
+        }
+        userId = session.user.id;
+        document.getElementById('logoutBtn').hidden = false;
+        await loadProfile();
+        goToStep(1);
       }
-
-      if (result.error) throw result.error;
-
-      const session = result.data.session || (await supabase.auth.getSession()).data.session;
-      if (!session?.user) {
-        // Email confirmation required
-        showError('Bitte bestätigen Sie Ihre E-Mail (Posteingang prüfen) und melden Sie sich anschließend an.');
-        submit.disabled = false;
-        submit.textContent = orig;
-        return;
-      }
-
-      userId = session.user.id;
-      document.getElementById('logoutBtn').hidden = false;
-      await loadProfile();
-      goToStep(1); // business
     } catch (err) {
       showError(err.message || 'Anmeldung fehlgeschlagen');
       submit.disabled = false;
@@ -312,14 +324,16 @@ function bindBusiness() {
     const street = document.getElementById('bizStreet').value.trim();
     const house_number = document.getElementById('bizHouse').value.trim();
 
-    const booking_slug = cleanBookingSlug(business_name) || cleanBookingSlug(userId.toString().slice(0, 8));
+    const booking_slug = cleanBookingSlug(business_name) || cleanBookingSlug((sessionStorage.getItem('onboarding_email') || '').slice(0, 8));
 
-    const { error } = await supabase.from('profiles').update({
-      business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner'
-    }).eq('id', userId);
-
-    if (error) return showError(error.message);
+    if (userId) {
+      const { error } = await supabase.from('profiles').update({
+        business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner'
+      }).eq('id', userId);
+      if (error) return showError(error.message);
+    }
     profile = { ...profile, business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner' };
+    saveSessionProfile();
     goToStep(2);
   });
 }
@@ -341,12 +355,14 @@ function bindOwner() {
     const owner_last_name = document.getElementById('ownerLastName').value.trim();
     if (!owner_first_name || !owner_last_name) return showError('Vorname und Nachname sind erforderlich.');
 
-    const { error } = await supabase.from('profiles').update({
-      owner_first_name, owner_last_name, accepts_bookings: acceptsBookings, onboarding_step: 'services'
-    }).eq('id', userId);
-
-    if (error) return showError(error.message);
+    if (userId) {
+      const { error } = await supabase.from('profiles').update({
+        owner_first_name, owner_last_name, accepts_bookings: acceptsBookings, onboarding_step: 'services'
+      }).eq('id', userId);
+      if (error) return showError(error.message);
+    }
     profile = { ...profile, owner_first_name, owner_last_name, accepts_bookings: acceptsBookings, onboarding_step: 'services' };
+    saveSessionProfile();
     goToStep(3);
   });
 }
