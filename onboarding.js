@@ -530,18 +530,20 @@ function bindHours() {
       });
     });
 
-    await supabase.from('working_hours').delete().eq('user_id', userId);
-    if (whRows.length) {
-      const { error: whErr } = await supabase.from('working_hours').insert(whRows);
-      if (whErr) console.error('working_hours insert', whErr);
+    if (userId) {
+      await supabase.from('working_hours').delete().eq('user_id', userId);
+      if (whRows.length) {
+        const { error: whErr } = await supabase.from('working_hours').insert(whRows);
+        if (whErr) console.error('working_hours insert', whErr);
+      }
+      const { error } = await supabase.from('profiles').update({
+        working_hours: out, onboarding_step: 'whatsapp',
+      }).eq('id', userId);
+      if (error) return showError(error.message);
     }
 
-    const { error } = await supabase.from('profiles').update({
-      working_hours: out, onboarding_step: 'whatsapp',
-    }).eq('id', userId);
-    if (error) return showError(error.message);
-    profile = { ...profile, working_hours: out, onboarding_step: 'whatsapp' };
-
+    profile = { ...profile, working_hours: out, working_hours_rows: whRows, onboarding_step: 'whatsapp' };
+    saveSessionProfile();
     goToStep(5);
   });
 }
