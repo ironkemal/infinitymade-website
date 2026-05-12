@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260511n" />
+  <link rel="stylesheet" href="dashboard.css?v=20260512l" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -59,25 +59,16 @@
           <div class="dash-banner-icon">🎉</div>
           <div class="dash-banner-content">
             <strong>Willkommen bei InfinityMade!</strong>
-            <p>Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.</p>
+            <p>{{ 'Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.' | encodeURI }}</p>
           </div>
           <button class="dash-banner-close" onclick="this.closest('.dash-banner').hidden=true">✕</button>
-        </div>
-
-        <div id="noplan-banner" class="dash-banner pending" hidden>
-          <div class="dash-banner-icon">📦</div>
-          <div class="dash-banner-content">
-            <strong>Wählen Sie Ihren Plan</strong>
-            <p>Noch kein Plan aktiviert. Starten Sie 14 Tage kostenlos.</p>
-          </div>
-          <a href="/onboarding.html?step=plan" class="dash-banner-action">Plan wählen</a>
         </div>
 
         <div id="trial-banner" class="dash-banner trial" hidden>
           <div class="dash-banner-icon">⏱️</div>
           <div class="dash-banner-content">
             <strong>Test-Phase: <span id="trial-days-left">—</span> Tage übrig</strong>
-            <p>Nach Ablauf der Testphase wird Ihre Karte belastet. Jederzeit kündbar.</p>
+            <p>{{ 'Nach Ablauf der Testphase wird Ihre Karte belastet. Jederzeit kündbar.' | encodeURI }}</p>
           </div>
           <button class="dash-banner-action" id="trial-manage-btn">Abo verwalten</button>
         </div>
@@ -227,8 +218,9 @@
 
           <div id="servicesGrid" class="services-grid"></div>
 
-          <div class="add-service-form" id="addServiceForm" hidden>
-            <h3 data-i18n="lbl_add_service">Neue Dienstleistung</h3>
+          <div class="add-service-form" id="addServiceForm" hidden data-mode="add">
+            <h3 id="srvFormTitle" data-i18n="lbl_add_service">Neue Dienstleistung</h3>
+            <input type="hidden" id="srvEditId" />
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" data-i18n="lbl_srv_title">Name</label>
@@ -251,9 +243,16 @@
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_srv_emps">Mitarbeiter</label>
+              <label class="emp-checkbox-item" style="margin-bottom:10px;">
+                <input type="checkbox" id="srvEmpAll" checked>
+                <span><strong>Hepsi</strong></span>
+              </label>
               <div id="srvEmpCheckboxes" class="employee-checkboxes"></div>
             </div>
-            <button class="btn-primary" id="srvSaveBtn" data-i18n="btn_srv_save">Speichern</button>
+            <div class="form-row" style="gap:10px;">
+              <button class="btn-primary" id="srvSaveBtn" data-i18n="btn_srv_save">Speichern</button>
+              <button class="btn-ghost" id="srvCancelBtn" type="button">Abbrechen</button>
+            </div>
           </div>
         </section>
 
@@ -1157,6 +1156,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260512c"></script>
+  <script type="module" src="dashboard.js?v=20260512l"></script>
 </body>
 </html>
