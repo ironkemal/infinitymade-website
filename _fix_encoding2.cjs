@@ -25,6 +25,21 @@ const replacements = [
   { from: 'Â«', to: '"' },
   { from: 'Â»', to: '"' },
   { from: 'Â', to: '' },
+  { from: 'ðŸ—ï¸', to: '🏗️' },
+  { from: 'ðŸ‘¤', to: '👤' },
+  { from: 'ðŸ›ï¸', to: '🏛️' },
+  { from: 'ðŸ“', to: '📍' },
+  { from: 'ðŸ’¡', to: '💡' },
+  { from: 'ðŸ˜Š', to: '😊' },
+  { from: 'ðŸ¤–', to: '🤖' },
+  { from: 'ðŸŽ‰', to: '🎉' },
+  { from: 'ðŸ““', to: '📓' },
+  { from: 'ðŸ“¹', to: '📹' },
+  { from: 'ðŸ’§', to: '💧' },
+  { from: 'ðŸ†', to: '🏆' },
+  { from: 'ðŸ“š', to: '📚' },
+  { from: 'ðŸš€', to: '🚀' },
+  { from: 'ðŸ—‚ï¸', to: '🗂️' },
 ];
 
 function fixFile(filePath) {
