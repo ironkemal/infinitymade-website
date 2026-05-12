@@ -249,29 +249,32 @@ let activePanel = 'overview';
 let leadFilter = 'all';
 let leadSearchVal = '';
 
-try {
-  const { data: authData } = await supabase.auth.getSession();
-  const session = authData?.session;
-  if (!session) {
+(async function boot() {
+  try {
+    const { data: authData } = await supabase.auth.getSession();
+    const session = authData?.session;
+    if (!session) {
+      window.location.href = 'login.html';
+      return;
+    }
+    currentSession = session;
+
+    const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+    if (profErr) console.error('[profile]', profErr);
+    currentProfile = profile || { id: session.user.id, email: session.user.email, plan:'starter', role:'owner', is_active:true };
+    if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
+
+    if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
+      const { data: owner } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
+      if (owner) ownerProfile = owner;
+    }
+
+    await init();
+  } catch (e) {
+    console.error('[boot]', e);
     window.location.href = 'login.html';
-    return;
   }
-  currentSession = session;
-
-  const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-  if (profErr) console.error('[profile]', profErr);
-  currentProfile = profile || { id: session.user.id, email: session.user.email, plan:'starter', role:'owner', is_active:true };
-  if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
-
-  if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-    const { data: owner } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
-    if (owner) ownerProfile = owner;
-  }
-} catch (e) {
-  console.error('[boot]', e);
-  window.location.href = 'login.html';
-  return;
-}
+})();
 
 function t(key) { return (T[currentLang]||T.de)[key]||key; }
 function getOwnerId() { return currentProfile.role==='owner' ? currentSession.user.id : currentProfile.owner_id; }
@@ -2676,4 +2679,4 @@ async function init() {
   }
 }
 
-init();
+
