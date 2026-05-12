@@ -426,37 +426,84 @@ async function renderOverview() {
   await loadTodayBookings();
 }
 
-async function loadTodayBookings() {
+let scheduleDate = new Date();
+
+function hexToHSL(hex) {
+  let r=0,g=0,b=0;
+  if (hex.length===4){r=parseInt('0x'+hex[1]+hex[1]);g=parseInt('0x'+hex[2]+hex[2]);b=parseInt('0x'+hex[3]+hex[3]);}
+  else if (hex.length===7){r=parseInt('0x'+hex[1]+hex[2]);g=parseInt('0x'+hex[3]+hex[4]);b=parseInt('0x'+hex[5]+hex[6]);}
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b);
+  let h=0,s=0,l=(max+min)/2;
+  if (max!==min){
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r:h=((g-b)/d+(g<b?6:0))/6;break;
+      case g:h=((b-r)/d+2)/6;break;
+      case b:h=((r-g)/d+4)/6;break;
+    }
+  }
+  return {h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)};
+}
+function hslToHex(h,s,l){
+  s/=100; l/=100;
+  const k=n=>(n+h/30)%12;
+  const a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  const toHex=x=>Math.round(x*255).toString(16).padStart(2,'0');
+  return '#'+toHex(f(0))+toHex(f(8))+toHex(f(4));
+}
+function shiftColorForDay(hex, dayOffset){
+  if (!hex || hex==='null') return null;
+  const hsl = hexToHSL(hex);
+  // bugun -> canli, uzak -> koyu (dusuk L)
+  const factor = Math.min(Math.abs(dayOffset), 14) / 14;
+  hsl.l = Math.max(25, hsl.l - factor * 25);
+  hsl.s = Math.max(40, hsl.s - factor * 20);
+  return hslToHex(hsl.h, hsl.s, hsl.l);
+}
+
+async function loadScheduleBookings(date) {
+  scheduleDate = date;
   const loadingEl = document.getElementById('upcoming-bookings-loading');
   const emptyEl   = document.getElementById('upcoming-bookings-empty');
   const listEl    = document.getElementById('upcoming-bookings-list');
+  const labelEl   = document.getElementById('scheduleDateLabel');
   loadingEl.hidden=false; emptyEl.hidden=true; listEl.hidden=true;
 
+  const today = new Date();
+  const dayDiff = Math.round((date - new Date(today.toDateString())) / 86400000);
+  const isToday = dayDiff===0;
+  const fmtDate = new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'numeric',month:'short'}).format(date);
+  labelEl.textContent = isToday ? 'Heutige Termine' : fmtDate;
+
   const tz = 'Europe/Berlin';
-  const todayStr = new Date().toLocaleDateString('sv-SE',{timeZone:tz});
-  const todayStart = new Date(todayStr+'T00:00:00').toISOString();
-  const todayEnd   = new Date(todayStr+'T23:59:59').toISOString();
+  const dStr = date.toLocaleDateString('sv-SE',{timeZone:tz});
+  const dStart = new Date(dStr+'T00:00:00').toISOString();
+  const dEnd   = new Date(dStr+'T23:59:59').toISOString();
   const ownerId = getOwnerId();
 
   let q = supabase.from('bookings')
     .select('*,services(title,color)')
     .eq('owner_id',ownerId)
-    .gte('start_time',todayStart).lte('start_time',todayEnd)
+    .gte('start_time',dStart).lte('start_time',dEnd)
     .neq('status','cancelled').order('start_time').limit(25);
   if (currentProfile.role!=='owner') q = q.eq('user_id',currentSession.user.id);
 
   const {data:bookings} = await q;
   loadingEl.hidden = true;
-  document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
+  if (isToday) document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
   if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
-  const fallbackColors = ['#c4761a','#1a5c5c','#1a5c1a','#3c3c5c','#5c1a3c'];
+  const fallbackColors = ['#ff8c42','#06d6a0','#118ab2','#ef476f','#9b5de5'];
   listEl.innerHTML = bookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
     const dur = b.end_time
       ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' min'
       : (b.services?.duration_minutes ? b.services.duration_minutes+' min' : '—');
-    const color = b.services?.color || fallbackColors[i % fallbackColors.length];
+    const baseColor = b.services?.color || fallbackColors[i % fallbackColors.length];
+    const color = shiftColorForDay(baseColor, dayDiff) || baseColor;
     const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
     const isOwner = currentProfile.role==='owner';
     return `<div class="schedule-card" style="background:${color};">
@@ -468,6 +515,8 @@ async function loadTodayBookings() {
   }).join('');
   listEl.hidden = false;
 }
+
+async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
 
 async function openStripePortal() {
   if (!currentProfile.stripe_subscription_id) { window.location.href='/onboarding.html?step=plan'; return; }
@@ -2660,6 +2709,18 @@ function showAddEmployeeResult(email, password) {
 
 document.getElementById('teamAddBtn').addEventListener('click', openAddEmployeeModal);
 document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
+
+document.getElementById('schedulePrev')?.addEventListener('click', () => {
+  const d = new Date(scheduleDate);
+  d.setDate(d.getDate()-1);
+  loadScheduleBookings(d);
+});
+document.getElementById('scheduleNext')?.addEventListener('click', () => {
+  const d = new Date(scheduleDate);
+  d.setDate(d.getDate()+1);
+  loadScheduleBookings(d);
+});
+document.getElementById('scheduleToday')?.addEventListener('click', () => loadScheduleBookings(new Date()));
 
 async function init() {
   try {
