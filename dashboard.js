@@ -1306,7 +1306,7 @@ function openEmpDetail(empId) {
   renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
   renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
 
-  const bookingLink = m.booking_slug ? (window.location.origin + '/booking.html?u=' + m.booking_slug) : '';
+  const bookingLink = m.booking_slug || '';
   const linkInput = document.getElementById('empBookingLink');
   linkInput.value = bookingLink;
   document.getElementById('empCopyLinkBtn').onclick = () => {
@@ -2126,8 +2126,9 @@ async function ensureBookingSlug() {
     const emailPrefix = currentSession.user.email ? currentSession.user.email.split('@')[0] : '';
     const base = cleanBookingSlug(currentProfile.business_name) || cleanBookingSlug(emailPrefix) || cleanBookingSlug(currentSession.user.id);
     const slug = base || 'user';
-    await supabase.from('profiles').update({booking_slug:slug}).eq('id',currentSession.user.id);
-    currentProfile.booking_slug = slug;
+    const url = window.location.origin + '/booking.html?u=' + slug;
+    await supabase.from('profiles').update({booking_slug:url}).eq('id',currentSession.user.id);
+    currentProfile.booking_slug = url;
   } catch(e) {
     console.error('[ensureBookingSlug]', e);
   }
@@ -2597,9 +2598,10 @@ async function saveEmployee() {
     }
 
     const newUserId = data.user.id;
-    const ownerSlug = currentProfile.booking_slug || cleanBookingSlug(currentProfile.business_name) || currentProfile.company_code?.toLowerCase() || cleanBookingSlug(ownerId);
+    const ownerSlug = cleanBookingSlug(currentProfile.business_name) || currentProfile.company_code?.toLowerCase() || cleanBookingSlug(ownerId);
     const empSlug = cleanBookingSlug(businessName);
-    const booking_slug = ownerSlug + '-' + empSlug;
+    const slug = ownerSlug + '-' + empSlug;
+    const booking_url = window.location.origin + '/booking.html?u=' + slug;
 
     const { error: profileError } = await supabase.from('profiles').insert({
       id: newUserId,
@@ -2612,7 +2614,7 @@ async function saveEmployee() {
       language: currentLang,
       plan: currentProfile.plan || 'starter',
       sector: currentProfile.sector || 'default',
-      booking_slug
+      booking_slug: booking_url
     });
     if (profileError) throw profileError;
 
