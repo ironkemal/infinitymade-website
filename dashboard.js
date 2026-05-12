@@ -120,7 +120,7 @@ const T = {
     overview_sub:'Günlük genel bakışınız',
     kpi_plan:'Paket',kpi_status:'Durum',kpi_today_bookings:'Bugün',kpi_today_sub:'Randevu',kpi_support:'Destek',
     status_active:'✓ Aktif',status_inactive:'✗ Pasif',
-    today_bookings:'Bugünkü Randevular',upcoming_empty:'Bugün randevu yok.',features_title:'Paket içeriği',
+    today_bookings:'Bugünkü randevularınız',upcoming_empty:'Bugün randevu yok.',features_title:'Paket içeriği',
     calendar_sub:'Slot görmek için bir güne tıklayın',btn_add_leave:'İzin ekle',btn_add_booking:'+ Randevu',
     kunden_sub:'Lead & müşteri bilgileri',leads_import:'CSV içe aktar',leads_add:'+ Yeni Lead',
     apify_label:'Google Maps Scraper:',apify_run:'Ara',
@@ -279,6 +279,10 @@ let leadSearchVal = '';
 })();
 
 function t(key) { return (T[currentLang]||T.de)[key]||key; }
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function getOwnerId() { return currentProfile.role==='owner' ? currentSession.user.id : currentProfile.owner_id; }
 
 function getSector() {
@@ -396,9 +400,18 @@ function statusBadge(s) {
 
 async function renderOverview() {
   document.getElementById('bizName').textContent = currentProfile.business_name || '';
-  document.getElementById('kpi-plan').textContent = currentProfile.plan
+
+  // Welcome banner
+  const welcomeEl = document.getElementById('welcomeText');
+  if (welcomeEl) {
+    const name = currentProfile.business_name || currentSession.user.email?.split('@')[0] || '';
+    welcomeEl.innerHTML = `Hoşgeldin <span>${escapeHtml(name)}</span> ${currentProfile.business_name ? '- ' + escapeHtml(currentProfile.business_name) : ''}`;
+  }
+
+  // Settings Paket & Status
+  document.getElementById('setPlanValue').textContent = currentProfile.plan
     ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
-  document.getElementById('kpi-status').textContent = currentProfile.is_active ? t('status_active') : t('status_inactive');
+  document.getElementById('setStatusValue').textContent = currentProfile.is_active ? t('status_active') : t('status_inactive');
 
   ['welcome-banner','trial-banner','pastdue-banner'].forEach(id => {
     const el=document.getElementById(id); if(el) el.hidden=true;
@@ -1621,7 +1634,7 @@ function openEmpDetail(empId) {
   renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
   renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
 
-  const bookingLink = m.booking_slug || '';
+  const bookingLink = m.booking_slug || (window.location.origin + '/booking.html?u=' + m.id);
   const linkInput = document.getElementById('empBookingLink');
   linkInput.value = bookingLink;
   document.getElementById('empCopyLinkBtn').onclick = () => {

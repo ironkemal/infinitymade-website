@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260512l" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -91,30 +91,19 @@
             </div>
           </div>
 
-          <div class="kpi-grid">
-            <div class="kpi-card">
-              <div class="kpi-label" data-i18n="kpi_plan">Paket</div>
-              <div class="kpi-value" id="kpi-plan">—</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label" data-i18n="kpi_status">Status</div>
-              <div class="kpi-value" id="kpi-status">—</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label" data-i18n="kpi_today_bookings">Heute</div>
-              <div class="kpi-value kpi-green" id="kpi-today">—</div>
-              <div class="kpi-sub" data-i18n="kpi_today_sub">Termine</div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-label" data-i18n="kpi_support">Support</div>
-              <div class="kpi-value support-mail">info@infinitymade.de</div>
-            </div>
+          <div class="welcome-banner-overview" id="welcomeOverview">
+            <div class="welcome-text" id="welcomeText">Hoşgeldin</div>
+          </div>
+
+          <div class="today-kpi" id="todayKpiBlock">
+            <div class="today-kpi-label" data-i18n="today_bookings">Bugünkü randevularınız</div>
+            <div class="today-kpi-value" id="kpi-today">—</div>
           </div>
 
           <div class="today-section">
             <div class="schedule-header">
               <button class="btn-icon" id="schedulePrev" type="button">‹</button>
-              <span class="schedule-title" id="scheduleDateLabel">Heutige Termine</span>
+              <span class="schedule-title" id="scheduleDateLabel" data-i18n="today_bookings">Bugünkü randevularınız</span>
               <button class="btn-icon" id="scheduleNext" type="button">›</button>
               <button class="btn-ghost schedule-today-btn" id="scheduleToday" type="button">Heute</button>
             </div>
@@ -712,7 +701,15 @@
               <div class="settings-section-title" data-i18n="set_account">Konto</div>
               <div class="settings-section-body">
                 <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;" id="accEmail"></div>
-                <div class="plan-badge" id="accPlanBadge">—</div>
+                <div class="settings-info-row">
+                  <span class="settings-info-label" data-i18n="kpi_plan">Paket</span>
+                  <span class="settings-info-value" id="setPlanValue">—</span>
+                </div>
+                <div class="settings-info-row">
+                  <span class="settings-info-label" data-i18n="kpi_status">Status</span>
+                  <span class="settings-info-value" id="setStatusValue">—</span>
+                </div>
+                <div class="plan-badge" id="accPlanBadge" style="margin-top:12px;">—</div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
                   <button class="btn-ghost" id="subPortalBtn" data-i18n="sub_portal">Abonnement verwalten</button>
                   <button class="btn-primary" id="subUpgradeBtn" data-i18n="sub_upgrade">Upgrade</button>
@@ -1156,6 +1153,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260512l"></script>
+  <script type="module" src="dashboard.js?v=20260512m"></script>
 </body>
 </html>
