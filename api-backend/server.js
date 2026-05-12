@@ -417,7 +417,9 @@ app.post('/api/booking/get-slots', async (req, res) => {
     while (currentMins + totalBlock <= endMinutes) {
       const slotEnd = currentMins + totalBlock;
       const hasOverlap = bookedIntervals.some(b => currentMins < b.end && slotEnd > b.start);
-      if (!hasOverlap) slots.push(minsToTime(currentMins));
+      // Skip slots in the past (today only) + enforce 30-min lead time
+      const tooSoon = nowBerlinMinutes !== null && (currentMins + totalBlock) <= nowBerlinMinutes + 30;
+      if (!hasOverlap && !tooSoon) slots.push(minsToTime(currentMins));
       currentMins += step;
     }
 
@@ -432,6 +434,16 @@ app.post('/api/booking/create', async (req, res) => {
   const { userId, serviceId, date, time, customerName, customerEmail, customerPhone } = req.body;
   
   try {
+    // Reject past dates and enforce minimum 30-min lead time
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+    if (date < todayStr) return res.status(400).json({ error: 'Termine in der Vergangenheit können nicht gebucht werden.' });
+    if (date === todayStr) {
+      const nowMins = utcToBerlinMinutes(now);
+      const slotMins = timeToMins(time);
+      if (slotMins <= nowMins + 30) return res.status(400).json({ error: 'Bitte wählen Sie einen Termin mindestens 30 Minuten in der Zukunft.' });
+    }
+
     const { data: service } = await supabase.from('services').select('*').eq('id', serviceId).single();
     if (!service) return res.status(400).json({ error: 'Service not found' });
 

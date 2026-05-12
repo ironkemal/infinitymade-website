@@ -176,8 +176,7 @@ async function loadBookingSlots(date) {
   const labelEl = document.getElementById('bkDateLabel');
   const listEl  = document.getElementById('bkSlotsList');
   const today = new Date();
-  const dayDiff = Math.round((date - new Date(today.toDateString())) / 86400000);
-  const isToday = dayDiff === 0;
+  const isToday = date.toDateString() === today.toDateString();
   const fmtDate = new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'numeric',month:'long'}).format(date);
   labelEl.textContent = isToday ? `Heute, ${fmtDate}` : fmtDate;
   listEl.innerHTML = '<div class="slots-empty">Laden…</div>';
@@ -253,16 +252,19 @@ function renderBookingCalendar(year, month) {
   const firstDay = new Date(year, month, 1);
   const startOffset = (firstDay.getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const today = new Date();
-  const todayStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toDateString();
+  const tz = 'Europe/Berlin';
+  const todayStr = new Date().toLocaleDateString('sv-SE', {timeZone: tz});
+  const todayParts = todayStr.split('-').map(Number);
+  const todayY = todayParts[0], todayM = todayParts[1], todayD = todayParts[2];
 
   let html = '';
   for (let i = 0; i < startOffset; i++) html += '<div class="cal-cell empty"></div>';
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dateObj = new Date(year, month, d);
-    const isPast = dateObj < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const isToday = dateObj.toDateString() === todayStr;
+    const dStr = dateObj.toLocaleDateString('sv-SE', {timeZone: tz});
+    const isPast = dStr < todayStr;
+    const isToday = dStr === todayStr;
     const isSelected = bkScheduleDate && dateObj.toDateString() === new Date(bkScheduleDate.getFullYear(), bkScheduleDate.getMonth(), bkScheduleDate.getDate()).toDateString();
 
     let cls = 'cal-cell';
