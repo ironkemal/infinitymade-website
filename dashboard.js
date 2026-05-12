@@ -454,99 +454,103 @@ function hslToHex(h,s,l){
   const toHex=x=>Math.round(x*255).toString(16).padStart(2,'0');
   return '#'+toHex(f(0))+toHex(f(8))+toHex(f(4));
 }
-function shiftColorForDay(hex, dayOffset){
+function shiftColorForTime(hex, hour){
   if (!hex || hex==='null') return null;
   const hsl = hexToHSL(hex);
-  // bugun -> canli, uzak -> koyu (dusuk L)
-  const factor = Math.min(Math.abs(dayOffset), 14) / 14;
-  hsl.l = Math.max(25, hsl.l - factor * 25);
-  hsl.s = Math.max(40, hsl.s - factor * 20);
+  const factor = Math.max(0, Math.min(1, (hour - 8) / 12));
+  hsl.l = Math.max(38, Math.min(68, hsl.l - factor * 18));
+  hsl.s = Math.max(40, Math.min(95, hsl.s - factor * 22));
   return hslToHex(hsl.h, hsl.s, hsl.l);
 }
 
 function findGaps(whStart, whEnd, bookings) {
-  let current = (whStart || '09:00:00').substring(0,5);
-  const end   = (whEnd   || '18:00:00').substring(0,5);
-  if (!current || !end) return [];
-  const gaps = [];
-  const sorted = [...bookings].sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
-  for (const b of sorted) {
-    const bStart = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
-    const bEndRaw = b.end_time ? new Date(b.end_time) : new Date(new Date(b.start_time).getTime() + (b.services?.duration_minutes || 30)*60000);
-    const bEnd = bEndRaw.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
-    if (bStart > current) gaps.push({start: current, end: bStart});
-    if (bEnd > current) current = bEnd;
-  }
-  if (current < end) gaps.push({start: current, end});
-  return gaps;
+  try {
+    let current = (whStart || '09:00:00').substring(0,5);
+    const end   = (whEnd   || '18:00:00').substring(0,5);
+    if (!current || !end) return [];
+    const gaps = [];
+    const sorted = [...bookings].sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+    for (const b of sorted) {
+      const bStart = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
+      const durMin = b.services?.duration_minutes || 30;
+      const bEndRaw = b.end_time ? new Date(b.end_time) : new Date(new Date(b.start_time).getTime() + durMin*60000);
+      const bEnd = bEndRaw.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
+      if (bStart > current) gaps.push({start: current, end: bStart});
+      if (bEnd > current) current = bEnd;
+    }
+    if (current < end) gaps.push({start: current, end});
+    return gaps;
+  } catch(e) { console.error('[findGaps]', e); return []; }
 }
 
 async function renderGaps() {
-  const tz = 'Europe/Berlin';
-  const container = document.getElementById('gapsList');
-  if (!container) return;
+  try {
+    const tz = 'Europe/Berlin';
+    const container = document.getElementById('gapsList');
+    if (!container) return;
 
-  const now = new Date();
-  const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
-  const today = new Date(todayStr + 'T00:00:00');
-  const tomorrow = new Date(today.getTime() + 86400000);
-  const todayDow = today.getDay();
-  const tomorrowDow = tomorrow.getDay();
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
+    const today = new Date(todayStr + 'T00:00:00');
+    const tomorrow = new Date(today.getTime() + 86400000);
+    const todayDow = today.getDay();
+    const tomorrowDow = tomorrow.getDay();
 
-  const ownerId = getOwnerId();
-  const { data: whAll } = await supabase.from('working_hours')
-    .select('day_of_week,start_time,end_time,is_active')
-    .eq('user_id', ownerId)
-    .eq('is_active', true);
-  const whMap = {};
-  whAll?.forEach(r => whMap[r.day_of_week] = r);
+    const ownerId = getOwnerId();
+    const { data: whAll } = await supabase.from('working_hours')
+      .select('day_of_week,start_time,end_time,is_active')
+      .eq('user_id', ownerId)
+      .eq('is_active', true);
+    const whMap = {};
+    whAll?.forEach(r => whMap[r.day_of_week] = r);
 
-  const todayEndIso = new Date(today.getTime() + 86399000).toISOString();
-  const tomorrowEndIso = new Date(tomorrow.getTime() + 86399000).toISOString();
-  let q = supabase.from('bookings')
-    .select('start_time,end_time,services(duration_minutes),status')
-    .eq('owner_id', ownerId)
-    .gte('start_time', today.toISOString()).lte('start_time', tomorrowEndIso)
-    .neq('status','cancelled').order('start_time');
-  if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
-  const { data: bookings } = await q;
+    const todayEndIso = new Date(today.getTime() + 86399000).toISOString();
+    const tomorrowEndIso = new Date(tomorrow.getTime() + 86399000).toISOString();
+    let q = supabase.from('bookings')
+      .select('start_time,end_time,services(duration_minutes),status')
+      .eq('owner_id', ownerId)
+      .gte('start_time', today.toISOString()).lte('start_time', tomorrowEndIso)
+      .neq('status','cancelled').order('start_time');
+    if (currentProfile.role !== 'owner') q = q.eq('user_id', currentSession.user.id);
+    const { data: bookings } = await q;
 
-  const allGaps = [];
-  const whToday = whMap[todayDow];
-  if (whToday) {
-    const todayBookings = (bookings||[]).filter(b => {
-      const d = new Date(b.start_time);
-      return d >= today && d < new Date(today.getTime() + 86400000);
-    });
-    findGaps(whToday.start_time, whToday.end_time, todayBookings).forEach(g =>
-      allGaps.push({day: 'Heute', start: g.start, end: g.end})
-    );
-  }
-  const whTom = whMap[tomorrowDow];
-  if (whTom) {
-    const tomBookings = (bookings||[]).filter(b => {
-      const d = new Date(b.start_time);
-      return d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000);
-    });
-    findGaps(whTom.start_time, whTom.end_time, tomBookings).forEach(g =>
-      allGaps.push({day: 'Morgen', start: g.start, end: g.end})
-    );
-  }
+    const allGaps = [];
+    const whToday = whMap[todayDow];
+    if (whToday) {
+      const todayBookings = (bookings||[]).filter(b => {
+        const d = new Date(b.start_time);
+        return d >= today && d < new Date(today.getTime() + 86400000);
+      });
+      findGaps(whToday.start_time, whToday.end_time, todayBookings).forEach(g =>
+        allGaps.push({day: 'Heute', start: g.start, end: g.end})
+      );
+    }
+    const whTom = whMap[tomorrowDow];
+    if (whTom) {
+      const tomBookings = (bookings||[]).filter(b => {
+        const d = new Date(b.start_time);
+        return d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000);
+      });
+      findGaps(whTom.start_time, whTom.end_time, tomBookings).forEach(g =>
+        allGaps.push({day: 'Morgen', start: g.start, end: g.end})
+      );
+    }
 
-  if (allGaps.length === 0) {
-    container.innerHTML = '<div class="gap-empty">Keine freien Zeiten.</div>';
-    return;
-  }
-  container.innerHTML = allGaps.map(g => {
-    const durMin = Math.round((new Date('2000-01-01T' + g.end) - new Date('2000-01-01T' + g.start)) / 60000);
-    return `<div class="gap-card">
-      <div class="gap-card-top">
-        <span class="gap-card-day">${g.day}</span>
-        <span class="gap-card-dur">${durMin} min</span>
-      </div>
-      <div class="gap-card-time">${g.start} - ${g.end}</div>
-    </div>`;
-  }).join('');
+    if (allGaps.length === 0) {
+      container.innerHTML = '<div class="gap-empty">Keine freien Zeiten.</div>';
+      return;
+    }
+    container.innerHTML = allGaps.map(g => {
+      const durMin = Math.round((new Date('2000-01-01T' + g.end) - new Date('2000-01-01T' + g.start)) / 60000);
+      return `<div class="gap-card">
+        <div class="gap-card-top">
+          <span class="gap-card-day">${g.day}</span>
+          <span class="gap-card-dur">${durMin} min</span>
+        </div>
+        <div class="gap-card-time">${g.start} - ${g.end}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('[renderGaps]', e); }
 }
 
 async function loadScheduleBookings(date) {
@@ -581,14 +585,16 @@ async function loadScheduleBookings(date) {
   if (isToday) document.getElementById('kpi-today').textContent = bookings?.length ?? 0;
 
   if (!bookings||bookings.length===0) { emptyEl.hidden=false; return; }
-  const fallbackColors = ['#ff8c42','#06d6a0','#118ab2','#ef476f','#9b5de5'];
+  const fallbackColors = ['#f97316','#22c55e','#3b82f6','#ec4899','#a855f7'];
   listEl.innerHTML = bookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
     const dur = b.end_time
       ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' min'
       : (b.services?.duration_minutes ? b.services.duration_minutes+' min' : '—');
     const baseColor = b.services?.color || fallbackColors[i % fallbackColors.length];
-    const color = shiftColorForDay(baseColor, dayDiff) || baseColor;
+    const hourStr = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
+    const hour = parseInt(hourStr.split(':')[0]) + parseInt(hourStr.split(':')[1])/60;
+    const color = shiftColorForTime(baseColor, hour) || baseColor;
     const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
     const isOwner = currentProfile.role==='owner';
     return `<div class="schedule-card" style="background:${color};">
@@ -2795,17 +2801,24 @@ function showAddEmployeeResult(email, password) {
 document.getElementById('teamAddBtn').addEventListener('click', openAddEmployeeModal);
 document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 
-document.getElementById('schedulePrev')?.addEventListener('click', () => {
+document.getElementById('schedulePrev')?.addEventListener('click', async () => {
+  console.log('[schedule] prev clicked');
   const d = new Date(scheduleDate);
   d.setDate(d.getDate()-1);
-  loadScheduleBookings(d);
+  console.log('[schedule] loading prev', d);
+  try { await loadScheduleBookings(d); } catch(e) { console.error('[schedule] prev error', e); }
 });
-document.getElementById('scheduleNext')?.addEventListener('click', () => {
+document.getElementById('scheduleNext')?.addEventListener('click', async () => {
+  console.log('[schedule] next clicked');
   const d = new Date(scheduleDate);
   d.setDate(d.getDate()+1);
-  loadScheduleBookings(d);
+  console.log('[schedule] loading next', d);
+  try { await loadScheduleBookings(d); } catch(e) { console.error('[schedule] next error', e); }
 });
-document.getElementById('scheduleToday')?.addEventListener('click', () => loadScheduleBookings(new Date()));
+document.getElementById('scheduleToday')?.addEventListener('click', async () => {
+  console.log('[schedule] today clicked');
+  try { await loadScheduleBookings(new Date()); } catch(e) { console.error('[schedule] today error', e); }
+});
 
 async function init() {
   try {
@@ -2822,8 +2835,7 @@ async function init() {
     console.log('[init] team ok');
     await renderOverview();
     console.log('[init] overview ok');
-    await renderGaps();
-    console.log('[init] gaps ok');
+    try { await renderGaps(); console.log('[init] gaps ok'); } catch(e) { console.error('[init] renderGaps error', e); }
     await initCalendar();
     console.log('[init] calendar ok');
     await handleGmailCallback();
