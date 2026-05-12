@@ -2099,11 +2099,17 @@ function cleanBookingSlug(input) {
 }
 
 async function ensureBookingSlug() {
-  if (currentProfile.booking_slug) return;
-  const base = cleanBookingSlug(currentProfile.business_name) || cleanBookingSlug(currentSession.user.email.split('@')[0]) || cleanBookingSlug(currentSession.user.id);
-  const slug = base || 'user';
-  await supabase.from('profiles').update({booking_slug:slug}).eq('id',currentSession.user.id);
-  currentProfile.booking_slug = slug;
+  try {
+    if (!currentSession || !currentProfile) return;
+    if (currentProfile.booking_slug) return;
+    const emailPrefix = currentSession.user.email ? currentSession.user.email.split('@')[0] : '';
+    const base = cleanBookingSlug(currentProfile.business_name) || cleanBookingSlug(emailPrefix) || cleanBookingSlug(currentSession.user.id);
+    const slug = base || 'user';
+    await supabase.from('profiles').update({booking_slug:slug}).eq('id',currentSession.user.id);
+    currentProfile.booking_slug = slug;
+  } catch(e) {
+    console.error('[ensureBookingSlug]', e);
+  }
 }
 
 let docsCache = [];
@@ -2650,5 +2656,4 @@ async function init() {
   }
 }
 
-init();
 init();

@@ -111,6 +111,11 @@ async function init() {
       loadServices(btn.dataset.id);
     });
   });
+
+  if (isEmployee && state.employeeId) {
+    const autoBtn = document.querySelector(`.emp-btn[data-id="${state.employeeId}"]`);
+    if (autoBtn) autoBtn.click();
+  }
 }
 
 async function loadServices(empId) {
