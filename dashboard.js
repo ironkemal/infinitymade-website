@@ -679,8 +679,6 @@ async function loadScheduleBookings(date) {
   if (isToday) {
     const idx = bookings.findIndex(b => b.start_time >= nowIso);
     if (idx !== -1) { greenIndices.add(idx); if (idx + 1 < bookings.length) greenIndices.add(idx + 1); }
-  } else {
-    greenIndices.add(0); if (bookings.length > 1) greenIndices.add(1);
   }
   listEl.innerHTML = bookings.map((b,i)=>{
     const emp = teamMembers.find(m=>m.id===b.user_id);
