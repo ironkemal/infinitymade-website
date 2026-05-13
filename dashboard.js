@@ -2665,8 +2665,9 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
 
   if (mode === 'edit') {
     const editId = document.getElementById('srvEditId').value;
+    console.log('[srvSave] editing service', editId, payload);
     const { error } = await supabase.from('services').update(payload).eq('id', editId);
-    if (error) { showToast(t('err_generic'), 'error'); return; }
+    if (error) { console.error('[srvSave] update error:', error); showToast(t('err_generic'), 'error'); return; }
     await supabase.from('employee_services').delete().eq('service_id', editId);
     if (empIds.length) {
       await supabase.from('employee_services').insert(empIds.map(id => ({ employee_id: id, service_id: editId })));
@@ -2675,8 +2676,9 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   } else {
     const ownerId = getOwnerId();
     const userId = currentSession.user.id;
+    console.log('[srvSave] creating new service', { owner_id: ownerId, user_id: userId, ...payload });
     const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, user_id: userId, ...payload }).select().single();
-    if (error) { showToast(t('err_generic'), 'error'); return; }
+    if (error) { console.error('[srvSave] insert error:', error); showToast(t('err_generic'), 'error'); return; }
     if (empIds.length) {
       await supabase.from('employee_services').insert(empIds.map(id => ({ employee_id: id, service_id: srv.id })));
     }
