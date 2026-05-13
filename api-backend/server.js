@@ -862,24 +862,33 @@ app.post('/api/rezept/save', async (req, res) => {
       .eq('patient_id', patientId)
       .maybeSingle();
 
+    let existingNotizen = '';
+    if (existingAnam) {
+      const { data: anamData } = await supabase.from('anamnese').select('notizen').eq('id', existingAnam.id).single();
+      existingNotizen = anamData?.notizen || '';
+    }
+
+    const notizen = befund
+      ? (existingNotizen ? existingNotizen + '\n' : '') + 'Rezept ' + (rezeptDatum || new Date().toISOString().slice(0,10)) + ': ' + befund
+      : undefined;
+
     const anamPayload = {
       arzt_name: nameNorm,
       arzt_nummer: arztNummer || null,
       diagnose: diagnose || null,
       rezept_sitzungen: sitzungen != null ? parseInt(sitzungen, 10) : null,
-      hausbesuch: !!hausbesuch,
-      notizen: befund ? (existingAnam ? (await supabase.from('anamnese').select('notizen').eq('id', existingAnam.id).single()).data?.notizen || '' : '') + '\nRezept ' + (rezeptDatum || new Date().toISOString().slice(0,10)) + ': ' + befund : undefined
+      hausbesuch: !!hausbesuch
     };
+    if (notizen !== undefined) anamPayload.notizen = notizen;
 
     if (existingAnam) {
-      const cleanPayload = Object.fromEntries(Object.entries(anamPayload).filter(([_, v]) => v !== undefined));
-      await supabase.from('anamnese').update(cleanPayload).eq('id', existingAnam.id);
+      await supabase.from('anamnese').update(anamPayload).eq('id', existingAnam.id);
     } else {
       await supabase.from('anamnese').insert({
         owner_id: ownerId,
         patient_id: patientId,
         ...anamPayload,
-        notizen: anamPayload.notizen || null
+        notizen: notizen || null
       });
     }
 
