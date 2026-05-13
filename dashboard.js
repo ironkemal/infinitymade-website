@@ -439,7 +439,7 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 });
 
 function openModal(id) { const el=document.getElementById(id); if(el) el.hidden=false; }
-function closeModal(id) { const el=document.getElementById(id); if(el) el.hidden=true; }
+function closeModal(id) { const el=document.getElementById(id); if(el) el.hidden=true; if(id==='bkActionModal' && bkActionTimer){ clearInterval(bkActionTimer); bkActionTimer=null; } }
 
 function showToast(msg, type='success') {
   const d = document.createElement('div');
@@ -1306,7 +1306,7 @@ async function openBookingActionModal(booking) {
   openModal('bkActionModal');
 }
 
-function handleTerminStarten() {
+async function handleTerminStarten() {
   if (!bkActionBookingCache) return;
   const b = bkActionBookingCache;
   const patientName = b.customer_name || '';
@@ -1320,56 +1320,30 @@ function handleTerminStarten() {
   const match = sessionText.match(/Seans\s+(\d+)\s*\/\s*(\d+)/);
   const sessionNum = match ? parseInt(match[1]) : 1;
 
-  if (sessionNum === 1) {
-    switchPanel('anamnese');
-    setTimeout(async () => {
-      const { data: leads } = await supabase.from('leads')
-        .select('id')
-        .eq('owner_id', ownerId)
-        .eq('first_name||last_name', patientName)
-        .maybeSingle();
-      if (leads && leads.length > 0) {
-        const leadId = leads[0].id;
-        document.getElementById('anamPatientSelect').value = leadId;
-        await fillAnamneseForm(leadId);
-      } else if (patientPhone) {
-        const { data: leadsByPhone } = await supabase.from('leads')
-          .select('id')
-          .eq('owner_id', ownerId)
-          .eq('phone', patientPhone)
-          .maybeSingle();
-        if (leadsByPhone && leadsByPhone.length > 0) {
-          const leadId = leadsByPhone[0].id;
-          document.getElementById('anamPatientSelect').value = leadId;
-          await fillAnamneseForm(leadId);
-        }
-      }
-    }, 300);
-  } else {
-    switchPanel('notizen');
-    setTimeout(async () => {
-      const { data: leads } = await supabase.from('leads')
-        .select('id,first_name,last_name,title')
-        .eq('owner_id', ownerId)
-        .order('title');
-      if (!leads) return;
+  let leadId = null;
+  if (patientName) {
+    const { data: leads } = await supabase.from('leads')
+      .select('id,first_name,last_name,title,phone')
+      .eq('owner_id', ownerId);
+    if (leads && leads.length > 0) {
       const lead = leads.find(l => {
         const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '';
         return name === patientName;
       });
-      if (lead) {
-        document.getElementById('notesPatientInput').value = displayName(lead);
-        document.getElementById('notesPatient').value = lead.id;
-        loadPatientNotes(lead.id);
-      } else if (patientPhone) {
+      if (lead) leadId = lead.id;
+      else if (patientPhone) {
         const leadByPhone = leads.find(l => l.phone === patientPhone);
-        if (leadByPhone) {
-          document.getElementById('notesPatientInput').value = displayName(leadByPhone);
-          document.getElementById('notesPatient').value = leadByPhone.id;
-          loadPatientNotes(leadByPhone.id);
-        }
+        if (leadByPhone) leadId = leadByPhone.id;
       }
-    }, 300);
+    }
+  }
+
+  if (sessionNum === 1) {
+    prefillAnamnesePatientId = leadId;
+    switchPanel('anamnese');
+  } else {
+    prefillNotesPatientId = leadId;
+    switchPanel('notizen');
   }
 }
 
