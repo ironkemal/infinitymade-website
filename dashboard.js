@@ -972,6 +972,7 @@ function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, service
   populateEmpSelects(empId);
   populateSrvSelect(serviceId);
   openModal('bookingModal');
+  initBkCustomerAutocomplete();
 }
 
 async function initCalendar() {
@@ -1219,6 +1220,7 @@ function prefillBookingModal(startStr, endStr) {
   populateEmpSelects();
   populateSrvSelect();
   openModal('bookingModal');
+  initBkCustomerAutocomplete();
 }
 
 function computeSeriesPreview() {
@@ -1380,7 +1382,7 @@ function handlePatientNichtErschienen() {
   showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
 }
 
-function openBookingModal(b) {
+async function openBookingModal(b) {
   if (!b) { prefillBookingModal(null,null); return; }
   document.getElementById('bk-id').value = b.id||'';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
@@ -1419,6 +1421,113 @@ function openBookingModal(b) {
   populateSrvSelect(b.service_id);
   openModal('bookingModal');
   document.getElementById('bkMoveBtn').onclick = () => startMoveBooking(b);
+  initBkCustomerAutocomplete();
+}
+
+function initBkCustomerAutocomplete() {
+  const input = document.getElementById('bkCustomer');
+  const hidden = document.getElementById('bkCustomerId');
+  const list = document.getElementById('bkCustomerList');
+  const addWrap = document.getElementById('bkCustomerAddWrap');
+  const addBtn = document.getElementById('bkCustomerAddBtn');
+  if (!input || !hidden || !list) return;
+  if (getSector() !== 'physiotherapy') {
+    input.placeholder = '';
+    list.hidden = true;
+    if (addWrap) addWrap.hidden = true;
+    hidden.value = '';
+    return;
+  }
+  input.placeholder = 'Patient suchen…';
+  if (input.dataset.bkAutoBound) return;
+  input.dataset.bkAutoBound = '1';
+  let allLeads = [];
+  let activeIndex = -1;
+  let blurTimer = null;
+  async function loadLeads() {
+    const ownerId = getOwnerId();
+    const { data } = await supabase.from('leads').select('id,title,first_name,last_name').eq('owner_id', ownerId).order('title');
+    allLeads = data || [];
+  }
+  loadLeads();
+  function renderList(filter) {
+    activeIndex = -1;
+    const q = filter.trim().toLowerCase();
+    if (!q) { list.hidden = true; if (addWrap) addWrap.hidden = true; return; }
+    const filtered = allLeads.filter(l => displayName(l).toLowerCase().includes(q));
+    if (filtered.length === 0) {
+      list.innerHTML = '<li class="empty-item">Keine Treffer</li>';
+      list.hidden = false;
+      if (addWrap) addWrap.hidden = false;
+      return;
+    }
+    list.innerHTML = filtered.map((l, i) => {
+      const name = displayName(l);
+      const esc = q.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&');
+      const hl = name.replace(new RegExp(`(${esc})`, 'gi'), '<span class="match-hl">$1</span>');
+      return `<li data-id="${l.id}" data-index="${i}">${hl}</li>`;
+    }).join('');
+    list.hidden = false;
+    if (addWrap) addWrap.hidden = true;
+  }
+  function selectLead(id) {
+    const lead = allLeads.find(l => l.id === id);
+    if (!lead) return;
+    input.value = displayName(lead);
+    hidden.value = id;
+    list.hidden = true;
+    if (addWrap) addWrap.hidden = true;
+    activeIndex = -1;
+  }
+  input.addEventListener('input', () => {
+    hidden.value = '';
+    renderList(input.value);
+  });
+  input.addEventListener('keydown', (e) => {
+    const items = list.querySelectorAll('li[data-id]');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, items.length - 1);
+      items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIndex >= 0 && items[activeIndex]) {
+        selectLead(items[activeIndex].dataset.id);
+      }
+    } else if (e.key === 'Escape') {
+      list.hidden = true;
+      if (addWrap) addWrap.hidden = true;
+      activeIndex = -1;
+    }
+  });
+  list.addEventListener('click', (e) => {
+    const li = e.target.closest('li[data-id]');
+    if (li) selectLead(li.dataset.id);
+  });
+  input.addEventListener('blur', () => {
+    blurTimer = setTimeout(() => {
+      list.hidden = true;
+      if (!hidden.value && input.value.trim()) {
+        if (addWrap) addWrap.hidden = false;
+      } else {
+        if (addWrap) addWrap.hidden = true;
+      }
+    }, 150);
+  });
+  input.addEventListener('focus', () => {
+    if (blurTimer) clearTimeout(blurTimer);
+    if (input.value.trim()) renderList(input.value);
+  });
+  addBtn.addEventListener('click', () => {
+    closeModal('bookingModal');
+    openLeadModal(null);
+  });
 }
 
 function startMoveBooking(b) {
@@ -1523,6 +1632,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const phone   = document.getElementById('bkPhone').value.trim();
   const notes   = document.getElementById('bkNotes').value.trim();
   if (!startV||!cust) { showToast(t('err_generic'),'error'); return; }
+  const isPhysio = getSector() === 'physiotherapy';
+  const custId = document.getElementById('bkCustomerId').value.trim();
+  if (isPhysio && !id && !custId) { showToast('Bitte einen Patienten aus der Liste auswählen.', 'error'); return; }
 
   const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
   if (isSeries) {
@@ -1544,7 +1656,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       customerName: cust,
       customerPhone: phone || null,
       notes: notes || null,
-      duration: durMin
+      duration: durMin,
+      hausbesuch: document.getElementById('bkHausbesuch').checked || false
     };
     const res = await fetch('https://n8n.infinitymade.de/api/booking/batch-create', {
       method: 'POST',
@@ -1571,7 +1684,10 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     service_id:srvId||null,
     start_time:new Date(startV).toISOString(),
     end_time:endV ? new Date(endV).toISOString() : null,
-    customer_name:cust,customer_email:'',customer_phone:phone||null,status:'confirmed'
+    customer_name:cust,customer_email:'',customer_phone:phone||null,
+    notes:notes||null,
+    hausbesuch:document.getElementById('bkHausbesuch').checked||false,
+    status:'confirmed'
   };
   const {error} = id
     ? await supabase.from('bookings').update(payload).eq('id',id)
@@ -2216,7 +2332,6 @@ function renderServices() {
       meta = `${s.duration_minutes} min &middot; ${s.price!=null?s.price+' €':'—'}`;
     }
     return `<div class="service-card" data-srv-id="${s.id}">
-      <div class="service-color" style="background:${s.color||s.price_config?.color||'#22c55e'}"></div>
       <div class="service-info">
         <div class="service-title">${s.title}</div>
         <div class="service-meta">${meta}</div>
@@ -2261,7 +2376,6 @@ function resetServiceForm() {
   document.getElementById('srvTitle').value = '';
   document.getElementById('srvDur').value = '30';
   document.getElementById('srvPrice').value = '0';
-  document.getElementById('srvColor').value = '#22c55e';
   document.getElementById('srvEmpAll').checked = true;
   renderSrvEmpCheckboxes();
   toggleEmpCheckboxes(true);
@@ -2298,7 +2412,6 @@ function openServiceEdit(id) {
     document.getElementById('srvStandardColorRow').hidden = false;
     document.getElementById('srvDur').value = s.duration_minutes || 30;
     document.getElementById('srvPrice').value = s.price || 0;
-    document.getElementById('srvColor').value = s.color || '#22c55e';
   }
 
   const assignedIds = new Set((s.employee_services||[]).map(es => es.employee_id));
@@ -2402,7 +2515,6 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   let payload = { title };
   if (isPhysio) {
     const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
-    const color = document.getElementById('srvPhysioColor').value;
     const durations = {};
     document.querySelectorAll('.srv-dur-card').forEach(card => {
       const dur = card.dataset.dur;
@@ -2412,7 +2524,7 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     });
     payload = {
       title,
-      price_config: { unit_price: unitPrice, color, durations },
+      price_config: { unit_price: unitPrice, durations },
       duration_minutes: null,
       price: null,
       color: null
@@ -2420,8 +2532,7 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   } else {
     const duration = parseInt(document.getElementById('srvDur').value,10)||30;
     const price = parseFloat(document.getElementById('srvPrice').value)||0;
-    const color = document.getElementById('srvColor').value;
-    payload = { title, duration_minutes: duration, price, color };
+    payload = { title, duration_minutes: duration, price };
   }
 
   if (mode === 'edit') {
@@ -2435,7 +2546,8 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     showToast(t('saved'));
   } else {
     const ownerId = getOwnerId();
-    const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, ...payload }).select().single();
+    const userId = currentSession.user.id;
+    const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, user_id: userId, ...payload }).select().single();
     if (error) { showToast(t('err_generic'),'error'); return; }
     if (empIds.length) {
       await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: srv.id })));
@@ -4865,6 +4977,112 @@ function bindInvEvents() {
   document.getElementById('invKasse').oninput = calcInvTotals;
 }
 
+let aerzteCache = [];
+
+async function loadAerzte() {
+  const ownerId = getOwnerId();
+  const { data } = await supabase.from('aerzte').select('*').eq('owner_id', ownerId).order('name',{ascending:true});
+  aerzteCache = data || [];
+  const list = document.getElementById('aerzteList');
+  if (!list) return;
+  if (!aerzteCache.length) { list.innerHTML = '<p class="text-muted">Keine Ärzte.</p>'; return; }
+  list.innerHTML = aerzteCache.map(a => `
+    <div class="aerzte-row" data-id="${a.id}">
+      <span>${escapeHtml(a.name)} <span class="text-muted" style="font-size:12px;">${escapeHtml(a.arzt_nummer||'')}</span></span>
+      <div>
+        <button class="btn-outline" onclick="editAerzte('${a.id}')">Bearbeiten</button>
+        <button class="btn-danger" onclick="deleteAerzte('${a.id}')">Löschen</button>
+      </div>
+    </div>`).join('');
+}
+
+async function addAerzte() {
+  const name = document.getElementById('aeName').value.trim();
+  const nummer = document.getElementById('aeNummer').value.trim();
+  if (!name) { showToast('Bitte einen Namen eingeben.', 'error'); return; }
+  const ownerId = getOwnerId();
+  const { error } = await supabase.from('aerzte').insert({ owner_id: ownerId, name, arzt_nummer: nummer || null });
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  document.getElementById('aeName').value = '';
+  document.getElementById('aeNummer').value = '';
+  await loadAerzte();
+  showToast('Arzt gespeichert.');
+}
+
+async function deleteAerzte(id) {
+  if (!confirm('Arzt wirklich löschen?')) return;
+  const { error } = await supabase.from('aerzte').delete().eq('id', id);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  await loadAerzte();
+  showToast('Gelöscht.');
+}
+
+function editAerzte(id) {
+  const a = aerzteCache.find(x => x.id === id);
+  if (!a) return;
+  const name = prompt('Neuer Name:', a.name);
+  if (name === null) return;
+  const nummer = prompt('Neue Telefon/Fax:', a.arzt_nummer || '');
+  if (nummer === null) return;
+  supabase.from('aerzte').update({ name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id).then(({error}) => {
+    if (error) { showToast(t('err_generic'), 'error'); return; }
+    loadAerzte();
+    showToast('Aktualisiert.');
+  });
+}
+
+async function openRezeptModal(phone, leadId) {
+  document.getElementById('rezPatientId').value = leadId || '';
+  document.getElementById('rezArztName').value = '';
+  document.getElementById('rezArztNummer').value = '';
+  document.getElementById('rezDatum').value = '';
+  document.getElementById('rezDiagnose').value = '';
+  document.getElementById('rezSitzungen').value = '10';
+  document.getElementById('rezHausbesuch').checked = false;
+  document.getElementById('rezBefund').value = '';
+  if (leadId) {
+    const { data } = await supabase.from('leads').select('title,arzt_id,hausbesuch').eq('id', leadId).single();
+    if (data?.arzt_id) {
+      const { data: arzt } = await supabase.from('aerzte').select('name,arzt_nummer').eq('id', data.arzt_id).single();
+      if (arzt) {
+        document.getElementById('rezArztName').value = arzt.name || '';
+        document.getElementById('rezArztNummer').value = arzt.arzt_nummer || '';
+      }
+    }
+    if (data?.hausbesuch) document.getElementById('rezHausbesuch').checked = true;
+  }
+  openModal('rezeptModal');
+}
+
+async function saveRezept() {
+  const ownerId = getOwnerId();
+  const patientId = document.getElementById('rezPatientId').value;
+  if (!patientId) { showToast('Kein Patient ausgewählt.', 'error'); return; }
+  const payload = {
+    ownerId,
+    patientId,
+    arztName: document.getElementById('rezArztName').value.trim(),
+    arztNummer: document.getElementById('rezArztNummer').value.trim(),
+    rezeptDatum: document.getElementById('rezDatum').value,
+    diagnose: document.getElementById('rezDiagnose').value.trim(),
+    sitzungen: parseInt(document.getElementById('rezSitzungen').value) || 10,
+    hausbesuch: document.getElementById('rezHausbesuch').checked,
+    befund: document.getElementById('rezBefund').value.trim()
+  };
+  try {
+    const res = await fetch('https://n8n.infinitymade.de/api/rezept/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Speichern fehlgeschlagen');
+    closeModal('rezeptModal');
+    showToast('Rezept gespeichert.');
+  } catch (e) {
+    showToast('Fehler: ' + e.message, 'error');
+  }
+}
+
 async function init() {
   try {
     console.log('[init] start');
@@ -4891,6 +5109,9 @@ async function init() {
     console.log('[init] invoices ok');
     bindAnamneseEvents();
     console.log('[init] anamnese ok');
+    document.getElementById('aeAddBtn')?.addEventListener('click', addAerzte);
+    document.getElementById('rezSaveBtn')?.addEventListener('click', saveRezept);
+    if (activePanel==='settings') await loadAerzte();
     const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
     if (currentSession?.user?.id === ADMIN_UUID && adminLink) adminLink.style.display = '';

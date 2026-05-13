@@ -770,6 +770,7 @@ app.post('/api/booking/batch-create', async (req, res) => {
         customer_phone: customerPhone || null,
         customer_email: 'manual@booking.com',
         notes: notes || null,
+        hausbesuch: req.body.hausbesuch || false,
         status: 'confirmed'
       }).select().single();
 

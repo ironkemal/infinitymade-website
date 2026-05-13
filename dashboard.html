@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513m" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513n" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -241,21 +241,14 @@
               </div>
             </div>
             <div id="srvPhysioFields" hidden>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label">5-Min Einheitspreis (&euro;)</label>
-                  <input class="form-input" id="srvUnitPrice" type="number" min="0" step="0.5" value="10" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label" data-i18n="lbl_srv_color">Farbe</label>
-                  <input class="form-input" id="srvPhysioColor" type="color" value="#22c55e" style="height:38px;padding:2px 4px;" />
-                </div>
+              <div class="form-group">
+                <label class="form-label">5-Min Einheitspreis (&euro;)</label>
+                <input class="form-input" id="srvUnitPrice" type="number" min="0" step="0.5" value="10" />
               </div>
               <div class="srv-duration-grid" id="srvPhysioCards"></div>
             </div>
             <div id="srvStandardColorRow" class="form-group" hidden>
-              <label class="form-label" data-i18n="lbl_srv_color">Farbe</label>
-              <input class="form-input" id="srvColor" type="color" value="#22c55e" style="height:38px;padding:2px 4px;" />
+              <input type="hidden" id="srvColor" value="#22c55e" />
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_srv_emps">Mitarbeiter</label>
@@ -1794,6 +1787,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513w"></script>
+  <script type="module" src="dashboard.js?v=20260513x"></script>
 </body>
 </html>
