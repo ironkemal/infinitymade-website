@@ -1391,8 +1391,30 @@ function openBookingModal(b) {
   document.getElementById('bkCustomer').value = b.customer_name||'';
   document.getElementById('bkPhone').value    = b.customer_phone||'';
   document.getElementById('bkNotes').value    = b.notes||'';
+  document.getElementById('bkHausbesuch').checked = b.hausbesuch || false;
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
+  document.getElementById('bkSpecialBanner').hidden = true;
+  document.getElementById('bkDocAssignHint').hidden = true;
+  if (b.customer_phone) {
+    try {
+      const { data: lead } = await supabase.from('leads')
+        .select('besondere_wuensche,geschlecht,hausbesuch')
+        .eq('owner_id', ownerId)
+        .eq('phone', b.customer_phone)
+        .maybeSingle();
+      if (lead?.besondere_wuensche) {
+        const sb = document.getElementById('bkSpecialBanner');
+        sb.textContent = 'Besondere Wünsche: ' + lead.besondere_wuensche;
+        sb.hidden = false;
+      }
+      if (lead?.besondere_wuensche?.toLowerCase().includes('frau') || lead?.geschlecht === 'weiblich') {
+        const dh = document.getElementById('bkDocAssignHint');
+        dh.textContent = 'Patient wünscht weiblichen Therapeuten.';
+        dh.hidden = false;
+      }
+    } catch (_) {}
+  }
   populateEmpSelects(b.user_id);
   populateSrvSelect(b.service_id);
   openModal('bookingModal');
