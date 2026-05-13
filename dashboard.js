@@ -1192,9 +1192,54 @@ function prefillBookingModal(startStr, endStr) {
   document.getElementById('bkCustomer').value = '';
   document.getElementById('bkPhone').value    = '';
   document.getElementById('bkNotes').value    = '';
+  document.getElementById('bkSeriesToggle').checked = false;
+  document.getElementById('bkSeriesFields').hidden = true;
   populateEmpSelects();
   populateSrvSelect();
   openModal('bookingModal');
+}
+
+function computeSeriesPreview() {
+  const startV = document.getElementById('bkStart').value;
+  const count  = parseInt(document.getElementById('bkSeriesCount').value) || 0;
+  const rec    = document.getElementById('bkSeriesRecurrence').value;
+  if (!startV || count < 1) return [];
+  const dateStr = startV.substring(0, 10);
+  const timeStr = startV.substring(11, 16);
+  const step = rec === 'daily' ? 1 : (rec === 'biweekly' ? 14 : 7);
+  const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
+  const wdSet = new Set(checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()]);
+  const result = [];
+  let current = dateStr;
+  function addDays(ds, days) {
+    const d = new Date(ds + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().substring(0, 10);
+  }
+  function dayOfWeek(ds) {
+    const probe = new Date(ds + 'T12:00:00Z');
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', weekday: 'short' }).format(probe);
+  }
+  const wdMap = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
+  while (result.length < count) {
+    Array.from(wdSet).sort().forEach(d => {
+      if (result.length >= count) return;
+      const candidate = addDays(current, d);
+      if (wdMap[dayOfWeek(candidate)] === d) result.push(candidate);
+    });
+    current = addDays(current, step);
+  }
+  return result;
+}
+
+function updateBkSeriesPreview() {
+  const dates = computeSeriesPreview();
+  const el = document.getElementById('bkSeriesPreview');
+  if (!el) return;
+  if (dates.length === 0) { el.textContent = ''; return; }
+  const fmt = dates.map(d => new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+  const show = fmt.slice(0, 5).join(' · ');
+  el.textContent = dates.length > 5 ? `${show} · … (${dates.length} Termine)` : `${show} (${dates.length} Termine)`;
 }
 
 function openBookingModal(b) {
@@ -1208,6 +1253,8 @@ function openBookingModal(b) {
   document.getElementById('bkCustomer').value = b.customer_name||'';
   document.getElementById('bkPhone').value    = b.customer_phone||'';
   document.getElementById('bkNotes').value    = b.notes||'';
+  document.getElementById('bkSeriesToggle').checked = false;
+  document.getElementById('bkSeriesFields').hidden = true;
   populateEmpSelects(b.user_id);
   populateSrvSelect(b.service_id);
   openModal('bookingModal');
@@ -1317,6 +1364,48 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const notes   = document.getElementById('bkNotes').value.trim();
   if (!startV||!cust) { showToast(t('err_generic'),'error'); return; }
 
+  const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
+  if (isSeries) {
+    const dateStr = startV.substring(0, 10);
+    const timeStr = startV.substring(11, 16);
+    const count   = parseInt(document.getElementById('bkSeriesCount').value) || 8;
+    const rec     = document.getElementById('bkSeriesRecurrence').value;
+    const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
+    const durMin  = endV ? Math.round((new Date(endV) - new Date(startV)) / 60000) : 30;
+    const payload = {
+      userId: empId,
+      ownerId: getOwnerId(),
+      serviceId: srvId,
+      startDate: dateStr,
+      time: timeStr,
+      recurrence: rec,
+      weekdays: checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()],
+      count: count,
+      customerName: cust,
+      customerPhone: phone || null,
+      notes: notes || null,
+      duration: durMin
+    };
+    const res = await fetch('https://n8n.infinitymade.de/api/booking/batch-create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) { showToast('Fehler beim Erstellen der Serientermine.', 'error'); return; }
+    const data = await res.json();
+    const created = data.created || [];
+    const conflicts = data.conflicts || [];
+    closeModal('bookingModal');
+    if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
+    if (activePanel === 'overview') await loadTodayBookings();
+    if (conflicts.length > 0) {
+      showToast(`${created.length} Termine erstellt, ${conflicts.length} übersprungen (Konflikt).`);
+    } else {
+      showToast(`${created.length} Termine erstellt.`);
+    }
+    return;
+  }
+
   const payload = {
     owner_id:getOwnerId(),user_id:empId,
     service_id:srvId||null,
@@ -1343,6 +1432,28 @@ document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   if (activePanel==='overview') await loadTodayBookings();
   showToast(t('saved'));
 });
+
+(function bindSeriesEvents() {
+  const toggle = document.getElementById('bkSeriesToggle');
+  const fields = document.getElementById('bkSeriesFields');
+  const countEl = document.getElementById('bkSeriesCount');
+  const recEl = document.getElementById('bkSeriesRecurrence');
+  const wdWrap = document.getElementById('bkSeriesWeekdayWrap');
+  const startEl = document.getElementById('bkStart');
+  if (toggle) toggle.onchange = () => {
+    fields.hidden = !toggle.checked;
+    if (toggle.checked) updateBkSeriesPreview();
+  };
+  if (countEl) countEl.oninput = updateBkSeriesPreview;
+  if (recEl) recEl.onchange = () => {
+    wdWrap.hidden = recEl.value === 'daily';
+    updateBkSeriesPreview();
+  };
+  if (startEl) startEl.onchange = updateBkSeriesPreview;
+  document.querySelectorAll('#bkSeriesWeekdays input').forEach(cb => {
+    cb.onchange = updateBkSeriesPreview;
+  });
+})();
 
 document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const empId  = document.getElementById('leaveEmployee').value;
