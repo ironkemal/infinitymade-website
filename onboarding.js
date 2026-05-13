@@ -443,14 +443,31 @@ function bindServices() {
           if (delSvc) throw delSvc;
         }
 
-        const svcInserts = items.map(s => ({
-          user_id: userId,
-          owner_id: userId,
-          title: s.name,
-          duration_minutes: s.duration_minutes,
-          price: s.price_eur,
-          is_online_meeting: false,
-        }));
+        const isPhysio = profile.sector === 'physiotherapy';
+        const svcInserts = items.map(s => {
+          if (isPhysio) {
+            const dur = s.duration_minutes || 30;
+            const price = s.price_eur || 0;
+            const unitPrice = dur > 0 && price > 0 ? Math.round((price / (dur / 5)) * 100) / 100 : 10;
+            return {
+              user_id: userId,
+              owner_id: userId,
+              title: s.name,
+              price_config: { unit_price: unitPrice, durations: { [dur]: { active: true, price } } },
+              duration_minutes: null,
+              price: null,
+              is_online_meeting: false,
+            };
+          }
+          return {
+            user_id: userId,
+            owner_id: userId,
+            title: s.name,
+            duration_minutes: s.duration_minutes,
+            price: s.price_eur,
+            is_online_meeting: false,
+          };
+        });
         const { data: inserted, error: svcErr } = await supabase.from('services').insert(svcInserts).select();
         if (svcErr) throw svcErr;
 
