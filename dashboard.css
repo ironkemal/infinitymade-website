@@ -2564,13 +2564,14 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 @media print {
   .sidebar, .topbar, .panel-header, #invNewBtn, .panel-actions,
   #invSaveBtn, #invCancelBtn, #invAddLineBtn, .inv-del-line,
-  .hamburger, .logout-btn, .lang-select, .topbar-admin-link { display: none !important; }
+  #anamSaveBtn, #anamPdfBtn, .hamburger, .logout-btn, .lang-select, .topbar-admin-link { display: none !important; }
   #app { display: block !important; }
   .dashboard-layout { display: block !important; }
   .panel { display: none !important; }
   #panel-rechnungen { display: block !important; position: static !important; }
   #invEditor { display: block !important; }
   #invListWrap { display: none !important; }
+  #panel-anamnese { display: block !important; position: static !important; }
   body { background: #fff !important; color: #000 !important; }
   .card { background: #fff !important; border: 1px solid #ddd !important; color: #000 !important; }
   .data-table th, .data-table td { color: #000 !important; border-color: #ccc !important; }

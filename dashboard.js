@@ -8,7 +8,7 @@ const API = 'https://n8n.infinitymade.de/api';
 const T = {
   de: {
     logout:'Abmelden',
-    nav_overview:'Übersicht',nav_calendar:'Kalender',nav_kunden:'Kunden Info',
+    nav_overview:'Übersicht',nav_calendar:'Termine',nav_kunden:'Kunden Info',
     nav_services:'Dienstleistungen',nav_hours:'Arbeitszeiten',
     nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Rechnungen',nav_feedback:'Feedback',nav_settings:'Einstellungen',
     overview_sub:'Ihr heutiger Überblick',
@@ -16,7 +16,7 @@ const T = {
     kpi_plan:'Paket',kpi_status:'Status',kpi_today_bookings:'Heute',kpi_today_sub:'Termine',kpi_support:'Support',
     status_active:'✓ Aktiv',status_inactive:'✗ Inaktiv',
     today_bookings:'Heutige Termine',upcoming_empty:'Heute keine Termine.',features_title:'Paketinhalt',
-    calendar_sub:'Klicken Sie auf einen Tag für Slots',
+    calendar_sub:'Termine verwalten & buchen',
     btn_add_leave:'Abwesenheit eintragen',btn_add_booking:'+ Termin',
     kunden_sub:'Leads & Kundeninformationen',leads_import:'CSV importieren',leads_add:'+ Neuer Lead',
     apify_label:'Google Maps Scraper:',apify_run:'Suchen',
@@ -63,7 +63,7 @@ const T = {
   },
   en: {
     logout:'Sign out',
-    nav_overview:'Overview',nav_calendar:'Calendar',nav_kunden:'Customers',
+    nav_overview:'Overview',nav_calendar:'Appointments',nav_kunden:'Customers',
     nav_services:'Services',nav_hours:'Working Hours',
     nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Invoices',nav_feedback:'Feedback',nav_settings:'Settings',
     overview_sub:'Your daily overview',
@@ -71,7 +71,7 @@ const T = {
     kpi_plan:'Plan',kpi_status:'Status',kpi_today_bookings:'Today',kpi_today_sub:'Appointments',kpi_support:'Support',
     status_active:'✓ Active',status_inactive:'✗ Inactive',
     today_bookings:"Today's Appointments",upcoming_empty:'No appointments today.',features_title:"Plan contents",
-    calendar_sub:'Click a day to see slots',btn_add_leave:'Add time off',btn_add_booking:'+ Appointment',
+    calendar_sub:'Manage & book appointments',btn_add_leave:'Add time off',btn_add_booking:'+ Appointment',
     kunden_sub:'Leads & customer info',leads_import:'Import CSV',leads_add:'+ New lead',
     apify_label:'Google Maps Scraper:',apify_run:'Search',
     lf_all:'All',lf_new:'New',lf_contacted:'Contacted',lf_booked:'Booked',lf_won:'Won',lf_lost:'Lost',
@@ -116,7 +116,7 @@ const T = {
   },
   tr: {
     logout:'Çıkış',
-    nav_overview:'Genel Bakış',nav_calendar:'Takvim',nav_kunden:'Müşteri Bilgisi',
+    nav_overview:'Genel Bakış',nav_calendar:'Randevular',nav_kunden:'Müşteri Bilgisi',
     nav_services:'Hizmetler',nav_hours:'Çalışma Saatleri',
     nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Faturalar',nav_feedback:'Geri Bildirim',nav_settings:'Ayarlar',
     overview_sub:'Günlük genel bakışınız',
@@ -124,7 +124,7 @@ const T = {
     kpi_plan:'Paket',kpi_status:'Durum',kpi_today_bookings:'Bugün',kpi_today_sub:'Randevu',kpi_support:'Destek',
     status_active:'✓ Aktif',status_inactive:'✗ Pasif',
     today_bookings:'Bugünkü randevularınız',upcoming_empty:'Bugün randevu yok.',features_title:'Paket içeriği',
-    calendar_sub:'Slot görmek için bir güne tıklayın',btn_add_leave:'İzin ekle',btn_add_booking:'+ Randevu',
+    calendar_sub:'Randevu yönetimi',btn_add_leave:'İzin ekle',btn_add_booking:'+ Randevu',
     kunden_sub:'Lead & müşteri bilgileri',leads_import:'CSV içe aktar',leads_add:'+ Yeni Lead',
     apify_label:'Google Maps Scraper:',apify_run:'Ara',
     lf_all:'Tümü',lf_new:'Yeni',lf_contacted:'İletişim kuruldu',lf_booked:'Randevu',lf_won:'Kazanıldı',lf_lost:'Kaybedildi',
@@ -255,7 +255,7 @@ let calendar = null;
 let selectedEmployeeId = null;
 let ownerServices = [];
 let activePanel = 'overview';
-let calendarView = 'month';
+let calendarView = 'day';
 let dayViewDate = new Date();
 let moveBooking = null;
 let moveGhostEl = null;
@@ -380,10 +380,9 @@ async function switchPanel(id) {
   await renderSidebar();
   closeSidebar();
   if (id==='calendar'){
-    if(!calendar) await initCalendar(); else calendar.reloadMonth();
     showMyBookingLink();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
-    if (calendarView==='day') renderDayView(toISODate(dayViewDate));
+    setCalendarView('day');
   }
   if (id==='kunden') loadLeads();
   if (id==='services') loadServices();
@@ -3926,22 +3925,43 @@ async function loadAnamnese() {
   resetAnamneseForm();
 }
 
+function getAnamChecks(containerId) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return [];
+  return Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+}
+
+function setAnamChecks(containerId, dbString, otherInputId) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+  if (!dbString) { if (otherInputId) document.getElementById(otherInputId).value = ''; return; }
+  const items = dbString.split(',').map(s => s.trim()).filter(Boolean);
+  const known = Array.from(wrap.querySelectorAll('input[type="checkbox"]')).map(cb => cb.value);
+  const unmatched = [];
+  items.forEach(item => {
+    const cb = wrap.querySelector(`input[value="${item}"]`);
+    if (cb) cb.checked = true;
+    else unmatched.push(item);
+  });
+  if (otherInputId) document.getElementById(otherInputId).value = unmatched.join(', ');
+}
+
+function syncAnamTextarea(containerId, otherInputId, textareaId) {
+  const vals = getAnamChecks(containerId);
+  const other = document.getElementById(otherInputId)?.value.trim();
+  if (other) vals.push(other);
+  const ta = document.getElementById(textareaId);
+  if (ta) ta.value = vals.join(', ');
+}
+
 function resetAnamneseForm() {
   currentAnamneseId = null;
   document.getElementById('anamAufnahme').value = new Date().toISOString().substring(0, 10);
-  document.getElementById('anamHauptbeschwerde').value = '';
   document.getElementById('anamBeschwerdeSeit').value = '';
-  document.getElementById('anamVerlauf').value = '';
-  document.getElementById('anamSchmerzSkala').value = '';
-  document.getElementById('anamSchmerzArt').value = '';
-  document.getElementById('anamVorerkrankungen').value = '';
-  document.getElementById('anamOperationen').value = '';
-  document.getElementById('anamMedikamente').value = '';
-  document.getElementById('anamAllergien').value = '';
-  document.getElementById('anamBeruf').value = '';
-  document.getElementById('anamSport').value = '';
+  document.getElementById('anamSchmerzSkala').value = '0';
+  document.getElementById('anamSkalaVal').textContent = '0';
   document.getElementById('anamRaucher').checked = false;
-  document.getElementById('anamDiagnose').value = '';
   document.getElementById('anamArztName').value = '';
   document.getElementById('anamArztNummer').value = '';
   document.getElementById('anamRezeptSitzungen').value = '';
@@ -3950,6 +3970,31 @@ function resetAnamneseForm() {
   document.getElementById('anamNotizen').value = '';
   document.getElementById('anamSaveBtn').textContent = 'Speichern';
   document.getElementById('anamPdfBtn').hidden = true;
+
+  const clearAll = [
+    ['anamChkBeschwerden','anamBeschwerdenOther','anamHauptbeschwerde'],
+    ['anamChkVorerkrankungen','anamVorerkrankungenOther','anamVorerkrankungen'],
+    ['anamChkOperationen','anamOperationenOther','anamOperationen'],
+    ['anamChkMedikamente','anamMedikamenteOther','anamMedikamente'],
+    ['anamChkAllergien','anamAllergienOther','anamAllergien'],
+    ['anamChkBeruf','anamBerufOther','anamBeruf'],
+    ['anamChkSport','anamSportOther','anamSport'],
+    ['anamChkDiagnose','anamDiagnoseOther','anamDiagnose'],
+  ];
+  clearAll.forEach(([cId, oId, tId]) => {
+    const wrap = document.getElementById(cId);
+    if (wrap) wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    const other = document.getElementById(oId);
+    if (other) other.value = '';
+    const ta = document.getElementById(tId);
+    if (ta) ta.value = '';
+  });
+
+  const verlaufRadios = document.querySelectorAll('input[name="anamVerlauf"]');
+  verlaufRadios.forEach(r => r.checked = false);
+  const schmerzRadios = document.querySelectorAll('input[name="anamSchmerzArt"]');
+  schmerzRadios.forEach(r => r.checked = false);
+  document.getElementById('anamSchmerzArtOther').value = '';
 }
 
 async function fillAnamneseForm(patientId) {
@@ -3965,19 +4010,10 @@ async function fillAnamneseForm(patientId) {
   if (!data) { resetAnamneseForm(); return; }
   currentAnamneseId = data.id;
   document.getElementById('anamAufnahme').value = data.aufnahmedatum || new Date().toISOString().substring(0, 10);
-  document.getElementById('anamHauptbeschwerde').value = data.hauptbeschwerde || '';
   document.getElementById('anamBeschwerdeSeit').value = data.beschwerde_seit || '';
-  document.getElementById('anamVerlauf').value = data.beschwerde_verlauf || '';
-  document.getElementById('anamSchmerzSkala').value = data.schmerz_skala != null ? String(data.schmerz_skala) : '';
-  document.getElementById('anamSchmerzArt').value = data.schmerz_art || '';
-  document.getElementById('anamVorerkrankungen').value = data.vorerkrankungen || '';
-  document.getElementById('anamOperationen').value = data.operationen || '';
-  document.getElementById('anamMedikamente').value = data.medikamente || '';
-  document.getElementById('anamAllergien').value = data.allergien || '';
-  document.getElementById('anamBeruf').value = data.beruf || '';
-  document.getElementById('anamSport').value = data.sport || '';
+  document.getElementById('anamSchmerzSkala').value = data.schmerz_skala != null ? String(data.schmerz_skala) : '0';
+  document.getElementById('anamSkalaVal').textContent = data.schmerz_skala != null ? String(data.schmerz_skala) : '0';
   document.getElementById('anamRaucher').checked = data.raucher === true;
-  document.getElementById('anamDiagnose').value = data.diagnose || '';
   document.getElementById('anamArztName').value = data.arzt_name || '';
   document.getElementById('anamArztNummer').value = data.arzt_nummer || '';
   document.getElementById('anamRezeptSitzungen').value = data.rezept_sitzungen != null ? String(data.rezept_sitzungen) : '';
@@ -3986,21 +4022,54 @@ async function fillAnamneseForm(patientId) {
   document.getElementById('anamNotizen').value = data.notizen || '';
   document.getElementById('anamSaveBtn').textContent = 'Aktualisieren';
   document.getElementById('anamPdfBtn').hidden = false;
+
+  setAnamChecks('anamChkBeschwerden', data.hauptbeschwerde, 'anamBeschwerdenOther');
+  syncAnamTextarea('anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde');
+  setAnamChecks('anamChkVorerkrankungen', data.vorerkrankungen, 'anamVorerkrankungenOther');
+  syncAnamTextarea('anamChkVorerkrankungen', 'anamVorerkrankungenOther', 'anamVorerkrankungen');
+  setAnamChecks('anamChkOperationen', data.operationen, 'anamOperationenOther');
+  syncAnamTextarea('anamChkOperationen', 'anamOperationenOther', 'anamOperationen');
+  setAnamChecks('anamChkMedikamente', data.medikamente, 'anamMedikamenteOther');
+  syncAnamTextarea('anamChkMedikamente', 'anamMedikamenteOther', 'anamMedikamente');
+  setAnamChecks('anamChkAllergien', data.allergien, 'anamAllergienOther');
+  syncAnamTextarea('anamChkAllergien', 'anamAllergienOther', 'anamAllergien');
+  setAnamChecks('anamChkBeruf', data.beruf, 'anamBerufOther');
+  syncAnamTextarea('anamChkBeruf', 'anamBerufOther', 'anamBeruf');
+  setAnamChecks('anamChkSport', data.sport, 'anamSportOther');
+  syncAnamTextarea('anamChkSport', 'anamSportOther', 'anamSport');
+  setAnamChecks('anamChkDiagnose', data.diagnose, 'anamDiagnoseOther');
+  syncAnamTextarea('anamChkDiagnose', 'anamDiagnoseOther', 'anamDiagnose');
+
+  document.querySelectorAll('input[name="anamVerlauf"]').forEach(r => { r.checked = r.value === (data.beschwerde_verlauf || ''); });
+  document.querySelectorAll('input[name="anamSchmerzArt"]').forEach(r => { r.checked = r.value === (data.schmerz_art || ''); });
+  const schmerzAndere = document.querySelector('input[name="anamSchmerzArt"][value="andere"]');
+  if (schmerzAndere && !schmerzAndere.checked) {
+    const knownSchmerz = ['stechend','dumpf','brennend','ziehend','krampfartig','pulsierend'];
+    if (data.schmerz_art && !knownSchmerz.includes(data.schmerz_art)) {
+      document.getElementById('anamSchmerzArtOther').value = data.schmerz_art;
+      schmerzAndere.checked = true;
+    }
+  }
 }
 
 async function saveAnamnese() {
   const patientId = document.getElementById('anamPatientSelect').value;
   if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
   const ownerId = getOwnerId();
+
+  const getRadio = (name) => { const r = document.querySelector(`input[name="${name}"]:checked`); return r ? r.value : null; };
+  let schmerzArt = getRadio('anamSchmerzArt');
+  if (schmerzArt === 'andere') schmerzArt = document.getElementById('anamSchmerzArtOther').value.trim() || null;
+
   const payload = {
     owner_id: ownerId,
     patient_id: patientId,
     aufnahmedatum: document.getElementById('anamAufnahme').value || null,
     hauptbeschwerde: document.getElementById('anamHauptbeschwerde').value.trim() || null,
     beschwerde_seit: document.getElementById('anamBeschwerdeSeit').value.trim() || null,
-    beschwerde_verlauf: document.getElementById('anamVerlauf').value || null,
+    beschwerde_verlauf: getRadio('anamVerlauf'),
     schmerz_skala: document.getElementById('anamSchmerzSkala').value !== '' ? parseInt(document.getElementById('anamSchmerzSkala').value, 10) : null,
-    schmerz_art: document.getElementById('anamSchmerzArt').value.trim() || null,
+    schmerz_art: schmerzArt,
     vorerkrankungen: document.getElementById('anamVorerkrankungen').value.trim() || null,
     operationen: document.getElementById('anamOperationen').value.trim() || null,
     medikamente: document.getElementById('anamMedikamente').value.trim() || null,
@@ -4036,6 +4105,31 @@ function bindAnamneseEvents() {
   if (saveBtn) saveBtn.onclick = saveAnamnese;
   const pdfBtn = document.getElementById('anamPdfBtn');
   if (pdfBtn) pdfBtn.onclick = () => window.print();
+
+  const slider = document.getElementById('anamSchmerzSkala');
+  const skalaVal = document.getElementById('anamSkalaVal');
+  if (slider && skalaVal) {
+    slider.oninput = () => { skalaVal.textContent = slider.value; };
+  }
+
+  const syncPairs = [
+    ['anamChkBeschwerden','anamBeschwerdenOther','anamHauptbeschwerde'],
+    ['anamChkVorerkrankungen','anamVorerkrankungenOther','anamVorerkrankungen'],
+    ['anamChkOperationen','anamOperationenOther','anamOperationen'],
+    ['anamChkMedikamente','anamMedikamenteOther','anamMedikamente'],
+    ['anamChkAllergien','anamAllergienOther','anamAllergien'],
+    ['anamChkBeruf','anamBerufOther','anamBeruf'],
+    ['anamChkSport','anamSportOther','anamSport'],
+    ['anamChkDiagnose','anamDiagnoseOther','anamDiagnose'],
+  ];
+  syncPairs.forEach(([cId, oId, tId]) => {
+    const wrap = document.getElementById(cId);
+    const other = document.getElementById(oId);
+    if (wrap) wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.onchange = () => syncAnamTextarea(cId, oId, tId);
+    });
+    if (other) other.oninput = () => syncAnamTextarea(cId, oId, tId);
+  });
 }
 
 function bindInvEvents() {
