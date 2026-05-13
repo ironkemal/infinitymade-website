@@ -1192,6 +1192,22 @@
                 </div>
               </div>
             </div>
+
+            <div class="settings-section" id="aerzteSection">
+              <div class="settings-section-title">Ärzte</div>
+              <div class="settings-section-body">
+                <div id="aerzteList" style="margin-bottom:12px;"></div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <input class="form-input" id="aeName" type="text" placeholder="Arztname" />
+                  </div>
+                  <div class="form-group">
+                    <input class="form-input" id="aeNummer" type="text" placeholder="Telefon / Fax" />
+                  </div>
+                </div>
+                <button class="btn-primary" id="aeAddBtn">Hinzufügen</button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1226,6 +1242,8 @@
             <input class="form-input" id="bkEnd" type="datetime-local" />
           </div>
         </div>
+        <div id="bkSpecialBanner" class="bk-special-banner" hidden></div>
+        <div id="bkDocAssignHint" class="bk-doc-hint" hidden></div>
         <div class="form-group" id="bkCustomerGroup">
           <label class="form-label" data-i18n="lbl_manual_cust">Kundenname</label>
           <div class="patient-search-wrap" id="bkCustomerWrap">
@@ -1241,6 +1259,11 @@
           <label class="form-label" data-i18n="lead_phone">Telefon</label>
           <input class="form-input" id="bkPhone" type="tel" />
           <div id="bkWaHint" class="bk-wa-hint" hidden></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="bkHausbesuch" /> Hausbesuch
+          </label>
         </div>
         <div class="form-group">
           <label class="form-label" data-i18n="lead_notes">Notizen</label>
@@ -1295,6 +1318,56 @@
     </div>
   </div>
 
+  <!-- ===== MODAL: REZEPT ===== -->
+  <div class="modal-overlay" id="rezeptModal" hidden>
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title">Rezept hinzufügen</span>
+        <button class="modal-close" data-modal="rezeptModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="rzPatientId" />
+        <div class="form-group">
+          <label class="form-label">Arztname</label>
+          <input class="form-input" id="rzArztName" type="text" placeholder="Name der Praxis / Arzt" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Arzt-Nummer</label>
+            <input class="form-input" id="rzArztNummer" type="text" placeholder="Telefon / Fax" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rezeptdatum</label>
+            <input class="form-input" id="rzDatum" type="date" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Diagnose / ICD-Code</label>
+          <input class="form-input" id="rzDiagnose" type="text" placeholder="z. B. Lumbalgie, M54.5" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Anzahl Sitzungen</label>
+            <input class="form-input" id="rzSitzungen" type="number" min="1" placeholder="6" />
+          </div>
+          <div class="form-group" style="align-self:end;">
+            <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="rzHausbesuch" /> Hausbesuch
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Befund</label>
+          <textarea class="form-textarea" id="rzBefund" rows="3" placeholder="Befundbeschreibung…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="rezeptModal">Abbrechen</button>
+        <button class="btn-primary" id="rzSaveBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== MODAL: ABWESENHEIT ===== -->
   <div class="modal-overlay" id="leaveModal" hidden>
     <div class="modal">
@@ -1341,6 +1414,8 @@
           <button class="pd-tab active" data-tab="notes">Notizen</button>
           <button class="pd-tab" data-tab="anamnese">Anamnese</button>
           <button class="pd-tab" data-tab="ueberweisung">Überweisung</button>
+          <button class="pd-tab" data-tab="rechnungen">Rechnungen</button>
+          <button class="pd-tab" data-tab="termine">Termine</button>
           <button class="pd-tab" data-tab="mail">Mail</button>
         </div>
         <div class="pd-content">
@@ -1353,9 +1428,21 @@
             <div id="pdAnamContent"></div>
           </div>
           <div class="pd-panel" id="pdPanelUeberweisung">
+            <div style="padding:12px 20px;border-bottom:1px solid var(--border);">
+              <button class="btn-primary" id="pdUeberAddBtn" style="width:100%;justify-content:center;">📷 Überweisung fotografieren</button>
+              <input type="file" id="pdUeberFileInput" accept="image/*" capture="environment" hidden />
+            </div>
             <div id="pdUeberContent">
               <div class="pd-empty">Noch keine Überweisung eingetragen.</div>
             </div>
+          </div>
+          <div class="pd-panel" id="pdPanelRechnungen">
+            <div class="pd-loading" id="pdRechLoading"><div class="spinner-sm"></div></div>
+            <div id="pdRechContent"></div>
+          </div>
+          <div class="pd-panel" id="pdPanelTermine">
+            <div class="pd-loading" id="pdTermLoading"><div class="spinner-sm"></div></div>
+            <div id="pdTermContent"></div>
           </div>
           <div class="pd-panel" id="pdPanelMail">
             <div class="pd-loading" id="pdMailLoading"><div class="spinner-sm"></div></div>

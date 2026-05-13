@@ -2741,6 +2741,47 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   font-weight: 600;
 }
 
+.bk-home-icon {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 10px;
+  z-index: 2;
+}
+.bk-special-banner {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.bk-doc-hint {
+  background: #dbeafe;
+  border: 1px solid #3b82f6;
+  color: #1e40af;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.aerzte-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  background: var(--bg-card);
+  font-size: 13px;
+}
+.aerzte-row button {
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
 @media print {
   .sidebar, .topbar, .panel-header, #invNewBtn, .panel-actions,
   #invSaveBtn, #invCancelBtn, #invAddLineBtn, .inv-del-line,
