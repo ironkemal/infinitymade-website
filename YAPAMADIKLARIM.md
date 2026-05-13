@@ -150,3 +150,33 @@
 - `saveBooking`'te `bkDuration` gorunur ve doluysa o deger, degilse `duration_minutes || 30` kullaniliyor.
 
 **Dosyalar:** `dashboard.js`, `dashboard.html`
+
+---
+
+## 6. Booking Blok — Hausbesuch (🚗) Araba Simgesi Pozisyonu
+
+**Tarih:** 2026-05-13
+
+**Problem:** Hausbesuch (ev ziyareti) randevularinda booking blok'u uzerinde 🚗 simgesi yanlis yerde cikiyor. Metnin uzerine biniyor veya duzgun gorunmuyor.
+
+**Denenen cozumler:**
+1. `.bk-home-icon`'u `position: absolute; top: 2px; left: 2px` yaptim — simge sol ust kosede metnin uzerine bindi.
+2. `.bk-home-icon`'u inline (margin-right) yapp, metinden once ekledim — kullanici "hala duzgun gozukmuyor" dedi.
+3. `.bk-home-icon`'u tekrar `position: absolute; top: 3px; right: 4px` yapp, metinden sonra append ettim — kullanici yine memnun kalmadi.
+
+**Muhtemel sorunlar:**
+- `.dv-booking-block` yuksekligi cok kucuk oldugunda (ornegin 15dk'lik randevu) simge blok disina tasarabilir.
+- `overflow: hidden` oldugundan simge kesilebilir.
+- Font boyutu veya emoji render'i tarayiciya gore degisebilir.
+- Kullanici icin araba simgesinin yerinin tam olarak neresi oldugu belirsiz olabilir (ornegin booking basliginin basinda mi, sag ust kosede mi, ayri bir badge olarak mi).
+
+**Beklenen davranis:**
+- Hausbesuch randevularinda 🚗 simgesi, hasta ismiyle cakismadan, temiz ve anlasilir bir sekilde gorunmeli.
+- Muhtemelen sag ust kosede kucuk bir badge/rozet olarak veya booking blok'unun ustunde/yaninda ayri bir gosterge olarak.
+
+**Gereken gercek cozum:**
+- Kullanicinin istedigi gorsel yerlesimi netlestirmek (ekran goruntusu veya taslak).
+- Eger booking blok yuksekligi < 20px ise simgeyi gizlemek veya tooltip olarak gostermek.
+- Alternatif: `background-image` yerine border-left veya border-top ile renk kodlamasi yapmak (ornegin hausbesuch randevulari icin farkli border rengi).
+
+**Dosyalar:** `dashboard.js`, `dashboard.css`
