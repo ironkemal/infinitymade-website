@@ -146,9 +146,17 @@ async function loadServices(empId) {
 
   document.getElementById('srvList').innerHTML = data.map(d => {
     const s = d.services;
-    return `<button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${s.duration_minutes}" data-buf="${s.buffer_time || 0}">
+    // Check if service has multiple durations in price_config
+    const hasMultipleDurations = s.price_config?.durations && Object.keys(s.price_config.durations).length > 1;
+    // Get the first available duration as default, or use duration_minutes
+    const defaultDuration = hasMultipleDurations
+      ? Object.keys(s.price_config.durations).filter(k => s.price_config.durations[k].active)[0]
+      : s.duration_minutes;
+    const durationLabel = hasMultipleDurations ? 'Auswahl' : (defaultDuration ? defaultDuration + ' Min' : '');
+
+    return `<button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${defaultDuration || 30}" data-buf="${s.buffer_time || 0}" data-has-durations="${hasMultipleDurations}">
       <div class="list-btn-title">${s.title}</div>
-      <div class="list-btn-sub">${s.duration_minutes} Min${s.buffer_time ? ' + ' + s.buffer_time + ' Min Puffer' : ''}${s.price ? ' · ' + s.price : ''}</div>
+      <div class="list-btn-sub">${durationLabel}${s.buffer_time ? ' + ' + s.buffer_time + ' Min Puffer' : ''}${s.price ? ' · ' + s.price : ''}</div>
     </button>`;
   }).join('');
 
@@ -163,35 +171,42 @@ async function loadServices(empId) {
       state.selectedTime = null;
 
       // Check if service has multiple durations (physio)
-      const { data: srvData } = await supabase.from('services').select('price_config').eq('id', state.serviceId).single();
-      const durations = srvData?.price_config?.durations;
-      const durKeys = durations ? Object.keys(durations).filter(k => durations[k].active) : [];
+      // Use data attribute if available to avoid extra query
+      const hasDurations = btn.dataset.hasDurations === 'true';
+      let durations, durKeys;
 
-      if (durKeys.length > 0) {
-        // Show duration selection step
-        document.getElementById('durList').innerHTML = durKeys.map(k => `
-          <button class="list-btn dur-btn" data-dur="${k}">
-            <div class="list-btn-title">${k} Minuten</div>
-            <div class="list-btn-sub">${durations[k].price ? durations[k].price + ' €' : 'Preis nicht festgelegt'}</div>
-          </button>
-        `).join('');
-        document.querySelectorAll('.dur-btn').forEach(b => {
-          b.addEventListener('click', () => {
-            document.querySelectorAll('.dur-btn').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            state.durationMinutes = parseInt(b.dataset.dur);
-            updateSidebar();
-            mountBookingCalendar();
-            goStep('datetime');
-          });
-        });
-        goStep('duration');
+      if (hasDurations) {
+        // Already know it has durations, fetch price_config
+        const { data: srvData } = await supabase.from('services').select('price_config').eq('id', state.serviceId).single();
+        durations = srvData?.price_config?.durations;
+        durKeys = durations ? Object.keys(durations).filter(k => durations[k].active) : [];
       } else {
-        state.durationMinutes = parseInt(btn.dataset.dur);
+        // Single duration service - use button data
+        state.durationMinutes = parseInt(btn.dataset.dur) || 30;
         updateSidebar();
         mountBookingCalendar();
         goStep('datetime');
+        return;
       }
+
+      // Show duration selection step
+      document.getElementById('durList').innerHTML = durKeys.map(k => `
+        <button class="list-btn dur-btn" data-dur="${k}">
+          <div class="list-btn-title">${k} Minuten</div>
+          <div class="list-btn-sub">${durations[k].price ? durations[k].price + ' €' : 'Preis nicht festgelegt'}</div>
+        </button>
+      `).join('');
+      document.querySelectorAll('.dur-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.dur-btn').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          state.durationMinutes = parseInt(b.dataset.dur);
+          updateSidebar();
+          mountBookingCalendar();
+          goStep('datetime');
+        });
+      });
+      goStep('duration');
     });
   });
 }

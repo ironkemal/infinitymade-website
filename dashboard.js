@@ -1694,12 +1694,18 @@ document.getElementById('bkPhone').addEventListener('blur', async () => {
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   const empId = document.getElementById('bkEmployee').value;
-  const srvId = document.getElementById('bkService').value || null;
+  const srvId = document.getElementById('bkService').value;
   const startV = document.getElementById('bkStart').value;
   const cust = document.getElementById('bkCustomer').value.trim();
   const phone = document.getElementById('bkPhone').value.trim();
   const notes = document.getElementById('bkNotes').value.trim();
-  if (!startV || !cust) { showToast(t('err_generic'), 'error'); return; }
+
+  // Validation: Required fields
+  if (!empId) { showToast('Bitte einen Mitarbeiter auswählen.', 'error'); return; }
+  if (!srvId) { showToast('Bitte eine Dienstleistung auswählen.', 'error'); return; }
+  if (!startV) { showToast('Bitte Datum und Uhrzeit auswählen.', 'error'); return; }
+  if (!cust) { showToast('Bitte einen Kunden auswählen.', 'error'); return; }
+
   const isPhysio = getSector() === 'physiotherapy';
   const custId = document.getElementById('bkCustomerId').value.trim();
   if (isPhysio && !id && !custId) { showToast('Bitte einen Patienten aus der Liste auswählen.', 'error'); return; }
@@ -1762,7 +1768,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   const payload = {
     owner_id: getOwnerId(), user_id: empId,
-    service_id: srvId || null,
+    service_id: srvId,
     start_time: startIso,
     end_time: endIso,
     customer_name: cust, customer_email: '', customer_phone: phone || null,
