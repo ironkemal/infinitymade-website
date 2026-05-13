@@ -2797,6 +2797,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   color: var(--text-muted);
   margin-top: 4px;
 }
+.pd-rech-clickable {
+  transition: border-color 0.15s, background 0.15s;
+}
+.pd-rech-clickable:hover {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+}
 .pd-term-item {
   padding: 12px;
   border: 1px solid var(--border);

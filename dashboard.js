@@ -1839,7 +1839,7 @@ function renderLeads() {
   if (leadFilter!=='all') rows = rows.filter(r=>r.status===leadFilter);
   if (leadSearchVal) {
     const q = leadSearchVal.toLowerCase();
-    rows = rows.filter(r=>displayName(r).toLowerCase().includes(q)||(r.city||'').toLowerCase().includes(q)||(r.phone||'').toLowerCase().includes(q));
+    rows = rows.filter(r=>displayNameWithBirth(r).toLowerCase().includes(q)||(r.city||'').toLowerCase().includes(q)||(r.phone||'').toLowerCase().includes(q));
   }
   if (rows.length===0) { tbody.innerHTML=''; emptyEl.hidden=false; return; }
   emptyEl.hidden = true;
@@ -1847,8 +1847,9 @@ function renderLeads() {
     const meta = leadsMeta[r.phone_normalized]||{};
     const bkCount = meta.bookings?.length||0;
     const hasWa   = !!meta.wa;
+    const bd = leadBirthDate(r);
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
-      <td>${displayName(r)}</td>
+      <td>${displayName(r)}${bd ? ` <span style="color:var(--text-muted);font-size:12px;">· ${bd}</span>` : ''}</td>
       <td>${r.city||'—'}</td>
       <td>${r.phone||'—'}</td>
       <td>${r.total_score??r.rating??'—'}</td>
@@ -1953,19 +1954,25 @@ async function loadPatientDetailAnamnese(leadId) {
   }
 
   const fields = [
-    ['Grund der Behandlung', anam.reason],
-    ['Aktuelle Beschwerden', anam.current_symptoms],
-    ['Schmerzverlauf', anam.pain_history],
-    ['Frühere Behandlungen', anam.previous_treatments],
-    ['Allergien', anam.allergies],
-    ['Medikamente', anam.medications],
-    ['Operationen / Unfälle', anam.surgeries_accidents],
-    ['Beruf', anam.occupation],
-    ['Sport / Bewegung', anam.sport_exercise],
-    ['Lebensstil', anam.lifestyle],
-    ['Familiengeschichte', anam.family_history],
-    ['Röntgen / MRT vorhanden', anam.imaging_available],
-    ['Hausarzt', anam.hausarzt],
+    ['Hauptbeschwerde', anam.hauptbeschwerde],
+    ['Beschwerde seit', anam.beschwerde_seit],
+    ['Verlauf', anam.beschwerde_verlauf],
+    ['Schmerz-Skala (0–10)', anam.schmerz_skala != null ? String(anam.schmerz_skala) : ''],
+    ['Schmerzart', anam.schmerz_art],
+    ['Vorerkrankungen', anam.vorerkrankungen],
+    ['Operationen', anam.operationen],
+    ['Medikamente', anam.medikamente],
+    ['Allergien', anam.allergien],
+    ['Beruf', anam.beruf],
+    ['Sport / Bewegung', anam.sport],
+    ['Raucher', anam.raucher ? 'Ja' : 'Nein'],
+    ['Diagnose', anam.diagnose],
+    ['Arzt', anam.arzt_name],
+    ['Arzt-Nummer', anam.arzt_nummer],
+    ['Rezept-Sitzungen', anam.rezept_sitzungen != null ? String(anam.rezept_sitzungen) : ''],
+    ['Hausbesuch', anam.hausbesuch ? 'Ja' : 'Nein'],
+    ['Besondere Wünsche', anam.besondere_wuensche],
+    ['Notizen', anam.notizen],
     ['Erstellt am', anam.created_at ? fmtDate(anam.created_at) : ''],
     ['Erstellt von', creatorName],
   ];
@@ -5205,6 +5212,11 @@ async function init() {
     console.log('[init] anamnese ok');
     document.getElementById('aeAddBtn')?.addEventListener('click', addAerzte);
     document.getElementById('rzSaveBtn')?.addEventListener('click', saveRezept);
+    document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
+      const sel = document.getElementById('anamPatientSelect');
+      if (!sel || !sel.value) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
+      openRezeptModal(null, sel.value);
+    });
     if (activePanel==='settings') await loadAerzte();
     const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
