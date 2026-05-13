@@ -4040,43 +4040,56 @@ function bindInvEvents() {
     invLines.push({ title:'', quantity:1, unit_price:0 });
     renderInvLines(); calcInvTotals();
   };
+  let invBookingCache = [];
+
+  function syncInvLinesFromChecks() {
+    const wrap = document.getElementById('invBookingChecks');
+    if (!wrap) return;
+    const checked = Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked'));
+    invLines = checked.map(cb => ({
+      title: cb.dataset.svc || 'Leistung',
+      quantity: 1,
+      unit_price: parseFloat(cb.dataset.price)||0
+    }));
+    renderInvLines(); calcInvTotals();
+  }
+
   document.getElementById('invPatientSelect').onchange = async (e) => {
     invPatientId = e.target.value;
     const bookingWrap = document.getElementById('invBookingWrap');
-    const bookingSel = document.getElementById('invBookingSelect');
+    const checksWrap = document.getElementById('invBookingChecks');
     if (!invPatientId) {
       document.getElementById('invPatientInfo').textContent = '';
       bookingWrap.hidden = true;
+      invBookingCache = [];
       invLines = [];
       renderInvLines(); calcInvTotals();
       return;
     }
     const bookings = await loadPatientBookings(invPatientId);
+    invBookingCache = bookings;
     if (bookings.length > 0) {
       bookingWrap.hidden = false;
-      bookingSel.innerHTML = '<option value="">-- Termin auswählen --</option>' +
-        bookings.map(b => {
-          const dt = new Date(b.start_time).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-          const svc = b.services?.title || 'Leistung';
-          return `<option value="${b.id}" data-svc="${escapeHtml(svc)}" data-price="${parseFloat(b.services?.price)||0}">${dt} — ${escapeHtml(svc)}</option>`;
-        }).join('');
+      checksWrap.innerHTML = bookings.map(b => {
+        const dt = new Date(b.start_time).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        const svc = b.services?.title || 'Leistung';
+        const price = parseFloat(b.services?.price)||0;
+        const id = `invchk-${b.id}`;
+        return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer;">
+          <input type="checkbox" id="${id}" data-bid="${b.id}" data-svc="${escapeHtml(svc)}" data-price="${price}" />
+          <span>${dt} — <strong>${escapeHtml(svc)}</strong> ${price > 0 ? '— ' + formatEur(price) : ''}</span>
+        </label>`;
+      }).join('');
+      checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.onchange = syncInvLinesFromChecks;
+      });
       document.getElementById('invPatientInfo').textContent = `${bookings.length} Termin(e) gefunden.`;
     } else {
       bookingWrap.hidden = true;
-      bookingSel.innerHTML = '<option value="">-- Termin auswählen --</option>';
+      checksWrap.innerHTML = '';
       document.getElementById('invPatientInfo').textContent = 'Keine Termine gefunden.';
     }
     invLines = [];
-    renderInvLines(); calcInvTotals();
-  };
-  document.getElementById('invBookingSelect').onchange = (e) => {
-    const opt = e.target.options[e.target.selectedIndex];
-    if (!opt.value) { invLines = []; renderInvLines(); calcInvTotals(); return; }
-    invLines = [{
-      title: opt.dataset.svc || 'Leistung',
-      quantity: 1,
-      unit_price: parseFloat(opt.dataset.price)||0
-    }];
     renderInvLines(); calcInvTotals();
   };
   document.getElementById('invEigenPct').oninput = calcInvTotals;
