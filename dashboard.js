@@ -732,7 +732,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,color)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,color,code)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status','cancelled');
@@ -843,13 +843,9 @@ async function loadScheduleBookings(date) {
       block.style.background = color+'25';
       block.style.borderColor = color;
       block.style.color = '#fff';
-      block.textContent = b.customer_name || (b.services?.title) || 'Termin';
-      if (b.hausbesuch) {
-        const homeIcon = document.createElement('span');
-        homeIcon.className = 'bk-home-icon';
-        homeIcon.textContent = '🚗';
-        block.appendChild(homeIcon);
-      }
+      const svcCode2 = b.services?.code;
+      const label2 = b.customer_name || (b.services?.title) || 'Termin';
+      block.innerHTML = (b.hausbesuch ? '🚗 ' : '') + escapeHtml(label2) + (svcCode2 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode2)}</span>` : '');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);
@@ -936,7 +932,11 @@ async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
       })
     });
     const data = await res.json();
-    const slots = data.slots || [];
+    let slots = data.slots || [];
+    const today = new Date();
+    const offset = today.getTimezoneOffset();
+    const localIso = new Date(today.getTime() - offset * 60000).toISOString().substring(0,16);
+    slots = slots.filter(slot => `${dateStr}T${slot}` >= localIso);
     const slotItems = slots.map(slot => ({
       label: slot,
       onClick: () => {
@@ -963,7 +963,7 @@ async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, s
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
   populateEmpSelects(empId);
-  populateSrvSelect(serviceId);
+  await populateSrvSelect(serviceId);
   openModal('bookingModal');
   await initBkCustomerAutocomplete();
 }
@@ -1091,7 +1091,7 @@ async function renderDayView(dateStr) {
   const dEnd   = new Date(dateStr+'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,code)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status','cancelled');
@@ -1154,13 +1154,9 @@ async function renderDayView(dateStr) {
       block.style.background = color+'25';
       block.style.borderColor = color;
       block.style.color = '#fff';
-      block.textContent = b.customer_name || (b.services?.title) || 'Termin';
-      if (b.hausbesuch) {
-        const homeIcon = document.createElement('span');
-        homeIcon.className = 'bk-home-icon';
-        homeIcon.textContent = '🚗';
-        block.appendChild(homeIcon);
-      }
+      const svcCode3 = b.services?.code;
+      const label3 = b.customer_name || (b.services?.title) || 'Termin';
+      block.innerHTML = (b.hausbesuch ? '<span class="bk-home-icon">🚗</span> ' : '') + escapeHtml(label3) + (svcCode3 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode3)}</span>` : '');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingModal(b);
@@ -1197,7 +1193,12 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkMoveBtn').hidden = true;
-  document.getElementById('bkStart').value = startStr ? startStr.substring(0,16) : '';
+  const bkStartEl = document.getElementById('bkStart');
+  bkStartEl.value = startStr ? startStr.substring(0,16) : '';
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const localIso = new Date(now.getTime() - offset * 60000).toISOString().substring(0,16);
+  bkStartEl.min = localIso;
   document.getElementById('bkCustomer').value = '';
   document.getElementById('bkCustomerId').value = '';
   document.getElementById('bkPhone').value    = '';
@@ -2121,7 +2122,7 @@ async function loadPatientDetailTermine(leadId) {
   const ownerId = getOwnerId();
   const patientName = displayName(lead);
   let query = supabase.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,services(title)')
+    .select('id,start_time,end_time,status,customer_name,services(title,code)')
     .eq('owner_id', ownerId)
     .neq('status', 'cancelled')
     .order('start_time', { ascending: false });
@@ -2146,13 +2147,14 @@ async function loadPatientDetailTermine(leadId) {
     const timeStr = b.start_time ? fmtTime(b.start_time) : '—';
     const dur = b.end_time && b.start_time ? Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000) + ' min' : '';
     const serviceTitle = b.services?.title || '—';
+    const svcCode4 = b.services?.code;
     return `
       <div class="pd-term-item">
         <div class="pd-term-row">
           <span class="pd-term-date">${dateStr} · ${timeStr}</span>
           <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='cancelled'?'badge-red':'badge-gray'}">${b.status||'—'}</span>
         </div>
-        <div class="pd-term-service">${escapeHtml(serviceTitle)} ${dur ? '· ' + dur : ''}</div>
+        <div class="pd-term-service">${escapeHtml(serviceTitle)} ${svcCode4 ? '<span style="font-size:11px;color:var(--text-muted);margin-left:6px;background:var(--bg-elevated);padding:1px 5px;border-radius:3px;">' + escapeHtml(svcCode4) + '</span>' : ''} ${dur ? '· ' + dur : ''}</div>
       </div>
     `;
   }).join('');
@@ -3217,7 +3219,7 @@ async function loadEmpDaySchedule(empId, dateStr) {
   const dayEnd   = dateStr+'T23:59:59';
 
   const [{data:bks},{data:leaves}] = await Promise.all([
-    supabase.from('bookings').select('*,services(title,color)')
+    supabase.from('bookings').select('*,services(title,color,code)')
       .eq('user_id',empId)
       .gte('start_time',new Date(dayStart).toISOString())
       .lte('start_time',new Date(dayEnd).toISOString())
@@ -3253,7 +3255,7 @@ async function loadEmpDaySchedule(empId, dateStr) {
       <span class="emp-slot-time">${fmtTime(b.start_time)}${b.end_time?' – '+fmtTime(b.end_time):''}</span>
       <div class="emp-slot-info">
         <div class="emp-slot-customer">${b.customer_name||'—'}</div>
-        <div class="emp-slot-service">${b.services?.title||'—'}</div>
+        <div class="emp-slot-service">${b.services?.title||'—'} ${b.services?.code ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;background:var(--bg-elevated);padding:1px 4px;border-radius:3px;">' + escapeHtml(b.services.code) + '</span>' : ''}</div>
       </div>
       ${canEdit?`<span class="btn-icon" style="opacity:.5;font-size:12px;">✏️</span>`:''}
     </div>`;
