@@ -762,7 +762,7 @@ async function loadScheduleBookings(date) {
     }
   }
 
-  let emps = currentProfile.role==='owner' ? teamMembers : [currentProfile];
+  let emps = teamMembers.length ? teamMembers : [currentProfile];
   if (!emps.length) emps = [currentProfile];
 
   const currentId = currentSession.user.id;
