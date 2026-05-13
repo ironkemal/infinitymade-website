@@ -1036,7 +1036,7 @@ async function renderDayView(dateStr) {
   timeCol.innerHTML = '';
   colsWrap.innerHTML = '';
 
-  const emps = currentProfile.role==='owner' ? teamMembers : [currentProfile];
+  const emps = teamMembers;
   if (!emps.length) return;
 
   for (let h=8; h<20; h++) {
@@ -3896,6 +3896,138 @@ async function saveInvoice() {
   await loadRechnungen();
 }
 
+let anamnesePatientCache = [];
+let currentAnamneseId = null;
+
+async function loadAnamnese() {
+  const ownerId = getOwnerId();
+  const { data } = await supabase.from('leads')
+    .select('id,first_name,last_name,title,phone,email')
+    .eq('owner_id', ownerId)
+    .order('first_name', { ascending: true });
+  anamnesePatientCache = data || [];
+  const sel = document.getElementById('anamPatientSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
+    anamnesePatientCache.map(l => {
+      const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '—';
+      return `<option value="${l.id}">${escapeHtml(name)}</option>`;
+    }).join('');
+  resetAnamneseForm();
+}
+
+function resetAnamneseForm() {
+  currentAnamneseId = null;
+  document.getElementById('anamAufnahme').value = new Date().toISOString().substring(0, 10);
+  document.getElementById('anamHauptbeschwerde').value = '';
+  document.getElementById('anamBeschwerdeSeit').value = '';
+  document.getElementById('anamVerlauf').value = '';
+  document.getElementById('anamSchmerzSkala').value = '';
+  document.getElementById('anamSchmerzArt').value = '';
+  document.getElementById('anamVorerkrankungen').value = '';
+  document.getElementById('anamOperationen').value = '';
+  document.getElementById('anamMedikamente').value = '';
+  document.getElementById('anamAllergien').value = '';
+  document.getElementById('anamBeruf').value = '';
+  document.getElementById('anamSport').value = '';
+  document.getElementById('anamRaucher').checked = false;
+  document.getElementById('anamDiagnose').value = '';
+  document.getElementById('anamArztName').value = '';
+  document.getElementById('anamArztNummer').value = '';
+  document.getElementById('anamRezeptSitzungen').value = '';
+  document.getElementById('anamHausbesuch').checked = false;
+  document.getElementById('anamWuensche').value = '';
+  document.getElementById('anamNotizen').value = '';
+  document.getElementById('anamSaveBtn').textContent = 'Speichern';
+  document.getElementById('anamPdfBtn').hidden = true;
+}
+
+async function fillAnamneseForm(patientId) {
+  if (!patientId) { resetAnamneseForm(); return; }
+  const ownerId = getOwnerId();
+  const { data } = await supabase.from('anamnese')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .eq('patient_id', patientId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) { resetAnamneseForm(); return; }
+  currentAnamneseId = data.id;
+  document.getElementById('anamAufnahme').value = data.aufnahmedatum || new Date().toISOString().substring(0, 10);
+  document.getElementById('anamHauptbeschwerde').value = data.hauptbeschwerde || '';
+  document.getElementById('anamBeschwerdeSeit').value = data.beschwerde_seit || '';
+  document.getElementById('anamVerlauf').value = data.beschwerde_verlauf || '';
+  document.getElementById('anamSchmerzSkala').value = data.schmerz_skala != null ? String(data.schmerz_skala) : '';
+  document.getElementById('anamSchmerzArt').value = data.schmerz_art || '';
+  document.getElementById('anamVorerkrankungen').value = data.vorerkrankungen || '';
+  document.getElementById('anamOperationen').value = data.operationen || '';
+  document.getElementById('anamMedikamente').value = data.medikamente || '';
+  document.getElementById('anamAllergien').value = data.allergien || '';
+  document.getElementById('anamBeruf').value = data.beruf || '';
+  document.getElementById('anamSport').value = data.sport || '';
+  document.getElementById('anamRaucher').checked = data.raucher === true;
+  document.getElementById('anamDiagnose').value = data.diagnose || '';
+  document.getElementById('anamArztName').value = data.arzt_name || '';
+  document.getElementById('anamArztNummer').value = data.arzt_nummer || '';
+  document.getElementById('anamRezeptSitzungen').value = data.rezept_sitzungen != null ? String(data.rezept_sitzungen) : '';
+  document.getElementById('anamHausbesuch').checked = data.hausbesuch === true;
+  document.getElementById('anamWuensche').value = data.besondere_wuensche || '';
+  document.getElementById('anamNotizen').value = data.notizen || '';
+  document.getElementById('anamSaveBtn').textContent = 'Aktualisieren';
+  document.getElementById('anamPdfBtn').hidden = false;
+}
+
+async function saveAnamnese() {
+  const patientId = document.getElementById('anamPatientSelect').value;
+  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
+  const ownerId = getOwnerId();
+  const payload = {
+    owner_id: ownerId,
+    patient_id: patientId,
+    aufnahmedatum: document.getElementById('anamAufnahme').value || null,
+    hauptbeschwerde: document.getElementById('anamHauptbeschwerde').value.trim() || null,
+    beschwerde_seit: document.getElementById('anamBeschwerdeSeit').value.trim() || null,
+    beschwerde_verlauf: document.getElementById('anamVerlauf').value || null,
+    schmerz_skala: document.getElementById('anamSchmerzSkala').value !== '' ? parseInt(document.getElementById('anamSchmerzSkala').value, 10) : null,
+    schmerz_art: document.getElementById('anamSchmerzArt').value.trim() || null,
+    vorerkrankungen: document.getElementById('anamVorerkrankungen').value.trim() || null,
+    operationen: document.getElementById('anamOperationen').value.trim() || null,
+    medikamente: document.getElementById('anamMedikamente').value.trim() || null,
+    allergien: document.getElementById('anamAllergien').value.trim() || null,
+    beruf: document.getElementById('anamBeruf').value.trim() || null,
+    sport: document.getElementById('anamSport').value.trim() || null,
+    raucher: document.getElementById('anamRaucher').checked,
+    diagnose: document.getElementById('anamDiagnose').value.trim() || null,
+    arzt_name: document.getElementById('anamArztName').value.trim() || null,
+    arzt_nummer: document.getElementById('anamArztNummer').value.trim() || null,
+    rezept_sitzungen: document.getElementById('anamRezeptSitzungen').value !== '' ? parseInt(document.getElementById('anamRezeptSitzungen').value, 10) : null,
+    hausbesuch: document.getElementById('anamHausbesuch').checked,
+    besondere_wuensche: document.getElementById('anamWuensche').value.trim() || null,
+    notizen: document.getElementById('anamNotizen').value.trim() || null,
+  };
+  if (currentAnamneseId) {
+    const { error } = await supabase.from('anamnese').update(payload).eq('id', currentAnamneseId);
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+    showToast('Anamnese aktualisiert.');
+  } else {
+    const { data, error } = await supabase.from('anamnese').insert(payload).select();
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+    if (data && data[0]) currentAnamneseId = data[0].id;
+    showToast('Anamnese gespeichert.');
+  }
+  document.getElementById('anamPdfBtn').hidden = false;
+}
+
+function bindAnamneseEvents() {
+  const sel = document.getElementById('anamPatientSelect');
+  if (sel) sel.onchange = (e) => fillAnamneseForm(e.target.value);
+  const saveBtn = document.getElementById('anamSaveBtn');
+  if (saveBtn) saveBtn.onclick = saveAnamnese;
+  const pdfBtn = document.getElementById('anamPdfBtn');
+  if (pdfBtn) pdfBtn.onclick = () => window.print();
+}
+
 function bindInvEvents() {
   document.getElementById('invNewBtn').onclick = () => openInvEditor(null);
   document.getElementById('invCancelBtn').onclick = () => closeInvEditor();
@@ -3972,6 +4104,8 @@ async function init() {
     console.log('[init] gmail ok');
     bindInvEvents();
     console.log('[init] invoices ok');
+    bindAnamneseEvents();
+    console.log('[init] anamnese ok');
     const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
     if (currentSession?.user?.id === ADMIN_UUID && adminLink) adminLink.style.display = '';
