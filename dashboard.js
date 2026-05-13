@@ -1023,12 +1023,35 @@ async function initCalendar() {
       const displayServices = empServices.length > 0 ? empServices : ownerServices;
       const items = [];
       displayServices.forEach(s => {
-        items.push({
-          label: s.title,
-          meta: `${s.duration_minutes || 30} min`,
-          color: s.color || '#22c55e',
-          onClick: () => loadSlots(dateStr, s.duration_minutes || 30, s.id, s.title)
-        });
+        const isPhysio = getSector() === 'physiotherapy';
+        const durKeys = isPhysio && s.price_config?.durations
+          ? Object.keys(s.price_config.durations).filter(k => s.price_config.durations[k].active)
+          : [];
+
+        if (durKeys.length > 0) {
+          // Multi-duration physio service: show duration selection first
+          items.push({
+            label: s.title,
+            meta: 'Sitzungsdauer wählen',
+            color: s.color || '#22c55e',
+            onClick: () => {
+              calendar.setSideHead('Sitzungsdauer');
+              const durItems = durKeys.map(k => ({
+                label: `${k} min`,
+                meta: s.price_config.durations[k].price ? `${s.price_config.durations[k].price} €` : 'Preis nicht festgelegt',
+                onClick: () => loadSlots(dateStr, parseInt(k), s.id, s.title)
+              }));
+              calendar.renderSide(durItems);
+            }
+          });
+        } else {
+          items.push({
+            label: s.title,
+            meta: `${s.duration_minutes || 30} min`,
+            color: s.color || '#22c55e',
+            onClick: () => loadSlots(dateStr, s.duration_minutes || 30, s.id, s.title)
+          });
+        }
       });
       items.push({
         label: t('lbl_other') || 'Andere',
