@@ -1711,7 +1711,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const {error} = id
     ? await supabase.from('bookings').update(payload).eq('id',id)
     : await supabase.from('bookings').insert(payload);
-  if (error) { showToast(t('err_generic'),'error'); return; }
+  if (error) { console.error('[booking save]', error); showToast(error.message || t('err_generic'),'error'); return; }
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel==='overview') await loadTodayBookings();
