@@ -256,8 +256,13 @@ let ownerServices = [];
 let activePanel = 'overview';
 let calendarView = 'month';
 let dayViewDate = new Date();
+let moveBooking = null;
+let moveGhostEl = null;
 let leadFilter = 'all';
 let leadSearchVal = '';
+let invLines = [];
+let invPatientId = null;
+let invListCache = [];
 
 (async function boot() {
   try {
@@ -1027,13 +1032,17 @@ async function renderDayView(dateStr) {
       for (let m=0; m<60; m+=30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
-        const hour = h; const minute = m;
+        const timeStr = `${dateStr}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        slot.dataset.time = timeStr;
         slot.addEventListener('click', () => {
-          const sStr = `${dateStr}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-          const eDate = new Date(dateStr+'T'+String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0'));
+          if (moveBooking) {
+            placeGhost(slot, color, moveBooking.customer_name || (moveBooking.services?.title) || 'Termin');
+            return;
+          }
+          const eDate = new Date(timeStr+':00');
           eDate.setMinutes(eDate.getMinutes()+30);
           const eStr = eDate.toISOString().substring(0,16);
-          prefillBookingModal(sStr, eStr);
+          prefillBookingModal(timeStr, eStr);
           const bkEmp = document.getElementById('bkEmployee');
           if (bkEmp) bkEmp.value = emp.id;
         });
@@ -1053,6 +1062,7 @@ async function renderDayView(dateStr) {
 
       const block = document.createElement('div');
       block.className = 'dv-booking-block';
+      if (moveBooking && moveBooking.id === b.id) block.classList.add('dv-move-source');
       block.style.top = topPx+'px';
       block.style.height = Math.max(hPx,28)+'px';
       block.style.background = color+'25';
@@ -1096,6 +1106,7 @@ function prefillBookingModal(startStr, endStr) {
   document.getElementById('bk-id').value = '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = true;
+  document.getElementById('bkMoveBtn').hidden = true;
   document.getElementById('bkStart').value = startStr ? startStr.substring(0,16) : '';
   document.getElementById('bkEnd').value   = endStr   ? endStr.substring(0,16)   : '';
   document.getElementById('bkCustomer').value = '';
@@ -1111,6 +1122,7 @@ function openBookingModal(b) {
   document.getElementById('bk-id').value = b.id||'';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = false;
+  document.getElementById('bkMoveBtn').hidden = false;
   document.getElementById('bkStart').value    = b.start_time ? b.start_time.substring(0,16) : '';
   document.getElementById('bkEnd').value      = b.end_time   ? b.end_time.substring(0,16)   : '';
   document.getElementById('bkCustomer').value = b.customer_name||'';
@@ -1119,6 +1131,54 @@ function openBookingModal(b) {
   populateEmpSelects(b.user_id);
   populateSrvSelect(b.service_id);
   openModal('bookingModal');
+  document.getElementById('bkMoveBtn').onclick = () => startMoveBooking(b);
+}
+
+function startMoveBooking(b) {
+  moveBooking = b;
+  if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
+  closeModal('bookingModal');
+  if (calendarView !== 'day') setCalendarView('day');
+  else renderDayView(toISODate(dayViewDate));
+}
+
+function placeGhost(slotEl, color, text) {
+  if (moveGhostEl) moveGhostEl.remove();
+  const ghost = document.createElement('div');
+  ghost.className = 'dv-ghost';
+  ghost.style.background = color + '25';
+  ghost.style.borderColor = color;
+  ghost.style.color = '#fff';
+  ghost.style.top = slotEl.offsetTop + 'px';
+  const s = new Date(moveBooking.start_time);
+  const e = new Date(moveBooking.end_time);
+  const durMin = (e - s) / 60000;
+  ghost.style.height = Math.max((durMin / 30) * 56, 28) + 'px';
+  ghost.textContent = text;
+  ghost.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    doMoveBooking(slotEl.dataset.time);
+  });
+  slotEl.parentElement.appendChild(ghost);
+  moveGhostEl = ghost;
+}
+
+async function doMoveBooking(startStr) {
+  if (!moveBooking) return;
+  const s = new Date(startStr + ':00');
+  const e = new Date(moveBooking.end_time);
+  const oldS = new Date(moveBooking.start_time);
+  const durMs = e - oldS;
+  const newE = new Date(s.getTime() + durMs);
+  const { error } = await supabase.from('bookings').update({
+    start_time: s.toISOString(),
+    end_time: newE.toISOString()
+  }).eq('id', moveBooking.id);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  moveBooking = null;
+  if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
+  showToast('Termin verschoben');
+  renderDayView(toISODate(dayViewDate));
 }
 
 function populateEmpSelects(selectedId=null) {
