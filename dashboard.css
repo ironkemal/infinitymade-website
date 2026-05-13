@@ -803,6 +803,33 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   top: 0;
   z-index: 2;
 }
+.overview-day-grid {
+  display: flex;
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  overflow-x: auto;
+  max-height: 480px;
+}
+.overview-day-grid .dv-time-col { width: 48px; }
+.overview-day-grid .dv-slot { height: 48px; }
+.overview-day-grid .dv-col { min-width: 100px; }
+.overview-day-grid .dv-col-header { height: 36px; font-size: 12px; }
+.overview-day-grid .dv-booking-block {
+  font-size: 10px;
+  padding: 3px 5px;
+  border-radius: 4px;
+}
+.dv-col-highlight {
+  background: rgba(34,197,94,0.06);
+}
+.dv-col-highlight .dv-col-header {
+  background: var(--primary-dim);
+  color: var(--primary);
+  font-weight: 700;
+}
 .dv-col-slots {
   position: relative;
 }
