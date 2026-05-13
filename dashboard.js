@@ -1431,23 +1431,89 @@ function initBkCustomerAutocomplete() {
   const list = document.getElementById('bkCustomerList');
   const addWrap = document.getElementById('bkCustomerAddWrap');
   const addBtn = document.getElementById('bkCustomerAddBtn');
+  const phoneGroup = document.getElementById('bkPhoneGroup');
+  const phoneInput = document.getElementById('bkPhone');
   if (!input || !hidden || !list) return;
   if (getSector() !== 'physiotherapy') {
     input.placeholder = '';
     list.hidden = true;
     if (addWrap) addWrap.hidden = true;
     hidden.value = '';
+    if (phoneGroup) phoneGroup.hidden = false;
     return;
   }
   input.placeholder = 'Patient suchen…';
-  if (input.dataset.bkAutoBound) return;
-  input.dataset.bkAutoBound = '1';
+  if (phoneGroup) phoneGroup.hidden = true;
+  if (!input.dataset.bkAutoBound) {
+    input.dataset.bkAutoBound = '1';
+    input.addEventListener('input', () => {
+      hidden.value = '';
+      if (phoneInput) phoneInput.value = '';
+      renderList(input.value);
+    });
+    input.addEventListener('keydown', (e) => {
+      const items = list.querySelectorAll('li[data-id]');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, 0);
+        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex >= 0 && items[activeIndex]) {
+          selectLead(items[activeIndex].dataset.id);
+        }
+      } else if (e.key === 'Escape') {
+        list.hidden = true;
+        if (addWrap) addWrap.hidden = true;
+        activeIndex = -1;
+      }
+    });
+    list.addEventListener('click', (e) => {
+      const li = e.target.closest('li[data-id]');
+      if (li) selectLead(li.dataset.id);
+    });
+    input.addEventListener('blur', () => {
+      blurTimer = setTimeout(() => {
+        list.hidden = true;
+        if (!hidden.value && input.value.trim()) {
+          if (addWrap) addWrap.hidden = false;
+        } else {
+          if (addWrap) addWrap.hidden = true;
+        }
+      }, 150);
+    });
+    input.addEventListener('focus', () => {
+      if (blurTimer) clearTimeout(blurTimer);
+      if (input.value.trim()) renderList(input.value);
+    });
+    addBtn.addEventListener('click', () => {
+      window._returnToBkModal = true;
+      window._bkModalState = {
+        id: document.getElementById('bk-id').value,
+        start: document.getElementById('bkStart').value,
+        end: document.getElementById('bkEnd').value,
+        employee: document.getElementById('bkEmployee').value,
+        service: document.getElementById('bkService').value,
+        notes: document.getElementById('bkNotes').value,
+        hausbesuch: document.getElementById('bkHausbesuch').checked,
+        seriesToggle: document.getElementById('bkSeriesToggle').checked
+      };
+      closeModal('bookingModal');
+      openLeadModal(null);
+    });
+  }
   let allLeads = [];
   let activeIndex = -1;
   let blurTimer = null;
   async function loadLeads() {
     const ownerId = getOwnerId();
-    const { data } = await supabase.from('leads').select('id,title,first_name,last_name').eq('owner_id', ownerId).order('title');
+    const { data } = await supabase.from('leads').select('id,title,first_name,last_name,phone,metadata').eq('owner_id', ownerId).order('title');
     allLeads = data || [];
   }
   loadLeads();
@@ -1455,7 +1521,7 @@ function initBkCustomerAutocomplete() {
     activeIndex = -1;
     const q = filter.trim().toLowerCase();
     if (!q) { list.hidden = true; if (addWrap) addWrap.hidden = true; return; }
-    const filtered = allLeads.filter(l => displayName(l).toLowerCase().includes(q));
+    const filtered = allLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
     if (filtered.length === 0) {
       list.innerHTML = '<li class="empty-item">Keine Treffer</li>';
       list.hidden = false;
@@ -1463,7 +1529,7 @@ function initBkCustomerAutocomplete() {
       return;
     }
     list.innerHTML = filtered.map((l, i) => {
-      const name = displayName(l);
+      const name = displayNameWithBirth(l);
       const esc = q.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&');
       const hl = name.replace(new RegExp(`(${esc})`, 'gi'), '<span class="match-hl">$1</span>');
       return `<li data-id="${l.id}" data-index="${i}">${hl}</li>`;
@@ -1474,61 +1540,13 @@ function initBkCustomerAutocomplete() {
   function selectLead(id) {
     const lead = allLeads.find(l => l.id === id);
     if (!lead) return;
-    input.value = displayName(lead);
+    input.value = displayNameWithBirth(lead);
     hidden.value = id;
+    if (phoneInput) phoneInput.value = lead.phone || '';
     list.hidden = true;
     if (addWrap) addWrap.hidden = true;
     activeIndex = -1;
   }
-  input.addEventListener('input', () => {
-    hidden.value = '';
-    renderList(input.value);
-  });
-  input.addEventListener('keydown', (e) => {
-    const items = list.querySelectorAll('li[data-id]');
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      activeIndex = Math.min(activeIndex + 1, items.length - 1);
-      items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
-      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      activeIndex = Math.max(activeIndex - 1, 0);
-      items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
-      if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (activeIndex >= 0 && items[activeIndex]) {
-        selectLead(items[activeIndex].dataset.id);
-      }
-    } else if (e.key === 'Escape') {
-      list.hidden = true;
-      if (addWrap) addWrap.hidden = true;
-      activeIndex = -1;
-    }
-  });
-  list.addEventListener('click', (e) => {
-    const li = e.target.closest('li[data-id]');
-    if (li) selectLead(li.dataset.id);
-  });
-  input.addEventListener('blur', () => {
-    blurTimer = setTimeout(() => {
-      list.hidden = true;
-      if (!hidden.value && input.value.trim()) {
-        if (addWrap) addWrap.hidden = false;
-      } else {
-        if (addWrap) addWrap.hidden = true;
-      }
-    }, 150);
-  });
-  input.addEventListener('focus', () => {
-    if (blurTimer) clearTimeout(blurTimer);
-    if (input.value.trim()) renderList(input.value);
-  });
-  addBtn.addEventListener('click', () => {
-    closeModal('bookingModal');
-    openLeadModal(null);
-  });
 }
 
 function startMoveBooking(b) {
@@ -1766,6 +1784,15 @@ function displayName(lead) {
   if (ln) return ln;
   return lead.title || '—';
 }
+function leadBirthDate(lead) {
+  const md = lead.metadata || {};
+  return md.geburtsdatum || null;
+}
+function displayNameWithBirth(lead) {
+  const name = displayName(lead);
+  const bd = leadBirthDate(lead);
+  return bd ? `${name} · ${bd}` : name;
+}
 
 async function loadLeads() {
   const ownerId = getOwnerId();
@@ -1902,7 +1929,7 @@ async function loadPatientDetailNotes(leadId) {
 
 async function loadPatientDetailAnamnese(leadId) {
   const { data: anam } = await supabase.from('anamnese')
-    .select('*')
+    .select('*,created_by')
     .eq('patient_id', leadId)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -1913,6 +1940,18 @@ async function loadPatientDetailAnamnese(leadId) {
     content.innerHTML = '<div class="pd-empty">Keine Anamnese vorhanden.</div>';
     return;
   }
+
+  let creatorName = '';
+  if (anam.created_by) {
+    const { data: creator } = await supabase.from('profiles')
+      .select('first_name,last_name,business_name')
+      .eq('id', anam.created_by)
+      .maybeSingle();
+    if (creator) {
+      creatorName = [creator.first_name, creator.last_name].filter(Boolean).join(' ') || creator.business_name || '';
+    }
+  }
+
   const fields = [
     ['Grund der Behandlung', anam.reason],
     ['Aktuelle Beschwerden', anam.current_symptoms],
@@ -1928,13 +1967,22 @@ async function loadPatientDetailAnamnese(leadId) {
     ['Röntgen / MRT vorhanden', anam.imaging_available],
     ['Hausarzt', anam.hausarzt],
     ['Erstellt am', anam.created_at ? fmtDate(anam.created_at) : ''],
+    ['Erstellt von', creatorName],
   ];
   let html = '';
+  html += `<div style="margin-bottom:16px;"><button class="btn-primary" id="pdAnamViewBtn" data-lead-id="${leadId}">📄 Dokument anzeigen</button></div>`;
   fields.forEach(([label, val]) => {
     if (val) html += `<div class="pd-section"><div class="pd-section-title">${label}</div><div class="pd-text">${escapeHtml(String(val))}</div></div>`;
   });
   if (!html) html = '<div class="pd-empty">Anamnese vorhanden, aber keine Details.</div>';
   content.innerHTML = html;
+
+  const btn = document.getElementById('pdAnamViewBtn');
+  if (btn) btn.addEventListener('click', () => {
+    closeModal('patientDetailModal');
+    prefillAnamnesePatientId = btn.dataset.leadId;
+    switchPanel('anamnese');
+  });
 }
 
 async function loadPatientDetailMails(leadId) {
@@ -1991,7 +2039,7 @@ async function loadPatientDetailRechnungen(leadId) {
     return;
   }
   content.innerHTML = data.map(inv => `
-    <div class="pd-rech-item">
+    <div class="pd-rech-item pd-rech-clickable" data-inv-id="${inv.id}" style="cursor:pointer;">
       <div class="pd-rech-row">
         <span class="pd-rech-num">${escapeHtml(inv.invoice_number || '—')}</span>
         <span class="badge ${inv.status==='paid'?'badge-green':inv.status==='sent'?'badge-blue':'badge-gray'}">${inv.status||'—'}</span>
@@ -2004,6 +2052,19 @@ async function loadPatientDetailRechnungen(leadId) {
       ${inv.kassenzuzahlung ? `<div class="pd-rech-detail">Kassenzuzahlung: ${inv.kassenzuzahlung} €</div>` : ''}
     </div>
   `).join('');
+  content.querySelectorAll('.pd-rech-clickable').forEach(card => {
+    card.addEventListener('click', async () => {
+      const invId = card.dataset.invId;
+      closeModal('patientDetailModal');
+      if (!invListCache.find(i => i.id === invId)) {
+        const ownerId = getOwnerId();
+        const { data: invData } = await supabase.from('invoices').select('*').eq('id', invId).eq('owner_id', ownerId).maybeSingle();
+        if (invData) invListCache.push(invData);
+      }
+      switchPanel('rechnungen');
+      openInvEditor(invId);
+    });
+  });
 }
 
 async function loadPatientDetailTermine(leadId) {
@@ -2195,13 +2256,35 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     notes:document.getElementById('lead-notes').value.trim()||null,
     metadata: Object.keys(metadata).length ? metadata : null
   };
-  const {error} = id
-    ? await supabase.from('leads').update(payload).eq('id',id)
-    : await supabase.from('leads').insert(payload);
+  const {data: savedLead, error} = id
+    ? await supabase.from('leads').update(payload).eq('id',id).select().single()
+    : await supabase.from('leads').insert(payload).select().single();
   if (error) { showToast(t('err_generic'),'error'); return; }
   closeModal('leadModal');
   await loadLeads();
   showToast(t('saved'));
+
+  if (window._returnToBkModal) {
+    window._returnToBkModal = false;
+    const st = window._bkModalState || {};
+    if (st.id) {
+      await openBookingModal({ id: st.id, start_time: st.start, end_time: st.end, customer_name: '', customer_phone: '', notes: st.notes || '', hausbesuch: st.hausbesuch });
+    } else {
+      prefillBookingModal(st.start, st.end);
+    }
+    if (st.employee) document.getElementById('bkEmployee').value = st.employee;
+    if (st.service) document.getElementById('bkService').value = st.service;
+    if (st.notes) document.getElementById('bkNotes').value = st.notes;
+    document.getElementById('bkHausbesuch').checked = st.hausbesuch || false;
+    document.getElementById('bkSeriesToggle').checked = st.seriesToggle || false;
+    document.getElementById('bkSeriesFields').hidden = !st.seriesToggle;
+    if (savedLead) {
+      document.getElementById('bkCustomer').value = displayName(savedLead);
+      document.getElementById('bkCustomerId').value = savedLead.id;
+      document.getElementById('bkPhone').value = savedLead.phone || '';
+    }
+    initBkCustomerAutocomplete();
+  }
 });
 
 document.getElementById('csvImportBtn').addEventListener('click', () => {
@@ -4000,7 +4083,7 @@ async function loadNotizen() {
   const empty = document.getElementById('notesEmpty');
   const ownerId = getOwnerId();
 
-  const { data: leads } = await supabase.from('leads').select('id,title,first_name,last_name').eq('owner_id', ownerId).order('title');
+  const { data: leads } = await supabase.from('leads').select('id,title,first_name,last_name,metadata').eq('owner_id', ownerId).order('title');
   const allLeads = leads || [];
 
   input.value = '';
@@ -4011,7 +4094,7 @@ async function loadNotizen() {
   if (prefillNotesPatientId) {
     const prefillLead = allLeads.find(l => l.id === prefillNotesPatientId);
     if (prefillLead) {
-      input.value = displayName(prefillLead);
+      input.value = displayNameWithBirth(prefillLead);
       hidden.value = prefillLead.id;
       loadPatientNotes(prefillLead.id);
     }
@@ -4024,14 +4107,14 @@ async function loadNotizen() {
     activeIndex = -1;
     const q = filter.trim().toLowerCase();
     if (!q) { list.hidden = true; return; }
-    const filtered = allLeads.filter(l => displayName(l).toLowerCase().includes(q));
+    const filtered = allLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
     if (filtered.length === 0) {
       list.innerHTML = '<li class="empty-item">Keine Treffer</li>';
       list.hidden = false;
       return;
     }
     list.innerHTML = filtered.map((l, i) => {
-      const name = displayName(l);
+      const name = displayNameWithBirth(l);
       const esc = q.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
       const hl = name.replace(new RegExp(`(${esc})`, 'gi'), '<span class="match-hl">$1</span>');
       return `<li data-id="${l.id}" data-index="${i}">${hl}</li>`;
@@ -4042,7 +4125,7 @@ async function loadNotizen() {
   function selectPatient(id) {
     const lead = allLeads.find(l => l.id === id);
     if (!lead) return;
-    input.value = displayName(lead);
+    input.value = displayNameWithBirth(lead);
     hidden.value = id;
     list.hidden = true;
     activeIndex = -1;
@@ -4512,14 +4595,14 @@ function renderInvList() {
 async function loadInvPatients() {
   const ownerId = getOwnerId();
   const { data } = await supabase.from('leads')
-    .select('id,first_name,last_name,title,phone,email')
+    .select('id,first_name,last_name,title,phone,email,metadata')
     .eq('owner_id', ownerId).order('first_name', { ascending: true });
   const sel = document.getElementById('invPatientSelect');
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
     (data || []).map(l => {
-      const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '—';
-      return `<option value="${l.id}" data-phone="${l.phone||''}" data-email="${l.email||''}">${escapeHtml(name)}</option>`;
+      const name = displayNameWithBirth(l);
+      return `<option value="${l.id}" data-phone="${escapeHtml(l.phone||'')}" data-email="${escapeHtml(l.email||'')}">${escapeHtml(name)}</option>`;
     }).join('');
 }
 
@@ -4693,7 +4776,7 @@ let currentAnamneseId = null;
 async function loadAnamnese() {
   const ownerId = getOwnerId();
   const { data } = await supabase.from('leads')
-    .select('id,first_name,last_name,title,phone,email')
+    .select('id,first_name,last_name,title,phone,email,metadata,geschlecht')
     .eq('owner_id', ownerId)
     .order('first_name', { ascending: true });
   anamnesePatientCache = data || [];
@@ -4701,7 +4784,7 @@ async function loadAnamnese() {
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
     anamnesePatientCache.map(l => {
-      const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '—';
+      const name = displayNameWithBirth(l);
       return `<option value="${l.id}">${escapeHtml(name)}</option>`;
     }).join('');
   if (prefillAnamnesePatientId) {
@@ -4892,7 +4975,7 @@ function bindAnamneseEvents() {
   const saveBtn = document.getElementById('anamSaveBtn');
   if (saveBtn) saveBtn.onclick = saveAnamnese;
   const pdfBtn = document.getElementById('anamPdfBtn');
-  if (pdfBtn) pdfBtn.onclick = () => window.print();
+  if (pdfBtn) pdfBtn.onclick = printAnamnese;
 
   const slider = document.getElementById('anamSchmerzSkala');
   const skalaVal = document.getElementById('anamSkalaVal');
@@ -5054,9 +5137,9 @@ async function openRezeptModal(phone, leadId) {
   if (leadId) {
     const { data } = await supabase.from('leads').select('title,arzt_id,hausbesuch').eq('id', leadId).single();
     if (data?.arzt_id) {
-      const { data: arzt } = await supabase.from('aerzte').select('name,arzt_nummer').eq('id', data.arzt_id).single();
+      const { data: arzt } = await supabase.from('aerzte').select('arzt_name,arzt_nummer').eq('id', data.arzt_id).single();
       if (arzt) {
-        document.getElementById('rzArztName').value = arzt.name || '';
+        document.getElementById('rzArztName').value = arzt.arzt_name || '';
         document.getElementById('rzArztNummer').value = arzt.arzt_nummer || '';
       }
     }
