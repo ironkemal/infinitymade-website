@@ -1149,8 +1149,6 @@ async function renderDayView(dateStr) {
   });
 }
 
-document.getElementById('btnMonthView').addEventListener('click', () => setCalendarView('month'));
-document.getElementById('btnDayView').addEventListener('click', () => setCalendarView('day'));
 document.getElementById('dayViewPrev').addEventListener('click', () => {
   dayViewDate.setDate(dayViewDate.getDate()-1);
   if (calendarView==='day') renderDayView(toISODate(dayViewDate));
