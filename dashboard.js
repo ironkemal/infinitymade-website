@@ -3615,6 +3615,247 @@ function startClock() {
   setInterval(tick, 1000);
 }
 
+function formatEur(n) {
+  return (n || 0).toFixed(2).replace('.', ',') + ' €';
+}
+
+async function loadRechnungen() {
+  const ownerId = getOwnerId();
+  const { data, error } = await supabase.from('invoices')
+    .select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  if (error) { console.error('[invoices]', error); return; }
+  invListCache = data || [];
+  renderInvList();
+}
+
+function renderInvList() {
+  const tbody = document.getElementById('invListBody');
+  const empty = document.getElementById('invListEmpty');
+  const wrap = document.getElementById('invListWrap');
+  if (!tbody) return;
+  if (invListCache.length === 0) {
+    tbody.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+  const statusMap = { draft:'Entwurf', sent:'Gesendet', paid:'Bezahlt', cancelled:'Storniert' };
+  const statusCls = { draft:'badge-gray', sent:'badge-blue', paid:'badge-green', cancelled:'badge-red' };
+  tbody.innerHTML = invListCache.map(inv => {
+    const date = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
+    const total = formatEur(inv.total_patient || 0);
+    const st = inv.status || 'draft';
+    return `<tr>
+      <td><strong>${inv.invoice_number || '—'}</strong></td>
+      <td>${escapeHtml(inv.patient_name || '')}</td>
+      <td>${date}</td>
+      <td>${total}</td>
+      <td><span class="badge ${statusCls[st]||'badge-gray'}">${statusMap[st]||st}</span></td>
+      <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('.inv-view-btn').forEach(btn => {
+    btn.onclick = () => openInvEditor(btn.dataset.id);
+  });
+}
+
+async function loadInvPatients() {
+  const ownerId = getOwnerId();
+  const { data } = await supabase.from('leads')
+    .select('id,first_name,last_name,title,phone,email')
+    .eq('owner_id', ownerId).order('first_name', { ascending: true });
+  const sel = document.getElementById('invPatientSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
+    (data || []).map(l => {
+      const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '—';
+      return `<option value="${l.id}" data-phone="${l.phone||''}" data-email="${l.email||''}">${escapeHtml(name)}</option>`;
+    }).join('');
+}
+
+async function loadPatientBookings(patientId) {
+  if (!patientId) return [];
+  const sel = document.getElementById('invPatientSelect');
+  const opt = sel?.querySelector(`option[value="${patientId}"]`);
+  const phone = opt?.dataset.phone || '';
+  const email = opt?.dataset.email || '';
+  const ownerId = getOwnerId();
+  let query = supabase.from('bookings')
+    .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes)')
+    .eq('owner_id', ownerId)
+    .eq('status', 'confirmed')
+    .order('start_time', { ascending: false });
+  if (phone) query = query.eq('customer_phone', phone);
+  else if (email) query = query.eq('customer_email', email);
+  else query = query.eq('customer_name', sel.options[sel.selectedIndex].text);
+  const { data, error } = await query;
+  if (error) { console.error('[bookings]', error); return []; }
+  return data || [];
+}
+
+function buildInvLineRow(line, idx) {
+  return `<tr data-idx="${idx}">
+    <td><input type="text" class="form-input inv-line-title" value="${escapeHtml(line.title || '')}" placeholder="Leistung" /></td>
+    <td><input type="number" class="form-input inv-line-qty" value="${line.quantity||1}" min="0" style="width:72px;text-align:center;" /></td>
+    <td><input type="number" class="form-input inv-line-price" value="${line.unit_price||0}" min="0" step="0.01" style="width:100px;text-align:right;" /></td>
+    <td style="text-align:right;font-weight:600;">${formatEur((line.quantity||1)*(line.unit_price||0))}</td>
+    <td><button class="btn-icon inv-del-line" type="button" title="Entfernen">🗑</button></td>
+  </tr>`;
+}
+
+function renderInvLines() {
+  const tbody = document.getElementById('invLineBody');
+  if (!tbody) return;
+  tbody.innerHTML = invLines.map((l,i) => buildInvLineRow(l,i)).join('');
+  tbody.querySelectorAll('.inv-line-title').forEach((inp, i) => {
+    inp.onchange = () => { invLines[i].title = inp.value; };
+  });
+  tbody.querySelectorAll('.inv-line-qty').forEach((inp, i) => {
+    inp.onchange = () => { invLines[i].quantity = parseFloat(inp.value)||0; renderInvLines(); calcInvTotals(); };
+  });
+  tbody.querySelectorAll('.inv-line-price').forEach((inp, i) => {
+    inp.onchange = () => { invLines[i].unit_price = parseFloat(inp.value)||0; renderInvLines(); calcInvTotals(); };
+  });
+  tbody.querySelectorAll('.inv-del-line').forEach((btn, i) => {
+    btn.onclick = () => { invLines.splice(i,1); renderInvLines(); calcInvTotals(); };
+  });
+}
+
+function calcInvTotals() {
+  const sub = invLines.reduce((s,l) => s + (l.quantity||1)*(l.unit_price||0), 0);
+  const eigenPct = parseFloat(document.getElementById('invEigenPct').value)||0;
+  const eigenEur = sub * (eigenPct/100);
+  const kasse = parseFloat(document.getElementById('invKasse').value)||0;
+  const total = sub - eigenEur + kasse;
+  document.getElementById('invSubtotal').textContent = formatEur(sub);
+  document.getElementById('invEigenEur').textContent = formatEur(eigenEur);
+  document.getElementById('invKasseDisplay').textContent = formatEur(kasse);
+  document.getElementById('invTotalPatient').textContent = formatEur(total);
+}
+
+async function generateInvNumber() {
+  const year = new Date().getFullYear();
+  const ownerId = getOwnerId();
+  const { data } = await supabase.from('invoices')
+    .select('invoice_number')
+    .eq('owner_id', ownerId)
+    .ilike('invoice_number', `INV-${year}-%`)
+    .order('invoice_number', { ascending: false })
+    .limit(1);
+  let next = 1;
+  if (data && data.length > 0 && data[0].invoice_number) {
+    const m = data[0].invoice_number.match(/-(\d+)$/);
+    if (m) next = parseInt(m[1],10) + 1;
+  }
+  return `INV-${year}-${String(next).padStart(4,'0')}`;
+}
+
+function resetInvEditor() {
+  invLines = [];
+  invPatientId = null;
+  document.getElementById('invPatientSelect').value = '';
+  document.getElementById('invPatientInfo').textContent = '';
+  document.getElementById('invLineBody').innerHTML = '';
+  document.getElementById('invEigenPct').value = 0;
+  document.getElementById('invKasse').value = 0;
+  document.getElementById('invNotes').value = '';
+  document.getElementById('invPrintBtn').disabled = true;
+  calcInvTotals();
+}
+
+async function openInvEditor(invoiceId) {
+  document.getElementById('invEditor').hidden = false;
+  document.getElementById('invListWrap').hidden = true;
+  document.getElementById('invNewBtn').hidden = true;
+  await loadInvPatients();
+  resetInvEditor();
+  if (invoiceId) {
+    const inv = invListCache.find(i => i.id === invoiceId);
+    if (!inv) return;
+    invPatientId = inv.patient_id;
+    document.getElementById('invPatientSelect').value = inv.patient_id || '';
+    invLines = (inv.line_items || []).map(l => ({...l}));
+    document.getElementById('invEigenPct').value = inv.eigenanteil_pct || 0;
+    document.getElementById('invKasse').value = inv.kassenzuzahlung || 0;
+    document.getElementById('invNotes').value = inv.notes || '';
+    document.getElementById('invPrintBtn').disabled = false;
+    renderInvLines();
+    calcInvTotals();
+  } else {
+    document.getElementById('invPatientSelect').focus();
+  }
+}
+
+function closeInvEditor() {
+  document.getElementById('invEditor').hidden = true;
+  document.getElementById('invListWrap').hidden = false;
+  document.getElementById('invNewBtn').hidden = false;
+}
+
+async function saveInvoice() {
+  const patientSel = document.getElementById('invPatientSelect');
+  const patientId = patientSel.value;
+  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.','error'); return; }
+  if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.','error'); return; }
+  const subtotal = invLines.reduce((s,l) => s + (l.quantity||1)*(l.unit_price||0), 0);
+  const eigenPct = parseFloat(document.getElementById('invEigenPct').value)||0;
+  const eigenEur = subtotal * (eigenPct/100);
+  const kasse = parseFloat(document.getElementById('invKasse').value)||0;
+  const total = subtotal - eigenEur + kasse;
+  const ownerId = getOwnerId();
+  const patientName = patientSel.options[patientSel.selectedIndex].text;
+  const invoiceNumber = await generateInvNumber();
+  const payload = {
+    owner_id: ownerId,
+    patient_id: patientId,
+    patient_name: patientName,
+    line_items: invLines,
+    subtotal,
+    eigenanteil_pct: eigenPct,
+    eigenanteil_eur: eigenEur,
+    kassenzuzahlung: kasse,
+    total_patient: total,
+    status: 'draft',
+    invoice_number: invoiceNumber,
+    notes: document.getElementById('invNotes').value || null
+  };
+  const { error } = await supabase.from('invoices').insert(payload);
+  if (error) { console.error('[invoice save]', error); showToast('Fehler beim Speichern: ' + error.message, 'error'); return; }
+  showToast('Rechnung ' + invoiceNumber + ' erstellt.');
+  document.getElementById('invPrintBtn').disabled = false;
+  await loadRechnungen();
+}
+
+function bindInvEvents() {
+  document.getElementById('invNewBtn').onclick = () => openInvEditor(null);
+  document.getElementById('invCancelBtn').onclick = () => closeInvEditor();
+  document.getElementById('invSaveBtn').onclick = saveInvoice;
+  document.getElementById('invPrintBtn').onclick = () => window.print();
+  document.getElementById('invAddLineBtn').onclick = () => {
+    invLines.push({ title:'', quantity:1, unit_price:0 });
+    renderInvLines(); calcInvTotals();
+  };
+  document.getElementById('invPatientSelect').onchange = async (e) => {
+    invPatientId = e.target.value;
+    if (!invPatientId) { document.getElementById('invPatientInfo').textContent = ''; return; }
+    const bookings = await loadPatientBookings(invPatientId);
+    if (bookings.length > 0) {
+      invLines = bookings.map(b => ({
+        title: b.services?.title || 'Leistung',
+        quantity: 1,
+        unit_price: parseFloat(b.services?.price)||0
+      }));
+      document.getElementById('invPatientInfo').textContent = `${bookings.length} abgeschlossene Termin(e) gefunden — Leistungen wurden geladen.`;
+    } else {
+      invLines = [];
+      document.getElementById('invPatientInfo').textContent = 'Keine abgeschlossenen Termine gefunden.';
+    }
+    renderInvLines(); calcInvTotals();
+  };
+  document.getElementById('invEigenPct').oninput = calcInvTotals;
+  document.getElementById('invKasse').oninput = calcInvTotals;
+}
+
 async function init() {
   try {
     console.log('[init] start');
@@ -3637,6 +3878,8 @@ async function init() {
     console.log('[init] calendar ok');
     await handleGmailCallback();
     console.log('[init] gmail ok');
+    bindInvEvents();
+    console.log('[init] invoices ok');
     const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
     if (currentSession?.user?.id === ADMIN_UUID && adminLink) adminLink.style.display = '';
