@@ -2265,6 +2265,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   .filter-btn { font-size: 11px; padding: 4px 8px; }
   .modal { max-width: 100%; margin: 0; border-radius: var(--radius) var(--radius) 0 0; }
   .modal-overlay { align-items: flex-end; padding: 0; }
+  .srv-duration-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ============================
@@ -2591,6 +2592,62 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   color: var(--text-muted);
   min-width: 60px;
   text-align: center;
+}
+
+.srv-duration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.srv-dur-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+  transition: border-color var(--transition), background var(--transition);
+}
+.srv-dur-card.active {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+}
+.srv-dur-card .dur-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+.srv-dur-card .dur-min {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.srv-dur-card .dur-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-main);
+}
+.srv-dur-card .dur-toggle input {
+  accent-color: var(--primary);
+}
+.srv-dur-card .dur-price {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-size: 13px;
+  text-align: center;
+}
+.srv-dur-card:not(.active) .dur-price {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 @media print {

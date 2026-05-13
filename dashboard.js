@@ -1913,7 +1913,7 @@ let servicesCache = [];
 
 async function loadServices() {
   const {data} = await supabase.from('services')
-    .select('*,employee_services(employee_id)').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+    .select('*,employee_services(employee_id),price_config').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
   servicesCache = data||[];
   renderServices();
   renderSrvEmpCheckboxes();
@@ -1926,16 +1926,24 @@ function renderServices() {
       <div class="add-service-label">Neue Dienstleistung</div>
     </div>`;
   if (!servicesCache.length) { grid.innerHTML = addCard; bindAddServiceCard(); return; }
+  const isPhysio = getSector() === 'physiotherapy';
   grid.innerHTML = servicesCache.map(s=>{
     const empNames = (s.employee_services||[]).map(es=>{
       const m = teamMembers.find(tm=>tm.id===es.employee_id);
       return m ? (m.business_name||m.email?.split('@')[0]) : null;
     }).filter(Boolean).join(', ');
+    let meta = '';
+    if (isPhysio && s.price_config?.durations) {
+      const activeDurs = Object.entries(s.price_config.durations).filter(([_,v])=>v.active).map(([k,v])=>`${k}min=${v.price}€`).join(', ');
+      meta = activeDurs || 'Keine aktiven Zeiten';
+    } else {
+      meta = `${s.duration_minutes} min &middot; ${s.price!=null?s.price+' €':'—'}`;
+    }
     return `<div class="service-card" data-srv-id="${s.id}">
-      <div class="service-color" style="background:${s.color||'#22c55e'}"></div>
+      <div class="service-color" style="background:${s.color||s.price_config?.color||'#22c55e'}"></div>
       <div class="service-info">
         <div class="service-title">${s.title}</div>
-        <div class="service-meta">${s.duration_minutes} min · ${s.price!=null?s.price+' €':'—'}</div>
+        <div class="service-meta">${meta}</div>
         <div class="service-meta">${empNames||'—'}</div>
       </div>
       <button class="btn-icon" data-srv-del="${s.id}">🗑️</button>
@@ -1981,6 +1989,14 @@ function resetServiceForm() {
   document.getElementById('srvEmpAll').checked = true;
   renderSrvEmpCheckboxes();
   toggleEmpCheckboxes(true);
+  const isPhysio = getSector() === 'physiotherapy';
+  document.getElementById('srvStandardFields').hidden = isPhysio;
+  document.getElementById('srvPhysioFields').hidden = !isPhysio;
+  document.getElementById('srvStandardColorRow').hidden = true;
+  if (isPhysio) {
+    document.getElementById('srvUnitPrice').value = '10';
+    renderPhysioServiceCards();
+  }
 }
 
 function openServiceEdit(id) {
@@ -1992,9 +2008,22 @@ function openServiceEdit(id) {
   document.getElementById('srvFormTitle').textContent = 'Dienstleistung bearbeiten';
   document.getElementById('srvEditId').value = s.id;
   document.getElementById('srvTitle').value = s.title;
-  document.getElementById('srvDur').value = s.duration_minutes;
-  document.getElementById('srvPrice').value = s.price || 0;
-  document.getElementById('srvColor').value = s.color || '#22c55e';
+
+  const isPhysio = getSector() === 'physiotherapy';
+  if (isPhysio && s.price_config) {
+    document.getElementById('srvStandardFields').hidden = true;
+    document.getElementById('srvPhysioFields').hidden = false;
+    document.getElementById('srvStandardColorRow').hidden = true;
+    document.getElementById('srvUnitPrice').value = s.price_config.unit_price || '10';
+    renderPhysioServiceCards(s.price_config.durations || {});
+  } else {
+    document.getElementById('srvStandardFields').hidden = false;
+    document.getElementById('srvPhysioFields').hidden = true;
+    document.getElementById('srvStandardColorRow').hidden = false;
+    document.getElementById('srvDur').value = s.duration_minutes || 30;
+    document.getElementById('srvPrice').value = s.price || 0;
+    document.getElementById('srvColor').value = s.color || '#22c55e';
+  }
 
   const assignedIds = new Set((s.employee_services||[]).map(es => es.employee_id));
   const allChecked = assignedIds.size === 0 || assignedIds.size === teamMembers.length;
@@ -2008,6 +2037,56 @@ function openServiceEdit(id) {
   form.hidden = false;
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+const PHYSIO_DURATIONS = [10,15,20,25,30,35,40,45,50,55,60,75,90,120];
+
+function renderPhysioServiceCards(existingDurations) {
+  const grid = document.getElementById('srvPhysioCards');
+  if (!grid) return;
+  const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
+  grid.innerHTML = PHYSIO_DURATIONS.map(min => {
+    const dur = existingDurations?.[String(min)] || {};
+    const active = dur.active || false;
+    const price = dur.price != null ? dur.price : (unitPrice ? Math.round((min / 5) * unitPrice * 100) / 100 : '');
+    return `<div class="srv-dur-card${active ? ' active' : ''}" data-dur="${min}">
+      <div class="dur-label">${min}</div>
+      <div class="dur-min">Minuten</div>
+      <label class="dur-toggle">
+        <input type="checkbox" class="dur-cb" ${active ? 'checked' : ''}>
+        <span>Aktiv</span>
+      </label>
+      <input type="number" class="dur-price form-input" value="${price !== '' ? price : ''}" min="0" step="0.5" placeholder="Preis">
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.dur-cb').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const card = e.target.closest('.srv-dur-card');
+      card.classList.toggle('active', e.target.checked);
+    });
+  });
+  grid.querySelectorAll('.dur-price').forEach(inp => {
+    inp.addEventListener('focus', () => {
+      const card = inp.closest('.srv-dur-card');
+      const dur = parseInt(card.dataset.dur);
+      if (!inp.value && unitPrice) {
+        inp.value = Math.round((dur / 5) * unitPrice * 100) / 100;
+      }
+    });
+  });
+}
+
+document.getElementById('srvUnitPrice').addEventListener('input', () => {
+  if (getSector() === 'physiotherapy') {
+    const existing = {};
+    document.querySelectorAll('.srv-dur-card').forEach(card => {
+      const dur = card.dataset.dur;
+      const active = card.querySelector('.dur-cb').checked;
+      const price = card.querySelector('.dur-price').value;
+      existing[dur] = { active, price: price !== '' ? parseFloat(price) : null };
+    });
+    renderPhysioServiceCards(existing);
+  }
+});
 
 function toggleEmpCheckboxes(disabled) {
   document.querySelectorAll('input[name="srv_emp"]').forEach(cb => {
@@ -2039,16 +2118,39 @@ document.getElementById('srvCancelBtn').addEventListener('click', () => {
 
 document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const title = document.getElementById('srvTitle').value.trim();
-  const duration = parseInt(document.getElementById('srvDur').value,10)||30;
-  const price = parseFloat(document.getElementById('srvPrice').value)||0;
-  const color = document.getElementById('srvColor').value;
   if (!title) { showToast(t('err_generic'),'error'); return; }
   const empIds = [...document.querySelectorAll('input[name="srv_emp"]:checked')].map(cb=>cb.value);
   const mode = document.getElementById('addServiceForm').dataset.mode;
+  const isPhysio = getSector() === 'physiotherapy';
+
+  let payload = { title };
+  if (isPhysio) {
+    const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
+    const color = document.getElementById('srvPhysioColor').value;
+    const durations = {};
+    document.querySelectorAll('.srv-dur-card').forEach(card => {
+      const dur = card.dataset.dur;
+      const active = card.querySelector('.dur-cb').checked;
+      const priceVal = card.querySelector('.dur-price').value;
+      durations[dur] = { active, price: priceVal !== '' ? parseFloat(priceVal) : null };
+    });
+    payload = {
+      title,
+      price_config: { unit_price: unitPrice, color, durations },
+      duration_minutes: null,
+      price: null,
+      color: null
+    };
+  } else {
+    const duration = parseInt(document.getElementById('srvDur').value,10)||30;
+    const price = parseFloat(document.getElementById('srvPrice').value)||0;
+    const color = document.getElementById('srvColor').value;
+    payload = { title, duration_minutes: duration, price, color };
+  }
 
   if (mode === 'edit') {
     const editId = document.getElementById('srvEditId').value;
-    const { error } = await supabase.from('services').update({ title, duration_minutes: duration, price, color }).eq('id', editId);
+    const { error } = await supabase.from('services').update(payload).eq('id', editId);
     if (error) { showToast(t('err_generic'),'error'); return; }
     await supabase.from('employee_services').delete().eq('service_id', editId);
     if (empIds.length) {
@@ -2057,7 +2159,7 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     showToast(t('saved'));
   } else {
     const ownerId = getOwnerId();
-    const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, title, duration_minutes: duration, price, color }).select().single();
+    const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, ...payload }).select().single();
     if (error) { showToast(t('err_generic'),'error'); return; }
     if (empIds.length) {
       await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: srv.id })));
