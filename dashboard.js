@@ -2526,7 +2526,6 @@ function resetServiceForm() {
   document.getElementById('srvPhysioFields').hidden = !isPhysio;
   document.getElementById('srvStandardColorRow').hidden = true;
   if (isPhysio) {
-    document.getElementById('srvUnitPrice').value = '10';
     renderPhysioServiceCards();
   }
 }
@@ -2547,7 +2546,6 @@ function openServiceEdit(id) {
     document.getElementById('srvStandardFields').hidden = true;
     document.getElementById('srvPhysioFields').hidden = false;
     document.getElementById('srvStandardColorRow').hidden = true;
-    document.getElementById('srvUnitPrice').value = s.price_config.unit_price || '10';
     renderPhysioServiceCards(s.price_config.durations || {});
   } else {
     document.getElementById('srvStandardFields').hidden = false;
@@ -2575,11 +2573,11 @@ const PHYSIO_DURATIONS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 12
 function renderPhysioServiceCards(existingDurations) {
   const grid = document.getElementById('srvPhysioCards');
   if (!grid) return;
-  const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
+  const unitPrice = 0;
   grid.innerHTML = PHYSIO_DURATIONS.map(min => {
     const dur = existingDurations?.[String(min)] || {};
     const active = dur.active || false;
-    const price = dur.price != null ? dur.price : (unitPrice ? Math.round((min / 5) * unitPrice * 100) / 100 : '');
+    const price = dur.price != null ? dur.price : '';
     return `<div class="srv-dur-card${active ? ' active' : ''}" data-dur="${min}">
       <div class="dur-label">${min}</div>
       <div class="dur-min">Minuten</div>
@@ -2606,24 +2604,6 @@ function renderPhysioServiceCards(existingDurations) {
     });
   });
 }
-
-function calculatePhysioPrices() {
-  if (getSector() !== 'physiotherapy') return;
-  const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
-  if (!unitPrice) return;
-  document.querySelectorAll('.srv-dur-card').forEach(card => {
-    const dur = parseInt(card.dataset.dur);
-    const inp = card.querySelector('.dur-price');
-    if (inp && inp.value === '') {
-      inp.value = Math.round((dur / 5) * unitPrice * 100) / 100;
-    }
-  });
-}
-
-document.getElementById('srvUnitPrice').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); calculatePhysioPrices(); }
-});
-document.getElementById('srvCalcPriceBtn').addEventListener('click', calculatePhysioPrices);
 
 function toggleEmpCheckboxes(disabled) {
   document.querySelectorAll('input[name="srv_emp"]').forEach(cb => {
@@ -2663,7 +2643,6 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const code = document.getElementById('srvCode').value.trim().toUpperCase() || null;
   let payload = { title, code };
   if (isPhysio) {
-    const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
     const durations = {};
     document.querySelectorAll('.srv-dur-card').forEach(card => {
       const dur = card.dataset.dur;
@@ -2673,7 +2652,7 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     });
     payload = {
       title, code,
-      price_config: { unit_price: unitPrice, durations },
+      price_config: { durations },
       duration_minutes: null,
       price: null,
       color: null

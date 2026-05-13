@@ -49,7 +49,7 @@ function updateSidebar() {
   const dateBlock = document.getElementById('selDateBlock');
   if (state.selectedDate && state.selectedTime) {
     dateBlock.classList.add('show');
-    const d = new Date(state.selectedDate).toLocaleDateString('de-DE', { weekday:'short', day:'numeric', month:'short' });
+    const d = new Date(state.selectedDate).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
     document.getElementById('selDateVal').textContent = `${d} · ${state.selectedTime} Uhr`;
   } else {
     dateBlock.classList.remove('show');
@@ -75,11 +75,11 @@ async function init() {
   if (!profile) { showError('Unternehmen nicht gefunden.'); return; }
 
   const isEmployee = profile.role === 'employee' && profile.owner_id;
-  state.ownerId    = isEmployee ? profile.owner_id : profile.id;
+  state.ownerId = isEmployee ? profile.owner_id : profile.id;
   state.employeeId = isEmployee ? profile.id : null;
   state.companyName = profile.business_name;
   document.getElementById('bizAvatar').textContent = profile.business_name.charAt(0).toUpperCase();
-  document.getElementById('bizName').textContent   = profile.business_name;
+  document.getElementById('bizName').textContent = profile.business_name;
 
   const ownerName = profile.owner_first_name && profile.owner_last_name
     ? profile.owner_first_name + ' ' + profile.owner_last_name
@@ -126,7 +126,7 @@ async function init() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.emp-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      state.employeeId   = btn.dataset.id;
+      state.employeeId = btn.dataset.id;
       state.employeeName = btn.dataset.name;
       updateSidebar();
       loadServices(btn.dataset.id);
@@ -153,18 +153,45 @@ async function loadServices(empId) {
   }).join('');
 
   document.querySelectorAll('.srv-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      state.serviceId       = btn.dataset.id;
-      state.serviceTitle    = btn.dataset.title;
-      state.durationMinutes = parseInt(btn.dataset.dur);
-      state.bufferMinutes   = parseInt(btn.dataset.buf) || 0;
-      state.selectedDate    = null;
-      state.selectedTime    = null;
-      updateSidebar();
-      mountBookingCalendar();
-      goStep('datetime');
+      state.serviceId = btn.dataset.id;
+      state.serviceTitle = btn.dataset.title;
+      state.bufferMinutes = parseInt(btn.dataset.buf) || 0;
+      state.selectedDate = null;
+      state.selectedTime = null;
+
+      // Check if service has multiple durations (physio)
+      const { data: srvData } = await supabase.from('services').select('price_config').eq('id', state.serviceId).single();
+      const durations = srvData?.price_config?.durations;
+      const durKeys = durations ? Object.keys(durations).filter(k => durations[k].active) : [];
+
+      if (durKeys.length > 0) {
+        // Show duration selection step
+        document.getElementById('durList').innerHTML = durKeys.map(k => `
+          <button class="list-btn dur-btn" data-dur="${k}">
+            <div class="list-btn-title">${k} Minuten</div>
+            <div class="list-btn-sub">${durations[k].price ? durations[k].price + ' €' : 'Preis nicht festgelegt'}</div>
+          </button>
+        `).join('');
+        document.querySelectorAll('.dur-btn').forEach(b => {
+          b.addEventListener('click', () => {
+            document.querySelectorAll('.dur-btn').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            state.durationMinutes = parseInt(b.dataset.dur);
+            updateSidebar();
+            mountBookingCalendar();
+            goStep('datetime');
+          });
+        });
+        goStep('duration');
+      } else {
+        state.durationMinutes = parseInt(btn.dataset.dur);
+        updateSidebar();
+        mountBookingCalendar();
+        goStep('datetime');
+      }
     });
   });
 }
@@ -174,15 +201,15 @@ let bkScheduleDate = new Date();
 async function loadBookingSlots(date) {
   bkScheduleDate = date;
   const labelEl = document.getElementById('bkDateLabel');
-  const listEl  = document.getElementById('bkSlotsList');
+  const listEl = document.getElementById('bkSlotsList');
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
-  const fmtDate = new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'numeric',month:'long'}).format(date);
+  const fmtDate = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
   labelEl.textContent = isToday ? `Heute, ${fmtDate}` : fmtDate;
   listEl.innerHTML = '<div class="slots-empty">Laden…</div>';
 
   const tz = 'Europe/Berlin';
-  const dStr = date.toLocaleDateString('sv-SE',{timeZone:tz});
+  const dStr = date.toLocaleDateString('sv-SE', { timeZone: tz });
   state.selectedDate = dStr;
   state.selectedTime = null;
   updateSidebar();
@@ -204,24 +231,24 @@ async function loadBookingSlots(date) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId:   state.employeeId,
-        date:     dStr,
+        userId: state.employeeId,
+        date: dStr,
         duration: state.durationMinutes,
-        buffer:   state.bufferMinutes,
-        step:     30
+        buffer: state.bufferMinutes,
+        step: 30
       })
     });
     const data = await res.json();
     let slots = data.slots || [];
     const tz = 'Europe/Berlin';
     const now = new Date();
-    const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
-    const nowTimeStr = now.toLocaleTimeString('sv-SE',{timeZone:tz,hour12:false});
-    const [nh,nm] = nowTimeStr.split(':').map(Number);
+    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: tz });
+    const nowTimeStr = now.toLocaleTimeString('sv-SE', { timeZone: tz, hour12: false });
+    const [nh, nm] = nowTimeStr.split(':').map(Number);
     const minTotalMin = nh * 60 + nm + 30;
     slots = slots.filter(slot => {
       if (dStr !== todayStr) return true;
-      const [sh,sm] = slot.split(':').map(Number);
+      const [sh, sm] = slot.split(':').map(Number);
       return sh * 60 + sm >= minTotalMin;
     });
     if (!slots.length) {
@@ -245,7 +272,7 @@ async function loadBookingSlots(date) {
         setTimeout(() => goStep('form'), 200);
       });
     });
-  } catch(e) {
+  } catch (e) {
     listEl.innerHTML = '<div class="slots-empty">Fehler beim Laden.</div>';
   }
 }
@@ -258,14 +285,14 @@ async function renderBookingCalendar(year, month) {
   const label = document.getElementById('calMonthLabel');
   if (!grid || !label) return;
 
-  const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
   label.innerHTML = `${monthNames[month]} <em>${year}</em>`;
 
   const firstDay = new Date(year, month, 1);
   const startOffset = (firstDay.getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const tz = 'Europe/Berlin';
-  const todayStr = new Date().toLocaleDateString('sv-SE', {timeZone: tz});
+  const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: tz });
   const todayParts = todayStr.split('-').map(Number);
   const todayY = todayParts[0], todayM = todayParts[1], todayD = todayParts[2];
 
@@ -273,22 +300,22 @@ async function renderBookingCalendar(year, month) {
   const monthStartIso = new Date(year, month, 1).toISOString();
   const monthEndIso = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
 
-  let openDow = new Set([1,2,3,4,5]);
+  let openDow = new Set([1, 2, 3, 4, 5]);
   let closedDates = new Set();
   let bookedDates = new Set();
 
   if (userId) {
     const [{ data: wh }, { data: cd }, { data: bks }] = await Promise.all([
       supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', userId),
-      supabase.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', state.ownerId).gte('date', `${year}-${String(month+1).padStart(2,'0')}-01`).lte('date', `${year}-${String(month+1).padStart(2,'0')}-${daysInMonth}`),
-      supabase.from('bookings').select('start_time').eq('user_id', userId).gte('start_time', monthStartIso).lte('start_time', monthEndIso).neq('status','cancelled')
+      supabase.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', state.ownerId).gte('date', `${year}-${String(month + 1).padStart(2, '0')}-01`).lte('date', `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`),
+      supabase.from('bookings').select('start_time').eq('user_id', userId).gte('start_time', monthStartIso).lte('start_time', monthEndIso).neq('status', 'cancelled')
     ]);
     openDow = new Set((wh || []).filter(w => w.is_active).map(w => w.day_of_week));
     (cd || []).forEach(c => {
       if (!c.start_time && !c.end_time && (c.type === 'closed' || c.type === 'holiday')) closedDates.add(c.date);
     });
     (bks || []).forEach(b => {
-      const d = new Date(b.start_time).toLocaleDateString('sv-SE', {timeZone: tz});
+      const d = new Date(b.start_time).toLocaleDateString('sv-SE', { timeZone: tz });
       bookedDates.add(d);
     });
   }
@@ -298,7 +325,7 @@ async function renderBookingCalendar(year, month) {
 
   for (let d = 1; d <= daysInMonth; d++) {
     const dateObj = new Date(year, month, d);
-    const dStr = dateObj.toLocaleDateString('sv-SE', {timeZone: tz});
+    const dStr = dateObj.toLocaleDateString('sv-SE', { timeZone: tz });
     const isPast = dStr < todayStr;
     const isToday = dStr === todayStr;
     const isSelected = bkScheduleDate && dateObj.toDateString() === new Date(bkScheduleDate.getFullYear(), bkScheduleDate.getMonth(), bkScheduleDate.getDate()).toDateString();
@@ -351,6 +378,7 @@ async function mountBookingCalendar() {
 
 document.getElementById('backToEmp').addEventListener('click', () => goStep('employees'));
 document.getElementById('backToSrv').addEventListener('click', () => goStep('services'));
+document.getElementById('backToSrvDur')?.addEventListener('click', () => goStep('services'));
 document.getElementById('backToCal').addEventListener('click', () => goStep('datetime'));
 
 document.getElementById('bookingForm').addEventListener('submit', async e => {
@@ -360,11 +388,11 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
   try {
     const tz = 'Europe/Berlin';
     const now = new Date();
-    const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
-    const nowTimeStr = now.toLocaleTimeString('sv-SE',{timeZone:tz,hour12:false});
-    const [nh,nm] = nowTimeStr.split(':').map(Number);
+    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: tz });
+    const nowTimeStr = now.toLocaleTimeString('sv-SE', { timeZone: tz, hour12: false });
+    const [nh, nm] = nowTimeStr.split(':').map(Number);
     const minTotalMin = nh * 60 + nm + 30;
-    const [sh,sm] = state.selectedTime.split(':').map(Number);
+    const [sh, sm] = state.selectedTime.split(':').map(Number);
     if (state.selectedDate === todayStr && sh * 60 + sm < minTotalMin) {
       alert('Bitte wählen Sie einen Termin mindestens 30 Minuten in der Zukunft.');
       btn.disabled = false; btn.textContent = 'Termin verbindlich buchen';
@@ -374,19 +402,19 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ownerId:       state.ownerId,
-        userId:        state.employeeId,
-        serviceId:     state.serviceId,
-        date:          state.selectedDate,
-        time:          state.selectedTime,
-        customerName:  document.getElementById('custName').value,
+        ownerId: state.ownerId,
+        userId: state.employeeId,
+        serviceId: state.serviceId,
+        date: state.selectedDate,
+        time: state.selectedTime,
+        customerName: document.getElementById('custName').value,
         customerEmail: document.getElementById('custEmail').value,
         customerPhone: document.getElementById('custPhone').value
       })
     });
     if (!res.ok) throw new Error('Buchung fehlgeschlagen');
     goStep('success');
-  } catch(err) {
+  } catch (err) {
     alert('Fehler: ' + err.message);
     btn.disabled = false; btn.textContent = 'Termin verbindlich buchen';
   }
