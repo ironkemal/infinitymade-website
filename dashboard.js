@@ -258,6 +258,7 @@ let calendarView = 'month';
 let dayViewDate = new Date();
 let moveBooking = null;
 let moveGhostEl = null;
+const EMP_COLORS = ['#22c55e','#3b82f6','#f59e0b','#a855f7','#ec4899'];
 let leadFilter = 'all';
 let leadSearchVal = '';
 let invLines = [];
@@ -984,8 +985,6 @@ async function renderDayView(dateStr) {
   const emps = currentProfile.role==='owner' ? teamMembers : [currentProfile];
   if (!emps.length) return;
 
-  const empColors = ['#22c55e','#3b82f6','#f59e0b','#a855f7','#ec4899'];
-
   for (let h=8; h<20; h++) {
     for (let m=0; m<60; m+=30) {
       const slot = document.createElement('div');
@@ -1018,7 +1017,7 @@ async function renderDayView(dateStr) {
   emps.forEach((emp, idx) => {
     const col = document.createElement('div');
     col.className = 'dv-col';
-    const color = empColors[idx % empColors.length];
+    const color = EMP_COLORS[idx % EMP_COLORS.length];
 
     const header = document.createElement('div');
     header.className = 'dv-col-header';
@@ -1034,9 +1033,10 @@ async function renderDayView(dateStr) {
         slot.className = 'dv-slot';
         const timeStr = `${dateStr}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
         slot.dataset.time = timeStr;
+        slot.dataset.empId = emp.id;
         slot.addEventListener('click', () => {
           if (moveBooking) {
-            placeGhost(slot, color, moveBooking.customer_name || (moveBooking.services?.title) || 'Termin');
+            placeGhost(slot, emp.id, moveBooking.customer_name || (moveBooking.services?.title) || 'Termin');
             return;
           }
           const eDate = new Date(timeStr+':00');
@@ -1142,8 +1142,11 @@ function startMoveBooking(b) {
   else renderDayView(toISODate(dayViewDate));
 }
 
-function placeGhost(slotEl, color, text) {
+function placeGhost(slotEl, empId, text) {
   if (moveGhostEl) moveGhostEl.remove();
+  const allEmps = currentProfile.role === 'owner' ? teamMembers : [currentProfile];
+  const idx = allEmps.findIndex(e => e.id === empId);
+  const color = EMP_COLORS[idx % EMP_COLORS.length];
   const ghost = document.createElement('div');
   ghost.className = 'dv-ghost';
   ghost.style.background = color + '25';
@@ -1157,23 +1160,25 @@ function placeGhost(slotEl, color, text) {
   ghost.textContent = text;
   ghost.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    doMoveBooking(slotEl.dataset.time);
+    doMoveBooking(slotEl.dataset.time, empId);
   });
   slotEl.parentElement.appendChild(ghost);
   moveGhostEl = ghost;
 }
 
-async function doMoveBooking(startStr) {
+async function doMoveBooking(startStr, empId) {
   if (!moveBooking) return;
   const s = new Date(startStr + ':00');
   const e = new Date(moveBooking.end_time);
   const oldS = new Date(moveBooking.start_time);
   const durMs = e - oldS;
   const newE = new Date(s.getTime() + durMs);
-  const { error } = await supabase.from('bookings').update({
+  const payload = {
     start_time: s.toISOString(),
     end_time: newE.toISOString()
-  }).eq('id', moveBooking.id);
+  };
+  if (empId && empId !== moveBooking.user_id) payload.user_id = empId;
+  const { error } = await supabase.from('bookings').update(payload).eq('id', moveBooking.id);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
   moveBooking = null;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
