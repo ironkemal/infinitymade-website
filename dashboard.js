@@ -270,6 +270,7 @@ let prefillNotesPatientId = null;
 let prefillAnamnesePatientId = null;
 let bkActionBookingCache = null;
 let bkActionTimer = null;
+let pdCurrentLeadId = null;
 
 (async function boot() {
   try {
@@ -731,7 +732,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,status,services(title,color)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,color)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status','cancelled');
@@ -843,6 +844,12 @@ async function loadScheduleBookings(date) {
       block.style.borderColor = color;
       block.style.color = '#fff';
       block.textContent = b.customer_name || (b.services?.title) || 'Termin';
+      if (b.hausbesuch) {
+        const homeIcon = document.createElement('span');
+        homeIcon.className = 'bk-home-icon';
+        homeIcon.textContent = '🚗';
+        block.appendChild(homeIcon);
+      }
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);
@@ -1090,7 +1097,7 @@ async function renderDayView(dateStr) {
   const dEnd   = new Date(dateStr+'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,status,services(title)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status','cancelled');
@@ -1157,6 +1164,12 @@ async function renderDayView(dateStr) {
       block.style.borderColor = color;
       block.style.color = '#fff';
       block.textContent = b.customer_name || (b.services?.title) || 'Termin';
+      if (b.hausbesuch) {
+        const homeIcon = document.createElement('span');
+        homeIcon.className = 'bk-home-icon';
+        homeIcon.textContent = '🚗';
+        block.appendChild(homeIcon);
+      }
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingModal(b);
@@ -1198,8 +1211,11 @@ function prefillBookingModal(startStr, endStr) {
   document.getElementById('bkCustomer').value = '';
   document.getElementById('bkPhone').value    = '';
   document.getElementById('bkNotes').value    = '';
+  document.getElementById('bkHausbesuch').checked = false;
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
+  document.getElementById('bkSpecialBanner').hidden = true;
+  document.getElementById('bkDocAssignHint').hidden = true;
   populateEmpSelects();
   populateSrvSelect();
   openModal('bookingModal');
@@ -1694,6 +1710,7 @@ function renderLeads() {
 }
 
 async function openPatientDetailModal(lead) {
+  pdCurrentLeadId = lead.id;
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
   document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'notes'));
   document.querySelectorAll('.pd-panel').forEach(p => p.classList.toggle('active', p.id === 'pdPanelNotes'));
@@ -1701,6 +1718,11 @@ async function openPatientDetailModal(lead) {
   document.getElementById('pdNotesContent').innerHTML = '';
   document.getElementById('pdAnamLoading').hidden = false;
   document.getElementById('pdAnamContent').innerHTML = '';
+  document.getElementById('pdUeberContent').innerHTML = '<div class="pd-empty">Noch keine Überweisung eingetragen.</div>';
+  document.getElementById('pdRechLoading').hidden = false;
+  document.getElementById('pdRechContent').innerHTML = '';
+  document.getElementById('pdTermLoading').hidden = false;
+  document.getElementById('pdTermContent').innerHTML = '';
   document.getElementById('pdMailLoading').hidden = false;
   document.getElementById('pdMailContent').innerHTML = '';
   openModal('patientDetailModal');
@@ -1708,6 +1730,9 @@ async function openPatientDetailModal(lead) {
   const leadId = lead.id;
   loadPatientDetailNotes(leadId);
   loadPatientDetailAnamnese(leadId);
+  loadPatientDetailUeberweisung(leadId);
+  loadPatientDetailRechnungen(leadId);
+  loadPatientDetailTermine(leadId);
   loadPatientDetailMails(leadId);
 }
 
@@ -1793,10 +1818,116 @@ async function loadPatientDetailMails(leadId) {
   `).join('');
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+async function loadPatientDetailUeberweisung(leadId) {
+  const { data } = await supabase.from('ueberweisungen')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false });
+  const content = document.getElementById('pdUeberContent');
+  if (!data || data.length === 0) {
+    content.innerHTML = '<div class="pd-empty">Noch keine Überweisung eingetragen.</div>';
+    return;
+  }
+  content.innerHTML = data.map(u => `
+    <div class="pd-ueber-card">
+      <img src="${escapeHtml(u.image_url || '')}" class="pd-ueber-img" alt="Überweisung" />
+      <div class="pd-ueber-meta">
+        ${u.arzt_name ? `<div class="pd-ueber-row"><strong>Arzt:</strong> ${escapeHtml(u.arzt_name)}</div>` : ''}
+        ${u.notiz ? `<div class="pd-ueber-row">${escapeHtml(u.notiz)}</div>` : ''}
+        <div class="pd-ueber-date">${u.created_at ? fmtDate(u.created_at) : ''}</div>
+      </div>
+    </div>
+  `).join('');
 }
+
+async function loadPatientDetailRechnungen(leadId) {
+  const { data } = await supabase.from('invoices')
+    .select('id,invoice_number,status,issued_at,total_patient,eigenanteil_eur,kassenzuzahlung,subtotal')
+    .eq('patient_id', leadId)
+    .order('issued_at', { ascending: false });
+  const content = document.getElementById('pdRechContent');
+  document.getElementById('pdRechLoading').hidden = true;
+  if (!data || data.length === 0) {
+    content.innerHTML = '<div class="pd-empty">Keine Rechnungen vorhanden.</div>';
+    return;
+  }
+  content.innerHTML = data.map(inv => `
+    <div class="pd-rech-item">
+      <div class="pd-rech-row">
+        <span class="pd-rech-num">${escapeHtml(inv.invoice_number || '—')}</span>
+        <span class="badge ${inv.status==='paid'?'badge-green':inv.status==='sent'?'badge-blue':'badge-gray'}">${inv.status||'—'}</span>
+      </div>
+      <div class="pd-rech-row">
+        <span>${inv.issued_at ? fmtDate(inv.issued_at) : '—'}</span>
+        <span class="pd-rech-total">${inv.total_patient != null ? inv.total_patient + ' €' : '—'}</span>
+      </div>
+      ${inv.eigenanteil_eur ? `<div class="pd-rech-detail">Eigenanteil: ${inv.eigenanteil_eur} €</div>` : ''}
+      ${inv.kassenzuzahlung ? `<div class="pd-rech-detail">Kassenzuzahlung: ${inv.kassenzuzahlung} €</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function loadPatientDetailTermine(leadId) {
+  const lead = leadsCache.find(l => l.id === leadId);
+  const phoneNorm = lead?.phone_normalized;
+  const ownerId = getOwnerId();
+  let query = supabase.from('bookings')
+    .select('id,start_time,end_time,status,customer_name,services,employee_id')
+    .eq('owner_id', ownerId)
+    .order('start_time', { ascending: false });
+  if (phoneNorm) {
+    query = query.eq('customer_phone_normalized', phoneNorm);
+  } else {
+    query = query.eq('customer_name', lead?.title || lead?.first_name + ' ' + lead?.last_name || '');
+  }
+  const { data } = await query;
+  const content = document.getElementById('pdTermContent');
+  document.getElementById('pdTermLoading').hidden = true;
+  if (!data || data.length === 0) {
+    content.innerHTML = '<div class="pd-empty">Keine Termine vorhanden.</div>';
+    return;
+  }
+  content.innerHTML = data.map(b => {
+    const dateStr = b.start_time ? fmtDate(b.start_time) : '—';
+    const timeStr = b.start_time ? fmtTime(b.start_time) : '—';
+    const dur = b.end_time && b.start_time ? Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000) + ' min' : '';
+    const serviceTitle = b.services?.title || '—';
+    return `
+      <div class="pd-term-item">
+        <div class="pd-term-row">
+          <span class="pd-term-date">${dateStr} · ${timeStr}</span>
+          <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='cancelled'?'badge-red':'badge-gray'}">${b.status||'—'}</span>
+        </div>
+        <div class="pd-term-service">${escapeHtml(serviceTitle)} ${dur ? '· ' + dur : ''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+
+document.getElementById('pdUeberAddBtn').addEventListener('click', () => {
+  document.getElementById('pdUeberFileInput').click();
+});
+
+document.getElementById('pdUeberFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !pdCurrentLeadId) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result;
+    const { error } = await supabase.from('ueberweisungen').insert({
+      owner_id: getOwnerId(),
+      lead_id: pdCurrentLeadId,
+      image_url: base64,
+      created_at: new Date().toISOString()
+    });
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+    showToast('Überweisung gespeichert ✓');
+    loadPatientDetailUeberweisung(pdCurrentLeadId);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
 
 document.querySelectorAll('.pd-tab').forEach(tab => {
   tab.addEventListener('click', () => {

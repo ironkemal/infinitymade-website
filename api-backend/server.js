@@ -818,6 +818,77 @@ app.post('/api/booking/manual-create', async (req, res) => {
   }
 });
 
+app.post('/api/rezept/save', async (req, res) => {
+  try {
+    const { ownerId, patientId, arztName, arztNummer, diagnose, sitzungen, hausbesuch, befund, rezeptDatum } = req.body;
+    if (!ownerId || !patientId || !arztName) {
+      return res.status(400).json({ error: 'ownerId, patientId, arztName required' });
+    }
+
+    const nameNorm = arztName.trim();
+    const { data: existingArzt } = await supabase
+      .from('aerzte')
+      .select('id, arzt_nummer')
+      .eq('owner_id', ownerId)
+      .ilike('arzt_name', nameNorm)
+      .maybeSingle();
+
+    let arztId;
+    if (existingArzt) {
+      arztId = existingArzt.id;
+      if (arztNummer && arztNummer !== existingArzt.arzt_nummer) {
+        await supabase.from('aerzte').update({ arzt_nummer: arztNummer }).eq('id', arztId);
+      }
+    } else {
+      const { data: newArzt, error: arztErr } = await supabase.from('aerzte').insert({
+        owner_id: ownerId,
+        arzt_name: nameNorm,
+        arzt_nummer: arztNummer || null
+      }).select().single();
+      if (arztErr) throw arztErr;
+      arztId = newArzt.id;
+    }
+
+    await supabase.from('leads').update({
+      arzt_id: arztId,
+      hausbesuch: !!hausbesuch
+    }).eq('id', patientId).eq('owner_id', ownerId);
+
+    const { data: existingAnam } = await supabase
+      .from('anamnese')
+      .select('id')
+      .eq('owner_id', ownerId)
+      .eq('patient_id', patientId)
+      .maybeSingle();
+
+    const anamPayload = {
+      arzt_name: nameNorm,
+      arzt_nummer: arztNummer || null,
+      diagnose: diagnose || null,
+      rezept_sitzungen: sitzungen != null ? parseInt(sitzungen, 10) : null,
+      hausbesuch: !!hausbesuch,
+      notizen: befund ? (existingAnam ? (await supabase.from('anamnese').select('notizen').eq('id', existingAnam.id).single()).data?.notizen || '' : '') + '\nRezept ' + (rezeptDatum || new Date().toISOString().slice(0,10)) + ': ' + befund : undefined
+    };
+
+    if (existingAnam) {
+      const cleanPayload = Object.fromEntries(Object.entries(anamPayload).filter(([_, v]) => v !== undefined));
+      await supabase.from('anamnese').update(cleanPayload).eq('id', existingAnam.id);
+    } else {
+      await supabase.from('anamnese').insert({
+        owner_id: ownerId,
+        patient_id: patientId,
+        ...anamPayload,
+        notizen: anamPayload.notizen || null
+      });
+    }
+
+    res.json({ success: true, arztId });
+  } catch (err) {
+    console.error('[rezept/save]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);
