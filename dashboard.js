@@ -54,9 +54,9 @@ const T = {
     saved:'Gespeichert.',pw_changed:'Passwort geändert.',err_generic:'Ein Fehler ist aufgetreten.',
     copied:'Kopiert!',csv_imported:'Importiert: ',csv_error:'CSV-Fehler: ',
     apify_error:'Apify-Fehler: ',apify_done:'Importiert: ',me:'(Sie)',
-    nav_doctors:'Ärzte',nav_notizen:'Notizen',nav_beispielmodus:'Beispielmodus',
+    nav_doctors:'Ärzte',nav_notizen:'Notizen',nav_beispielmodus:'Beispielmodus',nav_anamnese:'Anamnese',
     doctors_sub:'Ärzte in der Nähe finden',notizen_sub:'Patientennotizen & Berichte',b2c_sub:'Kundenmailings & KI-Assistent',
-    beispielmodus_sub:'Anatomie-Haritas für Patientengespräche',
+    beispielmodus_sub:'Anatomie-Haritas für Patientengespräche',anamnese_sub:'Digitales Anamnese-Formular',
     lbl_doctor_notes:'Arztnotizen',lbl_therapist_notes:'Therapeutennotizen',
     lbl_ai_summary:'AI-Bericht',lbl_send_patient:'An Patient senden',
     lbl_select_patient:'Patient wählen',lbl_notes_empty:'Keine Notizen vorhanden.'
@@ -107,9 +107,9 @@ const T = {
     saved:'Saved.',pw_changed:'Password changed.',err_generic:'An error occurred.',
     copied:'Copied!',csv_imported:'Imported: ',csv_error:'CSV error: ',
     apify_error:'Apify error: ',apify_done:'Imported: ',me:'(You)',
-    nav_doctors:'Doctors',nav_notizen:'Notes',nav_beispielmodus:'Demo Mode',
+    nav_doctors:'Doctors',nav_notizen:'Notes',nav_beispielmodus:'Demo Mode',nav_anamnese:'Intake',
     doctors_sub:'Find nearby doctors',notizen_sub:'Patient notes & reports',b2c_sub:'Customer mailings & AI assistant',
-    beispielmodus_sub:'Anatomy maps for patient consultations',
+    beispielmodus_sub:'Anatomy maps for patient consultations',anamnese_sub:'Digital intake form',
     lbl_doctor_notes:'Doctor notes',lbl_therapist_notes:'Therapist notes',
     lbl_ai_summary:'AI Report',lbl_send_patient:'Send to patient',
     lbl_select_patient:'Select patient',lbl_notes_empty:'No notes available.'
@@ -160,9 +160,9 @@ const T = {
     saved:'Kaydedildi.',pw_changed:'Şifre değiştirildi.',err_generic:'Bir hata oluştu.',
     copied:'Kopyalandı!',csv_imported:'İçe aktarıldı: ',csv_error:'CSV hatası: ',
     apify_error:'Apify hatası: ',apify_done:'İçe aktarıldı: ',me:'(Siz)',
-    nav_doctors:'Doktorlar',nav_notizen:'Notlar',nav_beispielmodus:'Örnek Modu',
+    nav_doctors:'Doktorlar',nav_notizen:'Notlar',nav_beispielmodus:'Örnek Modu',nav_anamnese:'Anamnez',
     doctors_sub:'Yakındaki doktorları bul',notizen_sub:'Hasta notları ve raporlar',b2c_sub:'Müşteri maileri ve AI asistanı',
-    beispielmodus_sub:'Hasta görüşmeleri için anatomi haritaları',
+    beispielmodus_sub:'Hasta görüşmeleri için anatomi haritaları',anamnese_sub:'Dijital anamnez formu',
     lbl_doctor_notes:'Doktor notları',lbl_therapist_notes:'Terapist notları',
     lbl_ai_summary:'AI Raporu',lbl_send_patient:'Hastaya gönder',
     lbl_select_patient:'Hasta seç',lbl_notes_empty:'Not bulunmuyor.'
@@ -215,6 +215,7 @@ const SECTOR_PANELS = {
     {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
     {id:'team',    icon:'👤',key:'nav_team',    roles:['owner','employee']},
     {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
+    {id:'anamnese',icon:'📝',key:'nav_anamnese',roles:['owner','employee']},
     {id:'rechnungen',icon:'💶',key:'nav_rechnungen',roles:['owner','employee']},
     {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner','employee']},
     {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
@@ -395,6 +396,7 @@ async function switchPanel(id) {
   if (id==='notizen') loadNotizen();
   if (id==='beispielmodus') loadBeispielmodus();
   if (id==='rechnungen') loadRechnungen();
+  if (id==='anamnese') loadAnamnese();
 }
 
 function openSidebar() {
@@ -709,9 +711,9 @@ async function loadScheduleBookings(date) {
   scheduleDate = date;
   const loadingEl = document.getElementById('upcoming-bookings-loading');
   const emptyEl   = document.getElementById('upcoming-bookings-empty');
-  const listEl    = document.getElementById('upcoming-bookings-list');
+  const gridEl    = document.getElementById('upcoming-bookings-list');
   const labelEl   = document.getElementById('scheduleDateLabel');
-  loadingEl.hidden=false; emptyEl.hidden=true; listEl.hidden=true;
+  loadingEl.hidden=false; emptyEl.hidden=true; gridEl.hidden=true;
 
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
@@ -724,14 +726,12 @@ async function loadScheduleBookings(date) {
   const dEnd   = new Date(dStr+'T23:59:59').toISOString();
   const ownerId = getOwnerId();
 
-  let q = supabase.from('bookings')
-    .select('*,services(title,color)')
-    .eq('owner_id',ownerId)
-    .eq('user_id',currentSession.user.id)
-    .gte('start_time',dStart).lte('start_time',dEnd)
-    .neq('status','cancelled').order('start_time').limit(25);
+  const { data: bookings } = await supabase.from('bookings')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,status,services(title,color)')
+    .eq('owner_id', ownerId)
+    .gte('start_time', dStart).lte('start_time', dEnd)
+    .neq('status','cancelled');
 
-  const {data:bookings} = await q;
   loadingEl.hidden = true;
 
   const nowIso = new Date().toISOString();
@@ -742,33 +742,87 @@ async function loadScheduleBookings(date) {
   if (isToday) document.getElementById('kpi-today').textContent = displayBookings.length;
 
   if (displayBookings.length===0) { emptyEl.hidden=false; return; }
-  const fallbackColors = ['#f97316','#3b82f6','#ec4899','#a855f7','#ef4444'];
-  const greenIndices = new Set();
-  if (isToday) {
-    greenIndices.add(0);
-  } else {
-    greenIndices.add(0);
+
+  const timeCol = document.getElementById('ovTimeCol');
+  const colsWrap = document.getElementById('ovColsWrap');
+  timeCol.innerHTML = '';
+  colsWrap.innerHTML = '';
+
+  const SLOT_H = 48;
+  const DAY_START = 8;
+  for (let h=DAY_START; h<20; h++) {
+    for (let m=0; m<60; m+=30) {
+      const slot = document.createElement('div');
+      slot.className = 'dv-slot';
+      const label = document.createElement('div');
+      label.className = 'dv-time-label';
+      label.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      slot.appendChild(label);
+      timeCol.appendChild(slot);
+    }
   }
-  listEl.innerHTML = displayBookings.map((b,i)=>{
-    const emp = teamMembers.find(m=>m.id===b.user_id);
-    const dur = b.end_time
-      ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' min'
-      : (b.services?.duration_minutes ? b.services.duration_minutes+' min' : '—');
-    const hourStr = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
-    const hour = parseInt(hourStr.split(':')[0]) + parseInt(hourStr.split(':')[1])/60;
-    const isClose = greenIndices.has(i);
-    const baseColor = isClose ? '#22c55e' : (b.services?.color || fallbackColors[i % fallbackColors.length]);
-    const color = shiftColorForTime(baseColor, hour);
-    const staff = emp?.business_name||emp?.email?.split('@')[0]||'';
-    const isOwner = currentProfile.role==='owner';
-    return `<div class="schedule-card" style="background:${color};">
-      <div class="schedule-card-dur">${dur}</div>
-      <div class="schedule-card-name">${b.customer_name||'—'}</div>
-      <div class="schedule-card-time">${fmtTime(b.start_time)}</div>
-      ${isOwner && staff ? `<div class="schedule-card-staff">${staff}</div>` : ''}
-    </div>`;
-  }).join('');
-  listEl.hidden = false;
+
+  let emps = currentProfile.role==='owner' ? teamMembers : [currentProfile];
+  if (!emps.length) emps = [currentProfile];
+
+  const currentId = currentSession.user.id;
+  emps = [...emps].sort((a,b) => {
+    if (a.id === currentId) return -1;
+    if (b.id === currentId) return 1;
+    return 0;
+  });
+
+  emps.forEach((emp, idx) => {
+    const col = document.createElement('div');
+    col.className = 'dv-col' + (emp.id === currentId ? ' dv-col-highlight' : '');
+    const color = EMP_COLORS[idx % EMP_COLORS.length];
+
+    const header = document.createElement('div');
+    header.className = 'dv-col-header';
+    header.textContent = emp.business_name || emp.email?.split('@')[0] || '—';
+    col.appendChild(header);
+
+    const slotWrap = document.createElement('div');
+    slotWrap.className = 'dv-col-slots';
+
+    for (let h=DAY_START; h<20; h++) {
+      for (let m=0; m<60; m+=30) {
+        const slot = document.createElement('div');
+        slot.className = 'dv-slot';
+        slotWrap.appendChild(slot);
+      }
+    }
+
+    const empBookings = displayBookings.filter(b => b.user_id === emp.id);
+    empBookings.forEach(b => {
+      const s = new Date(b.start_time);
+      const e = new Date(b.end_time);
+      const sMin = s.getHours()*60+s.getMinutes();
+      const eMin = e.getHours()*60+e.getMinutes();
+      const dayStartMin = DAY_START*60;
+      const topPx = ((sMin-dayStartMin)/30)*SLOT_H;
+      const hPx   = ((eMin-sMin)/30)*SLOT_H;
+
+      const block = document.createElement('div');
+      block.className = 'dv-booking-block';
+      block.style.top = topPx+'px';
+      block.style.height = Math.max(hPx,24)+'px';
+      block.style.background = color+'25';
+      block.style.borderColor = color;
+      block.style.color = '#fff';
+      block.textContent = b.customer_name || (b.services?.title) || 'Termin';
+      block.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        openBookingModal(b);
+      });
+      slotWrap.appendChild(block);
+    });
+
+    col.appendChild(slotWrap);
+    colsWrap.appendChild(col);
+  });
+
+  gridEl.hidden = false;
 }
 
 async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
