@@ -36,7 +36,6 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  overflow: hidden;
 }
 
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
@@ -75,7 +74,8 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 #app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -242,6 +242,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   overflow-x: hidden;
   padding: 24px;
   position: relative;
+  -webkit-overflow-scrolling: touch;
 }
 
 .panel { display: none; }
@@ -2064,7 +2065,8 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 @media (max-width: 768px) {
-  .main-area { padding: 16px; }
+  .main-area { padding: 16px 16px 80px; }
+  .dashboard-layout { overflow: visible; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
   .calendar-wrap { flex-direction: column; height: auto; }
   .slot-panel { width: 100% !important; }
