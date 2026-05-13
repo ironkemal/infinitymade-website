@@ -7,243 +7,243 @@ const API = 'https://n8n.infinitymade.de/api';
 
 const T = {
   de: {
-    logout:'Abmelden',
-    nav_overview:'Übersicht',nav_calendar:'Termine',nav_kunden:'Kunden Info',
-    nav_services:'Dienstleistungen',nav_hours:'Arbeitszeiten',
-    nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Rechnungen',nav_feedback:'Feedback',nav_settings:'Einstellungen',
-    overview_sub:'Ihr heutiger Überblick',
-    welcome_text:'Willkommen',
-    kpi_plan:'Paket',kpi_status:'Status',kpi_today_bookings:'Heute',kpi_today_sub:'Termine',kpi_support:'Support',
-    status_active:'✓ Aktiv',status_inactive:'✗ Inaktiv',
-    today_bookings:'Heutige Termine',upcoming_empty:'Heute keine Termine.',features_title:'Paketinhalt',
-    calendar_sub:'Termine verwalten & buchen',
-    btn_add_leave:'Abwesenheit eintragen',btn_add_booking:'+ Termin',
-    kunden_sub:'Leads & Kundeninformationen',leads_import:'CSV importieren',leads_add:'+ Neuer Lead',
-    apify_label:'Google Maps Scraper:',apify_run:'Suchen',
-    lf_all:'Alle',lf_new:'Neu',lf_contacted:'Kontaktiert',lf_booked:'Termin',lf_won:'Gewonnen',lf_lost:'Verloren',
-    lead_title:'Name',lead_city:'Stadt',lead_phone:'Telefon',lead_rating:'Bewertung',
-    lead_status:'Status',lead_notes:'Notizen',lead_email:'E-Mail',lead_website:'Website',
-    lead_country_code:'Land',lead_google_url:'Google Maps URL',lead_category_name:'Kategorie',
-    leads_empty:'Noch keine Leads.',lead_modal_new:'Neuer Lead',lead_modal_edit:'Lead bearbeiten',
-    lead_save:'Speichern',lead_cancel:'Abbrechen',lead_delete:'Löschen',lead_confirm_delete:'Lead wirklich löschen?',
-    services_sub:'Angebotene Leistungen verwalten',
-    lbl_add_service:'Neue Dienstleistung',lbl_srv_title:'Name',lbl_srv_dur:'Dauer (Min)',
-    lbl_srv_price:'Preis (€)',lbl_srv_emps:'Mitarbeiter',btn_srv_save:'Speichern',
-    alert_service_delete:'Dienstleistung wirklich löschen?',
-    hours_sub:'Öffnungszeiten je Mitarbeiter',btn_save_hours:'Speichern',hours_for:'Für:',
-    alert_hours_saved:'Arbeitszeiten gespeichert!',
-    team_sub:'Team verwalten',lbl_invite_code:'Unternehmens-Code',
-    sub_invite_code:'Mitarbeiter registrieren sich mit diesem Code.',
-    btn_copy:'Kopieren',btn_remove:'Entfernen',tab_info:'Info',lbl_google_cal:'Google Kalender',
-    b2b_sub:'Geschäftskontakte & KI-Assistent',b2b_add:'+ Kontakt',
-    b2b_company:'Unternehmen',b2b_contact:'Ansprechpartner',b2b_status:'Status',
-    b2b_empty:'Noch keine B2B-Kontakte.',b2b_ai_title:'KI-Assistent',
-    b2b_ai_welcome:'Hallo! Ich helfe Ihnen bei B2B-Anfragen.',
-    set_profile:'Profil',set_biz:'Unternehmensname',set_lang:'Sprache',set_save:'Speichern',
-    set_account:'Konto',set_password:'Passwort',set_new_pw:'Neues Passwort',
-    set_change:'Passwort ändern',set_integrations:'Integrationen',
-    sub_portal:'Abonnement verwalten',sub_upgrade:'Upgrade',
-    status_disconnected:'Nicht verbunden',status_connected:'Verbunden',
-    btn_connect:'Verbinden',btn_disconnect:'Trennen',
-    lbl_manual_title:'Neuer Termin',lbl_manual_emp:'Mitarbeiter',lbl_manual_service:'Dienstleistung',
-    lbl_manual_start:'Von',lbl_manual_end:'Bis',lbl_manual_cust:'Kundenname',
-    lbl_leave_title:'Abwesenheit eintragen',lbl_leave_emp:'Für wen?',
-    lbl_leave_start:'Start',lbl_leave_end:'Ende',lbl_leave_reason:'Grund',
-    btn_leave_cancel:'Abbrechen',btn_leave_save:'Speichern',
-    lbl_other:'Andere',
-    saved:'Gespeichert.',pw_changed:'Passwort geändert.',err_generic:'Ein Fehler ist aufgetreten.',
-    copied:'Kopiert!',csv_imported:'Importiert: ',csv_error:'CSV-Fehler: ',
-    apify_error:'Apify-Fehler: ',apify_done:'Importiert: ',me:'(Sie)',
-    nav_doctors:'Ärzte',nav_notizen:'Notizen',nav_beispielmodus:'Beispielmodus',nav_anamnese:'Anamnese',
-    doctors_sub:'Ärzte in der Nähe finden',notizen_sub:'Patientennotizen & Berichte',b2c_sub:'Kundenmailings & KI-Assistent',
-    beispielmodus_sub:'Anatomie-Haritas für Patientengespräche',anamnese_sub:'Digitales Anamnese-Formular',
-    lbl_doctor_notes:'Arztnotizen',lbl_therapist_notes:'Therapeutennotizen',
-    lbl_ai_summary:'AI-Bericht',lbl_send_patient:'An Patient senden',
-    lbl_select_patient:'Patient wählen',lbl_notes_empty:'Keine Notizen vorhanden.'
+    logout: 'Abmelden',
+    nav_overview: 'Übersicht', nav_calendar: 'Termine', nav_kunden: 'Kunden Info',
+    nav_services: 'Dienstleistungen', nav_hours: 'Arbeitszeiten',
+    nav_team: 'Mitarbeiter', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Rechnungen', nav_feedback: 'Feedback', nav_settings: 'Einstellungen',
+    overview_sub: 'Ihr heutiger Überblick',
+    welcome_text: 'Willkommen',
+    kpi_plan: 'Paket', kpi_status: 'Status', kpi_today_bookings: 'Heute', kpi_today_sub: 'Termine', kpi_support: 'Support',
+    status_active: '✓ Aktiv', status_inactive: '✗ Inaktiv',
+    today_bookings: 'Heutige Termine', upcoming_empty: 'Heute keine Termine.', features_title: 'Paketinhalt',
+    calendar_sub: 'Termine verwalten & buchen',
+    btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin',
+    kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Lead',
+    apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
+    lf_all: 'Alle', lf_new: 'Neu', lf_contacted: 'Kontaktiert', lf_booked: 'Termin', lf_won: 'Gewonnen', lf_lost: 'Verloren',
+    lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung',
+    lead_status: 'Status', lead_notes: 'Notizen', lead_email: 'E-Mail', lead_website: 'Website',
+    lead_country_code: 'Land', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategorie',
+    leads_empty: 'Noch keine Leads.', lead_modal_new: 'Neuer Lead', lead_modal_edit: 'Lead bearbeiten',
+    lead_save: 'Speichern', lead_cancel: 'Abbrechen', lead_delete: 'Löschen', lead_confirm_delete: 'Lead wirklich löschen?',
+    services_sub: 'Angebotene Leistungen verwalten',
+    lbl_add_service: 'Neue Dienstleistung', lbl_srv_title: 'Name', lbl_srv_dur: 'Dauer (Min)',
+    lbl_srv_price: 'Preis (€)', lbl_srv_emps: 'Mitarbeiter', btn_srv_save: 'Speichern',
+    alert_service_delete: 'Dienstleistung wirklich löschen?',
+    hours_sub: 'Öffnungszeiten je Mitarbeiter', btn_save_hours: 'Speichern', hours_for: 'Für:',
+    alert_hours_saved: 'Arbeitszeiten gespeichert!',
+    team_sub: 'Team verwalten', lbl_invite_code: 'Unternehmens-Code',
+    sub_invite_code: 'Mitarbeiter registrieren sich mit diesem Code.',
+    btn_copy: 'Kopieren', btn_remove: 'Entfernen', tab_info: 'Info', lbl_google_cal: 'Google Kalender',
+    b2b_sub: 'Geschäftskontakte & KI-Assistent', b2b_add: '+ Kontakt',
+    b2b_company: 'Unternehmen', b2b_contact: 'Ansprechpartner', b2b_status: 'Status',
+    b2b_empty: 'Noch keine B2B-Kontakte.', b2b_ai_title: 'KI-Assistent',
+    b2b_ai_welcome: 'Hallo! Ich helfe Ihnen bei B2B-Anfragen.',
+    set_profile: 'Profil', set_biz: 'Unternehmensname', set_lang: 'Sprache', set_save: 'Speichern',
+    set_account: 'Konto', set_password: 'Passwort', set_new_pw: 'Neues Passwort',
+    set_change: 'Passwort ändern', set_integrations: 'Integrationen',
+    sub_portal: 'Abonnement verwalten', sub_upgrade: 'Upgrade',
+    status_disconnected: 'Nicht verbunden', status_connected: 'Verbunden',
+    btn_connect: 'Verbinden', btn_disconnect: 'Trennen',
+    lbl_manual_title: 'Neuer Termin', lbl_manual_emp: 'Mitarbeiter', lbl_manual_service: 'Dienstleistung',
+    lbl_manual_start: 'Von', lbl_manual_end: 'Bis', lbl_manual_cust: 'Kundenname',
+    lbl_leave_title: 'Abwesenheit eintragen', lbl_leave_emp: 'Für wen?',
+    lbl_leave_start: 'Start', lbl_leave_end: 'Ende', lbl_leave_reason: 'Grund',
+    btn_leave_cancel: 'Abbrechen', btn_leave_save: 'Speichern',
+    lbl_other: 'Andere',
+    saved: 'Gespeichert.', pw_changed: 'Passwort geändert.', err_generic: 'Ein Fehler ist aufgetreten.',
+    copied: 'Kopiert!', csv_imported: 'Importiert: ', csv_error: 'CSV-Fehler: ',
+    apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
+    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_beispielmodus: 'Beispielmodus', nav_anamnese: 'Anamnese',
+    doctors_sub: 'Ärzte in der Nähe finden', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
+    beispielmodus_sub: 'Anatomie-Haritas für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
+    lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
+    lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
+    lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.'
   },
   en: {
-    logout:'Sign out',
-    nav_overview:'Overview',nav_calendar:'Appointments',nav_kunden:'Customers',
-    nav_services:'Services',nav_hours:'Working Hours',
-    nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Invoices',nav_feedback:'Feedback',nav_settings:'Settings',
-    overview_sub:'Your daily overview',
-    welcome_text:'Welcome',
-    kpi_plan:'Plan',kpi_status:'Status',kpi_today_bookings:'Today',kpi_today_sub:'Appointments',kpi_support:'Support',
-    status_active:'✓ Active',status_inactive:'✗ Inactive',
-    today_bookings:"Today's Appointments",upcoming_empty:'No appointments today.',features_title:"Plan contents",
-    calendar_sub:'Manage & book appointments',btn_add_leave:'Add time off',btn_add_booking:'+ Appointment',
-    kunden_sub:'Leads & customer info',leads_import:'Import CSV',leads_add:'+ New lead',
-    apify_label:'Google Maps Scraper:',apify_run:'Search',
-    lf_all:'All',lf_new:'New',lf_contacted:'Contacted',lf_booked:'Booked',lf_won:'Won',lf_lost:'Lost',
-    lead_title:'Name',lead_city:'City',lead_phone:'Phone',lead_rating:'Rating',
-    lead_status:'Status',lead_notes:'Notes',lead_email:'Email',lead_website:'Website',
-    lead_country_code:'Country',lead_google_url:'Google Maps URL',lead_category_name:'Category',
-    leads_empty:'No leads yet.',lead_modal_new:'New lead',lead_modal_edit:'Edit lead',
-    lead_save:'Save',lead_cancel:'Cancel',lead_delete:'Delete',lead_confirm_delete:'Delete this lead?',
-    services_sub:'Manage your services',
-    lbl_add_service:'New Service',lbl_srv_title:'Name',lbl_srv_dur:'Duration (min)',
-    lbl_srv_price:'Price (€)',lbl_srv_emps:'Employees',btn_srv_save:'Save',
-    alert_service_delete:'Delete this service?',
-    hours_sub:'Working hours per employee',btn_save_hours:'Save',hours_for:'For:',
-    alert_hours_saved:'Hours saved!',
-    team_sub:'Manage your team',lbl_invite_code:'Company Code',
-    sub_invite_code:'Employees register with this code.',
-    btn_copy:'Copy',btn_remove:'Remove',tab_info:'Info',lbl_google_cal:'Google Calendar',
-    b2b_sub:'Business contacts & AI assistant',b2b_add:'+ Contact',
-    b2b_company:'Company',b2b_contact:'Contact person',b2b_status:'Status',
-    b2b_empty:'No B2B contacts yet.',b2b_ai_title:'AI Assistant',b2b_ai_welcome:'Hi! I can help with B2B queries.',
-    set_profile:'Profile',set_biz:'Business name',set_lang:'Language',set_save:'Save',
-    set_account:'Account',set_password:'Password',set_new_pw:'New password',
-    set_change:'Change password',set_integrations:'Integrations',
-    sub_portal:'Manage subscription',sub_upgrade:'Upgrade',
-    status_disconnected:'Disconnected',status_connected:'Connected',
-    btn_connect:'Connect',btn_disconnect:'Disconnect',
-    lbl_manual_title:'New Appointment',lbl_manual_emp:'Employee',lbl_manual_service:'Service',
-    lbl_manual_start:'From',lbl_manual_end:'To',lbl_manual_cust:'Customer name',
-    lbl_leave_title:'Add time off',lbl_leave_emp:'For whom?',
-    lbl_leave_start:'Start',lbl_leave_end:'End',lbl_leave_reason:'Reason',
-    btn_leave_cancel:'Cancel',btn_leave_save:'Save',
-    lbl_other:'Other',
-    saved:'Saved.',pw_changed:'Password changed.',err_generic:'An error occurred.',
-    copied:'Copied!',csv_imported:'Imported: ',csv_error:'CSV error: ',
-    apify_error:'Apify error: ',apify_done:'Imported: ',me:'(You)',
-    nav_doctors:'Doctors',nav_notizen:'Notes',nav_beispielmodus:'Demo Mode',nav_anamnese:'Intake',
-    doctors_sub:'Find nearby doctors',notizen_sub:'Patient notes & reports',b2c_sub:'Customer mailings & AI assistant',
-    beispielmodus_sub:'Anatomy maps for patient consultations',anamnese_sub:'Digital intake form',
-    lbl_doctor_notes:'Doctor notes',lbl_therapist_notes:'Therapist notes',
-    lbl_ai_summary:'AI Report',lbl_send_patient:'Send to patient',
-    lbl_select_patient:'Select patient',lbl_notes_empty:'No notes available.'
+    logout: 'Sign out',
+    nav_overview: 'Overview', nav_calendar: 'Appointments', nav_kunden: 'Customers',
+    nav_services: 'Services', nav_hours: 'Working Hours',
+    nav_team: 'Team', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Invoices', nav_feedback: 'Feedback', nav_settings: 'Settings',
+    overview_sub: 'Your daily overview',
+    welcome_text: 'Welcome',
+    kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
+    status_active: '✓ Active', status_inactive: '✗ Inactive',
+    today_bookings: "Today's Appointments", upcoming_empty: 'No appointments today.', features_title: "Plan contents",
+    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_add_booking: '+ Appointment',
+    kunden_sub: 'Leads & customer info', leads_import: 'Import CSV', leads_add: '+ New lead',
+    apify_label: 'Google Maps Scraper:', apify_run: 'Search',
+    lf_all: 'All', lf_new: 'New', lf_contacted: 'Contacted', lf_booked: 'Booked', lf_won: 'Won', lf_lost: 'Lost',
+    lead_title: 'Name', lead_city: 'City', lead_phone: 'Phone', lead_rating: 'Rating',
+    lead_status: 'Status', lead_notes: 'Notes', lead_email: 'Email', lead_website: 'Website',
+    lead_country_code: 'Country', lead_google_url: 'Google Maps URL', lead_category_name: 'Category',
+    leads_empty: 'No leads yet.', lead_modal_new: 'New lead', lead_modal_edit: 'Edit lead',
+    lead_save: 'Save', lead_cancel: 'Cancel', lead_delete: 'Delete', lead_confirm_delete: 'Delete this lead?',
+    services_sub: 'Manage your services',
+    lbl_add_service: 'New Service', lbl_srv_title: 'Name', lbl_srv_dur: 'Duration (min)',
+    lbl_srv_price: 'Price (€)', lbl_srv_emps: 'Employees', btn_srv_save: 'Save',
+    alert_service_delete: 'Delete this service?',
+    hours_sub: 'Working hours per employee', btn_save_hours: 'Save', hours_for: 'For:',
+    alert_hours_saved: 'Hours saved!',
+    team_sub: 'Manage your team', lbl_invite_code: 'Company Code',
+    sub_invite_code: 'Employees register with this code.',
+    btn_copy: 'Copy', btn_remove: 'Remove', tab_info: 'Info', lbl_google_cal: 'Google Calendar',
+    b2b_sub: 'Business contacts & AI assistant', b2b_add: '+ Contact',
+    b2b_company: 'Company', b2b_contact: 'Contact person', b2b_status: 'Status',
+    b2b_empty: 'No B2B contacts yet.', b2b_ai_title: 'AI Assistant', b2b_ai_welcome: 'Hi! I can help with B2B queries.',
+    set_profile: 'Profile', set_biz: 'Business name', set_lang: 'Language', set_save: 'Save',
+    set_account: 'Account', set_password: 'Password', set_new_pw: 'New password',
+    set_change: 'Change password', set_integrations: 'Integrations',
+    sub_portal: 'Manage subscription', sub_upgrade: 'Upgrade',
+    status_disconnected: 'Disconnected', status_connected: 'Connected',
+    btn_connect: 'Connect', btn_disconnect: 'Disconnect',
+    lbl_manual_title: 'New Appointment', lbl_manual_emp: 'Employee', lbl_manual_service: 'Service',
+    lbl_manual_start: 'From', lbl_manual_end: 'To', lbl_manual_cust: 'Customer name',
+    lbl_leave_title: 'Add time off', lbl_leave_emp: 'For whom?',
+    lbl_leave_start: 'Start', lbl_leave_end: 'End', lbl_leave_reason: 'Reason',
+    btn_leave_cancel: 'Cancel', btn_leave_save: 'Save',
+    lbl_other: 'Other',
+    saved: 'Saved.', pw_changed: 'Password changed.', err_generic: 'An error occurred.',
+    copied: 'Copied!', csv_imported: 'Imported: ', csv_error: 'CSV error: ',
+    apify_error: 'Apify error: ', apify_done: 'Imported: ', me: '(You)',
+    nav_doctors: 'Doctors', nav_notizen: 'Notes', nav_beispielmodus: 'Demo Mode', nav_anamnese: 'Intake',
+    doctors_sub: 'Find nearby doctors', notizen_sub: 'Patient notes & reports', b2c_sub: 'Customer mailings & AI assistant',
+    beispielmodus_sub: 'Anatomy maps for patient consultations', anamnese_sub: 'Digital intake form',
+    lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
+    lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
+    lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.'
   },
   tr: {
-    logout:'Çıkış',
-    nav_overview:'Genel Bakış',nav_calendar:'Randevular',nav_kunden:'Müşteri Bilgisi',
-    nav_services:'Hizmetler',nav_hours:'Çalışma Saatleri',
-    nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Faturalar',nav_feedback:'Geri Bildirim',nav_settings:'Ayarlar',
-    overview_sub:'Günlük genel bakışınız',
-    welcome_text:'Hoşgeldin',
-    kpi_plan:'Paket',kpi_status:'Durum',kpi_today_bookings:'Bugün',kpi_today_sub:'Randevu',kpi_support:'Destek',
-    status_active:'✓ Aktif',status_inactive:'✗ Pasif',
-    today_bookings:'Bugünkü randevularınız',upcoming_empty:'Bugün randevu yok.',features_title:'Paket içeriği',
-    calendar_sub:'Randevu yönetimi',btn_add_leave:'İzin ekle',btn_add_booking:'+ Randevu',
-    kunden_sub:'Lead & müşteri bilgileri',leads_import:'CSV içe aktar',leads_add:'+ Yeni Lead',
-    apify_label:'Google Maps Scraper:',apify_run:'Ara',
-    lf_all:'Tümü',lf_new:'Yeni',lf_contacted:'İletişim kuruldu',lf_booked:'Randevu',lf_won:'Kazanıldı',lf_lost:'Kaybedildi',
-    lead_title:'Ad',lead_city:'Şehir',lead_phone:'Telefon',lead_rating:'Puan',
-    lead_status:'Durum',lead_notes:'Notlar',lead_email:'E-posta',lead_website:'Website',
-    lead_country_code:'Ülke',lead_google_url:'Google Maps URL',lead_category_name:'Kategori',
-    leads_empty:'Henüz lead yok.',lead_modal_new:'Yeni Lead',lead_modal_edit:'Lead düzenle',
-    lead_save:'Kaydet',lead_cancel:'İptal',lead_delete:'Sil',lead_confirm_delete:'Bu lead silinsin mi?',
-    services_sub:'Sunulan hizmetleri yönet',
-    lbl_add_service:'Yeni Hizmet',lbl_srv_title:'Ad',lbl_srv_dur:'Süre (dk)',
-    lbl_srv_price:'Fiyat (€)',lbl_srv_emps:'Personel',btn_srv_save:'Kaydet',
-    alert_service_delete:'Bu hizmet silinsin mi?',
-    hours_sub:'Personel başına çalışma saatleri',btn_save_hours:'Kaydet',hours_for:'Kimin için:',
-    alert_hours_saved:'Saatler kaydedildi!',
-    team_sub:'Ekibi yönet',lbl_invite_code:'Şirket Kodu',
-    sub_invite_code:'Çalışanlar bu kodla kayıt olabilir.',
-    btn_copy:'Kopyala',btn_remove:'Çıkar',tab_info:'Bilgi',lbl_google_cal:'Google Takvim',
-    b2b_sub:'İş ortakları & KI asistan',b2b_add:'+ Kişi',
-    b2b_company:'Şirket',b2b_contact:'İlgili kişi',b2b_status:'Durum',
-    b2b_empty:'Henüz B2B kişisi yok.',b2b_ai_title:'KI Asistan',b2b_ai_welcome:'Merhaba! B2B sorularınızda yardımcı olabilirim.',
-    set_profile:'Profil',set_biz:'İşletme adı',set_lang:'Dil',set_save:'Kaydet',
-    set_account:'Hesap',set_password:'Şifre',set_new_pw:'Yeni şifre',
-    set_change:'Şifre değiştir',set_integrations:'Entegrasyonlar',
-    sub_portal:'Aboneliği yönet',sub_upgrade:'Yükselt',
-    status_disconnected:'Bağlı değil',status_connected:'Bağlandı',
-    btn_connect:'Bağlan',btn_disconnect:'Bağlantıyı kes',
-    lbl_manual_title:'Yeni Randevu',lbl_manual_emp:'Personel',lbl_manual_service:'Hizmet',
-    lbl_manual_start:'Başlangıç',lbl_manual_end:'Bitiş',lbl_manual_cust:'Müşteri adı',
-    lbl_leave_title:'İzin ekle',lbl_leave_emp:'Kimin için?',
-    lbl_leave_start:'Başlangıç',lbl_leave_end:'Bitiş',lbl_leave_reason:'Sebep',
-    btn_leave_cancel:'İptal',btn_leave_save:'Kaydet',
-    lbl_other:'Diğer',
-    saved:'Kaydedildi.',pw_changed:'Şifre değiştirildi.',err_generic:'Bir hata oluştu.',
-    copied:'Kopyalandı!',csv_imported:'İçe aktarıldı: ',csv_error:'CSV hatası: ',
-    apify_error:'Apify hatası: ',apify_done:'İçe aktarıldı: ',me:'(Siz)',
-    nav_doctors:'Doktorlar',nav_notizen:'Notlar',nav_beispielmodus:'Örnek Modu',nav_anamnese:'Anamnez',
-    doctors_sub:'Yakındaki doktorları bul',notizen_sub:'Hasta notları ve raporlar',b2c_sub:'Müşteri maileri ve AI asistanı',
-    beispielmodus_sub:'Hasta görüşmeleri için anatomi haritaları',anamnese_sub:'Dijital anamnez formu',
-    lbl_doctor_notes:'Doktor notları',lbl_therapist_notes:'Terapist notları',
-    lbl_ai_summary:'AI Raporu',lbl_send_patient:'Hastaya gönder',
-    lbl_select_patient:'Hasta seç',lbl_notes_empty:'Not bulunmuyor.'
+    logout: 'Çıkış',
+    nav_overview: 'Genel Bakış', nav_calendar: 'Randevular', nav_kunden: 'Müşteri Bilgisi',
+    nav_services: 'Hizmetler', nav_hours: 'Çalışma Saatleri',
+    nav_team: 'Personel', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Faturalar', nav_feedback: 'Geri Bildirim', nav_settings: 'Ayarlar',
+    overview_sub: 'Günlük genel bakışınız',
+    welcome_text: 'Hoşgeldin',
+    kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
+    status_active: '✓ Aktif', status_inactive: '✗ Pasif',
+    today_bookings: 'Bugünkü randevularınız', upcoming_empty: 'Bugün randevu yok.', features_title: 'Paket içeriği',
+    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_add_booking: '+ Randevu',
+    kunden_sub: 'Lead & müşteri bilgileri', leads_import: 'CSV içe aktar', leads_add: '+ Yeni Lead',
+    apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
+    lf_all: 'Tümü', lf_new: 'Yeni', lf_contacted: 'İletişim kuruldu', lf_booked: 'Randevu', lf_won: 'Kazanıldı', lf_lost: 'Kaybedildi',
+    lead_title: 'Ad', lead_city: 'Şehir', lead_phone: 'Telefon', lead_rating: 'Puan',
+    lead_status: 'Durum', lead_notes: 'Notlar', lead_email: 'E-posta', lead_website: 'Website',
+    lead_country_code: 'Ülke', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategori',
+    leads_empty: 'Henüz lead yok.', lead_modal_new: 'Yeni Lead', lead_modal_edit: 'Lead düzenle',
+    lead_save: 'Kaydet', lead_cancel: 'İptal', lead_delete: 'Sil', lead_confirm_delete: 'Bu lead silinsin mi?',
+    services_sub: 'Sunulan hizmetleri yönet',
+    lbl_add_service: 'Yeni Hizmet', lbl_srv_title: 'Ad', lbl_srv_dur: 'Süre (dk)',
+    lbl_srv_price: 'Fiyat (€)', lbl_srv_emps: 'Personel', btn_srv_save: 'Kaydet',
+    alert_service_delete: 'Bu hizmet silinsin mi?',
+    hours_sub: 'Personel başına çalışma saatleri', btn_save_hours: 'Kaydet', hours_for: 'Kimin için:',
+    alert_hours_saved: 'Saatler kaydedildi!',
+    team_sub: 'Ekibi yönet', lbl_invite_code: 'Şirket Kodu',
+    sub_invite_code: 'Çalışanlar bu kodla kayıt olabilir.',
+    btn_copy: 'Kopyala', btn_remove: 'Çıkar', tab_info: 'Bilgi', lbl_google_cal: 'Google Takvim',
+    b2b_sub: 'İş ortakları & KI asistan', b2b_add: '+ Kişi',
+    b2b_company: 'Şirket', b2b_contact: 'İlgili kişi', b2b_status: 'Durum',
+    b2b_empty: 'Henüz B2B kişisi yok.', b2b_ai_title: 'KI Asistan', b2b_ai_welcome: 'Merhaba! B2B sorularınızda yardımcı olabilirim.',
+    set_profile: 'Profil', set_biz: 'İşletme adı', set_lang: 'Dil', set_save: 'Kaydet',
+    set_account: 'Hesap', set_password: 'Şifre', set_new_pw: 'Yeni şifre',
+    set_change: 'Şifre değiştir', set_integrations: 'Entegrasyonlar',
+    sub_portal: 'Aboneliği yönet', sub_upgrade: 'Yükselt',
+    status_disconnected: 'Bağlı değil', status_connected: 'Bağlandı',
+    btn_connect: 'Bağlan', btn_disconnect: 'Bağlantıyı kes',
+    lbl_manual_title: 'Yeni Randevu', lbl_manual_emp: 'Personel', lbl_manual_service: 'Hizmet',
+    lbl_manual_start: 'Başlangıç', lbl_manual_end: 'Bitiş', lbl_manual_cust: 'Müşteri adı',
+    lbl_leave_title: 'İzin ekle', lbl_leave_emp: 'Kimin için?',
+    lbl_leave_start: 'Başlangıç', lbl_leave_end: 'Bitiş', lbl_leave_reason: 'Sebep',
+    btn_leave_cancel: 'İptal', btn_leave_save: 'Kaydet',
+    lbl_other: 'Diğer',
+    saved: 'Kaydedildi.', pw_changed: 'Şifre değiştirildi.', err_generic: 'Bir hata oluştu.',
+    copied: 'Kopyalandı!', csv_imported: 'İçe aktarıldı: ', csv_error: 'CSV hatası: ',
+    apify_error: 'Apify hatası: ', apify_done: 'İçe aktarıldı: ', me: '(Siz)',
+    nav_doctors: 'Doktorlar', nav_notizen: 'Notlar', nav_beispielmodus: 'Örnek Modu', nav_anamnese: 'Anamnez',
+    doctors_sub: 'Yakındaki doktorları bul', notizen_sub: 'Hasta notları ve raporlar', b2c_sub: 'Müşteri maileri ve AI asistanı',
+    beispielmodus_sub: 'Hasta görüşmeleri için anatomi haritaları', anamnese_sub: 'Dijital anamnez formu',
+    lbl_doctor_notes: 'Doktor notları', lbl_therapist_notes: 'Terapist notları',
+    lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
+    lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.'
   }
 };
 
 const PLAN_FEATURES = {
   starter: {
-    de:['WhatsApp KI-Assistent (24/7)','Automatische Erinnerungen','Warteliste-Automation','InfinityMade Online-Terminbuchung','DSGVO-konform'],
-    en:['WhatsApp AI Assistant (24/7)','Automatic reminders','Waitlist automation','InfinityMade online booking','GDPR-compliant'],
-    tr:['WhatsApp KI Asistanı (7/24)','Otomatik hatırlatmalar','Bekleme listesi otomasyonu','InfinityMade online randevu','DSGVO uyumlu']
+    de: ['WhatsApp KI-Assistent (24/7)', 'Automatische Erinnerungen', 'Warteliste-Automation', 'InfinityMade Online-Terminbuchung', 'DSGVO-konform'],
+    en: ['WhatsApp AI Assistant (24/7)', 'Automatic reminders', 'Waitlist automation', 'InfinityMade online booking', 'GDPR-compliant'],
+    tr: ['WhatsApp KI Asistanı (7/24)', 'Otomatik hatırlatmalar', 'Bekleme listesi otomasyonu', 'InfinityMade online randevu', 'DSGVO uyumlu']
   },
   professional: {
-    de:['Alles aus Starter','Reaktivierungskampagne','Upsell-Vorschläge','Auslastungs-Dashboard','Mitarbeiter-Routing'],
-    en:['Everything in Starter','Reactivation campaign','Upsell suggestions','Utilization dashboard','Staff routing'],
-    tr:["Starter'daki her şey",'Reaktivasyon kampanyası','Ek satış önerileri','Doluluk paneli','Personel yönlendirme']
+    de: ['Alles aus Starter', 'Reaktivierungskampagne', 'Upsell-Vorschläge', 'Auslastungs-Dashboard', 'Mitarbeiter-Routing'],
+    en: ['Everything in Starter', 'Reactivation campaign', 'Upsell suggestions', 'Utilization dashboard', 'Staff routing'],
+    tr: ["Starter'daki her şey", 'Reaktivasyon kampanyası', 'Ek satış önerileri', 'Doluluk paneli', 'Personel yönlendirme']
   },
   klinik: {
-    de:['Alles aus Professional','Digitales Anamnese-Formular','Verpasster Anruf → Assistent','Medizinische Erinnerungen','Rezept-Workflow'],
-    en:['Everything in Professional','Digital intake form','Missed call → Assistant','Medical reminders','Prescription workflow'],
-    tr:["Professional'daki her şey",'Dijital anamnez formu','Cevapsız çağrı → Asistan','Tıbbi hatırlatmalar','Reçete iş akışı']
+    de: ['Alles aus Professional', 'Digitales Anamnese-Formular', 'Verpasster Anruf → Assistent', 'Medizinische Erinnerungen', 'Rezept-Workflow'],
+    en: ['Everything in Professional', 'Digital intake form', 'Missed call → Assistant', 'Medical reminders', 'Prescription workflow'],
+    tr: ["Professional'daki her şey", 'Dijital anamnez formu', 'Cevapsız çağrı → Asistan', 'Tıbbi hatırlatmalar', 'Reçete iş akışı']
   },
   mitarbeiter: {
-    de:['Online-Terminbuchung','Kalender-Synchronisation','Arbeitszeiten-Verwaltung','DSGVO-konform'],
-    en:['Online booking','Calendar sync','Working hours management','GDPR-compliant'],
-    tr:['Online randevu','Takvim senkronizasyonu','Çalışma saatleri yönetimi','DSGVO uyumlu']
+    de: ['Online-Terminbuchung', 'Kalender-Synchronisation', 'Arbeitszeiten-Verwaltung', 'DSGVO-konform'],
+    en: ['Online booking', 'Calendar sync', 'Working hours management', 'GDPR-compliant'],
+    tr: ['Online randevu', 'Takvim senkronizasyonu', 'Çalışma saatleri yönetimi', 'DSGVO uyumlu']
   }
 };
 
 const SECTOR_PANELS = {
   default: [
-    {id:'overview',icon:'📊',key:'nav_overview',roles:['owner','employee']},
-    {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
-    {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner','employee']},
-    {id:'services',icon:'✂️', key:'nav_services',roles:['owner','employee']},
-    {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
-    {id:'team',    icon:'👤',key:'nav_team',    roles:['owner','employee']},
-    {id:'rechnungen',icon:'💶',key:'nav_rechnungen',roles:['owner','employee']},
-    {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner','employee']},
-    {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
-    {id:'feedback',icon:'💬',key:'nav_feedback',roles:['owner','employee']},
-    {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
+    { id: 'overview', icon: '📊', key: 'nav_overview', roles: ['owner', 'employee'] },
+    { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
+    { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
+    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner', 'employee'] },
+    { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
+    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
+    { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
+    { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
+    { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
+    { id: 'feedback', icon: '💬', key: 'nav_feedback', roles: ['owner', 'employee'] },
+    { id: 'settings', icon: '⚙️', key: 'nav_settings', roles: ['owner', 'employee'] }
   ],
   physiotherapy: [
-    {id:'overview',icon:'📊',key:'nav_overview',roles:['owner','employee']},
-    {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
-    {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner','employee']},
-    {id:'notizen', icon:'📝',key:'nav_notizen', roles:['owner','employee']},
-    {id:'services',icon:'✂️', key:'nav_services',roles:['owner','employee']},
-    {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
-    {id:'team',    icon:'👤',key:'nav_team',    roles:['owner','employee']},
-    {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
-    {id:'anamnese',icon:'📝',key:'nav_anamnese',roles:['owner','employee']},
-    {id:'rechnungen',icon:'💶',key:'nav_rechnungen',roles:['owner','employee']},
-    {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner','employee']},
-    {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
-    {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
-    {id:'feedback',icon:'💬',key:'nav_feedback',roles:['owner','employee']},
-    {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
+    { id: 'overview', icon: '📊', key: 'nav_overview', roles: ['owner', 'employee'] },
+    { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
+    { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
+    { id: 'notizen', icon: '📝', key: 'nav_notizen', roles: ['owner', 'employee'] },
+    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner', 'employee'] },
+    { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
+    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
+    { id: 'doctors', icon: '🏥', key: 'nav_doctors', roles: ['owner', 'employee'] },
+    { id: 'anamnese', icon: '📝', key: 'nav_anamnese', roles: ['owner', 'employee'] },
+    { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
+    { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
+    { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
+    { id: 'beispielmodus', icon: '🦴', key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
+    { id: 'feedback', icon: '💬', key: 'nav_feedback', roles: ['owner', 'employee'] },
+    { id: 'settings', icon: '⚙️', key: 'nav_settings', roles: ['owner', 'employee'] }
   ],
   praxis: [
-    {id:'overview',icon:'📊',key:'nav_overview',roles:['owner','employee']},
-    {id:'calendar',icon:'📅',key:'nav_calendar',roles:['owner','employee']},
-    {id:'kunden',  icon:'👥',key:'nav_kunden',  roles:['owner','employee']},
-    {id:'notizen', icon:'📝',key:'nav_notizen', roles:['owner','employee']},
-    {id:'services',icon:'✂️', key:'nav_services',roles:['owner','employee']},
-    {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
-    {id:'team',    icon:'👤',key:'nav_team',    roles:['owner','employee']},
-    {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
-    {id:'rechnungen',icon:'💶',key:'nav_rechnungen',roles:['owner','employee']},
-    {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner','employee']},
-    {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
-    {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
-    {id:'settings',icon:'⚙️', key:'nav_settings',roles:['owner','employee']}
+    { id: 'overview', icon: '📊', key: 'nav_overview', roles: ['owner', 'employee'] },
+    { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
+    { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
+    { id: 'notizen', icon: '📝', key: 'nav_notizen', roles: ['owner', 'employee'] },
+    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner', 'employee'] },
+    { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
+    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
+    { id: 'doctors', icon: '🏥', key: 'nav_doctors', roles: ['owner', 'employee'] },
+    { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
+    { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
+    { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
+    { id: 'beispielmodus', icon: '🦴', key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
+    { id: 'settings', icon: '⚙️', key: 'nav_settings', roles: ['owner', 'employee'] }
   ]
 };
 
 const DAYS = {
-  de:['So','Mo','Di','Mi','Do','Fr','Sa'],
-  en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
-  tr:['Paz','Pzt','Sal','Çar','Per','Cum','Cmt']
+  de: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  tr: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt']
 };
 
 let currentLang = localStorage.getItem('infinity_lang') || 'de';
@@ -259,7 +259,7 @@ let calendarView = 'day';
 let dayViewDate = new Date();
 let moveBooking = null;
 let moveGhostEl = null;
-const EMP_COLORS = ['#22c55e','#3b82f6','#f59e0b','#a855f7','#ec4899'];
+const EMP_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ec4899'];
 let ovEmpPage = 0;
 let leadFilter = 'all';
 let leadSearchVal = '';
@@ -284,7 +284,7 @@ let pdCurrentLeadId = null;
 
     const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
     if (profErr) console.error('[profile]', profErr);
-    currentProfile = profile || { id: session.user.id, email: session.user.email, plan:'starter', role:'owner', is_active:true };
+    currentProfile = profile || { id: session.user.id, email: session.user.email, plan: 'starter', role: 'owner', is_active: true };
     if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
@@ -308,12 +308,12 @@ let pdCurrentLeadId = null;
   }
 })();
 
-function t(key) { return (T[currentLang]||T.de)[key]||key; }
+function t(key) { return (T[currentLang] || T.de)[key] || key; }
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-function getOwnerId() { return currentProfile.role==='owner' ? currentSession.user.id : currentProfile.owner_id; }
+function getOwnerId() { return currentProfile.role === 'owner' ? currentSession.user.id : currentProfile.owner_id; }
 
 function getSector() {
   if (currentProfile.role === 'owner') return currentProfile.sector || 'default';
@@ -328,7 +328,7 @@ function getSidebarItems() {
 
 function applyI18n() {
   document.documentElement.lang = currentLang;
-  document.querySelectorAll('[data-i18n]').forEach(el => { const v=t(el.dataset.i18n); if(v) el.textContent=v; });
+  document.querySelectorAll('[data-i18n]').forEach(el => { const v = t(el.dataset.i18n); if (v) el.textContent = v; });
   const ls = document.getElementById('langSelect');
   if (ls) ls.value = currentLang;
 }
@@ -351,11 +351,11 @@ async function renderSidebar() {
   }
 
   const items = getSidebarItems();
-  console.log('[renderSidebar] items count=', items.length, items.map(i=>i.id));
+  console.log('[renderSidebar] items count=', items.length, items.map(i => i.id));
   items.forEach(item => {
     if (!item.roles.includes(role)) return;
     const btn = document.createElement('button');
-    btn.className = 'sidebar-item' + (item.id===activePanel ? ' active' : '');
+    btn.className = 'sidebar-item' + (item.id === activePanel ? ' active' : '');
     btn.dataset.panel = item.id;
     btn.innerHTML = `<span class="icon">${item.icon}</span><span>${t(item.key)}</span>`;
     btn.addEventListener('click', () => switchPanel(item.id));
@@ -381,27 +381,27 @@ function showMyBookingLink() {
 async function switchPanel(id) {
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const target = document.getElementById('panel-'+id);
+  const target = document.getElementById('panel-' + id);
   if (target) target.classList.add('active');
   await renderSidebar();
   closeSidebar();
-  if (id==='calendar'){
+  if (id === 'calendar') {
     showMyBookingLink();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
     setCalendarView('day');
   }
-  if (id==='kunden') loadLeads();
-  if (id==='services') loadServices();
-  if (id==='hours') loadHoursPanel();
-  if (id==='team') loadTeam();
-  if (id==='b2b') { loadB2B(); checkB2bSetup(); }
-  if (id==='b2c') { loadB2C(); checkB2cSetup(); }
-  if (id==='settings') loadSettings();
-  if (id==='doctors') loadDoctors();
-  if (id==='notizen') loadNotizen();
-  if (id==='beispielmodus') loadBeispielmodus();
-  if (id==='rechnungen') loadRechnungen();
-  if (id==='anamnese') loadAnamnese();
+  if (id === 'kunden') loadLeads();
+  if (id === 'services') loadServices();
+  if (id === 'hours') loadHoursPanel();
+  if (id === 'team') loadTeam();
+  if (id === 'b2b') { loadB2B(); checkB2bSetup(); }
+  if (id === 'b2c') { loadB2C(); checkB2cSetup(); }
+  if (id === 'settings') loadSettings();
+  if (id === 'doctors') loadDoctors();
+  if (id === 'notizen') loadNotizen();
+  if (id === 'beispielmodus') loadBeispielmodus();
+  if (id === 'rechnungen') loadRechnungen();
+  if (id === 'anamnese') loadAnamnese();
 }
 
 function openSidebar() {
@@ -422,7 +422,7 @@ document.getElementById('langSelect').addEventListener('change', async (e) => {
   localStorage.setItem('infinity_lang', currentLang);
   applyI18n();
   await renderSidebar();
-  await supabase.from('profiles').update({language:currentLang}).eq('id',currentSession.user.id);
+  await supabase.from('profiles').update({ language: currentLang }).eq('id', currentSession.user.id);
 });
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await supabase.auth.signOut();
@@ -436,13 +436,13 @@ document.querySelectorAll('.modal-close,[data-modal]').forEach(btn => {
   });
 });
 document.querySelectorAll('.modal-overlay').forEach(ov => {
-  ov.addEventListener('click', e => { if(e.target===ov) closeModal(ov.id); });
+  ov.addEventListener('click', e => { if (e.target === ov) closeModal(ov.id); });
 });
 
-function openModal(id) { const el=document.getElementById(id); if(el) el.hidden=false; }
-function closeModal(id) { const el=document.getElementById(id); if(el) el.hidden=true; if(id==='bkActionModal' && bkActionTimer){ clearInterval(bkActionTimer); bkActionTimer=null; } }
+function openModal(id) { const el = document.getElementById(id); if (el) el.hidden = false; }
+function closeModal(id) { const el = document.getElementById(id); if (el) el.hidden = true; if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } }
 
-function showToast(msg, type='success') {
+function showToast(msg, type = 'success') {
   const d = document.createElement('div');
   d.className = `toast ${type}`;
   d.textContent = msg;
@@ -452,17 +452,17 @@ function showToast(msg, type='success') {
 
 function fmtTime(iso) {
   if (!iso) return '—';
-  return new Intl.DateTimeFormat('de-DE',{timeZone:'Europe/Berlin',hour:'2-digit',minute:'2-digit'}).format(new Date(iso));
+  return new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
 }
 function fmtDate(iso) {
   if (!iso) return '—';
-  return new Intl.DateTimeFormat('de-DE',{timeZone:'Europe/Berlin',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(iso));
+  return new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(iso));
 }
 
 function statusBadge(s) {
-  if (s==='confirmed'||s==='accepted') return 'badge-green';
-  if (s==='cancelled'||s==='canceled') return 'badge-red';
-  if (s==='pending') return 'badge-yellow';
+  if (s === 'confirmed' || s === 'accepted') return 'badge-green';
+  if (s === 'cancelled' || s === 'canceled') return 'badge-red';
+  if (s === 'pending') return 'badge-yellow';
   return 'badge-gray';
 }
 
@@ -478,19 +478,19 @@ async function renderOverview() {
 
   // Settings Paket & Status
   document.getElementById('setPlanValue').textContent = currentProfile.plan
-    ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
+    ? currentProfile.plan.charAt(0).toUpperCase() + currentProfile.plan.slice(1) : '—';
   document.getElementById('setStatusValue').textContent = currentProfile.is_active ? t('status_active') : t('status_inactive');
 
-  ['welcome-banner','pastdue-banner'].forEach(id => {
-    const el=document.getElementById(id); if(el) el.hidden=true;
+  ['welcome-banner', 'pastdue-banner'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.hidden = true;
   });
   const params = new URLSearchParams(location.search);
   const status = currentProfile.plan_status;
 
-  if (params.get('welcome')==='1') {
-    history.replaceState({},'' ,location.pathname);
+  if (params.get('welcome') === '1') {
+    history.replaceState({}, '', location.pathname);
     document.getElementById('welcome-banner').hidden = false;
-  } else if (status==='past_due') {
+  } else if (status === 'past_due') {
     document.getElementById('pastdue-banner').hidden = false;
   }
 
@@ -502,33 +502,33 @@ async function renderOverview() {
 let scheduleDate = new Date();
 
 function hexToHSL(hex) {
-  let r=0,g=0,b=0;
-  if (hex.length===4){r=parseInt('0x'+hex[1]+hex[1]);g=parseInt('0x'+hex[2]+hex[2]);b=parseInt('0x'+hex[3]+hex[3]);}
-  else if (hex.length===7){r=parseInt('0x'+hex[1]+hex[2]);g=parseInt('0x'+hex[3]+hex[4]);b=parseInt('0x'+hex[5]+hex[6]);}
-  r/=255; g/=255; b/=255;
-  const max=Math.max(r,g,b), min=Math.min(r,g,b);
-  let h=0,s=0,l=(max+min)/2;
-  if (max!==min){
-    const d=max-min;
-    s=l>0.5?d/(2-max-min):d/(max+min);
-    switch(max){
-      case r:h=((g-b)/d+(g<b?6:0))/6;break;
-      case g:h=((b-r)/d+2)/6;break;
-      case b:h=((r-g)/d+4)/6;break;
+  let r = 0, g = 0, b = 0;
+  if (hex.length === 4) { r = parseInt('0x' + hex[1] + hex[1]); g = parseInt('0x' + hex[2] + hex[2]); b = parseInt('0x' + hex[3] + hex[3]); }
+  else if (hex.length === 7) { r = parseInt('0x' + hex[1] + hex[2]); g = parseInt('0x' + hex[3] + hex[4]); b = parseInt('0x' + hex[5] + hex[6]); }
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
     }
   }
-  return {h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)};
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
 }
-function hslToHex(h,s,l){
-  s/=100; l/=100;
-  const k=n=>(n+h/30)%12;
-  const a=s*Math.min(l,1-l);
-  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
-  const toHex=x=>Math.round(x*255).toString(16).padStart(2,'0');
-  return '#'+toHex(f(0))+toHex(f(8))+toHex(f(4));
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
+  return '#' + toHex(f(0)) + toHex(f(8)) + toHex(f(4));
 }
-function shiftColorForTime(hex, hour){
-  if (!hex || hex==='null') return null;
+function shiftColorForTime(hex, hour) {
+  if (!hex || hex === 'null') return null;
   const hsl = hexToHSL(hex);
   const factor = Math.max(0, Math.min(1, (hour - 8) / 12));
   hsl.l = Math.max(38, Math.min(68, hsl.l - factor * 18));
@@ -538,22 +538,22 @@ function shiftColorForTime(hex, hour){
 
 function findGaps(whStart, whEnd, bookings) {
   try {
-    let current = (whStart || '09:00:00').substring(0,5);
-    const end   = (whEnd   || '18:00:00').substring(0,5);
+    let current = (whStart || '09:00:00').substring(0, 5);
+    const end = (whEnd || '18:00:00').substring(0, 5);
     if (!current || !end) return [];
     const gaps = [];
-    const sorted = [...bookings].sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+    const sorted = [...bookings].sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
     for (const b of sorted) {
-      const bStart = new Date(b.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
+      const bStart = new Date(b.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' });
       const durMin = b.services?.duration_minutes || 30;
-      const bEndRaw = b.end_time ? new Date(b.end_time) : new Date(new Date(b.start_time).getTime() + durMin*60000);
-      const bEnd = bEndRaw.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Europe/Berlin'});
-      if (bStart > current) gaps.push({start: current, end: bStart});
+      const bEndRaw = b.end_time ? new Date(b.end_time) : new Date(new Date(b.start_time).getTime() + durMin * 60000);
+      const bEnd = bEndRaw.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Berlin' });
+      if (bStart > current) gaps.push({ start: current, end: bStart });
       if (bEnd > current) current = bEnd;
     }
-    if (current < end) gaps.push({start: current, end});
+    if (current < end) gaps.push({ start: current, end });
     return gaps;
-  } catch(e) { console.error('[findGaps]', e); return []; }
+  } catch (e) { console.error('[findGaps]', e); return []; }
 }
 
 async function renderGaps() {
@@ -563,7 +563,7 @@ async function renderGaps() {
     if (!container) return;
 
     const now = new Date();
-    const todayStr = now.toLocaleDateString('sv-SE',{timeZone:tz});
+    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: tz });
     const today = new Date(todayStr + 'T00:00:00');
     const tomorrow = new Date(today.getTime() + 86400000);
     const todayDow = today.getDay();
@@ -584,28 +584,28 @@ async function renderGaps() {
       .eq('owner_id', ownerId)
       .eq('user_id', currentSession.user.id)
       .gte('start_time', today.toISOString()).lte('start_time', tomorrowEndIso)
-      .neq('status','cancelled').order('start_time');
+      .neq('status', 'cancelled').order('start_time');
     const { data: bookings } = await q;
 
     const allGaps = [];
     const whToday = whMap[todayDow];
     if (whToday) {
-      const todayBookings = (bookings||[]).filter(b => {
+      const todayBookings = (bookings || []).filter(b => {
         const d = new Date(b.start_time);
         return d >= today && d < new Date(today.getTime() + 86400000);
       });
       findGaps(whToday.start_time, whToday.end_time, todayBookings).forEach(g =>
-        allGaps.push({day: 'Heute', start: g.start, end: g.end})
+        allGaps.push({ day: 'Heute', start: g.start, end: g.end })
       );
     }
     const whTom = whMap[tomorrowDow];
     if (whTom) {
-      const tomBookings = (bookings||[]).filter(b => {
+      const tomBookings = (bookings || []).filter(b => {
         const d = new Date(b.start_time);
         return d >= tomorrow && d < new Date(tomorrow.getTime() + 86400000);
       });
       findGaps(whTom.start_time, whTom.end_time, tomBookings).forEach(g =>
-        allGaps.push({day: 'Morgen', start: g.start, end: g.end})
+        allGaps.push({ day: 'Morgen', start: g.start, end: g.end })
       );
     }
 
@@ -616,8 +616,8 @@ async function renderGaps() {
       return;
     }
     const totalFreeMin = allGaps.reduce((sum, g) => {
-      const s = parseInt(g.start.split(':')[0])*60 + parseInt(g.start.split(':')[1]);
-      const e = parseInt(g.end.split(':')[0])*60 + parseInt(g.end.split(':')[1]);
+      const s = parseInt(g.start.split(':')[0]) * 60 + parseInt(g.start.split(':')[1]);
+      const e = parseInt(g.end.split(':')[0]) * 60 + parseInt(g.end.split(':')[1]);
       return sum + (e - s);
     }, 0);
     const totalH = Math.floor(totalFreeMin / 60);
@@ -633,7 +633,7 @@ async function renderGaps() {
         <div class="gap-card-time">${g.start} - ${g.end}</div>
       </div>`;
     }).join('');
-  } catch(e) { console.error('[renderGaps]', e); }
+  } catch (e) { console.error('[renderGaps]', e); }
 }
 
 async function renderGapsForDate(date) {
@@ -643,15 +643,15 @@ async function renderGapsForDate(date) {
     if (!container) return;
     if (!date) date = scheduleDate;
 
-    const dateStr = date.toLocaleDateString('sv-SE',{timeZone:tz});
+    const dateStr = date.toLocaleDateString('sv-SE', { timeZone: tz });
     const dayStart = new Date(dateStr + 'T00:00:00');
     const dayDow = dayStart.getDay();
 
     const labelEl = document.getElementById('gapsDateLabel');
     if (labelEl) {
-      const todayStr = new Date().toLocaleDateString('sv-SE',{timeZone:tz});
+      const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: tz });
       const isToday = dateStr === todayStr;
-      const fmt = new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'numeric',month:'short'}).format(dayStart);
+      const fmt = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }).format(dayStart);
       labelEl.textContent = isToday ? 'Freie Zeiten' : fmt;
     }
 
@@ -669,7 +669,7 @@ async function renderGapsForDate(date) {
       .eq('owner_id', ownerId)
       .eq('user_id', currentSession.user.id)
       .gte('start_time', dayStart.toISOString()).lte('start_time', dayEndIso)
-      .neq('status','cancelled').order('start_time');
+      .neq('status', 'cancelled').order('start_time');
     const { data: bookings } = await q;
 
     const totalEl = document.getElementById('gapsTotal');
@@ -680,11 +680,11 @@ async function renderGapsForDate(date) {
       return;
     }
 
-    const dayBookings = (bookings||[]).filter(b => {
+    const dayBookings = (bookings || []).filter(b => {
       const d = new Date(b.start_time);
       return d >= dayStart && d < new Date(dayStart.getTime() + 86400000);
     });
-    const allGaps = findGaps(wh.start_time, wh.end_time, dayBookings).map(g => ({day: 'Heute', start: g.start, end: g.end}));
+    const allGaps = findGaps(wh.start_time, wh.end_time, dayBookings).map(g => ({ day: 'Heute', start: g.start, end: g.end }));
 
     if (allGaps.length === 0) {
       container.innerHTML = '<div class="gap-empty">Keine freien Zeiten.</div>';
@@ -692,8 +692,8 @@ async function renderGapsForDate(date) {
       return;
     }
     const totalFreeMin = allGaps.reduce((sum, g) => {
-      const s = parseInt(g.start.split(':')[0])*60 + parseInt(g.start.split(':')[1]);
-      const e = parseInt(g.end.split(':')[0])*60 + parseInt(g.end.split(':')[1]);
+      const s = parseInt(g.start.split(':')[0]) * 60 + parseInt(g.start.split(':')[1]);
+      const e = parseInt(g.end.split(':')[0]) * 60 + parseInt(g.end.split(':')[1]);
       return sum + (e - s);
     }, 0);
     const totalH = Math.floor(totalFreeMin / 60);
@@ -709,33 +709,33 @@ async function renderGapsForDate(date) {
         <div class="gap-card-time">${g.start} - ${g.end}</div>
       </div>`;
     }).join('');
-  } catch(e) { console.error('[renderGapsForDate]', e); }
+  } catch (e) { console.error('[renderGapsForDate]', e); }
 }
 
 async function loadScheduleBookings(date) {
   scheduleDate = date;
   const loadingEl = document.getElementById('upcoming-bookings-loading');
-  const emptyEl   = document.getElementById('upcoming-bookings-empty');
-  const gridEl    = document.getElementById('upcoming-bookings-list');
-  const labelEl   = document.getElementById('scheduleDateLabel');
-  loadingEl.hidden=false; emptyEl.hidden=true; gridEl.hidden=true;
+  const emptyEl = document.getElementById('upcoming-bookings-empty');
+  const gridEl = document.getElementById('upcoming-bookings-list');
+  const labelEl = document.getElementById('scheduleDateLabel');
+  loadingEl.hidden = false; emptyEl.hidden = true; gridEl.hidden = true;
 
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
-  const fmtDate = new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'numeric',month:'short'}).format(date);
+  const fmtDate = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }).format(date);
   labelEl.textContent = isToday ? 'Heutige Termine' : fmtDate;
 
   const tz = 'Europe/Berlin';
-  const dStr = date.toLocaleDateString('sv-SE',{timeZone:tz});
-  const dStart = new Date(dStr+'T00:00:00').toISOString();
-  const dEnd   = new Date(dStr+'T23:59:59').toISOString();
+  const dStr = date.toLocaleDateString('sv-SE', { timeZone: tz });
+  const dStart = new Date(dStr + 'T00:00:00').toISOString();
+  const dEnd = new Date(dStr + 'T23:59:59').toISOString();
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
     .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,color,code)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
-    .neq('status','cancelled');
+    .neq('status', 'cancelled');
 
   loadingEl.hidden = true;
 
@@ -749,7 +749,7 @@ async function loadScheduleBookings(date) {
     document.getElementById('kpi-today').textContent = myBookings.length;
   }
 
-  if (displayBookings.length===0) { emptyEl.hidden=false; return; }
+  if (displayBookings.length === 0) { emptyEl.hidden = false; return; }
 
   const timeCol = document.getElementById('ovTimeCol');
   const colsWrap = document.getElementById('ovColsWrap');
@@ -762,13 +762,13 @@ async function loadScheduleBookings(date) {
     const now = new Date();
     DAY_START = Math.max(8, now.getHours());
   }
-  for (let h=DAY_START; h<20; h++) {
-    for (let m=0; m<60; m+=30) {
+  for (let h = DAY_START; h < 20; h++) {
+    for (let m = 0; m < 60; m += 30) {
       const slot = document.createElement('div');
       slot.className = 'dv-slot';
       const label = document.createElement('div');
       label.className = 'dv-time-label';
-      label.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       slot.appendChild(label);
       timeCol.appendChild(slot);
     }
@@ -778,7 +778,7 @@ async function loadScheduleBookings(date) {
   if (!allEmps.length) allEmps = [currentProfile];
 
   const currentId = currentSession.user.id;
-  allEmps = [...allEmps].sort((a,b) => {
+  allEmps = [...allEmps].sort((a, b) => {
     if (a.id === currentId) return -1;
     if (b.id === currentId) return 1;
     return 0;
@@ -818,8 +818,8 @@ async function loadScheduleBookings(date) {
     const slotWrap = document.createElement('div');
     slotWrap.className = 'dv-col-slots';
 
-    for (let h=DAY_START; h<20; h++) {
-      for (let m=0; m<60; m+=30) {
+    for (let h = DAY_START; h < 20; h++) {
+      for (let m = 0; m < 60; m += 30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
         slotWrap.appendChild(slot);
@@ -830,17 +830,17 @@ async function loadScheduleBookings(date) {
     empBookings.forEach(b => {
       const s = new Date(b.start_time);
       const e = new Date(b.end_time);
-      const sMin = s.getHours()*60+s.getMinutes();
-      const eMin = e.getHours()*60+e.getMinutes();
-      const dayStartMin = DAY_START*60;
-      const topPx = ((sMin-dayStartMin)/30)*SLOT_H;
-      const hPx   = ((eMin-sMin)/30)*SLOT_H;
+      const sMin = s.getHours() * 60 + s.getMinutes();
+      const eMin = e.getHours() * 60 + e.getMinutes();
+      const dayStartMin = DAY_START * 60;
+      const topPx = ((sMin - dayStartMin) / 30) * SLOT_H;
+      const hPx = ((eMin - sMin) / 30) * SLOT_H;
 
       const block = document.createElement('div');
       block.className = 'dv-booking-block';
-      block.style.top = topPx+'px';
-      block.style.height = Math.max(hPx,24)+'px';
-      block.style.background = color+'25';
+      block.style.top = topPx + 'px';
+      block.style.height = Math.max(hPx, 24) + 'px';
+      block.style.background = color + '25';
       block.style.borderColor = color;
       block.style.color = '#fff';
       const svcCode2 = b.services?.code;
@@ -863,13 +863,13 @@ async function loadScheduleBookings(date) {
 async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
 
 async function openStripePortal() {
-  if (!currentProfile.stripe_subscription_id) { window.location.href='/onboarding.html?step=plan'; return; }
+  if (!currentProfile.stripe_subscription_id) { window.location.href = '/onboarding.html?step=plan'; return; }
   try {
-    const {data:{session:s}} = await supabase.auth.getSession();
-    const res = await fetch('/api/stripe/portal-session',{method:'POST',headers:{'Authorization':'Bearer '+s.access_token,'Content-Type':'application/json'}});
-    const {url} = await res.json();
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch('/api/stripe/portal-session', { method: 'POST', headers: { 'Authorization': 'Bearer ' + s.access_token, 'Content-Type': 'application/json' } });
+    const { url } = await res.json();
     if (url) window.location.href = url;
-  } catch { showToast(t('err_generic'),'error'); }
+  } catch { showToast(t('err_generic'), 'error'); }
 }
 
 function renderCalEmpList() {
@@ -935,7 +935,7 @@ async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
     let slots = data.slots || [];
     const today = new Date();
     const offset = today.getTimezoneOffset();
-    const localIso = new Date(today.getTime() - offset * 60000).toISOString().substring(0,16);
+    const localIso = new Date(today.getTime() - offset * 60000).toISOString().substring(0, 16);
     slots = slots.filter(slot => `${dateStr}T${slot}` >= localIso);
     const slotItems = slots.map(slot => ({
       label: slot,
@@ -1050,22 +1050,22 @@ document.getElementById('calAddLeaveBtn').addEventListener('click', () => {
 function toISODate(d) { return d.toISOString().split('T')[0]; }
 
 function formatDateDE(d) {
-  const opts = { day:'numeric', month:'long', year:'numeric' };
+  const opts = { day: 'numeric', month: 'long', year: 'numeric' };
   return d.toLocaleDateString('de-DE', opts);
 }
 
 function setCalendarView(view) {
   calendarView = view;
-  document.getElementById('monthViewWrap').style.display = view==='month'?'':'none';
-  document.getElementById('dayViewGrid').style.display = view==='day'?'flex':'none';
+  document.getElementById('monthViewWrap').style.display = view === 'month' ? '' : 'none';
+  document.getElementById('dayViewGrid').style.display = view === 'day' ? 'flex' : 'none';
   document.querySelectorAll('.cal-view-toggle .cal-view-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.view===view);
+    b.classList.toggle('active', b.dataset.view === view);
   });
-  if (view==='day') renderDayView(toISODate(dayViewDate));
+  if (view === 'day') renderDayView(toISODate(dayViewDate));
 }
 
 async function renderDayView(dateStr) {
-  document.getElementById('dayViewDateLabel').textContent = formatDateDE(new Date(dateStr+'T12:00:00'));
+  document.getElementById('dayViewDateLabel').textContent = formatDateDE(new Date(dateStr + 'T12:00:00'));
   const timeCol = document.getElementById('dvTimeCol');
   const colsWrap = document.getElementById('dvColsWrap');
   timeCol.innerHTML = '';
@@ -1074,27 +1074,27 @@ async function renderDayView(dateStr) {
   const emps = teamMembers;
   if (!emps.length) return;
 
-  for (let h=8; h<20; h++) {
-    for (let m=0; m<60; m+=30) {
+  for (let h = 8; h < 20; h++) {
+    for (let m = 0; m < 60; m += 30) {
       const slot = document.createElement('div');
       slot.className = 'dv-slot';
       const label = document.createElement('div');
       label.className = 'dv-time-label';
-      label.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       slot.appendChild(label);
       timeCol.appendChild(slot);
     }
   }
 
   const ownerId = getOwnerId();
-  const dStart = new Date(dateStr+'T00:00:00').toISOString();
-  const dEnd   = new Date(dateStr+'T23:59:59').toISOString();
+  const dStart = new Date(dateStr + 'T00:00:00').toISOString();
+  const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
     .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,code)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
-    .neq('status','cancelled');
+    .neq('status', 'cancelled');
 
   const empIds = emps.map(e => e.id);
   const { data: timeOffs } = await supabase.from('time_offs')
@@ -1116,11 +1116,11 @@ async function renderDayView(dateStr) {
     const slotWrap = document.createElement('div');
     slotWrap.className = 'dv-col-slots';
 
-    for (let h=8; h<20; h++) {
-      for (let m=0; m<60; m+=30) {
+    for (let h = 8; h < 20; h++) {
+      for (let m = 0; m < 60; m += 30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
-        const timeStr = `${dateStr}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        const timeStr = `${dateStr}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         slot.dataset.time = timeStr;
         slot.dataset.empId = emp.id;
         slot.addEventListener('click', async () => {
@@ -1136,22 +1136,22 @@ async function renderDayView(dateStr) {
       }
     }
 
-    const empBookings = (bookings||[]).filter(b => b.user_id === emp.id);
+    const empBookings = (bookings || []).filter(b => b.user_id === emp.id);
     empBookings.forEach(b => {
       const s = new Date(b.start_time);
       const e = new Date(b.end_time);
-      const sMin = s.getHours()*60+s.getMinutes();
-      const eMin = e.getHours()*60+e.getMinutes();
-      const dayStartMin = 8*60;
-      const topPx = ((sMin-dayStartMin)/30)*56;
-      const hPx   = ((eMin-sMin)/30)*56;
+      const sMin = s.getHours() * 60 + s.getMinutes();
+      const eMin = e.getHours() * 60 + e.getMinutes();
+      const dayStartMin = 8 * 60;
+      const topPx = ((sMin - dayStartMin) / 30) * 56;
+      const hPx = ((eMin - sMin) / 30) * 56;
 
       const block = document.createElement('div');
       block.className = 'dv-booking-block';
       if (moveBooking && moveBooking.id === b.id) block.classList.add('dv-move-source');
-      block.style.top = topPx+'px';
-      block.style.height = Math.max(hPx,28)+'px';
-      block.style.background = color+'25';
+      block.style.top = topPx + 'px';
+      block.style.height = Math.max(hPx, 28) + 'px';
+      block.style.background = color + '25';
       block.style.borderColor = color;
       block.style.color = '#fff';
       const svcCode3 = b.services?.code;
@@ -1164,7 +1164,7 @@ async function renderDayView(dateStr) {
       slotWrap.appendChild(block);
     });
 
-    const empOffs = (timeOffs||[]).filter(t => t.employee_id === emp.id);
+    const empOffs = (timeOffs || []).filter(t => t.employee_id === emp.id);
     if (empOffs.length) {
       const bar = document.createElement('div');
       bar.className = 'dv-absent';
@@ -1178,13 +1178,13 @@ async function renderDayView(dateStr) {
 }
 
 document.getElementById('dayViewPrev').addEventListener('click', () => {
-  dayViewDate.setDate(dayViewDate.getDate()-1);
-  if (calendarView==='day') renderDayView(toISODate(dayViewDate));
+  dayViewDate.setDate(dayViewDate.getDate() - 1);
+  if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
   else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
 });
 document.getElementById('dayViewNext').addEventListener('click', () => {
-  dayViewDate.setDate(dayViewDate.getDate()+1);
-  if (calendarView==='day') renderDayView(toISODate(dayViewDate));
+  dayViewDate.setDate(dayViewDate.getDate() + 1);
+  if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
   else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
 });
 
@@ -1194,15 +1194,15 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkMoveBtn').hidden = true;
   const bkStartEl = document.getElementById('bkStart');
-  bkStartEl.value = startStr ? startStr.substring(0,16) : '';
+  bkStartEl.value = startStr ? startStr.substring(0, 16) : '';
   const now = new Date();
   const offset = now.getTimezoneOffset();
-  const localIso = new Date(now.getTime() - offset * 60000).toISOString().substring(0,16);
+  const localIso = new Date(now.getTime() - offset * 60000).toISOString().substring(0, 16);
   bkStartEl.min = localIso;
   document.getElementById('bkCustomer').value = '';
   document.getElementById('bkCustomerId').value = '';
-  document.getElementById('bkPhone').value    = '';
-  document.getElementById('bkNotes').value    = '';
+  document.getElementById('bkPhone').value = '';
+  document.getElementById('bkNotes').value = '';
   document.getElementById('bkHausbesuch').checked = false;
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
@@ -1216,8 +1216,8 @@ async function prefillBookingModal(startStr) {
 
 function computeSeriesPreview() {
   const startV = document.getElementById('bkStart').value;
-  const count  = parseInt(document.getElementById('bkSeriesCount').value) || 0;
-  const rec    = document.getElementById('bkSeriesRecurrence').value;
+  const count = parseInt(document.getElementById('bkSeriesCount').value) || 0;
+  const rec = document.getElementById('bkSeriesRecurrence').value;
   if (!startV || count < 1) return [];
   const dateStr = startV.substring(0, 10);
   const step = rec === 'daily' ? 1 : (rec === 'biweekly' ? 14 : 7);
@@ -1383,14 +1383,14 @@ function handlePatientNichtErschienen() {
 async function openBookingModal(b) {
   if (!b) { await prefillBookingModal(null); return; }
   const ownerId = getOwnerId();
-  document.getElementById('bk-id').value = b.id||'';
+  document.getElementById('bk-id').value = b.id || '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
-  document.getElementById('bkStart').value    = b.start_time ? b.start_time.substring(0,16) : '';
-  document.getElementById('bkCustomer').value = b.customer_name||'';
-  document.getElementById('bkPhone').value    = b.customer_phone||'';
-  document.getElementById('bkNotes').value    = b.notes||'';
+  document.getElementById('bkStart').value = b.start_time ? b.start_time.substring(0, 16) : '';
+  document.getElementById('bkCustomer').value = b.customer_name || '';
+  document.getElementById('bkPhone').value = b.customer_phone || '';
+  document.getElementById('bkNotes').value = b.notes || '';
   document.getElementById('bkHausbesuch').checked = b.hausbesuch || false;
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
@@ -1413,7 +1413,7 @@ async function openBookingModal(b) {
         dh.textContent = 'Patient wünscht weiblichen Therapeuten.';
         dh.hidden = false;
       }
-    } catch (_) {}
+    } catch (_) { }
   }
   populateEmpSelects(b.user_id);
   await populateSrvSelect(b.service_id);
@@ -1605,27 +1605,27 @@ async function doMoveBooking(startStr, empId) {
   }
 }
 
-function populateEmpSelects(selectedId=null) {
-  ['bkEmployee','leaveEmployee'].forEach(id => {
+function populateEmpSelects(selectedId = null) {
+  ['bkEmployee', 'leaveEmployee'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.innerHTML = teamMembers.map(m=>
-      `<option value="${m.id}" ${m.id===selectedId?'selected':''}>${m.business_name||m.email?.split('@')[0]}</option>`
+    el.innerHTML = teamMembers.map(m =>
+      `<option value="${m.id}" ${m.id === selectedId ? 'selected' : ''}>${m.business_name || m.email?.split('@')[0]}</option>`
     ).join('');
   });
 }
 
-async function populateSrvSelect(selectedId=null) {
+async function populateSrvSelect(selectedId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  const {data} = await supabase.from('services').select('id,title,duration_minutes,price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
-  el.innerHTML = '<option value="">— Dienstleistung wählen —</option>'+(data||[]).map(s=>
-    `<option value="${s.id}" data-duration="${s.duration_minutes||30}" data-code="${escapeHtml(s.code||'')}" ${s.id===selectedId?'selected':''}>${escapeHtml(s.title)} (${s.duration_minutes||30} min)</option>`
+  const { data } = await supabase.from('services').select('id,title,duration_minutes,price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + (data || []).map(s =>
+    `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)} (${s.duration_minutes || 30} min)</option>`
   ).join('');
   if (selectedId) updateBkDuration(selectedId);
 }
 
-function updateBkDuration(srvId, defaultValue=null) {
+function updateBkDuration(srvId, defaultValue = null) {
   const durGroup = document.getElementById('bkDurationGroup');
   const durSelect = document.getElementById('bkDuration');
   if (!durGroup || !durSelect) return;
@@ -1653,30 +1653,30 @@ document.getElementById('bkService').addEventListener('change', (e) => {
 
 document.getElementById('bkPhone').addEventListener('blur', async () => {
   const phone = document.getElementById('bkPhone').value.trim();
-  const hint  = document.getElementById('bkWaHint');
-  if (!hint||!phone) { if(hint) hint.hidden=true; return; }
+  const hint = document.getElementById('bkWaHint');
+  if (!hint || !phone) { if (hint) hint.hidden = true; return; }
   const norm = normalize_phone_js(phone);
-  if (!norm) { hint.hidden=true; return; }
-  const {data:wa} = await supabase.from('wa_contacts')
-    .select('wa_id,customer_name').eq('business_id',getOwnerId()).eq('phone',norm).maybeSingle();
+  if (!norm) { hint.hidden = true; return; }
+  const { data: wa } = await supabase.from('wa_contacts')
+    .select('wa_id,customer_name').eq('business_id', getOwnerId()).eq('phone', norm).maybeSingle();
   if (wa) {
-    hint.textContent = `💬 WhatsApp bekannt: ${wa.customer_name||wa.wa_id}`;
+    hint.textContent = `💬 WhatsApp bekannt: ${wa.customer_name || wa.wa_id}`;
     hint.hidden = false;
-    if (!document.getElementById('bkCustomer').value) document.getElementById('bkCustomer').value = wa.customer_name||'';
+    if (!document.getElementById('bkCustomer').value) document.getElementById('bkCustomer').value = wa.customer_name || '';
   } else {
     hint.hidden = true;
   }
 });
 
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
-  const id      = document.getElementById('bk-id').value;
-  const empId   = document.getElementById('bkEmployee').value;
-  const srvId   = document.getElementById('bkService').value||null;
-  const startV  = document.getElementById('bkStart').value;
-  const cust    = document.getElementById('bkCustomer').value.trim();
-  const phone   = document.getElementById('bkPhone').value.trim();
-  const notes   = document.getElementById('bkNotes').value.trim();
-  if (!startV||!cust) { showToast(t('err_generic'),'error'); return; }
+  const id = document.getElementById('bk-id').value;
+  const empId = document.getElementById('bkEmployee').value;
+  const srvId = document.getElementById('bkService').value || null;
+  const startV = document.getElementById('bkStart').value;
+  const cust = document.getElementById('bkCustomer').value.trim();
+  const phone = document.getElementById('bkPhone').value.trim();
+  const notes = document.getElementById('bkNotes').value.trim();
+  if (!startV || !cust) { showToast(t('err_generic'), 'error'); return; }
   const isPhysio = getSector() === 'physiotherapy';
   const custId = document.getElementById('bkCustomerId').value.trim();
   if (isPhysio && !id && !custId) { showToast('Bitte einen Patienten aus der Liste auswählen.', 'error'); return; }
@@ -1698,10 +1698,10 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (isSeries) {
     const dateStr = startV.substring(0, 10);
     const timeStr = startV.substring(11, 16);
-    const count   = parseInt(document.getElementById('bkSeriesCount').value) || 8;
-    const rec     = document.getElementById('bkSeriesRecurrence').value;
+    const count = parseInt(document.getElementById('bkSeriesCount').value) || 8;
+    const rec = document.getElementById('bkSeriesRecurrence').value;
     const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
-    const durMin  = dur;
+    const durMin = dur;
     const payload = {
       userId: empId,
       ownerId: getOwnerId(),
@@ -1738,34 +1738,34 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
 
   const payload = {
-    owner_id:getOwnerId(),user_id:empId,
-    service_id:srvId||null,
-    start_time:startIso,
-    end_time:endIso,
-    customer_name:cust,customer_email:'',customer_phone:phone||null,
-    notes:notes||null,
-    hausbesuch:document.getElementById('bkHausbesuch').checked||false,
-    status:'confirmed'
+    owner_id: getOwnerId(), user_id: empId,
+    service_id: srvId || null,
+    start_time: startIso,
+    end_time: endIso,
+    customer_name: cust, customer_email: '', customer_phone: phone || null,
+    notes: notes || null,
+    hausbesuch: document.getElementById('bkHausbesuch').checked || false,
+    status: 'confirmed'
   };
-  const {error} = id
-    ? await supabase.from('bookings').update(payload).eq('id',id)
+  const { error } = id
+    ? await supabase.from('bookings').update(payload).eq('id', id)
     : await supabase.from('bookings').insert(payload);
-  if (error) { console.error('[booking save]', error); showToast(error.message || t('err_generic'),'error'); return; }
+  if (error) { console.error('[booking save]', error); showToast(error.message || t('err_generic'), 'error'); return; }
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-  if (activePanel==='overview') await loadTodayBookings();
-  if (activePanel==='calendar' && calendarView==='day') await renderDayView(toISODate(dayViewDate));
+  if (activePanel === 'overview') await loadTodayBookings();
+  if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
   showToast(t('saved'));
 });
 
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
-  if (!id||!confirm(t('lead_confirm_delete'))) return;
-  await supabase.from('bookings').delete().eq('id',id);
+  if (!id || !confirm(t('lead_confirm_delete'))) return;
+  await supabase.from('bookings').delete().eq('id', id);
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-  if (activePanel==='overview') await loadTodayBookings();
-  if (activePanel==='calendar' && calendarView==='day') await renderDayView(toISODate(dayViewDate));
+  if (activePanel === 'overview') await loadTodayBookings();
+  if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
   showToast(t('saved'));
 });
 
@@ -1795,18 +1795,18 @@ document.getElementById('bkActionStartBtn').addEventListener('click', handleTerm
 document.getElementById('bkActionNoShowBtn').addEventListener('click', handlePatientNichtErschienen);
 
 document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
-  const empId  = document.getElementById('leaveEmployee').value;
-  const start  = document.getElementById('leaveStart').value;
-  const end    = document.getElementById('leaveEnd').value;
+  const empId = document.getElementById('leaveEmployee').value;
+  const start = document.getElementById('leaveStart').value;
+  const end = document.getElementById('leaveEnd').value;
   const reason = document.getElementById('leaveReason').value.trim();
-  if (!start||!end) { showToast(t('err_generic'),'error'); return; }
-  const {error} = await supabase.from('time_offs').insert({
-    employee_id:empId,
-    start_date:new Date(start+'T00:00:00').toISOString(),
-    end_date:new Date(end+'T23:59:59').toISOString(),
+  if (!start || !end) { showToast(t('err_generic'), 'error'); return; }
+  const { error } = await supabase.from('time_offs').insert({
+    employee_id: empId,
+    start_date: new Date(start + 'T00:00:00').toISOString(),
+    end_date: new Date(end + 'T23:59:59').toISOString(),
     reason
   });
-  if (error) { showToast(t('err_generic'),'error'); return; }
+  if (error) { showToast(t('err_generic'), 'error'); return; }
   closeModal('leaveModal');
   document.getElementById('leaveReason').value = '';
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
@@ -1837,25 +1837,25 @@ function displayNameWithBirth(lead) {
 
 async function loadLeads() {
   const ownerId = getOwnerId();
-  const {data} = await supabase.from('leads')
-    .select('*').eq('owner_id',ownerId).order('created_at',{ascending:false});
-  leadsCache = data||[];
-  const phones = leadsCache.map(l=>l.phone_normalized).filter(Boolean);
+  const { data } = await supabase.from('leads')
+    .select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  leadsCache = data || [];
+  const phones = leadsCache.map(l => l.phone_normalized).filter(Boolean);
   leadsMeta = {};
   if (phones.length) {
     const [bkRes, waRes] = await Promise.all([
       supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
-        .eq('owner_id',ownerId).in('customer_phone_normalized',phones).order('start_time',{ascending:true}),
+        .eq('owner_id', ownerId).in('customer_phone_normalized', phones).order('start_time', { ascending: true }),
       supabase.from('wa_contacts').select('wa_id,phone,customer_name')
-        .eq('business_id',ownerId).in('phone',phones)
+        .eq('business_id', ownerId).in('phone', phones)
     ]);
-    (bkRes.data||[]).forEach(b => {
-      if (!leadsMeta[b.customer_phone_normalized]) leadsMeta[b.customer_phone_normalized] = {bookings:[],wa:null};
+    (bkRes.data || []).forEach(b => {
+      if (!leadsMeta[b.customer_phone_normalized]) leadsMeta[b.customer_phone_normalized] = { bookings: [], wa: null };
       leadsMeta[b.customer_phone_normalized].bookings.push(b);
     });
-    (waRes.data||[]).forEach(w => {
+    (waRes.data || []).forEach(w => {
       const norm = normalize_phone_js(w.phone);
-      if (!leadsMeta[norm]) leadsMeta[norm] = {bookings:[],wa:null};
+      if (!leadsMeta[norm]) leadsMeta[norm] = { bookings: [], wa: null };
       leadsMeta[norm].wa = w;
     });
   }
@@ -1864,12 +1864,12 @@ async function loadLeads() {
 
 function normalize_phone_js(p) {
   if (!p) return null;
-  let c = p.replace(/[^0-9+]/g,'');
+  let c = p.replace(/[^0-9+]/g, '');
   if (c.startsWith('+')) return c;
-  if (c.startsWith('00')) return '+'+c.slice(2);
-  if (c.startsWith('0')) return '+49'+c.slice(1);
-  if (c.length===11 && c.startsWith('49')) return '+'+c;
-  if (c.length>=10) return '+'+c;
+  if (c.startsWith('00')) return '+' + c.slice(2);
+  if (c.startsWith('0')) return '+49' + c.slice(1);
+  if (c.length === 11 && c.startsWith('49')) return '+' + c;
+  if (c.length >= 10) return '+' + c;
   return c;
 }
 
@@ -1877,28 +1877,28 @@ function renderLeads() {
   const tbody = document.getElementById('leadTableBody');
   const emptyEl = document.getElementById('leadEmpty');
   let rows = leadsCache;
-  if (leadFilter!=='all') rows = rows.filter(r=>r.status===leadFilter);
+  if (leadFilter !== 'all') rows = rows.filter(r => r.status === leadFilter);
   if (leadSearchVal) {
     const q = leadSearchVal.toLowerCase();
-    rows = rows.filter(r=>displayNameWithBirth(r).toLowerCase().includes(q)||(r.city||'').toLowerCase().includes(q)||(r.phone||'').toLowerCase().includes(q));
+    rows = rows.filter(r => displayNameWithBirth(r).toLowerCase().includes(q) || (r.city || '').toLowerCase().includes(q) || (r.phone || '').toLowerCase().includes(q));
   }
-  if (rows.length===0) { tbody.innerHTML=''; emptyEl.hidden=false; return; }
+  if (rows.length === 0) { tbody.innerHTML = ''; emptyEl.hidden = false; return; }
   emptyEl.hidden = true;
-  tbody.innerHTML = rows.map(r=>{
-    const meta = leadsMeta[r.phone_normalized]||{};
-    const bkCount = meta.bookings?.length||0;
-    const hasWa   = !!meta.wa;
+  tbody.innerHTML = rows.map(r => {
+    const meta = leadsMeta[r.phone_normalized] || {};
+    const bkCount = meta.bookings?.length || 0;
+    const hasWa = !!meta.wa;
     const bd = leadBirthDate(r);
     const sessionLabel = bkCount > 0 ? `Seans ${bkCount + 1}` : '';
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
       <td>${displayName(r)}${bd ? ` <span style="color:var(--text-muted);font-size:12px;">· ${bd}</span>` : ''}</td>
-      <td>${r.city||'—'}</td>
-      <td>${r.phone||'—'}</td>
-      <td>${r.email||'—'}</td>
-      <td>${r.total_score??r.rating??'—'}</td>
+      <td>${r.city || '—'}</td>
+      <td>${r.phone || '—'}</td>
+      <td>${r.email || '—'}</td>
+      <td>${r.total_score ?? r.rating ?? '—'}</td>
       <td>
-        ${sessionLabel?`<span class="badge badge-blue">${sessionLabel}</span> `:''}${hasWa?'<span class="badge badge-green" title="WhatsApp">💬</span> ':''}
-        <span class="badge ${leadStatusBadge(r.status)}">${r.status||'—'}</span>
+        ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? '<span class="badge badge-green" title="WhatsApp">💬</span> ' : ''}
+        <span class="badge ${leadStatusBadge(r.status)}">${r.status || '—'}</span>
       </td>
       <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit">✏️</button></td>
     </tr>`;
@@ -1906,14 +1906,14 @@ function renderLeads() {
   tbody.querySelectorAll('.lead-row').forEach(row => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('button')) return;
-      const lead = leadsCache.find(l=>l.id===row.dataset.leadId);
+      const lead = leadsCache.find(l => l.id === row.dataset.leadId);
       if (lead) openPatientDetailModal(lead);
     });
   });
   tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const lead = leadsCache.find(l=>l.id===btn.dataset.leadId);
+      const lead = leadsCache.find(l => l.id === btn.dataset.leadId);
       if (lead) openLeadModal(lead);
     });
   });
@@ -2092,7 +2092,7 @@ async function loadPatientDetailRechnungen(leadId) {
     <div class="pd-rech-item pd-rech-clickable" data-inv-id="${inv.id}" style="cursor:pointer;">
       <div class="pd-rech-row">
         <span class="pd-rech-num">${escapeHtml(inv.invoice_number || '—')}</span>
-        <span class="badge ${inv.status==='paid'?'badge-green':inv.status==='sent'?'badge-blue':'badge-gray'}">${inv.status||'—'}</span>
+        <span class="badge ${inv.status === 'paid' ? 'badge-green' : inv.status === 'sent' ? 'badge-blue' : 'badge-gray'}">${inv.status || '—'}</span>
       </div>
       <div class="pd-rech-row">
         <span>${inv.issued_at ? fmtDate(inv.issued_at) : '—'}</span>
@@ -2152,7 +2152,7 @@ async function loadPatientDetailTermine(leadId) {
       <div class="pd-term-item">
         <div class="pd-term-row">
           <span class="pd-term-date">${dateStr} · ${timeStr}</span>
-          <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='cancelled'?'badge-red':'badge-gray'}">${b.status||'—'}</span>
+          <span class="badge ${b.status === 'confirmed' ? 'badge-green' : b.status === 'cancelled' ? 'badge-red' : 'badge-gray'}">${b.status || '—'}</span>
         </div>
         <div class="pd-term-service">${escapeHtml(serviceTitle)} ${svcCode4 ? '<span style="font-size:11px;color:var(--text-muted);margin-left:6px;background:var(--bg-elevated);padding:1px 5px;border-radius:3px;">' + escapeHtml(svcCode4) + '</span>' : ''} ${dur ? '· ' + dur : ''}</div>
       </div>
@@ -2196,10 +2196,10 @@ document.querySelectorAll('.pd-tab').forEach(tab => {
 });
 
 function leadStatusBadge(s) {
-  if (s==='won') return 'badge-green';
-  if (s==='lost') return 'badge-red';
-  if (s==='contacted') return 'badge-blue';
-  if (s==='booked') return 'badge-yellow';
+  if (s === 'won') return 'badge-green';
+  if (s === 'lost') return 'badge-red';
+  if (s === 'contacted') return 'badge-blue';
+  if (s === 'booked') return 'badge-yellow';
   return 'badge-gray';
 }
 
@@ -2207,7 +2207,7 @@ document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
   if (btn.closest('#panel-kunden')) {
     btn.addEventListener('click', () => {
       leadFilter = btn.dataset.status;
-      btn.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderLeads();
     });
@@ -2222,14 +2222,14 @@ document.getElementById('leadSearch').addEventListener('input', e => {
 document.getElementById('leadAddBtn').addEventListener('click', () => openLeadModal(null));
 
 async function openLeadModal(lead) {
-  document.getElementById('lead-id').value        = lead?.id||'';
-  document.getElementById('lead-first-name').value = lead?.first_name||'';
-  document.getElementById('lead-last-name').value   = lead?.last_name||'';
-  document.getElementById('lead-phone').value     = lead?.phone||'';
-  document.getElementById('lead-email').value     = lead?.email||'';
-  document.getElementById('lead-city').value      = lead?.city||'';
-  document.getElementById('lead-status').value    = lead?.status||'new';
-  document.getElementById('lead-notes').value     = lead?.notes||'';
+  document.getElementById('lead-id').value = lead?.id || '';
+  document.getElementById('lead-first-name').value = lead?.first_name || '';
+  document.getElementById('lead-last-name').value = lead?.last_name || '';
+  document.getElementById('lead-phone').value = lead?.phone || '';
+  document.getElementById('lead-email').value = lead?.email || '';
+  document.getElementById('lead-city').value = lead?.city || '';
+  document.getElementById('lead-status').value = lead?.status || 'new';
+  document.getElementById('lead-notes').value = lead?.notes || '';
   document.getElementById('leadModalTitle').textContent = lead ? t('lead_modal_edit') : t('lead_modal_new');
 
   const sector = getSector();
@@ -2243,14 +2243,14 @@ async function openLeadModal(lead) {
     physioRow2.style.display = 'grid';
 
     if (krankenkassenCache.length === 0) {
-      const {data} = await supabase.from('krankenkassen').select('*').order('name');
-      krankenkassenCache = data||[];
+      const { data } = await supabase.from('krankenkassen').select('*').order('name');
+      krankenkassenCache = data || [];
     }
     const kkSelect = document.getElementById('lead-krankenkasse');
     kkSelect.innerHTML = '<option value="">-- Wählen --</option>' +
-      krankenkassenCache.map(k=>`<option value="${k.name}">${k.name}</option>`).join('');
+      krankenkassenCache.map(k => `<option value="${k.name}">${k.name}</option>`).join('');
 
-    const md = lead?.metadata||{};
+    const md = lead?.metadata || {};
     kkSelect.value = md.krankenkasse || '';
     document.getElementById('lead-krankenkassennummer').value = md.krankenkassennummer || '';
     document.getElementById('lead-geburtsdatum').value = md.geburtsdatum || '';
@@ -2265,16 +2265,16 @@ async function openLeadModal(lead) {
   if (histEl) {
     histEl.innerHTML = '';
     if (lead?.phone_normalized) {
-      const meta = leadsMeta[lead.phone_normalized]||{};
-      const bks  = meta.bookings||[];
-      const wa   = meta.wa;
+      const meta = leadsMeta[lead.phone_normalized] || {};
+      const bks = meta.bookings || [];
+      const wa = meta.wa;
       let html = '';
-      if (wa) html += `<div class="lead-hist-item lead-hist-wa">💬 WhatsApp: ${wa.customer_name||wa.wa_id}</div>`;
+      if (wa) html += `<div class="lead-hist-item lead-hist-wa">💬 WhatsApp: ${wa.customer_name || wa.wa_id}</div>`;
       if (bks.length) {
-        html += bks.slice(0,5).map(b=>`<div class="lead-hist-item lead-hist-bk">📅 ${fmtDate(b.start_time)} — <span class="badge ${statusBadge(b.status)}">${b.status}</span></div>`).join('');
-        if (bks.length>5) html += `<div class="lead-hist-item" style="color:var(--text-muted)">+${bks.length-5} weitere</div>`;
+        html += bks.slice(0, 5).map(b => `<div class="lead-hist-item lead-hist-bk">📅 ${fmtDate(b.start_time)} — <span class="badge ${statusBadge(b.status)}">${b.status}</span></div>`).join('');
+        if (bks.length > 5) html += `<div class="lead-hist-item" style="color:var(--text-muted)">+${bks.length - 5} weitere</div>`;
       }
-      if (html) histEl.innerHTML = '<div class="lead-hist-title">Verlauf</div>'+html;
+      if (html) histEl.innerHTML = '<div class="lead-hist-title">Verlauf</div>' + html;
     }
   }
   openModal('leadModal');
@@ -2283,7 +2283,7 @@ async function openLeadModal(lead) {
 document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   const id = document.getElementById('lead-id').value;
   const firstName = document.getElementById('lead-first-name').value.trim();
-  const lastName  = document.getElementById('lead-last-name').value.trim();
+  const lastName = document.getElementById('lead-last-name').value.trim();
   if (!firstName || !lastName) { showToast('Vorname und Nachname sind erforderlich.', 'error'); return; }
 
   const metadata = {};
@@ -2296,21 +2296,21 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   }
 
   const payload = {
-    owner_id:getOwnerId(),
-    first_name:firstName,
-    last_name:lastName,
-    title:firstName + ' ' + lastName,
-    phone:document.getElementById('lead-phone').value.trim()||null,
-    email:document.getElementById('lead-email').value.trim()||null,
-    city:document.getElementById('lead-city').value.trim()||null,
-    status:document.getElementById('lead-status').value,
-    notes:document.getElementById('lead-notes').value.trim()||null,
+    owner_id: getOwnerId(),
+    first_name: firstName,
+    last_name: lastName,
+    title: firstName + ' ' + lastName,
+    phone: document.getElementById('lead-phone').value.trim() || null,
+    email: document.getElementById('lead-email').value.trim() || null,
+    city: document.getElementById('lead-city').value.trim() || null,
+    status: document.getElementById('lead-status').value,
+    notes: document.getElementById('lead-notes').value.trim() || null,
     metadata: Object.keys(metadata).length ? metadata : null
   };
-  const {data: savedLead, error} = id
-    ? await supabase.from('leads').update(payload).eq('id',id).select().single()
+  const { data: savedLead, error } = id
+    ? await supabase.from('leads').update(payload).eq('id', id).select().single()
     : await supabase.from('leads').insert(payload).select().single();
-  if (error) { showToast(t('err_generic'),'error'); return; }
+  if (error) { showToast(t('err_generic'), 'error'); return; }
   closeModal('leadModal');
   await loadLeads();
   showToast(t('saved'));
@@ -2352,39 +2352,39 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
       rows = JSON.parse(text);
     } else {
       const lines = text.trim().split('\n');
-      const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
       rows = lines.slice(1).map(line => {
-        const vals = line.split(',').map(v=>v.trim().replace(/"/g,''));
-        return Object.fromEntries(headers.map((h,i)=>[h,vals[i]]));
+        const vals = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        return Object.fromEntries(headers.map((h, i) => [h, vals[i]]));
       });
     }
-    const inserts = rows.filter(r=>r.title||r.name).map(r=>({
-      owner_id:ownerId,
-      title:r.title||r.name||'—',
-      phone:r.phone||r.phoneNumber||null,
-      email:r.email||null,
-      website:r.website||null,
-      city:r.city||r['address.city']||null,
-      country_code:r.country_code||r.country||null,
-      total_score:parseFloat(r.rating||r.totalScore)||null,
-      reviews_count:parseInt(r.reviews_count||r.reviewsCount)||null,
-      google_url:r.google_url||r.url||null,
-      status:'new'
+    const inserts = rows.filter(r => r.title || r.name).map(r => ({
+      owner_id: ownerId,
+      title: r.title || r.name || '—',
+      phone: r.phone || r.phoneNumber || null,
+      email: r.email || null,
+      website: r.website || null,
+      city: r.city || r['address.city'] || null,
+      country_code: r.country_code || r.country || null,
+      total_score: parseFloat(r.rating || r.totalScore) || null,
+      reviews_count: parseInt(r.reviews_count || r.reviewsCount) || null,
+      google_url: r.google_url || r.url || null,
+      status: 'new'
     }));
-    if (inserts.length===0) throw new Error('empty');
+    if (inserts.length === 0) throw new Error('empty');
     await supabase.from('leads').insert(inserts);
     await loadLeads();
-    showToast(t('csv_imported')+inserts.length);
-  } catch(err) {
-    showToast(t('csv_error')+err.message,'error');
+    showToast(t('csv_imported') + inserts.length);
+  } catch (err) {
+    showToast(t('csv_error') + err.message, 'error');
   }
   e.target.value = '';
 });
 
 document.getElementById('apifyRunBtn').addEventListener('click', async () => {
   const rawQuery = document.getElementById('apifyQuery').value.trim();
-  const city     = document.getElementById('apifyCity').value.trim();
-  const limit    = Math.min(parseInt(document.getElementById('apifyLimit').value)||20, 50);
+  const city = document.getElementById('apifyCity').value.trim();
+  const limit = Math.min(parseInt(document.getElementById('apifyLimit').value) || 20, 50);
   if (!rawQuery) { showToast('Bitte Suchbegriff eingeben', 'error'); return; }
   const btn = document.getElementById('apifyRunBtn');
   btn.disabled = true; btn.textContent = '⏳';
@@ -2398,14 +2398,14 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
       document.getElementById('b2bSearch').value = rawQuery;
       renderB2B();
       showToast(`${dbHits.length} Treffer aus Datenbank geladen`);
-      btn.disabled=false; btn.textContent='Suchen'; return;
+      btn.disabled = false; btn.textContent = 'Suchen'; return;
     }
     const searchQuery = city ? `${rawQuery} ${city}` : rawQuery;
     const { data: { session: s } } = await supabase.auth.getSession();
     const res = await fetch('/api/apify/search', {
       method: 'POST',
       headers: {
-        'Content-Type':'application/json',
+        'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + s.access_token
       },
       body: JSON.stringify({ query: searchQuery, limit })
@@ -2435,18 +2435,18 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
     document.getElementById('b2bSearch').value = rawQuery;
     await loadB2B();
     showToast(`✓ ${inserts.length} Kontakte importiert`);
-  } catch(err) {
-    showToast('Fehler: '+err.message, 'error');
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
   }
-  btn.disabled=false; btn.textContent='Suchen';
+  btn.disabled = false; btn.textContent = 'Suchen';
 });
 
 let servicesCache = [];
 
 async function loadServices() {
-  const {data} = await supabase.from('services')
+  const { data } = await supabase.from('services')
     .select('*,employee_services(employee_id),price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
-  servicesCache = data||[];
+  servicesCache = data || [];
   renderServices();
   renderSrvEmpCheckboxes();
 }
@@ -2459,24 +2459,24 @@ function renderServices() {
     </div>`;
   if (!servicesCache.length) { grid.innerHTML = addCard; bindAddServiceCard(); return; }
   const isPhysio = getSector() === 'physiotherapy';
-  grid.innerHTML = servicesCache.map(s=>{
-    const empNames = (s.employee_services||[]).map(es=>{
-      const m = teamMembers.find(tm=>tm.id===es.employee_id);
-      return m ? (m.business_name||m.email?.split('@')[0]) : null;
+  grid.innerHTML = servicesCache.map(s => {
+    const empNames = (s.employee_services || []).map(es => {
+      const m = teamMembers.find(tm => tm.id === es.employee_id);
+      return m ? (m.business_name || m.email?.split('@')[0]) : null;
     }).filter(Boolean).join(', ');
     let meta = '';
     if (isPhysio && s.price_config?.durations) {
-      const activeDurs = Object.entries(s.price_config.durations).filter(([_,v])=>v.active).map(([k,v])=>`${k}min=${v.price}€`).join(', ');
+      const activeDurs = Object.entries(s.price_config.durations).filter(([_, v]) => v.active).map(([k, v]) => `${k}min=${v.price}€`).join(', ');
       meta = activeDurs || 'Keine aktiven Zeiten';
     } else {
-      meta = `${s.duration_minutes} min &middot; ${s.price!=null?s.price+' €':'—'}`;
+      meta = `${s.duration_minutes} min &middot; ${s.price != null ? s.price + ' €' : '—'}`;
     }
     const codeTag = s.code ? `<span class="srv-code-badge">${escapeHtml(s.code)}</span>` : '';
     return `<div class="service-card" data-srv-id="${s.id}">
       <div class="service-info">
         <div class="service-title">${s.title} ${codeTag}</div>
         <div class="service-meta">${meta}</div>
-        <div class="service-meta">${empNames||'—'}</div>
+        <div class="service-meta">${empNames || '—'}</div>
       </div>
       <button class="btn-icon" data-srv-del="${s.id}">🗑️</button>
     </div>`;
@@ -2491,7 +2491,7 @@ function renderServices() {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!confirm(t('alert_service_delete'))) return;
-      await supabase.from('services').delete().eq('id',btn.dataset.srvDel);
+      await supabase.from('services').delete().eq('id', btn.dataset.srvDel);
       await loadServices();
     });
   });
@@ -2557,7 +2557,7 @@ function openServiceEdit(id) {
     document.getElementById('srvPrice').value = s.price || 0;
   }
 
-  const assignedIds = new Set((s.employee_services||[]).map(es => es.employee_id));
+  const assignedIds = new Set((s.employee_services || []).map(es => es.employee_id));
   const allChecked = assignedIds.size === 0 || assignedIds.size === teamMembers.length;
   document.getElementById('srvEmpAll').checked = allChecked;
   toggleEmpCheckboxes(allChecked);
@@ -2570,7 +2570,7 @@ function openServiceEdit(id) {
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-const PHYSIO_DURATIONS = [10,15,20,25,30,35,40,45,50,55,60,75,90,120];
+const PHYSIO_DURATIONS = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 120];
 
 function renderPhysioServiceCards(existingDurations) {
   const grid = document.getElementById('srvPhysioCards');
@@ -2636,8 +2636,8 @@ function toggleEmpCheckboxes(disabled) {
 function renderSrvEmpCheckboxes() {
   const container = document.getElementById('srvEmpCheckboxes');
   if (!container) return;
-  container.innerHTML = teamMembers.map(m=>{
-    const name = m.business_name||m.email?.split('@')[0];
+  container.innerHTML = teamMembers.map(m => {
+    const name = m.business_name || m.email?.split('@')[0];
     return `<label class="emp-checkbox-item">
       <input type="checkbox" name="srv_emp" value="${m.id}" checked>
       <span>${name}</span>
@@ -2655,8 +2655,8 @@ document.getElementById('srvCancelBtn').addEventListener('click', () => {
 
 document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const title = document.getElementById('srvTitle').value.trim();
-  if (!title) { showToast(t('err_generic'),'error'); return; }
-  const empIds = [...document.querySelectorAll('input[name="srv_emp"]:checked')].map(cb=>cb.value);
+  if (!title) { showToast(t('err_generic'), 'error'); return; }
+  const empIds = [...document.querySelectorAll('input[name="srv_emp"]:checked')].map(cb => cb.value);
   const mode = document.getElementById('addServiceForm').dataset.mode;
   const isPhysio = getSector() === 'physiotherapy';
 
@@ -2679,31 +2679,31 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
       color: null
     };
   } else {
-    const duration = parseInt(document.getElementById('srvDur').value,10)||30;
-    const price = parseFloat(document.getElementById('srvPrice').value)||0;
+    const duration = parseInt(document.getElementById('srvDur').value, 10) || 30;
+    const price = parseFloat(document.getElementById('srvPrice').value) || 0;
     payload = { title, code, duration_minutes: duration, price };
   }
 
   if (mode === 'edit') {
     const editId = document.getElementById('srvEditId').value;
     const { error } = await supabase.from('services').update(payload).eq('id', editId);
-    if (error) { showToast(t('err_generic'),'error'); return; }
+    if (error) { showToast(t('err_generic'), 'error'); return; }
     await supabase.from('employee_services').delete().eq('service_id', editId);
     if (empIds.length) {
-      await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: editId })));
+      await supabase.from('employee_services').insert(empIds.map(id => ({ employee_id: id, service_id: editId })));
     }
     showToast(t('saved'));
   } else {
     const ownerId = getOwnerId();
     const userId = currentSession.user.id;
     const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, user_id: userId, ...payload }).select().single();
-    if (error) { showToast(t('err_generic'),'error'); return; }
+    if (error) { showToast(t('err_generic'), 'error'); return; }
     if (empIds.length) {
-      await supabase.from('employee_services').insert(empIds.map(id=>({ employee_id: id, service_id: srv.id })));
+      await supabase.from('employee_services').insert(empIds.map(id => ({ employee_id: id, service_id: srv.id })));
     }
     showToast(t('saved'));
   }
-  document.getElementById('srvTitle').value='';
+  document.getElementById('srvTitle').value = '';
   await loadServices();
   document.getElementById('addServiceForm').hidden = true;
 });
@@ -2716,14 +2716,14 @@ document.getElementById('hoursEmpSelect').addEventListener('change', async () =>
 });
 
 async function loadHoursPanel() {
-  const {data:emps} = await supabase.from('profiles').select('id,business_name,email')
-    .eq('owner_id',getOwnerId());
-  const all = currentProfile.role==='owner'
-    ? [{id:currentSession.user.id,business_name:currentProfile.business_name,email:currentSession.user.email},...(emps||[])]
-    : [{id:currentSession.user.id,business_name:currentProfile.business_name,email:currentSession.user.email}];
+  const { data: emps } = await supabase.from('profiles').select('id,business_name,email')
+    .eq('owner_id', getOwnerId());
+  const all = currentProfile.role === 'owner'
+    ? [{ id: currentSession.user.id, business_name: currentProfile.business_name, email: currentSession.user.email }, ...(emps || [])]
+    : [{ id: currentSession.user.id, business_name: currentProfile.business_name, email: currentSession.user.email }];
   const sel = document.getElementById('hoursEmpSelect');
-  sel.innerHTML = all.map(e=>`<option value="${e.id}">${e.business_name||e.email?.split('@')[0]}</option>`).join('');
-  hoursEmpId = all[0]?.id||currentSession.user.id;
+  sel.innerHTML = all.map(e => `<option value="${e.id}">${e.business_name || e.email?.split('@')[0]}</option>`).join('');
+  hoursEmpId = all[0]?.id || currentSession.user.id;
   await renderHoursGrid();
   const calSection = document.querySelector('.hours-calendar-section');
   if (calSection) {
@@ -2735,39 +2735,39 @@ async function loadHoursPanel() {
 let hoursBreaks = [];
 
 async function renderHoursGrid() {
-  const [{data:hours},{data:breaks}] = await Promise.all([
-    supabase.from('working_hours').select('*').eq('user_id',hoursEmpId),
-    supabase.from('breaks').select('*').eq('user_id',hoursEmpId)
+  const [{ data: hours }, { data: breaks }] = await Promise.all([
+    supabase.from('working_hours').select('*').eq('user_id', hoursEmpId),
+    supabase.from('breaks').select('*').eq('user_id', hoursEmpId)
   ]);
   hoursBreaks = breaks || [];
-  const dayLabels = DAYS[currentLang]||DAYS.de;
+  const dayLabels = DAYS[currentLang] || DAYS.de;
   const grid = document.getElementById('hoursGrid');
   grid.innerHTML = '';
-  for (let i=0;i<7;i++) {
-    const h = hours?.find(x=>x.day_of_week===i)||{start_time:'09:00:00',end_time:'17:00:00',is_active:(i>0&&i<6)};
-    const dayBreaks = hoursBreaks.filter(b=>b.day_of_week===i).sort((a,b)=>a.start_time.localeCompare(b.start_time));
+  for (let i = 0; i < 7; i++) {
+    const h = hours?.find(x => x.day_of_week === i) || { start_time: '09:00:00', end_time: '17:00:00', is_active: (i > 0 && i < 6) };
+    const dayBreaks = hoursBreaks.filter(b => b.day_of_week === i).sort((a, b) => a.start_time.localeCompare(b.start_time));
     const row = document.createElement('div');
-    row.className = 'hours-row' + (h.is_active?'':' inactive');
+    row.className = 'hours-row' + (h.is_active ? '' : ' inactive');
     row.innerHTML = `
       <div class="hours-day">
         <label class="toggle-switch">
-          <input type="checkbox" id="wh-active-${i}" ${h.is_active?'checked':''}>
+          <input type="checkbox" id="wh-active-${i}" ${h.is_active ? 'checked' : ''}>
           <span class="toggle-slider"></span>
         </label>
         <span>${dayLabels[i]}</span>
       </div>
       <div></div>
       <div class="hours-times">
-        <input class="form-input" id="wh-start-${i}" type="time" value="${h.start_time.substring(0,5)}">
-        <input class="form-input" id="wh-end-${i}" type="time" value="${h.end_time.substring(0,5)}">
+        <input class="form-input" id="wh-start-${i}" type="time" value="${h.start_time.substring(0, 5)}">
+        <input class="form-input" id="wh-end-${i}" type="time" value="${h.end_time.substring(0, 5)}">
       </div>`;
     grid.appendChild(row);
 
     const breakWrap = document.createElement('div');
     breakWrap.className = 'hours-breaks-wrap';
     breakWrap.style.cssText = 'grid-column:1/-1;padding-left:44px;margin-bottom:8px;';
-    breakWrap.innerHTML = dayBreaks.map(b=>`
-      <span class="break-chip">${b.start_time.substring(0,5)}–${b.end_time.substring(0,5)}
+    breakWrap.innerHTML = dayBreaks.map(b => `
+      <span class="break-chip">${b.start_time.substring(0, 5)}–${b.end_time.substring(0, 5)}
         <button class="break-del" data-id="${b.id}" title="Entfernen">×</button>
       </span>
     `).join('') + `
@@ -2781,29 +2781,29 @@ async function renderHoursGrid() {
     grid.appendChild(breakWrap);
   }
 
-  grid.querySelectorAll('.break-add-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const d=btn.dataset.day;
-      const form=document.getElementById(`break-form-${d}`);
-      form.style.display=form.style.display==='none'?'inline-flex':'none';
+  grid.querySelectorAll('.break-add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.dataset.day;
+      const form = document.getElementById(`break-form-${d}`);
+      form.style.display = form.style.display === 'none' ? 'inline-flex' : 'none';
     });
   });
-  grid.querySelectorAll('.break-confirm').forEach(btn=>{
-    btn.addEventListener('click',async ()=>{
-      const d=parseInt(btn.dataset.day);
-      const s=document.getElementById(`break-start-${d}`).value;
-      const e=document.getElementById(`break-end-${d}`).value;
-      if(!s||!e){showToast('Zeiten auswählen','error');return;}
-      if(s>=e){showToast('Ende muss nach Start liegen','error');return;}
-      const {error}=await supabase.from('breaks').insert({user_id:hoursEmpId,day_of_week:d,start_time:s+':00',end_time:e+':00'});
-      if(error){showToast(t('err_generic'),'error');return;}
+  grid.querySelectorAll('.break-confirm').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const d = parseInt(btn.dataset.day);
+      const s = document.getElementById(`break-start-${d}`).value;
+      const e = document.getElementById(`break-end-${d}`).value;
+      if (!s || !e) { showToast('Zeiten auswählen', 'error'); return; }
+      if (s >= e) { showToast('Ende muss nach Start liegen', 'error'); return; }
+      const { error } = await supabase.from('breaks').insert({ user_id: hoursEmpId, day_of_week: d, start_time: s + ':00', end_time: e + ':00' });
+      if (error) { showToast(t('err_generic'), 'error'); return; }
       await renderHoursGrid();
     });
   });
-  grid.querySelectorAll('.break-del').forEach(btn=>{
-    btn.addEventListener('click',async ()=>{
-      const {error}=await supabase.from('breaks').delete().eq('id',btn.dataset.id);
-      if(error){showToast(t('err_generic'),'error');return;}
+  grid.querySelectorAll('.break-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const { error } = await supabase.from('breaks').delete().eq('id', btn.dataset.id);
+      if (error) { showToast(t('err_generic'), 'error'); return; }
       await renderHoursGrid();
     });
   });
@@ -2811,16 +2811,16 @@ async function renderHoursGrid() {
 
 document.getElementById('hoursSaveBtn').addEventListener('click', async () => {
   const payload = [];
-  for(let i=0;i<7;i++) {
+  for (let i = 0; i < 7; i++) {
     payload.push({
-      user_id:hoursEmpId,day_of_week:i,
-      start_time:document.getElementById(`wh-start-${i}`).value+':00',
-      end_time:document.getElementById(`wh-end-${i}`).value+':00',
-      is_active:document.getElementById(`wh-active-${i}`).checked
+      user_id: hoursEmpId, day_of_week: i,
+      start_time: document.getElementById(`wh-start-${i}`).value + ':00',
+      end_time: document.getElementById(`wh-end-${i}`).value + ':00',
+      is_active: document.getElementById(`wh-active-${i}`).checked
     });
   }
-  const {error} = await supabase.from('working_hours').upsert(payload,{onConflict:'user_id,day_of_week'});
-  if (error) { showToast(t('err_generic'),'error'); return; }
+  const { error } = await supabase.from('working_hours').upsert(payload, { onConflict: 'user_id,day_of_week' });
+  if (error) { showToast(t('err_generic'), 'error'); return; }
   showToast(t('alert_hours_saved'));
 });
 
@@ -2851,8 +2851,8 @@ async function renderHoursMiniCal() {
   const grid = document.getElementById('hoursMiniCal');
   grid.innerHTML = '';
   const wdays = currentLang === 'tr'
-    ? ['Pz','Pt','Sa','Ça','Pe','Cu','Ct']
-    : ['So','Mo','Di','Mi','Do','Fr','Sa'];
+    ? ['Pz', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct']
+    : ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   wdays.forEach(d => {
     const el = document.createElement('div');
     el.className = 'cal-weekday';
@@ -2907,7 +2907,7 @@ function renderSpecialDaysList() {
   if (!hoursCustomDays.length) { list.innerHTML = '<div style="color:var(--text-faint);font-size:13px;">Keine Sondertage vorhanden.</div>'; return; }
   const sorted = [...hoursCustomDays].sort((a, b) => a.date.localeCompare(b.date));
   list.innerHTML = sorted.map(d => {
-    const timeRange = d.start_time && d.end_time ? ` ${d.start_time.substring(0,5)}–${d.end_time.substring(0,5)}` : '';
+    const timeRange = d.start_time && d.end_time ? ` ${d.start_time.substring(0, 5)}–${d.end_time.substring(0, 5)}` : '';
     return `
     <div class="special-day-item">
       <span class="sd-date">${d.date}</span>
@@ -2919,7 +2919,7 @@ function renderSpecialDaysList() {
   }).join('');
 }
 
-window.deleteSpecialDay = async function(id) {
+window.deleteSpecialDay = async function (id) {
   const { error } = await supabase.from('custom_days').delete().eq('id', id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   showToast('Gelöscht');
@@ -2970,14 +2970,14 @@ async function loadTeam() {
   try {
     const res = await fetch(`${API}/team?owner_id=${ownerId}`);
     if (res.ok) data = await res.json();
-  } catch {}
-  if (data.length===0) {
-    data = [{id:currentSession.user.id,email:currentSession.user.email,business_name:currentProfile.business_name||currentSession.user.email.split('@')[0],role:currentProfile.role}];
+  } catch { }
+  if (data.length === 0) {
+    data = [{ id: currentSession.user.id, email: currentSession.user.email, business_name: currentProfile.business_name || currentSession.user.email.split('@')[0], role: currentProfile.role }];
   }
   teamMembers = data;
 
-  if (currentProfile.role!=='owner') return;
-  const code = currentProfile.company_code||'—';
+  if (currentProfile.role !== 'owner') return;
+  const code = currentProfile.company_code || '—';
   document.getElementById('inviteCode').textContent = code;
   const inviteUrl = code === '—' ? '—' : `${location.origin}/employee-signup.html?code=${encodeURIComponent(code)}`;
   document.getElementById('inviteLink').textContent = inviteUrl;
@@ -2991,16 +2991,16 @@ async function loadTeam() {
   };
 
   const list = document.getElementById('employeeList');
-  list.innerHTML = data.map(m=>{
+  list.innerHTML = data.map(m => {
     const name = m.business_name || m.email?.split('@')[0] || '—';
-    const initial = (name[0]||'?').toUpperCase();
+    const initial = (name[0] || '?').toUpperCase();
     const avatar = m.avatar_url ? `<img src="${m.avatar_url}" alt="">` : initial;
     const bookingLink = m.booking_slug || (window.location.origin + '/booking.html?u=' + m.id);
     return `<div class="emp-card" data-emp-id="${m.id}">
       <div class="emp-avatar">${avatar}</div>
-      <div class="emp-name">${name} ${m.id===currentSession.user.id?t('me'):''}</div>
-      <div class="emp-role">${m.role==='owner'?'Geschäftsführung':'Mitarbeiter'}</div>
-      ${m.id===currentSession.user.id?'<div class="emp-badge" title="Sie"></div>':''}
+      <div class="emp-name">${name} ${m.id === currentSession.user.id ? t('me') : ''}</div>
+      <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
+      ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
       <div class="emp-link-row">
         <span class="emp-link-text">${bookingLink}</span>
         <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}">📋</button>
@@ -3031,13 +3031,13 @@ function renderEmpAvatar(el, m) {
 }
 
 function openEmpDetail(empId) {
-  const m = teamMembers.find(tm=>tm.id===empId);
+  const m = teamMembers.find(tm => tm.id === empId);
   if (!m) return;
   detailEmpId = empId;
 
-  document.getElementById('empDetailName').textContent  = m.business_name||m.email?.split('@')[0]||'—';
-  document.getElementById('empDetailRole').textContent  = m.role||'employee';
-  document.getElementById('empDetailEmail').textContent = m.email||'—';
+  document.getElementById('empDetailName').textContent = m.business_name || m.email?.split('@')[0] || '—';
+  document.getElementById('empDetailRole').textContent = m.role || 'employee';
+  document.getElementById('empDetailEmail').textContent = m.email || '—';
   renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
   renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
 
@@ -3050,7 +3050,7 @@ function openEmpDetail(empId) {
     showToast('Link kopiert');
   };
 
-  document.getElementById('teamListView').hidden  = true;
+  document.getElementById('teamListView').hidden = true;
   document.getElementById('teamDetailView').hidden = false;
 
   // Avatar upload with crop
@@ -3144,48 +3144,48 @@ function openEmpDetail(empId) {
   });
   detail.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      detail.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      detail.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      detail.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      detail.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
-      const tc = document.getElementById('tab-'+btn.dataset.tab);
+      const tc = document.getElementById('tab-' + btn.dataset.tab);
       if (tc) tc.classList.add('active');
-      if (btn.dataset.tab==='kalender') initEmpCalTab(empId);
-      if (btn.dataset.tab==='hours') loadEmpHours(empId);
-      if (btn.dataset.tab==='services') loadEmpServices(empId);
+      if (btn.dataset.tab === 'kalender') initEmpCalTab(empId);
+      if (btn.dataset.tab === 'hours') loadEmpHours(empId);
+      if (btn.dataset.tab === 'services') loadEmpServices(empId);
     });
   });
   detail.querySelector('.tab-btn[data-tab="info"]')?.classList.add('active');
   document.getElementById('tab-info')?.classList.add('active');
 
   document.getElementById('empDetailBack').onclick = () => {
-    document.getElementById('teamListView').hidden  = false;
+    document.getElementById('teamListView').hidden = false;
     document.getElementById('teamDetailView').hidden = true;
     detailEmpId = null;
   };
 
-  const isOwn = m.id===currentSession.user.id;
+  const isOwn = m.id === currentSession.user.id;
   document.getElementById('empRemoveBtn').hidden = isOwn;
   document.getElementById('empRemoveBtn').onclick = async () => {
-    if (!confirm(t('btn_remove')+'?')) return;
-    await supabase.from('profiles').update({owner_id:null,role:'owner'}).eq('id',m.id);
+    if (!confirm(t('btn_remove') + '?')) return;
+    await supabase.from('profiles').update({ owner_id: null, role: 'owner' }).eq('id', m.id);
     await loadTeam();
-    document.getElementById('teamListView').hidden  = false;
+    document.getElementById('teamListView').hidden = false;
     document.getElementById('teamDetailView').hidden = true;
   };
 
-  supabase.from('calendar_integrations').select('*').eq('user_id',m.id).eq('provider','google').single()
-    .then(({data}) => {
+  supabase.from('calendar_integrations').select('*').eq('user_id', m.id).eq('provider', 'google').single()
+    .then(({ data }) => {
       document.getElementById('empGoogleStatus').textContent = data?.access_token ? t('status_connected') : t('status_disconnected');
     });
 }
 
 function initEmpCalTab(empId) {
   const tz = 'Europe/Berlin';
-  const todayStr = new Date().toLocaleDateString('sv-SE',{timeZone:tz});
+  const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: tz });
   const dateInput = document.getElementById('empCalDate');
   if (!dateInput.value) dateInput.value = todayStr;
 
-  const canEdit = currentProfile.role==='owner' || empId===currentSession.user.id;
+  const canEdit = currentProfile.role === 'owner' || empId === currentSession.user.id;
   document.getElementById('empCalAddBtn').style.display = canEdit ? '' : 'none';
 
   loadEmpDaySchedule(empId, dateInput.value);
@@ -3193,20 +3193,20 @@ function initEmpCalTab(empId) {
   dateInput.onchange = () => loadEmpDaySchedule(empId, dateInput.value);
 
   document.getElementById('empCalPrev').onclick = () => {
-    const d = new Date(dateInput.value+'T12:00:00');
-    d.setDate(d.getDate()-1);
-    dateInput.value = d.toISOString().substring(0,10);
+    const d = new Date(dateInput.value + 'T12:00:00');
+    d.setDate(d.getDate() - 1);
+    dateInput.value = d.toISOString().substring(0, 10);
     loadEmpDaySchedule(empId, dateInput.value);
   };
   document.getElementById('empCalNext').onclick = () => {
-    const d = new Date(dateInput.value+'T12:00:00');
-    d.setDate(d.getDate()+1);
-    dateInput.value = d.toISOString().substring(0,10);
+    const d = new Date(dateInput.value + 'T12:00:00');
+    d.setDate(d.getDate() + 1);
+    dateInput.value = d.toISOString().substring(0, 10);
     loadEmpDaySchedule(empId, dateInput.value);
   };
   document.getElementById('empCalAddBtn').onclick = async () => {
     const dateVal = dateInput.value;
-    await prefillBookingModal(dateVal+'T09:00');
+    await prefillBookingModal(dateVal + 'T09:00');
     document.getElementById('bkEmployee').value = empId;
   };
 }
@@ -3215,56 +3215,56 @@ async function loadEmpDaySchedule(empId, dateStr) {
   const list = document.getElementById('empDaySchedule');
   list.innerHTML = '<div class="emp-day-empty">Lädt…</div>';
 
-  const dayStart = dateStr+'T00:00:00';
-  const dayEnd   = dateStr+'T23:59:59';
+  const dayStart = dateStr + 'T00:00:00';
+  const dayEnd = dateStr + 'T23:59:59';
 
-  const [{data:bks},{data:leaves}] = await Promise.all([
+  const [{ data: bks }, { data: leaves }] = await Promise.all([
     supabase.from('bookings').select('*,services(title,color,code)')
-      .eq('user_id',empId)
-      .gte('start_time',new Date(dayStart).toISOString())
-      .lte('start_time',new Date(dayEnd).toISOString())
-      .neq('status','cancelled').order('start_time'),
+      .eq('user_id', empId)
+      .gte('start_time', new Date(dayStart).toISOString())
+      .lte('start_time', new Date(dayEnd).toISOString())
+      .neq('status', 'cancelled').order('start_time'),
     supabase.from('time_offs').select('*')
-      .eq('employee_id',empId)
-      .lte('start_date',new Date(dayEnd).toISOString())
-      .gte('end_date',new Date(dayStart).toISOString())
+      .eq('employee_id', empId)
+      .lte('start_date', new Date(dayEnd).toISOString())
+      .gte('end_date', new Date(dayStart).toISOString())
   ]);
 
   const items = [];
-  (bks||[]).forEach(b => items.push({type:'booking',sort:b.start_time,data:b}));
-  (leaves||[]).forEach(l => items.push({type:'leave',sort:l.start_date,data:l}));
-  items.sort((a,b)=>a.sort.localeCompare(b.sort));
+  (bks || []).forEach(b => items.push({ type: 'booking', sort: b.start_time, data: b }));
+  (leaves || []).forEach(l => items.push({ type: 'leave', sort: l.start_date, data: l }));
+  items.sort((a, b) => a.sort.localeCompare(b.sort));
 
-  if (!items.length) { list.innerHTML='<div class="emp-day-empty">Keine Termine</div>'; return; }
+  if (!items.length) { list.innerHTML = '<div class="emp-day-empty">Keine Termine</div>'; return; }
 
-  const canEdit = currentProfile.role==='owner' || empId===currentSession.user.id;
+  const canEdit = currentProfile.role === 'owner' || empId === currentSession.user.id;
 
   list.innerHTML = items.map(item => {
-    if (item.type==='leave') {
+    if (item.type === 'leave') {
       const l = item.data;
       return `<div class="emp-slot emp-slot-leave">
         <span class="emp-slot-time">❌ Ganztags</span>
         <div class="emp-slot-info">
-          <div class="emp-slot-customer">${l.reason||'Abwesenheit'}</div>
+          <div class="emp-slot-customer">${l.reason || 'Abwesenheit'}</div>
         </div>
       </div>`;
     }
     const b = item.data;
-    const color = b.services?.color||'var(--primary)';
+    const color = b.services?.color || 'var(--primary)';
     return `<div class="emp-slot" data-bk-id="${b.id}" style="border-left:3px solid ${color};">
-      <span class="emp-slot-time">${fmtTime(b.start_time)}${b.end_time?' – '+fmtTime(b.end_time):''}</span>
+      <span class="emp-slot-time">${fmtTime(b.start_time)}${b.end_time ? ' – ' + fmtTime(b.end_time) : ''}</span>
       <div class="emp-slot-info">
-        <div class="emp-slot-customer">${b.customer_name||'—'}</div>
-        <div class="emp-slot-service">${b.services?.title||'—'} ${b.services?.code ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;background:var(--bg-elevated);padding:1px 4px;border-radius:3px;">' + escapeHtml(b.services.code) + '</span>' : ''}</div>
+        <div class="emp-slot-customer">${b.customer_name || '—'}</div>
+        <div class="emp-slot-service">${b.services?.title || '—'} ${b.services?.code ? '<span style="font-size:10px;color:var(--text-muted);margin-left:4px;background:var(--bg-elevated);padding:1px 4px;border-radius:3px;">' + escapeHtml(b.services.code) + '</span>' : ''}</div>
       </div>
-      ${canEdit?`<span class="btn-icon" style="opacity:.5;font-size:12px;">✏️</span>`:''}
+      ${canEdit ? `<span class="btn-icon" style="opacity:.5;font-size:12px;">✏️</span>` : ''}
     </div>`;
   }).join('');
 
   if (canEdit) {
     list.querySelectorAll('[data-bk-id]').forEach(el => {
       el.addEventListener('click', () => {
-        const bk = (bks||[]).find(b=>b.id===el.dataset.bkId);
+        const bk = (bks || []).find(b => b.id === el.dataset.bkId);
         if (bk) openBookingModal(bk);
       });
     });
@@ -3272,40 +3272,40 @@ async function loadEmpDaySchedule(empId, dateStr) {
 }
 
 async function loadEmpHours(empId) {
-  const [{data:hours},{data:breaks}] = await Promise.all([
-    supabase.from('working_hours').select('*').eq('user_id',empId),
-    supabase.from('breaks').select('*').eq('user_id',empId)
+  const [{ data: hours }, { data: breaks }] = await Promise.all([
+    supabase.from('working_hours').select('*').eq('user_id', empId),
+    supabase.from('breaks').select('*').eq('user_id', empId)
   ]);
   const empBreaks = breaks || [];
-  const dayLabels = DAYS[currentLang]||DAYS.de;
+  const dayLabels = DAYS[currentLang] || DAYS.de;
   const grid = document.getElementById('empHoursGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  for (let i=0;i<7;i++) {
-    const h = hours?.find(x=>x.day_of_week===i)||{start_time:'09:00:00',end_time:'17:00:00',is_active:(i>0&&i<6)};
-    const dayBreaks = empBreaks.filter(b=>b.day_of_week===i).sort((a,b)=>a.start_time.localeCompare(b.start_time));
+  for (let i = 0; i < 7; i++) {
+    const h = hours?.find(x => x.day_of_week === i) || { start_time: '09:00:00', end_time: '17:00:00', is_active: (i > 0 && i < 6) };
+    const dayBreaks = empBreaks.filter(b => b.day_of_week === i).sort((a, b) => a.start_time.localeCompare(b.start_time));
     const row = document.createElement('div');
-    row.className = 'hours-row' + (h.is_active?'':' inactive');
+    row.className = 'hours-row' + (h.is_active ? '' : ' inactive');
     row.innerHTML = `
       <div class="hours-day">
         <label class="toggle-switch">
-          <input type="checkbox" id="ewh-active-${i}" ${h.is_active?'checked':''}>
+          <input type="checkbox" id="ewh-active-${i}" ${h.is_active ? 'checked' : ''}>
           <span class="toggle-slider"></span>
         </label>
         <span>${dayLabels[i]}</span>
       </div>
       <div></div>
       <div class="hours-times">
-        <input class="form-input" id="ewh-start-${i}" type="time" value="${h.start_time.substring(0,5)}">
-        <input class="form-input" id="ewh-end-${i}" type="time" value="${h.end_time.substring(0,5)}">
+        <input class="form-input" id="ewh-start-${i}" type="time" value="${h.start_time.substring(0, 5)}">
+        <input class="form-input" id="ewh-end-${i}" type="time" value="${h.end_time.substring(0, 5)}">
       </div>`;
     grid.appendChild(row);
 
     const breakWrap = document.createElement('div');
     breakWrap.className = 'hours-breaks-wrap';
     breakWrap.style.cssText = 'grid-column:1/-1;padding-left:44px;margin-bottom:8px;';
-    breakWrap.innerHTML = dayBreaks.map(b=>`
-      <span class="break-chip">${b.start_time.substring(0,5)}–${b.end_time.substring(0,5)}
+    breakWrap.innerHTML = dayBreaks.map(b => `
+      <span class="break-chip">${b.start_time.substring(0, 5)}–${b.end_time.substring(0, 5)}
         <button class="break-del" data-id="${b.id}" title="Entfernen">×</button>
       </span>
     `).join('') + `
@@ -3319,29 +3319,29 @@ async function loadEmpHours(empId) {
     grid.appendChild(breakWrap);
   }
 
-  grid.querySelectorAll('.emp-break-add').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const d=btn.dataset.day;
-      const form=document.getElementById(`emp-break-form-${d}`);
-      form.style.display=form.style.display==='none'?'inline-flex':'none';
+  grid.querySelectorAll('.emp-break-add').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.dataset.day;
+      const form = document.getElementById(`emp-break-form-${d}`);
+      form.style.display = form.style.display === 'none' ? 'inline-flex' : 'none';
     });
   });
-  grid.querySelectorAll('.emp-break-confirm').forEach(btn=>{
-    btn.addEventListener('click',async ()=>{
-      const d=parseInt(btn.dataset.day);
-      const s=document.getElementById(`emp-break-start-${d}`).value;
-      const e=document.getElementById(`emp-break-end-${d}`).value;
-      if(!s||!e){showToast('Zeiten auswählen','error');return;}
-      if(s>=e){showToast('Ende muss nach Start liegen','error');return;}
-      const {error}=await supabase.from('breaks').insert({user_id:empId,day_of_week:d,start_time:s+':00',end_time:e+':00'});
-      if(error){showToast(t('err_generic'),'error');return;}
+  grid.querySelectorAll('.emp-break-confirm').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const d = parseInt(btn.dataset.day);
+      const s = document.getElementById(`emp-break-start-${d}`).value;
+      const e = document.getElementById(`emp-break-end-${d}`).value;
+      if (!s || !e) { showToast('Zeiten auswählen', 'error'); return; }
+      if (s >= e) { showToast('Ende muss nach Start liegen', 'error'); return; }
+      const { error } = await supabase.from('breaks').insert({ user_id: empId, day_of_week: d, start_time: s + ':00', end_time: e + ':00' });
+      if (error) { showToast(t('err_generic'), 'error'); return; }
       await loadEmpHours(empId);
     });
   });
-  grid.querySelectorAll('.break-del').forEach(btn=>{
-    btn.addEventListener('click',async ()=>{
-      const {error}=await supabase.from('breaks').delete().eq('id',btn.dataset.id);
-      if(error){showToast(t('err_generic'),'error');return;}
+  grid.querySelectorAll('.break-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const { error } = await supabase.from('breaks').delete().eq('id', btn.dataset.id);
+      if (error) { showToast(t('err_generic'), 'error'); return; }
       await loadEmpHours(empId);
     });
   });
@@ -3349,16 +3349,16 @@ async function loadEmpHours(empId) {
   const saveBtn = document.getElementById('empHoursSaveBtn');
   if (saveBtn) saveBtn.onclick = async () => {
     const payload = [];
-    for(let i=0;i<7;i++) {
+    for (let i = 0; i < 7; i++) {
       payload.push({
-        user_id:empId,day_of_week:i,
-        start_time:document.getElementById(`ewh-start-${i}`).value+':00',
-        end_time:document.getElementById(`ewh-end-${i}`).value+':00',
-        is_active:document.getElementById(`ewh-active-${i}`).checked
+        user_id: empId, day_of_week: i,
+        start_time: document.getElementById(`ewh-start-${i}`).value + ':00',
+        end_time: document.getElementById(`ewh-end-${i}`).value + ':00',
+        is_active: document.getElementById(`ewh-active-${i}`).checked
       });
     }
-    const {error} = await supabase.from('working_hours').upsert(payload,{onConflict:'user_id,day_of_week'});
-    if (error) { showToast(t('err_generic'),'error'); return; }
+    const { error } = await supabase.from('working_hours').upsert(payload, { onConflict: 'user_id,day_of_week' });
+    if (error) { showToast(t('err_generic'), 'error'); return; }
     showToast(t('alert_hours_saved'));
   };
 }
@@ -3366,22 +3366,22 @@ async function loadEmpHours(empId) {
 async function loadEmpServices(empId) {
   const grid = document.getElementById('empServicesGrid');
   if (!grid) return;
-  const [{data:all},{data:assigned}] = await Promise.all([
+  const [{ data: all }, { data: assigned }] = await Promise.all([
     supabase.from('services').select('id,title').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`),
-    supabase.from('employee_services').select('service_id').eq('employee_id',empId)
+    supabase.from('employee_services').select('service_id').eq('employee_id', empId)
   ]);
-  const assignedIds = new Set((assigned||[]).map(x=>x.service_id));
-  grid.innerHTML = (all||[]).map(s=>`
+  const assignedIds = new Set((assigned || []).map(x => x.service_id));
+  grid.innerHTML = (all || []).map(s => `
     <label class="checkbox-label">
-      <input type="checkbox" class="emp-srv-chk" data-srv="${s.id}" ${assignedIds.has(s.id)?'checked':''}>
+      <input type="checkbox" class="emp-srv-chk" data-srv="${s.id}" ${assignedIds.has(s.id) ? 'checked' : ''}>
       ${s.title}
     </label>`).join('');
   grid.querySelectorAll('.emp-srv-chk').forEach(chk => {
     chk.addEventListener('change', async () => {
       if (chk.checked) {
-        await supabase.from('employee_services').insert({employee_id:empId,service_id:chk.dataset.srv});
+        await supabase.from('employee_services').insert({ employee_id: empId, service_id: chk.dataset.srv });
       } else {
-        await supabase.from('employee_services').delete().eq('employee_id',empId).eq('service_id',chk.dataset.srv);
+        await supabase.from('employee_services').delete().eq('employee_id', empId).eq('service_id', chk.dataset.srv);
       }
     });
   });
@@ -3390,9 +3390,9 @@ async function loadEmpServices(empId) {
 let b2bCache = [];
 
 async function loadB2B() {
-  const {data} = await supabase.from('b2b_contacts')
-    .select('*').eq('owner_id',getOwnerId()).order('created_at',{ascending:false});
-  b2bCache = data||[];
+  const { data } = await supabase.from('b2b_contacts')
+    .select('*').eq('owner_id', getOwnerId()).order('created_at', { ascending: false });
+  b2bCache = data || [];
   renderB2B();
 }
 
@@ -3401,29 +3401,29 @@ function renderB2B() {
   const emptyEl = document.getElementById('b2bEmpty');
   const q = document.getElementById('b2bSearch').value.toLowerCase();
   let rows = b2bCache;
-  if (q) rows = rows.filter(r=>(r.company_name||'').toLowerCase().includes(q)||(r.contact_name||'').toLowerCase().includes(q));
-  if (!rows.length) { tbody.innerHTML=''; emptyEl.hidden=false; return; }
+  if (q) rows = rows.filter(r => (r.company_name || '').toLowerCase().includes(q) || (r.contact_name || '').toLowerCase().includes(q));
+  if (!rows.length) { tbody.innerHTML = ''; emptyEl.hidden = false; return; }
   emptyEl.hidden = true;
-  tbody.innerHTML = rows.map(r=>`
+  tbody.innerHTML = rows.map(r => `
     <tr>
-      <td>${r.company_name||'—'}</td>
-      <td>${r.contact_name||'—'}</td>
-      <td>${r.phone||'—'}</td>
-      <td><span class="badge ${b2bStatusBadge(r.status)}">${r.status||'—'}</span></td>
+      <td>${r.company_name || '—'}</td>
+      <td>${r.contact_name || '—'}</td>
+      <td>${r.phone || '—'}</td>
+      <td><span class="badge ${b2bStatusBadge(r.status)}">${r.status || '—'}</span></td>
       <td><button class="btn-icon" data-b2b-id="${r.id}" data-action="edit">✏️</button></td>
     </tr>`).join('');
   tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const c = b2bCache.find(x=>x.id===btn.dataset.b2bId);
+      const c = b2bCache.find(x => x.id === btn.dataset.b2bId);
       if (c) openB2BModal(c);
     });
   });
 }
 
 function b2bStatusBadge(s) {
-  if (s==='partner') return 'badge-green';
-  if (s==='inactive') return 'badge-red';
-  if (s==='contacted') return 'badge-blue';
+  if (s === 'partner') return 'badge-green';
+  if (s === 'inactive') return 'badge-red';
+  if (s === 'contacted') return 'badge-blue';
   return 'badge-gray';
 }
 
@@ -3431,13 +3431,13 @@ document.getElementById('b2bSearch').addEventListener('input', renderB2B);
 document.getElementById('b2bAddBtn').addEventListener('click', () => openB2BModal(null));
 
 function openB2BModal(c) {
-  document.getElementById('b2b-id').value       = c?.id||'';
-  document.getElementById('b2b-company').value  = c?.company_name||'';
-  document.getElementById('b2b-contact').value  = c?.contact_name||'';
-  document.getElementById('b2b-phone').value    = c?.phone||'';
-  document.getElementById('b2b-email').value    = c?.email||'';
-  document.getElementById('b2b-status').value   = c?.status||'prospect';
-  document.getElementById('b2b-notes').value    = c?.notes||'';
+  document.getElementById('b2b-id').value = c?.id || '';
+  document.getElementById('b2b-company').value = c?.company_name || '';
+  document.getElementById('b2b-contact').value = c?.contact_name || '';
+  document.getElementById('b2b-phone').value = c?.phone || '';
+  document.getElementById('b2b-email').value = c?.email || '';
+  document.getElementById('b2b-status').value = c?.status || 'prospect';
+  document.getElementById('b2b-notes').value = c?.notes || '';
   document.getElementById('b2bModalTitle').textContent = c ? 'Kontakt bearbeiten' : t('b2b_add');
   openModal('b2bModal');
 }
@@ -3445,19 +3445,19 @@ function openB2BModal(c) {
 document.getElementById('b2bSaveBtn').addEventListener('click', async () => {
   const id = document.getElementById('b2b-id').value;
   const payload = {
-    owner_id:getOwnerId(),
-    company_name:document.getElementById('b2b-company').value.trim(),
-    contact_name:document.getElementById('b2b-contact').value.trim()||null,
-    phone:document.getElementById('b2b-phone').value.trim()||null,
-    email:document.getElementById('b2b-email').value.trim()||null,
-    status:document.getElementById('b2b-status').value,
-    notes:document.getElementById('b2b-notes').value.trim()||null
+    owner_id: getOwnerId(),
+    company_name: document.getElementById('b2b-company').value.trim(),
+    contact_name: document.getElementById('b2b-contact').value.trim() || null,
+    phone: document.getElementById('b2b-phone').value.trim() || null,
+    email: document.getElementById('b2b-email').value.trim() || null,
+    status: document.getElementById('b2b-status').value,
+    notes: document.getElementById('b2b-notes').value.trim() || null
   };
-  if (!payload.company_name) { showToast(t('err_generic'),'error'); return; }
-  const {error} = id
-    ? await supabase.from('b2b_contacts').update(payload).eq('id',id)
+  if (!payload.company_name) { showToast(t('err_generic'), 'error'); return; }
+  const { error } = id
+    ? await supabase.from('b2b_contacts').update(payload).eq('id', id)
     : await supabase.from('b2b_contacts').insert(payload);
-  if (error) { showToast(t('err_generic'),'error'); return; }
+  if (error) { showToast(t('err_generic'), 'error'); return; }
   closeModal('b2bModal');
   await loadB2B();
   showToast(t('saved'));
@@ -3467,32 +3467,32 @@ document.getElementById('b2bSaveBtn').addEventListener('click', async () => {
 let b2cCache = [];
 
 async function loadB2C() {
-  const {data} = await supabase.from('leads')
-    .select('id,title,email,phone,status').eq('owner_id',getOwnerId()).order('created_at',{ascending:false});
-  b2cCache = data||[];
+  const { data } = await supabase.from('leads')
+    .select('id,title,email,phone,status').eq('owner_id', getOwnerId()).order('created_at', { ascending: false });
+  b2cCache = data || [];
   renderB2C();
 }
 
 function renderB2C() {
   const tbody = document.getElementById('b2cTableBody');
   const emptyEl = document.getElementById('b2cEmpty');
-  const q = (document.getElementById('b2cSearch').value||'').toLowerCase();
+  const q = (document.getElementById('b2cSearch').value || '').toLowerCase();
   let rows = b2cCache;
-  if (q) rows = rows.filter(r=>(r.title||'').toLowerCase().includes(q)||(r.email||'').toLowerCase().includes(q)||(r.phone||'').toLowerCase().includes(q));
-  if (!rows.length) { tbody.innerHTML=''; emptyEl.hidden=false; return; }
+  if (q) rows = rows.filter(r => (r.title || '').toLowerCase().includes(q) || (r.email || '').toLowerCase().includes(q) || (r.phone || '').toLowerCase().includes(q));
+  if (!rows.length) { tbody.innerHTML = ''; emptyEl.hidden = false; return; }
   emptyEl.hidden = true;
-  tbody.innerHTML = rows.map(r=>`
+  tbody.innerHTML = rows.map(r => `
     <tr>
-      <td>${r.title||'—'}</td>
-      <td>${r.email||'—'}</td>
-      <td>${r.phone||'—'}</td>
-      <td><span class="badge ${leadStatusBadge(r.status)}">${r.status||'—'}</span></td>
+      <td>${r.title || '—'}</td>
+      <td>${r.email || '—'}</td>
+      <td>${r.phone || '—'}</td>
+      <td><span class="badge ${leadStatusBadge(r.status)}">${r.status || '—'}</span></td>
       <td><button class="btn-icon" data-b2c-id="${r.id}" data-action="mail">✉</button></td>
     </tr>`).join('');
   tbody.querySelectorAll('[data-action="mail"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const c = b2cCache.find(x=>x.id===btn.dataset.b2cId);
-      if (c) openComposeModal({to_name:c.title||'',to_email:c.email||'',subject:'',body:''});
+      const c = b2cCache.find(x => x.id === btn.dataset.b2cId);
+      if (c) openComposeModal({ to_name: c.title || '', to_email: c.email || '', subject: '', body: '' });
     });
   });
 }
@@ -3500,7 +3500,7 @@ function renderB2C() {
 document.getElementById('b2cSearch').addEventListener('input', renderB2C);
 
 document.getElementById('b2cComposeBtn').addEventListener('click', () => {
-  openComposeModal({to_name:'',to_email:'',subject:'',body:''});
+  openComposeModal({ to_name: '', to_email: '', subject: '', body: '' });
 });
 
 async function checkB2cSetup() {
@@ -3529,8 +3529,8 @@ document.getElementById('b2cSetupSenderName').addEventListener('input', updateB2
 document.getElementById('b2cSetupFinishBtn').addEventListener('click', async () => {
   const name = document.getElementById('b2cSetupSenderName').value.trim();
   if (!name) return;
-  const {error} = await supabase.from('profiles')
-    .update({b2b_sender_name: name, b2b_setup_done: true})
+  const { error } = await supabase.from('profiles')
+    .update({ b2b_sender_name: name, b2b_setup_done: true })
     .eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   currentProfile.b2b_sender_name = name;
@@ -3561,11 +3561,11 @@ function startGmailOAuth() {
 
 function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
   if (email) {
-    dotEl.className   = 'status-dot connected';
+    dotEl.className = 'status-dot connected';
     labelEl.textContent = email;
     connectBtnEl.textContent = 'Konto wechseln';
   } else {
-    dotEl.className   = 'status-dot';
+    dotEl.className = 'status-dot';
     labelEl.textContent = 'Kein Konto verbunden';
     connectBtnEl.textContent = 'Mit Google verbinden';
   }
@@ -3574,12 +3574,12 @@ function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
 async function checkB2bSetup() {
   gmailConnectedEmail = currentProfile.b2b_from_email || null;
   const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name;
-  document.getElementById('b2bSetupCard').hidden   = !!setupDone;
+  document.getElementById('b2bSetupCard').hidden = !!setupDone;
   document.getElementById('b2bMainContent').hidden = !setupDone;
   if (setupDone) {
-    document.getElementById('b2bFromName').textContent  = currentProfile.b2b_sender_name || '—';
+    document.getElementById('b2bFromName').textContent = currentProfile.b2b_sender_name || '—';
     document.getElementById('b2bFromEmail').textContent = gmailConnectedEmail || '—';
-    document.getElementById('aiFromBadge').textContent  = gmailConnectedEmail || '';
+    document.getElementById('aiFromBadge').textContent = gmailConnectedEmail || '';
     document.getElementById('composeFromDisplay').textContent = gmailConnectedEmail || currentProfile.b2b_sender_name || '—';
   } else {
     const nameInput = document.getElementById('setupSenderName');
@@ -3598,12 +3598,12 @@ document.getElementById('setupSenderName').addEventListener('input', updateSetup
 document.getElementById('b2bSetupFinishBtn').addEventListener('click', async () => {
   const name = document.getElementById('setupSenderName').value.trim();
   if (!name) return;
-  const {error} = await supabase.from('profiles')
-    .update({b2b_sender_name: name, b2b_setup_done: true})
+  const { error } = await supabase.from('profiles')
+    .update({ b2b_sender_name: name, b2b_setup_done: true })
     .eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   currentProfile.b2b_sender_name = name;
-  currentProfile.b2b_setup_done  = true;
+  currentProfile.b2b_setup_done = true;
   await checkB2bSetup();
   showToast('E-Mail-Einrichtung abgeschlossen ✓');
 });
@@ -3624,8 +3624,8 @@ document.getElementById('b2bConfigSaveBtn').addEventListener('click', async () =
   const name = document.getElementById('cfgSenderName').value.trim();
   if (!name) { showToast(t('err_generic'), 'error'); return; }
   const systemPrompt = document.getElementById('cfgSystemPrompt')?.value.trim() || '';
-  const {error} = await supabase.from('profiles')
-    .update({b2b_sender_name: name, system_prompt: systemPrompt}).eq('id', currentSession.user.id);
+  const { error } = await supabase.from('profiles')
+    .update({ b2b_sender_name: name, system_prompt: systemPrompt }).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   currentProfile.b2b_sender_name = name;
   currentProfile.system_prompt = systemPrompt;
@@ -3639,10 +3639,10 @@ document.getElementById('b2bConfigSaveBtn').addEventListener('click', async () =
 
 function openComposeModal(draft) {
   currentDraftContactId = draft.contact_id || null;
-  document.getElementById('composeToName').value  = draft.to_name || '';
+  document.getElementById('composeToName').value = draft.to_name || '';
   document.getElementById('composeToEmail').value = draft.to_email || '';
-  document.getElementById('composeSubject').value  = draft.subject || '';
-  document.getElementById('composeBody').value     = draft.body || '';
+  document.getElementById('composeSubject').value = draft.subject || '';
+  document.getElementById('composeBody').value = draft.body || '';
   document.getElementById('composeFromDisplay').textContent = gmailConnectedEmail || currentSession.user.email;
   openModal('emailComposeModal');
 }
@@ -3673,9 +3673,9 @@ document.getElementById('copyBodyBtn').addEventListener('click', () => {
 
 document.getElementById('composeSendBtn').addEventListener('click', async () => {
   const toEmail = document.getElementById('composeToEmail').value.trim();
-  const toName  = document.getElementById('composeToName').value.trim();
+  const toName = document.getElementById('composeToName').value.trim();
   const subject = document.getElementById('composeSubject').value.trim();
-  const body    = document.getElementById('composeBody').value.trim();
+  const body = document.getElementById('composeBody').value.trim();
   if (!toEmail || !subject || !body) { showToast(t('err_generic'), 'error'); return; }
 
   const systemPrompt = currentProfile.system_prompt?.trim();
@@ -3686,7 +3686,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
   try {
     const res = await fetch('https://n8n.infinitymade.de/api/gmail/send', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId: currentSession.user.id,
         to_email: toEmail, to_name: toName,
@@ -3711,7 +3711,7 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
     closeModal('emailComposeModal');
     aiAddMsg('E-Mail gesendet an ' + toEmail + ' ✓', 'ai');
     showToast('E-Mail gesendet ✓');
-  } catch(e) {
+  } catch (e) {
     showToast('Fehler: ' + e.message, 'error');
   }
   btn.disabled = false; btn.textContent = '✉ Senden';
@@ -3738,13 +3738,13 @@ async function runMailDraft(intent, contactsCache, containerId = 'aiMessages', m
   msgsEl.scrollTop = 9999;
   try {
     const cache = contactsCache || b2bCache;
-    const contacts = cache.slice(0,30).map(c => mapContactFn ? mapContactFn(c) : ({
-      id:c.id, company_name:c.company_name, contact_name:c.contact_name,
-      email:c.email, phone:c.phone, notes:c.notes
+    const contacts = cache.slice(0, 30).map(c => mapContactFn ? mapContactFn(c) : ({
+      id: c.id, company_name: c.company_name, contact_name: c.contact_name,
+      email: c.email, phone: c.phone, notes: c.notes
     }));
     const res = await fetch(B2B_AGENT_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'draft',
         intent,
@@ -3763,7 +3763,7 @@ async function runMailDraft(intent, contactsCache, containerId = 'aiMessages', m
     if (!json.success || !json.draft) throw new Error(json.error || 'Fehler');
     aiAddMsg('E-Mail-Entwurf erstellt — bitte prüfen und senden.', 'ai', containerId);
     openComposeModal(json.draft);
-  } catch(e) {
+  } catch (e) {
     loadingDiv.remove();
     aiAddMsg('Fehler: ' + e.message, 'ai', containerId);
   }
@@ -3778,7 +3778,7 @@ document.getElementById('aiSendBtn').addEventListener('click', () => {
 });
 
 document.getElementById('aiInput').addEventListener('keydown', e => {
-  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('aiSendBtn').click(); }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('aiSendBtn').click(); }
 });
 
 (function initVoiceInput() {
@@ -3809,13 +3809,13 @@ document.getElementById('b2cAiSendBtn').addEventListener('click', () => {
   if (!msg) return;
   input.value = '';
   runMailDraft(msg, b2cCache, 'b2cAiMessages', c => ({
-    id:c.id, company_name:c.title, contact_name:c.title,
-    email:c.email, phone:c.phone, notes:''
+    id: c.id, company_name: c.title, contact_name: c.title,
+    email: c.email, phone: c.phone, notes: ''
   }));
 });
 
 document.getElementById('b2cAiInput').addEventListener('keydown', e => {
-  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('b2cAiSendBtn').click(); }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('b2cAiSendBtn').click(); }
 });
 
 (function initB2cVoiceInput() {
@@ -3835,8 +3835,8 @@ document.getElementById('b2cAiInput').addEventListener('keydown', e => {
     document.getElementById('b2cAiInput').value = text;
     active = false; btn.textContent = '🎤';
     runMailDraft(text, b2cCache, 'b2cAiMessages', c => ({
-      id:c.id, company_name:c.title, contact_name:c.title,
-      email:c.email, phone:c.phone, notes:''
+      id: c.id, company_name: c.title, contact_name: c.title,
+      email: c.email, phone: c.phone, notes: ''
     }));
   };
   recog.onend = () => { active = false; btn.textContent = '🎤'; };
@@ -3844,7 +3844,7 @@ document.getElementById('b2cAiInput').addEventListener('keydown', e => {
 })();
 
 async function loadSettings() {
-  document.getElementById('setBiz').value  = currentProfile.business_name||'';
+  document.getElementById('setBiz').value = currentProfile.business_name || '';
   document.getElementById('setLang').value = currentLang;
 
   const isEmployee = currentProfile.role !== 'owner';
@@ -3852,28 +3852,28 @@ async function loadSettings() {
   if (accSection) accSection.hidden = isEmployee;
 
   if (!isEmployee) {
-    document.getElementById('accEmail').textContent = currentSession.user.email||'—';
-    const planName = currentProfile.plan ? currentProfile.plan.charAt(0).toUpperCase()+currentProfile.plan.slice(1) : '—';
+    document.getElementById('accEmail').textContent = currentSession.user.email || '—';
+    const planName = currentProfile.plan ? currentProfile.plan.charAt(0).toUpperCase() + currentProfile.plan.slice(1) : '—';
     document.getElementById('accPlanBadge').textContent = planName;
   }
 
-  const {data:integ} = await supabase.from('calendar_integrations')
-    .select('*').eq('user_id',currentSession.user.id).eq('provider','google').single();
+  const { data: integ } = await supabase.from('calendar_integrations')
+    .select('*').eq('user_id', currentSession.user.id).eq('provider', 'google').single();
   const calStatus = document.getElementById('googleCalStatus');
-  const calBtn    = document.getElementById('googleCalBtn');
+  const calBtn = document.getElementById('googleCalBtn');
   if (integ?.access_token) {
     calStatus.textContent = t('status_connected');
     calStatus.className = 'integration-status connected';
     calBtn.textContent = t('btn_disconnect');
-    calBtn.onclick = async () => { await supabase.from('calendar_integrations').delete().eq('id',integ.id); loadSettings(); };
+    calBtn.onclick = async () => { await supabase.from('calendar_integrations').delete().eq('id', integ.id); loadSettings(); };
   } else {
     calStatus.textContent = t('status_disconnected');
     calStatus.className = 'integration-status';
     calBtn.textContent = t('btn_connect');
-    calBtn.onclick = () => { window.location.href=`${API}/calendar/google-auth?userId=${currentSession.user.id}`; };
+    calBtn.onclick = () => { window.location.href = `${API}/calendar/google-auth?userId=${currentSession.user.id}`; };
   }
 
-  const features = (PLAN_FEATURES[currentProfile.plan]||PLAN_FEATURES.starter)[currentLang]||[];
+  const features = (PLAN_FEATURES[currentProfile.plan] || PLAN_FEATURES.starter)[currentLang] || [];
   const sfList = document.getElementById('settingsFeatureList');
   if (sfList) sfList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
 
@@ -3881,14 +3881,14 @@ async function loadSettings() {
 }
 
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
-  const biz  = document.getElementById('setBiz').value.trim();
+  const biz = document.getElementById('setBiz').value.trim();
   const lang = document.getElementById('setLang').value;
-  const {error} = await supabase.from('profiles').update({business_name:biz,language:lang}).eq('id',currentSession.user.id);
-  if (error) { showToast(t('err_generic'),'error'); return; }
+  const { error } = await supabase.from('profiles').update({ business_name: biz, language: lang }).eq('id', currentSession.user.id);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
   currentProfile.business_name = biz;
   currentProfile.language = lang;
   currentLang = lang;
-  localStorage.setItem('infinity_lang',lang);
+  localStorage.setItem('infinity_lang', lang);
   document.getElementById('bizName').textContent = biz;
   applyI18n();
   await renderSidebar();
@@ -3897,21 +3897,21 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
 
 document.getElementById('pwChangeBtn').addEventListener('click', async () => {
   const pw = document.getElementById('setPw').value;
-  if (pw.length<6) { showToast(t('err_generic'),'error'); return; }
-  const {error} = await supabase.auth.updateUser({password:pw});
-  if (error) { showToast(t('err_generic'),'error'); return; }
+  if (pw.length < 6) { showToast(t('err_generic'), 'error'); return; }
+  const { error } = await supabase.auth.updateUser({ password: pw });
+  if (error) { showToast(t('err_generic'), 'error'); return; }
   document.getElementById('setPw').value = '';
   showToast(t('pw_changed'));
 });
 
 document.getElementById('subPortalBtn').addEventListener('click', openStripePortal);
-document.getElementById('subUpgradeBtn').addEventListener('click', () => { window.location.href='/onboarding.html?step=plan'; });
+document.getElementById('subUpgradeBtn').addEventListener('click', () => { window.location.href = '/onboarding.html?step=plan'; });
 
 async function ensureCompanyCode() {
-  if (currentProfile.role!=='owner'||currentProfile.company_code) return;
-  const base = (currentProfile.business_name||currentSession.user.email.split('@')[0]).replace(/[^A-Za-z0-9]/g,'').toUpperCase().substring(0,10);
-  const code = 'INF-'+base;
-  await supabase.from('profiles').update({company_code:code}).eq('id',currentSession.user.id);
+  if (currentProfile.role !== 'owner' || currentProfile.company_code) return;
+  const base = (currentProfile.business_name || currentSession.user.email.split('@')[0]).replace(/[^A-Za-z0-9]/g, '').toUpperCase().substring(0, 10);
+  const code = 'INF-' + base;
+  await supabase.from('profiles').update({ company_code: code }).eq('id', currentSession.user.id);
   currentProfile.company_code = code;
 }
 
@@ -3932,9 +3932,9 @@ async function ensureBookingSlug() {
     const base = cleanBookingSlug(currentProfile.business_name) || cleanBookingSlug(emailPrefix) || cleanBookingSlug(currentSession.user.id);
     const slug = base || 'user';
     const url = window.location.origin + '/booking.html?u=' + slug;
-    await supabase.from('profiles').update({booking_slug:url}).eq('id',currentSession.user.id);
+    await supabase.from('profiles').update({ booking_slug: url }).eq('id', currentSession.user.id);
     currentProfile.booking_slug = url;
-  } catch(e) {
+  } catch (e) {
     console.error('[ensureBookingSlug]', e);
   }
 }
@@ -3959,7 +3959,7 @@ function renderDocTable(rows) {
       <td>${d.email ? `<a href="mailto:${d.email}">${d.email}</a>` : '—'}</td>
       <td>${d.phone || '—'}</td>
       <td>${d.notes || '—'}</td>
-      <td>${d.website ? `<a href="https://${d.website.replace(/^https?:\/\//,'')}" target="_blank" rel="noopener">${d.website}</a>` : '—'}</td>
+      <td>${d.website ? `<a href="https://${d.website.replace(/^https?:\/\//, '')}" target="_blank" rel="noopener">${d.website}</a>` : '—'}</td>
     </tr>`;
   }).join('');
 }
@@ -4070,9 +4070,9 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   const ticker = setInterval(() => {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const phase = elapsed < 8 ? 'Google Maps wird durchsucht...'
-               : elapsed < 25 ? 'Praxisdetails werden extrahiert...'
-               : elapsed < 50 ? 'Kontaktdaten werden aufbereitet...'
-               : 'Daten werden verarbeitet...';
+      : elapsed < 25 ? 'Praxisdetails werden extrahiert...'
+        : elapsed < 50 ? 'Kontaktdaten werden aufbereitet...'
+          : 'Daten werden verarbeitet...';
     const pct = Math.min(95, (elapsed / 120) * 95);
     setDocProgress(`${phase} <b>${elapsed}s</b>`, pct);
   }, 1000);
@@ -4488,14 +4488,14 @@ function setupScheduleNav() {
   if (prev) prev.addEventListener('click', async () => {
     ovEmpPage = 0;
     const d = new Date(scheduleDate);
-    d.setDate(d.getDate()-1);
+    d.setDate(d.getDate() - 1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
   if (next) next.addEventListener('click', async () => {
     ovEmpPage = 0;
     const d = new Date(scheduleDate);
-    d.setDate(d.getDate()+1);
+    d.setDate(d.getDate() + 1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
@@ -4523,14 +4523,14 @@ function setupScheduleNav() {
   if (gPrev) gPrev.addEventListener('click', async () => {
     ovEmpPage = 0;
     const d = new Date(scheduleDate);
-    d.setDate(d.getDate()-1);
+    d.setDate(d.getDate() - 1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
   if (gNext) gNext.addEventListener('click', async () => {
     ovEmpPage = 0;
     const d = new Date(scheduleDate);
-    d.setDate(d.getDate()+1);
+    d.setDate(d.getDate() + 1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
@@ -4549,8 +4549,8 @@ async function loadFeedbacks() {
   if (error) { list.innerHTML = '<div class="table-empty">Fehler beim Laden.</div>'; return; }
   if (!data || data.length === 0) { list.innerHTML = '<div class="table-empty">Noch keine Tickets.</div>'; return; }
   list.innerHTML = data.map(f => {
-    const statusColors = { open:'badge-yellow', in_progress:'badge-blue', resolved:'badge-green', closed:'badge-gray' };
-    const priorityColors = { low:'badge-gray', medium:'badge-yellow', high:'badge-red', critical:'badge-red' };
+    const statusColors = { open: 'badge-yellow', in_progress: 'badge-blue', resolved: 'badge-green', closed: 'badge-gray' };
+    const priorityColors = { low: 'badge-gray', medium: 'badge-yellow', high: 'badge-red', critical: 'badge-red' };
     const st = f.status || 'open';
     const pr = f.priority || 'medium';
     const date = new Date(f.created_at).toLocaleDateString('de-DE');
@@ -4558,8 +4558,8 @@ async function loadFeedbacks() {
       <div class="feedback-header">
         <span class="feedback-title">${f.title}</span>
         <div class="feedback-badges">
-          <span class="badge ${statusColors[st]||'badge-gray'}">${st}</span>
-          <span class="badge ${priorityColors[pr]||'badge-gray'}">${pr}</span>
+          <span class="badge ${statusColors[st] || 'badge-gray'}">${st}</span>
+          <span class="badge ${priorityColors[pr] || 'badge-gray'}">${pr}</span>
         </div>
       </div>
       <div class="feedback-meta">${f.type} · ${date}</div>
@@ -4594,7 +4594,7 @@ function startClock() {
   let lastMinute = -1;
   function tick() {
     const now = new Date();
-    el.textContent = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Berlin'});
+    el.textContent = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
     const currentMinute = now.getMinutes();
     if (currentMinute !== lastMinute) {
       lastMinute = currentMinute;
@@ -4632,8 +4632,8 @@ function renderInvList() {
     return;
   }
   empty.hidden = true;
-  const statusMap = { draft:'Entwurf', sent:'Gesendet', paid:'Bezahlt', cancelled:'Storniert' };
-  const statusCls = { draft:'badge-gray', sent:'badge-blue', paid:'badge-green', cancelled:'badge-red' };
+  const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
+  const statusCls = { draft: 'badge-gray', sent: 'badge-blue', paid: 'badge-green', cancelled: 'badge-red' };
   tbody.innerHTML = invListCache.map(inv => {
     const date = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
     const total = formatEur(inv.total_patient || 0);
@@ -4643,7 +4643,7 @@ function renderInvList() {
       <td>${escapeHtml(inv.patient_name || '')}</td>
       <td>${date}</td>
       <td>${total}</td>
-      <td><span class="badge ${statusCls[st]||'badge-gray'}">${statusMap[st]||st}</span></td>
+      <td><span class="badge ${statusCls[st] || 'badge-gray'}">${statusMap[st] || st}</span></td>
       <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button></td>
     </tr>`;
   }).join('');
@@ -4662,7 +4662,7 @@ async function loadInvPatients() {
   sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
     (data || []).map(l => {
       const name = displayNameWithBirth(l);
-      return `<option value="${l.id}" data-phone="${escapeHtml(l.phone||'')}" data-email="${escapeHtml(l.email||'')}">${escapeHtml(name)}</option>`;
+      return `<option value="${l.id}" data-phone="${escapeHtml(l.phone || '')}" data-email="${escapeHtml(l.email || '')}">${escapeHtml(name)}</option>`;
     }).join('');
 }
 
@@ -4687,17 +4687,17 @@ async function loadPatientBookings(patientId) {
 
 function buildSvcOptions(selectedTitle) {
   const opts = ownerServices.map(s =>
-    `<option value="${escapeHtml(s.title||'')}" data-price="${parseFloat(s.price)||0}" ${(s.title||'')===selectedTitle?'selected':''}>${escapeHtml(s.title||'')}</option>`
+    `<option value="${escapeHtml(s.title || '')}" data-price="${parseFloat(s.price) || 0}" ${(s.title || '') === selectedTitle ? 'selected' : ''}>${escapeHtml(s.title || '')}</option>`
   ).join('');
   return `<option value="" data-price="0">-- Leistung wählen --</option>` + opts;
 }
 
 function buildInvLineRow(line, idx) {
   return `<tr data-idx="${idx}">
-    <td><select class="form-select inv-line-svc" style="min-width:180px;font-size:13px;">${buildSvcOptions(line.title||'')}</select></td>
-    <td><input type="number" class="form-input inv-line-qty" value="${line.quantity||1}" min="0" style="width:72px;text-align:center;" /></td>
-    <td><input type="number" class="form-input inv-line-price" value="${line.unit_price||0}" min="0" step="0.01" style="width:100px;text-align:right;" /></td>
-    <td style="text-align:right;font-weight:600;">${formatEur((line.quantity||1)*(line.unit_price||0))}</td>
+    <td><select class="form-select inv-line-svc" style="min-width:180px;font-size:13px;">${buildSvcOptions(line.title || '')}</select></td>
+    <td><input type="number" class="form-input inv-line-qty" value="${line.quantity || 1}" min="0" style="width:72px;text-align:center;" /></td>
+    <td><input type="number" class="form-input inv-line-price" value="${line.unit_price || 0}" min="0" step="0.01" style="width:100px;text-align:right;" /></td>
+    <td style="text-align:right;font-weight:600;">${formatEur((line.quantity || 1) * (line.unit_price || 0))}</td>
     <td><button class="btn-icon inv-del-line" type="button" title="Entfernen">🗑</button></td>
   </tr>`;
 }
@@ -4705,31 +4705,31 @@ function buildInvLineRow(line, idx) {
 function renderInvLines() {
   const tbody = document.getElementById('invLineBody');
   if (!tbody) return;
-  tbody.innerHTML = invLines.map((l,i) => buildInvLineRow(l,i)).join('');
+  tbody.innerHTML = invLines.map((l, i) => buildInvLineRow(l, i)).join('');
   tbody.querySelectorAll('.inv-line-svc').forEach((sel, i) => {
     sel.onchange = () => {
       const opt = sel.options[sel.selectedIndex];
       invLines[i].title = opt.value;
-      invLines[i].unit_price = parseFloat(opt.dataset.price)||0;
+      invLines[i].unit_price = parseFloat(opt.dataset.price) || 0;
       renderInvLines(); calcInvTotals();
     };
   });
   tbody.querySelectorAll('.inv-line-qty').forEach((inp, i) => {
-    inp.onchange = () => { invLines[i].quantity = parseFloat(inp.value)||0; renderInvLines(); calcInvTotals(); };
+    inp.onchange = () => { invLines[i].quantity = parseFloat(inp.value) || 0; renderInvLines(); calcInvTotals(); };
   });
   tbody.querySelectorAll('.inv-line-price').forEach((inp, i) => {
-    inp.onchange = () => { invLines[i].unit_price = parseFloat(inp.value)||0; renderInvLines(); calcInvTotals(); };
+    inp.onchange = () => { invLines[i].unit_price = parseFloat(inp.value) || 0; renderInvLines(); calcInvTotals(); };
   });
   tbody.querySelectorAll('.inv-del-line').forEach((btn, i) => {
-    btn.onclick = () => { invLines.splice(i,1); renderInvLines(); calcInvTotals(); };
+    btn.onclick = () => { invLines.splice(i, 1); renderInvLines(); calcInvTotals(); };
   });
 }
 
 function calcInvTotals() {
-  const sub = invLines.reduce((s,l) => s + (l.quantity||1)*(l.unit_price||0), 0);
-  const eigenPct = parseFloat(document.getElementById('invEigenPct').value)||0;
-  const eigenEur = sub * (eigenPct/100);
-  const kasse = parseFloat(document.getElementById('invKasse').value)||0;
+  const sub = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
+  const eigenPct = parseFloat(document.getElementById('invEigenPct').value) || 0;
+  const eigenEur = sub * (eigenPct / 100);
+  const kasse = parseFloat(document.getElementById('invKasse').value) || 0;
   const total = eigenEur + kasse;
   document.getElementById('invSubtotal').textContent = formatEur(sub);
   document.getElementById('invEigenEur').textContent = formatEur(eigenEur);
@@ -4749,9 +4749,9 @@ async function generateInvNumber() {
   let next = 1;
   if (data && data.length > 0 && data[0].invoice_number) {
     const m = data[0].invoice_number.match(/-(\d+)$/);
-    if (m) next = parseInt(m[1],10) + 1;
+    if (m) next = parseInt(m[1], 10) + 1;
   }
-  return `INV-${year}-${String(next).padStart(4,'0')}`;
+  return `INV-${year}-${String(next).padStart(4, '0')}`;
 }
 
 function resetInvEditor() {
@@ -4778,7 +4778,7 @@ async function openInvEditor(invoiceId) {
     if (!inv) return;
     invPatientId = inv.patient_id;
     document.getElementById('invPatientSelect').value = inv.patient_id || '';
-    invLines = (inv.line_items || []).map(l => ({...l}));
+    invLines = (inv.line_items || []).map(l => ({ ...l }));
     document.getElementById('invEigenPct').value = inv.eigenanteil_pct || 0;
     document.getElementById('invKasse').value = inv.kassenzuzahlung || 0;
     document.getElementById('invNotes').value = inv.notes || '';
@@ -4799,12 +4799,12 @@ function closeInvEditor() {
 async function saveInvoice() {
   const patientSel = document.getElementById('invPatientSelect');
   const patientId = patientSel.value;
-  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.','error'); return; }
-  if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.','error'); return; }
-  const subtotal = invLines.reduce((s,l) => s + (l.quantity||1)*(l.unit_price||0), 0);
-  const eigenPct = parseFloat(document.getElementById('invEigenPct').value)||0;
-  const eigenEur = subtotal * (eigenPct/100);
-  const kasse = parseFloat(document.getElementById('invKasse').value)||0;
+  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
+  if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; }
+  const subtotal = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
+  const eigenPct = parseFloat(document.getElementById('invEigenPct').value) || 0;
+  const eigenEur = subtotal * (eigenPct / 100);
+  const kasse = parseFloat(document.getElementById('invKasse').value) || 0;
   const total = eigenEur + kasse;
   const ownerId = getOwnerId();
   const patientName = patientSel.options[patientSel.selectedIndex].text;
@@ -4832,6 +4832,7 @@ async function saveInvoice() {
 
 let anamnesePatientCache = [];
 let currentAnamneseId = null;
+let currentAnamnesePatientId = null;
 
 async function loadAnamnese() {
   const ownerId = getOwnerId();
@@ -4903,14 +4904,14 @@ function resetAnamneseForm() {
   document.getElementById('anamPdfBtn').hidden = true;
 
   const clearAll = [
-    ['anamChkBeschwerden','anamBeschwerdenOther','anamHauptbeschwerde'],
-    ['anamChkVorerkrankungen','anamVorerkrankungenOther','anamVorerkrankungen'],
-    ['anamChkOperationen','anamOperationenOther','anamOperationen'],
-    ['anamChkMedikamente','anamMedikamenteOther','anamMedikamente'],
-    ['anamChkAllergien','anamAllergienOther','anamAllergien'],
-    ['anamChkBeruf','anamBerufOther','anamBeruf'],
-    ['anamChkSport','anamSportOther','anamSport'],
-    ['anamChkDiagnose','anamDiagnoseOther','anamDiagnose'],
+    ['anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde'],
+    ['anamChkVorerkrankungen', 'anamVorerkrankungenOther', 'anamVorerkrankungen'],
+    ['anamChkOperationen', 'anamOperationenOther', 'anamOperationen'],
+    ['anamChkMedikamente', 'anamMedikamenteOther', 'anamMedikamente'],
+    ['anamChkAllergien', 'anamAllergienOther', 'anamAllergien'],
+    ['anamChkBeruf', 'anamBerufOther', 'anamBeruf'],
+    ['anamChkSport', 'anamSportOther', 'anamSport'],
+    ['anamChkDiagnose', 'anamDiagnoseOther', 'anamDiagnose'],
   ];
   clearAll.forEach(([cId, oId, tId]) => {
     const wrap = document.getElementById(cId);
@@ -4930,6 +4931,7 @@ function resetAnamneseForm() {
 
 async function fillAnamneseForm(patientId) {
   if (!patientId) { resetAnamneseForm(); return; }
+  currentAnamnesePatientId = patientId;
   const ownerId = getOwnerId();
   const { data } = await supabase.from('anamnese')
     .select('*')
@@ -4975,12 +4977,84 @@ async function fillAnamneseForm(patientId) {
   document.querySelectorAll('input[name="anamSchmerzArt"]').forEach(r => { r.checked = r.value === (data.schmerz_art || ''); });
   const schmerzAndere = document.querySelector('input[name="anamSchmerzArt"][value="andere"]');
   if (schmerzAndere && !schmerzAndere.checked) {
-    const knownSchmerz = ['stechend','dumpf','brennend','ziehend','krampfartig','pulsierend'];
+    const knownSchmerz = ['stechend', 'dumpf', 'brennend', 'ziehend', 'krampfartig', 'pulsierend'];
     if (data.schmerz_art && !knownSchmerz.includes(data.schmerz_art)) {
       document.getElementById('anamSchmerzArtOther').value = data.schmerz_art;
       schmerzAndere.checked = true;
     }
   }
+}
+
+async function printAnamnese() {
+  const patientId = currentAnamnesePatientId;
+  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
+
+  const ownerId = getOwnerId();
+  const { data: anamnese } = await supabase.from('anamnese')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .eq('patient_id', patientId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!anamnese) { showToast('Keine Anamnese für diesen Patienten gefunden.', 'error'); return; }
+
+  const patientName = document.querySelector('#anamPatientSelect option:checked')?.textContent || 'Unbekannt';
+
+  const getArrayStr = (val) => {
+    if (!val) return '-';
+    if (Array.isArray(val)) return val.filter(v => v).join(', ') || '-';
+    return String(val);
+  };
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Anamnese - ${patientName}</title>
+<style>
+  body{font-family:Arial,sans-serif;padding:30px;max-width:800px;margin:0 auto;font-size:14px}
+  h1{font-size:20px;border-bottom:2px solid #22c55e;padding-bottom:10px;margin-bottom:20px}
+  h2{font-size:16px;color:#22c55e;margin-top:20px}
+  .row{display:flex;gap:20px;margin:8px 0}
+  .label{font-weight:bold;min-width:160px}
+  .value{flex:1}
+  .section{background:#f9f9f9;padding:15px;margin:15px 0;border-radius:8px}
+</style></head><body>
+<h1>Anamnese - ${patientName}</h1>
+<div class="row"><span class="label">Aufnahmedatum:</span><span class="value">${anamnese.aufnahmedatum || '-'}</span></div>
+<div class="row"><span class="label">Beschwerden seit:</span><span class="value">${anamnese.beschwerde_seit || '-'}</span></div>
+<h2>Hauptbeschwerde</h2>
+<div class="section">${getArrayStr(anamnese.hauptbeschwerde)}</div>
+<h2>Schmerz</h2>
+<div class="row"><span class="label">Schmerz-Skala:</span><span class="value">${anamnese.schmerz_skala ?? '-'}/10</span></div>
+<div class="row"><span class="label">Schmerz-Art:</span><span class="value">${anamnese.schmerz_art || '-'}</span></div>
+<div class="row"><span class="label">Verlauf:</span><span class="value">${anamnese.beschwerde_verlauf || '-'}</span></div>
+<h2>Vorerkrankungen</h2>
+<div class="section">${getArrayStr(anamnese.vorerkrankungen)}</div>
+<h2>Medikamente</h2>
+<div class="section">${getArrayStr(anamnese.medikamente)}</div>
+<h2>Allergien</h2>
+<div class="section">${getArrayStr(anamnese.allergien)}</div>
+<h2>Operationen</h2>
+<div class="section">${getArrayStr(anamnese.operationen)}</div>
+<h2>Beruf / Sport</h2>
+<div class="row"><span class="label">Beruf:</span><span class="value">${getArrayStr(anamnese.beruf)}</span></div>
+<div class="row"><span class="label">Sport:</span><span class="value">${getArrayStr(anamnese.sport)}</span></div>
+<div class="row"><span class="label">Raucher:</span><span class="value">${anamnese.raucher ? 'Ja' : 'Nein'}</span></div>
+<h2>Arzt / Rezept</h2>
+<div class="row"><span class="label">Arzt:</span><span class="value">${anamnese.arzt_name || '-'}</span></div>
+<div class="row"><span class="label">Arzt-Nr.:</span><span class="value">${anamnese.arzt_nummer || '-'}</span></div>
+<div class="row"><span class="label">Rezept-Sitzungen:</span><span class="value">${anamnese.rezept_sitzungen || '-'}</span></div>
+<div class="row"><span class="label">Hausbesuch:</span><span class="value">${anamnese.hausbesuch ? 'Ja' : 'Nein'}</span></div>
+<h2>Besondere Wünsche</h2>
+<div class="section">${anamnese.besondere_wuensche || '-'}</div>
+<h2>Notizen</h2>
+<div class="section">${anamnese.notizen || '-'}</div>
+<script>window.onload=()=>{window.print();window.close();}<\/script>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if (win) { win.document.write(html); win.document.close(); }
+  else showToast('Popup blocked! Bitte Popups erlauben.', 'error');
 }
 
 async function saveAnamnese() {
@@ -5044,14 +5118,14 @@ function bindAnamneseEvents() {
   }
 
   const syncPairs = [
-    ['anamChkBeschwerden','anamBeschwerdenOther','anamHauptbeschwerde'],
-    ['anamChkVorerkrankungen','anamVorerkrankungenOther','anamVorerkrankungen'],
-    ['anamChkOperationen','anamOperationenOther','anamOperationen'],
-    ['anamChkMedikamente','anamMedikamenteOther','anamMedikamente'],
-    ['anamChkAllergien','anamAllergienOther','anamAllergien'],
-    ['anamChkBeruf','anamBerufOther','anamBeruf'],
-    ['anamChkSport','anamSportOther','anamSport'],
-    ['anamChkDiagnose','anamDiagnoseOther','anamDiagnose'],
+    ['anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde'],
+    ['anamChkVorerkrankungen', 'anamVorerkrankungenOther', 'anamVorerkrankungen'],
+    ['anamChkOperationen', 'anamOperationenOther', 'anamOperationen'],
+    ['anamChkMedikamente', 'anamMedikamenteOther', 'anamMedikamente'],
+    ['anamChkAllergien', 'anamAllergienOther', 'anamAllergien'],
+    ['anamChkBeruf', 'anamBerufOther', 'anamBeruf'],
+    ['anamChkSport', 'anamSportOther', 'anamSport'],
+    ['anamChkDiagnose', 'anamDiagnoseOther', 'anamDiagnose'],
   ];
   syncPairs.forEach(([cId, oId, tId]) => {
     const wrap = document.getElementById(cId);
@@ -5069,7 +5143,7 @@ function bindInvEvents() {
   document.getElementById('invSaveBtn').onclick = saveInvoice;
   document.getElementById('invPrintBtn').onclick = () => window.print();
   document.getElementById('invAddLineBtn').onclick = () => {
-    invLines.push({ title:'', quantity:1, unit_price:0 });
+    invLines.push({ title: '', quantity: 1, unit_price: 0 });
     renderInvLines(); calcInvTotals();
   };
   let invBookingCache = [];
@@ -5081,7 +5155,7 @@ function bindInvEvents() {
     invLines = checked.map(cb => ({
       title: cb.dataset.svc || 'Leistung',
       quantity: 1,
-      unit_price: parseFloat(cb.dataset.price)||0
+      unit_price: parseFloat(cb.dataset.price) || 0
     }));
     renderInvLines(); calcInvTotals();
   }
@@ -5103,9 +5177,9 @@ function bindInvEvents() {
     if (bookings.length > 0) {
       bookingWrap.hidden = false;
       checksWrap.innerHTML = bookings.map(b => {
-        const dt = new Date(b.start_time).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        const dt = new Date(b.start_time).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         const svc = b.services?.title || 'Leistung';
-        const price = parseFloat(b.services?.price)||0;
+        const price = parseFloat(b.services?.price) || 0;
         const id = `invchk-${b.id}`;
         return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer;">
           <input type="checkbox" id="${id}" data-bid="${b.id}" data-svc="${escapeHtml(svc)}" data-price="${price}" />
@@ -5131,14 +5205,14 @@ function bindInvEvents() {
 let aerzteCache = [];
 
 async function loadAerzte() {
-  const { data } = await supabase.from('aerzte').select('*').order('arzt_name',{ascending:true});
+  const { data } = await supabase.from('aerzte').select('*').order('arzt_name', { ascending: true });
   aerzteCache = data || [];
   const list = document.getElementById('aerzteList');
   if (!list) return;
   if (!aerzteCache.length) { list.innerHTML = '<p class="text-muted">Keine Ärzte.</p>'; return; }
   list.innerHTML = aerzteCache.map(a => `
     <div class="aerzte-row" data-id="${a.id}">
-      <span>${escapeHtml(a.arzt_name)} <span class="text-muted" style="font-size:12px;">${escapeHtml(a.arzt_nummer||'')}</span></span>
+      <span>${escapeHtml(a.arzt_name)} <span class="text-muted" style="font-size:12px;">${escapeHtml(a.arzt_nummer || '')}</span></span>
       <div>
         <button class="btn-outline" onclick="editAerzte('${a.id}')">Bearbeiten</button>
         <button class="btn-danger" onclick="deleteAerzte('${a.id}')">Löschen</button>
@@ -5174,7 +5248,7 @@ function editAerzte(id) {
   if (name === null) return;
   const nummer = prompt('Neue Telefon/Fax:', a.arzt_nummer || '');
   if (nummer === null) return;
-  supabase.from('aerzte').update({ arzt_name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id).then(({error}) => {
+  supabase.from('aerzte').update({ arzt_name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id).then(({ error }) => {
     if (error) { showToast(t('err_generic'), 'error'); return; }
     loadAerzte();
     showToast('Aktualisiert.');
@@ -5251,8 +5325,8 @@ async function init() {
     console.log('[init] team ok');
     await renderOverview();
     console.log('[init] overview ok');
-    try { await renderGaps(); console.log('[init] gaps ok'); } catch(e) { console.error('[init] renderGaps error', e); }
-    try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch(e) { console.error('[init] renderGapsForDate error', e); }
+    try { await renderGaps(); console.log('[init] gaps ok'); } catch (e) { console.error('[init] renderGaps error', e); }
+    try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
     await initCalendar();
     console.log('[init] calendar ok');
@@ -5269,11 +5343,11 @@ async function init() {
       if (!sel || !sel.value) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
       openRezeptModal(null, sel.value);
     });
-    if (activePanel==='settings') await loadAerzte();
+    if (activePanel === 'settings') await loadAerzte();
     const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
     if (currentSession?.user?.id === ADMIN_UUID && adminLink) adminLink.style.display = '';
-  } catch(e) {
+  } catch (e) {
     console.error('[dashboard init]', e);
   } finally {
     document.getElementById('loading').style.display = 'none';
