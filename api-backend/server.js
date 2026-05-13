@@ -730,14 +730,7 @@ app.post('/api/booking/batch-create', async (req, res) => {
     return d.toISOString().substring(0, 10);
   }
 
-  function getWeekday(dateStr) {
-    const probe = new Date(dateStr + 'T12:00:00Z');
-    return new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, weekday: 'short' }).format(probe);
-  }
-
   const targetDates = [];
-  let current = startDate;
-  let found = 0;
 
   if (recurrence === 'daily') {
     for (let i = 0; i < count; i++) {
@@ -747,33 +740,16 @@ app.post('/api/booking/batch-create', async (req, res) => {
     const wdSet = new Set((weekdays || []).map(Number));
     const startWd = berlinDayOfWeek(startDate);
     if (!wdSet.has(startWd)) wdSet.add(startWd);
+    const step = recurrence === 'biweekly' ? 14 : 7;
 
-    let safety = 0;
-    while (found < count && safety < 365) {
-      const wd = berlinDayOfWeek(current);
-      if (wdSet.has(wd)) {
-        targetDates.push(current);
-        found++;
-      }
-      const step = recurrence === 'biweekly' ? 1 : 1;
+    let current = startDate;
+    while (targetDates.length < count) {
+      wdSet.forEach(d => {
+        if (targetDates.length >= count) return;
+        const candidate = addDays(current, d);
+        if (berlinDayOfWeek(candidate) === d) targetDates.push(candidate);
+      });
       current = addDays(current, step);
-      if (recurrence === 'biweekly') {
-        const weekStart = addDays(current, -((berlinDayOfWeek(current) + 6) % 7));
-        const prevWeekStart = addDays(weekStart, -14);
-        if (targetDates.length > 0) {
-          const last = targetDates[targetDates.length - 1];
-          const lastWeekStart = addDays(last, -((berlinDayOfWeek(last) + 6) % 7));
-          const nextWeekStart = addDays(lastWeekStart, 14);
-          if (current < nextWeekStart) {
-            current = nextWeekStart;
-            wdSet.forEach(d => {
-              const candidate = addDays(current, d);
-              if (berlinDayOfWeek(candidate) === d) targetDates.push(candidate);
-            });
-          }
-        }
-      }
-      safety++;
     }
   }
 
