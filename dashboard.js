@@ -5330,6 +5330,24 @@ async function init() {
     setupScheduleNav();
     await initCalendar();
     console.log('[init] calendar ok');
+
+    // Realtime subscription for bookings — refreshes calendar when a booking is created from booking.html
+    const ownerId = getOwnerId();
+    const bkChannel = supabase.channel('bookings-realtime');
+    bkChannel
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'bookings',
+        filter: `owner_id=eq.${ownerId}`
+      }, async (payload) => {
+        console.log('[realtime] new booking detected:', payload.new?.id);
+        if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
+        if (activePanel === 'overview') await loadTodayBookings();
+        if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+      })
+      .subscribe();
+
     await handleGmailCallback();
     console.log('[init] gmail ok');
     bindInvEvents();
