@@ -1208,7 +1208,7 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bkSpecialBanner').hidden = true;
   document.getElementById('bkDocAssignHint').hidden = true;
   populateEmpSelects();
-  populateSrvSelect();
+  await populateSrvSelect();
   openModal('bookingModal');
   await initBkCustomerAutocomplete();
 }
@@ -1415,7 +1415,11 @@ async function openBookingModal(b) {
     } catch (_) {}
   }
   populateEmpSelects(b.user_id);
-  populateSrvSelect(b.service_id);
+  await populateSrvSelect(b.service_id);
+  if (b.service_id && b.start_time && b.end_time) {
+    const actualDur = Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000);
+    updateBkDuration(b.service_id, actualDur);
+  }
   openModal('bookingModal');
   document.getElementById('bkMoveBtn').onclick = () => startMoveBooking(b);
   await initBkCustomerAutocomplete();
@@ -1594,7 +1598,7 @@ async function doMoveBooking(startStr, empId) {
   moveBooking = null;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   showToast('Termin verschoben');
-  renderDayView(toISODate(dayViewDate));
+  await renderDayView(toISODate(dayViewDate));
   if (typeof scheduleDate !== 'undefined' && toISODate(dayViewDate) === toISODate(scheduleDate)) {
     loadScheduleBookings(scheduleDate);
   }
@@ -1610,15 +1614,41 @@ function populateEmpSelects(selectedId=null) {
   });
 }
 
-function populateSrvSelect(selectedId=null) {
+async function populateSrvSelect(selectedId=null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  supabase.from('services').select('id,title,duration_minutes').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`).then(({data}) => {
-    el.innerHTML = '<option value="">— Dienstleistung wählen —</option>'+(data||[]).map(s=>
-      `<option value="${s.id}" data-duration="${s.duration_minutes||30}" ${s.id===selectedId?'selected':''}>${escapeHtml(s.title)} (${s.duration_minutes||30} min)</option>`
-    ).join('');
-  });
+  const {data} = await supabase.from('services').select('id,title,duration_minutes,price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  el.innerHTML = '<option value="">— Dienstleistung wählen —</option>'+(data||[]).map(s=>
+    `<option value="${s.id}" data-duration="${s.duration_minutes||30}" data-code="${escapeHtml(s.code||'')}" ${s.id===selectedId?'selected':''}>${escapeHtml(s.title)} (${s.duration_minutes||30} min)</option>`
+  ).join('');
+  if (selectedId) updateBkDuration(selectedId);
 }
+
+function updateBkDuration(srvId, defaultValue=null) {
+  const durGroup = document.getElementById('bkDurationGroup');
+  const durSelect = document.getElementById('bkDuration');
+  if (!durGroup || !durSelect) return;
+  const isPhysio = getSector() === 'physiotherapy';
+  if (!isPhysio || !srvId) { durGroup.hidden = true; return; }
+  const srv = window._bkSrvData?.find(s => s.id === srvId);
+  if (srv?.price_config?.durations) {
+    const activeDurs = Object.entries(srv.price_config.durations)
+      .filter(([_, v]) => v.active)
+      .map(([k, _]) => parseInt(k))
+      .sort((a, b) => a - b);
+    if (activeDurs.length) {
+      durSelect.innerHTML = activeDurs.map(d => `<option value="${d}">${d} Minuten</option>`).join('');
+      durGroup.hidden = false;
+      durSelect.value = String(defaultValue || srv.duration_minutes || activeDurs[0]);
+      return;
+    }
+  }
+  durGroup.hidden = true;
+}
+
+document.getElementById('bkService').addEventListener('change', (e) => {
+  updateBkDuration(e.target.value);
+});
 
 document.getElementById('bkPhone').addEventListener('blur', async () => {
   const phone = document.getElementById('bkPhone').value.trim();
@@ -1650,7 +1680,16 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const custId = document.getElementById('bkCustomerId').value.trim();
   if (isPhysio && !id && !custId) { showToast('Bitte einen Patienten aus der Liste auswählen.', 'error'); return; }
 
-  const dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
+  const startDate = new Date(startV);
+  const now = new Date();
+  if (startDate < now) { showToast('Termine in der Vergangenheit können nicht gebucht werden.', 'error'); return; }
+
+  const durGroup = document.getElementById('bkDurationGroup');
+  const durSelect = document.getElementById('bkDuration');
+  let dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
+  if (durGroup && !durGroup.hidden && durSelect && durSelect.value) {
+    dur = parseInt(durSelect.value);
+  }
   const startIso = new Date(startV).toISOString();
   const endIso = new Date(new Date(startV).getTime() + dur * 60000).toISOString();
 
@@ -1714,7 +1753,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel==='overview') await loadTodayBookings();
-  if (activePanel==='calendar' && calendarView==='day') renderDayView(toISODate(dayViewDate));
+  if (activePanel==='calendar' && calendarView==='day') await renderDayView(toISODate(dayViewDate));
   showToast(t('saved'));
 });
 
@@ -1725,7 +1764,7 @@ document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel==='overview') await loadTodayBookings();
-  if (activePanel==='calendar' && calendarView==='day') renderDayView(toISODate(dayViewDate));
+  if (activePanel==='calendar' && calendarView==='day') await renderDayView(toISODate(dayViewDate));
   showToast(t('saved'));
 });
 
@@ -2404,7 +2443,7 @@ let servicesCache = [];
 
 async function loadServices() {
   const {data} = await supabase.from('services')
-    .select('*,employee_services(employee_id),price_config').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+    .select('*,employee_services(employee_id),price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
   servicesCache = data||[];
   renderServices();
   renderSrvEmpCheckboxes();
@@ -2430,9 +2469,10 @@ function renderServices() {
     } else {
       meta = `${s.duration_minutes} min &middot; ${s.price!=null?s.price+' €':'—'}`;
     }
+    const codeTag = s.code ? `<span class="srv-code-badge">${escapeHtml(s.code)}</span>` : '';
     return `<div class="service-card" data-srv-id="${s.id}">
       <div class="service-info">
-        <div class="service-title">${s.title}</div>
+        <div class="service-title">${s.title} ${codeTag}</div>
         <div class="service-meta">${meta}</div>
         <div class="service-meta">${empNames||'—'}</div>
       </div>
@@ -2473,6 +2513,7 @@ function resetServiceForm() {
   document.getElementById('srvFormTitle').textContent = t('lbl_add_service') || 'Neue Dienstleistung';
   document.getElementById('srvEditId').value = '';
   document.getElementById('srvTitle').value = '';
+  document.getElementById('srvCode').value = '';
   document.getElementById('srvDur').value = '30';
   document.getElementById('srvPrice').value = '0';
   document.getElementById('srvEmpAll').checked = true;
@@ -2497,6 +2538,7 @@ function openServiceEdit(id) {
   document.getElementById('srvFormTitle').textContent = 'Dienstleistung bearbeiten';
   document.getElementById('srvEditId').value = s.id;
   document.getElementById('srvTitle').value = s.title;
+  document.getElementById('srvCode').value = s.code || '';
 
   const isPhysio = getSector() === 'physiotherapy';
   if (isPhysio && s.price_config) {
@@ -2616,7 +2658,8 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   const mode = document.getElementById('addServiceForm').dataset.mode;
   const isPhysio = getSector() === 'physiotherapy';
 
-  let payload = { title };
+  const code = document.getElementById('srvCode').value.trim().toUpperCase() || null;
+  let payload = { title, code };
   if (isPhysio) {
     const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
     const durations = {};
@@ -2627,7 +2670,7 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
       durations[dur] = { active, price: priceVal !== '' ? parseFloat(priceVal) : null };
     });
     payload = {
-      title,
+      title, code,
       price_config: { unit_price: unitPrice, durations },
       duration_minutes: null,
       price: null,
@@ -2636,7 +2679,7 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   } else {
     const duration = parseInt(document.getElementById('srvDur').value,10)||30;
     const price = parseFloat(document.getElementById('srvPrice').value)||0;
-    payload = { title, duration_minutes: duration, price };
+    payload = { title, code, duration_minutes: duration, price };
   }
 
   if (mode === 'edit') {

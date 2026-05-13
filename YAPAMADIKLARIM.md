@@ -132,3 +132,21 @@
 - Eger `printAnamnese` yoksa, fonksiyonu tekrar eklemek ve buton referansini guncellemek.
 
 **Dosyalar:** `dashboard.js`
+
+---
+
+## 5. Booking Modal — Physio Servis Süre Seçimi
+
+**Tarih:** 2026-05-13
+
+**Problem:** Fizyoterapi sektorunde booking modal'da servis secildiginde, o servisin `price_config.durations` icindeki aktif sureleri (ornegin 20dk, 30dk, 45dk) secilemiyordu. `bkService` select'i sadece tek bir `duration_minutes` degerini gosteriyordu.
+
+**Cozum:**
+- `dashboard.html`'e `bkDurationGroup` (hidden baslangicta) eklendi.
+- `populateSrvSelect` `async` yapildi, `price_config` de Supabase'den cekiyor, sonuclari `window._bkSrvData`'ya atiyor.
+- `updateBkDuration(srvId, defaultValue)` fonksiyonu eklendi. Fizyoterapi sektorunde aktif sureleri `bkDuration` select'ine dolduruyor, yoksa gizliyor.
+- `bkService` change event listener'i `updateBkDuration`'i cagiriyor.
+- `openBookingModal`'da mevcut booking'in gercek suresi (`end_time - start_time`) `updateBkDuration`'a `defaultValue` olarak geciliyor.
+- `saveBooking`'te `bkDuration` gorunur ve doluysa o deger, degilse `duration_minutes || 30` kullaniliyor.
+
+**Dosyalar:** `dashboard.js`, `dashboard.html`

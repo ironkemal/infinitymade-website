@@ -2829,9 +2829,9 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .bk-home-icon {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  font-size: 10px;
+  top: 3px;
+  right: 4px;
+  font-size: 9px;
   z-index: 2;
 }
 .bk-special-banner {
