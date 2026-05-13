@@ -146,67 +146,76 @@ async function loadServices(empId) {
 
   document.getElementById('srvList').innerHTML = data.map(d => {
     const s = d.services;
-    // Check if service has multiple durations in price_config
-    const hasMultipleDurations = s.price_config?.durations && Object.keys(s.price_config.durations).length > 1;
-    // Get the first available duration as default, or use duration_minutes
-    const defaultDuration = hasMultipleDurations
-      ? Object.keys(s.price_config.durations).filter(k => s.price_config.durations[k].active)[0]
-      : s.duration_minutes;
-    const durationLabel = hasMultipleDurations ? 'Auswahl' : (defaultDuration ? defaultDuration + ' Min' : '');
-
-    return `<button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${defaultDuration || 30}" data-buf="${s.buffer_time || 0}" data-has-durations="${hasMultipleDurations}">
-      <div class="list-btn-title">${s.title}</div>
-      <div class="list-btn-sub">${durationLabel}${s.buffer_time ? ' + ' + s.buffer_time + ' Min Puffer' : ''}${s.price ? ' · ' + s.price : ''}</div>
-    </button>`;
+    const dur = s.duration_minutes || 30;
+    const price = s.price || '';
+    return `<div class="srv-item-wrapper">
+      <button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${dur}" data-price="${price}" data-buf="${s.buffer_time || 0}">
+        <div class="list-btn-title">${s.title}</div>
+        <div class="list-btn-sub">${dur} Min${s.buffer_time ? ' + ' + s.buffer_time + ' Min Puffer' : ''}${price ? ' · ' + price + ' €' : ''}</div>
+      </button>
+      <div class="srv-duration-row" id="dur-row-${s.id}" style="display:none;">
+        <span class="srv-duration-label">Dauer wählen:</span>
+        <div class="srv-duration-options">
+          ${[10, 15, 20, 25, 30, 35, 40, 45, 50, 60].filter(m => m <= dur * 2).map(m => `
+            <label class="srv-duration-option">
+              <input type="radio" name="srv-dur-${s.id}" value="${m}" data-dur="${m}">
+              <span>${m} Min</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    </div>`;
   }).join('');
 
   document.querySelectorAll('.srv-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', () => {
+      // Toggle duration row visibility
+      const srvId = btn.dataset.id;
+      const durRow = document.getElementById('dur-row-' + srvId);
+      const wasVisible = !durRow.hidden;
+
+      // Hide all duration rows first
+      document.querySelectorAll('.srv-duration-row').forEach(r => r.hidden = true);
       document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.serviceId = btn.dataset.id;
-      state.serviceTitle = btn.dataset.title;
-      state.bufferMinutes = parseInt(btn.dataset.buf) || 0;
-      state.selectedDate = null;
-      state.selectedTime = null;
 
-      // Check if service has multiple durations (physio)
-      // Use data attribute if available to avoid extra query
-      const hasDurations = btn.dataset.hasDurations === 'true';
-      let durations, durKeys;
-
-      if (hasDurations) {
-        // Already know it has durations, fetch price_config
-        const { data: srvData } = await supabase.from('services').select('price_config').eq('id', state.serviceId).single();
-        durations = srvData?.price_config?.durations;
-        durKeys = durations ? Object.keys(durations).filter(k => durations[k].active) : [];
-      } else {
-        // Single duration service - use button data
-        state.durationMinutes = parseInt(btn.dataset.dur) || 30;
-        updateSidebar();
-        mountBookingCalendar();
-        goStep('datetime');
+      if (wasVisible) {
+        // Was already open, just closed it - do nothing
         return;
       }
 
-      // Show duration selection step
-      document.getElementById('durList').innerHTML = durKeys.map(k => `
-        <button class="list-btn dur-btn" data-dur="${k}">
-          <div class="list-btn-title">${k} Minuten</div>
-          <div class="list-btn-sub">${durations[k].price ? durations[k].price + ' €' : 'Preis nicht festgelegt'}</div>
-        </button>
-      `).join('');
-      document.querySelectorAll('.dur-btn').forEach(b => {
-        b.addEventListener('click', () => {
-          document.querySelectorAll('.dur-btn').forEach(x => x.classList.remove('active'));
-          b.classList.add('active');
-          state.durationMinutes = parseInt(b.dataset.dur);
-          updateSidebar();
-          mountBookingCalendar();
-          goStep('datetime');
-        });
-      });
-      goStep('duration');
+      // Show this service's duration row
+      btn.classList.add('active');
+      durRow.hidden = false;
+
+      // Auto-select first duration
+      const firstRadio = durRow.querySelector('input[type="radio"]');
+      if (firstRadio) firstRadio.checked = true;
+
+      state.serviceId = srvId;
+      state.serviceTitle = btn.dataset.title;
+      state.bufferMinutes = parseInt(btn.dataset.buf) || 0;
+      state.durationMinutes = parseInt(firstRadio?.value) || parseInt(btn.dataset.dur) || 30;
+      state.selectedDate = null;
+      state.selectedTime = null;
+
+      updateSidebar();
+    });
+  });
+
+  // Duration radio change handlers
+  document.querySelectorAll('.srv-duration-options input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const srvId = e.target.name.replace('srv-dur-', '');
+      const btn = document.querySelector(`.srv-btn[data-id="${srvId}"]`);
+      if (btn) {
+        state.serviceId = srvId;
+        state.serviceTitle = btn.dataset.title;
+        state.durationMinutes = parseInt(e.target.value);
+        updateSidebar();
+        // Auto-proceed to datetime after duration selection
+        mountBookingCalendar();
+        goStep('datetime');
+      }
     });
   });
 }
