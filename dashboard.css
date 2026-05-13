@@ -2611,3 +2611,30 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   .inv-total-row span:last-child { color: #000 !important; }
   .inv-grand { color: #000 !important; }
 }
+
+.bk-action-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.bk-action-patient {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.bk-action-session {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.bk-action-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  text-align: center;
+}
+#bkActionNoShowBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

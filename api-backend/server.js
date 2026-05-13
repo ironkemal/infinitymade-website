@@ -742,7 +742,9 @@ app.post('/api/booking/batch-create', async (req, res) => {
     if (!wdSet.has(startWd)) wdSet.add(startWd);
     const step = recurrence === 'biweekly' ? 14 : 7;
 
-    let current = startDate;
+    const first = new Date(startDate + 'T12:00:00Z');
+    let current = addDays(startDate, -first.getUTCDay());
+
     while (targetDates.length < count) {
       wdSet.forEach(d => {
         if (targetDates.length >= count) return;

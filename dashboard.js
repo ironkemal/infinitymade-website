@@ -266,6 +266,10 @@ let leadSearchVal = '';
 let invLines = [];
 let invPatientId = null;
 let invListCache = [];
+let prefillNotesPatientId = null;
+let prefillAnamnesePatientId = null;
+let bkActionBookingCache = null;
+let bkActionTimer = null;
 
 (async function boot() {
   try {
@@ -841,7 +845,7 @@ async function loadScheduleBookings(date) {
       block.textContent = b.customer_name || (b.services?.title) || 'Termin';
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        openBookingModal(b);
+        openBookingActionModal(b);
       });
       slotWrap.appendChild(block);
     });
@@ -956,6 +960,8 @@ function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, service
   document.getElementById('bkCustomer').value = '';
   document.getElementById('bkPhone').value = '';
   document.getElementById('bkNotes').value = '';
+  document.getElementById('bkSeriesToggle').checked = false;
+  document.getElementById('bkSeriesFields').hidden = true;
   populateEmpSelects(empId);
   populateSrvSelect(serviceId);
   openModal('bookingModal');
@@ -1205,12 +1211,10 @@ function computeSeriesPreview() {
   const rec    = document.getElementById('bkSeriesRecurrence').value;
   if (!startV || count < 1) return [];
   const dateStr = startV.substring(0, 10);
-  const timeStr = startV.substring(11, 16);
   const step = rec === 'daily' ? 1 : (rec === 'biweekly' ? 14 : 7);
   const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
   const wdSet = new Set(checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()]);
   const result = [];
-  let current = dateStr;
   function addDays(ds, days) {
     const d = new Date(ds + 'T12:00:00Z');
     d.setUTCDate(d.getUTCDate() + days);
@@ -1221,11 +1225,15 @@ function computeSeriesPreview() {
     return new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Berlin', weekday: 'short' }).format(probe);
   }
   const wdMap = { 'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6 };
+
+  const first = new Date(dateStr + 'T12:00:00Z');
+  let current = addDays(dateStr, -first.getUTCDay());
+
   while (result.length < count) {
-    Array.from(wdSet).sort().forEach(d => {
+    Array.from(wdSet).sort().forEach(dayNum => {
       if (result.length >= count) return;
-      const candidate = addDays(current, d);
-      if (wdMap[dayOfWeek(candidate)] === d) result.push(candidate);
+      const candidate = addDays(current, dayNum);
+      if (wdMap[dayOfWeek(candidate)] === dayNum) result.push(candidate);
     });
     current = addDays(current, step);
   }
@@ -1240,6 +1248,146 @@ function updateBkSeriesPreview() {
   const fmt = dates.map(d => new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
   const show = fmt.slice(0, 5).join(' · ');
   el.textContent = dates.length > 5 ? `${show} · … (${dates.length} Termine)` : `${show} (${dates.length} Termine)`;
+}
+
+async function calculateSessionInfo(patientName, patientPhone, currentBookingId, ownerId) {
+  if (!patientName) return null;
+  let query = supabase.from('bookings')
+    .select('id,start_time')
+    .eq('owner_id', ownerId)
+    .eq('customer_name', patientName)
+    .neq('status', 'cancelled')
+    .order('start_time', { ascending: true });
+  if (patientPhone) { query = query.eq('customer_phone', patientPhone); }
+  const { data: bookings } = await query;
+  if (!bookings || bookings.length === 0) return null;
+  const idx = bookings.findIndex(b => b.id === currentBookingId);
+  if (idx === -1) return null;
+  return { current: idx + 1, total: bookings.length };
+}
+
+function updateNoShowButton(startTime) {
+  const btn = document.getElementById('bkActionNoShowBtn');
+  const hint = document.getElementById('bkActionNoShowHint');
+  if (!btn || !hint) return;
+  const start = new Date(startTime);
+  const now = new Date();
+  const diffMin = (now - start) / 60000;
+  if (diffMin >= 3) {
+    btn.disabled = false;
+    hint.hidden = true;
+  } else {
+    btn.disabled = true;
+    hint.hidden = false;
+    const remaining = Math.ceil(3 - diffMin);
+    hint.textContent = `Verfügbar in ${remaining} Min.`;
+  }
+}
+
+async function openBookingActionModal(booking) {
+  bkActionBookingCache = booking;
+  if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+
+  const patientName = booking.customer_name || (booking.services?.title) || 'Termin';
+  const patientPhone = booking.customer_phone || '';
+  document.getElementById('bkActionPatient').textContent = patientName;
+
+  const ownerId = getOwnerId();
+  const sessionInfo = await calculateSessionInfo(patientName, patientPhone, booking.id, ownerId);
+  if (sessionInfo) {
+    document.getElementById('bkActionSession').textContent = `Seans ${sessionInfo.current} / ${sessionInfo.total}`;
+  } else {
+    document.getElementById('bkActionSession').textContent = '';
+  }
+
+  updateNoShowButton(booking.start_time);
+  bkActionTimer = setInterval(() => updateNoShowButton(booking.start_time), 30000);
+
+  openModal('bkActionModal');
+}
+
+function handleTerminStarten() {
+  if (!bkActionBookingCache) return;
+  const b = bkActionBookingCache;
+  const patientName = b.customer_name || '';
+  const patientPhone = b.customer_phone || '';
+  const ownerId = getOwnerId();
+
+  closeModal('bkActionModal');
+  if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+
+  const sessionText = document.getElementById('bkActionSession').textContent;
+  const match = sessionText.match(/Seans\s+(\d+)\s*\/\s*(\d+)/);
+  const sessionNum = match ? parseInt(match[1]) : 1;
+
+  if (sessionNum === 1) {
+    switchPanel('anamnese');
+    setTimeout(async () => {
+      const { data: leads } = await supabase.from('leads')
+        .select('id')
+        .eq('owner_id', ownerId)
+        .eq('first_name||last_name', patientName)
+        .maybeSingle();
+      if (leads && leads.length > 0) {
+        const leadId = leads[0].id;
+        document.getElementById('anamPatientSelect').value = leadId;
+        await fillAnamneseForm(leadId);
+      } else if (patientPhone) {
+        const { data: leadsByPhone } = await supabase.from('leads')
+          .select('id')
+          .eq('owner_id', ownerId)
+          .eq('phone', patientPhone)
+          .maybeSingle();
+        if (leadsByPhone && leadsByPhone.length > 0) {
+          const leadId = leadsByPhone[0].id;
+          document.getElementById('anamPatientSelect').value = leadId;
+          await fillAnamneseForm(leadId);
+        }
+      }
+    }, 300);
+  } else {
+    switchPanel('notizen');
+    setTimeout(async () => {
+      const { data: leads } = await supabase.from('leads')
+        .select('id,first_name,last_name,title')
+        .eq('owner_id', ownerId)
+        .order('title');
+      if (!leads) return;
+      const lead = leads.find(l => {
+        const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '';
+        return name === patientName;
+      });
+      if (lead) {
+        document.getElementById('notesPatientInput').value = displayName(lead);
+        document.getElementById('notesPatient').value = lead.id;
+        loadPatientNotes(lead.id);
+      } else if (patientPhone) {
+        const leadByPhone = leads.find(l => l.phone === patientPhone);
+        if (leadByPhone) {
+          document.getElementById('notesPatientInput').value = displayName(leadByPhone);
+          document.getElementById('notesPatient').value = leadByPhone.id;
+          loadPatientNotes(leadByPhone.id);
+        }
+      }
+    }, 300);
+  }
+}
+
+async function triggerNoShowBot(booking) {
+  // TODO: WhatsApp no-show bot entegrasyonu
+  console.log('[NoShowBot] Triggered for booking:', booking.id, booking.customer_name);
+}
+
+function handlePatientNichtErschienen() {
+  if (!bkActionBookingCache) return;
+  const btn = document.getElementById('bkActionNoShowBtn');
+  if (btn && btn.disabled) return;
+
+  closeModal('bkActionModal');
+  if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+
+  triggerNoShowBot(bkActionBookingCache);
+  showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
 }
 
 function openBookingModal(b) {
@@ -1454,6 +1602,9 @@ document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
     cb.onchange = updateBkSeriesPreview;
   });
 })();
+
+document.getElementById('bkActionStartBtn').addEventListener('click', handleTerminStarten);
+document.getElementById('bkActionNoShowBtn').addEventListener('click', handlePatientNichtErschienen);
 
 document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const empId  = document.getElementById('leaveEmployee').value;
@@ -3385,6 +3536,16 @@ async function loadNotizen() {
   list.hidden = true;
   if (!hidden.value) { form.hidden = true; empty.hidden = false; }
 
+  if (prefillNotesPatientId) {
+    const prefillLead = allLeads.find(l => l.id === prefillNotesPatientId);
+    if (prefillLead) {
+      input.value = displayName(prefillLead);
+      hidden.value = prefillLead.id;
+      loadPatientNotes(prefillLead.id);
+    }
+    prefillNotesPatientId = null;
+  }
+
   let activeIndex = -1;
 
   function renderList(filter) {
@@ -4071,7 +4232,13 @@ async function loadAnamnese() {
       const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '—';
       return `<option value="${l.id}">${escapeHtml(name)}</option>`;
     }).join('');
-  resetAnamneseForm();
+  if (prefillAnamnesePatientId) {
+    sel.value = prefillAnamnesePatientId;
+    await fillAnamneseForm(prefillAnamnesePatientId);
+    prefillAnamnesePatientId = null;
+  } else {
+    resetAnamneseForm();
+  }
 }
 
 function getAnamChecks(containerId) {
