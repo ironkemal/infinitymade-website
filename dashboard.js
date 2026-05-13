@@ -4684,7 +4684,7 @@ async function loadPatientBookings(patientId) {
   const email = opt?.dataset.email || '';
   const ownerId = getOwnerId();
   let query = supabase.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes)')
+    .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes,price_config)')
     .eq('owner_id', ownerId)
     .order('start_time', { ascending: false });
   if (phone) query = query.eq('customer_phone', phone);
@@ -5189,11 +5189,18 @@ function bindInvEvents() {
       checksWrap.innerHTML = bookings.map(b => {
         const dt = new Date(b.start_time).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         const svc = b.services?.title || 'Leistung';
-        const price = parseFloat(b.services?.price) || 0;
+        const dur = b.services?.duration_minutes || 0;
+        // Get price from services table via price_config if available, otherwise use direct price field
+        let price = parseFloat(b.services?.price) || 0;
+        if (!price && b.services?.price_config?.durations) {
+          const durations = b.services.price_config.durations;
+          const firstActive = Object.keys(durations).find(k => durations[k].active);
+          price = parseFloat(durations[firstActive]?.price) || 0;
+        }
         const id = `invchk-${b.id}`;
         return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer;">
-          <input type="checkbox" id="${id}" data-bid="${b.id}" data-svc="${escapeHtml(svc)}" data-price="${price}" />
-          <span>${dt} — <strong>${escapeHtml(svc)}</strong> ${price > 0 ? '— ' + formatEur(price) : ''}</span>
+          <input type="checkbox" id="${id}" data-bid="${b.id}" data-svc="${escapeHtml(svc)}" data-price="${price}" data-dur="${dur}" />
+          <span>${dt} — <strong>${escapeHtml(svc)}</strong>${dur > 0 ? ' (' + dur + ' Min)' : ''} ${price > 0 ? '— ' + formatEur(price) : ''}</span>
         </label>`;
       }).join('');
       checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
