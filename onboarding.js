@@ -449,7 +449,6 @@ function bindServices() {
           title: s.name,
           duration_minutes: s.duration_minutes,
           price: s.price_eur,
-          buffer_time: 0,
           is_online_meeting: false,
         }));
         const { data: inserted, error: svcErr } = await supabase.from('services').insert(svcInserts).select();
