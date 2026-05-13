@@ -1650,28 +1650,70 @@ async function populateSrvSelect(selectedId = null) {
 
 function updateBkDuration(srvId, defaultValue = null) {
   const durGroup = document.getElementById('bkDurationGroup');
-  const durSelect = document.getElementById('bkDuration');
-  if (!durGroup || !durSelect) return;
-  const isPhysio = getSector() === 'physiotherapy';
-  if (!isPhysio || !srvId) { durGroup.hidden = true; return; }
-  const srv = window._bkSrvData?.find(s => s.id === srvId);
+  const durOptions = document.getElementById('bkDurationOptions');
+  if (!durGroup || !durOptions) return;
+  if (!srvId) { durGroup.hidden = true; return; }
+
+  const srv = ownerServices.find(s => s.id === srvId);
+  const defaultDur = parseInt(defaultValue) || parseInt(srv?.duration_minutes) || 30;
+
+  // Get available durations from price_config or use default options
+  let durations = [];
   if (srv?.price_config?.durations) {
-    const activeDurs = Object.entries(srv.price_config.durations)
+    durations = Object.entries(srv.price_config.durations)
       .filter(([_, v]) => v.active)
-      .map(([k, _]) => parseInt(k))
-      .sort((a, b) => a - b);
-    if (activeDurs.length) {
-      durSelect.innerHTML = activeDurs.map(d => `<option value="${d}">${d} Minuten</option>`).join('');
-      durGroup.hidden = false;
-      durSelect.value = String(defaultValue || srv.duration_minutes || activeDurs[0]);
-      return;
-    }
+      .map(([k, v]) => ({ minutes: parseInt(k), price: v.price }))
+      .sort((a, b) => a.minutes - b.minutes);
   }
-  durGroup.hidden = true;
+
+  if (durations.length > 0) {
+    durOptions.innerHTML = durations.map(d => `
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+        <input type="radio" name="bkDuration" value="${d.minutes}" ${d.minutes === defaultDur ? 'checked' : ''}>
+        <span>${d.minutes} Min${d.price ? ' - ' + formatEur(d.price) : ''}</span>
+      </label>
+    `).join('');
+    durGroup.hidden = false;
+  } else {
+    // Show fixed duration options based on service duration
+    const maxDur = Math.max(defaultDur * 2, 60);
+    const options = [];
+    for (let m = 10; m <= maxDur && m <= 120; m += 5) {
+      if (m >= defaultDur - 10 && m <= defaultDur + 20) {
+        options.push(m);
+      }
+    }
+    if (options.length === 0) options.push(defaultDur);
+
+    durOptions.innerHTML = options.map(d => `
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+        <input type="radio" name="bkDuration" value="${d}" ${d === defaultDur ? 'checked' : ''}>
+        <span>${d} Min</span>
+      </label>
+    `).join('');
+    durGroup.hidden = false;
+  }
+
+  // Set initial value
+  const checked = durOptions.querySelector('input[type="radio"]:checked');
+  if (checked) {
+    window._selectedBkDuration = parseInt(checked.value);
+  }
 }
 
 document.getElementById('bkService').addEventListener('change', (e) => {
   updateBkDuration(e.target.value);
+  // Add listeners for new radio buttons after duration group is populated
+  setTimeout(() => {
+    const durGroup = document.getElementById('bkDurationGroup');
+    if (durGroup) {
+      durGroup.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', (ev) => {
+          window._selectedBkDuration = parseInt(ev.target.value);
+        });
+      });
+    }
+  }, 10);
 });
 
 document.getElementById('bkPhone').addEventListener('blur', async () => {
@@ -1715,10 +1757,12 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (startDate < now) { showToast('Termine in der Vergangenheit können nicht gebucht werden.', 'error'); return; }
 
   const durGroup = document.getElementById('bkDurationGroup');
-  const durSelect = document.getElementById('bkDuration');
   let dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
-  if (durGroup && !durGroup.hidden && durSelect && durSelect.value) {
-    dur = parseInt(durSelect.value);
+  if (durGroup && !durGroup.hidden) {
+    const checkedRadio = durGroup.querySelector('input[type="radio"]:checked');
+    if (checkedRadio) {
+      dur = parseInt(checkedRadio.value);
+    }
   }
   const startIso = new Date(startV).toISOString();
   const endIso = new Date(new Date(startV).getTime() + dur * 60000).toISOString();
