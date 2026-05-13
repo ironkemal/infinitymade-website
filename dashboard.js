@@ -951,19 +951,11 @@ async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
 }
 
 function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, serviceTitle) {
-  const [h, m] = timeStr.split(':').map(Number);
-  const dur = ownerServices.find(s => s.id === serviceId)?.duration_minutes || 30;
-  let endH = h + Math.floor((m + dur) / 60);
-  let endM = (m + dur) % 60;
-  endH = endH % 24;
-  const endStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
   const startIso = `${dateStr}T${timeStr}:00`;
-  const endIso = `${dateStr}T${endStr}:00`;
   document.getElementById('bk-id').value = '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkStart').value = startIso.substring(0, 16);
-  document.getElementById('bkEnd').value = endIso.substring(0, 16);
   document.getElementById('bkCustomer').value = '';
   document.getElementById('bkPhone').value = '';
   document.getElementById('bkNotes').value = '';
@@ -1208,7 +1200,6 @@ function prefillBookingModal(startStr, endStr) {
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkMoveBtn').hidden = true;
   document.getElementById('bkStart').value = startStr ? startStr.substring(0,16) : '';
-  document.getElementById('bkEnd').value   = endStr   ? endStr.substring(0,16)   : '';
   document.getElementById('bkCustomer').value = '';
   document.getElementById('bkPhone').value    = '';
   document.getElementById('bkNotes').value    = '';
@@ -1318,8 +1309,15 @@ async function openBookingActionModal(booking) {
     document.getElementById('bkActionSession').textContent = '';
   }
 
-  updateNoShowButton(booking.start_time);
-  bkActionTimer = setInterval(() => updateNoShowButton(booking.start_time), 30000);
+  const isOwn = booking.user_id === currentSession.user.id;
+  document.getElementById('bkActionStartBtn').hidden = !isOwn;
+  document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
+  document.getElementById('bkActionNoShowHint').hidden = !isOwn;
+
+  if (isOwn) {
+    updateNoShowButton(booking.start_time);
+    bkActionTimer = setInterval(() => updateNoShowButton(booking.start_time), 30000);
+  }
 
   openModal('bkActionModal');
 }
@@ -1390,7 +1388,6 @@ async function openBookingModal(b) {
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
   document.getElementById('bkStart').value    = b.start_time ? b.start_time.substring(0,16) : '';
-  document.getElementById('bkEnd').value      = b.end_time   ? b.end_time.substring(0,16)   : '';
   document.getElementById('bkCustomer').value = b.customer_name||'';
   document.getElementById('bkPhone').value    = b.customer_phone||'';
   document.getElementById('bkNotes').value    = b.notes||'';
@@ -1617,9 +1614,9 @@ function populateEmpSelects(selectedId=null) {
 function populateSrvSelect(selectedId=null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  supabase.from('services').select('id,title').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`).then(({data}) => {
-    el.innerHTML = '<option value="">—</option>'+(data||[]).map(s=>
-      `<option value="${s.id}" ${s.id===selectedId?'selected':''}>${s.title}</option>`
+  supabase.from('services').select('id,title,duration_minutes').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`).then(({data}) => {
+    el.innerHTML = '<option value="">— Dienstleistung wählen —</option>'+(data||[]).map(s=>
+      `<option value="${s.id}" data-duration="${s.duration_minutes||30}" ${s.id===selectedId?'selected':''}>${escapeHtml(s.title)} (${s.duration_minutes||30} min)</option>`
     ).join('');
   });
 }
@@ -1646,7 +1643,6 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const empId   = document.getElementById('bkEmployee').value;
   const srvId   = document.getElementById('bkService').value||null;
   const startV  = document.getElementById('bkStart').value;
-  const endV    = document.getElementById('bkEnd').value;
   const cust    = document.getElementById('bkCustomer').value.trim();
   const phone   = document.getElementById('bkPhone').value.trim();
   const notes   = document.getElementById('bkNotes').value.trim();
@@ -1655,17 +1651,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const custId = document.getElementById('bkCustomerId').value.trim();
   if (isPhysio && !id && !custId) { showToast('Bitte einen Patienten aus der Liste auswählen.', 'error'); return; }
 
+  const dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
   const startIso = new Date(startV).toISOString();
-  let endIso;
-  if (endV) {
-    endIso = new Date(endV).toISOString();
-    if (new Date(endV) <= new Date(startV)) {
-      showToast('Endzeit muss nach der Startzeit liegen.', 'error'); return;
-    }
-  } else {
-    const dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
-    endIso = new Date(new Date(startV).getTime() + dur * 60000).toISOString();
-  }
+  const endIso = new Date(new Date(startV).getTime() + dur * 60000).toISOString();
 
   const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
   if (isSeries) {
@@ -1674,7 +1662,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const count   = parseInt(document.getElementById('bkSeriesCount').value) || 8;
     const rec     = document.getElementById('bkSeriesRecurrence').value;
     const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
-    const durMin  = endV ? Math.round((new Date(endV) - new Date(startV)) / 60000) : 30;
+    const durMin  = dur;
     const payload = {
       userId: empId,
       ownerId: getOwnerId(),
@@ -2572,18 +2560,23 @@ function renderPhysioServiceCards(existingDurations) {
   });
 }
 
-document.getElementById('srvUnitPrice').addEventListener('input', () => {
-  if (getSector() === 'physiotherapy') {
-    const existing = {};
-    document.querySelectorAll('.srv-dur-card').forEach(card => {
-      const dur = card.dataset.dur;
-      const active = card.querySelector('.dur-cb').checked;
-      const price = card.querySelector('.dur-price').value;
-      existing[dur] = { active, price: price !== '' ? parseFloat(price) : null };
-    });
-    renderPhysioServiceCards(existing);
-  }
+function calculatePhysioPrices() {
+  if (getSector() !== 'physiotherapy') return;
+  const unitPrice = parseFloat(document.getElementById('srvUnitPrice').value) || 0;
+  if (!unitPrice) return;
+  document.querySelectorAll('.srv-dur-card').forEach(card => {
+    const dur = parseInt(card.dataset.dur);
+    const inp = card.querySelector('.dur-price');
+    if (inp && inp.value === '') {
+      inp.value = Math.round((dur / 5) * unitPrice * 100) / 100;
+    }
+  });
+}
+
+document.getElementById('srvUnitPrice').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); calculatePhysioPrices(); }
 });
+document.getElementById('srvCalcPriceBtn').addEventListener('click', calculatePhysioPrices);
 
 function toggleEmpCheckboxes(disabled) {
   document.querySelectorAll('input[name="srv_emp"]').forEach(cb => {
