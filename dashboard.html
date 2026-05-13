@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513h" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513i" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -590,6 +590,105 @@
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- ===== PANEL: RECHNUNGEN ===== -->
+        <section class="panel" id="panel-rechnungen">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_rechnungen">Rechnungen</h2>
+              <p class="panel-sub">Rechnungen erstellen & verwalten</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-primary" id="invNewBtn">+ Neue Rechnung</button>
+            </div>
+          </div>
+
+          <div id="invEditor" hidden>
+            <div class="card" style="margin-bottom:16px;">
+              <div class="form-group">
+                <label class="form-label">Patient wählen</label>
+                <select class="form-select" id="invPatientSelect">
+                  <option value="">-- Patient auswählen --</option>
+                </select>
+              </div>
+              <div id="invPatientInfo" style="margin-top:8px;color:var(--text-muted);font-size:13px;"></div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+              <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">Leistungen</h3>
+              <div class="table-wrap" style="margin-bottom:12px;">
+                <table class="data-table" id="invLineTable">
+                  <thead>
+                    <tr>
+                      <th>Leistung</th>
+                      <th style="width:80px;">Anz.</th>
+                      <th style="width:100px;">Einzelpreis (€)</th>
+                      <th style="width:100px;">Gesamt (€)</th>
+                      <th style="width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="invLineBody"></tbody>
+                </table>
+              </div>
+              <button class="btn-ghost" id="invAddLineBtn" style="font-size:13px;">+ Leistung hinzufügen</button>
+
+              <div class="inv-totals" style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+                <div class="inv-total-row">
+                  <span>Zwischensumme</span>
+                  <span id="invSubtotal">0,00 €</span>
+                </div>
+                <div class="inv-total-row">
+                  <label style="display:flex;align-items:center;gap:8px;">
+                    <span>Eigenanteil</span>
+                    <input type="number" class="form-input" id="invEigenPct" value="0" min="0" max="100" style="width:60px;text-align:right;padding:4px 8px;font-size:13px;" />
+                    <span>%</span>
+                  </label>
+                  <span id="invEigenEur">0,00 €</span>
+                </div>
+                <div class="inv-total-row">
+                  <label style="display:flex;align-items:center;gap:8px;">
+                    <span>Kassenzuzahlung</span>
+                    <input type="number" class="form-input" id="invKasse" value="0" min="0" step="0.01" style="width:80px;text-align:right;padding:4px 8px;font-size:13px;" />
+                    <span>€</span>
+                  </label>
+                  <span id="invKasseDisplay">0,00 €</span>
+                </div>
+                <div class="inv-total-row inv-grand">
+                  <span>Zu zahlen (Patient)</span>
+                  <span id="invTotalPatient">0,00 €</span>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:16px;">
+                <label class="form-label">Notizen</label>
+                <textarea class="form-textarea" id="invNotes" rows="2" placeholder="z. B. Rezeptgebühr, Verordnung…"></textarea>
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:16px;">
+                <button class="btn-primary" id="invSaveBtn">Rechnung erstellen</button>
+                <button class="btn-ghost" id="invPrintBtn" disabled>🖨 Drucken</button>
+                <button class="btn-ghost" id="invCancelBtn">Abbrechen</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap" id="invListWrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Rechnungsnr.</th>
+                  <th>Patient</th>
+                  <th>Datum</th>
+                  <th>Betrag</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="invListBody"></tbody>
+            </table>
+            <div id="invListEmpty" class="table-empty" hidden>Noch keine Rechnungen vorhanden.</div>
           </div>
         </section>
 
@@ -1231,6 +1330,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513i"></script>
+  <script type="module" src="dashboard.js?v=20260513j"></script>
 </body>
 </html>
