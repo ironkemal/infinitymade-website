@@ -254,6 +254,8 @@ let calendar = null;
 let selectedEmployeeId = null;
 let ownerServices = [];
 let activePanel = 'overview';
+let calendarView = 'month';
+let dayViewDate = new Date();
 let leadFilter = 'all';
 let leadSearchVal = '';
 
@@ -370,7 +372,12 @@ async function switchPanel(id) {
   if (target) target.classList.add('active');
   await renderSidebar();
   closeSidebar();
-  if (id==='calendar'){ if(!calendar) await initCalendar(); else calendar.reloadMonth(); showMyBookingLink(); }
+  if (id==='calendar'){
+    if(!calendar) await initCalendar(); else calendar.reloadMonth();
+    showMyBookingLink();
+    document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+    if (calendarView==='day') renderDayView(toISODate(dayViewDate));
+  }
   if (id==='kunden') loadLeads();
   if (id==='services') loadServices();
   if (id==='hours') loadHoursPanel();
@@ -943,6 +950,146 @@ document.getElementById('calAddBookingBtn').addEventListener('click', () => open
 document.getElementById('calAddLeaveBtn').addEventListener('click', () => {
   populateEmpSelects();
   openModal('leaveModal');
+});
+
+function toISODate(d) { return d.toISOString().split('T')[0]; }
+
+function formatDateDE(d) {
+  const opts = { day:'numeric', month:'long', year:'numeric' };
+  return d.toLocaleDateString('de-DE', opts);
+}
+
+function setCalendarView(view) {
+  calendarView = view;
+  document.getElementById('monthViewWrap').style.display = view==='month'?'':'none';
+  document.getElementById('dayViewGrid').style.display = view==='day'?'flex':'none';
+  document.querySelectorAll('.cal-view-toggle .cal-view-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.view===view);
+  });
+  if (view==='day') renderDayView(toISODate(dayViewDate));
+}
+
+async function renderDayView(dateStr) {
+  document.getElementById('dayViewDateLabel').textContent = formatDateDE(new Date(dateStr+'T12:00:00'));
+  const timeCol = document.getElementById('dvTimeCol');
+  const colsWrap = document.getElementById('dvColsWrap');
+  timeCol.innerHTML = '';
+  colsWrap.innerHTML = '';
+
+  const emps = currentProfile.role==='owner' ? teamMembers : [currentProfile];
+  if (!emps.length) return;
+
+  const empColors = ['#22c55e','#3b82f6','#f59e0b','#a855f7','#ec4899'];
+
+  for (let h=8; h<20; h++) {
+    for (let m=0; m<60; m+=30) {
+      const slot = document.createElement('div');
+      slot.className = 'dv-slot';
+      const label = document.createElement('div');
+      label.className = 'dv-time-label';
+      label.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      slot.appendChild(label);
+      timeCol.appendChild(slot);
+    }
+  }
+
+  const ownerId = getOwnerId();
+  const dStart = new Date(dateStr+'T00:00:00').toISOString();
+  const dEnd   = new Date(dateStr+'T23:59:59').toISOString();
+
+  const { data: bookings } = await supabase.from('bookings')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,status,services(title)')
+    .eq('owner_id', ownerId)
+    .gte('start_time', dStart).lte('start_time', dEnd)
+    .neq('status','cancelled');
+
+  const empIds = emps.map(e => e.id);
+  const { data: timeOffs } = await supabase.from('time_offs')
+    .select('employee_id,start_date,end_date,reason')
+    .in('employee_id', empIds)
+    .lte('start_date', dEnd)
+    .gte('end_date', dStart);
+
+  emps.forEach((emp, idx) => {
+    const col = document.createElement('div');
+    col.className = 'dv-col';
+    const color = empColors[idx % empColors.length];
+
+    const header = document.createElement('div');
+    header.className = 'dv-col-header';
+    header.textContent = emp.business_name || emp.email?.split('@')[0] || '—';
+    col.appendChild(header);
+
+    const slotWrap = document.createElement('div');
+    slotWrap.className = 'dv-col-slots';
+
+    for (let h=8; h<20; h++) {
+      for (let m=0; m<60; m+=30) {
+        const slot = document.createElement('div');
+        slot.className = 'dv-slot';
+        const hour = h; const minute = m;
+        slot.addEventListener('click', () => {
+          const sStr = `${dateStr}T${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+          const eDate = new Date(dateStr+'T'+String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0'));
+          eDate.setMinutes(eDate.getMinutes()+30);
+          const eStr = eDate.toISOString().substring(0,16);
+          prefillBookingModal(sStr, eStr);
+          const bkEmp = document.getElementById('bkEmployee');
+          if (bkEmp) bkEmp.value = emp.id;
+        });
+        slotWrap.appendChild(slot);
+      }
+    }
+
+    const empBookings = (bookings||[]).filter(b => b.user_id === emp.id);
+    empBookings.forEach(b => {
+      const s = new Date(b.start_time);
+      const e = new Date(b.end_time);
+      const sMin = s.getHours()*60+s.getMinutes();
+      const eMin = e.getHours()*60+e.getMinutes();
+      const dayStartMin = 8*60;
+      const topPx = ((sMin-dayStartMin)/30)*56;
+      const hPx   = ((eMin-sMin)/30)*56;
+
+      const block = document.createElement('div');
+      block.className = 'dv-booking-block';
+      block.style.top = topPx+'px';
+      block.style.height = Math.max(hPx,28)+'px';
+      block.style.background = color+'25';
+      block.style.borderColor = color;
+      block.style.color = '#fff';
+      block.textContent = b.customer_name || (b.services?.title) || 'Termin';
+      block.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        openBookingModal(b);
+      });
+      slotWrap.appendChild(block);
+    });
+
+    const empOffs = (timeOffs||[]).filter(t => t.employee_id === emp.id);
+    if (empOffs.length) {
+      const bar = document.createElement('div');
+      bar.className = 'dv-absent';
+      bar.textContent = 'Abwesend';
+      slotWrap.appendChild(bar);
+    }
+
+    col.appendChild(slotWrap);
+    colsWrap.appendChild(col);
+  });
+}
+
+document.getElementById('btnMonthView').addEventListener('click', () => setCalendarView('month'));
+document.getElementById('btnDayView').addEventListener('click', () => setCalendarView('day'));
+document.getElementById('dayViewPrev').addEventListener('click', () => {
+  dayViewDate.setDate(dayViewDate.getDate()-1);
+  if (calendarView==='day') renderDayView(toISODate(dayViewDate));
+  else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+});
+document.getElementById('dayViewNext').addEventListener('click', () => {
+  dayViewDate.setDate(dayViewDate.getDate()+1);
+  if (calendarView==='day') renderDayView(toISODate(dayViewDate));
+  else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
 });
 
 function prefillBookingModal(startStr, endStr) {
