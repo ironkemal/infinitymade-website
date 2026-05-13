@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Syntax Test</title></head>
+<body>
+<div id="result">Loading...</div>
+<script type="module">
+try {
+  await import('./dashboard.js?v=99999999');
+  document.getElementById('result').textContent = 'JS loaded OK (no syntax errors)';
+} catch (e) {
+  document.getElementById('result').textContent = 'ERROR: ' + e.name + ': ' + e.message;
+}
+</script>
+</body>
+</html>

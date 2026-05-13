@@ -1384,6 +1384,7 @@ function handlePatientNichtErschienen() {
 
 async function openBookingModal(b) {
   if (!b) { prefillBookingModal(null,null); return; }
+  const ownerId = getOwnerId();
   document.getElementById('bk-id').value = b.id||'';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = false;
@@ -2007,16 +2008,21 @@ async function loadPatientDetailRechnungen(leadId) {
 
 async function loadPatientDetailTermine(leadId) {
   const lead = leadsCache.find(l => l.id === leadId);
-  const phoneNorm = lead?.phone_normalized;
   const ownerId = getOwnerId();
+  const patientName = displayName(lead);
   let query = supabase.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,services,employee_id')
+    .select('id,start_time,end_time,status,customer_name,services(title)')
     .eq('owner_id', ownerId)
+    .neq('status', 'cancelled')
     .order('start_time', { ascending: false });
-  if (phoneNorm) {
-    query = query.eq('customer_phone_normalized', phoneNorm);
+  if (lead?.phone) {
+    query = query.eq('customer_phone', lead.phone);
+  } else if (patientName) {
+    query = query.eq('customer_name', patientName);
   } else {
-    query = query.eq('customer_name', lead?.title || lead?.first_name + ' ' + lead?.last_name || '');
+    document.getElementById('pdTermLoading').hidden = true;
+    document.getElementById('pdTermContent').innerHTML = '<div class="pd-empty">Keine Termine vorhanden.</div>';
+    return;
   }
   const { data } = await query;
   const content = document.getElementById('pdTermContent');
@@ -3727,6 +3733,8 @@ async function loadSettings() {
   const features = (PLAN_FEATURES[currentProfile.plan]||PLAN_FEATURES.starter)[currentLang]||[];
   const sfList = document.getElementById('settingsFeatureList');
   if (sfList) sfList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
+
+  await loadAerzte();
 }
 
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
@@ -5031,43 +5039,46 @@ function editAerzte(id) {
   });
 }
 
+window.editAerzte = editAerzte;
+window.deleteAerzte = deleteAerzte;
+
 async function openRezeptModal(phone, leadId) {
-  document.getElementById('rezPatientId').value = leadId || '';
-  document.getElementById('rezArztName').value = '';
-  document.getElementById('rezArztNummer').value = '';
-  document.getElementById('rezDatum').value = '';
-  document.getElementById('rezDiagnose').value = '';
-  document.getElementById('rezSitzungen').value = '10';
-  document.getElementById('rezHausbesuch').checked = false;
-  document.getElementById('rezBefund').value = '';
+  document.getElementById('rzPatientId').value = leadId || '';
+  document.getElementById('rzArztName').value = '';
+  document.getElementById('rzArztNummer').value = '';
+  document.getElementById('rzDatum').value = '';
+  document.getElementById('rzDiagnose').value = '';
+  document.getElementById('rzSitzungen').value = '10';
+  document.getElementById('rzHausbesuch').checked = false;
+  document.getElementById('rzBefund').value = '';
   if (leadId) {
     const { data } = await supabase.from('leads').select('title,arzt_id,hausbesuch').eq('id', leadId).single();
     if (data?.arzt_id) {
       const { data: arzt } = await supabase.from('aerzte').select('name,arzt_nummer').eq('id', data.arzt_id).single();
       if (arzt) {
-        document.getElementById('rezArztName').value = arzt.name || '';
-        document.getElementById('rezArztNummer').value = arzt.arzt_nummer || '';
+        document.getElementById('rzArztName').value = arzt.name || '';
+        document.getElementById('rzArztNummer').value = arzt.arzt_nummer || '';
       }
     }
-    if (data?.hausbesuch) document.getElementById('rezHausbesuch').checked = true;
+    if (data?.hausbesuch) document.getElementById('rzHausbesuch').checked = true;
   }
   openModal('rezeptModal');
 }
 
 async function saveRezept() {
   const ownerId = getOwnerId();
-  const patientId = document.getElementById('rezPatientId').value;
+  const patientId = document.getElementById('rzPatientId').value;
   if (!patientId) { showToast('Kein Patient ausgewählt.', 'error'); return; }
   const payload = {
     ownerId,
     patientId,
-    arztName: document.getElementById('rezArztName').value.trim(),
-    arztNummer: document.getElementById('rezArztNummer').value.trim(),
-    rezeptDatum: document.getElementById('rezDatum').value,
-    diagnose: document.getElementById('rezDiagnose').value.trim(),
-    sitzungen: parseInt(document.getElementById('rezSitzungen').value) || 10,
-    hausbesuch: document.getElementById('rezHausbesuch').checked,
-    befund: document.getElementById('rezBefund').value.trim()
+    arztName: document.getElementById('rzArztName').value.trim(),
+    arztNummer: document.getElementById('rzArztNummer').value.trim(),
+    rezeptDatum: document.getElementById('rzDatum').value,
+    diagnose: document.getElementById('rzDiagnose').value.trim(),
+    sitzungen: parseInt(document.getElementById('rzSitzungen').value) || 10,
+    hausbesuch: document.getElementById('rzHausbesuch').checked,
+    befund: document.getElementById('rzBefund').value.trim()
   };
   try {
     const res = await fetch('https://n8n.infinitymade.de/api/rezept/save', {
@@ -5110,7 +5121,7 @@ async function init() {
     bindAnamneseEvents();
     console.log('[init] anamnese ok');
     document.getElementById('aeAddBtn')?.addEventListener('click', addAerzte);
-    document.getElementById('rezSaveBtn')?.addEventListener('click', saveRezept);
+    document.getElementById('rzSaveBtn')?.addEventListener('click', saveRezept);
     if (activePanel==='settings') await loadAerzte();
     const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
