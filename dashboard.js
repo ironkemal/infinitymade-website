@@ -1238,6 +1238,9 @@ async function doMoveBooking(startStr, empId) {
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   showToast('Termin verschoben');
   renderDayView(toISODate(dayViewDate));
+  if (typeof scheduleDate !== 'undefined' && toISODate(dayViewDate) === toISODate(scheduleDate)) {
+    loadScheduleBookings(scheduleDate);
+  }
 }
 
 function populateEmpSelects(selectedId=null) {

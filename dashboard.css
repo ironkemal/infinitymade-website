@@ -809,8 +809,8 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
   overflow-x: auto;
+  overflow-y: auto;
   max-height: 480px;
 }
 .overview-day-grid .dv-time-col { width: 48px; }
