@@ -781,6 +781,146 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: ANAMNESE ===== -->
+        <section class="panel" id="panel-anamnese">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_anamnese">Anamnese</h2>
+              <p class="panel-sub" data-i18n="anamnese_sub">Digitales Anamnese-Formular</p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="form-group">
+              <label class="form-label">Patient wählen</label>
+              <select class="form-select" id="anamPatientSelect">
+                <option value="">-- Patient auswählen --</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label">Aufnahmedatum</label>
+              <input type="date" class="form-input" id="anamAufnahme" />
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Beschwerden</h3>
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Hauptbeschwerde</label>
+                <textarea class="form-textarea" id="anamHauptbeschwerde" rows="2" placeholder="z. B. Rückenschmerzen rechts"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Beschwerde seit</label>
+                <input type="text" class="form-input" id="anamBeschwerdeSeit" placeholder="z. B. 3 Wochen" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Verlauf</label>
+                <select class="form-select" id="anamVerlauf">
+                  <option value="">-- Verlauf --</option>
+                  <option value="konstant">Konstant</option>
+                  <option value="zunehmend">Zunehmend</option>
+                  <option value="abnehmend">Abnehmend</option>
+                  <option value="wechselnd">Wechselnd</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Schmerz-Skala (0–10)</label>
+                <input type="number" class="form-input" id="anamSchmerzSkala" min="0" max="10" placeholder="0–10" />
+              </div>
+              <div class="form-group" style="grid-column:1 / -1;">
+                <label class="form-label">Schmerzart / Qualität</label>
+                <input type="text" class="form-input" id="anamSchmerzArt" placeholder="z. B. stechend, dumpf, brennend" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Vorgeschichte</h3>
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Vorerkrankungen</label>
+                <textarea class="form-textarea" id="anamVorerkrankungen" rows="2" placeholder="z. B. Diabetes, Bluthochdruck"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Operationen</label>
+                <textarea class="form-textarea" id="anamOperationen" rows="2" placeholder="z. B. Knie-OP 2019"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Aktuelle Medikamente</label>
+                <textarea class="form-textarea" id="anamMedikamente" rows="2" placeholder="z. B. Ibuprofen 400mg"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Allergien</label>
+                <textarea class="form-textarea" id="anamAllergien" rows="2" placeholder="z. B. Penicillin, Latex"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Lebensstil</h3>
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 120px;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Beruf</label>
+                <input type="text" class="form-input" id="anamBeruf" placeholder="z. B. Büroangestellte" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sport / Bewegung</label>
+                <input type="text" class="form-input" id="anamSport" placeholder="z. B. Joggen 2x/Woche" />
+              </div>
+              <div class="form-group" style="align-self:end;">
+                <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                  <input type="checkbox" id="anamRaucher" /> Raucher
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Arzt & Rezept</h3>
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group" style="grid-column:1 / -1;">
+                <label class="form-label">Diagnose (laut Arzt)</label>
+                <input type="text" class="form-input" id="anamDiagnose" placeholder="z. B. Lumbalgie, Rotatorenmanschettenruptur" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Behandelnder Arzt</label>
+                <input type="text" class="form-input" id="anamArztName" placeholder="Name der Praxis / Arzt" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Arzt-Telefon / Fax</label>
+                <input type="text" class="form-input" id="anamArztNummer" placeholder="Telefonnummer" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Rezept-Sitzungen</label>
+                <input type="number" class="form-input" id="anamRezeptSitzungen" min="0" placeholder="Anzahl" />
+              </div>
+              <div class="form-group" style="align-self:end;">
+                <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                  <input type="checkbox" id="anamHausbesuch" /> Hausbesuch gewünscht
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Besonderes & Notizen</h3>
+            <div class="form-group">
+              <label class="form-label">Besondere Wünsche</label>
+              <textarea class="form-textarea" id="anamWuensche" rows="2" placeholder="z. B. Keine Behandlung am Hals"></textarea>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label">Therapeuten-Notizen</label>
+              <textarea class="form-textarea" id="anamNotizen" rows="3" placeholder="Interne Notizen..."></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:24px;">
+            <button class="btn-primary" id="anamSaveBtn">Speichern</button>
+            <button class="btn-ghost" id="anamPdfBtn" hidden>Anamnese als PDF</button>
+          </div>
+        </section>
+
         <!-- ===== PANEL: BEISPIELMODUS ===== -->
         <section class="panel" id="panel-beispielmodus">
           <div class="panel-header">
@@ -1340,6 +1480,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513n"></script>
+  <script type="module" src="dashboard.js?v=20260513o"></script>
 </body>
 </html>
