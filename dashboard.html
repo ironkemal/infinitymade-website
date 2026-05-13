@@ -229,6 +229,10 @@
               <label class="form-label" data-i18n="lbl_srv_title">Name</label>
               <input class="form-input" id="srvTitle" type="text" />
             </div>
+            <div class="form-group">
+              <label class="form-label">Kürzel (z. B. HST, PT, KG)</label>
+              <input class="form-input" id="srvCode" type="text" maxlength="8" placeholder="HST" />
+            </div>
             <div id="srvStandardFields">
               <div class="form-row">
                 <div class="form-group">
@@ -1231,6 +1235,10 @@
         <div class="form-group">
           <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
           <select class="form-select" id="bkService"></select>
+        </div>
+        <div class="form-group" id="bkDurationGroup" hidden>
+          <label class="form-label">Dauer</label>
+          <select class="form-select" id="bkDuration"></select>
         </div>
         <div class="form-row">
           <div class="form-group">
