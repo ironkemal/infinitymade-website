@@ -739,7 +739,10 @@ async function loadScheduleBookings(date) {
   if (isToday) {
     displayBookings = displayBookings.filter(b => b.start_time >= nowIso);
   }
-  if (isToday) document.getElementById('kpi-today').textContent = displayBookings.length;
+  if (isToday) {
+    const myBookings = displayBookings.filter(b => b.user_id === currentSession.user.id);
+    document.getElementById('kpi-today').textContent = myBookings.length;
+  }
 
   if (displayBookings.length===0) { emptyEl.hidden=false; return; }
 
