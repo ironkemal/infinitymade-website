@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,6 +21,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 </head>
+
 <body>
   <div id="loading" class="loading-screen">
     <div class="spinner"></div>
@@ -41,7 +43,8 @@
           <option value="en">EN</option>
           <option value="tr">TR</option>
         </select>
-        <a href="admin.html" class="topbar-admin-link" id="topbarAdminLink" style="display:none;font-size:13px;color:var(--primary);text-decoration:none;font-weight:600;margin-right:8px;">Admin</a>
+        <a href="admin.html" class="topbar-admin-link" id="topbarAdminLink"
+          style="display:none;font-size:13px;color:var(--primary);text-decoration:none;font-weight:600;margin-right:8px;">Admin</a>
         <button class="logout-btn" id="logoutBtn" data-i18n="logout">Abmelden</button>
       </div>
     </header>
@@ -59,7 +62,8 @@
           <div class="dash-banner-icon">🎉</div>
           <div class="dash-banner-content">
             <strong>Willkommen bei InfinityMade!</strong>
-            <p>{{ 'Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24 Stunden von uns.' | encodeURI }}</p>
+            <p>{{ 'Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24
+              Stunden von uns.' | encodeURI }}</p>
           </div>
           <button class="dash-banner-close" onclick="this.closest('.dash-banner').hidden=true">✕</button>
         </div>
@@ -94,12 +98,15 @@
           <div class="today-section">
             <div class="schedule-header">
               <button class="btn-icon" id="schedulePrev" type="button">‹</button>
-              <span class="schedule-title" id="scheduleDateLabel" data-i18n="today_bookings">Bugünkü randevularınız</span>
+              <span class="schedule-title" id="scheduleDateLabel" data-i18n="today_bookings">Bugünkü
+                randevularınız</span>
               <button class="btn-icon" id="scheduleNext" type="button">›</button>
               <button class="btn-ghost schedule-today-btn" id="scheduleToday" type="button">Heute</button>
             </div>
             <div class="card upcoming-bookings-card">
-              <div id="upcoming-bookings-loading" class="upcoming-loading"><div class="spinner-sm"></div></div>
+              <div id="upcoming-bookings-loading" class="upcoming-loading">
+                <div class="spinner-sm"></div>
+              </div>
               <div id="upcoming-bookings-empty" class="upcoming-empty" hidden>
                 <p data-i18n="upcoming_empty">Heute keine Termine.</p>
               </div>
@@ -124,7 +131,9 @@
               <span class="gaps-total" id="gapsTotal"></span>
             </div>
             <div class="gaps-list" id="gapsList">
-              <div class="gaps-loading"><div class="spinner-sm"></div></div>
+              <div class="gaps-loading">
+                <div class="spinner-sm"></div>
+              </div>
             </div>
           </div>
 
@@ -316,11 +325,13 @@
                 </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label">Von Zeit <span style="color:var(--text-faint);font-size:11px;">(optional)</span></label>
+                    <label class="form-label">Von Zeit <span
+                        style="color:var(--text-faint);font-size:11px;">(optional)</span></label>
                     <input type="time" class="form-input" id="sdStartTime" />
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Bis Zeit <span style="color:var(--text-faint);font-size:11px;">(optional)</span></label>
+                    <label class="form-label">Bis Zeit <span
+                        style="color:var(--text-faint);font-size:11px;">(optional)</span></label>
                     <input type="time" class="form-input" id="sdEndTime" />
                   </div>
                 </div>
@@ -350,7 +361,8 @@
             </div>
           </div>
 
-          <div class="card invite-card" style="margin-bottom:16px;flex-direction:column;align-items:flex-start;gap:12px;">
+          <div class="card invite-card"
+            style="margin-bottom:16px;flex-direction:column;align-items:flex-start;gap:12px;">
             <div style="display:flex;align-items:center;gap:12px;width:100%;">
               <div style="flex:1;">
                 <div class="kpi-label" data-i18n="lbl_invite_code">Unternehmens-Code</div>
@@ -381,7 +393,8 @@
                   <div class="emp-name" id="empDetailName"></div>
                   <div class="emp-role" id="empDetailRole"></div>
                 </div>
-                <button class="btn-danger" id="empRemoveBtn" style="margin-left:auto;" data-i18n="btn_remove">Entfernen</button>
+                <button class="btn-danger" id="empRemoveBtn" style="margin-left:auto;"
+                  data-i18n="btn_remove">Entfernen</button>
               </div>
               <div class="tab-bar">
                 <button class="tab-btn active" data-tab="info" data-i18n="tab_info">Info</button>
@@ -399,7 +412,8 @@
                         <input type="file" id="empAvatarInput" accept="image/*" hidden />
                         📷 Bild ändern
                       </label>
-                      <button class="btn-ghost avatar-remove-btn" id="empAvatarRemoveBtn" type="button">🗑️ Bild entfernen</button>
+                      <button class="btn-ghost avatar-remove-btn" id="empAvatarRemoveBtn" type="button">🗑️ Bild
+                        entfernen</button>
                     </div>
                   </div>
                 </div>
@@ -410,7 +424,8 @@
                 <div class="form-group">
                   <label class="form-label">Buchungsseite</label>
                   <div class="booking-link-wrap">
-                    <input class="form-input" id="empBookingLink" type="text" readonly style="font-size:13px;cursor:pointer;" onclick="this.select()" />
+                    <input class="form-input" id="empBookingLink" type="text" readonly
+                      style="font-size:13px;cursor:pointer;" onclick="this.select()" />
                     <button class="btn-ghost" id="empCopyLinkBtn" type="button">📋 Kopieren</button>
                   </div>
                 </div>
@@ -459,11 +474,13 @@
             <div class="setup-fields">
               <div class="form-group">
                 <label class="form-label">Absendername <span class="req">*</span></label>
-                <input class="form-input" id="setupSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
+                <input class="form-input" id="setupSenderName" type="text"
+                  placeholder="z.B. Max Müller / Muster GmbH" />
                 <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
               </div>
             </div>
-            <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
+            <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschließen
+              ✓</button>
           </div>
 
           <!-- MAIN CONTENT -->
@@ -489,7 +506,8 @@
             <div class="b2b-layout">
               <div>
                 <div class="filter-bar" style="margin-bottom:12px;">
-                  <input class="search-input" id="b2bSearch" type="text" placeholder="Suchen..." style="margin-left:0;width:220px;" />
+                  <input class="search-input" id="b2bSearch" type="text" placeholder="Suchen..."
+                    style="margin-left:0;width:220px;" />
                 </div>
                 <div class="table-wrap">
                   <table class="data-table">
@@ -515,7 +533,8 @@
                   <span class="ai-from-badge" id="aiFromBadge"></span>
                 </div>
                 <div class="ai-messages" id="aiMessages">
-                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
+                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Bestelle 50 Stück
+                    Produkt X bei Firma Muster GmbH und frage nach der Lieferzeit."</div>
                 </div>
                 <div class="ai-input-row">
                   <button class="btn-icon" id="aiVoiceBtn" title="Spracheingabe">🎤</button>
@@ -546,11 +565,13 @@
             <div class="setup-fields">
               <div class="form-group">
                 <label class="form-label">Absendername <span class="req">*</span></label>
-                <input class="form-input" id="b2cSetupSenderName" type="text" placeholder="z.B. Max Müller / Muster GmbH" />
+                <input class="form-input" id="b2cSetupSenderName" type="text"
+                  placeholder="z.B. Max Müller / Muster GmbH" />
                 <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
               </div>
             </div>
-            <button class="btn-primary setup-finish-btn" id="b2cSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
+            <button class="btn-primary setup-finish-btn" id="b2cSetupFinishBtn" disabled>Einrichtung abschließen
+              ✓</button>
           </div>
 
           <div id="b2cMainContent" hidden>
@@ -565,7 +586,8 @@
             </div>
 
             <div class="filter-bar" style="margin-bottom:12px;margin-top:16px;">
-              <input class="search-input" id="b2cSearch" type="text" placeholder="Kunden suchen…" style="margin-left:0;width:260px;" />
+              <input class="search-input" id="b2cSearch" type="text" placeholder="Kunden suchen…"
+                style="margin-left:0;width:260px;" />
             </div>
             <div class="b2b-layout" style="margin-top:16px;">
               <div>
@@ -592,7 +614,8 @@
                   <span class="ai-from-badge" id="b2cAiFromBadge"></span>
                 </div>
                 <div class="ai-messages" id="b2cAiMessages">
-                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Schicke eine Erinnerungsmail an alle Kunden die noch nicht gebucht haben."</div>
+                  <div class="msg-bubble ai">Hallo! Beschreiben Sie was Sie tun möchten, z.B.: "Schicke eine
+                    Erinnerungsmail an alle Kunden die noch nicht gebucht haben."</div>
                 </div>
                 <div class="ai-input-row">
                   <button class="btn-icon" id="b2cAiVoiceBtn" title="Spracheingabe">🎤</button>
@@ -657,7 +680,8 @@
                 <div class="inv-total-row">
                   <label style="display:flex;align-items:center;gap:8px;">
                     <span>Eigenanteil</span>
-                    <input type="number" class="form-input" id="invEigenPct" value="10" min="0" max="100" style="width:60px;text-align:right;padding:4px 8px;font-size:13px;" />
+                    <input type="number" class="form-input" id="invEigenPct" value="10" min="0" max="100"
+                      style="width:60px;text-align:right;padding:4px 8px;font-size:13px;" />
                     <span>%</span>
                   </label>
                   <span id="invEigenEur">0,00 €</span>
@@ -665,7 +689,8 @@
                 <div class="inv-total-row">
                   <label style="display:flex;align-items:center;gap:8px;">
                     <span>Kassenzuzahlung</span>
-                    <input type="number" class="form-input" id="invKasse" value="10" min="0" step="0.01" style="width:80px;text-align:right;padding:4px 8px;font-size:13px;" />
+                    <input type="number" class="form-input" id="invKasse" value="10" min="0" step="0.01"
+                      style="width:80px;text-align:right;padding:4px 8px;font-size:13px;" />
                     <span>€</span>
                   </label>
                   <span id="invKasseDisplay">0,00 €</span>
@@ -678,7 +703,8 @@
 
               <div class="form-group" style="margin-top:16px;">
                 <label class="form-label">Notizen</label>
-                <textarea class="form-textarea" id="invNotes" rows="2" placeholder="z. B. Rezeptgebühr, Verordnung…"></textarea>
+                <textarea class="form-textarea" id="invNotes" rows="2"
+                  placeholder="z. B. Rezeptgebühr, Verordnung…"></textarea>
               </div>
 
               <div style="display:flex;gap:8px;margin-top:16px;">
@@ -718,7 +744,8 @@
           <div class="form-group">
             <label class="form-label" data-i18n="lbl_select_patient">Patient wählen</label>
             <div class="patient-search-wrap" id="notesPatientWrap">
-              <input class="form-input" id="notesPatientInput" type="text" placeholder="Hasta ara…" autocomplete="off" />
+              <input class="form-input" id="notesPatientInput" type="text" placeholder="Hasta ara…"
+                autocomplete="off" />
               <ul class="patient-search-list" id="notesPatientList" hidden></ul>
               <input type="hidden" id="notesPatient" />
             </div>
@@ -726,15 +753,19 @@
           <div id="notesForm" class="card" style="margin-top:16px;" hidden>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_doctor_notes">Arztnotizen</label>
-              <textarea class="form-textarea" id="notesDoctor" rows="3" placeholder="Vom Arzt übermittelte Diagnosen…"></textarea>
+              <textarea class="form-textarea" id="notesDoctor" rows="3"
+                placeholder="Vom Arzt übermittelte Diagnosen…"></textarea>
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_therapist_notes">Therapeutennotizen</label>
-              <textarea class="form-textarea" id="notesTherapist" rows="4" placeholder="Beobachtungen während der Sitzung…"></textarea>
+              <textarea class="form-textarea" id="notesTherapist" rows="4"
+                placeholder="Beobachtungen während der Sitzung…"></textarea>
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_ai_summary">AI-Bericht</label>
-              <div id="aiReportBox" class="ai-report-box" style="display:none;min-height:60px;padding:12px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:13px;"></div>
+              <div id="aiReportBox" class="ai-report-box"
+                style="display:none;min-height:60px;padding:12px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:13px;">
+              </div>
               <button class="btn-ghost" id="aiGenBtn" style="margin-top:8px;">🤖 AI-Bericht erstellen</button>
             </div>
             <div style="display:flex;gap:8px;margin-top:16px;">
@@ -742,7 +773,8 @@
               <button class="btn-primary" id="notesSendBtn" data-i18n="lbl_send_patient">An Patient senden</button>
             </div>
           </div>
-          <div id="notesEmpty" class="table-empty" style="margin-top:40px;" data-i18n="lbl_notes_empty">Keine Notizen vorhanden.</div>
+          <div id="notesEmpty" class="table-empty" style="margin-top:40px;" data-i18n="lbl_notes_empty">Keine Notizen
+            vorhanden.</div>
         </section>
 
         <!-- ===== PANEL: ÄRZTE ===== -->
@@ -762,10 +794,13 @@
           </div>
           <div class="search-progress-wrap" id="docProgressWrap" hidden>
             <div class="search-progress-info" id="docProgressInfo">Google Maps wird durchsucht...</div>
-            <div class="search-progress-bar"><div class="search-progress-fill" id="docProgressFill"></div></div>
+            <div class="search-progress-bar">
+              <div class="search-progress-fill" id="docProgressFill"></div>
+            </div>
           </div>
           <div class="filter-bar" style="margin-bottom:12px;">
-            <input class="form-input" id="docFilterInput" type="text" placeholder="🔍 In Lead-Datenbank suchen..." style="flex:1;" />
+            <input class="form-input" id="docFilterInput" type="text" placeholder="🔍 In Lead-Datenbank suchen..."
+              style="flex:1;" />
             <span class="filter-hint" id="docFilterHint"></span>
           </div>
           <div class="table-wrap">
@@ -832,7 +867,8 @@
               <label><input type="checkbox" value="Taubheitsgefühl" /> Taubheitsgefühl</label>
             </div>
             <input type="text" class="anam-other" id="anamBeschwerdenOther" placeholder="Andere Beschwerden…" />
-            <textarea class="form-textarea" id="anamHauptbeschwerde" rows="2" placeholder="Hauptbeschwerde (freier Text)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamHauptbeschwerde" rows="2"
+              placeholder="Hauptbeschwerde (freier Text)" style="margin-top:10px;"></textarea>
           </div>
 
           <div class="card" style="margin-bottom:16px;">
@@ -892,7 +928,8 @@
               <label><input type="checkbox" value="Multiple Sklerose" /> Multiple Sklerose</label>
             </div>
             <input type="text" class="anam-other" id="anamVorerkrankungenOther" placeholder="Andere Vorerkrankungen…" />
-            <textarea class="form-textarea" id="anamVorerkrankungen" rows="2" placeholder="Vorerkrankungen (Zusammenfassung)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamVorerkrankungen" rows="2"
+              placeholder="Vorerkrankungen (Zusammenfassung)" style="margin-top:10px;"></textarea>
 
             <label class="form-label" style="margin-top:16px;">Operationen</label>
             <div class="anam-grid" id="anamChkOperationen">
@@ -907,7 +944,8 @@
               <label><input type="checkbox" value="keine OP" /> keine OP</label>
             </div>
             <input type="text" class="anam-other" id="anamOperationenOther" placeholder="Andere Operationen…" />
-            <textarea class="form-textarea" id="anamOperationen" rows="2" placeholder="Operationen (Zusammenfassung)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamOperationen" rows="2" placeholder="Operationen (Zusammenfassung)"
+              style="margin-top:10px;"></textarea>
 
             <label class="form-label" style="margin-top:16px;">Aktuelle Medikamente</label>
             <div class="anam-grid" id="anamChkMedikamente">
@@ -923,7 +961,8 @@
               <label><input type="checkbox" value="keine Medikamente" /> keine Medikamente</label>
             </div>
             <input type="text" class="anam-other" id="anamMedikamenteOther" placeholder="Andere Medikamente…" />
-            <textarea class="form-textarea" id="anamMedikamente" rows="2" placeholder="Medikamente (Zusammenfassung)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamMedikamente" rows="2" placeholder="Medikamente (Zusammenfassung)"
+              style="margin-top:10px;"></textarea>
 
             <label class="form-label" style="margin-top:16px;">Allergien</label>
             <div class="anam-grid" id="anamChkAllergien">
@@ -936,7 +975,8 @@
               <label><input type="checkbox" value="keine Allergien" /> keine Allergien</label>
             </div>
             <input type="text" class="anam-other" id="anamAllergienOther" placeholder="Andere Allergien…" />
-            <textarea class="form-textarea" id="anamAllergien" rows="2" placeholder="Allergien (Zusammenfassung)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamAllergien" rows="2" placeholder="Allergien (Zusammenfassung)"
+              style="margin-top:10px;"></textarea>
           </div>
 
           <div class="card" style="margin-bottom:16px;">
@@ -953,7 +993,8 @@
               <label><input type="checkbox" value="Hausfrau / -mann" /> Hausfrau / -mann</label>
             </div>
             <input type="text" class="anam-other" id="anamBerufOther" placeholder="Andere Berufsbezeichnung…" />
-            <textarea class="form-textarea" id="anamBeruf" rows="2" placeholder="Beruf (Zusammenfassung)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamBeruf" rows="2" placeholder="Beruf (Zusammenfassung)"
+              style="margin-top:10px;"></textarea>
 
             <label class="form-label" style="margin-top:16px;">Sport / Bewegung</label>
             <div class="anam-grid" id="anamChkSport">
@@ -968,7 +1009,8 @@
               <label><input type="checkbox" value="kein Sport" /> kein Sport</label>
             </div>
             <input type="text" class="anam-other" id="anamSportOther" placeholder="Andere Sportarten…" />
-            <textarea class="form-textarea" id="anamSport" rows="2" placeholder="Sport (Zusammenfassung)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamSport" rows="2" placeholder="Sport (Zusammenfassung)"
+              style="margin-top:10px;"></textarea>
 
             <div style="margin-top:14px;">
               <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -995,7 +1037,8 @@
               <label><input type="checkbox" value="Fibromyalgie" /> Fibromyalgie</label>
             </div>
             <input type="text" class="anam-other" id="anamDiagnoseOther" placeholder="Andere Diagnosen…" />
-            <textarea class="form-textarea" id="anamDiagnose" rows="2" placeholder="Diagnose (Zusammenfassung)" style="margin-top:10px;"></textarea>
+            <textarea class="form-textarea" id="anamDiagnose" rows="2" placeholder="Diagnose (Zusammenfassung)"
+              style="margin-top:10px;"></textarea>
 
             <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
               <div class="form-group">
@@ -1022,7 +1065,8 @@
             <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">Besonderes & Notizen</h3>
             <div class="form-group">
               <label class="form-label">Besondere Wünsche</label>
-              <textarea class="form-textarea" id="anamWuensche" rows="2" placeholder="z. B. Keine Behandlung am Hals"></textarea>
+              <textarea class="form-textarea" id="anamWuensche" rows="2"
+                placeholder="z. B. Keine Behandlung am Hals"></textarea>
             </div>
             <div class="form-group" style="margin-top:12px;">
               <label class="form-label">Therapeuten-Notizen</label>
@@ -1045,13 +1089,19 @@
             </div>
           </div>
           <div class="body-map-wrap">
-            <iframe id="zygoteFrame" src="https://www.zygotebody.com/" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-fullscreen" loading="lazy"></iframe>
+            <iframe id="zygoteFrame" src="https://www.zygotebody.com/" allowfullscreen
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-fullscreen"
+              loading="lazy"></iframe>
             <button class="zygote-fs-btn" id="zygoteFsBtn" type="button" title="Vollbild">⛶ Vollbild</button>
-            <a class="zygote-fs-btn" id="zygoteNewTabBtn" href="https://www.zygotebody.com/" target="_blank" rel="noopener" style="right:auto;left:12px;display:none;" type="button">↗ Neuer Tab</a>
+            <a class="zygote-fs-btn" id="zygoteNewTabBtn" href="https://www.zygotebody.com/" target="_blank"
+              rel="noopener" style="right:auto;left:12px;display:none;" type="button">↗ Neuer Tab</a>
           </div>
           <div class="body-info-card" id="bodyInfoCard">
             <div class="body-info-title" id="bodyInfoTitle">3D-Anatomie — Zygote Body</div>
-            <div class="body-info-text" id="bodyInfoText">Klicken und ziehen Sie mit der Maus, um das Modell zu drehen. Scrollen zum Zoomen. Klicken Sie auf ein Körperteil, um Details anzuzeigen. Verwenden Sie den Regler links, um Systeme (Skelett, Muskeln, Nerven, Kreislauf) ein- oder auszublenden. <strong>Auf Mobilgeräten empfehlen wir „Neuer Tab“ oder „Vollbild“.</strong></div>
+            <div class="body-info-text" id="bodyInfoText">Klicken und ziehen Sie mit der Maus, um das Modell zu drehen.
+              Scrollen zum Zoomen. Klicken Sie auf ein Körperteil, um Details anzuzeigen. Verwenden Sie den Regler
+              links, um Systeme (Skelett, Muskeln, Nerven, Kreislauf) ein- oder auszublenden. <strong>Auf Mobilgeräten
+                empfehlen wir „Neuer Tab“ oder „Vollbild“.</strong></div>
           </div>
         </section>
 
@@ -1176,7 +1226,8 @@
                   <span class="integration-icon">🗓️</span>
                   <div class="integration-info">
                     <div class="integration-name">Google Calendar</div>
-                    <div class="integration-status" id="googleCalStatus" data-i18n="status_disconnected">Nicht verbunden</div>
+                    <div class="integration-status" id="googleCalStatus" data-i18n="status_disconnected">Nicht verbunden
+                    </div>
                   </div>
                   <button class="btn-ghost" id="googleCalBtn" data-i18n="btn_connect">Verbinden</button>
                 </div>
@@ -1230,8 +1281,8 @@
           <select class="form-select" id="bkService"></select>
         </div>
         <div class="form-group" id="bkDurationGroup" hidden>
-          <label class="form-label">Dauer</label>
-          <select class="form-select" id="bkDuration"></select>
+          <label class="form-label">Dauer wählen</label>
+          <div id="bkDurationOptions" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -1290,7 +1341,8 @@
           </div>
           <div class="form-group" style="margin-top:12px;" id="bkSeriesWeekdayWrap">
             <label class="form-label">Wochentag(e)</label>
-            <div class="anam-grid" id="bkSeriesWeekdays" style="grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px;">
+            <div class="anam-grid" id="bkSeriesWeekdays"
+              style="grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px;">
               <label><input type="checkbox" value="1" checked /> Mo</label>
               <label><input type="checkbox" value="2" /> Di</label>
               <label><input type="checkbox" value="3" /> Mi</label>
@@ -1417,16 +1469,21 @@
         </div>
         <div class="pd-content">
           <div class="pd-panel active" id="pdPanelNotes">
-            <div class="pd-loading" id="pdNotesLoading"><div class="spinner-sm"></div></div>
+            <div class="pd-loading" id="pdNotesLoading">
+              <div class="spinner-sm"></div>
+            </div>
             <div id="pdNotesContent"></div>
           </div>
           <div class="pd-panel" id="pdPanelAnamnese">
-            <div class="pd-loading" id="pdAnamLoading"><div class="spinner-sm"></div></div>
+            <div class="pd-loading" id="pdAnamLoading">
+              <div class="spinner-sm"></div>
+            </div>
             <div id="pdAnamContent"></div>
           </div>
           <div class="pd-panel" id="pdPanelUeberweisung">
             <div style="padding:12px 20px;border-bottom:1px solid var(--border);">
-              <button class="btn-primary" id="pdUeberAddBtn" style="width:100%;justify-content:center;">📷 Überweisung fotografieren</button>
+              <button class="btn-primary" id="pdUeberAddBtn" style="width:100%;justify-content:center;">📷 Überweisung
+                fotografieren</button>
               <input type="file" id="pdUeberFileInput" accept="image/*" capture="environment" hidden />
             </div>
             <div id="pdUeberContent">
@@ -1434,15 +1491,21 @@
             </div>
           </div>
           <div class="pd-panel" id="pdPanelRechnungen">
-            <div class="pd-loading" id="pdRechLoading"><div class="spinner-sm"></div></div>
+            <div class="pd-loading" id="pdRechLoading">
+              <div class="spinner-sm"></div>
+            </div>
             <div id="pdRechContent"></div>
           </div>
           <div class="pd-panel" id="pdPanelTermine">
-            <div class="pd-loading" id="pdTermLoading"><div class="spinner-sm"></div></div>
+            <div class="pd-loading" id="pdTermLoading">
+              <div class="spinner-sm"></div>
+            </div>
             <div id="pdTermContent"></div>
           </div>
           <div class="pd-panel" id="pdPanelMail">
-            <div class="pd-loading" id="pdMailLoading"><div class="spinner-sm"></div></div>
+            <div class="pd-loading" id="pdMailLoading">
+              <div class="spinner-sm"></div>
+            </div>
             <div id="pdMailContent"></div>
           </div>
         </div>
@@ -1559,7 +1622,8 @@
         </div>
         <div class="form-group">
           <label class="form-label">System-Prompt für alle Nachrichten</label>
-          <textarea class="form-input" id="cfgSystemPrompt" rows="4" placeholder="z. B. Antworte immer freundlich und professionell. Erwähne am Ende jedes E-Mails den Datenschutzhinweis..."></textarea>
+          <textarea class="form-input" id="cfgSystemPrompt" rows="4"
+            placeholder="z. B. Antworte immer freundlich und professionell. Erwähne am Ende jedes E-Mails den Datenschutzhinweis..."></textarea>
           <div class="form-hint">Dieser Prompt wird jeder ausgehenden E-Mail vorangestellt.</div>
         </div>
       </div>
@@ -1675,7 +1739,9 @@
         </div>
         <div class="form-group">
           <label class="form-label">Nachricht</label>
-          <div id="mailPreviewBody" style="padding:12px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:13px;line-height:1.6;min-height:80px;white-space:pre-wrap;"></div>
+          <div id="mailPreviewBody"
+            style="padding:12px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted);font-size:13px;line-height:1.6;min-height:80px;white-space:pre-wrap;">
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -1734,7 +1800,8 @@
               <button class="btn-icon" id="aeCopyLinkBtn" title="Kopieren">⎘</button>
             </div>
           </div>
-          <a class="btn-primary" id="aeShareWaBtn" href="#" target="_blank" style="width:100%;justify-content:center;margin-top:12px;">
+          <a class="btn-primary" id="aeShareWaBtn" href="#" target="_blank"
+            style="width:100%;justify-content:center;margin-top:12px;">
             <span>💬</span> Via WhatsApp teilen
           </a>
         </div>
@@ -1793,4 +1860,5 @@
 
   <script type="module" src="dashboard.js?v=20260513ab"></script>
 </body>
+
 </html>
