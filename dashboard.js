@@ -1655,6 +1655,18 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const custId = document.getElementById('bkCustomerId').value.trim();
   if (isPhysio && !id && !custId) { showToast('Bitte einen Patienten aus der Liste auswählen.', 'error'); return; }
 
+  const startIso = new Date(startV).toISOString();
+  let endIso;
+  if (endV) {
+    endIso = new Date(endV).toISOString();
+    if (new Date(endV) <= new Date(startV)) {
+      showToast('Endzeit muss nach der Startzeit liegen.', 'error'); return;
+    }
+  } else {
+    const dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
+    endIso = new Date(new Date(startV).getTime() + dur * 60000).toISOString();
+  }
+
   const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
   if (isSeries) {
     const dateStr = startV.substring(0, 10);
@@ -1701,8 +1713,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const payload = {
     owner_id:getOwnerId(),user_id:empId,
     service_id:srvId||null,
-    start_time:new Date(startV).toISOString(),
-    end_time:endV ? new Date(endV).toISOString() : null,
+    start_time:startIso,
+    end_time:endIso,
     customer_name:cust,customer_email:'',customer_phone:phone||null,
     notes:notes||null,
     hausbesuch:document.getElementById('bkHausbesuch').checked||false,
