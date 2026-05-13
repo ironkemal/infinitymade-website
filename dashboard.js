@@ -260,6 +260,7 @@ let dayViewDate = new Date();
 let moveBooking = null;
 let moveGhostEl = null;
 const EMP_COLORS = ['#22c55e','#3b82f6','#f59e0b','#a855f7','#ec4899'];
+let ovEmpPage = 0;
 let leadFilter = 'all';
 let leadSearchVal = '';
 let invLines = [];
@@ -768,15 +769,36 @@ async function loadScheduleBookings(date) {
     }
   }
 
-  let emps = teamMembers.length ? teamMembers : [currentProfile];
-  if (!emps.length) emps = [currentProfile];
+  let allEmps = teamMembers.length ? teamMembers : [currentProfile];
+  if (!allEmps.length) allEmps = [currentProfile];
 
   const currentId = currentSession.user.id;
-  emps = [...emps].sort((a,b) => {
+  allEmps = [...allEmps].sort((a,b) => {
     if (a.id === currentId) return -1;
     if (b.id === currentId) return 1;
     return 0;
   });
+
+  const isMobile = window.innerWidth < 768;
+  const colsPerPage = isMobile ? 1 : 3;
+  const totalPages = Math.ceil(allEmps.length / colsPerPage);
+  ovEmpPage = Math.min(ovEmpPage, Math.max(0, totalPages - 1));
+  const start = ovEmpPage * colsPerPage;
+  const emps = allEmps.slice(start, start + colsPerPage);
+
+  const navEl = document.getElementById('ovNav');
+  const prevBtn = document.getElementById('ovPrevEmp');
+  const nextBtn = document.getElementById('ovNextEmp');
+  const ovLabelEl = document.getElementById('ovNavLabel');
+  if (allEmps.length > colsPerPage) {
+    navEl.hidden = false;
+    prevBtn.disabled = ovEmpPage === 0;
+    nextBtn.disabled = ovEmpPage >= totalPages - 1;
+    const end = Math.min(start + colsPerPage, allEmps.length);
+    ovLabelEl.textContent = `${start + 1}–${end} / ${allEmps.length}`;
+  } else {
+    navEl.hidden = true;
+  }
 
   emps.forEach((emp, idx) => {
     const col = document.createElement('div');
@@ -3577,38 +3599,56 @@ function setupScheduleNav() {
   const next = document.getElementById('scheduleNext');
   const today = document.getElementById('scheduleToday');
   if (prev) prev.addEventListener('click', async () => {
+    ovEmpPage = 0;
     const d = new Date(scheduleDate);
     d.setDate(d.getDate()-1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
   if (next) next.addEventListener('click', async () => {
+    ovEmpPage = 0;
     const d = new Date(scheduleDate);
     d.setDate(d.getDate()+1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
   if (today) today.addEventListener('click', async () => {
+    ovEmpPage = 0;
     await loadScheduleBookings(new Date());
     await renderGapsForDate(new Date());
+  });
+
+  const ovPrev = document.getElementById('ovPrevEmp');
+  const ovNext = document.getElementById('ovNextEmp');
+  if (ovPrev) ovPrev.addEventListener('click', () => {
+    if (ovEmpPage > 0) { ovEmpPage--; loadScheduleBookings(scheduleDate); }
+  });
+  if (ovNext) ovNext.addEventListener('click', () => {
+    const allEmps = teamMembers.length ? teamMembers : [currentProfile];
+    const cpp = window.innerWidth < 768 ? 1 : 3;
+    const totalPages = Math.ceil(allEmps.length / cpp);
+    if (ovEmpPage < totalPages - 1) { ovEmpPage++; loadScheduleBookings(scheduleDate); }
   });
 
   const gPrev = document.getElementById('gapsPrev');
   const gNext = document.getElementById('gapsNext');
   const gToday = document.getElementById('gapsToday');
   if (gPrev) gPrev.addEventListener('click', async () => {
+    ovEmpPage = 0;
     const d = new Date(scheduleDate);
     d.setDate(d.getDate()-1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
   if (gNext) gNext.addEventListener('click', async () => {
+    ovEmpPage = 0;
     const d = new Date(scheduleDate);
     d.setDate(d.getDate()+1);
     await loadScheduleBookings(d);
     await renderGapsForDate(d);
   });
   if (gToday) gToday.addEventListener('click', async () => {
+    ovEmpPage = 0;
     await loadScheduleBookings(new Date());
     await renderGapsForDate(new Date());
   });

@@ -2561,6 +2561,38 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   accent-color: var(--primary);
 }
 
+.ov-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
+  margin-bottom: 4px;
+}
+.ov-nav .btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ov-nav .btn-icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ov-nav-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 60px;
+  text-align: center;
+}
+
 @media print {
   .sidebar, .topbar, .panel-header, #invNewBtn, .panel-actions,
   #invSaveBtn, #invCancelBtn, #invAddLineBtn, .inv-del-line,
