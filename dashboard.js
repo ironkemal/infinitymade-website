@@ -950,13 +950,14 @@ async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
   }
 }
 
-function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, serviceTitle) {
+async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, serviceTitle) {
   const startIso = `${dateStr}T${timeStr}:00`;
   document.getElementById('bk-id').value = '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkStart').value = startIso.substring(0, 16);
   document.getElementById('bkCustomer').value = '';
+  document.getElementById('bkCustomerId').value = '';
   document.getElementById('bkPhone').value = '';
   document.getElementById('bkNotes').value = '';
   document.getElementById('bkSeriesToggle').checked = false;
@@ -964,7 +965,7 @@ function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, service
   populateEmpSelects(empId);
   populateSrvSelect(serviceId);
   openModal('bookingModal');
-  initBkCustomerAutocomplete();
+  await initBkCustomerAutocomplete();
 }
 
 async function initCalendar() {
@@ -1122,15 +1123,12 @@ async function renderDayView(dateStr) {
         const timeStr = `${dateStr}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
         slot.dataset.time = timeStr;
         slot.dataset.empId = emp.id;
-        slot.addEventListener('click', () => {
+        slot.addEventListener('click', async () => {
           if (moveBooking) {
             placeGhost(slot, emp.id, moveBooking.customer_name || (moveBooking.services?.title) || 'Termin');
             return;
           }
-          const eDate = new Date(timeStr+':00');
-          eDate.setMinutes(eDate.getMinutes()+30);
-          const eStr = eDate.toISOString().substring(0,16);
-          prefillBookingModal(timeStr, eStr);
+          await prefillBookingModal(timeStr);
           const bkEmp = document.getElementById('bkEmployee');
           if (bkEmp) bkEmp.value = emp.id;
         });
@@ -1194,13 +1192,14 @@ document.getElementById('dayViewNext').addEventListener('click', () => {
   else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
 });
 
-function prefillBookingModal(startStr, endStr) {
+async function prefillBookingModal(startStr) {
   document.getElementById('bk-id').value = '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkMoveBtn').hidden = true;
   document.getElementById('bkStart').value = startStr ? startStr.substring(0,16) : '';
   document.getElementById('bkCustomer').value = '';
+  document.getElementById('bkCustomerId').value = '';
   document.getElementById('bkPhone').value    = '';
   document.getElementById('bkNotes').value    = '';
   document.getElementById('bkHausbesuch').checked = false;
@@ -1211,7 +1210,7 @@ function prefillBookingModal(startStr, endStr) {
   populateEmpSelects();
   populateSrvSelect();
   openModal('bookingModal');
-  initBkCustomerAutocomplete();
+  await initBkCustomerAutocomplete();
 }
 
 function computeSeriesPreview() {
@@ -1381,7 +1380,7 @@ function handlePatientNichtErschienen() {
 }
 
 async function openBookingModal(b) {
-  if (!b) { prefillBookingModal(null,null); return; }
+  if (!b) { await prefillBookingModal(null); return; }
   const ownerId = getOwnerId();
   document.getElementById('bk-id').value = b.id||'';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
@@ -1419,10 +1418,10 @@ async function openBookingModal(b) {
   populateSrvSelect(b.service_id);
   openModal('bookingModal');
   document.getElementById('bkMoveBtn').onclick = () => startMoveBooking(b);
-  initBkCustomerAutocomplete();
+  await initBkCustomerAutocomplete();
 }
 
-function initBkCustomerAutocomplete() {
+async function initBkCustomerAutocomplete() {
   const input = document.getElementById('bkCustomer');
   const hidden = document.getElementById('bkCustomerId');
   const list = document.getElementById('bkCustomerList');
@@ -1494,7 +1493,6 @@ function initBkCustomerAutocomplete() {
       window._bkModalState = {
         id: document.getElementById('bk-id').value,
         start: document.getElementById('bkStart').value,
-        end: document.getElementById('bkEnd').value,
         employee: document.getElementById('bkEmployee').value,
         service: document.getElementById('bkService').value,
         notes: document.getElementById('bkNotes').value,
@@ -1505,20 +1503,20 @@ function initBkCustomerAutocomplete() {
       openLeadModal(null);
     });
   }
-  let allLeads = [];
+  window.bkAllLeads = [];
   let activeIndex = -1;
   let blurTimer = null;
-  async function loadLeads() {
+  async function loadBkLeads() {
     const ownerId = getOwnerId();
     const { data } = await supabase.from('leads').select('id,title,first_name,last_name,phone,metadata').eq('owner_id', ownerId).order('title');
-    allLeads = data || [];
+    window.bkAllLeads = data || [];
   }
-  loadLeads();
+  await loadBkLeads();
   function renderList(filter) {
     activeIndex = -1;
     const q = filter.trim().toLowerCase();
     if (!q) { list.hidden = true; if (addWrap) addWrap.hidden = true; return; }
-    const filtered = allLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
+    const filtered = window.bkAllLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
     if (filtered.length === 0) {
       list.innerHTML = '<li class="empty-item">Keine Treffer</li>';
       list.hidden = false;
@@ -1527,7 +1525,7 @@ function initBkCustomerAutocomplete() {
     }
     list.innerHTML = filtered.map((l, i) => {
       const name = displayNameWithBirth(l);
-      const esc = q.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&');
+      const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&');
       const hl = name.replace(new RegExp(`(${esc})`, 'gi'), '<span class="match-hl">$1</span>');
       return `<li data-id="${l.id}" data-index="${i}">${hl}</li>`;
     }).join('');
@@ -1535,7 +1533,7 @@ function initBkCustomerAutocomplete() {
     if (addWrap) addWrap.hidden = true;
   }
   function selectLead(id) {
-    const lead = allLeads.find(l => l.id === id);
+    const lead = window.bkAllLeads.find(l => l.id === id);
     if (!lead) return;
     input.value = displayNameWithBirth(lead);
     hidden.value = id;
@@ -1544,6 +1542,7 @@ function initBkCustomerAutocomplete() {
     if (addWrap) addWrap.hidden = true;
     activeIndex = -1;
   }
+  window.bkSelectLead = selectLead;
 }
 
 function startMoveBooking(b) {
@@ -2277,7 +2276,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     if (st.id) {
       await openBookingModal({ id: st.id, start_time: st.start, end_time: st.end, customer_name: '', customer_phone: '', notes: st.notes || '', hausbesuch: st.hausbesuch });
     } else {
-      prefillBookingModal(st.start, st.end);
+      await prefillBookingModal(st.start);
     }
     if (st.employee) document.getElementById('bkEmployee').value = st.employee;
     if (st.service) document.getElementById('bkService').value = st.service;
@@ -2286,11 +2285,11 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     document.getElementById('bkSeriesToggle').checked = st.seriesToggle || false;
     document.getElementById('bkSeriesFields').hidden = !st.seriesToggle;
     if (savedLead) {
-      document.getElementById('bkCustomer').value = displayName(savedLead);
-      document.getElementById('bkCustomerId').value = savedLead.id;
-      document.getElementById('bkPhone').value = savedLead.phone || '';
+      if (!window.bkAllLeads.find(l => l.id === savedLead.id)) {
+        window.bkAllLeads.push(savedLead);
+      }
+      if (window.bkSelectLead) window.bkSelectLead(savedLead.id);
     }
-    initBkCustomerAutocomplete();
   }
 });
 
@@ -3156,9 +3155,9 @@ function initEmpCalTab(empId) {
     dateInput.value = d.toISOString().substring(0,10);
     loadEmpDaySchedule(empId, dateInput.value);
   };
-  document.getElementById('empCalAddBtn').onclick = () => {
+  document.getElementById('empCalAddBtn').onclick = async () => {
     const dateVal = dateInput.value;
-    prefillBookingModal(dateVal+'T09:00', dateVal+'T09:30');
+    await prefillBookingModal(dateVal+'T09:00');
     document.getElementById('bkEmployee').value = empId;
   };
 }
