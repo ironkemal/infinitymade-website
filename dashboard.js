@@ -3688,7 +3688,6 @@ async function loadPatientBookings(patientId) {
   let query = supabase.from('bookings')
     .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes)')
     .eq('owner_id', ownerId)
-    .eq('status', 'confirmed')
     .order('start_time', { ascending: false });
   if (phone) query = query.eq('customer_phone', phone);
   else if (email) query = query.eq('customer_email', email);
@@ -3698,9 +3697,16 @@ async function loadPatientBookings(patientId) {
   return data || [];
 }
 
+function buildSvcOptions(selectedTitle) {
+  const opts = ownerServices.map(s =>
+    `<option value="${escapeHtml(s.title||'')}" data-price="${parseFloat(s.price)||0}" ${(s.title||'')===selectedTitle?'selected':''}>${escapeHtml(s.title||'')}</option>`
+  ).join('');
+  return `<option value="" data-price="0">-- Leistung wählen --</option>` + opts;
+}
+
 function buildInvLineRow(line, idx) {
   return `<tr data-idx="${idx}">
-    <td><input type="text" class="form-input inv-line-title" value="${escapeHtml(line.title || '')}" placeholder="Leistung" /></td>
+    <td><select class="form-select inv-line-svc" style="min-width:180px;font-size:13px;">${buildSvcOptions(line.title||'')}</select></td>
     <td><input type="number" class="form-input inv-line-qty" value="${line.quantity||1}" min="0" style="width:72px;text-align:center;" /></td>
     <td><input type="number" class="form-input inv-line-price" value="${line.unit_price||0}" min="0" step="0.01" style="width:100px;text-align:right;" /></td>
     <td style="text-align:right;font-weight:600;">${formatEur((line.quantity||1)*(line.unit_price||0))}</td>
@@ -3712,8 +3718,13 @@ function renderInvLines() {
   const tbody = document.getElementById('invLineBody');
   if (!tbody) return;
   tbody.innerHTML = invLines.map((l,i) => buildInvLineRow(l,i)).join('');
-  tbody.querySelectorAll('.inv-line-title').forEach((inp, i) => {
-    inp.onchange = () => { invLines[i].title = inp.value; };
+  tbody.querySelectorAll('.inv-line-svc').forEach((sel, i) => {
+    sel.onchange = () => {
+      const opt = sel.options[sel.selectedIndex];
+      invLines[i].title = opt.value;
+      invLines[i].unit_price = parseFloat(opt.dataset.price)||0;
+      renderInvLines(); calcInvTotals();
+    };
   });
   tbody.querySelectorAll('.inv-line-qty').forEach((inp, i) => {
     inp.onchange = () => { invLines[i].quantity = parseFloat(inp.value)||0; renderInvLines(); calcInvTotals(); };
@@ -3731,7 +3742,7 @@ function calcInvTotals() {
   const eigenPct = parseFloat(document.getElementById('invEigenPct').value)||0;
   const eigenEur = sub * (eigenPct/100);
   const kasse = parseFloat(document.getElementById('invKasse').value)||0;
-  const total = sub - eigenEur + kasse;
+  const total = eigenEur + kasse;
   document.getElementById('invSubtotal').textContent = formatEur(sub);
   document.getElementById('invEigenEur').textContent = formatEur(eigenEur);
   document.getElementById('invKasseDisplay').textContent = formatEur(kasse);
@@ -3806,7 +3817,7 @@ async function saveInvoice() {
   const eigenPct = parseFloat(document.getElementById('invEigenPct').value)||0;
   const eigenEur = subtotal * (eigenPct/100);
   const kasse = parseFloat(document.getElementById('invKasse').value)||0;
-  const total = subtotal - eigenEur + kasse;
+  const total = eigenEur + kasse;
   const ownerId = getOwnerId();
   const patientName = patientSel.options[patientSel.selectedIndex].text;
   const invoiceNumber = await generateInvNumber();
@@ -3842,19 +3853,41 @@ function bindInvEvents() {
   };
   document.getElementById('invPatientSelect').onchange = async (e) => {
     invPatientId = e.target.value;
-    if (!invPatientId) { document.getElementById('invPatientInfo').textContent = ''; return; }
+    const bookingWrap = document.getElementById('invBookingWrap');
+    const bookingSel = document.getElementById('invBookingSelect');
+    if (!invPatientId) {
+      document.getElementById('invPatientInfo').textContent = '';
+      bookingWrap.hidden = true;
+      invLines = [];
+      renderInvLines(); calcInvTotals();
+      return;
+    }
     const bookings = await loadPatientBookings(invPatientId);
     if (bookings.length > 0) {
-      invLines = bookings.map(b => ({
-        title: b.services?.title || 'Leistung',
-        quantity: 1,
-        unit_price: parseFloat(b.services?.price)||0
-      }));
-      document.getElementById('invPatientInfo').textContent = `${bookings.length} abgeschlossene Termin(e) gefunden — Leistungen wurden geladen.`;
+      bookingWrap.hidden = false;
+      bookingSel.innerHTML = '<option value="">-- Termin auswählen --</option>' +
+        bookings.map(b => {
+          const dt = new Date(b.start_time).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+          const svc = b.services?.title || 'Leistung';
+          return `<option value="${b.id}" data-svc="${escapeHtml(svc)}" data-price="${parseFloat(b.services?.price)||0}">${dt} — ${escapeHtml(svc)}</option>`;
+        }).join('');
+      document.getElementById('invPatientInfo').textContent = `${bookings.length} Termin(e) gefunden.`;
     } else {
-      invLines = [];
-      document.getElementById('invPatientInfo').textContent = 'Keine abgeschlossenen Termine gefunden.';
+      bookingWrap.hidden = true;
+      bookingSel.innerHTML = '<option value="">-- Termin auswählen --</option>';
+      document.getElementById('invPatientInfo').textContent = 'Keine Termine gefunden.';
     }
+    invLines = [];
+    renderInvLines(); calcInvTotals();
+  };
+  document.getElementById('invBookingSelect').onchange = (e) => {
+    const opt = e.target.options[e.target.selectedIndex];
+    if (!opt.value) { invLines = []; renderInvLines(); calcInvTotals(); return; }
+    invLines = [{
+      title: opt.dataset.svc || 'Leistung',
+      quantity: 1,
+      unit_price: parseFloat(opt.dataset.price)||0
+    }];
     renderInvLines(); calcInvTotals();
   };
   document.getElementById('invEigenPct').oninput = calcInvTotals;
