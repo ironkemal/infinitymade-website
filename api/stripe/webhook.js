@@ -154,7 +154,6 @@ export default async function handler(req, res) {
             title: s.name,
             duration_minutes: s.duration_minutes || 30,
             price: s.price_eur || null,
-            buffer_time: 0,
             is_online_meeting: false,
           }));
           const { data: inserted } = await adminFetch('/services', { method: 'POST', body: JSON.stringify(svcInserts) });

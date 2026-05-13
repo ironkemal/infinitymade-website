@@ -141,9 +141,26 @@
             <button class="btn-icon" id="myBookingCopy" title="Link kopieren">📋</button>
           </div>
 
-          <div class="cal-3col">
+          <div class="cal-view-toolbar" id="calViewToolbar">
+            <div class="cal-view-nav">
+              <button class="btn-icon" id="dayViewPrev" type="button">‹</button>
+              <span class="cal-view-date" id="dayViewDateLabel">—</span>
+              <button class="btn-icon" id="dayViewNext" type="button">›</button>
+            </div>
+            <div class="cal-view-toggle">
+              <button class="cal-view-btn active" data-view="month" id="btnMonthView">Monatsansicht</button>
+              <button class="cal-view-btn" data-view="day" id="btnDayView">Tagesansicht</button>
+            </div>
+          </div>
+
+          <div class="cal-3col" id="monthViewWrap">
             <aside class="cal-emp-list" id="calEmpList"></aside>
             <div id="calendarEl"></div>
+          </div>
+
+          <div class="day-view-grid" id="dayViewGrid" style="display:none;">
+            <div class="dv-time-col" id="dvTimeCol"></div>
+            <div class="dv-cols-wrap" id="dvColsWrap"></div>
           </div>
         </section>
 

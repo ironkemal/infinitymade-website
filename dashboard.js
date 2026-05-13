@@ -10,7 +10,7 @@ const T = {
     logout:'Abmelden',
     nav_overview:'Übersicht',nav_calendar:'Kalender',nav_kunden:'Kunden Info',
     nav_services:'Dienstleistungen',nav_hours:'Arbeitszeiten',
-    nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Feedback',nav_settings:'Einstellungen',
+    nav_team:'Mitarbeiter',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Rechnungen',nav_feedback:'Feedback',nav_settings:'Einstellungen',
     overview_sub:'Ihr heutiger Überblick',
     welcome_text:'Willkommen',
     kpi_plan:'Paket',kpi_status:'Status',kpi_today_bookings:'Heute',kpi_today_sub:'Termine',kpi_support:'Support',
@@ -65,7 +65,7 @@ const T = {
     logout:'Sign out',
     nav_overview:'Overview',nav_calendar:'Calendar',nav_kunden:'Customers',
     nav_services:'Services',nav_hours:'Working Hours',
-    nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Feedback',nav_settings:'Settings',
+    nav_team:'Team',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Invoices',nav_feedback:'Feedback',nav_settings:'Settings',
     overview_sub:'Your daily overview',
     welcome_text:'Welcome',
     kpi_plan:'Plan',kpi_status:'Status',kpi_today_bookings:'Today',kpi_today_sub:'Appointments',kpi_support:'Support',
@@ -118,7 +118,7 @@ const T = {
     logout:'Çıkış',
     nav_overview:'Genel Bakış',nav_calendar:'Takvim',nav_kunden:'Müşteri Bilgisi',
     nav_services:'Hizmetler',nav_hours:'Çalışma Saatleri',
-    nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_feedback:'Geri Bildirim',nav_settings:'Ayarlar',
+    nav_team:'Personel',nav_b2b:'B2B',nav_b2c:'B2C Mail',nav_rechnungen:'Faturalar',nav_feedback:'Geri Bildirim',nav_settings:'Ayarlar',
     overview_sub:'Günlük genel bakışınız',
     welcome_text:'Hoşgeldin',
     kpi_plan:'Paket',kpi_status:'Durum',kpi_today_bookings:'Bugün',kpi_today_sub:'Randevu',kpi_support:'Destek',
@@ -200,6 +200,7 @@ const SECTOR_PANELS = {
     {id:'services',icon:'✂️', key:'nav_services',roles:['owner']},
     {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
     {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
+    {id:'rechnungen',icon:'💶',key:'nav_rechnungen',roles:['owner']},
     {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
     {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
     {id:'feedback',icon:'💬',key:'nav_feedback',roles:['owner','employee']},
@@ -214,6 +215,7 @@ const SECTOR_PANELS = {
     {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner']},
     {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
     {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
+    {id:'rechnungen',icon:'💶',key:'nav_rechnungen',roles:['owner']},
     {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
     {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
     {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
@@ -229,6 +231,7 @@ const SECTOR_PANELS = {
     {id:'hours',   icon:'🕐',key:'nav_hours',   roles:['owner','employee']},
     {id:'team',    icon:'👤',key:'nav_team',    roles:['owner']},
     {id:'doctors', icon:'🏥',key:'nav_doctors',   roles:['owner','employee']},
+    {id:'rechnungen',icon:'💶',key:'nav_rechnungen',roles:['owner']},
     {id:'b2b',     icon:'🤝',key:'nav_b2b',     roles:['owner']},
     {id:'b2c',     icon:'📧',key:'nav_b2c',     roles:['owner','employee']},
     {id:'beispielmodus',icon:'🦴',key:'nav_beispielmodus',roles:['owner','employee']},
@@ -378,6 +381,7 @@ async function switchPanel(id) {
   if (id==='doctors') loadDoctors();
   if (id==='notizen') loadNotizen();
   if (id==='beispielmodus') loadBeispielmodus();
+  if (id==='rechnungen') loadRechnungen();
 }
 
 function openSidebar() {
