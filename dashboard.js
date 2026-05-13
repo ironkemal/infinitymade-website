@@ -1641,27 +1641,46 @@ function populateEmpSelects(selectedId = null) {
 async function populateSrvSelect(selectedId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  const { data } = await supabase.from('services').select('id,title,duration_minutes,price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+
+  // Update global cache with full data including price_config
+  if (data) {
+    ownerServices = data;
+  }
+
   el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + (data || []).map(s =>
     `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)} (${s.duration_minutes || 30} min)</option>`
   ).join('');
   if (selectedId) updateBkDuration(selectedId);
 }
 
-function updateBkDuration(srvId, defaultValue = null) {
+async function updateBkDuration(srvId, defaultValue = null) {
   const durGroup = document.getElementById('bkDurationGroup');
   const durOptions = document.getElementById('bkDurationOptions');
   if (!durGroup || !durOptions) return;
   if (!srvId) { durGroup.hidden = true; return; }
 
-  const srv = ownerServices.find(s => s.id === srvId);
+  // First check local cache
+  let srv = ownerServices.find(s => s.id === srvId);
+
+  // If not in cache or doesn't have price_config, fetch from database
+  if (!srv || !srv.price_config) {
+    const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config').eq('id', srvId).single();
+    if (data) {
+      srv = data;
+      // Update local cache
+      const idx = ownerServices.findIndex(s => s.id === srvId);
+      if (idx >= 0) ownerServices[idx] = srv;
+    }
+  }
+
   const defaultDur = parseInt(defaultValue) || parseInt(srv?.duration_minutes) || 30;
 
-  // Get available durations from price_config or use default options
+  // Get available durations from price_config
   let durations = [];
   if (srv?.price_config?.durations) {
     durations = Object.entries(srv.price_config.durations)
-      .filter(([_, v]) => v.active)
+      .filter(([_, v]) => v && v.active)
       .map(([k, v]) => ({ minutes: parseInt(k), price: v.price }))
       .sort((a, b) => a.minutes - b.minutes);
   }
