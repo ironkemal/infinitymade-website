@@ -749,7 +749,11 @@ async function loadScheduleBookings(date) {
   colsWrap.innerHTML = '';
 
   const SLOT_H = 48;
-  const DAY_START = 8;
+  let DAY_START = 8;
+  if (isToday) {
+    const now = new Date();
+    DAY_START = Math.max(8, now.getHours());
+  }
   for (let h=DAY_START; h<20; h++) {
     for (let m=0; m<60; m+=30) {
       const slot = document.createElement('div');
