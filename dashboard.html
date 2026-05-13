@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513k" />
+  <link rel="stylesheet" href="dashboard.css?v=20260513l" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -1226,9 +1226,16 @@
             <input class="form-input" id="bkEnd" type="datetime-local" />
           </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="bkCustomerGroup">
           <label class="form-label" data-i18n="lbl_manual_cust">Kundenname</label>
-          <input class="form-input" id="bkCustomer" type="text" />
+          <div class="patient-search-wrap" id="bkCustomerWrap">
+            <input class="form-input" id="bkCustomer" type="text" autocomplete="off" placeholder="Patient suchen…" />
+            <input type="hidden" id="bkCustomerId" />
+            <ul class="patient-search-list" id="bkCustomerList" hidden></ul>
+            <div id="bkCustomerAddWrap" hidden style="margin-top:6px;text-align:center;">
+              <button class="btn-ghost-sm" id="bkCustomerAddBtn" type="button">+ Neuer Lead</button>
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label" data-i18n="lead_phone">Telefon</label>
@@ -1318,6 +1325,43 @@
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="leaveModal" data-i18n="btn_leave_cancel">Abbrechen</button>
         <button class="btn-primary" id="leaveSaveBtn" data-i18n="btn_leave_save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: PATIENT DETAIL ===== -->
+  <div class="modal-overlay" id="patientDetailModal" hidden>
+    <div class="modal modal-xl">
+      <div class="modal-header">
+        <span class="modal-title" id="pdModalTitle">Patientendetails</span>
+        <button class="modal-close" data-modal="patientDetailModal">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0;">
+        <div class="pd-tabs">
+          <button class="pd-tab active" data-tab="notes">Notizen</button>
+          <button class="pd-tab" data-tab="anamnese">Anamnese</button>
+          <button class="pd-tab" data-tab="ueberweisung">Überweisung</button>
+          <button class="pd-tab" data-tab="mail">Mail</button>
+        </div>
+        <div class="pd-content">
+          <div class="pd-panel active" id="pdPanelNotes">
+            <div class="pd-loading" id="pdNotesLoading"><div class="spinner-sm"></div></div>
+            <div id="pdNotesContent"></div>
+          </div>
+          <div class="pd-panel" id="pdPanelAnamnese">
+            <div class="pd-loading" id="pdAnamLoading"><div class="spinner-sm"></div></div>
+            <div id="pdAnamContent"></div>
+          </div>
+          <div class="pd-panel" id="pdPanelUeberweisung">
+            <div id="pdUeberContent">
+              <div class="pd-empty">Noch keine Überweisung eingetragen.</div>
+            </div>
+          </div>
+          <div class="pd-panel" id="pdPanelMail">
+            <div class="pd-loading" id="pdMailLoading"><div class="spinner-sm"></div></div>
+            <div id="pdMailContent"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1663,6 +1707,6 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260513u"></script>
+  <script type="module" src="dashboard.js?v=20260513v"></script>
 </body>
 </html>

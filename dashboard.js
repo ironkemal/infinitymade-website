@@ -1665,7 +1665,7 @@ function renderLeads() {
     const meta = leadsMeta[r.phone_normalized]||{};
     const bkCount = meta.bookings?.length||0;
     const hasWa   = !!meta.wa;
-    return `<tr>
+    return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
       <td>${displayName(r)}</td>
       <td>${r.city||'—'}</td>
       <td>${r.phone||'—'}</td>
@@ -1677,13 +1677,136 @@ function renderLeads() {
       <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit">✏️</button></td>
     </tr>`;
   }).join('');
+  tbody.querySelectorAll('.lead-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      const lead = leadsCache.find(l=>l.id===row.dataset.leadId);
+      if (lead) openPatientDetailModal(lead);
+    });
+  });
   tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const lead = leadsCache.find(l=>l.id===btn.dataset.leadId);
       if (lead) openLeadModal(lead);
     });
   });
 }
+
+async function openPatientDetailModal(lead) {
+  document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
+  document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'notes'));
+  document.querySelectorAll('.pd-panel').forEach(p => p.classList.toggle('active', p.id === 'pdPanelNotes'));
+  document.getElementById('pdNotesLoading').hidden = false;
+  document.getElementById('pdNotesContent').innerHTML = '';
+  document.getElementById('pdAnamLoading').hidden = false;
+  document.getElementById('pdAnamContent').innerHTML = '';
+  document.getElementById('pdMailLoading').hidden = false;
+  document.getElementById('pdMailContent').innerHTML = '';
+  openModal('patientDetailModal');
+
+  const leadId = lead.id;
+  loadPatientDetailNotes(leadId);
+  loadPatientDetailAnamnese(leadId);
+  loadPatientDetailMails(leadId);
+}
+
+async function loadPatientDetailNotes(leadId) {
+  const { data: notes } = await supabase.from('patient_notes')
+    .select('*')
+    .eq('lead_id', leadId)
+    .maybeSingle();
+  const content = document.getElementById('pdNotesContent');
+  document.getElementById('pdNotesLoading').hidden = true;
+  if (!notes) {
+    content.innerHTML = '<div class="pd-empty">Keine Notizen vorhanden.</div>';
+    return;
+  }
+  let html = '';
+  if (notes.doctor_notes) {
+    html += `<div class="pd-section"><div class="pd-section-title">Arztnotizen</div><div class="pd-text">${escapeHtml(notes.doctor_notes)}</div></div>`;
+  }
+  if (notes.therapist_notes) {
+    html += `<div class="pd-section"><div class="pd-section-title">Therapeutennotizen</div><div class="pd-text">${escapeHtml(notes.therapist_notes)}</div></div>`;
+  }
+  if (notes.ai_summary) {
+    html += `<div class="pd-section"><div class="pd-section-title">AI Zusammenfassung</div><div class="pd-text">${escapeHtml(notes.ai_summary)}</div></div>`;
+  }
+  if (!html) html = '<div class="pd-empty">Keine Notizen vorhanden.</div>';
+  content.innerHTML = html;
+}
+
+async function loadPatientDetailAnamnese(leadId) {
+  const { data: anam } = await supabase.from('anamnese')
+    .select('*')
+    .eq('patient_id', leadId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const content = document.getElementById('pdAnamContent');
+  document.getElementById('pdAnamLoading').hidden = true;
+  if (!anam) {
+    content.innerHTML = '<div class="pd-empty">Keine Anamnese vorhanden.</div>';
+    return;
+  }
+  const fields = [
+    ['Grund der Behandlung', anam.reason],
+    ['Aktuelle Beschwerden', anam.current_symptoms],
+    ['Schmerzverlauf', anam.pain_history],
+    ['Frühere Behandlungen', anam.previous_treatments],
+    ['Allergien', anam.allergies],
+    ['Medikamente', anam.medications],
+    ['Operationen / Unfälle', anam.surgeries_accidents],
+    ['Beruf', anam.occupation],
+    ['Sport / Bewegung', anam.sport_exercise],
+    ['Lebensstil', anam.lifestyle],
+    ['Familiengeschichte', anam.family_history],
+    ['Röntgen / MRT vorhanden', anam.imaging_available],
+    ['Hausarzt', anam.hausarzt],
+    ['Erstellt am', anam.created_at ? fmtDate(anam.created_at) : ''],
+  ];
+  let html = '';
+  fields.forEach(([label, val]) => {
+    if (val) html += `<div class="pd-section"><div class="pd-section-title">${label}</div><div class="pd-text">${escapeHtml(String(val))}</div></div>`;
+  });
+  if (!html) html = '<div class="pd-empty">Anamnese vorhanden, aber keine Details.</div>';
+  content.innerHTML = html;
+}
+
+async function loadPatientDetailMails(leadId) {
+  const { data: logs } = await supabase.from('email_logs')
+    .select('*')
+    .eq('contact_id', leadId)
+    .order('created_at', { ascending: false });
+  const content = document.getElementById('pdMailContent');
+  document.getElementById('pdMailLoading').hidden = true;
+  if (!logs || logs.length === 0) {
+    content.innerHTML = '<div class="pd-empty">Keine Mail-Historie vorhanden.</div>';
+    return;
+  }
+  content.innerHTML = logs.map(l => `
+    <div class="pd-mail-item">
+      <div class="pd-mail-subj">${escapeHtml(l.subject || '(Kein Betreff)')}</div>
+      <div class="pd-mail-meta">An: ${escapeHtml(l.to_email || '')} · ${l.created_at ? fmtDate(l.created_at) : ''}</div>
+      <div class="pd-mail-body">${escapeHtml(l.body || '').slice(0, 300)}${(l.body || '').length > 300 ? '...' : ''}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.querySelectorAll('.pd-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.pd-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.pd-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const panel = document.getElementById('pdPanel' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1));
+    if (panel) panel.classList.add('active');
+  });
+});
 
 function leadStatusBadge(s) {
   if (s==='won') return 'badge-green';

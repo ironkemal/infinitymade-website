@@ -2061,6 +2061,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   animation: slideUp 0.2s ease;
 }
 .modal-lg { max-width: 640px; }
+.modal-xl { max-width: 900px; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
 .modal-header {
@@ -2648,6 +2649,96 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 .srv-dur-card:not(.active) .dur-price {
   opacity: 0.4;
   pointer-events: none;
+}
+
+.pd-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  background: var(--bg-card);
+}
+.pd-tab {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pd-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.pd-content {
+  padding: 20px;
+  min-height: 300px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.pd-panel { display: none; }
+.pd-panel.active { display: block; }
+.pd-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+.pd-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+  font-size: 14px;
+}
+.pd-section {
+  margin-bottom: 20px;
+}
+.pd-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.pd-text {
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.pd-mail-item {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  background: var(--bg-card);
+}
+.pd-mail-subj {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+.pd-mail-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.pd-mail-body {
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.pd-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 @media print {
