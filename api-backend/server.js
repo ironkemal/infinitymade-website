@@ -550,17 +550,26 @@ app.post('/api/booking/create', async (req, res) => {
       }
     }
 
+    // Resolve actual owner_id for lead (employee -> owner)
+    let resolvedOwnerId = owner_id;
+    if (!req.body.ownerId) {
+      const { data: empProfile } = await supabase.from('profiles').select('owner_id').eq('id', userId).maybeSingle();
+      resolvedOwnerId = empProfile?.owner_id || userId;
+    }
+
     // Upsert lead into leads table
     try {
-      const leadOwnerId = owner_id;
       const normPhone = customerPhone ? customerPhone.replace(/\D/g, '') : null;
+      const email = (customerEmail || '').trim().toLowerCase();
 
-      if (customerEmail) {
+      console.log('[lead upsert]', { resolvedOwnerId, email, normPhone, customerName });
+
+      if (email) {
         const { data: existing } = await supabase
           .from('leads')
           .select('*')
-          .eq('owner_id', leadOwnerId)
-          .eq('email', customerEmail)
+          .eq('owner_id', resolvedOwnerId)
+          .eq('email', email)
           .limit(1)
           .maybeSingle();
 
@@ -572,25 +581,30 @@ app.post('/api/booking/create', async (req, res) => {
           if (Object.keys(updates).length > 0) {
             updates.updated_at = new Date().toISOString();
             await supabase.from('leads').update(updates).eq('id', existing.id);
+            console.log('[lead upsert] updated existing by email:', existing.id);
+          } else {
+            console.log('[lead upsert] existing lead found, no changes needed:', existing.id);
           }
         } else {
           const nameParts = customerName ? customerName.split(/\s+/) : [];
-          await supabase.from('leads').insert({
-            owner_id: leadOwnerId,
+          const { data: newLead, error: leadInsertErr } = await supabase.from('leads').insert({
+            owner_id: resolvedOwnerId,
             title: customerName || null,
-            email: customerEmail,
+            email: email,
             phone: customerPhone || null,
             phone_normalized: normPhone,
             first_name: nameParts[0] || null,
             last_name: nameParts.slice(1).join(' ') || null,
             status: 'booked'
-          });
+          }).select().single();
+          if (leadInsertErr) throw leadInsertErr;
+          console.log('[lead upsert] inserted new lead:', newLead?.id);
         }
       } else if (normPhone) {
         const { data: existing } = await supabase
           .from('leads')
           .select('*')
-          .eq('owner_id', leadOwnerId)
+          .eq('owner_id', resolvedOwnerId)
           .eq('phone_normalized', normPhone)
           .limit(1)
           .maybeSingle();
@@ -602,22 +616,29 @@ app.post('/api/booking/create', async (req, res) => {
           if (Object.keys(updates).length > 0) {
             updates.updated_at = new Date().toISOString();
             await supabase.from('leads').update(updates).eq('id', existing.id);
+            console.log('[lead upsert] updated existing by phone:', existing.id);
+          } else {
+            console.log('[lead upsert] existing lead found by phone, no changes:', existing.id);
           }
         } else {
           const nameParts = customerName ? customerName.split(/\s+/) : [];
-          await supabase.from('leads').insert({
-            owner_id: leadOwnerId,
+          const { data: newLead, error: leadInsertErr } = await supabase.from('leads').insert({
+            owner_id: resolvedOwnerId,
             title: customerName || null,
             phone: customerPhone,
             phone_normalized: normPhone,
             first_name: nameParts[0] || null,
             last_name: nameParts.slice(1).join(' ') || null,
             status: 'booked'
-          });
+          }).select().single();
+          if (leadInsertErr) throw leadInsertErr;
+          console.log('[lead upsert] inserted new lead by phone:', newLead?.id);
         }
+      } else {
+        console.log('[lead upsert] skipped — no email or phone provided');
       }
     } catch (leadErr) {
-      console.error('Lead upsert failed:', leadErr.message);
+      console.error('Lead upsert failed:', leadErr.message, leadErr);
     }
 
     // Trigger n8n webhook
