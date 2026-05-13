@@ -142,12 +142,14 @@ export default async function handler(req, res) {
           plan_status: 'trial',
           is_active: true,
           onboarding_step: 'done',
+          role: 'owner',
         };
         await adminFetch('/profiles', { method: 'POST', body: JSON.stringify(profilePayload) });
 
         // 3. Insert services + link employee
         if (Array.isArray(od.services) && od.services.length) {
           const svcInserts = od.services.map(s => ({
+            user_id: userId,
             owner_id: userId,
             title: s.name,
             duration_minutes: s.duration_minutes || 30,
@@ -173,7 +175,15 @@ export default async function handler(req, res) {
 
         // 4. Insert working_hours
         if (Array.isArray(od.working_hours_rows) && od.working_hours_rows.length) {
-          await adminFetch('/working_hours', { method: 'POST', body: JSON.stringify(od.working_hours_rows) });
+          const whRows = od.working_hours_rows.map(r => ({
+            user_id: userId,
+            owner_id: userId,
+            day_of_week: r.day_of_week,
+            start_time: r.start_time || '00:00:00',
+            end_time: r.end_time || '00:00:00',
+            is_active: r.is_active,
+          }));
+          await adminFetch('/working_hours', { method: 'POST', body: JSON.stringify(whRows) });
         }
 
         // 5. Save WhatsApp secret if present

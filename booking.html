@@ -180,6 +180,12 @@
     }
     .cal-cell.selected.has-dot::after { background: #000; }
     .cal-cell.past { color: rgba(255,255,255,0.18); pointer-events: none; }
+    .cal-cell.unavailable { color: rgba(255,255,255,0.18); pointer-events: none; }
+    .cal-cell.booked { opacity: 0.45; }
+    .cal-cell.booked::after {
+      content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 4px; background: #f59e0b; border-radius: 50%;
+    }
     .cal-cell.empty { pointer-events: none; }
 
     /* ── Slots panel ── */
@@ -374,6 +380,6 @@
   </main>
 </div>
 
-<script type="module" src="booking.js?v=20260513a"></script>
+<script type="module" src="booking.js?v=20260513b"></script>
 </body>
 </html>

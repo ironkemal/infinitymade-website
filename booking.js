@@ -253,7 +253,7 @@ async function loadBookingSlots(date) {
 let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
 
-function renderBookingCalendar(year, month) {
+async function renderBookingCalendar(year, month) {
   const grid = document.getElementById('bkCalGrid');
   const label = document.getElementById('calMonthLabel');
   if (!grid || !label) return;
@@ -269,6 +269,30 @@ function renderBookingCalendar(year, month) {
   const todayParts = todayStr.split('-').map(Number);
   const todayY = todayParts[0], todayM = todayParts[1], todayD = todayParts[2];
 
+  const userId = state.employeeId;
+  const monthStartIso = new Date(year, month, 1).toISOString();
+  const monthEndIso = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+
+  let openDow = new Set([1,2,3,4,5]);
+  let closedDates = new Set();
+  let bookedDates = new Set();
+
+  if (userId) {
+    const [{ data: wh }, { data: cd }, { data: bks }] = await Promise.all([
+      supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', userId),
+      supabase.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', state.ownerId).gte('date', `${year}-${String(month+1).padStart(2,'0')}-01`).lte('date', `${year}-${String(month+1).padStart(2,'0')}-${daysInMonth}`),
+      supabase.from('bookings').select('start_time').eq('user_id', userId).gte('start_time', monthStartIso).lte('start_time', monthEndIso).neq('status','cancelled')
+    ]);
+    openDow = new Set((wh || []).filter(w => w.is_active).map(w => w.day_of_week));
+    (cd || []).forEach(c => {
+      if (!c.start_time && !c.end_time && (c.type === 'closed' || c.type === 'holiday')) closedDates.add(c.date);
+    });
+    (bks || []).forEach(b => {
+      const d = new Date(b.start_time).toLocaleDateString('sv-SE', {timeZone: tz});
+      bookedDates.add(d);
+    });
+  }
+
   let html = '';
   for (let i = 0; i < startOffset; i++) html += '<div class="cal-cell empty"></div>';
 
@@ -278,18 +302,24 @@ function renderBookingCalendar(year, month) {
     const isPast = dStr < todayStr;
     const isToday = dStr === todayStr;
     const isSelected = bkScheduleDate && dateObj.toDateString() === new Date(bkScheduleDate.getFullYear(), bkScheduleDate.getMonth(), bkScheduleDate.getDate()).toDateString();
+    const dow = dateObj.getDay();
+    const isClosedDow = !openDow.has(dow);
+    const isClosedDate = closedDates.has(dStr);
+    const isBooked = bookedDates.has(dStr);
 
     let cls = 'cal-cell';
     if (isPast) cls += ' past';
+    else if (isClosedDow || isClosedDate) cls += ' unavailable';
     else cls += ' avail';
     if (isToday) cls += ' today';
     if (isSelected) cls += ' selected';
+    if (isBooked && !isPast && !isClosedDow && !isClosedDate) cls += ' booked';
 
     html += `<button class="${cls}" data-day="${d}" type="button">${d}</button>`;
   }
   grid.innerHTML = html;
 
-  grid.querySelectorAll('.cal-cell.avail, .cal-cell.today').forEach(btn => {
+  grid.querySelectorAll('.cal-cell.avail, .cal-cell.today, .cal-cell.booked').forEach(btn => {
     btn.addEventListener('click', () => {
       const day = parseInt(btn.dataset.day);
       const selected = new Date(year, month, day);
@@ -300,22 +330,22 @@ function renderBookingCalendar(year, month) {
   });
 }
 
-document.getElementById('calPrevMonth').addEventListener('click', () => {
+document.getElementById('calPrevMonth').addEventListener('click', async () => {
   calMonth--;
   if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderBookingCalendar(calYear, calMonth);
+  await renderBookingCalendar(calYear, calMonth);
 });
-document.getElementById('calNextMonth').addEventListener('click', () => {
+document.getElementById('calNextMonth').addEventListener('click', async () => {
   calMonth++;
   if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderBookingCalendar(calYear, calMonth);
+  await renderBookingCalendar(calYear, calMonth);
 });
 
 async function mountBookingCalendar() {
   bkScheduleDate = new Date();
   calYear = bkScheduleDate.getFullYear();
   calMonth = bkScheduleDate.getMonth();
-  renderBookingCalendar(calYear, calMonth);
+  await renderBookingCalendar(calYear, calMonth);
   await loadBookingSlots(bkScheduleDate);
 }
 

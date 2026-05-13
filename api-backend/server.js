@@ -550,6 +550,76 @@ app.post('/api/booking/create', async (req, res) => {
       }
     }
 
+    // Upsert lead into leads table
+    try {
+      const leadOwnerId = owner_id;
+      const normPhone = customerPhone ? customerPhone.replace(/\D/g, '') : null;
+
+      if (customerEmail) {
+        const { data: existing } = await supabase
+          .from('leads')
+          .select('*')
+          .eq('owner_id', leadOwnerId)
+          .eq('email', customerEmail)
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          const updates = {};
+          if (customerName && !existing.title) updates.title = customerName;
+          if (customerPhone && !existing.phone) { updates.phone = customerPhone; updates.phone_normalized = normPhone; }
+          if (existing.status !== 'booked') updates.status = 'booked';
+          if (Object.keys(updates).length > 0) {
+            updates.updated_at = new Date().toISOString();
+            await supabase.from('leads').update(updates).eq('id', existing.id);
+          }
+        } else {
+          const nameParts = customerName ? customerName.split(/\s+/) : [];
+          await supabase.from('leads').insert({
+            owner_id: leadOwnerId,
+            title: customerName || null,
+            email: customerEmail,
+            phone: customerPhone || null,
+            phone_normalized: normPhone,
+            first_name: nameParts[0] || null,
+            last_name: nameParts.slice(1).join(' ') || null,
+            status: 'booked'
+          });
+        }
+      } else if (normPhone) {
+        const { data: existing } = await supabase
+          .from('leads')
+          .select('*')
+          .eq('owner_id', leadOwnerId)
+          .eq('phone_normalized', normPhone)
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          const updates = {};
+          if (customerName && !existing.title) updates.title = customerName;
+          if (existing.status !== 'booked') updates.status = 'booked';
+          if (Object.keys(updates).length > 0) {
+            updates.updated_at = new Date().toISOString();
+            await supabase.from('leads').update(updates).eq('id', existing.id);
+          }
+        } else {
+          const nameParts = customerName ? customerName.split(/\s+/) : [];
+          await supabase.from('leads').insert({
+            owner_id: leadOwnerId,
+            title: customerName || null,
+            phone: customerPhone,
+            phone_normalized: normPhone,
+            first_name: nameParts[0] || null,
+            last_name: nameParts.slice(1).join(' ') || null,
+            status: 'booked'
+          });
+        }
+      }
+    } catch (leadErr) {
+      console.error('Lead upsert failed:', leadErr.message);
+    }
+
     // Trigger n8n webhook
     const n8nWebhook = process.env.N8N_WEBHOOK_URL;
     if (n8nWebhook) {

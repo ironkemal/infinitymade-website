@@ -521,12 +521,15 @@ function bindHours() {
     const whRows = [];
     Object.entries(out).forEach(([key, val]) => {
       if (dayMap[key] === undefined) return;
+      const closed = val.closed;
+      const openTime = val.open ? val.open + ':00' : '00:00:00';
+      const closeTime = val.close ? val.close + ':00' : '00:00:00';
       whRows.push({
         user_id: userId,
         day_of_week: dayMap[key],
-        start_time: val.closed ? null : val.open,
-        end_time: val.closed ? null : val.close,
-        is_active: !val.closed,
+        start_time: closed ? '00:00:00' : openTime,
+        end_time: closed ? '00:00:00' : closeTime,
+        is_active: !closed,
       });
     });
 
