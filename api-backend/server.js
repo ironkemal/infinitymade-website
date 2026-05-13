@@ -708,6 +708,110 @@ app.get('/api/team', async (req, res) => {
   }
 });
 
+app.post('/api/booking/batch-create', async (req, res) => {
+  const { userId, ownerId, serviceId, startDate, time, recurrence, weekdays, count, customerName, customerPhone, notes, duration } = req.body;
+
+  if (!userId || !ownerId || !startDate || !time || !count || count < 1 || count > 52) {
+    return res.status(400).json({ error: 'Missing or invalid params' });
+  }
+
+  let dur = duration || 30;
+  if (serviceId) {
+    const { data: svc } = await supabase.from('services').select('duration_minutes').eq('id', serviceId).single();
+    if (svc) dur = svc.duration_minutes;
+  }
+
+  const created = [];
+  const conflicts = [];
+
+  function addDays(dateStr, days) {
+    const d = new Date(dateStr + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().substring(0, 10);
+  }
+
+  function getWeekday(dateStr) {
+    const probe = new Date(dateStr + 'T12:00:00Z');
+    return new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, weekday: 'short' }).format(probe);
+  }
+
+  const targetDates = [];
+  let current = startDate;
+  let found = 0;
+
+  if (recurrence === 'daily') {
+    for (let i = 0; i < count; i++) {
+      targetDates.push(addDays(startDate, i));
+    }
+  } else {
+    const wdSet = new Set((weekdays || []).map(Number));
+    const startWd = berlinDayOfWeek(startDate);
+    if (!wdSet.has(startWd)) wdSet.add(startWd);
+
+    let safety = 0;
+    while (found < count && safety < 365) {
+      const wd = berlinDayOfWeek(current);
+      if (wdSet.has(wd)) {
+        targetDates.push(current);
+        found++;
+      }
+      const step = recurrence === 'biweekly' ? 1 : 1;
+      current = addDays(current, step);
+      if (recurrence === 'biweekly') {
+        const weekStart = addDays(current, -((berlinDayOfWeek(current) + 6) % 7));
+        const prevWeekStart = addDays(weekStart, -14);
+        if (targetDates.length > 0) {
+          const last = targetDates[targetDates.length - 1];
+          const lastWeekStart = addDays(last, -((berlinDayOfWeek(last) + 6) % 7));
+          const nextWeekStart = addDays(lastWeekStart, 14);
+          if (current < nextWeekStart) {
+            current = nextWeekStart;
+            wdSet.forEach(d => {
+              const candidate = addDays(current, d);
+              if (berlinDayOfWeek(candidate) === d) targetDates.push(candidate);
+            });
+          }
+        }
+      }
+      safety++;
+    }
+  }
+
+  for (const dateStr of targetDates.slice(0, count)) {
+    try {
+      const start_time = berlinLocalToUTC(dateStr, time);
+      const end_time = new Date(start_time.getTime() + dur * 60000);
+
+      const { data: booking, error: dbErr } = await supabase.from('bookings').insert({
+        user_id: userId,
+        owner_id: ownerId,
+        service_id: serviceId || null,
+        start_time: start_time.toISOString(),
+        end_time: end_time.toISOString(),
+        customer_name: customerName || null,
+        customer_phone: customerPhone || null,
+        customer_email: 'manual@booking.com',
+        notes: notes || null,
+        status: 'confirmed'
+      }).select().single();
+
+      if (dbErr) {
+        if (dbErr.code === '23P01') {
+          conflicts.push({ date: dateStr, reason: 'Slot bereits belegt' });
+        } else {
+          conflicts.push({ date: dateStr, reason: dbErr.message });
+        }
+      } else {
+        created.push({ id: booking.id, date: dateStr, start_time: booking.start_time });
+      }
+    } catch (err) {
+      conflicts.push({ date: dateStr, reason: err.message });
+    }
+  }
+
+  res.json({ created, conflicts, count: created.length });
+});
+
 // 6. Manual Booking (From Admin Panel)
 app.post('/api/booking/manual-create', async (req, res) => {
   try {
