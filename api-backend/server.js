@@ -87,7 +87,7 @@ function utcToBerlinMinutes(utcDate) {
 function berlinDayOfWeek(dateStr) {
   const probe = new Date(`${dateStr}T12:00:00Z`); // noon UTC = afternoon Berlin, safe from DST edges
   const wd = new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, weekday: 'short' }).format(probe);
-  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(wd);
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(wd);
 }
 
 // Returns UTC ISO bounds (start/end) covering the full Berlin calendar day "YYYY-MM-DD".
@@ -151,10 +151,10 @@ app.get('/api/calendar/google-callback', async (req, res) => {
   let userId, flowType;
   try {
     const parsed = JSON.parse(rawState);
-    userId   = parsed.userId;
+    userId = parsed.userId;
     flowType = parsed.type || 'calendar';
   } catch {
-    userId   = rawState;
+    userId = rawState;
     flowType = 'calendar';
   }
 
@@ -162,7 +162,7 @@ app.get('/api/calendar/google-callback', async (req, res) => {
     const { tokens } = await newOAuthClient().getToken(code);
 
     if (flowType === 'gmail') {
-      const uRes  = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      const uRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: 'Bearer ' + tokens.access_token }
       });
       const uinfo = await uRes.json();
@@ -189,9 +189,9 @@ app.get('/api/calendar/google-callback', async (req, res) => {
         refresh_token: tokens.refresh_token,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id, provider' });
-      
+
     if (error) throw error;
-    
+
     res.redirect('https://infinitymade.de/dashboard.html#calendar?success=google_connected');
   } catch (error) {
     console.error('OAuth callback error:', error);
@@ -214,8 +214,8 @@ app.post('/api/gmail/send', async (req, res) => {
     const { credentials } = await oauth.refreshAccessToken();
 
     const fromLabel = sender_name ? `${sender_name} <${profile.b2b_from_email}>` : profile.b2b_from_email;
-    const toLabel   = to_name ? `${to_name} <${to_email}>` : to_email;
-    const rawEmail  = [
+    const toLabel = to_name ? `${to_name} <${to_email}>` : to_email;
+    const rawEmail = [
       `From: ${fromLabel}`,
       `To: ${toLabel}`,
       `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
@@ -225,7 +225,7 @@ app.post('/api/gmail/send', async (req, res) => {
       '',
       Buffer.from(body).toString('base64')
     ].join('\r\n');
-    const encoded = Buffer.from(rawEmail).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const encoded = Buffer.from(rawEmail).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
     const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
       method: 'POST',
@@ -245,44 +245,46 @@ app.post('/api/gmail/send', async (req, res) => {
 app.post('/api/apify/search', async (req, res) => {
   const { query, limit, userId } = req.body;
   if (!query || !userId) return res.status(400).json({ error: 'Missing params' });
-  const safeLimit = Math.min(parseInt(limit)||20, 50);
+  const safeLimit = Math.min(parseInt(limit) || 20, 50);
   const token = process.env.APIFY_TOKEN;
   if (!token) return res.status(500).json({ error: 'Apify not configured' });
   try {
-    const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { count: weekCount } = await supabase.from('b2b_contacts')
       .select('id', { count: 'exact', head: true })
       .eq('owner_id', userId).eq('source', 'apify').gte('created_at', weekAgo);
     const WEEKLY_LIMIT = 100;
-    if ((weekCount||0) >= WEEKLY_LIMIT)
+    if ((weekCount || 0) >= WEEKLY_LIMIT)
       return res.status(429).json({ success: false, error: `Wöchentliches Limit von ${WEEKLY_LIMIT} erreicht (Reset in 7 Tagen)` });
-    const allowed = Math.min(safeLimit, WEEKLY_LIMIT - (weekCount||0));
+    const allowed = Math.min(safeLimit, WEEKLY_LIMIT - (weekCount || 0));
     const apifyRes = await fetch(
       `https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${token}&timeout=120&memory=512`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchStringsArray: [query], maxCrawledPlacesPerSearch: allowed, language: 'de', includeHistogram: false, includeImages: false }) }
+      {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchStringsArray: [query], maxCrawledPlacesPerSearch: allowed, language: 'de', includeHistogram: false, includeImages: false })
+      }
     );
     if (!apifyRes.ok) throw new Error('Apify HTTP ' + apifyRes.status);
     const items = await apifyRes.json();
-    const contacts = (items||[]).map(p => ({
+    const contacts = (items || []).map(p => ({
       owner_id: userId,
-      company_name: p.title||p.name||'—',
+      company_name: p.title || p.name || '—',
       contact_name: null,
-      phone: p.phone||p.phoneNumber||null,
-      email: p.email||null,
-      website: p.website||null,
+      phone: p.phone || p.phoneNumber || null,
+      email: p.email || null,
+      website: p.website || null,
       status: 'prospect',
       source: 'apify',
       notes: [
         p.categoryName ? `Branche: ${p.categoryName}` : null,
-        p.address?.street ? `Adresse: ${p.address.street}, ${p.address.city||''}` : null,
-        p.totalScore ? `Bewertung: ${p.totalScore} ⭐ (${p.reviewsCount||0} Rezensionen)` : null,
+        p.address?.street ? `Adresse: ${p.address.street}, ${p.address.city || ''}` : null,
+        p.totalScore ? `Bewertung: ${p.totalScore} ⭐ (${p.reviewsCount || 0} Rezensionen)` : null,
         p.url ? `Google Maps: ${p.url}` : null
-      ].filter(Boolean).join('\n')||null
+      ].filter(Boolean).join('\n') || null
     }));
     if (contacts.length > 0) await supabase.from('b2b_contacts').insert(contacts);
-    res.json({ success: true, count: contacts.length, remaining: WEEKLY_LIMIT - (weekCount||0) - contacts.length });
-  } catch(e) {
+    res.json({ success: true, count: contacts.length, remaining: WEEKLY_LIMIT - (weekCount || 0) - contacts.length });
+  } catch (e) {
     console.error('[apify/search]', e.message);
     res.status(500).json({ success: false, error: e.message });
   }
@@ -451,7 +453,7 @@ app.post('/api/booking/get-slots', async (req, res) => {
 
     // 4. Generate available slots
     const buffer = parseInt(req.body.buffer) || 0;
-    const step   = parseInt(req.body.step)   || 30;
+    const step = parseInt(req.body.step) || 30;
     const totalBlock = parseInt(duration) + buffer;
     const slots = [];
     let currentMins = startMinutes;
@@ -473,7 +475,7 @@ app.post('/api/booking/get-slots', async (req, res) => {
 
 app.post('/api/booking/create', async (req, res) => {
   const { userId, serviceId, date, time, customerName, customerEmail, customerPhone } = req.body;
-  
+
   try {
     // Reject past dates and enforce minimum 30-min lead time
     const now = new Date();
@@ -672,18 +674,18 @@ app.post('/api/verify-code', async (req, res) => {
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ error: 'Code is required' });
-    
+
     const { data, error } = await supabase
       .from('profiles')
       .select('id')
       .eq('company_code', code.toUpperCase())
       .eq('role', 'owner')
       .single();
-      
+
     if (error || !data) {
       return res.status(404).json({ error: 'Ungültiger Code' });
     }
-    
+
     res.json({ ownerId: data.id });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -724,6 +726,9 @@ app.post('/api/booking/batch-create', async (req, res) => {
   const created = [];
   const conflicts = [];
 
+  // Generate a single series_id for all bookings in this series
+  const seriesId = crypto.randomUUID ? crypto.randomUUID() : (await import('uuid')).v4();
+
   function addDays(dateStr, days) {
     const d = new Date(dateStr + 'T12:00:00Z');
     d.setUTCDate(d.getUTCDate() + days);
@@ -755,7 +760,9 @@ app.post('/api/booking/batch-create', async (req, res) => {
     }
   }
 
-  for (const dateStr of targetDates.slice(0, count)) {
+  for (let i = 0; i < targetDates.slice(0, count).length; i++) {
+    const dateStr = targetDates[i];
+    const position = i + 1;
     try {
       const start_time = berlinLocalToUTC(dateStr, time);
       const end_time = new Date(start_time.getTime() + dur * 60000);
@@ -771,7 +778,10 @@ app.post('/api/booking/batch-create', async (req, res) => {
         customer_email: 'manual@booking.com',
         notes: notes || null,
         hausbesuch: req.body.hausbesuch || false,
-        status: 'confirmed'
+        status: 'confirmed',
+        series_id: seriesId,
+        series_position: position,
+        series_total: count
       }).select().single();
 
       if (dbErr) {
@@ -781,21 +791,21 @@ app.post('/api/booking/batch-create', async (req, res) => {
           conflicts.push({ date: dateStr, reason: dbErr.message });
         }
       } else {
-        created.push({ id: booking.id, date: dateStr, start_time: booking.start_time });
+        created.push({ id: booking.id, date: dateStr, start_time: booking.start_time, series_position: position, series_total: count });
       }
     } catch (err) {
       conflicts.push({ date: dateStr, reason: err.message });
     }
   }
 
-  res.json({ created, conflicts, count: created.length });
+  res.json({ created, conflicts, count: created.length, series_id: seriesId });
 });
 
 // 6. Manual Booking (From Admin Panel)
 app.post('/api/booking/manual-create', async (req, res) => {
   try {
     const { ownerId, employeeId, title, start_time, end_time, customerName, customerPhone } = req.body;
-    
+
     const { data, error } = await supabase.from('bookings').insert({
       owner_id: ownerId,
       user_id: employeeId,
@@ -869,7 +879,7 @@ app.post('/api/rezept/save', async (req, res) => {
     }
 
     const notizen = befund
-      ? (existingNotizen ? existingNotizen + '\n' : '') + 'Rezept ' + (rezeptDatum || new Date().toISOString().slice(0,10)) + ': ' + befund
+      ? (existingNotizen ? existingNotizen + '\n' : '') + 'Rezept ' + (rezeptDatum || new Date().toISOString().slice(0, 10)) + ': ' + befund
       : undefined;
 
     const anamPayload = {

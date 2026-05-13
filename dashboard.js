@@ -732,7 +732,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,color,code)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,series_id,series_position,series_total,services(title,color,code)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -845,7 +845,8 @@ async function loadScheduleBookings(date) {
       block.style.color = '#fff';
       const svcCode2 = b.services?.code;
       const label2 = b.customer_name || (b.services?.title) || 'Termin';
-      block.innerHTML = (b.hausbesuch ? '<span style="font-size:14px;">🚗</span> ' : '') + escapeHtml(label2) + (svcCode2 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode2)}</span>` : '');
+      const seriesBadge = b.series_position && b.series_total ? `<br><span style="font-size:10px;opacity:0.8;">${b.series_position}/${b.series_total}</span>` : '';
+      block.innerHTML = (b.hausbesuch ? `<span style="font-size:14px;">🚗</span>${seriesBadge} ` : '') + escapeHtml(label2) + (svcCode2 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode2)}</span>` : '');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);
@@ -1114,7 +1115,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,code)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,series_id,series_position,series_total,services(title,code)')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1179,7 +1180,8 @@ async function renderDayView(dateStr) {
       block.style.color = '#fff';
       const svcCode3 = b.services?.code;
       const label3 = b.customer_name || (b.services?.title) || 'Termin';
-      block.innerHTML = (b.hausbesuch ? '<span style="font-size:14px;">🚗</span> ' : '') + escapeHtml(label3) + (svcCode3 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode3)}</span>` : '');
+      const seriesBadge3 = b.series_position && b.series_total ? `<br><span style="font-size:10px;opacity:0.8;">${b.series_position}/${b.series_total}</span>` : '';
+      block.innerHTML = (b.hausbesuch ? `<span style="font-size:14px;">🚗</span>${seriesBadge3} ` : '') + escapeHtml(label3) + (svcCode3 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode3)}</span>` : '');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingModal(b);
