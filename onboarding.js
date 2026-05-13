@@ -444,6 +444,7 @@ function bindServices() {
         }
 
         const svcInserts = items.map(s => ({
+          user_id: userId,
           owner_id: userId,
           title: s.name,
           duration_minutes: s.duration_minutes,
@@ -526,6 +527,7 @@ function bindHours() {
       const closeTime = val.close ? val.close + ':00' : '00:00:00';
       whRows.push({
         user_id: userId,
+        owner_id: userId,
         day_of_week: dayMap[key],
         start_time: closed ? '00:00:00' : openTime,
         end_time: closed ? '00:00:00' : closeTime,
