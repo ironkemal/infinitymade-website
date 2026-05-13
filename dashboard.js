@@ -5090,15 +5090,14 @@ function bindInvEvents() {
 let aerzteCache = [];
 
 async function loadAerzte() {
-  const ownerId = getOwnerId();
-  const { data } = await supabase.from('aerzte').select('*').eq('owner_id', ownerId).order('name',{ascending:true});
+  const { data } = await supabase.from('aerzte').select('*').order('arzt_name',{ascending:true});
   aerzteCache = data || [];
   const list = document.getElementById('aerzteList');
   if (!list) return;
   if (!aerzteCache.length) { list.innerHTML = '<p class="text-muted">Keine Ärzte.</p>'; return; }
   list.innerHTML = aerzteCache.map(a => `
     <div class="aerzte-row" data-id="${a.id}">
-      <span>${escapeHtml(a.name)} <span class="text-muted" style="font-size:12px;">${escapeHtml(a.arzt_nummer||'')}</span></span>
+      <span>${escapeHtml(a.arzt_name)} <span class="text-muted" style="font-size:12px;">${escapeHtml(a.arzt_nummer||'')}</span></span>
       <div>
         <button class="btn-outline" onclick="editAerzte('${a.id}')">Bearbeiten</button>
         <button class="btn-danger" onclick="deleteAerzte('${a.id}')">Löschen</button>
@@ -5111,7 +5110,7 @@ async function addAerzte() {
   const nummer = document.getElementById('aeNummer').value.trim();
   if (!name) { showToast('Bitte einen Namen eingeben.', 'error'); return; }
   const ownerId = getOwnerId();
-  const { error } = await supabase.from('aerzte').insert({ owner_id: ownerId, name, arzt_nummer: nummer || null });
+  const { error } = await supabase.from('aerzte').insert({ owner_id: ownerId, arzt_name: name, arzt_nummer: nummer || null });
   if (error) { showToast(t('err_generic'), 'error'); return; }
   document.getElementById('aeName').value = '';
   document.getElementById('aeNummer').value = '';
@@ -5130,11 +5129,11 @@ async function deleteAerzte(id) {
 function editAerzte(id) {
   const a = aerzteCache.find(x => x.id === id);
   if (!a) return;
-  const name = prompt('Neuer Name:', a.name);
+  const name = prompt('Neuer Name:', a.arzt_name);
   if (name === null) return;
   const nummer = prompt('Neue Telefon/Fax:', a.arzt_nummer || '');
   if (nummer === null) return;
-  supabase.from('aerzte').update({ name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id).then(({error}) => {
+  supabase.from('aerzte').update({ arzt_name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id).then(({error}) => {
     if (error) { showToast(t('err_generic'), 'error'); return; }
     loadAerzte();
     showToast('Aktualisiert.');
