@@ -845,7 +845,7 @@ async function loadScheduleBookings(date) {
       block.style.color = '#fff';
       const svcCode2 = b.services?.code;
       const label2 = b.customer_name || (b.services?.title) || 'Termin';
-      block.innerHTML = (b.hausbesuch ? '🚗 ' : '') + escapeHtml(label2) + (svcCode2 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode2)}</span>` : '');
+      block.innerHTML = (b.hausbesuch ? '<span style="font-size:14px;">🚗</span> ' : '') + escapeHtml(label2) + (svcCode2 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode2)}</span>` : '');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);
@@ -1156,7 +1156,7 @@ async function renderDayView(dateStr) {
       block.style.color = '#fff';
       const svcCode3 = b.services?.code;
       const label3 = b.customer_name || (b.services?.title) || 'Termin';
-      block.innerHTML = (b.hausbesuch ? '<span class="bk-home-icon">🚗</span> ' : '') + escapeHtml(label3) + (svcCode3 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode3)}</span>` : '');
+      block.innerHTML = (b.hausbesuch ? '<span style="font-size:14px;">🚗</span> ' : '') + escapeHtml(label3) + (svcCode3 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode3)}</span>` : '');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingModal(b);
