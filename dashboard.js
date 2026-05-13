@@ -3829,8 +3829,8 @@ function resetInvEditor() {
   document.getElementById('invPatientSelect').value = '';
   document.getElementById('invPatientInfo').textContent = '';
   document.getElementById('invLineBody').innerHTML = '';
-  document.getElementById('invEigenPct').value = 0;
-  document.getElementById('invKasse').value = 0;
+  document.getElementById('invEigenPct').value = 10;
+  document.getElementById('invKasse').value = 10;
   document.getElementById('invNotes').value = '';
   document.getElementById('invPrintBtn').disabled = true;
   calcInvTotals();
