@@ -1714,6 +1714,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel==='overview') await loadTodayBookings();
+  if (activePanel==='calendar' && calendarView==='day') renderDayView(toISODate(dayViewDate));
   showToast(t('saved'));
 });
 
@@ -1724,6 +1725,7 @@ document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel==='overview') await loadTodayBookings();
+  if (activePanel==='calendar' && calendarView==='day') renderDayView(toISODate(dayViewDate));
   showToast(t('saved'));
 });
 
@@ -1803,7 +1805,7 @@ async function loadLeads() {
   if (phones.length) {
     const [bkRes, waRes] = await Promise.all([
       supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
-        .eq('owner_id',ownerId).in('customer_phone_normalized',phones),
+        .eq('owner_id',ownerId).in('customer_phone_normalized',phones).order('start_time',{ascending:true}),
       supabase.from('wa_contacts').select('wa_id,phone,customer_name')
         .eq('business_id',ownerId).in('phone',phones)
     ]);
@@ -1847,13 +1849,15 @@ function renderLeads() {
     const bkCount = meta.bookings?.length||0;
     const hasWa   = !!meta.wa;
     const bd = leadBirthDate(r);
+    const sessionLabel = bkCount > 0 ? `Seans ${bkCount + 1}` : '';
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
       <td>${displayName(r)}${bd ? ` <span style="color:var(--text-muted);font-size:12px;">· ${bd}</span>` : ''}</td>
       <td>${r.city||'—'}</td>
       <td>${r.phone||'—'}</td>
+      <td>${r.email||'—'}</td>
       <td>${r.total_score??r.rating??'—'}</td>
       <td>
-        ${bkCount?`<span class="badge badge-blue" title="Termine">📅 ${bkCount}</span> `:''}${hasWa?'<span class="badge badge-green" title="WhatsApp">💬</span> ':''}
+        ${sessionLabel?`<span class="badge badge-blue">${sessionLabel}</span> `:''}${hasWa?'<span class="badge badge-green" title="WhatsApp">💬</span> ':''}
         <span class="badge ${leadStatusBadge(r.status)}">${r.status||'—'}</span>
       </td>
       <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit">✏️</button></td>
