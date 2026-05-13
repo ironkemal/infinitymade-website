@@ -8,70 +8,38 @@ const STEPS = ['account', 'business', 'owner', 'services', 'hours', 'whatsapp', 
 
 const SERVICE_TEMPLATES = {
   barber: [
-    { name: 'Haarschnitt',         duration: 30, price: 25, code: 'HST' },
-    { name: 'Bart',                duration: 15, price: 12, code: 'BART' },
-    { name: 'Komplett-Service',    duration: 45, price: 35, code: 'KPLT' },
-    { name: 'Kinderhaarschnitt',   duration: 20, price: 18, code: 'KIDS' },
-    { name: 'Färbung',             duration: 60, price: 45, code: 'FARB' },
+    { name: 'Haarschnitt', price_config: { durations: { '15': { price: 15, active: true }, '30': { price: 25, active: true }, '45': { price: 35, active: true } } } },
   ],
   beauty: [
-    { name: 'Klassische Reinigung', duration: 60, price: 55, code: 'KR' },
-    { name: 'Microneedling',        duration: 75, price: 95, code: 'MNL' },
-    { name: 'Maniküre',             duration: 45, price: 30, code: 'MAN' },
-    { name: 'Pediküre',             duration: 50, price: 35, code: 'PED' },
-    { name: 'Wimpernlifting',       duration: 60, price: 65, code: 'WLP' },
+    { name: 'Behandlung', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
   ],
   nails: [
-    { name: 'Maniküre',         duration: 45, price: 25, code: 'MAN' },
-    { name: 'Pediküre',         duration: 50, price: 30, code: 'PED' },
-    { name: 'Gel-Modellage',    duration: 90, price: 55, code: 'GEL' },
-    { name: 'Nail Art',         duration: 30, price: 15, code: 'ART' },
-    { name: 'Nagelreparatur',   duration: 20, price: 8, code: 'REP' },
+    { name: 'Nagelmodellage', price_config: { durations: { '30': { price: 25, active: true }, '45': { price: 35, active: true }, '60': { price: 50, active: true } } } },
   ],
   tattoo: [
-    { name: 'Beratung',         duration: 30, price: 0, code: 'BER' },
-    { name: 'Kleines Tattoo',   duration: 60, price: 120, code: 'T-S' },
-    { name: 'Mittleres Tattoo', duration: 180, price: 350, code: 'T-M' },
-    { name: 'Großes Tattoo',    duration: 300, price: 600, code: 'T-L' },
-    { name: 'Cover-Up',         duration: 240, price: 400, code: 'CUP' },
+    { name: 'Tattoo', price_config: { durations: { '60': { price: 80, active: true }, '120': { price: 150, active: true }, '180': { price: 220, active: true } } } },
   ],
   spa: [
-    { name: 'Massage 30 Min',  duration: 30, price: 39, code: 'M30' },
-    { name: 'Massage 60 Min',  duration: 60, price: 69, code: 'M60' },
-    { name: 'Aromatherapie',   duration: 60, price: 79, code: 'ARO' },
-    { name: 'Hot Stone',       duration: 75, price: 89, code: 'HST' },
-    { name: 'Paarmassage',     duration: 60, price: 129, code: 'PRM' },
+    { name: 'Massage', price_config: { durations: { '30': { price: 39, active: true }, '60': { price: 69, active: true }, '90': { price: 99, active: true } } } },
   ],
   massage: [
-    { name: 'Schultermassage', duration: 25, price: 35, code: 'SCH' },
-    { name: 'Rückenmassage',   duration: 40, price: 50, code: 'RUE' },
-    { name: 'Ganzkörper',      duration: 60, price: 75, code: 'GK' },
-    { name: 'Fußmassage',      duration: 30, price: 40, code: 'FUS' },
-    { name: 'Sportmassage',    duration: 60, price: 85, code: 'SPO' },
+    { name: 'Massage', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 75, active: true } } } },
   ],
   physiotherapy: [
-    { name: 'Erstberatung',         duration: 30, price: 0, code: 'EB' },
-    { name: 'Physiotherapie 30 Min', duration: 30, price: 45, code: 'PT30' },
-    { name: 'Physiotherapie 45 Min', duration: 45, price: 65, code: 'PT45' },
-    { name: 'Physiotherapie 60 Min', duration: 60, price: 85, code: 'PT60' },
-    { name: 'Manuelle Therapie',    duration: 45, price: 75, code: 'MT' },
-    { name: 'Kräftigungstraining',  duration: 30, price: 40, code: 'KG' },
-    { name: 'Lymphdrainage',        duration: 45, price: 70, code: 'LYM' },
+    { name: 'Physiotherapie', price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 65, active: true }, '60': { price: 85, active: true } } } },
+  ],
+  restaurant: [
+    { name: 'Tischreservierung', price_config: { durations: { '60': { price: 0, active: true }, '90': { price: 0, active: true }, '120': { price: 0, active: true } } } },
+  ],
+  other: [
+    { name: 'Behandlung', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
   ],
   praxis: [
-    { name: 'Allgemeine Beratung',   duration: 30, price: 0, code: 'BER' },
-    { name: 'Vorsorgeuntersuchung',  duration: 30, price: 0, code: 'VOR' },
-    { name: 'Behandlung 30 Min',     duration: 30, price: 45, code: 'B30' },
-    { name: 'Behandlung 45 Min',     duration: 45, price: 65, code: 'B45' },
-    { name: 'Behandlung 60 Min',     duration: 60, price: 85, code: 'B60' },
-    { name: 'Sprechstunde',          duration: 15, price: 0, code: 'SPR' },
+    { name: 'Behandlung', price_config: { durations: { '15': { price: 0, active: true }, '30': { price: 0, active: true }, '45': { price: 65, active: true }, '60': { price: 85, active: true } } } },
   ],
   gym: [
-    { name: 'Probetraining',    duration: 60, price: 0, code: 'PRO' },
-    { name: 'Personal Training', duration: 60, price: 65, code: 'PT' },
-    { name: 'Beratung',         duration: 30, price: 0, code: 'BER' },
+    { name: 'Training', price_config: { durations: { '30': { price: 20, active: true }, '60': { price: 40, active: true }, '90': { price: 60, active: true } } } },
   ],
-  other: [],
 };
 
 const DAYS = [
@@ -443,18 +411,15 @@ function bindServices() {
           if (delSvc) throw delSvc;
         }
 
-        const isPhysio = profile.sector === 'physiotherapy';
         const svcInserts = items.map(s => {
-          if (isPhysio) {
-            const dur = s.duration_minutes || 30;
-            const price = s.price_eur || 0;
-            const unitPrice = dur > 0 && price > 0 ? Math.round((price / (dur / 5)) * 100) / 100 : 10;
+          if (s.price_config) {
+            // New format with durations
             return {
               user_id: userId,
               owner_id: userId,
               title: s.name,
               code: s.code || null,
-              price_config: { unit_price: unitPrice, durations: { [dur]: { active: true, price } } },
+              price_config: s.price_config,
               duration_minutes: null,
               price: null,
               is_online_meeting: false,
