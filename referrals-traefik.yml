@@ -1,0 +1,14 @@
+http:
+  routers:
+    referrals:
+      rule: "PathPrefix(\"/referrals\")"
+      service: referrals-service
+      tls: {}
+      entryPoints:
+        - websecure
+
+  services:
+    referrals-service:
+      loadBalancer:
+        servers:
+          - url: "http://referrals-server:80"

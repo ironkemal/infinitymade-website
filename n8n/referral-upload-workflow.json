@@ -1,0 +1,515 @@
+{
+    "name": "Überweisung Upload - VPS Storage (Multi-Model)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "referral-upload",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "id": "webhook-trigger",
+            "name": "Webhook - Fotoğraf Al",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                250,
+                400
+            ],
+            "typeVersion": 1,
+            "webhookId": "9a136b09-1b13-4fff-b205-9040b863d5a8"
+        },
+        {
+            "parameters": {
+                "functionCode": "const businessId = $input.first().json.body.business_id;\nconst dateNow = $input.first().json.dateNow;\nconst uuid = $input.first().json.uuid;\nconst filename = `referral_${dateNow}_${uuid}.jpg`;\nconst publicUrl = `https://n8n.infinitymade.de/webhook/referral-image?business_id=${businessId}&filename=${filename}`;\nreturn {\n  json: {\n    ...$input.first().json,\n    filename: filename,\n    imageUrl: publicUrl,\n    businessId: businessId,\n    modelTried: []\n  }\n};"
+            },
+            "id": "set-vars",
+            "name": "Set Variables",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                450,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "command": "cat > /home/n8n/referrals/{{ $json.businessId }}/{{ $json.filename }}",
+                "note": "Dosyayı VPS'e kaydet"
+            },
+            "id": "write-file",
+            "name": "Write Binary File",
+            "type": "n8n-nodes-base.writeBinaryFile",
+            "position": [
+                650,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer {{ $env.OPENROUTER_API_KEY }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "google/gemma-4-31b-it:free"
+                        },
+                        {
+                            "name": "messages",
+                            "value": [
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "text",
+                                        "text": "Du bist ein medizinischer Assistent. Analysiere das hochgeladene Überweisungsdokument und extrahiere die folgenden Informationen:\n\n1. Patientenvorname (Vorname)\n2. Patientennachname (Nachname)\n3. Geburtsdatum (Format: YYYY-MM-DD)\n4. Anzahl der Sitzungen (seans_sayisi)\n5. Behandlungsart (tedavi_turu)\n6. Hausbesuch (ja/nein)\n7. Diagnose\n8. Arztname (falls vorhanden)\n\nAntworte NUR im JSON-Format:\n```json\n{\n  \"ad\": \"Vorname\",\n  \"soyad\": \"Nachname\",\n  \"dogum_tarihi\": \"YYYY-MM-DD\",\n  \"seans_sayisi\": 6,\n  \"tedavi_turu\": \"Physiotherapie\",\n  \"hausbesuch\": false,\n  \"diagnose\": \"Rückenschmerzen\",\n  \"arzt_name\": \"Dr. Müller\"\n}\n```\n\nWICHTIG:\n- Antworte NUR mit gültigem JSON, keine Erklärungen\n- Wenn du dir bei einem Feld nicht sicher bist, setze es auf null\n- Das Geburtsdatum muss im Format YYYY-MM-DD sein"
+                                    }
+                                },
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": "={{ $json.imageUrl }}"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ai-model-1",
+            "name": "OpenRouter - Gemma (Model 1)",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                850,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "id": "has-choices",
+                            "leftValue": "={{ $json.choices }}",
+                            "rightValue": "",
+                            "operator": "exists"
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "check-model-1",
+            "name": "Model 1 Başarılı mı?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                1050,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer {{ $env.OPENROUTER_API_KEY }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "nvidia/nemotron-nano-12b-2-vl:free"
+                        },
+                        {
+                            "name": "messages",
+                            "value": [
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "text",
+                                        "text": "Du bist ein medizinischer Assistent. Analysiere das hochgeladene Überweisungsdokument und extrahiere die folgenden Informationen:\n\n1. Patientenvorname (Vorname)\n2. Patientennachname (Nachname)\n3. Geburtsdatum (Format: YYYY-MM-DD)\n4. Anzahl der Sitzungen (seans_sayisi)\n5. Behandlungsart (tedavi_turu)\n6. Hausbesuch (ja/nein)\n7. Diagnose\n8. Arztname (falls vorhanden)\n\nAntworte NUR im JSON-Format:\n```json\n{\n  \"ad\": \"Vorname\",\n  \"soyad\": \"Nachname\",\n  \"dogum_tarihi\": \"YYYY-MM-DD\",\n  \"seans_sayisi\": 6,\n  \"tedavi_turu\": \"Physiotherapie\",\n  \"hausbesuch\": false,\n  \"diagnose\": \"Rückenschmerzen\",\n  \"arzt_name\": \"Dr. Müller\"\n}\n```\n\nWICHTIG:\n- Antworte NUR mit gültigem JSON, keine Erklärungen\n- Wenn du dir bei einem Feld nicht sicher bist, setze es auf null\n- Das Geburtsdatum muss im Format YYYY-MM-DD sein"
+                                    }
+                                },
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": "={{ $json.imageUrl }}"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ai-model-2",
+            "name": "OpenRouter - Nemotron (Model 2)",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                850,
+                600
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "id": "has-choices",
+                            "leftValue": "={{ $json.choices }}",
+                            "rightValue": "",
+                            "operator": "exists"
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "check-model-2",
+            "name": "Model 2 Başarılı mı?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                1050,
+                600
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer {{ $env.OPENROUTER_API_KEY }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "google/gemini-2.0-flash"
+                        },
+                        {
+                            "name": "messages",
+                            "value": [
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "text",
+                                        "text": "Du bist ein medizinischer Assistent. Analysiere das hochgeladene Überweisungsdokument und extrahiere die folgenden Informationen:\n\n1. Patientenvorname (Vorname)\n2. Patientennachname (Nachname)\n3. Geburtsdatum (Format: YYYY-MM-DD)\n4. Anzahl der Sitzungen (seans_sayisi)\n5. Behandlungsart (tedavi_turu)\n6. Hausbesuch (ja/nein)\n7. Diagnose\n8. Arztname (falls vorhanden)\n\nAntworte NUR im JSON-Format:\n```json\n{\n  \"ad\": \"Vorname\",\n  \"soyad\": \"Nachname\",\n  \"dogum_tarihi\": \"YYYY-MM-DD\",\n  \"seans_sayisi\": 6,\n  \"tedavi_turu\": \"Physiotherapie\",\n  \"hausbesuch\": false,\n  \"diagnose\": \"Rückenschmerzen\",\n  \"arzt_name\": \"Dr. Müller\"\n}\n```\n\nWICHTIG:\n- Antworte NUR mit gültigem JSON, keine Erklärungen\n- Wenn du dir bei einem Feld nicht sicher bist, setze es auf null\n- Das Geburtsdatum muss im Format YYYY-MM-DD sein"
+                                    }
+                                },
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": "={{ $json.imageUrl }}"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ai-model-3",
+            "name": "OpenRouter - Gemini Flash (Model 3 - Ücretli)",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                850,
+                800
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "const response = $input.first().json;\nlet aiContent = response.choices?.[0]?.message?.content || '';\naiContent = aiContent.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nlet parsedData;\ntry {\n  parsedData = JSON.parse(aiContent);\n} catch (e) {\n  throw new Error('AI response is not valid JSON: ' + aiContent);\n}\nreturn {\n  json: {\n    ...$input.first().json,\n    parsedData: parsedData\n  }\n};"
+            },
+            "id": "parse-json",
+            "name": "JSON Parse",
+            "type": "n8n-nodes-base.function",
+            "position": [
+                1250,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://njvuclullotbksskpwgk.supabase.co/rest/v1/referral_drafts",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "{{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "name": "Prefer",
+                            "value": "return=representation"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "owner_id",
+                            "value": "={{ $json.body.business_id }}"
+                        },
+                        {
+                            "name": "raw_ai_data",
+                            "value": "={{ $json.aiResponse }}"
+                        },
+                        {
+                            "name": "patient_vorname",
+                            "value": "={{ $json.parsedData.ad }}"
+                        },
+                        {
+                            "name": "patient_nachname",
+                            "value": "={{ $json.parsedData.soyad }}"
+                        },
+                        {
+                            "name": "patient_geburtsdatum",
+                            "value": "={{ $json.parsedData.dogum_tarihi }}"
+                        },
+                        {
+                            "name": "seans_sayisi",
+                            "value": "={{ $json.parsedData.seans_sayisi }}"
+                        },
+                        {
+                            "name": "tedavi_turu",
+                            "value": "={{ $json.parsedData.tedavi_turu }}"
+                        },
+                        {
+                            "name": "hausbesuch",
+                            "value": "={{ $json.parsedData.hausbesuch }}"
+                        },
+                        {
+                            "name": "diagnose",
+                            "value": "={{ $json.parsedData.diagnose }}"
+                        },
+                        {
+                            "name": "arzt_name",
+                            "value": "={{ $json.parsedData.arzt_name }}"
+                        },
+                        {
+                            "name": "image_url",
+                            "value": "={{ $json.imageUrl }}"
+                        },
+                        {
+                            "name": "status",
+                            "value": "pending"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "db-insert",
+            "name": "Supabase - Kaydet",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1450,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "return {\n  json: {\n    success: false,\n    error: 'Tüm modeller başarısız oldu. Lütfen manuel olarak girin.',\n    imageUrl: $input.first().json.imageUrl,\n    businessId: $input.first().json.businessId\n  }\n};"
+            },
+            "id": "all-failed",
+            "name": "Tüm Modeller Başarısız",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                1250,
+                800
+            ]
+        }
+    ],
+    "connections": {
+        "webhook-trigger": {
+            "main": [
+                [
+                    {
+                        "node": "set-vars",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "set-vars": {
+            "main": [
+                [
+                    {
+                        "node": "write-file",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "write-file": {
+            "main": [
+                [
+                    {
+                        "node": "ai-model-1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "ai-model-1": {
+            "main": [
+                [
+                    {
+                        "node": "check-model-1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "check-model-1": {
+            "main": [
+                [
+                    {
+                        "node": "parse-json",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "ai-model-2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "ai-model-2": {
+            "main": [
+                [
+                    {
+                        "node": "check-model-2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "check-model-2": {
+            "main": [
+                [
+                    {
+                        "node": "parse-json",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "ai-model-3",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "ai-model-3": {
+            "main": [
+                [
+                    {
+                        "node": "parse-json",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "parse-json": {
+            "main": [
+                [
+                    {
+                        "node": "db-insert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "all-failed": {
+            "main": [
+                [
+                    {
+                        "node": "db-insert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    }
+}

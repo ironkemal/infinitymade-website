@@ -1080,6 +1080,44 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: ÜBERWEISUNG ===== -->
+        <section class="panel" id="panel-ueberweisung">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_ueberweisung">Überweisungen</h2>
+              <p class="panel-sub" data-i18n="ueberweisung_sub">Sevk belgeleri onayı ve randevu oluşturma</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn-ghost" id="ueberweisungRefreshBtn" title="Aktualisieren">🔄</button>
+            </div>
+          </div>
+
+          <!-- Yeni Gelen Belgeler -->
+          <div id="ueberweisungPendingSection">
+            <div class="kpi-bar" style="margin-bottom:16px;">
+              <div class="kpi-card" style="background:linear-gradient(135deg,#ff6b35,#ff8f3a);">
+                <div class="kpi-value" id="ueberweisungPendingCount">0</div>
+                <div class="kpi-label" data-i18n="ueberweisung_pending">Ausstehende Überweisungen</div>
+              </div>
+            </div>
+
+            <div id="ueberweisungEmpty" class="table-empty" style="margin:40px 0;">
+              <div style="font-size:48px;margin-bottom:12px;">📋</div>
+              <div data-i18n="ueberweisung_empty">Keine ausstehenden Überweisungen.</div>
+              <div style="font-size:13px;color:#888;margin-top:8px;" data-i18n="ueberweisung_empty_hint">Neue
+                Überweisungen werden hier automatisch angezeigt.</div>
+            </div>
+
+            <div id="ueberweisungList"></div>
+          </div>
+
+          <!-- Onaylanmış Belgeler -->
+          <details class="collapsible-section" style="margin-top:24px;">
+            <summary class="collapsible-header" data-i18n="ueberweisung_approved">Bestätigte Überweisungen</summary>
+            <div id="ueberweisungApprovedList" style="margin-top:12px;"></div>
+          </details>
+        </section>
+
         <!-- ===== PANEL: BEISPIELMODUS ===== -->
         <section class="panel" id="panel-beispielmodus">
           <div class="panel-header">

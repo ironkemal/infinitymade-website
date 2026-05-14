@@ -1,0 +1,121 @@
+{
+    "name": "Überweisung - Dosya Servis (GET)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "GET",
+                "path": "referral-image",
+                "responseMode": "lastNode",
+                "options": {
+                    "responseData": "binaryData"
+                }
+            },
+            "id": "webhook-trigger",
+            "name": "Webhook - Resim Al",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                250,
+                300
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {
+                "command": "cat /home/n8n/referrals/{{ $query.business_id }}/{{ $query.filename }}",
+                "note": "Dosyayı VPS'ten oku"
+            },
+            "id": "read-file",
+            "name": "Read Binary File",
+            "type": "n8n-nodes-base.readBinaryFile",
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "const filename = $input.first().json.filename || $query.filename || '';\nconst ext = filename.split('.').pop().toLowerCase();\nconst contentTypes = {\n  'jpg': 'image/jpeg',\n  'jpeg': 'image/jpeg',\n  'png': 'image/png',\n  'gif': 'image/gif',\n  'webp': 'image/webp',\n  'pdf': 'application/pdf'\n};\nconst contentType = contentTypes[ext] || 'application/octet-stream';\nreturn {\n  json: {\n    contentType: contentType,\n    filename: filename\n  }\n};"
+            },
+            "id": "set-metadata",
+            "name": "Set Metadata",
+            "type": "n8n-nodes-base.function",
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "lastNode",
+                "responseContentType": "={{ $json.contentType }}",
+                "responseCode": 200,
+                "responseHeaders": {
+                    "parameters": [
+                        {
+                            "name": "Cache-Control",
+                            "value": "no-store, no-cache, must-revalidate, max-age=0"
+                        },
+                        {
+                            "name": "Pragma",
+                            "value": "no-cache"
+                        },
+                        {
+                            "name": "Expires",
+                            "value": "0"
+                        },
+                        {
+                            "name": "X-Content-Type-Options",
+                            "value": "nosniff"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "respond",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                850,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "webhook-trigger": {
+            "main": [
+                [
+                    {
+                        "node": "read-file",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "read-file": {
+            "main": [
+                [
+                    {
+                        "node": "set-metadata",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "set-metadata": {
+            "main": [
+                [
+                    {
+                        "node": "respond",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    }
+}

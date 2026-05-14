@@ -1,0 +1,7 @@
+[http.middlewares.referrals-headers.headers]
+  customResponseHeaders.X-Robots-Tag = "noindex,nofollow"
+  customResponseHeaders.X-Content-Type-Options = "nosniff"
+
+[http.services.referrals.loadbalancer]
+  [[http.services.referrals.loadbalancer.servers]]
+    url = "file:///referrals"

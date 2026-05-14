@@ -54,8 +54,14 @@ const T = {
     saved: 'Gespeichert.', pw_changed: 'Passwort geändert.', err_generic: 'Ein Fehler ist aufgetreten.',
     copied: 'Kopiert!', csv_imported: 'Importiert: ', csv_error: 'CSV-Fehler: ',
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
-    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_beispielmodus: 'Beispielmodus', nav_anamnese: 'Anamnese',
+    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_beispielmodus: 'Beispielmodus', nav_anamnese: 'Anamnese', nav_ueberweisung: 'Überweisungen',
     doctors_sub: 'Ärzte in der Nähe finden', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
+    ueberweisung_sub: 'Sevk belgeleri onayı', ueberweisung_pending: 'Ausstehende Überweisungen', ueberweisung_empty: 'Keine ausstehenden Überweisungen.',
+    ueberweisung_empty_hint: 'Neue Überweisungen werden hier automatisch angezeigt.', ueberweisung_approved: 'Bestätigte Überweisungen',
+    ueberweisung_confirm: 'Bestätigen & Termin erstellen', ueberweisung_reject: 'Ablehnen', ueberweisung_preview: 'Vorschau',
+    ueberweisung_seans: 'Sitzungen', ueberweisung_hausbesuch: 'Hausbesuch', ueberweisung_diagnose: 'Diagnose',
+    ueberweisung_select_patient: 'Patient auswählen', ueberweisung_no_match: 'Kein passender Patient gefunden',
+    ueberweisung_confirmed: 'Überweisung bestätigt!', ueberweisung_rejected: 'Überweisung abgelehnt.',
     beispielmodus_sub: 'Anatomie-Haritas für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
@@ -216,6 +222,7 @@ const SECTOR_PANELS = {
     { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
     { id: 'doctors', icon: '🏥', key: 'nav_doctors', roles: ['owner', 'employee'] },
     { id: 'anamnese', icon: '📝', key: 'nav_anamnese', roles: ['owner', 'employee'] },
+    { id: 'ueberweisung', icon: '📋', key: 'nav_ueberweisung', roles: ['owner', 'employee'] },
     { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
     { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
@@ -402,6 +409,7 @@ async function switchPanel(id) {
   if (id === 'beispielmodus') loadBeispielmodus();
   if (id === 'rechnungen') loadRechnungen();
   if (id === 'anamnese') loadAnamnese();
+  if (id === 'ueberweisung') loadÜberweisung();
 }
 
 function openSidebar() {
@@ -4908,6 +4916,240 @@ async function saveInvoice() {
 let anamnesePatientCache = [];
 let currentAnamneseId = null;
 let currentAnamnesePatientId = null;
+
+// ==============================================
+// ÜBERWEISUNG PANEL - Sevk Belgesi Otomasyonu
+// ==============================================
+
+let überweisungCache = { pending: [], approved: [] };
+
+async function loadÜberweisung() {
+  const ownerId = getOwnerId();
+
+  // Pending (onay bekleyen) belgeleri al
+  const { data: pendingData } = await supabase
+    .from('referral_drafts')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  // Onaylanmış belgeleri al
+  const { data: approvedData } = await supabase
+    .from('referral_drafts')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .eq('status', 'approved')
+    .order('confirmed_at', { ascending: false })
+    .limit(20);
+
+  überweisungCache = {
+    pending: pendingData || [],
+    approved: approvedData || []
+  };
+
+  renderÜberweisungPending();
+  renderÜberweisungApproved();
+}
+
+function renderÜberweisungPending() {
+  const list = document.getElementById('ueberweisungList');
+  const empty = document.getElementById('ueberweisungEmpty');
+  const count = document.getElementById('ueberweisungPendingCount');
+
+  if (!list) return;
+
+  count.textContent = überweisungCache.pending.length;
+
+  if (überweisungCache.pending.length === 0) {
+    list.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+
+  empty.hidden = true;
+  list.innerHTML = überweisungCache.pending.map(draft => renderÜberweisungCard(draft)).join('');
+
+  // Event listeners
+  list.querySelectorAll('.ueberweisung-card').forEach(card => {
+    const draftId = card.dataset.id;
+
+    // Onayla butonu
+    card.querySelector('.ueberweisung-confirm-btn')?.addEventListener('click', () => confirmÜberweisung(draftId));
+
+    // Reddet butonu
+    card.querySelector('.ueberweisung-reject-btn')?.addEventListener('click', () => rejectÜberweisung(draftId));
+
+    // Önizleme butonu
+    card.querySelector('.ueberweisung-preview-btn')?.addEventListener('click', () => {
+      const url = card.dataset.imageUrl;
+      if (url) openImagePreview(url);
+    });
+  });
+}
+
+function renderÜberweisungApproved() {
+  const list = document.getElementById('ueberweisungApprovedList');
+  if (!list) return;
+
+  if (überweisungCache.approved.length === 0) {
+    list.innerHTML = '<div class="table-empty">Keine bestätigten Überweisungen.</div>';
+    return;
+  }
+
+  list.innerHTML = überweisungCache.approved.map(draft => `
+    <div class="ueberweisung-approved-item" style="padding:8px 12px;background:#f0f0f0;border-radius:6px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>${draft.patient_vorname || ''} ${draft.patient_nachname || ''}</strong>
+          <span style="color:#888;margin-left:8px;">${draft.seans_sayisi || 0} ${t('ueberweisung_seans')}</span>
+        </div>
+        <div style="color:#22c55e;font-size:13px;">✓ ${formatDate(draft.confirmed_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderÜberweisungCard(draft) {
+  const hausbesuchBadge = draft.hausbesuch
+    ? '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:12px;font-size:11px;">🏠 Hausbesuch</span>'
+    : '';
+
+  return `
+    <div class="ueberweisung-card" data-id="${draft.id}" data-image-url="${draft.image_url || ''}" style="
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:16px;
+      margin-bottom:12px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.1);
+    ">
+      <div style="display:flex;gap:16px;">
+        <!-- Sol: Form Data -->
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <h3 style="font-size:16px;font-weight:600;margin:0;">
+              ${draft.patient_vorname || '?'} ${draft.patient_nachname || ''}
+            </h3>
+            ${hausbesuchBadge}
+          </div>
+          
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13px;">
+            <div>
+              <span style="color:#6b7280;">${t('ueberweisung_seans')}:</span>
+              <strong>${draft.seans_sayisi || '-'}</strong>
+            </div>
+            <div>
+              <span style="color:#6b7280;">Tedavi:</span>
+              <strong>${draft.tedavi_turu || '-'}</strong>
+            </div>
+            <div>
+              <span style="color:#6b7280;">${t('ueberweisung_diagnose')}:</span>
+              <strong>${draft.diagnose || '-'}</strong>
+            </div>
+            <div>
+              <span style="color:#6b7280;">Doktor:</span>
+              <strong>${draft.arzt_name || '-'}</strong>
+            </div>
+          </div>
+          
+          <div style="margin-top:12px;">
+            <label style="font-size:12px;color:#6b7280;display:block;margin-bottom:4px;">${t('ueberweisung_select_patient')}</label>
+            <select class="form-select ueberweisung-patient-select" data-draft-id="${draft.id}" style="font-size:13px;">
+              <option value="">-- Patient auswählen --</option>
+            </select>
+          </div>
+          
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="btn-primary ueberweisung-confirm-btn" style="flex:1;">
+              ✓ ${t('ueberweisung_confirm')}
+            </button>
+            <button class="btn-ghost ueberweisung-reject-btn" style="color:#ef4444;">
+              ✗ ${t('ueberweisung_reject')}
+            </button>
+          </div>
+        </div>
+        
+        <!-- Sağ: Görsel Önizleme -->
+        <div style="width:120px;flex-shrink:0;">
+          ${draft.image_url
+      ? `<img src="${draft.image_url}" alt="Überweisung" style="width:120px;height:160px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;cursor:pointer;" class="ueberweisung-preview-btn" />`
+      : `<div style="width:120px;height:160px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;text-align:center;">Kein Bild</div>`
+    }
+          ${draft.image_url ? `<button class="btn-ghost ueberweisung-preview-btn" style="width:100%;margin-top:4px;font-size:11px;padding:4px;">${t('ueberweisung_preview')}</button>` : ''}
+        </div>
+      </div>
+      
+      <div style="margin-top:8px;font-size:11px;color:#9ca3af;">
+        📅 ${formatDate(draft.created_at)}
+      </div>
+    </div>
+  `;
+}
+
+async function confirmÜberweisung(draftId) {
+  const card = document.querySelector(`.ueberweisung-card[data-id="${draftId}"]`);
+  const patientSelect = card?.querySelector('.ueberweisung-patient-select');
+  const leadId = patientSelect?.value;
+
+  if (!leadId) {
+    showToast(t('ueberweisung_select_patient'), 'error');
+    return;
+  }
+
+  const ownerId = getOwnerId();
+
+  // confirm_referral_and_create_series fonksiyonunu çağır
+  const { data, error } = await supabase.rpc('confirm_referral_and_create_series', {
+    p_draft_id: draftId,
+    p_lead_id: leadId,
+    p_confirmed_by: ownerId
+  });
+
+  if (error) {
+    console.error('Confirm error:', error);
+    showToast(t('err_generic'), 'error');
+    return;
+  }
+
+  showToast(t('ueberweisung_confirmed'));
+  await loadÜberweisung();
+}
+
+async function rejectÜberweisung(draftId) {
+  if (!confirm('Überweisung wirklich ablehnen?')) return;
+
+  const { error } = await supabase
+    .from('referral_drafts')
+    .update({ status: 'rejected', is_confirmed: false })
+    .eq('id', draftId);
+
+  if (error) {
+    showToast(t('err_generic'), 'error');
+    return;
+  }
+
+  showToast(t('ueberweisung_rejected'));
+  await loadÜberweisung();
+}
+
+function openImagePreview(url) {
+  // Modal aç
+  let modal = document.getElementById('imagePreviewModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'imagePreviewModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+    modal.innerHTML = '<img id="imagePreviewContent" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px;" />';
+    modal.addEventListener('click', () => modal.hidden = true);
+    document.body.appendChild(modal);
+  }
+  document.getElementById('imagePreviewContent').src = url;
+  modal.hidden = false;
+}
+
+// Refresh button
+document.getElementById('ueberweisungRefreshBtn')?.addEventListener('click', loadÜberweisung);
 
 async function loadAnamnese() {
   const ownerId = getOwnerId();

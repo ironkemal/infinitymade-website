@@ -1,0 +1,299 @@
+{
+    "name": "Überweisung Automation - Physio (VPS Storage)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "referral-upload",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "id": "webhook-trigger",
+            "name": "Webhook - Fotoğraf Al",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                250,
+                300
+            ],
+            "typeVersion": 1
+        },
+        {
+            "parameters": {
+                "command": "mkdir -p /home/n8n/referrals/{{ $json.body.business_id }}",
+                "note": "Business ID klasörü oluştur"
+            },
+            "id": "create-dir",
+            "name": "Dizin Oluştur",
+            "type": "n8n-nodes-base.executeCommand",
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "command": "cat > /home/n8n/referrals/{{ $json.body.business_id }}/referral_{{ $json.dateNow }}_{{ $json.uuid }}.jpg",
+                "note": "Dosyayı VPS'e kaydet"
+            },
+            "id": "write-file",
+            "name": "Write Binary File",
+            "type": "n8n-nodes-base.writeBinaryFile",
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "// Generate filename and public URL\nconst businessId = $input.first().json.body.business_id;\nconst dateNow = $input.first().json.dateNow;\nconst uuid = $input.first().json.uuid;\nconst filename = `referral_${dateNow}_${uuid}.jpg`;\n\n// Public URL for the image server workflow\nconst publicUrl = `https://n8n.infinitymade.de/webhook/referral-image?business_id=${businessId}&filename=${filename}`;\n\n// Local VPS path for AI vision\nconst vpsPath = `/home/n8n/referrals/${businessId}/${filename}`;\n\nreturn {\n  json: {\n    ...$input.first().json,\n    filename: filename,\n    vpsFilePath: vpsPath,\n    imageUrl: publicUrl\n  }\n};"
+            },
+            "id": "set-public-url",
+            "name": "Set Public URL",
+            "type": "n8n-nodes-base.function",
+            "position": [
+                750,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://openrouter.ai/api/v1/chat/completions",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer {{ $env.OPENROUTER_API_KEY }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "model",
+                            "value": "google/gemini-2.0-flash-thinking:free"
+                        },
+                        {
+                            "name": "messages",
+                            "value": [
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "text",
+                                        "text": "Du bist ein medizinischer Assistent. Analysiere das hochgeladene Überweisungsdokument und extrahiere die folgenden Informationen:\n\n1. Patientenvorname (Vorname)\n2. Patientennachname (Nachname)  \n3. Geburtsdatum (Format: YYYY-MM-DD)\n4. Anzahl der Sitzungen (seans_sayisi)\n5. Behandlungsart (tedavi_turu)\n6. Hausbesuch (ja/nein)\n7. Diagnose\n8. Arztname (falls vorhanden)\n\nAntworte NUR im JSON-Format:\n```json\n{\n  \"ad\": \"Vorname\",\n  \"soyad\": \"Nachname\",\n  \"dogum_tarihi\": \"YYYY-MM-DD\",\n  \"seans_sayisi\": 6,\n  \"tedavi_turu\": \"Physiotherapie\",\n  \"hausbesuch\": false,\n  \"diagnose\": \"Rückenschmerzen\",\n  \"arzt_name\": \"Dr. Müller\"\n}\n```\n\nWICHTIG: \n- Antworte NUR mit gültigem JSON, keine Erklärungen\n- Wenn du dir bei einem Feld nicht sicher bist, setze es auf null\n- Das Geburtsdatum muss im Format YYYY-MM-DD sein\n- Zero Retention: Diese Daten werden NICHT für Training verwendet"
+                                    }
+                                },
+                                {
+                                    "role": "user",
+                                    "content": {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": "={{ $json.imageUrl }}"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "ai-vision",
+            "name": "OpenRouter - Gemini Vision",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "// JSON Parse\nconst response = $input.first().json;\n\n// AI yanıtından JSON çıkar\nlet aiContent = response.choices?.[0]?.message?.content || '';\n\n\n// Markdown kod bloklarını temizle\naiContent = aiContent.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\n\nlet parsedData;\ntry {\n  parsedData = JSON.parse(aiContent);\n} catch (e) {\n  throw new Error('AI response is not valid JSON: ' + aiContent);\n}\n\n\nreturn {\n  json: {\n    ...$input.first().json,\n    parsedData: parsedData\n  }\n};"
+            },
+            "id": "parse-json",
+            "name": "JSON Parse",
+            "type": "n8n-nodes-base.function",
+            "position": [
+                1000,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "https://njvuclullotbksskpwgk.supabase.co/rest/v1/referral_drafts",
+                "method": "POST",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "{{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        },
+                        {
+                            "name": "Prefer",
+                            "value": "return=representation"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "owner_id",
+                            "value": "={{ $json.body.business_id }}"
+                        },
+                        {
+                            "name": "raw_ai_data",
+                            "value": "={{ $json.aiResponse }}"
+                        },
+                        {
+                            "name": "patient_vorname",
+                            "value": "={{ $json.parsedData.ad }}"
+                        },
+                        {
+                            "name": "patient_nachname",
+                            "value": "={{ $json.parsedData.soyad }}"
+                        },
+                        {
+                            "name": "patient_geburtsdatum",
+                            "value": "={{ $json.parsedData.dogum_tarihi }}"
+                        },
+                        {
+                            "name": "seans_sayisi",
+                            "value": "={{ $json.parsedData.seans_sayisi }}"
+                        },
+                        {
+                            "name": "tedavi_turu",
+                            "value": "={{ $json.parsedData.tedavi_turu }}"
+                        },
+                        {
+                            "name": "hausbesuch",
+                            "value": "={{ $json.parsedData.hausbesuch }}"
+                        },
+                        {
+                            "name": "diagnose",
+                            "value": "={{ $json.parsedData.diagnose }}"
+                        },
+                        {
+                            "name": "arzt_name",
+                            "value": "={{ $json.parsedData.arzt_name }}"
+                        },
+                        {
+                            "name": "image_url",
+                            "value": "={{ $json.imageUrl }}"
+                        },
+                        {
+                            "name": "status",
+                            "value": "pending"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "db-insert",
+            "name": "Supabase - Kaydet",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1200,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "webhook-trigger": {
+            "main": [
+                [
+                    {
+                        "node": "create-dir",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "create-dir": {
+            "main": [
+                [
+                    {
+                        "node": "write-file",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "write-file": {
+            "main": [
+                [
+                    {
+                        "node": "set-public-url",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "set-public-url": {
+            "main": [
+                [
+                    {
+                        "node": "ai-vision",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "ai-vision": {
+            "main": [
+                [
+                    {
+                        "node": "parse-json",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "parse-json": {
+            "main": [
+                [
+                    {
+                        "node": "db-insert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "staticData": null,
+    "tags": [
+        "physio",
+        "referral",
+        "automation",
+        "vps"
+    ],
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "templateId": "referral-automation-physio-vps"
+    }
+}
