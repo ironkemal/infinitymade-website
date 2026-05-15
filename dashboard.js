@@ -365,21 +365,6 @@ let pdCurrentLeadId = null;
       });
       return;
     }
-    // Owner onboarding guard: must complete onboarding before entering dashboard
-    if (currentProfile.role === 'owner' && currentProfile.onboarding_step && currentProfile.onboarding_step !== 'done') {
-      console.log('[boot] redirecting owner with incomplete onboarding:', currentProfile.onboarding_step);
-      window.location.href = 'onboarding.html';
-      return;
-    }
-    // Owner without a sector: this happens if account was created outside of onboarding.
-    // Drop into onboarding so they can pick a sector and business name.
-    if (currentProfile.role === 'owner' && !currentProfile.sector) {
-      console.log('[boot] owner has no sector, sending to onboarding');
-      await supabase.from('profiles').update({ onboarding_step: 'business' }).eq('id', currentSession.user.id);
-      window.location.href = 'onboarding.html';
-      return;
-    }
-
     if (currentProfile.role === 'employee' && currentProfile.approval_status === 'rejected') {
       await supabase.auth.signOut();
       alert('Ihr Konto wurde abgelehnt.');

@@ -84,27 +84,13 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
 applyLang();
 
 const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
-function routeAfterLogin(profile) {
-  if (!profile) return 'dashboard.html';
-  // If onboarding_step is null/undefined/empty or 'done', go to dashboard
-  if (profile.role === 'owner' && profile.onboarding_step && profile.onboarding_step !== 'done' && profile.onboarding_step !== '') {
-    return 'onboarding.html';
-  }
-  return 'dashboard.html';
-}
-
 const { data: { session } } = await supabase.auth.getSession();
 if (session) {
   if (session.user.id === ADMIN_UUID) { window.location.href = 'admin.html'; }
   else {
-    const { data: profileData, error } = await supabase.from('profiles').select('role, onboarding_step, sector, company_code').eq('id', session.user.id).single();
-    console.log('[login] profile query result:', profileData, error);
-    if (error) {
-      // If profile query fails, still go to dashboard (don't redirect to onboarding)
-      window.location.href = 'dashboard.html';
-    } else {
-      window.location.href = routeAfterLogin(profileData);
-    }
+    const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    if (data && data.role === 'employee') window.location.href = 'dashboard.html';
+    else window.location.href = 'dashboard.html';
   }
 }
 const msg = document.getElementById('message');
@@ -138,15 +124,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     return;
   }
 
+  const { data } = await supabase.from('profiles').select('role').eq('id', (await supabase.auth.getUser()).data.user.id).single();
   const user = (await supabase.auth.getUser()).data.user;
   if (user && user.id === ADMIN_UUID) { window.location.href = 'admin.html'; return; }
-  const { data: profileData, error: profileErr } = await supabase.from('profiles').select('role, onboarding_step, sector, company_code').eq('id', user.id).single();
-  console.log('[login] form submit profile result:', profileData, profileErr);
-  if (profileErr) {
-    window.location.href = 'dashboard.html';
-  } else {
-    window.location.href = routeAfterLogin(profileData);
-  }
+  if (data && data.role === 'employee') window.location.href = 'dashboard.html';
+  else window.location.href = 'dashboard.html';
 });
 
 document.getElementById('forgotLink').addEventListener('click', async (e) => {
