@@ -1,0 +1,410 @@
+{
+  "C:\\Users\\Test\\Desktop\\claude\\website\\admin.js": {
+    "mtime": 1778596594.7108474,
+    "hash": "0a5b5d108303752d825f33a62eb81f19"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\booking.js": {
+    "mtime": 1778710661.934931,
+    "hash": "17af092a1d065a5f0e97daf85881ff66"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\calendar-widget.js": {
+    "mtime": 1778576505.8556058,
+    "hash": "d1f59865cdff3466f71c7408f78f9083"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\dashboard.js": {
+    "mtime": 1778713199.2238941,
+    "hash": "6dff11726f7b4abe98ab6fddc7918a57"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_custom_days.sql": {
+    "mtime": 1778607791.0392332,
+    "hash": "c4395a337a16e70c924dad291c420f0b"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_pending_signups.sql": {
+    "mtime": 1778607428.1914017,
+    "hash": "e71e6d5e64b2e5bc3be72f213d14f94d"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_setup.sql": {
+    "mtime": 1778284323.2988741,
+    "hash": "a75b53e21574ed634db0ec304b137afc"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v10_ueberweisung_automation.sql": {
+    "mtime": 1778712870.9731097,
+    "hash": "fe2ef032fed54ead78ff3ffacb359f19"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v2.sql": {
+    "mtime": 1778287924.1516297,
+    "hash": "08939f3b7d4e54c0c68e9f189de202c4"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v3_concurrency.sql": {
+    "mtime": 1778332719.0602963,
+    "hash": "6bc3a3314307004d3132f6a7974a59a0"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v4_sector.sql": {
+    "mtime": 1778520460.2754197,
+    "hash": "03ac5beb932ede8a2e0f5a9d7393639b"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v5_working_hours_owner.sql": {
+    "mtime": 1778608072.0789714,
+    "hash": "b933d0dbc3882e477124761f5214526e"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v6_working_hours_rls.sql": {
+    "mtime": 1778608641.289248,
+    "hash": "3d2609c27f7db1eefbe294c38bc141b4"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v7_custom_days_fix.sql": {
+    "mtime": 1778610659.2157164,
+    "hash": "ebc9aa7383f1057018fc5cacf12ed777"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v8_missing_tables.sql": {
+    "mtime": 1778699843.7048855,
+    "hash": "70b871fc11b31396f3e14fd6894333ba"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\database_v9_series_tracking.sql": {
+    "mtime": 1778711420.0796769,
+    "hash": "72a4c71dabfad54ef4d14af03e79135e"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\employee-signup.js": {
+    "mtime": 1778606821.6770875,
+    "hash": "5a75ae31739537753f6661df572bc733"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\fix_encoding.py": {
+    "mtime": 1778599162.7509186,
+    "hash": "432eaaaa4b256bb3d369f2d3c2ef9950"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\kalender.js": {
+    "mtime": 1778535721.2868276,
+    "hash": "889973b221b4d69e3eafab6c1c01976c"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\login.js": {
+    "mtime": 1778608592.5578365,
+    "hash": "19f35c9a46596eb5ba6220badf74de5e"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\onboarding.js": {
+    "mtime": 1778704886.0800111,
+    "hash": "fc76bf646df71350c5efa51133e46d7c"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\script.js": {
+    "mtime": 1778535841.9300601,
+    "hash": "157197e3c79a9fb4d2cc2b4f485dabc9"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\supabase-config.js": {
+    "mtime": 1778328856.224641,
+    "hash": "06f68b1d2974b54f55e6bd831b35f50d"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\admin\\data.js": {
+    "mtime": 1778596533.8696148,
+    "hash": "525bb39e6a22363592c532c4a6564216"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\admin\\feedbacks.js": {
+    "mtime": 1778579010.2096186,
+    "hash": "cc475d651b62db70d207dfb46b777f67"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\apify\\search.js": {
+    "mtime": 1778532005.5736601,
+    "hash": "fe1ca0bb0d8f8f574f3b1386d193e5df"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\onboarding\\pending.js": {
+    "mtime": 1778607466.0577507,
+    "hash": "98289e126ccd706578c446189343e4f2"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\stripe\\create-checkout-session.js": {
+    "mtime": 1778607522.74239,
+    "hash": "5b3232fb9043659d36c5f5d4ac9e3b9b"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\stripe\\portal-session.js": {
+    "mtime": 1778260088.6816058,
+    "hash": "e49e3148958fdeee8086304d32012cdc"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\stripe\\webhook.js": {
+    "mtime": 1778667190.170082,
+    "hash": "617e872cdf49e6c23c292c59a79a84bb"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\whatsapp\\send-test.js": {
+    "mtime": 1778099237.233269,
+    "hash": "f872f2e9271e17b09a8e1d47696ed19d"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\whatsapp\\subscribe-webhook.js": {
+    "mtime": 1778099225.4507184,
+    "hash": "987d4dffc7fe67190f1633df25ab9aaa"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\_lib\\auth.js": {
+    "mtime": 1778607450.212444,
+    "hash": "a047e8dbd7630ede32dd600c31bc4461"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api\\_lib\\stripe.js": {
+    "mtime": 1778260033.443052,
+    "hash": "d2bcd716662271132bc868d9385ca3ba"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api-backend\\check_db.js": {
+    "mtime": 1778292603.8380675,
+    "hash": "3e9283221e12dfec35fe4cfe46a17983"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api-backend\\fix_db.js": {
+    "mtime": 1778291630.774091,
+    "hash": "dcb614c51080b6902ea493233c371aff"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api-backend\\server.js": {
+    "mtime": 1778711486.3535957,
+    "hash": "4e11c7a6cb38335c67905e90ef3c654f"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api-backend\\test_schema.js": {
+    "mtime": 1778291302.9862142,
+    "hash": "1bd177df6ae275953f6aacc28bf9255e"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\lib\\supabase.js": {
+    "mtime": 1778709231.7141323,
+    "hash": "b8f81820f7d1dff6d250730bddba7417"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\admin.html": {
+    "mtime": 1778603486.4121215,
+    "hash": "f4d7c8f6ff765f8a547504e5bd957dbf"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\agb.html": {
+    "mtime": 1778601038.4665709,
+    "hash": "84fadfa18442d721139c99064512c3ec"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\AGENT_PROMPTS.md": {
+    "mtime": 1778665871.0317445,
+    "hash": "ba4321f83dd844275aef9e21f2380ab5"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\booking.html": {
+    "mtime": 1778703173.6286187,
+    "hash": "66d7e5fc9584d9cb40969ddf9ff737b8"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\bunu_yapamadiklarim.md": {
+    "mtime": 1778679100.751063,
+    "hash": "f387e4425096ed09276d3c45c29d1902"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\CLAUDE.md": {
+    "mtime": 1778331159.9263656,
+    "hash": "ab3cda52d7d9f85cdea6d76a3a99fc77"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\dashboard.html": {
+    "mtime": 1778713066.2627833,
+    "hash": "83dc6edecccb6112666a2606d9626c8f"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\DASHBOARD_REDESIGN_PLAN.md": {
+    "mtime": 1778423413.093467,
+    "hash": "c759263952dd76eacd73180ec1e63914"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\DATA_OPTIMIZATION_REPORT.md": {
+    "mtime": 1778709166.7607129,
+    "hash": "106c46baf6d887c1e25f628cbcd30c87"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\datenschutz.html": {
+    "mtime": 1778601038.497569,
+    "hash": "3b2ea76fa68ca7980536952034e3ee98"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\DEPLOY_BOOTSTRAP.md": {
+    "mtime": 1778335223.870671,
+    "hash": "5652a098d4503fd3c1fda989f6e840ed"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\docker-compose-n8n-referrals.yml": {
+    "mtime": 1778714831.3642366,
+    "hash": "27957dd22be99bd7a2976927df9953cb"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\dpa.html": {
+    "mtime": 1778601038.4995694,
+    "hash": "b196306cd4a56d3fa7bf11c05aa52cff"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\employee-signup.html": {
+    "mtime": 1778606765.389853,
+    "hash": "9f624182369be4b06827f741705bdc03"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\HANDOFF.md": {
+    "mtime": 1778428644.6093068,
+    "hash": "d5b17611271d48c36dd779032c294ebb"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\impressum.html": {
+    "mtime": 1778601038.5075703,
+    "hash": "16ee8331a1c237ad3d139050a150705a"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\index.html": {
+    "mtime": 1778601580.7934675,
+    "hash": "ec7852c72cc3f952e38d8b3c0debb064"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\infinitymade.md": {
+    "mtime": 1776202010.902739,
+    "hash": "de063f5a97339545dd549d21c6d2d1cc"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\INFINITYMADE_DASHBOARD.md": {
+    "mtime": 1777641342.923487,
+    "hash": "097b02a91680998c430c185283b954a3"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\infinitymade_pricing_prompt.md": {
+    "mtime": 1777333370.9205487,
+    "hash": "17f9880f29e09ca6c0c0b72266c8b540"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\infinitymade_v2.md": {
+    "mtime": 1777332701.655678,
+    "hash": "85038c48bac4f027fb1f2a72c762f6e2"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\INFRASTRUCTURE.md": {
+    "mtime": 1778429684.5459335,
+    "hash": "a01786b39edd856e24c79a426bd68db8"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\kalender.html": {
+    "mtime": 1778293067.0228066,
+    "hash": "2fc1dee082b261803707362a953ef167"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\llms.txt": {
+    "mtime": 1778581832.1048002,
+    "hash": "ee507abfd60dc82209baa13caf0caab3"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\login.html": {
+    "mtime": 1778601366.3455665,
+    "hash": "e6d13ce93dccf99c66cb78f8d5e0bc82"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\N8N_MIGRATION.md": {
+    "mtime": 1778334376.940708,
+    "hash": "2b4acb8684491d7930507beb107372e9"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\onboarding.html": {
+    "mtime": 1778682498.9276278,
+    "hash": "4046340295b93b363a37752c10499051"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\PRAXISAI_UPGRADE_CHEATSHEET.md": {
+    "mtime": 1777977179.9972646,
+    "hash": "34111b58ed480e11d9b5e8802e69dd2d"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\referrals-traefik.yml": {
+    "mtime": 1778714819.9356155,
+    "hash": "fe756f7a3e30c425915a776891d58ed3"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\robots.txt": {
+    "mtime": 1778250076.2018843,
+    "hash": "c78bf02130a550b26cfd2ea2b470d281"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\STRIPE_SETUP.md": {
+    "mtime": 1778260298.9872606,
+    "hash": "2daa1ca0b602b6d010cc114355bc3434"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\TODO_MANUEL.md": {
+    "mtime": 1778601072.1932554,
+    "hash": "588d879160ddf378cdd8a902471019d2"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\UEBERWEISUNG_SETUP.md": {
+    "mtime": 1778715127.281097,
+    "hash": "dc873ca8490fc57be182660155423a26"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\upload-ueberweisung.html": {
+    "mtime": 1778713241.6132588,
+    "hash": "fc6fcab3165923b6a3660ba26ac609d2"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\webdesign-bonn.html": {
+    "mtime": 1778601366.3765697,
+    "hash": "437d5bb6a0870b80c7d5a4d5d2141655"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\webdesign-hennef.html": {
+    "mtime": 1778601366.3775675,
+    "hash": "9dbb18d50087e381d5b2e839f3e48cc9"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\webdesign-koeln.html": {
+    "mtime": 1778601366.3785675,
+    "hash": "dc5dc1870f8db0228ead04c1656a412d"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\webdesign-siegburg.html": {
+    "mtime": 1778601038.542214,
+    "hash": "f52786dc1f4405ee961453cdef8d876b"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\webdesign-troisdorf.html": {
+    "mtime": 1778601366.3815684,
+    "hash": "4854fedfd8e77733d49928ddd1e84e06"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\whatsapp-bot-fitness.html": {
+    "mtime": 1778601366.3825693,
+    "hash": "88e1f7565e3a841cc0b0c3506ac2bd3e"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\whatsapp-bot-friseur.html": {
+    "mtime": 1778601366.383569,
+    "hash": "96a1a21a87e61f7ece8bfeed7ce0b8aa"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\whatsapp-bot-physiotherapie.html": {
+    "mtime": 1778601366.3845687,
+    "hash": "4c0e932ff265951fd6942714dc494261"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\whatsapp-bot-restaurant.html": {
+    "mtime": 1778601785.5269535,
+    "hash": "5adb18411d7724487bf35b8f4aaceaea"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\widerruf.html": {
+    "mtime": 1778601038.5502138,
+    "hash": "e2bb00505c71ed72dc765408416412dc"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\YAPAMADIKLARIM.md": {
+    "mtime": 1778681364.311208,
+    "hash": "e40ce72052a3ac5b5c31a196b7e4268f"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\api-backend\\docker-compose.yml": {
+    "mtime": 1778498717.9632647,
+    "hash": "1c6cf12430b5644e87ddb76fb53564e1"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\blog\\fitnessstudio-mitglieder-digital.html": {
+    "mtime": 1778609221.1339607,
+    "hash": "8b22f3bb76af6f5feeeec665091ff4ac"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\blog\\friseur-whatsapp-terminbuchung.html": {
+    "mtime": 1778609221.141962,
+    "hash": "67163ce34613bd3f8c3a044f508c9f29"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\blog\\handwerker-website-kosten-2025.html": {
+    "mtime": 1778609221.143963,
+    "hash": "4a58103b49851cc821582906b53eb677"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\blog\\index.html": {
+    "mtime": 1778609221.144962,
+    "hash": "d6abba54ea5e949d8a221c35bc7dcb03"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\blog\\restaurant-online-reservierung.html": {
+    "mtime": 1778609221.1462662,
+    "hash": "3cfd9d206716ecb17561eeec9de86f20"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\blog\\webdesign-kosten-kmu-nrw.html": {
+    "mtime": 1778609221.1475995,
+    "hash": "f67169a77d4b18e6dcec0d0ba9a31f0c"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\pakete\\coming-soon.html": {
+    "mtime": 1778609221.1639743,
+    "hash": "a12887472ed02e0c57dec1bc8f92043f"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\pakete\\fitness.html": {
+    "mtime": 1778609221.1650472,
+    "hash": "f98023efb1e1e5d269ad823b704ec81b"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\pakete\\gastro.html": {
+    "mtime": 1778601785.4997146,
+    "hash": "0408e9aa8a064e5fa9e047f5594bd678"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\pakete\\handwerker.html": {
+    "mtime": 1778601785.5017118,
+    "hash": "1f77134a464adcc9ba38257cda0d758f"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\pakete\\physio.html": {
+    "mtime": 1778601785.507687,
+    "hash": "86f0e285b45ad91a68ed152d3c63c64e"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\pakete\\salon.html": {
+    "mtime": 1778601832.2796707,
+    "hash": "1d1bb2704ae3b2b004b90cb12810ede4"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\02_029_51136_Uebertragungsprotokoll_ESt_unbeschraenkt__ESt_1_A__2025__Yavuz_Kemal_Demir.pdf": {
+    "mtime": 1777373630.3043292,
+    "hash": "d1c261d9ffb79b73bab381d8bee0aa4f"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\apple-touch-icon.png": {
+    "mtime": 1778264801.0196338,
+    "hash": "28a5121b499fd60a14ea8fe108d1cca6"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\favicon.svg": {
+    "mtime": 1778259967.448443,
+    "hash": "9af5363a4dd2380d29914768a15653a8"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\logo.png": {
+    "mtime": 1778264867.4701416,
+    "hash": "48cff6c700855a4e1dbc263e497ed660"
+  },
+  "C:\\Users\\Test\\Desktop\\claude\\website\\og-image.png": {
+    "mtime": 1778264736.6131928,
+    "hash": "9ebc84c0387c16f3ed9fef005a408b0b"
+  }
+}

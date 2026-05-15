@@ -86,7 +86,8 @@ applyLang();
 const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
 function routeAfterLogin(profile) {
   if (!profile) return 'dashboard.html';
-  if (profile.role === 'owner' && profile.onboarding_step && profile.onboarding_step !== 'done') {
+  // If onboarding_step is null/undefined/empty or 'done', go to dashboard
+  if (profile.role === 'owner' && profile.onboarding_step && profile.onboarding_step !== 'done' && profile.onboarding_step !== '') {
     return 'onboarding.html';
   }
   return 'dashboard.html';
