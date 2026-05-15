@@ -11,6 +11,13 @@ const T = {
     nav_overview: 'Übersicht', nav_calendar: 'Termine', nav_kunden: 'Kunden Info',
     nav_services: 'Dienstleistungen', nav_hours: 'Arbeitszeiten',
     nav_team: 'Mitarbeiter', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Rechnungen', nav_feedback: 'Feedback', nav_settings: 'Einstellungen',
+    nav_walk_in: 'Warteschlange', walk_in_sub: 'Walk-in Kunden ohne Termin verwalten',
+    walk_in_add: '+ Kunde in Warteschlange', walk_in_empty: 'Niemand wartet aktuell.',
+    walk_in_status_waiting: 'Wartet', walk_in_status_in_progress: 'In Bearbeitung', walk_in_status_done: 'Fertig', walk_in_status_left: 'Gegangen',
+    walk_in_start: 'Bedienen', walk_in_complete: 'Fertig', walk_in_remove: 'Entfernen',
+    approval_pending_title: 'Genehmigung ausstehend', approval_pending_msg: 'Ihre Anmeldung wartet auf Bestätigung durch den Inhaber.',
+    approval_approve: 'Genehmigen', approval_reject: 'Ablehnen', approval_pending_badge: 'Ausstehend',
+    no_show_label: 'Nicht erschienen', no_show_marked: 'Als No-Show markiert.', preferred_stylist: 'Bevorzugter Mitarbeiter',
     overview_sub: 'Ihr heutiger Überblick',
     welcome_text: 'Willkommen',
     kpi_plan: 'Paket', kpi_status: 'Status', kpi_today_bookings: 'Heute', kpi_today_sub: 'Termine', kpi_support: 'Support',
@@ -72,6 +79,13 @@ const T = {
     nav_overview: 'Overview', nav_calendar: 'Appointments', nav_kunden: 'Customers',
     nav_services: 'Services', nav_hours: 'Working Hours',
     nav_team: 'Team', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Invoices', nav_feedback: 'Feedback', nav_settings: 'Settings',
+    nav_walk_in: 'Walk-in Queue', walk_in_sub: 'Manage walk-in customers without an appointment',
+    walk_in_add: '+ Add to queue', walk_in_empty: 'No one is waiting right now.',
+    walk_in_status_waiting: 'Waiting', walk_in_status_in_progress: 'In progress', walk_in_status_done: 'Done', walk_in_status_left: 'Left',
+    walk_in_start: 'Start', walk_in_complete: 'Complete', walk_in_remove: 'Remove',
+    approval_pending_title: 'Approval pending', approval_pending_msg: 'Your account is awaiting approval from the shop owner.',
+    approval_approve: 'Approve', approval_reject: 'Reject', approval_pending_badge: 'Pending',
+    no_show_label: 'No-show', no_show_marked: 'Marked as no-show.', preferred_stylist: 'Preferred employee',
     overview_sub: 'Your daily overview',
     welcome_text: 'Welcome',
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
@@ -131,6 +145,13 @@ const T = {
     nav_overview: 'Genel Bakış', nav_calendar: 'Randevular', nav_kunden: 'Müşteri Bilgisi',
     nav_services: 'Hizmetler', nav_hours: 'Çalışma Saatleri',
     nav_team: 'Personel', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Faturalar', nav_feedback: 'Geri Bildirim', nav_settings: 'Ayarlar',
+    nav_walk_in: 'Sıra', walk_in_sub: 'Randevusuz gelen müşterileri yönetin',
+    walk_in_add: '+ Sıraya ekle', walk_in_empty: 'Şu anda bekleyen yok.',
+    walk_in_status_waiting: 'Bekliyor', walk_in_status_in_progress: 'Hizmette', walk_in_status_done: 'Tamamlandı', walk_in_status_left: 'Ayrıldı',
+    walk_in_start: 'Başla', walk_in_complete: 'Tamamla', walk_in_remove: 'Kaldır',
+    approval_pending_title: 'Onay bekleniyor', approval_pending_msg: 'Hesabınız patron onayını bekliyor.',
+    approval_approve: 'Onayla', approval_reject: 'Reddet', approval_pending_badge: 'Bekliyor',
+    no_show_label: 'Gelmedi', no_show_marked: 'No-show olarak işaretlendi.', preferred_stylist: 'Tercih edilen personel',
     overview_sub: 'Günlük genel bakışınız',
     welcome_text: 'Hoşgeldin',
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
@@ -204,14 +225,33 @@ const PLAN_FEATURES = {
   }
 };
 
+// Access matrix:
+//   - Dienstleistungen + Mitarbeiter: owner-only (employees don't see price/service config or team mgmt)
+//   - Übersicht/Termine/Kunden: both roles see WHOLE shop (cover for absent colleagues)
+//   - Rechnungen/B2B/B2C/Feedback: both, but RLS at DB filters employees to their own rows
+//   - Walk-in queue (berber extra): both roles, shared shop view
 const SECTOR_PANELS = {
   default: [
     { id: 'overview', icon: '📊', key: 'nav_overview', roles: ['owner', 'employee'] },
     { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
     { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
-    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner', 'employee'] },
+    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner'] },
     { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
-    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
+    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner'] },
+    { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
+    { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
+    { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
+    { id: 'feedback', icon: '💬', key: 'nav_feedback', roles: ['owner', 'employee'] },
+    { id: 'settings', icon: '⚙️', key: 'nav_settings', roles: ['owner', 'employee'] }
+  ],
+  barber: [
+    { id: 'overview', icon: '📊', key: 'nav_overview', roles: ['owner', 'employee'] },
+    { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
+    { id: 'walk_in', icon: '🚶', key: 'nav_walk_in', roles: ['owner', 'employee'] },
+    { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
+    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner'] },
+    { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
+    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner'] },
     { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
     { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
@@ -223,9 +263,9 @@ const SECTOR_PANELS = {
     { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
     { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
     { id: 'notizen', icon: '📝', key: 'nav_notizen', roles: ['owner', 'employee'] },
-    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner', 'employee'] },
+    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner'] },
     { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
-    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
+    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner'] },
     { id: 'doctors', icon: '🏥', key: 'nav_doctors', roles: ['owner', 'employee'] },
     { id: 'anamnese', icon: '📝', key: 'nav_anamnese', roles: ['owner', 'employee'] },
     { id: 'ueberweisung', icon: '📋', key: 'nav_ueberweisung', roles: ['owner', 'employee'] },
@@ -241,9 +281,9 @@ const SECTOR_PANELS = {
     { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
     { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
     { id: 'notizen', icon: '📝', key: 'nav_notizen', roles: ['owner', 'employee'] },
-    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner', 'employee'] },
+    { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner'] },
     { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
-    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
+    { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner'] },
     { id: 'doctors', icon: '🏥', key: 'nav_doctors', roles: ['owner', 'employee'] },
     { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
     { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
@@ -252,6 +292,14 @@ const SECTOR_PANELS = {
     { id: 'settings', icon: '⚙️', key: 'nav_settings', roles: ['owner', 'employee'] }
   ]
 };
+
+// If user has a sector that has no explicit panel definition, fall back to barber if they're a barber-like business
+function resolvePanelKey(sector) {
+  if (SECTOR_PANELS[sector]) return sector;
+  // Barber-like sectors (beauty, nails, tattoo, spa, massage, gym) → barber template
+  if (['beauty', 'nails', 'tattoo', 'spa', 'massage', 'gym'].includes(sector)) return 'barber';
+  return 'default';
+}
 
 const DAYS = {
   de: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
@@ -300,6 +348,30 @@ let pdCurrentLeadId = null;
     currentProfile = profile || { id: session.user.id, email: session.user.email, plan: 'starter', role: 'owner', is_active: true };
     if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
 
+    // Approval gate: employees with pending approval cannot access the dashboard
+    if (currentProfile.role === 'employee' && currentProfile.approval_status === 'pending') {
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f1115;color:#fff;font-family:system-ui,sans-serif;padding:20px;">
+          <div style="max-width:480px;text-align:center;background:#1a1d24;padding:40px;border-radius:16px;border:1px solid #2a2e3a;">
+            <div style="font-size:56px;margin-bottom:16px;">⏳</div>
+            <h2 style="margin:0 0 12px;color:#fbbf24;">${t('approval_pending_title')}</h2>
+            <p style="color:#9ca3af;line-height:1.6;margin:0 0 24px;">${t('approval_pending_msg')}</p>
+            <button id="approvalLogout" style="background:#374151;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;">${t('logout')}</button>
+          </div>
+        </div>`;
+      document.getElementById('approvalLogout').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+      });
+      return;
+    }
+    if (currentProfile.role === 'employee' && currentProfile.approval_status === 'rejected') {
+      await supabase.auth.signOut();
+      alert('Ihr Konto wurde abgelehnt.');
+      window.location.href = 'login.html';
+      return;
+    }
+
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
       const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector').eq('id', currentProfile.owner_id).maybeSingle();
       if (ownerErr) console.error('[ownerProfile]', ownerErr);
@@ -336,7 +408,7 @@ function getSector() {
 }
 function getSidebarItems() {
   const sector = getSector();
-  return SECTOR_PANELS[sector] || SECTOR_PANELS.default;
+  return SECTOR_PANELS[resolvePanelKey(sector)] || SECTOR_PANELS.default;
 }
 
 function applyI18n() {
@@ -412,7 +484,7 @@ async function switchPanel(id) {
   if (id === 'kunden') loadLeads();
   if (id === 'services') loadServices();
   if (id === 'hours') loadHoursPanel();
-  if (id === 'team') loadTeam();
+  if (id === 'team') { loadTeam(); loadPendingEmployees(); }
   if (id === 'b2b') { loadB2B(); checkB2bSetup(); }
   if (id === 'b2c') { loadB2C(); checkB2cSetup(); }
   if (id === 'settings') loadSettings();
@@ -422,7 +494,180 @@ async function switchPanel(id) {
   if (id === 'rechnungen') loadRechnungen();
   if (id === 'anamnese') loadAnamnese();
   if (id === 'ueberweisung') loadÜberweisung();
+  if (id === 'walk_in') loadWalkInQueue();
 }
+
+// ============================================================
+// Walk-in Queue (berber extra)
+// ============================================================
+async function loadWalkInQueue() {
+  const ownerId = getOwnerId();
+  const list = document.getElementById('walkInList');
+  if (!list) return;
+  const { data, error } = await supabase
+    .from('walk_in_queue')
+    .select('*, services(title, duration_minutes), assigned_employee:assigned_employee_id(id, owner_first_name, owner_last_name, email)')
+    .eq('owner_id', ownerId)
+    .in('status', ['waiting', 'in_progress'])
+    .order('position', { ascending: true });
+  if (error) { console.error('[walk_in]', error); list.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`; return; }
+  if (!data || data.length === 0) {
+    list.innerHTML = `<div class="empty" style="text-align:center;padding:40px;color:#888;">${t('walk_in_empty')}</div>`;
+    return;
+  }
+  list.innerHTML = data.map((w, i) => {
+    const empName = w.assigned_employee
+      ? (w.assigned_employee.owner_first_name ? `${w.assigned_employee.owner_first_name} ${w.assigned_employee.owner_last_name || ''}` : w.assigned_employee.email)
+      : '—';
+    const svcName = w.services?.title || '—';
+    const isWaiting = w.status === 'waiting';
+    return `
+      <div class="card walk-in-card" style="display:flex;align-items:center;gap:16px;padding:12px;margin-bottom:8px;background:#1a1d24;border-radius:10px;border:1px solid #2a2e3a;">
+        <div style="font-size:20px;font-weight:600;color:#3b82f6;min-width:32px;">${i + 1}.</div>
+        <div style="flex:1;">
+          <div style="font-weight:600;">${escapeHtml(w.customer_name)}</div>
+          <div style="font-size:13px;color:#9ca3af;">${escapeHtml(svcName)} · ${escapeHtml(empName)} · ⏱ ${w.estimated_minutes || 30}min</div>
+          ${w.customer_phone ? `<div style="font-size:12px;color:#6b7280;">📞 ${escapeHtml(w.customer_phone)}</div>` : ''}
+        </div>
+        <span class="badge ${isWaiting ? 'badge-yellow' : 'badge-green'}">${t('walk_in_status_' + w.status)}</span>
+        <div style="display:flex;gap:8px;">
+          ${isWaiting ? `<button class="btn btn-sm btn-primary" onclick="window.walkInAction('${w.id}', 'in_progress')">${t('walk_in_start')}</button>` : ''}
+          ${w.status === 'in_progress' ? `<button class="btn btn-sm btn-success" onclick="window.walkInAction('${w.id}', 'done')">${t('walk_in_complete')}</button>` : ''}
+          <button class="btn btn-sm btn-ghost" onclick="window.walkInAction('${w.id}', 'left')">${t('walk_in_remove')}</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+window.walkInAction = async function(id, status) {
+  const patch = { status };
+  if (status === 'in_progress') patch.started_at = new Date().toISOString();
+  if (status === 'done' || status === 'left') patch.done_at = new Date().toISOString();
+  const { error } = await supabase.from('walk_in_queue').update(patch).eq('id', id);
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast(t('saved'));
+  await loadWalkInQueue();
+};
+
+window.openWalkInModal = async function() {
+  const modal = document.getElementById('walkInModal');
+  if (!modal) return;
+  // Populate service + employee dropdowns
+  const ownerId = getOwnerId();
+  const svcSel = document.getElementById('walkInService');
+  const empSel = document.getElementById('walkInEmployee');
+  if (svcSel) {
+    const { data: svcs } = await supabase.from('services').select('id, title, duration_minutes')
+      .or(`user_id.eq.${ownerId},owner_id.eq.${ownerId}`);
+    svcSel.innerHTML = '<option value="">—</option>' + (svcs || []).map(s =>
+      `<option value="${s.id}" data-dur="${s.duration_minutes || 30}">${escapeHtml(s.title)} (${s.duration_minutes || 30}min)</option>`
+    ).join('');
+    svcSel.onchange = () => {
+      const opt = svcSel.options[svcSel.selectedIndex];
+      const dur = opt?.dataset.dur;
+      const minEl = document.getElementById('walkInMinutes');
+      if (dur && minEl) minEl.value = dur;
+    };
+  }
+  if (empSel) {
+    // Team list = owner + employees of this tenant
+    const { data: team } = await supabase.from('profiles').select('id, email, owner_first_name, owner_last_name, role')
+      .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`)
+      .eq('approval_status', 'approved');
+    empSel.innerHTML = '<option value="">—</option>' + (team || []).map(p => {
+      const name = p.owner_first_name ? `${p.owner_first_name} ${p.owner_last_name || ''}` : p.email;
+      return `<option value="${p.id}">${escapeHtml(name)}</option>`;
+    }).join('');
+    // Default to current user
+    empSel.value = currentSession.user.id;
+  }
+  modal.hidden = false;
+};
+
+window.addToWalkInQueue = async function() {
+  const name = document.getElementById('walkInName').value.trim();
+  const phone = document.getElementById('walkInPhone').value.trim();
+  const serviceId = document.getElementById('walkInService').value || null;
+  const empId = document.getElementById('walkInEmployee').value || null;
+  const mins = parseInt(document.getElementById('walkInMinutes').value, 10) || 30;
+  if (!name) { showToast('Name erforderlich', 'error'); return; }
+  const ownerId = getOwnerId();
+  const { error } = await supabase.from('walk_in_queue').insert({
+    owner_id: ownerId,
+    customer_name: name,
+    customer_phone: phone || null,
+    service_id: serviceId,
+    assigned_employee_id: empId,
+    estimated_minutes: mins,
+    status: 'waiting'
+  });
+  if (error) { showToast(error.message, 'error'); return; }
+  document.getElementById('walkInModal').hidden = true;
+  ['walkInName', 'walkInPhone'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  showToast(t('saved'));
+  await loadWalkInQueue();
+};
+
+// ============================================================
+// Employee Approval (owner sees pending in Mitarbeiter panel)
+// ============================================================
+async function loadPendingEmployees() {
+  if (currentProfile.role !== 'owner') return;
+  const container = document.getElementById('pendingEmployeesList');
+  if (!container) return;
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, owner_first_name, owner_last_name, invited_at, approval_status')
+    .eq('owner_id', currentSession.user.id)
+    .eq('approval_status', 'pending');
+  if (error) { console.error('[pending_emps]', error); return; }
+  if (!data || data.length === 0) {
+    container.innerHTML = '';
+    const section = document.getElementById('pendingEmployeesSection');
+    if (section) section.hidden = true;
+    return;
+  }
+  const section = document.getElementById('pendingEmployeesSection');
+  if (section) section.hidden = false;
+  container.innerHTML = data.map(p => {
+    const name = p.owner_first_name ? `${p.owner_first_name} ${p.owner_last_name || ''}` : p.email;
+    const since = p.invited_at ? new Date(p.invited_at).toLocaleDateString('de-DE') : '';
+    return `
+      <div class="card" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;background:#1a1d24;border:1px solid #fbbf24;border-radius:10px;">
+        <div style="flex:1;">
+          <div style="font-weight:600;">${escapeHtml(name)}</div>
+          <div style="font-size:13px;color:#9ca3af;">${escapeHtml(p.email)} · ${since}</div>
+        </div>
+        <span class="badge badge-yellow">${t('approval_pending_badge')}</span>
+        <button class="btn btn-sm btn-success" onclick="window.approveEmployee('${p.id}')">${t('approval_approve')}</button>
+        <button class="btn btn-sm btn-danger" onclick="window.rejectEmployee('${p.id}')">${t('approval_reject')}</button>
+      </div>`;
+  }).join('');
+}
+
+window.approveEmployee = async function(id) {
+  const { error } = await supabase.from('profiles').update({
+    approval_status: 'approved',
+    approved_by: currentSession.user.id,
+    approved_at: new Date().toISOString()
+  }).eq('id', id);
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast(t('saved'));
+  await loadPendingEmployees();
+  await loadTeam();
+};
+
+window.rejectEmployee = async function(id) {
+  if (!confirm('Sind Sie sicher?')) return;
+  const { error } = await supabase.from('profiles').update({
+    approval_status: 'rejected',
+    approved_by: currentSession.user.id,
+    approved_at: new Date().toISOString()
+  }).eq('id', id);
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast(t('saved'));
+  await loadPendingEmployees();
+};
 
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');

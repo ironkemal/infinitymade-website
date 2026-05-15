@@ -380,6 +380,12 @@
             </div>
           </div>
 
+          <!-- Pending employees awaiting approval -->
+          <div id="pendingEmployeesSection" hidden style="margin-bottom:20px;">
+            <h3 style="font-size:15px;color:#fbbf24;margin:0 0 12px;">⏳ <span data-i18n="approval_pending_title">Genehmigung ausstehend</span></h3>
+            <div id="pendingEmployeesList"></div>
+          </div>
+
           <div id="teamListView">
             <div id="employeeList" class="employee-list"></div>
           </div>
@@ -1142,6 +1148,56 @@
                 empfehlen wir „Neuer Tab“ oder „Vollbild“.</strong></div>
           </div>
         </section>
+
+        <!-- ===== PANEL: WALK-IN QUEUE (barber/beauty) ===== -->
+        <section class="panel" id="panel-walk_in">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_walk_in">Warteschlange</h2>
+              <p class="panel-sub" data-i18n="walk_in_sub">Walk-in Kunden ohne Termin verwalten</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-primary" onclick="window.openWalkInModal()" data-i18n="walk_in_add">+ Kunde in Warteschlange</button>
+            </div>
+          </div>
+          <div id="walkInList"></div>
+        </section>
+
+        <!-- Walk-in Modal -->
+        <div class="modal-overlay" id="walkInModal" hidden>
+          <div class="modal" style="max-width:480px;">
+            <div class="modal-header">
+              <h3 data-i18n="walk_in_add">+ Kunde in Warteschlange</h3>
+              <button class="modal-close" data-modal="walkInModal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label">Name *</label>
+                <input class="form-input" id="walkInName" type="text" autocomplete="off" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Telefon</label>
+                <input class="form-input" id="walkInPhone" type="tel" autocomplete="off" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
+                <select class="form-input" id="walkInService"><option value="">—</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_manual_emp">Mitarbeiter</label>
+                <select class="form-input" id="walkInEmployee"><option value="">—</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="lbl_srv_dur">Dauer (Min)</label>
+                <input class="form-input" id="walkInMinutes" type="number" value="30" min="5" step="5" />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" data-modal="walkInModal" data-i18n="lead_cancel">Abbrechen</button>
+              <button class="btn-primary" onclick="window.addToWalkInQueue()" data-i18n="lead_save">Speichern</button>
+            </div>
+          </div>
+        </div>
 
         <!-- ===== PANEL: FEEDBACK ===== -->
         <section class="panel" id="panel-feedback">

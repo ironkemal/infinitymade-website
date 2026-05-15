@@ -181,10 +181,14 @@ $('signupForm').addEventListener('submit', async (e) => {
       // Wait briefly so Supabase auth trigger can initialize the profile row first
       await new Promise(r => setTimeout(r, 800));
       const slug = cleanSlug(name) + '-' + Math.random().toString(36).slice(2, 6);
+      const fullName = ($('vorname').value.trim() + ' ' + $('nachname').value.trim()).trim();
       const { error: upErr } = await supabase.from('profiles').update({
         role: 'employee', owner_id: ownerId, business_name: name,
         plan: 'mitarbeiter', plan_status: 'active',
-        is_active: true, booking_slug: slug
+        is_active: true, booking_slug: slug,
+        approval_status: 'pending', invited_at: new Date().toISOString(),
+        owner_first_name: $('vorname').value.trim(),
+        owner_last_name: $('nachname').value.trim()
       }).eq('id', authData.user.id);
       if (upErr) console.error('[employee-signup] profile update error:', upErr);
 
@@ -195,8 +199,8 @@ $('signupForm').addEventListener('submit', async (e) => {
       await supabase.from('working_hours').insert(whRows);
     }
 
-    showMsg('Konto erfolgreich erstellt! Sie werden weitergeleitet...', 'success');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+    showMsg('Konto erstellt! Ihr Konto wartet auf die Bestätigung durch den Inhaber. Sie erhalten eine Benachrichtigung, sobald freigeschaltet.', 'success');
+    setTimeout(() => { window.location.href = 'login.html'; }, 4000);
 
   } catch (error) {
     showMsg(error.message || 'Ein Fehler ist aufgetreten.', 'error');
