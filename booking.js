@@ -65,10 +65,8 @@ async function init() {
     q = q.eq('id', identifier);
   } else if (identifier.toUpperCase().startsWith('INF-')) {
     q = q.eq('company_code', identifier.toUpperCase());
-  } else if (identifier.toLowerCase().includes('booking.html?u=')) {
-    q = q.ilike('booking_slug', `%${identifier.toLowerCase().split('booking.html?u=')[1]}`);
   } else {
-    q = q.ilike('booking_slug', `%/booking.html?u=${identifier.toLowerCase()}`);
+    q = q.eq('booking_slug', identifier.toLowerCase());
   }
   const { data: profile, error } = await q.maybeSingle();
   if (error) console.error('[booking] supabase error:', error);
@@ -153,7 +151,7 @@ async function loadServices(empId) {
         <div class="list-btn-title">${s.title}</div>
         <div class="list-btn-sub">${dur} Min${s.buffer_time ? ' + ' + s.buffer_time + ' Min Puffer' : ''}${price ? ' · ' + price + ' €' : ''}</div>
       </button>
-      <div class="srv-duration-row" id="dur-row-${s.id}" style="display:none;">
+      <div class="srv-duration-row" id="dur-row-${s.id}" hidden>
         <span class="srv-duration-label">Dauer wählen:</span>
         <div class="srv-duration-options">
           ${[10, 15, 20, 25, 30, 35, 40, 45, 50, 60].filter(m => m <= dur * 2).map(m => `

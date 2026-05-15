@@ -366,7 +366,7 @@ document.getElementById('form-service').addEventListener('submit', async (e) => 
   const price = document.getElementById('srv-price').value;
   
   const { data: srv, error } = await supabase.from('services').insert({
-    owner_id: session.user.id, title, duration_minutes: dur, price
+    owner_id: session.user.id, user_id: session.user.id, title, duration_minutes: dur, price
   }).select().single();
   if (error) return alert(error.message);
 
@@ -414,7 +414,7 @@ document.getElementById('leave-form').addEventListener('submit', async (e) => {
 // ================= HOURS =================
 const DAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 async function loadHours() {
-  const { data: hours } = await supabase.from('working_hours').select('*').eq('employee_id', session.user.id);
+  const { data: hours } = await supabase.from('working_hours').select('*').eq('user_id', session.user.id);
   let html = '';
   for(let i=0; i<7; i++) {
     const h = hours?.find(x => x.day_of_week === i) || { start_time: '09:00', end_time: '17:00', is_active: (i > 0 && i < 6) };
@@ -435,14 +435,14 @@ document.getElementById('btn-save-hours').addEventListener('click', async () => 
   const payload = [];
   for(let i=0; i<7; i++) {
     payload.push({
-      employee_id: session.user.id,
+      user_id: session.user.id,
       day_of_week: i,
       start_time: document.getElementById(`wh-start-${i}`).value + ':00',
       end_time: document.getElementById(`wh-end-${i}`).value + ':00',
       is_active: document.getElementById(`wh-active-${i}`).checked
     });
   }
-  await supabase.from('working_hours').upsert(payload, { onConflict: 'employee_id, day_of_week' });
+  await supabase.from('working_hours').upsert(payload, { onConflict: 'user_id, day_of_week' });
   alert(T[lang].alert_hours_saved);
 });
 

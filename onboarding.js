@@ -398,12 +398,16 @@ function renderServices() {
       price: s.price_eur || '',
       id: s.id,
     })),
-    ...tpl.filter(t => !existingNames.has(t.name.toLowerCase())).map(t => ({
-      checked: true,
-      name: t.name,
-      duration: t.duration,
-      price: t.price || '',
-    })),
+    ...tpl.filter(t => !existingNames.has(t.name.toLowerCase())).map(t => {
+      const durations = t.price_config?.durations || {};
+      const firstKey = Object.keys(durations)[0];
+      return {
+        checked: true,
+        name: t.name,
+        duration: firstKey ? parseInt(firstKey) : 30,
+        price: firstKey ? (durations[firstKey].price ?? '') : '',
+      };
+    }),
   ];
 
   if (rows.length === 0) rows.push({ checked: true, name: '', duration: 30, price: '' });
@@ -458,30 +462,14 @@ function bindServices() {
           if (delSvc) throw delSvc;
         }
 
-        const svcInserts = items.map(s => {
-          if (s.price_config) {
-            // New format with durations
-            return {
-              user_id: userId,
-              owner_id: userId,
-              title: s.name,
-              code: s.code || null,
-              price_config: s.price_config,
-              duration_minutes: null,
-              price: null,
-              is_online_meeting: false,
-            };
-          }
-          return {
-            user_id: userId,
-            owner_id: userId,
-            title: s.name,
-            code: s.code || null,
-            duration_minutes: s.duration_minutes,
-            price: s.price_eur,
-            is_online_meeting: false,
-          };
-        });
+        const svcInserts = items.map(s => ({
+          user_id: userId,
+          owner_id: userId,
+          title: s.name,
+          duration_minutes: s.duration_minutes,
+          price: s.price_eur,
+          is_online_meeting: false,
+        }));
         const { data: inserted, error: svcErr } = await supabase.from('services').insert(svcInserts).select();
         if (svcErr) throw svcErr;
 
