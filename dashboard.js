@@ -1832,7 +1832,10 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
     if (activePanel === 'overview') await loadTodayBookings();
     if (conflicts.length > 0) {
-      showToast(`${created.length} Termine erstellt, ${conflicts.length} übersprungen (Konflikt).`);
+      const reasons = [...new Set(conflicts.map(c => c.reason).filter(Boolean))];
+      const detail = reasons.length ? `: ${reasons[0]}` : '';
+      const type = created.length === 0 ? 'error' : 'warning';
+      showToast(`${created.length} Termine erstellt, ${conflicts.length} übersprungen${detail}`, type);
     } else {
       showToast(`${created.length} Termine erstellt.`);
     }

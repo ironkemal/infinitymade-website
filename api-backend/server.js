@@ -747,15 +747,20 @@ app.post('/api/booking/batch-create', async (req, res) => {
     if (!wdSet.has(startWd)) wdSet.add(startWd);
     const step = recurrence === 'biweekly' ? 14 : 7;
 
-    const first = new Date(startDate + 'T12:00:00Z');
-    let current = addDays(startDate, -first.getUTCDay());
+    // Go back to the Berlin Sunday of the week containing startDate
+    const startWdBerlin = berlinDayOfWeek(startDate);
+    let current = addDays(startDate, -startWdBerlin);
 
     while (targetDates.length < count) {
-      wdSet.forEach(d => {
-        if (targetDates.length >= count) return;
+      const sorted = [...wdSet].sort((a, b) => a - b);
+      for (const d of sorted) {
+        if (targetDates.length >= count) break;
         const candidate = addDays(current, d);
-        if (berlinDayOfWeek(candidate) === d) targetDates.push(candidate);
-      });
+        // Only include dates on/after startDate to avoid creating past bookings
+        if (berlinDayOfWeek(candidate) === d && candidate >= startDate) {
+          targetDates.push(candidate);
+        }
+      }
       current = addDays(current, step);
     }
   }
@@ -785,11 +790,9 @@ app.post('/api/booking/batch-create', async (req, res) => {
       }).select().single();
 
       if (dbErr) {
-        if (dbErr.code === '23P01') {
-          conflicts.push({ date: dateStr, reason: 'Slot bereits belegt' });
-        } else {
-          conflicts.push({ date: dateStr, reason: dbErr.message });
-        }
+        console.error(`[batch-create] ${dateStr} error code=${dbErr.code} msg=${dbErr.message}`);
+        const reason = dbErr.code === '23P01' ? 'Slot bereits belegt' : (dbErr.message || dbErr.code);
+        conflicts.push({ date: dateStr, reason });
       } else {
         created.push({ id: booking.id, date: dateStr, start_time: booking.start_time, series_position: position, series_total: count });
       }
