@@ -3,6 +3,12 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+function cleanSlug(str) {
+  const map = {'ä':'ae','ö':'oe','ü':'ue','Ä':'ae','Ö':'oe','Ü':'ue','ß':'ss','İ':'i','ı':'i','ş':'s','ğ':'g','ç':'c'};
+  return (str||'').replace(/[äöüÄÖÜßİışğç]/g, m => map[m]||'').toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,35);
+}
 let currentStep = 1;
 
 /* ─── Helpers ─── */
@@ -166,11 +172,21 @@ $('signupForm').addEventListener('submit', async (e) => {
     });
     if (authErr) throw authErr;
 
+    // Supabase returns existing user with empty identities on duplicate email
+    if (!authData.user || authData.user.identities?.length === 0) {
+      throw new Error('Diese E-Mail-Adresse ist bereits registriert. Bitte melden Sie sich an.');
+    }
+
     if (authData.user) {
-      await supabase.from('profiles').update({
+      // Wait briefly so Supabase auth trigger can initialize the profile row first
+      await new Promise(r => setTimeout(r, 800));
+      const slug = cleanSlug(name) + '-' + Math.random().toString(36).slice(2, 6);
+      const { error: upErr } = await supabase.from('profiles').update({
         role: 'employee', owner_id: ownerId, business_name: name,
-        plan: 'mitarbeiter', billing: null, plan_status: 'active'
+        plan: 'mitarbeiter', plan_status: 'active',
+        is_active: true, booking_slug: slug
       }).eq('id', authData.user.id);
+      if (upErr) console.error('[employee-signup] profile update error:', upErr);
 
       const whRows = collectWorkingHours().map(h => ({
         user_id: authData.user.id, day_of_week: h.day_of_week,

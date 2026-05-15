@@ -56,13 +56,13 @@ const T = {
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
     nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_beispielmodus: 'Beispielmodus', nav_anamnese: 'Anamnese', nav_ueberweisung: 'Überweisungen',
     doctors_sub: 'Ärzte in der Nähe finden', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
-    ueberweisung_sub: 'Sevk belgeleri onayı', ueberweisung_pending: 'Ausstehende Überweisungen', ueberweisung_empty: 'Keine ausstehenden Überweisungen.',
+    ueberweisung_sub: 'Überweisungsbelege verwalten', ueberweisung_pending: 'Ausstehende Überweisungen', ueberweisung_empty: 'Keine ausstehenden Überweisungen.',
     ueberweisung_empty_hint: 'Neue Überweisungen werden hier automatisch angezeigt.', ueberweisung_approved: 'Bestätigte Überweisungen',
     ueberweisung_confirm: 'Bestätigen & Termin erstellen', ueberweisung_reject: 'Ablehnen', ueberweisung_preview: 'Vorschau',
     ueberweisung_seans: 'Sitzungen', ueberweisung_hausbesuch: 'Hausbesuch', ueberweisung_diagnose: 'Diagnose',
     ueberweisung_select_patient: 'Patient auswählen', ueberweisung_no_match: 'Kein passender Patient gefunden',
     ueberweisung_confirmed: 'Überweisung bestätigt!', ueberweisung_rejected: 'Überweisung abgelehnt.',
-    beispielmodus_sub: 'Anatomie-Haritas für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
+    beispielmodus_sub: 'Anatomiekarten für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
     lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.'
@@ -113,9 +113,15 @@ const T = {
     saved: 'Saved.', pw_changed: 'Password changed.', err_generic: 'An error occurred.',
     copied: 'Copied!', csv_imported: 'Imported: ', csv_error: 'CSV error: ',
     apify_error: 'Apify error: ', apify_done: 'Imported: ', me: '(You)',
-    nav_doctors: 'Doctors', nav_notizen: 'Notes', nav_beispielmodus: 'Demo Mode', nav_anamnese: 'Intake',
+    nav_doctors: 'Doctors', nav_notizen: 'Notes', nav_beispielmodus: 'Demo Mode', nav_anamnese: 'Intake', nav_ueberweisung: 'Referrals',
     doctors_sub: 'Find nearby doctors', notizen_sub: 'Patient notes & reports', b2c_sub: 'Customer mailings & AI assistant',
     beispielmodus_sub: 'Anatomy maps for patient consultations', anamnese_sub: 'Digital intake form',
+    ueberweisung_sub: 'Manage referral documents', ueberweisung_pending: 'Pending referrals', ueberweisung_empty: 'No pending referrals.',
+    ueberweisung_empty_hint: 'New referrals will appear here automatically.', ueberweisung_approved: 'Confirmed referrals',
+    ueberweisung_confirm: 'Confirm & book appointment', ueberweisung_reject: 'Reject', ueberweisung_preview: 'Preview',
+    ueberweisung_seans: 'Sessions', ueberweisung_hausbesuch: 'Home visit', ueberweisung_diagnose: 'Diagnosis',
+    ueberweisung_select_patient: 'Select patient', ueberweisung_no_match: 'No matching patient found',
+    ueberweisung_confirmed: 'Referral confirmed!', ueberweisung_rejected: 'Referral rejected.',
     lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
     lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
     lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.'
@@ -375,7 +381,8 @@ function showMyBookingLink() {
   const urlEl = document.getElementById('myBookingUrl');
   const btn = document.getElementById('myBookingCopy');
   if (!wrap || !currentProfile) return;
-  const link = currentProfile.booking_slug || (window.location.origin + '/booking.html?u=' + currentProfile.id);
+  const slug = currentProfile.booking_slug;
+  const link = window.location.origin + '/booking.html?u=' + (slug || currentProfile.id);
   urlEl.textContent = link;
   btn.onclick = (e) => {
     e.stopPropagation();
@@ -2227,7 +2234,7 @@ async function loadPatientDetailTermine(leadId) {
   const ownerId = getOwnerId();
   const patientName = displayName(lead);
   let query = supabase.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,services(title,code)')
+    .select('id,start_time,end_time,status,customer_name,services(title,code,duration_minutes)')
     .eq('owner_id', ownerId)
     .neq('status', 'cancelled')
     .order('start_time', { ascending: false });
@@ -2250,7 +2257,9 @@ async function loadPatientDetailTermine(leadId) {
   content.innerHTML = data.map(b => {
     const dateStr = b.start_time ? fmtDate(b.start_time) : '—';
     const timeStr = b.start_time ? fmtTime(b.start_time) : '—';
-    const dur = b.end_time && b.start_time ? Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000) + ' min' : '';
+    const msec = (b.end_time && b.start_time) ? (new Date(b.end_time) - new Date(b.start_time)) : 0;
+    const durMins = msec > 60000 ? Math.round(msec / 60000) : (b.services?.duration_minutes || 0);
+    const dur = durMins > 0 ? durMins + ' min' : '';
     const serviceTitle = b.services?.title || '—';
     const svcCode4 = b.services?.code;
     return `
