@@ -381,7 +381,12 @@ function showMyBookingLink() {
   const urlEl = document.getElementById('myBookingUrl');
   const btn = document.getElementById('myBookingCopy');
   if (!wrap || !currentProfile) return;
-  const slug = currentProfile.booking_slug;
+  let slug = currentProfile.booking_slug || '';
+  // Legacy: some slugs were stored as full URLs — extract just the 'u' param
+  if (slug.includes('/booking.html?u=')) {
+    const m = slug.match(/[?&]u=([^&]+)/);
+    slug = m ? decodeURIComponent(m[1]) : '';
+  }
   const link = window.location.origin + '/booking.html?u=' + (slug || currentProfile.id);
   urlEl.textContent = link;
   btn.onclick = (e) => {
