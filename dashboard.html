@@ -2100,9 +2100,32 @@
     </div>
   </div>
 
+  <!-- ===== MAIL OFFER MODAL (Phase 3) ===== -->
+  <div class="modal-overlay" id="mailOfferModal" hidden>
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-header">
+        <span class="modal-title">📧 Termine per E-Mail bestätigen?</span>
+        <button class="modal-close" data-modal="mailOfferModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="mailOfferText" style="margin:0 0 12px 0;color:#444;line-height:1.5;">
+          Möchten Sie dem Patienten die erstellten Termine per E-Mail bestätigen?
+        </p>
+        <div class="form-group" id="mailOfferEmailWrap" hidden>
+          <label class="form-label">E-Mail-Adresse <span style="color:#888;font-weight:400;">(Patient fragen)</span></label>
+          <input class="form-input" id="mailOfferEmail" type="email" placeholder="patient@example.com" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="mailOfferNoBtn">Nein, weiter zur Rechnung</button>
+        <button class="btn-primary" id="mailOfferYesBtn">Ja, Entwurf erstellen</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260517mail1"></script>
+  <script type="module" src="dashboard.js?v=20260517mail2"></script>
 </body>
 
 </html>

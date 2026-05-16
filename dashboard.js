@@ -2089,24 +2089,73 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
   }
 });
 
-async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custName, empMap }) {
-  const lead = custId ? leadsCache.find(l => l.id === custId) : null;
-  let email = lead?.email || '';
-  if (!email && !custId) return; // nothing to send to
+function openMailOfferModal({ hasEmail, patientName }) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('mailOfferModal');
+    const textEl = document.getElementById('mailOfferText');
+    const emailWrap = document.getElementById('mailOfferEmailWrap');
+    const emailInput = document.getElementById('mailOfferEmail');
+    const yesBtn = document.getElementById('mailOfferYesBtn');
+    const noBtn = document.getElementById('mailOfferNoBtn');
+    const closeBtn = modal.querySelector('.modal-close');
 
-  const ok = window.confirm('Möchten Sie dem Patienten die Termine per E-Mail bestätigen?');
-  if (!ok) {
+    textEl.textContent = hasEmail
+      ? `Möchten Sie ${patientName || 'dem Patienten'} die erstellten Termine per E-Mail bestätigen?`
+      : `Wir haben keine E-Mail-Adresse für ${patientName || 'den Patienten'}. Bitte fragen Sie nach und tragen Sie sie unten ein — oder überspringen.`;
+    emailWrap.hidden = hasEmail;
+    emailInput.value = '';
+
+    const cleanup = () => {
+      yesBtn.onclick = null; noBtn.onclick = null; closeBtn.onclick = null;
+      closeModal('mailOfferModal');
+    };
+    yesBtn.onclick = () => {
+      if (!hasEmail) {
+        const val = (emailInput.value || '').trim();
+        if (!val.includes('@')) {
+          emailInput.focus();
+          emailInput.style.borderColor = '#e74c3c';
+          return;
+        }
+        cleanup();
+        resolve({ ok: true, email: val });
+      } else {
+        cleanup();
+        resolve({ ok: true });
+      }
+    };
+    noBtn.onclick = () => { cleanup(); resolve({ ok: false }); };
+    closeBtn.onclick = () => { cleanup(); resolve({ ok: false }); };
+
+    openModal('mailOfferModal');
+  });
+}
+
+async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custName, empMap }) {
+  let lead = custId ? leadsCache.find(l => l.id === custId) : null;
+  let email = lead?.email || '';
+
+  // Cache may be stale (patient just created by rezept-confirm). Fetch fresh.
+  if (custId && !email) {
+    const { data: fresh } = await supabase
+      .from('leads').select('id,email,phone,title,first_name,last_name')
+      .eq('id', custId).maybeSingle();
+    if (fresh) {
+      email = fresh.email || '';
+      if (lead) Object.assign(lead, fresh);
+      else { lead = fresh; leadsCache.push(fresh); }
+    }
+  }
+  if (!custId && !email) return;
+
+  const offer = await openMailOfferModal({ hasEmail: !!email, patientName: custName });
+  if (!offer.ok) {
     showToast('OK — weiter zur Rechnung.');
     return;
   }
 
   if (!email) {
-    const entered = window.prompt('E-Mail-Adresse des Patienten:', '');
-    if (!entered || !entered.includes('@')) {
-      showToast('Keine gültige E-Mail — Abbruch.', 'error');
-      return;
-    }
-    email = entered.trim();
+    email = offer.email;
     if (lead) {
       await supabase.from('leads').update({ email }).eq('id', lead.id);
       lead.email = email;
