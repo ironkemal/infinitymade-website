@@ -1376,19 +1376,18 @@ async function handleTerminStarten() {
 
   let leadId = null;
   if (patientName) {
+    // Strip the " · YYYY-MM-DD" birth date suffix that displayNameWithBirth appends
+    const cleanName = patientName.split('·')[0].trim().toLowerCase();
     const { data: leads } = await supabase.from('leads')
-      .select('id,first_name,last_name,title,phone')
+      .select('id,first_name,last_name,title,phone,metadata')
       .eq('owner_id', ownerId);
     if (leads && leads.length > 0) {
       const lead = leads.find(l => {
-        const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || l.title || '';
-        return name === patientName;
-      });
+        const composed = [l.first_name, l.last_name].filter(Boolean).join(' ').toLowerCase();
+        const titleLc = (l.title || '').toLowerCase();
+        return composed === cleanName || titleLc === cleanName;
+      }) || (patientPhone ? leads.find(l => l.phone === patientPhone) : null);
       if (lead) leadId = lead.id;
-      else if (patientPhone) {
-        const leadByPhone = leads.find(l => l.phone === patientPhone);
-        if (leadByPhone) leadId = leadByPhone.id;
-      }
     }
   }
 
@@ -4490,18 +4489,21 @@ async function loadNotizen() {
 
   function renderList(filter) {
     activeIndex = -1;
-    const q = filter.trim().toLowerCase();
-    if (!q) { list.hidden = true; return; }
-    const filtered = allLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
+    const q = (filter || '').trim().toLowerCase();
+    const filtered = q
+      ? allLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q))
+      : allLeads.slice();
     if (filtered.length === 0) {
-      list.innerHTML = '<li class="empty-item">Keine Treffer</li>';
+      list.innerHTML = '<li class="empty-item">Keine Patienten</li>';
       list.hidden = false;
       return;
     }
+    const esc = q.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+    const rx = q ? new RegExp(`(${esc})`, 'gi') : null;
     list.innerHTML = filtered.map((l, i) => {
       const name = displayNameWithBirth(l);
-      const esc = q.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
-      const hl = name.replace(new RegExp(`(${esc})`, 'gi'), '<span class="match-hl">$1</span>');
+      const safe = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const hl = rx ? safe.replace(rx, '<span class="match-hl">$1</span>') : safe;
       return `<li data-id="${l.id}" data-index="${i}">${hl}</li>`;
     }).join('');
     list.hidden = false;
@@ -4535,6 +4537,10 @@ async function loadNotizen() {
     if (hidden.value) { hidden.value = ''; form.hidden = true; empty.hidden = false; }
     renderList(input.value);
   };
+
+  input.onfocus = () => renderList(input.value);
+
+  input.onclick = () => renderList(input.value);
 
   input.onkeydown = (e) => {
     const items = list.querySelectorAll('li:not(.empty-item)');
