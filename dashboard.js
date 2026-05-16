@@ -5770,6 +5770,104 @@ async function init() {
   }
 }
 
+// ===== Phase 2: rxPreset → booking modal + AI series scheduler =====
+// After rezept/confirm we land on the calendar panel; this opens the
+// booking modal pre-filled with patient + service + series settings,
+// then auto-triggers the existing AI suggest flow.
+
+function parseFrequenzWoche(freq) {
+  // "2x pro Woche" / "2 x / Woche" / "2x wöchentlich" → 2
+  if (!freq) return null;
+  const m = freq.match(/(\d+)\s*x?\s*(?:pro|\/)?\s*Woche|w[öo]ch/i);
+  if (m && m[1]) return parseInt(m[1], 10);
+  const n = freq.match(/^\s*(\d+)/);
+  return n ? parseInt(n[1], 10) : null;
+}
+
+function matchServiceForHeilmittel(heilmittelCode) {
+  if (!heilmittelCode || !Array.isArray(ownerServices)) return null;
+  const hm = heilmittelCode.trim().toUpperCase();
+  // 1. exact code match
+  let hit = ownerServices.find(s => (s.code || '').toUpperCase() === hm);
+  if (hit) return hit;
+  // 2. title substring (e.g. "KG" inside "Krankengymnastik (KG)")
+  hit = ownerServices.find(s => (s.title || '').toUpperCase().includes(hm));
+  if (hit) return hit;
+  // 3. common long-form aliases
+  const aliases = {
+    KG: 'krankengymnastik', MT: 'manuelle therapie', MLD: 'lymphdrainage',
+    KMT: 'krankengymnastik', E: 'elektrotherapie', WT: 'wärme', KT: 'kälte'
+  };
+  const long = aliases[hm];
+  if (long) return ownerServices.find(s => (s.title || '').toLowerCase().includes(long)) || null;
+  return null;
+}
+
+async function openBookingFromRxPreset(preset) {
+  try {
+    if (typeof prefillBookingModal === 'function') {
+      await prefillBookingModal(null);
+    } else {
+      openModal('bookingModal');
+    }
+
+    // Patient
+    if (preset.patient_id && preset.patient_name) {
+      document.getElementById('bkCustomer').value = preset.patient_name;
+      document.getElementById('bkCustomerId').value = preset.patient_id;
+    }
+    if (preset.hausbesuch) document.getElementById('bkHausbesuch').checked = true;
+
+    // Service mapping
+    const srv = matchServiceForHeilmittel(preset.heilmittel);
+    if (srv) {
+      const srvSel = document.getElementById('bkService');
+      srvSel.value = srv.id;
+      srvSel.dispatchEvent(new Event('change'));
+    } else if (preset.heilmittel) {
+      showToast(`Keine Dienstleistung für "${preset.heilmittel}" gefunden — bitte manuell auswählen.`, 'info');
+    }
+
+    // Series
+    if (preset.anzahl && preset.anzahl > 1) {
+      const toggle = document.getElementById('bkSeriesToggle');
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change'));
+      const fields = document.getElementById('bkSeriesFields');
+      if (fields) fields.hidden = false;
+      document.getElementById('bkSeriesCount').value = preset.anzahl;
+      const perWeek = parseFrequenzWoche(preset.frequenz);
+      const recSel = document.getElementById('bkSeriesRecurrence');
+      if (recSel) recSel.value = 'weekly';
+      // Hint via toast — user picks specific weekdays in AI prefs
+      if (perWeek) showToast(`Serie: ${preset.anzahl} × · ${perWeek}× pro Woche — bitte Wochentage wählen.`, 'info');
+    }
+
+    // Start = next Monday 09:00 by default (user can change)
+    const today = new Date();
+    const dow = today.getDay();
+    const daysToMon = (8 - dow) % 7 || 7;
+    const start = new Date(today.getTime() + daysToMon * 86400000);
+    const iso = start.toISOString().slice(0, 10) + 'T09:00';
+    document.getElementById('bkStart').value = iso;
+
+    // Auto-trigger AI suggest if we have employee + service + customer
+    setTimeout(() => {
+      const empId = document.getElementById('bkEmployee').value;
+      const srvId = document.getElementById('bkService').value;
+      const custId = document.getElementById('bkCustomerId').value.trim();
+      if (empId && srvId && custId) {
+        document.getElementById('bkAiSuggestBtn')?.click();
+      } else {
+        showToast('Bitte Mitarbeiter & ggf. Dienstleistung wählen, dann „KI-Vorschlag" klicken.', 'info');
+      }
+    }, 600);
+  } catch (e) {
+    console.error('[openBookingFromRxPreset]', e);
+    showToast('Konnte Buchungs-Maske nicht öffnen: ' + e.message, 'error');
+  }
+}
+
 // ===== Phase 2: AI-driven Rezept Scanner =====
 // Webcam/file capture → /api/rezept/upload (Azure OCR + validators)
 // → confirmation modal → /api/rezept/confirm → redirect to Termine.
@@ -6025,14 +6123,20 @@ async function submitConfirm() {
     document.getElementById('rezeptConfirmModal').hidden = true;
     showToast('Rezept gespeichert ✓ Weiter zur Terminplanung.', 'success');
 
-    if (typeof showPanel === 'function') showPanel('termine');
-    sessionStorage.setItem('rxPreset', JSON.stringify({
+    const preset = {
       prescription_id: json.prescription_id,
       patient_id: json.patient_id,
       anzahl: parsedEdited.rezept.anzahl_einheiten,
       frequenz: parsedEdited.rezept.frequenz,
-      heilmittel: parsedEdited.rezept.heilmittel
-    }));
+      heilmittel: parsedEdited.rezept.heilmittel,
+      hausbesuch: parsedEdited.rezept.hausbesuch,
+      is_dringend: parsedEdited.rezept.is_dringend,
+      patient_name: [parsedEdited.patient.first_name, parsedEdited.patient.last_name].filter(Boolean).join(' ')
+    };
+    sessionStorage.setItem('rxPreset', JSON.stringify(preset));
+
+    if (typeof showPanel === 'function') showPanel('calendar');
+    setTimeout(() => openBookingFromRxPreset(preset), 400);
   } catch (e) {
     alert('Fehler: ' + e.message);
   } finally {
