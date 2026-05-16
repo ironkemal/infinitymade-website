@@ -363,12 +363,27 @@ async function renderSidebar() {
   });
 }
 
+function buildBookingUrl(profile) {
+  if (!profile) return '';
+  const slug = (profile.booking_slug || '').trim();
+  const base = (window.location.origin || 'https://infinitymade.de');
+  // If empty: use UUID
+  if (!slug) return base + '/booking.html?u=' + profile.id;
+  // Already a full URL (http/https)?
+  if (/^https?:\/\//i.test(slug)) {
+    // Force production host so localhost links don't break when sharing
+    return slug.replace(/^https?:\/\/[^/]+/i, base);
+  }
+  // Plain slug → wrap in URL
+  return base + '/booking.html?u=' + slug;
+}
+
 function showMyBookingLink() {
   const wrap = document.getElementById('myBookingLink');
   const urlEl = document.getElementById('myBookingUrl');
   const btn = document.getElementById('myBookingCopy');
   if (!wrap || !currentProfile) return;
-  const link = currentProfile.booking_slug || (window.location.origin + '/booking.html?u=' + currentProfile.id);
+  const link = buildBookingUrl(currentProfile);
   urlEl.textContent = link;
   btn.onclick = (e) => {
     e.stopPropagation();
@@ -3117,14 +3132,15 @@ async function loadTeam() {
     const name = m.business_name || m.email?.split('@')[0] || '—';
     const initial = (name[0] || '?').toUpperCase();
     const avatar = m.avatar_url ? `<img src="${m.avatar_url}" alt="">` : initial;
-    const bookingLink = m.booking_slug || (window.location.origin + '/booking.html?u=' + m.id);
+    const bookingLink = buildBookingUrl(m);
+    const shortLink = bookingLink.replace(/^https?:\/\/(www\.)?/i, '');
     return `<div class="emp-card" data-emp-id="${m.id}">
       <div class="emp-avatar">${avatar}</div>
       <div class="emp-name">${name} ${m.id === currentSession.user.id ? t('me') : ''}</div>
       <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
       ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
       <div class="emp-link-row">
-        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">🔗 Buchungslink öffnen</a>
+        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">🔗 ${escapeHtml(shortLink)}</a>
         <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}">📋</button>
       </div>
     </div>`;
@@ -3170,7 +3186,7 @@ function openEmpDetail(empId) {
   renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
   renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
 
-  const bookingLink = m.booking_slug || (window.location.origin + '/booking.html?u=' + m.id);
+  const bookingLink = buildBookingUrl(m);
   const linkInput = document.getElementById('empBookingLink');
   linkInput.value = bookingLink;
   document.getElementById('empCopyLinkBtn').onclick = () => {

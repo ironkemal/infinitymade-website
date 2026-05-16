@@ -715,11 +715,33 @@ app.post('/api/booking/batch-create', async (req, res) => {
     return res.status(400).json({ error: 'Missing or invalid params' });
   }
 
-  let dur = duration || 30;
-  if (serviceId) {
-    const { data: svc } = await supabase.from('services').select('duration_minutes').eq('id', serviceId).single();
-    if (svc) dur = svc.duration_minutes;
+  // Trust the duration sent from the frontend (the user picked it from the
+  // service's active durations). Only fall back to the service's stored
+  // duration if the frontend didn't send one.
+  let dur = parseInt(duration, 10);
+  if (!dur || dur <= 0) {
+    if (serviceId) {
+      const { data: svc } = await supabase
+        .from('services')
+        .select('duration_minutes, price_config')
+        .eq('id', serviceId)
+        .single();
+      if (svc) {
+        if (svc.duration_minutes && svc.duration_minutes > 0) {
+          dur = svc.duration_minutes;
+        } else if (svc.price_config && svc.price_config.durations) {
+          const active = Object.entries(svc.price_config.durations)
+            .filter(([_, v]) => v && v.active)
+            .map(([k]) => parseInt(k, 10))
+            .filter(n => n > 0)
+            .sort((a, b) => a - b);
+          if (active.length) dur = active[0];
+        }
+      }
+    }
   }
+  if (!dur || dur <= 0) dur = 30; // last-resort default
+  console.log('[batch-create] dur=', dur, 'count=', count, 'serviceId=', serviceId);
 
   const created = [];
   const conflicts = [];

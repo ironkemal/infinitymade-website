@@ -61,14 +61,20 @@ async function init() {
   if (!identifier) { showError('Ungültiger Buchungslink.'); return; }
   const isUUID = s => s.length === 36 && s.includes('-');
   let q = supabase.from('profiles_public').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
-  if (isUUID(identifier)) {
-    q = q.eq('id', identifier);
-  } else if (identifier.toUpperCase().startsWith('INF-')) {
-    q = q.eq('company_code', identifier.toUpperCase());
-  } else if (identifier.toLowerCase().includes('booking.html?u=')) {
-    q = q.ilike('booking_slug', `%${identifier.toLowerCase().split('booking.html?u=')[1]}`);
+  // Slug can be stored either as a bare slug ("kemal") or a full URL
+  // ("https://infinitymade.de/booking.html?u=kemal") — match both shapes.
+  let slug = identifier;
+  if (slug.toLowerCase().includes('booking.html?u=')) {
+    slug = slug.toLowerCase().split('booking.html?u=')[1].split(/[?#&]/)[0];
+  }
+
+  if (isUUID(slug)) {
+    q = q.eq('id', slug);
+  } else if (slug.toUpperCase().startsWith('INF-')) {
+    q = q.eq('company_code', slug.toUpperCase());
   } else {
-    q = q.ilike('booking_slug', `%/booking.html?u=${identifier.toLowerCase()}`);
+    // Match either the bare slug or the full URL containing it
+    q = q.or(`booking_slug.eq.${slug},booking_slug.ilike.%booking.html?u=${slug}`);
   }
   const { data: profile, error } = await q.maybeSingle();
   if (error) console.error('[booking] supabase error:', error);
