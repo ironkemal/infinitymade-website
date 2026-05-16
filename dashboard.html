@@ -1354,6 +1354,15 @@
             <label class="form-label">Vorschau</label>
             <div id="bkSeriesPreview" style="font-size:13px;color:var(--text-muted);min-height:24px;"></div>
           </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);">
+            <button type="button" class="btn-secondary" id="bkAiSuggestBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+              <span style="font-size:18px;">🤖</span>
+              <span>KI-Vorschlag erhalten</span>
+            </button>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center;">
+              KI sucht freie Slots, ber&uuml;cksichtigt Pr&auml;ferenzen und schl&auml;gt die besten Termine vor.
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -1361,6 +1370,61 @@
         <button class="btn-ghost" id="bkMoveBtn" hidden>Verschieben</button>
         <button class="btn-ghost" data-modal="bookingModal" data-i18n="lead_cancel">Abbrechen</button>
         <button class="btn-primary" id="bkSaveBtn" data-i18n="lead_save">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: AI Series Preferences ===== -->
+  <div class="modal-overlay" id="aiPrefsModal" hidden>
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3>🤖 KI-Vorschlag &mdash; Pr&auml;ferenzen</h3>
+        <button class="modal-close" data-modal="aiPrefsModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Soll die ganze Serie beim selben Mitarbeiter sein?</label>
+          <select class="form-select" id="aiPrefSameEmp">
+            <option value="preferred">Wenn m&ouml;glich (Standard)</option>
+            <option value="always">Immer beim selben (kein Wechsel)</option>
+            <option value="any">Egal &mdash; verteilen ist ok</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bevorzugte Tageszeit</label>
+          <select class="form-select" id="aiPrefTimeOfDay">
+            <option value="any">Beliebig</option>
+            <option value="morning">Vormittag (8&ndash;12 Uhr)</option>
+            <option value="afternoon">Nachmittag (12&ndash;18 Uhr)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Besondere W&uuml;nsche des Patienten (optional)</label>
+          <textarea class="form-textarea" id="aiPrefNotes" rows="3" placeholder="z. B. nur weibliche Therapeutin, lieber Montag/Mittwoch, ..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="aiPrefsModal">Abbrechen</button>
+        <button class="btn-primary" id="aiPrefSubmit">Vorschl&auml;ge holen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: AI Suggestions ===== -->
+  <div class="modal-overlay" id="aiSuggestModal" hidden>
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <h3>🤖 KI-Vorschl&auml;ge</h3>
+        <button class="modal-close" data-modal="aiSuggestModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="aiSuggestReport" style="background:var(--primary-dim);color:var(--text-main);padding:12px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;line-height:1.5;"></div>
+        <div id="aiSuggestList" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="aiSuggestModal">Abbrechen</button>
+        <button class="btn-secondary" id="aiSuggestRetry">Andere Vorschl&auml;ge</button>
+        <button class="btn-primary" id="aiSuggestConfirm">Termine erstellen</button>
       </div>
     </div>
   </div>
