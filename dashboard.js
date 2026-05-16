@@ -1906,6 +1906,174 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   showToast(t('saved'));
 });
 
+// ============================================================
+// AI Series Scheduler — KI-Vorschlag flow
+// ============================================================
+const AI_SUGGEST_URL = 'https://n8n.infinitymade.de/api/booking/ai-suggest-series';
+const AI_BATCH_URL = 'https://n8n.infinitymade.de/api/booking/batch-create-explicit';
+window._aiCtx = null; // holds last context for retry
+
+document.getElementById('bkAiSuggestBtn').addEventListener('click', () => {
+  const empId = document.getElementById('bkEmployee').value;
+  const srvId = document.getElementById('bkService').value;
+  const custId = document.getElementById('bkCustomerId').value.trim();
+  const cust = document.getElementById('bkCustomer').value.trim();
+
+  if (!empId) { showToast('Bitte zuerst einen Mitarbeiter auswählen.', 'error'); return; }
+  if (!srvId) { showToast('Bitte zuerst eine Dienstleistung auswählen.', 'error'); return; }
+  if (!custId || !cust) { showToast('Bitte zuerst einen Kunden auswählen.', 'error'); return; }
+
+  // Open preferences modal
+  document.getElementById('aiPrefSameEmp').value = 'preferred';
+  document.getElementById('aiPrefTimeOfDay').value = 'any';
+  document.getElementById('aiPrefNotes').value = '';
+  openModal('aiPrefsModal');
+});
+
+document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
+  const empId = document.getElementById('bkEmployee').value;
+  const srvId = document.getElementById('bkService').value;
+  const custId = document.getElementById('bkCustomerId').value.trim();
+  const count = parseInt(document.getElementById('bkSeriesCount').value) || 8;
+  const recurrence = document.getElementById('bkSeriesRecurrence').value;
+  const startV = document.getElementById('bkStart').value;
+  const preferredTime = startV ? startV.substring(11, 16) : null;
+
+  const preferences = {
+    sameEmployee: document.getElementById('aiPrefSameEmp').value,
+    timeOfDay: document.getElementById('aiPrefTimeOfDay').value,
+    notes: document.getElementById('aiPrefNotes').value.trim()
+  };
+
+  closeModal('aiPrefsModal');
+
+  showToast('🤖 KI sucht passende Termine…', 'info');
+
+  const payload = {
+    ownerId: getOwnerId(),
+    serviceId: srvId,
+    customerId: custId,
+    employeeId: empId,
+    count,
+    recurrence,
+    preferredTime,
+    preferences
+  };
+
+  window._aiCtx = { payload, baseEmpId: empId };
+
+  try {
+    const res = await fetch(AI_SUGGEST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      showToast('Fehler: ' + (json.error || 'Vorschlag fehlgeschlagen'), 'error');
+      return;
+    }
+    if (!json.selected || json.selected.length === 0) {
+      showToast('Keine passenden Termine im Suchzeitraum.', 'error');
+      return;
+    }
+    window._aiCtx.lastResult = json;
+    renderAiSuggestions(json);
+  } catch (err) {
+    console.error('[ai-suggest]', err);
+    showToast('Netzwerkfehler beim Abrufen der Vorschläge.', 'error');
+  }
+});
+
+function renderAiSuggestions(json) {
+  const reportEl = document.getElementById('aiSuggestReport');
+  reportEl.textContent = json.report || 'Hier sind die KI-Vorschläge:';
+
+  const empMap = {};
+  (json.employees || []).forEach(e => { empMap[e.id] = e.name; });
+
+  const listEl = document.getElementById('aiSuggestList');
+  listEl.innerHTML = json.selected.map((s, i) => {
+    const wd = new Date(s.date + 'T12:00:00Z').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const empName = empMap[s.employeeId] || 'Mitarbeiter';
+    const isDifferent = s.employeeId !== window._aiCtx.baseEmpId;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:600;color:var(--text-faint);min-width:24px;">${i + 1}.</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;">${wd} · ${escapeHtml(s.time)} Uhr</div>
+        <div style="font-size:12px;color:${isDifferent ? '#b45309' : 'var(--text-muted)'};margin-top:2px;">
+          👤 ${escapeHtml(empName)}${isDifferent ? ' (Wechsel)' : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  openModal('aiSuggestModal');
+}
+
+document.getElementById('aiSuggestRetry').addEventListener('click', async () => {
+  if (!window._aiCtx?.payload) return;
+  closeModal('aiSuggestModal');
+  showToast('🤖 Suche andere Vorschläge…', 'info');
+  try {
+    const res = await fetch(AI_SUGGEST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(window._aiCtx.payload)
+    });
+    const json = await res.json();
+    if (json.success && json.selected?.length) {
+      window._aiCtx.lastResult = json;
+      renderAiSuggestions(json);
+    } else {
+      showToast('Keine weiteren Vorschläge.', 'error');
+    }
+  } catch (err) {
+    showToast('Netzwerkfehler.', 'error');
+  }
+});
+
+document.getElementById('aiSuggestConfirm').addEventListener('click', async () => {
+  if (!window._aiCtx?.lastResult) return;
+  const { selected, service } = window._aiCtx.lastResult;
+  const cust = document.getElementById('bkCustomer').value.trim();
+  const phone = document.getElementById('bkPhone').value.trim();
+  const notes = document.getElementById('bkNotes').value.trim();
+  const hausbesuch = document.getElementById('bkHausbesuch').checked;
+
+  const payload = {
+    ownerId: getOwnerId(),
+    serviceId: service?.id || document.getElementById('bkService').value,
+    duration: service?.duration,
+    slots: selected,
+    customerName: cust,
+    customerPhone: phone || null,
+    notes: notes || null,
+    hausbesuch
+  };
+
+  try {
+    const res = await fetch(AI_BATCH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    closeModal('aiSuggestModal');
+    closeModal('bookingModal');
+    if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
+    if (activePanel === 'overview') await loadTodayBookings();
+    if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+    if (json.conflicts?.length) {
+      showToast(`${json.created?.length || 0} erstellt, ${json.conflicts.length} übersprungen (Konflikt).`);
+    } else {
+      showToast(`${json.created?.length || 0} Termine erfolgreich erstellt.`);
+    }
+  } catch (err) {
+    console.error('[ai-confirm]', err);
+    showToast('Fehler beim Erstellen der Termine.', 'error');
+  }
+});
+
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   if (!id || !confirm(t('lead_confirm_delete'))) return;

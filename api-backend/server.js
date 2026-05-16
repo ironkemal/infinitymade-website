@@ -813,6 +813,300 @@ app.post('/api/booking/batch-create', async (req, res) => {
   res.json({ created, conflicts, count: created.length });
 });
 
+// 5b. AI Series Scheduler — enumerate candidate slots, send to n8n+OpenAI for ranking
+app.post('/api/booking/ai-suggest-series', async (req, res) => {
+  try {
+    const {
+      ownerId, serviceId, customerId, employeeId,
+      count = 8, recurrence = 'weekly',
+      preferredTime, preferences = {}
+    } = req.body;
+    if (!ownerId || !serviceId || !count) {
+      return res.status(400).json({ error: 'ownerId, serviceId, count required' });
+    }
+
+    // 1) Resolve service + duration
+    const { data: svc } = await supabase.from('services')
+      .select('id,title,duration_minutes,price_config').eq('id', serviceId).single();
+    if (!svc) return res.status(400).json({ error: 'Service not found' });
+    let dur = svc.duration_minutes;
+    if (!dur && svc.price_config?.durations) {
+      const active = Object.entries(svc.price_config.durations)
+        .filter(([_, v]) => v && v.active).map(([k]) => parseInt(k)).filter(n => n > 0).sort((a, b) => a - b);
+      if (active.length) dur = active[0];
+    }
+    if (!dur || dur <= 0) dur = 30;
+
+    // 2) Resolve owner profile (sector) + customer
+    const [{ data: ownerProfile }, { data: customer }] = await Promise.all([
+      supabase.from('profiles').select('sector,business_name').eq('id', ownerId).single(),
+      customerId ? supabase.from('leads').select('id,first_name,last_name,title,phone,metadata').eq('id', customerId).single() : Promise.resolve({ data: null })
+    ]);
+    const sector = ownerProfile?.sector || 'unknown';
+
+    // 3) Resolve eligible employees offered the service
+    const { data: empSvc } = await supabase.from('employee_services')
+      .select('employee_id').eq('service_id', serviceId);
+    let allowedIds = (empSvc || []).map(e => e.employee_id);
+    // If service has no explicit employee assignments, allow the whole team
+    if (allowedIds.length === 0) {
+      const { data: team } = await supabase.from('profiles').select('id').or(`id.eq.${ownerId},owner_id.eq.${ownerId}`);
+      allowedIds = (team || []).map(t => t.id);
+    }
+    if (preferences.sameEmployee === 'always' && employeeId) {
+      allowedIds = [employeeId];
+    } else if (employeeId && !allowedIds.includes(employeeId)) {
+      allowedIds.push(employeeId);
+    }
+    if (allowedIds.length === 0) return res.json({ candidates: [], selected: [], report: 'Keine Mitarbeiter verfügbar.' });
+
+    const { data: employees } = await supabase.from('profiles')
+      .select('id,business_name,email').in('id', allowedIds);
+    const empList = (employees || []).map(e => ({ id: e.id, name: e.business_name || e.email?.split('@')[0] || 'Mitarbeiter' }));
+
+    // 4) Fetch working_hours, breaks, time_offs, custom_days, bookings for next 14 weeks
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+    const horizonDate = new Date();
+    horizonDate.setDate(horizonDate.getDate() + 14 * 7);
+    const horizon = horizonDate.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+    const horizonStartIso = berlinLocalToUTC(today, '00:00').toISOString();
+    const horizonEndIso = berlinLocalToUTC(horizon, '23:59').toISOString();
+
+    const [whRes, brRes, toRes, cdRes, bkRes] = await Promise.all([
+      supabase.from('working_hours').select('user_id,day_of_week,start_time,end_time,is_active').in('user_id', allowedIds),
+      supabase.from('breaks').select('user_id,day_of_week,start_time,end_time').in('user_id', allowedIds),
+      supabase.from('time_offs').select('employee_id,start_date,end_date').in('employee_id', allowedIds).lte('start_date', horizonEndIso).gte('end_date', horizonStartIso),
+      supabase.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', ownerId).gte('date', today).lte('date', horizon),
+      supabase.from('bookings').select('user_id,start_time,end_time').in('user_id', allowedIds).eq('status', 'confirmed').gte('start_time', horizonStartIso).lte('start_time', horizonEndIso)
+    ]);
+
+    const wh = whRes.data || [];
+    const breaks = brRes.data || [];
+    const timeOffs = toRes.data || [];
+    const customDays = cdRes.data || [];
+    const bookings = bkRes.data || [];
+
+    // Index helpers
+    const whByEmpDay = new Map();
+    wh.forEach(w => { if (w.is_active) whByEmpDay.set(`${w.user_id}|${w.day_of_week}`, w); });
+    const breaksByEmpDay = new Map();
+    breaks.forEach(b => {
+      const key = `${b.user_id}|${b.day_of_week}`;
+      if (!breaksByEmpDay.has(key)) breaksByEmpDay.set(key, []);
+      breaksByEmpDay.get(key).push(b);
+    });
+    const customDayByDate = new Map(customDays.map(c => [c.date, c]));
+    const bookingsByEmp = new Map();
+    bookings.forEach(b => {
+      if (!bookingsByEmp.has(b.user_id)) bookingsByEmp.set(b.user_id, []);
+      bookingsByEmp.get(b.user_id).push(b);
+    });
+
+    function timeToMinsLocal(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+    function minsToTimeLocal(m) { const h = Math.floor(m / 60); const mm = m % 60; return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
+
+    // 5) Enumerate candidate slots
+    const targetMin = preferredTime ? timeToMinsLocal(preferredTime) : null;
+    const tod = preferences.timeOfDay; // morning|afternoon|any
+    const step = 30;
+    void recurrence; // recurrence handled by AI ranking, not by enumeration
+
+    const candidates = [];
+    const maxCandidates = 80;
+    const dayCursor = new Date(today + 'T12:00:00Z');
+    let safetyCounter = 0;
+
+    while (candidates.length < maxCandidates && safetyCounter < 14 * 7) {
+      const dateStr = dayCursor.toISOString().substring(0, 10);
+      const dayOfWeek = berlinDayOfWeek(dateStr);
+
+      // Custom day check (closed/holiday)
+      const cd = customDayByDate.get(dateStr);
+      const isClosedDay = cd && (cd.type === 'closed' || cd.type === 'holiday') && !cd.start_time && !cd.end_time;
+
+      if (!isClosedDay) {
+        for (const emp of empList) {
+          if (candidates.length >= maxCandidates) break;
+          const w = whByEmpDay.get(`${emp.id}|${dayOfWeek}`);
+          if (!w) continue;
+
+          let startMins = timeToMinsLocal(w.start_time);
+          let endMins = timeToMinsLocal(w.end_time);
+          if (cd && cd.type === 'special' && cd.start_time && cd.end_time) {
+            startMins = timeToMinsLocal(cd.start_time);
+            endMins = timeToMinsLocal(cd.end_time);
+          }
+
+          // Filter by morning/afternoon preference
+          if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
+          else if (tod === 'afternoon') startMins = Math.max(startMins, 12 * 60);
+
+          // Build busy intervals: bookings + breaks + time_offs that hit this date
+          const busy = [];
+          (breaksByEmpDay.get(`${emp.id}|${dayOfWeek}`) || []).forEach(b => {
+            busy.push({ start: timeToMinsLocal(b.start_time), end: timeToMinsLocal(b.end_time) });
+          });
+          (bookingsByEmp.get(emp.id) || []).forEach(b => {
+            const s = new Date(b.start_time);
+            const e = new Date(b.end_time);
+            const sDate = s.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+            if (sDate !== dateStr) return;
+            const sLocal = parseInt(s.toLocaleTimeString('de-DE', { timeZone: BUSINESS_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).split(':')[0]) * 60
+                         + parseInt(s.toLocaleTimeString('de-DE', { timeZone: BUSINESS_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).split(':')[1]);
+            const eLocal = sLocal + Math.round((e - s) / 60000);
+            busy.push({ start: sLocal, end: eLocal });
+          });
+          // Time-offs that include this date
+          const offHit = timeOffs.find(t => t.employee_id === emp.id && t.start_date <= dateStr && t.end_date >= dateStr);
+          if (offHit) continue; // whole day blocked
+
+          // Generate slots
+          for (let m = startMins; m + dur <= endMins; m += step) {
+            const slotEnd = m + dur;
+            const overlap = busy.some(b => m < b.end && slotEnd > b.start);
+            if (overlap) continue;
+
+            // Score: lower is better (closer to preferences)
+            let score = 0;
+            if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
+            if (targetMin !== null) score += Math.abs(m - targetMin) / 5;
+            // Earlier dates slightly preferred for series cohesion
+            score += safetyCounter * 0.5;
+
+            candidates.push({
+              date: dateStr,
+              time: minsToTimeLocal(m),
+              employeeId: emp.id,
+              score
+            });
+            if (candidates.length >= maxCandidates) break;
+          }
+        }
+      }
+
+      dayCursor.setUTCDate(dayCursor.getUTCDate() + 1);
+      safetyCounter++;
+    }
+
+    // Sort by score and take top N (give AI ~3x candidates to choose from)
+    candidates.sort((a, b) => a.score - b.score);
+    const shortList = candidates.slice(0, Math.min(60, count * 5));
+
+    if (shortList.length === 0) {
+      return res.json({ candidates: [], selected: [], report: 'Im Suchzeitraum von 14 Wochen wurden keine freien Slots gefunden.' });
+    }
+
+    // 6) Send to n8n for AI ranking + report
+    const customerName = customer
+      ? ((customer.first_name || '') + ' ' + (customer.last_name || '')).trim() || customer.title || 'Patient'
+      : 'Patient';
+
+    const aiPayload = {
+      candidates: shortList.map(({ score, ...c }) => c),
+      count,
+      preferences: {
+        ...preferences,
+        preferredEmployee: employeeId || null
+      },
+      service: { title: svc.title, duration: dur },
+      employees: empList,
+      customer: { name: customerName, id: customer?.id || null },
+      sector
+    };
+
+    const N8N_AI_URL = process.env.N8N_AI_SERIES_URL || 'https://n8n.infinitymade.de/webhook/ai-series-scheduler';
+    let aiResult = { selected: [], report: '' };
+    try {
+      const aiRes = await fetch(N8N_AI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(aiPayload)
+      });
+      if (aiRes.ok) {
+        aiResult = await aiRes.json();
+      } else {
+        console.error('[ai-suggest-series] n8n returned', aiRes.status);
+      }
+    } catch (err) {
+      console.error('[ai-suggest-series] n8n error', err.message);
+    }
+
+    // 7) Fallback: if AI failed or returned empty, just take the top N by score
+    let selected = Array.isArray(aiResult.selected) && aiResult.selected.length
+      ? aiResult.selected.slice(0, count)
+      : shortList.slice(0, count).map(({ score, ...c }) => c);
+    let report = aiResult.report || `Wir haben ${selected.length} freie Termine gefunden, die Ihren Wünschen am besten entsprechen.`;
+
+    res.json({
+      success: true,
+      selected,
+      report,
+      candidatesTotal: candidates.length,
+      service: { id: svc.id, title: svc.title, duration: dur },
+      employees: empList
+    });
+  } catch (err) {
+    console.error('[ai-suggest-series] error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5c. Batch-create with explicit slots (used after AI confirmation)
+app.post('/api/booking/batch-create-explicit', async (req, res) => {
+  const { ownerId, serviceId, slots, customerName, customerPhone, notes, hausbesuch, duration } = req.body;
+  if (!ownerId || !Array.isArray(slots) || slots.length === 0) {
+    return res.status(400).json({ error: 'ownerId and slots[] required' });
+  }
+  let dur = parseInt(duration, 10);
+  if (!dur || dur <= 0) {
+    if (serviceId) {
+      const { data: svc } = await supabase.from('services').select('duration_minutes,price_config').eq('id', serviceId).single();
+      if (svc) {
+        if (svc.duration_minutes && svc.duration_minutes > 0) dur = svc.duration_minutes;
+        else if (svc.price_config?.durations) {
+          const active = Object.entries(svc.price_config.durations).filter(([_, v]) => v && v.active).map(([k]) => parseInt(k)).filter(n => n > 0).sort((a, b) => a - b);
+          if (active.length) dur = active[0];
+        }
+      }
+    }
+  }
+  if (!dur || dur <= 0) dur = 30;
+
+  const created = [];
+  const conflicts = [];
+  for (const s of slots) {
+    if (!s || !s.date || !s.time || !s.employeeId) {
+      conflicts.push({ slot: s, reason: 'Ungültiger Slot' });
+      continue;
+    }
+    try {
+      const start_time = berlinLocalToUTC(s.date, s.time);
+      const end_time = new Date(start_time.getTime() + dur * 60000);
+      const { data: bk, error } = await supabase.from('bookings').insert({
+        user_id: s.employeeId,
+        owner_id: ownerId,
+        service_id: serviceId || null,
+        start_time: start_time.toISOString(),
+        end_time: end_time.toISOString(),
+        customer_name: customerName || null,
+        customer_phone: customerPhone || null,
+        customer_email: 'manual@booking.com',
+        notes: notes || null,
+        hausbesuch: !!hausbesuch,
+        status: 'confirmed'
+      }).select().single();
+      if (error) {
+        conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : error.message });
+      } else {
+        created.push({ id: bk.id, date: s.date, time: s.time, employeeId: s.employeeId });
+      }
+    } catch (err) {
+      conflicts.push({ slot: s, reason: err.message });
+    }
+  }
+  res.json({ created, conflicts, count: created.length });
+});
+
 // 6. Manual Booking (From Admin Panel)
 app.post('/api/booking/manual-create', async (req, res) => {
   try {
