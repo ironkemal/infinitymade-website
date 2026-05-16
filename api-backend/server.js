@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import WebSocket from 'ws';
 import { google } from 'googleapis';
+import aiRouter from './ai/router.js';
 
 dotenv.config();
 
@@ -111,6 +112,9 @@ function berlinLocalToUTC(dateStr, timeStr) {
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// Unified AI gateway (Phase 0). All Azure OpenAI traffic routes through here.
+app.use('/api/ai', aiRouter);
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', (req, res) => {

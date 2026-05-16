@@ -4132,14 +4132,67 @@ document.getElementById('aiInput').addEventListener('keydown', e => {
   recog.onerror = () => { active = false; btn.textContent = '🎤'; };
 })();
 
+// Unified AI gateway endpoint (Phase 0). B2C draft now flows through Azure
+// Frankfurt via api-backend/ai/router.js. B2B path still uses legacy n8n
+// webhook and will be migrated in Phase 5.
+const AI_GATEWAY_BASE = 'https://n8n.infinitymade.de/api/ai';
+
+async function runMailDraftViaGateway(intent, contactsCache, containerId, mapContactFn) {
+  aiAddMsg(intent, 'user', containerId);
+  const msgsEl = document.getElementById(containerId);
+  if (!msgsEl) return;
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'msg-bubble ai';
+  loadingDiv.textContent = '⏳ KI bereitet E-Mail vor…';
+  msgsEl.appendChild(loadingDiv);
+  msgsEl.scrollTop = 9999;
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+
+    const contacts = (contactsCache || []).slice(0, 30).map(c =>
+      mapContactFn ? mapContactFn(c) : ({
+        id: c.id, name: c.title || c.contact_name || c.company_name,
+        email: c.email, phone: c.phone, notes: c.notes || ''
+      })
+    );
+
+    const res = await fetch(`${AI_GATEWAY_BASE}/b2c-draft`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + s.access_token
+      },
+      body: JSON.stringify({
+        intent,
+        contacts,
+        owner_info: {
+          business_name: currentProfile.business_name,
+          sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
+          city: currentProfile.city || '',
+          sector: currentProfile.sector || '',
+          extra_context: currentProfile.system_prompt || ''
+        }
+      })
+    });
+    const json = await res.json();
+    loadingDiv.remove();
+    if (!json.success || !json.draft) throw new Error(json.error || 'Fehler');
+    aiAddMsg('E-Mail-Entwurf erstellt — bitte prüfen und senden.', 'ai', containerId);
+    openComposeModal(json.draft);
+  } catch (e) {
+    loadingDiv.remove();
+    aiAddMsg('Fehler: ' + e.message, 'ai', containerId);
+  }
+}
+
 document.getElementById('b2cAiSendBtn').addEventListener('click', () => {
   const input = document.getElementById('b2cAiInput');
   const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
-  runMailDraft(msg, b2cCache, 'b2cAiMessages', c => ({
-    id: c.id, company_name: c.title, contact_name: c.title,
-    email: c.email, phone: c.phone, notes: ''
+  runMailDraftViaGateway(msg, b2cCache, 'b2cAiMessages', c => ({
+    id: c.id, name: c.title, email: c.email, phone: c.phone, notes: ''
   }));
 });
 
@@ -4163,9 +4216,8 @@ document.getElementById('b2cAiInput').addEventListener('keydown', e => {
     const text = e.results[0][0].transcript;
     document.getElementById('b2cAiInput').value = text;
     active = false; btn.textContent = '🎤';
-    runMailDraft(text, b2cCache, 'b2cAiMessages', c => ({
-      id: c.id, company_name: c.title, contact_name: c.title,
-      email: c.email, phone: c.phone, notes: ''
+    runMailDraftViaGateway(text, b2cCache, 'b2cAiMessages', c => ({
+      id: c.id, name: c.title, email: c.email, phone: c.phone, notes: ''
     }));
   };
   recog.onend = () => { active = false; btn.textContent = '🎤'; };
