@@ -3352,6 +3352,17 @@ function openEmpDetail(empId) {
   document.getElementById('empDetailName').textContent = m.business_name || m.email?.split('@')[0] || '—';
   document.getElementById('empDetailRole').textContent = m.role || 'employee';
   document.getElementById('empDetailEmail').textContent = m.email || '—';
+  const anredeSel = document.getElementById('empDetailAnrede');
+  if (anredeSel) {
+    anredeSel.value = m.anrede || '';
+    anredeSel.onchange = async () => {
+      const newVal = anredeSel.value || null;
+      const { error } = await supabase.from('profiles').update({ anrede: newVal }).eq('id', empId);
+      if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+      m.anrede = newVal;
+      showToast('Anrede gespeichert');
+    };
+  }
   renderEmpAvatar(document.getElementById('empDetailAvatar'), m);
   renderEmpAvatar(document.getElementById('empAvatarPreview'), m);
 

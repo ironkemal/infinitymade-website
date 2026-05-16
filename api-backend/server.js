@@ -698,7 +698,7 @@ app.get('/api/team', async (req, res) => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, email, business_name, role, booking_slug, avatar_url')
+      .select('id, email, business_name, role, booking_slug, avatar_url, anrede')
       .or(`id.eq.${owner_id},owner_id.eq.${owner_id}`);
 
     if (error) throw error;
@@ -861,8 +861,12 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
     if (allowedIds.length === 0) return res.json({ candidates: [], selected: [], report: 'Keine Mitarbeiter verfügbar.' });
 
     const { data: employees } = await supabase.from('profiles')
-      .select('id,business_name,email').in('id', allowedIds);
-    const empList = (employees || []).map(e => ({ id: e.id, name: e.business_name || e.email?.split('@')[0] || 'Mitarbeiter' }));
+      .select('id,business_name,email,anrede').in('id', allowedIds);
+    const empList = (employees || []).map(e => ({
+      id: e.id,
+      name: e.business_name || e.email?.split('@')[0] || 'Mitarbeiter',
+      anrede: e.anrede || null
+    }));
 
     // 4) Fetch working_hours, breaks, time_offs, custom_days, bookings for next 14 weeks
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
