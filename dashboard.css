@@ -3664,6 +3664,16 @@ textarea {
   background: transparent;
 }
 
+.patient-search-list .cust-new-item {
+  color: var(--primary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card-solid);
+  z-index: 1;
+}
+
 /* ===== GAPS ===== */
 .gaps-section {
   margin-top: 24px;

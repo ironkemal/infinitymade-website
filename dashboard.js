@@ -1450,12 +1450,13 @@ async function openBookingModal(b) {
 }
 
 async function initBkCustomerAutocomplete() {
-  const sel = document.getElementById('bkCustomerSelect');
+  const input = document.getElementById('bkCustomerSearch');
+  const list = document.getElementById('bkCustomerList');
   const nameH = document.getElementById('bkCustomer');
   const idH = document.getElementById('bkCustomerId');
   const phoneGroup = document.getElementById('bkPhoneGroup');
   const phoneInput = document.getElementById('bkPhone');
-  if (!sel || !nameH || !idH) return;
+  if (!input || !list || !nameH || !idH) return;
   if (phoneGroup) phoneGroup.hidden = true;
 
   async function loadBkLeads() {
@@ -1469,99 +1470,136 @@ async function initBkCustomerAutocomplete() {
   }
   await loadBkLeads();
 
-  function rebuildOptions(preserveValue) {
-    const prev = preserveValue || sel.value;
-    sel.innerHTML = '';
-    const optNew = document.createElement('option');
-    optNew.value = '__new__';
-    optNew.textContent = '+ Neuer Kunde…';
-    sel.appendChild(optNew);
-    const optPick = document.createElement('option');
-    optPick.value = '';
-    optPick.textContent = '— Kunde auswählen —';
-    sel.appendChild(optPick);
-    (window.bkAllLeads || []).forEach(l => {
-      const o = document.createElement('option');
-      o.value = l.id;
-      o.textContent = displayNameWithBirth(l);
-      sel.appendChild(o);
-    });
-    if (prev && (prev === '__new__' || prev === '' || (window.bkAllLeads || []).some(l => l.id === prev))) {
-      sel.value = prev;
+  let activeIndex = -1;
+
+  function renderList(filter) {
+    const q = (filter || '').trim().toLowerCase();
+    const filtered = !q
+      ? (window.bkAllLeads || [])
+      : (window.bkAllLeads || []).filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
+    let html = '<li class="cust-new-item" data-action="new">+ Neuer Kunde…</li>';
+    if (filtered.length === 0) {
+      html += '<li class="empty-item">Keine Treffer</li>';
     } else {
-      sel.value = '';
+      const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const rx = q ? new RegExp(`(${esc})`, 'gi') : null;
+      html += filtered.map(l => {
+        const name = displayNameWithBirth(l);
+        const safe = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const hl = rx ? safe.replace(rx, '<span class="match-hl">$1</span>') : safe;
+        return `<li data-id="${l.id}">${hl}</li>`;
+      }).join('');
+    }
+    list.innerHTML = html;
+    list.hidden = false;
+    activeIndex = -1;
+  }
+
+  function openNewLeadFlow() {
+    window._returnToBkModal = true;
+    window._bkModalState = {
+      id: document.getElementById('bk-id').value,
+      start: document.getElementById('bkStart').value,
+      employee: document.getElementById('bkEmployee').value,
+      service: document.getElementById('bkService').value,
+      notes: document.getElementById('bkNotes').value,
+      hausbesuch: document.getElementById('bkHausbesuch').checked,
+      seriesToggle: document.getElementById('bkSeriesToggle').checked
+    };
+    list.hidden = true;
+    closeModal('bookingModal');
+    openLeadModal(null);
+    // Prefill first name with what user typed so far
+    const typed = (input.value || '').trim();
+    if (typed) {
+      const fn = document.getElementById('lead-first-name');
+      if (fn && !fn.value) fn.value = typed;
     }
   }
-  rebuildOptions();
 
   function applyLeadById(id) {
     const lead = (window.bkAllLeads || []).find(l => l.id === id);
-    if (!lead) {
-      nameH.value = '';
-      idH.value = '';
-      if (phoneInput) phoneInput.value = '';
-      return;
-    }
+    if (!lead) return;
+    input.value = displayNameWithBirth(lead);
     nameH.value = displayNameWithBirth(lead);
     idH.value = lead.id;
     if (phoneInput) phoneInput.value = lead.phone || '';
+    list.hidden = true;
+    activeIndex = -1;
   }
 
-  if (!sel.dataset.bkAutoBound) {
-    sel.dataset.bkAutoBound = '1';
-    sel.addEventListener('change', () => {
-      const v = sel.value;
-      if (v === '__new__') {
-        window._returnToBkModal = true;
-        window._bkModalState = {
-          id: document.getElementById('bk-id').value,
-          start: document.getElementById('bkStart').value,
-          employee: document.getElementById('bkEmployee').value,
-          service: document.getElementById('bkService').value,
-          notes: document.getElementById('bkNotes').value,
-          hausbesuch: document.getElementById('bkHausbesuch').checked,
-          seriesToggle: document.getElementById('bkSeriesToggle').checked
-        };
-        sel.value = '';
-        closeModal('bookingModal');
-        openLeadModal(null);
-        return;
+  if (!input.dataset.bkAutoBound) {
+    input.dataset.bkAutoBound = '1';
+    input.addEventListener('input', () => {
+      nameH.value = '';
+      idH.value = '';
+      if (phoneInput) phoneInput.value = '';
+      renderList(input.value);
+    });
+    input.addEventListener('focus', () => renderList(input.value));
+    input.addEventListener('keydown', (e) => {
+      const items = list.querySelectorAll('li[data-id], li[data-action="new"]');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, items.length - 1);
+        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, 0);
+        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
+        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex >= 0 && items[activeIndex]) {
+          const it = items[activeIndex];
+          if (it.dataset.action === 'new') openNewLeadFlow();
+          else applyLeadById(it.dataset.id);
+        }
+      } else if (e.key === 'Escape') {
+        list.hidden = true;
+        activeIndex = -1;
       }
-      if (!v) {
-        nameH.value = '';
-        idH.value = '';
-        if (phoneInput) phoneInput.value = '';
-        return;
+    });
+    list.addEventListener('mousedown', (e) => {
+      const it = e.target.closest('li');
+      if (!it) return;
+      e.preventDefault();
+      if (it.dataset.action === 'new') openNewLeadFlow();
+      else if (it.dataset.id) applyLeadById(it.dataset.id);
+    });
+    document.addEventListener('mousedown', (e) => {
+      if (!document.getElementById('bkCustomerWrap')?.contains(e.target)) {
+        list.hidden = true;
       }
-      applyLeadById(v);
     });
   }
 
   function selectLead(id) {
     if (!id) return;
-    if (!(window.bkAllLeads || []).some(l => l.id === id)) rebuildOptions();
-    sel.value = id;
+    if (!(window.bkAllLeads || []).some(l => l.id === id)) {
+      // refresh in case new lead just got added
+      loadBkLeads().then(() => applyLeadById(id));
+      return;
+    }
     applyLeadById(id);
   }
   window.bkSelectLead = selectLead;
-  window.bkRebuildCustomerOptions = rebuildOptions;
 
-  // If booking modal was opened with an existing customer (edit case),
-  // try to match by name/phone and select that lead.
+  // Pre-select existing customer when editing a booking
   const existingName = (nameH.value || '').trim().toLowerCase();
   const existingId = (idH.value || '').trim();
   if (existingId && (window.bkAllLeads || []).some(l => l.id === existingId)) {
-    sel.value = existingId;
+    applyLeadById(existingId);
   } else if (existingName) {
     const match = (window.bkAllLeads || []).find(l =>
       (displayNameWithBirth(l) || '').toLowerCase() === existingName ||
       ((l.title || '').toLowerCase() === existingName)
     );
-    if (match) {
-      sel.value = match.id;
-      idH.value = match.id;
-      if (phoneInput && !phoneInput.value) phoneInput.value = match.phone || '';
-    }
+    if (match) applyLeadById(match.id);
+    else { input.value = nameH.value; }
+  } else {
+    input.value = '';
   }
 }
 
@@ -2313,6 +2351,9 @@ async function openLeadModal(lead) {
   document.getElementById('lead-notes').value = lead?.notes || '';
   document.getElementById('leadModalTitle').textContent = lead ? t('lead_modal_edit') : t('lead_modal_new');
 
+  const md = lead?.metadata || {};
+  document.getElementById('lead-geburtsdatum').value = md.geburtsdatum || '';
+
   const sector = getSector();
   const sectorFieldsEl = document.getElementById('lead-sector-fields');
   const physioRow = document.getElementById('lead-physio-row');
@@ -2331,10 +2372,8 @@ async function openLeadModal(lead) {
     kkSelect.innerHTML = '<option value="">-- Wählen --</option>' +
       krankenkassenCache.map(k => `<option value="${k.name}">${k.name}</option>`).join('');
 
-    const md = lead?.metadata || {};
     kkSelect.value = md.krankenkasse || '';
     document.getElementById('lead-krankenkassennummer').value = md.krankenkassennummer || '';
-    document.getElementById('lead-geburtsdatum').value = md.geburtsdatum || '';
     document.getElementById('lead-adresse').value = md.adresse || '';
   } else {
     sectorFieldsEl.style.display = 'none';
@@ -2365,14 +2404,15 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   const id = document.getElementById('lead-id').value;
   const firstName = document.getElementById('lead-first-name').value.trim();
   const lastName = document.getElementById('lead-last-name').value.trim();
+  const geburtsdatum = document.getElementById('lead-geburtsdatum').value;
   if (!firstName || !lastName) { showToast('Vorname und Nachname sind erforderlich.', 'error'); return; }
+  if (!geburtsdatum) { showToast('Geburtsdatum ist erforderlich.', 'error'); return; }
 
-  const metadata = {};
+  const metadata = { geburtsdatum };
   const sector = getSector();
   if (sector === 'physiotherapy') {
     metadata.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
     metadata.krankenkassennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
-    metadata.geburtsdatum = document.getElementById('lead-geburtsdatum').value || null;
     metadata.adresse = document.getElementById('lead-adresse').value.trim() || null;
   }
 
