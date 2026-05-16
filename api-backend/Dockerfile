@@ -8,6 +8,7 @@ RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
 # Then copy source
 COPY server.js ./
+COPY ai ./ai
 
 ENV NODE_ENV=production
 EXPOSE 3000
