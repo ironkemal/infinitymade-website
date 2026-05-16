@@ -1715,32 +1715,27 @@ async function updateBkDuration(srvId, defaultValue = null) {
       .sort((a, b) => a.minutes - b.minutes);
   }
 
-  if (durations.length > 0) {
+  if (durations.length > 1) {
+    // Multiple active durations → show radio buttons
+    const hasDefault = durations.some(d => d.minutes === defaultDur);
+    const selected = hasDefault ? defaultDur : durations[0].minutes;
     durOptions.innerHTML = durations.map(d => `
-      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-        <input type="radio" name="bkDuration" value="${d.minutes}" ${d.minutes === defaultDur ? 'checked' : ''}>
-        <span>${d.minutes} Min${d.price ? ' - ' + formatEur(d.price) : ''}</span>
+      <label class="bk-dur-option">
+        <input type="radio" name="bkDuration" value="${d.minutes}" ${d.minutes === selected ? 'checked' : ''}>
+        <span>${d.minutes} Min${d.price ? ' · ' + formatEur(d.price) : ''}</span>
       </label>
     `).join('');
     durGroup.hidden = false;
+  } else if (durations.length === 1) {
+    // Single configured duration → hide radio group, single value applied automatically
+    const d = durations[0];
+    durOptions.innerHTML = `<input type="radio" name="bkDuration" value="${d.minutes}" checked hidden>`;
+    durGroup.hidden = true;
   } else {
-    // Show fixed duration options based on service duration
-    const maxDur = Math.max(defaultDur * 2, 60);
-    const options = [];
-    for (let m = 10; m <= maxDur && m <= 120; m += 5) {
-      if (m >= defaultDur - 10 && m <= defaultDur + 20) {
-        options.push(m);
-      }
-    }
-    if (options.length === 0) options.push(defaultDur);
-
-    durOptions.innerHTML = options.map(d => `
-      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-        <input type="radio" name="bkDuration" value="${d}" ${d === defaultDur ? 'checked' : ''}>
-        <span>${d} Min</span>
-      </label>
-    `).join('');
-    durGroup.hidden = false;
+    // No price_config → fall back to the service's single duration_minutes
+    const single = parseInt(srv?.duration_minutes) || defaultDur;
+    durOptions.innerHTML = `<input type="radio" name="bkDuration" value="${single}" checked hidden>`;
+    durGroup.hidden = true;
   }
 
   // Set initial value
@@ -1787,7 +1782,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
   const startV = document.getElementById('bkStart').value;
-  const cust = document.getElementById('bkCustomer').value.trim();
+  let cust = document.getElementById('bkCustomer').value.trim();
+  let custId = document.getElementById('bkCustomerId').value.trim();
   const phone = document.getElementById('bkPhone').value.trim();
   const notes = document.getElementById('bkNotes').value.trim();
 
@@ -1795,7 +1791,26 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!empId) { showToast('Bitte einen Mitarbeiter auswählen.', 'error'); return; }
   if (!srvId) { showToast('Bitte eine Dienstleistung auswählen.', 'error'); return; }
   if (!startV) { showToast('Bitte Datum und Uhrzeit auswählen.', 'error'); return; }
-  const custId = document.getElementById('bkCustomerId').value.trim();
+
+  // Robust customer resolution: if hidden fields are empty but the search
+  // input shows a name, try to match a lead and use it.
+  if (!custId) {
+    const searchEl = document.getElementById('bkCustomerSearch');
+    const searchTxt = (searchEl?.value || '').trim();
+    if (searchTxt && Array.isArray(window.bkAllLeads)) {
+      const lower = searchTxt.toLowerCase();
+      const match = window.bkAllLeads.find(l =>
+        (displayNameWithBirth(l) || '').toLowerCase() === lower ||
+        (l.title || '').toLowerCase() === lower
+      ) || window.bkAllLeads.find(l => (l.title || '').toLowerCase().startsWith(lower));
+      if (match) {
+        custId = match.id;
+        cust = displayNameWithBirth(match);
+        document.getElementById('bkCustomer').value = cust;
+        document.getElementById('bkCustomerId').value = custId;
+      }
+    }
+  }
   if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
 
   const startDate = new Date(startV);
@@ -1803,13 +1818,11 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (startDate < now) { showToast('Termine in der Vergangenheit können nicht gebucht werden.', 'error'); return; }
 
   const durGroup = document.getElementById('bkDurationGroup');
+  const durOptions = document.getElementById('bkDurationOptions');
   let dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
-  if (durGroup && !durGroup.hidden) {
-    const checkedRadio = durGroup.querySelector('input[type="radio"]:checked');
-    if (checkedRadio) {
-      dur = parseInt(checkedRadio.value);
-    }
-  }
+  // Read from radio whether group is hidden or visible (single-option case keeps the radio)
+  const checkedRadio = (durOptions || durGroup)?.querySelector('input[type="radio"]:checked');
+  if (checkedRadio) dur = parseInt(checkedRadio.value);
   const startIso = new Date(startV).toISOString();
   const endIso = new Date(new Date(startV).getTime() + dur * 60000).toISOString();
 
@@ -2579,27 +2592,38 @@ function renderServices() {
       <div class="add-service-label">Neue Dienstleistung</div>
     </div>`;
   if (!servicesCache.length) { grid.innerHTML = addCard; bindAddServiceCard(); return; }
-  const isPhysio = getSector() === 'physiotherapy';
   grid.innerHTML = servicesCache.map(s => {
     const empNames = (s.employee_services || []).map(es => {
       const m = teamMembers.find(tm => tm.id === es.employee_id);
       return m ? (m.business_name || m.email?.split('@')[0]) : null;
     }).filter(Boolean).join(', ');
-    let meta = '';
-    if (isPhysio && s.price_config?.durations) {
-      const activeDurs = Object.entries(s.price_config.durations).filter(([_, v]) => v.active).map(([k, v]) => `${k}min=${v.price}€`).join(', ');
-      meta = activeDurs || 'Keine aktiven Zeiten';
+
+    // Build duration chips from price_config or fall back to legacy duration_minutes
+    let durChips = '';
+    const cfg = s.price_config?.durations;
+    if (cfg) {
+      const active = Object.entries(cfg)
+        .filter(([_, v]) => v && v.active)
+        .map(([k, v]) => ({ min: parseInt(k), price: v.price }))
+        .sort((a, b) => a.min - b.min);
+      durChips = active.length
+        ? active.map(d => `<span class="srv-chip">${d.min} Min${d.price != null ? ' · ' + formatEur(d.price) : ''}</span>`).join('')
+        : '<span class="srv-chip srv-chip-warn">Keine aktive Dauer</span>';
     } else {
-      meta = `${s.duration_minutes} min &middot; ${s.price != null ? s.price + ' €' : '—'}`;
+      const pr = s.price != null ? ' · ' + formatEur(s.price) : '';
+      durChips = `<span class="srv-chip">${s.duration_minutes || '–'} Min${pr}</span>`;
     }
+
     const codeTag = s.code ? `<span class="srv-code-badge">${escapeHtml(s.code)}</span>` : '';
     return `<div class="service-card" data-srv-id="${s.id}">
-      <div class="service-info">
-        <div class="service-title">${s.title} ${codeTag}</div>
-        <div class="service-meta">${meta}</div>
-        <div class="service-meta">${empNames || '—'}</div>
+      <div class="service-card-head">
+        <div class="service-title">${escapeHtml(s.title)} ${codeTag}</div>
+        <button class="srv-del-btn" data-srv-del="${s.id}" title="Löschen" aria-label="Löschen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+        </button>
       </div>
-      <button class="btn-icon" data-srv-del="${s.id}">🗑️</button>
+      <div class="srv-chip-row">${durChips}</div>
+      <div class="service-meta service-emps">${empNames ? '👥 ' + escapeHtml(empNames) : '— Alle Mitarbeiter'}</div>
     </div>`;
   }).join('') + addCard;
   grid.querySelectorAll('.service-card[data-srv-id]').forEach(card => {
@@ -2642,13 +2666,11 @@ function resetServiceForm() {
   document.getElementById('srvEmpAll').checked = true;
   renderSrvEmpCheckboxes();
   toggleEmpCheckboxes(true);
-  const isPhysio = getSector() === 'physiotherapy';
-  document.getElementById('srvStandardFields').hidden = isPhysio;
-  document.getElementById('srvPhysioFields').hidden = !isPhysio;
+  // Unified: always use duration cards for every sector
+  document.getElementById('srvStandardFields').hidden = true;
+  document.getElementById('srvPhysioFields').hidden = false;
   document.getElementById('srvStandardColorRow').hidden = true;
-  if (isPhysio) {
-    renderPhysioServiceCards();
-  }
+  renderPhysioServiceCards();
 }
 
 function openServiceEdit(id) {
@@ -2662,19 +2684,16 @@ function openServiceEdit(id) {
   document.getElementById('srvTitle').value = s.title;
   document.getElementById('srvCode').value = s.code || '';
 
-  const isPhysio = getSector() === 'physiotherapy';
-  if (isPhysio && s.price_config) {
-    document.getElementById('srvStandardFields').hidden = true;
-    document.getElementById('srvPhysioFields').hidden = false;
-    document.getElementById('srvStandardColorRow').hidden = true;
-    renderPhysioServiceCards(s.price_config.durations || {});
-  } else {
-    document.getElementById('srvStandardFields').hidden = false;
-    document.getElementById('srvPhysioFields').hidden = true;
-    document.getElementById('srvStandardColorRow').hidden = false;
-    document.getElementById('srvDur').value = s.duration_minutes || 30;
-    document.getElementById('srvPrice').value = s.price || 0;
+  // If price_config exists, use it. Otherwise build one from legacy duration_minutes+price.
+  let durations = s.price_config?.durations;
+  if (!durations || !Object.keys(durations).length) {
+    if (s.duration_minutes) {
+      durations = { [String(s.duration_minutes)]: { active: true, price: s.price || 0 } };
+    } else {
+      durations = {};
+    }
   }
+  renderPhysioServiceCards(durations);
 
   const assignedIds = new Set((s.employee_services || []).map(es => es.employee_id));
   const allChecked = assignedIds.size === 0 || assignedIds.size === teamMembers.length;
@@ -2759,30 +2778,31 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   if (!title) { showToast(t('err_generic'), 'error'); return; }
   const empIds = [...document.querySelectorAll('input[name="srv_emp"]:checked')].map(cb => cb.value);
   const mode = document.getElementById('addServiceForm').dataset.mode;
-  const isPhysio = getSector() === 'physiotherapy';
 
   const code = document.getElementById('srvCode').value.trim().toUpperCase() || null;
-  let payload = { title, code };
-  if (isPhysio) {
-    const durations = {};
-    document.querySelectorAll('.srv-dur-card').forEach(card => {
-      const dur = card.dataset.dur;
-      const active = card.querySelector('.dur-cb').checked;
-      const priceVal = card.querySelector('.dur-price').value;
-      durations[dur] = { active, price: priceVal !== '' ? parseFloat(priceVal) : null };
-    });
-    payload = {
-      title, code,
-      price_config: { durations },
-      duration_minutes: null,
-      price: null,
-      color: null
-    };
-  } else {
-    const duration = parseInt(document.getElementById('srvDur').value, 10) || 30;
-    const price = parseFloat(document.getElementById('srvPrice').value) || 0;
-    payload = { title, code, duration_minutes: duration, price };
+
+  // Always save price_config.durations (unified across sectors)
+  const durations = {};
+  const activeDurs = [];
+  document.querySelectorAll('.srv-dur-card').forEach(card => {
+    const dur = card.dataset.dur;
+    const active = card.querySelector('.dur-cb').checked;
+    const priceVal = card.querySelector('.dur-price').value;
+    durations[dur] = { active, price: priceVal !== '' ? parseFloat(priceVal) : null };
+    if (active) activeDurs.push({ minutes: parseInt(dur), price: priceVal !== '' ? parseFloat(priceVal) : 0 });
+  });
+  if (activeDurs.length === 0) {
+    showToast('Bitte mindestens eine Dauer aktivieren.', 'error');
+    return;
   }
+  activeDurs.sort((a, b) => a.minutes - b.minutes);
+  // Backward-compat fields use the smallest active duration
+  const payload = {
+    title, code,
+    price_config: { durations },
+    duration_minutes: activeDurs[0].minutes,
+    price: activeDurs[0].price
+  };
 
   if (mode === 'edit') {
     const editId = document.getElementById('srvEditId').value;
@@ -3104,17 +3124,24 @@ async function loadTeam() {
       <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
       ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
       <div class="emp-link-row">
-        <span class="emp-link-text">${bookingLink}</span>
+        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">🔗 Buchungslink öffnen</a>
         <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}">📋</button>
       </div>
     </div>`;
   }).join('');
   list.querySelectorAll('.emp-card').forEach(card => {
-    card.addEventListener('click', () => openEmpDetail(card.dataset.empId));
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.emp-link-row')) return;
+      openEmpDetail(card.dataset.empId);
+    });
+  });
+  list.querySelectorAll('.emp-link-row a, .emp-link-row button').forEach(el => {
+    el.addEventListener('click', (e) => e.stopPropagation());
   });
   list.querySelectorAll('.emp-copy-link').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.preventDefault();
       navigator.clipboard.writeText(btn.dataset.link);
       showToast(t('copied'));
     });
