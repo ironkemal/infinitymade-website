@@ -5811,16 +5811,24 @@ async function openBookingFromRxPreset(preset) {
       openModal('bookingModal');
     }
 
-    // Patient — use the dropdown's helper so the visible search input is also filled.
-    // bkSelectLead refreshes the leads cache if the patient was just created.
+    // Patient — fill all three fields directly. bkSelectLead alone is fragile
+    // because the leads cache may not yet contain the just-created patient.
     if (preset.patient_id) {
+      const displayName = preset.patient_name || '';
+      const searchEl = document.getElementById('bkCustomerSearch');
+      const nameH = document.getElementById('bkCustomer');
+      const idH = document.getElementById('bkCustomerId');
+      if (searchEl) searchEl.value = displayName;
+      if (nameH) nameH.value = displayName;
+      if (idH) idH.value = preset.patient_id;
+      // Hide the suggestion dropdown if it's open
+      const list = document.getElementById('bkCustomerList');
+      if (list) list.hidden = true;
+      // Best-effort: refresh leads cache so subsequent edits see the new patient
       if (typeof window.bkSelectLead === 'function') {
-        window.bkSelectLead(preset.patient_id);
-      } else if (preset.patient_name) {
-        document.getElementById('bkCustomer').value = preset.patient_name;
-        document.getElementById('bkCustomerId').value = preset.patient_id;
-        const search = document.getElementById('bkCustomerSearch');
-        if (search) search.value = preset.patient_name;
+        setTimeout(() => {
+          try { window.bkSelectLead(preset.patient_id); } catch {}
+        }, 150);
       }
     }
     if (preset.hausbesuch) document.getElementById('bkHausbesuch').checked = true;
