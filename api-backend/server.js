@@ -1362,7 +1362,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
           versichertennummer: patient.versichertennummer || null,
           krankenkasse: patient.krankenkasse || null,
           street: patient.adresse || null,
-          status: 'patient'
+          status: 'booked'
         })
         .select('id')
         .single();
