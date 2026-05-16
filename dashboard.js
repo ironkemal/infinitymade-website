@@ -2040,6 +2040,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
   if (!window._aiCtx?.lastResult) return;
   const { selected, service } = window._aiCtx.lastResult;
   const cust = document.getElementById('bkCustomer').value.trim();
+  const custIdAtConfirm = document.getElementById('bkCustomerId').value.trim() || null;
   const phone = document.getElementById('bkPhone').value.trim();
   const notes = document.getElementById('bkNotes').value.trim();
   const hausbesuch = document.getElementById('bkHausbesuch').checked;
@@ -2075,10 +2076,20 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
 
     // Phase 3: post-batch-create — ask if patient should be emailed
     if (json.created?.length) {
+      // Fallback: if hidden id field was cleared, derive from physio flow context or name lookup
+      let custId = custIdAtConfirm || window._physioFlow?.patient_id || null;
+      if (!custId && cust) {
+        const match = leadsCache.find(l =>
+          (l.title || '').toLowerCase() === cust.toLowerCase() ||
+          [(l.first_name || ''), (l.last_name || '')].filter(Boolean).join(' ').toLowerCase() === cust.toLowerCase()
+        );
+        if (match) custId = match.id;
+      }
+      console.log('[phase3] post-batch custId=', custId, 'cust=', cust);
       await maybeOfferAppointmentConfirmEmail({
         slots: selected,
         service,
-        custId: document.getElementById('bkCustomerId').value.trim() || null,
+        custId,
         custName: cust,
         empMap: (window._aiCtx?.lastResult?.employees || []).reduce((a, e) => (a[e.id] = e.name, a), {})
       });
@@ -2208,15 +2219,18 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
 }
 
 async function proceedToRechnungForPhysio({ patientId, patientName }) {
-  if (!patientId) return;
+  console.log('[proceedToRechnung] patientId=', patientId, 'name=', patientName);
   const flow = window._physioFlow || {};
   const isBlanko = !!flow.is_blanko;
   try {
-    if (typeof showPanel === 'function') showPanel('rechnungen');
-    else if (typeof switchPanel === 'function') switchPanel('rechnungen');
+    switchPanel('rechnungen');
 
     // Wait for panel + invoice list to mount
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 350));
+    if (!patientId) {
+      showToast('Rechnungen-Übersicht geöffnet (Patient nicht erkannt).', 'info');
+      return;
+    }
     await openInvEditor(null);
 
     const sel = document.getElementById('invPatientSelect');
