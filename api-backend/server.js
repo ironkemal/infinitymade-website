@@ -863,11 +863,32 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
 
     const { data: employees } = await supabase.from('profiles')
       .select('id,business_name,email,anrede').in('id', allowedIds);
-    const empList = (employees || []).map(e => ({
+    let empList = (employees || []).map(e => ({
       id: e.id,
       name: e.business_name || e.email?.split('@')[0] || 'Mitarbeiter',
       anrede: e.anrede || null
     }));
+
+    // Gender filter from preferences.notes — enforce server-side so AI can't drift
+    const notesLower = (preferences.notes || '').toLowerCase();
+    const wantsFemale = /\bweiblich|\bfrau\b|\bfemale|\bwoman|\bkadin|\bkadın|\bbayan/.test(notesLower);
+    const wantsMale = /\bmännlich|\bmaennlich|\bherr\b|\bmale\b|\bman\b|\berkek|\bbay /.test(notesLower);
+    let genderFilterApplied = null;
+    if (wantsFemale) {
+      const filtered = empList.filter(e => e.anrede === 'Frau');
+      if (filtered.length) { empList = filtered; genderFilterApplied = 'female'; }
+    } else if (wantsMale) {
+      const filtered = empList.filter(e => e.anrede === 'Herr');
+      if (filtered.length) { empList = filtered; genderFilterApplied = 'male'; }
+    }
+    // Re-derive allowedIds after gender filter so DB queries below scope to those staff
+    allowedIds = empList.map(e => e.id);
+    if (allowedIds.length === 0) {
+      return res.json({
+        success: true, selected: [], report: 'Kein Mitarbeiter mit gewünschter Anrede verfügbar. Bitte Anrede der Mitarbeiter im Team-Panel pflegen.',
+        candidatesTotal: 0, service: { id: svc.id, title: svc.title, duration: dur }, employees: empList
+      });
+    }
 
     // 4) Fetch working_hours, breaks, time_offs, custom_days, bookings for next 14 weeks
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
@@ -916,8 +937,8 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
     const step = 30;
     const anchor = startDate || today;
     const anchorWd = berlinDayOfWeek(anchor);
+    // Respect user's weekday selection exactly. Only fall back to anchor weekday if none chosen.
     const wdSet = (weekdays && weekdays.length) ? new Set(weekdays.map(Number)) : new Set([anchorWd]);
-    if (!wdSet.has(anchorWd)) wdSet.add(anchorWd);
 
     function addDaysISO(dateStr, days) {
       const d = new Date(dateStr + 'T12:00:00Z');
@@ -927,36 +948,31 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
 
     const targetDates = [];
     if (recurrence === 'daily') {
-      // count consecutive days from anchor
       for (let i = 0; i < count; i++) targetDates.push(addDaysISO(anchor, i));
     } else {
-      // weekly / biweekly — for each "week bucket", pick all selected weekdays
       const weekStep = recurrence === 'biweekly' ? 14 : 7;
-      // Buckets needed (rounded up by #weekdays per bucket)
-      const perBucket = wdSet.size;
-      const buckets = Math.ceil(count / perBucket);
-      const weekStartOffset = -anchorWd; // back to start-of-week (Sunday) of anchor's week
-      const sortedWds = [...wdSet].sort((a, b) => {
-        // start from anchor day so the first bucket honors the anchor weekday
-        const aRel = (a - anchorWd + 7) % 7;
-        const bRel = (b - anchorWd + 7) % 7;
-        return aRel - bRel;
+      // For each selected weekday, compute the first occurrence on/after the anchor
+      const sortedWds = [...wdSet].sort((a, b) => ((a - anchorWd + 7) % 7) - ((b - anchorWd + 7) % 7));
+      const firstByWd = new Map();
+      sortedWds.forEach(wd => {
+        const diff = (wd - anchorWd + 7) % 7;
+        firstByWd.set(wd, addDaysISO(anchor, diff));
       });
-      let added = 0;
-      for (let b = 0; b < buckets && added < count; b++) {
+      const perBucket = sortedWds.length;
+      const buckets = Math.ceil(count / perBucket);
+      for (let b = 0; b < buckets && targetDates.length < count; b++) {
         for (const wd of sortedWds) {
-          if (added >= count) break;
-          const offset = b === 0
-            ? ((wd - anchorWd + 7) % 7)               // first bucket: relative to anchor
-            : weekStartOffset + b * weekStep + wd;    // later: full week stride
-          const dateStr = addDaysISO(anchor, offset);
-          // First bucket: skip dates before anchor (e.g., user picked Fri but Mon checked too)
-          if (dateStr < anchor) continue;
-          targetDates.push(dateStr);
-          added++;
+          if (targetDates.length >= count) break;
+          targetDates.push(addDaysISO(firstByWd.get(wd), b * weekStep));
         }
       }
     }
+    // Final guard: dedupe + sort chronologically (defensive — should not be needed)
+    const seen = new Set();
+    const dedupedTargets = [];
+    targetDates.sort().forEach(d => { if (!seen.has(d)) { seen.add(d); dedupedTargets.push(d); } });
+    targetDates.length = 0;
+    Array.prototype.push.apply(targetDates, dedupedTargets);
 
     // Cap horizon to what we fetched (14 weeks)
     const horizonCap = horizon;
@@ -1053,6 +1069,7 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
         ...preferences,
         preferredEmployee: employeeId || null
       },
+      genderFilterApplied,
       service: { title: svc.title, duration: dur },
       employees: empList,
       customer: { name: customerName, id: customer?.id || null },
@@ -1076,25 +1093,39 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
       console.error('[ai-suggest-series] n8n error', err.message);
     }
 
-    // 7) Fallback: if AI failed or returned empty, pick the best slot per target date
-    let selected;
-    if (Array.isArray(aiResult.selected) && aiResult.selected.length) {
-      selected = aiResult.selected.slice(0, count);
-    } else {
-      selected = [];
+    // 7) Validate + dedupe AI response, fall back to deterministic pick per target date
+    const candidateKey = new Set(shortList.map(c => `${c.date}|${c.time}|${c.employeeId}`));
+    const cleanFromAi = (Array.isArray(aiResult.selected) ? aiResult.selected : [])
+      .filter(s => s && s.date && s.time && s.employeeId)
+      .filter(s => candidateKey.has(`${s.date}|${s.time}|${s.employeeId}`));
+    const dateSeen = new Set();
+    const selected = [];
+    for (const s of cleanFromAi) {
+      if (dateSeen.has(s.date)) continue; // dedupe: max one slot per date
+      dateSeen.add(s.date);
+      selected.push({ date: s.date, time: s.time, employeeId: s.employeeId });
+      if (selected.length >= count) break;
+    }
+    // Fill any missing target dates with the deterministic best slot for that date
+    if (selected.length < count) {
       for (const d of cappedDates) {
         if (selected.length >= count) break;
+        if (dateSeen.has(d)) continue;
         const slots = candidatesByDate.get(d) || [];
-        if (slots.length) {
-          const { score, bucket, ...rest } = slots[0];
-          selected.push(rest);
-        }
+        if (!slots.length) continue;
+        const { score: _s, bucket: _b, ...rest } = slots[0];
+        selected.push(rest);
+        dateSeen.add(d);
       }
     }
+
     let report = aiResult.report
       || (emptyDates.length
         ? `${selected.length} Termine gefunden. An folgenden Wunschtagen war kein Slot frei: ${emptyDates.join(', ')}.`
         : `${selected.length} freie Termine gefunden, die Ihren Wünschen am besten entsprechen.`);
+    if (genderFilterApplied) {
+      report += ` (Gefiltert auf ${genderFilterApplied === 'female' ? 'weibliche' : 'männliche'} Behandler.)`;
+    }
 
     res.json({
       success: true,
