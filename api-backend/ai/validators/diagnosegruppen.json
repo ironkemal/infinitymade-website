@@ -1,0 +1,177 @@
+{
+  "_meta": {
+    "source": "G-BA Heilmittel-Richtlinie + Heilmittelkatalog (Anlage 1, Stand 2024)",
+    "note": "Höchstmenge je Verordnung im Regelfall. Bei LHB/BVB: bis zu 12 Wochen je Verordnung erlaubt. Bei Blanko: keine Mengenbegrenzung, aber Ampelsystem.",
+    "version": "2026-05-16-v1"
+  },
+  "physio": {
+    "WS1": {
+      "title": "Wirbelsäulenerkrankungen (akut/postoperativ)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 6,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "WS2": {
+      "title": "Wirbelsäulenerkrankungen (prolongierter Verlauf)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "WS": {
+      "title": "Wirbelsäulenerkrankungen (Gruppenbezeichnung)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 6,
+      "frequency_hint": "1-3 x wöchentlich",
+      "note": "Fallback wenn Spezifizierung WS1/WS2 nicht angegeben."
+    },
+    "EX1": {
+      "title": "Erkrankungen der Extremitäten und des Beckens (akut)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 6,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "EX2": {
+      "title": "Erkrankungen der Extremitäten und des Beckens (prolongiert)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "EX3": {
+      "title": "Erkrankungen der Extremitäten und des Beckens (schwer/postoperativ)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 30,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "EX": {
+      "title": "Extremitäten/Becken (Gruppenbezeichnung)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 6,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "ZN1": {
+      "title": "ZNS-Erkrankungen Erwachsene",
+      "hoechstmenge": 10,
+      "orientierende_menge": 40,
+      "frequency_hint": "2-5 x wöchentlich"
+    },
+    "ZN2": {
+      "title": "ZNS-Erkrankungen Kinder",
+      "hoechstmenge": 10,
+      "orientierende_menge": 40,
+      "frequency_hint": "2-5 x wöchentlich"
+    },
+    "ZN": {
+      "title": "Zentralnervensystem (Gruppenbezeichnung)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 40,
+      "frequency_hint": "2-5 x wöchentlich"
+    },
+    "PN": {
+      "title": "Periphere Nervensystem-Erkrankungen",
+      "hoechstmenge": 10,
+      "orientierende_menge": 30,
+      "frequency_hint": "2-3 x wöchentlich"
+    },
+    "AT1": {
+      "title": "Atemwegserkrankungen (akut)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 6,
+      "frequency_hint": "2-5 x wöchentlich"
+    },
+    "AT2": {
+      "title": "Atemwegserkrankungen (chronisch)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "AT3": {
+      "title": "Atemwegserkrankungen Kinder",
+      "hoechstmenge": 6,
+      "orientierende_menge": 30,
+      "frequency_hint": "2-3 x wöchentlich"
+    },
+    "AT": {
+      "title": "Atemwege (Gruppenbezeichnung)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 6,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "LY1": {
+      "title": "Lymphabflussstörungen (Stadium I)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "LY2": {
+      "title": "Lymphabflussstörungen (Stadium II/III)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 30,
+      "frequency_hint": "2-5 x wöchentlich"
+    },
+    "LY3": {
+      "title": "Lymphabflussstörungen (schwerwiegend, z. B. nach Op.)",
+      "hoechstmenge": 10,
+      "orientierende_menge": 50,
+      "frequency_hint": "2-5 x wöchentlich"
+    },
+    "LY": {
+      "title": "Lymphsystem (Gruppenbezeichnung)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "CS": {
+      "title": "Erkrankungen der Cardio-/Skelettmuskulatur, sonstige",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "GE": {
+      "title": "Gefäßerkrankungen",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SO1": {
+      "title": "Sonstige Erkrankungen (Verbrennungen, Narbenkontrakturen)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SO2": {
+      "title": "Sonstige Erkrankungen (Schwangerschaft/Wochenbett)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SO3": {
+      "title": "Sonstige Erkrankungen (psychosomatisch)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    },
+    "SO4": {
+      "title": "Sonstige Erkrankungen (geriatrisch)",
+      "hoechstmenge": 6,
+      "orientierende_menge": 18,
+      "frequency_hint": "1-3 x wöchentlich"
+    }
+  },
+  "blanko_ampel": {
+    "_note": "Blankoverordnung Ampel-System (NOVENTI-Leitfaden, Schulter EX-Diagnosen). Ab Rote-Schwelle gilt 9% Vergütungsabschlag. BVB und LHB unterliegen NICHT dem Ampelsystem.",
+    "weichteil_arthrose_knorpel": {
+      "vorrangig": { "gruen_bis": 18, "rot_ab": 19 },
+      "ergaenzend": { "gruen_bis": 6, "rot_ab": 7 }
+    },
+    "fraktur": {
+      "vorrangig": { "gruen_bis": 26, "rot_ab": 27 },
+      "ergaenzend": { "gruen_bis": 8, "rot_ab": 9 }
+    }
+  },
+  "blanko_verguetung_eur": {
+    "_note": "Zusätzliche Leistungspositionen zur Blankoverordnung (Stand März 2026, NOVENTI).",
+    "physiotherapeutische_diagnostik": 34.34,
+    "bedarfsdiagnostik": 25.76,
+    "mehraufwandspauschale": 55.00
+  }
+}

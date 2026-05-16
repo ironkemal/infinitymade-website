@@ -1,0 +1,3566 @@
+{
+  "_meta": {
+    "source": "KBV Diagnoseliste — Langfristiger Heilmittelbedarf / Besonderer Verordnungsbedarf / Blankoverordnung",
+    "edition": "Stand 1. Januar 2026",
+    "generated_at_utc": "2026-05-16T20:04:43.803274Z",
+    "lhb_bvb_count": 238,
+    "blanko_physio_shoulder_count": 62
+  },
+  "lhb_bvb": {
+    "B94.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "SO3",
+        "EN1",
+        "SC",
+        "ST1",
+        "SP1",
+        "SP3",
+        "SP4",
+        "SP5",
+        "RE1",
+        "RE2",
+        "SF",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Folgezustände der Virusenzephalitis ZN/SO3 EN1 SC/ST1/SP1/"
+    },
+    "C70.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "ST1",
+        "SP1",
+        "SO1",
+        "SO3",
+        "SP2",
+        "SP3",
+        "SP5",
+        "SP6",
+        "RE1",
+        "RE2",
+        "SF"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Hirnhäute SO1/SO3 SP2/SP3/SP5/ nach Akutereignis"
+    },
+    "C70.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "ST1",
+        "SP1",
+        "SO1",
+        "SO3",
+        "SP2",
+        "SP3",
+        "SP5",
+        "SP6",
+        "RE1",
+        "RE2",
+        "SF"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Rückenmarkhäute SP6/RE1/RE2/"
+    },
+    "C70.9": {
+      "diagnosegruppen": [
+        "SO1",
+        "SO3",
+        "SP2",
+        "SP3",
+        "SP5",
+        "SP6",
+        "RE1",
+        "RE2",
+        "SF"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Meningen, nicht näher bezeichnet SF"
+    },
+    "C71.0": {
+      "diagnosegruppen": [
+        "SF"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Zerebrum, ausgenommen Hirnlappen und"
+    },
+    "C72.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Gehirn und andere Teile des Zentral-"
+    },
+    "C72.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Zentralnervensystem, nicht näher"
+    },
+    "G10": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Chorea Huntington ZN EN1 SC/SP5/SP6"
+    },
+    "G11.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Angeborene nichtprogressive Ataxie"
+    },
+    "G11.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Früh beginnende zerebellare Ataxie"
+    },
+    "G12.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN2",
+        "SB3",
+        "SC",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Infantile spinale Muskelatrophie, Typ I"
+    },
+    "G12.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "PN"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Motoneuron-Krankheit"
+    },
+    "G12.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "PN",
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige spinale Muskelatrophien und"
+    },
+    "G12.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "PN",
+        "AT",
+        "EN1",
+        "EN2",
+        "EN3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Spinale Muskelatrophie, nicht näher"
+    },
+    "G14": {
+      "diagnosegruppen": [
+        "ZN",
+        "PN",
+        "AT",
+        "EN1",
+        "EN2",
+        "EN3",
+        "SC",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Postpoliosyndrom ZN/PN/"
+    },
+    "G20.1": {
+      "diagnosegruppen": [
+        "SC",
+        "SP6",
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "- Primäres Parkinson-Syndrom mit mäßiger"
+    },
+    "G20.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "- Primäres Parkinson-Syndrom mit schwers-"
+    },
+    "G21.3": {
+      "diagnosegruppen": [
+        "ST1",
+        "ZN",
+        "EN1",
+        "SC",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "nur bei gleichzeitiger leitliniengerechter medikamentöser",
+      "diagnose": "Postenzephalitisches Parkinson-Syndrom"
+    },
+    "G21.4": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "nur bei gleichzeitiger leitliniengerechter medikamentöser Therapie",
+      "diagnose": "Vaskuläres Parkinson-Syndrom"
+    },
+    "G21.8": {
+      "diagnosegruppen": [
+        "ZN"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": "nur bei gleichzeitiger leitliniengerechter medikamentöser Therapie Multiple Sklerose [Encephalomyelitis",
+      "diagnose": "Sonstiges sekundäres Parkinson-Syndrom"
+    },
+    "G24.3": {
+      "diagnosegruppen": [
+        "ZN"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": "nur bei gleichzeitiger leitliniengerechter medikamentöser Therapie Multiple Sklerose [Encephalomyelitis disseminata]:",
+      "diagnose": "Torticollis spasticus ZN nur bei gleichzeitiger"
+    },
+    "G35.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "ST1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Erstmanifestation einer multiplen Skle-"
+    },
+    "G36.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "ST1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Akute disseminierte Demyelinisation,"
+    },
+    "G37.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "ST1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Diffuse Hirnsklerose"
+    },
+    "G37.1": {
+      "diagnosegruppen": [
+        "SP5",
+        "SP6"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Zentrale Demyelinisation des Corpus"
+    },
+    "G37.4": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "ST1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Subakute nekrotisierende Myelitis [Foix-"
+    },
+    "G37.5": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "ST1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Konzentrische Sklerose [Baló-Krankheit]"
+    },
+    "G37.8": {
+      "diagnosegruppen": [
+        "SP5",
+        "SP6"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige näher bezeichnete demyelini-"
+    },
+    "G37.9": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "PN",
+        "SB2",
+        "EN3",
+        "SP3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Demyelinisierende Krankheit des Zentral-"
+    },
+    "G60.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "PN",
+        "SB2",
+        "EN3",
+        "SP3",
+        "CS",
+        "SO4",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Hereditäre sensomotorische Neuropathie WS/EX/PN SB2/EN3 SP3"
+    },
+    "G60.8": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "PN",
+        "SB2",
+        "EN3",
+        "SP3",
+        "CS",
+        "SO4",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige hereditäre und idiopathische"
+    },
+    "G61.0": {
+      "diagnosegruppen": [
+        "SB1",
+        "SB2",
+        "EN3",
+        "PN"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "nur chronisch inflammatorische demyelinisierende Polyradikuloneuro- pathie (CIDP)",
+      "diagnose": "Guillain-Barré-Syndrom PN EN3"
+    },
+    "G61.8": {
+      "diagnosegruppen": [
+        "EN3",
+        "PN",
+        "ZN",
+        "EN1",
+        "SB3",
+        "SC",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "nur chronisch inflammatorische demyelinisierende Polyradikuloneuro- pathie (CIDP) G70",
+      "diagnose": "Sonstige Polyneuritiden PN EN3 nur chronisch"
+    },
+    "G70.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SB3",
+        "SC",
+        "SP6",
+        "PN",
+        "AT",
+        "EN3",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Myasthenia gravis ZN EN1/SB3 SC/SP6"
+    },
+    "G70.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SB3",
+        "SC",
+        "SP6",
+        "PN",
+        "AT",
+        "EN3",
+        "EN2",
+        "WS",
+        "EX"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Angeborene oder entwicklungsbedingte"
+    },
+    "G71.0": {
+      "diagnosegruppen": [
+        "PN",
+        "AT",
+        "EN3",
+        "SB3",
+        "SC",
+        "SP6",
+        "ZN",
+        "EN2",
+        "WS",
+        "EX"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "- Muskeldystrophie ZN/AT EN2/SB3 SC/SP6"
+    },
+    "G71.1": {
+      "diagnosegruppen": [
+        "PN",
+        "AT",
+        "EN3",
+        "SB3",
+        "SC",
+        "SP6",
+        "ZN",
+        "EN2",
+        "WS",
+        "EX"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Myotone Syndrome PN/AT EN3/SB3 SC/SP6"
+    },
+    "G71.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN2",
+        "SB3",
+        "SC",
+        "SP6",
+        "PN",
+        "EN3",
+        "WS",
+        "EX",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Angeborene Myopathien WS/EX/"
+    },
+    "G71.3": {
+      "diagnosegruppen": [
+        "PN",
+        "AT",
+        "EN3",
+        "SB3",
+        "SC",
+        "SP6",
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Mitochondriale Myopathie, anderenorts"
+    },
+    "G72.3": {
+      "diagnosegruppen": [
+        "SB3",
+        "SC",
+        "SP6",
+        "PN",
+        "AT",
+        "EN3",
+        "ZN",
+        "EN1",
+        "SP1",
+        "SP2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Periodische Lähmung PN/AT EN3/SB3"
+    },
+    "G72.4": {
+      "diagnosegruppen": [
+        "SC",
+        "SP6",
+        "PN",
+        "AT",
+        "EN3",
+        "SB3",
+        "ZN",
+        "EN1",
+        "SP1",
+        "SP2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Entzündliche Myopathie, anderenorts"
+    },
+    "G80.0": {
+      "diagnosegruppen": [
+        "PN",
+        "EN3",
+        "SB3",
+        "SC",
+        "SP6",
+        "ZN",
+        "EN1",
+        "SP1",
+        "SP2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Spastische tetraplegische Zerebralparese SP6/SC"
+    },
+    "G80.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1",
+        "SP2",
+        "SP6",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Spastische diplegische Zerebralparese"
+    },
+    "G80.2": {
+      "diagnosegruppen": [
+        "SP6",
+        "SC"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Infantile hemiplegische Zerebralparese"
+    },
+    "G80.3": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Dyskinetische Zerebralparese"
+    },
+    "G80.4": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Ataktische Zerebralparese"
+    },
+    "G80.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige infantile Zerebralparese"
+    },
+    "G80.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Infantile Zerebralparese, nicht näher be-"
+    },
+    "G81.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Schlaffe Hemiparese und Hemiplegie"
+    },
+    "G81.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Spastische Hemiparese und Hemiplegie"
+    },
+    "G82.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Schlaffe Paraparese und Paraplegie"
+    },
+    "G82.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Spastische Paraparese und Paraplegie"
+    },
+    "G82.3": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Schlaffe Tetraparese und Tetraplegie"
+    },
+    "G82.4": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Spastische Tetraparese und Tetraplegie"
+    },
+    "G82.5": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Tetraparese und Tetraplegie, nicht näher"
+    },
+    "G91.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Normaldruckhydrozephalus ZN EN1"
+    },
+    "G93.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Anoxische Hirnschädigung, anderenorts"
+    },
+    "G93.80": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach AkutereignisI60",
+      "diagnose": "Apallisches Syndrom"
+    },
+    "G95.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach AkutereignisI60",
+      "diagnose": "Syringomyelie und Syringobulbie ZN EN1/EN2"
+    },
+    "I60.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige Subarachnoidalblutung"
+    },
+    "I60.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach AkutereignisI61",
+      "diagnose": "Subarachnoidalblutung, nicht näher be-"
+    },
+    "I61.6": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Intrazerebrale Blutung an mehreren"
+    },
+    "I61.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige intrazerebrale Blutung"
+    },
+    "I61.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach AkutereignisI63",
+      "diagnose": "Intrazerebrale Blutung, nicht näher be-"
+    },
+    "I63.6": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Hirninfarkt durch Thrombose der Hirn-"
+    },
+    "I63.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Sonstiger Hirninfarkt"
+    },
+    "I63.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Hirninfarkt, nicht näher bezeichnet"
+    },
+    "I64": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6",
+        "ST1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach AkutereignisI69",
+      "diagnose": "Schlaganfall, nicht als Blutung oder In-"
+    },
+    "I69.3": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Folgen eines Hirninfarktes"
+    },
+    "I69.4": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Folgen eines Schlaganfalls, nicht als"
+    },
+    "I69.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3",
+        "EN1",
+        "SC",
+        "SP1",
+        "SP5"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Folgen sonstiger und nicht näher bezeich-"
+    },
+    "Q01.1": {
+      "diagnosegruppen": [
+        "EN1",
+        "SC",
+        "SP1",
+        "SP5",
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Nasofrontale Enzephalozele"
+    },
+    "Q01.2": {
+      "diagnosegruppen": [
+        "SP5",
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3",
+        "EN1",
+        "SC",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Okzipitale Enzephalozele"
+    },
+    "Q01.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3",
+        "EN1",
+        "SC",
+        "SP1",
+        "SP5"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Enzephalozele sonstiger Lokalisationen"
+    },
+    "Q01.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3",
+        "EN1",
+        "SC",
+        "SP1",
+        "SP5"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Enzephalozele, nicht näher bezeichnet"
+    },
+    "Q03.1": {
+      "diagnosegruppen": [
+        "EN1",
+        "SC",
+        "SP1",
+        "SP5"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Atresie der Apertura mediana [Foramen"
+    },
+    "Q03.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstiger angeborener Hydrozephalus"
+    },
+    "Q03.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Angeborener Hydrozephalus, nicht näher"
+    },
+    "Q04.0": {
+      "diagnosegruppen": [
+        "EN1",
+        "SC",
+        "SP1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Angeborene Fehlbildungen des Corpus"
+    },
+    "Q04.6": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Angeborene Gehirnzysten"
+    },
+    "Q04.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige näher bezeichnete angeborene"
+    },
+    "Q04.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3",
+        "EN1",
+        "EN2",
+        "SC",
+        "SP1",
+        "SP5"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Angeborene Fehlbildung des Gehirns,"
+    },
+    "Q05.1": {
+      "diagnosegruppen": [
+        "EN1",
+        "EN2",
+        "SC",
+        "SP1",
+        "SP5"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Thorakale Spina bifida mit Hydrozephalus"
+    },
+    "Q05.2": {
+      "diagnosegruppen": [
+        "SP5"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Lumbale Spina bifida mit Hydrozephalus"
+    },
+    "Q05.6": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3",
+        "EN1",
+        "EN2",
+        "SC",
+        "SP1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Thorakale Spina bifida ohne Hydroze-"
+    },
+    "Q05.7": {
+      "diagnosegruppen": [
+        "EN1",
+        "EN2",
+        "SC",
+        "SP1",
+        "SP5",
+        "SP6"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Lumbale Spina bifida ohne Hydrozepha-"
+    },
+    "Q05.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sakrale Spina bifida ohne Hydrozephalus"
+    },
+    "Q05.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "SO1",
+        "SO3",
+        "EN2",
+        "SC",
+        "SP1",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Spina bifida, nicht näher bezeichnet"
+    },
+    "Q06.0": {
+      "diagnosegruppen": [
+        "SO3",
+        "EN2",
+        "SC",
+        "SP1",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Amyelie"
+    },
+    "Q06.1": {
+      "diagnosegruppen": [
+        "EN2",
+        "SC",
+        "SP1",
+        "SP6"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Hypoplasie und Dysplasie des Rücken-"
+    },
+    "Q06.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Angeborene Fehlbildung des Rückenmar-"
+    },
+    "S14.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Kontusion und Ödem des zervikalen"
+    },
+    "S14.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Sonstige und nicht näher bezeichnete"
+    },
+    "S14.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN1",
+        "EN2",
+        "EN3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach AkutereignisS14",
+      "diagnose": "Verletzung von Nervenwurzeln der Hals-"
+    },
+    "S14.3": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN1",
+        "EN2",
+        "EN3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach AkutereignisS14",
+      "diagnose": "Verletzung des Plexus brachialis ZN/AT EN1/EN2/ längstens 1  Jahr"
+    },
+    "S14.5": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN1",
+        "EN2",
+        "EN3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach AkutereignisS14",
+      "diagnose": "Verletzung zervikaler sympathischer"
+    },
+    "S14.6": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Verletzung sonstiger und nicht näher be-"
+    },
+    "S24.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Kontusion und Ödem des thorakalen"
+    },
+    "S24.6": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Verletzung eines nicht näher bezeichne-"
+    },
+    "S34.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Kontusion und Ödem des lumbalen Rü-"
+    },
+    "S34.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Verletzung von Nervenwurzeln der Len-"
+    },
+    "S34.3": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "- Verletzung der Cauda equina"
+    },
+    "T09.3": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN2",
+        "SO3",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Verletzung des Rückenmarkes, Höhe nicht"
+    },
+    "T90.5": {
+      "diagnosegruppen": [
+        "ZN",
+        "AT",
+        "EN2",
+        "SO3",
+        "EN1",
+        "SC",
+        "SP5",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": "längstens 1 Jahr nach Akutereignis",
+      "diagnose": "Folgen einer intrakraniellen Verletzung ZN/AT/SO3 EN1 SC/SP5"
+    },
+    "M40.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Kyphose als Haltungsstörung WS ab Gesamtkypho-"
+    },
+    "M40.1": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Sonstige sekundäre Kyphose"
+    },
+    "M41.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Idiopathische Skoliose beim Kind WS/EX SB1 Skoliose über 20°"
+    },
+    "M41.1": {
+      "diagnosegruppen": [
+        "WS",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Idiopathische Skoliose beim Jugend-"
+    },
+    "M41.2": {
+      "diagnosegruppen": [
+        "WS",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Sonstige idiopathische Skoliose WS/AT SB1 ab 50°  nach Cobb"
+    },
+    "M42.04": {
+      "diagnosegruppen": [
+        "WS",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Juvenile Osteochondrose der Wirbelsäule"
+    },
+    "M47.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "ZN",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- G99.2 Arteria-spinalis-anterior-Kompressions-"
+    },
+    "M51.0": {
+      "diagnosegruppen": [
+        "EX"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "G99.2 Lumbale und sonstige Bandscheiben-"
+    },
+    "M51.1": {
+      "diagnosegruppen": [
+        "EX",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "G55.1 Lumbale und sonstige Bandscheiben-"
+    },
+    "M75.1": {
+      "diagnosegruppen": [
+        "EX",
+        "LY",
+        "PN",
+        "SB2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach AkutereignisG90",
+      "diagnose": "Läsionen der Rotatorenmanschette"
+    },
+    "M89.0": {
+      "diagnosegruppen": [
+        "EX",
+        "LY",
+        "PN",
+        "SB2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 1 Jahr nach AkutereignisG90",
+      "diagnose": "- Neurodystrophie [Algodystrophie] EX/LY/"
+    },
+    "G90.7": {
+      "diagnosegruppen": [
+        "EX",
+        "WS"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Komplexes regionales Schmerzsyndrom,"
+    },
+    "Z89.6": {
+      "diagnosegruppen": [
+        "EX",
+        "WS",
+        "CS",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Einseitiger Verlust der unteren Extremität"
+    },
+    "Z89.3": {
+      "diagnosegruppen": [
+        "EX",
+        "WS",
+        "CS",
+        "LY",
+        "SB2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Beidseitiger (teilweiser) Verlust der obe-"
+    },
+    "Z89.7": {
+      "diagnosegruppen": [
+        "CS",
+        "LY",
+        "SB2",
+        "WS",
+        "EX",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Beidseitiger (teilweiser) Verlust der unte-"
+    },
+    "Z89.8": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Verlust der oberen und unteren Extremi-"
+    },
+    "M05.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Felty-Syndrom"
+    },
+    "M05.1": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Lungenmanifestation der seropositiven"
+    },
+    "M05.8": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Sonstige seropositive chronische Poly-"
+    },
+    "M05.9": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Seropositive chronische Polyarthritis,"
+    },
+    "M06.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Seronegative chronische Polyarthritis WS/EX SB1"
+    },
+    "M06.1": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Adulte Form der Still-Krankheit WS/EX SB1"
+    },
+    "M07.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Distale interphalangeale Arthritis psoria-"
+    },
+    "M07.4": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Arthritis bei Crohn-Krankheit [Enteritis"
+    },
+    "M07.5": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Arthritis bei Colitis ulcerosa"
+    },
+    "M07.6": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Sonstige Arthritiden bei gastrointestina-"
+    },
+    "M08.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Juvenile chronische Polyarthritis, adulter"
+    },
+    "M08.4": {
+      "diagnosegruppen": [
+        "EX",
+        "ZN"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Juvenile chronische Arthritis, oligoartiku-"
+    },
+    "M08.7": {
+      "diagnosegruppen": [
+        "EX",
+        "ZN",
+        "PN",
+        "EN1",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Vaskulitis bei juveniler Arthritis"
+    },
+    "M08.8": {
+      "diagnosegruppen": [
+        "EX",
+        "ZN",
+        "PN",
+        "EN1",
+        "SB1",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Sonstige juvenile Arthritis"
+    },
+    "M08.9": {
+      "diagnosegruppen": [
+        "EX",
+        "ZN",
+        "PN",
+        "EN1",
+        "SB1",
+        "SB3",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "- Juvenile Arthritis, nicht näher bezeichnet"
+    },
+    "M30.0": {
+      "diagnosegruppen": [
+        "EX",
+        "ZN",
+        "PN",
+        "EN1",
+        "SB1",
+        "SB3",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Panarteriitis nodosa EX/ZN/"
+    },
+    "M31.3": {
+      "diagnosegruppen": [
+        "SB3",
+        "SC",
+        "EX",
+        "WS",
+        "AT"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Granulomatose mit Polyangiitis*"
+    },
+    "M32.1": {
+      "diagnosegruppen": [
+        "SC",
+        "EX",
+        "WS",
+        "AT",
+        "SB1",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Systemischer Lupus erythematodes mit"
+    },
+    "M32.8": {
+      "diagnosegruppen": [
+        "AT",
+        "SB1",
+        "SB3",
+        "EX",
+        "ZN",
+        "PN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige Formen des systemischen Lupus"
+    },
+    "M33.0": {
+      "diagnosegruppen": [
+        "EX",
+        "ZN",
+        "PN",
+        "EN1",
+        "SB1",
+        "SB3",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Juvenile Dermatomyositis EX/ZN/"
+    },
+    "M33.1": {
+      "diagnosegruppen": [
+        "SB3",
+        "SC",
+        "WS",
+        "EX",
+        "AT",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige Dermatomyositis"
+    },
+    "M33.2": {
+      "diagnosegruppen": [
+        "SC",
+        "WS",
+        "EX",
+        "AT",
+        "SB1",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Polymyositis"
+    },
+    "M34.0": {
+      "diagnosegruppen": [
+        "AT",
+        "SB1",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Progressive systemische Sklerose"
+    },
+    "M34.1": {
+      "diagnosegruppen": [
+        "SB1",
+        "SB3"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "CR(E)ST-Syndrom"
+    },
+    "M34.9": {
+      "diagnosegruppen": [
+        "EX",
+        "CS",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Systemische Sklerose, nicht näher be-"
+    },
+    "M36.2": {
+      "diagnosegruppen": [
+        "EX",
+        "CS",
+        "SB1",
+        "WS"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Arthropathia haemophilica"
+    },
+    "M45.0": {
+      "diagnosegruppen": [
+        "EX",
+        "CS",
+        "SB1",
+        "WS"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Spondylitis ankylosans WS/EX SB1"
+    },
+    "Q79.6": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "CS",
+        "SB1",
+        "SB2",
+        "AT",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Ehlers-Danlos-Syndrom WS/EX/CS SB1/SB2"
+    },
+    "Q87.4": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "CS",
+        "SB1",
+        "SB2",
+        "AT",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Marfan-Syndrom WS/EX/"
+    },
+    "Q66.0": {
+      "diagnosegruppen": [
+        "SB1",
+        "SB3",
+        "EX",
+        "SB2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Pes equinovarus congenitus (Klumpfuß) EX SB2"
+    },
+    "Q68.0": {
+      "diagnosegruppen": [
+        "EX",
+        "SB2",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Angeborene Deformitäten des M. sternoc-"
+    },
+    "Q71.0": {
+      "diagnosegruppen": [
+        "SO3",
+        "SO4",
+        "SB2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Angeborenes vollständiges Fehlen der"
+    },
+    "Q71.9": {
+      "diagnosegruppen": [
+        "CS",
+        "AT",
+        "PN"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Reduktionsdefekt der oberen Extremität,"
+    },
+    "Q72.0": {
+      "diagnosegruppen": [
+        "SO3",
+        "SO4",
+        "SB2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Angeborenes vollständiges Fehlen der"
+    },
+    "Q73.8": {
+      "diagnosegruppen": [
+        "CS",
+        "AT",
+        "PN",
+        "WS",
+        "EX",
+        "ZN",
+        "GE",
+        "LY",
+        "SO1",
+        "SO2"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige Reduktionsdefekte nicht näher"
+    },
+    "Q74.3": {
+      "diagnosegruppen": [
+        "SO3",
+        "SO4",
+        "SB2",
+        "EX",
+        "SB1",
+        "WS",
+        "SP3",
+        "SP4",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Arthrogryposis multiplex congenita EX SB1"
+    },
+    "Q78.0": {
+      "diagnosegruppen": [
+        "SB2",
+        "EX",
+        "SB1",
+        "WS",
+        "SP3",
+        "SP4",
+        "SP6",
+        "SF"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Osteogenesis imperfecta EX/WS SB1"
+    },
+    "Q86.80": {
+      "diagnosegruppen": [
+        "EX",
+        "SB1",
+        "WS",
+        "SP3",
+        "SP4",
+        "SP6",
+        "SB2",
+        "SF",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Thalidomid-Embryopathie SP3/SP4/"
+    },
+    "Q87.0": {
+      "diagnosegruppen": [
+        "SP3",
+        "SP4",
+        "SP6",
+        "WS",
+        "EX",
+        "SB2",
+        "SF",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Angeborene Fehlbildungssyndrome mit"
+    },
+    "Q87.2": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SB2",
+        "SP3",
+        "SF",
+        "SC",
+        "CS",
+        "LY",
+        "SB1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Angeborene Fehlbildungssyndrome mit"
+    },
+    "M23.5": {
+      "diagnosegruppen": [
+        "EX",
+        "CS",
+        "LY",
+        "SB1",
+        "SB2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": "längstens 6 Monate nach Akutereignis",
+      "diagnose": "- Z98.88 Chronische Instabilität des Kniegelenks EX/LY SB2 längstens 6  Monate"
+    },
+    "M24.41": {
+      "diagnosegruppen": [
+        "EX",
+        "SB2",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Z98.88 Habituelle Luxation und Subluxation"
+    },
+    "Z96.60": {
+      "diagnosegruppen": [
+        "EX",
+        "SB2",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Z98.88 Vorhandensein einer Schulterprothese EX SB2"
+    },
+    "Z96.64": {
+      "diagnosegruppen": [
+        "EX",
+        "SB2",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Z98.88 Vorhandensein einer Hüftgelenkprothese EX/LY SB2"
+    },
+    "Z96.65": {
+      "diagnosegruppen": [
+        "EX",
+        "SB2",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Z98.88 Vorhandensein einer Kniegelenkprothese"
+    },
+    "I89.01": {
+      "diagnosegruppen": [
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Lymphödem der oberen und unteren"
+    },
+    "I89.02": {
+      "diagnosegruppen": [
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Lymphödem der oberen und unteren"
+    },
+    "I97.83": {
+      "diagnosegruppen": [
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Lymphödem nach medizinischen Maß-"
+    },
+    "I97.85": {
+      "diagnosegruppen": [
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Lymphödem nach medizinischen Maß-"
+    },
+    "Q82.04": {
+      "diagnosegruppen": [
+        "SP3",
+        "SF"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Hereditäres Lymphödem, sonstige Lokali-"
+    },
+    "Q82.05": {
+      "diagnosegruppen": [
+        "SP3",
+        "SF"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Hereditäres Lymphödem, sonstige Lokali-"
+    },
+    "Q37.0": {
+      "diagnosegruppen": [
+        "SP3",
+        "SF"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Spalte des harten Gaumens mit beidseiti-"
+    },
+    "Q37.9": {
+      "diagnosegruppen": [
+        "SP1",
+        "SP2"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Gaumenspalte, nicht näher bezeichnet,"
+    },
+    "F80.1": {
+      "diagnosegruppen": [
+        "SP1",
+        "SP2",
+        "ZN",
+        "EN1",
+        "SP3",
+        "SP6"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Expressive Sprachstörung"
+    },
+    "F80.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1",
+        "SP2",
+        "SP3",
+        "SP6",
+        "RE2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "- Rezeptive Sprachstörung"
+    },
+    "F83": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1",
+        "SP2",
+        "SP3",
+        "SP6",
+        "RE2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Kombinierte umschriebene Entwicklungs-"
+    },
+    "F84.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "PS1",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Frühkindlicher Autismus"
+    },
+    "F84.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "PS1",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Atypischer Autismus"
+    },
+    "F84.4": {
+      "diagnosegruppen": [
+        "ZN",
+        "WS"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Überaktive Störung mit Intelligenzminde-"
+    },
+    "F84.5": {
+      "diagnosegruppen": [
+        "ZN",
+        "WS",
+        "EX",
+        "AT",
+        "PS1",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Asperger-Syndrom"
+    },
+    "F84.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "WS",
+        "EX",
+        "AT",
+        "PS1",
+        "EN1",
+        "SB1",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige tief greifende Entwicklungs-"
+    },
+    "F84.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "WS",
+        "EX",
+        "AT",
+        "PS1",
+        "EN1",
+        "SB1",
+        "SB3",
+        "SP1",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Rett-Syndrom ZN/WS/"
+    },
+    "Q90.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1",
+        "SP3",
+        "RE1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Trisomie 21,  Mosaik (mitotische Non-dis-"
+    },
+    "Q90.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Trisomie 21,  Translokation"
+    },
+    "Q90.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Down-Syndrom, nicht näher bezeichnet"
+    },
+    "Q91.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Trisomie 18,  meiotische Non-disjunction"
+    },
+    "Q91.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Trisomie 18,  Mosaik (mitotische Non-dis-"
+    },
+    "Q91.6": {
+      "diagnosegruppen": [
+        "EX",
+        "WS",
+        "SB1",
+        "SB2",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Trisomie 13,  Translokation"
+    },
+    "Q91.7": {
+      "diagnosegruppen": [
+        "EX",
+        "WS",
+        "SB1",
+        "SB2",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Patau-Syndrom, nicht näher bezeichnet"
+    },
+    "Q93.3": {
+      "diagnosegruppen": [
+        "EX",
+        "WS",
+        "SB1",
+        "SB2",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Deletion des kurzen Armes des Chromo-"
+    },
+    "Q93.4": {
+      "diagnosegruppen": [
+        "EX",
+        "WS",
+        "SB1",
+        "SB2",
+        "SP1",
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Deletion des kurzen Armes des Chromo-"
+    },
+    "Q93.5": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1",
+        "WS",
+        "SB1",
+        "SB2",
+        "PS1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige Deletion eines Chromosomen-"
+    },
+    "Q96.0": {
+      "diagnosegruppen": [
+        "SP1",
+        "ZN",
+        "EN1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Karyotyp 45,X"
+    },
+    "Q96.1": {
+      "diagnosegruppen": [
+        "ZN",
+        "EN1",
+        "SP1"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Karyotyp 46,X  iso (Xq)"
+    },
+    "Q96.3": {
+      "diagnosegruppen": [
+        "ZN",
+        "SO2",
+        "EN1",
+        "SB3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Mosaik, 45,X/46,XX  oder 45,X/46,XY"
+    },
+    "Q96.4": {
+      "diagnosegruppen": [
+        "ZN",
+        "SO2",
+        "EN1",
+        "SB3",
+        "PS1",
+        "PS2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Mosaik, 45,X/sonstige  Zelllinie(n) mit"
+    },
+    "Q96.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "SO2",
+        "EN1",
+        "SB3",
+        "PS1",
+        "PS2",
+        "SP1",
+        "SP3",
+        "SP5",
+        "SF",
+        "RE1",
+        "RE2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige Varianten des Turner-Syndroms"
+    },
+    "Q96.9": {
+      "diagnosegruppen": [
+        "ZN",
+        "SO2",
+        "EN1",
+        "SB3",
+        "PS1",
+        "PS2",
+        "SP1",
+        "SP3",
+        "SP5",
+        "SF",
+        "RE1",
+        "RE2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Turner-Syndrom, nicht näher bezeichnet"
+    },
+    "Q99.2": {
+      "diagnosegruppen": [
+        "ZN",
+        "SO2",
+        "EN1",
+        "SB3",
+        "PS1",
+        "PS2",
+        "SP1",
+        "SP3",
+        "SP5",
+        "SF",
+        "RE1",
+        "RE2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Fragiles X-Chromosom ZN/SO2 EN1/SB3/"
+    },
+    "J44.00": {
+      "diagnosegruppen": [
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Chronische obstruktive Lungenkrankheit"
+    },
+    "J44.90": {
+      "diagnosegruppen": [
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Chronische obstruktive Lungenkrankheit,"
+    },
+    "J84.10": {
+      "diagnosegruppen": [
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige interstitielle Lungenkrankheiten"
+    },
+    "J84.80": {
+      "diagnosegruppen": [
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige näher bezeichnete interstitielle"
+    },
+    "P27.1": {
+      "diagnosegruppen": [
+        "AT"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Bronchopulmonale Dysplasie mit"
+    },
+    "P27.8": {
+      "diagnosegruppen": [
+        "AT",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Sonstige chronische Atemwegserkrankun-"
+    },
+    "E41": {
+      "diagnosegruppen": [
+        "SC"
+      ],
+      "physio": false,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Alimentärer Marasmus SC ab vollendetem"
+    },
+    "F00.0": {
+      "diagnosegruppen": [
+        "PS4"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Demenz bei Alzheimer-Krankheit mit"
+    },
+    "F00.1": {
+      "diagnosegruppen": [
+        "PS4"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Demenz bei Alzheimer-Krankheit, mit"
+    },
+    "F00.2": {
+      "diagnosegruppen": [
+        "PS4"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Demenz bei Alzheimer-Krankheit, atypi-"
+    },
+    "F02.8": {
+      "diagnosegruppen": [
+        "PS2"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Demenz bei anderenorts klassifizierten"
+    },
+    "F03": {
+      "diagnosegruppen": [
+        "PS2"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Nicht näher bezeichnete Demenz"
+    },
+    "F41.0": {
+      "diagnosegruppen": [
+        "PS2"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Panikstörung [episodisch paroxysmale"
+    },
+    "F41.1": {
+      "diagnosegruppen": [
+        "PS2"
+      ],
+      "physio": false,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Generalisierte Angststörung"
+    },
+    "F41.3": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Andere gemischte Angststörungen"
+    },
+    "F41.8": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sonstige spezifische Angststörungen"
+    },
+    "F41.9": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Angststörung, nicht näher bezeichnet"
+    },
+    "F45.40": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Anhaltende somatoforme"
+    },
+    "F45.41": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2",
+        "WS",
+        "EX",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Chronische Schmerzstörung mit somati-"
+    },
+    "G54.6": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2",
+        "WS",
+        "EX",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Phantomschmerz CS PS2 ab vollendetem"
+    },
+    "N39.3": {
+      "diagnosegruppen": [
+        "SO2"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Belastungsinkontinenz [Stressinkonti-"
+    },
+    "N39.4": {
+      "diagnosegruppen": [
+        "SO2",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "- Sonstige näher bezeichnete Harninkon-"
+    },
+    "R15": {
+      "diagnosegruppen": [
+        "SC",
+        "SO2"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Stuhlinkontinenz SO2 ab vollendetem"
+    },
+    "R26.0": {
+      "diagnosegruppen": [
+        "WS",
+        "EX",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Ataktischer Gang WS/EX/"
+    },
+    "R26.2": {
+      "diagnosegruppen": [
+        "SO2"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Gehbeschwerden, anderenorts nicht"
+    },
+    "R29.6": {
+      "diagnosegruppen": [
+        "SO2",
+        "WS",
+        "EX",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Sturzneigung, anderenorts nicht klassi-"
+    },
+    "R32": {
+      "diagnosegruppen": [
+        "SO2",
+        "WS",
+        "EX",
+        "SO3"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Nicht näher bezeichnete Harninkontinenz SO2 ab vollendetem"
+    },
+    "R42": {
+      "diagnosegruppen": [
+        "SO2",
+        "WS",
+        "EX",
+        "SO3",
+        "CS",
+        "PS2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Schwindel und Taumel WS/EX/"
+    },
+    "R52.1": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2",
+        "SC"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Chronischer unbeeinflussbarer Schmerz CS PS2 ab vollendetem"
+    },
+    "R64": {
+      "diagnosegruppen": [
+        "CS",
+        "PS2",
+        "SC",
+        "WS",
+        "EX"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Kachexie SC ab vollendetem"
+    },
+    "M80.0": {
+      "diagnosegruppen": [
+        "SC",
+        "WS",
+        "EX"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "- Postmenopausale Osteoporose mit pa-"
+    },
+    "M80.2": {
+      "diagnosegruppen": [
+        "WS",
+        "EX"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Inaktivitätsosteoporose mit pathologi-"
+    },
+    "M80.8": {
+      "diagnosegruppen": [
+        "ZN",
+        "PN"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "- Sonstige Osteoporose mit pathologischer"
+    },
+    "E74.0": {
+      "diagnosegruppen": [
+        "ZN",
+        "PN",
+        "AT",
+        "WS",
+        "EX",
+        "CS",
+        "SO1"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Glykogenspeicherkrankheiten [Glyko-"
+    },
+    "E75.0": {
+      "diagnosegruppen": [
+        "SB3",
+        "SC",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "GM2-Gangliosidose"
+    },
+    "E76.0": {
+      "diagnosegruppen": [
+        "SC",
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": true,
+      "hinweis": null,
+      "diagnose": "Mukopolysaccharidose, Typ I"
+    },
+    "E88.20": {
+      "diagnosegruppen": [
+        "LY"
+      ],
+      "physio": true,
+      "ergo": false,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Lipödem, Stadium I LY nur im Zusammen-"
+    },
+    "U09.9": {
+      "diagnosegruppen": [
+        "WS",
+        "AT",
+        "SB1",
+        "PS2",
+        "PS3"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Post-COVID  Syndrom WS/AT SB1/PS2/"
+    },
+    "Z99.0": {
+      "diagnosegruppen": [
+        "EX",
+        "ZN",
+        "PN",
+        "AT",
+        "LY",
+        "EN1",
+        "EN2"
+      ],
+      "physio": true,
+      "ergo": true,
+      "stimm": false,
+      "hinweis": null,
+      "diagnose": "Z43.0 Abhängigkeit (langzeit) vom Aspirator"
+    }
+  },
+  "blanko_physio_shoulder": {
+    "M13.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Monarthritis, anderenorts nicht klassifiziert: Schulterregion",
+      "second_icd": null
+    },
+    "M13.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige näher bezeichnete Arthritis: Schulterregion",
+      "second_icd": null
+    },
+    "M13.91": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Arthritis, nicht näher bezeichnet : Schulterregion",
+      "second_icd": null
+    },
+    "M19.01": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Primäre Arthrose sonstiger Gelenke: Schulterregion",
+      "second_icd": null
+    },
+    "M19.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Posttraumatische Arthrose sonstiger Gelenke: Schulterregion",
+      "second_icd": null
+    },
+    "M19.21": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige sekundäre Arthrose: Schulterregion",
+      "second_icd": null
+    },
+    "M19.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige näher bezeichnete Arthrose: Schulterregion",
+      "second_icd": null
+    },
+    "M19.91": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Arthrose, nicht näher bezeichnet: Schulterregion",
+      "second_icd": null
+    },
+    "M24.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige Gelenkknorpelschädigungen: Schulterregion",
+      "second_icd": null
+    },
+    "M24.21": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige Gelenkknorpelschädigungen: Oberarm [Humerus, Ellenbogengelenk]",
+      "second_icd": null
+    },
+    "M24.31": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Pathologische Luxation und Subluxation eines Gelenkes, anderenorts nicht klassifiziert: Schulter-",
+      "second_icd": null
+    },
+    "M24.41": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Habituelle Luxation und Subluxation eines Gelenkes: Schulterregion",
+      "second_icd": null
+    },
+    "M24.51": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Gelenkkontraktur: Schulterregion",
+      "second_icd": null
+    },
+    "M24.61": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Ankylose eines Gelenkes: Schulterregion",
+      "second_icd": null
+    },
+    "M24.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige näher bezeichnete Gelenkschädigungen, anderenorts nicht klassifiziert: Schulterregion",
+      "second_icd": null
+    },
+    "M24.91": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Gelenkschädigung, nicht näher bezeichnet: Schulterregion",
+      "second_icd": null
+    },
+    "M25.01": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Hämarthros: Schulterregion",
+      "second_icd": null
+    },
+    "M25.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Gelenkfistel : Schulterregion",
+      "second_icd": null
+    },
+    "M25.21": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Schlottergelenk: Schulterregion",
+      "second_icd": null
+    },
+    "M25.31": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige Instabilität eines Gelenkes: Schulterregion [Klavikula, Skapula, Akromioklavikular-,",
+      "second_icd": null
+    },
+    "M25.41": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Gelenkerguss: Schulterregion",
+      "second_icd": null
+    },
+    "M25.61": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Gelenksteife, anderenorts nicht klassifiziert: Schulterregion",
+      "second_icd": null
+    },
+    "M65.01": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sehnenscheidenabszess: Schulterregion",
+      "second_icd": null
+    },
+    "M65.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige infektiöse (Teno-)Synovitis: Schulterregion",
+      "second_icd": null
+    },
+    "M65.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige Synovitis und Tenosynovitis: Schulterregion",
+      "second_icd": null
+    },
+    "M65.91": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Synovitis und Tenosynovitis, nicht näher bezeichnet: Schulterregion",
+      "second_icd": null
+    },
+    "M66.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Ruptur der Synovialis: Schulterregion",
+      "second_icd": null
+    },
+    "M66.21": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Spontanruptur der Strecksehnen: Schulterregion",
+      "second_icd": null
+    },
+    "M66.31": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Spontanruptur von Beugesehnen: Schulterregion",
+      "second_icd": null
+    },
+    "M66.41": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Spontanruptur sonstiger Sehnen: Schulterregion",
+      "second_icd": null
+    },
+    "M71.01": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Schleimbeutelabszess: Schulterregion",
+      "second_icd": null
+    },
+    "M71.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige infektiöse Bursitis: Schulterregion",
+      "second_icd": null
+    },
+    "M71.31": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige Schleimbeutelzyste: Schulterregion",
+      "second_icd": null
+    },
+    "M71.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige näher bezeichnete Bursopathien: Schulterregion",
+      "second_icd": null
+    },
+    "M71.91": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Bursopathie, nicht näher bezeichnet: Schulterregion",
+      "second_icd": null
+    },
+    "M75.-": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Schulterläsionen",
+      "second_icd": null
+    },
+    "M84.11": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Nichtvereinigung der Frakturenden [Pseudarthrose]: Schulterregion",
+      "second_icd": null
+    },
+    "M84.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige Veränderungen der Knochenkontinuität: Schulterregion",
+      "second_icd": null
+    },
+    "M84.91": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Veränderung der Knochenkontinuität, nicht näher bezeichnet: Schulterregion",
+      "second_icd": null
+    },
+    "M93.21": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Osteochondrosis dissecans : Schulterregion",
+      "second_icd": null
+    },
+    "M93.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige näher bezeichnete Osteochrondropathien: Schulterregion",
+      "second_icd": null
+    },
+    "M94.21": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Chondromalazie: Schulterregion",
+      "second_icd": null
+    },
+    "M94.31": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Chondrolyse: Schulterregion",
+      "second_icd": null
+    },
+    "M94.81": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige näher bezeichnete Knorpelkrankheiten: Schulterregion",
+      "second_icd": null
+    },
+    "M94.91": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Knorpelkrankheit, nicht näher bezeichnet: Schulterregion",
+      "second_icd": null
+    },
+    "S43.-": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Luxation, Verstauchung und Zerrung von Gelenken und Bändern des Schultergürtels",
+      "second_icd": null
+    },
+    "S46.-": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Verletzung von Muskeln und Sehnen in Höhe der Schulter und des Oberarmes",
+      "second_icd": null
+    },
+    "S49.-": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Sonstige und nicht näher bezeichnete Verletzungen der Schulter und des Oberarmes",
+      "second_icd": null
+    },
+    "S42.3": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Fraktur des Humerusschaftes",
+      "second_icd": null
+    },
+    "S42.7": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Multiple Frakturen der Klavikula, der Skapula und des Humerus",
+      "second_icd": null
+    },
+    "S42.8": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Fraktur sonstiger Teile der Schulter und des Oberarmes",
+      "second_icd": null
+    },
+    "S42.9": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Fraktur des Schultergürtels, Teil nicht näher bezeichnet; Fraktur der Schulter o.n.A.",
+      "second_icd": null
+    },
+    "T22.30": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Verbrennung 3. Grades der Schulter und des Armes, ausgenommen Handgelenk und Hand, Teil",
+      "second_icd": null
+    },
+    "T22.32": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Verbrennung 3. Grades des (Ober-)Armes und der Schulterregion",
+      "second_icd": null
+    },
+    "T22.33": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Verbrennung 3. Grades der Achselhöhle",
+      "second_icd": null
+    },
+    "T84.00": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Mechanische Komplikation durch eine Gelenkendoprothese: Schultergelenk",
+      "second_icd": null
+    },
+    "T84.10": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Mechanische Komplikation durch eine interne Osteosynthesevorrichtung an Extremitätenknochen:",
+      "second_icd": null
+    },
+    "M84.01": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Frakturheilung in Fehlstellung: Schulterregion [Klavikula, Skapula, Akromioklavikular-, Schulter-,",
+      "second_icd": null
+    },
+    "M84.21": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Verzögerte Frakturheilung: Schulterregion [Klavikula, Skapula, Akromioklavikular-, Schulter-, Ster-",
+      "second_icd": null
+    },
+    "M84.31": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Stressfraktur, anderenorts nicht klassifiziert: Schulterregion [Klavikula, Skapula, Akromioklaviku-",
+      "second_icd": null
+    },
+    "M84.41": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Pathologische Fraktur, anderenorts nicht klassifiziert: Schulterregion [Klavikula, Skapula, Akromiok-",
+      "second_icd": null
+    },
+    "Z96.60": {
+      "diagnosegruppe": "EX",
+      "diagnose": "Vorhandensein von orthopädischen Gelenkimplantaten + Sonstige näher bezeichnete Zustände",
+      "second_icd": "Z98.88"
+    }
+  }
+}
