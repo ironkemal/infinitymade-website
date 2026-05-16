@@ -70,6 +70,15 @@
           <div class="step-title">Persönliche Daten</div>
           <div class="step-sub">Geben Sie Ihre Kontaktinformationen ein.</div>
 
+          <label>Anrede</label>
+          <select id="anrede" class="form-select" style="width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;background:#fff;font-size:14px;">
+            <option value="">— Bitte wählen —</option>
+            <option value="Frau">Frau</option>
+            <option value="Herr">Herr</option>
+            <option value="Divers">Divers</option>
+          </select>
+          <div class="field-error" id="err-anrede">Bitte wählen Sie eine Anrede.</div>
+
           <label>Vorname</label>
           <input type="text" id="vorname" placeholder="Ihr Vorname" />
           <div class="field-error" id="err-vorname">Bitte geben Sie Ihren Vornamen ein.</div>

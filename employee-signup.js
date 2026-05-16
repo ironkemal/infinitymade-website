@@ -26,7 +26,7 @@ function showFieldErr(id, show) {
   if (inp) inp.classList.toggle('error', show);
 }
 function clearStep1Errors() {
-  ['vorname','nachname','email','password','password2'].forEach(id => showFieldErr(id, false));
+  ['anrede','vorname','nachname','email','password','password2'].forEach(id => showFieldErr(id, false));
 }
 function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
@@ -78,12 +78,14 @@ function showMsg(text, type) {
 function validateStep1() {
   clearStep1Errors();
   let ok = true;
+  const anrede = $('anrede').value;
   const vorname = $('vorname').value.trim();
   const nachname = $('nachname').value.trim();
   const email = $('email').value.trim();
   const pw = $('password').value;
   const pw2 = $('password2').value;
 
+  if (!anrede) { showFieldErr('anrede', true); ok = false; }
   if (!vorname) { showFieldErr('vorname', true); ok = false; }
   if (!nachname) { showFieldErr('nachname', true); ok = false; }
   if (!isValidEmail(email)) { showFieldErr('email', true); ok = false; }
@@ -169,6 +171,7 @@ $('signupForm').addEventListener('submit', async (e) => {
     if (authData.user) {
       await supabase.from('profiles').update({
         role: 'employee', owner_id: ownerId, business_name: name,
+        anrede: $('anrede').value || null,
         plan: 'mitarbeiter', billing: null, plan_status: 'active'
       }).eq('id', authData.user.id);
 
