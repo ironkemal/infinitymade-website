@@ -6017,6 +6017,8 @@ function openRezeptConfirmModal(payload) {
   setVal('rxcDob', pat.geburtsdatum);
   setVal('rxcVersNr', pat.versichertennummer);
   setVal('rxcKasse', pat.krankenkasse);
+  setVal('rxcEmail', pat.email);
+  setVal('rxcPhone', pat.phone);
   setVal('rxcArztName', arzt.name);
   setVal('rxcAusstDate', arzt.ausstellungsdatum);
   setVal('rxcLanr', arzt.lanr);
@@ -6089,6 +6091,8 @@ async function submitConfirm() {
         geburtsdatum: document.getElementById('rxcDob').value || null,
         versichertennummer: document.getElementById('rxcVersNr').value.trim() || null,
         krankenkasse: document.getElementById('rxcKasse').value.trim() || null,
+        email: document.getElementById('rxcEmail').value.trim() || null,
+        phone: document.getElementById('rxcPhone').value.trim() || null,
         geschlecht: rxLastUpload.parsed?.patient?.geschlecht || null,
         adresse: rxLastUpload.parsed?.patient?.adresse || null
       },

@@ -1345,6 +1345,15 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
 
       if (matches && matches.length) {
         patientId = matches[0].id;
+        // Backfill contact info the employee just collected
+        const patch = {};
+        if (patient.email) patch.email = patient.email;
+        if (patient.phone) patch.phone = patient.phone;
+        if (patient.versichertennummer) patch.versichertennummer = patient.versichertennummer;
+        if (patient.krankenkasse) patch.krankenkasse = patient.krankenkasse;
+        if (Object.keys(patch).length) {
+          await supabase.from('leads').update(patch).eq('id', patientId);
+        }
       }
     }
 
@@ -1361,6 +1370,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
           geschlecht: patient.geschlecht || null,
           versichertennummer: patient.versichertennummer || null,
           krankenkasse: patient.krankenkasse || null,
+          email: patient.email || null,
+          phone: patient.phone || null,
           street: patient.adresse || null,
           status: 'booked'
         })
