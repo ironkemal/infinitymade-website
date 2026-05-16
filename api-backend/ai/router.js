@@ -11,10 +11,12 @@ import { logCall, hashRequest } from './audit.js';
 import { configSummary } from './azureClient.js';
 
 import { run as b2cDraft } from './tasks/b2c-draft.js';
+import { run as rezeptValidate } from './tasks/rezept-validate.js';
 
 const TASKS = {
-  'b2c-draft': b2cDraft
-  // Future: 'rezept-ocr', 'rezept-validate', 'schedule-series',
+  'b2c-draft': b2cDraft,
+  'rezept-validate': rezeptValidate
+  // Future: 'rezept-ocr', 'schedule-series',
   //         'b2b-draft', 'doctor-email-draft', 'whatsapp-intent'
 };
 
