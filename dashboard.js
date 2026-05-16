@@ -2072,11 +2072,88 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     } else {
       showToast(`${json.created?.length || 0} Termine erfolgreich erstellt.`);
     }
+
+    // Phase 3: post-batch-create — ask if patient should be emailed
+    if (json.created?.length) {
+      await maybeOfferAppointmentConfirmEmail({
+        slots: selected,
+        service,
+        custId: document.getElementById('bkCustomerId').value.trim() || null,
+        custName: cust,
+        empMap: (window._aiCtx?.lastResult?.employees || []).reduce((a, e) => (a[e.id] = e.name, a), {})
+      });
+    }
   } catch (err) {
     console.error('[ai-confirm]', err);
     showToast('Fehler beim Erstellen der Termine.', 'error');
   }
 });
+
+async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custName, empMap }) {
+  const lead = custId ? leadsCache.find(l => l.id === custId) : null;
+  let email = lead?.email || '';
+  if (!email && !custId) return; // nothing to send to
+
+  const ok = window.confirm('Möchten Sie dem Patienten die Termine per E-Mail bestätigen?');
+  if (!ok) {
+    showToast('OK — weiter zur Rechnung.');
+    return;
+  }
+
+  if (!email) {
+    const entered = window.prompt('E-Mail-Adresse des Patienten:', '');
+    if (!entered || !entered.includes('@')) {
+      showToast('Keine gültige E-Mail — Abbruch.', 'error');
+      return;
+    }
+    email = entered.trim();
+    if (lead) {
+      await supabase.from('leads').update({ email }).eq('id', lead.id);
+      lead.email = email;
+    }
+  }
+
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+
+    const payload = {
+      patient: { name: custName, email },
+      service: { title: service?.title || '' },
+      slots: (slots || []).map(sl => ({
+        date: sl.date, time: sl.time,
+        employeeName: empMap[sl.employeeId] || ''
+      })),
+      owner_info: {
+        business_name: currentProfile.business_name,
+        sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || '',
+        city: currentProfile.city || '',
+        phone: currentProfile.phone || ''
+      }
+    };
+
+    showToast('⏳ KI bereitet Bestätigungs-E-Mail vor…');
+    const res = await fetch(`${AI_GATEWAY_BASE}/appointment-confirm-draft`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + s.access_token
+      },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (!json.success || !json.draft) throw new Error(json.error || 'Entwurf fehlgeschlagen');
+
+    const draft = json.draft;
+    if (!draft.to_email) draft.to_email = email;
+    if (!draft.to_name) draft.to_name = custName;
+    if (lead) draft.contact_id = lead.id;
+    openComposeModal(draft);
+  } catch (e) {
+    console.error('[appointment-confirm-draft]', e);
+    showToast('Fehler: ' + e.message, 'error');
+  }
+}
 
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
