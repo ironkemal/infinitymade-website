@@ -2151,6 +2151,7 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
   const offer = await openMailOfferModal({ hasEmail: !!email, patientName: custName });
   if (!offer.ok) {
     showToast('OK — weiter zur Rechnung.');
+    proceedToRechnungForPhysio({ patientId: custId, patientName: custName });
     return;
   }
 
@@ -2197,10 +2198,57 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
     if (!draft.to_email) draft.to_email = email;
     if (!draft.to_name) draft.to_name = custName;
     if (lead) draft.contact_id = lead.id;
+    // After send/discard, proceed to Rechnung
+    window._composePostFlow = () => proceedToRechnungForPhysio({ patientId: custId, patientName: custName });
     openComposeModal(draft);
   } catch (e) {
     console.error('[appointment-confirm-draft]', e);
     showToast('Fehler: ' + e.message, 'error');
+  }
+}
+
+async function proceedToRechnungForPhysio({ patientId, patientName }) {
+  if (!patientId) return;
+  const flow = window._physioFlow || {};
+  const isBlanko = !!flow.is_blanko;
+  try {
+    if (typeof showPanel === 'function') showPanel('rechnungen');
+    else if (typeof switchPanel === 'function') switchPanel('rechnungen');
+
+    // Wait for panel + invoice list to mount
+    await new Promise(r => setTimeout(r, 300));
+    await openInvEditor(null);
+
+    const sel = document.getElementById('invPatientSelect');
+    if (sel) {
+      sel.value = patientId;
+      sel.dispatchEvent(new Event('change'));
+    }
+
+    // Wait for bookings to populate, then check them all
+    await new Promise(r => setTimeout(r, 600));
+    const checks = document.querySelectorAll('#invBookingChecks input[type="checkbox"]');
+    checks.forEach(cb => { cb.checked = true; });
+    if (checks.length) checks[0].dispatchEvent(new Event('change'));
+
+    // Inject Blanko bonus (PD + Mehraufwand) if applicable
+    if (isBlanko) {
+      const exists = (title) => invLines.some(l => (l.title || '').toLowerCase().includes(title.toLowerCase()));
+      if (!exists('Prozessdokumentation')) {
+        invLines.push({ title: 'Prozessdokumentation (Blanko)', quantity: 1, unit_price: 34.34 });
+      }
+      if (!exists('Mehraufwand')) {
+        invLines.push({ title: 'Mehraufwand (Blanko)', quantity: 1, unit_price: 55.00 });
+      }
+      renderInvLines(); calcInvTotals();
+      showToast(`Rechnung vorbereitet für ${patientName} (Blanko-Bonus +89.34€ enjekte).`);
+    } else {
+      showToast(`Rechnung vorbereitet für ${patientName}.`);
+    }
+    window._physioFlow = null;
+  } catch (e) {
+    console.error('[proceedToRechnung]', e);
+    showToast('Fehler beim Öffnen der Rechnung: ' + e.message, 'error');
   }
 }
 
@@ -4105,6 +4153,9 @@ function openComposeModal(draft) {
 document.getElementById('composeDiscardBtn').addEventListener('click', () => {
   closeModal('emailComposeModal');
   aiAddMsg('Entwurf verworfen.', 'ai');
+  if (typeof window._composePostFlow === 'function') {
+    const fn = window._composePostFlow; window._composePostFlow = null; fn();
+  }
 });
 
 function copyWithFeedback(btn, text) {
@@ -4166,6 +4217,9 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
     closeModal('emailComposeModal');
     aiAddMsg('E-Mail gesendet an ' + toEmail + ' ✓', 'ai');
     showToast('E-Mail gesendet ✓');
+    if (typeof window._composePostFlow === 'function') {
+      const fn = window._composePostFlow; window._composePostFlow = null; fn();
+    }
   } catch (e) {
     showToast('Fehler: ' + e.message, 'error');
   }
@@ -6276,8 +6330,10 @@ async function submitConfirm() {
       heilmittel: parsedEdited.rezept.heilmittel,
       hausbesuch: parsedEdited.rezept.hausbesuch,
       is_dringend: parsedEdited.rezept.is_dringend,
+      is_blanko: parsedEdited.rezept.is_blanko,
       patient_name: [parsedEdited.patient.first_name, parsedEdited.patient.last_name].filter(Boolean).join(' ')
     };
+    window._physioFlow = preset;
     sessionStorage.setItem('rxPreset', JSON.stringify(preset));
 
     if (typeof showPanel === 'function') showPanel('calendar');
