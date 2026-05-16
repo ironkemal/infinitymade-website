@@ -1294,9 +1294,10 @@
         <div id="bkDocAssignHint" class="bk-doc-hint" hidden></div>
         <div class="form-group" id="bkCustomerGroup">
           <label class="form-label" data-i18n="lbl_manual_cust">Kunde</label>
-          <select class="form-select" id="bkCustomerSelect">
-            <option value="__new__">+ Neuer Kunde…</option>
-          </select>
+          <div class="patient-search-wrap" id="bkCustomerWrap">
+            <input class="form-input" id="bkCustomerSearch" type="text" autocomplete="off" placeholder="Suchen oder auswählen…" />
+            <ul class="patient-search-list" id="bkCustomerList" hidden></ul>
+          </div>
           <input type="hidden" id="bkCustomer" />
           <input type="hidden" id="bkCustomerId" />
         </div>
@@ -1541,9 +1542,15 @@
         </div>
         <div class="form-row">
           <div class="form-group">
+            <label class="form-label">Geburtsdatum <span class="req">*</span></label>
+            <input class="form-input" id="lead-geburtsdatum" type="date" required />
+          </div>
+          <div class="form-group">
             <label class="form-label" data-i18n="lead_city">Stadt</label>
             <input class="form-input" id="lead-city" type="text" />
           </div>
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label class="form-label" data-i18n="lead_status">Status</label>
             <select class="form-select" id="lead-status">
@@ -1571,10 +1578,6 @@
             </div>
           </div>
           <div class="form-row" id="lead-physio-row2" style="display:none;">
-            <div class="form-group">
-              <label class="form-label">Geburtsdatum</label>
-              <input class="form-input" id="lead-geburtsdatum" type="date" />
-            </div>
             <div class="form-group">
               <label class="form-label">Adresse</label>
               <input class="form-input" id="lead-adresse" type="text" placeholder="Strasse, Hausnummer" />
