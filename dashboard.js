@@ -5811,10 +5811,17 @@ async function openBookingFromRxPreset(preset) {
       openModal('bookingModal');
     }
 
-    // Patient
-    if (preset.patient_id && preset.patient_name) {
-      document.getElementById('bkCustomer').value = preset.patient_name;
-      document.getElementById('bkCustomerId').value = preset.patient_id;
+    // Patient — use the dropdown's helper so the visible search input is also filled.
+    // bkSelectLead refreshes the leads cache if the patient was just created.
+    if (preset.patient_id) {
+      if (typeof window.bkSelectLead === 'function') {
+        window.bkSelectLead(preset.patient_id);
+      } else if (preset.patient_name) {
+        document.getElementById('bkCustomer').value = preset.patient_name;
+        document.getElementById('bkCustomerId').value = preset.patient_id;
+        const search = document.getElementById('bkCustomerSearch');
+        if (search) search.value = preset.patient_name;
+      }
     }
     if (preset.hausbesuch) document.getElementById('bkHausbesuch').checked = true;
 
