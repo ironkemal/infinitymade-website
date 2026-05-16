@@ -5760,12 +5760,284 @@ async function init() {
     const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
     if (currentSession?.user?.id === ADMIN_UUID && adminLink) adminLink.style.display = '';
+    initRezeptScanner();
   } catch (e) {
     console.error('[dashboard init]', e);
   } finally {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = '';
     startClock();
+  }
+}
+
+// ===== Phase 2: AI-driven Rezept Scanner =====
+// Webcam/file capture → /api/rezept/upload (Azure OCR + validators)
+// → confirmation modal → /api/rezept/confirm → redirect to Termine.
+
+const REZEPT_API = 'https://n8n.infinitymade.de/api/rezept';
+let rxStream = null;
+let rxLastUpload = null;  // { storage_path, parsed, validation, ocr_confidence, dataUri }
+
+function initRezeptScanner() {
+  const btn = document.getElementById('rezeptScanBtn');
+  if (!btn) return;
+  if (getSector() === 'physiotherapy') btn.style.display = '';
+
+  btn.addEventListener('click', openRezeptScanModal);
+
+  document.getElementById('rxScanWebcamBtn')?.addEventListener('click', startWebcamCapture);
+  document.getElementById('rxScanFileBtn')?.addEventListener('click', () =>
+    document.getElementById('rxScanFileInput').click());
+  document.getElementById('rxScanFileInput')?.addEventListener('change', onFileChosen);
+  document.getElementById('rxScanShotBtn')?.addEventListener('click', captureWebcamShot);
+  document.getElementById('rxScanCancelCamBtn')?.addEventListener('click', stopWebcam);
+  document.getElementById('rxConfirmBtn')?.addEventListener('click', submitConfirm);
+  document.getElementById('rxInformPatientBtn')?.addEventListener('click', () =>
+    showToast('Patient wird informiert (Demo) — Phase 3 verbindet das automatisch.', 'info'));
+  document.getElementById('rxDoctorEmailBtn')?.addEventListener('click', () =>
+    showToast('Arzt-E-Mail kommt in Phase 3.', 'info'));
+
+  document.querySelectorAll('[data-modal="rezeptScanModal"]').forEach(el => {
+    el.addEventListener('click', () => { stopWebcam(); closeRezeptScanModal(); });
+  });
+}
+
+function openRezeptScanModal() {
+  document.getElementById('rxScanError').style.display = 'none';
+  document.getElementById('rxScanChooser').style.display = '';
+  document.getElementById('rxScanCamera').style.display = 'none';
+  document.getElementById('rxScanProcessing').style.display = 'none';
+  document.getElementById('rezeptScanModal').hidden = false;
+}
+function closeRezeptScanModal() {
+  document.getElementById('rezeptScanModal').hidden = true;
+}
+
+async function startWebcamCapture() {
+  try {
+    rxStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1440 } }
+    });
+    const video = document.getElementById('rxScanVideo');
+    video.srcObject = rxStream;
+    document.getElementById('rxScanChooser').style.display = 'none';
+    document.getElementById('rxScanCamera').style.display = '';
+  } catch (e) {
+    document.getElementById('rxScanError').textContent = 'Kamera nicht verfügbar: ' + e.message;
+    document.getElementById('rxScanError').style.display = '';
+  }
+}
+function stopWebcam() {
+  if (rxStream) {
+    rxStream.getTracks().forEach(t => t.stop());
+    rxStream = null;
+  }
+  document.getElementById('rxScanCamera').style.display = 'none';
+  document.getElementById('rxScanChooser').style.display = '';
+}
+
+function captureWebcamShot() {
+  const video = document.getElementById('rxScanVideo');
+  const canvas = document.getElementById('rxScanCanvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUri = canvas.toDataURL('image/jpeg', 0.85);
+  stopWebcam();
+  uploadRezeptImage(dataUri);
+}
+
+function onFileChosen(e) {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => uploadRezeptImage(ev.target.result);
+  reader.readAsDataURL(f);
+  e.target.value = '';
+}
+
+async function uploadRezeptImage(dataUri) {
+  document.getElementById('rxScanChooser').style.display = 'none';
+  document.getElementById('rxScanCamera').style.display = 'none';
+  document.getElementById('rxScanProcessing').style.display = '';
+  document.getElementById('rxScanError').style.display = 'none';
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+    const mimeMatch = dataUri.match(/^data:([^;]+);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const res = await fetch(`${REZEPT_API}/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.access_token },
+      body: JSON.stringify({ image_base64: dataUri, image_mime: mime })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Upload fehlgeschlagen');
+    rxLastUpload = { ...json, dataUri };
+    closeRezeptScanModal();
+    openRezeptConfirmModal(rxLastUpload);
+  } catch (e) {
+    document.getElementById('rxScanProcessing').style.display = 'none';
+    document.getElementById('rxScanChooser').style.display = '';
+    document.getElementById('rxScanError').textContent = 'Fehler: ' + e.message;
+    document.getElementById('rxScanError').style.display = '';
+  }
+}
+
+function openRezeptConfirmModal(payload) {
+  const p = payload.parsed || {};
+  const pat = p.patient || {};
+  const arzt = p.arzt || {};
+  const rez = p.rezept || {};
+
+  document.getElementById('rxConfirmImg').src = payload.dataUri;
+  const confEl = document.getElementById('rxOcrConfidence');
+  confEl.textContent = payload.ocr_confidence != null
+    ? `OCR-Vertrauen: ${Math.round(payload.ocr_confidence * 100)}%${payload.dry_run ? ' (DRY-RUN)' : ''}`
+    : '';
+
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+  const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+
+  setVal('rxcFirstName', pat.first_name);
+  setVal('rxcLastName', pat.last_name);
+  setVal('rxcDob', pat.geburtsdatum);
+  setVal('rxcVersNr', pat.versichertennummer);
+  setVal('rxcKasse', pat.krankenkasse);
+  setVal('rxcArztName', arzt.name);
+  setVal('rxcAusstDate', arzt.ausstellungsdatum);
+  setVal('rxcLanr', arzt.lanr);
+  setVal('rxcBsnr', arzt.bsnr);
+  setVal('rxcIcd', rez.icd10);
+  setVal('rxcDg', rez.diagnosegruppe);
+  setVal('rxcHm', rez.heilmittel);
+  setVal('rxcAnzahl', rez.anzahl_einheiten);
+  setVal('rxcFreq', rez.frequenz);
+  setChk('rxcDringend', rez.is_dringend);
+  setChk('rxcHausbesuch', rez.hausbesuch);
+  setChk('rxcBlanko', rez.is_blanko);
+  setChk('rxcLhbBvb', rez.is_lhb_bvb);
+
+  renderValidationBanner(payload.validation);
+
+  document.getElementById('rezeptConfirmModal').hidden = false;
+}
+
+function renderValidationBanner(v) {
+  const el = document.getElementById('rxValidationBanner');
+  if (!v) { el.innerHTML = ''; return; }
+  const warnings = v.warnings || [];
+  const blockers = v.blockers || [];
+  const hinweise = v.hinweise || [];
+
+  let html = '';
+  if (blockers.length) {
+    html += `<div style="background:#fee;border:1px solid #c00;border-radius:8px;padding:10px;margin-bottom:8px;">
+      <strong style="color:#c00;">🔴 Blocker (${blockers.length}):</strong>
+      <ul style="margin:6px 0 0 18px;color:#900;">${blockers.map(b => `<li>${b.message || b.code || b}</li>`).join('')}</ul>
+    </div>`;
+  }
+  if (warnings.length) {
+    html += `<div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px;margin-bottom:8px;">
+      <strong style="color:#a06200;">⚠️ Warnungen (${warnings.length}):</strong>
+      <ul style="margin:6px 0 0 18px;color:#6b4500;">${warnings.map(w => `<li>${w.message || w.code || w}</li>`).join('')}</ul>
+    </div>`;
+  }
+  if (hinweise.length) {
+    html += `<div style="background:#eef6ff;border:1px solid #2a73d3;border-radius:8px;padding:10px;margin-bottom:8px;">
+      <strong style="color:#1c4d8f;">ℹ️ Hinweise:</strong>
+      <ul style="margin:6px 0 0 18px;color:#1c4d8f;">${hinweise.map(h => `<li>${h.message || h.code || h}</li>`).join('')}</ul>
+    </div>`;
+  }
+  if (!html) {
+    html = `<div style="background:#eaf8ee;border:1px solid #2a8c4a;border-radius:8px;padding:10px;color:#1f6b38;">
+      ✅ Verordnung ist regelkonform.
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+async function submitConfirm() {
+  if (!rxLastUpload) return;
+  const btn = document.getElementById('rxConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Speichere…';
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+
+    const fn = document.getElementById('rxcFirstName').value.trim();
+    const ln = document.getElementById('rxcLastName').value.trim();
+    const parsedEdited = {
+      patient: {
+        first_name: fn || null,
+        last_name: ln || null,
+        name: [fn, ln].filter(Boolean).join(' ') || null,
+        geburtsdatum: document.getElementById('rxcDob').value || null,
+        versichertennummer: document.getElementById('rxcVersNr').value.trim() || null,
+        krankenkasse: document.getElementById('rxcKasse').value.trim() || null,
+        geschlecht: rxLastUpload.parsed?.patient?.geschlecht || null,
+        adresse: rxLastUpload.parsed?.patient?.adresse || null
+      },
+      arzt: {
+        name: document.getElementById('rxcArztName').value.trim() || null,
+        ausstellungsdatum: document.getElementById('rxcAusstDate').value || null,
+        lanr: document.getElementById('rxcLanr').value.trim() || null,
+        bsnr: document.getElementById('rxcBsnr').value.trim() || null
+      },
+      rezept: {
+        icd10: document.getElementById('rxcIcd').value.trim() || null,
+        diagnosegruppe: document.getElementById('rxcDg').value.trim() || null,
+        heilmittel: document.getElementById('rxcHm').value.trim() || null,
+        heilmittel_feld_text: rxLastUpload.parsed?.rezept?.heilmittel_feld_text || null,
+        anzahl_einheiten: parseInt(document.getElementById('rxcAnzahl').value, 10) || null,
+        frequenz: document.getElementById('rxcFreq').value.trim() || null,
+        behandlungsbeginn: null,
+        is_dringend: document.getElementById('rxcDringend').checked,
+        hausbesuch: document.getElementById('rxcHausbesuch').checked,
+        is_blanko: document.getElementById('rxcBlanko').checked,
+        is_lhb_bvb: document.getElementById('rxcLhbBvb').checked
+      }
+    };
+
+    const blockers = rxLastUpload.validation?.blockers || [];
+    const proceedAnyway = blockers.length > 0
+      ? confirm(`Es bestehen ${blockers.length} Blocker. Trotzdem fortfahren?`)
+      : false;
+    if (blockers.length && !proceedAnyway) {
+      btn.disabled = false;
+      btn.textContent = '✅ Bestätigen & Termine planen';
+      return;
+    }
+
+    const res = await fetch(`${REZEPT_API}/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.access_token },
+      body: JSON.stringify({
+        storage_path: rxLastUpload.storage_path,
+        parsed: parsedEdited,
+        proceed_anyway: proceedAnyway
+      })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Fehler');
+
+    document.getElementById('rezeptConfirmModal').hidden = true;
+    showToast('Rezept gespeichert ✓ Weiter zur Terminplanung.', 'success');
+
+    if (typeof showPanel === 'function') showPanel('termine');
+    sessionStorage.setItem('rxPreset', JSON.stringify({
+      prescription_id: json.prescription_id,
+      patient_id: json.patient_id,
+      anzahl: parsedEdited.rezept.anzahl_einheiten,
+      frequenz: parsedEdited.rezept.frequenz,
+      heilmittel: parsedEdited.rezept.heilmittel
+    }));
+  } catch (e) {
+    alert('Fehler: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ Bestätigen & Termine planen';
   }
 }
 
