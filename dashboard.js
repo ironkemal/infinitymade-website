@@ -1450,127 +1450,119 @@ async function openBookingModal(b) {
 }
 
 async function initBkCustomerAutocomplete() {
-  const input = document.getElementById('bkCustomer');
-  const hidden = document.getElementById('bkCustomerId');
-  const list = document.getElementById('bkCustomerList');
-  const addWrap = document.getElementById('bkCustomerAddWrap');
-  const addBtn = document.getElementById('bkCustomerAddBtn');
+  const sel = document.getElementById('bkCustomerSelect');
+  const nameH = document.getElementById('bkCustomer');
+  const idH = document.getElementById('bkCustomerId');
   const phoneGroup = document.getElementById('bkPhoneGroup');
   const phoneInput = document.getElementById('bkPhone');
-  if (!input || !hidden || !list) return;
-  if (getSector() !== 'physiotherapy') {
-    input.placeholder = '';
-    list.hidden = true;
-    if (addWrap) addWrap.hidden = true;
-    hidden.value = '';
-    if (phoneGroup) phoneGroup.hidden = false;
-    return;
-  }
-  input.placeholder = 'Patient suchen…';
+  if (!sel || !nameH || !idH) return;
   if (phoneGroup) phoneGroup.hidden = true;
-  if (!input.dataset.bkAutoBound) {
-    input.dataset.bkAutoBound = '1';
-    input.addEventListener('input', () => {
-      hidden.value = '';
-      if (phoneInput) phoneInput.value = '';
-      renderList(input.value);
-    });
-    input.addEventListener('keydown', (e) => {
-      const items = list.querySelectorAll('li[data-id]');
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        activeIndex = Math.min(activeIndex + 1, items.length - 1);
-        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
-        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        activeIndex = Math.max(activeIndex - 1, 0);
-        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
-        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (activeIndex >= 0 && items[activeIndex]) {
-          selectLead(items[activeIndex].dataset.id);
-        }
-      } else if (e.key === 'Escape') {
-        list.hidden = true;
-        if (addWrap) addWrap.hidden = true;
-        activeIndex = -1;
-      }
-    });
-    list.addEventListener('click', (e) => {
-      const li = e.target.closest('li[data-id]');
-      if (li) selectLead(li.dataset.id);
-    });
-    input.addEventListener('blur', () => {
-      blurTimer = setTimeout(() => {
-        list.hidden = true;
-        if (!hidden.value && input.value.trim()) {
-          if (addWrap) addWrap.hidden = false;
-        } else {
-          if (addWrap) addWrap.hidden = true;
-        }
-      }, 150);
-    });
-    input.addEventListener('focus', () => {
-      if (blurTimer) clearTimeout(blurTimer);
-      if (input.value.trim()) renderList(input.value);
-    });
-    addBtn.addEventListener('click', () => {
-      window._returnToBkModal = true;
-      window._bkModalState = {
-        id: document.getElementById('bk-id').value,
-        start: document.getElementById('bkStart').value,
-        employee: document.getElementById('bkEmployee').value,
-        service: document.getElementById('bkService').value,
-        notes: document.getElementById('bkNotes').value,
-        hausbesuch: document.getElementById('bkHausbesuch').checked,
-        seriesToggle: document.getElementById('bkSeriesToggle').checked
-      };
-      closeModal('bookingModal');
-      openLeadModal(null);
-    });
-  }
-  window.bkAllLeads = [];
-  let activeIndex = -1;
-  let blurTimer = null;
+
   async function loadBkLeads() {
     const ownerId = getOwnerId();
-    const { data } = await supabase.from('leads').select('id,title,first_name,last_name,phone,metadata').eq('owner_id', ownerId).order('title');
+    const { data } = await supabase
+      .from('leads')
+      .select('id,title,first_name,last_name,phone,metadata')
+      .eq('owner_id', ownerId)
+      .order('title');
     window.bkAllLeads = data || [];
   }
   await loadBkLeads();
-  function renderList(filter) {
-    activeIndex = -1;
-    const q = filter.trim().toLowerCase();
-    if (!q) { list.hidden = true; if (addWrap) addWrap.hidden = true; return; }
-    const filtered = window.bkAllLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
-    if (filtered.length === 0) {
-      list.innerHTML = '<li class="empty-item">Keine Treffer</li>';
-      list.hidden = false;
-      if (addWrap) addWrap.hidden = false;
+
+  function rebuildOptions(preserveValue) {
+    const prev = preserveValue || sel.value;
+    sel.innerHTML = '';
+    const optNew = document.createElement('option');
+    optNew.value = '__new__';
+    optNew.textContent = '+ Neuer Kunde…';
+    sel.appendChild(optNew);
+    const optPick = document.createElement('option');
+    optPick.value = '';
+    optPick.textContent = '— Kunde auswählen —';
+    sel.appendChild(optPick);
+    (window.bkAllLeads || []).forEach(l => {
+      const o = document.createElement('option');
+      o.value = l.id;
+      o.textContent = displayNameWithBirth(l);
+      sel.appendChild(o);
+    });
+    if (prev && (prev === '__new__' || prev === '' || (window.bkAllLeads || []).some(l => l.id === prev))) {
+      sel.value = prev;
+    } else {
+      sel.value = '';
+    }
+  }
+  rebuildOptions();
+
+  function applyLeadById(id) {
+    const lead = (window.bkAllLeads || []).find(l => l.id === id);
+    if (!lead) {
+      nameH.value = '';
+      idH.value = '';
+      if (phoneInput) phoneInput.value = '';
       return;
     }
-    list.innerHTML = filtered.map((l, i) => {
-      const name = displayNameWithBirth(l);
-      const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&');
-      const hl = name.replace(new RegExp(`(${esc})`, 'gi'), '<span class="match-hl">$1</span>');
-      return `<li data-id="${l.id}" data-index="${i}">${hl}</li>`;
-    }).join('');
-    list.hidden = false;
-    if (addWrap) addWrap.hidden = true;
-  }
-  function selectLead(id) {
-    const lead = window.bkAllLeads.find(l => l.id === id);
-    if (!lead) return;
-    input.value = displayNameWithBirth(lead);
-    hidden.value = id;
+    nameH.value = displayNameWithBirth(lead);
+    idH.value = lead.id;
     if (phoneInput) phoneInput.value = lead.phone || '';
-    list.hidden = true;
-    if (addWrap) addWrap.hidden = true;
-    activeIndex = -1;
+  }
+
+  if (!sel.dataset.bkAutoBound) {
+    sel.dataset.bkAutoBound = '1';
+    sel.addEventListener('change', () => {
+      const v = sel.value;
+      if (v === '__new__') {
+        window._returnToBkModal = true;
+        window._bkModalState = {
+          id: document.getElementById('bk-id').value,
+          start: document.getElementById('bkStart').value,
+          employee: document.getElementById('bkEmployee').value,
+          service: document.getElementById('bkService').value,
+          notes: document.getElementById('bkNotes').value,
+          hausbesuch: document.getElementById('bkHausbesuch').checked,
+          seriesToggle: document.getElementById('bkSeriesToggle').checked
+        };
+        sel.value = '';
+        closeModal('bookingModal');
+        openLeadModal(null);
+        return;
+      }
+      if (!v) {
+        nameH.value = '';
+        idH.value = '';
+        if (phoneInput) phoneInput.value = '';
+        return;
+      }
+      applyLeadById(v);
+    });
+  }
+
+  function selectLead(id) {
+    if (!id) return;
+    if (!(window.bkAllLeads || []).some(l => l.id === id)) rebuildOptions();
+    sel.value = id;
+    applyLeadById(id);
   }
   window.bkSelectLead = selectLead;
+  window.bkRebuildCustomerOptions = rebuildOptions;
+
+  // If booking modal was opened with an existing customer (edit case),
+  // try to match by name/phone and select that lead.
+  const existingName = (nameH.value || '').trim().toLowerCase();
+  const existingId = (idH.value || '').trim();
+  if (existingId && (window.bkAllLeads || []).some(l => l.id === existingId)) {
+    sel.value = existingId;
+  } else if (existingName) {
+    const match = (window.bkAllLeads || []).find(l =>
+      (displayNameWithBirth(l) || '').toLowerCase() === existingName ||
+      ((l.title || '').toLowerCase() === existingName)
+    );
+    if (match) {
+      sel.value = match.id;
+      idH.value = match.id;
+      if (phoneInput && !phoneInput.value) phoneInput.value = match.phone || '';
+    }
+  }
 }
 
 function startMoveBooking(b) {
@@ -1765,11 +1757,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!empId) { showToast('Bitte einen Mitarbeiter auswählen.', 'error'); return; }
   if (!srvId) { showToast('Bitte eine Dienstleistung auswählen.', 'error'); return; }
   if (!startV) { showToast('Bitte Datum und Uhrzeit auswählen.', 'error'); return; }
-  if (!cust) { showToast('Bitte einen Kunden auswählen.', 'error'); return; }
-
-  const isPhysio = getSector() === 'physiotherapy';
   const custId = document.getElementById('bkCustomerId').value.trim();
-  if (isPhysio && !id && !custId) { showToast('Bitte einen Patienten aus der Liste auswählen.', 'error'); return; }
+  if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
 
   const startDate = new Date(startV);
   const now = new Date();
