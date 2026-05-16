@@ -1364,14 +1364,15 @@
             <label class="form-label">Vorschau</label>
             <div id="bkSeriesPreview" style="font-size:13px;color:var(--text-muted);min-height:24px;"></div>
           </div>
-          <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);">
-            <button type="button" class="btn-secondary" id="bkAiSuggestBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
-              <span style="font-size:18px;">🤖</span>
-              <span>KI-Vorschlag erhalten</span>
+          <div class="ai-suggest-wrap">
+            <button type="button" class="ai-suggest-btn" id="bkAiSuggestBtn">
+              <span class="ai-sparkle">✨</span>
+              <span class="ai-suggest-label">
+                <span class="ai-suggest-title">KI-Vorschlag erhalten</span>
+                <span class="ai-suggest-sub">Findet automatisch die besten freien Termine</span>
+              </span>
+              <span class="ai-arrow">→</span>
             </button>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:6px;text-align:center;">
-              KI sucht freie Slots, ber&uuml;cksichtigt Pr&auml;ferenzen und schl&auml;gt die besten Termine vor.
-            </div>
           </div>
         </div>
       </div>

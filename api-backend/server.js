@@ -819,6 +819,7 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
     const {
       ownerId, serviceId, customerId, employeeId,
       count = 8, recurrence = 'weekly',
+      startDate, weekdays,
       preferredTime, preferences = {}
     } = req.body;
     if (!ownerId || !serviceId || !count) {
@@ -909,92 +910,129 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
     function timeToMinsLocal(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
     function minsToTimeLocal(m) { const h = Math.floor(m / 60); const mm = m % 60; return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
 
-    // 5) Enumerate candidate slots
+    // 5) Compute target dates from recurrence rules
     const targetMin = preferredTime ? timeToMinsLocal(preferredTime) : null;
     const tod = preferences.timeOfDay; // morning|afternoon|any
     const step = 30;
-    void recurrence; // recurrence handled by AI ranking, not by enumeration
+    const anchor = startDate || today;
+    const anchorWd = berlinDayOfWeek(anchor);
+    const wdSet = (weekdays && weekdays.length) ? new Set(weekdays.map(Number)) : new Set([anchorWd]);
+    if (!wdSet.has(anchorWd)) wdSet.add(anchorWd);
 
-    const candidates = [];
-    const maxCandidates = 80;
-    const dayCursor = new Date(today + 'T12:00:00Z');
-    let safetyCounter = 0;
-
-    while (candidates.length < maxCandidates && safetyCounter < 14 * 7) {
-      const dateStr = dayCursor.toISOString().substring(0, 10);
-      const dayOfWeek = berlinDayOfWeek(dateStr);
-
-      // Custom day check (closed/holiday)
-      const cd = customDayByDate.get(dateStr);
-      const isClosedDay = cd && (cd.type === 'closed' || cd.type === 'holiday') && !cd.start_time && !cd.end_time;
-
-      if (!isClosedDay) {
-        for (const emp of empList) {
-          if (candidates.length >= maxCandidates) break;
-          const w = whByEmpDay.get(`${emp.id}|${dayOfWeek}`);
-          if (!w) continue;
-
-          let startMins = timeToMinsLocal(w.start_time);
-          let endMins = timeToMinsLocal(w.end_time);
-          if (cd && cd.type === 'special' && cd.start_time && cd.end_time) {
-            startMins = timeToMinsLocal(cd.start_time);
-            endMins = timeToMinsLocal(cd.end_time);
-          }
-
-          // Filter by morning/afternoon preference
-          if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
-          else if (tod === 'afternoon') startMins = Math.max(startMins, 12 * 60);
-
-          // Build busy intervals: bookings + breaks + time_offs that hit this date
-          const busy = [];
-          (breaksByEmpDay.get(`${emp.id}|${dayOfWeek}`) || []).forEach(b => {
-            busy.push({ start: timeToMinsLocal(b.start_time), end: timeToMinsLocal(b.end_time) });
-          });
-          (bookingsByEmp.get(emp.id) || []).forEach(b => {
-            const s = new Date(b.start_time);
-            const e = new Date(b.end_time);
-            const sDate = s.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
-            if (sDate !== dateStr) return;
-            const sLocal = parseInt(s.toLocaleTimeString('de-DE', { timeZone: BUSINESS_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).split(':')[0]) * 60
-                         + parseInt(s.toLocaleTimeString('de-DE', { timeZone: BUSINESS_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).split(':')[1]);
-            const eLocal = sLocal + Math.round((e - s) / 60000);
-            busy.push({ start: sLocal, end: eLocal });
-          });
-          // Time-offs that include this date
-          const offHit = timeOffs.find(t => t.employee_id === emp.id && t.start_date <= dateStr && t.end_date >= dateStr);
-          if (offHit) continue; // whole day blocked
-
-          // Generate slots
-          for (let m = startMins; m + dur <= endMins; m += step) {
-            const slotEnd = m + dur;
-            const overlap = busy.some(b => m < b.end && slotEnd > b.start);
-            if (overlap) continue;
-
-            // Score: lower is better (closer to preferences)
-            let score = 0;
-            if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
-            if (targetMin !== null) score += Math.abs(m - targetMin) / 5;
-            // Earlier dates slightly preferred for series cohesion
-            score += safetyCounter * 0.5;
-
-            candidates.push({
-              date: dateStr,
-              time: minsToTimeLocal(m),
-              employeeId: emp.id,
-              score
-            });
-            if (candidates.length >= maxCandidates) break;
-          }
-        }
-      }
-
-      dayCursor.setUTCDate(dayCursor.getUTCDate() + 1);
-      safetyCounter++;
+    function addDaysISO(dateStr, days) {
+      const d = new Date(dateStr + 'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate() + days);
+      return d.toISOString().substring(0, 10);
     }
 
-    // Sort by score and take top N (give AI ~3x candidates to choose from)
-    candidates.sort((a, b) => a.score - b.score);
-    const shortList = candidates.slice(0, Math.min(60, count * 5));
+    const targetDates = [];
+    if (recurrence === 'daily') {
+      // count consecutive days from anchor
+      for (let i = 0; i < count; i++) targetDates.push(addDaysISO(anchor, i));
+    } else {
+      // weekly / biweekly — for each "week bucket", pick all selected weekdays
+      const weekStep = recurrence === 'biweekly' ? 14 : 7;
+      // Buckets needed (rounded up by #weekdays per bucket)
+      const perBucket = wdSet.size;
+      const buckets = Math.ceil(count / perBucket);
+      const weekStartOffset = -anchorWd; // back to start-of-week (Sunday) of anchor's week
+      const sortedWds = [...wdSet].sort((a, b) => {
+        // start from anchor day so the first bucket honors the anchor weekday
+        const aRel = (a - anchorWd + 7) % 7;
+        const bRel = (b - anchorWd + 7) % 7;
+        return aRel - bRel;
+      });
+      let added = 0;
+      for (let b = 0; b < buckets && added < count; b++) {
+        for (const wd of sortedWds) {
+          if (added >= count) break;
+          const offset = b === 0
+            ? ((wd - anchorWd + 7) % 7)               // first bucket: relative to anchor
+            : weekStartOffset + b * weekStep + wd;    // later: full week stride
+          const dateStr = addDaysISO(anchor, offset);
+          // First bucket: skip dates before anchor (e.g., user picked Fri but Mon checked too)
+          if (dateStr < anchor) continue;
+          targetDates.push(dateStr);
+          added++;
+        }
+      }
+    }
+
+    // Cap horizon to what we fetched (14 weeks)
+    const horizonCap = horizon;
+    const cappedDates = targetDates.filter(d => d <= horizonCap);
+
+    // 6) Enumerate slots for each target date (multiple slots per date for AI to choose)
+    const candidates = [];
+    const candidatesByDate = new Map();
+
+    for (let i = 0; i < cappedDates.length; i++) {
+      const dateStr = cappedDates[i];
+      const dayOfWeek = berlinDayOfWeek(dateStr);
+      const cd = customDayByDate.get(dateStr);
+      const isClosedDay = cd && (cd.type === 'closed' || cd.type === 'holiday') && !cd.start_time && !cd.end_time;
+      if (isClosedDay) { candidatesByDate.set(dateStr, []); continue; }
+
+      const dateSlots = [];
+      for (const emp of empList) {
+        const w = whByEmpDay.get(`${emp.id}|${dayOfWeek}`);
+        if (!w) continue;
+
+        let startMins = timeToMinsLocal(w.start_time);
+        let endMins = timeToMinsLocal(w.end_time);
+        if (cd && cd.type === 'special' && cd.start_time && cd.end_time) {
+          startMins = timeToMinsLocal(cd.start_time);
+          endMins = timeToMinsLocal(cd.end_time);
+        }
+        if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
+        else if (tod === 'afternoon') startMins = Math.max(startMins, 12 * 60);
+
+        const busy = [];
+        (breaksByEmpDay.get(`${emp.id}|${dayOfWeek}`) || []).forEach(b => {
+          busy.push({ start: timeToMinsLocal(b.start_time), end: timeToMinsLocal(b.end_time) });
+        });
+        (bookingsByEmp.get(emp.id) || []).forEach(b => {
+          const s = new Date(b.start_time);
+          const e = new Date(b.end_time);
+          const sDate = s.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+          if (sDate !== dateStr) return;
+          const tParts = s.toLocaleTimeString('de-DE', { timeZone: BUSINESS_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).split(':');
+          const sLocal = parseInt(tParts[0]) * 60 + parseInt(tParts[1]);
+          const eLocal = sLocal + Math.round((e - s) / 60000);
+          busy.push({ start: sLocal, end: eLocal });
+        });
+        const offHit = timeOffs.find(t => t.employee_id === emp.id && t.start_date <= dateStr && t.end_date >= dateStr);
+        if (offHit) continue;
+
+        for (let m = startMins; m + dur <= endMins; m += step) {
+          const slotEnd = m + dur;
+          const overlap = busy.some(b => m < b.end && slotEnd > b.start);
+          if (overlap) continue;
+
+          let score = 0;
+          if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
+          if (targetMin !== null) score += Math.abs(m - targetMin) / 5;
+
+          dateSlots.push({
+            date: dateStr,
+            time: minsToTimeLocal(m),
+            employeeId: emp.id,
+            bucket: i,
+            score
+          });
+        }
+      }
+      dateSlots.sort((a, b) => a.score - b.score);
+      candidatesByDate.set(dateStr, dateSlots.slice(0, 6));
+      dateSlots.slice(0, 6).forEach(s => candidates.push(s));
+    }
+
+    // Identify target dates with NO available slots so the AI can report it
+    const emptyDates = [];
+    cappedDates.forEach(d => { if ((candidatesByDate.get(d) || []).length === 0) emptyDates.push(d); });
+
+    // Cap total candidates sent to AI
+    const shortList = candidates.slice(0, 80);
 
     if (shortList.length === 0) {
       return res.json({ candidates: [], selected: [], report: 'Im Suchzeitraum von 14 Wochen wurden keine freien Slots gefunden.' });
@@ -1008,6 +1046,9 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
     const aiPayload = {
       candidates: shortList.map(({ score, ...c }) => c),
       count,
+      recurrence,
+      targetDates: cappedDates,
+      emptyDates,
       preferences: {
         ...preferences,
         preferredEmployee: employeeId || null
@@ -1035,11 +1076,25 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
       console.error('[ai-suggest-series] n8n error', err.message);
     }
 
-    // 7) Fallback: if AI failed or returned empty, just take the top N by score
-    let selected = Array.isArray(aiResult.selected) && aiResult.selected.length
-      ? aiResult.selected.slice(0, count)
-      : shortList.slice(0, count).map(({ score, ...c }) => c);
-    let report = aiResult.report || `Wir haben ${selected.length} freie Termine gefunden, die Ihren Wünschen am besten entsprechen.`;
+    // 7) Fallback: if AI failed or returned empty, pick the best slot per target date
+    let selected;
+    if (Array.isArray(aiResult.selected) && aiResult.selected.length) {
+      selected = aiResult.selected.slice(0, count);
+    } else {
+      selected = [];
+      for (const d of cappedDates) {
+        if (selected.length >= count) break;
+        const slots = candidatesByDate.get(d) || [];
+        if (slots.length) {
+          const { score, bucket, ...rest } = slots[0];
+          selected.push(rest);
+        }
+      }
+    }
+    let report = aiResult.report
+      || (emptyDates.length
+        ? `${selected.length} Termine gefunden. An folgenden Wunschtagen war kein Slot frei: ${emptyDates.join(', ')}.`
+        : `${selected.length} freie Termine gefunden, die Ihren Wünschen am besten entsprechen.`);
 
     res.json({
       success: true,
