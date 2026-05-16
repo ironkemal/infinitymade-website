@@ -12,8 +12,26 @@ const ENDPOINT       = process.env.AZURE_OPENAI_ENDPOINT || '';
 const API_KEY        = process.env.AZURE_OPENAI_API_KEY || '';
 const DEPLOYMENT     = process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-4o-mini';
 const API_VERSION    = process.env.AZURE_OPENAI_API_VERSION || '2024-10-21';
+const REGION         = (process.env.AZURE_OPENAI_REGION || '').toLowerCase();
 const FORCE_DRY_RUN  = process.env.AZURE_DRY_RUN === '1';
 const IS_DEV         = process.env.NODE_ENV !== 'production';
+
+// EU Data Boundary regions — Microsoft contractually guarantees data stays
+// within the EU/EEA for these. Adequate for DSGVO without separate transfer
+// safeguards. Reject anything else outright.
+const EU_DATA_BOUNDARY_REGIONS = new Set([
+  'germanywestcentral',
+  'westeurope',
+  'northeurope',
+  'francecentral',
+  'swedencentral',
+  'switzerlandnorth',
+  'switzerlandwest',
+  'norwayeast',
+  'polandcentral',
+  'italynorth',
+  'spaincentral'
+]);
 
 function isDryRun() {
   if (FORCE_DRY_RUN) return true;
@@ -24,16 +42,34 @@ function isDryRun() {
   return false;
 }
 
-// Hard assertion: Frankfurt only. Refuse to start if endpoint points elsewhere.
-function assertGermanyRegion() {
+// Hard assertion: EU Data Boundary regions only.
+// Classic endpoints (*.openai.azure.com) don't expose region in URL, so we
+// rely on AZURE_OPENAI_REGION env var. Foundry endpoints (*.services.ai.azure.com)
+// usually encode region in the subdomain — we infer it as a fallback.
+function assertEUDataBoundary() {
   if (!ENDPOINT) return; // dry-run, nothing to assert
+
   const lower = ENDPOINT.toLowerCase();
-  const ok = lower.includes('germanywestcentral') || lower.includes('frankfurt');
-  if (!ok) {
-    throw new Error(`AZURE_OPENAI_ENDPOINT must be Germany West Central (Frankfurt). Got: ${ENDPOINT}`);
+  let region = REGION;
+
+  if (!region) {
+    // Try to infer region from Foundry-style subdomain (e.g. "ironk-...-swedencentral.services.ai.azure.com")
+    for (const r of EU_DATA_BOUNDARY_REGIONS) {
+      if (lower.includes(r)) { region = r; break; }
+    }
   }
+
+  if (!region) {
+    throw new Error(`Cannot determine Azure region. Set AZURE_OPENAI_REGION env var explicitly (e.g. swedencentral). Endpoint=${ENDPOINT}`);
+  }
+
+  if (!EU_DATA_BOUNDARY_REGIONS.has(region)) {
+    throw new Error(`AZURE_OPENAI_REGION '${region}' is not in the EU Data Boundary. DSGVO requires data to stay within EU/EEA. Allowed: ${[...EU_DATA_BOUNDARY_REGIONS].join(', ')}`);
+  }
+
+  console.log(`[ai/azure] EU Data Boundary check OK — region=${region}`);
 }
-assertGermanyRegion();
+assertEUDataBoundary();
 
 /**
  * Call Azure OpenAI Chat Completions.
