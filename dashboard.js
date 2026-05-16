@@ -1937,6 +1937,9 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
   const recurrence = document.getElementById('bkSeriesRecurrence').value;
   const startV = document.getElementById('bkStart').value;
   const preferredTime = startV ? startV.substring(11, 16) : null;
+  const startDate = startV ? startV.substring(0, 10) : null;
+  const weekdays = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked'))
+    .map(cb => parseInt(cb.value));
 
   const preferences = {
     sameEmployee: document.getElementById('aiPrefSameEmp').value,
@@ -1955,6 +1958,8 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
     employeeId: empId,
     count,
     recurrence,
+    startDate,
+    weekdays,
     preferredTime,
     preferences
   };
@@ -1996,12 +2001,12 @@ function renderAiSuggestions(json) {
     const wd = new Date(s.date + 'T12:00:00Z').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
     const empName = empMap[s.employeeId] || 'Mitarbeiter';
     const isDifferent = s.employeeId !== window._aiCtx.baseEmpId;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">
-      <div style="font-weight:600;color:var(--text-faint);min-width:24px;">${i + 1}.</div>
-      <div style="flex:1;">
-        <div style="font-weight:600;">${wd} · ${escapeHtml(s.time)} Uhr</div>
-        <div style="font-size:12px;color:${isDifferent ? '#b45309' : 'var(--text-muted)'};margin-top:2px;">
-          👤 ${escapeHtml(empName)}${isDifferent ? ' (Wechsel)' : ''}
+    return `<div class="ai-slot-row">
+      <div class="ai-slot-num">${i + 1}</div>
+      <div class="ai-slot-main">
+        <div class="ai-slot-date">📅 ${wd} · ${escapeHtml(s.time)} Uhr</div>
+        <div class="ai-slot-emp${isDifferent ? ' is-switch' : ''}">
+          👤 ${escapeHtml(empName)}${isDifferent ? '<span class="ai-slot-switch-badge">Wechsel</span>' : ''}
         </div>
       </div>
     </div>`;
