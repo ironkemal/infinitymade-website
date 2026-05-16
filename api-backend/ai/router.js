@@ -12,12 +12,13 @@ import { configSummary } from './azureClient.js';
 
 import { run as b2cDraft } from './tasks/b2c-draft.js';
 import { run as rezeptValidate } from './tasks/rezept-validate.js';
+import { run as rezeptOcr } from './tasks/rezept-ocr.js';
 
 const TASKS = {
   'b2c-draft': b2cDraft,
-  'rezept-validate': rezeptValidate
-  // Future: 'rezept-ocr', 'schedule-series',
-  //         'b2b-draft', 'doctor-email-draft', 'whatsapp-intent'
+  'rezept-validate': rezeptValidate,
+  'rezept-ocr': rezeptOcr
+  // Future: 'schedule-series', 'b2b-draft', 'doctor-email-draft', 'whatsapp-intent'
 };
 
 const router = express.Router();

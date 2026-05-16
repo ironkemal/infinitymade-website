@@ -5,12 +5,16 @@ import { createClient } from '@supabase/supabase-js';
 import WebSocket from 'ws';
 import { google } from 'googleapis';
 import aiRouter from './ai/router.js';
+import { requireAuth as requireAuthAI } from './ai/auth.js';
+import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
+import { validateRezept } from './ai/validators/validate.js';
+import crypto from 'crypto';
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '15mb' })); // raised for rezept image base64 payloads
 
 // Request logger — used to debug what the n8n bot is actually sending.
 app.use((req, _res, next) => {
@@ -1225,6 +1229,250 @@ app.post('/api/booking/manual-create', async (req, res) => {
     }
     res.json({ success: true, booking: data });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Phase 2: AI-driven Rezept-Workflow ---
+
+function stripDataUriPrefix(b64) {
+  if (!b64) return null;
+  const m = String(b64).match(/^data:[^;]+;base64,(.+)$/);
+  return m ? m[1] : b64;
+}
+
+// Upload: accept base64 image, store to Supabase Storage, run OCR + validators,
+// return the parsed draft (NO DB write yet — user confirms first).
+app.post('/api/rezept/upload', requireAuthAI, async (req, res) => {
+  try {
+    const { image_base64, image_mime } = req.body || {};
+    if (!image_base64) {
+      return res.status(400).json({ error: 'image_base64 required' });
+    }
+
+    const mime = (image_mime || 'image/jpeg').toLowerCase();
+    const ext = mime.includes('png') ? 'png' : (mime.includes('webp') ? 'webp' : 'jpg');
+    const tenantId = req.auth.tenantId;
+    const fileId = crypto.randomUUID();
+    const storagePath = `${tenantId}/${new Date().toISOString().slice(0, 10)}/${fileId}.${ext}`;
+
+    const rawB64 = stripDataUriPrefix(image_base64);
+    const buffer = Buffer.from(rawB64, 'base64');
+    if (buffer.length < 1000) {
+      return res.status(400).json({ error: 'Image too small / decode failed' });
+    }
+
+    const { error: upErr } = await supabase
+      .storage
+      .from('prescriptions')
+      .upload(storagePath, buffer, { contentType: mime, upsert: false });
+    if (upErr) throw upErr;
+
+    // Run OCR — pass the original data-URI so the model gets a proper image block
+    const dataUri = image_base64.startsWith('data:')
+      ? image_base64
+      : `data:${mime};base64,${rawB64}`;
+
+    const ocrResult = await rezeptOcrRun({ image_base64: dataUri });
+    const parsed = ocrResult.parsed || {};
+
+    // Map OCR output → validator input shape
+    const rezeptForValidator = {
+      icd10: parsed.rezept?.icd10,
+      diagnosegruppe: parsed.rezept?.diagnosegruppe,
+      heilmittel: parsed.rezept?.heilmittel,
+      heilmittel_feld_text: parsed.rezept?.heilmittel_feld_text,
+      anzahl_einheiten: parsed.rezept?.anzahl_einheiten,
+      frequenz: parsed.rezept?.frequenz,
+      ausstellungsdatum: parsed.arzt?.ausstellungsdatum,
+      behandlungsbeginn: parsed.rezept?.behandlungsbeginn,
+      is_dringend: !!parsed.rezept?.is_dringend,
+      hausbesuch: !!parsed.rezept?.hausbesuch,
+      is_blanko: !!parsed.rezept?.is_blanko,
+      is_lhb_bvb: !!parsed.rezept?.is_lhb_bvb,
+      patient_geburtsdatum: parsed.patient?.geburtsdatum
+    };
+
+    const validation = validateRezept(rezeptForValidator);
+
+    res.json({
+      success: true,
+      storage_path: storagePath,
+      parsed,
+      validation,
+      ocr_confidence: ocrResult.ocr_confidence,
+      dry_run: !!ocrResult._meta?.dry_run
+    });
+  } catch (err) {
+    console.error('[rezept/upload]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Confirm: accept the user-edited fields, re-validate, write prescription
+// row + validation snapshot, auto-match-or-create patient.
+app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
+  try {
+    const tenantId = req.auth.tenantId;
+    const userId = req.auth.userId;
+    const {
+      storage_path,
+      parsed,                  // possibly user-edited
+      proceed_anyway = false   // user clicked "Proceed despite warnings"
+    } = req.body || {};
+
+    if (!parsed) return res.status(400).json({ error: 'parsed required' });
+
+    const patient = parsed.patient || {};
+    const arzt = parsed.arzt || {};
+    const rezept = parsed.rezept || {};
+
+    // --- Auto-match-or-create patient ---
+    let patientId = null;
+    const dob = patient.geburtsdatum || null;
+    const fn = (patient.first_name || '').trim();
+    const ln = (patient.last_name || '').trim();
+
+    if (dob && (fn || ln)) {
+      const { data: matches } = await supabase
+        .from('leads')
+        .select('id')
+        .eq('owner_id', tenantId)
+        .eq('geburtsdatum', dob)
+        .ilike('first_name', fn || '%')
+        .ilike('last_name', ln || '%')
+        .limit(1);
+
+      if (matches && matches.length) {
+        patientId = matches[0].id;
+      }
+    }
+
+    if (!patientId) {
+      const fullName = patient.name || [fn, ln].filter(Boolean).join(' ') || null;
+      const { data: newLead, error: leadErr } = await supabase
+        .from('leads')
+        .insert({
+          owner_id: tenantId,
+          first_name: fn || null,
+          last_name: ln || null,
+          title: fullName,
+          geburtsdatum: dob,
+          geschlecht: patient.geschlecht || null,
+          versichertennummer: patient.versichertennummer || null,
+          krankenkasse: patient.krankenkasse || null,
+          street: patient.adresse || null,
+          status: 'patient'
+        })
+        .select('id')
+        .single();
+      if (leadErr) throw leadErr;
+      patientId = newLead.id;
+    }
+
+    // --- Auto-match-or-create doctor (aerzte) ---
+    let arztId = null;
+    if (arzt.lanr) {
+      const { data: existing } = await supabase
+        .from('aerzte')
+        .select('id')
+        .eq('owner_id', tenantId)
+        .eq('lanr', arzt.lanr)
+        .maybeSingle();
+      if (existing) arztId = existing.id;
+    }
+    if (!arztId && arzt.name) {
+      const { data: newArzt, error: arztErr } = await supabase
+        .from('aerzte')
+        .insert({
+          owner_id: tenantId,
+          arzt_name: arzt.name,
+          lanr: arzt.lanr || null,
+          bsnr: arzt.bsnr || null
+        })
+        .select('id')
+        .single();
+      if (!arztErr && newArzt) arztId = newArzt.id;
+    }
+
+    // --- Re-validate with possibly edited fields ---
+    const rezeptForValidator = {
+      icd10: rezept.icd10,
+      diagnosegruppe: rezept.diagnosegruppe,
+      heilmittel: rezept.heilmittel,
+      heilmittel_feld_text: rezept.heilmittel_feld_text,
+      anzahl_einheiten: rezept.anzahl_einheiten,
+      frequenz: rezept.frequenz,
+      ausstellungsdatum: arzt.ausstellungsdatum,
+      behandlungsbeginn: rezept.behandlungsbeginn,
+      is_dringend: !!rezept.is_dringend,
+      hausbesuch: !!rezept.hausbesuch,
+      is_blanko: !!rezept.is_blanko,
+      is_lhb_bvb: !!rezept.is_lhb_bvb,
+      patient_geburtsdatum: dob
+    };
+    const validation = validateRezept(rezeptForValidator);
+
+    const rezeptTyp = rezept.is_blanko ? 'blanko' : (rezept.is_lhb_bvb ? 'lhb_bvb' : 'standard');
+
+    // --- Insert prescription row ---
+    const { data: rx, error: rxErr } = await supabase
+      .from('prescriptions')
+      .insert({
+        owner_id: tenantId,
+        patient_id: patientId,
+        arzt_id: arztId,
+        image_storage_path: storage_path || null,
+        image_uploaded_at: storage_path ? new Date().toISOString() : null,
+        status: 'confirmed',
+        rezept_typ: rezeptTyp,
+        icd10: rezept.icd10 || null,
+        diagnosegruppe: rezept.diagnosegruppe || null,
+        heilmittel: rezept.heilmittel || null,
+        heilmittel_feld_text: rezept.heilmittel_feld_text || null,
+        anzahl_einheiten: rezept.anzahl_einheiten ?? null,
+        frequenz: rezept.frequenz || null,
+        ausstellungsdatum: arzt.ausstellungsdatum || null,
+        behandlungsbeginn: rezept.behandlungsbeginn || null,
+        is_dringend: !!rezept.is_dringend,
+        hausbesuch: !!rezept.hausbesuch,
+        gueltig_bis: validation.computed?.gueltig_bis || null,
+        computed: validation.computed || null,
+        warnings: validation.warnings || null,
+        blockers_overridden: proceed_anyway ? (validation.blockers || null) : null,
+        ocr_raw_response: parsed,
+        confirmed_by: userId,
+        confirmed_at: new Date().toISOString(),
+        proceed_anyway: !!proceed_anyway,
+        total_bonuses_eur: validation.computed?.bonus_eur ?? null
+      })
+      .select('id')
+      .single();
+    if (rxErr) throw rxErr;
+
+    // --- Validation snapshot ---
+    await supabase.from('prescription_validations').insert({
+      prescription_id: rx.id,
+      engine: validation.engine || 'standard',
+      input_snapshot: rezeptForValidator,
+      result: validation,
+      ok: !!validation.ok,
+      warnings_count: (validation.warnings || []).length,
+      blockers_count: (validation.blockers || []).length,
+      proceeded_anyway: !!proceed_anyway,
+      validated_by: userId
+    });
+
+    res.json({
+      success: true,
+      prescription_id: rx.id,
+      patient_id: patientId,
+      arzt_id: arztId,
+      rezept_typ: rezeptTyp,
+      validation
+    });
+  } catch (err) {
+    console.error('[rezept/confirm]', err);
     res.status(500).json({ error: err.message });
   }
 });
