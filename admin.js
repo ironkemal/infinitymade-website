@@ -1,8 +1,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
+// Isolated storage key — admin session lives ONLY on admin.infinitymade.de,
+// never shared with tenant app. Must match admin-login.js.
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { storageKey: 'sb-admin-auth' }
+});
+
+async function isAdminUser(userId) {
+  const { data } = await supabase
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  return !!data;
+}
 
 let currentSession = null;
 
@@ -122,15 +134,16 @@ document.querySelectorAll('.nav-item[data-panel]').forEach(el=>{
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await supabase.auth.signOut();
-  window.location.href='login.html';
+  window.location.href='/login';
 });
 
 async function boot() {
   const { data: { session }, error } = await supabase.auth.getSession();
-  if (error||!session) { window.location.href='login.html'; return; }
+  if (error||!session) { window.location.href='/login'; return; }
   currentSession = session;
-  if (String(session.user.id).toLowerCase() !== String(ADMIN_UUID).toLowerCase()) {
-    window.location.href = 'dashboard.html';
+  if (!(await isAdminUser(session.user.id))) {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
     return;
   }
   document.getElementById('loading').style.display='none';
