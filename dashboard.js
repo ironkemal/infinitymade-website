@@ -2064,14 +2064,23 @@ function renderAiSuggestions(json) {
   (json.employees || []).forEach(e => { empMap[e.id] = e.name; });
 
   const listEl = document.getElementById('aiSuggestList');
+  const fmtWd = iso => new Date(iso + 'T12:00:00Z').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
   listEl.innerHTML = json.selected.map((s, i) => {
-    const wd = new Date(s.date + 'T12:00:00Z').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const wd = fmtWd(s.date);
     const empName = empMap[s.employeeId] || 'Mitarbeiter';
     const isDifferent = s.employeeId !== window._aiCtx.baseEmpId;
+    const shiftBadges = [];
+    if (s.dateShiftDays != null && s.shiftedFromDate) {
+      const sign = s.dateShiftDays > 0 ? '+' : '';
+      shiftBadges.push(`<span class="ai-slot-shift-badge" title="Wunschtag war ${fmtWd(s.shiftedFromDate)} — auf diesen Tag verschoben (Wunschtag voll belegt)">⚠ Tag verschoben (${sign}${s.dateShiftDays}d)</span>`);
+    } else if (s.timeShiftMin != null) {
+      const sign = s.timeShiftMin > 0 ? '+' : '';
+      shiftBadges.push(`<span class="ai-slot-shift-badge" title="Wunschzeit war belegt — um ${s.timeShiftMin} Min verschoben">⏱ Zeit verschoben (${sign}${s.timeShiftMin} Min)</span>`);
+    }
     return `<div class="ai-slot-row">
       <div class="ai-slot-num">${i + 1}</div>
       <div class="ai-slot-main">
-        <div class="ai-slot-date">📅 ${wd} · ${escapeHtml(s.time)} Uhr</div>
+        <div class="ai-slot-date">📅 ${wd} · ${escapeHtml(s.time)} Uhr ${shiftBadges.join(' ')}</div>
         <div class="ai-slot-emp${isDifferent ? ' is-switch' : ''}">
           👤 ${escapeHtml(empName)}${isDifferent ? '<span class="ai-slot-switch-badge">Wechsel</span>' : ''}
         </div>

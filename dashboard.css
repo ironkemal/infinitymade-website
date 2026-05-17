@@ -4905,3 +4905,17 @@ textarea {
   .invoice-print-footer-grid { page-break-inside: avoid; }
   .invoice-print-recipient { page-break-inside: avoid; }
 }
+
+.ai-slot-shift-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  vertical-align: middle;
+  cursor: help;
+}
