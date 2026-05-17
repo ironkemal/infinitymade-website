@@ -5957,7 +5957,63 @@ function resetAnamneseForm() {
   document.getElementById('anamSchmerzArtOther').value = '';
 }
 
+async function loadAnamneseRxContext(patientId) {
+  const box = document.getElementById('anamRxContext');
+  if (!box) return;
+  if (!patientId || getSector() !== 'physiotherapy') { box.style.display = 'none'; return; }
+
+  const { data: rx } = await supabase
+    .from('prescriptions')
+    .select('id, rezept_typ, status, heilmittel, icd10, diagnosegruppe, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis, hausbesuch, is_dringend, prescription_sessions(status)')
+    .eq('patient_id', patientId)
+    .in('status', ['parsed', 'confirmed', 'in_therapy'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!rx) { box.style.display = 'none'; return; }
+
+  const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' }[rx.rezept_typ] || rx.rezept_typ;
+  const statusLabel = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie' }[rx.status] || rx.status;
+
+  let validColor = '#15803d', validNote = '';
+  if (rx.gueltig_bis) {
+    const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+    const days = Math.round((new Date(rx.gueltig_bis) - today0) / 86400000);
+    if (days < 0) { validColor = '#ef4444'; validNote = ' · überfällig'; }
+    else if (days <= 3) { validColor = '#ef4444'; validNote = ` · in ${days}T`; }
+    else if (days <= 10) { validColor = '#f59e0b'; validNote = ` · in ${days}T`; }
+  }
+  const validStr = rx.gueltig_bis
+    ? `<span style="color:${validColor};font-weight:600;">Gültig bis ${new Date(rx.gueltig_bis).toLocaleDateString('de-DE')}${validNote}</span>`
+    : 'Gültig bis —';
+
+  const flags = [
+    rx.is_dringend ? '<span class="badge badge-red">Dringend</span>' : '',
+    rx.hausbesuch  ? '<span class="badge badge-blue">Hausbesuch</span>' : ''
+  ].filter(Boolean).join(' ');
+
+  document.getElementById('anamRxBadges').innerHTML = `
+    <span class="badge badge-blue">${typLabel}</span>
+    <span class="badge badge-gray">${statusLabel}</span>
+    ${flags}
+  `;
+  document.getElementById('anamRxHeading').textContent =
+    `${rx.heilmittel || '—'}${rx.icd10 ? ' · ' + rx.icd10 : ''}${rx.diagnosegruppe ? ' · ' + rx.diagnosegruppe : ''}`;
+  document.getElementById('anamRxMeta').innerHTML =
+    `${validStr} · Frequenz: ${escapeHtml(rx.frequenz || '—')}`;
+
+  const total = rx.anzahl_einheiten || (rx.prescription_sessions || []).length || 0;
+  const done = (rx.prescription_sessions || []).filter(s => s.status === 'done').length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('anamRxProgressBar').style.width = pct + '%';
+  document.getElementById('anamRxProgressLabel').textContent = `${done}/${total}`;
+
+  box.style.display = '';
+}
+
 async function fillAnamneseForm(patientId) {
+  loadAnamneseRxContext(patientId).catch(() => {});
   if (!patientId) { resetAnamneseForm(); return; }
   currentAnamnesePatientId = patientId;
   const ownerId = getOwnerId();
