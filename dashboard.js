@@ -265,6 +265,7 @@ let leadFilter = 'all';
 let leadSearchVal = '';
 let invLines = [];
 let invPatientId = null;
+let invPrescriptionId = null;
 let invListCache = [];
 let prefillNotesPatientId = null;
 let prefillAnamnesePatientId = null;
@@ -2222,6 +2223,7 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
   console.log('[proceedToRechnung] patientId=', patientId, 'name=', patientName);
   const flow = window._physioFlow || {};
   const isBlanko = !!flow.is_blanko;
+  const prescriptionId = flow.prescription_id || null;
   try {
     switchPanel('rechnungen');
 
@@ -2232,6 +2234,7 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
       return;
     }
     await openInvEditor(null);
+    invPrescriptionId = prescriptionId;
 
     const sel = document.getElementById('invPatientSelect');
     if (sel) {
@@ -5363,6 +5366,7 @@ async function generateInvNumber() {
 function resetInvEditor() {
   invLines = [];
   invPatientId = null;
+  invPrescriptionId = null;
   document.getElementById('invPatientSelect').value = '';
   document.getElementById('invPatientInfo').textContent = '';
   document.getElementById('invLineBody').innerHTML = '';
@@ -5386,6 +5390,7 @@ async function openInvEditor(invoiceId) {
     const inv = invListCache.find(i => i.id === invoiceId);
     if (!inv) return;
     invPatientId = inv.patient_id;
+    invPrescriptionId = inv.prescription_id || null;
     document.getElementById('invPatientSelect').value = inv.patient_id || '';
     invLines = (inv.line_items || []).map(l => ({ ...l }));
     document.getElementById('invEigenPct').value = inv.eigenanteil_pct || 0;
@@ -5433,6 +5438,7 @@ async function saveInvoice() {
     total_patient: total,
     status: 'draft',
     invoice_number: invoiceNumber,
+    prescription_id: invPrescriptionId || null,
     notes: document.getElementById('invNotes').value || null
   };
   const { data: inserted, error } = await supabase.from('invoices').insert(payload).select('id').maybeSingle();
@@ -5523,10 +5529,18 @@ async function downloadDmrzForInvoice() {
       .select('id,first_name,last_name,title,dob,versichertennummer,krankenkasse,email,phone')
       .eq('id', invoice.patient_id).maybeSingle();
 
-    const { data: prescriptions } = await supabase.from('prescriptions')
-      .select('*').eq('patient_id', invoice.patient_id)
-      .order('created_at', { ascending: false }).limit(1);
-    const prescription = prescriptions?.[0] || null;
+    let prescription = null;
+    if (invoice.prescription_id) {
+      const { data: p } = await supabase.from('prescriptions')
+        .select('*').eq('id', invoice.prescription_id).maybeSingle();
+      prescription = p || null;
+    }
+    if (!prescription) {
+      const { data: prescriptions } = await supabase.from('prescriptions')
+        .select('*').eq('patient_id', invoice.patient_id)
+        .order('created_at', { ascending: false }).limit(1);
+      prescription = prescriptions?.[0] || null;
+    }
 
     let arzt = null;
     if (prescription?.arzt_id) {
