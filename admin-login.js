@@ -8,7 +8,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { storageKey: 'sb-admin-auth' }
 });
 
-const ADMIN_HOME = '/';        // admin.infinitymade.de/  → rewritten to admin.html
+const ADMIN_HOME = '/admin.html';
 const TENANT_LOGIN = 'https://app.infinitymade.de/login.html';
 
 const msg = document.getElementById('message');
