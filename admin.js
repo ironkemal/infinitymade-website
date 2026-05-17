@@ -44,7 +44,13 @@ async function apiPatch(path, body) {
   return res.json();
 }
 
-const fmtEUR = n => '€' + (Number(n) || 0).toFixed(2);
+const fmtEUR = n => {
+  const v = Number(n) || 0;
+  if (v === 0) return '€0.00';
+  if (Math.abs(v) < 0.01) return '€' + v.toFixed(4);   // €0.0034 instead of €0.00
+  if (Math.abs(v) < 1)    return '€' + v.toFixed(3);   // €0.123
+  return '€' + v.toFixed(2);
+};
 const fmtInt = n => (Number(n) || 0).toLocaleString('de-DE');
 const fmtBytes = b => {
   const u = ['B','KB','MB','GB','TB']; let i = 0; let v = Number(b) || 0;
