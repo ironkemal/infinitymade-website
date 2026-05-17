@@ -2538,12 +2538,91 @@ async function openPatientDetailModal(lead) {
   openModal('patientDetailModal');
 
   const leadId = lead.id;
+  const isPhysio = getSector() === 'physiotherapy';
+  const rezTab = document.getElementById('pdTabRezepte');
+  if (rezTab) rezTab.style.display = isPhysio ? '' : 'none';
+
   loadPatientDetailNotes(leadId);
   loadPatientDetailAnamnese(leadId);
   loadPatientDetailUeberweisung(leadId);
+  if (isPhysio) loadPatientDetailRezepte(leadId);
   loadPatientDetailRechnungen(leadId);
   loadPatientDetailTermine(leadId);
   loadPatientDetailMails(leadId);
+}
+
+async function loadPatientDetailRezepte(leadId) {
+  const content = document.getElementById('pdRezContent');
+  const loading = document.getElementById('pdRezLoading');
+  if (!content) return;
+  if (loading) loading.hidden = false;
+
+  const { data: rxs, error } = await supabase
+    .from('prescriptions')
+    .select(`
+      id, rezept_typ, status, icd10, diagnosegruppe, heilmittel,
+      anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
+      is_dringend, hausbesuch, dmrz_exported_at, created_at,
+      prescription_sessions ( id, session_number, status, done_at )
+    `)
+    .eq('patient_id', leadId)
+    .order('created_at', { ascending: false });
+
+  if (loading) loading.hidden = true;
+  if (error) { content.innerHTML = '<div class="pd-empty">Fehler: ' + escapeHtml(error.message) + '</div>'; return; }
+  if (!rxs || !rxs.length) { content.innerHTML = '<div class="pd-empty">Keine Rezepte vorhanden.</div>'; return; }
+
+  const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' };
+  const statusLabel = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie', completed: 'Abgeschlossen', billed: 'Abgerechnet', cancelled: 'Storniert' };
+  const sessStatusLabel = { planned: 'geplant', done: 'erledigt', no_show: 'no_show', cancelled: 'storniert' };
+  const sessStatusCls = { planned: 'badge-gray', done: 'badge-green', no_show: 'badge-red', cancelled: 'badge-gray' };
+
+  content.innerHTML = rxs.map(rx => {
+    const sessions = (rx.prescription_sessions || []).sort((a, b) => a.session_number - b.session_number);
+    const total = rx.anzahl_einheiten || sessions.length || 0;
+    const done = sessions.filter(s => s.status === 'done').length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const valid = rx.gueltig_bis ? new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : '—';
+    const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
+    const dmrz = rx.dmrz_exported_at
+      ? `<span class="badge badge-green" title="${new Date(rx.dmrz_exported_at).toLocaleString('de-DE')}">DMRZ ✓</span>`
+      : `<span class="badge badge-gray">DMRZ offen</span>`;
+    const flags = [
+      rx.is_dringend ? '<span class="badge badge-red">Dringend</span>' : '',
+      rx.hausbesuch  ? '<span class="badge badge-blue">Hausbesuch</span>' : ''
+    ].filter(Boolean).join(' ');
+
+    const sessionPills = sessions.map(s => {
+      const date = s.done_at ? new Date(s.done_at).toLocaleDateString('de-DE') : '';
+      const title = `Sitzung ${s.session_number}${date ? ' · ' + date : ''}`;
+      return `<span class="badge ${sessStatusCls[s.status] || 'badge-gray'}" title="${title}">${s.session_number} · ${sessStatusLabel[s.status] || s.status}</span>`;
+    }).join(' ');
+
+    return `<div class="pd-rech-item" style="padding:14px 20px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+        <div>
+          <strong>${escapeHtml(rx.heilmittel || '—')}</strong>
+          <span style="color:#888;margin-left:8px;font-size:13px;">${escapeHtml(rx.icd10 || '')}${rx.diagnosegruppe ? ' · ' + escapeHtml(rx.diagnosegruppe) : ''}</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span class="badge badge-blue">${typLabel[rx.rezept_typ] || rx.rezept_typ}</span>
+          <span class="badge badge-gray">${statusLabel[rx.status] || rx.status}</span>
+          ${dmrz}
+          ${flags}
+        </div>
+      </div>
+      <div style="font-size:13px;color:#555;margin-bottom:8px;">
+        Ausgestellt: ${issued} · Gültig bis: ${valid} · Frequenz: ${escapeHtml(rx.frequenz || '—')}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:#22c55e;"></div>
+        </div>
+        <span style="font-size:13px;color:#444;white-space:nowrap;">${done}/${total} Sitzungen</span>
+      </div>
+      ${sessionPills ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${sessionPills}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 async function loadPatientDetailNotes(leadId) {
