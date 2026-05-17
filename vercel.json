@@ -24,22 +24,18 @@
       ]
     }
   ],
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "admin.infinitymade.de" }],
-      "destination": "/admin.html"
-    },
-    {
-      "source": "/login",
-      "has": [{ "type": "host", "value": "admin.infinitymade.de" }],
-      "destination": "/admin-login.html"
-    }
-  ],
   "redirects": [
-    { "source": "/admin.html",          "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://admin.infinitymade.de/",                  "permanent": false },
-    { "source": "/admin.html",          "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://admin.infinitymade.de/",                  "permanent": false },
-    { "source": "/admin.html",          "has": [{ "type": "host", "value": "app.infinitymade.de" }], "destination": "https://admin.infinitymade.de/",                  "permanent": false },
+    { "source": "/",                    "has": [{ "type": "host", "value": "admin.infinitymade.de" }], "destination": "/admin.html",                                     "permanent": false },
+    { "source": "/index.html",          "has": [{ "type": "host", "value": "admin.infinitymade.de" }], "destination": "/admin.html",                                     "permanent": false },
+    { "source": "/login",               "has": [{ "type": "host", "value": "admin.infinitymade.de" }], "destination": "/admin-login.html",                               "permanent": false },
+    { "source": "/login.html",          "has": [{ "type": "host", "value": "admin.infinitymade.de" }], "destination": "/admin-login.html",                               "permanent": false },
+
+    { "source": "/",                    "has": [{ "type": "host", "value": "app.infinitymade.de"   }], "destination": "/login.html",                                     "permanent": false },
+    { "source": "/index.html",          "has": [{ "type": "host", "value": "app.infinitymade.de"   }], "destination": "/login.html",                                     "permanent": false },
+
+    { "source": "/admin.html",          "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://admin.infinitymade.de/admin.html",        "permanent": false },
+    { "source": "/admin.html",          "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://admin.infinitymade.de/admin.html",        "permanent": false },
+    { "source": "/admin.html",          "has": [{ "type": "host", "value": "app.infinitymade.de" }], "destination": "https://admin.infinitymade.de/admin.html",        "permanent": false },
 
     { "source": "/login.html",          "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://app.infinitymade.de/login.html",          "permanent": false },
     { "source": "/login.html",          "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://app.infinitymade.de/login.html",          "permanent": false },
