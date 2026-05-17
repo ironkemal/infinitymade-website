@@ -1051,12 +1051,86 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
       dateSlots.slice(0, 6).forEach(s => candidates.push(s));
     }
 
-    // Identify target dates with NO available slots so the AI can report it
+    // Identify target dates with NO available slots and look for nearby
+    // replacement days (±3 days, preferring later shifts first). This lets
+    // the scheduler fall back automatically instead of returning "no slot".
     const emptyDates = [];
-    cappedDates.forEach(d => { if ((candidatesByDate.get(d) || []).length === 0) emptyDates.push(d); });
+    const SHIFT_DAYS = [1, -1, 2, -2, 3, -3];
+
+    function enumerateDay(dateStr) {
+      const dayOfWeek = berlinDayOfWeek(dateStr);
+      const cd = customDayByDate.get(dateStr);
+      const isClosedDay = cd && (cd.type === 'closed' || cd.type === 'holiday') && !cd.start_time && !cd.end_time;
+      if (isClosedDay) return [];
+      const slots = [];
+      for (const emp of empList) {
+        const w = whByEmpDay.get(`${emp.id}|${dayOfWeek}`);
+        if (!w) continue;
+        let startMins = timeToMinsLocal(w.start_time);
+        let endMins = timeToMinsLocal(w.end_time);
+        if (cd && cd.type === 'special' && cd.start_time && cd.end_time) {
+          startMins = timeToMinsLocal(cd.start_time);
+          endMins = timeToMinsLocal(cd.end_time);
+        }
+        if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
+        else if (tod === 'afternoon') startMins = Math.max(startMins, 12 * 60);
+        const busy = [];
+        (breaksByEmpDay.get(`${emp.id}|${dayOfWeek}`) || []).forEach(b => {
+          busy.push({ start: timeToMinsLocal(b.start_time), end: timeToMinsLocal(b.end_time) });
+        });
+        (bookingsByEmp.get(emp.id) || []).forEach(b => {
+          const s = new Date(b.start_time);
+          const e = new Date(b.end_time);
+          const sDate = s.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+          if (sDate !== dateStr) return;
+          const tParts = s.toLocaleTimeString('de-DE', { timeZone: BUSINESS_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).split(':');
+          const sLocal = parseInt(tParts[0]) * 60 + parseInt(tParts[1]);
+          const eLocal = sLocal + Math.round((e - s) / 60000);
+          busy.push({ start: sLocal, end: eLocal });
+        });
+        const offHit = timeOffs.find(t => t.employee_id === emp.id && t.start_date <= dateStr && t.end_date >= dateStr);
+        if (offHit) continue;
+        for (let m = startMins; m + dur <= endMins; m += step) {
+          if (busy.some(b => m < b.end && m + dur > b.start)) continue;
+          let score = 0;
+          if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
+          if (targetMin !== null) score += Math.abs(m - targetMin) / 5;
+          slots.push({ date: dateStr, time: minsToTimeLocal(m), employeeId: emp.id, score });
+        }
+      }
+      return slots.sort((a, b) => a.score - b.score);
+    }
+
+    cappedDates.forEach((d, bucketIdx) => {
+      if ((candidatesByDate.get(d) || []).length === 0) {
+        emptyDates.push(d);
+        // Try to shift this target to a nearby day so the patient still gets a slot.
+        for (const offset of SHIFT_DAYS) {
+          const altDate = addDaysISO(d, offset);
+          if (altDate < today || altDate > horizonCap) continue;
+          const altSlots = enumerateDay(altDate);
+          if (altSlots.length === 0) continue;
+          const best = altSlots[0];
+          const shifted = {
+            date: best.date,
+            time: best.time,
+            employeeId: best.employeeId,
+            bucket: bucketIdx,
+            score: best.score + 50,
+            shiftedFromDate: d,
+            dateShiftDays: offset
+          };
+          const existing = candidatesByDate.get(d) || [];
+          existing.push(shifted);
+          candidatesByDate.set(d, existing);
+          candidates.push(shifted);
+          break;
+        }
+      }
+    });
 
     // Cap total candidates sent to AI
-    const shortList = candidates.slice(0, 80);
+    const shortList = candidates.slice(0, 120);
 
     if (shortList.length === 0) {
       return res.json({ candidates: [], selected: [], report: 'Im Suchzeitraum von 14 Wochen wurden keine freien Slots gefunden.' });
@@ -1101,36 +1175,59 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
       console.error('[ai-suggest-series] n8n error', err.message);
     }
 
-    // 7) Validate + dedupe AI response, fall back to deterministic pick per target date
-    const candidateKey = new Set(shortList.map(c => `${c.date}|${c.time}|${c.employeeId}`));
+    // 7) Validate + dedupe AI response, fall back to deterministic pick per target date.
+    // Use a lookup so we can re-attach shift metadata after the AI strips it.
+    const candidateByKey = new Map(shortList.map(c => [`${c.date}|${c.time}|${c.employeeId}`, c]));
     const cleanFromAi = (Array.isArray(aiResult.selected) ? aiResult.selected : [])
       .filter(s => s && s.date && s.time && s.employeeId)
-      .filter(s => candidateKey.has(`${s.date}|${s.time}|${s.employeeId}`));
+      .filter(s => candidateByKey.has(`${s.date}|${s.time}|${s.employeeId}`));
     const dateSeen = new Set();
     const selected = [];
+    function pushSlot(slot, originalTargetDate) {
+      const original = candidateByKey.get(`${slot.date}|${slot.time}|${slot.employeeId}`) || slot;
+      const out = { date: slot.date, time: slot.time, employeeId: slot.employeeId };
+      const origDate = original.shiftedFromDate || originalTargetDate || slot.date;
+      if (origDate !== slot.date) {
+        out.shiftedFromDate = origDate;
+        out.dateShiftDays = original.dateShiftDays != null
+          ? original.dateShiftDays
+          : Math.round((new Date(slot.date + 'T12:00:00Z') - new Date(origDate + 'T12:00:00Z')) / 86400000);
+      }
+      if (targetMin !== null) {
+        const [hh, mm] = slot.time.split(':').map(Number);
+        const slotMin = hh * 60 + mm;
+        if (slotMin !== targetMin) out.timeShiftMin = slotMin - targetMin;
+      }
+      selected.push(out);
+    }
     for (const s of cleanFromAi) {
-      if (dateSeen.has(s.date)) continue; // dedupe: max one slot per date
+      if (dateSeen.has(s.date)) continue;
       dateSeen.add(s.date);
-      selected.push({ date: s.date, time: s.time, employeeId: s.employeeId });
+      pushSlot(s);
       if (selected.length >= count) break;
     }
-    // Fill any missing target dates with the deterministic best slot for that date
     if (selected.length < count) {
       for (const d of cappedDates) {
         if (selected.length >= count) break;
         if (dateSeen.has(d)) continue;
         const slots = candidatesByDate.get(d) || [];
         if (!slots.length) continue;
-        const { score: _s, bucket: _b, ...rest } = slots[0];
-        selected.push(rest);
-        dateSeen.add(d);
+        const best = slots[0];
+        pushSlot({ date: best.date, time: best.time, employeeId: best.employeeId }, d);
+        dateSeen.add(best.date);
       }
     }
 
-    let report = aiResult.report
-      || (emptyDates.length
-        ? `${selected.length} Termine gefunden. An folgenden Wunschtagen war kein Slot frei: ${emptyDates.join(', ')}.`
-        : `${selected.length} freie Termine gefunden, die Ihren Wünschen am besten entsprechen.`);
+    // Summarize shifts in the report so the user sees what happened
+    const dayShifts = selected.filter(s => s.dateShiftDays != null);
+    const timeShifts = selected.filter(s => s.dateShiftDays == null && s.timeShiftMin != null);
+    const reportLines = [];
+    reportLines.push(`${selected.length} Termine gefunden.`);
+    if (dayShifts.length) reportLines.push(`⚠ ${dayShifts.length} Termin(e) auf einen anderen Tag verschoben (Wunschtag voll belegt).`);
+    if (timeShifts.length) reportLines.push(`⏱ ${timeShifts.length} Termin(e) zeitlich angepasst (Wunschzeit belegt).`);
+    const unmetTargets = cappedDates.filter(d => !selected.some(s => s.date === d || s.shiftedFromDate === d));
+    if (unmetTargets.length) reportLines.push(`✗ Für ${unmetTargets.length} Wunschtag(e) konnte trotz Suche im Umkreis kein Slot gefunden werden.`);
+    let report = aiResult.report || reportLines.join(' ');
     if (genderFilterApplied) {
       report += ` (Gefiltert auf ${genderFilterApplied === 'female' ? 'weibliche' : 'männliche'} Behandler.)`;
     }
