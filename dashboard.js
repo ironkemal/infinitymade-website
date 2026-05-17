@@ -1750,14 +1750,16 @@ function populateEmpSelects(selectedId = null) {
 async function populateSrvSelect(selectedId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
 
   // Update global cache with full data including price_config
   if (data) {
     ownerServices = data;
   }
 
-  el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + (data || []).map(s =>
+  // Customer-facing dropdown: exclude is_internal services (Blanko bonus etc.)
+  const visible = (data || []).filter(s => !s.is_internal);
+  el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + visible.map(s =>
     `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)} (${s.duration_minutes || 30} min)</option>`
   ).join('');
   if (selectedId) updateBkDuration(selectedId);
@@ -2387,6 +2389,55 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
   }
 }
 
+// Lazy-creates the two internal services (Prozessdokumentation + Mehraufwand)
+// per owner so the Blanko bonus lines reference real catalog entries.
+// Marked is_internal=true so they're hidden from customer-facing pickers.
+const BLANKO_BONUS_DEFINITIONS = [
+  { title: 'Prozessdokumentation (Blanko)', price: '34.34', duration: 0, code: 'BLANKO_PD' },
+  { title: 'Mehraufwand (Blanko)',         price: '55.00', duration: 0, code: 'BLANKO_MA' }
+];
+
+async function ensureBlankoBonusServices() {
+  const ownerId = getOwnerId();
+  const titles = BLANKO_BONUS_DEFINITIONS.map(d => d.title);
+  const { data: existing } = await supabase.from('services')
+    .select('id, title, price, code, is_internal')
+    .eq('owner_id', ownerId)
+    .in('title', titles);
+  const existingMap = new Map((existing || []).map(s => [s.title, s]));
+  const result = [];
+  for (const def of BLANKO_BONUS_DEFINITIONS) {
+    const hit = existingMap.get(def.title);
+    if (hit) {
+      // If found but flag missing, normalize it once
+      if (!hit.is_internal) {
+        await supabase.from('services').update({ is_internal: true }).eq('id', hit.id);
+      }
+      result.push(hit);
+    } else {
+      const { data: inserted, error } = await supabase.from('services').insert({
+        owner_id: ownerId,
+        user_id: ownerId,
+        title: def.title,
+        price: def.price,
+        duration_minutes: def.duration,
+        code: def.code,
+        is_internal: true,
+        description: 'Automatisch erstellt für Blanko-Verordnungs-Abrechnung. Tarif in den Dienstleistungen anpassen.'
+      }).select('id, title, price, code, is_internal').maybeSingle();
+      if (error) { console.warn('[ensureBlankoBonus]', error); continue; }
+      if (inserted) {
+        result.push(inserted);
+        // Keep the global cache in sync so the invoice line dropdown finds the new service
+        if (Array.isArray(ownerServices) && !ownerServices.some(s => s.id === inserted.id)) {
+          ownerServices.push(inserted);
+        }
+      }
+    }
+  }
+  return result;
+}
+
 async function proceedToRechnungForPhysio({ patientId, patientName }) {
   const flow = window._physioFlow || {};
   const isBlanko = !!flow.is_blanko;
@@ -2417,15 +2468,15 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
 
     // Inject Blanko bonus (PD + Mehraufwand) if applicable
     if (isBlanko) {
+      const bonusServices = await ensureBlankoBonusServices();
       const exists = (title) => invLines.some(l => (l.title || '').toLowerCase().includes(title.toLowerCase()));
-      if (!exists('Prozessdokumentation')) {
-        invLines.push({ title: 'Prozessdokumentation (Blanko)', quantity: 1, unit_price: 34.34 });
-      }
-      if (!exists('Mehraufwand')) {
-        invLines.push({ title: 'Mehraufwand (Blanko)', quantity: 1, unit_price: 55.00 });
-      }
+      bonusServices.forEach(svc => {
+        if (!exists(svc.title)) {
+          invLines.push({ title: svc.title, quantity: 1, unit_price: parseFloat(svc.price) || 0 });
+        }
+      });
       renderInvLines(); calcInvTotals();
-      showToast(`Rechnung vorbereitet für ${patientName} (Blanko-Bonus +89.34€ enjekte).`);
+      showToast(`Rechnung vorbereitet für ${patientName} (Blanko-Bonus enjekte).`);
     } else {
       showToast(`Rechnung vorbereitet für ${patientName}.`);
     }
@@ -5524,8 +5575,117 @@ function renderInvList() {
     </tr>`;
   }).join('');
   tbody.querySelectorAll('.inv-view-btn').forEach(btn => {
-    btn.onclick = () => openInvEditor(btn.dataset.id);
+    btn.onclick = () => openInvView(btn.dataset.id);
   });
+}
+
+async function openInvView(invoiceId) {
+  if (!invoiceId) return;
+  const inv = invListCache.find(i => i.id === invoiceId);
+  if (!inv) { showToast('Rechnung nicht gefunden.', 'error'); return; }
+
+  // Resolve patient + prescription (best-effort)
+  const [{ data: patient }, prescriptionRes] = await Promise.all([
+    supabase.from('leads')
+      .select('first_name,last_name,title,dob,versichertennummer,krankenkasse,phone,email,metadata')
+      .eq('id', inv.patient_id).maybeSingle(),
+    inv.prescription_id
+      ? supabase.from('prescriptions')
+          .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at')
+          .eq('id', inv.prescription_id).maybeSingle()
+      : Promise.resolve({ data: null })
+  ]);
+  const rx = prescriptionRes.data;
+
+  document.getElementById('invvBizName').textContent = currentProfile.business_name || '—';
+  const bizMetaParts = [];
+  if (currentProfile.city) bizMetaParts.push(currentProfile.city);
+  if (currentProfile.phone) bizMetaParts.push('Tel: ' + currentProfile.phone);
+  if (currentProfile.ik_number) bizMetaParts.push('IK: ' + currentProfile.ik_number);
+  document.getElementById('invvBizMeta').textContent = bizMetaParts.join(' · ');
+
+  document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
+  document.getElementById('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
+  const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
+  document.getElementById('invvStatus').textContent = statusMap[inv.status] || inv.status || '—';
+
+  const patientLines = [];
+  if (patient) {
+    const fullName = [patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || inv.patient_name || '';
+    patientLines.push(`<strong>${escapeHtml(fullName)}</strong>`);
+    if (patient.dob) patientLines.push('Geburtsdatum: ' + new Date(patient.dob).toLocaleDateString('de-DE'));
+    if (patient.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
+    if (patient.versichertennummer) patientLines.push('Versichertennummer: ' + escapeHtml(patient.versichertennummer));
+  } else {
+    patientLines.push(`<strong>${escapeHtml(inv.patient_name || '—')}</strong>`);
+  }
+  document.getElementById('invvPatient').innerHTML = patientLines.join('<br>');
+
+  if (rx) {
+    document.getElementById('invvRxBlock').hidden = false;
+    document.getElementById('invvRx').innerHTML = [
+      `<div>Heilmittel: <strong>${escapeHtml(rx.heilmittel || '—')}</strong></div>`,
+      rx.icd10 ? `<div>ICD-10: ${escapeHtml(rx.icd10)}</div>` : '',
+      rx.diagnosegruppe ? `<div>Diagnosegruppe: ${escapeHtml(rx.diagnosegruppe)}</div>` : '',
+      rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}</div>` : '',
+      rx.gueltig_bis ? `<div>Gültig bis: ${new Date(rx.gueltig_bis).toLocaleDateString('de-DE')}</div>` : '',
+      rx.frequenz ? `<div>Frequenz: ${escapeHtml(rx.frequenz)}</div>` : ''
+    ].filter(Boolean).join('');
+  } else {
+    document.getElementById('invvRxBlock').hidden = true;
+  }
+
+  const lines = inv.line_items || [];
+  document.getElementById('invvLineBody').innerHTML = lines.map(l => `
+    <tr>
+      <td>${escapeHtml(l.title || '')}</td>
+      <td class="num">${l.quantity || 1}</td>
+      <td class="num">${formatEur(l.unit_price || 0)}</td>
+      <td class="num">${formatEur((l.quantity || 1) * (l.unit_price || 0))}</td>
+    </tr>`).join('');
+
+  document.getElementById('invvSubtotal').textContent = formatEur(inv.subtotal || 0);
+  document.getElementById('invvEigenPct').textContent = inv.eigenanteil_pct || 0;
+  document.getElementById('invvEigenEur').textContent = formatEur(inv.eigenanteil_eur || 0);
+  document.getElementById('invvKasse').textContent = formatEur(inv.kassenzuzahlung || 0);
+  document.getElementById('invvTotal').textContent = formatEur(inv.total_patient || 0);
+
+  if (inv.notes) {
+    document.getElementById('invvNotesWrap').hidden = false;
+    document.getElementById('invvNotes').textContent = inv.notes;
+  } else {
+    document.getElementById('invvNotesWrap').hidden = true;
+  }
+
+  window._currentInvoiceId = inv.id;
+  document.getElementById('invListWrap').hidden = true;
+  document.getElementById('invEditor').hidden = true;
+  document.getElementById('invView').hidden = false;
+  document.getElementById('invNewBtn').hidden = true;
+}
+
+function closeInvView() {
+  document.getElementById('invView').hidden = true;
+  document.getElementById('invListWrap').hidden = false;
+  document.getElementById('invNewBtn').hidden = false;
+}
+
+function printArea() {
+  const inv = document.getElementById('invoicePrintArea');
+  const anam = document.getElementById('anamnesePrintArea');
+  // Force the print template into the layout briefly so @media print can show it
+  const prevInv = inv ? inv.style.display : '';
+  const prevAnam = anam ? anam.style.display : '';
+  if (inv && !document.getElementById('invView').hidden) inv.style.display = 'block';
+  if (anam && activePanel === 'anamnese') anam.style.display = 'block';
+
+  document.body.classList.add('printing-area');
+  setTimeout(() => {
+    window.print();
+    document.body.classList.remove('printing-area');
+    if (inv) inv.style.display = prevInv;
+    if (anam) anam.style.display = prevAnam;
+  }, 100);
 }
 
 function renderRezeptBadges(inv) {
@@ -5556,21 +5716,52 @@ async function loadInvPatients() {
 
 async function loadPatientBookings(patientId) {
   if (!patientId) return [];
-  const sel = document.getElementById('invPatientSelect');
-  const opt = sel?.querySelector(`option[value="${patientId}"]`);
-  const phone = opt?.dataset.phone || '';
-  const email = opt?.dataset.email || '';
   const ownerId = getOwnerId();
+
+  // 1. Bookings linked through prescription_sessions for this patient
+  const { data: linkedRows } = await supabase
+    .from('prescription_sessions')
+    .select('booking_id, prescriptions!inner(patient_id)')
+    .eq('prescriptions.patient_id', patientId)
+    .not('booking_id', 'is', null);
+  const linkedIds = (linkedRows || []).map(r => r.booking_id).filter(Boolean);
+
+  // 2. Bookings matched by customer identifiers (legacy/non-physio path)
+  const { data: lead } = await supabase
+    .from('leads')
+    .select('first_name,last_name,title,phone,email,phone_normalized')
+    .eq('id', patientId)
+    .maybeSingle();
+  const orParts = [];
+  const names = new Set();
+  if (lead?.title) names.add(lead.title);
+  const composed = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ');
+  if (composed) names.add(composed);
+  names.forEach(n => orParts.push(`customer_name.eq.${n}`));
+  if (lead?.phone) orParts.push(`customer_phone.eq.${lead.phone}`);
+  if (lead?.phone_normalized) orParts.push(`customer_phone_normalized.eq.${lead.phone_normalized}`);
+  if (lead?.email) orParts.push(`customer_email.eq.${lead.email}`);
+
   let query = supabase.from('bookings')
     .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes,price_config)')
     .eq('owner_id', ownerId)
     .order('start_time', { ascending: false });
-  if (phone) query = query.eq('customer_phone', phone);
-  else if (email) query = query.eq('customer_email', email);
-  else query = query.eq('customer_name', sel.options[sel.selectedIndex].text);
+
+  if (linkedIds.length && orParts.length) {
+    query = query.or(`id.in.(${linkedIds.join(',')}),${orParts.join(',')}`);
+  } else if (linkedIds.length) {
+    query = query.in('id', linkedIds);
+  } else if (orParts.length) {
+    query = query.or(orParts.join(','));
+  } else {
+    return [];
+  }
+
   const { data, error } = await query;
   if (error) { console.error('[bookings]', error); return []; }
-  return data || [];
+  // Dedupe just in case the OR overlapped with linked ids
+  const seen = new Set();
+  return (data || []).filter(b => (seen.has(b.id) ? false : (seen.add(b.id), true)));
 }
 
 function buildSvcOptions(selectedTitle) {
@@ -6069,6 +6260,58 @@ async function fillAnamneseForm(patientId) {
   }
 }
 
+async function printAnamneseInline() {
+  const patientId = currentAnamnesePatientId;
+  if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
+
+  const ownerId = getOwnerId();
+  const { data: anamnese } = await supabase.from('anamnese')
+    .select('*').eq('owner_id', ownerId).eq('patient_id', patientId)
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!anamnese) { showToast('Keine Anamnese für diesen Patienten gefunden.', 'error'); return; }
+
+  const patientName = document.querySelector('#anamPatientSelect option:checked')?.textContent || 'Unbekannt';
+  const arr = (v) => Array.isArray(v) ? (v.filter(Boolean).join(', ') || '—') : (v || '—');
+
+  document.getElementById('anamPrintBizName').textContent = currentProfile.business_name || '—';
+  const bm = [];
+  if (currentProfile.city) bm.push(currentProfile.city);
+  if (currentProfile.phone) bm.push('Tel: ' + currentProfile.phone);
+  document.getElementById('anamPrintBizMeta').textContent = bm.join(' · ');
+  document.getElementById('anamPrintDate').textContent = new Date(anamnese.aufnahmedatum || anamnese.created_at).toLocaleDateString('de-DE');
+  document.getElementById('anamPrintPatient').innerHTML = `<strong>${escapeHtml(patientName)}</strong>`;
+
+  const rows = [
+    ['Aufnahmedatum', anamnese.aufnahmedatum ? new Date(anamnese.aufnahmedatum).toLocaleDateString('de-DE') : '—'],
+    ['Beschwerde seit', anamnese.beschwerde_seit || '—'],
+    ['Hauptbeschwerden', arr(anamnese.hauptbeschwerde || anamnese.beschwerden)],
+    ['Schmerz-Skala (0–10)', anamnese.schmerz_skala != null ? String(anamnese.schmerz_skala) : '—'],
+    ['Schmerzart', arr(anamnese.schmerz_art)],
+    ['Vorerkrankungen', arr(anamnese.vorerkrankungen)],
+    ['Medikamente', arr(anamnese.medikamente)],
+    ['Allergien', arr(anamnese.allergien)],
+    ['Raucher', anamnese.raucher ? 'Ja' : 'Nein'],
+    ['Hausbesuch', anamnese.hausbesuch ? 'Ja' : 'Nein'],
+    ['Arzt', anamnese.arzt_name || '—'],
+    ['Arzt-Nummer', anamnese.arzt_nummer || '—'],
+    ['Verordnete Sitzungen', anamnese.rezept_sitzungen != null ? String(anamnese.rezept_sitzungen) : '—'],
+    ['Besondere Wünsche', anamnese.besondere_wuensche || '—']
+  ];
+  document.getElementById('anamPrintFields').innerHTML = rows.map(([k, v]) =>
+    `<div class="anamnese-print-row"><div class="anamnese-print-label">${k}</div><div class="anamnese-print-value">${escapeHtml(String(v))}</div></div>`
+  ).join('');
+
+  if (anamnese.notizen) {
+    document.getElementById('anamPrintNotesWrap').hidden = false;
+    document.getElementById('anamPrintNotes').textContent = anamnese.notizen;
+  } else {
+    document.getElementById('anamPrintNotesWrap').hidden = true;
+  }
+
+  printArea();
+}
+
+// Legacy popup printer (kept for compatibility but unwired)
 async function printAnamnese() {
   const patientId = currentAnamnesePatientId;
   if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
@@ -6192,8 +6435,8 @@ function bindAnamneseEvents() {
   if (sel) sel.onchange = (e) => fillAnamneseForm(e.target.value);
   const saveBtn = document.getElementById('anamSaveBtn');
   if (saveBtn) saveBtn.onclick = saveAnamnese;
-  const pdfBtn = document.getElementById('anamPdfBtn');
-  if (pdfBtn) pdfBtn.onclick = printAnamnese;
+  const printBtn = document.getElementById('anamPrintBtn');
+  if (printBtn) printBtn.onclick = printAnamneseInline;
 
   const slider = document.getElementById('anamSchmerzSkala');
   const skalaVal = document.getElementById('anamSkalaVal');
@@ -6225,9 +6468,25 @@ function bindInvEvents() {
   document.getElementById('invNewBtn').onclick = () => openInvEditor(null);
   document.getElementById('invCancelBtn').onclick = () => closeInvEditor();
   document.getElementById('invSaveBtn').onclick = saveInvoice;
-  document.getElementById('invPrintBtn').onclick = () => window.print();
+  document.getElementById('invPrintBtn').onclick = () => {
+    // Switch to view first, then print the templated invoice
+    if (window._currentInvoiceId) {
+      openInvView(window._currentInvoiceId).then(printArea);
+    } else {
+      showToast('Bitte zuerst die Rechnung speichern.', 'error');
+    }
+  };
   const dmrzBtn = document.getElementById('invDmrzBtn');
   if (dmrzBtn) dmrzBtn.onclick = downloadDmrzForInvoice;
+  document.getElementById('invvPrintBtn')?.addEventListener('click', printArea);
+  document.getElementById('invvDmrzBtn')?.addEventListener('click', downloadDmrzForInvoice);
+  document.getElementById('invvBackBtn')?.addEventListener('click', closeInvView);
+  document.getElementById('invvEditBtn')?.addEventListener('click', () => {
+    const id = window._currentInvoiceId;
+    if (!id) return;
+    document.getElementById('invView').hidden = true;
+    openInvEditor(id);
+  });
   document.getElementById('invAddLineBtn').onclick = () => {
     invLines.push({ title: '', quantity: 1, unit_price: 0 });
     renderInvLines(); calcInvTotals();
