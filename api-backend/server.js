@@ -1568,6 +1568,108 @@ app.post('/api/rezept/save', async (req, res) => {
   }
 });
 
+// ===== Phase 4: WhatsApp bot prescription lookup =====
+// Returns the active prescription for a patient identified by phone, plus
+// remaining session count and Gültig bis horizon. Used by the n8n
+// `get_active_prescription` toolHttpRequest. Server-internal: no JWT
+// (matches the existing booking tools), but ownerId is required so we
+// never leak across tenants.
+app.post('/api/prescription/lookup-by-phone', async (req, res) => {
+  try {
+    const { ownerId, phone } = req.body || {};
+    if (!ownerId || !phone) {
+      return res.status(400).json({ error: 'ownerId and phone required' });
+    }
+    const normalized = String(phone).replace(/\s+/g, '');
+
+    // 1. Find the patient by phone (try exact + last 9 digits suffix match)
+    const { data: leads } = await supabase
+      .from('leads')
+      .select('id, first_name, last_name, title, phone')
+      .eq('owner_id', ownerId)
+      .limit(50);
+    const last9 = normalized.replace(/\D/g, '').slice(-9);
+    const patient = (leads || []).find(l => {
+      const p = String(l.phone || '').replace(/\s+/g, '');
+      return p === normalized || p.replace(/\D/g, '').slice(-9) === last9;
+    });
+    if (!patient) {
+      return res.json({ found: false, reason: 'no_patient_for_phone' });
+    }
+
+    // 2. Active prescription = open status, newest first
+    const { data: rx } = await supabase
+      .from('prescriptions')
+      .select('id, rezept_typ, status, heilmittel, icd10, diagnosegruppe, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis')
+      .eq('patient_id', patient.id)
+      .in('status', ['parsed', 'confirmed', 'in_therapy'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!rx) {
+      return res.json({ found: true, patient_id: patient.id, has_active: false });
+    }
+
+    // 3. Session counts
+    const { data: sessions } = await supabase
+      .from('prescription_sessions')
+      .select('id, status, session_number')
+      .eq('prescription_id', rx.id);
+    const total = rx.anzahl_einheiten || (sessions || []).length;
+    const done = (sessions || []).filter(s => s.status === 'done').length;
+    const noShow = (sessions || []).filter(s => s.status === 'no_show').length;
+    const remaining = Math.max(0, total - done);
+
+    let gueltigBisDays = null;
+    if (rx.gueltig_bis) {
+      const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+      gueltigBisDays = Math.round((new Date(rx.gueltig_bis) - today0) / 86400000);
+    }
+
+    // 4. Next planned booking (linked session that isn't done)
+    let nextAppointment = null;
+    const { data: nextSession } = await supabase
+      .from('prescription_sessions')
+      .select('booking_id, session_number, bookings ( start_time, services ( title ) )')
+      .eq('prescription_id', rx.id)
+      .eq('status', 'planned')
+      .order('session_number', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (nextSession?.bookings?.start_time) {
+      nextAppointment = {
+        session_number: nextSession.session_number,
+        start_time: nextSession.bookings.start_time,
+        service: nextSession.bookings.services?.title || null
+      };
+    }
+
+    res.json({
+      found: true,
+      has_active: true,
+      patient_id: patient.id,
+      patient_name: [patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || null,
+      prescription: {
+        id: rx.id,
+        typ: rx.rezept_typ,
+        status: rx.status,
+        heilmittel: rx.heilmittel,
+        icd10: rx.icd10,
+        diagnosegruppe: rx.diagnosegruppe,
+        frequenz: rx.frequenz,
+        ausstellungsdatum: rx.ausstellungsdatum,
+        gueltig_bis: rx.gueltig_bis,
+        gueltig_bis_days: gueltigBisDays
+      },
+      sessions: { total, done, no_show: noShow, remaining },
+      next_appointment: nextAppointment
+    });
+  } catch (err) {
+    console.error('[prescription/lookup-by-phone]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);
