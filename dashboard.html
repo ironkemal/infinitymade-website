@@ -877,6 +877,21 @@
             </div>
           </div>
 
+          <div class="card anam-rx-context" id="anamRxContext" style="display:none;margin-bottom:16px;border-left:4px solid #22c55e;background:#f0fdf4;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div style="font-size:13px;color:#15803d;font-weight:600;">Aktive Verordnung</div>
+              <div id="anamRxBadges" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+            </div>
+            <div id="anamRxHeading" style="margin-top:6px;font-size:15px;font-weight:700;color:#111;"></div>
+            <div id="anamRxMeta" style="margin-top:4px;font-size:13px;color:#444;"></div>
+            <div style="margin-top:10px;display:flex;align-items:center;gap:10px;">
+              <div style="flex:1;height:8px;background:#dcfce7;border-radius:4px;overflow:hidden;">
+                <div id="anamRxProgressBar" style="height:100%;background:#22c55e;width:0%;"></div>
+              </div>
+              <span id="anamRxProgressLabel" style="font-size:13px;color:#15803d;white-space:nowrap;">0/0</span>
+            </div>
+          </div>
+
           <div class="card" style="margin-bottom:16px;">
             <h3 style="font-size:15px;font-weight:600;margin-bottom:12px;">Beschwerden — Haken setzen</h3>
             <div class="anam-grid" id="anamChkBeschwerden">
@@ -2178,7 +2193,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260517polish1"></script>
+  <script type="module" src="dashboard.js?v=20260517anamrx1"></script>
 </body>
 
 </html>
