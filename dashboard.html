@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260517print1" />
+  <link rel="stylesheet" href="dashboard.css?v=20260517print2" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -669,20 +669,24 @@
 
           <div id="invView" hidden>
             <div class="invoice-print-card" id="invoicePrintArea">
+              <!-- DIN 5008 letter-style header: issuer top-left, meta top-right -->
               <div class="invoice-print-header">
                 <div class="invoice-print-praxis">
                   <div class="invoice-print-biz-name" id="invvBizName">—</div>
                   <div class="invoice-print-biz-meta" id="invvBizMeta"></div>
                 </div>
                 <div class="invoice-print-meta">
-                  <div><strong>Rechnungsnummer:</strong> <span id="invvNumber">—</span></div>
+                  <div class="invoice-print-doctype">Rechnung</div>
+                  <div><strong>Nr.:</strong> <span id="invvNumber">—</span></div>
                   <div><strong>Datum:</strong> <span id="invvDate">—</span></div>
+                  <div id="invvLeistungszeitraumRow" hidden><strong>Leistungszeitraum:</strong> <span id="invvLeistungszeitraum"></span></div>
                   <div><strong>Status:</strong> <span id="invvStatus">—</span></div>
                 </div>
               </div>
 
-              <div class="invoice-print-section">
-                <div class="invoice-print-section-title">Patient</div>
+              <!-- Recipient address (Patient, DIN 5008 left block) -->
+              <div class="invoice-print-recipient">
+                <div class="invoice-print-section-title">Rechnungsempfänger</div>
                 <div id="invvPatient">—</div>
               </div>
 
@@ -695,7 +699,7 @@
                 <div class="invoice-print-section-title">Leistungen</div>
                 <table class="invoice-print-table">
                   <thead>
-                    <tr><th>Leistung</th><th class="num">Anz.</th><th class="num">Einzelpreis</th><th class="num">Gesamt</th></tr>
+                    <tr><th>Pos.</th><th>Leistung</th><th class="num">Anz.</th><th class="num">Einzelpreis</th><th class="num">Gesamt</th></tr>
                   </thead>
                   <tbody id="invvLineBody"></tbody>
                 </table>
@@ -708,13 +712,30 @@
                 <div class="invoice-print-total-row invoice-print-grand"><span>Zu zahlen (Patient)</span><span id="invvTotal">—</span></div>
               </div>
 
+              <div class="invoice-print-paymentinfo">
+                <div id="invvTaxExemptNote" class="invoice-print-tax-note"></div>
+                <div>Zahlbar binnen 14 Tagen ohne Abzug auf das unten genannte Konto unter Angabe der Rechnungsnummer.</div>
+              </div>
+
               <div class="invoice-print-section" id="invvNotesWrap" hidden>
                 <div class="invoice-print-section-title">Notizen</div>
                 <div id="invvNotes" style="white-space:pre-wrap;"></div>
               </div>
 
-              <div class="invoice-print-footer">
-                <div>Vielen Dank für Ihr Vertrauen.</div>
+              <!-- DIN 5008 footer: praxis contact / bank / tax IDs -->
+              <div class="invoice-print-footer-grid">
+                <div>
+                  <div class="invoice-print-footer-title">Praxis</div>
+                  <div id="invvFooterContact"></div>
+                </div>
+                <div>
+                  <div class="invoice-print-footer-title">Bankverbindung</div>
+                  <div id="invvFooterBank">—</div>
+                </div>
+                <div>
+                  <div class="invoice-print-footer-title">Steuer</div>
+                  <div id="invvFooterTax">—</div>
+                </div>
               </div>
             </div>
 
@@ -1301,15 +1322,71 @@
                   <label class="form-label" data-i18n="set_biz">Unternehmensname</label>
                   <input class="form-input" id="setBiz" type="text" />
                 </div>
-                <div class="form-group">
-                  <label class="form-label" data-i18n="set_lang">Sprache</label>
-                  <select class="form-select" id="setLang">
-                    <option value="de">Deutsch</option>
-                    <option value="en">English</option>
-                    <option value="tr">Türkçe</option>
-                  </select>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Straße + Nr.</label>
+                    <input class="form-input" id="setStreet" type="text" placeholder="z. B. Hauptstr. 12" />
+                  </div>
+                  <div class="form-group" style="max-width:140px;">
+                    <label class="form-label">PLZ</label>
+                    <input class="form-input" id="setPlz" type="text" inputmode="numeric" maxlength="5" placeholder="53721" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Stadt</label>
+                    <input class="form-input" id="setCity" type="text" placeholder="Siegburg" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Telefon</label>
+                    <input class="form-input" id="setPhone" type="tel" placeholder="+49 …" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" data-i18n="set_lang">Sprache</label>
+                    <select class="form-select" id="setLang">
+                      <option value="de">Deutsch</option>
+                      <option value="en">English</option>
+                      <option value="tr">Türkçe</option>
+                    </select>
+                  </div>
                 </div>
                 <button class="btn-primary" id="profileSaveBtn" data-i18n="set_save">Speichern</button>
+              </div>
+            </div>
+
+            <div class="settings-section" id="settingsBillingSection">
+              <div class="settings-section-title">Rechnungsdaten</div>
+              <div class="settings-section-body">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Bank</label>
+                    <input class="form-input" id="setBankName" type="text" placeholder="z. B. Sparkasse Köln-Bonn" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">IBAN</label>
+                    <input class="form-input" id="setIban" type="text" placeholder="DE…" />
+                  </div>
+                  <div class="form-group" style="max-width:160px;">
+                    <label class="form-label">BIC</label>
+                    <input class="form-input" id="setBic" type="text" placeholder="COLSDE…" />
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Steuernummer</label>
+                    <input class="form-input" id="setSteuernummer" type="text" placeholder="z. B. 220/5070/0815" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">USt-IdNr (optional)</label>
+                    <input class="form-input" id="setUstId" type="text" placeholder="DE…" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Steuerhinweis (erscheint auf Rechnung)</label>
+                  <input class="form-input" id="setTaxExempt" type="text" placeholder="Gemäß §4 Nr. 14 UStG umsatzsteuerfrei" />
+                  <div class="form-hint">Für Physiotherapie: meist § 4 Nr. 14 UStG umsatzsteuerfrei.</div>
+                </div>
+                <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
               </div>
             </div>
 
@@ -2280,7 +2357,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260517bugfix1"></script>
+  <script type="module" src="dashboard.js?v=20260517print2"></script>
 </body>
 
 </html>

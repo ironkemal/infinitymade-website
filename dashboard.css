@@ -4841,3 +4841,67 @@ textarea {
   }
   .no-print { display: none !important; }
 }
+
+/* ===== Phase 3.2: Print template polish (DIN 5008 + multi-page) ===== */
+.invoice-print-doctype { font-size: 26px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 6px; }
+.invoice-print-recipient {
+  border: 1px dashed #d1d5db;
+  padding: 14px 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  max-width: 60%;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.invoice-print-paymentinfo {
+  margin-top: 24px;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+}
+.invoice-print-tax-note { font-style: italic; margin-bottom: 6px; }
+.invoice-print-footer-grid {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid #d1d5db;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  font-size: 11px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+.invoice-print-footer-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #111;
+  margin-bottom: 4px;
+  font-size: 10px;
+}
+.invoice-print-footer-grid > div > div:not(.invoice-print-footer-title) {
+  white-space: pre-line;
+}
+.invoice-print-biz-meta { white-space: pre-line; }
+
+/* Print page setup */
+@page { size: A4; margin: 20mm 15mm; }
+
+@media print {
+  body.printing-area #invoicePrintArea,
+  body.printing-area #anamnesePrintArea {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+  /* Allow tables to flow across pages, keep rows intact */
+  .invoice-print-table { page-break-inside: auto; }
+  .invoice-print-table thead { display: table-header-group; } /* repeat header on each page */
+  .invoice-print-table tr { page-break-inside: avoid; page-break-after: auto; }
+  .invoice-print-totals,
+  .invoice-print-paymentinfo,
+  .invoice-print-footer-grid { page-break-inside: avoid; }
+  .invoice-print-recipient { page-break-inside: avoid; }
+}

@@ -4740,6 +4740,17 @@ document.getElementById('b2cAiInput').addEventListener('keydown', e => {
 async function loadSettings() {
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   document.getElementById('setLang').value = currentLang;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  set('setStreet', currentProfile.street);
+  set('setPlz', currentProfile.plz);
+  set('setCity', currentProfile.city);
+  set('setPhone', currentProfile.phone);
+  set('setBankName', currentProfile.bank_name);
+  set('setIban', currentProfile.iban);
+  set('setBic', currentProfile.bic);
+  set('setSteuernummer', currentProfile.steuernummer);
+  set('setUstId', currentProfile.ust_id);
+  set('setTaxExempt', currentProfile.tax_exempt_note);
 
   const isEmployee = currentProfile.role !== 'owner';
   const accSection = document.getElementById('settingsAccountSection');
@@ -4799,18 +4810,42 @@ document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
 });
 
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
-  const biz = document.getElementById('setBiz').value.trim();
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  const biz = v('setBiz');
   const lang = document.getElementById('setLang').value;
-  const { error } = await supabase.from('profiles').update({ business_name: biz, language: lang }).eq('id', currentSession.user.id);
+  const patch = {
+    business_name: biz,
+    language: lang,
+    street: v('setStreet') || null,
+    plz: v('setPlz') || null,
+    city: v('setCity') || null,
+    phone: v('setPhone') || null
+  };
+  const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
-  currentProfile.business_name = biz;
-  currentProfile.language = lang;
+  Object.assign(currentProfile, patch);
   currentLang = lang;
   localStorage.setItem('infinity_lang', lang);
   document.getElementById('bizName').textContent = biz;
   applyI18n();
   await renderSidebar();
   showToast(t('saved'));
+});
+
+document.getElementById('billingSaveBtn')?.addEventListener('click', async () => {
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  const patch = {
+    bank_name: v('setBankName') || null,
+    iban: v('setIban') || null,
+    bic: v('setBic') || null,
+    steuernummer: v('setSteuernummer') || null,
+    ust_id: v('setUstId') || null,
+    tax_exempt_note: v('setTaxExempt') || null
+  };
+  const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  Object.assign(currentProfile, patch);
+  showToast('Rechnungsdaten gespeichert ✓');
 });
 
 document.getElementById('pwChangeBtn').addEventListener('click', async () => {
@@ -5534,7 +5569,8 @@ function startClock() {
 }
 
 function formatEur(n) {
-  return (n || 0).toFixed(2).replace('.', ',') + ' €';
+  const num = typeof n === 'number' ? n : parseFloat(n);
+  return ((isFinite(num) ? num : 0)).toFixed(2).replace('.', ',') + ' €';
 }
 
 async function loadRechnungen() {
@@ -5584,38 +5620,65 @@ async function openInvView(invoiceId) {
   const inv = invListCache.find(i => i.id === invoiceId);
   if (!inv) { showToast('Rechnung nicht gefunden.', 'error'); return; }
 
-  // Resolve patient + prescription (best-effort)
-  const [{ data: patient }, prescriptionRes] = await Promise.all([
+  // Resolve patient, prescription (with arzt), and booking range
+  const [{ data: patient }, prescriptionRes, bookingsRes] = await Promise.all([
     supabase.from('leads')
-      .select('first_name,last_name,title,dob,versichertennummer,krankenkasse,phone,email,metadata')
+      .select('first_name,last_name,title,geburtsdatum,street,plz,city,versichertennummer,krankenkasse,phone,email')
       .eq('id', inv.patient_id).maybeSingle(),
     inv.prescription_id
       ? supabase.from('prescriptions')
-          .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at')
+          .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
           .eq('id', inv.prescription_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    inv.prescription_id
+      ? supabase.from('prescription_sessions')
+          .select('bookings ( start_time )').eq('prescription_id', inv.prescription_id)
       : Promise.resolve({ data: null })
   ]);
   const rx = prescriptionRes.data;
+  const arzt = rx?.aerzte;
 
+  // Issuer (top-left)
   document.getElementById('invvBizName').textContent = currentProfile.business_name || '—';
-  const bizMetaParts = [];
-  if (currentProfile.city) bizMetaParts.push(currentProfile.city);
-  if (currentProfile.phone) bizMetaParts.push('Tel: ' + currentProfile.phone);
-  if (currentProfile.ik_number) bizMetaParts.push('IK: ' + currentProfile.ik_number);
-  document.getElementById('invvBizMeta').textContent = bizMetaParts.join(' · ');
+  const bizMeta = [];
+  if (currentProfile.street) bizMeta.push(currentProfile.street);
+  const cityLine = [currentProfile.plz, currentProfile.city].filter(Boolean).join(' ');
+  if (cityLine) bizMeta.push(cityLine);
+  if (currentProfile.phone) bizMeta.push('Tel: ' + currentProfile.phone);
+  if (currentProfile.email) bizMeta.push(currentProfile.email);
+  if (currentProfile.ik_number) bizMeta.push('IK: ' + currentProfile.ik_number);
+  document.getElementById('invvBizMeta').textContent = bizMeta.join('\n');
 
+  // Meta (top-right)
   document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
   document.getElementById('invvDate').textContent = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
   const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
   document.getElementById('invvStatus').textContent = statusMap[inv.status] || inv.status || '—';
 
+  // Leistungszeitraum from linked session bookings (min..max start_time)
+  const bookingDates = (bookingsRes.data || []).map(r => r.bookings?.start_time).filter(Boolean).map(s => new Date(s));
+  if (bookingDates.length) {
+    bookingDates.sort((a, b) => a - b);
+    const fmt = d => d.toLocaleDateString('de-DE');
+    const a = bookingDates[0], b = bookingDates[bookingDates.length - 1];
+    document.getElementById('invvLeistungszeitraumRow').hidden = false;
+    document.getElementById('invvLeistungszeitraum').textContent =
+      a.toDateString() === b.toDateString() ? fmt(a) : `${fmt(a)} – ${fmt(b)}`;
+  } else {
+    document.getElementById('invvLeistungszeitraumRow').hidden = true;
+  }
+
+  // Recipient (DIN 5008)
   const patientLines = [];
   if (patient) {
     const fullName = [patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || inv.patient_name || '';
     patientLines.push(`<strong>${escapeHtml(fullName)}</strong>`);
-    if (patient.dob) patientLines.push('Geburtsdatum: ' + new Date(patient.dob).toLocaleDateString('de-DE'));
+    if (patient.street) patientLines.push(escapeHtml(patient.street));
+    const pc = [patient.plz, patient.city].filter(Boolean).join(' ');
+    if (pc) patientLines.push(escapeHtml(pc));
+    if (patient.geburtsdatum) patientLines.push('Geboren: ' + new Date(patient.geburtsdatum).toLocaleDateString('de-DE'));
     if (patient.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
-    if (patient.versichertennummer) patientLines.push('Versichertennummer: ' + escapeHtml(patient.versichertennummer));
+    if (patient.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(patient.versichertennummer));
   } else {
     patientLines.push(`<strong>${escapeHtml(inv.patient_name || '—')}</strong>`);
   }
@@ -5625,21 +5688,24 @@ async function openInvView(invoiceId) {
     document.getElementById('invvRxBlock').hidden = false;
     document.getElementById('invvRx').innerHTML = [
       `<div>Heilmittel: <strong>${escapeHtml(rx.heilmittel || '—')}</strong></div>`,
-      rx.icd10 ? `<div>ICD-10: ${escapeHtml(rx.icd10)}</div>` : '',
-      rx.diagnosegruppe ? `<div>Diagnosegruppe: ${escapeHtml(rx.diagnosegruppe)}</div>` : '',
-      rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}</div>` : '',
-      rx.gueltig_bis ? `<div>Gültig bis: ${new Date(rx.gueltig_bis).toLocaleDateString('de-DE')}</div>` : '',
-      rx.frequenz ? `<div>Frequenz: ${escapeHtml(rx.frequenz)}</div>` : ''
+      rx.icd10 ? `<div>ICD-10: ${escapeHtml(rx.icd10)}${rx.diagnosegruppe ? ' · Diagnosegruppe ' + escapeHtml(rx.diagnosegruppe) : ''}</div>` : '',
+      rx.ausstellungsdatum ? `<div>Ausgestellt: ${new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE')}${rx.gueltig_bis ? ' · Gültig bis: ' + new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : ''}</div>` : '',
+      rx.frequenz ? `<div>Frequenz: ${escapeHtml(rx.frequenz)}</div>` : '',
+      arzt?.arzt_name
+        ? `<div>Verordnender Arzt: ${escapeHtml(arzt.arzt_name)}${arzt.lanr ? ' · LANR ' + escapeHtml(arzt.lanr) : ''}${arzt.bsnr ? ' · BSNR ' + escapeHtml(arzt.bsnr) : ''}</div>`
+        : ''
     ].filter(Boolean).join('');
   } else {
     document.getElementById('invvRxBlock').hidden = true;
   }
 
-  const lines = inv.line_items || [];
-  document.getElementById('invvLineBody').innerHTML = lines.map(l => `
+  // Aggregate just for display in case the row has stale duplicates
+  const lines = aggregateInvLines(inv.line_items || []);
+  document.getElementById('invvLineBody').innerHTML = lines.map((l, i) => `
     <tr>
+      <td>${i + 1}</td>
       <td>${escapeHtml(l.title || '')}</td>
-      <td class="num">${l.quantity || 1}</td>
+      <td class="num">${l.quantity || 1}×</td>
       <td class="num">${formatEur(l.unit_price || 0)}</td>
       <td class="num">${formatEur((l.quantity || 1) * (l.unit_price || 0))}</td>
     </tr>`).join('');
@@ -5656,6 +5722,38 @@ async function openInvView(invoiceId) {
   } else {
     document.getElementById('invvNotesWrap').hidden = true;
   }
+
+  // Tax exempt note (e.g. § 4 Nr. 14 UStG)
+  const taxNoteEl = document.getElementById('invvTaxExemptNote');
+  if (currentProfile.tax_exempt_note) {
+    taxNoteEl.textContent = currentProfile.tax_exempt_note;
+    taxNoteEl.style.display = '';
+  } else {
+    taxNoteEl.style.display = 'none';
+  }
+
+  // Footer: contact / bank / tax IDs
+  const contact = [
+    currentProfile.business_name,
+    [currentProfile.street, [currentProfile.plz, currentProfile.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+    currentProfile.phone ? 'Tel: ' + currentProfile.phone : '',
+    currentProfile.email
+  ].filter(Boolean).join('\n');
+  document.getElementById('invvFooterContact').textContent = contact || '—';
+
+  const bank = [
+    currentProfile.bank_name,
+    currentProfile.iban ? 'IBAN: ' + currentProfile.iban : '',
+    currentProfile.bic ? 'BIC: ' + currentProfile.bic : ''
+  ].filter(Boolean).join('\n');
+  document.getElementById('invvFooterBank').textContent = bank || '—';
+
+  const tax = [
+    currentProfile.steuernummer ? 'Steuernr.: ' + currentProfile.steuernummer : '',
+    currentProfile.ust_id ? 'USt-IdNr.: ' + currentProfile.ust_id : '',
+    currentProfile.ik_number ? 'IK: ' + currentProfile.ik_number : ''
+  ].filter(Boolean).join('\n');
+  document.getElementById('invvFooterTax').textContent = tax || '—';
 
   window._currentInvoiceId = inv.id;
   document.getElementById('invListWrap').hidden = true;
@@ -5883,11 +5981,34 @@ function closeInvEditor() {
   document.getElementById('invNewBtn').hidden = false;
 }
 
+// Collapses repeated lines (same title + same unit price) into single rows
+// with summed quantity. Keeps lines with the same title but different prices
+// as separate entries (different durations / tariffs).
+function aggregateInvLines(lines) {
+  const groups = new Map();
+  const order = [];
+  for (const l of lines || []) {
+    const title = (l.title || '').trim();
+    const price = parseFloat(l.unit_price) || 0;
+    const qty = parseFloat(l.quantity) || 1;
+    const key = `${title}::${price.toFixed(2)}`;
+    if (!groups.has(key)) {
+      groups.set(key, { title, unit_price: price, quantity: 0 });
+      order.push(key);
+    }
+    groups.get(key).quantity += qty;
+  }
+  return order.map(k => groups.get(k));
+}
+
 async function saveInvoice() {
   const patientSel = document.getElementById('invPatientSelect');
   const patientId = patientSel.value;
   if (!patientId) { showToast('Bitte wählen Sie einen Patienten aus.', 'error'); return; }
   if (invLines.length === 0) { showToast('Bitte fügen Sie mindestens eine Leistung hinzu.', 'error'); return; }
+  // Collapse duplicates so the printed invoice and the DB row stay tidy
+  invLines = aggregateInvLines(invLines);
+  renderInvLines(); calcInvTotals();
   const subtotal = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
   const eigenPct = parseFloat(document.getElementById('invEigenPct').value) || 0;
   const eigenEur = subtotal * (eigenPct / 100);
