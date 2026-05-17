@@ -1423,6 +1423,8 @@ async function openBookingModal(b) {
   const ownerId = getOwnerId();
   document.getElementById('bk-id').value = b.id || '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
+  // Show "Sitzung N/M" if this booking is linked to a prescription session
+  if (b.id) decorateBookingTitleWithSession(b.id).catch(() => {});
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
   document.getElementById('bkStart').value = b.start_time ? b.start_time.substring(0, 16) : '';
@@ -2075,6 +2077,11 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
       showToast(`${json.created?.length || 0} Termine erfolgreich erstellt.`);
     }
 
+    // Phase 3.1: link each booking to a prescription_session (physio flow only)
+    if (json.created?.length && window._physioFlow?.prescription_id) {
+      await linkBookingsToPrescriptionSessions(window._physioFlow.prescription_id, json.created);
+    }
+
     // Phase 3: post-batch-create — ask if patient should be emailed
     if (json.created?.length) {
       // Fallback: if hidden id field was cleared, derive from physio flow context or name lookup
@@ -2141,6 +2148,49 @@ function openMailOfferModal({ hasEmail, patientName }) {
 
     openModal('mailOfferModal');
   });
+}
+
+async function decorateBookingTitleWithSession(bookingId) {
+  const { data: sess } = await supabase
+    .from('prescription_sessions')
+    .select('session_number, prescription_id, prescriptions ( anzahl_einheiten, heilmittel )')
+    .eq('booking_id', bookingId)
+    .maybeSingle();
+  if (!sess) return;
+  const total = sess.prescriptions?.anzahl_einheiten || '?';
+  const hm = sess.prescriptions?.heilmittel ? ` · ${sess.prescriptions.heilmittel}` : '';
+  const titleEl = document.getElementById('bookingModalTitle');
+  if (titleEl) titleEl.textContent = `${t('lbl_manual_title')} — Sitzung ${sess.session_number}/${total}${hm}`;
+}
+
+async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
+  try {
+    const bookingIds = (created || [])
+      .map(b => (typeof b === 'string' ? b : b?.id || b?.booking_id))
+      .filter(Boolean);
+    if (!bookingIds.length) return;
+
+    // Continue numbering after any existing sessions for this Rx
+    const { data: existing } = await supabase
+      .from('prescription_sessions')
+      .select('session_number')
+      .eq('prescription_id', prescriptionId)
+      .order('session_number', { ascending: false })
+      .limit(1);
+    let next = (existing?.[0]?.session_number || 0) + 1;
+
+    const rows = bookingIds.map((bid, i) => ({
+      prescription_id: prescriptionId,
+      booking_id: bid,
+      session_number: next + i,
+      status: 'planned'
+    }));
+    const { error } = await supabase.from('prescription_sessions').insert(rows);
+    if (error) console.warn('[prescription_sessions insert]', error);
+    else console.log('[phase3.1] linked', rows.length, 'sessions to rx', prescriptionId);
+  } catch (e) {
+    console.warn('[linkBookingsToPrescriptionSessions]', e);
+  }
 }
 
 async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custName, empMap }) {
