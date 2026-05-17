@@ -5313,7 +5313,8 @@ function formatEur(n) {
 async function loadRechnungen() {
   const ownerId = getOwnerId();
   const { data, error } = await supabase.from('invoices')
-    .select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+    .select('*, prescriptions ( rezept_typ, status, dmrz_exported_at, heilmittel )')
+    .eq('owner_id', ownerId).order('created_at', { ascending: false });
   if (error) { console.error('[invoices]', error); return; }
   invListCache = data || [];
   renderInvList();
@@ -5342,12 +5343,25 @@ function renderInvList() {
       <td>${date}</td>
       <td>${total}</td>
       <td><span class="badge ${statusCls[st] || 'badge-gray'}">${statusMap[st] || st}</span></td>
+      <td>${renderRezeptBadges(inv)}</td>
       <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button></td>
     </tr>`;
   }).join('');
   tbody.querySelectorAll('.inv-view-btn').forEach(btn => {
     btn.onclick = () => openInvEditor(btn.dataset.id);
   });
+}
+
+function renderRezeptBadges(inv) {
+  const rx = inv.prescriptions;
+  if (!rx) return '<span class="badge badge-gray" title="Kein verknüpftes Rezept">—</span>';
+  const typLabel = { standard: 'Std', blanko: 'Blanko', lhb_bvb: 'LHB' }[rx.rezept_typ] || rx.rezept_typ;
+  const typCls = { standard: 'badge-gray', blanko: 'badge-blue', lhb_bvb: 'badge-blue' }[rx.rezept_typ] || 'badge-gray';
+  const typBadge = `<span class="badge ${typCls}" title="${escapeHtml(rx.heilmittel || '')}">${typLabel}</span>`;
+  const dmrzBadge = rx.dmrz_exported_at
+    ? `<span class="badge badge-green" title="DMRZ exportiert am ${new Date(rx.dmrz_exported_at).toLocaleString('de-DE')}">DMRZ ✓</span>`
+    : `<span class="badge badge-gray" title="Noch nicht exportiert">DMRZ offen</span>`;
+  return `<div style="display:flex;gap:4px;flex-wrap:wrap;">${typBadge}${dmrzBadge}</div>`;
 }
 
 async function loadInvPatients() {
