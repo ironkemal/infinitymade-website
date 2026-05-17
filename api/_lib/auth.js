@@ -94,6 +94,16 @@ export async function adminAuthFetch(path, options = {}) {
 }
 
 /**
+ * Returns true if the given user.id exists in public.admin_users.
+ * Uses service-role to bypass RLS — call only after getAuthedUser.
+ */
+export async function isAdmin(userId) {
+  if (!userId) return false;
+  const { ok, data } = await adminFetch(`/admin_users?select=user_id&user_id=eq.${userId}&limit=1`);
+  return ok && Array.isArray(data) && data.length > 0;
+}
+
+/**
  * JSON response shortcut.
  */
 export function json(res, status, body) {

@@ -23,5 +23,37 @@
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "admin.infinitymade.de" }],
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/login",
+      "has": [{ "type": "host", "value": "admin.infinitymade.de" }],
+      "destination": "/admin-login.html"
+    }
+  ],
+  "redirects": [
+    { "source": "/admin.html",          "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://admin.infinitymade.de/",                  "permanent": false },
+    { "source": "/admin.html",          "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://admin.infinitymade.de/",                  "permanent": false },
+    { "source": "/admin.html",          "has": [{ "type": "host", "value": "app.infinitymade.de" }], "destination": "https://admin.infinitymade.de/",                  "permanent": false },
+
+    { "source": "/login.html",          "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://app.infinitymade.de/login.html",          "permanent": false },
+    { "source": "/login.html",          "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://app.infinitymade.de/login.html",          "permanent": false },
+
+    { "source": "/dashboard.html",      "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://app.infinitymade.de/dashboard.html",      "permanent": false },
+    { "source": "/dashboard.html",      "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://app.infinitymade.de/dashboard.html",      "permanent": false },
+
+    { "source": "/onboarding.html",     "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://app.infinitymade.de/onboarding.html",     "permanent": false },
+    { "source": "/onboarding.html",     "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://app.infinitymade.de/onboarding.html",     "permanent": false },
+
+    { "source": "/kalender.html",       "has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://app.infinitymade.de/kalender.html",       "permanent": false },
+    { "source": "/kalender.html",       "has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://app.infinitymade.de/kalender.html",       "permanent": false },
+
+    { "source": "/employee-signup.html","has": [{ "type": "host", "value": "infinitymade.de"     }], "destination": "https://app.infinitymade.de/employee-signup.html","permanent": false },
+    { "source": "/employee-signup.html","has": [{ "type": "host", "value": "www.infinitymade.de" }], "destination": "https://app.infinitymade.de/employee-signup.html","permanent": false }
   ]
 }

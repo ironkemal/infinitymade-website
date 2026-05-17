@@ -6871,9 +6871,18 @@ async function init() {
       openRezeptModal(null, sel.value);
     });
     if (activePanel === 'settings') await loadAerzte();
-    const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
     const adminLink = document.getElementById('topbarAdminLink');
-    if (currentSession?.user?.id === ADMIN_UUID && adminLink) adminLink.style.display = '';
+    if (adminLink && currentSession?.user?.id) {
+      const { data: adminRow } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', currentSession.user.id)
+        .maybeSingle();
+      if (adminRow) {
+        adminLink.style.display = '';
+        adminLink.href = 'https://admin.infinitymade.de/';
+      }
+    }
     initRezeptScanner();
   } catch (e) {
     console.error('[dashboard init]', e);

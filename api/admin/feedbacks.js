@@ -1,11 +1,9 @@
-import { getAuthedUser, adminFetch, json } from '../_lib/auth.js';
-
-const ADMIN_UUID = 'a82285cb-48c8-4c6c-b346-5f97343e7691';
+import { getAuthedUser, adminFetch, isAdmin, json } from '../_lib/auth.js';
 
 export default async function handler(req, res) {
   const { user, error: authErr } = await getAuthedUser(req);
   if (authErr || !user) return json(res, 401, { error: 'Unauthorized' });
-  if (user.id !== ADMIN_UUID) return json(res, 403, { error: 'Forbidden' });
+  if (!(await isAdmin(user.id))) return json(res, 403, { error: 'Forbidden' });
 
   if (req.method === 'GET') {
     const { ok, data, status } = await adminFetch('/feedbacks?select=*,profiles(email,business_name)&order=created_at.desc');
