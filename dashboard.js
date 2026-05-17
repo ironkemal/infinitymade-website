@@ -2155,7 +2155,6 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
         );
         if (match) custId = match.id;
       }
-      console.log('[phase3] post-batch custId=', custId, 'cust=', cust);
       await maybeOfferAppointmentConfirmEmail({
         slots: selected,
         service,
@@ -2169,6 +2168,31 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     showToast('Fehler beim Erstellen der Termine.', 'error');
   }
 });
+
+function showConfirmModal({ title = 'Bestätigen', message = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'primary' } = {}) {
+  return new Promise(resolve => {
+    const titleEl = document.getElementById('confirmModalTitle');
+    const textEl = document.getElementById('confirmModalText');
+    const okBtn = document.getElementById('confirmModalOk');
+    const cancelBtn = document.getElementById('confirmModalCancel');
+    const closeBtn = document.querySelector('#confirmModal .modal-close');
+    titleEl.textContent = title;
+    textEl.textContent = message;
+    okBtn.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+    okBtn.className = variant === 'danger' ? 'btn-danger' : 'btn-primary';
+
+    const cleanup = (val) => {
+      okBtn.onclick = null; cancelBtn.onclick = null; closeBtn.onclick = null;
+      closeModal('confirmModal');
+      resolve(val);
+    };
+    okBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+    closeBtn.onclick = () => cleanup(false);
+    openModal('confirmModal');
+  });
+}
 
 function openMailOfferModal({ hasEmail, patientName }) {
   return new Promise(resolve => {
@@ -2282,7 +2306,6 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
     }));
     const { error } = await supabase.from('prescription_sessions').insert(rows);
     if (error) console.warn('[prescription_sessions insert]', error);
-    else console.log('[phase3.1] linked', rows.length, 'sessions to rx', prescriptionId);
   } catch (e) {
     console.warn('[linkBookingsToPrescriptionSessions]', e);
   }
@@ -2365,7 +2388,6 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
 }
 
 async function proceedToRechnungForPhysio({ patientId, patientName }) {
-  console.log('[proceedToRechnung] patientId=', patientId, 'name=', patientName);
   const flow = window._physioFlow || {};
   const isBlanko = !!flow.is_blanko;
   const prescriptionId = flow.prescription_id || null;
@@ -2416,7 +2438,15 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
 
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
-  if (!id || !confirm(t('lead_confirm_delete'))) return;
+  if (!id) return;
+  const ok = await showConfirmModal({
+    title: 'Termin löschen?',
+    message: t('lead_confirm_delete'),
+    confirmText: 'Löschen',
+    cancelText: 'Abbrechen',
+    variant: 'danger'
+  });
+  if (!ok) return;
   await supabase.from('bookings').delete().eq('id', id);
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
@@ -6730,13 +6760,21 @@ async function submitConfirm() {
     };
 
     const blockers = rxLastUpload.validation?.blockers || [];
-    const proceedAnyway = blockers.length > 0
-      ? confirm(`Es bestehen ${blockers.length} Blocker. Trotzdem fortfahren?`)
-      : false;
-    if (blockers.length && !proceedAnyway) {
-      btn.disabled = false;
-      btn.textContent = '✅ Bestätigen & Termine planen';
-      return;
+    let proceedAnyway = false;
+    if (blockers.length > 0) {
+      const detail = (blockers.slice(0, 5).map(b => '• ' + (b.message || b.code || b)).join('\n'));
+      proceedAnyway = await showConfirmModal({
+        title: `⚠ ${blockers.length} Blocker erkannt`,
+        message: `${detail}\n\nMöchten Sie trotzdem fortfahren? Der Override wird protokolliert.`,
+        confirmText: 'Trotzdem fortfahren',
+        cancelText: 'Abbrechen',
+        variant: 'danger'
+      });
+      if (!proceedAnyway) {
+        btn.disabled = false;
+        btn.textContent = '✅ Bestätigen & Termine planen';
+        return;
+      }
     }
 
     const res = await fetch(`${REZEPT_API}/confirm`, {
@@ -6771,7 +6809,8 @@ async function submitConfirm() {
     if (typeof showPanel === 'function') showPanel('calendar');
     setTimeout(() => openBookingFromRxPreset(preset), 400);
   } catch (e) {
-    alert('Fehler: ' + e.message);
+    console.error('[rezept-confirm]', e);
+    showToast('Fehler: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = '✅ Bestätigen & Termine planen';
