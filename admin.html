@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -6,24 +6,65 @@
   <title>Admin — InfinityMade</title>
   <meta name="robots" content="noindex" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="stylesheet" href="dashboard.css?v=20260511n" />
-  
+  <link rel="stylesheet" href="dashboard.css?v=20260518a" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    .admin-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .admin-kpi { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-    .admin-kpi .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-    .admin-kpi .value { font-size: 24px; font-weight: 700; color: var(--text-main); margin-top: 6px; }
-    .admin-table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .admin-filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-    .admin-access-denied { display: flex; align-items: center; justify-content: center; height: 100vh; color: var(--text-muted); font-size: 16px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .kpi { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .kpi .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+    .kpi .value { font-size: 22px; font-weight: 700; color: var(--text-main); margin-top: 6px; }
+    .kpi .sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .kpi.warn .value { color: #d97706; }
+    .kpi.danger .value { color: #dc2626; }
+
+    .section-title { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 700; margin: 24px 0 10px; }
+
+    .integ-row { display: flex; gap: 4px; flex-wrap: wrap; }
+    .integ {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; padding: 2px 6px; border-radius: 4px;
+      background: var(--bg-subtle, #f3f4f6); color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .integ.on { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+
+    .usage-mini { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .usage-mini b { color: var(--text-main); font-weight: 600; }
+    .cost-cell { font-weight: 600; color: var(--text-main); font-variant-numeric: tabular-nums; }
+
+    .data-table tr.clickable { cursor: pointer; }
+    .data-table tr.clickable:hover td { background: var(--bg-subtle, #f9fafb); }
+
+    /* DB health */
+    .dbh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .dbh-grid { grid-template-columns: 1fr; } }
+    .bar { height: 6px; background: var(--bg-subtle, #f3f4f6); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .bar > div { height: 100%; background: #2563eb; }
+
+    /* Drawer */
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; display: none; }
+    .drawer-overlay.open { display: block; }
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 540px; max-width: 100vw;
+      background: var(--bg-card); border-left: 1px solid var(--border);
+      transform: translateX(100%); transition: transform .2s ease;
+      z-index: 101; overflow-y: auto; padding: 20px 24px;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer h3 { margin: 0 0 4px; font-size: 18px; }
+    .drawer .meta { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    .drawer .close-x { position: absolute; top: 12px; right: 12px; background: none; border: 0; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+    .drawer .mini-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+    .drawer .mini-table th, .drawer .mini-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+    .drawer .mini-table th { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+    .drawer .err { font-size: 12px; padding: 6px 8px; background: #fef2f2; border-left: 3px solid #dc2626; margin-bottom: 6px; border-radius: 0 4px 4px 0; }
   </style>
 </head>
 <body>
   <div id="loading" class="loading-screen"><div class="spinner"></div></div>
   <div id="app" style="display:none;">
     <header class="topbar">
-      <div class="topbar-left"><a href="/" class="brand">InfinityMade</a><span class="biz-name">Super Admin</span></div>
+      <div class="topbar-left"><a href="/admin.html" class="brand">InfinityMade</a><span class="biz-name">Super Admin</span></div>
       <div class="topbar-right"><button class="logout-btn" id="logoutBtn">Abmelden</button></div>
     </header>
     <div class="dashboard-layout">
@@ -31,7 +72,7 @@
         <nav>
           <a class="nav-item active" data-panel="overview"><span>📊</span> Übersicht</a>
           <a class="nav-item" data-panel="customers"><span>👥</span> Kunden</a>
-          <a class="nav-item" data-panel="bookings"><span>📅</span> Termine</a>
+          <a class="nav-item" data-panel="dbhealth"><span>🗄️</span> Datenbank</a>
           <a class="nav-item" data-panel="feedbacks"><span>💬</span> Feedback</a>
           <a class="nav-item" href="https://app.infinitymade.de/dashboard.html"><span>🔙</span> Dashboard</a>
         </nav>
@@ -39,19 +80,46 @@
       <main class="main-area" id="mainArea">
 
         <section class="panel active" id="panel-overview">
-          <div class="panel-header"><div><h2>Übersicht</h2></div></div>
-          <div class="admin-kpi-grid" id="adminKpi"></div>
+          <div class="panel-header"><div><h2>Übersicht</h2><p class="panel-sub">Aktueller Monat (MTD) — alle Zahlen in EUR.</p></div></div>
+          <div class="section-title">Umsatz & Konten</div>
+          <div class="kpi-grid" id="kpiBilling"></div>
+          <div class="section-title">Verbrauch diesen Monat</div>
+          <div class="kpi-grid" id="kpiUsage"></div>
         </section>
 
         <section class="panel" id="panel-customers">
-          <div class="panel-header"><div><h2>Kunden</h2></div></div>
+          <div class="panel-header"><div><h2>Kunden</h2><p class="panel-sub">Klicke eine Zeile für Detail-Verbrauch.</p></div></div>
           <div class="admin-filter-bar">
-            <select class="form-select" id="custFilterPlan"><option value="">Alle Pläne</option><option value="starter">Starter</option><option value="professional">Professional</option><option value="klinik">Klinik</option><option value="mitarbeiter">Mitarbeiter</option></select>
+            <select class="form-select" id="custFilterPlan"><option value="">Alle Pläne</option><option value="starter">Starter</option><option value="professional">Professional</option><option value="klinik">Klinik</option></select>
             <select class="form-select" id="custFilterStatus"><option value="">Alle Status</option><option value="trial">Trial</option><option value="active">Aktiv</option><option value="past_due">Past Due</option><option value="canceled">Canceled</option></select>
             <input class="search-input" id="custSearch" placeholder="Suchen..." />
           </div>
           <div class="admin-table-wrap">
-            <table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Termine</th><th>Leads</th></tr></thead><tbody id="custTable"></tbody></table>
+            <table class="data-table">
+              <thead><tr>
+                <th>Geschäft</th><th>Plan</th><th>Status</th><th>Integrationen</th><th>Verbrauch (MTD)</th><th>AI-Kosten</th>
+              </tr></thead>
+              <tbody id="custTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-dbhealth">
+          <div class="panel-header"><div><h2>Datenbank-Gesundheit</h2><p class="panel-sub">Was wächst auf der Supabase-Instanz und welche Tenants verbrauchen am meisten.</p></div></div>
+          <div class="kpi-grid" id="kpiDb"></div>
+          <div class="dbh-grid">
+            <div>
+              <div class="section-title">Größte Tabellen</div>
+              <div class="admin-table-wrap">
+                <table class="data-table"><thead><tr><th>Tabelle</th><th>Größe</th><th>Zeilen (geschätzt)</th></tr></thead><tbody id="dbTables"></tbody></table>
+              </div>
+            </div>
+            <div>
+              <div class="section-title">Tenants mit den meisten Zeilen</div>
+              <div class="admin-table-wrap">
+                <table class="data-table"><thead><tr><th>Geschäft</th><th>E-Mail</th><th>Zeilen</th></tr></thead><tbody id="dbTenants"></tbody></table>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -65,7 +133,16 @@
       </main>
     </div>
   </div>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <button class="close-x" id="drawerClose">×</button>
+    <h3 id="dwName">—</h3>
+    <p class="meta" id="dwMeta">—</p>
+    <div id="dwBody"></div>
+  </aside>
+
   <div id="toastContainer"></div>
-  <script type="module" src="admin.js?v=20260511n"></script>
+  <script type="module" src="admin.js?v=20260518a"></script>
 </body>
 </html>
