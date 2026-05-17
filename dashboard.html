@@ -98,6 +98,21 @@
             <div class="today-kpi-value" id="kpi-today">—</div>
           </div>
 
+          <div id="physioRezKpi" class="physio-rez-kpi" style="display:none;margin-bottom:16px;">
+            <button class="rez-kpi-tile rez-kpi-overdue" data-filter="overdue" type="button">
+              <span class="rez-kpi-num" id="rezKpiOverdue">0</span>
+              <span class="rez-kpi-lbl">überfällig</span>
+            </button>
+            <button class="rez-kpi-tile rez-kpi-soon" data-filter="soon" type="button">
+              <span class="rez-kpi-num" id="rezKpiSoon">0</span>
+              <span class="rez-kpi-lbl">in ≤ 7 Tagen</span>
+            </button>
+            <button class="rez-kpi-tile rez-kpi-active" data-filter="active" type="button">
+              <span class="rez-kpi-num" id="rezKpiActive">0</span>
+              <span class="rez-kpi-lbl">in Therapie</span>
+            </button>
+          </div>
+
           <div class="today-section">
             <div class="schedule-header">
               <button class="btn-icon" id="schedulePrev" type="button">‹</button>
@@ -2146,7 +2161,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260517pdrx1"></script>
+  <script type="module" src="dashboard.js?v=20260517rezkpi1"></script>
 </body>
 
 </html>
