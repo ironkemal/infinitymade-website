@@ -8,6 +8,7 @@ import aiRouter from './ai/router.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
 import { validateRezept } from './ai/validators/validate.js';
+import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
 import crypto from 'crypto';
 
 dotenv.config();
@@ -1370,7 +1371,34 @@ app.post('/api/rezept/upload', requireAuthAI, async (req, res) => {
       ? image_base64
       : `data:${mime};base64,${rawB64}`;
 
-    const ocrResult = await rezeptOcrRun({ image_base64: dataUri });
+    // OCR happens outside the unified /api/ai router, so audit logging must be
+    // wired explicitly here — otherwise rezept-ocr usage never lands in
+    // ai_audit_log and the admin AI-cost panel undercounts dramatically.
+    const ocrT0 = Date.now();
+    const ocrReqHash = aiHashRequest({ image_mime: mime, size: buffer.length });
+    let ocrResult, ocrStatus = 'ok', ocrError = null, ocrMeta = {};
+    try {
+      ocrResult = await rezeptOcrRun({ image_base64: dataUri });
+      ocrMeta = ocrResult._meta || {};
+    } catch (e) {
+      ocrStatus = 'error';
+      ocrError = e.message || String(e);
+      throw e;
+    } finally {
+      aiLogCall({
+        tenantId,
+        userId: req.auth?.userId,
+        task: 'rezept-ocr',
+        model: ocrMeta.model,
+        deployment: ocrMeta.deployment,
+        usage: ocrMeta.usage || {},
+        latencyMs: ocrMeta.latency_ms ?? (Date.now() - ocrT0),
+        status: ocrStatus,
+        error: ocrError,
+        dryRun: !!ocrMeta.dry_run,
+        requestHash: ocrReqHash,
+      });
+    }
     const parsed = ocrResult.parsed || {};
 
     // Map OCR output → validator input shape
