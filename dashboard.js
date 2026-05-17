@@ -1371,6 +1371,9 @@ async function handleTerminStarten() {
   closeModal('bkActionModal');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
+  // Mark linked prescription_session done (physio); non-blocking
+  markPrescriptionSession(b.id, 'done');
+
   const sessionText = document.getElementById('bkActionSession').textContent;
   const match = sessionText.match(/Seans\s+(\d+)\s*\/\s*(\d+)/);
   const sessionNum = match ? parseInt(match[1]) : 1;
@@ -1413,6 +1416,9 @@ function handlePatientNichtErschienen() {
 
   closeModal('bkActionModal');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+
+  // Mark linked prescription_session no_show (physio); non-blocking
+  markPrescriptionSession(bkActionBookingCache.id, 'no_show');
 
   triggerNoShowBot(bkActionBookingCache);
   showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
@@ -2148,6 +2154,39 @@ function openMailOfferModal({ hasEmail, patientName }) {
 
     openModal('mailOfferModal');
   });
+}
+
+async function markPrescriptionSession(bookingId, status) {
+  if (!bookingId) return;
+  try {
+    const patch = { status };
+    if (status === 'done') patch.done_at = new Date().toISOString();
+    const { data: sess, error } = await supabase
+      .from('prescription_sessions')
+      .update(patch).eq('booking_id', bookingId)
+      .select('prescription_id').maybeSingle();
+    if (error) { console.warn('[session update]', error); return; }
+    if (!sess?.prescription_id) return;
+
+    // If all sessions are done, promote prescription to 'completed'
+    const { count: openCount } = await supabase
+      .from('prescription_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('prescription_id', sess.prescription_id)
+      .neq('status', 'done');
+    if ((openCount || 0) === 0) {
+      await supabase.from('prescriptions')
+        .update({ status: 'completed' }).eq('id', sess.prescription_id)
+        .in('status', ['parsed', 'confirmed', 'in_therapy']);
+    } else {
+      // Otherwise ensure 'in_therapy' once treatment has begun
+      await supabase.from('prescriptions')
+        .update({ status: 'in_therapy' }).eq('id', sess.prescription_id)
+        .in('status', ['parsed', 'confirmed']);
+    }
+  } catch (e) {
+    console.warn('[markPrescriptionSession]', e);
+  }
 }
 
 async function decorateBookingTitleWithSession(bookingId) {
