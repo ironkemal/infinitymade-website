@@ -513,6 +513,7 @@ async function renderOverview() {
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
 
   await loadTodayBookings();
+  loadPhysioRezKpis().catch(() => {});
 }
 
 let scheduleDate = new Date();
@@ -877,6 +878,61 @@ async function loadScheduleBookings(date) {
 }
 
 async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
+
+let _rezKpiCache = null;
+
+async function loadPhysioRezKpis() {
+  const block = document.getElementById('physioRezKpi');
+  if (!block) return;
+  if (getSector() !== 'physiotherapy') { block.style.display = 'none'; return; }
+
+  const ownerId = getOwnerId();
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .select('id, status, gueltig_bis, patient_id, heilmittel')
+    .eq('owner_id', ownerId)
+    .not('status', 'in', '(completed,billed,cancelled)');
+  if (error) { console.warn('[rez-kpi]', error); block.style.display = 'none'; return; }
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const soonCutoff = new Date(today); soonCutoff.setDate(today.getDate() + 7);
+
+  const overdue = [], soon = [], active = [];
+  for (const rx of (data || [])) {
+    const gb = rx.gueltig_bis ? new Date(rx.gueltig_bis) : null;
+    if (gb && gb < today) overdue.push(rx);
+    else if (gb && gb <= soonCutoff) soon.push(rx);
+    if (rx.status === 'in_therapy') active.push(rx);
+  }
+  _rezKpiCache = { overdue, soon, active };
+
+  document.getElementById('rezKpiOverdue').textContent = overdue.length;
+  document.getElementById('rezKpiSoon').textContent = soon.length;
+  document.getElementById('rezKpiActive').textContent = active.length;
+  block.style.display = '';
+}
+
+(function bindRezKpiClicks() {
+  document.addEventListener('click', async (ev) => {
+    const tile = ev.target.closest('.rez-kpi-tile');
+    if (!tile || !_rezKpiCache) return;
+    const cat = tile.dataset.filter;
+    const list = _rezKpiCache[cat] || [];
+    if (!list.length) { showToast('Keine Rezepte in dieser Kategorie.', 'info'); return; }
+    // Open the first patient with such a prescription; user can flip patients from there
+    const firstRx = list[0];
+    if (!firstRx?.patient_id) return;
+    const { data: lead } = await supabase.from('leads')
+      .select('*').eq('id', firstRx.patient_id).maybeSingle();
+    if (lead && typeof openPatientDetailModal === 'function') {
+      openPatientDetailModal(lead);
+      setTimeout(() => {
+        const rezTab = document.querySelector('.pd-tab[data-tab="rezepte"]');
+        if (rezTab) rezTab.click();
+      }, 200);
+    }
+  });
+})();
 
 async function openStripePortal() {
   if (!currentProfile.stripe_subscription_id) { window.location.href = '/onboarding.html?step=plan'; return; }
@@ -2582,7 +2638,18 @@ async function loadPatientDetailRezepte(leadId) {
     const total = rx.anzahl_einheiten || sessions.length || 0;
     const done = sessions.filter(s => s.status === 'done').length;
     const pct = total ? Math.round((done / total) * 100) : 0;
-    const valid = rx.gueltig_bis ? new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : '—';
+    let validColor = '';
+    if (rx.gueltig_bis) {
+      const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+      const gb = new Date(rx.gueltig_bis);
+      const days = Math.round((gb - today0) / 86400000);
+      if (days < 0) validColor = 'color:#ef4444;font-weight:600;';
+      else if (days <= 3) validColor = 'color:#ef4444;';
+      else if (days <= 10) validColor = 'color:#f59e0b;';
+    }
+    const valid = rx.gueltig_bis
+      ? `<span style="${validColor}">${new Date(rx.gueltig_bis).toLocaleDateString('de-DE')}</span>`
+      : '—';
     const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
     const dmrz = rx.dmrz_exported_at
       ? `<span class="badge badge-green" title="${new Date(rx.dmrz_exported_at).toLocaleString('de-DE')}">DMRZ ✓</span>`

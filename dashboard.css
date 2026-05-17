@@ -671,6 +671,32 @@ textarea {
   line-height: 1;
 }
 
+.physio-rez-kpi {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.rez-kpi-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border);
+  border-left: 4px solid #9ca3af;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.rez-kpi-tile:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+.rez-kpi-tile.rez-kpi-overdue { border-left-color: #ef4444; }
+.rez-kpi-tile.rez-kpi-soon { border-left-color: #f59e0b; }
+.rez-kpi-tile.rez-kpi-active { border-left-color: #22c55e; }
+.rez-kpi-num { font-size: 26px; font-weight: 800; line-height: 1; color: var(--text-main); }
+.rez-kpi-lbl { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
 .features-card {
   margin-top: 20px;
 }
