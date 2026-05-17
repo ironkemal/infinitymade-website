@@ -2863,10 +2863,28 @@ async function loadPatientDetailAnamnese(leadId) {
 }
 
 async function loadPatientDetailMails(leadId) {
+  const ownerId = getOwnerId();
+  // Look up patient email so we can also catch legacy rows that were
+  // inserted without a contact_id.
+  const { data: lead } = await supabase.from('leads')
+    .select('email').eq('id', leadId).maybeSingle();
+  const email = (lead?.email || '').trim();
+
+  // Two queries OR'd: by contact_id (preferred) OR by to_email match
+  const filters = [`contact_id.eq.${leadId}`];
+  if (email) filters.push(`and(contact_id.is.null,to_email.ilike.${email})`);
   const { data: logs } = await supabase.from('email_logs')
     .select('*')
-    .eq('contact_id', leadId)
+    .eq('owner_id', ownerId)
+    .or(filters.join(','))
     .order('created_at', { ascending: false });
+
+  // Backfill contact_id for the email-matched rows so future queries are cheaper
+  const orphanIds = (logs || []).filter(l => !l.contact_id).map(l => l.id);
+  if (orphanIds.length) {
+    supabase.from('email_logs').update({ contact_id: leadId }).in('id', orphanIds).then(() => {});
+  }
+
   const content = document.getElementById('pdMailContent');
   document.getElementById('pdMailLoading').hidden = true;
   if (!logs || logs.length === 0) {
@@ -4541,9 +4559,18 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
       }
       throw new Error(json.error || 'Senden fehlgeschlagen');
     }
+    // Resolve contact_id from to_email if the draft didn't supply one,
+    // so patient-detail mail history finds the row.
+    let contactId = currentDraftContactId || null;
+    if (!contactId && toEmail) {
+      const { data: matchLead } = await supabase.from('leads')
+        .select('id').eq('owner_id', getOwnerId()).ilike('email', toEmail)
+        .maybeSingle();
+      if (matchLead?.id) contactId = matchLead.id;
+    }
     await supabase.from('email_logs').insert({
       owner_id: getOwnerId(),
-      contact_id: currentDraftContactId || null,
+      contact_id: contactId,
       to_email: toEmail, to_name: toName,
       subject, body, status: 'sent'
     });
