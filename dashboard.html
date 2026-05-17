@@ -1255,6 +1255,18 @@
               </div>
             </div>
 
+            <div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
+              <div class="settings-section-title">Abrechnung (Krankenkasse)</div>
+              <div class="settings-section-body">
+                <div class="form-group">
+                  <label class="form-label">Institutionskennzeichen (IK)</label>
+                  <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
+                  <div class="form-hint">Wird von der ARGE-IK vergeben. Erscheint im DMRZ-XML-Export für §302 SGB V Abrechnung.</div>
+                </div>
+                <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
+              </div>
+            </div>
+
             <div class="settings-section" id="aerzteSection">
               <div class="settings-section-title">Ärzte</div>
               <div class="settings-section-body">
@@ -2126,7 +2138,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260517dmrz1"></script>
+  <script type="module" src="dashboard.js?v=20260517ik1"></script>
 </body>
 
 </html>

@@ -4453,7 +4453,31 @@ async function loadSettings() {
   if (sfList) sfList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
 
   await loadAerzte();
+
+  // Physio-only: IK number for §302/DMRZ
+  const abrSection = document.getElementById('settingsAbrechnungSection');
+  if (abrSection) {
+    if (getSector() === 'physiotherapy') {
+      abrSection.style.display = '';
+      document.getElementById('setIkNumber').value = currentProfile.ik_number || '';
+    } else {
+      abrSection.style.display = 'none';
+    }
+  }
 }
+
+document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
+  const raw = document.getElementById('setIkNumber').value.trim();
+  if (raw && !/^\d{9}$/.test(raw)) {
+    showToast('IK muss genau 9 Ziffern enthalten.', 'error');
+    return;
+  }
+  const ik = raw || null;
+  const { error } = await supabase.from('profiles').update({ ik_number: ik }).eq('id', currentSession.user.id);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  currentProfile.ik_number = ik;
+  showToast(ik ? 'IK gespeichert ✓' : 'IK entfernt.');
+});
 
 document.getElementById('profileSaveBtn').addEventListener('click', async () => {
   const biz = document.getElementById('setBiz').value.trim();
