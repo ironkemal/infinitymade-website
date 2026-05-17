@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260513o" />
+  <link rel="stylesheet" href="dashboard.css?v=20260517print1" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -667,6 +667,65 @@
             </div>
           </div>
 
+          <div id="invView" hidden>
+            <div class="invoice-print-card" id="invoicePrintArea">
+              <div class="invoice-print-header">
+                <div class="invoice-print-praxis">
+                  <div class="invoice-print-biz-name" id="invvBizName">—</div>
+                  <div class="invoice-print-biz-meta" id="invvBizMeta"></div>
+                </div>
+                <div class="invoice-print-meta">
+                  <div><strong>Rechnungsnummer:</strong> <span id="invvNumber">—</span></div>
+                  <div><strong>Datum:</strong> <span id="invvDate">—</span></div>
+                  <div><strong>Status:</strong> <span id="invvStatus">—</span></div>
+                </div>
+              </div>
+
+              <div class="invoice-print-section">
+                <div class="invoice-print-section-title">Patient</div>
+                <div id="invvPatient">—</div>
+              </div>
+
+              <div class="invoice-print-section" id="invvRxBlock" hidden>
+                <div class="invoice-print-section-title">Verordnung</div>
+                <div id="invvRx"></div>
+              </div>
+
+              <div class="invoice-print-section">
+                <div class="invoice-print-section-title">Leistungen</div>
+                <table class="invoice-print-table">
+                  <thead>
+                    <tr><th>Leistung</th><th class="num">Anz.</th><th class="num">Einzelpreis</th><th class="num">Gesamt</th></tr>
+                  </thead>
+                  <tbody id="invvLineBody"></tbody>
+                </table>
+              </div>
+
+              <div class="invoice-print-totals">
+                <div class="invoice-print-total-row"><span>Zwischensumme</span><span id="invvSubtotal">—</span></div>
+                <div class="invoice-print-total-row"><span>Eigenanteil (<span id="invvEigenPct">0</span>%)</span><span id="invvEigenEur">—</span></div>
+                <div class="invoice-print-total-row"><span>Kassenzuzahlung</span><span id="invvKasse">—</span></div>
+                <div class="invoice-print-total-row invoice-print-grand"><span>Zu zahlen (Patient)</span><span id="invvTotal">—</span></div>
+              </div>
+
+              <div class="invoice-print-section" id="invvNotesWrap" hidden>
+                <div class="invoice-print-section-title">Notizen</div>
+                <div id="invvNotes" style="white-space:pre-wrap;"></div>
+              </div>
+
+              <div class="invoice-print-footer">
+                <div>Vielen Dank für Ihr Vertrauen.</div>
+              </div>
+            </div>
+
+            <div class="no-print" style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+              <button class="btn-primary" id="invvPrintBtn">🖨 Drucken</button>
+              <button class="btn-ghost" id="invvEditBtn">✎ Bearbeiten</button>
+              <button class="btn-ghost" id="invvDmrzBtn">📤 DMRZ XML</button>
+              <button class="btn-ghost" id="invvBackBtn">← Zurück zur Liste</button>
+            </div>
+          </div>
+
           <div id="invEditor" hidden>
             <div class="card" style="margin-bottom:16px;">
               <div class="form-group">
@@ -1121,7 +1180,35 @@
 
           <div style="display:flex;gap:8px;margin-bottom:24px;">
             <button class="btn-primary" id="anamSaveBtn">Speichern</button>
-            <button class="btn-ghost" id="anamPdfBtn" hidden>Anamnese als PDF</button>
+            <button class="btn-ghost" id="anamPrintBtn">🖨 Drucken</button>
+          </div>
+
+          <div id="anamnesePrintArea" class="anamnese-print-card" style="display:none;">
+            <div class="invoice-print-header">
+              <div class="invoice-print-praxis">
+                <div class="invoice-print-biz-name" id="anamPrintBizName">—</div>
+                <div class="invoice-print-biz-meta" id="anamPrintBizMeta"></div>
+              </div>
+              <div class="invoice-print-meta">
+                <div><strong>Anamnese</strong></div>
+                <div><span id="anamPrintDate">—</span></div>
+              </div>
+            </div>
+            <div class="invoice-print-section">
+              <div class="invoice-print-section-title">Patient</div>
+              <div id="anamPrintPatient">—</div>
+            </div>
+            <div class="invoice-print-section">
+              <div class="invoice-print-section-title">Anamnese-Daten</div>
+              <div id="anamPrintFields"></div>
+            </div>
+            <div class="invoice-print-section" id="anamPrintNotesWrap" hidden>
+              <div class="invoice-print-section-title">Notizen</div>
+              <div id="anamPrintNotes" style="white-space:pre-wrap;"></div>
+            </div>
+            <div class="invoice-print-footer">
+              <div>Vertraulich · Interner Praxisbeleg</div>
+            </div>
           </div>
         </section>
 
@@ -2193,7 +2280,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260517anamrx1"></script>
+  <script type="module" src="dashboard.js?v=20260517bugfix1"></script>
 </body>
 
 </html>
