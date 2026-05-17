@@ -1719,6 +1719,7 @@
           <button class="pd-tab active" data-tab="notes">Notizen</button>
           <button class="pd-tab" data-tab="anamnese">Anamnese</button>
           <button class="pd-tab" data-tab="ueberweisung">Überweisung</button>
+          <button class="pd-tab" data-tab="rezepte" id="pdTabRezepte" style="display:none;">Rezepte</button>
           <button class="pd-tab" data-tab="rechnungen">Rechnungen</button>
           <button class="pd-tab" data-tab="termine">Termine</button>
           <button class="pd-tab" data-tab="mail">Mail</button>
@@ -1745,6 +1746,12 @@
             <div id="pdUeberContent">
               <div class="pd-empty">Noch keine Überweisung eingetragen.</div>
             </div>
+          </div>
+          <div class="pd-panel" id="pdPanelRezepte">
+            <div class="pd-loading" id="pdRezLoading">
+              <div class="spinner-sm"></div>
+            </div>
+            <div id="pdRezContent"></div>
           </div>
           <div class="pd-panel" id="pdPanelRechnungen">
             <div class="pd-loading" id="pdRechLoading">
@@ -2139,7 +2146,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260517rxbadge1"></script>
+  <script type="module" src="dashboard.js?v=20260517pdrx1"></script>
 </body>
 
 </html>
