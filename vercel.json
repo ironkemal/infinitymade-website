@@ -244,13 +244,15 @@
       ],
       "destination": "https://app.infinitymade.de/employee-signup.html",
       "permanent": false
-    },
+    }
+  ],
+  "rewrites": [
     {
       "source": "/praxis",
       "destination": "/praxis.html"
     },
     {
-      "source": "/praxis.html",
+      "source": "/praxis/",
       "destination": "/praxis.html"
     }
   ]
