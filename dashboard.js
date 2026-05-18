@@ -59,7 +59,20 @@ const T = {
     beispielmodus_sub: 'Anatomie-Haritas für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
-    lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.'
+    lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.',
+    nav_abrechnung: 'Kassenabrechnung', abrechnung_sub: 'Sammelrechnung § 302 SGB V an Krankenkassen',
+    ab_ready: 'Abrechnungsbereit', ab_history: 'Abrechnungs-Historie',
+    ab_kk: 'Krankenkasse', ab_patient: 'Patient', ab_rezept: 'Rezept', ab_einheiten: 'Einheiten',
+    ab_brutto: 'Brutto', ab_zuzahlung: 'Zuzahlung', ab_select_all: 'Alle wählen',
+    ab_create: 'Abrechnung erstellen', ab_no_ready: 'Keine abrechnungsbereiten Rezepte.',
+    ab_no_history: 'Noch keine Abrechnungen erstellt.',
+    ab_filename: 'Dateiname', ab_count: 'Rezepte', ab_total: 'Summe', ab_status: 'Status', ab_actions: '',
+    ab_download_dta: '📥 DTA', ab_download_begleit: '📄 Begleitzettel',
+    ab_creating: 'Erstelle Abrechnung…', ab_created: 'Abrechnung erstellt.',
+    ab_status_erstellt: 'Erstellt', ab_status_heruntergeladen: 'Heruntergeladen',
+    ab_status_gesendet: 'Versendet', ab_status_accepted: 'Akzeptiert',
+    ab_status_rejected: 'Abgelehnt', ab_status_paid: 'Bezahlt',
+    ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.'
   },
   en: {
     logout: 'Sign out',
@@ -112,7 +125,20 @@ const T = {
     beispielmodus_sub: 'Anatomy maps for patient consultations', anamnese_sub: 'Digital intake form',
     lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
     lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
-    lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.'
+    lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.',
+    nav_abrechnung: 'Insurance Billing', abrechnung_sub: '§ 302 SGB V batch billing to health insurers',
+    ab_ready: 'Ready to bill', ab_history: 'Billing history',
+    ab_kk: 'Insurer', ab_patient: 'Patient', ab_rezept: 'Rx', ab_einheiten: 'Units',
+    ab_brutto: 'Gross', ab_zuzahlung: 'Co-pay', ab_select_all: 'Select all',
+    ab_create: 'Create billing', ab_no_ready: 'No prescriptions ready for billing.',
+    ab_no_history: 'No billings yet.',
+    ab_filename: 'Filename', ab_count: 'Rx count', ab_total: 'Total', ab_status: 'Status', ab_actions: '',
+    ab_download_dta: '📥 DTA', ab_download_begleit: '📄 Cover sheet',
+    ab_creating: 'Creating billing…', ab_created: 'Billing created.',
+    ab_status_erstellt: 'Created', ab_status_heruntergeladen: 'Downloaded',
+    ab_status_gesendet: 'Sent', ab_status_accepted: 'Accepted',
+    ab_status_rejected: 'Rejected', ab_status_paid: 'Paid',
+    ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.'
   },
   tr: {
     logout: 'Çıkış',
@@ -165,7 +191,20 @@ const T = {
     beispielmodus_sub: 'Hasta görüşmeleri için anatomi haritaları', anamnese_sub: 'Dijital anamnez formu',
     lbl_doctor_notes: 'Doktor notları', lbl_therapist_notes: 'Terapist notları',
     lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
-    lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.'
+    lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.',
+    nav_abrechnung: 'Kasa Faturalandırması', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası',
+    ab_ready: 'Faturalandırmaya hazır', ab_history: 'Fatura geçmişi',
+    ab_kk: 'Sigorta', ab_patient: 'Hasta', ab_rezept: 'Reçete', ab_einheiten: 'Birim',
+    ab_brutto: 'Brüt', ab_zuzahlung: 'Katkı', ab_select_all: 'Tümünü seç',
+    ab_create: 'Fatura oluştur', ab_no_ready: 'Faturalandırmaya hazır reçete yok.',
+    ab_no_history: 'Henüz fatura oluşturulmadı.',
+    ab_filename: 'Dosya adı', ab_count: 'Reçete sayısı', ab_total: 'Toplam', ab_status: 'Durum', ab_actions: '',
+    ab_download_dta: '📥 DTA', ab_download_begleit: '📄 Refakat belgesi',
+    ab_creating: 'Fatura oluşturuluyor…', ab_created: 'Fatura oluşturuldu.',
+    ab_status_erstellt: 'Oluşturuldu', ab_status_heruntergeladen: 'İndirildi',
+    ab_status_gesendet: 'Gönderildi', ab_status_accepted: 'Kabul',
+    ab_status_rejected: 'Red', ab_status_paid: 'Ödendi',
+    ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.'
   }
 };
 
@@ -217,6 +256,7 @@ const SECTOR_PANELS = {
     { id: 'doctors', icon: '🏥', key: 'nav_doctors', roles: ['owner', 'employee'] },
     { id: 'anamnese', icon: '📝', key: 'nav_anamnese', roles: ['owner', 'employee'] },
     { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
+    { id: 'abrechnung', icon: '🏥', key: 'nav_abrechnung', roles: ['owner'] },
     { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
     { id: 'beispielmodus', icon: '🦴', key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
@@ -233,6 +273,7 @@ const SECTOR_PANELS = {
     { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
     { id: 'doctors', icon: '🏥', key: 'nav_doctors', roles: ['owner', 'employee'] },
     { id: 'rechnungen', icon: '💶', key: 'nav_rechnungen', roles: ['owner', 'employee'] },
+    { id: 'abrechnung', icon: '🏥', key: 'nav_abrechnung', roles: ['owner'] },
     { id: 'b2b', icon: '🤝', key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: '📧', key: 'nav_b2c', roles: ['owner', 'employee'] },
     { id: 'beispielmodus', icon: '🦴', key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
@@ -417,6 +458,7 @@ async function switchPanel(id) {
   if (id === 'notizen') loadNotizen();
   if (id === 'beispielmodus') loadBeispielmodus();
   if (id === 'rechnungen') loadRechnungen();
+  if (id === 'abrechnung') loadAbrechnung();
   if (id === 'anamnese') loadAnamnese();
 }
 
@@ -2269,6 +2311,14 @@ async function markPrescriptionSession(bookingId, status) {
       await supabase.from('prescriptions')
         .update({ status: 'completed' }).eq('id', sess.prescription_id)
         .in('status', ['parsed', 'confirmed', 'in_therapy']);
+      // §302 GKV flip: mark prescription "abrechnungsbereit" so it appears on
+      // the Kassenabrechnung page. Only when the Krankenkasse is known AND
+      // no abrechnung_status was already set (manual override wins).
+      await supabase.from('prescriptions')
+        .update({ abrechnung_status: 'bereit' })
+        .eq('id', sess.prescription_id)
+        .is('abrechnung_status', null)
+        .not('kostentraeger_ik', 'is', null);
     } else {
       // Otherwise ensure 'in_therapy' once treatment has begun
       await supabase.from('prescriptions')
@@ -2703,20 +2753,35 @@ async function loadPatientDetailRezepte(leadId) {
   if (!content) return;
   if (loading) loading.hidden = false;
 
-  const { data: rxs, error } = await supabase
-    .from('prescriptions')
-    .select(`
-      id, rezept_typ, status, icd10, diagnosegruppe, heilmittel,
-      anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
-      is_dringend, hausbesuch, dmrz_exported_at, created_at,
-      prescription_sessions ( id, session_number, status, done_at )
-    `)
-    .eq('patient_id', leadId)
-    .order('created_at', { ascending: false });
+  const [rxRes, befRes] = await Promise.all([
+    supabase
+      .from('prescriptions')
+      .select(`
+        id, rezept_typ, status, icd10, diagnosegruppe, heilmittel,
+        anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
+        is_dringend, hausbesuch, dmrz_exported_at, created_at,
+        prescription_sessions ( id, session_number, status, done_at )
+      `)
+      .eq('patient_id', leadId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('zuzahlung_befreiung')
+      .select('id, jahr, befreit_ab, befreit_bis, beleg_url')
+      .eq('patient_id', leadId)
+      .order('jahr', { ascending: false }),
+  ]);
+  const { data: rxs, error } = rxRes;
+  const befreiungen = befRes.data || [];
 
   if (loading) loading.hidden = true;
   if (error) { content.innerHTML = '<div class="pd-empty">Fehler: ' + escapeHtml(error.message) + '</div>'; return; }
-  if (!rxs || !rxs.length) { content.innerHTML = '<div class="pd-empty">Keine Rezepte vorhanden.</div>'; return; }
+
+  const befreiungCard = renderBefreiungCard(leadId, befreiungen);
+  if (!rxs || !rxs.length) {
+    content.innerHTML = befreiungCard + '<div class="pd-empty">Keine Rezepte vorhanden.</div>';
+    wireBefreiungCard(leadId);
+    return;
+  }
 
   const typLabel = { standard: 'Standard', blanko: 'Blanko', lhb_bvb: 'LHB/BVB' };
   const statusLabel = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie', completed: 'Abgeschlossen', billed: 'Abgerechnet', cancelled: 'Storniert' };
@@ -2780,6 +2845,129 @@ async function loadPatientDetailRezepte(leadId) {
       ${sessionPills ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${sessionPills}</div>` : ''}
     </div>`;
   }).join('');
+
+  content.innerHTML = befreiungCard + content.innerHTML;
+  wireBefreiungCard(leadId);
+}
+
+// --- Zuzahlung-Befreiung (yearly co-pay exemption) ---
+
+function renderBefreiungCard(leadId, befreiungen) {
+  const currentYear = new Date().getFullYear();
+  const current = befreiungen.find(b => b.jahr === currentYear);
+  const others  = befreiungen.filter(b => b.jahr !== currentYear);
+
+  const fmt = (d) => d ? new Date(d).toLocaleDateString('de-DE') : '—';
+  const head = current
+    ? `<span class="badge badge-green" style="font-size:13px;">Befreit ${currentYear}</span>
+       <span style="font-size:13px;color:#555;">ab ${fmt(current.befreit_ab)}${current.befreit_bis ? ' – ' + fmt(current.befreit_bis) : ''}</span>
+       ${current.beleg_url ? `<button class="btn-ghost btn-sm bef-view" data-path="${escapeHtml(current.beleg_url)}">📄 Beleg</button>` : ''}
+       <button class="btn-ghost btn-sm bef-remove" data-id="${current.id}" style="color:#b91c1c;">Entfernen</button>`
+    : `<span class="badge badge-gray" style="font-size:13px;">Zuzahlungspflichtig ${currentYear}</span>
+       <button class="btn-primary btn-sm bef-add" data-lead="${escapeHtml(leadId)}">+ Befreiungsbescheinigung</button>`;
+
+  const history = others.length
+    ? `<div style="margin-top:8px;font-size:12px;color:#666;">
+        ${others.map(b => `<span>${b.jahr}: befreit ab ${fmt(b.befreit_ab)}${b.beleg_url ? ` · <a href="#" class="bef-view" data-path="${escapeHtml(b.beleg_url)}">Beleg</a>` : ''}</span>`).join(' · ')}
+      </div>`
+    : '';
+
+  return `<div class="pd-rech-item" style="padding:12px 20px;border-bottom:1px solid var(--border);background:#fafbfc;">
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;">
+      <strong style="font-size:14px;">Zuzahlungs-Befreiung</strong>
+      ${head}
+    </div>
+    ${history}
+  </div>`;
+}
+
+function wireBefreiungCard(leadId) {
+  const root = document.getElementById('pdRezContent');
+  if (!root) return;
+  root.querySelectorAll('.bef-add').forEach(btn => {
+    btn.addEventListener('click', () => openBefreiungModal(btn.dataset.lead));
+  });
+  root.querySelectorAll('.bef-remove').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Befreiung für dieses Jahr entfernen?')) return;
+      const { error } = await supabase.from('zuzahlung_befreiung').delete().eq('id', btn.dataset.id);
+      if (error) return showToast('Fehler: ' + error.message, 'error');
+      showToast('Befreiung entfernt.');
+      loadPatientDetailRezepte(leadId);
+    });
+  });
+  root.querySelectorAll('.bef-view').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const path = btn.dataset.path;
+      if (!path) return;
+      const { data, error } = await supabase.storage.from('patient-documents').createSignedUrl(path, 300);
+      if (error) return showToast('Beleg konnte nicht geöffnet werden: ' + error.message, 'error');
+      window.open(data.signedUrl, '_blank');
+    });
+  });
+}
+
+function openBefreiungModal(leadId) {
+  const modal = document.getElementById('befreiungModal');
+  if (!modal) return;
+  const yearInp = document.getElementById('befJahr');
+  const abInp   = document.getElementById('befAb');
+  const bisInp  = document.getElementById('befBis');
+  const fileInp = document.getElementById('befFile');
+  const errEl   = document.getElementById('befErr');
+  const saveBtn = document.getElementById('befSaveBtn');
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  yearInp.value = String(yyyy);
+  abInp.value   = today.toISOString().slice(0, 10);
+  bisInp.value  = `${yyyy}-12-31`;
+  fileInp.value = '';
+  if (errEl) errEl.textContent = '';
+  saveBtn.dataset.lead = leadId;
+  openModal('befreiungModal');
+}
+
+async function saveBefreiung(leadId) {
+  const errEl = document.getElementById('befErr');
+  errEl.textContent = '';
+  const jahr = parseInt(document.getElementById('befJahr').value, 10);
+  const ab   = document.getElementById('befAb').value;
+  const bis  = document.getElementById('befBis').value || null;
+  const file = document.getElementById('befFile').files[0];
+  if (!jahr || !ab) { errEl.textContent = 'Jahr und „befreit ab“ sind Pflicht.'; return; }
+
+  const ownerId = getOwnerId();
+
+  // Upload beleg if present
+  let belegPath = null;
+  if (file) {
+    if (file.size > 5 * 1024 * 1024) {
+      errEl.textContent = 'Datei zu groß (max 5 MB).'; return;
+    }
+    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+    belegPath = `${ownerId}/${leadId}/befreiung_${jahr}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('patient-documents').upload(belegPath, file, {
+      contentType: file.type || 'application/octet-stream',
+      upsert: true,
+    });
+    if (upErr) { errEl.textContent = 'Upload-Fehler: ' + upErr.message; return; }
+  }
+
+  const row = {
+    owner_id: ownerId,
+    patient_id: leadId,
+    jahr,
+    befreit_ab: ab,
+    befreit_bis: bis,
+    beleg_url: belegPath,
+  };
+  const { error } = await supabase.from('zuzahlung_befreiung').upsert(row, { onConflict: 'patient_id,jahr' });
+  if (error) { errEl.textContent = 'Speicherfehler: ' + error.message; return; }
+
+  closeModal('befreiungModal');
+  showToast('Befreiung gespeichert ✓');
+  loadPatientDetailRezepte(leadId);
 }
 
 async function loadPatientDetailNotes(leadId) {
@@ -4820,17 +5008,47 @@ async function loadSettings() {
 
   await loadAerzte();
 
-  // Physio-only: IK number for §302/DMRZ
+  // Physio/Praxis: IK number for §302/DMRZ + Krankenkasse-Abrechnung
   const abrSection = document.getElementById('settingsAbrechnungSection');
   if (abrSection) {
-    if (getSector() === 'physiotherapy') {
+    const sec = getSector();
+    if (sec === 'physiotherapy' || sec === 'praxis') {
       abrSection.style.display = '';
       document.getElementById('setIkNumber').value = currentProfile.ik_number || '';
+      // Pull existing terapeut_zertifikat metadata (IK takes precedence here if set)
+      supabase.from('terapeut_zertifikat')
+        .select('ik_nummer, cert_subject, cert_valid_to')
+        .eq('owner_id', getOwnerId())
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!data) return;
+          const ikInp = document.getElementById('setIkNumber');
+          if (data.ik_nummer && !ikInp.value) ikInp.value = data.ik_nummer;
+          const status = document.getElementById('certStatus');
+          if (status) {
+            if (data.cert_subject) {
+              const valid = data.cert_valid_to ? new Date(data.cert_valid_to).toLocaleDateString('de-DE') : '—';
+              status.textContent = `Zertifikat: ${data.cert_subject} · gültig bis ${valid}`;
+              status.style.color = '#15803d';
+            } else {
+              status.textContent = 'Noch kein ITSG-Zertifikat hinterlegt.';
+              status.style.color = '';
+            }
+          }
+        });
     } else {
       abrSection.style.display = 'none';
     }
   }
 }
+
+document.getElementById('befSaveBtn')?.addEventListener('click', () => {
+  const lead = document.getElementById('befSaveBtn').dataset.lead;
+  if (lead) saveBefreiung(lead);
+});
+
+document.getElementById('signRunBtn')?.addEventListener('click', runSignAbrechnung);
+document.getElementById('zaaRunBtn')?.addEventListener('click', runZaaUpload);
 
 document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
   const raw = document.getElementById('setIkNumber').value.trim();
@@ -4839,9 +5057,22 @@ document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
     return;
   }
   const ik = raw || null;
-  const { error } = await supabase.from('profiles').update({ ik_number: ik }).eq('id', currentSession.user.id);
-  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  const ownerId = getOwnerId();
+
+  // 1) profiles.ik_number (legacy DMRZ flow)
+  const { error: pErr } = await supabase.from('profiles').update({ ik_number: ik }).eq('id', currentSession.user.id);
+  if (pErr) { showToast('Fehler: ' + pErr.message, 'error'); return; }
   currentProfile.ik_number = ik;
+
+  // 2) terapeut_zertifikat upsert (§302 Sammelabrechnung route reads this)
+  if (ik) {
+    const { error: zErr } = await supabase.from('terapeut_zertifikat').upsert({
+      owner_id:  ownerId,
+      ik_nummer: ik,
+    }, { onConflict: 'owner_id' });
+    if (zErr) console.warn('[ik/zertifikat-upsert]', zErr);
+  }
+
   showToast(ik ? 'IK gespeichert ✓' : 'IK entfernt.');
 });
 
@@ -7322,4 +7553,518 @@ async function submitConfirm() {
   }
 }
 
+// ===== § 302 SGB V Kassenabrechnung =====
+
+const _abState = { ready: [], kkMap: new Map(), busy: false };
+
+function fmtEur(n) {
+  const v = Number(n) || 0;
+  return v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+async function loadAbrechnung() {
+  const ownerId = getOwnerId();
+  if (!ownerId) return;
+
+  // Pull ready prescriptions + Krankenkasse lookup + history in parallel
+  const [readyRes, kkRes, histRes] = await Promise.all([
+    supabase.from('prescriptions')
+      .select('id, patient_id, kostentraeger_ik, heilmittel, heilmittel_position, anzahl_einheiten, zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb, leads:patient_id(first_name,last_name,krankenkasse,versichertennummer)')
+      .eq('owner_id', ownerId)
+      .eq('abrechnung_status', 'bereit')
+      .order('ausstellungsdatum', { ascending: true }),
+    supabase.from('kostentraeger').select('ik, name, das_ik'),
+    supabase.from('abrechnung')
+      .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, created_at')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+  ]);
+
+  if (readyRes.error) console.error('[abrechnung/ready]', readyRes.error);
+  if (kkRes.error)    console.error('[abrechnung/kk]',    kkRes.error);
+  if (histRes.error)  console.error('[abrechnung/hist]',  histRes.error);
+
+  _abState.kkMap = new Map((kkRes.data || []).map(r => [r.ik, r]));
+  _abState.ready = readyRes.data || [];
+
+  renderAbrechnungReady();
+  renderAbrechnungHistory(histRes.data || []);
+}
+
+function renderAbrechnungReady() {
+  const container = document.getElementById('abReadyGroups');
+  const empty     = document.getElementById('abReadyEmpty');
+  if (!container || !empty) return;
+  container.innerHTML = '';
+
+  if (!_abState.ready.length) {
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Group by Krankenkasse IK
+  const groups = new Map();
+  _abState.ready.forEach(rx => {
+    const ik = rx.kostentraeger_ik || '__unknown__';
+    if (!groups.has(ik)) groups.set(ik, []);
+    groups.get(ik).push(rx);
+  });
+
+  for (const [ik, items] of groups) {
+    const kk = _abState.kkMap.get(ik);
+    const kkName = kk?.name || (ik === '__unknown__' ? '⚠ Kostenträger fehlt' : ik);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'ab-group';
+    wrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;';
+
+    const ready  = ik !== '__unknown__';
+    const totalBrutto = items.reduce((s, r) => s + (Number(r.zuzahlung_eur) || 0) + 0, 0); // placeholder; real brutto via tarif on server
+    const totalCount  = items.length;
+
+    wrap.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-card);">
+        <div>
+          <div style="font-weight:600;font-size:15px;">${escapeHtml(kkName)}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${ik !== '__unknown__' ? 'IK ' + escapeHtml(ik) : ''} · ${totalCount} ${t('ab_rezept')}</div>
+        </div>
+        <button class="btn-primary ab-create-btn" data-ik="${escapeHtml(ik)}" ${ready ? '' : 'disabled'}>${t('ab_create')}</button>
+      </div>
+      <div class="table-wrap" style="margin:0;">
+        <table class="data-table" style="margin:0;">
+          <thead>
+            <tr>
+              <th style="width:38px;"><input type="checkbox" class="ab-group-select-all" data-ik="${escapeHtml(ik)}" checked /></th>
+              <th>${t('ab_patient')}</th>
+              <th>${t('ab_rezept')}</th>
+              <th>${t('ab_einheiten')}</th>
+              <th>${t('ab_zuzahlung')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(rx => {
+              const lead = rx.leads || {};
+              const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
+              const rezeptLabel = [rx.heilmittel_position || '', rx.heilmittel || ''].filter(Boolean).join(' · ') || '—';
+              const zu = rx.zuzahlung_befreit
+                ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
+                : fmtEur(rx.zuzahlung_eur || 0);
+              return `<tr>
+                <td><input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked /></td>
+                <td>${escapeHtml(pname)}</td>
+                <td>${escapeHtml(rezeptLabel)}</td>
+                <td>${rx.anzahl_einheiten || 0}</td>
+                <td>${zu}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    container.appendChild(wrap);
+  }
+
+  // Group select-all
+  container.querySelectorAll('.ab-group-select-all').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const ik = e.target.dataset.ik;
+      container.querySelectorAll(`.ab-rx-check[data-ik="${ik}"]`).forEach(c => { c.checked = e.target.checked; });
+    });
+  });
+  container.querySelectorAll('.ab-create-btn').forEach(btn => {
+    btn.addEventListener('click', () => createAbrechnung(btn.dataset.ik));
+  });
+}
+
+function renderAbrechnungHistory(rows) {
+  const body  = document.getElementById('abHistoryBody');
+  const empty = document.getElementById('abHistoryEmpty');
+  if (!body || !empty) return;
+  body.innerHTML = '';
+  if (!rows.length) { empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  rows.forEach(a => {
+    const kk = _abState.kkMap.get(a.kostentraeger_ik);
+    const statusLabel = t('ab_status_' + a.status) || a.status;
+    const signedBadge = a.signed_storage_path
+      ? `<span class="badge badge-green" title="${a.signed_at ? new Date(a.signed_at).toLocaleString('de-DE') : ''}">✍ signiert</span>`
+      : `<span class="badge badge-gray">unsigniert</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span style="font-family:monospace;font-size:12px;">${escapeHtml(a.dateiname || a.rechnungsnummer || a.id.slice(0,8))}</span> ${signedBadge}</td>
+      <td>${escapeHtml(kk?.name || a.kostentraeger_ik || '—')}</td>
+      <td>${a.prescription_count || 0}</td>
+      <td>${fmtEur(a.total_eur)}</td>
+      <td>${escapeHtml(statusLabel)}</td>
+      <td style="white-space:nowrap;">
+        ${a.signed_storage_path
+          ? `<button class="btn-ghost btn-sm ab-dl-signed" data-path="${escapeHtml(a.signed_storage_path)}" data-id="${escapeHtml(a.id)}">📥 P7M</button>`
+          : (a.storage_path ? `<button class="btn-primary btn-sm ab-sign" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}">✍ Signieren</button>` : '')
+        }
+        ${a.storage_path ? `<button class="btn-ghost btn-sm ab-dl-dta" data-path="${escapeHtml(a.storage_path)}" data-id="${escapeHtml(a.id)}">${t('ab_download_dta')}</button>` : ''}
+        ${a.begleitzettel_path ? `<button class="btn-ghost btn-sm ab-dl-beg" data-path="${escapeHtml(a.begleitzettel_path)}">${t('ab_download_begleit')}</button>` : ''}
+        <button class="btn-ghost btn-sm ab-zaa" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}" title="ZAA-Antwortdatei hochladen">📨 ZAA</button>
+        ${a.status === 'rejected' || a.status === 'accepted'
+          ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
+          : ''}
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll('.ab-dl-dta').forEach(btn => {
+    btn.addEventListener('click', () => downloadAbrechnungFile(btn.dataset.path, btn.dataset.id, 'dta'));
+  });
+  body.querySelectorAll('.ab-dl-signed').forEach(btn => {
+    btn.addEventListener('click', () => downloadAbrechnungFile(btn.dataset.path, btn.dataset.id, 'dta'));
+  });
+  body.querySelectorAll('.ab-dl-beg').forEach(btn => {
+    btn.addEventListener('click', () => downloadAbrechnungFile(btn.dataset.path, null, 'begleit'));
+  });
+  body.querySelectorAll('.ab-sign').forEach(btn => {
+    btn.addEventListener('click', () => openSignModal(btn.dataset.id, { filename: btn.dataset.name }));
+  });
+  body.querySelectorAll('.ab-zaa').forEach(btn => {
+    btn.addEventListener('click', () => openZaaModal(btn.dataset.id, btn.dataset.name));
+  });
+  body.querySelectorAll('.ab-show-errors').forEach(btn => {
+    btn.addEventListener('click', () => showZaaErrors(btn.dataset.id));
+  });
+}
+
+// --- ZAA response file upload + error display ---
+
+function openZaaModal(abrechnungId, filename) {
+  const modal = document.getElementById('zaaModal');
+  if (!modal) return;
+  document.getElementById('zaaFileInput').value = '';
+  document.getElementById('zaaErr').textContent = '';
+  document.getElementById('zaaResult').innerHTML = '';
+  const btn = document.getElementById('zaaRunBtn');
+  btn.disabled = false;
+  btn.textContent = 'Hochladen & analysieren';
+  btn.dataset.abrechnung = abrechnungId;
+  document.getElementById('zaaTitle').textContent =
+    'ZAA-Antwortdatei' + (filename ? ' — ' + filename : '');
+  openModal('zaaModal');
+}
+
+async function runZaaUpload() {
+  const btn  = document.getElementById('zaaRunBtn');
+  const err  = document.getElementById('zaaErr');
+  const out  = document.getElementById('zaaResult');
+  const file = document.getElementById('zaaFileInput').files[0];
+  err.textContent = '';
+  out.innerHTML  = '';
+  if (!file) { err.textContent = 'Bitte Datei auswählen.'; return; }
+  if (file.size > 5 * 1024 * 1024) { err.textContent = 'Datei zu groß (max 5 MB).'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Lade hoch…';
+  try {
+    const ab = btn.dataset.abrechnung;
+    const ab64 = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload  = () => resolve(String(r.result).split(',')[1] || '');
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(file);
+    });
+
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch(`${API}/billing/abrechnung/${ab}/upload-zaa`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + s.access_token,
+      },
+      body: JSON.stringify({ contentBase64: ab64, filename: file.name }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+
+    const summary = json.errorCount
+      ? `<div style="padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;margin-bottom:10px;color:#991b1b;">
+           ${json.errorCount} Fehler erkannt — Abrechnung als <strong>abgelehnt</strong> markiert.
+         </div>`
+      : `<div style="padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;margin-bottom:10px;color:#166534;">
+           Keine Fehler erkannt — Abrechnung als <strong>akzeptiert</strong> markiert.
+         </div>`;
+    const rows = (json.errors || []).map(e => `
+      <tr>
+        <td><code>${escapeHtml(e.code)}</code></td>
+        <td>${escapeHtml(e.belegnummer || '—')}</td>
+        <td>${escapeHtml(e.uebersetzung || e.text || '')}</td>
+        <td style="color:#444;">${escapeHtml(e.loesung || '')}</td>
+      </tr>
+    `).join('');
+    out.innerHTML = summary + (rows
+      ? `<table class="data-table"><thead><tr><th>Code</th><th>Beleg</th><th>Fehler</th><th>Lösung</th></tr></thead><tbody>${rows}</tbody></table>`
+      : '');
+
+    showToast(json.errorCount ? `${json.errorCount} Fehler importiert.` : 'Abrechnung akzeptiert.');
+    btn.disabled = false;
+    btn.textContent = 'Schließen';
+    btn.onclick = () => { closeModal('zaaModal'); loadAbrechnung(); btn.onclick = runZaaUpload; };
+  } catch (e) {
+    console.error('[abrechnung/zaa-upload]', e);
+    err.textContent = e.message;
+    btn.disabled = false;
+    btn.textContent = 'Hochladen & analysieren';
+  }
+}
+
+async function showZaaErrors(abrechnungId) {
+  const { data, error } = await supabase
+    .from('zaa_fehler')
+    .select('fehler_code, fehler_text, uebersetzung, loesung_hint, status, prescription_id, created_at')
+    .eq('abrechnung_id', abrechnungId)
+    .order('created_at');
+  if (error) return showToast('Fehler: ' + error.message, 'error');
+
+  openModal('zaaModal');
+  document.getElementById('zaaTitle').textContent = 'ZAA-Fehler dieser Abrechnung';
+  document.getElementById('zaaFileInput').value = '';
+  document.getElementById('zaaErr').textContent = '';
+  const out = document.getElementById('zaaResult');
+  if (!data?.length) {
+    out.innerHTML = `<div style="padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;">Keine Fehler — alles abgenommen.</div>`;
+  } else {
+    out.innerHTML = `<table class="data-table"><thead><tr><th>Code</th><th>Status</th><th>Fehler</th><th>Lösung</th></tr></thead><tbody>
+      ${data.map(e => `<tr>
+        <td><code>${escapeHtml(e.fehler_code)}</code></td>
+        <td>${escapeHtml(e.status)}</td>
+        <td>${escapeHtml(e.uebersetzung || e.fehler_text || '')}</td>
+        <td style="color:#444;">${escapeHtml(e.loesung_hint || '')}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  }
+  document.getElementById('zaaRunBtn').textContent = 'Schließen';
+  document.getElementById('zaaRunBtn').onclick = () => {
+    closeModal('zaaModal');
+    document.getElementById('zaaRunBtn').onclick = runZaaUpload;
+  };
+}
+
+async function downloadAbrechnungFile(path, abrechnungId, kind) {
+  try {
+    const { data, error } = await supabase.storage.from('abrechnungen').createSignedUrl(path, 300);
+    if (error) throw error;
+    window.open(data.signedUrl, '_blank');
+    if (abrechnungId && kind === 'dta') {
+      // First download → mark heruntergeladen (non-blocking)
+      supabase.from('abrechnung')
+        .update({ status: 'heruntergeladen' })
+        .eq('id', abrechnungId)
+        .eq('status', 'erstellt')
+        .then(() => loadAbrechnung());
+    }
+  } catch (e) {
+    console.error('[abrechnung/download]', e);
+    showToast('Download fehlgeschlagen: ' + e.message, 'error');
+  }
+}
+
+// --- PKCS#7 browser-side signing of the DTA file ---
+
+let _forgeMod = null;
+async function loadForge() {
+  if (_forgeMod) return _forgeMod;
+  const m = await import('https://esm.sh/node-forge@1.3.1');
+  _forgeMod = m.default || m;
+  return _forgeMod;
+}
+
+function _binStrToUint8(bs) {
+  const u = new Uint8Array(bs.length);
+  for (let i = 0; i < bs.length; i++) u[i] = bs.charCodeAt(i) & 0xff;
+  return u;
+}
+function _u8ToBinStr(u8) {
+  let s = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < u8.length; i += chunk) s += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
+  return s;
+}
+
+function openSignModal(abrechnungId, opts = {}) {
+  const modal = document.getElementById('signModal');
+  if (!modal) return;
+  document.getElementById('signFileInput').value = '';
+  document.getElementById('signPinInput').value = '';
+  const err = document.getElementById('signErr');
+  err.textContent = '';
+  const status = document.getElementById('signStatus');
+  status.textContent = '';
+  const btn = document.getElementById('signRunBtn');
+  btn.disabled = false;
+  btn.textContent = 'Signieren';
+  btn.dataset.abrechnung = abrechnungId;
+  document.getElementById('signTitle').textContent =
+    opts.title || ('DTA signieren' + (opts.filename ? ' — ' + opts.filename : ''));
+  openModal('signModal');
+}
+
+async function runSignAbrechnung() {
+  const btn = document.getElementById('signRunBtn');
+  const abrechnungId = btn.dataset.abrechnung;
+  const err  = document.getElementById('signErr');
+  const stat = document.getElementById('signStatus');
+  err.textContent = '';
+  stat.textContent = '';
+
+  const file = document.getElementById('signFileInput').files[0];
+  const pin  = document.getElementById('signPinInput').value;
+  if (!file) { err.textContent = 'Bitte .p12-Datei auswählen.'; return; }
+  if (!pin)  { err.textContent = 'PIN erforderlich.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Signiere…';
+  try {
+    stat.textContent = 'Lade DTA-Datei vom Server…';
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+
+    const dtaRes = await fetch(`${API}/billing/abrechnung/${abrechnungId}/dta-bytes`, {
+      headers: { 'Authorization': 'Bearer ' + s.access_token },
+    });
+    const dtaJson = await dtaRes.json();
+    if (!dtaRes.ok) throw new Error(dtaJson.error || ('HTTP ' + dtaRes.status));
+
+    stat.textContent = 'Lade Krypto-Bibliothek…';
+    const forge = await loadForge();
+
+    stat.textContent = 'Entschlüssele Zertifikat…';
+    const p12Ab = await file.arrayBuffer();
+    const p12BinStr = _u8ToBinStr(new Uint8Array(p12Ab));
+    const p12Asn1 = forge.asn1.fromDer(p12BinStr);
+    let p12;
+    try { p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, pin); }
+    catch (e) {
+      throw new Error('Zertifikat konnte nicht entschlüsselt werden (falsche PIN?).');
+    }
+
+    const keyBagSets = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
+    const certBagSets = p12.getBags({ bagType: forge.pki.oids.certBag });
+    const keyBag  = keyBagSets[forge.pki.oids.pkcs8ShroudedKeyBag]?.[0]
+                 || p12.getBags({ bagType: forge.pki.oids.keyBag })[forge.pki.oids.keyBag]?.[0];
+    const certBag = certBagSets[forge.pki.oids.certBag]?.[0];
+    if (!keyBag?.key)  throw new Error('Privater Schlüssel im Zertifikat nicht gefunden.');
+    if (!certBag?.cert) throw new Error('Zertifikat-Bag nicht gefunden.');
+
+    const cert = certBag.cert;
+    const privateKey = keyBag.key;
+
+    // Cert metadata for the server (no private key leaves the browser)
+    const certDer = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
+    const md = forge.md.sha1.create(); md.update(certDer); const certThumbprint = md.digest().toHex();
+    const subjectAttrs = (cert.subject?.attributes || []).map(a => `${a.shortName || a.name}=${a.value}`).join(', ');
+    const notAfter = cert.validity?.notAfter ? new Date(cert.validity.notAfter).toISOString() : null;
+    const certSerial = cert.serialNumber || null;
+
+    // Validity guardrail
+    if (cert.validity?.notAfter && cert.validity.notAfter < new Date()) {
+      throw new Error(`Zertifikat abgelaufen (${cert.validity.notAfter.toLocaleDateString('de-DE')}).`);
+    }
+
+    stat.textContent = 'Erzeuge PKCS#7 SignedData…';
+    const dtaBytes = atob(dtaJson.contentBase64);  // binary string
+
+    const p7 = forge.pkcs7.createSignedData();
+    p7.content = forge.util.createBuffer(dtaBytes, 'binary');
+    p7.addCertificate(cert);
+    p7.addSigner({
+      key: privateKey,
+      certificate: cert,
+      digestAlgorithm: forge.pki.oids.sha256,
+      authenticatedAttributes: [
+        { type: forge.pki.oids.contentType,   value: forge.pki.oids.data },
+        { type: forge.pki.oids.messageDigest /* auto-filled */ },
+        { type: forge.pki.oids.signingTime,   value: new Date() },
+      ],
+    });
+    p7.sign({ detached: false });
+
+    const p7DerBin = forge.asn1.toDer(p7.toAsn1()).getBytes();
+    const signedBase64 = forge.util.encode64(p7DerBin);
+
+    stat.textContent = 'Lade signierte Datei hoch…';
+    const upRes = await fetch(`${API}/billing/abrechnung/${abrechnungId}/upload-signed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + s.access_token,
+      },
+      body: JSON.stringify({
+        signedBase64,
+        certSubject:    subjectAttrs,
+        certValidTo:    notAfter,
+        certThumbprint,
+        certSerial,
+      }),
+    });
+    const upJson = await upRes.json();
+    if (!upRes.ok) throw new Error(upJson.error || ('HTTP ' + upRes.status));
+
+    showToast('Signiert ✓ Lade Sie die .p7m-Datei jetzt im DAS-Portal hoch.');
+    closeModal('signModal');
+    loadAbrechnung();
+  } catch (e) {
+    console.error('[abrechnung/sign]', e);
+    err.textContent = e.message || 'Signierung fehlgeschlagen.';
+    stat.textContent = '';
+    btn.disabled = false;
+    btn.textContent = 'Signieren';
+  }
+}
+
+async function createAbrechnung(kostentraegerIk) {
+  if (_abState.busy) return;
+  if (kostentraegerIk === '__unknown__') return;
+
+  const checks = document.querySelectorAll(`.ab-rx-check[data-ik="${kostentraegerIk}"]:checked`);
+  const prescriptionIds = [...checks].map(c => c.dataset.id);
+  if (!prescriptionIds.length) {
+    showToast('Bitte mindestens ein Rezept auswählen.', 'error');
+    return;
+  }
+
+  const btn = document.querySelector(`.ab-create-btn[data-ik="${kostentraegerIk}"]`);
+  if (btn) { btn.disabled = true; btn.textContent = t('ab_creating'); }
+  _abState.busy = true;
+
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+
+    const res = await fetch(`${API}/billing/abrechnung/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + s.access_token
+      },
+      body: JSON.stringify({
+        ownerId: getOwnerId(),
+        kostentraegerIk,
+        prescriptionIds
+      })
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+
+    showToast(t('ab_created'));
+    await loadAbrechnung();
+    if (json.abrechnungId) {
+      openSignModal(json.abrechnungId, { filename: json.dateiname });
+    }
+  } catch (e) {
+    console.error('[abrechnung/create]', e);
+    showToast('Fehler: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = t('ab_create'); }
+  } finally {
+    _abState.busy = false;
+  }
+}
 

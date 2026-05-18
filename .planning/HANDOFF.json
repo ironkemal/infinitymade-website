@@ -1,0 +1,59 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-19T00:21:00+02:00",
+  "context": "billing_a2",
+  "phase": "sprint-6",
+  "phase_name": "Dashboard + Signing + ZAA loop",
+  "phase_dir": "BILLING_A2_PLAN.md",
+  "plan": null,
+  "task": 5,
+  "total_tasks": 5,
+  "status": "paused_complete",
+  "completed_tasks": [
+    { "id": 1, "name": "Dashboard Abrechnung sayfası (sidebar + panel + create flow)", "status": "done" },
+    { "id": 2, "name": "Storage buckets + IK/cert form + bereit flip + Heilmittel→Position default + KK adı→IK resolve", "status": "done" },
+    { "id": 3, "name": "Befreiung UI (patient-documents bucket + modal + upsert)", "status": "done" },
+    { "id": 4, "name": "PKCS#7 browser-side imzalama (node-forge, .p12+PIN local sign)", "status": "done" },
+    { "id": 5, "name": "ZAA parser + upload + UI (EDIFACT FEHL + plain-text fallback + 40-code dictionary)", "status": "done" }
+  ],
+  "remaining_tasks": [
+    { "id": "s7-1", "name": "Heilmittel-Position inline override UI (Abrechnung page) — default map yetmediği rezeptler için manuel pick", "status": "not_started" },
+    { "id": "s7-2", "name": "Begleitzettel HTML → PDF (puppeteer veya server-side render)", "status": "not_started" },
+    { "id": "s11",  "name": "Stripe DTA-Pro addon (+29€/ay) paketleme", "status": "not_started" },
+    { "id": "s12",  "name": "3 pilot terapistle gerçek DAS portal (Davaso/DDG/Bitmarck) kabul testi", "status": "not_started" },
+    { "id": "ops",  "name": "Real-world ZAA örnekleri geldikçe error-translations sözlüğünü genişlet (şu an ~40 kod)", "status": "not_started" }
+  ],
+  "blockers": [
+    { "description": "Pre-commit hook (eğer aktifse) staging/build ortamında DTA testlerini çalıştırır mı belirsiz; commit denemesi yapıldığında doğrulansın.", "type": "technical", "workaround": "Testler manuel çalıştırıldı, 87/87 geçti." }
+  ],
+  "human_actions_pending": [
+    { "action": "VPS Docker deploy: api-backend yeni billing route'larıyla yeniden başlatılmalı (Watchtower otomatik yapıyor — image push gerekli)", "context": "POST /api/billing/abrechnung/* canlıya çıkmadıkça dashboard UI 'Abrechnung erstellen' 404 alır", "blocking": true },
+    { "action": "Vercel deploy: dashboard.js?v=20260519c bump'ı için git push", "context": "Cache buster güncellendi, kullanıcılar yeni JS'i alsın", "blocking": true },
+    { "action": "İlk pilot terapistten gerçek .p12 (Dakota) testi alınmalı, browser-side imza akışı end-to-end doğrulanmalı", "context": "node-forge entegrasyonu unit testi yok; gerçek Dakota .p12 ile prod'a benzer ortamda denenmedi", "blocking": false },
+    { "action": "DAS portal test upload (Davaso veya AOK test) ile .p7m kabul kontrolü", "context": "DTA hâlâ kind:'test' modunda — DAS ack sonrası 'echt'e çevrilmeli", "blocking": false }
+  ],
+  "decisions": [
+    { "decision": "PKCS#7 SignedData (attached content), sha256, signingTime; ENCRYPTION YOK", "rationale": "Faz A2 manual upload — DAS portal kendi içinde routing yapar. Encryption Faz B kapsamı.", "phase": "sprint-6" },
+    { "decision": "node-forge esm.sh lazy import (dashboard.js içinde), ayrı bundle yok", "rationale": "Vanilla JS proje, build step yok; ilk imza tıklamasında ~250KB tek seferlik yüklenir.", "phase": "sprint-6" },
+    { "decision": "Befreiung dosyaları için ayrı 'patient-documents' bucket; abrechnung dosyaları 'abrechnungen' bucket", "rationale": "Path/RLS modelini ayırmak için (befreiung owner+employee CRUD, abrechnung sadece read).", "phase": "sprint-6" },
+    { "decision": "bereit-flip yalnız kostentraeger_ik IS NOT NULL ise; abrechnung_status NULL→bereit; manuel override korunur", "rationale": "KK bilinmeyen reçeteler 'unknown' grubunda görünür ama otomatik bereit olmaz.", "phase": "sprint-6" },
+    { "decision": "ZAA re-upload semantiği: önce mevcut zaa_fehler satırları DELETE, sonra parse sonucu INSERT", "rationale": "Terapist düzeltilmiş ZAA dosyasını tekrar yükleyebilsin.", "phase": "sprint-6" },
+    { "decision": "Heilmittel→Position default map (KG→X0501, MT→X1201, MLD→X0205, vb.) confirm route'unda otomatik atanır", "rationale": "OCR genelde 'KG' gibi kısa kod döndürür; Positionsnummer eksikse Abrechnung create patlar. Terapist override edebilir (henüz UI yok).", "phase": "sprint-6" }
+  ],
+  "uncommitted_files": [
+    "api-backend/server.js",
+    "dashboard.html",
+    "dashboard.js",
+    "BILLING_A2_PLAN.md",
+    "api-backend/billing/",
+    "database_v11_billing_a2.sql",
+    "database_v12_billing_codes.sql",
+    "database_v15_abrechnung_storage.sql",
+    "database_v16_patient_documents.sql",
+    "database_v17_abrechnung_signed.sql",
+    ".planning/HANDOFF.json",
+    ".planning/.continue-here.md"
+  ],
+  "next_action": "Sprint 7 — Heilmittel-Position inline override UI: Abrechnung sayfasında 'bereit' reçete satırı içinde heilmittel_position için inline select (PHYSIO_POSITIONS listesinden) ve save endpoint. Default map yetmediği durumlar için kritik.",
+  "context_notes": "Sprint 6 tüm 5 adımı tamam ve testler geçiyor (87/87). Modüller production-ready; eksik olan SADECE deploy + gerçek pilot testi. Migration'lar v15/v16/v17 Supabase'e zaten uygulandı (apply_migration MCP), dosyalar da repo'da var. Cache buster dashboard.js?v=20260519c."
+}
