@@ -3528,42 +3528,14 @@ textarea {
   }
 }
 
-@media (max-width: 1024px) {
-  html, body {
-    height: auto;
-    min-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
+@media (max-width: 768px) {
+  .main-area {
+    padding: 16px 16px calc(120px + env(safe-area-inset-bottom));
     -webkit-overflow-scrolling: touch;
-  }
-
-  #app {
-    height: auto;
-    min-height: 100dvh;
-    overflow: visible;
   }
 
   .dashboard-layout {
     overflow: visible;
-    height: auto;
-    min-height: 0;
-  }
-
-  .topbar {
-    position: sticky;
-    top: 0;
-  }
-
-  .main-area {
-    overflow: visible;
-    height: auto;
-    min-height: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-area {
-    padding: 16px 16px calc(40px + env(safe-area-inset-bottom));
   }
 
   .kpi-grid {
