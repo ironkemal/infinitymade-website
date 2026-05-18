@@ -81,6 +81,8 @@ async function loadOverview() {
   document.getElementById('kpiUsage').innerHTML = [
     kpiHtml('AI-Kosten',            fmtEUR(s.ai_cost_eur_mtd),       `${fmtInt(s.ai_calls_mtd)} Aufrufe`),
     kpiHtml('AI-Aufrufe',           fmtInt(s.ai_calls_mtd),          'Diesen Monat'),
+    kpiHtml('Chatbot-Kosten',       fmtEUR(s.chatbot_cost_eur_mtd),  `${fmtInt(s.chatbot_calls_mtd)} Nachrichten`),
+    kpiHtml('Chatbot-Tokens',       fmtInt(s.chatbot_tokens_mtd),    'Widget-Verbrauch'),
     kpiHtml('E-Mails',              fmtInt(s.emails_mtd),            'B2B + Patient'),
     kpiHtml('WhatsApp',             fmtInt(s.whatsapp_mtd),          'Nachrichten'),
     kpiHtml('Neue Buchungen',       fmtInt(s.new_bookings_mtd),      'Diesen Monat'),

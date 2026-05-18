@@ -62,6 +62,13 @@ export default async function handler(req, res) {
     const msgs   = await adminFetch(`/messages?select=id&created_at=gte.${monthStart}`);
     const newBookings = await adminFetch(`/bookings?select=id&created_at=gte.${monthStart}`);
 
+    // Chatbot widget usage — logged by n8n directly (not via calendar-api router).
+    // owner_id is usually null until embedded widgets start passing it.
+    const cb = await adminFetch(`/chatbot_usage?select=cost_eur,total_tokens&created_at=gte.${monthStart}`);
+    const cbRows = cb.data || [];
+    let cbCost = 0, cbTokens = 0;
+    for (const c of cbRows) { cbCost += Number(c.cost_eur || 0); cbTokens += Number(c.total_tokens || 0); }
+
     return json(res, 200, {
       mrr_eur: Number(mrr.toFixed(2)),
       total_owners: rows.length,
@@ -72,6 +79,9 @@ export default async function handler(req, res) {
       klinik_count:       rows.filter(r => r.plan === 'klinik').length,
       ai_calls_mtd:       aiRows.length,
       ai_cost_eur_mtd:    Number(aiCost.toFixed(4)),
+      chatbot_calls_mtd:  cbRows.length,
+      chatbot_tokens_mtd: cbTokens,
+      chatbot_cost_eur_mtd: Number(cbCost.toFixed(4)),
       emails_mtd:         (emails.data || []).length,
       whatsapp_mtd:       (msgs.data || []).length,
       new_bookings_mtd:   (newBookings.data || []).length,
