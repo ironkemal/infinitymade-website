@@ -5112,16 +5112,40 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
 });
 
 function loadBeispielmodus() {
-  const frame = document.getElementById('zygoteFrame');
-  if (frame && !frame.src) frame.src = 'https://www.zygotebody.com/';
-  const fsBtn = document.getElementById('zygoteFsBtn');
-  if (fsBtn && !fsBtn.dataset.bound) {
-    fsBtn.dataset.bound = '1';
-    fsBtn.addEventListener('click', () => {
-      if (frame?.requestFullscreen) frame.requestFullscreen();
-      else if (frame?.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-    });
-  }
+  const wrap = document.getElementById('zygoteWrap');
+  if (!wrap) return;
+  if (wrap.dataset.loaded === '1') return;
+  wrap.dataset.loaded = '1';
+  wrap.innerHTML = '';
+  const frame = document.createElement('iframe');
+  frame.id = 'zygoteFrame';
+  frame.src = 'https://www.zygotebody.com/';
+  frame.allow = 'fullscreen';
+  frame.setAttribute('allowfullscreen', '');
+  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+  wrap.appendChild(frame);
+
+  const fsBtn = document.createElement('button');
+  fsBtn.className = 'zygote-fs-btn';
+  fsBtn.id = 'zygoteFsBtn';
+  fsBtn.type = 'button';
+  fsBtn.title = 'Vollbild';
+  fsBtn.textContent = '⛶ Vollbild';
+  fsBtn.addEventListener('click', () => {
+    if (frame.requestFullscreen) frame.requestFullscreen();
+    else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+  });
+  wrap.appendChild(fsBtn);
+
+  const newTab = document.createElement('a');
+  newTab.className = 'zygote-fs-btn';
+  newTab.id = 'zygoteNewTabBtn';
+  newTab.href = 'https://www.zygotebody.com/';
+  newTab.target = '_blank';
+  newTab.rel = 'noopener';
+  newTab.style.cssText = 'right:auto;left:12px;display:none;';
+  newTab.textContent = '↗ Neuer Tab';
+  wrap.appendChild(newTab);
 }
 
 async function loadNotizen() {
