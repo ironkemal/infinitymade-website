@@ -3695,20 +3695,20 @@ textarea {
    ============================ */
 .body-map-wrap {
   position: relative;
+  overflow: hidden;
   background: var(--bg-card);
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  overflow: hidden;
-  width: 100%;
-  height: 620px;
+  height: 560px;
 }
 
 .body-map-wrap iframe {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  border: 0;
-  background: var(--bg-card);
+  border: none;
+  display: block;
 }
 
 .body-info-card {
@@ -3764,15 +3764,17 @@ textarea {
     height: 520px;
   }
 
-  #zygoteNewTabBtn {
-    display: flex !important;
-    left: 12px;
-    right: auto;
-  }
-
   .zygote-fs-btn {
+    bottom: 8px;
+    right: 8px;
     padding: 6px 10px;
     font-size: 11px;
+  }
+
+  #zygoteNewTabBtn {
+    display: flex !important;
+    left: 8px;
+    right: auto;
   }
 }
 
