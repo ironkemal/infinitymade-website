@@ -3761,7 +3761,17 @@ textarea {
 
 @media (max-width: 768px) {
   .body-map-wrap {
-    height: 520px;
+    height: 420px;
+  }
+
+  .body-map-wrap iframe {
+    width: 1280px;
+    height: 1050px;
+    transform: scale(0.4);
+    transform-origin: top left;
+    inset: auto;
+    top: 0;
+    left: 0;
   }
 
   .zygote-fs-btn {
@@ -3775,6 +3785,16 @@ textarea {
     display: flex !important;
     left: 8px;
     right: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .body-map-wrap {
+    height: 360px;
+  }
+
+  .body-map-wrap iframe {
+    transform: scale(0.32);
   }
 }
 
