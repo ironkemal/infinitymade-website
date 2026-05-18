@@ -7555,7 +7555,95 @@ async function submitConfirm() {
 
 // ===== § 302 SGB V Kassenabrechnung =====
 
-const _abState = { ready: [], kkMap: new Map(), busy: false };
+const _abState = { ready: [], kkMap: new Map(), busy: false, positions: [], positionsLoaded: false };
+
+// Lazy-load PHYSIO_POSITIONS from backend on first Abrechnung page open.
+async function loadPhysioPositions() {
+  if (_abState.positionsLoaded) return _abState.positions;
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+    const res = await fetch(`${API}/billing/positions`, {
+      headers: { 'Authorization': 'Bearer ' + s.access_token },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+    _abState.positions = json.positions || [];
+    _abState.positionsLoaded = true;
+  } catch (e) {
+    console.warn('[positions/load]', e);
+    _abState.positions = [];
+  }
+  return _abState.positions;
+}
+
+function buildPositionOptionsHtml(currentValue) {
+  // Group by kat (category). Current value is either an X-template or a 5-digit resolved code.
+  const positions = _abState.positions || [];
+  const normalizedCurrent = (() => {
+    if (!currentValue) return '';
+    if (/^X\d{4}$/.test(currentValue)) return currentValue;
+    if (/^\d{5}$/.test(currentValue))  return 'X' + currentValue.slice(1);
+    return currentValue;
+  })();
+
+  const byKat = new Map();
+  for (const p of positions) {
+    if (!byKat.has(p.kat)) byKat.set(p.kat, []);
+    byKat.get(p.kat).push(p);
+  }
+
+  let html = `<option value="" ${normalizedCurrent ? '' : 'selected'}>— Position wählen —</option>`;
+  const knownMatch = positions.some(p => p.x === normalizedCurrent);
+  if (normalizedCurrent && !knownMatch) {
+    html += `<option value="${escapeHtml(normalizedCurrent)}" selected disabled>⚠ Unbekannt: ${escapeHtml(normalizedCurrent)}</option>`;
+  }
+  for (const [kat, items] of byKat) {
+    html += `<optgroup label="${escapeHtml(kat)}">`;
+    for (const p of items) {
+      const sel = p.x === normalizedCurrent ? 'selected' : '';
+      const priceTag = p.preis != null ? ` — ${p.preis.toFixed(2)} €` : '';
+      const flagTag  = [p.gruppe ? 'Gruppe' : '', p.telemed ? 'telemed' : ''].filter(Boolean).join(', ');
+      const flag     = flagTag ? ` (${flagTag})` : '';
+      html += `<option value="${escapeHtml(p.x)}" ${sel}>${escapeHtml(p.x)} · ${escapeHtml(p.label)}${flag}${priceTag}</option>`;
+    }
+    html += '</optgroup>';
+  }
+  return html;
+}
+
+async function savePositionOverride(prescriptionId, newPosition, selectEl) {
+  if (!selectEl) return;
+  const prev = selectEl.dataset.prev || '';
+  selectEl.disabled = true;
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+    const res = await fetch(`${API}/billing/prescription/${prescriptionId}/position`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + s.access_token,
+      },
+      body: JSON.stringify({ position: newPosition }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+
+    // Update local state so re-render keeps the new value.
+    const rx = _abState.ready.find(r => r.id === prescriptionId);
+    if (rx) rx.heilmittel_position = json.heilmittel_position;
+    selectEl.dataset.prev = newPosition;
+    showToast('Position aktualisiert: ' + (json.label || newPosition));
+  } catch (e) {
+    console.error('[position/save]', e);
+    showToast('Fehler: ' + e.message, 'error');
+    // revert UI
+    selectEl.value = prev;
+  } finally {
+    selectEl.disabled = false;
+  }
+}
 
 function fmtEur(n) {
   const v = Number(n) || 0;
@@ -7587,6 +7675,11 @@ async function loadAbrechnung() {
 
   _abState.kkMap = new Map((kkRes.data || []).map(r => [r.ik, r]));
   _abState.ready = readyRes.data || [];
+
+  // Fire-and-forget positions load; re-render once available so picker dropdowns populate.
+  loadPhysioPositions().then(() => {
+    if (_abState.ready.length) renderAbrechnungReady();
+  });
 
   renderAbrechnungReady();
   renderAbrechnungHistory(histRes.data || []);
@@ -7647,14 +7740,21 @@ function renderAbrechnungReady() {
             ${items.map(rx => {
               const lead = rx.leads || {};
               const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
-              const rezeptLabel = [rx.heilmittel_position || '', rx.heilmittel || ''].filter(Boolean).join(' · ') || '—';
+              const heilmittelText = rx.heilmittel || '—';
+              const currentPos = rx.heilmittel_position || '';
+              const picker = _abState.positionsLoaded
+                ? `<select class="ab-pos-select" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
+                : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
               const zu = rx.zuzahlung_befreit
                 ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
                 : fmtEur(rx.zuzahlung_eur || 0);
               return `<tr>
                 <td><input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked /></td>
                 <td>${escapeHtml(pname)}</td>
-                <td>${escapeHtml(rezeptLabel)}</td>
+                <td>
+                  <div style="font-weight:500;">${escapeHtml(heilmittelText)}</div>
+                  ${picker}
+                </td>
                 <td>${rx.anzahl_einheiten || 0}</td>
                 <td>${zu}</td>
               </tr>`;
@@ -7675,6 +7775,14 @@ function renderAbrechnungReady() {
   });
   container.querySelectorAll('.ab-create-btn').forEach(btn => {
     btn.addEventListener('click', () => createAbrechnung(btn.dataset.ik));
+  });
+  // Inline position override (Sprint 7-1)
+  container.querySelectorAll('.ab-pos-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const newVal = e.target.value;
+      if (!newVal) { e.target.value = e.target.dataset.prev || ''; return; }
+      savePositionOverride(e.target.dataset.id, newVal, e.target);
+    });
   });
 }
 

@@ -13,7 +13,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
-import { findPosition, resolvePositionsnummer } from '../codes/physio_positions.js';
+import { findPosition, resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
 import { renderBegleitzettel } from '../pdf/begleitzettel.template.js';
 import { parseZaaFile } from '../zaa/parser.js';
 
@@ -576,6 +576,97 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
     return res.json({ ok: true });
   } catch (e) {
     console.error('[abrechnung/mark-sent]', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ---------- Sprint 7-1: position list + per-prescription override ----------
+
+// Public list of physio positions for UI pickers.
+// Authed (any logged-in user) — data is bundeseinheitlich, not tenant-specific.
+router.get('/positions', async (req, res) => {
+  try {
+    const hdr   = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    // Return the template list. UI shows x/label/kat; preis is informational.
+    const list = PHYSIO_POSITIONS.map(p => ({
+      x:        p.x,
+      label:    p.label,
+      kat:      p.kat,
+      preis:    p.preis,
+      gruppe:   !!p.gruppe,
+      telemed:  !!p.telemed,
+    }));
+    res.set('Cache-Control', 'private, max-age=3600');
+    return res.json({ ok: true, positions: list });
+  } catch (e) {
+    console.error('[billing/positions]', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Override heilmittel_position on a single 'bereit' prescription before billing.
+router.patch('/prescription/:id/position', async (req, res) => {
+  try {
+    const hdr   = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+    const tenantId = profile.role === 'employee' && profile.owner_id
+      ? profile.owner_id : profile.id;
+
+    const { position } = req.body || {};
+    if (!position || typeof position !== 'string') {
+      return res.status(400).json({ error: 'position required (X-template, e.g. "X0501")' });
+    }
+    // Validate against the static list — accept template (X0501) or resolved (20501).
+    const entry = PHYSIO_POSITIONS.find(p => p.x === position)
+      || (/^\d{5}$/.test(position)
+            ? PHYSIO_POSITIONS.find(p => p.x === 'X' + position.slice(1))
+            : null);
+    if (!entry) {
+      return res.status(400).json({ error: `Unknown Positionsnummer: ${position}` });
+    }
+    // Persist template form (X-prefixed) — DTA builder resolves prefix per Abrechnungscode.
+    const storeValue = entry.x;
+
+    // Tenant + status guard: only the owner's prescriptions, only while still 'bereit'.
+    const { data: rx, error: rxErr } = await supabase
+      .from('prescriptions')
+      .select('id, owner_id, abrechnung_status')
+      .eq('id', req.params.id)
+      .maybeSingle();
+    if (rxErr || !rx) return res.status(404).json({ error: 'Prescription not found' });
+    if (rx.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
+    if (rx.abrechnung_status !== 'bereit') {
+      return res.status(409).json({
+        error: `Prescription nicht mehr änderbar (status: ${rx.abrechnung_status || 'offen'})`,
+      });
+    }
+
+    const { error: upErr } = await supabase
+      .from('prescriptions')
+      .update({ heilmittel_position: storeValue })
+      .eq('id', req.params.id);
+    if (upErr) return res.status(500).json({ error: upErr.message });
+
+    return res.json({
+      ok: true,
+      id: req.params.id,
+      heilmittel_position: storeValue,
+      label: entry.label,
+    });
+  } catch (e) {
+    console.error('[billing/prescription/position]', e);
     return res.status(500).json({ error: e.message });
   }
 });
