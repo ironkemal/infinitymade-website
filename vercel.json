@@ -35,6 +35,12 @@
       ]
     }
   ],
+  "rewrites": [
+    {
+      "source": "/praxis",
+      "destination": "/praxis.html"
+    }
+  ],
   "redirects": [
     {
       "source": "/",
