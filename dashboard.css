@@ -3530,12 +3530,14 @@ textarea {
 
 @media (max-width: 768px) {
   .main-area {
-    padding: 16px 16px calc(120px + env(safe-area-inset-bottom));
+    padding: 16px 16px calc(40px + env(safe-area-inset-bottom));
+    min-height: 0;
     -webkit-overflow-scrolling: touch;
   }
 
   .dashboard-layout {
-    overflow: visible;
+    overflow: hidden;
+    min-height: 0;
   }
 
   .kpi-grid {
