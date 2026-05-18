@@ -44,6 +44,7 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -593,6 +594,11 @@
 
     /* ── Responsive ── */
     @media (max-width: 740px) {
+      body {
+        align-items: flex-start;
+        padding: 12px 12px calc(40px + env(safe-area-inset-bottom));
+      }
+
       .card {
         flex-direction: column;
       }
@@ -603,8 +609,18 @@
         border-bottom: 1px solid var(--border);
       }
 
+      .main {
+        overflow-y: visible;
+        padding: 18px 18px 24px;
+      }
+
       .cal-layout {
         grid-template-columns: 1fr;
+      }
+
+      .cal-right {
+        max-height: none;
+        overflow-y: visible;
       }
     }
   </style>
