@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import WebSocket from 'ws';
 import { google } from 'googleapis';
 import aiRouter from './ai/router.js';
+import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
+import { defaultPositionForHeilmittel, resolvePositionsnummer } from './billing/codes/physio_positions.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
 import { validateRezept } from './ai/validators/validate.js';
@@ -120,6 +122,9 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // Unified AI gateway (Phase 0). All Azure OpenAI traffic routes through here.
 app.use('/api/ai', aiRouter);
+
+// § 302 SGB V Sammelabrechnung routes.
+app.use('/api/billing', billingAbrechnungRouter);
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', (req, res) => {
@@ -1551,6 +1556,27 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
 
     const rezeptTyp = rezept.is_blanko ? 'blanko' : (rezept.is_lhb_bvb ? 'lhb_bvb' : 'standard');
 
+    // --- Resolve Krankenkasse name → kostentraeger.ik (best-effort, fuzzy). ---
+    let kostentraegerIk = null;
+    if (patient.krankenkasse) {
+      const { data: kkMatch } = await supabase
+        .from('kostentraeger')
+        .select('ik')
+        .ilike('name', `%${patient.krankenkasse.trim()}%`)
+        .eq('active', true)
+        .limit(1)
+        .maybeSingle();
+      if (kkMatch?.ik) kostentraegerIk = kkMatch.ik;
+    }
+
+    // --- Default Positionsnummer from Heilmittel code (therapist can override). ---
+    let heilmittelPosition = null;
+    const posTemplate = defaultPositionForHeilmittel(rezept.heilmittel);
+    if (posTemplate) {
+      try { heilmittelPosition = resolvePositionsnummer(posTemplate, '22'); }
+      catch (_e) { /* ignore */ }
+    }
+
     // --- Insert prescription row ---
     const { data: rx, error: rxErr } = await supabase
       .from('prescriptions')
@@ -1566,12 +1592,18 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         diagnosegruppe: rezept.diagnosegruppe || null,
         heilmittel: rezept.heilmittel || null,
         heilmittel_feld_text: rezept.heilmittel_feld_text || null,
+        heilmittel_position: heilmittelPosition,
         anzahl_einheiten: rezept.anzahl_einheiten ?? null,
         frequenz: rezept.frequenz || null,
         ausstellungsdatum: arzt.ausstellungsdatum || null,
         behandlungsbeginn: rezept.behandlungsbeginn || null,
         is_dringend: !!rezept.is_dringend,
         hausbesuch: !!rezept.hausbesuch,
+        is_blanko: !!rezept.is_blanko,
+        is_lhb_bvb: !!rezept.is_lhb_bvb,
+        doctor_lanr: arzt.lanr || null,
+        doctor_bsnr: arzt.bsnr || null,
+        kostentraeger_ik: kostentraegerIk,
         gueltig_bis: validation.computed?.gueltig_bis || null,
         computed: validation.computed || null,
         warnings: validation.warnings || null,

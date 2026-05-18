@@ -843,6 +843,45 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: KASSENABRECHNUNG (§ 302 SGB V) ===== -->
+        <section class="panel" id="panel-abrechnung">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_abrechnung">Kassenabrechnung</h2>
+              <p class="panel-sub" data-i18n="abrechnung_sub">Sammelrechnung § 302 SGB V an Krankenkassen</p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:24px;">
+            <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;" data-i18n="ab_ready">Abrechnungsbereit</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;" data-i18n="ab_hint_select">Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.</p>
+            <div id="abReadyContainer">
+              <div id="abReadyEmpty" class="table-empty" data-i18n="ab_no_ready">Keine abrechnungsbereiten Rezepte.</div>
+              <div id="abReadyGroups"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size:16px;font-weight:600;margin-bottom:14px;" data-i18n="ab_history">Abrechnungs-Historie</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="ab_filename">Dateiname</th>
+                    <th data-i18n="ab_kk">Krankenkasse</th>
+                    <th data-i18n="ab_count">Rezepte</th>
+                    <th data-i18n="ab_total">Summe</th>
+                    <th data-i18n="ab_status">Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="abHistoryBody"></tbody>
+              </table>
+              <div id="abHistoryEmpty" class="table-empty" data-i18n="ab_no_history">Noch keine Abrechnungen erstellt.</div>
+            </div>
+          </div>
+        </section>
+
         <!-- ===== PANEL: NOTIZEN ===== -->
         <section class="panel" id="panel-notizen">
           <div class="panel-header">
@@ -1449,9 +1488,11 @@
                 <div class="form-group">
                   <label class="form-label">Institutionskennzeichen (IK)</label>
                   <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
-                  <div class="form-hint">Wird von der ARGE-IK vergeben. Erscheint im DMRZ-XML-Export für §302 SGB V Abrechnung.</div>
+                  <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung (Datei „Kassenabrechnung“ in der Seitenleiste).</div>
                 </div>
                 <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
+                <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
+                <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
               </div>
             </div>
 
@@ -1963,6 +2004,98 @@
     </div>
   </div>
 
+  <!-- ===== MODAL: ZAA-ANTWORT HOCHLADEN ===== -->
+  <div class="modal-overlay" id="zaaModal" hidden>
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <span class="modal-title" id="zaaTitle">ZAA-Antwortdatei</span>
+        <button class="modal-close" data-modal="zaaModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+          Laden Sie die Antwortdatei (EDIFACT FEHL oder TXT) hoch, die das DAS-Portal nach Ihrer Einreichung
+          bereitstellt. Erkannte Fehler werden mit Klartext + Lösungshinweis übersetzt.
+        </p>
+        <div class="form-group">
+          <label class="form-label">ZAA-Datei</label>
+          <input class="form-input" id="zaaFileInput" type="file" accept=".txt,.edi,.dat,.zaa,application/edifact,text/plain" />
+        </div>
+        <div id="zaaErr" style="color:#b91c1c;font-size:13px;margin-top:6px;"></div>
+        <div id="zaaResult" style="margin-top:14px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn-primary" id="zaaRunBtn">Hochladen &amp; analysieren</button>
+          <button class="btn-ghost" data-modal="zaaModal">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: DTA-DATEI SIGNIEREN (PKCS#7) ===== -->
+  <div class="modal-overlay" id="signModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="signTitle">DTA signieren</span>
+        <button class="modal-close" data-modal="signModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+          Die DTA-Datei wird <strong>lokal in Ihrem Browser</strong> mit Ihrem ITSG-/Dakota-Zertifikat signiert.
+          Der private Schlüssel verlässt Ihren Rechner nicht.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Zertifikat-Datei (.p12 / .pfx)</label>
+          <input class="form-input" id="signFileInput" type="file" accept=".p12,.pfx,application/x-pkcs12" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">PIN / Passwort</label>
+          <input class="form-input" id="signPinInput" type="password" autocomplete="current-password" />
+        </div>
+        <div id="signStatus" style="font-size:13px;color:var(--text-muted);margin:8px 0;"></div>
+        <div id="signErr" style="color:#b91c1c;font-size:13px;margin-top:6px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn-primary" id="signRunBtn">Signieren</button>
+          <button class="btn-ghost" data-modal="signModal">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: ZUZAHLUNGS-BEFREIUNG ===== -->
+  <div class="modal-overlay" id="befreiungModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Zuzahlungs-Befreiung erfassen</span>
+        <button class="modal-close" data-modal="befreiungModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Jahr</label>
+            <input class="form-input" id="befJahr" type="number" min="2020" max="2099" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Befreit ab</label>
+            <input class="form-input" id="befAb" type="date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Befreit bis (optional)</label>
+            <input class="form-input" id="befBis" type="date" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bescheinigung (PDF/Bild, optional)</label>
+          <input class="form-input" id="befFile" type="file" accept="image/*,application/pdf" />
+          <div class="form-hint">Lokal auf Supabase Storage gespeichert, nur für Sie und Ihre Mitarbeiter sichtbar.</div>
+        </div>
+        <div id="befErr" style="color:#b91c1c;font-size:13px;margin-top:6px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn-primary" id="befSaveBtn">Speichern</button>
+          <button class="btn-ghost" data-modal="befreiungModal">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== MODAL: LEAD ===== -->
   <div class="modal-overlay" id="leadModal" hidden>
     <div class="modal modal-lg">
@@ -2350,7 +2483,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260518a"></script>
+  <script type="module" src="dashboard.js?v=20260519c"></script>
 </body>
 
 </html>
