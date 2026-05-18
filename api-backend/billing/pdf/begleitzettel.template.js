@@ -81,11 +81,39 @@ export function renderBegleitzettel(opts) {
   .checklist ul { margin: 0; padding-left: 5mm; font-size: 9pt; line-height: 1.6; }
   .signature { margin-top: 14mm; display: flex; gap: 20mm; }
   .signature .line { flex: 1; border-top: 1px solid #1a1a1a; padding-top: 1.5mm; font-size: 8pt; color: #666; }
-  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+  /* Screen-only toolbar (hidden in print/PDF output) */
+  .no-print {
+    position: sticky; top: 0; z-index: 10;
+    background: #0a4a7a; color: #fff;
+    padding: 10px 16px; margin: -18mm -18mm 8mm;
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'Inter','Segoe UI',sans-serif; font-size: 11pt;
+  }
+  .no-print .hint { font-size: 9pt; opacity: .9; }
+  .no-print button {
+    background: #fff; color: #0a4a7a; border: 0;
+    padding: 7px 14px; border-radius: 4px; font-weight: 600; cursor: pointer;
+    font-size: 11pt;
+  }
+  .no-print button:hover { background: #e6eaef; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none !important; }
+  }
 </style>
 </head>
 <body>
 <div class="doc">
+
+  <div class="no-print">
+    <div>
+      <strong>Begleitzettel</strong>
+      <div class="hint">Im Druckdialog &bdquo;Ziel &rarr; Als PDF speichern&ldquo; wählen und an die Datenannahmestelle senden.</div>
+    </div>
+    <button type="button" onclick="window.print()">🖨️ Drucken / PDF speichern</button>
+  </div>
 
   <header>
     <h1>Begleitzettel zur Sammelrechnung</h1>
@@ -159,6 +187,22 @@ export function renderBegleitzettel(opts) {
   </div>
 
 </div>
+<script>
+  // Auto-open print dialog once page + fonts are ready.
+  // ?autoprint=0 → skip (e.g. when opened from history just to view).
+  (function () {
+    var params = new URLSearchParams(window.location.search || '');
+    if (params.get('autoprint') === '0') return;
+    var fire = function () { setTimeout(function () { window.print(); }, 250); };
+    if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+      document.fonts.ready.then(fire).catch(fire);
+    } else if (document.readyState === 'complete') {
+      fire();
+    } else {
+      window.addEventListener('load', fire, { once: true });
+    }
+  })();
+</script>
 </body>
 </html>`;
 }
