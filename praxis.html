@@ -228,7 +228,8 @@
                     </div>
                     <h3>Intelligente Termin- & Patientenverwaltung</h3>
                     <p class="feature-desc">Alles aus einer Hand: Online-Terminbuchung, automatisierte Erinnerungen per
-                        <strong>E-Mail</strong>, Patientenakte und Rezeptverwaltung.</p>
+                        <strong>E-Mail</strong>, Patientenakte und Rezeptverwaltung.
+                    </p>
                     <ul class="feature-list">
                         <li>✓ 24/7 Online-Buchung für Patienten</li>
                         <li>✓ Automatische E-Mail-Erinnerungen</li>
@@ -631,6 +632,119 @@
                 }
             });
         });
+    </script>
+
+    <!-- Chatbot Widget -->
+    <script>
+        (function () {
+            var DATA = { "botName": "InfinityMade", "welcomeMessage": "Willkommen bei InfinityMade! Wir unterstützen kleine und mittelständische Betriebe dabei, im Internet sichtbar zu werden – einfach und schnell.", "noMatchMessage": "Dazu liegen mir aktuell keine Informationen vor. Bitte kontaktieren Sie uns direkt unter +49 1522 8033834 oder per E-Mail an info@infinitymade.de für weitere Hilfe.", "tone": "formal", "brandColor": "#1e40af", "avatar": { "type": "emoji", "emoji": "robot", "imageUrl": "" }, "language": "de", "casualPrefixes": ["Klar, ", "Natürlich, "], "friendlySuffix": " Falls Sie weitere Fragen haben, schreiben Sie mir einfach!", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": { "minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500 }, "extraKnowledge": "DU BIST: InfinityBot — InfinityMade Assistent.\nInfinityMade: Digitalagentur aus Siegburg (NRW) für kleine Unternehmen.\n\nPOTENZIELLE KUNDEN: Physiotherapeuten, Friseure, Restaurantbesitzer, Fitnessstudio-Betreiber, Handwerker.\nSIE WOLLEN: Mehr Patienten/Kunden, weniger Bürokratie, weniger Stress.\nZIEL: Jeden Besucher zu einem KOSTENLOSEN DEMO-RANDVERVU lenken.\n\nWICHTIG:\n- Demo-Termin ist das Kraftvollste was wir anbieten. DORT sehen sie das komplette System live — WhatsApp-Bot, Buchungskalender, Dashboard, alle Automatisierungen.\n- Max 2-3 Sätze pro Antwort.\n- Sanfter CTA für Demo am Ende der meisten Antworten.\n- Niemals technische Details (Server, Hosting, Datenbank, API, Cloud).\n- Preise immer allgemein: \"ab 39€/Monat\", für Details Demo.\n- DSGVO erwähnen wenn nach Daten gefragt.\n- Keine quantitativen Versprechen (\"Sie sparen X Stunden\").\n\nANTWORTEN:\n- \"Was kostet das?\" → \"Das kommt auf Ihr Paket an. Für Physiotherapie startet es bei 59€/Monat. Am besten besprechen wir das in einem kurzen Demo — da zeige ich Ihnen alles live. Haben Sie 15 Minuten?\"\n\n- \"Ich bin Physiotherapeut\" → \"Absolut! Viele Physiopraxen nutzen uns: Patienten buchen über WhatsApp, Erinnerungen automatisch, alles in einem Dashboard. Soll ich Ihnen das in einem Demo zeigen?\"\n\n- \"Brauche ich technisches Wissen?\" → \"Nein, überhaupt nicht. Wir richten alles ein, Sie müssen nur noch benutzen. Im Demo zeige ich Ihnen wie einfach das ist.\"\n\n- \"Ist das DSGVO-konform?\" → \"Ja, vollständig. AV-Vertrag, Hosting in Deutschland, für Gesundheitsbetriebe gemacht.\"\n\n- \"Ich habe schon eine Website\" → \"Perfekt! Wir bauen unser System parallel ein — Patienten buchen trotzdem über WhatsApp. Im Demo sehen Sie den Unterschied!\"\n\n- \"Wie schnell geht das?\" → \"Die Einrichtung dauert 1-2 Tage. Viele Kunden sind am dritten Tag schon live. Im Demo zeige ich den genauen Ablauf.\"\n\n- \"Machen Sie auch für andere Branchen?\" → \"Ja! Friseure, Restaurants, Fitnessstudios, Handwerker — für jede Branche haben wir spezialisierte Pakete.\"\n\n- \"Kann ich das erstmal testen?\" → \"Der beste Weg ist ein kostenloses Demo — dort sehen Sie alles ohne etwas zu installieren. Haben Sie 15 Minuten diese Woche?\"\n\n- \"Ich will nicht abhängig sein\" → \"Sie behalten jederzeit Ihre Daten und können das System bei Bedarf exportieren. In einem Demo zeige ich Ihnen genau wie das funktioniert.\"\n\n- \"Was wenn das nicht funktioniert?\" → \"Die meisten Kunden sind nach dem ersten Monat begeistert. Wir bieten einen kostenlosen Demo-Termin an, damit Sie alles vorher sehen können.\"\n\n- \"Ich brauche mehr Patienten\" → \"Über unser System werden Sie bei Google besser gefunden und Patienten können einfacher bei Ihnen buchen — direkt über WhatsApp. Das Demo zeigt Ihnen genau wie das funktioniert.\"\n\nBEGRÜSSUNG: \"Hallo! 👋 Ich bin der InfinityBot. Wie kann ich Ihnen helfen? Gerne vereinbare ich auch einen kostenlosen Demo-Termin.\"\n\nVERBOTEN:\n- Server/Hosting/Datenbank/Technik erklären\n- Preise verhandeln oder Rabatte anbieten\n- Quantitative Versprechen (\"Sie sparen X Stunden\")\n- Eigene Kontodaten oder IBAN nennen\n- Garantien geben\n- Andere Firmen vergleichen\n\nERLAUBT:\n- \"Kostenloser Demo-Termin\"\n- \"24/7 verfügbar\"\n- \"DSGVO-konform\"\n- \"Keine technischen Kenntnisse nötig\"\n- \"In 1-2 Tagen live\"\n- \"Wir richten alles ein\"\n- \"Persönliche Betreuung\"\n- \"DE, TR, EN, AR\"", "qaPairs": [{ "question": "Welche Leistungen bietet InfinityMade an?", "answer": "Wir bieten moderne Websiteerstellung, WhatsApp KI-Assistenten, Online-Buchungssysteme, Google My Business Optimierung, digitale Speisekarten und Social-Media-Optimierung an.", "keywords": "leistungen, webdesign, chatbot, marketing, service" }, { "question": "Wie lange dauert die Erstellung einer Website?", "answer": "In der Regel ist Ihre Website innerhalb von 24 bis 48 Stunden fertig. Bei größeren Projekten mit individuellen Anforderungen kann es bis zu 5 Werktage dauern.", "keywords": "dauer, lieferzeit, website, erstellung, zeitraum" }, { "question": "Was kosten die Dienstleistungen für verschiedene Branchen?", "answer": "Die Preise starten ab 39 €/Monat für Friseure und Gastronomie. Handwerksbetriebe beginnen bei 49 €/Monat und Physiotherapie-Praxen bei 59 €/Monat.", "keywords": "preise, kosten, gebühren, monatlich, budget" }, { "question": "Benötige ich technisches Wissen für die Zusammenarbeit?", "answer": "Nein, wir kümmern uns um alles – von der Einrichtung bis zur Veröffentlichung. Sie müssen sich um keine technischen Details kümmern.", "keywords": "technik, vorkenntnisse, unterstützung, einrichtung, hilfe" }, { "question": "Kann ich meine Website später selbst bearbeiten?", "answer": "Ja, wir bauen Ihre Website so auf, dass Sie Texte und Bilder ohne Programmierkenntnisse selbst aktualisieren können. Auf Wunsch bieten wir auch Schulungen an.", "keywords": "bearbeiten, ändern, inhalte, aktualisierung, cms" }, { "question": "Wo befindet sich das Unternehmen?", "answer": "Wir sind Ihr lokaler Partner für den Raum Siegburg, Köln und Bonn und betreuen Kunden deutschlandweit.", "keywords": "standort, adresse, köln, bonn, siegburg" }, { "question": "Wie kann ich ein Beratungsgespräch buchen?", "answer": "Sie können ein kostenloses Demo-Gespräch direkt über unsere Website buchen oder uns eine Nachricht per E-Mail oder WhatsApp senden.", "keywords": "termin, beratung, demo, kontakt, gespräch" }, { "question": "Gibt es versteckte Kosten?", "answer": "Nein, unsere Preise sind transparent. Mögliche externe Kosten für Domain oder Hosting werden im Vorfeld klar mit Ihnen besprochen.", "keywords": "kosten, transparent, gebühren, hosting, domain" }] };
+            var EMOJI_MAP = { "robot": "🤖", "star": "⭐", "heart": "❤️", "bulb": "💡", "rocket": "🚀", "smile": "😊" };
+            function applyTone(text) {
+                if (DATA.tone === 'formal') return text;
+                if (DATA.tone === 'casual') {
+                    var p = DATA.casualPrefixes || ['', ''];
+                    return p[Math.floor(Math.random() * p.length)] + text.charAt(0).toLowerCase() + text.slice(1);
+                }
+                if (DATA.tone === 'friendly') {
+                    var es = ['\ud83d\udc4b', '\u2728', '\ud83d\udc4d', '\ud83d\ude0a', '\ud83d\udcab'];
+                    return es[Math.floor(Math.random() * es.length)] + ' ' + text + (DATA.friendlySuffix || '');
+                }
+                return text;
+            }
+            var SESSION = { history: [], count: 0, strikes: 0, terminated: false, lastSent: 0 };
+            function fetchAnswer(msg) {
+                var cfg = {
+                    businessName: DATA.botName || '',
+                    language: DATA.language || 'de',
+                    welcomeMessage: DATA.welcomeMessage || '',
+                    noMatchMessage: DATA.noMatchMessage || '',
+                    contactInfo: DATA.noMatchMessage || '',
+                    extraKnowledge: DATA.extraKnowledge || '',
+                    qaPairs: DATA.qaPairs || []
+                };
+                return fetch(DATA.chatWebhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, history: SESSION.history.slice(-10), config: cfg })
+                }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+            }
+            var brand = DATA.brandColor;
+            var avatarHtml = DATA.avatar.type === 'image' && DATA.avatar.imageUrl
+                ? '<img src="' + DATA.avatar.imageUrl + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>'
+                : '<span>' + (EMOJI_MAP[DATA.avatar.emoji] || '\ud83e\udd16') + '</span>';
+            var css = '\
+.cwb-launcher{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:'+ brand + ';border:none;box-shadow:0 8px 24px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:white;font-size:24px;cursor:pointer;z-index:99998;overflow:hidden;transition:transform .2s ease;font-family:system-ui,sans-serif;}\
+.cwb-launcher:hover{transform:scale(1.1);}\
+.cwb-window{position:fixed;bottom:24px;right:24px;width:380px;height:520px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);background:white;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;transform:translateY(20px) scale(.95);opacity:0;pointer-events:none;transition:all .25s ease;z-index:99999;font-family:system-ui,sans-serif;}\
+.cwb-window.cwb-open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}\
+.cwb-header{background:'+ brand + ';color:white;padding:14px 16px;display:flex;align-items:center;gap:12px;}\
+.cwb-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0;}\
+.cwb-name{font-weight:600;font-size:15px;flex:1;}\
+.cwb-close{background:transparent;border:none;color:white;font-size:22px;width:28px;height:28px;border-radius:6px;cursor:pointer;}\
+.cwb-msgs{flex:1;overflow-y:auto;padding:16px;background:#fff;display:flex;flex-direction:column;gap:8px;}\
+.cwb-msg{display:flex;flex-direction:column;max-width:80%;}\
+.cwb-msg.cwb-bot{align-self:flex-start;align-items:flex-start;}\
+.cwb-msg.cwb-user{align-self:flex-end;align-items:flex-end;}\
+.cwb-bubble{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.4;word-wrap:break-word;color:#1a1a1a;user-select:text;-webkit-user-select:text;}\
+.cwb-bot .cwb-bubble{background:#f0f0f0;border-bottom-left-radius:4px;}\
+.cwb-user .cwb-bubble{background:'+ brand + ';color:white;border-bottom-right-radius:4px;}\
+.cwb-time{font-size:10px;color:#999;margin-top:3px;padding:0 4px;}\
+.cwb-typing{align-self:flex-start;background:#f0f0f0;border-radius:14px;border-bottom-left-radius:4px;padding:12px 14px;display:none;}\
+.cwb-typing.cwb-vis{display:flex;}\
+.cwb-typing span{width:6px;height:6px;background:#999;border-radius:50%;margin:0 2px;animation:cwb-bounce 1.2s infinite;}\
+.cwb-typing span:nth-child(2){animation-delay:.15s;}\
+.cwb-typing span:nth-child(3){animation-delay:.3s;}\
+@keyframes cwb-bounce{0%,60%,100%{transform:translateY(0);opacity:.6;}30%{transform:translateY(-5px);opacity:1;}}\
+.cwb-input-area{background:white;border-top:1px solid #ececec;padding:10px 12px;display:flex;align-items:center;gap:8px;}\
+.cwb-input-area input{flex:1;border:none;outline:none;padding:10px 4px;font-size:14px;color:#1a1a1a;background:transparent;}\
+.cwb-send{width:36px;height:36px;border-radius:50%;background:'+ brand + ';border:none;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}\
+';
+            var style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
+            var launcher = document.createElement('button'); launcher.className = 'cwb-launcher'; launcher.innerHTML = avatarHtml;
+            var win = document.createElement('div'); win.className = 'cwb-window'; win.setAttribute('lang', DATA.language || 'de');
+            win.innerHTML = '<div class="cwb-header"><div class="cwb-avatar">' + avatarHtml + '</div><div class="cwb-name">' + DATA.botName + '</div><button class="cwb-close" type="button">\u00d7</button></div><div class="cwb-msgs"><div class="cwb-typing"><span></span><span></span><span></span></div></div><div class="cwb-input-area"><input type="text" placeholder="' + (DATA.typeMessage || '') + '" /><button class="cwb-send" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>';
+            document.body.appendChild(launcher); document.body.appendChild(win);
+            var msgs = win.querySelector('.cwb-msgs'); var typing = win.querySelector('.cwb-typing'); var input = win.querySelector('input'); var send = win.querySelector('.cwb-send'); var closeBtn = win.querySelector('.cwb-close');
+            function timeNow() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+            function addMsg(text, who) { var div = document.createElement('div'); div.className = 'cwb-msg cwb-' + who; div.innerHTML = '<div class="cwb-bubble"></div><div class="cwb-time">' + timeNow() + '</div>'; div.querySelector('.cwb-bubble').textContent = text; msgs.insertBefore(div, typing); msgs.scrollTop = msgs.scrollHeight; }
+            var inited = false;
+            launcher.addEventListener('click', function () { win.classList.add('cwb-open'); if (!inited) { inited = true; setTimeout(function () { addMsg(DATA.welcomeMessage, 'bot'); }, 200); } });
+            closeBtn.addEventListener('click', function () { win.classList.remove('cwb-open'); });
+            function lockSession(reasonText) { SESSION.terminated = true; input.disabled = true; input.value = ''; input.placeholder = DATA.sessionEnded || ''; addMsg((reasonText || DATA.sessionEnded) + ' ' + (DATA.noMatchMessage || ''), 'bot'); }
+            function userSend() {
+                if (SESSION.terminated) return;
+                var t = (input.value || '').trim();
+                if (!t) return;
+                if (t.length < (DATA.limits.minLen || 2)) { addMsg(DATA.errTooShort, 'bot'); return; }
+                if (t.length > (DATA.limits.maxLen || 500)) { addMsg(DATA.errTooLong, 'bot'); return; }
+                var now = Date.now();
+                if (now - SESSION.lastSent < (DATA.limits.cooldownMs || 1500)) { addMsg(DATA.errCooldown, 'bot'); return; }
+                SESSION.lastSent = now;
+                addMsg(t, 'user');
+                input.value = '';
+                SESSION.count++;
+                if (SESSION.count > (DATA.limits.maxMessagesPerSession || 30)) { lockSession(DATA.sessionLimit); return; }
+                typing.classList.add('cwb-vis'); msgs.scrollTop = msgs.scrollHeight;
+                fetchAnswer(t).then(function (data) {
+                    typing.classList.remove('cwb-vis');
+                    if (!data || data.error || !data.reply) { addMsg(DATA.errNetwork, 'bot'); return; }
+                    addMsg(applyTone(data.reply), 'bot');
+                    SESSION.history.push({ role: 'user', content: t });
+                    SESSION.history.push({ role: 'assistant', content: data.reply });
+                    if (data.offTopic) {
+                        SESSION.strikes++;
+                        if (SESSION.strikes >= (DATA.limits.maxOffTopicStrikes || 3)) {
+                            setTimeout(function () { lockSession(DATA.sessionEnded); }, 600);
+                        }
+                    }
+                }).catch(function (err) {
+                    typing.classList.remove('cwb-vis');
+                    addMsg(DATA.errNetwork, 'bot');
+                });
+            }
+            send.addEventListener('click', userSend);
+            input.addEventListener('keydown', function (e) { if (e.key === 'Enter') userSend(); });
+        })();
     </script>
 </body>
 
