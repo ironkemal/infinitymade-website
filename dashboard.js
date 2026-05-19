@@ -5157,6 +5157,124 @@ async function dtaProRemove() {
   }
 }
 
+// ---------- Sprint 8: DAS-Portal walkthrough modal ----------
+
+const _dasGuideState = { abrechnungId: null, abrechnung: null };
+
+function _dgStatusToStep(ab) {
+  // Map abrechnung.status + signed_at → current step (1..4)
+  if (!ab) return 1;
+  if (ab.status === 'accepted' || ab.status === 'rejected') return 4; // done; keep step 4 highlighted
+  if (ab.status === 'gesendet' || ab.status === 'heruntergeladen') {
+    return ab.zaa_uploaded_at ? 4 : 3;
+  }
+  if (ab.signed_at) return 2;
+  return 1;
+}
+
+function _dgRender(currentStep) {
+  document.querySelectorAll('#dasGuideSteps .dg-step').forEach(li => {
+    const step   = parseInt(li.dataset.step, 10);
+    const marker = li.querySelector('.dg-marker');
+    const actions= li.querySelector('.dg-actions');
+    // Reset
+    li.style.background    = '';
+    li.style.border        = '1px solid transparent';
+    if (marker) {
+      marker.style.cssText = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;';
+    }
+    if (actions) actions.style.display = 'none';
+
+    if (step < currentStep) {
+      // Done
+      if (marker) { marker.style.background = '#15803d'; marker.style.color = '#fff'; marker.textContent = '✓'; }
+    } else if (step === currentStep) {
+      li.style.background = '#eff6ff';
+      li.style.border     = '1px solid #93c5fd';
+      if (marker) { marker.style.background = '#1d4ed8'; marker.style.color = '#fff'; marker.textContent = String(step); }
+      if (actions) actions.style.display = 'flex';
+      if (actions) actions.style.gap = '8px';
+    } else {
+      if (marker) { marker.style.background = '#e5e7eb'; marker.style.color = '#6b7280'; marker.textContent = String(step); }
+    }
+  });
+}
+
+async function openDasGuideModal(abrechnungId, forceStep) {
+  if (!abrechnungId) return;
+  _dasGuideState.abrechnungId = abrechnungId;
+
+  const { data: ab } = await supabase
+    .from('abrechnung')
+    .select('id, dateiname, status, storage_path, signed_storage_path, signed_at, zaa_uploaded_at, kostentraeger_ik, prescription_count')
+    .eq('id', abrechnungId)
+    .maybeSingle();
+  _dasGuideState.abrechnung = ab;
+
+  const header = document.getElementById('dasGuideHeader');
+  if (header) {
+    const ik = ab?.kostentraeger_ik || '—';
+    const kk = _abState.kkMap.get(ik)?.name || ik;
+    header.innerHTML = `<strong>${escapeHtml(ab?.dateiname || abrechnungId)}</strong> · ${escapeHtml(kk)} · ${ab?.prescription_count || 0} Rezepte`;
+  }
+
+  const step = forceStep || _dgStatusToStep(ab);
+  _dgRender(step);
+  openModal('dasGuideModal');
+}
+
+document.getElementById('dgSignBtn')?.addEventListener('click', () => {
+  const id = _dasGuideState.abrechnungId;
+  const ab = _dasGuideState.abrechnung;
+  if (!id) return;
+  closeModal('dasGuideModal');
+  openSignModal(id, { filename: ab?.dateiname });
+});
+
+document.getElementById('dgDownloadBtn')?.addEventListener('click', () => {
+  const ab = _dasGuideState.abrechnung;
+  if (!ab) return;
+  const path = ab.signed_storage_path || ab.storage_path;
+  if (!path) {
+    showToast('Datei nicht verfügbar — bitte erst signieren.', 'error');
+    return;
+  }
+  downloadAbrechnungFile(path, ab.id, 'dta');
+});
+
+document.getElementById('dgMarkSentBtn')?.addEventListener('click', async () => {
+  const id = _dasGuideState.abrechnungId;
+  if (!id) return;
+  try {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (!s?.access_token) throw new Error('Nicht angemeldet');
+    const res = await fetch(`${API}/billing/abrechnung/${id}/mark-sent`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + s.access_token },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+    showToast('Status: gesendet. Warten Sie auf die ZAA-Antwort.');
+    await loadAbrechnung();
+    _dgRender(3);
+  } catch (e) {
+    showToast('Fehler: ' + e.message, 'error');
+  }
+});
+
+document.getElementById('dgZaaBtn')?.addEventListener('click', () => {
+  const id = _dasGuideState.abrechnungId;
+  if (!id) return;
+  closeModal('dasGuideModal');
+  // Re-use the existing ZAA upload modal
+  if (typeof openZaaModal === 'function') {
+    openZaaModal(id, _dasGuideState.abrechnung?.dateiname);
+  } else {
+    const btn = document.querySelector(`.ab-zaa-btn[data-id="${id}"]`);
+    if (btn) btn.click();
+  }
+});
+
 document.getElementById('dtaProAddMonthBtn')?.addEventListener('click', () => dtaProAdd('month'));
 document.getElementById('dtaProAddYearBtn')?.addEventListener('click',  () => dtaProAdd('year'));
 document.getElementById('dtaProRemoveBtn')?.addEventListener('click',   dtaProRemove);
@@ -7927,6 +8045,7 @@ function renderAbrechnungHistory(rows) {
         ${a.storage_path ? `<button class="btn-ghost btn-sm ab-dl-dta" data-path="${escapeHtml(a.storage_path)}" data-id="${escapeHtml(a.id)}">${t('ab_download_dta')}</button>` : ''}
         ${a.begleitzettel_path ? `<button class="btn-ghost btn-sm ab-dl-beg" data-path="${escapeHtml(a.begleitzettel_path)}">${t('ab_download_begleit')}</button>` : ''}
         <button class="btn-ghost btn-sm ab-zaa" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}" title="ZAA-Antwortdatei hochladen">📨 ZAA</button>
+        <button class="btn-ghost btn-sm ab-guide" data-id="${escapeHtml(a.id)}" title="Schritt-für-Schritt-Anleitung">📋 Anleitung</button>
         ${a.status === 'rejected' || a.status === 'accepted'
           ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
           : ''}
@@ -7952,6 +8071,9 @@ function renderAbrechnungHistory(rows) {
   });
   body.querySelectorAll('.ab-show-errors').forEach(btn => {
     btn.addEventListener('click', () => showZaaErrors(btn.dataset.id));
+  });
+  body.querySelectorAll('.ab-guide').forEach(btn => {
+    btn.addEventListener('click', () => openDasGuideModal(btn.dataset.id));
   });
 }
 
@@ -8231,6 +8353,8 @@ async function runSignAbrechnung() {
     showToast('Signiert ✓ Lade Sie die .p7m-Datei jetzt im DAS-Portal hoch.');
     closeModal('signModal');
     loadAbrechnung();
+    // Sprint 8 — Walkthrough panel pushes the user to step 2 (DAS portal upload).
+    openDasGuideModal(abrechnungId, 2);
   } catch (e) {
     console.error('[abrechnung/sign]', e);
     err.textContent = e.message || 'Signierung fehlgeschlagen.';

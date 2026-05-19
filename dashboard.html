@@ -2082,6 +2082,80 @@
     </div>
   </div>
 
+  <!-- ===== MODAL: DAS PORTAL WALKTHROUGH (Sprint 8) ===== -->
+  <div class="modal-overlay" id="dasGuideModal" hidden>
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <h3>📋 Sammelabrechnung — nächste Schritte</h3>
+        <button class="modal-close" data-modal="dasGuideModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="dasGuideHeader" style="font-size:13px;color:var(--text-muted);margin-bottom:12px;"></div>
+
+        <ol id="dasGuideSteps" style="list-style:none;padding:0;margin:0;">
+          <li class="dg-step" data-step="1" style="display:flex;gap:12px;padding:10px;border-radius:6px;margin-bottom:6px;">
+            <div class="dg-marker">1</div>
+            <div style="flex:1;">
+              <div class="dg-title" style="font-weight:600;">DTA-Datei signieren (PKCS#7)</div>
+              <div class="dg-body" style="font-size:13px;color:var(--text-muted);margin-top:4px;">
+                Mit Ihrem ITSG/Dakota-Zertifikat (.p12) lokal im Browser. Der private Schlüssel verlässt Ihren Rechner nicht.
+              </div>
+              <div class="dg-actions" style="margin-top:6px;display:none;">
+                <button class="btn-primary btn-sm" id="dgSignBtn">Signieren öffnen</button>
+              </div>
+            </div>
+          </li>
+
+          <li class="dg-step" data-step="2" style="display:flex;gap:12px;padding:10px;border-radius:6px;margin-bottom:6px;">
+            <div class="dg-marker">2</div>
+            <div style="flex:1;">
+              <div class="dg-title" style="font-weight:600;">Signierte Datei (.p7m) im DAS-Portal hochladen</div>
+              <div class="dg-body" style="font-size:13px;color:var(--text-muted);margin-top:4px;">
+                Laden Sie die <code>.p7m</code>-Datei herunter und im Portal der Datenannahmestelle Ihrer Krankenkasse hoch. Häufig genutzt:
+                <span style="display:block;margin-top:4px;">
+                  <a href="https://www.davaso.de/das" target="_blank" rel="noopener">Davaso (AOK, IKK, BKK)</a> ·
+                  <a href="https://www.ddg-online.de/" target="_blank" rel="noopener">DDG (TK, Barmer)</a> ·
+                  <a href="https://www.bitmarck.de/" target="_blank" rel="noopener">BITMARCK</a>
+                </span>
+              </div>
+              <div class="dg-actions" style="margin-top:6px;display:none;">
+                <button class="btn-primary btn-sm" id="dgDownloadBtn">📥 .p7m herunterladen</button>
+                <button class="btn-ghost btn-sm" id="dgMarkSentBtn">✓ Bereits hochgeladen</button>
+              </div>
+            </div>
+          </li>
+
+          <li class="dg-step" data-step="3" style="display:flex;gap:12px;padding:10px;border-radius:6px;margin-bottom:6px;">
+            <div class="dg-marker">3</div>
+            <div style="flex:1;">
+              <div class="dg-title" style="font-weight:600;">ZAA-Antwort abwarten</div>
+              <div class="dg-body" style="font-size:13px;color:var(--text-muted);margin-top:4px;">
+                Die Datenannahmestelle prüft Ihre Abrechnung und sendet innerhalb von <strong>24-72 Stunden</strong> eine Annahme-Antwort (ZAA-Datei) per Email oder zum Download im Portal.
+              </div>
+            </div>
+          </li>
+
+          <li class="dg-step" data-step="4" style="display:flex;gap:12px;padding:10px;border-radius:6px;">
+            <div class="dg-marker">4</div>
+            <div style="flex:1;">
+              <div class="dg-title" style="font-weight:600;">ZAA-Datei zurück ins Dashboard laden</div>
+              <div class="dg-body" style="font-size:13px;color:var(--text-muted);margin-top:4px;">
+                So sehen Sie sofort, welche Rezepte angenommen oder abgelehnt wurden, mit übersetzten Fehlertexten.
+              </div>
+              <div class="dg-actions" style="margin-top:6px;display:none;">
+                <button class="btn-primary btn-sm" id="dgZaaBtn">📤 ZAA-Datei hochladen</button>
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+          <button class="btn-ghost" data-modal="dasGuideModal">Schließen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== MODAL: ZUZAHLUNGS-BEFREIUNG ===== -->
   <div class="modal-overlay" id="befreiungModal" hidden>
     <div class="modal">
@@ -2505,7 +2579,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260519e"></script>
+  <script type="module" src="dashboard.js?v=20260519f"></script>
 </body>
 
 </html>
