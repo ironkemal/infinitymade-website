@@ -206,6 +206,7 @@ function saveSessionProfile() {
 
 function prefillForms() {
   if (!profile) return;
+  if (typeof window.__refreshDtaVisibility === 'function') window.__refreshDtaVisibility();
   if (profile.business_name) document.getElementById('bizName').value = profile.business_name;
   if (profile.sector) document.getElementById('bizSector').value = profile.sector;
   if (profile.city) document.getElementById('bizCity').value = profile.city;
@@ -668,10 +669,13 @@ function bindPlan() {
   const dtaCard     = document.getElementById('dtaProOptIn');
   const dtaCheckbox = document.getElementById('dtaProCheckbox');
   const dtaLabel    = document.getElementById('dtaProPriceLabel');
-  if (dtaCard) {
-    const s = (profile.sector || '').toLowerCase();
+  const refreshDtaVisibility = () => {
+    if (!dtaCard) return;
+    const s = (profile?.sector || '').toLowerCase();
     dtaCard.hidden = !(s === 'physiotherapy' || s === 'praxis');
-  }
+  };
+  refreshDtaVisibility();
+  window.__refreshDtaVisibility = refreshDtaVisibility;
   const updateDtaLabel = () => {
     if (!dtaLabel) return;
     dtaLabel.textContent = currentInterval === 'year' ? '290 €/Jahr (2 Monate gratis)' : '29 €/Monat';
