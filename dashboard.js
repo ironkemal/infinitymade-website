@@ -564,7 +564,7 @@ async function renderOverview() {
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
 
   await loadTodayBookings();
-  loadPhysioRezKpis().catch(() => {});
+  loadPhysioRezKpis().catch(() => { });
 }
 
 let scheduleDate = new Date();
@@ -1537,7 +1537,7 @@ async function openBookingModal(b) {
   document.getElementById('bk-id').value = b.id || '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   // Show "Sitzung N/M" if this booking is linked to a prescription session
-  if (b.id) decorateBookingTitleWithSession(b.id).catch(() => {});
+  if (b.id) decorateBookingTitleWithSession(b.id).catch(() => { });
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
   document.getElementById('bkStart').value = b.start_time ? b.start_time.substring(0, 16) : '';
@@ -2462,7 +2462,7 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
 // Marked is_internal=true so they're hidden from customer-facing pickers.
 const BLANKO_BONUS_DEFINITIONS = [
   { title: 'Prozessdokumentation (Blanko)', price: '34.34', duration: 0, code: 'BLANKO_PD' },
-  { title: 'Mehraufwand (Blanko)',         price: '55.00', duration: 0, code: 'BLANKO_MA' }
+  { title: 'Mehraufwand (Blanko)', price: '55.00', duration: 0, code: 'BLANKO_MA' }
 ];
 
 async function ensureBlankoBonusServices() {
@@ -2821,7 +2821,7 @@ async function loadPatientDetailRezepte(leadId) {
       : `<span class="badge badge-gray">DMRZ offen</span>`;
     const flags = [
       rx.is_dringend ? '<span class="badge badge-red">Dringend</span>' : '',
-      rx.hausbesuch  ? '<span class="badge badge-blue">Hausbesuch</span>' : ''
+      rx.hausbesuch ? '<span class="badge badge-blue">Hausbesuch</span>' : ''
     ].filter(Boolean).join(' ');
 
     const sessionPills = sessions.map(s => {
@@ -2838,10 +2838,10 @@ async function loadPatientDetailRezepte(leadId) {
     let abrButton = '';
     if (showAbrControls) {
       const statusBadges = {
-        bereit:         '<span class="badge" style="background:#dcfce7;color:#15803d;">Abrechnungsbereit</span>',
-        in_abrechnung:  '<span class="badge" style="background:#dbeafe;color:#1e40af;">In Abrechnung</span>',
-        rejected:       '<span class="badge" style="background:#fee2e2;color:#b91c1c;">ZAA abgelehnt</span>',
-        accepted:       '<span class="badge" style="background:#d1fae5;color:#065f46;">Bezahlt</span>',
+        bereit: '<span class="badge" style="background:#dcfce7;color:#15803d;">Abrechnungsbereit</span>',
+        in_abrechnung: '<span class="badge" style="background:#dbeafe;color:#1e40af;">In Abrechnung</span>',
+        rejected: '<span class="badge" style="background:#fee2e2;color:#b91c1c;">ZAA abgelehnt</span>',
+        accepted: '<span class="badge" style="background:#d1fae5;color:#065f46;">Bezahlt</span>',
       };
       abrBadge = statusBadges[abrStatus] || '';
       if (!abrStatus) {
@@ -2915,7 +2915,7 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
 function renderBefreiungCard(leadId, befreiungen) {
   const currentYear = new Date().getFullYear();
   const current = befreiungen.find(b => b.jahr === currentYear);
-  const others  = befreiungen.filter(b => b.jahr !== currentYear);
+  const others = befreiungen.filter(b => b.jahr !== currentYear);
 
   const fmt = (d) => d ? new Date(d).toLocaleDateString('de-DE') : '—';
   const head = current
@@ -2972,16 +2972,16 @@ function openBefreiungModal(leadId) {
   const modal = document.getElementById('befreiungModal');
   if (!modal) return;
   const yearInp = document.getElementById('befJahr');
-  const abInp   = document.getElementById('befAb');
-  const bisInp  = document.getElementById('befBis');
+  const abInp = document.getElementById('befAb');
+  const bisInp = document.getElementById('befBis');
   const fileInp = document.getElementById('befFile');
-  const errEl   = document.getElementById('befErr');
+  const errEl = document.getElementById('befErr');
   const saveBtn = document.getElementById('befSaveBtn');
   const today = new Date();
   const yyyy = today.getFullYear();
   yearInp.value = String(yyyy);
-  abInp.value   = today.toISOString().slice(0, 10);
-  bisInp.value  = `${yyyy}-12-31`;
+  abInp.value = today.toISOString().slice(0, 10);
+  bisInp.value = `${yyyy}-12-31`;
   fileInp.value = '';
   if (errEl) errEl.textContent = '';
   saveBtn.dataset.lead = leadId;
@@ -2992,8 +2992,8 @@ async function saveBefreiung(leadId) {
   const errEl = document.getElementById('befErr');
   errEl.textContent = '';
   const jahr = parseInt(document.getElementById('befJahr').value, 10);
-  const ab   = document.getElementById('befAb').value;
-  const bis  = document.getElementById('befBis').value || null;
+  const ab = document.getElementById('befAb').value;
+  const bis = document.getElementById('befBis').value || null;
   const file = document.getElementById('befFile').files[0];
   if (!jahr || !ab) { errEl.textContent = 'Jahr und „befreit ab“ sind Pflicht.'; return; }
 
@@ -3139,7 +3139,7 @@ async function loadPatientDetailMails(leadId) {
   // Backfill contact_id for the email-matched rows so future queries are cheaper
   const orphanIds = (logs || []).filter(l => !l.contact_id).map(l => l.id);
   if (orphanIds.length) {
-    supabase.from('email_logs').update({ contact_id: leadId }).in('id', orphanIds).then(() => {});
+    supabase.from('email_logs').update({ contact_id: leadId }).in('id', orphanIds).then(() => { });
   }
 
   const content = document.getElementById('pdMailContent');
@@ -5140,9 +5140,9 @@ document.getElementById('signRunBtn')?.addEventListener('click', runSignAbrechnu
 // ---------- Sprint 7-3 / s11: DTA-Pro addon card ----------
 
 function renderDtaProCard() {
-  const card  = document.getElementById('dtaProCard');
+  const card = document.getElementById('dtaProCard');
   if (!card) return;
-  const role  = currentProfile?.role || 'owner';
+  const role = currentProfile?.role || 'owner';
   if (role !== 'owner') {
     // Employees should not see billing controls.
     card.style.display = 'none';
@@ -5150,26 +5150,26 @@ function renderDtaProCard() {
   }
   card.style.display = '';
 
-  const active     = hasDtaPro();
-  const badge      = document.getElementById('dtaProStatusBadge');
+  const active = hasDtaPro();
+  const badge = document.getElementById('dtaProStatusBadge');
   const addMonthBtn = document.getElementById('dtaProAddMonthBtn');
-  const addYearBtn  = document.getElementById('dtaProAddYearBtn');
-  const removeBtn   = document.getElementById('dtaProRemoveBtn');
-  const desc        = document.getElementById('dtaProDesc');
-  const msg         = document.getElementById('dtaProMsg');
+  const addYearBtn = document.getElementById('dtaProAddYearBtn');
+  const removeBtn = document.getElementById('dtaProRemoveBtn');
+  const desc = document.getElementById('dtaProDesc');
+  const msg = document.getElementById('dtaProMsg');
   if (msg) msg.textContent = '';
 
   if (active) {
-    if (badge)        badge.style.display = '';
-    if (addMonthBtn)  addMonthBtn.style.display = 'none';
-    if (addYearBtn)   addYearBtn.style.display = 'none';
-    if (removeBtn)    removeBtn.style.display  = '';
+    if (badge) badge.style.display = '';
+    if (addMonthBtn) addMonthBtn.style.display = 'none';
+    if (addYearBtn) addYearBtn.style.display = 'none';
+    if (removeBtn) removeBtn.style.display = '';
     if (desc) desc.innerHTML = 'Sie nutzen den DTA-Pro Add-on. Die <strong>Kassenabrechnung</strong> ist in der Seitenleiste verfügbar.';
   } else {
-    if (badge)        badge.style.display = 'none';
-    if (addMonthBtn)  addMonthBtn.style.display = '';
-    if (addYearBtn)   addYearBtn.style.display  = '';
-    if (removeBtn)    removeBtn.style.display   = 'none';
+    if (badge) badge.style.display = 'none';
+    if (addMonthBtn) addMonthBtn.style.display = '';
+    if (addYearBtn) addYearBtn.style.display = '';
+    if (removeBtn) removeBtn.style.display = 'none';
   }
 }
 
@@ -5252,12 +5252,12 @@ function _dgStatusToStep(ab) {
 
 function _dgRender(currentStep) {
   document.querySelectorAll('#dasGuideSteps .dg-step').forEach(li => {
-    const step   = parseInt(li.dataset.step, 10);
+    const step = parseInt(li.dataset.step, 10);
     const marker = li.querySelector('.dg-marker');
-    const actions= li.querySelector('.dg-actions');
+    const actions = li.querySelector('.dg-actions');
     // Reset
-    li.style.background    = '';
-    li.style.border        = '1px solid transparent';
+    li.style.background = '';
+    li.style.border = '1px solid transparent';
     if (marker) {
       marker.style.cssText = 'width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;';
     }
@@ -5268,7 +5268,7 @@ function _dgRender(currentStep) {
       if (marker) { marker.style.background = '#15803d'; marker.style.color = '#fff'; marker.textContent = '✓'; }
     } else if (step === currentStep) {
       li.style.background = '#eff6ff';
-      li.style.border     = '1px solid #93c5fd';
+      li.style.border = '1px solid #93c5fd';
       if (marker) { marker.style.background = '#1d4ed8'; marker.style.color = '#fff'; marker.textContent = String(step); }
       if (actions) actions.style.display = 'flex';
       if (actions) actions.style.gap = '8px';
@@ -5354,8 +5354,8 @@ document.getElementById('dgZaaBtn')?.addEventListener('click', () => {
 });
 
 document.getElementById('dtaProAddMonthBtn')?.addEventListener('click', () => dtaProAdd('month'));
-document.getElementById('dtaProAddYearBtn')?.addEventListener('click',  () => dtaProAdd('year'));
-document.getElementById('dtaProRemoveBtn')?.addEventListener('click',   dtaProRemove);
+document.getElementById('dtaProAddYearBtn')?.addEventListener('click', () => dtaProAdd('year'));
+document.getElementById('dtaProRemoveBtn')?.addEventListener('click', dtaProRemove);
 document.getElementById('zaaRunBtn')?.addEventListener('click', runZaaUpload);
 
 document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
@@ -5375,7 +5375,7 @@ document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
   // 2) terapeut_zertifikat upsert (§302 Sammelabrechnung route reads this)
   if (ik) {
     const { error: zErr } = await supabase.from('terapeut_zertifikat').upsert({
-      owner_id:  ownerId,
+      owner_id: ownerId,
       ik_nummer: ik,
     }, { onConflict: 'owner_id' });
     if (zErr) console.warn('[ik/zertifikat-upsert]', zErr);
@@ -5656,6 +5656,21 @@ function loadBeispielmodus() {
   if (wrap.dataset.loaded === '1') return;
   wrap.dataset.loaded = '1';
   wrap.innerHTML = '';
+
+  // On mobile, skip iframe entirely - show only placeholder (handled by CSS)
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (isMobile) {
+    const newTab = document.createElement('a');
+    newTab.className = 'zygote-fs-btn';
+    newTab.id = 'zygoteNewTabBtn';
+    newTab.href = 'https://www.zygotebody.com/';
+    newTab.target = '_blank';
+    newTab.rel = 'noopener';
+    newTab.textContent = '↗ Neuer Tab';
+    wrap.appendChild(newTab);
+    return;
+  }
+
   const frame = document.createElement('iframe');
   frame.id = 'zygoteFrame';
   frame.src = 'https://www.zygotebody.com/';
@@ -6226,12 +6241,12 @@ async function openInvView(invoiceId) {
       .eq('id', inv.patient_id).maybeSingle(),
     inv.prescription_id
       ? supabase.from('prescriptions')
-          .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
-          .eq('id', inv.prescription_id).maybeSingle()
+        .select('rezept_typ,status,heilmittel,icd10,diagnosegruppe,anzahl_einheiten,frequenz,ausstellungsdatum,gueltig_bis,dmrz_exported_at, aerzte ( arzt_name, lanr, bsnr )')
+        .eq('id', inv.prescription_id).maybeSingle()
       : Promise.resolve({ data: null }),
     inv.prescription_id
       ? supabase.from('prescription_sessions')
-          .select('bookings ( start_time )').eq('prescription_id', inv.prescription_id)
+        .select('bookings ( start_time )').eq('prescription_id', inv.prescription_id)
       : Promise.resolve({ data: null })
   ]);
   const rx = prescriptionRes.data;
@@ -6653,7 +6668,7 @@ function buildDmrzXml({ invoice, patient, prescription, arzt, owner }) {
   const tag = (name, val) => `    <${name}>${xmlEscape(val)}</${name}>`;
   const now = new Date().toISOString();
   const lines = (invoice.line_items || []).map((l, i) =>
-`    <Leistung position="${i + 1}">
+    `    <Leistung position="${i + 1}">
       <Bezeichnung>${xmlEscape(l.title || '')}</Bezeichnung>
       <Anzahl>${Number(l.quantity || 1)}</Anzahl>
       <Einzelpreis>${(Number(l.unit_price) || 0).toFixed(2)}</Einzelpreis>
@@ -6901,7 +6916,7 @@ async function loadAnamneseRxContext(patientId) {
 
   const flags = [
     rx.is_dringend ? '<span class="badge badge-red">Dringend</span>' : '',
-    rx.hausbesuch  ? '<span class="badge badge-blue">Hausbesuch</span>' : ''
+    rx.hausbesuch ? '<span class="badge badge-blue">Hausbesuch</span>' : ''
   ].filter(Boolean).join(' ');
 
   document.getElementById('anamRxBadges').innerHTML = `
@@ -6924,7 +6939,7 @@ async function loadAnamneseRxContext(patientId) {
 }
 
 async function fillAnamneseForm(patientId) {
-  loadAnamneseRxContext(patientId).catch(() => {});
+  loadAnamneseRxContext(patientId).catch(() => { });
   if (!patientId) { resetAnamneseForm(); return; }
   currentAnamnesePatientId = patientId;
   const ownerId = getOwnerId();
@@ -7513,7 +7528,7 @@ async function openBookingFromRxPreset(preset) {
       // Best-effort: refresh leads cache so subsequent edits see the new patient
       if (typeof window.bkSelectLead === 'function') {
         setTimeout(() => {
-          try { window.bkSelectLead(preset.patient_id); } catch {}
+          try { window.bkSelectLead(preset.patient_id); } catch { }
         }, 150);
       }
     }
@@ -7938,17 +7953,17 @@ function aiMatchHeilmittel(text, positions) {
   // Short-code → first letters of label (KG ~ "Allgemeine Krankengymnastik")
   // Use a small alias table for accuracy.
   const aliases = {
-    kg:    'X0501',
+    kg: 'X0501',
     'kg einzel': 'X0501',
-    mt:    'X1201',
+    mt: 'X1201',
     'manuelle therapie': 'X1201',
-    mld:   'X0205',
+    mld: 'X0205',
     'mld 30': 'X0205',
     'mld 45': 'X0201',
     'mld 60': 'X0202',
-    kmt:   'X0106',
+    kmt: 'X0106',
     'klassische massage': 'X0106',
-    bgm:   'X0107',
+    bgm: 'X0107',
     traktion: 'X1104',
     'kg geraet': 'X0507',
     'kg-geraet': 'X0507',
@@ -7997,7 +8012,7 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
   // Auto-match Krankenkasse from OCR
   const kkMatch = aiMatchKK(ocrKkText, kkList);
   if (kkMatch) {
-    kkInput.value   = kkMatch.name;
+    kkInput.value = kkMatch.name;
     kkIkInput.value = kkMatch.ik;
     if (kkStatus) kkStatus.textContent = ` ✓ erkannt (${Math.round(kkMatch.score * 100)}%) · IK ${kkMatch.ik}`;
   } else if (ocrKkText) {
@@ -8073,7 +8088,7 @@ function buildPositionOptionsHtml(currentValue) {
   const normalizedCurrent = (() => {
     if (!currentValue) return '';
     if (/^X\d{4}$/.test(currentValue)) return currentValue;
-    if (/^\d{5}$/.test(currentValue))  return 'X' + currentValue.slice(1);
+    if (/^\d{5}$/.test(currentValue)) return 'X' + currentValue.slice(1);
     return currentValue;
   })();
 
@@ -8093,8 +8108,8 @@ function buildPositionOptionsHtml(currentValue) {
     for (const p of items) {
       const sel = p.x === normalizedCurrent ? 'selected' : '';
       const priceTag = p.preis != null ? ` — ${p.preis.toFixed(2)} €` : '';
-      const flagTag  = [p.gruppe ? 'Gruppe' : '', p.telemed ? 'telemed' : ''].filter(Boolean).join(', ');
-      const flag     = flagTag ? ` (${flagTag})` : '';
+      const flagTag = [p.gruppe ? 'Gruppe' : '', p.telemed ? 'telemed' : ''].filter(Boolean).join(', ');
+      const flag = flagTag ? ` (${flagTag})` : '';
       html += `<option value="${escapeHtml(p.x)}" ${sel}>${escapeHtml(p.x)} · ${escapeHtml(p.label)}${flag}${priceTag}</option>`;
     }
     html += '</optgroup>';
@@ -8160,8 +8175,8 @@ async function loadAbrechnung() {
   ]);
 
   if (readyRes.error) console.error('[abrechnung/ready]', readyRes.error);
-  if (kkRes.error)    console.error('[abrechnung/kk]',    kkRes.error);
-  if (histRes.error)  console.error('[abrechnung/hist]',  histRes.error);
+  if (kkRes.error) console.error('[abrechnung/kk]', kkRes.error);
+  if (histRes.error) console.error('[abrechnung/hist]', histRes.error);
 
   _abState.kkMap = new Map((kkRes.data || []).map(r => [r.ik, r]));
   _abState.ready = readyRes.data || [];
@@ -8177,7 +8192,7 @@ async function loadAbrechnung() {
 
 function renderAbrechnungReady() {
   const container = document.getElementById('abReadyGroups');
-  const empty     = document.getElementById('abReadyEmpty');
+  const empty = document.getElementById('abReadyEmpty');
   if (!container || !empty) return;
   container.innerHTML = '';
 
@@ -8203,9 +8218,9 @@ function renderAbrechnungReady() {
     wrap.className = 'ab-group';
     wrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;';
 
-    const ready  = ik !== '__unknown__';
+    const ready = ik !== '__unknown__';
     const totalBrutto = items.reduce((s, r) => s + (Number(r.zuzahlung_eur) || 0) + 0, 0); // placeholder; real brutto via tarif on server
-    const totalCount  = items.length;
+    const totalCount = items.length;
 
     wrap.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-card);">
@@ -8228,35 +8243,35 @@ function renderAbrechnungReady() {
           </thead>
           <tbody>
             ${items.map(rx => {
-              const lead = rx.leads || {};
-              const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
-              const heilmittelText = rx.heilmittel || '—';
-              const currentPos = rx.heilmittel_position || '';
-              const picker = _abState.positionsLoaded
-                ? `<select class="ab-pos-select" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
-                : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
-              // Sprint 8+: compute zuzahlung from PHYSIO_POSITIONS at render time
-              // (DB column zuzahlung_eur isn't populated on insert — calculator
-              // runs server-side during abrechnung create). Formula:
-              //   zuzahlung = (per-Einheit-zuzahlung × anzahl) + 10€ Verordnungspauschale
-              //             capped so total ≤ brutto.
-              const _posLookup = (() => {
-                if (!currentPos) return null;
-                const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
-                          : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
-                          : null;
-                return tpl ? _abState.positions.find(p => p.x === tpl) : null;
-              })();
-              const anzahl   = rx.anzahl_einheiten || 1;
-              const brutto   = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
-              const zuPerEin = _posLookup?.zuzahlung;
-              const zuProz   = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
-              const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
-              const zuTotal  = Math.round((zuProz + zuPausch) * 100) / 100;
-              const zu = rx.zuzahlung_befreit
-                ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
-                : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
-              return `<tr>
+      const lead = rx.leads || {};
+      const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
+      const heilmittelText = rx.heilmittel || '—';
+      const currentPos = rx.heilmittel_position || '';
+      const picker = _abState.positionsLoaded
+        ? `<select class="ab-pos-select" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
+        : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
+      // Sprint 8+: compute zuzahlung from PHYSIO_POSITIONS at render time
+      // (DB column zuzahlung_eur isn't populated on insert — calculator
+      // runs server-side during abrechnung create). Formula:
+      //   zuzahlung = (per-Einheit-zuzahlung × anzahl) + 10€ Verordnungspauschale
+      //             capped so total ≤ brutto.
+      const _posLookup = (() => {
+        if (!currentPos) return null;
+        const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
+          : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
+            : null;
+        return tpl ? _abState.positions.find(p => p.x === tpl) : null;
+      })();
+      const anzahl = rx.anzahl_einheiten || 1;
+      const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
+      const zuPerEin = _posLookup?.zuzahlung;
+      const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
+      const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
+      const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;
+      const zu = rx.zuzahlung_befreit
+        ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
+        : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
+      return `<tr>
                 <td><input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked /></td>
                 <td>${escapeHtml(pname)}</td>
                 <td>
@@ -8266,7 +8281,7 @@ function renderAbrechnungReady() {
                 <td>${rx.anzahl_einheiten || 0}</td>
                 <td>${zu}</td>
               </tr>`;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </div>
@@ -8295,7 +8310,7 @@ function renderAbrechnungReady() {
 }
 
 function renderAbrechnungHistory(rows) {
-  const body  = document.getElementById('abHistoryBody');
+  const body = document.getElementById('abHistoryBody');
   const empty = document.getElementById('abHistoryEmpty');
   if (!body || !empty) return;
   body.innerHTML = '';
@@ -8310,23 +8325,23 @@ function renderAbrechnungHistory(rows) {
       : `<span class="badge badge-gray">unsigniert</span>`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><span style="font-family:monospace;font-size:12px;">${escapeHtml(a.dateiname || a.rechnungsnummer || a.id.slice(0,8))}</span> ${signedBadge}</td>
+      <td><span style="font-family:monospace;font-size:12px;">${escapeHtml(a.dateiname || a.rechnungsnummer || a.id.slice(0, 8))}</span> ${signedBadge}</td>
       <td>${escapeHtml(kk?.name || a.kostentraeger_ik || '—')}</td>
       <td>${a.prescription_count || 0}</td>
       <td>${fmtEur(a.total_eur)}</td>
       <td>${escapeHtml(statusLabel)}</td>
       <td style="white-space:nowrap;">
         ${a.signed_storage_path
-          ? `<button class="btn-ghost btn-sm ab-dl-signed" data-path="${escapeHtml(a.signed_storage_path)}" data-id="${escapeHtml(a.id)}">📥 P7M</button>`
-          : (a.storage_path ? `<button class="btn-primary btn-sm ab-sign" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}">✍ Signieren</button>` : '')
-        }
+        ? `<button class="btn-ghost btn-sm ab-dl-signed" data-path="${escapeHtml(a.signed_storage_path)}" data-id="${escapeHtml(a.id)}">📥 P7M</button>`
+        : (a.storage_path ? `<button class="btn-primary btn-sm ab-sign" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}">✍ Signieren</button>` : '')
+      }
         ${a.storage_path ? `<button class="btn-ghost btn-sm ab-dl-dta" data-path="${escapeHtml(a.storage_path)}" data-id="${escapeHtml(a.id)}">${t('ab_download_dta')}</button>` : ''}
         ${a.begleitzettel_path ? `<button class="btn-ghost btn-sm ab-dl-beg" data-path="${escapeHtml(a.begleitzettel_path)}">${t('ab_download_begleit')}</button>` : ''}
         <button class="btn-ghost btn-sm ab-zaa" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}" title="ZAA-Antwortdatei hochladen">📨 ZAA</button>
         <button class="btn-ghost btn-sm ab-guide" data-id="${escapeHtml(a.id)}" title="Schritt-für-Schritt-Anleitung">📋 Anleitung</button>
         ${a.status === 'rejected' || a.status === 'accepted'
-          ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
-          : ''}
+        ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
+        : ''}
       </td>
     `;
     body.appendChild(tr);
@@ -8373,12 +8388,12 @@ function openZaaModal(abrechnungId, filename) {
 }
 
 async function runZaaUpload() {
-  const btn  = document.getElementById('zaaRunBtn');
-  const err  = document.getElementById('zaaErr');
-  const out  = document.getElementById('zaaResult');
+  const btn = document.getElementById('zaaRunBtn');
+  const err = document.getElementById('zaaErr');
+  const out = document.getElementById('zaaResult');
   const file = document.getElementById('zaaFileInput').files[0];
   err.textContent = '';
-  out.innerHTML  = '';
+  out.innerHTML = '';
   if (!file) { err.textContent = 'Bitte Datei auswählen.'; return; }
   if (file.size > 5 * 1024 * 1024) { err.textContent = 'Datei zu groß (max 5 MB).'; return; }
 
@@ -8388,7 +8403,7 @@ async function runZaaUpload() {
     const ab = btn.dataset.abrechnung;
     const ab64 = await new Promise((resolve, reject) => {
       const r = new FileReader();
-      r.onload  = () => resolve(String(r.result).split(',')[1] || '');
+      r.onload = () => resolve(String(r.result).split(',')[1] || '');
       r.onerror = () => reject(r.error);
       r.readAsDataURL(file);
     });
@@ -8530,15 +8545,15 @@ function openSignModal(abrechnungId, opts = {}) {
 async function runSignAbrechnung() {
   const btn = document.getElementById('signRunBtn');
   const abrechnungId = btn.dataset.abrechnung;
-  const err  = document.getElementById('signErr');
+  const err = document.getElementById('signErr');
   const stat = document.getElementById('signStatus');
   err.textContent = '';
   stat.textContent = '';
 
   const file = document.getElementById('signFileInput').files[0];
-  const pin  = document.getElementById('signPinInput').value;
+  const pin = document.getElementById('signPinInput').value;
   if (!file) { err.textContent = 'Bitte .p12-Datei auswählen.'; return; }
-  if (!pin)  { err.textContent = 'PIN erforderlich.'; return; }
+  if (!pin) { err.textContent = 'PIN erforderlich.'; return; }
 
   btn.disabled = true;
   btn.textContent = '⏳ Signiere…';
@@ -8568,10 +8583,10 @@ async function runSignAbrechnung() {
 
     const keyBagSets = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
     const certBagSets = p12.getBags({ bagType: forge.pki.oids.certBag });
-    const keyBag  = keyBagSets[forge.pki.oids.pkcs8ShroudedKeyBag]?.[0]
-                 || p12.getBags({ bagType: forge.pki.oids.keyBag })[forge.pki.oids.keyBag]?.[0];
+    const keyBag = keyBagSets[forge.pki.oids.pkcs8ShroudedKeyBag]?.[0]
+      || p12.getBags({ bagType: forge.pki.oids.keyBag })[forge.pki.oids.keyBag]?.[0];
     const certBag = certBagSets[forge.pki.oids.certBag]?.[0];
-    if (!keyBag?.key)  throw new Error('Privater Schlüssel im Zertifikat nicht gefunden.');
+    if (!keyBag?.key) throw new Error('Privater Schlüssel im Zertifikat nicht gefunden.');
     if (!certBag?.cert) throw new Error('Zertifikat-Bag nicht gefunden.');
 
     const cert = certBag.cert;
@@ -8600,9 +8615,9 @@ async function runSignAbrechnung() {
       certificate: cert,
       digestAlgorithm: forge.pki.oids.sha256,
       authenticatedAttributes: [
-        { type: forge.pki.oids.contentType,   value: forge.pki.oids.data },
+        { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
         { type: forge.pki.oids.messageDigest /* auto-filled */ },
-        { type: forge.pki.oids.signingTime,   value: new Date() },
+        { type: forge.pki.oids.signingTime, value: new Date() },
       ],
     });
     p7.sign({ detached: false });
@@ -8619,8 +8634,8 @@ async function runSignAbrechnung() {
       },
       body: JSON.stringify({
         signedBase64,
-        certSubject:    subjectAttrs,
-        certValidTo:    notAfter,
+        certSubject: subjectAttrs,
+        certValidTo: notAfter,
         certThumbprint,
         certSerial,
       }),
