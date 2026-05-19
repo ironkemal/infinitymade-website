@@ -2071,10 +2071,20 @@
         <div class="form-group">
           <label class="form-label">Zertifikat-Datei (.p12 / .pfx)</label>
           <input class="form-input" id="signFileInput" type="file" accept=".p12,.pfx,application/x-pkcs12" />
+          <div class="form-hint" style="font-size:12px;color:#555;margin-top:6px;">
+            Das ist die <strong>ITSG-Zertifikatsdatei</strong> (Dakota.eHealth), die Sie nach Ihrer Beantragung von
+            <a href="https://www.trustcenter.itsg.de" target="_blank" rel="noopener">trustcenter.itsg.de</a> per Post / Download erhalten.
+            Endung: <code>.p12</code> oder <code>.pfx</code>.
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">PIN / Passwort</label>
           <input class="form-input" id="signPinInput" type="password" autocomplete="current-password" />
+          <div class="form-hint" style="font-size:12px;color:#555;margin-top:6px;">
+            Das ist die <strong>PIN, die Sie bei der Beantragung Ihres ITSG-/Dakota-Zertifikats selbst festgelegt</strong>
+            (oder per Post erhalten) haben — schützt den privaten Schlüssel in der <code>.p12</code>-Datei.
+            <em>Nicht</em> Ihr InfinityMade-Login-Passwort, <em>nicht</em> Ihr Krankenkassen-Portal-Passwort.
+          </div>
         </div>
         <div id="signStatus" style="font-size:13px;color:var(--text-muted);margin:8px 0;"></div>
         <div id="signErr" style="color:#b91c1c;font-size:13px;margin-top:6px;"></div>
@@ -2583,7 +2593,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260519h"></script>
+  <script type="module" src="dashboard.js?v=20260519i"></script>
 </body>
 
 </html>
