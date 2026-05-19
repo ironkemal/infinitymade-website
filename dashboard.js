@@ -800,7 +800,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,color,code)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,services(title,color,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -911,9 +911,7 @@ async function loadScheduleBookings(date) {
       block.style.background = color + '25';
       block.style.borderColor = color;
       block.style.color = '#fff';
-      const svcCode2 = b.services?.code;
-      const label2 = b.customer_name || (b.services?.title) || 'Termin';
-      block.innerHTML = escapeHtml(label2) + (svcCode2 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode2)}</span>` : '') + (b.hausbesuch ? '<span style="position:absolute;top:2px;right:4px;font-size:14px;line-height:1;pointer-events:none;">🚗</span>' : '');
+      block.innerHTML = renderBookingSlotInner(b);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);
@@ -929,6 +927,64 @@ async function loadScheduleBookings(date) {
 }
 
 async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
+
+// Render the inner HTML for a calendar booking block. Physio-friendly:
+//   line 1 — "Nachname, Vorname"
+//   line 2 — Heilmittel · DG     (n/total)
+//   icons  — Hausbesuch, Dringend, Blanko, Notiz
+function renderBookingSlotInner(b) {
+  // "Vorname Nachname" → "Nachname, Vorname" (best-effort). Single token or
+  // already comma-formatted strings pass through.
+  const raw = (b.customer_name || (b.services?.title) || 'Termin').trim();
+  let displayName = raw;
+  if (raw.includes(',')) {
+    displayName = raw;
+  } else {
+    const parts = raw.split(/\s+/);
+    if (parts.length >= 2) {
+      const ln = parts[parts.length - 1];
+      const vn = parts.slice(0, -1).join(' ');
+      displayName = ln + ', ' + vn;
+    }
+  }
+
+  const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
+  const rx   = sess?.prescriptions || null;
+  const heilmittel = rx?.heilmittel || b.services?.code || '';
+  const dg = rx?.diagnosegruppe || '';
+  const counter = (sess?.session_number && rx?.anzahl_einheiten)
+    ? `(${sess.session_number}/${rx.anzahl_einheiten})`
+    : '';
+  const isReadyBadge = rx?.abrechnung_status === 'bereit' ? '<span title="Abrechnungsbereit" style="color:#15803d;">●</span>' : '';
+
+  const subtitle = [
+    heilmittel ? escapeHtml(heilmittel) : '',
+    dg ? `<span style="opacity:0.75;">${escapeHtml(dg)}</span>` : '',
+  ].filter(Boolean).join(' · ');
+
+  // Right-aligned icon strip (clickable parent already wired)
+  const icons = [
+    b.hausbesuch    ? '<span title="Hausbesuch">🚗</span>' : '',
+    rx?.is_dringend ? '<span title="Dringend" style="color:#fbbf24;">⚠</span>' : '',
+    rx?.is_blanko   ? '<span title="Blankoverordnung" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">BL</span>' : '',
+    rx?.is_lhb_bvb  ? '<span title="LHB/BVB" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">LHB</span>' : '',
+    b.notes         ? '<span title="Notiz" style="opacity:0.85;">ℹ</span>' : '',
+  ].filter(Boolean).join(' ');
+
+  return `
+    <div style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      ${escapeHtml(displayName)}
+      ${isReadyBadge}
+    </div>
+    ${subtitle || counter
+      ? `<div style="display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;">
+           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${subtitle}</span>
+           ${counter ? `<span style="font-variant-numeric:tabular-nums;flex-shrink:0;">${counter}</span>` : ''}
+         </div>`
+      : ''}
+    ${icons ? `<div style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
+  `;
+}
 
 let _rezKpiCache = null;
 
@@ -1237,7 +1293,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,services(title,code)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,services(title,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1300,9 +1356,7 @@ async function renderDayView(dateStr) {
       block.style.background = color + '25';
       block.style.borderColor = color;
       block.style.color = '#fff';
-      const svcCode3 = b.services?.code;
-      const label3 = b.customer_name || (b.services?.title) || 'Termin';
-      block.innerHTML = escapeHtml(label3) + (svcCode3 ? ` <span style="font-size:10px;opacity:0.75;background:rgba(255,255,255,0.15);padding:1px 4px;border-radius:3px;">${escapeHtml(svcCode3)}</span>` : '') + (b.hausbesuch ? '<span style="position:absolute;top:2px;right:4px;font-size:14px;line-height:1;pointer-events:none;">🚗</span>' : '');
+      block.innerHTML = renderBookingSlotInner(b);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingModal(b);
