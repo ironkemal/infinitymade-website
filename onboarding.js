@@ -664,6 +664,20 @@ function bindPlan() {
   const intervalBtns = document.querySelectorAll('.plan-toggle-btn');
   let currentInterval = 'month';
 
+  // DTA-Pro opt-in card (physiotherapy / praxis sectors only).
+  const dtaCard     = document.getElementById('dtaProOptIn');
+  const dtaCheckbox = document.getElementById('dtaProCheckbox');
+  const dtaLabel    = document.getElementById('dtaProPriceLabel');
+  if (dtaCard) {
+    const s = (profile.sector || '').toLowerCase();
+    dtaCard.hidden = !(s === 'physiotherapy' || s === 'praxis');
+  }
+  const updateDtaLabel = () => {
+    if (!dtaLabel) return;
+    dtaLabel.textContent = currentInterval === 'year' ? '290 €/Jahr (2 Monate gratis)' : '29 €/Monat';
+  };
+  updateDtaLabel();
+
   intervalBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       intervalBtns.forEach(b => b.classList.remove('active'));
@@ -678,12 +692,14 @@ function bindPlan() {
           ? 'jährlich abgerechnet · 15% gespart'
           : 'monatlich abgerechnet';
       });
+      updateDtaLabel();
     });
   });
 
   document.querySelectorAll('.plan-select').forEach(btn => {
     btn.addEventListener('click', async () => {
       const planSlug = btn.dataset.plan;
+      const dtaPro   = !!(dtaCheckbox && dtaCheckbox.checked && !dtaCard?.hidden);
       btn.disabled = true;
       btn.textContent = 'Weiterleitung...';
       try {
@@ -696,7 +712,7 @@ function bindPlan() {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session.access_token}`,
             },
-            body: JSON.stringify({ planSlug, interval: currentInterval }),
+            body: JSON.stringify({ planSlug, interval: currentInterval, dtaPro }),
           });
           const data = await res.json();
           if (!res.ok || !data.url) {
@@ -740,6 +756,7 @@ function bindPlan() {
           services: services || [],
           plan: planSlug,
           billing_interval: currentInterval,
+          dta_pro: dtaPro,
         };
 
         const pendingRes = await fetch('/api/onboarding/pending', {
@@ -758,7 +775,7 @@ function bindPlan() {
         const checkoutRes = await fetch('/api/stripe/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pending_id: pendingData.pending_id, planSlug, interval: currentInterval }),
+          body: JSON.stringify({ pending_id: pendingData.pending_id, planSlug, interval: currentInterval, dtaPro }),
         });
         const checkoutData = await checkoutRes.json();
         if (!checkoutRes.ok || !checkoutData.url) {
