@@ -189,7 +189,7 @@ router.post('/abrechnung/create', async (req, res) => {
         zuzahlung_eur, zuzahlung_befreit,
         abrechnung_status,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse),
-        aerzte:arzt_id   (lanr, bsnr, name)
+        aerzte:arzt_id   (lanr, bsnr, arzt_name)
       `)
       .eq('owner_id', tenantId)
       .in('id', prescriptionIds);
