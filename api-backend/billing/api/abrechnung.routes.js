@@ -217,8 +217,8 @@ router.post('/abrechnung/create', async (req, res) => {
       .eq('owner_id', tenantId)
       .gte('created_at', `${year}-01-01`);
 
-    const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, (weekCount || 0) + 1);
-    const datennummer = String((weekCount || 0) + 1).padStart(5, '0');
+    const datennummer = (weekCount || 0) + 1;  // integer; filename + envelope helpers pad internally
+    const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
 
     // ---- map prescriptions ----
     const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte));
