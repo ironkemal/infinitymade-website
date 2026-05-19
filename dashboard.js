@@ -4008,12 +4008,39 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
 async function loadTeam() {
   const ownerId = getOwnerId();
   let data = [];
-  try {
-    const res = await fetch(`${API}/team?owner_id=${ownerId}`);
-    if (res.ok) data = await res.json();
-  } catch { }
+
+  // Primary: direct Supabase query (uses v20 tenant-scoped RLS).
+  const { data: rows, error: tErr } = await supabase
+    .from('profiles')
+    .select('id, email, business_name, role, booking_slug, avatar_url, anrede, owner_id')
+    .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`)
+    .order('role', { ascending: true })  // owner first, then employees
+    .order('created_at', { ascending: true });
+
+  if (tErr) {
+    console.error('[loadTeam] supabase error', tErr);
+  } else if (rows && rows.length) {
+    data = rows;
+  }
+
+  // Fallback: legacy VPS endpoint (kept for any RLS edge cases).
+  if (!data.length) {
+    try {
+      const res = await fetch(`${API}/team?owner_id=${ownerId}`);
+      if (res.ok) data = await res.json();
+    } catch (e) {
+      console.warn('[loadTeam] VPS fallback failed', e);
+    }
+  }
+
   if (data.length === 0) {
-    data = [{ id: currentSession.user.id, email: currentSession.user.email, business_name: currentProfile.business_name || currentSession.user.email.split('@')[0], role: currentProfile.role }];
+    console.warn('[loadTeam] no team rows returned — showing self only');
+    data = [{
+      id: currentSession.user.id,
+      email: currentSession.user.email,
+      business_name: currentProfile.business_name || currentSession.user.email.split('@')[0],
+      role: currentProfile.role,
+    }];
   }
   teamMembers = data;
 
