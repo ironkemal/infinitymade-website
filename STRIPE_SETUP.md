@@ -27,6 +27,19 @@ Go to https://dashboard.stripe.com/test/products and create 3 products:
 - €99 / month → `STRIPE_PRICE_KLINIK_MONTHLY`
 - €84 / month yearly (€1008/year) → `STRIPE_PRICE_KLINIK_YEARLY`
 
+### Add-on Product: DTA-Pro  *(physiotherapy / praxis only — gates §302 SGB V Sammelabrechnung)*
+- €29 / month → `STRIPE_PRICE_DTA_PRO_MONTHLY`
+- €290 / year (2 months free) → `STRIPE_PRICE_DTA_PRO_YEARLY`
+
+Sold as a **multi-item subscription** addon: the existing customer subscription
+gets a second `subscription_item` line. Endpoints:
+- `POST /api/stripe/dta-pro-add`     — body `{ interval: 'month' | 'year' }`
+- `POST /api/stripe/dta-pro-remove`  — removes the addon line, prorates refund
+
+The webhook (`customer.subscription.updated`) detects the DTA-Pro price ID in
+`sub.items.data[]` and flips `profiles.has_dta_pro`. The dashboard sidebar's
+"Kassenabrechnung" entry is hidden unless this flag is true.
+
 Each price ID looks like `price_1AbCdE2FgHiJkLmN`.
 
 ## 3) Webhook endpoint
