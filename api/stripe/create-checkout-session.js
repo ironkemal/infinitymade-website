@@ -10,7 +10,7 @@ const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://infinitymade.de';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
-  const { pending_id, planSlug, interval } = req.body || {};
+  const { pending_id, planSlug, interval, dtaPro } = req.body || {};
   if (!pending_id) return json(res, 400, { error: 'pending_id fehlt.' });
   if (!['starter', 'professional', 'klinik'].includes(planSlug)) {
     return json(res, 400, { error: 'Invalid planSlug' });
@@ -21,6 +21,17 @@ export default async function handler(req, res) {
 
   const priceId = priceIdFor(planSlug, interval);
   if (!priceId) return json(res, 500, { error: `Price ID not configured for ${planSlug}/${interval}` });
+
+  // Optional DTA-Pro addon — adds a second line_item on the same subscription.
+  // Webhook detects DTA-Pro price ID in sub.items[] and flips profiles.has_dta_pro.
+  const lineItems = [{ price: priceId, quantity: 1 }];
+  if (dtaPro) {
+    const dtaProPrice = priceIdFor('dta_pro', interval);
+    if (!dtaProPrice) {
+      return json(res, 500, { error: `DTA-Pro price not configured (${interval})` });
+    }
+    lineItems.push({ price: dtaProPrice, quantity: 1 });
+  }
 
   // Load pending signup
   const { ok: pOk, data: pendingRows } = await adminFetch(
@@ -49,7 +60,7 @@ export default async function handler(req, res) {
     body: {
       mode: 'subscription',
       customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: lineItems,
       subscription_data: {
         trial_period_days: 14,
         metadata: { pending_id, plan_slug: planSlug, interval },
