@@ -1556,9 +1556,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
 
     const rezeptTyp = rezept.is_blanko ? 'blanko' : (rezept.is_lhb_bvb ? 'lhb_bvb' : 'standard');
 
-    // --- Resolve Krankenkasse name → kostentraeger.ik (best-effort, fuzzy). ---
-    let kostentraegerIk = null;
-    if (patient.krankenkasse) {
+    // --- Resolve Krankenkasse → ik. Prefer frontend-supplied IK (datalist
+    // pick) over fuzzy name-based lookup so therapist intent wins. ---
+    let kostentraegerIk = patient.kostentraeger_ik || null;
+    if (!kostentraegerIk && patient.krankenkasse) {
       const { data: kkMatch } = await supabase
         .from('kostentraeger')
         .select('ik')
@@ -1569,12 +1570,19 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       if (kkMatch?.ik) kostentraegerIk = kkMatch.ik;
     }
 
-    // --- Default Positionsnummer from Heilmittel code (therapist can override). ---
+    // --- Resolve Heilmittel-Position. Frontend can send the canonical
+    // X-template (e.g. "X0501") via the datalist match; otherwise fall back
+    // to the short-code default map (KG → X0501 → 20501). ---
     let heilmittelPosition = null;
-    const posTemplate = defaultPositionForHeilmittel(rezept.heilmittel);
-    if (posTemplate) {
-      try { heilmittelPosition = resolvePositionsnummer(posTemplate, '22'); }
-      catch (_e) { /* ignore */ }
+    if (rezept.heilmittel_position) {
+      try { heilmittelPosition = resolvePositionsnummer(rezept.heilmittel_position, '22'); }
+      catch (_e) { heilmittelPosition = rezept.heilmittel_position; }
+    } else {
+      const posTemplate = defaultPositionForHeilmittel(rezept.heilmittel);
+      if (posTemplate) {
+        try { heilmittelPosition = resolvePositionsnummer(posTemplate, '22'); }
+        catch (_e) { /* ignore */ }
+      }
     }
 
     // --- Insert prescription row ---
