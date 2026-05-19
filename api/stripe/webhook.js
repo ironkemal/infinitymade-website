@@ -125,10 +125,8 @@ export default async function handler(req, res) {
 
         const od = pending.onboarding_data || {};
 
-        // 2. Insert profile
+        // 2. Update profile (auth trigger handle_new_user() already inserted (id, email))
         const profilePayload = {
-          id: userId,
-          email: pending.email,
           business_name: od.business_name || null,
           sector: od.sector || null,
           city: od.city || null,
@@ -154,7 +152,11 @@ export default async function handler(req, res) {
           onboarding_step: 'done',
           role: 'owner',
         };
-        await adminFetch('/profiles', { method: 'POST', body: JSON.stringify(profilePayload) });
+        const { ok: profOk, status: profStatus, data: profData } = await adminFetch(`/profiles?id=eq.${userId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(profilePayload),
+        });
+        if (!profOk) console.error('[webhook] profile patch failed', profStatus, profData);
 
         // 3. Insert services + link employee
         if (Array.isArray(od.services) && od.services.length) {
