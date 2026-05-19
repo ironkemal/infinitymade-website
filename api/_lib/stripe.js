@@ -86,13 +86,23 @@ export function verifyWebhook(rawBody, signatureHeader, secret) {
   return JSON.parse(rawBody);
 }
 
-// Plan slug → env var name for price ID
+// Plan/addon slug → env var name for price ID
 export function priceIdFor(planSlug, interval) {
   const map = {
     starter:      { month: 'STRIPE_PRICE_STARTER_MONTHLY',      year: 'STRIPE_PRICE_STARTER_YEARLY' },
     professional: { month: 'STRIPE_PRICE_PROFESSIONAL_MONTHLY', year: 'STRIPE_PRICE_PROFESSIONAL_YEARLY' },
     klinik:       { month: 'STRIPE_PRICE_KLINIK_MONTHLY',       year: 'STRIPE_PRICE_KLINIK_YEARLY' },
+    dta_pro:      { month: 'STRIPE_PRICE_DTA_PRO_MONTHLY',      year: 'STRIPE_PRICE_DTA_PRO_YEARLY' },
   };
   const envVar = map[planSlug]?.[interval];
   return envVar ? process.env[envVar] : null;
+}
+
+// All currently-configured DTA-Pro price IDs (monthly + yearly).
+// Used by the webhook to detect whether a subscription contains the addon.
+export function dtaProPriceIds() {
+  return [
+    process.env.STRIPE_PRICE_DTA_PRO_MONTHLY,
+    process.env.STRIPE_PRICE_DTA_PRO_YEARLY,
+  ].filter(Boolean);
 }
