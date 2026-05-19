@@ -5656,21 +5656,6 @@ function loadBeispielmodus() {
   if (wrap.dataset.loaded === '1') return;
   wrap.dataset.loaded = '1';
   wrap.innerHTML = '';
-
-  // On mobile, skip iframe entirely - show only placeholder (handled by CSS)
-  const isMobile = window.matchMedia('(max-width: 768px)').matches;
-  if (isMobile) {
-    const newTab = document.createElement('a');
-    newTab.className = 'zygote-fs-btn';
-    newTab.id = 'zygoteNewTabBtn';
-    newTab.href = 'https://www.zygotebody.com/';
-    newTab.target = '_blank';
-    newTab.rel = 'noopener';
-    newTab.textContent = '↗ Neuer Tab';
-    wrap.appendChild(newTab);
-    return;
-  }
-
   const frame = document.createElement('iframe');
   frame.id = 'zygoteFrame';
   frame.src = 'https://www.zygotebody.com/';
