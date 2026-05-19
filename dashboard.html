@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260518h" />
+  <link rel="stylesheet" href="dashboard.css?v=20260519a" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -1831,8 +1831,10 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Krankenkasse</label>
-              <input class="form-input" id="rxcKasse" type="text" />
+              <label class="form-label">Krankenkasse <span id="rxcKasseStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></label>
+              <input class="form-input" id="rxcKasse" type="text" list="kkDatalist" autocomplete="off" placeholder="Krankenkasse wählen oder tippen…" />
+              <datalist id="kkDatalist"></datalist>
+              <input type="hidden" id="rxcKasseIk" />
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -1880,8 +1882,10 @@
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Heilmittel</label>
-                <input class="form-input" id="rxcHm" type="text" />
+                <label class="form-label">Heilmittel <span id="rxcHmStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></label>
+                <input class="form-input" id="rxcHm" type="text" list="hmDatalist" autocomplete="off" placeholder="KG, MT, MLD oder Position…" />
+                <datalist id="hmDatalist"></datalist>
+                <input type="hidden" id="rxcHmPosition" />
               </div>
               <div class="form-group">
                 <label class="form-label">Anzahl</label>
@@ -2579,7 +2583,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260519g"></script>
+  <script type="module" src="dashboard.js?v=20260519h"></script>
 </body>
 
 </html>

@@ -2767,8 +2767,9 @@ async function loadPatientDetailRezepte(leadId) {
       .from('prescriptions')
       .select(`
         id, rezept_typ, status, icd10, diagnosegruppe, heilmittel,
-        anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
+        heilmittel_position, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
         is_dringend, hausbesuch, dmrz_exported_at, created_at,
+        abrechnung_status, kostentraeger_ik, zuzahlung_befreit,
         prescription_sessions ( id, session_number, status, done_at )
       `)
       .eq('patient_id', leadId)
@@ -2829,17 +2830,40 @@ async function loadPatientDetailRezepte(leadId) {
       return `<span class="badge ${sessStatusCls[s.status] || 'badge-gray'}" title="${title}">${s.session_number} · ${sessStatusLabel[s.status] || s.status}</span>`;
     }).join(' ');
 
+    // Sprint 8+: abrechnung_status badge + manual "bereit setzen" button (physio only)
+    const abrStatus = rx.abrechnung_status;
+    const sector = getSector();
+    const showAbrControls = (sector === 'physiotherapy' || sector === 'praxis');
+    let abrBadge = '';
+    let abrButton = '';
+    if (showAbrControls) {
+      const statusBadges = {
+        bereit:         '<span class="badge" style="background:#dcfce7;color:#15803d;">Abrechnungsbereit</span>',
+        in_abrechnung:  '<span class="badge" style="background:#dbeafe;color:#1e40af;">In Abrechnung</span>',
+        rejected:       '<span class="badge" style="background:#fee2e2;color:#b91c1c;">ZAA abgelehnt</span>',
+        accepted:       '<span class="badge" style="background:#d1fae5;color:#065f46;">Bezahlt</span>',
+      };
+      abrBadge = statusBadges[abrStatus] || '';
+      if (!abrStatus) {
+        abrButton = `<button class="btn-primary btn-sm rx-mark-bereit" data-id="${rx.id}" title="Manuell als bereit für §302-Abrechnung markieren">Als bereit markieren</button>`;
+      } else if (abrStatus === 'bereit') {
+        abrButton = `<button class="btn-ghost btn-sm rx-unmark-bereit" data-id="${rx.id}" style="color:#b45309;" title="Zurück auf offen">Rückgängig</button>`;
+      }
+    }
     return `<div class="pd-rech-item" style="padding:14px 20px;border-bottom:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
         <div>
           <strong>${escapeHtml(rx.heilmittel || '—')}</strong>
+          ${rx.heilmittel_position ? `<span style="font-family:monospace;font-size:11px;color:#666;margin-left:6px;">${escapeHtml(rx.heilmittel_position)}</span>` : ''}
           <span style="color:#888;margin-left:8px;font-size:13px;">${escapeHtml(rx.icd10 || '')}${rx.diagnosegruppe ? ' · ' + escapeHtml(rx.diagnosegruppe) : ''}</span>
         </div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
           <span class="badge badge-blue">${typLabel[rx.rezept_typ] || rx.rezept_typ}</span>
           <span class="badge badge-gray">${statusLabel[rx.status] || rx.status}</span>
           ${dmrz}
           ${flags}
+          ${abrBadge}
+          ${abrButton}
         </div>
       </div>
       <div style="font-size:13px;color:#555;margin-bottom:8px;">
@@ -2857,6 +2881,33 @@ async function loadPatientDetailRezepte(leadId) {
 
   content.innerHTML = befreiungCard + content.innerHTML;
   wireBefreiungCard(leadId);
+
+  // Sprint 8+: manual "bereit setzen" / "rückgängig" handlers
+  content.querySelectorAll('.rx-mark-bereit').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await flipAbrechnungStatus(btn.dataset.id, 'bereit', leadId);
+    });
+  });
+  content.querySelectorAll('.rx-unmark-bereit').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await flipAbrechnungStatus(btn.dataset.id, null, leadId);
+    });
+  });
+}
+
+async function flipAbrechnungStatus(rxId, newStatus, leadId) {
+  try {
+    const { error } = await supabase
+      .from('prescriptions')
+      .update({ abrechnung_status: newStatus })
+      .eq('id', rxId);
+    if (error) throw error;
+    showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : 'Zurück auf offen ✓');
+    await loadPatientDetailRezepte(leadId);
+  } catch (e) {
+    console.error('[abrechnung-status]', e);
+    showToast('Fehler: ' + e.message, 'error');
+  }
 }
 
 // --- Zuzahlung-Befreiung (yearly co-pay exemption) ---
@@ -7651,7 +7702,7 @@ function openRezeptConfirmModal(payload) {
   setVal('rxcLastName', pat.last_name);
   setVal('rxcDob', pat.geburtsdatum);
   setVal('rxcVersNr', pat.versichertennummer);
-  setVal('rxcKasse', pat.krankenkasse);
+  // Krankenkasse is set up by setupRezeptConfirmDropdowns below — skip plain setVal.
   setVal('rxcEmail', pat.email);
   setVal('rxcPhone', pat.phone);
   setVal('rxcArztName', arzt.name);
@@ -7660,7 +7711,8 @@ function openRezeptConfirmModal(payload) {
   setVal('rxcBsnr', arzt.bsnr);
   setVal('rxcIcd', rez.icd10);
   setVal('rxcDg', rez.diagnosegruppe);
-  setVal('rxcHm', rez.heilmittel);
+  // Heilmittel — handled by setupRezeptConfirmDropdowns
+  // (we still pass the raw OCR text below)
   setVal('rxcAnzahl', rez.anzahl_einheiten);
   setVal('rxcFreq', rez.frequenz);
   setChk('rxcDringend', rez.is_dringend);
@@ -7669,6 +7721,9 @@ function openRezeptConfirmModal(payload) {
   setChk('rxcLhbBvb', rez.is_lhb_bvb);
 
   renderValidationBanner(payload.validation);
+
+  // Sprint 8+: populate KK + Heilmittel datalists and run AI fuzzy match on OCR text.
+  setupRezeptConfirmDropdowns(pat.krankenkasse, rez.heilmittel);
 
   document.getElementById('rezeptConfirmModal').hidden = false;
 }
@@ -7726,6 +7781,7 @@ async function submitConfirm() {
         geburtsdatum: document.getElementById('rxcDob').value || null,
         versichertennummer: document.getElementById('rxcVersNr').value.trim() || null,
         krankenkasse: document.getElementById('rxcKasse').value.trim() || null,
+        kostentraeger_ik: document.getElementById('rxcKasseIk').value.trim() || null,
         email: document.getElementById('rxcEmail').value.trim() || null,
         phone: document.getElementById('rxcPhone').value.trim() || null,
         geschlecht: rxLastUpload.parsed?.patient?.geschlecht || null,
@@ -7741,6 +7797,7 @@ async function submitConfirm() {
         icd10: document.getElementById('rxcIcd').value.trim() || null,
         diagnosegruppe: document.getElementById('rxcDg').value.trim() || null,
         heilmittel: document.getElementById('rxcHm').value.trim() || null,
+        heilmittel_position: document.getElementById('rxcHmPosition').value.trim() || null,
         heilmittel_feld_text: rxLastUpload.parsed?.rezept?.heilmittel_feld_text || null,
         anzahl_einheiten: parseInt(document.getElementById('rxcAnzahl').value, 10) || null,
         frequenz: document.getElementById('rxcFreq').value.trim() || null,
@@ -7813,6 +7870,182 @@ async function submitConfirm() {
 // ===== § 302 SGB V Kassenabrechnung =====
 
 const _abState = { ready: [], kkMap: new Map(), busy: false, positions: [], positionsLoaded: false };
+
+// ---------- Sprint 8+ : Krankenkasse + Heilmittel datalist + AI auto-match ----------
+
+let _kkListCache = null;
+
+async function loadKkList() {
+  if (_kkListCache) return _kkListCache;
+  const { data, error } = await supabase
+    .from('kostentraeger')
+    .select('ik, name')
+    .order('name');
+  if (error) { console.warn('[kkList]', error); return []; }
+  _kkListCache = data || [];
+  return _kkListCache;
+}
+
+// Normalize for fuzzy compare: lowercase, strip diacritics, punctuation, runs of whitespace.
+function _norm(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Score how close needle matches haystack (0 = no overlap, 1 = exact). Token Jaccard + prefix bonus.
+function _matchScore(needle, haystack) {
+  const a = _norm(needle), b = _norm(haystack);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (b.startsWith(a) || a.startsWith(b)) return 0.95;
+  if (b.includes(a) || a.includes(b)) return 0.85;
+  const ta = new Set(a.split(' ')), tb = new Set(b.split(' '));
+  let common = 0;
+  ta.forEach(t => { if (tb.has(t)) common++; });
+  const union = ta.size + tb.size - common;
+  return union ? common / union : 0;
+}
+
+function aiMatchKK(text, kkList) {
+  if (!text) return null;
+  let best = null, bestScore = 0;
+  for (const k of kkList) {
+    const s = _matchScore(text, k.name);
+    if (s > bestScore) { bestScore = s; best = k; }
+  }
+  // Accept anything 0.6+ — covers "AOK Rheinland" → "AOK Rheinland/Hamburg" (0.85+)
+  return bestScore >= 0.6 ? { ...best, score: bestScore } : null;
+}
+
+function aiMatchHeilmittel(text, positions) {
+  if (!text) return null;
+  const t = _norm(text);
+  // Try exact short-code match first (KG, MT, MLD, etc. → first token of label)
+  // and also X-template match (X0501 / 20501).
+  if (/^x\d{4}$/i.test(text.trim())) {
+    const exact = positions.find(p => p.x.toLowerCase() === text.trim().toLowerCase());
+    if (exact) return { ...exact, score: 1 };
+  }
+  if (/^\d{5}$/.test(text.trim())) {
+    const x = 'X' + text.trim().slice(1);
+    const exact = positions.find(p => p.x === x);
+    if (exact) return { ...exact, score: 1 };
+  }
+  // Short-code → first letters of label (KG ~ "Allgemeine Krankengymnastik")
+  // Use a small alias table for accuracy.
+  const aliases = {
+    kg:    'X0501',
+    'kg einzel': 'X0501',
+    mt:    'X1201',
+    'manuelle therapie': 'X1201',
+    mld:   'X0205',
+    'mld 30': 'X0205',
+    'mld 45': 'X0201',
+    'mld 60': 'X0202',
+    kmt:   'X0106',
+    'klassische massage': 'X0106',
+    bgm:   'X0107',
+    traktion: 'X1104',
+    'kg geraet': 'X0507',
+    'kg-geraet': 'X0507',
+    'kg zns': 'X0710',
+    'kg-muko': 'X0702',
+  };
+  if (aliases[t]) {
+    const found = positions.find(p => p.x === aliases[t]);
+    if (found) return { ...found, score: 0.95 };
+  }
+  // Fallback: score against label
+  let best = null, bestScore = 0;
+  for (const p of positions) {
+    const s = _matchScore(text, p.label + ' ' + p.x);
+    if (s > bestScore) { bestScore = s; best = p; }
+  }
+  return bestScore >= 0.55 ? { ...best, score: bestScore } : null;
+}
+
+function populateKkDatalist(kkList) {
+  const dl = document.getElementById('kkDatalist');
+  if (!dl) return;
+  dl.innerHTML = kkList.map(k =>
+    `<option data-ik="${k.ik}" value="${escapeHtml(k.name)}">IK ${k.ik}</option>`
+  ).join('');
+}
+
+function populateHmDatalist(positions) {
+  const dl = document.getElementById('hmDatalist');
+  if (!dl) return;
+  // Show short labels with X-code so user can type either
+  dl.innerHTML = positions.map(p =>
+    `<option value="${escapeHtml(p.x + ' · ' + p.label)}"></option>`
+  ).join('');
+}
+
+async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
+  const [kkList, positions] = await Promise.all([loadKkList(), loadPhysioPositions()]);
+  populateKkDatalist(kkList);
+  populateHmDatalist(positions);
+
+  const kkInput = document.getElementById('rxcKasse');
+  const kkIkInput = document.getElementById('rxcKasseIk');
+  const kkStatus = document.getElementById('rxcKasseStatus');
+
+  // Auto-match Krankenkasse from OCR
+  const kkMatch = aiMatchKK(ocrKkText, kkList);
+  if (kkMatch) {
+    kkInput.value   = kkMatch.name;
+    kkIkInput.value = kkMatch.ik;
+    if (kkStatus) kkStatus.textContent = ` ✓ erkannt (${Math.round(kkMatch.score * 100)}%) · IK ${kkMatch.ik}`;
+  } else if (ocrKkText) {
+    kkInput.value = ocrKkText;
+    if (kkStatus) { kkStatus.textContent = ' ⚠ nicht erkannt — bitte auswählen'; kkStatus.style.color = '#b45309'; }
+  } else {
+    if (kkStatus) kkStatus.textContent = '';
+  }
+
+  // Re-resolve IK whenever user changes the input
+  kkInput.oninput = () => {
+    const m = aiMatchKK(kkInput.value, kkList);
+    if (m && _norm(m.name) === _norm(kkInput.value)) {
+      kkIkInput.value = m.ik;
+      if (kkStatus) { kkStatus.style.color = '#15803d'; kkStatus.textContent = ` ✓ IK ${m.ik}`; }
+    } else {
+      kkIkInput.value = '';
+      if (kkStatus) { kkStatus.style.color = '#b45309'; kkStatus.textContent = ' ⚠ keine IK zugeordnet'; }
+    }
+  };
+
+  // Heilmittel
+  const hmInput = document.getElementById('rxcHm');
+  const hmPosInput = document.getElementById('rxcHmPosition');
+  const hmStatus = document.getElementById('rxcHmStatus');
+
+  const hmMatch = aiMatchHeilmittel(ocrHmText, positions);
+  if (hmMatch) {
+    // Keep short-form text the OCR gave (KG) — user familiarity; store position separately.
+    hmInput.value = ocrHmText || hmMatch.label;
+    hmPosInput.value = hmMatch.x;
+    if (hmStatus) hmStatus.textContent = ` ✓ ${hmMatch.x} (${Math.round(hmMatch.score * 100)}%)`;
+  } else if (ocrHmText) {
+    hmInput.value = ocrHmText;
+    if (hmStatus) { hmStatus.style.color = '#b45309'; hmStatus.textContent = ' ⚠ nicht erkannt — Position wählen'; }
+  }
+
+  hmInput.oninput = () => {
+    const m = aiMatchHeilmittel(hmInput.value, positions);
+    if (m) {
+      hmPosInput.value = m.x;
+      if (hmStatus) { hmStatus.style.color = '#15803d'; hmStatus.textContent = ` ✓ ${m.x}`; }
+    } else {
+      hmPosInput.value = '';
+      if (hmStatus) { hmStatus.style.color = '#b45309'; hmStatus.textContent = ' ⚠ keine Position zugeordnet'; }
+    }
+  };
+}
 
 // Lazy-load PHYSIO_POSITIONS from backend on first Abrechnung page open.
 async function loadPhysioPositions() {
@@ -8002,9 +8235,27 @@ function renderAbrechnungReady() {
               const picker = _abState.positionsLoaded
                 ? `<select class="ab-pos-select" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
                 : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
+              // Sprint 8+: compute zuzahlung from PHYSIO_POSITIONS at render time
+              // (DB column zuzahlung_eur isn't populated on insert — calculator
+              // runs server-side during abrechnung create). Formula:
+              //   zuzahlung = (per-Einheit-zuzahlung × anzahl) + 10€ Verordnungspauschale
+              //             capped so total ≤ brutto.
+              const _posLookup = (() => {
+                if (!currentPos) return null;
+                const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
+                          : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
+                          : null;
+                return tpl ? _abState.positions.find(p => p.x === tpl) : null;
+              })();
+              const anzahl   = rx.anzahl_einheiten || 1;
+              const brutto   = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
+              const zuPerEin = _posLookup?.zuzahlung;
+              const zuProz   = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
+              const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
+              const zuTotal  = Math.round((zuProz + zuPausch) * 100) / 100;
               const zu = rx.zuzahlung_befreit
                 ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
-                : fmtEur(rx.zuzahlung_eur || 0);
+                : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
               return `<tr>
                 <td><input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked /></td>
                 <td>${escapeHtml(pname)}</td>

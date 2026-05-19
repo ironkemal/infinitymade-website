@@ -114,7 +114,7 @@ router.post('/abrechnung/create', async (req, res) => {
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .select('id, role, owner_id, business_name, phone, city, address')
+      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number')
       .eq('id', u.user.id)
       .single();
     if (pErr || !profile) return res.status(403).json({ error: 'Profile not found' });
@@ -308,8 +308,8 @@ router.post('/abrechnung/create', async (req, res) => {
     const begleitHtml = renderBegleitzettel({
       praxis: {
         name:     profile.business_name || 'Praxis',
-        strasse:  profile.address || '',
-        plz_ort:  profile.city || '',
+        strasse:  [profile.street, profile.house_number].filter(Boolean).join(' '),
+        plz_ort:  [profile.zip, profile.city].filter(Boolean).join(' ').trim(),
         telefon:  profile.phone || '',
         ik:       cert.ik_nummer,
       },
