@@ -1559,19 +1559,40 @@ async function renderBkActionFahrtState(booking, isOwn) {
   }
 
   // Hausbesuch — adres ve durum bilgisini al
+  // Phone exact match çok kısıtlı (booking.customer_phone normalize farkı, eski kayıtlar vs.).
+  // Önce phone'la dene, bulunamazsa owner kapsamında name match yap.
   let leadAddr = null, distanceKm = null, durationMin = null;
-  if (booking.customer_phone) {
-    const { data: l } = await supabase.from('leads')
-      .select('street,plz,city,distance_km,duration_min')
-      .eq('owner_id', booking.owner_id)
-      .eq('phone', booking.customer_phone)
-      .maybeSingle();
-    if (l) {
-      const parts = [l.street, [l.plz, l.city].filter(Boolean).join(' ')].filter(Boolean);
-      leadAddr = parts.join(', ');
-      distanceKm = l.distance_km;
-      durationMin = l.duration_min;
+  try {
+    const ownerScope = booking.owner_id || getOwnerId();
+    let lead = null;
+    if (booking.customer_phone) {
+      const r = await supabase.from('leads')
+        .select('id,first_name,last_name,title,phone,street,plz,city,distance_km,duration_min')
+        .eq('owner_id', ownerScope)
+        .eq('phone', booking.customer_phone)
+        .maybeSingle();
+      lead = r.data || null;
     }
+    if (!lead && booking.customer_name) {
+      // Name match — "Vorname Nachname · YYYY-MM-DD" formatından sadece isim kısmı
+      const cleanName = booking.customer_name.split('·')[0].trim().toLowerCase();
+      const { data: all } = await supabase.from('leads')
+        .select('id,first_name,last_name,title,phone,street,plz,city,distance_km,duration_min')
+        .eq('owner_id', ownerScope);
+      lead = (all || []).find(l => {
+        const composed = [l.first_name, l.last_name].filter(Boolean).join(' ').toLowerCase();
+        const titleLc = (l.title || '').toLowerCase();
+        return composed === cleanName || titleLc === cleanName;
+      }) || null;
+    }
+    if (lead) {
+      const parts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
+      leadAddr = parts.length ? parts.join(', ') : null;
+      distanceKm = lead.distance_km;
+      durationMin = lead.duration_min;
+    }
+  } catch (e) {
+    console.warn('[renderBkActionFahrtState lead lookup]', e);
   }
 
   hbInfo.hidden = false;
