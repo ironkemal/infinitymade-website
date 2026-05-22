@@ -5802,21 +5802,6 @@ async function loadEmpServices(empId) {
   const total = (all || []).length;
   const selectedCount = assignedIds.size;
 
-  // Hizmet fiyat özetini hesapla (süre çoklu olduğu için göstermiyoruz)
-  const formatService = (s) => {
-    let priceStr = '';
-    if (typeof s.price === 'number') priceStr = `${s.price.toFixed(2)} €`;
-    else if (s.price_config?.durations) {
-      const durs = s.price_config.durations;
-      const values = Object.values(durs).filter(d => d.active && typeof d.price === 'number').map(d => d.price);
-      if (values.length) {
-        const min = Math.min(...values), max = Math.max(...values);
-        priceStr = min === max ? `${min.toFixed(2)} €` : `${min.toFixed(2)}–${max.toFixed(2)} €`;
-      }
-    }
-    return { priceStr };
-  };
-
   grid.innerHTML = `
     <div class="emp-srv-toolbar">
       <span class="emp-srv-count">${selectedCount} von ${total} ausgewählt</span>
@@ -5825,23 +5810,12 @@ async function loadEmpServices(empId) {
         <button type="button" class="btn-ghost-sm" data-srv-action="none">Keine</button>
       </div>
     </div>
-    <div class="emp-srv-cards">
+    <div class="emp-srv-list">
       ${(all || []).map(s => {
-        const { priceStr } = formatService(s);
         const checked = assignedIds.has(s.id);
-        const initial = (s.title || '?').trim().charAt(0).toUpperCase();
-        const color = s.color || 'var(--primary)';
-        const hasMeta = priceStr || s.code;
-        return `<label class="emp-srv-card ${checked ? 'is-selected' : ''}" data-srv-id="${s.id}">
-          <span class="emp-srv-card-avatar" style="background:${color};">${escapeHtml(initial)}</span>
-          <span class="emp-srv-card-body">
-            <span class="emp-srv-card-title">${escapeHtml(s.title)}</span>
-            ${hasMeta ? `<span class="emp-srv-card-meta">
-              ${priceStr ? `<span>💶 ${escapeHtml(priceStr)}</span>` : ''}
-              ${s.code ? `<span class="emp-srv-card-code">${escapeHtml(s.code)}</span>` : ''}
-            </span>` : ''}
-          </span>
+        return `<label class="emp-srv-row ${checked ? 'is-selected' : ''}" data-srv-id="${s.id}">
           <input type="checkbox" class="emp-srv-chk" data-srv="${s.id}" ${checked ? 'checked' : ''}>
+          <span class="emp-srv-row-title">${escapeHtml(s.title)}</span>
         </label>`;
       }).join('')}
     </div>
@@ -5857,23 +5831,14 @@ async function loadEmpServices(empId) {
   grid.querySelectorAll('.emp-srv-chk').forEach(chk => {
     chk.addEventListener('change', async (e) => {
       e.stopPropagation();
-      const card = chk.closest('.emp-srv-card');
-      if (card) card.classList.toggle('is-selected', chk.checked);
+      const row = chk.closest('.emp-srv-row');
+      if (row) row.classList.toggle('is-selected', chk.checked);
       if (chk.checked) {
         await supabase.from('employee_services').insert({ employee_id: empId, service_id: chk.dataset.srv });
       } else {
         await supabase.from('employee_services').delete().eq('employee_id', empId).eq('service_id', chk.dataset.srv);
       }
       updateCount();
-    });
-  });
-
-  // Tüm karta tıklayınca checkbox toggle
-  grid.querySelectorAll('.emp-srv-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('input')) return;
-      const chk = card.querySelector('.emp-srv-chk');
-      if (chk) { chk.checked = !chk.checked; chk.dispatchEvent(new Event('change')); }
     });
   });
 
@@ -5887,7 +5852,7 @@ async function loadEmpServices(empId) {
       for (const chk of checks) {
         if (chk.checked === toCheck) continue;
         chk.checked = toCheck;
-        chk.closest('.emp-srv-card')?.classList.toggle('is-selected', toCheck);
+        chk.closest('.emp-srv-row')?.classList.toggle('is-selected', toCheck);
         if (toCheck) {
           await supabase.from('employee_services').insert({ employee_id: empId, service_id: chk.dataset.srv });
         } else {

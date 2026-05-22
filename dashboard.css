@@ -389,87 +389,44 @@ textarea {
   border-color: var(--border-strong);
 }
 
-.emp-srv-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 10px;
-}
-.emp-srv-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.1s;
-}
-.emp-srv-card:hover {
-  border-color: var(--border-strong);
-  background: var(--bg-hover);
-}
-.emp-srv-card.is-selected {
-  border-color: var(--primary);
-  background: var(--primary-dim);
-}
-.emp-srv-card.is-selected::after {
-  content: '✓';
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--primary);
-}
-.emp-srv-card-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 15px;
-  flex-shrink: 0;
-}
-.emp-srv-card-body {
+.emp-srv-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 0;
-  flex: 1;
 }
-.emp-srv-card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.emp-srv-card-meta {
+.emp-srv-row {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.emp-srv-card-code {
-  padding: 1px 6px;
-  background: var(--bg-input);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 11px;
-  font-family: ui-monospace, monospace;
-  color: var(--text-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
-.emp-srv-card .emp-srv-chk {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.emp-srv-row:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+}
+.emp-srv-row.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+}
+.emp-srv-row .emp-srv-chk {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.emp-srv-row-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+.emp-srv-row.is-selected .emp-srv-row-title {
+  font-weight: 600;
 }
 
 /* Faz 4: Standort-Öffnungstage (Hours panel) */
