@@ -240,7 +240,15 @@ Kullanıcı kararı gerekli: fiyat noktası (€149 / €199 / başka), aylık +
 ### ⏳ Faz 3 — Cross-employment (BEKLEMEDE)
 Employee invite akışını güncelle: 1 employee birden fazla business'a (`employee_business_assignments` üzerinden) atanabilsin. Mevcut `company_code` akışı korunur.
 
-### ⏳ Faz 4 — Haftalık/Aylık takvim görünümleri (BEKLEMEDE)
+### ✅ Faz 4 — Haftalık/Aylık takvim görünümleri (TAMAM, 2026-05-22)
+
+- Übersicht panelinde **Tag / Woche / Monat** toggle (sadece Enterprise için görünür)
+- **Haftalık görünüm**: 7 gün × çalışan grid, hücrelerde randevu listesi (saat + servis), bugün vurgu, aktif business filter
+- **Aylık görünüm**: tek terapist seçimi dropdown, klasik Mo-So × 6 hafta grid, her hücrede gün numarası + randevu sayısı, bugün/ay-dışı stilleri, ay toplamı summary
+- Aylık hücreye tıklayınca o günün **günlük görünümüne** geçer
+- Prev/Next butonları aktif görüşe göre gün/hafta/ay sıçar
+- View tercihi + monthly_employee `user_preferences` tablosunda kaydedilir, refresh'te kalır
+- Tüm UI **koyu tema uyumlu** (`--bg-card-solid`, `--primary-dim`, `--text-main` tokenleri)
 
 ### 🟡 Faz 5 — Onboarding güncelleme (KISMEN TAMAM, 2026-05-22)
 
