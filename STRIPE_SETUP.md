@@ -27,6 +27,10 @@ Go to https://dashboard.stripe.com/test/products and create 3 products:
 - €99 / month → `STRIPE_PRICE_KLINIK_MONTHLY`
 - €84 / month yearly (€1008/year) → `STRIPE_PRICE_KLINIK_YEARLY`
 
+### Product: Enterprise (Multi-Business, RBAC, Wochen-/Monatsansicht — Faz 1.3, 2026-05-22)
+- €149 / month → `STRIPE_PRICE_ENTERPRISE_MONTHLY`  ⚠️ TODO: kullanıcı kararı bekliyor
+- €127 / month yearly (~€1524/year) → `STRIPE_PRICE_ENTERPRISE_YEARLY`  ⚠️ TODO
+
 ### Add-on Product: DTA-Pro  *(physiotherapy / praxis only — gates §302 SGB V Sammelabrechnung)*
 - €29 / month → `STRIPE_PRICE_DTA_PRO_MONTHLY`
 - €290 / year (2 months free) → `STRIPE_PRICE_DTA_PRO_YEARLY`
