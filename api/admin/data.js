@@ -59,7 +59,8 @@ export default async function handler(req, res) {
     for (const a of aiRows) aiCost += aiCallCostEUR(a.model, a.prompt_tokens, a.completion_tokens);
 
     const emails = await adminFetch(`/email_logs?select=id&created_at=gte.${monthStart}`);
-    const msgs   = await adminFetch(`/messages?select=id&created_at=gte.${monthStart}`);
+    // messages table DROPPED 2026-05-22 (WhatsApp shelved)
+    const msgs   = { data: [] };
     const newBookings = await adminFetch(`/bookings?select=id&created_at=gte.${monthStart}`);
 
     // Chatbot widget usage — logged by n8n directly (not via calendar-api router).
@@ -77,6 +78,7 @@ export default async function handler(req, res) {
       starter_count:      rows.filter(r => r.plan === 'starter').length,
       professional_count: rows.filter(r => r.plan === 'professional').length,
       klinik_count:       rows.filter(r => r.plan === 'klinik').length,
+      enterprise_count:   rows.filter(r => r.plan === 'enterprise').length,
       ai_calls_mtd:       aiRows.length,
       ai_cost_eur_mtd:    Number(aiCost.toFixed(4)),
       chatbot_calls_mtd:  cbRows.length,
@@ -97,7 +99,8 @@ export default async function handler(req, res) {
 
     const ai      = await adminFetch(`/ai_audit_log?select=tenant_id,model,prompt_tokens,completion_tokens&created_at=gte.${monthStart}`);
     const emails  = await adminFetch(`/email_logs?select=owner_id&created_at=gte.${monthStart}`);
-    const msgs    = await adminFetch(`/messages?select=business_id&created_at=gte.${monthStart}`);
+    // messages table DROPPED 2026-05-22 (WhatsApp shelved). Stub kept for backward compat.
+    const msgs    = { data: [] };
     const bk      = await adminFetch(`/bookings?select=owner_id&created_at=gte.${monthStart}`);
     const cal     = await adminFetch('/calendar_integrations?select=user_id');
 
@@ -133,7 +136,6 @@ export default async function handler(req, res) {
         billing_interval: o.billing_interval,
         created_at: o.created_at,
         integrations: {
-          whatsapp: !!o.whatsapp_phone_number_id,
           gmail:    !!o.b2b_setup_done,
           gcal:     calConnected.has(o.id),
           stripe:   !!o.stripe_subscription_id,
@@ -143,7 +145,6 @@ export default async function handler(req, res) {
           ai_tokens: a.tokens,
           ai_cost_eur: Number(a.cost.toFixed(4)),
           emails:    emailsByOwner.get(o.id) || 0,
-          whatsapp:  msgsByOwner.get(o.id) || 0,
           bookings:  bkByOwner.get(o.id) || 0,
         },
       };
