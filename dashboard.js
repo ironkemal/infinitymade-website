@@ -9768,8 +9768,3 @@ async function loadFbReports() {
   `).join('');
 }
 
-// Küçük yardımcı: HTML escape
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
