@@ -7376,16 +7376,17 @@ async function renderOverviewWeekly(date) {
   // Tüm team'i göster (owner dahil), filter ettiysek owner gözüksün
   const allEmps = teamMembers.length ? teamMembers : [currentProfile];
 
-  // Bookings çek
-  let query = supabase
+  // Bookings çek — cross-business: owner'in tüm business'larındaki bookings
+  // (çalışan çakışmalarının görünür olması için)
+  const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('id, start_time, end_time, user_id, status, service_id, services(title, color)')
+    .select('id, start_time, end_time, user_id, status, service_id, business_id, services(title, color)')
+    .eq('owner_id', getOwnerId())
     .gte('start_time', weekStart.toISOString())
     .lte('start_time', weekEnd.toISOString())
     .neq('status', 'cancelled');
-  if (currentBusiness?.id) query = query.eq('business_id', currentBusiness.id);
-  const { data: bookings, error } = await query;
   if (error) { console.warn('[weekly]', error); }
+  const bizNameById = new Map(myBusinesses.map(b => [b.id, b.business_name]));
 
   // Header label
   const labelEl = document.getElementById('scheduleDateLabel');
@@ -7422,8 +7423,13 @@ async function renderOverviewWeekly(date) {
       dayBookings.forEach(b => {
         const t = new Date(b.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         const svc = b.services?.title || 'Termin';
-        html += `<div class="ov-week-appt" data-booking="${b.id}">
+        const isOther = currentBusiness?.id && b.business_id !== currentBusiness.id;
+        const otherBizName = isOther ? (bizNameById.get(b.business_id) || 'Anderer Standort') : '';
+        const cls = isOther ? 'ov-week-appt ov-week-appt-other' : 'ov-week-appt';
+        const meta = isOther ? `<div class="ov-week-appt-other-tag">${escapeHtml(otherBizName)}</div>` : '';
+        html += `<div class="${cls}" data-booking="${b.id}" title="${isOther ? 'Termin in ' + escapeHtml(otherBizName) : ''}">
           <span class="ov-week-appt-time">${t}</span> ${escapeHtml(svc)}
+          ${meta}
         </div>`;
       });
       html += `</div>`;
@@ -7463,14 +7469,15 @@ async function renderOverviewMonthly(date) {
   const startISO = cells[0].toISOString();
   const endISO = new Date(cells[41]); endISO.setHours(23, 59, 59, 999);
 
+  // Cross-business: çalışanın tüm business'lardaki randevuları görünür
   let query = supabase
     .from('bookings')
-    .select('id, start_time, user_id, status')
+    .select('id, start_time, user_id, status, business_id')
+    .eq('owner_id', getOwnerId())
     .gte('start_time', startISO)
     .lte('start_time', endISO.toISOString())
     .neq('status', 'cancelled');
   if (monthlyEmpId) query = query.eq('user_id', monthlyEmpId);
-  if (currentBusiness?.id) query = query.eq('business_id', currentBusiness.id);
   const { data: bookings, error } = await query;
   if (error) console.warn('[monthly]', error);
 

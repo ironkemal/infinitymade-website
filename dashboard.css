@@ -1654,6 +1654,23 @@ textarea {
 }
 .ov-week-appt:hover { background: rgba(34, 197, 94, 0.25); }
 .ov-week-appt-time { font-weight: 700; color: var(--primary); }
+
+/* Cross-business: başka standorttaki randevular (block-as-busy) */
+.ov-week-appt-other {
+  background: var(--bg-input);
+  border-left: 3px solid var(--text-faint);
+  color: var(--text-muted);
+}
+.ov-week-appt-other:hover { background: var(--bg-hover); }
+.ov-week-appt-other .ov-week-appt-time { color: var(--text-muted); }
+.ov-week-appt-other-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+}
 .ov-week-empty-state {
   text-align: center;
   padding: 30px 20px;
