@@ -390,20 +390,21 @@ textarea {
 }
 
 .emp-srv-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px 8px;
 }
 .emp-srv-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 8px 12px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
+  min-width: 0;
 }
 .emp-srv-row:hover {
   border-color: var(--border-strong);
@@ -414,19 +415,26 @@ textarea {
   background: var(--primary-dim);
 }
 .emp-srv-row .emp-srv-chk {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   accent-color: var(--primary);
   cursor: pointer;
   flex-shrink: 0;
 }
 .emp-srv-row-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 .emp-srv-row.is-selected .emp-srv-row-title {
   font-weight: 600;
+}
+@media (max-width: 640px) {
+  .emp-srv-list { grid-template-columns: 1fr; }
 }
 
 /* Faz 4: Standort-Öffnungstage (Hours panel) */
