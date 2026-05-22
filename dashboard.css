@@ -5213,3 +5213,190 @@ textarea {
   padding-top: 8px;
   border-top: 1px dashed #c4d8ee;
 }
+
+/* ============================================================
+   Patient Detail (Kunden Info) — top info block redesign
+   ============================================================ */
+#pdInfoBlock {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 18px 24px !important;
+}
+#pdInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  gap: 14px 24px !important;
+}
+#pdInfoGrid > div {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-width: 0;
+}
+#pdInfoGrid > div:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+#pdInfoGrid > div > div:first-child {
+  color: #64748b !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.6px !important;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+#pdInfoGrid > div > div:nth-child(2) {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* ============================================================
+   Fahrtenbuch panel — table + filter polish
+   ============================================================ */
+#panel-fahrtenbuch .tabs {
+  margin-bottom: 18px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+#panel-fahrtenbuch .tab-btn {
+  color: #64748b;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+#panel-fahrtenbuch .tab-btn:hover {
+  color: #0f172a;
+}
+#panel-fahrtenbuch .tab-btn.active {
+  color: #1c4d8f !important;
+  border-bottom-color: #1c4d8f !important;
+}
+
+/* Filter row */
+.fb-tab > div:first-child {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.fb-tab > div:first-child .form-group {
+  margin-bottom: 0 !important;
+}
+.fb-tab > div:first-child .form-input,
+.fb-tab > div:first-child .form-select {
+  background: #fff;
+  font-size: 13px;
+  padding: 6px 10px;
+  min-width: 130px;
+}
+.fb-tab > div:first-child .btn-ghost {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+}
+.fb-tab > div:first-child .btn-ghost:hover {
+  background: #1c4d8f;
+  color: #fff;
+  border-color: #1c4d8f;
+}
+
+/* Table polish — applies to Fahrten/Vehicles/Reports tables */
+#panel-fahrtenbuch .table-wrap {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+#panel-fahrtenbuch .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+#panel-fahrtenbuch .table thead th {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+#panel-fahrtenbuch .table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+  vertical-align: middle;
+}
+#panel-fahrtenbuch .table tbody tr:hover td {
+  background: #f8fafc;
+}
+#panel-fahrtenbuch .table tbody tr:last-child td {
+  border-bottom: none;
+}
+#fbFahrtenTable tbody td:nth-child(6),   /* Start-KM */
+#fbFahrtenTable tbody td:nth-child(7),   /* End-KM */
+#fbFahrtenTable tbody td:nth-child(8),   /* Strecke */
+#fbFahrtenTable tbody td:nth-child(9) {  /* Dauer */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  font-weight: 500;
+}
+#fbFahrtenTable tbody td:nth-child(8) {
+  color: #1c4d8f;
+  font-weight: 600;
+}
+.fb-tab h3 {
+  color: #0f172a;
+  font-weight: 600;
+  margin-top: 24px !important;
+  margin-bottom: 10px !important;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Vehicle row: kennzeichen mono + action buttons */
+#fbVehiclesTbody td:nth-child(1) {
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #1c4d8f;
+}
+#fbVehiclesTbody .fb-veh-edit {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+#fbVehiclesTbody .fb-veh-edit:hover {
+  background: #1c4d8f;
+  color: #fff;
+  border-color: #1c4d8f;
+}
+#fbVehiclesTbody .fb-veh-del {
+  background: #fff;
+  border: 1px solid #fecaca;
+  color: #b91c1c !important;
+  border-radius: 6px;
+}
+#fbVehiclesTbody .fb-veh-del:hover {
+  background: #dc2626;
+  color: #fff !important;
+  border-color: #dc2626;
+}
+
+/* Empty state */
+#panel-fahrtenbuch .table-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+}
