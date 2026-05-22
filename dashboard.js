@@ -5085,9 +5085,10 @@ async function renderEmpPermGrid(empId, groupId) {
   grid.innerHTML = RBAC_MODULES.map(m => {
     const effective = overrideMap[m.id] !== undefined ? overrideMap[m.id] : (groupAccess[m.id] === true);
     const isOverride = overrideMap[m.id] !== undefined;
-    return `<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface-alt,#f3f4f6);border-radius:4px;cursor:pointer;">
+    return `<label class="perm-item">
       <input type="checkbox" data-perm="${m.id}" ${effective ? 'checked' : ''} />
-      <span>${m.label}${isOverride ? ' <span style="font-size:10px;color:var(--primary);">(Override)</span>' : ''}</span>
+      <span>${m.label}</span>
+      ${isOverride ? '<span class="perm-item-override">OVERRIDE</span>' : ''}
     </label>`;
   }).join('');
 }
@@ -8452,18 +8453,21 @@ function renderBusinessesSection() {
     return;
   }
 
-  listEl.innerHTML = myBusinesses.map(b => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-alt,#f3f4f6);border-radius:6px;">
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-weight:600;">${escapeHtml(b.business_name)}${b.is_default ? ' <span style="font-size:11px;font-weight:400;color:var(--text-muted);">(Standard)</span>' : ''}</span>
-        <span style="font-size:12px;color:var(--text-muted);">${escapeHtml([b.street, b.house_number].filter(Boolean).join(' '))}${b.zip || b.city ? ', ' : ''}${escapeHtml([b.zip, b.city].filter(Boolean).join(' '))}</span>
+  listEl.innerHTML = myBusinesses.map(b => {
+    const addr = [b.street, b.house_number].filter(Boolean).join(' ');
+    const cityLine = [b.zip, b.city].filter(Boolean).join(' ');
+    const fullAddr = [addr, cityLine].filter(Boolean).join(', ') || '—';
+    return `<div class="biz-row">
+      <div>
+        <div class="biz-row-name">${escapeHtml(b.business_name)}${b.is_default ? '<span class="biz-row-default-tag">(Standard)</span>' : ''}</div>
+        <div class="biz-row-meta">${escapeHtml(fullAddr)}</div>
       </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn-secondary" data-edit-business="${b.id}" style="padding:6px 12px;font-size:12px;">Bearbeiten</button>
-        ${b.is_default ? '' : `<button class="btn-secondary" data-delete-business="${b.id}" style="padding:6px 12px;font-size:12px;color:#dc2626;">Löschen</button>`}
+      <div class="biz-row-actions">
+        <button class="btn-secondary" data-edit-business="${b.id}">Bearbeiten</button>
+        ${b.is_default ? '' : `<button class="btn-danger-link" data-delete-business="${b.id}">Löschen</button>`}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   // Bind handlers (idempotent — set dataset.wired)
   if (!section.dataset.wired) {
