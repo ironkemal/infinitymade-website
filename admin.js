@@ -84,7 +84,6 @@ async function loadOverview() {
     kpiHtml('Chatbot-Kosten',       fmtEUR(s.chatbot_cost_eur_mtd),  `${fmtInt(s.chatbot_calls_mtd)} Nachrichten`),
     kpiHtml('Chatbot-Tokens',       fmtInt(s.chatbot_tokens_mtd),    'Widget-Verbrauch'),
     kpiHtml('E-Mails',              fmtInt(s.emails_mtd),            'B2B + Patient'),
-    kpiHtml('WhatsApp',             fmtInt(s.whatsapp_mtd),          'Nachrichten'),
     kpiHtml('Neue Buchungen',       fmtInt(s.new_bookings_mtd),      'Diesen Monat'),
   ].join('');
 }
@@ -115,16 +114,15 @@ function renderCustomers() {
     const ig = o.integrations || {};
     const integ = `
       <div class="integ-row">
-        <span class="integ ${ig.whatsapp ? 'on':''}" title="WhatsApp">📱</span>
-        <span class="integ ${ig.gmail    ? 'on':''}" title="Gmail B2B">📧</span>
-        <span class="integ ${ig.gcal     ? 'on':''}" title="Google Calendar">📅</span>
-        <span class="integ ${ig.stripe   ? 'on':''}" title="Stripe">💳</span>
+        <span class="integ ${ig.gmail  ? 'on':''}" title="Gmail B2B">📧</span>
+        <span class="integ ${ig.gcal   ? 'on':''}" title="Google Calendar">📅</span>
+        <span class="integ ${ig.stripe ? 'on':''}" title="Stripe">💳</span>
       </div>`;
     const u = o.usage_mtd || {};
     const usage = `<div class="usage-mini">
-      <b>${fmtInt(u.ai_calls)}</b> AI · <b>${fmtInt(u.whatsapp)}</b> WA · <b>${fmtInt(u.emails)}</b> Mail · <b>${fmtInt(u.bookings)}</b> Buchung
+      <b>${fmtInt(u.ai_calls)}</b> AI · <b>${fmtInt(u.emails)}</b> Mail · <b>${fmtInt(u.bookings)}</b> Buchung
     </div>`;
-    const planBadge   = `<span class="badge badge-${o.plan==='starter'?'yellow':o.plan==='professional'?'green':o.plan==='klinik'?'blue':'gray'}">${escapeHtml(o.plan || '—')}</span>`;
+    const planBadge   = `<span class="badge badge-${o.plan==='starter'?'yellow':o.plan==='professional'?'green':o.plan==='klinik'?'blue':o.plan==='enterprise'?'purple':'gray'}">${escapeHtml(o.plan || '—')}</span>`;
     const statusBadge = `<span class="badge badge-${o.plan_status==='active'?'green':o.plan_status==='trial'?'blue':o.plan_status==='past_due'?'red':'gray'}">${escapeHtml(o.plan_status || '—')}</span>`;
     return `
       <tr class="clickable" data-owner-id="${o.id}">
@@ -191,7 +189,7 @@ async function openDrawer(ownerId) {
 
       <div class="section-title">Verbrauch diesen Monat</div>
       <div class="usage-mini" style="font-size:13px;line-height:1.8;">
-        <b>${fmtInt(o.usage_mtd.whatsapp)}</b> WhatsApp · <b>${fmtInt(o.usage_mtd.emails)}</b> E-Mails · <b>${fmtInt(o.usage_mtd.bookings)}</b> neue Buchungen
+        <b>${fmtInt(o.usage_mtd.emails)}</b> E-Mails · <b>${fmtInt(o.usage_mtd.bookings)}</b> neue Buchungen
       </div>
     `;
   } catch (e) {
