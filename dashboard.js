@@ -4924,6 +4924,17 @@ async function loadTeam() {
     data = rows;
   }
 
+  // Enterprise + multi-business: aktif business'a atanmamış employee'leri filtrele
+  // (owner her zaman görünür)
+  if (isEnterprise() && currentBusiness?.id && myBusinesses.length > 1) {
+    const { data: assigned } = await supabase
+      .from('employee_business_assignments')
+      .select('employee_id')
+      .eq('business_id', currentBusiness.id);
+    const assignedIds = new Set((assigned || []).map(a => a.employee_id));
+    data = data.filter(p => p.role === 'owner' || assignedIds.has(p.id));
+  }
+
   // Fallback: legacy VPS endpoint (kept for any RLS edge cases).
   if (!data.length) {
     try {
@@ -5030,6 +5041,13 @@ async function loadEmpPermissions(empId) {
   const tab = document.getElementById('empTabPermissions');
   if (tab) tab.hidden = false;
 
+  // Aktif business label
+  const lbl = document.getElementById('empPermBusinessLabel');
+  if (lbl) lbl.textContent = currentBusiness.business_name || '—';
+
+  // Standorte (multi-business sadece Enterprise + >1 business)
+  await renderEmpStandortList(empId);
+
   // Grup listesi
   const { data: groups } = await supabase
     .from('employee_groups')
@@ -5057,6 +5075,74 @@ async function loadEmpPermissions(empId) {
   groupSel.onchange = () => renderEmpPermGrid(empId, groupSel.value || null);
 
   document.getElementById('empPermSaveBtn').onclick = () => saveEmpPermissions(empId);
+}
+
+// ===== Faz 3: Cross-business assignment UI =====
+async function renderEmpStandortList(empId) {
+  const wrap = document.getElementById('empStandortWrap');
+  const list = document.getElementById('empStandortList');
+  if (!wrap || !list) return;
+
+  // Sadece Enterprise + birden fazla business varsa göster
+  if (!isEnterprise() || myBusinesses.length <= 1) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+
+  const { data: assignments } = await supabase
+    .from('employee_business_assignments')
+    .select('business_id')
+    .eq('employee_id', empId);
+  const assignedSet = new Set((assignments || []).map(a => a.business_id));
+
+  list.innerHTML = myBusinesses.map(b => `
+    <label class="perm-item">
+      <input type="checkbox" data-standort="${b.id}" ${assignedSet.has(b.id) ? 'checked' : ''} />
+      <span>${escapeHtml(b.business_name)}${b.is_default ? ' <span class="biz-row-default-tag">(Standard)</span>' : ''}</span>
+    </label>
+  `).join('');
+
+  // Anında kaydet (her tıklamada)
+  list.querySelectorAll('input[data-standort]').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const bizId = cb.dataset.standort;
+      const checked = cb.checked;
+      // En az 1 standort kalmalı
+      if (!checked) {
+        const remaining = Array.from(list.querySelectorAll('input[data-standort]:checked')).length;
+        if (remaining === 0) {
+          cb.checked = true;
+          showToast('Mindestens ein Standort erforderlich.', 'error');
+          return;
+        }
+      }
+      if (checked) {
+        // Default Mitarbeiter grubunu bul ve ata
+        const { data: g } = await supabase
+          .from('employee_groups')
+          .select('id')
+          .eq('business_id', bizId)
+          .eq('name', 'Mitarbeiter')
+          .maybeSingle();
+        const { error } = await supabase.from('employee_business_assignments').upsert({
+          employee_id: empId,
+          business_id: bizId,
+          group_id: g?.id || null,
+        }, { onConflict: 'employee_id,business_id' });
+        if (error) { console.error('[standort-add]', error); cb.checked = false; showToast(t('err_generic'), 'error'); return; }
+        showToast('Standort hinzugefügt ✓');
+      } else {
+        const { error } = await supabase
+          .from('employee_business_assignments')
+          .delete()
+          .eq('employee_id', empId)
+          .eq('business_id', bizId);
+        if (error) { console.error('[standort-remove]', error); cb.checked = true; showToast(t('err_generic'), 'error'); return; }
+        showToast('Standort entfernt ✓');
+      }
+    });
+  });
 }
 
 async function renderEmpPermGrid(empId, groupId) {
