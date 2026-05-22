@@ -2336,6 +2336,8 @@ function refreshBkHausbesuchPanel() {
 
   const lead = getSelectedBkLead();
   const txt = document.getElementById('bkHbAddressText');
+  const addrView = document.getElementById('bkHbAddrView');
+  const addrEdit = document.getElementById('bkHbAddrEdit');
   const result = document.getElementById('bkHbResult');
   const err = document.getElementById('bkHbError');
   const cached = document.getElementById('bkHbCached');
@@ -2345,20 +2347,27 @@ function refreshBkHausbesuchPanel() {
   err.textContent = '';
 
   if (!lead) {
+    addrView.hidden = false; addrEdit.hidden = true;
     txt.textContent = '— Patient auswählen —';
     result.style.display = 'none';
     bufferLine.style.display = 'none';
     return;
   }
 
-  const parts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
-  if (!parts.length) {
-    txt.innerHTML = '<span style="color:#c00;">⚠ Adresse fehlt — Patient bearbeiten und Strasse/PLZ/Stadt eintragen.</span>';
-    result.style.display = 'none';
-    bufferLine.style.display = 'none';
-    return;
+  const hasAddr = !!(lead.street || lead.plz || lead.city);
+  if (hasAddr) {
+    // View modu: kayıtlı adresi göster
+    addrView.hidden = false; addrEdit.hidden = true;
+    const parts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
+    txt.textContent = parts.join(', ');
+  } else {
+    // Adres yok: inline edit aç
+    addrView.hidden = true; addrEdit.hidden = false;
+    document.getElementById('bkHbStreet').value = '';
+    document.getElementById('bkHbPlz').value = '';
+    document.getElementById('bkHbCity').value = '';
+    document.getElementById('bkHbCancelAddrBtn').hidden = true;
   }
-  txt.textContent = parts.join(', ');
 
   if (lead.distance_km != null && lead.duration_min != null) {
     document.getElementById('bkHbKm').textContent = `${Number(lead.distance_km).toFixed(1)} km`;
@@ -2374,6 +2383,45 @@ function refreshBkHausbesuchPanel() {
     bufferLine.style.display = 'none';
   }
 }
+
+// Adresi düzenlemek için inline edit'i aç
+document.getElementById('bkHbEditAddrBtn')?.addEventListener('click', () => {
+  const lead = getSelectedBkLead();
+  if (!lead) return;
+  document.getElementById('bkHbAddrView').hidden = true;
+  document.getElementById('bkHbAddrEdit').hidden = false;
+  document.getElementById('bkHbStreet').value = lead.street || '';
+  document.getElementById('bkHbPlz').value = lead.plz || '';
+  document.getElementById('bkHbCity').value = lead.city || '';
+  document.getElementById('bkHbCancelAddrBtn').hidden = false;
+});
+
+document.getElementById('bkHbCancelAddrBtn')?.addEventListener('click', refreshBkHausbesuchPanel);
+
+document.getElementById('bkHbSaveAddrBtn')?.addEventListener('click', async () => {
+  const lead = getSelectedBkLead();
+  if (!lead) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
+  const street = document.getElementById('bkHbStreet').value.trim();
+  const plz = document.getElementById('bkHbPlz').value.trim();
+  const city = document.getElementById('bkHbCity').value.trim();
+  if (!street || !plz || !city) {
+    showToast('Strasse, PLZ und Stadt sind erforderlich.', 'error'); return;
+  }
+  if (!/^\d{5}$/.test(plz)) { showToast('PLZ muss 5-stellig sein.', 'error'); return; }
+  // Adres değişirse cache invalidate
+  const { error } = await supabase.from('leads').update({
+    street, plz, city,
+    lat: null, lng: null,
+    distance_km: null, duration_min: null, route_calculated_at: null
+  }).eq('id', lead.id);
+  if (error) { showToast(error.message, 'error'); return; }
+  // In-memory state
+  lead.street = street; lead.plz = plz; lead.city = city;
+  lead.lat = null; lead.lng = null;
+  lead.distance_km = null; lead.duration_min = null; lead.route_calculated_at = null;
+  showToast('Adresse gespeichert.');
+  refreshBkHausbesuchPanel();
+});
 
 document.getElementById('bkHausbesuch')?.addEventListener('change', refreshBkHausbesuchPanel);
 document.getElementById('bkService')?.addEventListener('change', refreshBkHausbesuchPanel);
@@ -3321,9 +3369,45 @@ function renderLeads() {
   });
 }
 
+function renderPdInfoBlock(lead) {
+  const grid = document.getElementById('pdInfoGrid');
+  if (!grid) return;
+  const md = lead.metadata || {};
+  const dob = lead.geburtsdatum || md.geburtsdatum || '';
+  const dobStr = dob ? new Date(dob).toLocaleDateString('de-DE') : '—';
+  const addrParts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
+  const addr = addrParts.length ? addrParts.join(', ') : '—';
+  const hausbesuch = md.hausbesuch ? '🚗 Ja' : 'Nein';
+  const km = lead.distance_km != null ? `ca. ${Number(lead.distance_km).toFixed(1)} km` : '—';
+  const dur = lead.duration_min != null ? `ca. ${lead.duration_min} min` : '—';
+  const krankenkasse = lead.krankenkasse || md.krankenkasse || '—';
+  const vNr = lead.versichertennummer || md.krankenkassennummer || '—';
+  const sex = md.geschlecht || lead.geschlecht || '—';
+  const cell = (label, value) => `
+    <div>
+      <div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">${label}</div>
+      <div style="font-weight:500;">${escapeHtml(value)}</div>
+    </div>`;
+  grid.innerHTML = [
+    cell('Name', displayName(lead) || '—'),
+    cell('Geburtsdatum', dobStr),
+    cell('Geschlecht', sex),
+    cell('Telefon', lead.phone || '—'),
+    cell('E-Mail', lead.email || '—'),
+    cell('Krankenkasse', krankenkasse),
+    cell('Versicherten-Nr.', vNr),
+    cell('Adresse', addr),
+    cell('Hausbesuch', hausbesuch),
+    cell('Entfernung', km),
+    cell('Fahrzeit (einfach)', dur),
+    cell('Status', lead.status || '—')
+  ].join('');
+}
+
 async function openPatientDetailModal(lead) {
   pdCurrentLeadId = lead.id;
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
+  renderPdInfoBlock(lead);
   document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'notes'));
   document.querySelectorAll('.pd-panel').forEach(p => p.classList.toggle('active', p.id === 'pdPanelNotes'));
   document.getElementById('pdNotesLoading').hidden = false;
