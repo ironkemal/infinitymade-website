@@ -1538,6 +1538,7 @@ async function openBookingActionModal(booking) {
 
 // Fahrtenbuch: bkActionModal'ı booking.hausbesuch + fahrt_status'a göre render eder
 async function renderBkActionFahrtState(booking, isOwn) {
+  console.log('[fahrtenbuch] renderBkActionFahrtState', { id: booking?.id, hausbesuch: booking?.hausbesuch, fahrt_status: booking?.fahrt_status, isOwn });
   const hbInfo = document.getElementById('bkActionHbInfo');
   const fahrtStartGroup = document.getElementById('bkActionFahrtStartedGroup');
   const arrivedGroup = document.getElementById('bkActionArrivedGroup');
@@ -1685,7 +1686,7 @@ async function openFahrtStartModal() {
   openModal('fahrtStartModal');
 }
 
-// ---- Named handlers (delegated event'lerden çağrılır) ----
+// ---- Named handlers (delegated event'lerden + inline onclick fallback'tan çağrılır) ----
 
 function openQuickVehicleModal() {
   document.getElementById('qvKennzeichen').value = '';
@@ -9552,7 +9553,9 @@ function fbActivateTab(tabName) {
   if (tabName === 'reports') loadFbReports();
 }
 
-// Fahrtenbuch: Global delegated handlers — tüm flow butonları + Fahrtenbuch panel
+// Fahrtenbuch version stamp + global namespace (cache problem teşhisi için)
+console.log('[fahrtenbuch] module loaded v=20260522f');
+window.__fbVersion = '20260522f';
 // Module-level addEventListener'lara güvenmiyoruz çünkü DOM hazır olmadan koşulan
 // query'ler veya hot reload sırasında binding'ler kaçabilir.
 if (!window.__fbDelegatedBound) {
@@ -9956,3 +9959,23 @@ async function loadFbReports() {
   `).join('');
 }
 
+
+// ============================================================
+// Fahrtenbuch global namespace — inline onclick fallback (cache resilience)
+// HTML butonlarına onclick="window.__fb.fahrtStart()" yazılabilir; bu sayede
+// delegated handler bir sebepten ötürü kaçırsa bile flow çalışır.
+// ============================================================
+window.__fb = window.__fb || {};
+Object.assign(window.__fb, {
+  fahrtStart: () => openFahrtStartModal().catch(e => { console.error('[fb.fahrtStart]', e); showToast('Fahrt Starten: ' + (e?.message || e), 'error'); }),
+  saveFahrtStart: () => saveFahrtStartHandler().catch(e => { console.error('[fb.saveFahrtStart]', e); showToast('Speichern: ' + (e?.message || e), 'error'); }),
+  arrived: () => markArrivedHandler().catch(e => { console.error('[fb.arrived]', e); showToast('Angekommen: ' + (e?.message || e), 'error'); }),
+  fahrtEnd: () => { try { openFahrtEndModal(); } catch (e) { console.error('[fb.fahrtEnd]', e); showToast('Fahrt Beenden: ' + (e?.message || e), 'error'); } },
+  saveFahrtEnd: () => saveFahrtEndHandler().catch(e => { console.error('[fb.saveFahrtEnd]', e); showToast('End-KM: ' + (e?.message || e), 'error'); }),
+  copyAddr: () => copyHausbesuchAddress().catch(e => { console.error('[fb.copyAddr]', e); }),
+  addVehicle: () => { try { openVehicleEditModal(null); } catch (e) { console.error('[fb.addVehicle]', e); showToast('Fahrzeug: ' + (e?.message || e), 'error'); } },
+  saveVehicle: () => Promise.resolve(saveVehicleEdit()).catch(e => { console.error('[fb.saveVehicle]', e); showToast('Speichern: ' + (e?.message || e), 'error'); }),
+  quickAdd: () => { try { openQuickVehicleModal(); } catch (e) { console.error('[fb.quickAdd]', e); } },
+  saveQuick: () => saveQuickVehicleHandler().catch(e => { console.error('[fb.saveQuick]', e); showToast('Fahrzeug: ' + (e?.message || e), 'error'); }),
+});
+console.log('[fahrtenbuch] window.__fb ready', Object.keys(window.__fb));
