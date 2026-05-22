@@ -1627,8 +1627,6 @@ async function renderBkActionFahrtState(booking, isOwn) {
     startTerminGroup.hidden = true;
   } else if (s === 'fahrt_started') {
     arrivedGroup.hidden = false;
-    document.getElementById('bkActionCopyAddr').textContent = leadAddr || '—';
-    document.getElementById('bkActionCopyOk').style.display = 'none';
     startTerminGroup.hidden = true;
   } else if (s === 'fahrt_arrived') {
     // Termin Starten aktif (mevcut buton)
@@ -1753,13 +1751,21 @@ document.getElementById('fsSaveBtn')?.addEventListener('click', async () => {
   showToast('🚗 Fahrt gestartet — bitte Adresse kopieren und losfahren.');
 });
 
-document.getElementById('bkActionCopyBtn')?.addEventListener('click', async () => {
-  const addr = document.getElementById('bkActionCopyAddr').textContent.trim();
-  if (!addr || addr === '—') return;
+// Hausbesuch info card → Kopieren butonu (adresi panoya yapıştırır)
+document.getElementById('bkActionHbCopyBtn')?.addEventListener('click', async () => {
+  const addr = document.getElementById('bkActionHbAddr').textContent.trim();
+  if (!addr || addr === '—' || addr.includes('fehlt')) {
+    showToast('Keine Adresse zum Kopieren.', 'error');
+    return;
+  }
   try {
     await navigator.clipboard.writeText(addr);
-    document.getElementById('bkActionCopyOk').style.display = '';
-    setTimeout(() => { document.getElementById('bkActionCopyOk').style.display = 'none'; }, 2000);
+    const ok = document.getElementById('bkActionHbCopyOk');
+    if (ok) {
+      ok.style.display = 'inline';
+      setTimeout(() => { ok.style.display = 'none'; }, 1800);
+    }
+    showToast('Adresse kopiert ✓');
   } catch (_) {
     showToast('Kopieren fehlgeschlagen — manuell auswählen.', 'error');
   }

@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260522b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260522c" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -2727,14 +2727,21 @@
           <div class="bk-action-session" id="bkActionSession">—</div>
         </div>
 
-        <!-- Hausbesuch info row (sadece hausbesuch=true booking'lerde görünür) -->
-        <div id="bkActionHbInfo" hidden style="background:#eef6ff;border:1px solid #2a73d3;border-radius:8px;padding:10px;margin-bottom:12px;font-size:13px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-            <span>🚗 <strong>Hausbesuch</strong></span>
-            <span id="bkActionHbStatusBadge" style="font-size:11px;padding:2px 8px;border-radius:10px;background:#fff;border:1px solid #c4d8ee;"></span>
+        <!-- Hausbesuch info card -->
+        <div id="bkActionHbInfo" class="hb-info-card" hidden>
+          <div class="hb-info-head">
+            <span class="hb-info-title">🚗 Hausbesuch</span>
+            <span id="bkActionHbStatusBadge" class="hb-info-badge"></span>
           </div>
-          <div id="bkActionHbAddr" style="margin-top:6px;color:#1c4d8f;"></div>
-          <div id="bkActionHbRoute" style="margin-top:4px;color:#1c4d8f;font-size:12px;"></div>
+          <div class="hb-info-row">
+            <div class="hb-info-label">Adresse</div>
+            <div class="hb-info-addr-row">
+              <div id="bkActionHbAddr" class="hb-info-value"></div>
+              <button type="button" id="bkActionHbCopyBtn" class="hb-copy-btn" title="Adresse kopieren">📋 Kopieren</button>
+              <span id="bkActionHbCopyOk" class="hb-copy-ok">✓</span>
+            </div>
+          </div>
+          <div id="bkActionHbRoute" class="hb-info-route"></div>
         </div>
 
         <!-- STATE: null → Fahrt Starten -->
@@ -2744,14 +2751,8 @@
           </button>
         </div>
 
-        <!-- STATE: fahrt_started → adres + kopiere + Ich bin angekommen -->
+        <!-- STATE: fahrt_started → Ich bin angekommen (Adresse + Kopieren bkActionHbInfo'da zaten gösteriliyor) -->
         <div class="form-group" id="bkActionArrivedGroup" hidden>
-          <div style="background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Ziel-Adresse:</div>
-            <div id="bkActionCopyAddr" style="font-weight:600;font-size:14px;margin-bottom:8px;">—</div>
-            <button class="btn-ghost" id="bkActionCopyBtn" style="font-size:12px;padding:4px 10px;">📋 Kopieren</button>
-            <span id="bkActionCopyOk" style="font-size:12px;color:#2a8c4a;margin-left:8px;display:none;">✓ kopiert</span>
-          </div>
           <button class="btn-primary" id="bkActionArrivedBtn" style="width:100%;justify-content:center;background:#2a8c4a;">
             <span>✅</span> Ich bin angekommen
           </button>
@@ -2952,7 +2953,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260522c"></script>
+  <script type="module" src="dashboard.js?v=20260522d"></script>
 </body>
 
 </html>
