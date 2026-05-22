@@ -9129,14 +9129,22 @@ function renderBusinessesSection() {
     return;
   }
 
+  const baseUrl = (window.location.origin || 'https://infinitymade.de');
   listEl.innerHTML = myBusinesses.map(b => {
     const addr = [b.street, b.house_number].filter(Boolean).join(' ');
     const cityLine = [b.zip, b.city].filter(Boolean).join(' ');
     const fullAddr = [addr, cityLine].filter(Boolean).join(', ') || '—';
+    const link = b.booking_slug ? `${baseUrl}/booking.html?u=${b.booking_slug}` : null;
+    const linkHtml = link
+      ? `<div class="biz-row-link">🔗 <span>${escapeHtml(link.replace(/^https?:\/\/(www\.)?/, ''))}</span>
+           <button class="btn-icon-sm" data-copy-link="${link}" title="Link kopieren">📋</button>
+         </div>`
+      : `<div class="biz-row-link biz-row-link-missing">Kein Buchungs-Slug gesetzt</div>`;
     return `<div class="biz-row">
-      <div>
+      <div class="biz-row-body">
         <div class="biz-row-name">${escapeHtml(b.business_name)}${b.is_default ? '<span class="biz-row-default-tag">(Standard)</span>' : ''}</div>
         <div class="biz-row-meta">${escapeHtml(fullAddr)}</div>
+        ${linkHtml}
       </div>
       <div class="biz-row-actions">
         <button class="btn-secondary" data-edit-business="${b.id}">Bearbeiten</button>
@@ -9144,6 +9152,14 @@ function renderBusinessesSection() {
       </div>
     </div>`;
   }).join('');
+
+  listEl.querySelectorAll('[data-copy-link]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const lnk = btn.dataset.copyLink;
+      navigator.clipboard.writeText(lnk).then(() => showToast(t('copied') || 'Link kopiert ✓'));
+    });
+  });
 
   // Bind handlers (idempotent — set dataset.wired)
   if (!section.dataset.wired) {
@@ -9232,12 +9248,28 @@ function wireBusinessModal() {
     let newBiz = null;
     if (id) {
       const { error } = await supabase.from('businesses').update(payload).eq('id', id);
-      if (error) { console.error('[biz-update]', error); showToast(t('err_generic'), 'error'); return; }
+      if (error) {
+        console.error('[biz-update]', error);
+        if (error.code === '23505' && error.message.includes('booking_slug')) {
+          showToast('Dieser Buchungs-Slug ist bereits vergeben.', 'error');
+        } else {
+          showToast(t('err_generic'), 'error');
+        }
+        return;
+      }
     } else {
       payload.owner_id = currentSession.user.id;
       payload.sector = currentProfile?.sector || null;
       const { data: created, error } = await supabase.from('businesses').insert(payload).select().single();
-      if (error) { console.error('[biz-insert]', error); showToast(t('err_generic'), 'error'); return; }
+      if (error) {
+        console.error('[biz-insert]', error);
+        if (error.code === '23505' && error.message.includes('booking_slug')) {
+          showToast('Dieser Buchungs-Slug ist bereits vergeben.', 'error');
+        } else {
+          showToast(t('err_generic'), 'error');
+        }
+        return;
+      }
       newBiz = created;
 
       // Servisleri kopyala (opsiyonel)
