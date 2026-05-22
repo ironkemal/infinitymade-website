@@ -1481,6 +1481,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         if (patient.phone) patch.phone = patient.phone;
         if (patient.versichertennummer) patch.versichertennummer = patient.versichertennummer;
         if (patient.krankenkasse) patch.krankenkasse = patient.krankenkasse;
+        // Fahrtenbuch: strukturlu adres backfill (yalnızca eksikse doldur — kullanıcı manuel düzeltiyorsa override yapma)
+        if (patient.street) patch.street = patient.street;
+        if (patient.plz) patch.plz = patient.plz;
+        if (patient.city) patch.city = patient.city;
         if (Object.keys(patch).length) {
           await supabase.from('leads').update(patch).eq('id', patientId);
         }
@@ -1502,7 +1506,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
           krankenkasse: patient.krankenkasse || null,
           email: patient.email || null,
           phone: patient.phone || null,
-          street: patient.adresse || null,
+          // Fahrtenbuch: strukturlu kolonlar (eski tek string yerine)
+          street: patient.street || null,
+          plz: patient.plz || null,
+          city: patient.city || null,
           status: 'booked'
         })
         .select('id')

@@ -926,6 +926,158 @@
             vorhanden.</div>
         </section>
 
+        <!-- ===== PANEL: FAHRTENBUCH ===== -->
+        <section class="panel" id="panel-fahrtenbuch">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_fahrtenbuch">Fahrtenbuch</h2>
+              <p class="panel-sub">Fahrzeuge, Fahrten und Monatsberichte für Hausbesuche</p>
+            </div>
+          </div>
+
+          <div class="tabs" style="margin-bottom:16px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
+            <button class="tab-btn active" data-fb-tab="fahrten" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;">🚗 Fahrten</button>
+            <button class="tab-btn" data-fb-tab="vehicles" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;">🚙 Fahrzeuge</button>
+            <button class="tab-btn" data-fb-tab="reports" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;">📊 Berichte</button>
+          </div>
+
+          <!-- Tab: Fahrten -->
+          <div id="fbTabFahrten" class="fb-tab">
+            <div style="display:flex;gap:12px;align-items:end;margin-bottom:12px;flex-wrap:wrap;">
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" style="font-size:12px;">Von</label>
+                <input type="date" class="form-input" id="fbFahrtenFrom" />
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" style="font-size:12px;">Bis</label>
+                <input type="date" class="form-input" id="fbFahrtenTo" />
+              </div>
+              <div class="form-group" style="margin:0;" id="fbFahrtenUserWrap" hidden>
+                <label class="form-label" style="font-size:12px;">Therapeut</label>
+                <select class="form-select" id="fbFahrtenUser">
+                  <option value="">— Alle —</option>
+                </select>
+              </div>
+              <button class="btn-ghost" id="fbFahrtenRefresh">Aktualisieren</button>
+              <button class="btn-ghost" id="fbFahrtenExportCsv">CSV exportieren</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table" id="fbFahrtenTable">
+                <thead>
+                  <tr>
+                    <th>Datum</th>
+                    <th>Patient</th>
+                    <th>Therapeut</th>
+                    <th>Kennzeichen</th>
+                    <th>Art</th>
+                    <th>Start-KM</th>
+                    <th>End-KM</th>
+                    <th>Strecke</th>
+                    <th>Dauer</th>
+                  </tr>
+                </thead>
+                <tbody id="fbFahrtenTbody"></tbody>
+              </table>
+              <div id="fbFahrtenEmpty" class="table-empty" hidden>Keine Fahrten im gewählten Zeitraum.</div>
+            </div>
+          </div>
+
+          <!-- Tab: Fahrzeuge -->
+          <div id="fbTabVehicles" class="fb-tab" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div style="font-size:13px;color:var(--text-muted);">
+                <strong>Gewerblich</strong> = Praxis-Fahrzeuge (für alle sichtbar) · <strong>Privat</strong> = nur für die anlegende Person sichtbar
+              </div>
+              <button class="btn-primary" id="fbVehicleAddBtn">+ Neues Fahrzeug</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Kennzeichen</th>
+                    <th>Bezeichnung</th>
+                    <th>Art</th>
+                    <th>Status</th>
+                    <th>Standard</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="fbVehiclesTbody"></tbody>
+              </table>
+              <div id="fbVehiclesEmpty" class="table-empty" hidden>Noch keine Fahrzeuge angelegt.</div>
+            </div>
+          </div>
+
+          <!-- Tab: Berichte -->
+          <div id="fbTabReports" class="fb-tab" hidden>
+            <div style="display:flex;gap:12px;align-items:end;margin-bottom:12px;flex-wrap:wrap;">
+              <div class="form-group" style="margin:0;">
+                <label class="form-label" style="font-size:12px;">Monat</label>
+                <input type="month" class="form-input" id="fbReportMonth" />
+              </div>
+              <button class="btn-ghost" id="fbReportRefresh">Aktualisieren</button>
+            </div>
+            <h3 style="margin:16px 0 8px;font-size:15px;">Nach Therapeut</h3>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr><th>Therapeut</th><th>Fahrten</th><th>KM gesamt</th><th>Minuten gesamt</th></tr>
+                </thead>
+                <tbody id="fbReportByUserTbody"></tbody>
+              </table>
+            </div>
+            <h3 style="margin:24px 0 8px;font-size:15px;">Nach Fahrzeug</h3>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr><th>Kennzeichen</th><th>Art</th><th>Fahrten</th><th>KM gesamt</th><th>Minuten gesamt</th></tr>
+                </thead>
+                <tbody id="fbReportByVehicleTbody"></tbody>
+              </table>
+            </div>
+            <div id="fbReportEmpty" class="table-empty" hidden>Keine Daten für diesen Monat.</div>
+          </div>
+        </section>
+
+        <!-- ===== MODAL: Vehicle CRUD ===== -->
+        <div class="modal-overlay" id="vehicleEditModal" hidden>
+          <div class="modal" style="max-width:440px;">
+            <div class="modal-header">
+              <span class="modal-title" id="vehicleEditTitle">Fahrzeug anlegen</span>
+              <button class="modal-close" data-modal="vehicleEditModal">✕</button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="vehEditId" />
+              <div class="form-group">
+                <label class="form-label">Kennzeichen <span class="req">*</span></label>
+                <input class="form-input" id="vehEditKennzeichen" placeholder="z.B. SU-AB 123" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bezeichnung (optional)</label>
+                <input class="form-input" id="vehEditLabel" placeholder="z.B. Praxis VW Caddy" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Art</label>
+                <select class="form-select" id="vehEditKind">
+                  <option value="gewerblich">🏢 Gewerblich (Praxis-Fahrzeug, für alle sichtbar)</option>
+                  <option value="privat">🚙 Privat (nur ich)</option>
+                </select>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="vehEditKindHint"></div>
+              </div>
+              <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                  <input type="checkbox" id="vehEditIsDefault" /> Als Standardfahrzeug verwenden
+                </label>
+              </div>
+              <div id="vehEditError" style="color:#c00;font-size:13px;display:none;"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" data-modal="vehicleEditModal">Abbrechen</button>
+              <button class="btn-primary" id="vehEditSaveBtn">Speichern</button>
+            </div>
+          </div>
+        </div>
+
         <!-- ===== PANEL: ÄRZTE ===== -->
         <section class="panel" id="panel-doctors">
           <div class="panel-header">
@@ -1585,8 +1737,25 @@
         </div>
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-            <input type="checkbox" id="bkHausbesuch" /> Hausbesuch
+            <input type="checkbox" id="bkHausbesuch" /> 🚗 Hausbesuch
           </label>
+        </div>
+        <!-- Fahrtenbuch: Hausbesuch route panel -->
+        <div id="bkHausbesuchPanel" class="form-group" hidden style="background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:-8px;">
+          <div id="bkHbAddressLine" style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">
+            <span id="bkHbAddressText">— Adresse fehlt —</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn-ghost" id="bkHbBerechnenBtn" style="font-size:13px;padding:6px 12px;">📍 Entfernung berechnen</button>
+            <div id="bkHbResult" style="font-size:13px;display:none;">
+              <strong id="bkHbKm">— km</strong> · <strong id="bkHbMin">— min</strong>
+              <span id="bkHbCached" style="color:var(--text-muted);font-size:11px;margin-left:6px;"></span>
+            </div>
+            <div id="bkHbError" style="font-size:12px;color:#c00;display:none;"></div>
+          </div>
+          <div id="bkHbBufferLine" style="font-size:12px;color:var(--text-muted);margin-top:8px;display:none;">
+            Termin-Block: <strong id="bkHbBlockTotal">—</strong> min (Hin + Sitzung + Rück + 10 min Puffer)
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label" data-i18n="lead_notes">Notizen</label>
@@ -1844,6 +2013,20 @@
               <div class="form-group">
                 <label class="form-label">Telefon</label>
                 <input class="form-input" id="rxcPhone" type="tel" placeholder="+49…" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="flex:2;">
+                <label class="form-label">Strasse + Hausnr. <span id="rxcStreetReq" class="req" hidden>*</span></label>
+                <input class="form-input" id="rxcStreet" type="text" placeholder="z.B. Hauptstraße 12" />
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">PLZ <span id="rxcPlzReq" class="req" hidden>*</span></label>
+                <input class="form-input" id="rxcPlz" type="text" maxlength="5" placeholder="53721" />
+              </div>
+              <div class="form-group" style="flex:1.5;">
+                <label class="form-label">Stadt <span id="rxcCityReq" class="req" hidden>*</span></label>
+                <input class="form-input" id="rxcCity" type="text" placeholder="Siegburg" />
               </div>
             </div>
 
@@ -2273,9 +2456,24 @@
             </div>
           </div>
           <div class="form-row" id="lead-physio-row2" style="display:none;">
+            <div class="form-group" style="flex:2;">
+              <label class="form-label">Strasse + Hausnummer <span class="req" id="lead-street-req" hidden>*</span></label>
+              <input class="form-input" id="lead-street" type="text" placeholder="z.B. Hauptstraße 12" />
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label class="form-label">PLZ <span class="req" id="lead-plz-req" hidden>*</span></label>
+              <input class="form-input" id="lead-plz" type="text" placeholder="53721" maxlength="5" />
+            </div>
+          </div>
+          <div class="form-row" id="lead-hausbesuch-row" style="display:none;">
             <div class="form-group">
-              <label class="form-label">Adresse</label>
-              <input class="form-input" id="lead-adresse" type="text" placeholder="Strasse, Hausnummer" />
+              <label class="form-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" id="lead-hausbesuch" />
+                <span>🚗 Hausbesuch (Heimbesuch erforderlich)</span>
+              </label>
+              <div id="lead-hausbesuch-hint" style="font-size:12px; color:var(--text-muted); margin-top:4px;" hidden>
+                Adresse (Strasse, PLZ, Stadt) wird benötigt für die Routenberechnung.
+              </div>
             </div>
           </div>
         </div>
@@ -2526,7 +2724,7 @@
   </div>
 
   <div class="modal-overlay" id="bkActionModal" hidden>
-    <div class="modal" style="max-width:420px;">
+    <div class="modal" style="max-width:460px;">
       <div class="modal-header">
         <span class="modal-title">Termin Aksiyon</span>
         <button class="modal-close" data-modal="bkActionModal">✕</button>
@@ -2536,17 +2734,147 @@
           <div class="bk-action-patient" id="bkActionPatient">—</div>
           <div class="bk-action-session" id="bkActionSession">—</div>
         </div>
-        <div class="form-group">
+
+        <!-- Hausbesuch info row (sadece hausbesuch=true booking'lerde görünür) -->
+        <div id="bkActionHbInfo" hidden style="background:#eef6ff;border:1px solid #2a73d3;border-radius:8px;padding:10px;margin-bottom:12px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span>🚗 <strong>Hausbesuch</strong></span>
+            <span id="bkActionHbStatusBadge" style="font-size:11px;padding:2px 8px;border-radius:10px;background:#fff;border:1px solid #c4d8ee;"></span>
+          </div>
+          <div id="bkActionHbAddr" style="margin-top:6px;color:#1c4d8f;"></div>
+          <div id="bkActionHbRoute" style="margin-top:4px;color:#1c4d8f;font-size:12px;"></div>
+        </div>
+
+        <!-- STATE: null → Fahrt Starten -->
+        <div class="form-group" id="bkActionFahrtStartedGroup" hidden>
+          <button class="btn-primary" id="bkActionFahrtStartBtn" style="width:100%;justify-content:center;background:#1c4d8f;">
+            <span>🚗</span> Fahrt Starten
+          </button>
+        </div>
+
+        <!-- STATE: fahrt_started → adres + kopiere + Ich bin angekommen -->
+        <div class="form-group" id="bkActionArrivedGroup" hidden>
+          <div style="background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Ziel-Adresse:</div>
+            <div id="bkActionCopyAddr" style="font-weight:600;font-size:14px;margin-bottom:8px;">—</div>
+            <button class="btn-ghost" id="bkActionCopyBtn" style="font-size:12px;padding:4px 10px;">📋 Kopieren</button>
+            <span id="bkActionCopyOk" style="font-size:12px;color:#2a8c4a;margin-left:8px;display:none;">✓ kopiert</span>
+          </div>
+          <button class="btn-primary" id="bkActionArrivedBtn" style="width:100%;justify-content:center;background:#2a8c4a;">
+            <span>✅</span> Ich bin angekommen
+          </button>
+        </div>
+
+        <!-- STATE: normal veya fahrt_arrived → Termin Starten -->
+        <div class="form-group" id="bkActionStartTerminGroup">
           <button class="btn-primary" id="bkActionStartBtn" style="width:100%;justify-content:center;">
             <span>▶</span> Termin Starten
           </button>
         </div>
+
+        <!-- STATE: fahrt_return_pending → Fahrt Beenden (End-KM) -->
+        <div class="form-group" id="bkActionFahrtEndGroup" hidden>
+          <div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px;margin-bottom:10px;font-size:13px;">
+            Termin abgeschlossen. Bitte End-KM nach Rückkehr eintragen.
+          </div>
+          <button class="btn-primary" id="bkActionFahrtEndBtn" style="width:100%;justify-content:center;background:#a06200;">
+            <span>🏁</span> Fahrt Beenden
+          </button>
+        </div>
+
+        <!-- STATE: fahrt_completed → done -->
+        <div class="form-group" id="bkActionDoneGroup" hidden>
+          <div style="background:#eaf8ee;border:1px solid #2a8c4a;border-radius:8px;padding:10px;color:#1f6b38;font-size:13px;text-align:center;">
+            ✅ Fahrt + Termin abgeschlossen
+          </div>
+        </div>
+
         <div class="form-group" style="margin-bottom:0;">
           <button class="btn-danger" id="bkActionNoShowBtn" style="width:100%;justify-content:center;" disabled>
             <span>✕</span> Patient nicht erschienen
           </button>
           <div class="bk-action-hint" id="bkActionNoShowHint">Verfügbar ab 3 Min. nach Terminbeginn</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: Fahrt Starten (Vehicle + Start-KM) ===== -->
+  <div class="modal-overlay" id="fahrtStartModal" hidden>
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <span class="modal-title">🚗 Fahrt Starten</span>
+        <button class="modal-close" data-modal="fahrtStartModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Welches Fahrzeug verwenden Sie?</label>
+          <select class="form-select" id="fsVehicleSelect">
+            <option value="">— Fahrzeug wählen —</option>
+          </select>
+          <div style="margin-top:6px;">
+            <button class="btn-ghost" id="fsAddVehicleBtn" style="font-size:12px;padding:4px 8px;">+ Neues Privatfahrzeug</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aktueller Kilometerstand (Start-KM)</label>
+          <input class="form-input" type="number" id="fsStartKm" min="0" placeholder="z.B. 45230" />
+        </div>
+        <div id="fsError" style="color:#c00;font-size:13px;display:none;margin-top:6px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="fahrtStartModal">Abbrechen</button>
+        <button class="btn-primary" id="fsSaveBtn">Fahrt Starten</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: Fahrt Beenden (End-KM) ===== -->
+  <div class="modal-overlay" id="fahrtEndModal" hidden>
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <span class="modal-title">🏁 Fahrt Beenden</span>
+        <button class="modal-close" data-modal="fahrtEndModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <div style="font-size:13px;color:var(--text-muted);">Start-KM: <strong id="feStartKm">—</strong></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aktueller Kilometerstand (End-KM)</label>
+          <input class="form-input" type="number" id="feEndKm" min="0" placeholder="z.B. 45245" />
+          <div id="feDistance" style="margin-top:6px;font-size:13px;color:#1c4d8f;display:none;"></div>
+        </div>
+        <div id="feError" style="color:#c00;font-size:13px;display:none;margin-top:6px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="fahrtEndModal">Abbrechen</button>
+        <button class="btn-primary" id="feSaveBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: Quick-Add Privatfahrzeug ===== -->
+  <div class="modal-overlay" id="quickVehicleModal" hidden>
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-header">
+        <span class="modal-title">+ Privatfahrzeug</span>
+        <button class="modal-close" data-modal="quickVehicleModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Kennzeichen</label>
+          <input class="form-input" id="qvKennzeichen" placeholder="z.B. SU-AB 123" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bezeichnung (optional)</label>
+          <input class="form-input" id="qvLabel" placeholder="z.B. Mein VW Golf" />
+        </div>
+        <div id="qvError" style="color:#c00;font-size:13px;display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="quickVehicleModal">Abbrechen</button>
+        <button class="btn-primary" id="qvSaveBtn">Speichern</button>
       </div>
     </div>
   </div>
