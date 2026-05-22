@@ -1740,21 +1740,48 @@
             <input type="checkbox" id="bkHausbesuch" /> 🚗 Hausbesuch
           </label>
         </div>
-        <!-- Fahrtenbuch: Hausbesuch route panel -->
-        <div id="bkHausbesuchPanel" class="form-group" hidden style="background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:-8px;">
-          <div id="bkHbAddressLine" style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">
-            <span id="bkHbAddressText">— Adresse fehlt —</span>
+        <!-- Fahrtenbuch: Hausbesuch route alanı (sade, form-group düzeninde) -->
+        <div id="bkHausbesuchPanel" hidden>
+          <!-- Mevcut adres okunabiliyorsa göster -->
+          <div class="form-group" id="bkHbAddrView" hidden>
+            <label class="form-label">Patientenadresse</label>
+            <div id="bkHbAddressText" style="padding:8px 0;font-size:14px;"></div>
+            <button type="button" class="btn-ghost" id="bkHbEditAddrBtn" style="font-size:12px;padding:4px 10px;">✎ Adresse bearbeiten</button>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button type="button" class="btn-ghost" id="bkHbBerechnenBtn" style="font-size:13px;padding:6px 12px;">📍 Entfernung berechnen</button>
-            <div id="bkHbResult" style="font-size:13px;display:none;">
-              <strong id="bkHbKm">— km</strong> · <strong id="bkHbMin">— min</strong>
-              <span id="bkHbCached" style="color:var(--text-muted);font-size:11px;margin-left:6px;"></span>
+
+          <!-- Adres yoksa veya düzenlenmek istenirse inline edit -->
+          <div id="bkHbAddrEdit" hidden>
+            <div class="form-row" style="grid-template-columns: 2fr 1fr;">
+              <div class="form-group">
+                <label class="form-label">Strasse + Hausnummer</label>
+                <input class="form-input" id="bkHbStreet" type="text" placeholder="z.B. Hauptstraße 12" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">PLZ</label>
+                <input class="form-input" id="bkHbPlz" type="text" maxlength="5" placeholder="53721" />
+              </div>
             </div>
-            <div id="bkHbError" style="font-size:12px;color:#c00;display:none;"></div>
+            <div class="form-group">
+              <label class="form-label">Stadt</label>
+              <input class="form-input" id="bkHbCity" type="text" placeholder="Siegburg" />
+            </div>
+            <div class="form-group">
+              <button type="button" class="btn-ghost" id="bkHbSaveAddrBtn" style="font-size:12px;padding:4px 10px;">💾 Adresse speichern</button>
+              <button type="button" class="btn-ghost" id="bkHbCancelAddrBtn" style="font-size:12px;padding:4px 10px;" hidden>Abbrechen</button>
+            </div>
           </div>
-          <div id="bkHbBufferLine" style="font-size:12px;color:var(--text-muted);margin-top:8px;display:none;">
-            Termin-Block: <strong id="bkHbBlockTotal">—</strong> min (Hin + Sitzung + Rück + 10 min Puffer)
+
+          <!-- Berechnen + sonuç -->
+          <div class="form-group">
+            <button type="button" class="btn-ghost" id="bkHbBerechnenBtn" style="font-size:13px;padding:6px 14px;">📍 Entfernung berechnen</button>
+            <span id="bkHbResult" style="font-size:14px;margin-left:12px;display:none;">
+              <strong>ca. <span id="bkHbKm">— km</span></strong> · <strong>ca. <span id="bkHbMin">— min</span></strong>
+              <span id="bkHbCached" style="color:var(--text-muted);font-size:11px;margin-left:6px;"></span>
+            </span>
+            <div id="bkHbError" style="font-size:12px;color:#c00;margin-top:6px;display:none;"></div>
+            <div id="bkHbBufferLine" style="font-size:12px;color:var(--text-muted);margin-top:6px;display:none;">
+              Termin-Block: ca. <strong id="bkHbBlockTotal">—</strong> min (Hin + Sitzung + Rück + 10 min Puffer)
+            </div>
           </div>
         </div>
         <div class="form-group">
@@ -2152,6 +2179,10 @@
         <button class="modal-close" data-modal="patientDetailModal">✕</button>
       </div>
       <div class="modal-body" style="padding:0;">
+        <!-- Patient-Info: tüm bilgiler tek yerde özet -->
+        <div id="pdInfoBlock" style="padding:14px 20px;border-bottom:1px solid var(--border);background:#fafbfd;">
+          <div id="pdInfoGrid" style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:8px 20px;font-size:13px;"></div>
+        </div>
         <div class="pd-tabs">
           <button class="pd-tab active" data-tab="notes">Notizen</button>
           <button class="pd-tab" data-tab="anamnese">Anamnese</button>
