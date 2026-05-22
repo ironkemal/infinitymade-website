@@ -1039,45 +1039,6 @@
           </div>
         </section>
 
-        <!-- ===== MODAL: Vehicle CRUD ===== -->
-        <div class="modal-overlay" id="vehicleEditModal" hidden>
-          <div class="modal" style="max-width:440px;">
-            <div class="modal-header">
-              <span class="modal-title" id="vehicleEditTitle">Fahrzeug anlegen</span>
-              <button class="modal-close" data-modal="vehicleEditModal">✕</button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" id="vehEditId" />
-              <div class="form-group">
-                <label class="form-label">Kennzeichen <span class="req">*</span></label>
-                <input class="form-input" id="vehEditKennzeichen" placeholder="z.B. SU-AB 123" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Bezeichnung (optional)</label>
-                <input class="form-input" id="vehEditLabel" placeholder="z.B. Praxis VW Caddy" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Art</label>
-                <select class="form-select" id="vehEditKind">
-                  <option value="gewerblich">🏢 Gewerblich (Praxis-Fahrzeug, für alle sichtbar)</option>
-                  <option value="privat">🚙 Privat (nur ich)</option>
-                </select>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="vehEditKindHint"></div>
-              </div>
-              <div class="form-group">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                  <input type="checkbox" id="vehEditIsDefault" /> Als Standardfahrzeug verwenden
-                </label>
-              </div>
-              <div id="vehEditError" style="color:#c00;font-size:13px;display:none;"></div>
-            </div>
-            <div class="modal-footer">
-              <button class="btn-ghost" data-modal="vehicleEditModal">Abbrechen</button>
-              <button class="btn-primary" id="vehEditSaveBtn">Speichern</button>
-            </div>
-          </div>
-        </div>
-
         <!-- ===== PANEL: ÄRZTE ===== -->
         <section class="panel" id="panel-doctors">
           <div class="panel-header">
@@ -2906,6 +2867,45 @@
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="quickVehicleModal">Abbrechen</button>
         <button class="btn-primary" id="qvSaveBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: Vehicle CRUD (Fahrtenbuch) ===== -->
+  <div class="modal-overlay" id="vehicleEditModal" hidden>
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <span class="modal-title" id="vehicleEditTitle">Fahrzeug anlegen</span>
+        <button class="modal-close" data-modal="vehicleEditModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="vehEditId" />
+        <div class="form-group">
+          <label class="form-label">Kennzeichen <span class="req">*</span></label>
+          <input class="form-input" id="vehEditKennzeichen" placeholder="z.B. SU-AB 123" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bezeichnung (optional)</label>
+          <input class="form-input" id="vehEditLabel" placeholder="z.B. Praxis VW Caddy" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Art</label>
+          <select class="form-select" id="vehEditKind">
+            <option value="gewerblich">🏢 Gewerblich (Praxis-Fahrzeug, für alle sichtbar)</option>
+            <option value="privat">🚙 Privat (nur ich)</option>
+          </select>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="vehEditKindHint"></div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="vehEditIsDefault" /> Als Standardfahrzeug verwenden
+          </label>
+        </div>
+        <div id="vehEditError" style="color:#c00;font-size:13px;display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="vehicleEditModal">Abbrechen</button>
+        <button class="btn-primary" id="vehEditSaveBtn">Speichern</button>
       </div>
     </div>
   </div>
