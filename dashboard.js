@@ -9523,18 +9523,25 @@ function fbActivateTab(tabName) {
 // Fahrtenbuch: Global delegated handlers — panel binding'e bağımlı değil
 if (!window.__fbDelegatedBound) {
   window.__fbDelegatedBound = true;
+  const safe = (label, fn) => {
+    try { fn(); }
+    catch (err) {
+      console.error('[fahrtenbuch:' + label + ']', err);
+      if (typeof showToast === 'function') showToast(label + ' Fehler: ' + (err?.message || err), 'error');
+    }
+  };
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[id]');
+    const t = e.target.closest('[id], [data-fb-tab]');
     if (!t) return;
-    if (t.id === 'fbVehicleAddBtn') { e.preventDefault(); openVehicleEditModal(null); return; }
-    if (t.id === 'vehEditSaveBtn') { e.preventDefault(); saveVehicleEdit(); return; }
-    if (t.id === 'fbFahrtenRefresh') { e.preventDefault(); loadFbFahrten(); return; }
-    if (t.id === 'fbFahrtenExportCsv') { e.preventDefault(); exportFbFahrtenCsv(); return; }
-    if (t.id === 'fbReportRefresh') { e.preventDefault(); loadFbReports(); return; }
-    if (t.dataset && t.dataset.fbTab) { e.preventDefault(); fbActivateTab(t.dataset.fbTab); return; }
+    if (t.id === 'fbVehicleAddBtn')   { e.preventDefault(); safe('openVehicle', () => openVehicleEditModal(null)); return; }
+    if (t.id === 'vehEditSaveBtn')    { e.preventDefault(); safe('saveVehicle', saveVehicleEdit); return; }
+    if (t.id === 'fbFahrtenRefresh')  { e.preventDefault(); safe('refreshFahrten', loadFbFahrten); return; }
+    if (t.id === 'fbFahrtenExportCsv'){ e.preventDefault(); safe('exportCsv', exportFbFahrtenCsv); return; }
+    if (t.id === 'fbReportRefresh')   { e.preventDefault(); safe('refreshReport', loadFbReports); return; }
+    if (t.dataset && t.dataset.fbTab) { e.preventDefault(); safe('switchTab', () => fbActivateTab(t.dataset.fbTab)); return; }
   });
   document.addEventListener('change', (e) => {
-    if (e.target.id === 'vehEditKind') updateVehEditKindHint();
+    if (e.target.id === 'vehEditKind') safe('kindHint', updateVehEditKindHint);
   });
 }
 
@@ -9766,20 +9773,31 @@ function updateVehEditKindHint() {
 }
 
 function openVehicleEditModal(v) {
+  const modal = document.getElementById('vehicleEditModal');
+  if (!modal) {
+    console.error('[fahrtenbuch] vehicleEditModal element nicht gefunden im DOM');
+    showToast('Modal nicht geladen — bitte Seite neu laden (Strg+F5).', 'error');
+    return;
+  }
   const isOwner = currentProfile?.role === 'owner';
-  document.getElementById('vehEditId').value = v?.id || '';
-  document.getElementById('vehEditKennzeichen').value = v?.kennzeichen || '';
-  document.getElementById('vehEditLabel').value = v?.label || '';
-  document.getElementById('vehEditTitle').textContent = v ? 'Fahrzeug bearbeiten' : 'Fahrzeug anlegen';
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setVal('vehEditId', v?.id || '');
+  setVal('vehEditKennzeichen', v?.kennzeichen || '');
+  setVal('vehEditLabel', v?.label || '');
+  const titleEl = document.getElementById('vehEditTitle');
+  if (titleEl) titleEl.textContent = v ? 'Fahrzeug bearbeiten' : 'Fahrzeug anlegen';
   const kindSel = document.getElementById('vehEditKind');
-  kindSel.value = v?.kind || (isOwner ? 'gewerblich' : 'privat');
-  // Employee'lar gewerblich oluşturamaz (RLS engelliyor zaten — UI'da da gri yapalım)
-  Array.from(kindSel.options).forEach(opt => {
-    opt.disabled = (opt.value === 'gewerblich' && !isOwner);
-  });
-  if (!isOwner) kindSel.value = 'privat';
-  document.getElementById('vehEditIsDefault').checked = !!v?.is_default;
-  document.getElementById('vehEditError').style.display = 'none';
+  if (kindSel) {
+    kindSel.value = v?.kind || (isOwner ? 'gewerblich' : 'privat');
+    Array.from(kindSel.options).forEach(opt => {
+      opt.disabled = (opt.value === 'gewerblich' && !isOwner);
+    });
+    if (!isOwner) kindSel.value = 'privat';
+  }
+  const defEl = document.getElementById('vehEditIsDefault');
+  if (defEl) defEl.checked = !!v?.is_default;
+  const errEl = document.getElementById('vehEditError');
+  if (errEl) errEl.style.display = 'none';
   updateVehEditKindHint();
   openModal('vehicleEditModal');
 }
