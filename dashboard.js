@@ -2310,7 +2310,7 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
   if (allowedSet) visible = visible.filter(s => allowedSet.has(s.id));
 
   el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + visible.map(s =>
-    `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)} (${s.duration_minutes || 30} min)</option>`
+    `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)}</option>`
   ).join('');
   if (selectedId) updateBkDuration(selectedId);
 }
@@ -5802,17 +5802,19 @@ async function loadEmpServices(empId) {
   const total = (all || []).length;
   const selectedCount = assignedIds.size;
 
-  // Hizmet süresi/fiyat özetini hesapla
+  // Hizmet fiyat özetini hesapla (süre çoklu olduğu için göstermiyoruz)
   const formatService = (s) => {
-    const dur = s.duration_minutes || 30;
     let priceStr = '';
     if (typeof s.price === 'number') priceStr = `${s.price.toFixed(2)} €`;
     else if (s.price_config?.durations) {
       const durs = s.price_config.durations;
       const values = Object.values(durs).filter(d => d.active && typeof d.price === 'number').map(d => d.price);
-      if (values.length) priceStr = `ab ${Math.min(...values).toFixed(2)} €`;
+      if (values.length) {
+        const min = Math.min(...values), max = Math.max(...values);
+        priceStr = min === max ? `${min.toFixed(2)} €` : `${min.toFixed(2)}–${max.toFixed(2)} €`;
+      }
     }
-    return { dur, priceStr };
+    return { priceStr };
   };
 
   grid.innerHTML = `
@@ -5825,19 +5827,19 @@ async function loadEmpServices(empId) {
     </div>
     <div class="emp-srv-cards">
       ${(all || []).map(s => {
-        const { dur, priceStr } = formatService(s);
+        const { priceStr } = formatService(s);
         const checked = assignedIds.has(s.id);
         const initial = (s.title || '?').trim().charAt(0).toUpperCase();
         const color = s.color || 'var(--primary)';
+        const hasMeta = priceStr || s.code;
         return `<label class="emp-srv-card ${checked ? 'is-selected' : ''}" data-srv-id="${s.id}">
           <span class="emp-srv-card-avatar" style="background:${color};">${escapeHtml(initial)}</span>
           <span class="emp-srv-card-body">
             <span class="emp-srv-card-title">${escapeHtml(s.title)}</span>
-            <span class="emp-srv-card-meta">
-              <span>⏱ ${dur} min</span>
+            ${hasMeta ? `<span class="emp-srv-card-meta">
               ${priceStr ? `<span>💶 ${escapeHtml(priceStr)}</span>` : ''}
               ${s.code ? `<span class="emp-srv-card-code">${escapeHtml(s.code)}</span>` : ''}
-            </span>
+            </span>` : ''}
           </span>
           <input type="checkbox" class="emp-srv-chk" data-srv="${s.id}" ${checked ? 'checked' : ''}>
         </label>`;
