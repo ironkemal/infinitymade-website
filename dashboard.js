@@ -9436,6 +9436,24 @@ function fbActivateTab(tabName) {
   if (tabName === 'reports') loadFbReports();
 }
 
+// Fahrtenbuch: Global delegated handlers — panel binding'e bağımlı değil
+if (!window.__fbDelegatedBound) {
+  window.__fbDelegatedBound = true;
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[id]');
+    if (!t) return;
+    if (t.id === 'fbVehicleAddBtn') { e.preventDefault(); openVehicleEditModal(null); return; }
+    if (t.id === 'vehEditSaveBtn') { e.preventDefault(); saveVehicleEdit(); return; }
+    if (t.id === 'fbFahrtenRefresh') { e.preventDefault(); loadFbFahrten(); return; }
+    if (t.id === 'fbFahrtenExportCsv') { e.preventDefault(); exportFbFahrtenCsv(); return; }
+    if (t.id === 'fbReportRefresh') { e.preventDefault(); loadFbReports(); return; }
+    if (t.dataset && t.dataset.fbTab) { e.preventDefault(); fbActivateTab(t.dataset.fbTab); return; }
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target.id === 'vehEditKind') updateVehEditKindHint();
+  });
+}
+
 async function loadFahrtenbuchPanel() {
   const panel = document.getElementById('panel-fahrtenbuch');
   if (!panel) return;
