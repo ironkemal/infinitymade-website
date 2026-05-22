@@ -339,7 +339,7 @@ app.post('/api/apify/search', async (req, res) => {
 
 // 2. Booking Routes (Get Slots & Create)
 app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
-  const { userId, date, duration } = req.body; // date: YYYY-MM-DD
+  const { userId, date, duration, businessId } = req.body; // date: YYYY-MM-DD
   if (!userId || !date || !duration) return res.status(400).json({ error: 'Missing params' });
 
   try {
@@ -367,10 +367,22 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
     if (profile?.owner_id) ownerId = profile.owner_id;
 
     // 1.4 Check business closed_days (multi-business açılış günleri)
-    // Önce: userId bir employee mi? Atandığı business'i bul. Default'a atanmissa onu,
-    // degilse ilk atamasi (created_at ASC); employee degilse owner default business.
+    // Önce: request explicit businessId vermisse onu kullan. Yoksa:
+    // - userId bir employee mi? Atandığı business'i bul. Default'a atanmissa onu,
+    //   degilse ilk atamasi (created_at ASC); employee degilse owner default business.
     let activeBiz = null;
-    if (profile?.owner_id) {
+    if (businessId) {
+      const { data: explicitBiz } = await supabase
+        .from('businesses')
+        .select('id, closed_days, owner_id')
+        .eq('id', businessId)
+        .maybeSingle();
+      // Güvenlik: business gerçekten bu owner'a ait mi?
+      if (explicitBiz && explicitBiz.owner_id === ownerId) {
+        activeBiz = explicitBiz;
+      }
+    }
+    if (!activeBiz && profile?.owner_id) {
       // Employee — owner'in altinda employee'nin atandigi business'i bul
       const { data: assigned } = await supabase
         .from('employee_business_assignments')
@@ -556,7 +568,7 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
 });
 
 app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
-  const { userId, serviceId, date, time, customerName, customerEmail, customerPhone } = req.body;
+  const { userId, serviceId, date, time, customerName, customerEmail, customerPhone, businessId } = req.body;
   
   try {
     // Reject past dates and enforce minimum 30-min lead time
@@ -581,7 +593,19 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     // orphaned calendar events when two clients race for the same slot.
     const owner_id = (req.body.ownerId != null) ? req.body.ownerId : userId; // solopreneur fallback
 
-    const { data: booking, error: dbErr } = await supabase.from('bookings').insert({
+    // businessId verilmiş ve gerçekten bu owner'a aitse onu kullan, aksi halde trigger fallback
+    let resolvedBusinessId = null;
+    if (businessId) {
+      const { data: biz } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('id', businessId)
+        .eq('owner_id', owner_id)
+        .maybeSingle();
+      if (biz) resolvedBusinessId = biz.id;
+    }
+
+    const insertPayload = {
       user_id: userId,
       owner_id: owner_id,
       service_id: serviceId,
@@ -591,7 +615,10 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       customer_email: customerEmail || `wa${(customerPhone || 'anon').replace(/\D/g, '')}@whatsapp.local`,
       customer_phone: customerPhone,
       status: 'confirmed'
-    }).select().single();
+    };
+    if (resolvedBusinessId) insertPayload.business_id = resolvedBusinessId;
+
+    const { data: booking, error: dbErr } = await supabase.from('bookings').insert(insertPayload).select().single();
 
     if (dbErr) {
       if (dbErr.code === '23P01') {
