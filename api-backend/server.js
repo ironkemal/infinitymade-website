@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import WebSocket from 'ws';
@@ -16,8 +17,42 @@ import crypto from 'crypto';
 dotenv.config();
 
 const app = express();
+
+// Trust proxy (Traefik) so rate-limit can read real client IP from X-Forwarded-For
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.json({ limit: '15mb' })); // raised for rezept image base64 payloads
+
+// ============================================================================
+// Rate limiters — public endpoint abuse koruması
+// ============================================================================
+// Public booking flow: agresif limit (anonim, IP bazlı)
+const publicBookingLimiter = rateLimit({
+  windowMs: 60 * 1000,        // 1 dakika
+  limit: 20,                  // IP başına 20 istek/dakika
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' },
+});
+
+// Slot lookup: hafif (kullanıcı tıklayarak gezinebilir)
+const slotsLookupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,                  // IP başına 60 sorgu/dakika
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen. Bitte warten Sie eine Minute.' },
+});
+
+// Verify-code (employee signup): brute-force koruma
+const verifyCodeLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,   // 10 dakika
+  limit: 5,                   // IP başına 5 deneme
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Versuche. Bitte warten Sie 10 Minuten.' },
+});
 
 // Request logger — used to debug what the n8n bot is actually sending.
 app.use((req, _res, next) => {
@@ -303,7 +338,7 @@ app.post('/api/apify/search', async (req, res) => {
 });
 
 // 2. Booking Routes (Get Slots & Create)
-app.post('/api/booking/get-slots', async (req, res) => {
+app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
   const { userId, date, duration } = req.body; // date: YYYY-MM-DD
   if (!userId || !date || !duration) return res.status(400).json({ error: 'Missing params' });
 
@@ -341,8 +376,8 @@ app.post('/api/booking/get-slots', async (req, res) => {
       .maybeSingle();
 
     if (defaultBiz && Array.isArray(defaultBiz.closed_days) && defaultBiz.closed_days.length) {
-      // JS Date.getDay() vs PG EXTRACT(DOW): both 0=Sunday, 1=Monday,...
-      const jsDow = new Date(date + 'T12:00:00').getDay();
+      // berlinDayOfWeek server local TZ'den bağımsız (DST-safe)
+      const jsDow = berlinDayOfWeek(date);
       if (defaultBiz.closed_days.includes(jsDow)) {
         return res.json({ slots: [], reason: 'business_closed_day' });
       }
@@ -502,7 +537,7 @@ app.post('/api/booking/get-slots', async (req, res) => {
   }
 });
 
-app.post('/api/booking/create', async (req, res) => {
+app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
   const { userId, serviceId, date, time, customerName, customerEmail, customerPhone } = req.body;
   
   try {
@@ -699,7 +734,7 @@ app.post('/api/booking/create', async (req, res) => {
 });
 
 // 5. Verify Company Code (Bypass RLS)
-app.post('/api/verify-code', async (req, res) => {
+app.post('/api/verify-code', verifyCodeLimiter, async (req, res) => {
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ error: 'Code is required' });
