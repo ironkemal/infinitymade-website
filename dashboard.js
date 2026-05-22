@@ -21,7 +21,7 @@ const T = {
     kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_new: 'Neu', lf_contacted: 'Kontaktiert', lf_booked: 'Termin', lf_won: 'Gewonnen', lf_lost: 'Verloren',
-    lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung',
+    lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
     lead_status: 'Status', lead_notes: 'Notizen', lead_email: 'E-Mail', lead_website: 'Website',
     lead_country_code: 'Land', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategorie',
     leads_empty: 'Noch keine Leads.', lead_modal_new: 'Neuer Lead', lead_modal_edit: 'Lead bearbeiten',
@@ -88,7 +88,7 @@ const T = {
     kunden_sub: 'Leads & customer info', leads_import: 'Import CSV', leads_add: '+ New lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Search',
     lf_all: 'All', lf_new: 'New', lf_contacted: 'Contacted', lf_booked: 'Booked', lf_won: 'Won', lf_lost: 'Lost',
-    lead_title: 'Name', lead_city: 'City', lead_phone: 'Phone', lead_rating: 'Rating',
+    lead_title: 'Name', lead_city: 'City', lead_phone: 'Phone', lead_rating: 'Rating', lead_standort: 'Practice',
     lead_status: 'Status', lead_notes: 'Notes', lead_email: 'Email', lead_website: 'Website',
     lead_country_code: 'Country', lead_google_url: 'Google Maps URL', lead_category_name: 'Category',
     leads_empty: 'No leads yet.', lead_modal_new: 'New lead', lead_modal_edit: 'Edit lead',
@@ -154,7 +154,7 @@ const T = {
     kunden_sub: 'Lead & müşteri bilgileri', leads_import: 'CSV içe aktar', leads_add: '+ Yeni Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
     lf_all: 'Tümü', lf_new: 'Yeni', lf_contacted: 'İletişim kuruldu', lf_booked: 'Randevu', lf_won: 'Kazanıldı', lf_lost: 'Kaybedildi',
-    lead_title: 'Ad', lead_city: 'Şehir', lead_phone: 'Telefon', lead_rating: 'Puan',
+    lead_title: 'Ad', lead_city: 'Şehir', lead_phone: 'Telefon', lead_rating: 'Puan', lead_standort: 'Şube',
     lead_status: 'Durum', lead_notes: 'Notlar', lead_email: 'E-posta', lead_website: 'Website',
     lead_country_code: 'Ülke', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategori',
     leads_empty: 'Henüz lead yok.', lead_modal_new: 'Yeni Lead', lead_modal_edit: 'Lead düzenle',
@@ -3415,18 +3415,21 @@ function renderLeads() {
   }
   if (rows.length === 0) { tbody.innerHTML = ''; emptyEl.hidden = false; return; }
   emptyEl.hidden = true;
+  // Standort lookup: lead.business_id → business_name
+  const bizNameById = new Map((myBusinesses || []).map(b => [b.id, b.business_name]));
   tbody.innerHTML = rows.map(r => {
     const meta = leadsMeta[r.phone_normalized] || {};
     const bkCount = meta.bookings?.length || 0;
     const hasWa = !!meta.wa;
     const bd = leadBirthDate(r);
     const sessionLabel = bkCount > 0 ? `Seans ${bkCount + 1}` : '';
+    const standort = bizNameById.get(r.business_id) || '—';
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
       <td>${displayName(r)}${bd ? ` <span style="color:var(--text-muted);font-size:12px;">· ${bd}</span>` : ''}</td>
       <td>${r.city || '—'}</td>
       <td>${r.phone || '—'}</td>
       <td>${r.email || '—'}</td>
-      <td>${r.total_score ?? r.rating ?? '—'}</td>
+      <td>${escapeHtml(standort)}</td>
       <td>
         ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? '<span class="badge badge-green" title="WhatsApp">💬</span> ' : ''}
         <span class="badge ${leadStatusBadge(r.status)}">${r.status || '—'}</span>
