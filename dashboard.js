@@ -9437,42 +9437,61 @@ function fbActivateTab(tabName) {
 }
 
 async function loadFahrtenbuchPanel() {
-  // Tab event'leri bir kez bağla
-  if (!document.getElementById('panel-fahrtenbuch').dataset.fbBound) {
-    document.getElementById('panel-fahrtenbuch').dataset.fbBound = '1';
-    document.querySelectorAll('#panel-fahrtenbuch .tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => fbActivateTab(btn.dataset.fbTab));
-    });
-    document.getElementById('fbFahrtenRefresh').addEventListener('click', loadFbFahrten);
-    document.getElementById('fbFahrtenExportCsv').addEventListener('click', exportFbFahrtenCsv);
-    document.getElementById('fbVehicleAddBtn').addEventListener('click', () => openVehicleEditModal(null));
-    document.getElementById('vehEditSaveBtn').addEventListener('click', saveVehicleEdit);
-    document.getElementById('vehEditKind').addEventListener('change', updateVehEditKindHint);
-    document.getElementById('fbReportRefresh').addEventListener('click', loadFbReports);
+  const panel = document.getElementById('panel-fahrtenbuch');
+  if (!panel) return;
+  // Tab event'leri bir kez bağla — async fail durumunda flag set olmaması için
+  // her binding'i try/catch içinde tut ve flag binding sonrasına koy.
+  if (!panel.dataset.fbBound) {
+    try {
+      panel.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => fbActivateTab(btn.dataset.fbTab));
+      });
+      document.getElementById('fbFahrtenRefresh')?.addEventListener('click', loadFbFahrten);
+      document.getElementById('fbFahrtenExportCsv')?.addEventListener('click', exportFbFahrtenCsv);
+      document.getElementById('fbVehicleAddBtn')?.addEventListener('click', () => openVehicleEditModal(null));
+      document.getElementById('vehEditSaveBtn')?.addEventListener('click', saveVehicleEdit);
+      document.getElementById('vehEditKind')?.addEventListener('change', updateVehEditKindHint);
+      document.getElementById('fbReportRefresh')?.addEventListener('click', loadFbReports);
 
-    // Default filters
-    const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById('fbFahrtenFrom').value = toISODate(monthStart);
-    document.getElementById('fbFahrtenTo').value = toISODate(today);
-    document.getElementById('fbReportMonth').value = today.toISOString().substring(0, 7);
+      // Default filters
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const fromEl = document.getElementById('fbFahrtenFrom');
+      const toEl = document.getElementById('fbFahrtenTo');
+      const monthEl = document.getElementById('fbReportMonth');
+      if (fromEl) fromEl.value = toISODate(monthStart);
+      if (toEl) toEl.value = toISODate(today);
+      if (monthEl) monthEl.value = today.toISOString().substring(0, 7);
 
-    // Owner ise terapist filtresini göster
-    if (currentProfile?.role === 'owner') {
-      document.getElementById('fbFahrtenUserWrap').hidden = false;
-      const { data: team } = await supabase.from('profiles')
-        .select('id,owner_first_name,owner_last_name,email')
-        .or(`id.eq.${currentSession.user.id},owner_id.eq.${currentSession.user.id}`);
-      const sel = document.getElementById('fbFahrtenUser');
-      sel.innerHTML = '<option value="">— Alle —</option>' +
-        (team || []).map(u => {
-          const name = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
-          return `<option value="${u.id}">${name}</option>`;
-        }).join('');
-      sel.addEventListener('change', loadFbFahrten);
+      panel.dataset.fbBound = '1';
+    } catch (e) {
+      console.error('[loadFahrtenbuchPanel bind]', e);
     }
   }
-  // İlk açılışta Fahrten tab aktif
+
+  // Owner ise terapist filtresini her açılışta tazele (await burada — fail olsa bile flag etkilenmez)
+  if (currentProfile?.role === 'owner') {
+    try {
+      const wrap = document.getElementById('fbFahrtenUserWrap');
+      if (wrap) wrap.hidden = false;
+      const sel = document.getElementById('fbFahrtenUser');
+      if (sel && !sel.dataset.populated) {
+        const { data: team } = await supabase.from('profiles')
+          .select('id,owner_first_name,owner_last_name,email')
+          .or(`id.eq.${currentSession.user.id},owner_id.eq.${currentSession.user.id}`);
+        sel.innerHTML = '<option value="">— Alle —</option>' +
+          (team || []).map(u => {
+            const name = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
+            return `<option value="${u.id}">${name}</option>`;
+          }).join('');
+        sel.addEventListener('change', loadFbFahrten);
+        sel.dataset.populated = '1';
+      }
+    } catch (e) {
+      console.warn('[loadFahrtenbuchPanel team]', e);
+    }
+  }
+
   fbActivateTab('fahrten');
 }
 
