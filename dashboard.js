@@ -54,7 +54,7 @@ const T = {
     saved: 'Gespeichert.', pw_changed: 'Passwort geändert.', err_generic: 'Ein Fehler ist aufgetreten.',
     copied: 'Kopiert!', csv_imported: 'Importiert: ', csv_error: 'CSV-Fehler: ',
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
-    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_beispielmodus: 'Beispielmodus', nav_anamnese: 'Anamnese',
+    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Beispielmodus', nav_anamnese: 'Anamnese',
     doctors_sub: 'Ärzte in der Nähe finden', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
     beispielmodus_sub: 'Anatomie-Haritas für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
@@ -120,7 +120,7 @@ const T = {
     saved: 'Saved.', pw_changed: 'Password changed.', err_generic: 'An error occurred.',
     copied: 'Copied!', csv_imported: 'Imported: ', csv_error: 'CSV error: ',
     apify_error: 'Apify error: ', apify_done: 'Imported: ', me: '(You)',
-    nav_doctors: 'Doctors', nav_notizen: 'Notes', nav_beispielmodus: 'Demo Mode', nav_anamnese: 'Intake',
+    nav_doctors: 'Doctors', nav_notizen: 'Notes', nav_fahrtenbuch: 'Travel Log', nav_beispielmodus: 'Demo Mode', nav_anamnese: 'Intake',
     doctors_sub: 'Find nearby doctors', notizen_sub: 'Patient notes & reports', b2c_sub: 'Customer mailings & AI assistant',
     beispielmodus_sub: 'Anatomy maps for patient consultations', anamnese_sub: 'Digital intake form',
     lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
@@ -186,7 +186,7 @@ const T = {
     saved: 'Kaydedildi.', pw_changed: 'Şifre değiştirildi.', err_generic: 'Bir hata oluştu.',
     copied: 'Kopyalandı!', csv_imported: 'İçe aktarıldı: ', csv_error: 'CSV hatası: ',
     apify_error: 'Apify hatası: ', apify_done: 'İçe aktarıldı: ', me: '(Siz)',
-    nav_doctors: 'Doktorlar', nav_notizen: 'Notlar', nav_beispielmodus: 'Örnek Modu', nav_anamnese: 'Anamnez',
+    nav_doctors: 'Doktorlar', nav_notizen: 'Notlar', nav_fahrtenbuch: 'Sürüş Defteri', nav_beispielmodus: 'Örnek Modu', nav_anamnese: 'Anamnez',
     doctors_sub: 'Yakındaki doktorları bul', notizen_sub: 'Hasta notları ve raporlar', b2c_sub: 'Müşteri maileri ve AI asistanı',
     beispielmodus_sub: 'Hasta görüşmeleri için anatomi haritaları', anamnese_sub: 'Dijital anamnez formu',
     lbl_doctor_notes: 'Doktor notları', lbl_therapist_notes: 'Terapist notları',
@@ -250,6 +250,7 @@ const SECTOR_PANELS = {
     { id: 'calendar', icon: '📅', key: 'nav_calendar', roles: ['owner', 'employee'] },
     { id: 'kunden', icon: '👥', key: 'nav_kunden', roles: ['owner', 'employee'] },
     { id: 'notizen', icon: '📝', key: 'nav_notizen', roles: ['owner', 'employee'] },
+    { id: 'fahrtenbuch', icon: '🚗', key: 'nav_fahrtenbuch', roles: ['owner', 'employee'] },
     { id: 'services', icon: '✂️', key: 'nav_services', roles: ['owner', 'employee'] },
     { id: 'hours', icon: '🕐', key: 'nav_hours', roles: ['owner', 'employee'] },
     { id: 'team', icon: '👤', key: 'nav_team', roles: ['owner', 'employee'] },
@@ -456,6 +457,7 @@ async function switchPanel(id) {
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
     setCalendarView('day');
   }
+  if (id === 'fahrtenbuch') loadFahrtenbuchPanel();
   if (id === 'kunden') loadLeads();
   if (id === 'services') loadServices();
   if (id === 'hours') loadHoursPanel();
@@ -800,7 +802,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,services(title,color,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,services(title,color,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1293,7 +1295,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,services(title,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,services(title,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1408,6 +1410,7 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   document.getElementById('bkDocAssignHint').hidden = true;
+  if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
   populateEmpSelects();
   await populateSrvSelect();
   openModal('bookingModal');
@@ -1510,9 +1513,11 @@ async function openBookingActionModal(booking) {
   }
 
   const isOwn = booking.user_id === currentSession.user.id;
-  document.getElementById('bkActionStartBtn').hidden = !isOwn;
   document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
   document.getElementById('bkActionNoShowHint').hidden = !isOwn;
+
+  // Fahrtenbuch: Hausbesuch state machine UI
+  await renderBkActionFahrtState(booking, isOwn);
 
   if (isOwn) {
     updateNoShowButton(booking.start_time);
@@ -1522,12 +1527,348 @@ async function openBookingActionModal(booking) {
   openModal('bkActionModal');
 }
 
+// Fahrtenbuch: bkActionModal'ı booking.hausbesuch + fahrt_status'a göre render eder
+async function renderBkActionFahrtState(booking, isOwn) {
+  const hbInfo = document.getElementById('bkActionHbInfo');
+  const fahrtStartGroup = document.getElementById('bkActionFahrtStartedGroup');
+  const arrivedGroup = document.getElementById('bkActionArrivedGroup');
+  const startTerminGroup = document.getElementById('bkActionStartTerminGroup');
+  const fahrtEndGroup = document.getElementById('bkActionFahrtEndGroup');
+  const doneGroup = document.getElementById('bkActionDoneGroup');
+
+  // Reset
+  hbInfo.hidden = true;
+  fahrtStartGroup.hidden = true;
+  arrivedGroup.hidden = true;
+  startTerminGroup.hidden = !isOwn;
+  fahrtEndGroup.hidden = true;
+  doneGroup.hidden = true;
+
+  if (!booking.hausbesuch) {
+    // Normal randevu — sadece "Termin Starten" (mevcut akış)
+    return;
+  }
+
+  // Hausbesuch — adres ve durum bilgisini al
+  let leadAddr = null, distanceKm = null, durationMin = null;
+  if (booking.customer_phone) {
+    const { data: l } = await supabase.from('leads')
+      .select('street,plz,city,distance_km,duration_min')
+      .eq('owner_id', booking.owner_id)
+      .eq('phone', booking.customer_phone)
+      .maybeSingle();
+    if (l) {
+      const parts = [l.street, [l.plz, l.city].filter(Boolean).join(' ')].filter(Boolean);
+      leadAddr = parts.join(', ');
+      distanceKm = l.distance_km;
+      durationMin = l.duration_min;
+    }
+  }
+
+  hbInfo.hidden = false;
+  document.getElementById('bkActionHbAddr').textContent = leadAddr || '— Adresse fehlt —';
+  const routeEl = document.getElementById('bkActionHbRoute');
+  if (distanceKm != null && durationMin != null) {
+    routeEl.textContent = `${Number(distanceKm).toFixed(1)} km · ${durationMin} min (einfache Fahrt)`;
+  } else {
+    routeEl.textContent = '';
+  }
+
+  const statusBadge = document.getElementById('bkActionHbStatusBadge');
+  const statusLabels = {
+    null: 'Nicht gestartet',
+    fahrt_started: 'Fahrt unterwegs',
+    fahrt_arrived: 'Angekommen',
+    in_progress: 'Termin läuft',
+    fahrt_return_pending: 'Rückkehr offen',
+    fahrt_completed: 'Abgeschlossen'
+  };
+  statusBadge.textContent = statusLabels[booking.fahrt_status] || statusLabels.null;
+
+  if (!isOwn) {
+    // Başka terapistin Hausbesuch'u — sadece bilgi göster, aksiyon yok
+    startTerminGroup.hidden = true;
+    return;
+  }
+
+  const s = booking.fahrt_status;
+  if (s == null) {
+    fahrtStartGroup.hidden = false;
+    startTerminGroup.hidden = true;
+  } else if (s === 'fahrt_started') {
+    arrivedGroup.hidden = false;
+    document.getElementById('bkActionCopyAddr').textContent = leadAddr || '—';
+    document.getElementById('bkActionCopyOk').style.display = 'none';
+    startTerminGroup.hidden = true;
+  } else if (s === 'fahrt_arrived') {
+    // Termin Starten aktif (mevcut buton)
+    startTerminGroup.hidden = false;
+  } else if (s === 'in_progress') {
+    // Termin başlatılmış — Fahrt Beenden henüz aktif değil ama gösterelim
+    startTerminGroup.hidden = true;
+    fahrtEndGroup.hidden = false;
+  } else if (s === 'fahrt_return_pending') {
+    startTerminGroup.hidden = true;
+    fahrtEndGroup.hidden = false;
+  } else if (s === 'fahrt_completed') {
+    startTerminGroup.hidden = true;
+    doneGroup.hidden = false;
+  }
+}
+
+// Fahrtenbuch: Fahrt Starten flow — vehicle picker + Start-KM
+async function loadVehiclesForPicker() {
+  const ownerId = getOwnerId();
+  if (!ownerId) return [];
+  const { data, error } = await supabase
+    .from('vehicles')
+    .select('id,kind,kennzeichen,label,is_default,created_by')
+    .eq('owner_id', ownerId)
+    .eq('is_active', true)
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) { console.error('[loadVehicles]', error); return []; }
+  return data || [];
+}
+
+async function openFahrtStartModal() {
+  const sel = document.getElementById('fsVehicleSelect');
+  const err = document.getElementById('fsError');
+  err.style.display = 'none'; err.textContent = '';
+  document.getElementById('fsStartKm').value = '';
+  const list = await loadVehiclesForPicker();
+  const lastUsed = localStorage.getItem('fahrtenbuch:lastVehicleId') || '';
+  sel.innerHTML = '<option value="">— Fahrzeug wählen —</option>' +
+    list.map(v => {
+      const kindLabel = v.kind === 'gewerblich' ? '🏢' : '🚙';
+      const lbl = [v.kennzeichen, v.label].filter(Boolean).join(' · ');
+      return `<option value="${v.id}">${kindLabel} ${lbl}</option>`;
+    }).join('');
+  if (lastUsed && list.find(v => v.id === lastUsed)) {
+    sel.value = lastUsed;
+  } else {
+    const def = list.find(v => v.is_default);
+    if (def) sel.value = def.id;
+  }
+  if (list.length === 0) {
+    err.textContent = 'Noch kein Fahrzeug vorhanden. Bitte zuerst eines anlegen.';
+    err.style.display = '';
+  }
+  openModal('fahrtStartModal');
+}
+
+document.getElementById('bkActionFahrtStartBtn')?.addEventListener('click', openFahrtStartModal);
+
+document.getElementById('fsAddVehicleBtn')?.addEventListener('click', () => {
+  document.getElementById('qvKennzeichen').value = '';
+  document.getElementById('qvLabel').value = '';
+  document.getElementById('qvError').style.display = 'none';
+  openModal('quickVehicleModal');
+});
+
+document.getElementById('qvSaveBtn')?.addEventListener('click', async () => {
+  const kz = document.getElementById('qvKennzeichen').value.trim();
+  const lbl = document.getElementById('qvLabel').value.trim();
+  const err = document.getElementById('qvError');
+  err.style.display = 'none';
+  if (!kz) { err.textContent = 'Kennzeichen erforderlich.'; err.style.display = ''; return; }
+  const ownerId = getOwnerId();
+  const userId = currentSession.user.id;
+  const isOwner = currentProfile.role === 'owner';
+  const { data, error } = await supabase.from('vehicles').insert({
+    owner_id: ownerId,
+    created_by: userId,
+    kind: isOwner ? 'gewerblich' : 'privat',  // employee → privat, owner Quick-Add → gewerblich (Fahrtenbuch sayfasında detaylı seçer)
+    kennzeichen: kz,
+    label: lbl || null
+  }).select().single();
+  if (error) { err.textContent = error.message; err.style.display = ''; return; }
+  closeModal('quickVehicleModal');
+  // Refresh picker
+  await openFahrtStartModal();
+  document.getElementById('fsVehicleSelect').value = data.id;
+});
+
+document.getElementById('fsSaveBtn')?.addEventListener('click', async () => {
+  const vehicleId = document.getElementById('fsVehicleSelect').value;
+  const startKm = parseInt(document.getElementById('fsStartKm').value, 10);
+  const err = document.getElementById('fsError');
+  err.style.display = 'none';
+  if (!vehicleId) { err.textContent = 'Bitte ein Fahrzeug wählen.'; err.style.display = ''; return; }
+  if (!Number.isFinite(startKm) || startKm < 0) {
+    err.textContent = 'Bitte einen gültigen Start-KM eingeben.'; err.style.display = ''; return;
+  }
+  const b = bkActionBookingCache;
+  if (!b) { err.textContent = 'Buchung nicht gefunden.'; err.style.display = ''; return; }
+
+  const nowIso = new Date().toISOString();
+  const { error: updErr } = await supabase.from('bookings').update({
+    fahrt_status: 'fahrt_started',
+    vehicle_id: vehicleId,
+    start_km: startKm,
+    fahrt_started_at: nowIso
+  }).eq('id', b.id);
+  if (updErr) { err.textContent = updErr.message; err.style.display = ''; return; }
+
+  localStorage.setItem('fahrtenbuch:lastVehicleId', vehicleId);
+
+  // In-memory state güncelle
+  b.fahrt_status = 'fahrt_started';
+  b.vehicle_id = vehicleId;
+  b.start_km = startKm;
+  b.fahrt_started_at = nowIso;
+
+  closeModal('fahrtStartModal');
+  await renderBkActionFahrtState(b, true);
+  showToast('🚗 Fahrt gestartet — bitte Adresse kopieren und losfahren.');
+});
+
+document.getElementById('bkActionCopyBtn')?.addEventListener('click', async () => {
+  const addr = document.getElementById('bkActionCopyAddr').textContent.trim();
+  if (!addr || addr === '—') return;
+  try {
+    await navigator.clipboard.writeText(addr);
+    document.getElementById('bkActionCopyOk').style.display = '';
+    setTimeout(() => { document.getElementById('bkActionCopyOk').style.display = 'none'; }, 2000);
+  } catch (_) {
+    showToast('Kopieren fehlgeschlagen — manuell auswählen.', 'error');
+  }
+});
+
+document.getElementById('bkActionArrivedBtn')?.addEventListener('click', async () => {
+  const b = bkActionBookingCache;
+  if (!b) return;
+  const nowIso = new Date().toISOString();
+  const { error } = await supabase.from('bookings').update({
+    fahrt_status: 'fahrt_arrived',
+    fahrt_arrived_at: nowIso
+  }).eq('id', b.id);
+  if (error) { showToast(error.message || 'Fehler', 'error'); return; }
+  b.fahrt_status = 'fahrt_arrived';
+  b.fahrt_arrived_at = nowIso;
+  await renderBkActionFahrtState(b, true);
+  showToast('✅ Angekommen — Termin kann gestartet werden.');
+});
+
+document.getElementById('bkActionFahrtEndBtn')?.addEventListener('click', async () => {
+  const b = bkActionBookingCache;
+  if (!b) return;
+  document.getElementById('feStartKm').textContent = b.start_km != null ? b.start_km + ' km' : '—';
+  document.getElementById('feEndKm').value = '';
+  document.getElementById('feDistance').style.display = 'none';
+  document.getElementById('feError').style.display = 'none';
+  openModal('fahrtEndModal');
+});
+
+document.getElementById('feEndKm')?.addEventListener('input', e => {
+  const b = bkActionBookingCache;
+  const end = parseInt(e.target.value, 10);
+  const distEl = document.getElementById('feDistance');
+  if (!b || !Number.isFinite(end) || b.start_km == null) {
+    distEl.style.display = 'none'; return;
+  }
+  const diff = end - b.start_km;
+  if (diff < 0) {
+    distEl.textContent = '⚠ End-KM darf nicht kleiner als Start-KM sein.';
+    distEl.style.color = '#c00';
+  } else {
+    distEl.textContent = `Gefahrene Strecke: ${diff} km`;
+    distEl.style.color = '#1c4d8f';
+  }
+  distEl.style.display = '';
+});
+
+document.getElementById('feSaveBtn')?.addEventListener('click', async () => {
+  const b = bkActionBookingCache;
+  const endKm = parseInt(document.getElementById('feEndKm').value, 10);
+  const err = document.getElementById('feError');
+  err.style.display = 'none';
+  if (!b) return;
+  if (!Number.isFinite(endKm) || endKm < 0) {
+    err.textContent = 'Bitte einen gültigen End-KM eingeben.'; err.style.display = ''; return;
+  }
+  if (b.start_km != null && endKm < b.start_km) {
+    err.textContent = 'End-KM darf nicht kleiner als Start-KM sein.'; err.style.display = ''; return;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  // 1) bookings → fahrt_completed
+  const { error: updErr } = await supabase.from('bookings').update({
+    fahrt_status: 'fahrt_completed',
+    end_km: endKm,
+    fahrt_ended_at: nowIso
+  }).eq('id', b.id);
+  if (updErr) { err.textContent = updErr.message; err.style.display = ''; return; }
+
+  // 2) Vehicle snapshot (immutable log için)
+  let kzSnapshot = null, kindSnapshot = null;
+  if (b.vehicle_id) {
+    const { data: v } = await supabase.from('vehicles')
+      .select('kennzeichen,kind').eq('id', b.vehicle_id).maybeSingle();
+    if (v) { kzSnapshot = v.kennzeichen; kindSnapshot = v.kind; }
+  }
+
+  // 3) Lead lookup (booking → phone → lead)
+  let leadId = null, leadDurationMin = null;
+  if (b.customer_phone) {
+    const { data: l } = await supabase.from('leads')
+      .select('id,duration_min')
+      .eq('owner_id', b.owner_id)
+      .eq('phone', b.customer_phone)
+      .maybeSingle();
+    if (l) { leadId = l.id; leadDurationMin = l.duration_min; }
+  }
+
+  // 4) fahrten log insert (UPSERT — booking_id unique, eski yarım log varsa update)
+  const { error: fErr } = await supabase.from('fahrten').upsert({
+    owner_id: b.owner_id,
+    user_id: currentSession.user.id,
+    booking_id: b.id,
+    lead_id: leadId,
+    vehicle_id: b.vehicle_id || null,
+    kennzeichen_snapshot: kzSnapshot,
+    kind_snapshot: kindSnapshot,
+    start_km: b.start_km,
+    end_km: endKm,
+    estimated_duration_min: leadDurationMin,
+    fahrt_started_at: b.fahrt_started_at,
+    fahrt_arrived_at: b.fahrt_arrived_at,
+    fahrt_ended_at: nowIso
+  }, { onConflict: 'booking_id' });
+  if (fErr) {
+    console.error('[fahrten-insert]', fErr);
+    showToast('Buchung aktualisiert, aber Fahrtenbuch-Log fehlgeschlagen: ' + fErr.message, 'error');
+  }
+
+  b.fahrt_status = 'fahrt_completed';
+  b.end_km = endKm;
+  b.fahrt_ended_at = nowIso;
+
+  closeModal('fahrtEndModal');
+  await renderBkActionFahrtState(b, true);
+  showToast('🏁 Fahrt abgeschlossen.');
+});
+
 async function handleTerminStarten() {
   if (!bkActionBookingCache) return;
   const b = bkActionBookingCache;
   const patientName = b.customer_name || '';
   const patientPhone = b.customer_phone || '';
   const ownerId = getOwnerId();
+
+  // Fahrtenbuch: Hausbesuch ise fahrt_status'u 'in_progress'e geçir — kullanıcı geri dönüp
+  // Fahrt Beenden tıklayabilsin. Eğer henüz fahrt_arrived değilse blokla.
+  if (b.hausbesuch) {
+    if (b.fahrt_status !== 'fahrt_arrived' && b.fahrt_status !== 'in_progress') {
+      showToast('Bitte zuerst "Fahrt Starten" → "Ich bin angekommen" durchlaufen.', 'error');
+      return;
+    }
+    if (b.fahrt_status === 'fahrt_arrived') {
+      await supabase.from('bookings').update({ fahrt_status: 'in_progress' }).eq('id', b.id);
+      b.fahrt_status = 'in_progress';
+    }
+  }
 
   closeModal('bkActionModal');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
@@ -1603,6 +1944,7 @@ async function openBookingModal(b) {
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   document.getElementById('bkDocAssignHint').hidden = true;
+  if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
   if (b.customer_phone) {
     try {
       const { data: lead } = await supabase.from('leads')
@@ -1647,7 +1989,7 @@ async function initBkCustomerAutocomplete() {
     const ownerId = getOwnerId();
     const { data } = await supabase
       .from('leads')
-      .select('id,title,first_name,last_name,phone,metadata')
+      .select('id,title,first_name,last_name,phone,metadata,street,plz,city,lat,lng,distance_km,duration_min,route_calculated_at')
       .eq('owner_id', ownerId)
       .order('title');
     window.bkAllLeads = data || [];
@@ -1710,6 +2052,7 @@ async function initBkCustomerAutocomplete() {
     if (phoneInput) phoneInput.value = lead.phone || '';
     list.hidden = true;
     activeIndex = -1;
+    refreshBkHausbesuchPanel(); // Fahrtenbuch: lead seçilince adres + cache durumu güncellenir
   }
 
   if (!input.dataset.bkAutoBound) {
@@ -1963,6 +2306,188 @@ document.getElementById('bkPhone').addEventListener('blur', async () => {
   }
 });
 
+// ============================================================
+// Fahrtenbuch: Hausbesuch panel + Berechnen flow
+// ============================================================
+
+const HAUSBESUCH_BUFFER_MIN = 10; // Fahrtenbuch.md §2: kapı çal, eşya topla payı
+
+function getSelectedBkLead() {
+  const id = document.getElementById('bkCustomerId')?.value;
+  if (!id || !Array.isArray(window.bkAllLeads)) return null;
+  return window.bkAllLeads.find(l => l.id === id) || null;
+}
+
+function getBkServiceDurationMin() {
+  const durOptions = document.getElementById('bkDurationOptions');
+  const durGroup = document.getElementById('bkDurationGroup');
+  const checkedRadio = (durOptions || durGroup)?.querySelector('input[type="radio"]:checked');
+  if (checkedRadio) return parseInt(checkedRadio.value, 10) || 30;
+  const srvId = document.getElementById('bkService')?.value;
+  return (ownerServices || []).find(s => s.id === srvId)?.duration_minutes || 30;
+}
+
+function refreshBkHausbesuchPanel() {
+  const isHb = document.getElementById('bkHausbesuch').checked;
+  const panel = document.getElementById('bkHausbesuchPanel');
+  if (!panel) return;
+  panel.hidden = !isHb;
+  if (!isHb) return;
+
+  const lead = getSelectedBkLead();
+  const txt = document.getElementById('bkHbAddressText');
+  const result = document.getElementById('bkHbResult');
+  const err = document.getElementById('bkHbError');
+  const cached = document.getElementById('bkHbCached');
+  const bufferLine = document.getElementById('bkHbBufferLine');
+  const blockTotal = document.getElementById('bkHbBlockTotal');
+  err.style.display = 'none';
+  err.textContent = '';
+
+  if (!lead) {
+    txt.textContent = '— Patient auswählen —';
+    result.style.display = 'none';
+    bufferLine.style.display = 'none';
+    return;
+  }
+
+  const parts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
+  if (!parts.length) {
+    txt.innerHTML = '<span style="color:#c00;">⚠ Adresse fehlt — Patient bearbeiten und Strasse/PLZ/Stadt eintragen.</span>';
+    result.style.display = 'none';
+    bufferLine.style.display = 'none';
+    return;
+  }
+  txt.textContent = parts.join(', ');
+
+  if (lead.distance_km != null && lead.duration_min != null) {
+    document.getElementById('bkHbKm').textContent = `${Number(lead.distance_km).toFixed(1)} km`;
+    document.getElementById('bkHbMin').textContent = `${lead.duration_min} min`;
+    const when = lead.route_calculated_at ? new Date(lead.route_calculated_at).toLocaleDateString('de-DE') : '';
+    cached.textContent = when ? `(gespeichert ${when})` : '';
+    result.style.display = '';
+    const seance = getBkServiceDurationMin();
+    blockTotal.textContent = String(lead.duration_min * 2 + seance + HAUSBESUCH_BUFFER_MIN);
+    bufferLine.style.display = '';
+  } else {
+    result.style.display = 'none';
+    bufferLine.style.display = 'none';
+  }
+}
+
+document.getElementById('bkHausbesuch')?.addEventListener('change', refreshBkHausbesuchPanel);
+document.getElementById('bkService')?.addEventListener('change', refreshBkHausbesuchPanel);
+
+async function invokeFahrtenbuchFn(name, body) {
+  const { data, error } = await supabase.functions.invoke(name, { body });
+  if (error) {
+    // FunctionsHttpError: error response body in error.context.response
+    let detail = error.message || 'Unbekannter Fehler';
+    try {
+      const ctxRes = error.context?.response || error.response;
+      if (ctxRes && typeof ctxRes.json === 'function') {
+        const j = await ctxRes.json();
+        detail = j.error || j.detail || detail;
+      }
+    } catch (_) {}
+    throw new Error(detail);
+  }
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
+async function ensureClinicLocation() {
+  // profiles.clinic_lat/lng yoksa klinik adresini geocode et ve kaydet
+  const ownerId = getOwnerId();
+  if (!ownerId) throw new Error('Kein Owner');
+  const { data: p } = await supabase
+    .from('profiles')
+    .select('clinic_lat,clinic_lng,street,house_number,zip,city,plz,country')
+    .eq('id', ownerId)
+    .maybeSingle();
+  if (!p) throw new Error('Profil nicht gefunden');
+  if (p.clinic_lat != null && p.clinic_lng != null) {
+    return { lat: Number(p.clinic_lat), lng: Number(p.clinic_lng) };
+  }
+  const street = [p.street, p.house_number].filter(Boolean).join(' ').trim();
+  const zip = p.zip || p.plz || '';
+  const cityPart = [zip, p.city].filter(Boolean).join(' ').trim();
+  const fullAddr = [street, cityPart].filter(Boolean).join(', ');
+  if (!fullAddr) {
+    throw new Error('Klinik-Adresse fehlt in den Einstellungen (Strasse, PLZ, Stadt)');
+  }
+  const geo = await invokeFahrtenbuchFn('fahrtenbuch-geocode', { address: fullAddr, country: p.country || 'DE' });
+  // RPC update is on profiles → only owner can update own row (RLS allows)
+  await supabase.from('profiles')
+    .update({ clinic_lat: geo.lat, clinic_lng: geo.lng, clinic_geocoded_at: new Date().toISOString() })
+    .eq('id', ownerId);
+  return { lat: geo.lat, lng: geo.lng };
+}
+
+document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('bkHbBerechnenBtn');
+  const err = document.getElementById('bkHbError');
+  const result = document.getElementById('bkHbResult');
+  err.style.display = 'none'; err.textContent = '';
+  const lead = getSelectedBkLead();
+  if (!lead) { err.textContent = 'Bitte zuerst einen Patienten auswählen.'; err.style.display = ''; return; }
+  if (!lead.street || !lead.plz || !lead.city) {
+    err.textContent = 'Adresse unvollständig — Patient bearbeiten.';
+    err.style.display = ''; return;
+  }
+
+  btn.disabled = true; btn.textContent = '⏳ Berechne…';
+  try {
+    // 1) Klinik koordinatı
+    const clinic = await ensureClinicLocation();
+
+    // 2) Hasta koordinatı — yoksa geocode + leads update
+    let leadLat = lead.lat != null ? Number(lead.lat) : null;
+    let leadLng = lead.lng != null ? Number(lead.lng) : null;
+    if (leadLat == null || leadLng == null) {
+      const addr = `${lead.street}, ${lead.plz} ${lead.city}`;
+      const geo = await invokeFahrtenbuchFn('fahrtenbuch-geocode', { address: addr });
+      leadLat = geo.lat; leadLng = geo.lng;
+      await supabase.from('leads').update({ lat: leadLat, lng: leadLng }).eq('id', lead.id);
+    }
+
+    // 3) Rota
+    const route = await invokeFahrtenbuchFn('fahrtenbuch-route', {
+      origin: [clinic.lng, clinic.lat],
+      dest: [leadLng, leadLat]
+    });
+
+    // 4) Cache
+    const nowIso = new Date().toISOString();
+    await supabase.from('leads').update({
+      distance_km: route.distance_km,
+      duration_min: route.duration_min,
+      route_calculated_at: nowIso
+    }).eq('id', lead.id);
+
+    // 5) In-memory state güncelle
+    lead.lat = leadLat; lead.lng = leadLng;
+    lead.distance_km = route.distance_km;
+    lead.duration_min = route.duration_min;
+    lead.route_calculated_at = nowIso;
+
+    // 6) UI refresh
+    document.getElementById('bkHbKm').textContent = `${route.distance_km.toFixed(1)} km`;
+    document.getElementById('bkHbMin').textContent = `${route.duration_min} min`;
+    document.getElementById('bkHbCached').textContent = '(gerade berechnet)';
+    result.style.display = '';
+    const seance = getBkServiceDurationMin();
+    document.getElementById('bkHbBlockTotal').textContent = String(route.duration_min * 2 + seance + HAUSBESUCH_BUFFER_MIN);
+    document.getElementById('bkHbBufferLine').style.display = '';
+  } catch (e) {
+    console.error('[fahrtenbuch-berechnen]', e);
+    err.textContent = 'Fehler: ' + e.message;
+    err.style.display = '';
+  } finally {
+    btn.disabled = false; btn.textContent = '📍 Entfernung berechnen';
+  }
+});
+
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   const empId = document.getElementById('bkEmployee').value;
@@ -2009,8 +2534,26 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   // Read from radio whether group is hidden or visible (single-option case keeps the radio)
   const checkedRadio = (durOptions || durGroup)?.querySelector('input[type="radio"]:checked');
   if (checkedRadio) dur = parseInt(checkedRadio.value);
+
+  // Fahrtenbuch: Hausbesuch ise end_time = gidiş + seans + dönüş + 10 dk buffer
+  const isHausbesuch = document.getElementById('bkHausbesuch').checked;
+  let totalBlockMin = dur;
+  if (isHausbesuch) {
+    const selLead = getSelectedBkLead();
+    if (!selLead) {
+      showToast('Bitte zuerst den Patienten auswählen.', 'error'); return;
+    }
+    if (!selLead.street || !selLead.plz || !selLead.city) {
+      showToast('Hausbesuch: Patientenadresse fehlt — Patient bearbeiten.', 'error'); return;
+    }
+    if (selLead.duration_min == null) {
+      showToast('Bitte zuerst "Entfernung berechnen" klicken.', 'error'); return;
+    }
+    totalBlockMin = Number(selLead.duration_min) * 2 + dur + HAUSBESUCH_BUFFER_MIN;
+  }
+
   const startIso = new Date(startV).toISOString();
-  const endIso = new Date(new Date(startV).getTime() + dur * 60000).toISOString();
+  const endIso = new Date(new Date(startV).getTime() + totalBlockMin * 60000).toISOString();
 
   const isSeries = document.getElementById('bkSeriesToggle').checked && !id;
   if (isSeries) {
@@ -3395,11 +3938,13 @@ async function openLeadModal(lead) {
   const sectorFieldsEl = document.getElementById('lead-sector-fields');
   const physioRow = document.getElementById('lead-physio-row');
   const physioRow2 = document.getElementById('lead-physio-row2');
+  const hausbesuchRow = document.getElementById('lead-hausbesuch-row');
 
   if (sector === 'physiotherapy') {
     sectorFieldsEl.style.display = 'block';
     physioRow.style.display = 'grid';
     physioRow2.style.display = 'grid';
+    hausbesuchRow.style.display = 'grid';
 
     if (krankenkassenCache.length === 0) {
       const { data } = await supabase.from('krankenkassen').select('*').order('name');
@@ -3411,11 +3956,25 @@ async function openLeadModal(lead) {
 
     kkSelect.value = md.krankenkasse || '';
     document.getElementById('lead-krankenkassennummer').value = md.krankenkassennummer || '';
-    document.getElementById('lead-adresse').value = md.adresse || '';
+    // New strukturlu adres alanları (kolonlar). Backward-compat: eski metadata.adresse'den parse et.
+    const streetEl = document.getElementById('lead-street');
+    const plzEl = document.getElementById('lead-plz');
+    streetEl.value = lead?.street || '';
+    plzEl.value = lead?.plz || '';
+    if (!streetEl.value && md.adresse) {
+      const parsed = parseAdresseString(md.adresse);
+      streetEl.value = parsed.street || md.adresse;
+      if (!plzEl.value) plzEl.value = parsed.plz || '';
+      if (!document.getElementById('lead-city').value) document.getElementById('lead-city').value = parsed.city || '';
+    }
+    const hb = !!md.hausbesuch;
+    document.getElementById('lead-hausbesuch').checked = hb;
+    toggleLeadHausbesuchUI(hb);
   } else {
     sectorFieldsEl.style.display = 'none';
     physioRow.style.display = 'none';
     physioRow2.style.display = 'none';
+    hausbesuchRow.style.display = 'none';
   }
 
   const histEl = document.getElementById('leadHistory');
@@ -3437,6 +3996,37 @@ async function openLeadModal(lead) {
   openModal('leadModal');
 }
 
+// ===== Fahrtenbuch helpers =====
+// Parse "Straßenname 12, 53721 Siegburg" → {street, plz, city}
+function parseAdresseString(s) {
+  if (!s || typeof s !== 'string') return { street: null, plz: null, city: null };
+  const txt = s.trim();
+  // PLZ + Ort kalıbı: 5 digit + space + city (DE)
+  const plzMatch = txt.match(/\b(\d{5})\s+([A-Za-zÀ-ÿäöüÄÖÜß .'-]+?)$/);
+  if (plzMatch) {
+    const plz = plzMatch[1];
+    const city = plzMatch[2].trim();
+    const before = txt.slice(0, plzMatch.index).replace(/[,;]\s*$/, '').trim();
+    return { street: before || null, plz, city };
+  }
+  // Fallback: virgülle ayrılmışsa son parça city
+  const parts = txt.split(',').map(p => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return { street: parts.slice(0, -1).join(', '), plz: null, city: parts.at(-1) };
+  }
+  return { street: txt, plz: null, city: null };
+}
+
+function toggleLeadHausbesuchUI(checked) {
+  document.getElementById('lead-street-req').hidden = !checked;
+  document.getElementById('lead-plz-req').hidden = !checked;
+  document.getElementById('lead-hausbesuch-hint').hidden = !checked;
+}
+
+document.getElementById('lead-hausbesuch')?.addEventListener('change', e => {
+  toggleLeadHausbesuchUI(e.target.checked);
+});
+
 document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   const id = document.getElementById('lead-id').value;
   const firstName = document.getElementById('lead-first-name').value.trim();
@@ -3445,12 +4035,40 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   if (!firstName || !lastName) { showToast('Vorname und Nachname sind erforderlich.', 'error'); return; }
   if (!geburtsdatum) { showToast('Geburtsdatum ist erforderlich.', 'error'); return; }
 
-  const metadata = { geburtsdatum };
   const sector = getSector();
+  const city = document.getElementById('lead-city').value.trim();
+  let street = null, plz = null, hausbesuch = false;
+
+  if (sector === 'physiotherapy') {
+    street = document.getElementById('lead-street').value.trim() || null;
+    plz = document.getElementById('lead-plz').value.trim() || null;
+    hausbesuch = document.getElementById('lead-hausbesuch').checked;
+
+    // Hausbesuch işaretliyse adres zorunlu (Fahrtenbuch.md §1)
+    if (hausbesuch) {
+      const missing = [];
+      if (!street) missing.push('Strasse');
+      if (!plz) missing.push('PLZ');
+      if (!city) missing.push('Stadt');
+      if (missing.length) {
+        showToast('Hausbesuch erfordert: ' + missing.join(', '), 'error');
+        return;
+      }
+      if (!/^\d{5}$/.test(plz)) {
+        showToast('PLZ muss 5-stellig sein.', 'error');
+        return;
+      }
+    }
+  }
+
+  const metadata = { geburtsdatum };
   if (sector === 'physiotherapy') {
     metadata.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
     metadata.krankenkassennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
-    metadata.adresse = document.getElementById('lead-adresse').value.trim() || null;
+    metadata.hausbesuch = hausbesuch;
+    // metadata.adresse'yi artık kullanmıyoruz (strukturlu kolonlar var). Eski kayıtları
+    // upsert sırasında silmek istemiyoruz → kolonlarda doluysa metadata.adresse'i drop edelim.
+    if (street || plz) metadata.adresse = null;
   }
 
   const payload = {
@@ -3460,11 +4078,24 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     title: firstName + ' ' + lastName,
     phone: document.getElementById('lead-phone').value.trim() || null,
     email: document.getElementById('lead-email').value.trim() || null,
-    city: document.getElementById('lead-city').value.trim() || null,
+    street,
+    plz,
+    city: city || null,
     status: document.getElementById('lead-status').value,
     notes: document.getElementById('lead-notes').value.trim() || null,
     metadata: Object.keys(metadata).length ? metadata : null
   };
+
+  // Adres değiştiyse cache'lenmiş rota geçersiz → temizle (Wave 3 Berechnen'de yeniden hesaplanır)
+  if (id) {
+    const prev = (Array.isArray(leadsCache) ? leadsCache : []).find(l => l.id === id) || {};
+    if (prev.street !== street || prev.plz !== plz || (prev.city || null) !== (city || null)) {
+      payload.location = null;
+      payload.distance_km = null;
+      payload.duration_min = null;
+      payload.route_calculated_at = null;
+    }
+  }
   const { data: savedLead, error } = id
     ? await supabase.from('leads').update(payload).eq('id', id).select().single()
     : await supabase.from('leads').insert(payload).select().single();
@@ -7759,6 +8390,19 @@ function openRezeptConfirmModal(payload) {
   // Krankenkasse is set up by setupRezeptConfirmDropdowns below — skip plain setVal.
   setVal('rxcEmail', pat.email);
   setVal('rxcPhone', pat.phone);
+  // Fahrtenbuch: OCR adresse'i strukturlu alanlara parse et
+  const adresseParsed = parseAdresseString(pat.adresse);
+  setVal('rxcStreet', adresseParsed.street);
+  setVal('rxcPlz', adresseParsed.plz);
+  setVal('rxcCity', adresseParsed.city);
+  // Hausbesuch işaretliyse adres required göstergesi
+  const setReq = (checked) => {
+    document.getElementById('rxcStreetReq').hidden = !checked;
+    document.getElementById('rxcPlzReq').hidden = !checked;
+    document.getElementById('rxcCityReq').hidden = !checked;
+  };
+  setReq(!!rez.hausbesuch);
+  document.getElementById('rxcHausbesuch')?.addEventListener('change', e => setReq(e.target.checked), { once: false });
   setVal('rxcArztName', arzt.name);
   setVal('rxcAusstDate', arzt.ausstellungsdatum);
   setVal('rxcLanr', arzt.lanr);
@@ -7827,6 +8471,30 @@ async function submitConfirm() {
 
     const fn = document.getElementById('rxcFirstName').value.trim();
     const ln = document.getElementById('rxcLastName').value.trim();
+    // Fahrtenbuch: Hausbesuch işaretliyse adres alanları zorunlu
+    const hausbesuchChecked = document.getElementById('rxcHausbesuch').checked;
+    const street = document.getElementById('rxcStreet').value.trim();
+    const plz = document.getElementById('rxcPlz').value.trim();
+    const city = document.getElementById('rxcCity').value.trim();
+    if (hausbesuchChecked) {
+      const missing = [];
+      if (!street) missing.push('Strasse');
+      if (!plz) missing.push('PLZ');
+      if (!city) missing.push('Stadt');
+      if (missing.length) {
+        showToast('Hausbesuch erfordert: ' + missing.join(', '), 'error');
+        btn.disabled = false;
+        btn.textContent = '✅ Bestätigen & Termine planen';
+        return;
+      }
+      if (!/^\d{5}$/.test(plz)) {
+        showToast('PLZ muss 5-stellig sein.', 'error');
+        btn.disabled = false;
+        btn.textContent = '✅ Bestätigen & Termine planen';
+        return;
+      }
+    }
+
     const parsedEdited = {
       patient: {
         first_name: fn || null,
@@ -7839,7 +8507,11 @@ async function submitConfirm() {
         email: document.getElementById('rxcEmail').value.trim() || null,
         phone: document.getElementById('rxcPhone').value.trim() || null,
         geschlecht: rxLastUpload.parsed?.patient?.geschlecht || null,
-        adresse: rxLastUpload.parsed?.patient?.adresse || null
+        adresse: rxLastUpload.parsed?.patient?.adresse || null,
+        // Strukturlu adres alanları (Fahrtenbuch)
+        street: street || null,
+        plz: plz || null,
+        city: city || null
       },
       arzt: {
         name: document.getElementById('rxcArztName').value.trim() || null,
@@ -8742,5 +9414,362 @@ async function createAbrechnung(kostentraegerIk) {
   } finally {
     _abState.busy = false;
   }
+}
+
+// ============================================================
+// Fahrtenbuch Panel — Fahrzeuge / Fahrten / Berichte
+// ============================================================
+
+function fbActivateTab(tabName) {
+  document.querySelectorAll('#panel-fahrtenbuch .tab-btn').forEach(btn => {
+    const active = btn.dataset.fbTab === tabName;
+    btn.classList.toggle('active', active);
+    btn.style.borderBottomColor = active ? 'var(--primary, #1c4d8f)' : 'transparent';
+    btn.style.fontWeight = active ? '600' : '400';
+  });
+  ['fahrten', 'vehicles', 'reports'].forEach(t => {
+    const el = document.getElementById('fbTab' + t[0].toUpperCase() + t.slice(1));
+    if (el) el.hidden = (t !== tabName);
+  });
+  if (tabName === 'fahrten') loadFbFahrten();
+  if (tabName === 'vehicles') loadFbVehicles();
+  if (tabName === 'reports') loadFbReports();
+}
+
+async function loadFahrtenbuchPanel() {
+  // Tab event'leri bir kez bağla
+  if (!document.getElementById('panel-fahrtenbuch').dataset.fbBound) {
+    document.getElementById('panel-fahrtenbuch').dataset.fbBound = '1';
+    document.querySelectorAll('#panel-fahrtenbuch .tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => fbActivateTab(btn.dataset.fbTab));
+    });
+    document.getElementById('fbFahrtenRefresh').addEventListener('click', loadFbFahrten);
+    document.getElementById('fbFahrtenExportCsv').addEventListener('click', exportFbFahrtenCsv);
+    document.getElementById('fbVehicleAddBtn').addEventListener('click', () => openVehicleEditModal(null));
+    document.getElementById('vehEditSaveBtn').addEventListener('click', saveVehicleEdit);
+    document.getElementById('vehEditKind').addEventListener('change', updateVehEditKindHint);
+    document.getElementById('fbReportRefresh').addEventListener('click', loadFbReports);
+
+    // Default filters
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('fbFahrtenFrom').value = toISODate(monthStart);
+    document.getElementById('fbFahrtenTo').value = toISODate(today);
+    document.getElementById('fbReportMonth').value = today.toISOString().substring(0, 7);
+
+    // Owner ise terapist filtresini göster
+    if (currentProfile?.role === 'owner') {
+      document.getElementById('fbFahrtenUserWrap').hidden = false;
+      const { data: team } = await supabase.from('profiles')
+        .select('id,owner_first_name,owner_last_name,email')
+        .or(`id.eq.${currentSession.user.id},owner_id.eq.${currentSession.user.id}`);
+      const sel = document.getElementById('fbFahrtenUser');
+      sel.innerHTML = '<option value="">— Alle —</option>' +
+        (team || []).map(u => {
+          const name = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
+          return `<option value="${u.id}">${name}</option>`;
+        }).join('');
+      sel.addEventListener('change', loadFbFahrten);
+    }
+  }
+  // İlk açılışta Fahrten tab aktif
+  fbActivateTab('fahrten');
+}
+
+// ---------- Fahrten tab ----------
+async function loadFbFahrten() {
+  const from = document.getElementById('fbFahrtenFrom').value;
+  const to = document.getElementById('fbFahrtenTo').value;
+  const userFilter = document.getElementById('fbFahrtenUser')?.value || '';
+
+  let q = supabase.from('fahrten')
+    .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,leads(first_name,last_name,title)')
+    .order('fahrt_started_at', { ascending: false });
+  if (from) q = q.gte('fahrt_started_at', from + 'T00:00:00Z');
+  if (to) q = q.lte('fahrt_started_at', to + 'T23:59:59Z');
+  if (userFilter) q = q.eq('user_id', userFilter);
+
+  const { data, error } = await q;
+  if (error) { console.error('[loadFbFahrten]', error); showToast('Fehler beim Laden.', 'error'); return; }
+
+  // User name lookup (kim hangi terapist)
+  const userIds = Array.from(new Set((data || []).map(f => f.user_id).filter(Boolean)));
+  const userMap = {};
+  if (userIds.length) {
+    const { data: users } = await supabase.from('profiles')
+      .select('id,owner_first_name,owner_last_name,email').in('id', userIds);
+    (users || []).forEach(u => {
+      userMap[u.id] = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
+    });
+  }
+
+  const tbody = document.getElementById('fbFahrtenTbody');
+  const empty = document.getElementById('fbFahrtenEmpty');
+  if (!data || !data.length) {
+    tbody.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+  tbody.innerHTML = data.map(f => {
+    const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at) : null;
+    const dtStr = dt ? dt.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    const patient = f.leads ? (f.leads.title || [f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ')) : '—';
+    const therapist = userMap[f.user_id] || '—';
+    const duration = (f.fahrt_started_at && f.fahrt_ended_at)
+      ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000) + ' min'
+      : '—';
+    const art = f.kind_snapshot === 'gewerblich' ? '🏢 Gewerblich' : (f.kind_snapshot === 'privat' ? '🚙 Privat' : '—');
+    return `<tr>
+      <td>${dtStr}</td>
+      <td>${escapeHtml(patient)}</td>
+      <td>${escapeHtml(therapist)}</td>
+      <td>${escapeHtml(f.kennzeichen_snapshot || '—')}</td>
+      <td>${art}</td>
+      <td>${f.start_km ?? '—'}</td>
+      <td>${f.end_km ?? '—'}</td>
+      <td>${f.distance_km != null ? f.distance_km + ' km' : '—'}</td>
+      <td>${duration}</td>
+    </tr>`;
+  }).join('');
+  // Cache for CSV export
+  window._fbFahrtenCache = data.map(f => ({
+    ...f,
+    _patient: f.leads ? (f.leads.title || [f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ')) : '',
+    _therapist: userMap[f.user_id] || ''
+  }));
+}
+
+function exportFbFahrtenCsv() {
+  const rows = window._fbFahrtenCache || [];
+  if (!rows.length) { showToast('Keine Daten zum Exportieren.', 'error'); return; }
+  const header = ['Datum', 'Patient', 'Therapeut', 'Kennzeichen', 'Art', 'Start-KM', 'End-KM', 'Strecke (km)', 'Dauer (min)'];
+  const lines = [header.join(';')];
+  for (const f of rows) {
+    const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at).toLocaleString('de-DE') : '';
+    const dur = (f.fahrt_started_at && f.fahrt_ended_at)
+      ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000)
+      : '';
+    lines.push([
+      dt,
+      `"${(f._patient || '').replace(/"/g, '""')}"`,
+      `"${(f._therapist || '').replace(/"/g, '""')}"`,
+      f.kennzeichen_snapshot || '',
+      f.kind_snapshot || '',
+      f.start_km ?? '',
+      f.end_km ?? '',
+      f.distance_km ?? '',
+      dur
+    ].join(';'));
+  }
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fahrtenbuch_${new Date().toISOString().substring(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ---------- Fahrzeuge tab ----------
+async function loadFbVehicles() {
+  const ownerId = getOwnerId();
+  const { data, error } = await supabase.from('vehicles')
+    .select('id,owner_id,created_by,kind,kennzeichen,label,is_default,is_active,created_at')
+    .eq('owner_id', ownerId)
+    .order('is_active', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) { console.error('[loadFbVehicles]', error); return; }
+
+  const tbody = document.getElementById('fbVehiclesTbody');
+  const empty = document.getElementById('fbVehiclesEmpty');
+  if (!data || !data.length) {
+    tbody.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+  const isOwner = currentProfile?.role === 'owner';
+  const myUid = currentSession.user.id;
+  tbody.innerHTML = data.map(v => {
+    const art = v.kind === 'gewerblich' ? '🏢 Gewerblich' : '🚙 Privat';
+    const canEdit = (isOwner) || (v.kind === 'privat' && v.created_by === myUid);
+    const status = v.is_active ? '<span class="badge badge-green">aktiv</span>' : '<span class="badge badge-gray">inaktiv</span>';
+    const def = v.is_default ? '⭐' : '';
+    return `<tr data-vid="${v.id}">
+      <td>${escapeHtml(v.kennzeichen)}</td>
+      <td>${escapeHtml(v.label || '')}</td>
+      <td>${art}</td>
+      <td>${status}</td>
+      <td>${def}</td>
+      <td style="text-align:right;">
+        ${canEdit ? '<button class="btn-ghost fb-veh-edit" data-vid="' + v.id + '" style="font-size:12px;padding:4px 8px;">Bearbeiten</button>' : ''}
+        ${canEdit ? '<button class="btn-ghost fb-veh-del" data-vid="' + v.id + '" style="font-size:12px;padding:4px 8px;color:#c00;">Löschen</button>' : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.fb-veh-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = data.find(x => x.id === btn.dataset.vid);
+      if (v) openVehicleEditModal(v);
+    });
+  });
+  tbody.querySelectorAll('.fb-veh-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const v = data.find(x => x.id === btn.dataset.vid);
+      if (!v) return;
+      const ok = await showConfirmModal({
+        title: 'Fahrzeug löschen?',
+        message: `Kennzeichen: ${v.kennzeichen}\n\nFahrten-Logs bleiben erhalten (Kennzeichen wird im Log gespeichert).`,
+        confirmText: 'Löschen',
+        cancelText: 'Abbrechen',
+        variant: 'danger'
+      });
+      if (!ok) return;
+      const { error } = await supabase.from('vehicles').delete().eq('id', v.id);
+      if (error) { showToast(error.message, 'error'); return; }
+      showToast('Gelöscht.');
+      loadFbVehicles();
+    });
+  });
+}
+
+function updateVehEditKindHint() {
+  const kind = document.getElementById('vehEditKind').value;
+  const hint = document.getElementById('vehEditKindHint');
+  if (kind === 'gewerblich') {
+    hint.textContent = 'Für alle Mitarbeiter sichtbar. Nur der Owner kann Gewerblich-Fahrzeuge anlegen/ändern.';
+  } else {
+    hint.textContent = 'Nur für die anlegende Person sichtbar (z.B. eigenes Privatauto).';
+  }
+}
+
+function openVehicleEditModal(v) {
+  const isOwner = currentProfile?.role === 'owner';
+  document.getElementById('vehEditId').value = v?.id || '';
+  document.getElementById('vehEditKennzeichen').value = v?.kennzeichen || '';
+  document.getElementById('vehEditLabel').value = v?.label || '';
+  document.getElementById('vehEditTitle').textContent = v ? 'Fahrzeug bearbeiten' : 'Fahrzeug anlegen';
+  const kindSel = document.getElementById('vehEditKind');
+  kindSel.value = v?.kind || (isOwner ? 'gewerblich' : 'privat');
+  // Employee'lar gewerblich oluşturamaz (RLS engelliyor zaten — UI'da da gri yapalım)
+  Array.from(kindSel.options).forEach(opt => {
+    opt.disabled = (opt.value === 'gewerblich' && !isOwner);
+  });
+  if (!isOwner) kindSel.value = 'privat';
+  document.getElementById('vehEditIsDefault').checked = !!v?.is_default;
+  document.getElementById('vehEditError').style.display = 'none';
+  updateVehEditKindHint();
+  openModal('vehicleEditModal');
+}
+
+async function saveVehicleEdit() {
+  const id = document.getElementById('vehEditId').value;
+  const kennzeichen = document.getElementById('vehEditKennzeichen').value.trim();
+  const label = document.getElementById('vehEditLabel').value.trim();
+  const kind = document.getElementById('vehEditKind').value;
+  const isDefault = document.getElementById('vehEditIsDefault').checked;
+  const err = document.getElementById('vehEditError');
+  err.style.display = 'none';
+  if (!kennzeichen) { err.textContent = 'Kennzeichen erforderlich.'; err.style.display = ''; return; }
+
+  const ownerId = getOwnerId();
+  const userId = currentSession.user.id;
+  const payload = { kennzeichen, label: label || null, kind, is_default: isDefault };
+
+  let error;
+  if (id) {
+    ({ error } = await supabase.from('vehicles').update(payload).eq('id', id));
+  } else {
+    ({ error } = await supabase.from('vehicles').insert({ ...payload, owner_id: ownerId, created_by: userId }));
+  }
+  if (error) { err.textContent = error.message; err.style.display = ''; return; }
+
+  // is_default seçildiyse diğer aynı kind araçların default'unu kaldır
+  if (isDefault) {
+    await supabase.from('vehicles').update({ is_default: false })
+      .eq('owner_id', ownerId).eq('kind', kind).neq('id', id || '00000000-0000-0000-0000-000000000000');
+    if (id) await supabase.from('vehicles').update({ is_default: true }).eq('id', id);
+  }
+
+  closeModal('vehicleEditModal');
+  showToast('Gespeichert.');
+  loadFbVehicles();
+}
+
+// ---------- Berichte tab ----------
+async function loadFbReports() {
+  const month = document.getElementById('fbReportMonth').value;
+  if (!month) return;
+  const [y, m] = month.split('-').map(n => parseInt(n));
+  const monthStart = new Date(Date.UTC(y, m - 1, 1)).toISOString();
+  const monthEnd = new Date(Date.UTC(y, m, 1)).toISOString();
+
+  // fahrten_monthly_summary view kullan
+  const { data, error } = await supabase.from('fahrten_monthly_summary')
+    .select('user_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,trips,total_km,total_minutes,month')
+    .gte('month', monthStart)
+    .lt('month', monthEnd);
+  if (error) { console.error('[loadFbReports]', error); return; }
+
+  const userTbody = document.getElementById('fbReportByUserTbody');
+  const vehTbody = document.getElementById('fbReportByVehicleTbody');
+  const empty = document.getElementById('fbReportEmpty');
+
+  if (!data || !data.length) {
+    userTbody.innerHTML = ''; vehTbody.innerHTML = '';
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  // Aggregate by user
+  const userIds = Array.from(new Set(data.map(r => r.user_id)));
+  const { data: users } = await supabase.from('profiles')
+    .select('id,owner_first_name,owner_last_name,email').in('id', userIds);
+  const userMap = {};
+  (users || []).forEach(u => {
+    userMap[u.id] = [u.owner_first_name, u.owner_last_name].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
+  });
+
+  const byUser = {};
+  for (const r of data) {
+    if (!byUser[r.user_id]) byUser[r.user_id] = { trips: 0, km: 0, min: 0 };
+    byUser[r.user_id].trips += Number(r.trips || 0);
+    byUser[r.user_id].km += Number(r.total_km || 0);
+    byUser[r.user_id].min += Number(r.total_minutes || 0);
+  }
+  userTbody.innerHTML = Object.entries(byUser).map(([uid, agg]) => `
+    <tr>
+      <td>${escapeHtml(userMap[uid] || uid.slice(0,8))}</td>
+      <td>${agg.trips}</td>
+      <td>${agg.km.toFixed(1)} km</td>
+      <td>${agg.min} min</td>
+    </tr>
+  `).join('');
+
+  // Aggregate by vehicle
+  const byVeh = {};
+  for (const r of data) {
+    const key = r.vehicle_id || ('snapshot:' + (r.kennzeichen_snapshot || 'unbekannt'));
+    if (!byVeh[key]) byVeh[key] = { kennzeichen: r.kennzeichen_snapshot, kind: r.kind_snapshot, trips: 0, km: 0, min: 0 };
+    byVeh[key].trips += Number(r.trips || 0);
+    byVeh[key].km += Number(r.total_km || 0);
+    byVeh[key].min += Number(r.total_minutes || 0);
+  }
+  vehTbody.innerHTML = Object.values(byVeh).map(v => `
+    <tr>
+      <td>${escapeHtml(v.kennzeichen || '—')}</td>
+      <td>${v.kind === 'gewerblich' ? '🏢' : '🚙'} ${escapeHtml(v.kind || '—')}</td>
+      <td>${v.trips}</td>
+      <td>${v.km.toFixed(1)} km</td>
+      <td>${v.min} min</td>
+    </tr>
+  `).join('');
+}
+
+// Küçük yardımcı: HTML escape
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
