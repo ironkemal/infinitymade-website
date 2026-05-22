@@ -1685,16 +1685,16 @@ async function openFahrtStartModal() {
   openModal('fahrtStartModal');
 }
 
-document.getElementById('bkActionFahrtStartBtn')?.addEventListener('click', openFahrtStartModal);
+// ---- Named handlers (delegated event'lerden çağrılır) ----
 
-document.getElementById('fsAddVehicleBtn')?.addEventListener('click', () => {
+function openQuickVehicleModal() {
   document.getElementById('qvKennzeichen').value = '';
   document.getElementById('qvLabel').value = '';
   document.getElementById('qvError').style.display = 'none';
   openModal('quickVehicleModal');
-});
+}
 
-document.getElementById('qvSaveBtn')?.addEventListener('click', async () => {
+async function saveQuickVehicleHandler() {
   const kz = document.getElementById('qvKennzeichen').value.trim();
   const lbl = document.getElementById('qvLabel').value.trim();
   const err = document.getElementById('qvError');
@@ -1702,24 +1702,25 @@ document.getElementById('qvSaveBtn')?.addEventListener('click', async () => {
   if (!kz) { err.textContent = 'Kennzeichen erforderlich.'; err.style.display = ''; return; }
   const ownerId = getOwnerId();
   const userId = currentSession.user.id;
-  const isOwner = currentProfile.role === 'owner';
+  const isOwner = currentProfile?.role === 'owner';
   const { data, error } = await supabase.from('vehicles').insert({
     owner_id: ownerId,
     created_by: userId,
-    kind: isOwner ? 'gewerblich' : 'privat',  // employee → privat, owner Quick-Add → gewerblich (Fahrtenbuch sayfasında detaylı seçer)
+    kind: isOwner ? 'gewerblich' : 'privat',
     kennzeichen: kz,
     label: lbl || null
   }).select().single();
-  if (error) { err.textContent = error.message; err.style.display = ''; return; }
+  if (error) { err.textContent = error.message; err.style.display = ''; throw error; }
   closeModal('quickVehicleModal');
-  // Refresh picker
   await openFahrtStartModal();
   document.getElementById('fsVehicleSelect').value = data.id;
-});
+  showToast('Fahrzeug hinzugefügt ✓');
+}
 
-document.getElementById('fsSaveBtn')?.addEventListener('click', async () => {
+async function saveFahrtStartHandler() {
   const vehicleId = document.getElementById('fsVehicleSelect').value;
-  const startKm = parseInt(document.getElementById('fsStartKm').value, 10);
+  const startKmRaw = document.getElementById('fsStartKm').value;
+  const startKm = parseInt(startKmRaw, 10);
   const err = document.getElementById('fsError');
   err.style.display = 'none';
   if (!vehicleId) { err.textContent = 'Bitte ein Fahrzeug wählen.'; err.style.display = ''; return; }
@@ -1727,20 +1728,27 @@ document.getElementById('fsSaveBtn')?.addEventListener('click', async () => {
     err.textContent = 'Bitte einen gültigen Start-KM eingeben.'; err.style.display = ''; return;
   }
   const b = bkActionBookingCache;
-  if (!b) { err.textContent = 'Buchung nicht gefunden.'; err.style.display = ''; return; }
+  if (!b || !b.id) { err.textContent = 'Buchung nicht gefunden. Bitte Modal neu öffnen.'; err.style.display = ''; return; }
 
   const nowIso = new Date().toISOString();
-  const { error: updErr } = await supabase.from('bookings').update({
+  const { data: updData, error: updErr } = await supabase.from('bookings').update({
     fahrt_status: 'fahrt_started',
     vehicle_id: vehicleId,
     start_km: startKm,
     fahrt_started_at: nowIso
-  }).eq('id', b.id);
-  if (updErr) { err.textContent = updErr.message; err.style.display = ''; return; }
+  }).eq('id', b.id).select('id').maybeSingle();
+  if (updErr) {
+    err.textContent = 'DB-Fehler: ' + updErr.message;
+    err.style.display = '';
+    throw updErr;
+  }
+  if (!updData) {
+    err.textContent = 'Keine Berechtigung — Buchung konnte nicht aktualisiert werden.';
+    err.style.display = '';
+    return;
+  }
 
   localStorage.setItem('fahrtenbuch:lastVehicleId', vehicleId);
-
-  // In-memory state güncelle
   b.fahrt_status = 'fahrt_started';
   b.vehicle_id = vehicleId;
   b.start_km = startKm;
@@ -1748,57 +1756,53 @@ document.getElementById('fsSaveBtn')?.addEventListener('click', async () => {
 
   closeModal('fahrtStartModal');
   await renderBkActionFahrtState(b, true);
-  showToast('🚗 Fahrt gestartet — bitte Adresse kopieren und losfahren.');
-});
+  showToast('🚗 Fahrt gestartet — Adresse kopieren und losfahren.');
+}
 
-// Hausbesuch info card → Kopieren butonu (adresi panoya yapıştırır)
-document.getElementById('bkActionHbCopyBtn')?.addEventListener('click', async () => {
+async function copyHausbesuchAddress() {
   const addr = document.getElementById('bkActionHbAddr').textContent.trim();
   if (!addr || addr === '—' || addr.includes('fehlt')) {
-    showToast('Keine Adresse zum Kopieren.', 'error');
-    return;
+    showToast('Keine Adresse zum Kopieren.', 'error'); return;
   }
   try {
     await navigator.clipboard.writeText(addr);
     const ok = document.getElementById('bkActionHbCopyOk');
-    if (ok) {
-      ok.style.display = 'inline';
-      setTimeout(() => { ok.style.display = 'none'; }, 1800);
-    }
+    if (ok) { ok.style.display = 'inline'; setTimeout(() => { ok.style.display = 'none'; }, 1800); }
     showToast('Adresse kopiert ✓');
   } catch (_) {
     showToast('Kopieren fehlgeschlagen — manuell auswählen.', 'error');
   }
-});
+}
 
-document.getElementById('bkActionArrivedBtn')?.addEventListener('click', async () => {
+async function markArrivedHandler() {
   const b = bkActionBookingCache;
-  if (!b) return;
+  if (!b || !b.id) { showToast('Buchung nicht gefunden.', 'error'); return; }
   const nowIso = new Date().toISOString();
-  const { error } = await supabase.from('bookings').update({
+  const { data, error } = await supabase.from('bookings').update({
     fahrt_status: 'fahrt_arrived',
     fahrt_arrived_at: nowIso
-  }).eq('id', b.id);
-  if (error) { showToast(error.message || 'Fehler', 'error'); return; }
+  }).eq('id', b.id).select('id').maybeSingle();
+  if (error) throw error;
+  if (!data) { showToast('Keine Berechtigung — Buchung nicht aktualisierbar.', 'error'); return; }
   b.fahrt_status = 'fahrt_arrived';
   b.fahrt_arrived_at = nowIso;
   await renderBkActionFahrtState(b, true);
   showToast('✅ Angekommen — Termin kann gestartet werden.');
-});
+}
 
-document.getElementById('bkActionFahrtEndBtn')?.addEventListener('click', async () => {
+function openFahrtEndModal() {
   const b = bkActionBookingCache;
-  if (!b) return;
+  if (!b) { showToast('Buchung nicht gefunden.', 'error'); return; }
   document.getElementById('feStartKm').textContent = b.start_km != null ? b.start_km + ' km' : '—';
   document.getElementById('feEndKm').value = '';
   document.getElementById('feDistance').style.display = 'none';
   document.getElementById('feError').style.display = 'none';
   openModal('fahrtEndModal');
-});
+}
 
-document.getElementById('feEndKm')?.addEventListener('input', e => {
+function updateEndKmPreview(value) {
   const b = bkActionBookingCache;
-  const end = parseInt(e.target.value, 10);
+  const end = parseInt(value, 10);
   const distEl = document.getElementById('feDistance');
   if (!b || !Number.isFinite(end) || b.start_km == null) {
     distEl.style.display = 'none'; return;
@@ -1812,14 +1816,14 @@ document.getElementById('feEndKm')?.addEventListener('input', e => {
     distEl.style.color = '#1c4d8f';
   }
   distEl.style.display = '';
-});
+}
 
-document.getElementById('feSaveBtn')?.addEventListener('click', async () => {
+async function saveFahrtEndHandler() {
   const b = bkActionBookingCache;
   const endKm = parseInt(document.getElementById('feEndKm').value, 10);
   const err = document.getElementById('feError');
   err.style.display = 'none';
-  if (!b) return;
+  if (!b || !b.id) { err.textContent = 'Buchung nicht gefunden.'; err.style.display = ''; return; }
   if (!Number.isFinite(endKm) || endKm < 0) {
     err.textContent = 'Bitte einen gültigen End-KM eingeben.'; err.style.display = ''; return;
   }
@@ -1828,35 +1832,27 @@ document.getElementById('feSaveBtn')?.addEventListener('click', async () => {
   }
 
   const nowIso = new Date().toISOString();
-
-  // 1) bookings → fahrt_completed
-  const { error: updErr } = await supabase.from('bookings').update({
+  const { data: updData, error: updErr } = await supabase.from('bookings').update({
     fahrt_status: 'fahrt_completed',
     end_km: endKm,
     fahrt_ended_at: nowIso
-  }).eq('id', b.id);
-  if (updErr) { err.textContent = updErr.message; err.style.display = ''; return; }
+  }).eq('id', b.id).select('id').maybeSingle();
+  if (updErr) { err.textContent = 'DB: ' + updErr.message; err.style.display = ''; throw updErr; }
+  if (!updData) { err.textContent = 'Keine Berechtigung.'; err.style.display = ''; return; }
 
-  // 2) Vehicle snapshot (immutable log için)
   let kzSnapshot = null, kindSnapshot = null;
   if (b.vehicle_id) {
-    const { data: v } = await supabase.from('vehicles')
-      .select('kennzeichen,kind').eq('id', b.vehicle_id).maybeSingle();
+    const { data: v } = await supabase.from('vehicles').select('kennzeichen,kind').eq('id', b.vehicle_id).maybeSingle();
     if (v) { kzSnapshot = v.kennzeichen; kindSnapshot = v.kind; }
   }
 
-  // 3) Lead lookup (booking → phone → lead)
   let leadId = null, leadDurationMin = null;
   if (b.customer_phone) {
-    const { data: l } = await supabase.from('leads')
-      .select('id,duration_min')
-      .eq('owner_id', b.owner_id)
-      .eq('phone', b.customer_phone)
-      .maybeSingle();
+    const { data: l } = await supabase.from('leads').select('id,duration_min')
+      .eq('owner_id', b.owner_id).eq('phone', b.customer_phone).maybeSingle();
     if (l) { leadId = l.id; leadDurationMin = l.duration_min; }
   }
 
-  // 4) fahrten log insert (UPSERT — booking_id unique, eski yarım log varsa update)
   const { error: fErr } = await supabase.from('fahrten').upsert({
     owner_id: b.owner_id,
     user_id: currentSession.user.id,
@@ -1883,8 +1879,8 @@ document.getElementById('feSaveBtn')?.addEventListener('click', async () => {
 
   closeModal('fahrtEndModal');
   await renderBkActionFahrtState(b, true);
-  showToast('🏁 Fahrt abgeschlossen.');
-});
+  showToast('🏁 Fahrt abgeschlossen — im Fahrtenbuch eingetragen.');
+}
 
 async function handleTerminStarten() {
   if (!bkActionBookingCache) return;
@@ -9556,28 +9552,45 @@ function fbActivateTab(tabName) {
   if (tabName === 'reports') loadFbReports();
 }
 
-// Fahrtenbuch: Global delegated handlers — panel binding'e bağımlı değil
+// Fahrtenbuch: Global delegated handlers — tüm flow butonları + Fahrtenbuch panel
+// Module-level addEventListener'lara güvenmiyoruz çünkü DOM hazır olmadan koşulan
+// query'ler veya hot reload sırasında binding'ler kaçabilir.
 if (!window.__fbDelegatedBound) {
   window.__fbDelegatedBound = true;
-  const safe = (label, fn) => {
-    try { fn(); }
+  const safe = async (label, fn) => {
+    try { await fn(); }
     catch (err) {
       console.error('[fahrtenbuch:' + label + ']', err);
-      if (typeof showToast === 'function') showToast(label + ' Fehler: ' + (err?.message || err), 'error');
+      if (typeof showToast === 'function') showToast(label + ': ' + (err?.message || err), 'error');
     }
   };
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[id], [data-fb-tab]');
     if (!t) return;
-    if (t.id === 'fbVehicleAddBtn')   { e.preventDefault(); safe('openVehicle', () => openVehicleEditModal(null)); return; }
-    if (t.id === 'vehEditSaveBtn')    { e.preventDefault(); safe('saveVehicle', saveVehicleEdit); return; }
-    if (t.id === 'fbFahrtenRefresh')  { e.preventDefault(); safe('refreshFahrten', loadFbFahrten); return; }
-    if (t.id === 'fbFahrtenExportCsv'){ e.preventDefault(); safe('exportCsv', exportFbFahrtenCsv); return; }
-    if (t.id === 'fbReportRefresh')   { e.preventDefault(); safe('refreshReport', loadFbReports); return; }
-    if (t.dataset && t.dataset.fbTab) { e.preventDefault(); safe('switchTab', () => fbActivateTab(t.dataset.fbTab)); return; }
+    const id = t.id;
+    // Fahrtenbuch panel
+    if (id === 'fbVehicleAddBtn')   { e.preventDefault(); return safe('openVehicle',   () => openVehicleEditModal(null)); }
+    if (id === 'vehEditSaveBtn')    { e.preventDefault(); return safe('saveVehicle',   saveVehicleEdit); }
+    if (id === 'fbFahrtenRefresh')  { e.preventDefault(); return safe('refreshFahrten',loadFbFahrten); }
+    if (id === 'fbFahrtenExportCsv'){ e.preventDefault(); return safe('exportCsv',     exportFbFahrtenCsv); }
+    if (id === 'fbReportRefresh')   { e.preventDefault(); return safe('refreshReport', loadFbReports); }
+    if (t.dataset && t.dataset.fbTab) { e.preventDefault(); return safe('switchTab',   () => fbActivateTab(t.dataset.fbTab)); }
+    // Therapist flow (bkActionModal)
+    if (id === 'bkActionFahrtStartBtn'){ e.preventDefault(); return safe('Fahrt Starten öffnen', openFahrtStartModal); }
+    if (id === 'bkActionArrivedBtn')   { e.preventDefault(); return safe('Angekommen markieren', markArrivedHandler); }
+    if (id === 'bkActionFahrtEndBtn')  { e.preventDefault(); return safe('Fahrt Beenden öffnen', openFahrtEndModal); }
+    if (id === 'bkActionHbCopyBtn')    { e.preventDefault(); return safe('Kopieren',             copyHausbesuchAddress); }
+    // Fahrt Start modal
+    if (id === 'fsSaveBtn')         { e.preventDefault(); return safe('Fahrt speichern', saveFahrtStartHandler); }
+    if (id === 'fsAddVehicleBtn')   { e.preventDefault(); return safe('Quick-Vehicle',  openQuickVehicleModal); }
+    // Quick vehicle modal
+    if (id === 'qvSaveBtn')         { e.preventDefault(); return safe('Fahrzeug speichern', saveQuickVehicleHandler); }
+    // Fahrt End modal
+    if (id === 'feSaveBtn')         { e.preventDefault(); return safe('Fahrt Ende speichern', saveFahrtEndHandler); }
   });
   document.addEventListener('change', (e) => {
     if (e.target.id === 'vehEditKind') safe('kindHint', updateVehEditKindHint);
+    if (e.target.id === 'feEndKm')     safe('endKmPreview', () => updateEndKmPreview(e.target.value));
   });
 }
 
