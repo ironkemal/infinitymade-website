@@ -5406,3 +5406,48 @@ textarea {
   background: rgba(255, 255, 255, 0.02);
   border-top: 1px solid var(--border);
 }
+
+/* ============================================================
+   Patient Detail Modal — defensive dark theme override
+   Catches any nested element that might still have white bg
+   (inline styles, third-party widgets, missing rules, etc.)
+   ============================================================ */
+#patientDetailModal .modal-body {
+  background: var(--bg-card-solid);
+}
+#patientDetailModal .pd-tabs {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border);
+}
+#patientDetailModal .pd-content {
+  background: var(--bg-card-solid);
+  color: var(--text-main);
+}
+#patientDetailModal .pd-content .card,
+#patientDetailModal .pd-content .pd-section,
+#patientDetailModal .pd-content > div {
+  background-color: transparent;
+  color: var(--text-main);
+}
+/* Inline white backgrounds from old templates */
+#patientDetailModal [style*="background:#fff"],
+#patientDetailModal [style*="background: #fff"],
+#patientDetailModal [style*="background:white"],
+#patientDetailModal [style*="background: white"],
+#patientDetailModal [style*="background-color:#fff"],
+#patientDetailModal [style*="background-color: #fff"] {
+  background: var(--bg-card-solid) !important;
+  color: var(--text-main) !important;
+}
+#patientDetailModal [style*="color:#000"],
+#patientDetailModal [style*="color: #000"],
+#patientDetailModal [style*="color:black"] {
+  color: var(--text-main) !important;
+}
+/* Loading spinner blocks should sit on the dark surface */
+#patientDetailModal .pd-loading {
+  background: transparent;
+  padding: 24px 0;
+  display: flex;
+  justify-content: center;
+}
