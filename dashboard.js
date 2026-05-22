@@ -2288,7 +2288,9 @@ function populateEmpSelects(selectedId = null) {
 async function populateSrvSelect(selectedId = null, employeeId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  let q = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  if (currentBusiness?.id) q = q.eq('business_id', currentBusiness.id);
+  const { data } = await q;
 
   // Update global cache with full data including price_config
   if (data) {
@@ -2393,19 +2395,9 @@ document.getElementById('bkService').addEventListener('change', (e) => {
 
 document.getElementById('bkPhone').addEventListener('blur', async () => {
   const phone = document.getElementById('bkPhone').value.trim();
+  // wa_contacts tablosu DROP edildi (2026-05-22, WhatsApp shelved). Hint kalktı.
   const hint = document.getElementById('bkWaHint');
-  if (!hint || !phone) { if (hint) hint.hidden = true; return; }
-  const norm = normalize_phone_js(phone);
-  if (!norm) { hint.hidden = true; return; }
-  const { data: wa } = await supabase.from('wa_contacts')
-    .select('wa_id,customer_name').eq('business_id', getOwnerId()).eq('phone', norm).maybeSingle();
-  if (wa) {
-    hint.textContent = `💬 WhatsApp bekannt: ${wa.customer_name || wa.wa_id}`;
-    hint.hidden = false;
-    if (!document.getElementById('bkCustomer').value) document.getElementById('bkCustomer').value = wa.customer_name || '';
-  } else {
-    hint.hidden = true;
-  }
+  if (hint) hint.hidden = true;
 });
 
 // ============================================================
@@ -3389,26 +3381,21 @@ function displayNameWithBirth(lead) {
 
 async function loadLeads() {
   const ownerId = getOwnerId();
-  const { data } = await supabase.from('leads')
-    .select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  let q = supabase.from('leads').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  if (currentBusiness?.id) q = q.eq('business_id', currentBusiness.id);
+  const { data } = await q;
   leadsCache = data || [];
   const phones = leadsCache.map(l => l.phone_normalized).filter(Boolean);
   leadsMeta = {};
   if (phones.length) {
-    const [bkRes, waRes] = await Promise.all([
-      supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
-        .eq('owner_id', ownerId).in('customer_phone_normalized', phones).order('start_time', { ascending: true }),
-      supabase.from('wa_contacts').select('wa_id,phone,customer_name')
-        .eq('business_id', ownerId).in('phone', phones)
-    ]);
-    (bkRes.data || []).forEach(b => {
+    let bkQ = supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
+      .eq('owner_id', ownerId).in('customer_phone_normalized', phones).order('start_time', { ascending: true });
+    if (currentBusiness?.id) bkQ = bkQ.eq('business_id', currentBusiness.id);
+    const { data: bkData } = await bkQ;
+    // wa_contacts tablosu 2026-05-22'de DROP edildi (WhatsApp shelved). wa metadata kalktı.
+    (bkData || []).forEach(b => {
       if (!leadsMeta[b.customer_phone_normalized]) leadsMeta[b.customer_phone_normalized] = { bookings: [], wa: null };
       leadsMeta[b.customer_phone_normalized].bookings.push(b);
-    });
-    (waRes.data || []).forEach(w => {
-      const norm = normalize_phone_js(w.phone);
-      if (!leadsMeta[norm]) leadsMeta[norm] = { bookings: [], wa: null };
-      leadsMeta[norm].wa = w;
     });
   }
   renderLeads();
@@ -4422,8 +4409,11 @@ document.getElementById('apifyRunBtn').addEventListener('click', async () => {
 let servicesCache = [];
 
 async function loadServices() {
-  const { data } = await supabase.from('services')
-    .select('*,employee_services(employee_id),price_config,code').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  let q = supabase.from('services')
+    .select('*,employee_services(employee_id),price_config,code')
+    .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  if (currentBusiness?.id) q = q.eq('business_id', currentBusiness.id);
+  const { data } = await q;
   servicesCache = data || [];
   renderServices();
   renderSrvEmpCheckboxes();
@@ -4662,7 +4652,9 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     const ownerId = getOwnerId();
     const userId = currentSession.user.id;
     console.log('[srvSave] creating new service', { owner_id: ownerId, user_id: userId, ...payload });
-    const { data: srv, error } = await supabase.from('services').insert({ owner_id: ownerId, user_id: userId, ...payload }).select().single();
+    const insertPayload = { owner_id: ownerId, user_id: userId, ...payload };
+    if (currentBusiness?.id) insertPayload.business_id = currentBusiness.id;
+    const { data: srv, error } = await supabase.from('services').insert(insertPayload).select().single();
     if (error) { console.error('[srvSave] insert error:', error); showToast(t('err_generic'), 'error'); return; }
     if (empIds.length) {
       await supabase.from('employee_services').insert(empIds.map(id => ({ employee_id: id, service_id: srv.id })));
@@ -5792,10 +5784,12 @@ async function loadEmpHours(empId) {
 async function loadEmpServices(empId) {
   const grid = document.getElementById('empServicesGrid');
   if (!grid) return;
+  let allQ = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,color')
+    .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`)
+    .order('title');
+  if (currentBusiness?.id) allQ = allQ.eq('business_id', currentBusiness.id);
   const [{ data: all }, { data: assigned }] = await Promise.all([
-    supabase.from('services').select('id,title,duration_minutes,price,price_config,code,color')
-      .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`)
-      .order('title'),
+    allQ,
     supabase.from('employee_services').select('service_id').eq('employee_id', empId)
   ]);
   const assignedIds = new Set((assigned || []).map(x => x.service_id));

@@ -367,18 +367,36 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
     if (profile?.owner_id) ownerId = profile.owner_id;
 
     // 1.4 Check business closed_days (multi-business açılış günleri)
-    // Owner'ın default business'ını çek (booking link şu an default business'a düşer).
-    const { data: defaultBiz } = await supabase
-      .from('businesses')
-      .select('id, closed_days')
-      .eq('owner_id', ownerId)
-      .eq('is_default', true)
-      .maybeSingle();
+    // Önce: userId bir employee mi? Atandığı business'i bul. Default'a atanmissa onu,
+    // degilse ilk atamasi (created_at ASC); employee degilse owner default business.
+    let activeBiz = null;
+    if (profile?.owner_id) {
+      // Employee — owner'in altinda employee'nin atandigi business'i bul
+      const { data: assigned } = await supabase
+        .from('employee_business_assignments')
+        .select('business_id, businesses(id, closed_days, is_default)')
+        .eq('employee_id', userId);
+      if (assigned && assigned.length) {
+        // Default'a atanmissa onu, degilse ilk
+        const def = assigned.find(a => a.businesses?.is_default);
+        activeBiz = (def || assigned[0])?.businesses || null;
+      }
+    }
+    if (!activeBiz) {
+      // Owner kendisi veya employee'nin atamasi yoksa: owner'in default business
+      const { data: defaultBiz } = await supabase
+        .from('businesses')
+        .select('id, closed_days')
+        .eq('owner_id', ownerId)
+        .eq('is_default', true)
+        .maybeSingle();
+      activeBiz = defaultBiz || null;
+    }
 
-    if (defaultBiz && Array.isArray(defaultBiz.closed_days) && defaultBiz.closed_days.length) {
+    if (activeBiz && Array.isArray(activeBiz.closed_days) && activeBiz.closed_days.length) {
       // berlinDayOfWeek server local TZ'den bağımsız (DST-safe)
       const jsDow = berlinDayOfWeek(date);
-      if (defaultBiz.closed_days.includes(jsDow)) {
+      if (activeBiz.closed_days.includes(jsDow)) {
         return res.json({ slots: [], reason: 'business_closed_day' });
       }
     }
