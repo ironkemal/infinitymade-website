@@ -370,12 +370,17 @@ async function renderBookingCalendar(year, month) {
   let openDow = new Set([1, 2, 3, 4, 5]);
   let closedDates = new Set();
   let bookedDates = new Set();
+  let businessClosedDow = new Set();
 
   if (userId) {
-    const [{ data: wh }, { data: cd }, { data: bks }] = await Promise.all([
+    const [{ data: wh }, { data: cd }, { data: bks }, { data: biz }] = await Promise.all([
       supabase.from('working_hours').select('day_of_week,is_active').eq('user_id', userId),
       supabase.from('custom_days').select('date,type,start_time,end_time').eq('owner_id', state.ownerId).gte('date', `${year}-${String(month + 1).padStart(2, '0')}-01`).lte('date', `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`),
-      supabase.from('bookings').select('start_time').eq('user_id', userId).gte('start_time', monthStartIso).lte('start_time', monthEndIso).neq('status', 'cancelled')
+      supabase.from('bookings').select('start_time').eq('user_id', userId).gte('start_time', monthStartIso).lte('start_time', monthEndIso).neq('status', 'cancelled'),
+      // İş günleri: explicit businessId varsa onu, yoksa owner default business
+      state.businessId
+        ? supabase.from('businesses').select('closed_days').eq('id', state.businessId).maybeSingle()
+        : supabase.from('businesses').select('closed_days').eq('owner_id', state.ownerId).eq('is_default', true).maybeSingle()
     ]);
     openDow = new Set((wh || []).filter(w => w.is_active).map(w => w.day_of_week));
     (cd || []).forEach(c => {
@@ -385,6 +390,7 @@ async function renderBookingCalendar(year, month) {
       const d = new Date(b.start_time).toLocaleDateString('sv-SE', { timeZone: tz });
       bookedDates.add(d);
     });
+    businessClosedDow = new Set((biz?.closed_days || []).map(Number));
   }
 
   let html = '';
@@ -399,11 +405,12 @@ async function renderBookingCalendar(year, month) {
     const dow = dateObj.getDay();
     const isClosedDow = !openDow.has(dow);
     const isClosedDate = closedDates.has(dStr);
+    const isBizClosed = businessClosedDow.has(dow);
     const isBooked = bookedDates.has(dStr);
 
     let cls = 'cal-cell';
     if (isPast) cls += ' past';
-    else if (isClosedDow || isClosedDate) cls += ' unavailable';
+    else if (isClosedDow || isClosedDate || isBizClosed) cls += ' unavailable';
     else cls += ' avail';
     if (isToday) cls += ' today';
     if (isSelected) cls += ' selected';
