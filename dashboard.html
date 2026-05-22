@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260522i" />
+  <link rel="stylesheet" href="dashboard.css?v=20260522j" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -129,6 +129,15 @@
                 randevularınız</span>
               <button class="btn-icon" id="scheduleNext" type="button">›</button>
               <button class="btn-ghost schedule-today-btn" id="scheduleToday" type="button">Heute</button>
+
+              <!-- View toggle (Enterprise / Paket 3) -->
+              <div class="schedule-view-toggle" id="scheduleViewToggle" hidden>
+                <button class="sv-btn active" data-view="daily" type="button">Tag</button>
+                <button class="sv-btn" data-view="weekly" type="button">Woche</button>
+                <button class="sv-btn" data-view="monthly" type="button">Monat</button>
+              </div>
+
+              <select class="form-select schedule-monthly-emp" id="monthlyEmpSelect" hidden></select>
             </div>
             <div class="card upcoming-bookings-card">
               <div id="upcoming-bookings-loading" class="upcoming-loading">
@@ -146,6 +155,12 @@
                 <div class="dv-time-col" id="ovTimeCol"></div>
                 <div class="dv-cols-wrap" id="ovColsWrap"></div>
               </div>
+
+              <!-- Weekly view (Enterprise) -->
+              <div id="overview-weekly" class="ov-weekly" hidden></div>
+
+              <!-- Monthly view (Enterprise) -->
+              <div id="overview-monthly" class="ov-monthly" hidden></div>
             </div>
           </div>
 
@@ -3043,7 +3058,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260522i"></script>
+  <script type="module" src="dashboard.js?v=20260522j"></script>
 </body>
 
 </html>
