@@ -5126,3 +5126,90 @@ textarea {
   vertical-align: middle;
   cursor: help;
 }
+/* ============================================================
+   Fahrtenbuch — Hausbesuch info card in bkActionModal
+   ============================================================ */
+.hb-info-card {
+  background: linear-gradient(135deg, #eef6ff 0%, #f4f9ff 100%);
+  border: 1px solid #c4d8ee;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #1c4d8f;
+  box-shadow: 0 1px 2px rgba(28, 77, 143, 0.04);
+}
+.hb-info-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.hb-info-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c4d8f;
+}
+.hb-info-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #c4d8ee;
+  color: #1c4d8f;
+}
+.hb-info-row {
+  margin-bottom: 6px;
+}
+.hb-info-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b87a8;
+  margin-bottom: 4px;
+}
+.hb-info-value {
+  font-weight: 500;
+  font-size: 14px;
+  color: #1c4d8f;
+  flex: 1;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.hb-info-addr-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hb-copy-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+  background: #fff;
+  border: 1px solid #2a73d3;
+  color: #1c4d8f;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.hb-copy-btn:hover {
+  background: #2a73d3;
+  color: #fff;
+}
+.hb-copy-ok {
+  font-size: 13px;
+  color: #2a8c4a;
+  font-weight: 600;
+  display: none;
+}
+.hb-info-route {
+  font-size: 12px;
+  color: #6b87a8;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #c4d8ee;
+}
