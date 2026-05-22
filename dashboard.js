@@ -2274,9 +2274,18 @@ function populateEmpSelects(selectedId = null) {
       `<option value="${m.id}" ${m.id === selectedId ? 'selected' : ''}>${m.business_name || m.email?.split('@')[0]}</option>`
     ).join('');
   });
+
+  // bkEmployee değişince servis listesini o çalışanın hizmetlerine göre yenile
+  const bkEmp = document.getElementById('bkEmployee');
+  if (bkEmp && !bkEmp.dataset.srvFilterWired) {
+    bkEmp.dataset.srvFilterWired = '1';
+    bkEmp.addEventListener('change', async () => {
+      await populateSrvSelect(null, bkEmp.value);
+    });
+  }
 }
 
-async function populateSrvSelect(selectedId = null) {
+async function populateSrvSelect(selectedId = null, employeeId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
   const { data } = await supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
@@ -2286,8 +2295,20 @@ async function populateSrvSelect(selectedId = null) {
     ownerServices = data;
   }
 
+  // Çalışana atanmış hizmetler için filtre — atama yoksa hepsi gösterilir
+  let allowedSet = null;
+  if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
+  if (employeeId) {
+    const { data: assigned } = await supabase.from('employee_services').select('service_id').eq('employee_id', employeeId);
+    if (assigned && assigned.length) {
+      allowedSet = new Set(assigned.map(a => a.service_id));
+    }
+  }
+
   // Customer-facing dropdown: exclude is_internal services (Blanko bonus etc.)
-  const visible = (data || []).filter(s => !s.is_internal);
+  let visible = (data || []).filter(s => !s.is_internal);
+  if (allowedSet) visible = visible.filter(s => allowedSet.has(s.id));
+
   el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + visible.map(s =>
     `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)} (${s.duration_minutes || 30} min)</option>`
   ).join('');
@@ -5772,22 +5793,107 @@ async function loadEmpServices(empId) {
   const grid = document.getElementById('empServicesGrid');
   if (!grid) return;
   const [{ data: all }, { data: assigned }] = await Promise.all([
-    supabase.from('services').select('id,title').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`),
+    supabase.from('services').select('id,title,duration_minutes,price,price_config,code,color')
+      .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`)
+      .order('title'),
     supabase.from('employee_services').select('service_id').eq('employee_id', empId)
   ]);
   const assignedIds = new Set((assigned || []).map(x => x.service_id));
-  grid.innerHTML = (all || []).map(s => `
-    <label class="checkbox-label">
-      <input type="checkbox" class="emp-srv-chk" data-srv="${s.id}" ${assignedIds.has(s.id) ? 'checked' : ''}>
-      ${s.title}
-    </label>`).join('');
+  const total = (all || []).length;
+  const selectedCount = assignedIds.size;
+
+  // Hizmet süresi/fiyat özetini hesapla
+  const formatService = (s) => {
+    const dur = s.duration_minutes || 30;
+    let priceStr = '';
+    if (typeof s.price === 'number') priceStr = `${s.price.toFixed(2)} €`;
+    else if (s.price_config?.durations) {
+      const durs = s.price_config.durations;
+      const values = Object.values(durs).filter(d => d.active && typeof d.price === 'number').map(d => d.price);
+      if (values.length) priceStr = `ab ${Math.min(...values).toFixed(2)} €`;
+    }
+    return { dur, priceStr };
+  };
+
+  grid.innerHTML = `
+    <div class="emp-srv-toolbar">
+      <span class="emp-srv-count">${selectedCount} von ${total} ausgewählt</span>
+      <div class="emp-srv-toolbar-actions">
+        <button type="button" class="btn-ghost-sm" data-srv-action="all">Alle</button>
+        <button type="button" class="btn-ghost-sm" data-srv-action="none">Keine</button>
+      </div>
+    </div>
+    <div class="emp-srv-cards">
+      ${(all || []).map(s => {
+        const { dur, priceStr } = formatService(s);
+        const checked = assignedIds.has(s.id);
+        const initial = (s.title || '?').trim().charAt(0).toUpperCase();
+        const color = s.color || 'var(--primary)';
+        return `<label class="emp-srv-card ${checked ? 'is-selected' : ''}" data-srv-id="${s.id}">
+          <span class="emp-srv-card-avatar" style="background:${color};">${escapeHtml(initial)}</span>
+          <span class="emp-srv-card-body">
+            <span class="emp-srv-card-title">${escapeHtml(s.title)}</span>
+            <span class="emp-srv-card-meta">
+              <span>⏱ ${dur} min</span>
+              ${priceStr ? `<span>💶 ${escapeHtml(priceStr)}</span>` : ''}
+              ${s.code ? `<span class="emp-srv-card-code">${escapeHtml(s.code)}</span>` : ''}
+            </span>
+          </span>
+          <input type="checkbox" class="emp-srv-chk" data-srv="${s.id}" ${checked ? 'checked' : ''}>
+        </label>`;
+      }).join('')}
+    </div>
+  `;
+
+  const updateCount = () => {
+    const sel = grid.querySelectorAll('.emp-srv-chk:checked').length;
+    const tot = grid.querySelectorAll('.emp-srv-chk').length;
+    const c = grid.querySelector('.emp-srv-count');
+    if (c) c.textContent = `${sel} von ${tot} ausgewählt`;
+  };
+
   grid.querySelectorAll('.emp-srv-chk').forEach(chk => {
-    chk.addEventListener('change', async () => {
+    chk.addEventListener('change', async (e) => {
+      e.stopPropagation();
+      const card = chk.closest('.emp-srv-card');
+      if (card) card.classList.toggle('is-selected', chk.checked);
       if (chk.checked) {
         await supabase.from('employee_services').insert({ employee_id: empId, service_id: chk.dataset.srv });
       } else {
         await supabase.from('employee_services').delete().eq('employee_id', empId).eq('service_id', chk.dataset.srv);
       }
+      updateCount();
+    });
+  });
+
+  // Tüm karta tıklayınca checkbox toggle
+  grid.querySelectorAll('.emp-srv-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('input')) return;
+      const chk = card.querySelector('.emp-srv-chk');
+      if (chk) { chk.checked = !chk.checked; chk.dispatchEvent(new Event('change')); }
+    });
+  });
+
+  // Toolbar Alle/Keine
+  grid.querySelectorAll('[data-srv-action]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const action = btn.dataset.srvAction;
+      const checks = Array.from(grid.querySelectorAll('.emp-srv-chk'));
+      const toCheck = action === 'all';
+      // Sadece değişenleri DB'ye yaz
+      for (const chk of checks) {
+        if (chk.checked === toCheck) continue;
+        chk.checked = toCheck;
+        chk.closest('.emp-srv-card')?.classList.toggle('is-selected', toCheck);
+        if (toCheck) {
+          await supabase.from('employee_services').insert({ employee_id: empId, service_id: chk.dataset.srv });
+        } else {
+          await supabase.from('employee_services').delete().eq('employee_id', empId).eq('service_id', chk.dataset.srv);
+        }
+      }
+      updateCount();
+      showToast(toCheck ? 'Alle Dienstleistungen zugewiesen ✓' : 'Alle entfernt ✓');
     });
   });
 }
