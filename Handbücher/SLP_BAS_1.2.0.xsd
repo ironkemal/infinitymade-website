@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- bearbeitet mit XMLSpy v2025 (x64) (https://www.altova.com) von Markus Schmidt (GKV-Spitzenverband) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.gkv-datenaustausch.de/XMLSchema/SLP_BAS/1.2" targetNamespace="http://www.gkv-datenaustausch.de/XMLSchema/SLP_BAS/1.2" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:simpleType name="Anzahl_Dezimal_Stp">
+		<xs:annotation>
+			<xs:documentation>Angabe einer Anzahl zwischen "0" und "9999,99"</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="9999.99"/>
+			<xs:fractionDigits value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Anzahl_Dezimal_5_Stp">
+		<xs:annotation>
+			<xs:documentation>Angabe einer Anzahl zwischen "0" und "9999,99999"</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="9999.99999"/>
+			<xs:fractionDigits value="5"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Anzahl_Max99_Stp">
+		<xs:annotation>
+			<xs:documentation>Angabe einer Anzahl zwischen "1" und "99"</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="99"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Anzahl_Max9999_Stp">
+		<xs:annotation>
+			<xs:documentation>Angabe einer Anzahl zwischen "1" und "9999".</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="9999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Anzahl_MinutenTag_Stp">
+		<xs:annotation>
+			<xs:documentation>Angabe einer Anzahl zwischen "1" und "1440", da ein Tag 1440 Minuten umfasst.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="1440"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Abrechnungsmonat_Stp">
+		<xs:annotation>
+			<xs:documentation>Angabe eines Abrechnungsmonats im Format JJJJMM; mindestens "200001"</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="6"/>
+			<xs:pattern value="2\d{3}(0[1-9]|1[0-2])"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Betrag_Stp">
+		<xs:annotation>
+			<xs:documentation>Ein Geldbetrag.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:decimal">
+			<xs:fractionDigits value="2"/>
+			<xs:totalDigits value="12"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="BSNR_Stp">
+		<xs:annotation>
+			<xs:documentation>Betriebsstättennummer, 9stellig</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="9"/>
+			<xs:pattern value="([0-9]{9})"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Freitext_Stp">
+		<xs:annotation>
+			<xs:documentation>Freitext ohne Zeilenumbrüche, 600 Zeichen</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:whiteSpace value="collapse"/>
+			<xs:minLength value="1"/>
+			<xs:maxLength value="600"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Freitext_kurz_Stp">
+		<xs:annotation>
+			<xs:documentation>kurzer Freitext ohne Zeilenumbrüche, 150 Zeichen</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:whiteSpace value="collapse"/>
+			<xs:minLength value="1"/>
+			<xs:maxLength value="150"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Hausnummer_Stp">
+		<xs:annotation>
+			<xs:documentation>Hausnummer. Es muss mindestens ein Zeichen enthalten sein. Maximale Länge auf eGK=9</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="9"/>
+			<xs:minLength value="1"/>
+			<xs:whiteSpace value="collapse"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Institutionskennzeichen_Stp">
+		<xs:annotation>
+			<xs:documentation>Institutionskennzeichen, 9stellig</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="9"/>
+			<xs:pattern value="([0-9]{9})"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Jahreszahl_Stp">
+		<xs:annotation>
+			<xs:documentation>Angabe einesr Jahreszahl im Format JJJJ; mindestens "1900"</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="4"/>
+			<xs:pattern value="(19|2[0-9])\d{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="KVNR_Stp">
+		<xs:annotation>
+			<xs:documentation>Krankenversichertennummer, beginnend mit einem Großbuchstaben, danach neun Ziffern</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="10"/>
+			<xs:pattern value="([A-Z][0-9]{9})"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LANR_Stp">
+		<xs:annotation>
+			<xs:documentation>Lebenslange Arztnummer, 9stellig</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="9"/>
+			<xs:pattern value="([0-9]{9})"/>
+		</xs:restriction>
+	</xs:simpleType>	<xs:simpleType name="LBNR_stp">
+		<xs:annotation>
+			<xs:documentation>Die lebenslange Beschäftigtennummer (LBNR) ist ein neunstelliger numerischer Wert. Das Beschäftigtenverzeichnis der ambulanten Pflege (BeVaP) wird in § 293 Absatz 8 SGB V geregelt.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="9"/>
+			<xs:pattern value="\d{9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Logische_Version_Stp">
+		<xs:annotation>
+			<xs:documentation>Logische Version des Verfahrens</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="5"/>
+			<xs:maxLength value="8"/>
+			<xs:pattern value="[1-9][0-9]{0,1}\.(0|[1-9][0-9]{0,1})\.(0|[1-9][0-9]{0,1})"/>
+		</xs:restriction>
+	</xs:simpleType>	
+	<xs:simpleType name="MessageID_Stp">
+		<xs:annotation>
+			<xs:documentation>MessageID einer KIM-Nachricht</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="998"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Name_Stp">
+		<xs:annotation>
+			<xs:documentation>Vor- oder Nachnamen einer Person oder Name einer Institution. Der Name muss mindestens 1 Zeichen enthalten. </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:whiteSpace value="collapse"/>
+			<xs:minLength value="1"/>
+			<xs:maxLength value="45"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Ort_Stp">
+		<xs:annotation>
+			<xs:documentation>Name eines Ortes (Gemeinde, Ortschaft oder Stadt). Es muss mindestens ein Zeichen enthalten sein. Maximale Länge auf eGK=40</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="40"/>
+			<xs:minLength value="1"/>
+			<xs:whiteSpace value="collapse"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Postleitzahl_Stp">
+		<xs:annotation>
+			<xs:documentation>Postleitzahl eines Ortes. Es muss mindestens ein Zeichen enthalten sein. Maximale Länge auf eGK=10</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="10"/>
+			<xs:minLength value="1"/>
+			<xs:whiteSpace value="collapse"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PRODMOD_ID_Stp">
+		<xs:annotation>
+			<xs:documentation>PRODMOD-ID gem. Anhang 4 zur Technischen Anlage 1</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:length value="12"/>
+			<xs:pattern value="\d{12}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Rechnungsnummer_Stp">
+		<xs:annotation>
+			<xs:documentation>Frei definierbare Rechnungsnummer. Länge fasst auch Kreditorreferenz (Structured Creditor Reference - SCOR) falls benötigt.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="25"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Strasse_Stp">
+		<xs:annotation>
+			<xs:documentation>Strasse bzw. Zusatz zur Straße/Hausnummer. Es muss mindestens ein Zeichen enthalten sein. Maximale Länge auf eGK=46</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="46"/>
+			<xs:minLength value="1"/>
+			<xs:whiteSpace value="collapse"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="UUID_Stp">
+		<xs:annotation>
+			<xs:documentation>
+				<xs:displayName>UUID</xs:displayName>
+				<xs:description>Universally Unique IDentifier; https://datatracker.ietf.org/doc/html/rfc4122</xs:description>
+				<xs:tooltip/>
+				<xs:definition/>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

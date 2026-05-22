@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chatbot Widget Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #0a0a0a;
+    color: #e5e5e5;
+    min-width: 900px;
+    overflow: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, button, select { font-family: inherit; }
+  textarea { resize: vertical; }
+
+  .app { display: flex; flex-direction: column; height: 100vh; }
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; background: #0f0f0f;
+    border-bottom: 1px solid #262626; flex-shrink: 0;
+  }
+  .header h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .lang-select {
+    background: #1e1e1e; border: 1px solid #2a2a2a; color: #e5e5e5;
+    border-radius: 8px; padding: 9px 12px; font-size: 13px; cursor: pointer;
+    outline: none; transition: border-color 0.2s ease;
+  }
+  .lang-select:hover { border-color: #444; }
+  .lang-select:focus { border-color: #f43f5e; }
+  .copy-btn {
+    background: #f43f5e; color: white; border: none;
+    padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+    transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
+  }
+  .copy-btn:hover { background: #e11d48; transform: translateY(-1px); }
+
+  .main { display: flex; flex: 1; min-height: 0; }
+
+  .left-panel {
+    width: 420px; flex-shrink: 0; background: #141414;
+    border-right: 1px solid #262626; overflow-y: auto;
+  }
+  .section { padding: 20px; border-bottom: 1px solid #262626; }
+  .section:last-child { border-bottom: none; }
+  .section-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+    color: #888; margin: 0 0 16px 0; font-weight: 600;
+  }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block; font-size: 13px; color: #b5b5b5;
+    margin-bottom: 6px; font-weight: 500;
+  }
+  .field input[type="text"], .field textarea {
+    width: 100%; background: #252525; border: 1px solid #333;
+    color: #e5e5e5; border-radius: 8px; padding: 10px 12px;
+    font-size: 14px; outline: none; transition: border-color 0.2s ease;
+  }
+  .field input[type="text"]:focus, .field textarea:focus { border-color: #f43f5e; }
+  .field textarea { min-height: 90px; line-height: 1.45; }
+  .qa-card .field textarea[data-key="answer"] { min-height: 110px; }
+  .qa-card .field textarea[data-key="question"] { min-height: 50px; }
+
+  .kb-upload { border: 1px dashed #3a3a3a; border-radius: 10px; padding: 14px; background: #1c1c1c; }
+  .kb-upload input[type="file"] { display: none; }
+  .kb-upload .kb-pick { display: inline-block; padding: 8px 14px; border-radius: 8px; background: #2a2a2a; border: 1px solid #3a3a3a; color: #e5e5e5; cursor: pointer; font-size: 13px; transition: all .15s; }
+  .kb-upload .kb-pick:hover { background: #333; border-color: #f43f5e; }
+  .kb-status { font-size: 12px; color: #888; margin-top: 8px; }
+  .kb-status.ok { color: #34d399; }
+  .kb-status.err { color: #f87171; }
+  .kb-preview { margin-top: 10px; max-height: 140px; overflow-y: auto; background: #141414; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px; font-size: 12px; color: #aaa; line-height: 1.5; white-space: pre-wrap; word-break: break-word; display: none; }
+  .kb-preview.visible { display: block; }
+  .kb-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .kb-clear { background: transparent; border: 1px solid #3a3a3a; color: #aaa; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .kb-clear:hover { color: #f87171; border-color: #f87171; }
+  .kb-counter { font-size: 11px; color: #666; margin-left: auto; align-self: center; }
+
+  .tone-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tone-btn {
+    background: #1e1e1e; border: 1px solid #2a2a2a; color: #d5d5d5;
+    border-radius: 8px; padding: 10px 6px; font-size: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: all 0.2s ease;
+  }
+  .tone-btn:hover { border-color: #444; }
+  .tone-btn.active { border-color: #f43f5e; background: rgba(244, 63, 94, 0.1); color: #fff; }
+  .tone-btn .icon { font-size: 18px; }
+
+  .color-row { display: flex; align-items: center; gap: 12px; }
+  .color-row input[type="color"] {
+    width: 48px; height: 36px; border: 1px solid #333;
+    border-radius: 8px; background: #252525; cursor: pointer; padding: 2px;
+  }
+  .color-row .color-value { font-size: 13px; color: #888; font-family: monospace; }
+
+  .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 12px; }
+  .emoji-btn {
+    background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px;
+    padding: 8px; font-size: 22px; transition: all 0.2s ease;
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  }
+  .emoji-btn:hover { border-color: #444; }
+  .emoji-btn.active { border-color: #f43f5e; background: rgba(244, 63, 94, 0.1); }
+
+  .btn-secondary {
+    background: #1e1e1e; border: 1px solid #2a2a2a; color: #e5e5e5;
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 500;
+    transition: all 0.2s ease; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-secondary:hover { border-color: #444; background: #242424; }
+
+  .btn-primary {
+    background: #f43f5e; color: white; border: none;
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-primary:hover { background: #e11d48; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .ai-avatar-panel {
+    margin-top: 12px; background: #1a1a1a; border: 1px solid #2a2a2a;
+    border-radius: 10px; padding: 14px; display: none;
+  }
+  .ai-avatar-panel.visible { display: block; }
+  .spinner {
+    width: 22px; height: 22px; border: 2.5px solid #333;
+    border-top-color: #f43f5e; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 12px auto; display: none;
+  }
+  .spinner.visible { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .avatar-result {
+    display: none; flex-direction: column; align-items: center;
+    gap: 10px; margin-top: 12px;
+  }
+  .avatar-result.visible { display: flex; }
+  .avatar-result img {
+    width: 64px; height: 64px; border-radius: 50%;
+    object-fit: cover; border: 2px solid #f43f5e;
+  }
+  .avatar-actions { display: flex; gap: 8px; width: 100%; }
+  .avatar-actions button { flex: 1; }
+
+  .error-msg { color: #f87171; font-size: 12px; margin-top: 8px; display: none; }
+  .error-msg.visible { display: block; }
+
+  .ai-fill-row { display: flex; gap: 8px; align-items: stretch; }
+  .ai-fill-row input {
+    flex: 1; background: #252525; border: 1px solid #333; color: #e5e5e5;
+    border-radius: 8px; padding: 10px 12px; font-size: 14px;
+    outline: none; transition: border-color 0.2s ease;
+  }
+  .ai-fill-row input:focus { border-color: #f43f5e; }
+  .ai-fill-btn {
+    background: linear-gradient(135deg, #f43f5e, #fb7185);
+    color: white; border: none; border-radius: 8px;
+    padding: 0 16px; font-weight: 600; font-size: 14px;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s ease; flex-shrink: 0;
+  }
+  .ai-fill-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); }
+  .ai-fill-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .ai-fill-status { font-size: 12px; margin-top: 8px; min-height: 16px; }
+  .ai-fill-status.loading { color: #fbbf24; }
+  .ai-fill-status.success { color: #34d399; }
+  .ai-fill-status.error { color: #f87171; }
+  .ai-fill-hint { font-size: 11px; color: #666; margin-top: 6px; line-height: 1.4; }
+
+  .qa-card {
+    background: #1a1a1a; border: 1px solid #2a2a2a;
+    border-radius: 10px; padding: 14px; margin-bottom: 12px; position: relative;
+  }
+  .qa-delete {
+    position: absolute; top: 8px; right: 8px;
+    background: transparent; border: 1px solid #3a1a1a; color: #f87171;
+    width: 26px; height: 26px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease; padding: 0;
+  }
+  .qa-delete:hover { background: rgba(248, 113, 113, 0.15); border-color: #f87171; }
+
+  .right-panel {
+    flex: 1; background: #1a1a1a;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 20px 20px;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+
+  .web-preview {
+    background: #f5f5f5; border-radius: 12px;
+    width: 100%; max-width: 500px; padding: 40px;
+    color: #2a2a2a; box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .web-preview .logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #f43f5e, #fb7185);
+    border-radius: 12px; margin-bottom: 18px;
+  }
+  .web-preview h2 { margin: 0 0 12px 0; font-size: 22px; color: #1a1a1a; }
+  .web-preview p { color: #666; line-height: 1.6; font-size: 14px; margin: 0 0 12px 0; }
+  .web-preview .placeholder-bar { height: 10px; background: #e0e0e0; border-radius: 4px; margin-bottom: 8px; }
+  .web-preview .placeholder-bar.short { width: 60%; }
+  .web-preview .placeholder-bar.med { width: 80%; }
+
+  .chat-launcher {
+    position: absolute; bottom: 30px; right: 30px;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--brand, #f43f5e); border: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 24px;
+    transition: transform 0.2s ease; z-index: 5; overflow: hidden;
+  }
+  .chat-launcher:hover { transform: scale(1.1); }
+  .chat-launcher img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+  .chat-window {
+    position: absolute; bottom: 30px; right: 30px;
+    width: 380px; height: 520px; background: white;
+    border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateY(20px) scale(0.95); opacity: 0; pointer-events: none;
+    transition: all 0.25s ease; z-index: 6;
+  }
+  .chat-window.open { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+
+  .chat-header {
+    background: var(--brand, #f43f5e); color: white;
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .chat-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; overflow: hidden; flex-shrink: 0;
+  }
+  .chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .chat-name { font-weight: 600; font-size: 15px; flex: 1; }
+  .chat-close {
+    background: transparent; border: none; color: white; font-size: 22px;
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s ease; padding: 0;
+  }
+  .chat-close:hover { background: rgba(255,255,255,0.2); }
+
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px; background: #ffffff;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .msg { display: flex; flex-direction: column; max-width: 80%; }
+  .msg.bot { align-self: flex-start; align-items: flex-start; }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg .bubble {
+    padding: 10px 13px; border-radius: 14px; font-size: 14px;
+    line-height: 1.4; word-wrap: break-word; color: #1a1a1a;
+  }
+  .msg.bot .bubble { background: #f0f0f0; border-bottom-left-radius: 4px; }
+  .msg.user .bubble { background: var(--brand, #f43f5e); color: white; border-bottom-right-radius: 4px; }
+  .msg .time { font-size: 10px; color: #999; margin-top: 3px; padding: 0 4px; }
+
+  .typing {
+    align-self: flex-start; background: #f0f0f0;
+    border-radius: 14px; border-bottom-left-radius: 4px;
+    padding: 12px 14px; display: none;
+  }
+  .typing.visible { display: flex; }
+  .typing span {
+    width: 6px; height: 6px; background: #999; border-radius: 50%;
+    margin: 0 2px; animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  .chat-input-area {
+    background: white; border-top: 1px solid #ececec;
+    padding: 10px 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .chat-input-area input {
+    flex: 1; border: none; outline: none; padding: 10px 4px;
+    font-size: 14px; color: #1a1a1a; background: transparent;
+  }
+  .chat-send {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--brand, #f43f5e); border: none; color: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s ease; flex-shrink: 0;
+  }
+  .chat-send:hover { transform: scale(1.05); }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+  .chat-messages::-webkit-scrollbar-thumb { background: #d5d5d5; }
+
+  .toast {
+    position: fixed; top: 20px; right: 20px;
+    background: #1f2937; color: white; padding: 12px 18px;
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transform: translateX(120%); transition: transform 0.3s ease;
+    z-index: 100; font-size: 14px;
+  }
+  .toast.visible { transform: translateX(0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1 data-i18n="appTitle">Chatbot Widget Builder</h1>
+    <div class="header-right">
+      <select class="lang-select" id="langSelect" title="Language">
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="tr">🇹🇷 Türkçe</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="nl">🇳🇱 Nederlands</option>
+        <option value="pl">🇵🇱 Polski</option>
+      </select>
+      <button class="copy-btn" id="copyBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span data-i18n="copyCode">Widget-Code kopieren</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="left-panel">
+
+      <div class="section">
+        <h3 class="section-title" data-i18n="autoFill">KI-Autoausfüllung</h3>
+        <div class="field" style="margin-bottom:8px;">
+          <label data-i18n="websiteUrl">Website-URL des Kunden</label>
+          <div class="ai-fill-row">
+            <input type="text" id="siteUrl" data-i18n-ph="websiteUrlPh" />
+            <button class="ai-fill-btn" id="aiFillBtn" title="KI-Autoausfüllung">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 11l-5.8 1.9L12 19l-1.9-6.1L4 11l6.1-2.2z"/></svg>
+              <span data-i18n="aiFillButton">KI</span>
+            </button>
+          </div>
+        </div>
+        <div class="ai-fill-status" id="aiFillStatus"></div>
+        <div class="ai-fill-hint" data-i18n="aiFillHint">Geben Sie die URL der Kundenwebsite ein. Die KI liest die Seite und füllt automatisch Adresse, Telefon, Öffnungszeiten und häufige Fragen aus.</div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title" data-i18n="generalSettings">Allgemeine Einstellungen</h3>
+        <div class="field">
+          <label data-i18n="botName">Bot-Name</label>
+          <input type="text" id="botName" />
+        </div>
+        <div class="field">
+          <label data-i18n="welcomeMessage">Begrüßungsnachricht</label>
+          <textarea id="welcomeMessage"></textarea>
+        </div>
+        <div class="field">
+          <label data-i18n="noMatchMessage">Fallback-Nachricht</label>
+          <textarea id="noMatchMessage"></textarea>
+        </div>
+        <div class="field">
+          <label data-i18n="toneSelection">Tonalität</label>
+          <div class="tone-group" id="toneGroup">
+            <button class="tone-btn active" data-tone="formal"><span class="icon">👔</span><span data-i18n="toneFormal">Förmlich</span></button>
+            <button class="tone-btn" data-tone="casual"><span class="icon">👋</span><span data-i18n="toneCasual">Locker</span></button>
+            <button class="tone-btn" data-tone="friendly"><span class="icon">💖</span><span data-i18n="toneFriendly">Freundschaftlich</span></button>
+          </div>
+        </div>
+        <div class="field">
+          <label data-i18n="brandColor">Markenfarbe</label>
+          <div class="color-row">
+            <input type="color" id="brandColor" value="#f43f5e" />
+            <span class="color-value" id="brandColorVal">#f43f5e</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title" data-i18n="botAvatar">Bot-Avatar</h3>
+        <div class="emoji-grid" id="emojiGrid">
+          <button class="emoji-btn active" data-emoji="robot">🤖</button>
+          <button class="emoji-btn" data-emoji="star">⭐</button>
+          <button class="emoji-btn" data-emoji="heart">❤️</button>
+          <button class="emoji-btn" data-emoji="bulb">💡</button>
+          <button class="emoji-btn" data-emoji="rocket">🚀</button>
+          <button class="emoji-btn" data-emoji="smile">😊</button>
+        </div>
+        <button class="btn-primary" id="toggleAiAvatar" style="width:100%;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 11l-5.8 1.9L12 19l-1.9-6.1L4 11l6.1-2.2z"/></svg>
+          <span data-i18n="generateAvatar">Bot-Avatar generieren</span>
+        </button>
+        <div class="ai-avatar-panel" id="aiAvatarPanel">
+          <div class="field">
+            <label data-i18n="describeAvatar">Avatar beschreiben</label>
+            <textarea id="avatarPrompt" data-i18n-ph="avatarPlaceholder"></textarea>
+          </div>
+          <button class="btn-primary" id="generateAvatarBtn" style="width:100%;" data-i18n="generate">Generieren</button>
+          <div class="spinner" id="avatarSpinner"></div>
+          <div class="error-msg" id="avatarError"></div>
+          <div class="avatar-result" id="avatarResult">
+            <img id="avatarPreview" alt="Avatar" />
+            <div class="avatar-actions">
+              <button class="btn-secondary" id="cancelAvatarBtn" data-i18n="cancel">Abbrechen</button>
+              <button class="btn-primary" id="useAvatarBtn" data-i18n="use">Verwenden</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title" data-i18n="qaPairs">Frage-Antwort-Paare</h3>
+        <div id="qaList"></div>
+        <button class="btn-secondary" id="addQaBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span data-i18n="addQa">Neues Frage-Antwort-Paar hinzufügen</span>
+        </button>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title" data-i18n="generalInfoTitle">Allgemeine Informationen für die KI</h3>
+        <p style="font-size:12px;color:#888;line-height:1.5;margin-bottom:10px;" data-i18n="generalInfoHint">Schreiben Sie hier einmalig alles, was die KI über Ihr Unternehmen wissen soll (Marke, Tonalität, Besonderheiten, häufige Hinweise). Der Text wird bei jeder Antwort als Referenz verwendet.</p>
+        <div class="field" style="margin-bottom:0;">
+          <textarea id="generalInfo" rows="6" data-i18n-ph="generalInfoPh" style="min-height:140px;resize:vertical;"></textarea>
+          <div style="font-size:11px;color:#666;text-align:right;margin-top:6px;"><span id="generalInfoCounter">0</span> / 5000</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title" data-i18n="knowledgeFile">Wissensdatei (PDF/TXT)</h3>
+        <p style="font-size:12px;color:#888;line-height:1.5;margin-bottom:10px;" data-i18n="knowledgeHint">Laden Sie eine Speisekarte, Preisliste oder Broschüre hoch. Der Text wird einmalig extrahiert und dem Bot als zusätzliches Wissen übergeben.</p>
+        <div class="kb-upload">
+          <label class="kb-pick" for="kbFile">
+            <span data-i18n="chooseFile">Datei wählen (PDF/TXT)</span>
+          </label>
+          <input type="file" id="kbFile" accept=".pdf,.txt,text/plain,application/pdf" />
+          <span class="kb-counter" id="kbCounter"></span>
+          <div class="kb-status" id="kbStatus" data-i18n="kbNoFile">Keine Datei geladen.</div>
+          <div class="kb-preview" id="kbPreview"></div>
+          <div class="kb-actions" id="kbActions" style="display:none;">
+            <button type="button" class="kb-clear" id="kbClear" data-i18n="clearKnowledge">Wissen entfernen</button>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <main class="right-panel">
+      <div class="web-preview">
+        <div class="logo"></div>
+        <h2 data-i18n="previewTitle">Beispielunternehmen</h2>
+        <p data-i18n="previewText">Vorschau einer modernen Unternehmensseite. Das Widget unten rechts ist live einsetzbar.</p>
+        <div class="placeholder-bar"></div>
+        <div class="placeholder-bar med"></div>
+        <div class="placeholder-bar short"></div>
+      </div>
+
+      <button class="chat-launcher" id="chatLauncher">
+        <span id="launcherIcon">🤖</span>
+      </button>
+
+      <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+          <div class="chat-avatar" id="chatHeaderAvatar"><span id="headerAvatarIcon">🤖</span></div>
+          <div class="chat-name" id="chatHeaderName">Assistent</div>
+          <button class="chat-close" id="chatClose">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="typing" id="typingIndicator"><span></span><span></span><span></span></div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="chatInput" data-i18n-ph="typeMessage" />
+          <button class="chat-send" id="chatSend">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" data-i18n="copied">Kopiert!</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const FAL_KEY = '3c2e1b25-c850-4e3f-9822-9f88b6807a63:e41f4d159c6dd129bb795b812e27d75a';
+  const SCRAPE_WEBHOOK_URL = 'https://n8n.infinitymade.de/webhook/scrape-business';
+  const CHAT_WEBHOOK_URL = 'https://n8n.infinitymade.de/webhook/chat';
+
+  // Hardcoded abuse-prevention limits (cannot be changed by tenant)
+  const LIMITS = {
+    minLen: 2,
+    maxLen: 500,
+    maxMessagesPerSession: 30,
+    maxOffTopicStrikes: 3,
+    cooldownMs: 1500
+  };
+
+  const EMOJI_MAP = {
+    robot: '🤖', star: '⭐', heart: '❤️', bulb: '💡', rocket: '🚀', smile: '😊'
+  };
+
+  // ---------- I18N ----------
+  const I18N = {
+    de: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Widget-Code kopieren',
+      copied: 'Kopiert!',
+      autoFill: 'KI-Autoausfüllung',
+      websiteUrl: 'Website-URL des Kunden',
+      websiteUrlPh: 'https://www.kundenwebsite.de',
+      aiFillButton: 'KI',
+      aiFillHint: 'Geben Sie die URL der Kundenwebsite ein. Die KI liest die Seite und füllt automatisch Adresse, Telefon, Öffnungszeiten und häufige Fragen aus.',
+      aiFillLoading: 'Website wird analysiert (kann 15-30 Sek. dauern)...',
+      aiFillSuccess: 'Erfolgreich ausgefüllt!',
+      aiFillErrorUrl: 'Bitte gültige URL eingeben (mit https://).',
+      aiFillErrorNetwork: 'Verbindungsfehler. Bitte später erneut versuchen.',
+      aiFillErrorParse: 'Die KI konnte die Website nicht auswerten.',
+      generalSettings: 'Allgemeine Einstellungen',
+      botName: 'Bot-Name',
+      welcomeMessage: 'Begrüßungsnachricht',
+      noMatchMessage: 'Fallback-Nachricht',
+      toneSelection: 'Tonalität',
+      toneFormal: 'Förmlich',
+      toneCasual: 'Locker',
+      toneFriendly: 'Freundschaftlich',
+      brandColor: 'Markenfarbe',
+      botAvatar: 'Bot-Avatar',
+      generateAvatar: 'Bot-Avatar generieren',
+      describeAvatar: 'Avatar beschreiben',
+      avatarPlaceholder: 'niedlicher blauer Roboter-Maskottchen, große Augen',
+      generate: 'Generieren',
+      use: 'Verwenden',
+      cancel: 'Abbrechen',
+      qaPairs: 'Frage-Antwort-Paare',
+      addQa: 'Neues Frage-Antwort-Paar hinzufügen',
+      questionLabel: 'Frage',
+      answerLabel: 'Antwort',
+      keywordsLabel: 'Schlüsselwörter (kommagetrennt)',
+      questionPh: 'Was sind Ihre Öffnungszeiten?',
+      answerPh: 'Wir sind werktags von 09:00 bis 18:00 Uhr für Sie da.',
+      keywordsPh: 'zeit, öffnung, geöffnet, geschlossen',
+      typeMessage: 'Nachricht schreiben...',
+      previewTitle: 'Beispielunternehmen',
+      previewText: 'Vorschau einer modernen Unternehmensseite. Das Widget unten rechts ist live einsetzbar.',
+      enterDescription: 'Bitte geben Sie eine Beschreibung ein.',
+      apiError: 'API-Fehler',
+      imageGenError: 'Bild konnte nicht generiert werden',
+      botNameDefault: 'Assistent',
+      welcomeDefault: 'Hallo! Wie kann ich Ihnen helfen?',
+      noMatchDefault: 'Dazu kann ich Ihnen leider nicht weiterhelfen. Bitte kontaktieren Sie uns unter +49 30 1234567.',
+      casualPrefixes: ['Klar, ', 'Natürlich, '],
+      friendlySuffix: ' Falls Sie weitere Fragen haben, schreiben Sie mir einfach!',
+      errTooShort: 'Bitte schreiben Sie eine längere Nachricht.',
+      errTooLong: 'Ihre Nachricht ist zu lang (max. 500 Zeichen).',
+      errCooldown: 'Bitte warten Sie einen Moment...',
+      errNetwork: 'Verbindungsproblem. Bitte später erneut versuchen.',
+      sessionEnded: 'Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.',
+      sessionLimit: 'Das Nachrichtenlimit dieser Sitzung wurde erreicht.',
+      knowledgeFile: 'Wissensdatei (PDF/TXT)',
+      knowledgeHint: 'Laden Sie eine Speisekarte, Preisliste oder Broschüre hoch. Der Text wird einmalig extrahiert und dem Bot als zusätzliches Wissen übergeben.',
+      chooseFile: 'Datei wählen (PDF/TXT)',
+      kbNoFile: 'Keine Datei geladen.',
+      kbParsing: 'Datei wird gelesen...',
+      kbLoaded: 'Datei geladen',
+      kbEmpty: 'Keine Textinhalte gefunden (vielleicht ein gescannter PDF?).',
+      kbError: 'Fehler beim Lesen der Datei',
+      clearKnowledge: 'Wissen entfernen',
+      generalInfoTitle: 'Allgemeine Informationen für die KI',
+      generalInfoHint: 'Schreiben Sie hier einmalig alles, was die KI über Ihr Unternehmen wissen soll (Marke, Tonalität, Besonderheiten, häufige Hinweise). Der Text wird bei jeder Antwort als Referenz verwendet.',
+      generalInfoPh: 'z.B. Wir sind eine familiengeführte Bio-Bäckerei seit 1995. Wir nutzen ausschließlich regionale Zutaten. Auf Allergien gehen wir besonders ein...'
+    },
+    en: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Copy widget code',
+      copied: 'Copied!',
+      autoFill: 'AI Auto-Fill',
+      websiteUrl: 'Customer website URL',
+      websiteUrlPh: 'https://www.customer-site.com',
+      aiFillButton: 'AI',
+      aiFillHint: 'Paste the customer\u2019s website URL. The AI will scan the site and auto-fill address, phone, hours and common questions.',
+      aiFillLoading: 'Analyzing website (may take 15-30s)...',
+      aiFillSuccess: 'Successfully filled in!',
+      aiFillErrorUrl: 'Please enter a valid URL (starting with https://).',
+      aiFillErrorNetwork: 'Connection error. Please try again later.',
+      aiFillErrorParse: 'The AI could not parse the website.',
+      generalSettings: 'General settings',
+      botName: 'Bot name',
+      welcomeMessage: 'Welcome message',
+      noMatchMessage: 'Fallback message',
+      toneSelection: 'Tone',
+      toneFormal: 'Formal',
+      toneCasual: 'Casual',
+      toneFriendly: 'Friendly',
+      brandColor: 'Brand color',
+      botAvatar: 'Bot avatar',
+      generateAvatar: 'Generate bot avatar',
+      describeAvatar: 'Describe the avatar',
+      avatarPlaceholder: 'cute blue robot mascot, big eyes',
+      generate: 'Generate',
+      use: 'Use',
+      cancel: 'Cancel',
+      qaPairs: 'Q&A pairs',
+      addQa: 'Add new Q&A pair',
+      questionLabel: 'Question',
+      answerLabel: 'Answer',
+      keywordsLabel: 'Keywords (comma-separated)',
+      questionPh: 'What are your opening hours?',
+      answerPh: 'We are open Mon-Fri from 9 a.m. to 6 p.m.',
+      keywordsPh: 'time, hours, open, closed',
+      typeMessage: 'Type a message...',
+      previewTitle: 'Sample business',
+      previewText: 'Preview of a modern business page. The widget at the bottom right works live.',
+      enterDescription: 'Please enter a description.',
+      apiError: 'API error',
+      imageGenError: 'Image could not be generated',
+      botNameDefault: 'Assistant',
+      welcomeDefault: 'Hi! How can I help you?',
+      noMatchDefault: "I'm not able to help with that. Please contact us at +49 30 1234567.",
+      casualPrefixes: ['Sure, ', 'Of course, '],
+      friendlySuffix: ' Let me know if you have any other questions!',
+      errTooShort: 'Please write a longer message.',
+      errTooLong: 'Your message is too long (max 500 chars).',
+      errCooldown: 'Please wait a moment...',
+      errNetwork: 'Connection problem. Please try again later.',
+      sessionEnded: 'This conversation has been ended. For further questions please contact us directly.',
+      sessionLimit: 'The message limit for this session has been reached.',
+      knowledgeFile: 'Knowledge file (PDF/TXT)',
+      knowledgeHint: 'Upload a menu, price list or brochure. The text is extracted once and given to the bot as additional knowledge.',
+      chooseFile: 'Choose file (PDF/TXT)',
+      kbNoFile: 'No file loaded.',
+      kbParsing: 'Reading file...',
+      kbLoaded: 'File loaded',
+      kbEmpty: 'No text content found (maybe a scanned PDF?).',
+      kbError: 'Error reading file',
+      clearKnowledge: 'Remove knowledge',
+      generalInfoTitle: 'General information for the AI',
+      generalInfoHint: 'Write here once everything the AI should know about your business (brand, tone, specifics, common notes). The text is used as a reference for every answer.',
+      generalInfoPh: 'e.g. We are a family-run organic bakery since 1995. We use only regional ingredients. We pay special attention to allergies...'
+    },
+    tr: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Widget Kodunu Kopyala',
+      copied: 'Kopyalandı!',
+      autoFill: 'AI ile Otomatik Doldur',
+      websiteUrl: 'Müşterinin Web Sitesi URL’si',
+      websiteUrlPh: 'https://www.musterifirma.com',
+      aiFillButton: 'AI',
+      aiFillHint: 'Müşterinin web sitesi adresini yapıştırın. Yapay zeka siteyi tarar; adres, telefon, saatler ve sık sorulan soruları otomatik doldurur.',
+      aiFillLoading: 'Site analiz ediliyor (15-30 sn sürebilir)...',
+      aiFillSuccess: 'Başarıyla dolduruldu!',
+      aiFillErrorUrl: 'Lütfen geçerli bir URL girin (https:// ile).',
+      aiFillErrorNetwork: 'Bağlantı hatası. Lütfen daha sonra tekrar deneyin.',
+      aiFillErrorParse: 'AI siteyi analiz edemedi.',
+      generalSettings: 'Genel Ayarlar',
+      botName: 'Bot Adı',
+      welcomeMessage: 'Karşılama Mesajı',
+      noMatchMessage: 'Eşleşmeme Mesajı',
+      toneSelection: 'Ton Seçimi',
+      toneFormal: 'Resmi',
+      toneCasual: 'Samimi',
+      toneFriendly: 'Arkadaş Canlısı',
+      brandColor: 'Marka Rengi',
+      botAvatar: 'Bot Avatarı',
+      generateAvatar: 'Bot Avatarı Oluştur',
+      describeAvatar: 'Avatarı tarif edin',
+      avatarPlaceholder: 'sevimli mavi robot maskot, büyük gözler',
+      generate: 'Oluştur',
+      use: 'Kullan',
+      cancel: 'Vazgeç',
+      qaPairs: 'Soru-Cevap Çiftleri',
+      addQa: 'Yeni Soru-Cevap Ekle',
+      questionLabel: 'Soru',
+      answerLabel: 'Cevap',
+      keywordsLabel: 'Anahtar Kelimeler (virgülle ayırın)',
+      questionPh: 'Çalışma saatleriniz nedir?',
+      answerPh: 'Hafta içi 09:00-18:00 arası hizmet vermekteyiz.',
+      keywordsPh: 'saat, çalışma, açık, kapalı',
+      typeMessage: 'Mesajınızı yazın...',
+      previewTitle: 'Örnek İşletme',
+      previewText: 'Modern bir işletme sayfası önizlemesi. Sağ alttaki widget canlı olarak çalışıyor.',
+      enterDescription: 'Lütfen bir tarif girin.',
+      apiError: 'API hatası',
+      imageGenError: 'Görsel üretilemedi',
+      botNameDefault: 'Asistan',
+      welcomeDefault: 'Merhaba! Size nasıl yardımcı olabilirim?',
+      noMatchDefault: 'Bu konuda yardımcı olamıyorum. Lütfen 0850 123 4567 ile iletişime geçin.',
+      casualPrefixes: ['Tabii, ', 'Elbette, '],
+      friendlySuffix: ' Başka bir sorun varsa yaz bana!',
+      errTooShort: 'Lütfen daha uzun bir mesaj yazın.',
+      errTooLong: 'Mesajınız çok uzun (en fazla 500 karakter).',
+      errCooldown: 'Lütfen biraz bekleyin...',
+      errNetwork: 'Bağlantı sorunu. Daha sonra tekrar deneyin.',
+      sessionEnded: 'Bu sohbet sonlandırıldı. Daha fazla soru için lütfen bize doğrudan ulaşın.',
+      sessionLimit: 'Bu oturumun mesaj sınırına ulaşıldı.',
+      knowledgeFile: 'Bilgi Dosyası (PDF/TXT)',
+      knowledgeHint: 'Menü, fiyat listesi veya broşür yükleyin. Metin bir kez okunur ve bota ek bilgi olarak verilir.',
+      chooseFile: 'Dosya Seç (PDF/TXT)',
+      kbNoFile: 'Dosya yüklenmedi.',
+      kbParsing: 'Dosya okunuyor...',
+      kbLoaded: 'Dosya yüklendi',
+      kbEmpty: 'Metin bulunamadı (taranmış PDF olabilir?).',
+      kbError: 'Dosya okuma hatası',
+      clearKnowledge: 'Bilgiyi Sil',
+      generalInfoTitle: 'Yapay zeka için genel bilgiler',
+      generalInfoHint: 'Yapay zekanın işletmeniz hakkında bilmesini istediğiniz her şeyi (marka, ton, özellikler, sık uyarılar) buraya bir kez yazın. Bu metin her cevapta referans olarak kullanılır.',
+      generalInfoPh: 'örn. 1995’ten beri aile işletmesi organik bir fırınız. Sadece bölgesel malzemeler kullanıyoruz. Alerjilere özel önem gösteriyoruz...'
+    },
+    fr: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Copier le code',
+      copied: 'Copié !',
+      autoFill: 'Remplissage IA',
+      websiteUrl: 'URL du site client',
+      websiteUrlPh: 'https://www.site-client.fr',
+      aiFillButton: 'IA',
+      aiFillHint: 'Collez l’URL du site client. L’IA analyse la page et remplit automatiquement adresse, téléphone, horaires et questions fréquentes.',
+      aiFillLoading: 'Analyse du site en cours (15-30s)...',
+      aiFillSuccess: 'Rempli avec succès !',
+      aiFillErrorUrl: 'Veuillez saisir une URL valide (avec https://).',
+      aiFillErrorNetwork: 'Erreur de connexion. Réessayez plus tard.',
+      aiFillErrorParse: 'L’IA n’a pas pu analyser le site.',
+      generalSettings: 'Paramètres généraux',
+      botName: 'Nom du bot',
+      welcomeMessage: 'Message de bienvenue',
+      noMatchMessage: 'Message par défaut',
+      toneSelection: 'Tonalité',
+      toneFormal: 'Formel',
+      toneCasual: 'Décontracté',
+      toneFriendly: 'Amical',
+      brandColor: 'Couleur de marque',
+      botAvatar: 'Avatar du bot',
+      generateAvatar: "Générer l'avatar",
+      describeAvatar: "Décrivez l'avatar",
+      avatarPlaceholder: 'mignonne mascotte robot bleue, grands yeux',
+      generate: 'Générer',
+      use: 'Utiliser',
+      cancel: 'Annuler',
+      qaPairs: 'Paires Q-R',
+      addQa: 'Ajouter une nouvelle paire Q-R',
+      questionLabel: 'Question',
+      answerLabel: 'Réponse',
+      keywordsLabel: 'Mots-clés (séparés par des virgules)',
+      questionPh: 'Quels sont vos horaires ?',
+      answerPh: 'Nous sommes ouverts du lundi au vendredi de 9h à 18h.',
+      keywordsPh: 'horaire, heures, ouvert, fermé',
+      typeMessage: 'Écrivez un message...',
+      previewTitle: 'Exemple d\'entreprise',
+      previewText: "Aperçu d'une page d'entreprise moderne. Le widget en bas à droite fonctionne en direct.",
+      enterDescription: 'Veuillez saisir une description.',
+      apiError: 'Erreur API',
+      imageGenError: "L'image n'a pas pu être générée",
+      botNameDefault: 'Assistant',
+      welcomeDefault: 'Bonjour ! Comment puis-je vous aider ?',
+      noMatchDefault: "Je ne peux pas vous aider sur ce point. Veuillez nous contacter au +49 30 1234567.",
+      casualPrefixes: ['Bien sûr, ', 'Absolument, '],
+      friendlySuffix: " N'hésitez pas si vous avez d'autres questions !",
+      errTooShort: 'Veuillez écrire un message plus long.',
+      errTooLong: 'Votre message est trop long (500 car. max).',
+      errCooldown: 'Veuillez patienter...',
+      errNetwork: 'Problème de connexion. Réessayez plus tard.',
+      sessionEnded: 'Cette conversation est terminée. Pour toute autre question, veuillez nous contacter directement.',
+      sessionLimit: 'La limite de messages de cette session est atteinte.'
+    },
+    es: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Copiar código',
+      copied: '¡Copiado!',
+      autoFill: 'Autorrelleno IA',
+      websiteUrl: 'URL del sitio del cliente',
+      websiteUrlPh: 'https://www.sitio-cliente.es',
+      aiFillButton: 'IA',
+      aiFillHint: 'Pegue la URL del sitio del cliente. La IA analizará la página y rellenará automáticamente dirección, teléfono, horarios y preguntas frecuentes.',
+      aiFillLoading: 'Analizando sitio (15-30s)...',
+      aiFillSuccess: '¡Rellenado con éxito!',
+      aiFillErrorUrl: 'Por favor introduce una URL válida (con https://).',
+      aiFillErrorNetwork: 'Error de conexión. Inténtalo más tarde.',
+      aiFillErrorParse: 'La IA no pudo analizar el sitio.',
+      generalSettings: 'Ajustes generales',
+      botName: 'Nombre del bot',
+      welcomeMessage: 'Mensaje de bienvenida',
+      noMatchMessage: 'Mensaje alternativo',
+      toneSelection: 'Tono',
+      toneFormal: 'Formal',
+      toneCasual: 'Casual',
+      toneFriendly: 'Amistoso',
+      brandColor: 'Color de marca',
+      botAvatar: 'Avatar del bot',
+      generateAvatar: 'Generar avatar',
+      describeAvatar: 'Describe el avatar',
+      avatarPlaceholder: 'lindo mascota robot azul, ojos grandes',
+      generate: 'Generar',
+      use: 'Usar',
+      cancel: 'Cancelar',
+      qaPairs: 'Pares de P-R',
+      addQa: 'Añadir nuevo par P-R',
+      questionLabel: 'Pregunta',
+      answerLabel: 'Respuesta',
+      keywordsLabel: 'Palabras clave (separadas por comas)',
+      questionPh: '¿Cuál es su horario?',
+      answerPh: 'Abrimos de lunes a viernes de 9:00 a 18:00.',
+      keywordsPh: 'horario, horas, abierto, cerrado',
+      typeMessage: 'Escribe un mensaje...',
+      previewTitle: 'Empresa de ejemplo',
+      previewText: 'Vista previa de una página empresarial moderna. El widget de abajo a la derecha funciona en vivo.',
+      enterDescription: 'Por favor introduce una descripción.',
+      apiError: 'Error de API',
+      imageGenError: 'No se pudo generar la imagen',
+      botNameDefault: 'Asistente',
+      welcomeDefault: '¡Hola! ¿En qué puedo ayudarle?',
+      noMatchDefault: 'No puedo ayudarle con eso. Contáctenos en +49 30 1234567.',
+      casualPrefixes: ['Claro, ', 'Por supuesto, '],
+      friendlySuffix: ' ¡Avísame si tienes más preguntas!',
+      errTooShort: 'Por favor escribe un mensaje más largo.',
+      errTooLong: 'Tu mensaje es demasiado largo (máx. 500 caracteres).',
+      errCooldown: 'Por favor espera un momento...',
+      errNetwork: 'Problema de conexión. Inténtalo más tarde.',
+      sessionEnded: 'Esta conversación ha terminado. Para más preguntas, contáctenos directamente.',
+      sessionLimit: 'Se ha alcanzado el límite de mensajes de esta sesión.'
+    },
+    it: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Copia codice',
+      copied: 'Copiato!',
+      autoFill: 'Compilazione IA',
+      websiteUrl: 'URL del sito del cliente',
+      websiteUrlPh: 'https://www.sito-cliente.it',
+      aiFillButton: 'IA',
+      aiFillHint: 'Incolla l’URL del sito del cliente. L’IA analizza la pagina e compila automaticamente indirizzo, telefono, orari e domande frequenti.',
+      aiFillLoading: 'Analisi del sito in corso (15-30s)...',
+      aiFillSuccess: 'Compilato con successo!',
+      aiFillErrorUrl: 'Inserisci un URL valido (con https://).',
+      aiFillErrorNetwork: 'Errore di connessione. Riprova più tardi.',
+      aiFillErrorParse: 'L’IA non è riuscita ad analizzare il sito.',
+      generalSettings: 'Impostazioni generali',
+      botName: 'Nome del bot',
+      welcomeMessage: 'Messaggio di benvenuto',
+      noMatchMessage: 'Messaggio di fallback',
+      toneSelection: 'Tono',
+      toneFormal: 'Formale',
+      toneCasual: 'Informale',
+      toneFriendly: 'Amichevole',
+      brandColor: 'Colore del brand',
+      botAvatar: 'Avatar del bot',
+      generateAvatar: "Genera l'avatar",
+      describeAvatar: "Descrivi l'avatar",
+      avatarPlaceholder: 'simpatica mascotte robot blu, occhi grandi',
+      generate: 'Genera',
+      use: 'Usa',
+      cancel: 'Annulla',
+      qaPairs: 'Coppie D-R',
+      addQa: 'Aggiungi nuova coppia D-R',
+      questionLabel: 'Domanda',
+      answerLabel: 'Risposta',
+      keywordsLabel: 'Parole chiave (separate da virgola)',
+      questionPh: 'Quali sono i vostri orari?',
+      answerPh: 'Siamo aperti dal lunedì al venerdì dalle 9 alle 18.',
+      keywordsPh: 'orario, ore, aperto, chiuso',
+      typeMessage: 'Scrivi un messaggio...',
+      previewTitle: 'Azienda esempio',
+      previewText: 'Anteprima di una pagina aziendale moderna. Il widget in basso a destra è funzionante.',
+      enterDescription: 'Inserisci una descrizione.',
+      apiError: 'Errore API',
+      imageGenError: "Impossibile generare l'immagine",
+      botNameDefault: 'Assistente',
+      welcomeDefault: 'Ciao! Come posso aiutarla?',
+      noMatchDefault: 'Non posso aiutarla con questo. La preghiamo di contattarci al +49 30 1234567.',
+      casualPrefixes: ['Certo, ', 'Naturalmente, '],
+      friendlySuffix: ' Se ha altre domande, scriva pure!',
+      errTooShort: 'Scrivi un messaggio più lungo.',
+      errTooLong: 'Il tuo messaggio è troppo lungo (max 500 caratteri).',
+      errCooldown: 'Attendere prego...',
+      errNetwork: 'Problema di connessione. Riprova più tardi.',
+      sessionEnded: 'Questa conversazione è terminata. Per altre domande, contattaci direttamente.',
+      sessionLimit: 'Il limite di messaggi di questa sessione è stato raggiunto.'
+    },
+    nl: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Widget-code kopiëren',
+      copied: 'Gekopieerd!',
+      autoFill: 'AI Automatisch Invullen',
+      websiteUrl: 'Website-URL van de klant',
+      websiteUrlPh: 'https://www.klantsite.nl',
+      aiFillButton: 'AI',
+      aiFillHint: 'Plak de URL van de klantwebsite. De AI scant de site en vult automatisch adres, telefoon, openingstijden en veelgestelde vragen in.',
+      aiFillLoading: 'Website wordt geanalyseerd (15-30 sec)...',
+      aiFillSuccess: 'Succesvol ingevuld!',
+      aiFillErrorUrl: 'Voer een geldige URL in (met https://).',
+      aiFillErrorNetwork: 'Verbindingsfout. Probeer later opnieuw.',
+      aiFillErrorParse: 'De AI kon de website niet analyseren.',
+      generalSettings: 'Algemene instellingen',
+      botName: 'Bot-naam',
+      welcomeMessage: 'Welkomstbericht',
+      noMatchMessage: 'Standaardbericht',
+      toneSelection: 'Toon',
+      toneFormal: 'Formeel',
+      toneCasual: 'Casual',
+      toneFriendly: 'Vriendelijk',
+      brandColor: 'Merkkleur',
+      botAvatar: 'Bot-avatar',
+      generateAvatar: 'Avatar genereren',
+      describeAvatar: 'Beschrijf de avatar',
+      avatarPlaceholder: 'schattige blauwe robotmascotte, grote ogen',
+      generate: 'Genereren',
+      use: 'Gebruiken',
+      cancel: 'Annuleren',
+      qaPairs: 'V&A-paren',
+      addQa: 'Nieuw V&A-paar toevoegen',
+      questionLabel: 'Vraag',
+      answerLabel: 'Antwoord',
+      keywordsLabel: 'Trefwoorden (kommagescheiden)',
+      questionPh: 'Wat zijn uw openingstijden?',
+      answerPh: 'We zijn ma-vr van 09:00 tot 18:00 geopend.',
+      keywordsPh: 'tijd, uren, open, gesloten',
+      typeMessage: 'Typ een bericht...',
+      previewTitle: 'Voorbeeldbedrijf',
+      previewText: 'Voorbeeld van een moderne bedrijfspagina. Het widget rechtsonder werkt live.',
+      enterDescription: 'Voer een beschrijving in.',
+      apiError: 'API-fout',
+      imageGenError: 'Afbeelding kon niet worden gegenereerd',
+      botNameDefault: 'Assistent',
+      welcomeDefault: 'Hallo! Hoe kan ik u helpen?',
+      noMatchDefault: 'Daar kan ik u helaas niet mee helpen. Neem contact op via +49 30 1234567.',
+      casualPrefixes: ['Zeker, ', 'Natuurlijk, '],
+      friendlySuffix: ' Laat het me weten als je nog vragen hebt!',
+      errTooShort: 'Schrijf een langer bericht.',
+      errTooLong: 'Je bericht is te lang (max. 500 tekens).',
+      errCooldown: 'Even geduld...',
+      errNetwork: 'Verbindingsprobleem. Probeer later opnieuw.',
+      sessionEnded: 'Dit gesprek is beëindigd. Neem voor verdere vragen rechtstreeks contact op.',
+      sessionLimit: 'De berichtenlimiet van deze sessie is bereikt.'
+    },
+    pl: {
+      appTitle: 'Chatbot Widget Builder',
+      copyCode: 'Kopiuj kod widgetu',
+      copied: 'Skopiowano!',
+      autoFill: 'Auto-wypełnianie AI',
+      websiteUrl: 'URL strony klienta',
+      websiteUrlPh: 'https://www.strona-klienta.pl',
+      aiFillButton: 'AI',
+      aiFillHint: 'Wklej adres strony klienta. AI przeskanuje stronę i automatycznie wypełni adres, telefon, godziny otwarcia i FAQ.',
+      aiFillLoading: 'Analizowanie strony (15-30s)...',
+      aiFillSuccess: 'Pomyślnie wypełniono!',
+      aiFillErrorUrl: 'Wprowadź poprawny URL (z https://).',
+      aiFillErrorNetwork: 'Błąd połączenia. Spróbuj później.',
+      aiFillErrorParse: 'AI nie mogło przeanalizować strony.',
+      generalSettings: 'Ustawienia ogólne',
+      botName: 'Nazwa bota',
+      welcomeMessage: 'Wiadomość powitalna',
+      noMatchMessage: 'Wiadomość zastępcza',
+      toneSelection: 'Ton',
+      toneFormal: 'Formalny',
+      toneCasual: 'Swobodny',
+      toneFriendly: 'Przyjazny',
+      brandColor: 'Kolor marki',
+      botAvatar: 'Awatar bota',
+      generateAvatar: 'Generuj awatar',
+      describeAvatar: 'Opisz awatar',
+      avatarPlaceholder: 'urocza niebieska maskotka robota, duże oczy',
+      generate: 'Generuj',
+      use: 'Użyj',
+      cancel: 'Anuluj',
+      qaPairs: 'Pary pytań i odpowiedzi',
+      addQa: 'Dodaj nową parę',
+      questionLabel: 'Pytanie',
+      answerLabel: 'Odpowiedź',
+      keywordsLabel: 'Słowa kluczowe (oddzielone przecinkami)',
+      questionPh: 'Jakie są godziny otwarcia?',
+      answerPh: 'Pracujemy od poniedziałku do piątku w godz. 9:00-18:00.',
+      keywordsPh: 'godziny, otwarte, zamknięte',
+      typeMessage: 'Napisz wiadomość...',
+      previewTitle: 'Przykładowa firma',
+      previewText: 'Podgląd nowoczesnej strony firmowej. Widget w prawym dolnym rogu działa na żywo.',
+      enterDescription: 'Wprowadź opis.',
+      apiError: 'Błąd API',
+      imageGenError: 'Nie udało się wygenerować obrazu',
+      botNameDefault: 'Asystent',
+      welcomeDefault: 'Cześć! W czym mogę pomóc?',
+      noMatchDefault: 'Niestety nie mogę pomóc w tej sprawie. Prosimy o kontakt pod numerem +49 30 1234567.',
+      casualPrefixes: ['Jasne, ', 'Oczywiście, '],
+      friendlySuffix: ' Daj znać, jeśli masz więcej pytań!',
+      errTooShort: 'Napisz dłuższą wiadomość.',
+      errTooLong: 'Twoja wiadomość jest za długa (max 500 znaków).',
+      errCooldown: 'Proszę chwilę poczekać...',
+      errNetwork: 'Problem z połączeniem. Spróbuj później.',
+      sessionEnded: 'Ta rozmowa została zakończona. Aby zadać więcej pytań, skontaktuj się z nami bezpośrednio.',
+      sessionLimit: 'Osiągnięto limit wiadomości w tej sesji.'
+    }
+  };
+
+  // Default Q&A seed data per language (8 generic business questions)
+  const QA_SEEDS = {
+    de: [
+      ['Was sind Ihre Öffnungszeiten?', 'Wir sind Mo-Fr von 09:00 bis 18:00 Uhr und Sa von 10:00 bis 14:00 Uhr für Sie da. Sonntags geschlossen.', 'zeit, öffnung, geöffnet, geschlossen, uhr'],
+      ['Wo befindet sich Ihre Adresse?', 'Sie finden uns in der Friedrichstraße 12, 10117 Berlin.', 'adresse, standort, ort, wo, finden'],
+      ['Wie sind Ihre Preise?', 'Unsere Preise variieren je nach Paket. Eine aktuelle Preisliste senden wir Ihnen gerne zu.', 'preis, kosten, gebühr, geld, wieviel'],
+      ['Welche Leistungen bieten Sie an?', 'Wir bieten Webdesign, App-Entwicklung, SEO-Beratung und digitales Marketing an.', 'leistung, service, dienst, angebot, was'],
+      ['Wie kann ich einen Termin vereinbaren?', 'Sie können uns unter +49 30 1234567 anrufen oder online über unsere Website einen Termin buchen.', 'termin, buchung, vereinbaren, treffen'],
+      ['Wie lange dauert der Versand?', 'Bestellungen werden innerhalb von 1-3 Werktagen versandt. Innerhalb Berlins meist am nächsten Tag.', 'versand, lieferung, dauer, wann'],
+      ['Welche Zahlungsmethoden akzeptieren Sie?', 'Wir akzeptieren Kreditkarte, Überweisung, PayPal und Rechnungskauf.', 'zahlung, kreditkarte, paypal, überweisung, rechnung'],
+      ['Haben Sie einen Kundenservice?', 'Unser Support ist 7 Tage die Woche unter +49 30 1234567 oder support@firma.de erreichbar.', 'support, kontakt, hilfe, telefon, email']
+    ],
+    en: [
+      ['What are your opening hours?', 'We are open Mon-Fri from 9 a.m. to 6 p.m., and Saturdays 10 a.m. to 2 p.m. Closed on Sundays.', 'time, hours, open, closed'],
+      ['Where are you located?', 'You can find us at Friedrichstraße 12, 10117 Berlin.', 'address, location, where, find'],
+      ['What are your prices?', 'Our prices vary by package. We are happy to send you the current price list.', 'price, cost, fee, how much'],
+      ['What services do you offer?', 'We offer web design, app development, SEO consulting and digital marketing.', 'service, offer, what, do'],
+      ['How can I book an appointment?', 'You can call us at +49 30 1234567 or book online via our website.', 'appointment, booking, schedule'],
+      ['How long does shipping take?', 'Orders are shipped within 1-3 business days. Usually next day within Berlin.', 'shipping, delivery, when'],
+      ['What payment methods do you accept?', 'We accept credit card, bank transfer, PayPal and invoice.', 'payment, credit card, paypal, transfer, invoice'],
+      ['Do you have customer support?', 'Our support is available 7 days a week at +49 30 1234567 or support@company.com.', 'support, contact, help, phone, email']
+    ],
+    tr: [
+      ['Çalışma saatleriniz nedir?', 'Hafta içi 09:00-18:00, Cumartesi 10:00-14:00 arası hizmet vermekteyiz. Pazar günleri kapalıyız.', 'saat, çalışma, açık, kapalı'],
+      ['Adresiniz nerede?', 'Friedrichstraße 12, 10117 Berlin adresinde bulunmaktayız.', 'adres, nerede, konum'],
+      ['Fiyatlarınız nedir?', 'Fiyatlarımız pakete göre değişir. Güncel fiyat listesini size memnuniyetle gönderiyoruz.', 'fiyat, ücret, ne kadar'],
+      ['Hangi hizmetleri veriyorsunuz?', 'Web tasarım, mobil uygulama geliştirme, SEO danışmanlığı ve dijital pazarlama hizmetleri sunuyoruz.', 'hizmet, servis, ne yapıyorsunuz'],
+      ['Randevu nasıl alabilirim?', '+49 30 1234567 numarasını arayabilir veya web sitemizden online randevu alabilirsiniz.', 'randevu, rezervasyon'],
+      ['Kargo süresi nedir?', 'Siparişleriniz 1-3 iş günü içinde kargoya verilir. Berlin içi genellikle ertesi gündür.', 'kargo, teslimat, süre'],
+      ['Hangi ödeme yöntemlerini kabul ediyorsunuz?', 'Kredi kartı, banka havalesi, PayPal ve fatura ile ödeme kabul ediyoruz.', 'ödeme, kredi, havale, paypal, fatura'],
+      ['Müşteri desteğiniz var mı?', 'Destek ekibimiz 7 gün +49 30 1234567 veya support@firma.de adresinden ulaşılabilir.', 'destek, yardım, iletişim']
+    ],
+    fr: [
+      ['Quels sont vos horaires ?', 'Nous sommes ouverts du lundi au vendredi de 9h à 18h, et le samedi de 10h à 14h. Fermé le dimanche.', 'horaire, heures, ouvert, fermé'],
+      ['Où êtes-vous situés ?', 'Vous nous trouverez au Friedrichstraße 12, 10117 Berlin.', 'adresse, où, situé'],
+      ['Quels sont vos tarifs ?', 'Nos tarifs varient selon le forfait. Nous vous envoyons volontiers notre liste de prix actuelle.', 'prix, tarif, coût, combien'],
+      ['Quels services proposez-vous ?', 'Nous proposons la conception web, le développement d\'applications, le conseil SEO et le marketing digital.', 'service, offre, proposer'],
+      ['Comment prendre rendez-vous ?', 'Appelez le +49 30 1234567 ou réservez en ligne via notre site.', 'rendez-vous, réservation'],
+      ['Quel est le délai de livraison ?', 'Les commandes sont expédiées sous 1-3 jours ouvrables. Livraison généralement le lendemain à Berlin.', 'livraison, expédition, délai'],
+      ['Quels moyens de paiement acceptez-vous ?', 'Nous acceptons carte bancaire, virement, PayPal et facture.', 'paiement, carte, virement, paypal'],
+      ['Avez-vous un service client ?', 'Notre support est disponible 7j/7 au +49 30 1234567 ou support@entreprise.fr.', 'support, contact, aide, téléphone']
+    ],
+    es: [
+      ['¿Cuál es su horario?', 'Abrimos de lunes a viernes de 9:00 a 18:00 y sábados de 10:00 a 14:00. Domingos cerrado.', 'horario, horas, abierto, cerrado'],
+      ['¿Dónde están ubicados?', 'Nos encuentra en Friedrichstraße 12, 10117 Berlín.', 'dirección, ubicación, dónde'],
+      ['¿Cuáles son sus precios?', 'Nuestros precios varían según el paquete. Le enviamos con gusto la lista actualizada.', 'precio, coste, cuánto'],
+      ['¿Qué servicios ofrecen?', 'Ofrecemos diseño web, desarrollo de apps, consultoría SEO y marketing digital.', 'servicio, oferta, qué hacen'],
+      ['¿Cómo puedo pedir cita?', 'Llame al +49 30 1234567 o reserve en línea desde nuestra web.', 'cita, reserva'],
+      ['¿Cuánto tarda el envío?', 'Los pedidos se envían en 1-3 días laborables. En Berlín suele llegar al día siguiente.', 'envío, entrega, cuándo'],
+      ['¿Qué métodos de pago aceptan?', 'Aceptamos tarjeta, transferencia, PayPal y factura.', 'pago, tarjeta, transferencia'],
+      ['¿Tienen atención al cliente?', 'Nuestro soporte está disponible 7 días en +49 30 1234567 o support@empresa.es.', 'soporte, contacto, ayuda']
+    ],
+    it: [
+      ['Quali sono i vostri orari?', 'Siamo aperti dal lunedì al venerdì dalle 9 alle 18 e il sabato dalle 10 alle 14. Domenica chiuso.', 'orario, ore, aperto, chiuso'],
+      ['Dove vi trovate?', 'Ci trovi in Friedrichstraße 12, 10117 Berlino.', 'indirizzo, dove, posizione'],
+      ['Quali sono i vostri prezzi?', 'I prezzi variano in base al pacchetto. Le inviamo volentieri il listino aggiornato.', 'prezzo, costo, quanto'],
+      ['Quali servizi offrite?', 'Offriamo web design, sviluppo app, consulenza SEO e marketing digitale.', 'servizio, offerta, cosa'],
+      ['Come posso prenotare un appuntamento?', 'Chiami il +49 30 1234567 o prenoti online dal nostro sito.', 'appuntamento, prenotazione'],
+      ['Quanto tempo richiede la spedizione?', 'Gli ordini vengono spediti entro 1-3 giorni lavorativi. A Berlino solitamente il giorno successivo.', 'spedizione, consegna, quando'],
+      ['Quali metodi di pagamento accettate?', 'Accettiamo carta, bonifico, PayPal e fattura.', 'pagamento, carta, bonifico'],
+      ['Avete assistenza clienti?', 'Il nostro supporto è disponibile 7 giorni al +49 30 1234567 o support@azienda.it.', 'supporto, contatto, aiuto']
+    ],
+    nl: [
+      ['Wat zijn jullie openingstijden?', 'Wij zijn ma-vr van 09:00 tot 18:00 en za van 10:00 tot 14:00 geopend. Zondag gesloten.', 'tijd, uren, open, gesloten'],
+      ['Waar zijn jullie gevestigd?', 'U vindt ons op Friedrichstraße 12, 10117 Berlijn.', 'adres, locatie, waar'],
+      ['Wat zijn jullie prijzen?', 'Onze prijzen verschillen per pakket. Wij sturen u graag de actuele prijslijst toe.', 'prijs, kosten, hoeveel'],
+      ['Welke diensten bieden jullie aan?', 'Wij bieden webdesign, app-ontwikkeling, SEO-advies en digitale marketing.', 'dienst, aanbod, wat'],
+      ['Hoe kan ik een afspraak maken?', 'Bel +49 30 1234567 of boek online via onze website.', 'afspraak, boeking'],
+      ['Hoe lang duurt de bezorging?', 'Bestellingen worden binnen 1-3 werkdagen verzonden. Binnen Berlijn meestal de volgende dag.', 'bezorging, levering, wanneer'],
+      ['Welke betaalmethodes accepteren jullie?', 'Wij accepteren creditcard, overschrijving, PayPal en factuur.', 'betaling, creditcard, overschrijving'],
+      ['Hebben jullie klantenservice?', 'Onze support is 7 dagen per week bereikbaar op +49 30 1234567 of support@bedrijf.nl.', 'support, contact, hulp']
+    ],
+    pl: [
+      ['Jakie są godziny otwarcia?', 'Pracujemy pn-pt 9:00-18:00, sob 10:00-14:00. W niedziele nieczynne.', 'godziny, otwarte, zamknięte'],
+      ['Gdzie się znajdujecie?', 'Znajdziesz nas pod adresem Friedrichstraße 12, 10117 Berlin.', 'adres, lokalizacja, gdzie'],
+      ['Jakie są ceny?', 'Nasze ceny zależą od pakietu. Chętnie prześlemy aktualny cennik.', 'cena, koszt, ile'],
+      ['Jakie usługi oferujecie?', 'Oferujemy projektowanie stron, tworzenie aplikacji, doradztwo SEO i marketing cyfrowy.', 'usługa, oferta, co'],
+      ['Jak umówić wizytę?', 'Zadzwoń pod +49 30 1234567 lub zarezerwuj online na naszej stronie.', 'wizyta, rezerwacja'],
+      ['Ile trwa dostawa?', 'Zamówienia wysyłamy w ciągu 1-3 dni roboczych. W Berlinie zwykle następnego dnia.', 'dostawa, wysyłka, kiedy'],
+      ['Jakie metody płatności akceptujecie?', 'Akceptujemy kartę, przelew, PayPal i fakturę.', 'płatność, karta, przelew'],
+      ['Czy macie obsługę klienta?', 'Wsparcie dostępne 7 dni w tygodniu pod +49 30 1234567 lub support@firma.pl.', 'wsparcie, kontakt, pomoc']
+    ]
+  };
+
+  let currentLang = 'de';
+  function t(key) {
+    return (I18N[currentLang] && I18N[currentLang][key]) || I18N.de[key] || key;
+  }
+
+  // ---------- State ----------
+  let qaIdSeq = 1;
+  const chatbotData = {
+    botName: '',
+    welcomeMessage: '',
+    noMatchMessage: '',
+    tone: 'formal',
+    brandColor: '#f43f5e',
+    avatar: { type: 'emoji', emoji: 'robot', imageUrl: '' },
+    qaPairs: [],
+    knowledgeText: '',
+    knowledgeFileName: '',
+    generalInfo: '',
+    language: 'de'
+  };
+
+  const KB_MAX_CHARS = 15000;
+  const GENERAL_INFO_MAX = 5000;
+
+  // DOM refs
+  const $ = (id) => document.getElementById(id);
+  const langSelect = $('langSelect');
+  const botNameInput = $('botName');
+  const welcomeInput = $('welcomeMessage');
+  const noMatchInput = $('noMatchMessage');
+  const brandColorInput = $('brandColor');
+  const brandColorVal = $('brandColorVal');
+  const toneGroup = $('toneGroup');
+  const emojiGrid = $('emojiGrid');
+  const qaList = $('qaList');
+  const addQaBtn = $('addQaBtn');
+  const generalInfoInput = $('generalInfo');
+  const generalInfoCounter = $('generalInfoCounter');
+
+  const launcher = $('chatLauncher');
+  const chatWindow = $('chatWindow');
+  const chatClose = $('chatClose');
+  const chatHeaderAvatar = $('chatHeaderAvatar');
+  const chatHeaderName = $('chatHeaderName');
+  const chatMessages = $('chatMessages');
+  const chatInput = $('chatInput');
+  const chatSend = $('chatSend');
+  const typingIndicator = $('typingIndicator');
+
+  const toggleAiAvatar = $('toggleAiAvatar');
+  const aiAvatarPanel = $('aiAvatarPanel');
+  const avatarPrompt = $('avatarPrompt');
+  const generateAvatarBtn = $('generateAvatarBtn');
+  const avatarSpinner = $('avatarSpinner');
+  const avatarError = $('avatarError');
+  const avatarResult = $('avatarResult');
+  const avatarPreview = $('avatarPreview');
+  const useAvatarBtn = $('useAvatarBtn');
+  const cancelAvatarBtn = $('cancelAvatarBtn');
+
+  const copyBtn = $('copyBtn');
+  const toast = $('toast');
+  const siteUrlInput = $('siteUrl');
+  const aiFillBtn = $('aiFillBtn');
+  const aiFillStatus = $('aiFillStatus');
+
+  let pendingAvatarUrl = '';
+
+  // ---------- Tone ----------
+  function applyTone(text) {
+    const tone = chatbotData.tone;
+    if (tone === 'formal') return text;
+    if (tone === 'casual') {
+      const prefixes = t('casualPrefixes') || ['', ''];
+      return prefixes[Math.floor(Math.random() * prefixes.length)] + text.charAt(0).toLowerCase() + text.slice(1);
+    }
+    if (tone === 'friendly') {
+      const emojis = ['👋', '✨', '👍', '😊', '💫'];
+      const e = emojis[Math.floor(Math.random() * emojis.length)];
+      return e + ' ' + text + (t('friendlySuffix') || '');
+    }
+    return text;
+  }
+
+  // ---------- Session state (resets on widget reset) ----------
+  const session = {
+    history: [],
+    messageCount: 0,
+    offTopicStrikes: 0,
+    terminated: false,
+    lastSentAt: 0
+  };
+  function resetSession() {
+    session.history = [];
+    session.messageCount = 0;
+    session.offTopicStrikes = 0;
+    session.terminated = false;
+    session.lastSentAt = 0;
+    chatInput.disabled = false;
+    chatInput.placeholder = t('typeMessage');
+  }
+
+  function buildContactInfo() {
+    return chatbotData.noMatchMessage || '';
+  }
+
+  function buildExtraKnowledge() {
+    const parts = [];
+    if (chatbotData.generalInfo && chatbotData.generalInfo.trim()) {
+      parts.push(chatbotData.generalInfo.trim());
+    }
+    if (chatbotData.knowledgeText && chatbotData.knowledgeText.trim()) {
+      parts.push(chatbotData.knowledgeText.trim());
+    }
+    return parts.join('\n\n');
+  }
+
+  async function fetchAnswer(userMessage) {
+    const config = {
+      businessName: chatbotData.botName || '',
+      language: chatbotData.language || 'de',
+      welcomeMessage: chatbotData.welcomeMessage || '',
+      noMatchMessage: chatbotData.noMatchMessage || '',
+      contactInfo: buildContactInfo(),
+      extraKnowledge: buildExtraKnowledge(),
+      qaPairs: (chatbotData.qaPairs || []).map(q => ({
+        question: q.question, answer: q.answer, keywords: q.keywords
+      }))
+    };
+    const resp = await fetch(CHAT_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: userMessage,
+        history: session.history.slice(-10),
+        config: config
+      })
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return await resp.json();
+  }
+
+  // ---------- Chat ----------
+  function timeNow() {
+    const d = new Date();
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  function appendMessage(text, who) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + who;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    const time = document.createElement('div');
+    time.className = 'time';
+    time.textContent = timeNow();
+    div.appendChild(bubble);
+    div.appendChild(time);
+    chatMessages.insertBefore(div, typingIndicator);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function showTyping() {
+    typingIndicator.classList.add('visible');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  function hideTyping() { typingIndicator.classList.remove('visible'); }
+
+  let widgetInitialized = false;
+  function openWidget() {
+    chatWindow.classList.add('open');
+    if (!widgetInitialized) {
+      widgetInitialized = true;
+      setTimeout(() => appendMessage(chatbotData.welcomeMessage, 'bot'), 200);
+    }
+  }
+  function closeWidget() { chatWindow.classList.remove('open'); }
+
+  function lockSession(reasonKey) {
+    session.terminated = true;
+    chatInput.disabled = true;
+    chatInput.value = '';
+    chatInput.placeholder = t('sessionEnded');
+    appendMessage(t(reasonKey) + ' ' + (chatbotData.noMatchMessage || ''), 'bot');
+  }
+
+  async function sendUserMessage() {
+    if (session.terminated) return;
+    const txt = (chatInput.value || '').trim();
+    if (!txt) return;
+    if (txt.length < LIMITS.minLen) {
+      appendMessage(t('errTooShort'), 'bot');
+      return;
+    }
+    if (txt.length > LIMITS.maxLen) {
+      appendMessage(t('errTooLong'), 'bot');
+      return;
+    }
+    const now = Date.now();
+    if (now - session.lastSentAt < LIMITS.cooldownMs) {
+      appendMessage(t('errCooldown'), 'bot');
+      return;
+    }
+    session.lastSentAt = now;
+
+    appendMessage(txt, 'user');
+    chatInput.value = '';
+    session.messageCount++;
+
+    if (session.messageCount > LIMITS.maxMessagesPerSession) {
+      lockSession('sessionLimit');
+      return;
+    }
+
+    showTyping();
+    try {
+      const data = await fetchAnswer(txt);
+      hideTyping();
+      if (!data || data.error || !data.reply) {
+        appendMessage(t('errNetwork'), 'bot');
+        return;
+      }
+      const reply = applyTone(data.reply);
+      appendMessage(reply, 'bot');
+      session.history.push({ role: 'user', content: txt });
+      session.history.push({ role: 'assistant', content: data.reply });
+      if (data.offTopic) {
+        session.offTopicStrikes++;
+        if (session.offTopicStrikes >= LIMITS.maxOffTopicStrikes) {
+          setTimeout(() => lockSession('sessionEnded'), 600);
+        }
+      }
+    } catch (err) {
+      hideTyping();
+      console.error(err);
+      appendMessage(t('errNetwork'), 'bot');
+    }
+  }
+
+  launcher.addEventListener('click', openWidget);
+  chatClose.addEventListener('click', closeWidget);
+  chatSend.addEventListener('click', sendUserMessage);
+  chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendUserMessage(); });
+
+  function resetWidgetMessages() {
+    [...chatMessages.querySelectorAll('.msg')].forEach(n => n.remove());
+    widgetInitialized = false;
+    resetSession();
+    if (chatWindow.classList.contains('open')) {
+      widgetInitialized = true;
+      setTimeout(() => appendMessage(chatbotData.welcomeMessage, 'bot'), 100);
+    }
+  }
+
+  // ---------- Avatar UI ----------
+  function updateAvatarUI() {
+    const a = chatbotData.avatar;
+    let icon;
+    if (a.type === 'image' && a.imageUrl) {
+      icon = '<img src="' + a.imageUrl + '" alt="bot" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>';
+    } else {
+      const e = EMOJI_MAP[a.emoji] || '🤖';
+      icon = '<span>' + e + '</span>';
+    }
+    launcher.innerHTML = icon;
+    chatHeaderAvatar.innerHTML = icon;
+  }
+
+  function updateBrand() {
+    document.documentElement.style.setProperty('--brand', chatbotData.brandColor);
+    brandColorVal.textContent = chatbotData.brandColor;
+  }
+
+  function updateName() {
+    chatHeaderName.textContent = chatbotData.botName || t('botNameDefault');
+  }
+
+  // ---------- I18N apply ----------
+  function applyI18n() {
+    document.documentElement.lang = currentLang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const val = t(key);
+      if (typeof val === 'string') el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      const key = el.getAttribute('data-i18n-ph');
+      const val = t(key);
+      if (typeof val === 'string') el.placeholder = val;
+    });
+    document.title = t('appTitle');
+  }
+
+  function loadDefaultsForLanguage(lang) {
+    currentLang = lang;
+    chatbotData.language = lang;
+    chatbotData.botName = t('botNameDefault');
+    chatbotData.welcomeMessage = t('welcomeDefault');
+    chatbotData.noMatchMessage = t('noMatchDefault');
+    const seeds = QA_SEEDS[lang] || QA_SEEDS.de;
+    qaIdSeq = 1;
+    chatbotData.qaPairs = seeds.map(s => ({
+      id: 'qa_' + (qaIdSeq++),
+      question: s[0], answer: s[1], keywords: s[2]
+    }));
+    botNameInput.value = chatbotData.botName;
+    welcomeInput.value = chatbotData.welcomeMessage;
+    noMatchInput.value = chatbotData.noMatchMessage;
+    chatbotData.generalInfo = '';
+    if (generalInfoInput) generalInfoInput.value = '';
+    if (typeof updateGeneralInfoCounter === 'function') updateGeneralInfoCounter();
+    applyI18n();
+    renderQaList();
+    updateName();
+    resetWidgetMessages();
+  }
+
+  langSelect.addEventListener('change', () => {
+    loadDefaultsForLanguage(langSelect.value);
+  });
+
+  // ---------- Bindings ----------
+  botNameInput.addEventListener('input', () => { chatbotData.botName = botNameInput.value; updateName(); });
+  welcomeInput.addEventListener('input', () => { chatbotData.welcomeMessage = welcomeInput.value; });
+  welcomeInput.addEventListener('change', resetWidgetMessages);
+  noMatchInput.addEventListener('input', () => { chatbotData.noMatchMessage = noMatchInput.value; });
+  brandColorInput.addEventListener('input', () => { chatbotData.brandColor = brandColorInput.value; updateBrand(); });
+
+  function updateGeneralInfoCounter() {
+    if (generalInfoCounter) generalInfoCounter.textContent = (chatbotData.generalInfo || '').length;
+  }
+  generalInfoInput.addEventListener('input', () => {
+    let v = generalInfoInput.value || '';
+    if (v.length > GENERAL_INFO_MAX) {
+      v = v.slice(0, GENERAL_INFO_MAX);
+      generalInfoInput.value = v;
+    }
+    chatbotData.generalInfo = v;
+    updateGeneralInfoCounter();
+  });
+
+  toneGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tone-btn');
+    if (!btn) return;
+    [...toneGroup.querySelectorAll('.tone-btn')].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chatbotData.tone = btn.dataset.tone;
+  });
+
+  emojiGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.emoji-btn');
+    if (!btn) return;
+    [...emojiGrid.querySelectorAll('.emoji-btn')].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chatbotData.avatar.type = 'emoji';
+    chatbotData.avatar.emoji = btn.dataset.emoji;
+    chatbotData.avatar.imageUrl = '';
+    updateAvatarUI();
+  });
+
+  // ---------- QA list ----------
+  function renderQaList() {
+    qaList.innerHTML = '';
+    chatbotData.qaPairs.forEach((qa) => {
+      const card = document.createElement('div');
+      card.className = 'qa-card';
+      card.innerHTML = `
+        <button class="qa-delete" data-id="${qa.id}" title="">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="field">
+          <label>${t('questionLabel')}</label>
+          <input type="text" data-id="${qa.id}" data-key="question" placeholder="${t('questionPh')}" />
+        </div>
+        <div class="field">
+          <label>${t('answerLabel')}</label>
+          <textarea data-id="${qa.id}" data-key="answer" placeholder="${t('answerPh')}"></textarea>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>${t('keywordsLabel')}</label>
+          <input type="text" data-id="${qa.id}" data-key="keywords" placeholder="${t('keywordsPh')}" />
+        </div>
+      `;
+      qaList.appendChild(card);
+      card.querySelector('[data-key="question"]').value = qa.question;
+      card.querySelector('[data-key="answer"]').value = qa.answer;
+      card.querySelector('[data-key="keywords"]').value = qa.keywords;
+    });
+  }
+
+  qaList.addEventListener('input', (e) => {
+    const t2 = e.target;
+    const id = t2.dataset.id;
+    const key = t2.dataset.key;
+    if (!id || !key) return;
+    const qa = chatbotData.qaPairs.find(q => q.id === id);
+    if (qa) qa[key] = t2.value;
+  });
+
+  qaList.addEventListener('click', (e) => {
+    const del = e.target.closest('.qa-delete');
+    if (!del) return;
+    const id = del.dataset.id;
+    chatbotData.qaPairs = chatbotData.qaPairs.filter(q => q.id !== id);
+    renderQaList();
+  });
+
+  addQaBtn.addEventListener('click', () => {
+    chatbotData.qaPairs.push({
+      id: 'qa_' + (qaIdSeq++),
+      question: '', answer: '', keywords: ''
+    });
+    renderQaList();
+  });
+
+  // ---------- Fal AI ----------
+  toggleAiAvatar.addEventListener('click', () => {
+    aiAvatarPanel.classList.toggle('visible');
+  });
+
+  cancelAvatarBtn.addEventListener('click', () => {
+    avatarResult.classList.remove('visible');
+    pendingAvatarUrl = '';
+  });
+
+  useAvatarBtn.addEventListener('click', () => {
+    if (!pendingAvatarUrl) return;
+    chatbotData.avatar.type = 'image';
+    chatbotData.avatar.imageUrl = pendingAvatarUrl;
+    updateAvatarUI();
+    avatarResult.classList.remove('visible');
+    aiAvatarPanel.classList.remove('visible');
+  });
+
+  generateAvatarBtn.addEventListener('click', async () => {
+    const desc = avatarPrompt.value.trim();
+    if (!desc) {
+      avatarError.textContent = t('enterDescription');
+      avatarError.classList.add('visible');
+      return;
+    }
+    avatarError.classList.remove('visible');
+    avatarResult.classList.remove('visible');
+    generateAvatarBtn.disabled = true;
+    avatarSpinner.classList.add('visible');
+    try {
+      const prompt = `cute friendly chatbot mascot, ${desc}, minimalist, flat design, circle avatar, solid background, high quality`;
+      const response = await fetch('https://fal.run/fal-ai/nano-banana-2', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Key ' + FAL_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          image_size: 'square_hd',
+          num_inference_steps: 25,
+          guidance_scale: 7.5
+        })
+      });
+      if (!response.ok) throw new Error(t('apiError') + ': ' + response.status);
+      const data = await response.json();
+      const url = data.images && data.images[0] && data.images[0].url;
+      if (!url) throw new Error(t('imageGenError'));
+      pendingAvatarUrl = url;
+      avatarPreview.src = url;
+      avatarResult.classList.add('visible');
+    } catch (err) {
+      avatarError.textContent = err.message;
+      avatarError.classList.add('visible');
+    } finally {
+      generateAvatarBtn.disabled = false;
+      avatarSpinner.classList.remove('visible');
+    }
+  });
+
+  // ---------- Embed code ----------
+  function buildEmbedCode() {
+    const safeData = {
+      botName: chatbotData.botName,
+      welcomeMessage: chatbotData.welcomeMessage,
+      noMatchMessage: chatbotData.noMatchMessage,
+      tone: chatbotData.tone,
+      brandColor: chatbotData.brandColor,
+      avatar: chatbotData.avatar,
+      language: chatbotData.language,
+      casualPrefixes: t('casualPrefixes'),
+      friendlySuffix: t('friendlySuffix'),
+      typeMessage: t('typeMessage'),
+      errTooShort: t('errTooShort'),
+      errTooLong: t('errTooLong'),
+      errCooldown: t('errCooldown'),
+      errNetwork: t('errNetwork'),
+      sessionEnded: t('sessionEnded'),
+      sessionLimit: t('sessionLimit'),
+      chatWebhookUrl: CHAT_WEBHOOK_URL,
+      limits: LIMITS,
+      extraKnowledge: buildExtraKnowledge(),
+      qaPairs: chatbotData.qaPairs.map(q => ({
+        question: q.question, answer: q.answer, keywords: q.keywords
+      }))
+    };
+    const dataJson = JSON.stringify(safeData);
+    const emojiMapJson = JSON.stringify(EMOJI_MAP);
+
+    return `<!-- Chatbot Widget -->
+<script>
+(function(){
+  var DATA = ${dataJson};
+  var EMOJI_MAP = ${emojiMapJson};
+  function applyTone(text){
+    if(DATA.tone==='formal') return text;
+    if(DATA.tone==='casual'){
+      var p=DATA.casualPrefixes||['',''];
+      return p[Math.floor(Math.random()*p.length)] + text.charAt(0).toLowerCase() + text.slice(1);
+    }
+    if(DATA.tone==='friendly'){
+      var es=['\\ud83d\\udc4b','\\u2728','\\ud83d\\udc4d','\\ud83d\\ude0a','\\ud83d\\udcab'];
+      return es[Math.floor(Math.random()*es.length)] + ' ' + text + (DATA.friendlySuffix||'');
+    }
+    return text;
+  }
+  var SESSION = { history: [], count: 0, strikes: 0, terminated: false, lastSent: 0 };
+  function fetchAnswer(msg){
+    var cfg = {
+      businessName: DATA.botName||'',
+      language: DATA.language||'de',
+      welcomeMessage: DATA.welcomeMessage||'',
+      noMatchMessage: DATA.noMatchMessage||'',
+      contactInfo: DATA.noMatchMessage||'',
+      extraKnowledge: DATA.extraKnowledge||'',
+      qaPairs: DATA.qaPairs||[]
+    };
+    return fetch(DATA.chatWebhookUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg, history: SESSION.history.slice(-10), config: cfg })
+    }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  }
+  var brand = DATA.brandColor;
+  var avatarHtml = DATA.avatar.type==='image'&&DATA.avatar.imageUrl
+    ? '<img src="'+DATA.avatar.imageUrl+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>'
+    : '<span>'+(EMOJI_MAP[DATA.avatar.emoji]||'\\ud83e\\udd16')+'</span>';
+  var css = '\\
+.cwb-launcher{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:'+brand+';border:none;box-shadow:0 8px 24px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:white;font-size:24px;cursor:pointer;z-index:99998;overflow:hidden;transition:transform .2s ease;font-family:system-ui,sans-serif;}\\
+.cwb-launcher:hover{transform:scale(1.1);}\\
+.cwb-window{position:fixed;bottom:24px;right:24px;width:380px;height:520px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);background:white;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;transform:translateY(20px) scale(.95);opacity:0;pointer-events:none;transition:all .25s ease;z-index:99999;font-family:system-ui,sans-serif;}\\
+.cwb-window.cwb-open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}\\
+.cwb-header{background:'+brand+';color:white;padding:14px 16px;display:flex;align-items:center;gap:12px;}\\
+.cwb-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0;}\\
+.cwb-name{font-weight:600;font-size:15px;flex:1;}\\
+.cwb-close{background:transparent;border:none;color:white;font-size:22px;width:28px;height:28px;border-radius:6px;cursor:pointer;}\\
+.cwb-msgs{flex:1;overflow-y:auto;padding:16px;background:#fff;display:flex;flex-direction:column;gap:8px;}\\
+.cwb-msg{display:flex;flex-direction:column;max-width:80%;}\\
+.cwb-msg.cwb-bot{align-self:flex-start;align-items:flex-start;}\\
+.cwb-msg.cwb-user{align-self:flex-end;align-items:flex-end;}\\
+.cwb-bubble{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.4;word-wrap:break-word;color:#1a1a1a;}\\
+.cwb-bot .cwb-bubble{background:#f0f0f0;border-bottom-left-radius:4px;}\\
+.cwb-user .cwb-bubble{background:'+brand+';color:white;border-bottom-right-radius:4px;}\\
+.cwb-time{font-size:10px;color:#999;margin-top:3px;padding:0 4px;}\\
+.cwb-typing{align-self:flex-start;background:#f0f0f0;border-radius:14px;border-bottom-left-radius:4px;padding:12px 14px;display:none;}\\
+.cwb-typing.cwb-vis{display:flex;}\\
+.cwb-typing span{width:6px;height:6px;background:#999;border-radius:50%;margin:0 2px;animation:cwb-bounce 1.2s infinite;}\\
+.cwb-typing span:nth-child(2){animation-delay:.15s;}\\
+.cwb-typing span:nth-child(3){animation-delay:.3s;}\\
+@keyframes cwb-bounce{0%,60%,100%{transform:translateY(0);opacity:.6;}30%{transform:translateY(-5px);opacity:1;}}\\
+.cwb-input-area{background:white;border-top:1px solid #ececec;padding:10px 12px;display:flex;align-items:center;gap:8px;}\\
+.cwb-input-area input{flex:1;border:none;outline:none;padding:10px 4px;font-size:14px;color:#1a1a1a;background:transparent;}\\
+.cwb-send{width:36px;height:36px;border-radius:50%;background:'+brand+';border:none;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}\\
+';
+  var style=document.createElement('style');style.textContent=css;document.head.appendChild(style);
+  var launcher=document.createElement('button');launcher.className='cwb-launcher';launcher.innerHTML=avatarHtml;
+  var win=document.createElement('div');win.className='cwb-window';win.setAttribute('lang',DATA.language||'de');
+  win.innerHTML='<div class="cwb-header"><div class="cwb-avatar">'+avatarHtml+'</div><div class="cwb-name">'+DATA.botName+'</div><button class="cwb-close" type="button">\\u00d7</button></div><div class="cwb-msgs"><div class="cwb-typing"><span></span><span></span><span></span></div></div><div class="cwb-input-area"><input type="text" placeholder="'+(DATA.typeMessage||'')+'" /><button class="cwb-send" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>';
+  document.body.appendChild(launcher);document.body.appendChild(win);
+  var msgs=win.querySelector('.cwb-msgs');var typing=win.querySelector('.cwb-typing');var input=win.querySelector('input');var send=win.querySelector('.cwb-send');var closeBtn=win.querySelector('.cwb-close');
+  function timeNow(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+  function addMsg(text,who){var div=document.createElement('div');div.className='cwb-msg cwb-'+who;div.innerHTML='<div class="cwb-bubble"></div><div class="cwb-time">'+timeNow()+'</div>';div.querySelector('.cwb-bubble').textContent=text;msgs.insertBefore(div,typing);msgs.scrollTop=msgs.scrollHeight;}
+  var inited=false;
+  launcher.addEventListener('click',function(){win.classList.add('cwb-open');if(!inited){inited=true;setTimeout(function(){addMsg(DATA.welcomeMessage,'bot');},200);}});
+  closeBtn.addEventListener('click',function(){win.classList.remove('cwb-open');});
+  function lockSession(reasonText){ SESSION.terminated=true; input.disabled=true; input.value=''; input.placeholder=DATA.sessionEnded||''; addMsg((reasonText||DATA.sessionEnded)+' '+(DATA.noMatchMessage||''),'bot'); }
+  function userSend(){
+    if(SESSION.terminated) return;
+    var t=(input.value||'').trim();
+    if(!t) return;
+    if(t.length < (DATA.limits.minLen||2)){ addMsg(DATA.errTooShort,'bot'); return; }
+    if(t.length > (DATA.limits.maxLen||500)){ addMsg(DATA.errTooLong,'bot'); return; }
+    var now=Date.now();
+    if(now - SESSION.lastSent < (DATA.limits.cooldownMs||1500)){ addMsg(DATA.errCooldown,'bot'); return; }
+    SESSION.lastSent=now;
+    addMsg(t,'user');
+    input.value='';
+    SESSION.count++;
+    if(SESSION.count > (DATA.limits.maxMessagesPerSession||30)){ lockSession(DATA.sessionLimit); return; }
+    typing.classList.add('cwb-vis'); msgs.scrollTop=msgs.scrollHeight;
+    fetchAnswer(t).then(function(data){
+      typing.classList.remove('cwb-vis');
+      if(!data || data.error || !data.reply){ addMsg(DATA.errNetwork,'bot'); return; }
+      addMsg(applyTone(data.reply),'bot');
+      SESSION.history.push({role:'user',content:t});
+      SESSION.history.push({role:'assistant',content:data.reply});
+      if(data.offTopic){
+        SESSION.strikes++;
+        if(SESSION.strikes >= (DATA.limits.maxOffTopicStrikes||3)){
+          setTimeout(function(){ lockSession(DATA.sessionEnded); }, 600);
+        }
+      }
+    }).catch(function(err){
+      typing.classList.remove('cwb-vis');
+      addMsg(DATA.errNetwork,'bot');
+    });
+  }
+  send.addEventListener('click',userSend);
+  input.addEventListener('keydown',function(e){if(e.key==='Enter')userSend();});
+})();
+<\/script>`;
+  }
+
+  // ---------- Knowledge file upload ----------
+  let pdfJsLoading = null;
+  function loadPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (pdfJsLoading) return pdfJsLoading;
+    pdfJsLoading = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload = () => {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          resolve(window.pdfjsLib);
+        } else reject(new Error('pdfjsLib not available'));
+      };
+      s.onerror = () => reject(new Error('Failed to load pdf.js'));
+      document.head.appendChild(s);
+    });
+    return pdfJsLoading;
+  }
+
+  async function extractPdfText(file) {
+    const lib = await loadPdfJs();
+    const ab = await file.arrayBuffer();
+    const pdf = await lib.getDocument({ data: ab }).promise;
+    const parts = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      parts.push(content.items.map(it => it.str).join(' '));
+    }
+    return parts.join('\n\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  function updateKbUI() {
+    const status = $('kbStatus');
+    const preview = $('kbPreview');
+    const actions = $('kbActions');
+    const counter = $('kbCounter');
+    const text = chatbotData.knowledgeText || '';
+    if (text) {
+      status.className = 'kb-status ok';
+      status.textContent = (t('kbLoaded') || 'Datei geladen') + ': ' + (chatbotData.knowledgeFileName || '?');
+      preview.textContent = text.slice(0, 1200) + (text.length > 1200 ? '...' : '');
+      preview.classList.add('visible');
+      actions.style.display = 'flex';
+      counter.textContent = text.length + ' / ' + KB_MAX_CHARS;
+    } else {
+      status.className = 'kb-status';
+      status.textContent = t('kbNoFile') || 'Keine Datei geladen.';
+      preview.textContent = '';
+      preview.classList.remove('visible');
+      actions.style.display = 'none';
+      counter.textContent = '';
+    }
+  }
+
+  $('kbFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const status = $('kbStatus');
+    status.className = 'kb-status';
+    status.textContent = t('kbParsing') || 'Datei wird gelesen...';
+    try {
+      let text = '';
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.pdf') || file.type === 'application/pdf') {
+        text = await extractPdfText(file);
+      } else if (name.endsWith('.txt') || file.type === 'text/plain') {
+        text = await file.text();
+      } else {
+        throw new Error('unsupported');
+      }
+      text = (text || '').trim();
+      if (!text) {
+        status.className = 'kb-status err';
+        status.textContent = t('kbEmpty') || 'Keine Textinhalte gefunden (vielleicht ein gescannter PDF?).';
+        e.target.value = '';
+        return;
+      }
+      if (text.length > KB_MAX_CHARS) {
+        text = text.slice(0, KB_MAX_CHARS);
+      }
+      chatbotData.knowledgeText = text;
+      chatbotData.knowledgeFileName = file.name;
+      updateKbUI();
+    } catch (err) {
+      console.error(err);
+      status.className = 'kb-status err';
+      status.textContent = (t('kbError') || 'Fehler beim Lesen der Datei') + ': ' + (err.message || err);
+    } finally {
+      e.target.value = '';
+    }
+  });
+
+  $('kbClear').addEventListener('click', () => {
+    chatbotData.knowledgeText = '';
+    chatbotData.knowledgeFileName = '';
+    updateKbUI();
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const code = buildEmbedCode();
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    toast.textContent = t('copied');
+    toast.classList.add('visible');
+    setTimeout(() => { toast.classList.remove('visible'); }, 2000);
+  });
+
+  // ---------- AI Auto-Fill ----------
+  function setAiFillStatus(text, kind) {
+    aiFillStatus.textContent = text || '';
+    aiFillStatus.className = 'ai-fill-status' + (kind ? ' ' + kind : '');
+  }
+
+  function applyScrapedData(d) {
+    if (!d || typeof d !== 'object') return false;
+    if (d.businessName) {
+      chatbotData.botName = d.businessName;
+      botNameInput.value = d.businessName;
+      updateName();
+    }
+    if (d.welcomeMessage) {
+      chatbotData.welcomeMessage = d.welcomeMessage;
+      welcomeInput.value = d.welcomeMessage;
+    }
+    if (d.noMatchMessage) {
+      chatbotData.noMatchMessage = d.noMatchMessage;
+      noMatchInput.value = d.noMatchMessage;
+    }
+    if (d.brandColor && /^#[0-9a-f]{6}$/i.test(d.brandColor)) {
+      chatbotData.brandColor = d.brandColor;
+      brandColorInput.value = d.brandColor;
+      updateBrand();
+    }
+    if (Array.isArray(d.qaPairs) && d.qaPairs.length > 0) {
+      chatbotData.qaPairs = d.qaPairs.map(q => ({
+        id: 'qa_' + (qaIdSeq++),
+        question: q.question || '',
+        answer: q.answer || '',
+        keywords: q.keywords || ''
+      }));
+      renderQaList();
+    }
+    resetWidgetMessages();
+    return true;
+  }
+
+  aiFillBtn.addEventListener('click', async () => {
+    let url = (siteUrlInput.value || '').trim();
+    if (!url) { setAiFillStatus(t('aiFillErrorUrl'), 'error'); return; }
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    try { new URL(url); } catch (e) {
+      setAiFillStatus(t('aiFillErrorUrl'), 'error'); return;
+    }
+    aiFillBtn.disabled = true;
+    setAiFillStatus(t('aiFillLoading'), 'loading');
+    try {
+      const resp = await fetch(SCRAPE_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url, language: currentLang })
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      if (data && data.error) {
+        setAiFillStatus(t('aiFillErrorParse'), 'error');
+        return;
+      }
+      const ok = applyScrapedData(data);
+      if (ok) setAiFillStatus(t('aiFillSuccess'), 'success');
+      else setAiFillStatus(t('aiFillErrorParse'), 'error');
+    } catch (err) {
+      console.error(err);
+      setAiFillStatus(t('aiFillErrorNetwork'), 'error');
+    } finally {
+      aiFillBtn.disabled = false;
+    }
+  });
+
+  // ---------- Init ----------
+  langSelect.value = 'de';
+  loadDefaultsForLanguage('de');
+  updateBrand();
+  updateAvatarUI();
+
+})();
+</script>
+</body>
+</html>

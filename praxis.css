@@ -659,6 +659,209 @@ a {
     color: var(--text-primary);
 }
 
+/* New pricing elements */
+.pricing-subtitle {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    margin-top: -8px;
+}
+
+.pricing-vat {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: -12px;
+    margin-bottom: 16px;
+}
+
+.pricing-setup {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.pricing-setup-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.pricing-setup-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.pricing-setup-price .strike {
+    text-decoration: line-through;
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-right: 8px;
+}
+
+.pricing-setup-note {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.pricing-capacity {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: left;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.pricing-capacity-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Website Add-on Highlight Box */
+.pricing-addon {
+    max-width: 900px;
+    margin: 60px auto 0;
+    padding: 40px;
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 200, 83, 0.08) 100%);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.pricing-addon .addon-icon {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.pricing-addon .addon-content {
+    flex: 1;
+}
+
+.pricing-addon .addon-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.pricing-addon .addon-subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 12px;
+}
+
+.pricing-addon .addon-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.pricing-addon .addon-price-box {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.pricing-addon .addon-price {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.pricing-addon .addon-price-note {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--text-dim);
+}
+
+.pricing-addon .addon-benefit {
+    font-size: 0.95rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 12px;
+}
+
+.pricing-addon .addon-features {
+    margin-bottom: 20px;
+}
+
+.pricing-addon .addon-features h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.pricing-addon .addon-features ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pricing-addon .addon-features li {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.pricing-addon .addon-features li strong {
+    color: var(--text-primary);
+}
+
+.pricing-addon .addon-seo-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.pricing-addon .addon-seo-note svg {
+    flex-shrink: 0;
+    color: #ff9800;
+    margin-top: 2px;
+}
+
+.pricing-addon .addon-seo-note strong {
+    color: #ff9800;
+}
+
+/* Responsive adjustments for addon */
+@media (max-width: 768px) {
+    .pricing-addon {
+        flex-direction: column;
+        padding: 24px;
+    }
+    
+    .pricing-addon .addon-icon {
+        font-size: 2rem;
+    }
+    
+    .pricing-addon .addon-title {
+        font-size: 1.25rem;
+    }
+}
+
 /* ===== CONTACT ===== */
 .contact-section {
     padding: 100px 24px;
