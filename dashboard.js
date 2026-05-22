@@ -4997,6 +4997,9 @@ async function loadTeam() {
   list.querySelectorAll('.emp-link-row a, .emp-link-row button').forEach(el => {
     el.addEventListener('click', (e) => e.stopPropagation());
   });
+
+  // Faz 3: Aktif business'a atanmamış owner employee'leri listele
+  await renderOtherStandortEmps();
   list.querySelectorAll('.emp-copy-link').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -5016,6 +5019,94 @@ function renderEmpAvatar(el, m) {
   } else {
     el.textContent = name[0].toUpperCase();
   }
+}
+
+// ===== Faz 3: Cross-business — diğer standortlardan henüz buraya atanmamış employee'ler =====
+async function renderOtherStandortEmps() {
+  const wrap = document.getElementById('otherStandortEmps');
+  const listEl = document.getElementById('otherStandortEmpsList');
+  if (!wrap || !listEl) return;
+
+  // Yalnız owner + Enterprise + birden fazla business olduğunda göster
+  if (currentProfile.role !== 'owner' || !isEnterprise() || myBusinesses.length <= 1 || !currentBusiness?.id) {
+    wrap.hidden = true;
+    return;
+  }
+
+  // Owner'ın tüm employee'lerini çek
+  const { data: allEmps } = await supabase
+    .from('profiles')
+    .select('id, email, business_name, avatar_url')
+    .eq('owner_id', getOwnerId())
+    .eq('role', 'employee');
+
+  if (!allEmps || allEmps.length === 0) { wrap.hidden = true; return; }
+
+  // Aktif business'a atanmış olanları al
+  const { data: assigned } = await supabase
+    .from('employee_business_assignments')
+    .select('employee_id')
+    .eq('business_id', currentBusiness.id);
+  const assignedSet = new Set((assigned || []).map(a => a.employee_id));
+
+  // Burada olmayanlar
+  const others = allEmps.filter(e => !assignedSet.has(e.id));
+  if (others.length === 0) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+
+  // Her employee'nin hangi business'lara atanmış olduğunu özetle
+  const empIds = others.map(e => e.id);
+  const { data: theirAssignments } = await supabase
+    .from('employee_business_assignments')
+    .select('employee_id, business_id')
+    .in('employee_id', empIds);
+  const bizNameById = new Map(myBusinesses.map(b => [b.id, b.business_name]));
+  const empBizMap = {};
+  (theirAssignments || []).forEach(a => {
+    if (!empBizMap[a.employee_id]) empBizMap[a.employee_id] = [];
+    const name = bizNameById.get(a.business_id);
+    if (name) empBizMap[a.employee_id].push(name);
+  });
+
+  listEl.innerHTML = others.map(e => {
+    const name = e.business_name || e.email?.split('@')[0] || '—';
+    const elsewhere = (empBizMap[e.id] || []).join(', ') || 'Keine Standorte';
+    return `<div class="other-standort-emp-row" data-emp="${e.id}">
+      <div>
+        <div class="other-standort-emp-name">${escapeHtml(name)}</div>
+        <div class="other-standort-emp-meta">Arbeitet in: ${escapeHtml(elsewhere)}</div>
+      </div>
+      <button class="btn-primary" type="button" data-add-emp="${e.id}" style="padding:6px 14px;font-size:12px;">＋ Hier hinzufügen</button>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('button[data-add-emp]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const empId = btn.dataset.addEmp;
+      btn.disabled = true;
+      btn.textContent = '…';
+      const { data: g } = await supabase
+        .from('employee_groups')
+        .select('id')
+        .eq('business_id', currentBusiness.id)
+        .eq('name', 'Mitarbeiter')
+        .maybeSingle();
+      const { error } = await supabase.from('employee_business_assignments').upsert({
+        employee_id: empId,
+        business_id: currentBusiness.id,
+        group_id: g?.id || null,
+      }, { onConflict: 'employee_id,business_id' });
+      if (error) {
+        console.error('[add-other-emp]', error);
+        showToast(t('err_generic'), 'error');
+        btn.disabled = false;
+        btn.textContent = '＋ Hier hinzufügen';
+        return;
+      }
+      showToast('Mitarbeiter hinzugefügt ✓');
+      await loadTeam();
+    });
+  });
 }
 
 // ===== RBAC: Employee permissions UI (Berechtigungen tab) =====

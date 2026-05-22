@@ -180,6 +180,31 @@ $('signupForm').addEventListener('submit', async (e) => {
         start_time: h.start_time, end_time: h.end_time, is_active: h.is_active
       }));
       await supabase.from('working_hours').insert(whRows);
+
+      // Faz 3: Employee'yi owner'ın default business'ına Mitarbeiter olarak ata
+      try {
+        const { data: defaultBiz } = await supabase
+          .from('businesses')
+          .select('id')
+          .eq('owner_id', ownerId)
+          .eq('is_default', true)
+          .maybeSingle();
+        if (defaultBiz?.id) {
+          const { data: mitGroup } = await supabase
+            .from('employee_groups')
+            .select('id')
+            .eq('business_id', defaultBiz.id)
+            .eq('name', 'Mitarbeiter')
+            .maybeSingle();
+          await supabase.from('employee_business_assignments').upsert({
+            employee_id: authData.user.id,
+            business_id: defaultBiz.id,
+            group_id: mitGroup?.id || null,
+          }, { onConflict: 'employee_id,business_id' });
+        }
+      } catch (eba) {
+        console.warn('[employee-signup] eba upsert failed', eba);
+      }
     }
 
     showMsg('Konto erfolgreich erstellt! Sie werden weitergeleitet...', 'success');
