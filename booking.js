@@ -76,8 +76,31 @@ async function init() {
     // Match either the bare slug or the full URL containing it
     q = q.or(`booking_slug.eq.${slug},booking_slug.ilike.%booking.html?u=${slug}`);
   }
-  const { data: profile, error } = await q.maybeSingle();
+  let { data: profile, error } = await q.maybeSingle();
   if (error) console.error('[booking] supabase error:', error);
+
+  // Multi-business fallback: profile bulunamazsa businesses tablosunda slug ara
+  if (!profile && !isUUID(slug) && !slug.toUpperCase().startsWith('INF-')) {
+    const { data: biz } = await supabase
+      .from('businesses')
+      .select('id, owner_id, business_name')
+      .or(`booking_slug.eq.${slug},booking_slug.ilike.%booking.html?u=${slug}`)
+      .maybeSingle();
+    if (biz) {
+      state.businessId = biz.id;
+      state.companyName = biz.business_name;
+      // Owner profile bilgisini ayrıca çek (görüntü için)
+      const { data: ownerProfile } = await supabase
+        .from('profiles_public')
+        .select('id,business_name,owner_first_name,owner_last_name,accepts_bookings,role,owner_id')
+        .eq('id', biz.owner_id)
+        .maybeSingle();
+      profile = ownerProfile || { id: biz.owner_id, business_name: biz.business_name, role: 'owner', accepts_bookings: true };
+      // business_name override: business adı profile.business_name'ten önemli
+      profile.business_name = biz.business_name;
+    }
+  }
+
   if (!profile) { showError('Unternehmen nicht gefunden.'); return; }
 
   const isEmployee = profile.role === 'employee' && profile.owner_id;
@@ -112,12 +135,25 @@ async function init() {
     .select('id,business_name,email,role,avatar_url')
     .or(`id.eq.${state.ownerId},owner_id.eq.${state.ownerId}`);
 
-  if (!employees || !employees.length) {
+  let visibleEmps = employees || [];
+
+  // Multi-business: belirli bir business slug ile gelinmişse, sadece
+  // o business'a atanmış employee'leri (+ owner) göster
+  if (state.businessId) {
+    const { data: assigned } = await supabase
+      .from('employee_business_assignments')
+      .select('employee_id')
+      .eq('business_id', state.businessId);
+    const assignedSet = new Set((assigned || []).map(a => a.employee_id));
+    visibleEmps = visibleEmps.filter(e => e.role === 'owner' || assignedSet.has(e.id));
+  }
+
+  if (!visibleEmps.length) {
     document.getElementById('empList').innerHTML = '<div class="slots-empty">Keine Mitarbeiter verfügbar.</div>';
     return;
   }
 
-  document.getElementById('empList').innerHTML = employees.map(e => {
+  document.getElementById('empList').innerHTML = visibleEmps.map(e => {
     const name = e.business_name || e.email.split('@')[0];
     const initial = (name[0] || '?').toUpperCase();
     const avatar = e.avatar_url ? `<img src="${e.avatar_url}" alt="">` : initial;
@@ -262,6 +298,7 @@ async function loadBookingSlots(date) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId: state.employeeId,
+        businessId: state.businessId || null,
         date: dStr,
         duration: state.durationMinutes,
         buffer: state.bufferMinutes,
@@ -434,6 +471,7 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
       body: JSON.stringify({
         ownerId: state.ownerId,
         userId: state.employeeId,
+        businessId: state.businessId || null,
         serviceId: state.serviceId,
         date: state.selectedDate,
         time: state.selectedTime,
