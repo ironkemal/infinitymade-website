@@ -4670,11 +4670,101 @@ async function loadHoursPanel() {
   sel.innerHTML = all.map(e => `<option value="${e.id}">${e.business_name || e.email?.split('@')[0]}</option>`).join('');
   hoursEmpId = all[0]?.id || currentSession.user.id;
   await renderHoursGrid();
+
+  // Standort-Öffnungstage section (Enterprise + owner)
+  await renderHoursStandortSection();
+
   const calSection = document.querySelector('.hours-calendar-section');
   if (calSection) {
     calSection.hidden = currentProfile.role !== 'owner';
     if (currentProfile.role === 'owner') await renderHoursMiniCal();
   }
+}
+
+// ===== Standort-Öffnungstage (closed_days) =====
+let hoursStandortId = null; // 'all' veya business UUID
+
+async function renderHoursStandortSection() {
+  const section = document.getElementById('hoursStandortSection');
+  if (!section) return;
+  const show = currentProfile.role === 'owner' && isEnterprise() && (myBusinesses?.length || 0) >= 1;
+  section.hidden = !show;
+  if (!show) return;
+
+  const sel = document.getElementById('hoursStandortSelect');
+  const multi = myBusinesses.length > 1;
+  let opts = '';
+  if (multi) opts += '<option value="all">Alle Standorte</option>';
+  opts += myBusinesses.map(b => `<option value="${b.id}">${escapeHtml(b.business_name)}${b.is_default ? ' (Standard)' : ''}</option>`).join('');
+  sel.innerHTML = opts;
+
+  if (!hoursStandortId) hoursStandortId = currentBusiness?.id || myBusinesses[0]?.id;
+  sel.value = hoursStandortId;
+
+  renderHoursStandortDays();
+
+  if (!sel.dataset.wired) {
+    sel.dataset.wired = '1';
+    sel.addEventListener('change', () => {
+      hoursStandortId = sel.value;
+      renderHoursStandortDays();
+    });
+  }
+}
+
+function renderHoursStandortDays() {
+  const wrap = document.getElementById('hoursStandortDays');
+  if (!wrap) return;
+
+  const dayLabels = DAYS[currentLang] || DAYS.de;
+  // Mevcut closed_days değerini bul (multi-biz "all" modunda kesişim göster)
+  let closedSet = new Set();
+  if (hoursStandortId === 'all') {
+    // her gün: tüm business'larda kapalıysa kapalı kabul et (kesişim)
+    const allClosed = myBusinesses.map(b => new Set((b.closed_days || []).map(Number)));
+    for (let i = 0; i < 7; i++) {
+      if (allClosed.every(s => s.has(i))) closedSet.add(i);
+    }
+  } else {
+    const biz = myBusinesses.find(b => b.id === hoursStandortId);
+    closedSet = new Set((biz?.closed_days || []).map(Number));
+  }
+
+  // 7 gün, Pazartesi başlangıç gösterimi için [1..6, 0]
+  const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+  wrap.innerHTML = dayOrder.map(i => {
+    const isOpen = !closedSet.has(i);
+    return `<button type="button" class="hours-day-pill ${isOpen ? 'is-open' : 'is-closed'}" data-day="${i}">
+      ${isOpen ? '✓' : '✕'} ${dayLabels[i]}
+    </button>`;
+  }).join('');
+
+  // Click handler
+  wrap.querySelectorAll('.hours-day-pill').forEach(btn => {
+    btn.addEventListener('click', () => toggleStandortDay(parseInt(btn.dataset.day, 10)));
+  });
+}
+
+async function toggleStandortDay(day) {
+  const targets = hoursStandortId === 'all' ? myBusinesses.map(b => b.id) : [hoursStandortId];
+
+  for (const bizId of targets) {
+    const biz = myBusinesses.find(b => b.id === bizId);
+    if (!biz) continue;
+    const current = new Set((biz.closed_days || []).map(Number));
+    if (current.has(day)) current.delete(day);
+    else current.add(day);
+    const newArr = Array.from(current).sort((a, b) => a - b);
+    const { error } = await supabase.from('businesses').update({ closed_days: newArr }).eq('id', bizId);
+    if (error) { console.error('[closed_days]', error); showToast(t('err_generic'), 'error'); return; }
+    biz.closed_days = newArr;
+  }
+
+  showToast('Öffnungstage aktualisiert ✓');
+  renderHoursStandortDays();
+
+  // Übersicht haftalık/aylık görünüm açıksa yenile
+  if (scheduleView !== 'daily') await refreshActiveScheduleView();
 }
 
 let hoursBreaks = [];
@@ -7406,12 +7496,19 @@ async function renderOverviewWeekly(date) {
   const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
   const todayISO = toISODate(new Date());
 
+  // Aktif business'in kapali gunleri (sadece switcher aktif business varsa)
+  const closedSet = new Set(((currentBusiness?.closed_days) || []).map(Number));
+
   // Grid: header row + emp rows
   let html = `<div class="ov-week-grid" style="--ov-day-count:7;">`;
   html += `<div class="ov-week-head" style="background:transparent;border:0;"></div>`;
   days.forEach((d, i) => {
     const isToday = toISODate(d) === todayISO;
-    html += `<div class="ov-week-head ${isToday ? 'ov-week-head-today' : ''}">${dayNames[i]} ${d.getDate()}.${d.getMonth() + 1}</div>`;
+    const isClosed = closedSet.has(d.getDay());
+    const cls = ['ov-week-head'];
+    if (isToday) cls.push('ov-week-head-today');
+    if (isClosed) cls.push('ov-week-head-closed');
+    html += `<div class="${cls.join(' ')}">${dayNames[i]} ${d.getDate()}.${d.getMonth() + 1}${isClosed ? '<span class="ov-day-closed-tag">geschlossen</span>' : ''}</div>`;
   });
 
   allEmps.forEach(emp => {
@@ -7419,10 +7516,11 @@ async function renderOverviewWeekly(date) {
     html += `<div class="ov-week-emp-cell">${escapeHtml(name)}</div>`;
     days.forEach(d => {
       const dayISO = toISODate(d);
+      const isClosed = closedSet.has(d.getDay());
       const dayBookings = (bookings || []).filter(b =>
         b.user_id === emp.id && toISODate(new Date(b.start_time)) === dayISO
       ).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-      html += `<div class="ov-week-cell" data-day="${dayISO}" data-emp="${emp.id}">`;
+      html += `<div class="ov-week-cell ${isClosed ? 'ov-week-cell-closed' : ''}" data-day="${dayISO}" data-emp="${emp.id}">`;
       dayBookings.forEach(b => {
         const t = new Date(b.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         const svc = b.services?.title || 'Termin';
@@ -7486,6 +7584,7 @@ async function renderOverviewMonthly(date) {
 
   const todayISO = toISODate(new Date());
   const dowNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const closedSet = new Set(((currentBusiness?.closed_days) || []).map(Number));
 
   let html = '<div class="ov-month-grid">';
   dowNames.forEach(n => { html += `<div class="ov-month-dow">${n}</div>`; });
@@ -7494,13 +7593,17 @@ async function renderOverviewMonthly(date) {
     const dayISO = toISODate(d);
     const isOut = d.getMonth() !== month;
     const isToday = dayISO === todayISO;
+    const isClosed = closedSet.has(d.getDay());
     const count = (bookings || []).filter(b => toISODate(new Date(b.start_time)) === dayISO).length;
     if (!isOut) monthTotal += count;
     const classes = ['ov-month-cell'];
     if (isOut) classes.push('ov-month-cell-out');
     if (isToday) classes.push('ov-month-cell-today');
-    const countHtml = isOut ? '' : `<span class="ov-month-count ${count === 0 ? 'ov-month-count-zero' : ''}">${count} ${count === 1 ? 'Termin' : 'Termine'}</span>`;
-    html += `<div class="${classes.join(' ')}" data-day="${dayISO}">
+    if (isClosed && !isOut) classes.push('ov-month-cell-closed');
+    const countHtml = isOut ? ''
+      : isClosed ? '<span class="ov-day-closed-tag">geschlossen</span>'
+      : `<span class="ov-month-count ${count === 0 ? 'ov-month-count-zero' : ''}">${count} ${count === 1 ? 'Termin' : 'Termine'}</span>`;
+    html += `<div class="${classes.join(' ')}" data-day="${dayISO}" ${isClosed && !isOut ? 'data-closed="1"' : ''}>
       <span class="ov-month-day-num">${d.getDate()}</span>
       ${countHtml}
     </div>`;
@@ -7513,8 +7616,8 @@ async function renderOverviewMonthly(date) {
   </div>`;
   container.innerHTML = html;
 
-  // Hücreye tıklayınca günlük görünüme dön
-  container.querySelectorAll('.ov-month-cell:not(.ov-month-cell-out)').forEach(el => {
+  // Hücreye tıklayınca günlük görünüme dön (kapali günler hariç)
+  container.querySelectorAll('.ov-month-cell:not(.ov-month-cell-out):not(.ov-month-cell-closed)').forEach(el => {
     el.addEventListener('click', () => {
       const day = el.dataset.day;
       if (!day) return;

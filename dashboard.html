@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260522m" />
+  <link rel="stylesheet" href="dashboard.css?v=20260522n" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -327,6 +327,18 @@
             <div class="panel-actions">
               <button class="btn-primary" id="hoursSaveBtn" data-i18n="btn_save_hours">Speichern</button>
             </div>
+          </div>
+
+          <!-- Standort-Öffnungstage (Enterprise + owner + multi-biz) -->
+          <div class="hours-standort-section" id="hoursStandortSection" hidden>
+            <div class="hours-standort-header">
+              <span>Standort-Öffnungstage</span>
+              <select class="form-select" id="hoursStandortSelect"></select>
+            </div>
+            <div class="hours-standort-days" id="hoursStandortDays"></div>
+            <p class="form-hint" style="margin:8px 0 0;">
+              Geschlossene Tage werden im Kalender ausgegraut und können nicht gebucht werden.
+            </p>
           </div>
 
           <div class="hours-employee-select">
@@ -3072,7 +3084,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260522m"></script>
+  <script type="module" src="dashboard.js?v=20260522n"></script>
 </body>
 
 </html>

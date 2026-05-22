@@ -331,6 +331,23 @@ app.post('/api/booking/get-slots', async (req, res) => {
       .single();
     if (profile?.owner_id) ownerId = profile.owner_id;
 
+    // 1.4 Check business closed_days (multi-business açılış günleri)
+    // Owner'ın default business'ını çek (booking link şu an default business'a düşer).
+    const { data: defaultBiz } = await supabase
+      .from('businesses')
+      .select('id, closed_days')
+      .eq('owner_id', ownerId)
+      .eq('is_default', true)
+      .maybeSingle();
+
+    if (defaultBiz && Array.isArray(defaultBiz.closed_days) && defaultBiz.closed_days.length) {
+      // JS Date.getDay() vs PG EXTRACT(DOW): both 0=Sunday, 1=Monday,...
+      const jsDow = new Date(date + 'T12:00:00').getDay();
+      if (defaultBiz.closed_days.includes(jsDow)) {
+        return res.json({ slots: [], reason: 'business_closed_day' });
+      }
+    }
+
     // 1.5 Check custom_days (shop-wide closed/holiday/special)
     const { data: customDay } = await supabase
       .from('custom_days')
