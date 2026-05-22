@@ -4,7 +4,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const STEPS = ['account', 'business', 'owner', 'services', 'hours', 'whatsapp', 'templates', 'plan', 'done'];
+// 2026-05-22: WhatsApp adımı kaldırıldı (rafa kaldırıldı, fokus buchungssystem). 7 adım kaldı.
+const STEPS = ['account', 'business', 'owner', 'services', 'hours', 'templates', 'plan', 'done'];
 
 const SERVICE_TEMPLATES = {
   barber: [
@@ -128,7 +129,6 @@ async function init() {
   bindOwner();
   bindServices();
   bindHours();
-  bindWhatsapp();
   bindTemplates();
   bindPlan();
 
@@ -144,6 +144,8 @@ async function init() {
     } else {
       stepName = profile?.onboarding_step || 'business';
     }
+    // 2026-05-22: WhatsApp adımı kaldırıldı, eski profillerin onboarding_step='whatsapp' değeri olabilir
+    if (stepName === 'whatsapp') stepName = 'templates';
     if (stepName === 'done') {
       window.location.href = 'dashboard.html';
       return;
@@ -347,6 +349,36 @@ function bindBusiness() {
         business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner'
       }).eq('id', userId);
       if (error) return showError(error.message);
+
+      // Faz 1 multi-business: default business satırını upsert et (her owner için 1 tane)
+      try {
+        const { data: existing } = await supabase
+          .from('businesses')
+          .select('id')
+          .eq('owner_id', userId)
+          .eq('is_default', true)
+          .maybeSingle();
+
+        const bizPayload = {
+          owner_id: userId,
+          business_name,
+          sector,
+          city: city || null,
+          zip: zip || null,
+          street: street || null,
+          house_number: house_number || null,
+          booking_slug: booking_slug || null,
+          is_default: true,
+        };
+
+        if (existing?.id) {
+          await supabase.from('businesses').update(bizPayload).eq('id', existing.id);
+        } else {
+          await supabase.from('businesses').insert(bizPayload);
+        }
+      } catch (bizErr) {
+        console.warn('[onboarding] default business upsert failed', bizErr);
+      }
     }
     profile = { ...profile, business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner' };
     saveSessionProfile();
@@ -573,54 +605,19 @@ function bindHours() {
         if (whErr) console.error('working_hours insert', whErr);
       }
       const { error } = await supabase.from('profiles').update({
-        working_hours: out, onboarding_step: 'whatsapp',
+        working_hours: out, onboarding_step: 'templates',
       }).eq('id', userId);
       if (error) return showError(error.message);
     }
 
-    profile = { ...profile, working_hours: out, working_hours_rows: whRows, onboarding_step: 'whatsapp' };
+    profile = { ...profile, working_hours: out, working_hours_rows: whRows, onboarding_step: 'templates' };
     saveSessionProfile();
-    goToStep(5);
+    goToStep(5);  // hours sonrası direkt templates (whatsapp atlandı)
   });
 }
 
-// ---- Step 5: WhatsApp ----
-function bindWhatsapp() {
-  document.getElementById('whatsappForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const number = normalizePhone(document.getElementById('waNumber').value);
-    const phoneNumberId = document.getElementById('waPhoneNumberId').value.trim() || null;
-    const wabaId = document.getElementById('waBaId').value.trim() || null;
-    const accessToken = document.getElementById('waAccessToken').value.trim();
-
-    try {
-      if (userId && accessToken) {
-        const { error: rpcErr } = await supabase.rpc('business_save_secret', {
-          p_user_id: userId,
-          p_secret_kind: 'whatsapp_access_token',
-          p_secret_value: accessToken,
-        });
-        if (rpcErr) throw rpcErr;
-      }
-
-      if (userId) {
-        const { error } = await supabase.from('profiles').update({
-          whatsapp_number: number,
-          whatsapp_phone_number_id: phoneNumberId,
-          whatsapp_waba_id: wabaId,
-          onboarding_step: 'templates',
-        }).eq('id', userId);
-        if (error) throw error;
-      }
-
-      profile = { ...profile, whatsapp_number: number, whatsapp_phone_number_id: phoneNumberId, whatsapp_waba_id: wabaId, whatsapp_access_token: accessToken || null, onboarding_step: 'templates' };
-      saveSessionProfile();
-      goToStep(6);
-    } catch (err) {
-      showError(err.message);
-    }
-  });
-}
+// ---- Step 5 (eski WhatsApp) — 2026-05-22'de kaldırıldı ----
+function bindWhatsapp() { /* no-op: artık çağrılmıyor */ }
 
 function normalizePhone(input) {
   return (input || '').replace(/[\s\-()]/g, '');

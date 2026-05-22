@@ -383,13 +383,56 @@ function applyI18n() {
   if (ls) ls.value = currentLang;
 }
 
+// ===== RBAC permissions cache =====
+let modulePermissions = null; // { dashboard: true, calendar: true, ... }
+
+async function loadModulePermissions() {
+  if (!currentBusiness?.id) { modulePermissions = null; return; }
+  try {
+    const { data, error } = await supabase.rpc('get_my_permissions', { p_business_id: currentBusiness.id });
+    if (error) { console.warn('[permissions]', error); modulePermissions = null; return; }
+    const map = {};
+    (data || []).forEach(r => { map[r.module] = r.has_access; });
+    modulePermissions = map;
+  } catch (e) {
+    console.warn('[permissions]', e);
+    modulePermissions = null;
+  }
+}
+
+function hasModuleAccess(module) {
+  // Owner her zaman tüm modüllere erişebilir (fallback)
+  if (currentProfile?.role === 'owner') return true;
+  if (!modulePermissions) return true; // fallback: kapanmadan önce gösterilebilir
+  return modulePermissions[module] === true;
+}
+
+// Sidebar item id'sini RBAC module key'ine eşle
+const SIDEBAR_TO_MODULE = {
+  overview: 'dashboard',
+  calendar: 'calendar',
+  customers: 'customers',
+  services: 'services',
+  hours: 'hours',
+  team: 'team',
+  notes: 'notes',
+  anamnese: 'anamnese',
+  prescriptions: 'prescriptions',
+  abrechnung: 'abrechnung',
+  fahrtenbuch: 'fahrtenbuch',
+  b2b: 'b2b',
+  b2c: 'b2c',
+  feedback: 'feedback',
+  settings: 'settings',
+};
+
 async function renderSidebar() {
   const nav = document.getElementById('sidebarNav');
   nav.innerHTML = '';
   const role = currentProfile.role || 'owner';
 
   if (role === 'employee' && !ownerProfile && currentProfile.owner_id) {
-    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,has_dta_pro').eq('id', currentProfile.owner_id).maybeSingle();
+    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,has_dta_pro,plan,plan_status').eq('id', currentProfile.owner_id).maybeSingle();
     if (ownerErr) console.error('[renderSidebar ownerProfile]', ownerErr);
     if (owner) {
       ownerProfile = owner;
@@ -400,12 +443,17 @@ async function renderSidebar() {
     }
   }
 
+  // RBAC: aktif business için modül erişimlerini yükle
+  await loadModulePermissions();
+
   const items = getSidebarItems();
   console.log('[renderSidebar] items count=', items.length, items.map(i => i.id));
   items.forEach(item => {
     if (!item.roles.includes(role)) return;
-    // DTA-Pro addon gate: hide §302 Sammelabrechnung unless the tenant subscribed.
     if (item.id === 'abrechnung' && !hasDtaPro()) return;
+    // RBAC scope check (sadece employee için)
+    const moduleKey = SIDEBAR_TO_MODULE[item.id];
+    if (role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) return;
     const btn = document.createElement('button');
     btn.className = 'sidebar-item' + (item.id === activePanel ? ' active' : '');
     btn.dataset.panel = item.id;
@@ -4959,10 +5007,156 @@ function renderEmpAvatar(el, m) {
   }
 }
 
+// ===== RBAC: Employee permissions UI (Berechtigungen tab) =====
+const RBAC_MODULES = [
+  { id: 'dashboard',     label: 'Übersicht' },
+  { id: 'calendar',      label: 'Termine' },
+  { id: 'customers',     label: 'Kunden' },
+  { id: 'services',      label: 'Dienstleistungen' },
+  { id: 'hours',         label: 'Arbeitszeiten' },
+  { id: 'team',          label: 'Personal' },
+  { id: 'notes',         label: 'Notizen' },
+  { id: 'anamnese',      label: 'Anamnese' },
+  { id: 'prescriptions', label: 'Rezepte' },
+  { id: 'abrechnung',    label: 'Abrechnung' },
+  { id: 'fahrtenbuch',   label: 'Fahrtenbuch' },
+  { id: 'b2b',           label: 'B2B' },
+  { id: 'b2c',           label: 'B2C' },
+  { id: 'feedback',      label: 'Feedback' },
+];
+
+async function loadEmpPermissions(empId) {
+  if (currentProfile.role !== 'owner' || !currentBusiness?.id) return;
+  const tab = document.getElementById('empTabPermissions');
+  if (tab) tab.hidden = false;
+
+  // Grup listesi
+  const { data: groups } = await supabase
+    .from('employee_groups')
+    .select('id, name, is_default')
+    .eq('business_id', currentBusiness.id)
+    .order('is_default', { ascending: false })
+    .order('name');
+
+  const groupSel = document.getElementById('empPermGroup');
+  groupSel.innerHTML = '<option value="">— Individuell —</option>' +
+    (groups || []).map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+
+  // Mevcut atama
+  const { data: assignment } = await supabase
+    .from('employee_business_assignments')
+    .select('group_id')
+    .eq('employee_id', empId)
+    .eq('business_id', currentBusiness.id)
+    .maybeSingle();
+
+  groupSel.value = assignment?.group_id || '';
+
+  await renderEmpPermGrid(empId, assignment?.group_id);
+
+  groupSel.onchange = () => renderEmpPermGrid(empId, groupSel.value || null);
+
+  document.getElementById('empPermSaveBtn').onclick = () => saveEmpPermissions(empId);
+}
+
+async function renderEmpPermGrid(empId, groupId) {
+  const grid = document.getElementById('empPermGrid');
+  if (!grid) return;
+
+  // Grup default'larını çek
+  let groupAccess = {};
+  if (groupId) {
+    const { data: scopes } = await supabase
+      .from('group_scopes')
+      .select('module, has_access')
+      .eq('group_id', groupId);
+    (scopes || []).forEach(s => { groupAccess[s.module] = s.has_access; });
+  }
+
+  // Bireysel override'lar
+  const { data: overrides } = await supabase
+    .from('employee_scope_overrides')
+    .select('module, has_access')
+    .eq('employee_id', empId)
+    .eq('business_id', currentBusiness.id);
+  const overrideMap = {};
+  (overrides || []).forEach(o => { overrideMap[o.module] = o.has_access; });
+
+  grid.innerHTML = RBAC_MODULES.map(m => {
+    const effective = overrideMap[m.id] !== undefined ? overrideMap[m.id] : (groupAccess[m.id] === true);
+    const isOverride = overrideMap[m.id] !== undefined;
+    return `<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface-alt,#f3f4f6);border-radius:4px;cursor:pointer;">
+      <input type="checkbox" data-perm="${m.id}" ${effective ? 'checked' : ''} />
+      <span>${m.label}${isOverride ? ' <span style="font-size:10px;color:var(--primary);">(Override)</span>' : ''}</span>
+    </label>`;
+  }).join('');
+}
+
+async function saveEmpPermissions(empId) {
+  const groupSel = document.getElementById('empPermGroup');
+  const newGroupId = groupSel.value || null;
+
+  // 1. Grup atamasını güncelle
+  const { error: assignErr } = await supabase
+    .from('employee_business_assignments')
+    .upsert({
+      employee_id: empId,
+      business_id: currentBusiness.id,
+      group_id: newGroupId,
+    }, { onConflict: 'employee_id,business_id' });
+  if (assignErr) { console.error('[perm-assign]', assignErr); showToast(t('err_generic'), 'error'); return; }
+
+  // 2. Mevcut override'ları sil
+  await supabase
+    .from('employee_scope_overrides')
+    .delete()
+    .eq('employee_id', empId)
+    .eq('business_id', currentBusiness.id);
+
+  // 3. UI'da işaretlenenler grup default'undan farklıysa override yaz
+  let groupAccess = {};
+  if (newGroupId) {
+    const { data: scopes } = await supabase
+      .from('group_scopes')
+      .select('module, has_access')
+      .eq('group_id', newGroupId);
+    (scopes || []).forEach(s => { groupAccess[s.module] = s.has_access; });
+  }
+
+  const overrides = [];
+  document.querySelectorAll('#empPermGrid input[data-perm]').forEach(cb => {
+    const mod = cb.dataset.perm;
+    const userChecked = cb.checked;
+    const groupDefault = groupAccess[mod] === true;
+    if (userChecked !== groupDefault) {
+      overrides.push({
+        employee_id: empId,
+        business_id: currentBusiness.id,
+        module: mod,
+        has_access: userChecked,
+      });
+    }
+  });
+  if (overrides.length) {
+    const { error: ovErr } = await supabase.from('employee_scope_overrides').insert(overrides);
+    if (ovErr) { console.error('[perm-overrides]', ovErr); showToast(t('err_generic'), 'error'); return; }
+  }
+
+  showToast('Berechtigungen gespeichert ✓');
+}
+
 function openEmpDetail(empId) {
   const m = teamMembers.find(tm => tm.id === empId);
   if (!m) return;
   detailEmpId = empId;
+
+  // RBAC tab'ı sadece owner + employee için
+  if (currentProfile.role === 'owner' && m.role === 'employee') {
+    loadEmpPermissions(empId).catch(err => console.warn('[loadEmpPermissions]', err));
+  } else {
+    const tab = document.getElementById('empTabPermissions');
+    if (tab) tab.hidden = true;
+  }
 
   document.getElementById('empDetailName').textContent = m.business_name || m.email?.split('@')[0] || '—';
   document.getElementById('empDetailRole').textContent = m.role || 'employee';
@@ -8184,6 +8378,294 @@ async function saveRezept() {
   }
 }
 
+// ===== Business Switcher (multi-business, Paket 3) =====
+let currentBusiness = null;
+let myBusinesses = [];
+
+const BIZ_STORAGE_KEY = 'infinitymade.active_business';
+const BIZ_PREF_KEY = 'selected_business';
+const ENTERPRISE_PLANS = new Set(['enterprise']);
+
+function isEnterprise() {
+  const plan = (ownerProfile?.plan || currentProfile?.plan || '').toLowerCase();
+  const status = ownerProfile?.plan_status || currentProfile?.plan_status;
+  return ENTERPRISE_PLANS.has(plan) && ['trial', 'active', 'past_due'].includes(status);
+}
+
+async function bootBusinessSwitcher() {
+  const wrap = document.getElementById('bizSwitcher');
+  if (!wrap) return;
+
+  try {
+    const { data: list } = await supabase
+      .from('businesses')
+      .select('*')
+      .order('is_default', { ascending: false })
+      .order('business_name', { ascending: true });
+    myBusinesses = list || [];
+  } catch (e) {
+    console.warn('[bizSwitcher] list failed', e);
+    myBusinesses = [];
+  }
+
+  if (myBusinesses.length === 0) { wrap.hidden = true; return; }
+
+  // Aktif business'ı çöz
+  let activeId = null;
+  try { activeId = localStorage.getItem(BIZ_STORAGE_KEY); } catch {}
+  if (!activeId) {
+    const { data: pref } = await supabase
+      .from('user_preferences')
+      .select('preference_value')
+      .eq('user_id', currentSession.user.id)
+      .eq('preference_key', BIZ_PREF_KEY)
+      .maybeSingle();
+    activeId = pref?.preference_value || null;
+  }
+  if (!activeId) {
+    const { data: defaultId } = await supabase.rpc('get_default_business', { p_user: currentSession.user.id });
+    activeId = defaultId || myBusinesses[0]?.id || null;
+  }
+  currentBusiness = myBusinesses.find(b => b.id === activeId) || myBusinesses[0] || null;
+
+  // Switcher'ı yalnızca: (a) birden fazla business varsa, veya (b) Enterprise plan + ekleme yetkisi varsa göster
+  const showSwitcher = myBusinesses.length > 1 || (isEnterprise() && currentProfile?.role === 'owner');
+  wrap.hidden = !showSwitcher;
+
+  renderBizSwitcher();
+  wireBizSwitcherEvents();
+  renderBusinessesSection();
+}
+
+// ===== Settings > Geschäfte (Multi-Business CRUD) =====
+function renderBusinessesSection() {
+  const section = document.getElementById('settingsBusinessesSection');
+  const listEl = document.getElementById('businessesList');
+  if (!section || !listEl) return;
+
+  const showSection = isEnterprise() && currentProfile?.role === 'owner';
+  section.hidden = !showSection;
+  if (!showSection) return;
+
+  if (myBusinesses.length === 0) {
+    listEl.innerHTML = '<div class="form-hint">Noch kein Geschäft. Fügen Sie eines hinzu.</div>';
+    return;
+  }
+
+  listEl.innerHTML = myBusinesses.map(b => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-alt,#f3f4f6);border-radius:6px;">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-weight:600;">${escapeHtml(b.business_name)}${b.is_default ? ' <span style="font-size:11px;font-weight:400;color:var(--text-muted);">(Standard)</span>' : ''}</span>
+        <span style="font-size:12px;color:var(--text-muted);">${escapeHtml([b.street, b.house_number].filter(Boolean).join(' '))}${b.zip || b.city ? ', ' : ''}${escapeHtml([b.zip, b.city].filter(Boolean).join(' '))}</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-secondary" data-edit-business="${b.id}" style="padding:6px 12px;font-size:12px;">Bearbeiten</button>
+        ${b.is_default ? '' : `<button class="btn-secondary" data-delete-business="${b.id}" style="padding:6px 12px;font-size:12px;color:#dc2626;">Löschen</button>`}
+      </div>
+    </div>
+  `).join('');
+
+  // Bind handlers (idempotent — set dataset.wired)
+  if (!section.dataset.wired) {
+    section.dataset.wired = '1';
+    document.getElementById('addBusinessBtn')?.addEventListener('click', () => openBusinessModal(null));
+    section.addEventListener('click', async (e) => {
+      const editId = e.target.dataset.editBusiness;
+      const delId  = e.target.dataset.deleteBusiness;
+      if (editId) openBusinessModal(myBusinesses.find(b => b.id === editId));
+      if (delId)  await deleteBusiness(delId);
+    });
+    wireBusinessModal();
+  }
+}
+
+function openBusinessModal(biz) {
+  const modal = document.getElementById('businessModal');
+  if (!modal) return;
+  document.getElementById('businessModalTitle').textContent = biz ? 'Geschäft bearbeiten' : 'Neues Geschäft';
+  document.getElementById('bizFormId').value = biz?.id || '';
+  document.getElementById('bizFormName').value = biz?.business_name || '';
+  document.getElementById('bizFormStreet').value = biz?.street || '';
+  document.getElementById('bizFormHouseNumber').value = biz?.house_number || '';
+  document.getElementById('bizFormZip').value = biz?.zip || '';
+  document.getElementById('bizFormCity').value = biz?.city || '';
+  document.getElementById('bizFormPhone').value = biz?.phone || '';
+
+  // "Diğer işletmemden kopyala" — sadece yeni business eklerken ve birden fazla varsa göster
+  const copyWrap = document.getElementById('bizCopyServicesWrap');
+  const copySel  = document.getElementById('bizCopyServicesFrom');
+  if (copyWrap && copySel) {
+    if (!biz && myBusinesses.length > 0) {
+      copyWrap.hidden = false;
+      copySel.innerHTML = '<option value="">— Nicht kopieren —</option>' +
+        myBusinesses.map(b => `<option value="${b.id}">${escapeHtml(b.business_name)}</option>`).join('');
+    } else {
+      copyWrap.hidden = true;
+    }
+  }
+  modal.hidden = false;
+}
+
+function wireBusinessModal() {
+  const modal = document.getElementById('businessModal');
+  if (!modal) return;
+  modal.querySelectorAll('[data-close="businessModal"]').forEach(el => {
+    el.addEventListener('click', () => { modal.hidden = true; });
+  });
+
+  const form = document.getElementById('businessForm');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('bizFormId').value || null;
+    const v = (gid) => (document.getElementById(gid)?.value || '').trim();
+    const payload = {
+      business_name: v('bizFormName'),
+      street:        v('bizFormStreet') || null,
+      house_number:  v('bizFormHouseNumber') || null,
+      zip:           v('bizFormZip') || null,
+      city:          v('bizFormCity') || null,
+      phone:         v('bizFormPhone') || null,
+    };
+    if (!payload.business_name) { showToast('Name erforderlich', 'error'); return; }
+
+    let newBiz = null;
+    if (id) {
+      const { error } = await supabase.from('businesses').update(payload).eq('id', id);
+      if (error) { console.error('[biz-update]', error); showToast(t('err_generic'), 'error'); return; }
+    } else {
+      payload.owner_id = currentSession.user.id;
+      payload.sector = currentProfile?.sector || null;
+      const { data: created, error } = await supabase.from('businesses').insert(payload).select().single();
+      if (error) { console.error('[biz-insert]', error); showToast(t('err_generic'), 'error'); return; }
+      newBiz = created;
+
+      // Servisleri kopyala (opsiyonel)
+      const copyFromId = document.getElementById('bizCopyServicesFrom')?.value;
+      if (copyFromId && newBiz) {
+        const { data: src } = await supabase.from('services').select('*').eq('business_id', copyFromId);
+        if (src && src.length) {
+          const clones = src.map(s => {
+            const { id: _id, created_at, updated_at, ...rest } = s;
+            return { ...rest, business_id: newBiz.id, owner_id: currentSession.user.id };
+          });
+          const { error: cErr } = await supabase.from('services').insert(clones);
+          if (cErr) console.warn('[biz-copy-services]', cErr);
+        }
+      }
+    }
+
+    showToast(t('saved'));
+    modal.hidden = true;
+    // Refresh
+    const { data: list } = await supabase
+      .from('businesses').select('*')
+      .order('is_default', { ascending: false })
+      .order('business_name', { ascending: true });
+    myBusinesses = list || [];
+    renderBizSwitcher();
+    renderBusinessesSection();
+  });
+}
+
+async function deleteBusiness(id) {
+  const biz = myBusinesses.find(b => b.id === id);
+  if (!biz) return;
+  if (!confirm(`"${biz.business_name}" wirklich löschen? Alle zugehörigen Daten (Termine, Dienstleistungen, Rechnungen) werden ebenfalls gelöscht.`)) return;
+  const { error } = await supabase.from('businesses').delete().eq('id', id);
+  if (error) { console.error('[biz-delete]', error); showToast(t('err_generic'), 'error'); return; }
+  showToast('Gelöscht ✓');
+  // Eğer aktif business silindiyse default'a dön
+  if (currentBusiness?.id === id) {
+    try { localStorage.removeItem(BIZ_STORAGE_KEY); } catch {}
+    location.reload();
+    return;
+  }
+  myBusinesses = myBusinesses.filter(b => b.id !== id);
+  renderBizSwitcher();
+  renderBusinessesSection();
+}
+
+function renderBizSwitcher() {
+  const currentEl = document.getElementById('bizSwitcherCurrent');
+  const menuEl = document.getElementById('bizSwitcherMenu');
+  if (!currentEl || !menuEl) return;
+
+  currentEl.textContent = currentBusiness?.business_name || '—';
+
+  let html = '';
+  myBusinesses.forEach(b => {
+    const isActive = b.id === currentBusiness?.id;
+    const meta = b.is_default ? '<span class="biz-switcher-item-meta">Standard</span>' : '';
+    html += `<button type="button" class="biz-switcher-item" role="option" aria-selected="${isActive}" data-id="${b.id}">
+      <span>${escapeHtml(b.business_name)}</span>${meta}
+    </button>`;
+  });
+
+  if (isEnterprise() && currentProfile?.role === 'owner') {
+    html += '<div class="biz-switcher-divider"></div>';
+    html += '<button type="button" class="biz-switcher-add" id="bizSwitcherAdd">＋ Neues Geschäft hinzufügen</button>';
+  }
+
+  menuEl.innerHTML = html;
+}
+
+function wireBizSwitcherEvents() {
+  const btn = document.getElementById('bizSwitcherBtn');
+  const menu = document.getElementById('bizSwitcherMenu');
+  if (!btn || !menu || btn.dataset.wired === '1') return;
+  btn.dataset.wired = '1';
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = !menu.hidden;
+    menu.hidden = open;
+    btn.setAttribute('aria-expanded', String(!open));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#bizSwitcher')) {
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  menu.addEventListener('click', async (e) => {
+    const item = e.target.closest('.biz-switcher-item');
+    if (item) {
+      const id = item.dataset.id;
+      if (id && id !== currentBusiness?.id) await switchBusiness(id);
+      menu.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    if (e.target.closest('#bizSwitcherAdd')) {
+      // TODO Faz 1.3: Settings > İşletmeler > Yeni ekle modal'ı
+      alert('Neues Geschäft hinzufügen — in Kürze verfügbar (Settings → Geschäfte).');
+    }
+  });
+}
+
+async function switchBusiness(businessId) {
+  const biz = myBusinesses.find(b => b.id === businessId);
+  if (!biz) return;
+  currentBusiness = biz;
+  try { localStorage.setItem(BIZ_STORAGE_KEY, businessId); } catch {}
+  try {
+    await supabase.from('user_preferences').upsert({
+      user_id: currentSession.user.id,
+      preference_key: BIZ_PREF_KEY,
+      preference_value: businessId,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,preference_key' });
+  } catch (e) { console.warn('[switchBusiness] pref upsert failed', e); }
+  // Sayfa yenilenmeden refresh: tüm panelleri yeniden çiz
+  location.reload();
+}
+
+function getActiveBusinessId() {
+  return currentBusiness?.id || null;
+}
+
 async function init() {
   try {
     console.log('[init] start');
@@ -8193,6 +8675,8 @@ async function init() {
     console.log('[init] bookingSlug ok');
     applyI18n();
     console.log('[init] i18n ok');
+    await bootBusinessSwitcher();
+    console.log('[init] bizSwitcher ok');
     await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();

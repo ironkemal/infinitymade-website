@@ -17,7 +17,7 @@
   <a href="/index.html" class="ob-brand">infinity<span class="ob-brand-accent">made</span></a>
   <div class="ob-progress">
     <div class="ob-progress-bar"><div class="ob-progress-fill" id="progressFill"></div></div>
-    <span class="ob-progress-label"><span id="stepNum">1</span> / 8</span>
+    <span class="ob-progress-label"><span id="stepNum">1</span> / 7</span>
   </div>
   <button class="ob-logout" id="logoutBtn" hidden>Abmelden</button>
 </header>
@@ -27,7 +27,7 @@
   <!-- Step 0: Account -->
   <section class="ob-step" data-step="account">
     <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 1 / 8</span>
+      <span class="ob-step-tag">Schritt 1 / 7</span>
       <h1>Konto erstellen</h1>
       <p>Sie melden sich später mit E-Mail und Passwort in Ihrem Dashboard an.</p>
     </div>
@@ -57,7 +57,7 @@
   <!-- Step 1: Business -->
   <section class="ob-step" data-step="business" hidden>
     <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 2 / 8</span>
+      <span class="ob-step-tag">Schritt 2 / 7</span>
       <h1>Über Ihr Unternehmen</h1>
       <p>Diese Daten erscheinen im KI-Assistenten — er stellt sich Ihren Kunden mit dem richtigen Namen vor.</p>
     </div>
@@ -72,14 +72,14 @@
           <option value="">Bitte wählen…</option>
           <option value="barber">Friseur / Barbershop</option>
           <option value="beauty">Kosmetikstudio</option>
-          <option value="nails">Nagelstudio</option>
-          <option value="tattoo">Tattoostudio</option>
-          <option value="spa">Spa / Wellness</option>
-          <option value="massage">Massagestudio</option>
           <option value="physiotherapy">Physiotherapie</option>
-          <option value="praxis">Praxis / Klinik</option>
-          <option value="gym">Fitnessstudio</option>
-          <option value="other">Sonstiges</option>
+          <optgroup label="Bald verfügbar">
+            <option value="nails" disabled>Nagelstudio (bald)</option>
+            <option value="massage" disabled>Massagestudio (bald)</option>
+            <option value="spa" disabled>Spa / Wellness (bald)</option>
+            <option value="tattoo" disabled>Tattoostudio (bald)</option>
+            <option value="gym" disabled>Fitnessstudio (bald)</option>
+          </optgroup>
         </select>
       </label>
       <div class="ob-row-2">
@@ -122,7 +122,7 @@
   <!-- Step 2: Owner Info -->
   <section class="ob-step" data-step="owner" hidden>
     <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 3 / 8</span>
+      <span class="ob-step-tag">Schritt 3 / 7</span>
       <h1>Inhaberdaten</h1>
       <p>Wer führt die Termine durch? Ihre Kunden sehen diesen Namen bei der Online-Buchung.</p>
     </div>
@@ -158,7 +158,7 @@
   <!-- Step 3: Services -->
   <section class="ob-step" data-step="services" hidden>
     <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 4 / 8</span>
+      <span class="ob-step-tag">Schritt 4 / 7</span>
       <h1>Ihre Dienstleistungen</h1>
       <p>Welche Termine kann der Bot buchen? Sie können später jederzeit bearbeiten.</p>
     </div>
@@ -184,7 +184,7 @@
   <!-- Step 4: Hours -->
   <section class="ob-step" data-step="hours" hidden>
     <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 5 / 8</span>
+      <span class="ob-step-tag">Schritt 5 / 7</span>
       <h1>Öffnungszeiten</h1>
       <p>Diese Zeiten gelten für die KI — außerhalb dieser Stunden bietet der Bot keine Termine an.</p>
     </div>
@@ -199,49 +199,10 @@
     </form>
   </section>
 
-  <!-- Step 5: WhatsApp -->
-  <section class="ob-step" data-step="whatsapp" hidden>
-    <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 6 / 8</span>
-      <h1>WhatsApp Verbindung</h1>
-      <p>Wir nutzen Twilio (oder WhatsApp Business Cloud API). Im einfachsten Fall: nur die Geschäfts-Telefonnummer.</p>
-    </div>
-
-    <form class="ob-form" id="whatsappForm">
-      <label>
-        <span>Geschäfts-Telefonnummer (mit +49…)</span>
-        <input type="tel" id="waNumber" required placeholder="+49 123 4567890" />
-        <small class="ob-input-hint">Diese Nummer wird Ihr Bot-Eingang. Falls noch nicht bei Twilio registriert: nehmen Sie Kontakt auf — wir richten es im Onboarding-Call ein.</small>
-      </label>
-
-      <details class="ob-collapse">
-        <summary>Erweiterte WhatsApp Cloud API Felder (optional — nur für Fortgeschrittene)</summary>
-        <p style="font-size:0.85rem;color:#888;margin:8px 0 16px;">Diese Felder benötigen Sie nur, wenn Sie die WhatsApp Business Cloud API selbst verwalten. Für die meisten Kunden richten wir das im Onboarding-Call gemeinsam ein.</p>
-        <label>
-          <span>Phone Number ID</span>
-          <input type="text" id="waPhoneNumberId" placeholder="Meta Business → WhatsApp → Phone Number ID" />
-        </label>
-        <label>
-          <span>WABA ID</span>
-          <input type="text" id="waBaId" placeholder="WhatsApp Business Account ID" />
-        </label>
-        <label>
-          <span>Permanent Access Token</span>
-          <input type="password" id="waAccessToken" placeholder="Wird im Onboarding-Call eingerichtet" autocomplete="off" />
-        </label>
-      </details>
-
-      <div class="ob-actions">
-        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
-        <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
-      </div>
-    </form>
-  </section>
-
-  <!-- Step 6: Templates -->
+  <!-- Step 5: Templates (WhatsApp-Schritt 2026-05-22 entfernt — Fokus auf Buchungssystem) -->
   <section class="ob-step" data-step="templates" hidden>
     <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 7 / 8</span>
+      <span class="ob-step-tag">Schritt 6 / 7</span>
       <h1>Nachrichten anpassen</h1>
       <p>Diese Texte verwendet der Bot. Sie können sie jetzt oder später ändern.</p>
     </div>
@@ -283,7 +244,7 @@
   <!-- Step 8: Plan & Payment -->
   <section class="ob-step" data-step="plan" hidden>
     <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 8 / 8</span>
+      <span class="ob-step-tag">Schritt 7 / 7</span>
       <h1>Wählen Sie Ihren Plan</h1>
       <p>14 Tage kostenlos testen. Kreditkarte wird hinterlegt, aber erst nach 14 Tagen belastet. Jederzeit kündbar.</p>
     </div>
@@ -300,10 +261,10 @@
           <div class="plan-price"><span class="plan-price-num" data-month="29" data-year="25">29</span> €<small>/Monat</small></div>
           <div class="plan-billing" data-billing>monatlich abgerechnet</div>
           <ul class="plan-features">
-            <li>WhatsApp KI-Bot</li>
             <li>Online-Terminbuchung</li>
-            <li>1.000 Nachrichten / Monat</li>
-            <li>1 Standort</li>
+            <li>Kalender &amp; Termine</li>
+            <li>Kundenverwaltung</li>
+            <li>1 Standort, bis 2 Mitarbeiter</li>
             <li>E-Mail-Support</li>
           </ul>
           <button type="button" class="ob-btn primary plan-select" data-plan="starter">Starter wählen</button>
@@ -316,7 +277,8 @@
           <div class="plan-billing" data-billing>monatlich abgerechnet</div>
           <ul class="plan-features">
             <li>Alles aus Starter</li>
-            <li>5.000 Nachrichten / Monat</li>
+            <li>Bis 5 Mitarbeiter</li>
+            <li>B2B / B2C E-Mail-Module</li>
             <li>Lead-Management</li>
             <li>CSV-Import / Export</li>
             <li>Priority Support</li>
@@ -330,12 +292,29 @@
           <div class="plan-billing" data-billing>monatlich abgerechnet</div>
           <ul class="plan-features">
             <li>Alles aus Professional</li>
-            <li>20.000 Nachrichten / Monat</li>
-            <li>Mehrere Standorte</li>
+            <li>Patientennotizen &amp; Anamnese</li>
+            <li>Rezeptverwaltung</li>
+            <li>Kassenabrechnung (§ 302)</li>
             <li>API-Zugang</li>
             <li>Persönlicher Account Manager</li>
           </ul>
           <button type="button" class="ob-btn primary plan-select" data-plan="klinik">Klinik wählen</button>
+        </div>
+
+        <div class="plan-card" data-plan="enterprise">
+          <div class="plan-badge" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);">Enterprise</div>
+          <div class="plan-name">Enterprise</div>
+          <div class="plan-price"><span class="plan-price-num" data-month="149" data-year="127">149</span> €<small>/Monat</small></div>
+          <div class="plan-billing" data-billing>monatlich abgerechnet</div>
+          <ul class="plan-features">
+            <li>Alles aus Klinik</li>
+            <li><strong>Mehrere Standorte</strong> (unbegrenzt)</li>
+            <li><strong>Mitarbeitergruppen</strong> &amp; Berechtigungen (RBAC)</li>
+            <li><strong>Wochen- &amp; Monatsansicht</strong> im Kalender</li>
+            <li>Standortübergreifende Mitarbeiter</li>
+            <li>Dedizierter Support</li>
+          </ul>
+          <button type="button" class="ob-btn primary plan-select" data-plan="enterprise">Enterprise wählen</button>
         </div>
       </div>
 

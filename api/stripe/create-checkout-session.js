@@ -1,5 +1,5 @@
 // POST /api/stripe/create-checkout-session
-// Body: { pending_id, planSlug: 'starter'|'professional'|'klinik', interval: 'month'|'year' }
+// Body: { pending_id, planSlug: 'starter'|'professional'|'klinik'|'enterprise', interval: 'month'|'year' }
 // Returns: { url } (Stripe Checkout URL)
 
 import { adminFetch, json } from '../_lib/auth.js';
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   const { pending_id, planSlug, interval, dtaPro } = req.body || {};
   if (!pending_id) return json(res, 400, { error: 'pending_id fehlt.' });
-  if (!['starter', 'professional', 'klinik'].includes(planSlug)) {
+  if (!['starter', 'professional', 'klinik', 'enterprise'].includes(planSlug)) {
     return json(res, 400, { error: 'Invalid planSlug' });
   }
   if (!['month', 'year'].includes(interval)) {

@@ -27,7 +27,7 @@ async function readRawBody(req) {
 
 function planSlugFromMetadata(meta) {
   const slug = meta?.plan_slug;
-  return ['starter','professional','klinik'].includes(slug) ? slug : null;
+  return ['starter','professional','klinik','enterprise'].includes(slug) ? slug : null;
 }
 
 async function updateProfileBySubscription(sub, overrides = {}) {

@@ -92,6 +92,7 @@ export function priceIdFor(planSlug, interval) {
     starter:      { month: 'STRIPE_PRICE_STARTER_MONTHLY',      year: 'STRIPE_PRICE_STARTER_YEARLY' },
     professional: { month: 'STRIPE_PRICE_PROFESSIONAL_MONTHLY', year: 'STRIPE_PRICE_PROFESSIONAL_YEARLY' },
     klinik:       { month: 'STRIPE_PRICE_KLINIK_MONTHLY',       year: 'STRIPE_PRICE_KLINIK_YEARLY' },
+    enterprise:   { month: 'STRIPE_PRICE_ENTERPRISE_MONTHLY',   year: 'STRIPE_PRICE_ENTERPRISE_YEARLY' },
     dta_pro:      { month: 'STRIPE_PRICE_DTA_PRO_MONTHLY',      year: 'STRIPE_PRICE_DTA_PRO_YEARLY' },
   };
   const envVar = map[planSlug]?.[interval];

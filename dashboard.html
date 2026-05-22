@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260522f" />
+  <link rel="stylesheet" href="dashboard.css?v=20260522h" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -35,6 +35,15 @@
         </button>
         <a href="/" class="brand">InfinityMade</a>
         <span class="biz-name" id="bizName"></span>
+
+        <!-- Business Switcher (multi-business, Paket 3) -->
+        <div class="biz-switcher" id="bizSwitcher" hidden>
+          <button type="button" class="biz-switcher-btn" id="bizSwitcherBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="biz-switcher-current" id="bizSwitcherCurrent">—</span>
+            <span class="biz-switcher-caret">▾</span>
+          </button>
+          <div class="biz-switcher-menu" id="bizSwitcherMenu" role="listbox" hidden></div>
+        </div>
       </div>
       <div class="topbar-right">
         <button id="rezeptScanBtn" class="btn-primary" type="button"
@@ -419,6 +428,7 @@
                 <button class="tab-btn" data-tab="kalender">Kalender</button>
                 <button class="tab-btn" data-tab="hours" data-i18n="nav_hours">Arbeitszeiten</button>
                 <button class="tab-btn" data-tab="services" data-i18n="nav_services">Dienstleistungen</button>
+                <button class="tab-btn" data-tab="permissions" id="empTabPermissions" hidden>Berechtigungen</button>
               </div>
               <div class="tab-content active" id="tab-info">
                 <div class="form-group">
@@ -477,6 +487,20 @@
               </div>
               <div class="tab-content" id="tab-services">
                 <div id="empServicesGrid" class="employee-checkboxes"></div>
+              </div>
+              <div class="tab-content" id="tab-permissions">
+                <div class="form-group">
+                  <label class="form-label">Gruppe</label>
+                  <select class="form-select" id="empPermGroup">
+                    <option value="">— Individuell —</option>
+                  </select>
+                  <div class="form-hint">Gruppe wechseln setzt die Standard-Berechtigungen. Einzelne Module können danach überschrieben werden.</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Modul-Zugriff</label>
+                  <div id="empPermGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div>
+                </div>
+                <button class="btn-primary" id="empPermSaveBtn" type="button">Berechtigungen speichern</button>
               </div>
             </div>
           </div>
@@ -1496,6 +1520,72 @@
                   </div>
                 </div>
                 <button class="btn-primary" id="profileSaveBtn" data-i18n="set_save">Speichern</button>
+              </div>
+            </div>
+
+            <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
+            <div class="settings-section" id="settingsBusinessesSection" hidden>
+              <div class="settings-section-title">Geschäfte</div>
+              <div class="settings-section-body">
+                <p class="form-hint" style="margin-bottom:12px;">
+                  Verwalten Sie Ihre Standorte. Jedes Geschäft hat eigene Dienstleistungen, Arbeitszeiten und Personal.
+                </p>
+                <div id="businessesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+                <button class="btn-primary" id="addBusinessBtn" type="button">＋ Neues Geschäft hinzufügen</button>
+              </div>
+            </div>
+
+            <!-- Business edit/create modal -->
+            <div class="modal-overlay" id="businessModal" hidden>
+              <div class="modal">
+                <div class="modal-header">
+                  <span class="modal-title" id="businessModalTitle">Neues Geschäft</span>
+                  <button class="modal-close" data-close="businessModal" type="button">✕</button>
+                </div>
+                <div class="modal-body">
+                  <form id="businessForm">
+                    <input type="hidden" id="bizFormId" />
+                    <div class="form-group">
+                      <label class="form-label">Geschäftsname *</label>
+                      <input class="form-input" id="bizFormName" type="text" required maxlength="120" />
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label class="form-label">Straße</label>
+                        <input class="form-input" id="bizFormStreet" type="text" />
+                      </div>
+                      <div class="form-group" style="max-width:120px;">
+                        <label class="form-label">Hausnr.</label>
+                        <input class="form-input" id="bizFormHouseNumber" type="text" />
+                      </div>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group" style="max-width:140px;">
+                        <label class="form-label">PLZ</label>
+                        <input class="form-input" id="bizFormZip" type="text" />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Stadt</label>
+                        <input class="form-input" id="bizFormCity" type="text" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Telefon</label>
+                      <input class="form-input" id="bizFormPhone" type="tel" />
+                    </div>
+                    <div class="form-group" id="bizCopyServicesWrap" hidden>
+                      <label class="form-label">Dienstleistungen kopieren von</label>
+                      <select class="form-select" id="bizCopyServicesFrom">
+                        <option value="">— Nicht kopieren —</option>
+                      </select>
+                      <div class="form-hint">Übernimmt die Liste der Dienstleistungen aus einem bestehenden Geschäft.</div>
+                    </div>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+                      <button type="button" class="btn-secondary" data-close="businessModal">Abbrechen</button>
+                      <button type="submit" class="btn-primary" id="bizFormSubmit">Speichern</button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
 
@@ -2953,7 +3043,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260522f"></script>
+  <script type="module" src="dashboard.js?v=20260522h"></script>
 </body>
 
 </html>
