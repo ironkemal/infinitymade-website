@@ -9159,6 +9159,14 @@ function renderBusinessesSection() {
   }
 }
 
+function updateBizSlugPreview() {
+  const slug = document.getElementById('bizFormSlug')?.value?.trim();
+  const preview = document.getElementById('bizSlugPreview');
+  if (!preview) return;
+  const base = (window.location.origin || 'https://infinitymade.de') + '/booking.html?u=';
+  preview.textContent = slug ? base + slug : base + '<slug>';
+}
+
 function openBusinessModal(biz) {
   const modal = document.getElementById('businessModal');
   if (!modal) return;
@@ -9170,6 +9178,18 @@ function openBusinessModal(biz) {
   document.getElementById('bizFormZip').value = biz?.zip || '';
   document.getElementById('bizFormCity').value = biz?.city || '';
   document.getElementById('bizFormPhone').value = biz?.phone || '';
+  document.getElementById('bizFormSlug').value = biz?.booking_slug || '';
+  updateBizSlugPreview();
+
+  const slugInp = document.getElementById('bizFormSlug');
+  if (!slugInp.dataset.wired) {
+    slugInp.dataset.wired = '1';
+    slugInp.addEventListener('input', () => {
+      // Normalize: lowercase + non-alphanum -> dash
+      slugInp.value = slugInp.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      updateBizSlugPreview();
+    });
+  }
 
   // "Diğer işletmemden kopyala" — sadece yeni business eklerken ve birden fazla varsa göster
   const copyWrap = document.getElementById('bizCopyServicesWrap');
@@ -9205,6 +9225,7 @@ function wireBusinessModal() {
       zip:           v('bizFormZip') || null,
       city:          v('bizFormCity') || null,
       phone:         v('bizFormPhone') || null,
+      booking_slug:  v('bizFormSlug') || null,
     };
     if (!payload.business_name) { showToast('Name erforderlich', 'error'); return; }
 

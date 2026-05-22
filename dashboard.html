@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260523a" />
+  <link rel="stylesheet" href="dashboard.css?v=20260523b" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -1614,6 +1614,11 @@
                       <label class="form-label">Telefon</label>
                       <input class="form-input" id="bizFormPhone" type="tel" />
                     </div>
+                    <div class="form-group">
+                      <label class="form-label">Buchungs-Slug</label>
+                      <input class="form-input" id="bizFormSlug" type="text" pattern="[a-z0-9-]+" placeholder="z.B. praxis-hamburg" />
+                      <div class="form-hint">Eigener Link für diesen Standort: <code id="bizSlugPreview">…</code></div>
+                    </div>
                     <div class="form-group" id="bizCopyServicesWrap" hidden>
                       <label class="form-label">Dienstleistungen kopieren von</label>
                       <select class="form-select" id="bizCopyServicesFrom">
@@ -3084,7 +3089,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260523a"></script>
+  <script type="module" src="dashboard.js?v=20260523b"></script>
 </body>
 
 </html>
