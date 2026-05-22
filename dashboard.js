@@ -7037,28 +7037,347 @@ document.getElementById('teamAddBtn').addEventListener('click', () => {
 });
 document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 
+// ===== Übersicht view modes (Enterprise: daily/weekly/monthly) =====
+let scheduleView = 'daily'; // 'daily' | 'weekly' | 'monthly'
+let monthlyEmpId = null;
+
+const SV_PREF_KEY = 'calendar_view';
+const SV_EMP_PREF_KEY = 'monthly_employee';
+
+async function bootScheduleViewToggle() {
+  const toggle = document.getElementById('scheduleViewToggle');
+  if (!toggle) return;
+
+  // Gate: yalnız Enterprise + multi-business gözüksün (1 biz'lik kullanıcıya gerek yok)
+  const showToggle = isEnterprise();
+  toggle.hidden = !showToggle;
+  if (!showToggle) { scheduleView = 'daily'; return; }
+
+  // Kayıtlı tercih
+  try {
+    const { data: pref } = await supabase
+      .from('user_preferences')
+      .select('preference_value')
+      .eq('user_id', currentSession.user.id)
+      .eq('preference_key', SV_PREF_KEY)
+      .maybeSingle();
+    if (pref?.preference_value && ['daily','weekly','monthly'].includes(pref.preference_value)) {
+      scheduleView = pref.preference_value;
+    }
+  } catch {}
+
+  try {
+    const { data: empPref } = await supabase
+      .from('user_preferences')
+      .select('preference_value')
+      .eq('user_id', currentSession.user.id)
+      .eq('preference_key', SV_EMP_PREF_KEY)
+      .maybeSingle();
+    if (empPref?.preference_value) monthlyEmpId = empPref.preference_value;
+  } catch {}
+
+  // Toggle buton wiring (idempotent)
+  if (!toggle.dataset.wired) {
+    toggle.dataset.wired = '1';
+    toggle.querySelectorAll('.sv-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchScheduleView(btn.dataset.view));
+    });
+  }
+
+  // Monthly employee selector wiring
+  const empSel = document.getElementById('monthlyEmpSelect');
+  if (empSel && !empSel.dataset.wired) {
+    empSel.dataset.wired = '1';
+    empSel.addEventListener('change', async () => {
+      monthlyEmpId = empSel.value || null;
+      await saveUserPref(SV_EMP_PREF_KEY, monthlyEmpId);
+      if (scheduleView === 'monthly') await renderOverviewMonthly(scheduleDate);
+    });
+  }
+
+  applyScheduleViewUI();
+
+  // Eğer kayıtlı tercih daily değilse, ilgili görünümü çiz
+  if (scheduleView !== 'daily') {
+    if (scheduleView === 'monthly') populateMonthlyEmpSelect();
+    await refreshActiveScheduleView();
+  }
+}
+
+function applyScheduleViewUI() {
+  const toggle = document.getElementById('scheduleViewToggle');
+  toggle?.querySelectorAll('.sv-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === scheduleView);
+  });
+
+  // Container görünürlüğü
+  const daily = document.getElementById('upcoming-bookings-list');
+  const weekly = document.getElementById('overview-weekly');
+  const monthly = document.getElementById('overview-monthly');
+  const empty = document.getElementById('upcoming-bookings-empty');
+  const ovNav = document.getElementById('ovNav');
+  const empSel = document.getElementById('monthlyEmpSelect');
+
+  if (daily) daily.hidden = scheduleView !== 'daily';
+  if (weekly) weekly.hidden = scheduleView !== 'weekly';
+  if (monthly) monthly.hidden = scheduleView !== 'monthly';
+  if (empty) empty.hidden = scheduleView !== 'daily';
+  if (ovNav) ovNav.hidden = scheduleView !== 'daily';
+  if (empSel) empSel.hidden = scheduleView !== 'monthly';
+}
+
+async function saveUserPref(key, value) {
+  if (!currentSession?.user?.id) return;
+  try {
+    await supabase.from('user_preferences').upsert({
+      user_id: currentSession.user.id,
+      preference_key: key,
+      preference_value: value,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,preference_key' });
+  } catch (e) { console.warn('[user-pref]', key, e); }
+}
+
+async function switchScheduleView(view) {
+  if (!['daily','weekly','monthly'].includes(view)) return;
+  scheduleView = view;
+  await saveUserPref(SV_PREF_KEY, view);
+  applyScheduleViewUI();
+
+  if (view === 'daily') {
+    await loadScheduleBookings(scheduleDate);
+  } else if (view === 'weekly') {
+    await renderOverviewWeekly(scheduleDate);
+  } else if (view === 'monthly') {
+    populateMonthlyEmpSelect();
+    await renderOverviewMonthly(scheduleDate);
+  }
+}
+
+function populateMonthlyEmpSelect() {
+  const sel = document.getElementById('monthlyEmpSelect');
+  if (!sel) return;
+  const emps = teamMembers.length ? teamMembers : [currentProfile];
+  sel.innerHTML = emps.map(m => {
+    const name = m.business_name || m.email?.split('@')[0] || '—';
+    return `<option value="${m.id}">${escapeHtml(name)}</option>`;
+  }).join('');
+  if (!monthlyEmpId || !emps.find(e => e.id === monthlyEmpId)) {
+    monthlyEmpId = emps[0]?.id || null;
+  }
+  sel.value = monthlyEmpId || '';
+}
+
+// ===== Weekly view render =====
+function startOfWeek(d) {
+  const date = new Date(d);
+  const day = date.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day; // Pazartesi başlangıç
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+async function renderOverviewWeekly(date) {
+  const container = document.getElementById('overview-weekly');
+  if (!container) return;
+
+  const monday = startOfWeek(date);
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    days.push(d);
+  }
+
+  const weekStart = days[0];
+  const weekEnd = new Date(days[6]);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  // Personel listesi — switcher aktif business filter'ı bookings'a uygulanır
+  const emps = (teamMembers.length ? teamMembers : [currentProfile]).filter(e => e.role !== 'owner' || teamMembers.length <= 1);
+  // Tüm team'i göster (owner dahil), filter ettiysek owner gözüksün
+  const allEmps = teamMembers.length ? teamMembers : [currentProfile];
+
+  // Bookings çek
+  let query = supabase
+    .from('bookings')
+    .select('id, start_time, end_time, user_id, status, service_id, services(title, color)')
+    .gte('start_time', weekStart.toISOString())
+    .lte('start_time', weekEnd.toISOString())
+    .neq('status', 'cancelled');
+  if (currentBusiness?.id) query = query.eq('business_id', currentBusiness.id);
+  const { data: bookings, error } = await query;
+  if (error) { console.warn('[weekly]', error); }
+
+  // Header label
+  const labelEl = document.getElementById('scheduleDateLabel');
+  if (labelEl) {
+    const fmt = (d) => d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+    labelEl.textContent = `${fmt(weekStart)} – ${fmt(weekEnd)}`;
+  }
+
+  if (!allEmps.length) {
+    container.innerHTML = '<div class="ov-week-empty-state">Keine Mitarbeiter — fügen Sie zuerst Personal hinzu.</div>';
+    return;
+  }
+
+  const dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const todayISO = toISODate(new Date());
+
+  // Grid: header row + emp rows
+  let html = `<div class="ov-week-grid" style="--ov-day-count:7;">`;
+  html += `<div class="ov-week-head" style="background:transparent;border:0;"></div>`;
+  days.forEach((d, i) => {
+    const isToday = toISODate(d) === todayISO;
+    html += `<div class="ov-week-head ${isToday ? 'ov-week-head-today' : ''}">${dayNames[i]} ${d.getDate()}.${d.getMonth() + 1}</div>`;
+  });
+
+  allEmps.forEach(emp => {
+    const name = emp.business_name || emp.email?.split('@')[0] || '—';
+    html += `<div class="ov-week-emp-cell">${escapeHtml(name)}</div>`;
+    days.forEach(d => {
+      const dayISO = toISODate(d);
+      const dayBookings = (bookings || []).filter(b =>
+        b.user_id === emp.id && toISODate(new Date(b.start_time)) === dayISO
+      ).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+      html += `<div class="ov-week-cell" data-day="${dayISO}" data-emp="${emp.id}">`;
+      dayBookings.forEach(b => {
+        const t = new Date(b.start_time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        const svc = b.services?.title || 'Termin';
+        html += `<div class="ov-week-appt" data-booking="${b.id}">
+          <span class="ov-week-appt-time">${t}</span> ${escapeHtml(svc)}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+// ===== Monthly view render =====
+async function renderOverviewMonthly(date) {
+  const container = document.getElementById('overview-monthly');
+  if (!container) return;
+  if (!monthlyEmpId) {
+    populateMonthlyEmpSelect();
+  }
+
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-indexed
+  const firstOfMonth = new Date(year, month, 1);
+  const monthName = firstOfMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+
+  // Grid start: Pazartesi'den başlat
+  const gridStart = startOfWeek(firstOfMonth);
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart);
+    d.setDate(d.getDate() + i);
+    cells.push(d);
+  }
+
+  // Header label
+  const labelEl = document.getElementById('scheduleDateLabel');
+  if (labelEl) labelEl.textContent = monthName;
+
+  // Bookings çek
+  const startISO = cells[0].toISOString();
+  const endISO = new Date(cells[41]); endISO.setHours(23, 59, 59, 999);
+
+  let query = supabase
+    .from('bookings')
+    .select('id, start_time, user_id, status')
+    .gte('start_time', startISO)
+    .lte('start_time', endISO.toISOString())
+    .neq('status', 'cancelled');
+  if (monthlyEmpId) query = query.eq('user_id', monthlyEmpId);
+  if (currentBusiness?.id) query = query.eq('business_id', currentBusiness.id);
+  const { data: bookings, error } = await query;
+  if (error) console.warn('[monthly]', error);
+
+  const todayISO = toISODate(new Date());
+  const dowNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+  let html = '<div class="ov-month-grid">';
+  dowNames.forEach(n => { html += `<div class="ov-month-dow">${n}</div>`; });
+  let monthTotal = 0;
+  cells.forEach(d => {
+    const dayISO = toISODate(d);
+    const isOut = d.getMonth() !== month;
+    const isToday = dayISO === todayISO;
+    const count = (bookings || []).filter(b => toISODate(new Date(b.start_time)) === dayISO).length;
+    if (!isOut) monthTotal += count;
+    const classes = ['ov-month-cell'];
+    if (isOut) classes.push('ov-month-cell-out');
+    if (isToday) classes.push('ov-month-cell-today');
+    const countHtml = isOut ? '' : `<span class="ov-month-count ${count === 0 ? 'ov-month-count-zero' : ''}">${count} ${count === 1 ? 'Termin' : 'Termine'}</span>`;
+    html += `<div class="${classes.join(' ')}" data-day="${dayISO}">
+      <span class="ov-month-day-num">${d.getDate()}</span>
+      ${countHtml}
+    </div>`;
+  });
+  html += '</div>';
+
+  html += `<div class="ov-month-summary">
+    <span>Gesamt im Monat: <strong>${monthTotal}</strong></span>
+    <span>${monthName}</span>
+  </div>`;
+  container.innerHTML = html;
+
+  // Hücreye tıklayınca günlük görünüme dön
+  container.querySelectorAll('.ov-month-cell:not(.ov-month-cell-out)').forEach(el => {
+    el.addEventListener('click', () => {
+      const day = el.dataset.day;
+      if (!day) return;
+      scheduleDate = new Date(day);
+      switchScheduleView('daily');
+    });
+  });
+}
+
+function shiftScheduleDate(direction) {
+  // direction: -1 (geri) | +1 (ileri) | 0 (bugün)
+  const d = direction === 0 ? new Date() : new Date(scheduleDate);
+  if (direction !== 0) {
+    if (scheduleView === 'weekly') d.setDate(d.getDate() + 7 * direction);
+    else if (scheduleView === 'monthly') d.setMonth(d.getMonth() + direction);
+    else d.setDate(d.getDate() + direction);
+  }
+  scheduleDate = d;
+  return d;
+}
+
+async function refreshActiveScheduleView() {
+  if (scheduleView === 'daily') {
+    await loadScheduleBookings(scheduleDate);
+    await renderGapsForDate(scheduleDate);
+  } else if (scheduleView === 'weekly') {
+    await renderOverviewWeekly(scheduleDate);
+  } else if (scheduleView === 'monthly') {
+    await renderOverviewMonthly(scheduleDate);
+  }
+}
+
 function setupScheduleNav() {
   const prev = document.getElementById('schedulePrev');
   const next = document.getElementById('scheduleNext');
   const today = document.getElementById('scheduleToday');
   if (prev) prev.addEventListener('click', async () => {
     ovEmpPage = 0;
-    const d = new Date(scheduleDate);
-    d.setDate(d.getDate() - 1);
-    await loadScheduleBookings(d);
-    await renderGapsForDate(d);
+    shiftScheduleDate(-1);
+    await refreshActiveScheduleView();
   });
   if (next) next.addEventListener('click', async () => {
     ovEmpPage = 0;
-    const d = new Date(scheduleDate);
-    d.setDate(d.getDate() + 1);
-    await loadScheduleBookings(d);
-    await renderGapsForDate(d);
+    shiftScheduleDate(+1);
+    await refreshActiveScheduleView();
   });
   if (today) today.addEventListener('click', async () => {
     ovEmpPage = 0;
-    await loadScheduleBookings(new Date());
-    await renderGapsForDate(new Date());
+    shiftScheduleDate(0);
+    await refreshActiveScheduleView();
   });
 
   const ovPrev = document.getElementById('ovPrevEmp');
@@ -8690,6 +9009,7 @@ async function init() {
     try { await renderGaps(); console.log('[init] gaps ok'); } catch (e) { console.error('[init] renderGaps error', e); }
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
+    await bootScheduleViewToggle();
     await initCalendar();
     console.log('[init] calendar ok');
 

@@ -1525,6 +1525,175 @@ textarea {
   padding: 4px 10px;
 }
 
+/* ============================
+   Übersicht View Toggle (Tag/Woche/Monat) — Enterprise
+   ============================ */
+.schedule-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.sv-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sv-btn:hover { color: var(--text-main); background: var(--bg-hover); }
+.sv-btn.active {
+  background: var(--primary-dim);
+  color: var(--primary);
+}
+.schedule-monthly-emp {
+  max-width: 220px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+/* ===== Weekly view ===== */
+.ov-weekly {
+  padding: 12px;
+  overflow-x: auto;
+}
+.ov-week-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(var(--ov-day-count, 7), minmax(120px, 1fr));
+  gap: 4px;
+  min-width: 100%;
+}
+.ov-week-head, .ov-week-emp-cell {
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+}
+.ov-week-head { background: var(--bg-card-solid); }
+.ov-week-head-today { color: var(--primary); border-color: var(--primary-dim); }
+.ov-week-emp-cell {
+  text-align: left;
+  font-size: 13px;
+  color: var(--text-main);
+}
+.ov-week-cell {
+  min-height: 60px;
+  padding: 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ov-week-cell:empty::after {
+  content: '—';
+  color: var(--text-faint);
+  font-size: 11px;
+  align-self: center;
+  margin: auto;
+}
+.ov-week-appt {
+  padding: 4px 6px;
+  background: var(--primary-dim);
+  border-left: 3px solid var(--primary);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-main);
+  line-height: 1.3;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ov-week-appt:hover { background: rgba(34, 197, 94, 0.25); }
+.ov-week-appt-time { font-weight: 700; color: var(--primary); }
+.ov-week-empty-state {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ===== Monthly view ===== */
+.ov-monthly {
+  padding: 12px;
+}
+.ov-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.ov-month-dow {
+  padding: 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.ov-month-cell {
+  min-height: 72px;
+  padding: 6px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.ov-month-cell:hover { border-color: var(--border-strong); background: var(--bg-hover); }
+.ov-month-cell-out {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-faint);
+  cursor: default;
+  opacity: 0.45;
+}
+.ov-month-cell-today {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+}
+.ov-month-day-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.ov-month-cell-out .ov-month-day-num { color: var(--text-faint); }
+.ov-month-count {
+  margin-top: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ov-month-count-zero { color: var(--text-faint); font-weight: 400; }
+.ov-month-summary {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+.ov-month-summary strong { color: var(--text-main); }
+
 .schedule-list {
   display: flex;
   flex-direction: column;
