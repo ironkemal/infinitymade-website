@@ -6,7 +6,7 @@
 
 ## 🎯 Proje Özeti
 
-**InfinityMade** — Almanya'daki küçük işletmeler için (kuaför, salon, restoran, fizyoterapi, klinik) WhatsApp AI resepsiyonist + randevu yönetimi + dashboard SaaS platformu.
+**InfinityMade** — Almanya'daki küçük işletmeler için (kuaför/güzellik salonları + fizyoterapi/praxis) online randevu yönetimi + dashboard SaaS platformu. WhatsApp AI resepsiyonist rafa kaldırıldı (2026-05-20), odak buchungssystem + dashboard.
 
 **Hedef kitle:** Almanya'daki KOBİ'ler (~3M işletme)
 **Domain:** [infinitymade.de](https://infinitymade.de)
@@ -23,7 +23,7 @@ Hosting:        Vercel (website/ klasörü)
 Auth:           Supabase Auth (email + Google OAuth)
 Database:       Supabase PostgreSQL (project: njvuclullotbksskpwgk)
 AI/Bot:         n8n workflow + Claude/Gemini
-WhatsApp:       Twilio (sandbox şu an, production approval bekleniyor)
+WhatsApp:       RAFA KALDIRILDI 2026-05-20 (Twilio/Meta tabloları DROP'lu)
 Calendar API:   Custom Node.js Express backend (VPS'te PM2)
 Payments:       Stripe (test mode şu an)
 ```
@@ -127,12 +127,12 @@ stripe_price_id, billing_interval, current_period_end
 
 ---
 
-## 🤖 n8n Workflow (Multi-tenant WhatsApp)
+## 🤖 n8n Workflow
 
 - Tek workflow, per-business config Supabase Vault'tan çekiliyor
-- Twilio sandbox: `+14155238886`
-- Customer Twilio'ya WhatsApp → n8n → Claude/Gemini → Cal.com (eskiden) / kendi calendar API (yeni)
-- `business_lookup_for_twilio` RPC → service_role key gerekli
+- WhatsApp inbound rafa kaldırıldı (Twilio/Meta entegrasyonu kapatıldı 2026-05-20)
+- n8n şu an Azure AI gateway için kullanılıyor (rezept OCR, b2c-draft vs.) — bkz. ai/router.js
+- `business_lookup_for_twilio` RPC kullanılmıyor artık, ileride lazım olursa duruyor
 
 ---
 
@@ -181,14 +181,13 @@ stripe_price_id, billing_interval, current_period_end
 
 ---
 
-## 📋 Aktif TODO (öncelik sırası)
+## 📋 Aktif TODO (öncelik sırası, 2026-05-23)
 
-1. 🔴 Calendar API P0 buglar (oauth race, double-booking, timezone)
-2. 🟡 Public endpoint rate limit + captcha
-3. 🟠 Cal.com kalıntılarını temizle (`cal_username` field, dashboard iframe)
-4. 🟠 Email confirmation sistemi (booking sonrası)
-5. 🟢 Twilio production numarası + Facebook Business approval
-6. 🟢 Sector branching (barber-only şu an, diğerleri "coming soon")
+1. 🟠 **Stripe Enterprise price ID** — Stripe dashboard'unda product + monthly/yearly price oluştur, env var'lara koy (`STRIPE_PRICE_ENTERPRISE_MONTHLY/YEARLY`)
+2. 🟠 **Email confirmation** — booking sonrası müşteri+owner'a e-posta (Resend ile, ~3 saat)
+3. 🟢 **Sentry/monitoring** — production hata yakalama
+4. 🟢 **reCAPTCHA** — public booking için bot koruma (rate limit yeterli ama eksik kalmasın)
+5. 🟢 **Per-business working_hours** — şu an employee saatleri global, business-bazlı override eklenebilir
 
 ---
 
