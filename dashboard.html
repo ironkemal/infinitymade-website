@@ -15,7 +15,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260522j" />
+  <link rel="stylesheet" href="dashboard.css?v=20260522k" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
@@ -424,6 +424,15 @@
 
           <div id="teamListView">
             <div id="employeeList" class="employee-list"></div>
+
+            <!-- Faz 3: Bestehende Mitarbeiter aus anderen Standorten -->
+            <div id="otherStandortEmps" class="other-standort-emps" hidden>
+              <div class="other-standort-emps-header">
+                <span>Mitarbeiter aus anderen Standorten</span>
+                <span class="form-hint" style="margin:0;">Klicken Sie auf "Hinzufügen", um sie auch hier arbeiten zu lassen.</span>
+              </div>
+              <div id="otherStandortEmpsList"></div>
+            </div>
           </div>
 
           <div id="teamDetailView" hidden>
@@ -3063,7 +3072,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260522j"></script>
+  <script type="module" src="dashboard.js?v=20260522k"></script>
 </body>
 
 </html>

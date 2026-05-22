@@ -354,6 +354,44 @@ textarea {
   letter-spacing: 0.4px;
 }
 
+/* Faz 3: Bestehende Mitarbeiter aus anderen Standorten */
+.other-standort-emps {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+}
+.other-standort-emps-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.other-standort-emp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.other-standort-emp-name {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+.other-standort-emp-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .hamburger {
   display: none;
   flex-direction: column;
