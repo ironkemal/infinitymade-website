@@ -504,8 +504,17 @@ document.querySelectorAll('.modal-close,[data-modal]').forEach(btn => {
     if (id) closeModal(id);
   });
 });
-document.querySelectorAll('.modal-overlay').forEach(ov => {
-  ov.addEventListener('click', e => { if (e.target === ov) closeModal(ov.id); });
+// Modal'ı dışarı tıklayarak kapatma davranışı kapatıldı (kullanıcı kararı): randevu /
+// rezept oluştururken yanlışlıkla overlay'e tıklayıp tüm girdiyi kaybetme şikayeti.
+// Modal'lar sadece X butonu, Abbrechen veya Escape tuşu ile kapanır.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  // En son açık modal'ı bul (hidden olmayan en yüksek z-index'li)
+  const open = Array.from(document.querySelectorAll('.modal-overlay')).filter(m => !m.hidden);
+  if (open.length) {
+    const top = open[open.length - 1];
+    closeModal(top.id);
+  }
 });
 
 function openModal(id) { const el = document.getElementById(id); if (el) el.hidden = false; }
