@@ -988,7 +988,7 @@
               <div style="font-size:13px;color:var(--text-muted);">
                 <strong>Gewerblich</strong> = Praxis-Fahrzeuge (für alle sichtbar) · <strong>Privat</strong> = nur für die anlegende Person sichtbar
               </div>
-              <button class="btn-primary" id="fbVehicleAddBtn">+ Neues Fahrzeug</button>
+              <button class="btn-primary" id="fbVehicleAddBtn" onclick="window.__fb&&window.__fb.addVehicle()">+ Neues Fahrzeug</button>
             </div>
             <div class="table-wrap">
               <table class="table">
@@ -2737,7 +2737,7 @@
             <div class="hb-info-label">Adresse</div>
             <div class="hb-info-addr-row">
               <div id="bkActionHbAddr" class="hb-info-value"></div>
-              <button type="button" id="bkActionHbCopyBtn" class="hb-copy-btn" title="Adresse kopieren">📋 Kopieren</button>
+              <button type="button" id="bkActionHbCopyBtn" class="hb-copy-btn" title="Adresse kopieren" onclick="window.__fb&&window.__fb.copyAddr()">📋 Kopieren</button>
               <span id="bkActionHbCopyOk" class="hb-copy-ok">✓</span>
             </div>
           </div>
@@ -2746,14 +2746,14 @@
 
         <!-- STATE: null → Fahrt Starten -->
         <div class="form-group" id="bkActionFahrtStartedGroup" hidden>
-          <button class="btn-primary" id="bkActionFahrtStartBtn" style="width:100%;justify-content:center;background:#1c4d8f;">
+          <button class="btn-primary" id="bkActionFahrtStartBtn" onclick="window.__fb&&window.__fb.fahrtStart()" style="width:100%;justify-content:center;background:#1c4d8f;">
             <span>🚗</span> Fahrt Starten
           </button>
         </div>
 
         <!-- STATE: fahrt_started → Ich bin angekommen (Adresse + Kopieren bkActionHbInfo'da zaten gösteriliyor) -->
         <div class="form-group" id="bkActionArrivedGroup" hidden>
-          <button class="btn-primary" id="bkActionArrivedBtn" style="width:100%;justify-content:center;background:#2a8c4a;">
+          <button class="btn-primary" id="bkActionArrivedBtn" onclick="window.__fb&&window.__fb.arrived()" style="width:100%;justify-content:center;background:#2a8c4a;">
             <span>✅</span> Ich bin angekommen
           </button>
         </div>
@@ -2770,7 +2770,7 @@
           <div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px;margin-bottom:10px;font-size:13px;">
             Termin abgeschlossen. Bitte End-KM nach Rückkehr eintragen.
           </div>
-          <button class="btn-primary" id="bkActionFahrtEndBtn" style="width:100%;justify-content:center;background:#a06200;">
+          <button class="btn-primary" id="bkActionFahrtEndBtn" onclick="window.__fb&&window.__fb.fahrtEnd()" style="width:100%;justify-content:center;background:#a06200;">
             <span>🏁</span> Fahrt Beenden
           </button>
         </div>
@@ -2817,7 +2817,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="fahrtStartModal">Abbrechen</button>
-        <button class="btn-primary" id="fsSaveBtn">Fahrt Starten</button>
+        <button class="btn-primary" id="fsSaveBtn" onclick="window.__fb&&window.__fb.saveFahrtStart()">Fahrt Starten</button>
       </div>
     </div>
   </div>
@@ -2842,7 +2842,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="fahrtEndModal">Abbrechen</button>
-        <button class="btn-primary" id="feSaveBtn">Speichern</button>
+        <button class="btn-primary" id="feSaveBtn" onclick="window.__fb&&window.__fb.saveFahrtEnd()">Speichern</button>
       </div>
     </div>
   </div>
@@ -2867,7 +2867,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="quickVehicleModal">Abbrechen</button>
-        <button class="btn-primary" id="qvSaveBtn">Speichern</button>
+        <button class="btn-primary" id="qvSaveBtn" onclick="window.__fb&&window.__fb.saveQuick()">Speichern</button>
       </div>
     </div>
   </div>
@@ -2906,7 +2906,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="vehicleEditModal">Abbrechen</button>
-        <button class="btn-primary" id="vehEditSaveBtn">Speichern</button>
+        <button class="btn-primary" id="vehEditSaveBtn" onclick="window.__fb&&window.__fb.saveVehicle()">Speichern</button>
       </div>
     </div>
   </div>
@@ -2953,7 +2953,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260522e"></script>
+  <script type="module" src="dashboard.js?v=20260522f"></script>
 </body>
 
 </html>
