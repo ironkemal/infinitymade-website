@@ -237,8 +237,15 @@ Uygulanan migration'lar:
 ### ⏳ Faz 1.3 — Stripe Enterprise plan kurulumu (BEKLEMEDE)
 Kullanıcı kararı gerekli: fiyat noktası (€149 / €199 / başka), aylık + yıllık price ID'leri.
 
-### ⏳ Faz 3 — Cross-employment (BEKLEMEDE)
-Employee invite akışını güncelle: 1 employee birden fazla business'a (`employee_business_assignments` üzerinden) atanabilsin. Mevcut `company_code` akışı korunur.
+### ✅ Faz 3 — Cross-employment (TAMAM, 2026-05-22)
+
+**Karar:** Cross-owner (farklı sahiplerin paylaştığı employee) ileri özellik olarak ertelendi. Bu fazda sadece **owner kendi business'ları arasında** atama yapabilir.
+
+- `loadTeam()` Enterprise + multi-business modunda aktif business'a atanmış employee'leri filtreler (owner her zaman görünür)
+- **Personel > Detay > Berechtigungen** tab'ına "Standorte" checkbox grid eklendi — owner anlık atama yapabilir (min 1 standort zorunlu)
+- Personel sayfasının altında **"Mitarbeiter aus anderen Standorten"** paneli görünür: aktif business'a atanmamış employee'lerin nerede çalıştığı listelenir + "＋ Hier hinzufügen" butonu
+- `employee-signup.js` yeni kayıt sırasında otomatik `employee_business_assignments`'a Mitarbeiter olarak atar
+- DB trigger `trg_seed_default_groups`: yeni eklenen her business'a Mitarbeiter + Sekreter grupları + scope'ları otomatik seed eder (onboarding ya da Settings > Geschäfte üzerinden eklendiğinde manuel iş yok)
 
 ### ✅ Faz 4 — Haftalık/Aylık takvim görünümleri (TAMAM, 2026-05-22)
 
