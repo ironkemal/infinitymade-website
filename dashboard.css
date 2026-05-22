@@ -354,6 +354,95 @@ textarea {
   letter-spacing: 0.4px;
 }
 
+/* Faz 4: Standort-Öffnungstage (Hours panel) */
+.hours-standort-section {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.hours-standort-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.hours-standort-header .form-select {
+  max-width: 240px;
+}
+.hours-standort-days {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.hours-day-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.hours-day-pill:hover { border-color: var(--border-strong); }
+.hours-day-pill.is-open {
+  background: var(--primary-dim);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.hours-day-pill.is-closed {
+  background: var(--bg-input);
+  border-color: var(--border);
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+/* Calendar — closed day visual */
+.ov-week-head-closed,
+.ov-week-cell-closed,
+.ov-month-cell-closed {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg-input),
+    var(--bg-input) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  border-color: var(--border) !important;
+  color: var(--text-faint) !important;
+  cursor: not-allowed !important;
+  opacity: 0.55;
+}
+.ov-week-cell-closed:hover,
+.ov-month-cell-closed:hover {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg-input),
+    var(--bg-input) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+.ov-day-closed-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  display: block;
+  margin-top: 2px;
+}
+
 /* Faz 3: Bestehende Mitarbeiter aus anderen Standorten */
 .other-standort-emps {
   margin-top: 20px;
