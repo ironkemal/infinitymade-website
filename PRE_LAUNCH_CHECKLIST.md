@@ -91,6 +91,19 @@ Status: 🔴 Hiçbiri yapılmadı
 
 ---
 
+## 🟠 P5 — Test fazından sonra yapılacaklar (UX bozar)
+
+> Bu maddeler şu an eklenirse test akışını yavaşlatır/kırar. Launch öncesi son 1 hafta açılacak.
+
+- [ ] **reCAPTCHA v3** — Public booking + employee-signup. (Test sırasında her seferinde captcha çözmek istemiyoruz)
+- [ ] **Cookie banner TTDSG strict-review** — Umami eklendikten sonra: reddet butonu eşit görünür mü? Pre-consent hiçbir script yüklenmiyor mu?
+- [ ] **Email rate limit + SPF/DKIM/DMARC** — Resend eklendikten sonra DNS kayıtları + production'da rate limit
+- [ ] **DSB (Datenschutzbeauftragter) iletişim bilgisi datenschutz.html'e** — Atama yapıldıktan sonra
+- [ ] **Status page subdomain DNS** — `status.infinitymade.de` Cloudflare DNS kaydı
+- [ ] **Umami production domain** — Test fazında `analytics.infinitymade.de`'de kalır, launch'tan önce gerçek subdomain'e bağlı doğrula
+
+---
+
 ## Launch Day Checklist (D-0)
 
 - [ ] Tüm P0 tamamlandı

@@ -22,6 +22,13 @@
   <link rel="alternate" hreflang="de" href="https://infinitymade.de/" />
   <link rel="alternate" hreflang="x-default" href="https://infinitymade.de/" />
 
+  <!-- ===== Umami Analytics (self-hosted, DSGVO-konform, cookie-frei) ===== -->
+  <!-- SETUP: VPS'te Umami deploy edildikten sonra (siehe UMAMI_SETUP.md), -->
+  <!-- data-website-id'yi Umami Dashboard'tan kopyaladığın UUID ile değiştir. -->
+  <!-- ID değiştirilmeden script çalıştırılırsa 404 alır, başka bir şey kırmaz. -->
+  <script defer src="https://analytics.infinitymade.de/script.js"
+          data-website-id="REPLACE_WITH_UMAMI_WEBSITE_ID"></script>
+
   <!-- ===== Open Graph ===== -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="InfinityMade" />
@@ -1044,6 +1051,7 @@
             <li><a href="#why">Über uns</a></li>
             <li><a href="/blog/">Blog</a></li>
             <li><a href="#contact">Kontakt</a></li>
+            <li><a href="/support.html">Support &amp; Hilfe</a></li>
             <li><a href="/impressum.html">Impressum</a></li>
             <li><a href="/datenschutz.html">Datenschutz</a></li>
           </ul>
@@ -1053,6 +1061,7 @@
       <div class="footer-bottom">
         <p id="ft_cp">© 2025 InfinityMade · Alle Rechte vorbehalten.</p>
         <div class="footer-bottom-links">
+          <a href="/support.html">Support</a>
           <a href="/impressum.html">Impressum</a>
           <a href="/datenschutz.html">Datenschutz</a>
           <a href="/agb.html">AGB</a>

@@ -28,5 +28,28 @@ export default async function handler(req, res) {
     return json(res, 502, { error: 'Speichern fehlgeschlagen', details: data });
   }
 
-  return json(res, 200, { pending_id: data[0]?.id });
+  const pendingId = data[0]?.id;
+
+  // DSGVO Art. 28 / TTDSG: log AGB + AVV consent with IP + timestamp (audit trail).
+  // Pre-signup: user_id is null, linked later via pending_id when account is created.
+  const consents = onboarding_data?.consents;
+  if (pendingId && consents?.agb_accepted && consents?.avv_accepted) {
+    const ip = (req.headers['x-forwarded-for'] || '').toString().split(',')[0].trim()
+              || req.headers['x-real-ip'] || null;
+    const ua = (req.headers['user-agent'] || '').toString().slice(0, 500);
+    const rows = ['agb', 'avv'].map(type => ({
+      pending_id: pendingId,
+      consent_type: type,
+      version: (type === 'agb' ? consents.agb_version : consents.avv_version) || '2026-05-23',
+      ip_address: ip,
+      user_agent: ua,
+      accepted_at: consents.accepted_at || new Date().toISOString(),
+    }));
+    await adminFetch('/consent_log', {
+      method: 'POST',
+      body: JSON.stringify(rows),
+    });
+  }
+
+  return json(res, 200, { pending_id: pendingId });
 }

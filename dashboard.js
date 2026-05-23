@@ -6769,6 +6769,85 @@ document.getElementById('pwChangeBtn').addEventListener('click', async () => {
 document.getElementById('subPortalBtn').addEventListener('click', openStripePortal);
 document.getElementById('subUpgradeBtn').addEventListener('click', () => { window.location.href = '/onboarding.html?step=plan'; });
 
+// DSGVO Art. 15 — Export
+document.getElementById('dsgvoExportBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('dsgvoExportBtn');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Wird vorbereitet...';
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch('/api/dsgvo/export', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast('Export fehlgeschlagen: ' + (err.error || res.status), 'error');
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `infinitymade-daten-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Export heruntergeladen ✓');
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
+// DSGVO Art. 17 — Delete (mit doppelter Bestätigung)
+document.getElementById('dsgvoDeleteBtn')?.addEventListener('click', async () => {
+  const confirm1 = window.confirm(
+    'Sind Sie sicher? Alle Ihre Daten werden gelöscht.\n\n' +
+    'Abrechnungsdaten bleiben aus gesetzlicher Pflicht 10 Jahre anonymisiert gespeichert.\n\n' +
+    'Diese Aktion ist NICHT rückgängig zu machen.'
+  );
+  if (!confirm1) return;
+
+  const typed = window.prompt('Tippen Sie LÖSCHEN (Großbuchstaben) um zu bestätigen:');
+  if (typed !== 'LÖSCHEN') {
+    showToast('Abgebrochen — Bestätigung stimmte nicht überein.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('dsgvoDeleteBtn');
+  btn.disabled = true;
+  btn.textContent = 'Wird gelöscht...';
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch('/api/dsgvo/delete', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ confirm: 'LÖSCHEN' }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast('Löschung fehlgeschlagen: ' + (data.error || res.status), 'error');
+      btn.disabled = false;
+      btn.textContent = '🗑️ Konto & Daten löschen';
+      return;
+    }
+    alert('Ihr Konto wurde gelöscht. Sie werden jetzt abgemeldet.');
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  } catch (err) {
+    showToast('Fehler: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🗑️ Konto & Daten löschen';
+  }
+});
+
 async function ensureCompanyCode() {
   if (currentProfile.role !== 'owner' || currentProfile.company_code) return;
   const base = (currentProfile.business_name || currentSession.user.email.split('@')[0]).replace(/[^A-Za-z0-9]/g, '').toUpperCase().substring(0, 10);

@@ -336,7 +336,24 @@
 
       <div class="ob-callout" style="margin-top: 24px;">
         <strong>🔒 Sicher zahlen mit Stripe:</strong>
-        Ihre Kreditkartendaten werden direkt bei Stripe verarbeitet — wir sehen sie nie. Mit Klick auf "Plan wählen" werden Sie zur sicheren Stripe-Zahlungsseite weitergeleitet. Mit dem Kauf akzeptieren Sie unsere <a href="/agb.html" target="_blank">AGB</a>, <a href="/widerruf.html" target="_blank">Widerrufsbelehrung</a> und <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a>.
+        Ihre Kreditkartendaten werden direkt bei Stripe verarbeitet — wir sehen sie nie. Mit Klick auf "Plan wählen" werden Sie zur sicheren Stripe-Zahlungsseite weitergeleitet.
+      </div>
+
+      <!-- Legal consents (DSGVO Art. 28 AVV + AGB) -->
+      <div style="margin-top:20px;padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#fafbfc;">
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px;">
+          <input type="checkbox" id="consentAgb" style="margin-top:4px;flex-shrink:0;" required />
+          <span style="font-size:13px;line-height:1.5;color:#374151;">
+            Ich akzeptiere die <a href="/agb.html" target="_blank">AGB</a>, die <a href="/widerruf.html" target="_blank">Widerrufsbelehrung</a> und die <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a>. <span style="color:#dc2626;">*</span>
+          </span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+          <input type="checkbox" id="consentAvv" style="margin-top:4px;flex-shrink:0;" required />
+          <span style="font-size:13px;line-height:1.5;color:#374151;">
+            Ich schließe den <a href="/dpa.html" target="_blank"><strong>Auftragsverarbeitungsvertrag (AVV)</strong> nach Art. 28 DSGVO</a> ab. Mir ist bewusst, dass InfinityMade personenbezogene Daten meiner Kund:innen/Patient:innen in meinem Auftrag verarbeitet. <span style="color:#dc2626;">*</span>
+          </span>
+        </label>
+        <div id="consentError" style="display:none;margin-top:10px;color:#dc2626;font-size:13px;">Bitte beide Zustimmungen ankreuzen, um fortzufahren.</div>
       </div>
 
       <div class="ob-actions">

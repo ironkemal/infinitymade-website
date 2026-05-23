@@ -1734,6 +1734,29 @@
               </div>
             </div>
 
+            <!-- DSGVO Self-Service (Art. 15 + Art. 17) -->
+            <div class="settings-section" id="settingsDsgvoSection">
+              <div class="settings-section-title">🔐 Datenschutz (DSGVO)</div>
+              <div class="settings-section-body">
+                <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;">
+                  Sie haben jederzeit das Recht auf Auskunft über und Löschung Ihrer Daten.
+                </p>
+
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <button class="btn-ghost" id="dsgvoExportBtn" type="button">
+                    📥 Meine Daten exportieren (JSON)
+                  </button>
+                  <button class="btn-ghost" id="dsgvoDeleteBtn" type="button" style="border-color:#fca5a5;color:#dc2626;">
+                    🗑️ Konto &amp; Daten löschen
+                  </button>
+                </div>
+
+                <p style="font-size:11px;color:var(--text-muted);margin:12px 0 0;line-height:1.5;">
+                  Hinweis Löschung: Abrechnungsdaten (Rechnungen, §302-Abrechnungen) bleiben aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) <strong>anonymisiert</strong> 10 Jahre gespeichert.
+                </p>
+              </div>
+            </div>
+
             <div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
               <div class="settings-section-title">Abrechnung (Krankenkasse)</div>
               <div class="settings-section-body">
