@@ -4,7 +4,7 @@
 //
 // Include AFTER the loader script:
 //   <script src="https://js-de.sentry-cdn.com/.../...min.js" crossorigin="anonymous"></script>
-//   <script src="/sentry-init.js?v=20260523a"></script>
+//   <script src="/sentry-init.js?v=20260523b"></script>
 
 (function () {
   if (typeof window === 'undefined' || !window.Sentry || !window.Sentry.onLoad) {
@@ -54,8 +54,11 @@
     window.Sentry.init({
       environment: environment,
 
-      // Test phase: capture everything. Production: %20 sample.
-      tracesSampleRate: isProd ? 0.2 : 1.0,
+      // Performance tracing disabled — the lightweight CDN loader doesn't ship
+      // the tracing bundle. We only need error tracking; if performance traces
+      // become useful later, enable "Performance Monitoring" in Sentry dashboard
+      // → Settings → Loader Script (swaps to the heavier bundle), then add
+      // tracesSampleRate back here.
 
       // Don't capture user input from forms (could contain KVNR, names, diagnose text).
       // We re-enable per-form only where safe.
