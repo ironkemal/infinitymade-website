@@ -36,6 +36,7 @@ import {
   validateZuzahlungskennzeichen,
   isPhysioAbrechnungscode,
 } from '../codes/anlage3_v22.js';
+import { preflight as runPreflight } from './preflight.js';
 
 const num = (v) => Number(v) || 0;
 const r2 = (v) => +Number(v).toFixed(2);
@@ -268,7 +269,17 @@ export function buildDtaFile({
   rechnungssteller, // optional override for NAM
   ust,              // optional UST segment
   skonto,           // optional SKO segments array
+  preflight = true, // run DMRZ-style preflight before building; set false to skip (dev only)
 }) {
+  if (preflight) {
+    const pf = runPreflight({ absender, empfaenger, rechnung, prescriptions, vkz });
+    if (!pf.ok) {
+      const summary = pf.errors.slice(0, 5).map(e => `[${e.code}] ${e.where}: ${e.message}`).join('; ');
+      const err = new Error(`Preflight failed (${pf.errors.length} errors): ${summary}`);
+      err.preflight = pf;
+      throw err;
+    }
+  }
   if (!absender?.ik || !empfaenger?.ik) throw new Error('absender.ik and empfaenger.ik are required');
   if (!Array.isArray(prescriptions) || prescriptions.length === 0) {
     throw new Error('at least one prescription required');
