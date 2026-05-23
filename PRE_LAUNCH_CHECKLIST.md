@@ -38,11 +38,12 @@ Status: 🔴 Hiçbiri yapılmadı
   - [ ] Hetzner günlük snapshot otomasyonu aktif
   - [ ] Supabase PITR (Point-in-Time Recovery) açık (Pro plan gerekli)
   - [ ] En az 1 kez restore tatbikatı yap, prosedür yaz
-- [ ] **Sentry production aktivasyonu** — Kod hazır (`api-backend/instrument.js` + `sentry-init.js`), test fazında DSN aktif. Production'da:
-  - [ ] `SENTRY_ENVIRONMENT=production` env vars'a yaz (Vercel + VPS)
-  - [ ] Alert kanalı bağla (Email / Slack)
-  - [ ] Sample rate'ler doğru mu (frontend 20%, backend 20% prod'da)
-  - [ ] Test event üret + PII scrub doğrula (Sentry'de KVNR/IBAN görmemeli)
+- [ ] **Sentry production'a çevir** — Frontend + Backend Sentry kodu zaten yazılı ve test'te çalışıyor. Launch günü:
+  - [ ] **Frontend**: `sentry-init.js` dosyasında `var environment = 'test';` satırını `var environment = 'production';` olarak değiştir, cache-bust query string'i güncelle (örn. `?v=20260601a`), git push
+  - [ ] **Backend (VPS)**: `.env` dosyasında `SENTRY_ENVIRONMENT=test` → `SENTRY_ENVIRONMENT=production` yap, `docker compose restart calendar-api`
+  - [ ] **Backend (Vercel)**: Sentry'i Vercel serverless'a da eklemeyi düşün (şu an sadece VPS backend kapsıyor)
+  - [ ] Sentry Dashboard → Settings → Alerts → email/slack notification kuralı kur
+  - [ ] Bir test hatası üret + PII scrub'ı doğrula (event'te KVNR/IBAN görmemeli)
 - [ ] **reCAPTCHA v3** — Public booking + employee-signup. Rate limit yeterli değil bot için.
 
 ---

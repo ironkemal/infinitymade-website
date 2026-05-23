@@ -12,11 +12,11 @@
     return;
   }
 
-  // Heuristic: anything on apex domain or *.infinitymade.de is production;
-  // localhost / vercel preview / 127.x is test.
-  var host = window.location.hostname;
-  var isProd = /(?:^|\.)infinitymade\.de$/.test(host) && !host.startsWith('preview-');
-  var environment = isProd ? 'production' : 'test';
+  // Environment — currently hardcoded to 'test'. When going live (first real
+  // paying customer), change this single line to 'production'. PRE_LAUNCH_
+  // CHECKLIST.md has this step listed.
+  var environment = 'test';
+  var isProd = false;
 
   // PII patterns to scrub from event payloads (mirrors backend access-log redactor).
   var PII_PATTERNS = [
