@@ -1973,7 +1973,14 @@ app.use((err, req, res, _next) => {
 // Debug endpoint — only mounted when DEBUG_SENTRY=1, throws an error so we
 // can verify the pipeline. Never expose in production.
 if (process.env.DEBUG_SENTRY === '1') {
-  app.get('/debug-sentry', () => { throw new Error('Sentry smoke test from calendar-api'); });
+  app.get('/debug-sentry', (req, res) => {
+    // Belt + suspenders: throw should be caught by setupExpressErrorHandler,
+    // but we also captureException explicitly so the test never fails because
+    // of v8 instrumentation timing.
+    const err = new Error('Sentry smoke test from calendar-api ' + Date.now());
+    Sentry.captureException(err);
+    throw err;
+  });
 }
 
 const PORT = process.env.PORT || 3000;
