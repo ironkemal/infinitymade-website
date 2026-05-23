@@ -1,3 +1,7 @@
+// Sentry MUST be initialised before any other import so it can instrument them.
+import './instrument.js';
+import * as Sentry from '@sentry/node';
+
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -1951,6 +1955,26 @@ app.post('/api/prescription/lookup-by-phone', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Sentry error handler — must be registered AFTER all controllers and BEFORE
+// any other Express error middleware.
+Sentry.setupExpressErrorHandler(app);
+
+// Final fallthrough error handler — attaches Sentry event id to response so
+// support can correlate user-reported issues with the captured event.
+app.use((err, req, res, _next) => {
+  console.error('[express error]', err.message);
+  res.status(500).json({
+    error: 'Internal server error',
+    sentry_event_id: res.sentry || null,
+  });
+});
+
+// Debug endpoint — only mounted when DEBUG_SENTRY=1, throws an error so we
+// can verify the pipeline. Never expose in production.
+if (process.env.DEBUG_SENTRY === '1') {
+  app.get('/debug-sentry', () => { throw new Error('Sentry smoke test from calendar-api'); });
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

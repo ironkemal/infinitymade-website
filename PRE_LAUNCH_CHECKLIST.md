@@ -38,7 +38,11 @@ Status: 🔴 Hiçbiri yapılmadı
   - [ ] Hetzner günlük snapshot otomasyonu aktif
   - [ ] Supabase PITR (Point-in-Time Recovery) açık (Pro plan gerekli)
   - [ ] En az 1 kez restore tatbikatı yap, prosedür yaz
-- [ ] **Sentry entegrasyonu** — Backend + frontend hata yakalama. PII filtering (KVNR, isim) zorunlu config'de.
+- [ ] **Sentry production aktivasyonu** — Kod hazır (`api-backend/instrument.js` + `sentry-init.js`), test fazında DSN aktif. Production'da:
+  - [ ] `SENTRY_ENVIRONMENT=production` env vars'a yaz (Vercel + VPS)
+  - [ ] Alert kanalı bağla (Email / Slack)
+  - [ ] Sample rate'ler doğru mu (frontend 20%, backend 20% prod'da)
+  - [ ] Test event üret + PII scrub doğrula (Sentry'de KVNR/IBAN görmemeli)
 - [ ] **reCAPTCHA v3** — Public booking + employee-signup. Rate limit yeterli değil bot için.
 
 ---
