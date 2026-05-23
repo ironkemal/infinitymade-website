@@ -1,0 +1,108 @@
+services:
+  traefik:
+    image: traefik:v3.5
+    container_name: traefik
+    environment:
+      - DOCKER_API_VERSION=1.47
+    restart: unless-stopped
+    command:
+      - --api=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=web
+      - --providers.file.directory=/traefik-dynamic
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik-dynamic:/traefik-dynamic:ro
+    networks:
+      - web
+
+  referrals-server:
+    image: nginx:alpine
+    container_name: referrals-server
+    restart: unless-stopped
+    networks:
+      - web
+    volumes:
+      - /home/n8n/referrals:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - 'traefik.http.routers.referrals-docker.rule=PathPrefix("/referrals")'
+      - "traefik.http.routers.referrals-docker.entrypoints=websecure"
+      - "traefik.http.routers.referrals-docker.tls.certresolver=le"
+      - "traefik.http.services.referrals-docker.loadbalancer.server.port=80"
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    environment:
+      - N8N_HOST=${DOMAIN}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://${DOMAIN}/
+      - N8N_EDITOR_BASE_URL=https://${DOMAIN}/
+      - GENERIC_TIMEZONE=${TZ}
+      - TZ=${TZ}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_SECURE_COOKIE=true
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.n8n.entrypoints=websecure"
+      - "traefik.http.routers.n8n.tls.certresolver=le"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+    networks:
+      - web
+
+  umami-db:
+    image: postgres:15-alpine
+    container_name: umami-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=umami
+      - POSTGRES_USER=umami
+      - POSTGRES_PASSWORD=${UMAMI_DB_PASSWORD}
+    volumes:
+      - ./umami_db:/var/lib/postgresql/data
+    networks:
+      - web
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    restart: unless-stopped
+    depends_on:
+      - umami-db
+    environment:
+      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
+      - DATABASE_TYPE=postgresql
+      - APP_SECRET=${UMAMI_APP_SECRET}
+      - DISABLE_TELEMETRY=1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.umami.rule=Host(`analytics.infinitymade.de`)"
+      - "traefik.http.routers.umami.entrypoints=websecure"
+      - "traefik.http.routers.umami.tls=true"
+      - "traefik.http.routers.umami.tls.certresolver=le"
+      - "traefik.http.services.umami.loadbalancer.server.port=3000"
+    networks:
+      - web
+
+networks:
+  web:
+    name: web
