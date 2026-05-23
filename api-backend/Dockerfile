@@ -8,6 +8,8 @@ RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
 # Then copy source
 COPY server.js ./
+COPY instrument.js ./
+COPY _lib ./_lib
 COPY ai ./ai
 COPY billing ./billing
 
