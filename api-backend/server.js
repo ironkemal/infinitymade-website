@@ -12,6 +12,7 @@ import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
 import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
+import { logAccess, accessLogger } from './_lib/access-log.js';
 import crypto from 'crypto';
 
 dotenv.config();
@@ -154,6 +155,10 @@ function berlinLocalToUTC(dateStr, timeStr) {
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// DSGVO Art. 32 access audit — auto-log every authenticated /api request.
+// Anonymous endpoints (booking flow) log explicitly from their handlers.
+app.use('/api', accessLogger(supabase));
 
 // Unified AI gateway (Phase 0). All Azure OpenAI traffic routes through here.
 app.use('/api/ai', aiRouter);
@@ -770,6 +775,14 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
         })
       }).catch(e => console.error('n8n webhook failed', e.message));
     }
+
+    // DSGVO audit — anonymous booking creates a patient record on owner's behalf
+    logAccess(supabase, {
+      ownerId: userId, ip: req.ip, userAgent: req.headers['user-agent'],
+      method: 'POST', path: req.path, resource: 'booking', resourceId: booking.id,
+      action: 'create', statusCode: 200,
+      metadata: { source: 'public_booking_page', service_id: service?.id },
+    });
 
     res.json({ success: true, booking });
   } catch (err) {

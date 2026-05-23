@@ -16,6 +16,7 @@ import { buildDtaFile } from '../dta/builder.js';
 import { findPosition, resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
 import { renderBegleitzettel } from '../pdf/begleitzettel.template.js';
 import { parseZaaFile } from '../zaa/parser.js';
+import { logAccess } from '../../_lib/access-log.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -223,25 +224,36 @@ router.post('/abrechnung/create', async (req, res) => {
     // ---- map prescriptions ----
     const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte));
 
-    // ---- build DTA ----
-    const dta = buildDtaFile({
-      absender:   { ik: cert.ik_nummer, name: profile.business_name || 'Praxis' },
-      empfaenger: { ik: dasIk,          name: dasName || kk.name },
-      rechnung: {
-        sammelRechnungsnummer,
-        einzelRechnungsnummer: '0',
-        datum: now,
-        datennummer,
-        rechnungsart: '1',
-      },
-      prescriptions,
-      kind: 'test',  // Faz A2 starts in test mode; flip to 'echt' once DAS portal acks
-      vkz: '01',
-      rechnungssteller: {
-        name:    profile.business_name || 'Praxis',
-        telefon: profile.phone || '',
-      },
-    });
+    // ---- build DTA (preflight runs first; rejects file if DMRZ would reject) ----
+    let dta;
+    try {
+      dta = buildDtaFile({
+        absender:   { ik: cert.ik_nummer, name: profile.business_name || 'Praxis' },
+        empfaenger: { ik: dasIk,          name: dasName || kk.name },
+        rechnung: {
+          sammelRechnungsnummer,
+          einzelRechnungsnummer: '0',
+          datum: now,
+          datennummer,
+          rechnungsart: '1',
+        },
+        prescriptions,
+        kind: 'test',  // Faz A2 starts in test mode; flip to 'echt' once DAS portal acks
+        vkz: '01',
+        rechnungssteller: {
+          name:    profile.business_name || 'Praxis',
+          telefon: profile.phone || '',
+        },
+      });
+    } catch (e) {
+      if (e.preflight) {
+        return res.status(422).json({
+          error: 'Abrechnung enthält Fehler, die vom DMRZ abgelehnt würden.',
+          preflight: e.preflight,
+        });
+      }
+      throw e;
+    }
 
     // ---- compute totals ----
     let totalBrutto = 0, totalZu = 0;
@@ -347,6 +359,14 @@ router.post('/abrechnung/create', async (req, res) => {
       status:            'billed',
     }).in('id', prescriptionIds);
     if (upRxErr) console.warn('[abrechnung] prescription link failed:', upRxErr.message);
+
+    logAccess(supabase, {
+      userId: req.userId || null, ownerId: tenantId, ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      method: 'POST', path: req.path, resource: 'abrechnung', resourceId: ab.id,
+      action: 'create', statusCode: 200,
+      metadata: { kostentraegerIk, prescription_count: prescriptions.length, dateiname: dta.filename },
+    });
 
     return res.json({
       ok: true,
