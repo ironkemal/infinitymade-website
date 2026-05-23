@@ -56,6 +56,7 @@ test('test EHM', () => assert.equal(
 
 console.log('builder — V21 Heilmittel');
 const result = buildDtaFile({
+  preflight: false,  // smoke test uses synthetic IKs; preflight is covered in preflight.test.js
   absender:   { ik: '123456789', name: 'Physiopraxis Müller' },
   empfaenger: { ik: '987654321', name: 'AOK DAS' },
   rechnung: {
@@ -173,6 +174,7 @@ test('validator rejects invalid VKZ', () => {
     rechnung: { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
     prescriptions: [{ patient:{kvnr:'A1',belegnummer:'1'}, verordnung:{verordnungsart:'03',zuzahlungskennzeichen:'3',kostentraegerIk:'1'}, tarif:{tarifkennzeichen:'01001'}, sessions:[] }],
     vkz: '99',
+    preflight: false,
   }), /Invalid VKZ/);
 });
 test('validator rejects non-Heilmittel Abrechnungscode', () => {
@@ -186,6 +188,7 @@ test('validator rejects non-Heilmittel Abrechnungscode', () => {
       tarif:{abrechnungscode:'14', tarifkennzeichen:'01001'},  // 14 = Hörgeräteakustiker (A)
       sessions:[],
     }],
+    preflight: false,
   }), /not a Heilmittel code/);
 });
 test('throws when no prescriptions', () => {
@@ -194,6 +197,7 @@ test('throws when no prescriptions', () => {
     empfaenger: { ik: '987654321' },
     rechnung:   { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
     prescriptions: [],
+    preflight: false,
   }));
 });
 
