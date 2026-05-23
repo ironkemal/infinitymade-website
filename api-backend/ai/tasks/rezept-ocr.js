@@ -105,6 +105,13 @@ function buildImageUrl(payload) {
   return `data:${mime};base64,${b64}`;
 }
 
+// DSGVO note: this task sends an image containing patient PII (name, KVNR,
+// geburtsdatum, ICD-10) to Azure. We cannot text-mask the image. Defense is:
+//   1. Azure region pinned to EU Data Boundary (azureClient.js asserts on boot)
+//   2. Zero-Data-Retention contract with Azure (operational)
+//   3. Image bytes never persisted in our DB; only structured fields after parse
+// If image masking becomes a requirement, route through a local OCR pre-pass
+// (e.g. Tesseract) → mask text → re-render image → then Azure.
 export async function run(payload) {
   const imageUrl = buildImageUrl(payload || {});
   if (!imageUrl) {
