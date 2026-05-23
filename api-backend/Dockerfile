@@ -20,4 +20,6 @@ EXPOSE 3000
 RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app
 USER app
 
-CMD ["node", "server.js"]
+# ESM mode: Sentry must be loaded via --import to instrument Express BEFORE
+# the app code runs. See https://docs.sentry.io/platforms/javascript/guides/express/install/esm/
+CMD ["node", "--import", "./instrument.js", "server.js"]
