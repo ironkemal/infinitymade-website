@@ -77,6 +77,11 @@ Status: 🔴 Hiçbiri yapılmadı
 - [ ] **Support kanal** — `support@infinitymade.de` veya Crisp/Intercom widget. Response time SLA'sı ekle AGB'ye.
 - [ ] **Pricing page** — Enterprise plan kartı doldur (şu an placeholder)
 - [ ] **DNS + Email auth** — SPF, DKIM, DMARC kayıtları (Resend tarafına doğru yönlendirme)
+- [ ] **DSGVO delete → Stripe abonelik iptali** — `api/dsgvo/delete.js` Stripe customer'ı silmiyor. Launch öncesi şu adımları ekle:
+  - Profile'dan `stripe_subscription_id` çek
+  - `stripeRequest('/subscriptions/{id}', method: DELETE)` ile aboneliği iptal et
+  - `stripeRequest('/customers/{id}', method: DELETE)` ile customer'ı sil (GDPR best practice)
+  - Stripe webhook customer.deleted event'ini handle et (idempotent)
 
 ---
 
