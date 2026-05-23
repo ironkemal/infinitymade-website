@@ -701,6 +701,25 @@ function bindPlan() {
     btn.addEventListener('click', async () => {
       const planSlug = btn.dataset.plan;
       const dtaPro   = !!(dtaCheckbox && dtaCheckbox.checked && !dtaCard?.hidden);
+
+      const consentAgb = document.getElementById('consentAgb');
+      const consentAvv = document.getElementById('consentAvv');
+      const consentError = document.getElementById('consentError');
+      if (!consentAgb?.checked || !consentAvv?.checked) {
+        if (consentError) consentError.style.display = 'block';
+        consentAgb?.closest('div')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (consentError) consentError.style.display = 'none';
+      const consents = {
+        agb_accepted: true,
+        avv_accepted: true,
+        accepted_at: new Date().toISOString(),
+        agb_version: '2026-05-23',
+        avv_version: '2026-05-23',
+        user_agent: navigator.userAgent,
+      };
+
       btn.disabled = true;
       btn.textContent = 'Weiterleitung...';
       try {
@@ -713,7 +732,7 @@ function bindPlan() {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session.access_token}`,
             },
-            body: JSON.stringify({ planSlug, interval: currentInterval, dtaPro }),
+            body: JSON.stringify({ planSlug, interval: currentInterval, dtaPro, consents }),
           });
           const data = await res.json();
           if (!res.ok || !data.url) {
@@ -758,6 +777,7 @@ function bindPlan() {
           plan: planSlug,
           billing_interval: currentInterval,
           dta_pro: dtaPro,
+          consents,
         };
 
         const pendingRes = await fetch('/api/onboarding/pending', {

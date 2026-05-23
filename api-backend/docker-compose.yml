@@ -71,6 +71,42 @@ services:
     networks:
       - web
 
+  # Umami — DSGVO-friendly self-hosted analytics. Cookie-free, no consent needed.
+  # Subdomain: analytics.infinitymade.de (DNS A-record → VPS IP gerekli)
+  umami-db:
+    image: postgres:15-alpine
+    container_name: umami-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=umami
+      - POSTGRES_USER=umami
+      - POSTGRES_PASSWORD=${UMAMI_DB_PASSWORD}
+    volumes:
+      - ./umami_db:/var/lib/postgresql/data
+    networks:
+      - web
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    restart: unless-stopped
+    depends_on:
+      - umami-db
+    environment:
+      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
+      - DATABASE_TYPE=postgresql
+      - APP_SECRET=${UMAMI_APP_SECRET}
+      - DISABLE_TELEMETRY=1
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.umami.rule=Host(`analytics.infinitymade.de`)"
+      - traefik.http.routers.umami.entrypoints=websecure
+      - traefik.http.routers.umami.tls=true
+      - traefik.http.routers.umami.tls.certresolver=le
+      - traefik.http.services.umami.loadbalancer.server.port=3000
+    networks:
+      - web
+
   # Auto-redeploy: polls GHCR every 60s, pulls new image, restarts container.
   watchtower:
     image: containrrr/watchtower
