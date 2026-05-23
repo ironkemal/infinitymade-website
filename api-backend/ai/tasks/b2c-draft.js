@@ -6,6 +6,7 @@
 // messages, call chat(), parse, return.
 
 import { chat } from '../azureClient.js';
+import { maskMessages, entitiesFromContacts } from '../pii-mask.js';
 
 const SYSTEM = `Du bist ein hilfreicher Assistent für eine deutsche Praxis/Kleinunternehmen.
 Du verfasst kurze, höfliche, professionelle E-Mail-Entwürfe auf Deutsch (Sie-Form).
@@ -68,17 +69,25 @@ export async function run(payload) {
     { role: 'user', content: buildUserMessage(payload) }
   ];
 
+  // DSGVO defense-in-depth: replace patient/owner PII with placeholders before
+  // sending to Azure. The model still works (placeholders look like template
+  // variables) and we unmask the response.
+  const entities = entitiesFromContacts(payload?.contacts || []);
+  const { messages: maskedMessages, unmask } = maskMessages(messages, { entities });
+
   const result = await chat({
-    messages,
+    messages: maskedMessages,
     responseFormat: { type: 'json_object' },
     temperature: 0.5,
     maxTokens: 800,
     mockFn: mockResponse
   });
 
+  const unmaskedContent = unmask(result.content);
+
   let draft;
   try {
-    draft = JSON.parse(result.content);
+    draft = JSON.parse(unmaskedContent);
   } catch {
     throw new Error('AI returned non-JSON content');
   }
