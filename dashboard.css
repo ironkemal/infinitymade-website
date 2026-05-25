@@ -829,21 +829,27 @@ textarea {
    ============================ */
 .btn-primary {
   background: var(--primary);
-  color: #0a0a0a;
+  color: var(--bg-card-solid);
   font-weight: 600;
   font-size: 13px;
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  transition: var(--transition);
+  padding: 9px 18px;
+  border-radius: 999px;
+  transition: transform 240ms var(--ease-spring), background 220ms var(--ease-out), box-shadow 240ms var(--ease-out);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  border: none;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 4px 10px -3px rgba(26, 22, 17, 0.18);
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
+  color: var(--bg-card-solid);
+  transform: translateY(-1px);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 8px 16px -4px rgba(26, 22, 17, 0.2);
 }
+.btn-primary:active { transform: translateY(0) scale(0.98); }
 
 .btn-ghost {
   background: var(--bg-input);
@@ -946,7 +952,8 @@ textarea {
 }
 
 .form-select option {
-  background: #1a1d26;
+  background: var(--bg-card-solid);
+  color: var(--text-main);
 }
 
 .form-textarea {
@@ -1046,7 +1053,7 @@ textarea {
 
 .dash-banner-action:hover {
   background: var(--primary);
-  color: #0a0a0a;
+  color: var(--bg-card-solid);
 }
 
 .dash-banner-close {
@@ -1298,7 +1305,7 @@ textarea {
 
 .cal-emp-pick.active {
   background: var(--primary);
-  color: #000;
+  color: var(--bg-card-solid);
   border-color: var(--primary);
 }
 
@@ -1307,7 +1314,7 @@ textarea {
   height: 22px;
   border-radius: 50%;
   background: var(--primary);
-  color: #000;
+  color: var(--bg-card-solid);
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -1317,8 +1324,8 @@ textarea {
 }
 
 .cal-emp-pick.active .cal-emp-dot {
-  background: rgba(0, 0, 0, .2);
-  color: #000;
+  background: rgba(255, 255, 255, .25);
+  color: var(--bg-card-solid);
 }
 
 @media (max-width: 600px) {
@@ -2027,43 +2034,47 @@ textarea {
 
 .schedule-card {
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 14px 16px 14px 18px;
   position: relative;
   min-height: 60px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: var(--bg-card-solid) !important;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--emp-color, var(--primary));
+  box-shadow: 0 2px 6px rgba(26, 22, 17, 0.05);
+  transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
+  overflow: hidden;
 }
 
 .schedule-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 16px -4px rgba(26, 22, 17, 0.1);
 }
 
 .schedule-card-name {
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-main);
   margin-bottom: 3px;
 }
 
 .schedule-card-time {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-muted);
 }
 
 .schedule-card-dur {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
+  background: var(--bg-warm);
+  color: var(--bronze);
   font-size: 11px;
   font-weight: 600;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 999px;
 }
 
 .schedule-card-staff {
@@ -2071,8 +2082,10 @@ textarea {
   bottom: 10px;
   right: 12px;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-faint);
   font-weight: 500;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
 }
 
 /* ============================
@@ -2501,7 +2514,7 @@ textarea {
   top: 1px;
   width: 5px;
   height: 10px;
-  border: solid #0a0a0a;
+  border: solid var(--bg-card-solid);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -3925,7 +3938,7 @@ textarea {
 }
 
 .modal {
-  background: #1a1d26;
+  background: var(--bg-card-solid);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   width: 100%;
@@ -3933,6 +3946,7 @@ textarea {
   max-height: 90vh;
   overflow-y: auto;
   animation: slideUp 0.2s ease;
+  box-shadow: 0 30px 60px -20px rgba(26, 22, 17, 0.25), 0 8px 16px -4px rgba(26, 22, 17, 0.08);
 }
 
 .modal-lg {
@@ -4116,7 +4130,7 @@ textarea {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #1a1d26;
+  background: var(--bg-card-solid);
   border: 1px solid var(--border);
   color: var(--text-main);
   font-size: 13px;
@@ -4126,7 +4140,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 18px 36px -12px rgba(26, 22, 17, 0.2), 0 6px 12px -3px rgba(26, 22, 17, 0.08);
   animation: slideUp 0.2s ease;
   max-width: 340px;
 }
@@ -5404,7 +5418,7 @@ textarea {
   #invAddLineBtn,
   .inv-del-line,
   #anamSaveBtn,
-  #anamPdfBtn,
+  #anamPrintBtn,
   .hamburger,
   .logout-btn,
   .lang-select,

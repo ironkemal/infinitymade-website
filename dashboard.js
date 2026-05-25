@@ -321,7 +321,7 @@ let calendarView = 'day';
 let dayViewDate = new Date();
 let moveBooking = null;
 let moveGhostEl = null;
-const EMP_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ec4899'];
+const EMP_COLORS = ['#1E3D2F', '#6B5538', '#4E5C45', '#8B6B47', '#523F26'];
 let ovEmpPage = 0;
 let leadFilter = 'all';
 let leadSearchVal = '';
@@ -989,7 +989,7 @@ async function loadScheduleBookings(date) {
       block.style.height = Math.max(hPx, 24) + 'px';
       block.style.background = color + '25';
       block.style.borderColor = color;
-      block.style.color = '#fff';
+      block.style.color = 'var(--text-main)';
       block.innerHTML = renderBookingSlotInner(b);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -1434,7 +1434,7 @@ async function renderDayView(dateStr) {
       block.style.height = Math.max(hPx, 28) + 'px';
       block.style.background = color + '25';
       block.style.borderColor = color;
-      block.style.color = '#fff';
+      block.style.color = 'var(--text-main)';
       block.innerHTML = renderBookingSlotInner(b);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -2248,7 +2248,7 @@ function placeGhost(slotEl, empId, text) {
   ghost.className = 'dv-ghost';
   ghost.style.background = color + '25';
   ghost.style.borderColor = color;
-  ghost.style.color = '#fff';
+  ghost.style.color = 'var(--text-main)';
   ghost.style.top = slotEl.offsetTop + 'px';
   const s = new Date(moveBooking.start_time);
   const e = new Date(moveBooking.end_time);
@@ -8612,7 +8612,7 @@ function resetAnamneseForm() {
   document.getElementById('anamWuensche').value = '';
   document.getElementById('anamNotizen').value = '';
   document.getElementById('anamSaveBtn').textContent = 'Speichern';
-  document.getElementById('anamPdfBtn').hidden = true;
+  document.getElementById('anamPrintBtn').hidden = true;
 
   const clearAll = [
     ['anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde'],
@@ -8721,7 +8721,7 @@ async function fillAnamneseForm(patientId) {
   document.getElementById('anamWuensche').value = data.besondere_wuensche || '';
   document.getElementById('anamNotizen').value = data.notizen || '';
   document.getElementById('anamSaveBtn').textContent = 'Aktualisieren';
-  document.getElementById('anamPdfBtn').hidden = false;
+  document.getElementById('anamPrintBtn').hidden = false;
 
   setAnamChecks('anamChkBeschwerden', data.hauptbeschwerde, 'anamBeschwerdenOther');
   syncAnamTextarea('anamChkBeschwerden', 'anamBeschwerdenOther', 'anamHauptbeschwerde');
@@ -8919,7 +8919,7 @@ async function saveAnamnese() {
     if (data && data[0]) currentAnamneseId = data[0].id;
     showToast('Anamnese gespeichert.');
   }
-  document.getElementById('anamPdfBtn').hidden = false;
+  document.getElementById('anamPrintBtn').hidden = false;
 }
 
 function bindAnamneseEvents() {
