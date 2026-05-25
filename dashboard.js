@@ -3,7 +3,9 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const API = 'https://n8n.infinitymade.de/api';
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : 'https://n8n.infinitymade.de/api';
 
 const T = {
   de: {
@@ -73,7 +75,8 @@ const T = {
     ab_status_erstellt: 'Erstellt', ab_status_heruntergeladen: 'Heruntergeladen',
     ab_status_gesendet: 'Versendet', ab_status_accepted: 'Akzeptiert',
     ab_status_rejected: 'Abgelehnt', ab_status_paid: 'Bezahlt',
-    ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.'
+    ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.',
+    nav_belegliste: 'Kassenbuch (GoBD)'
   },
   en: {
     logout: 'Sign out',
@@ -140,7 +143,8 @@ const T = {
     ab_status_erstellt: 'Created', ab_status_heruntergeladen: 'Downloaded',
     ab_status_gesendet: 'Sent', ab_status_accepted: 'Accepted',
     ab_status_rejected: 'Rejected', ab_status_paid: 'Paid',
-    ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.'
+    ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.',
+    nav_belegliste: 'Cash Ledger (GoBD)'
   },
   tr: {
     logout: 'Çıkış',
@@ -207,7 +211,8 @@ const T = {
     ab_status_erstellt: 'Oluşturuldu', ab_status_heruntergeladen: 'İndirildi',
     ab_status_gesendet: 'Gönderildi', ab_status_accepted: 'Kabul',
     ab_status_rejected: 'Red', ab_status_paid: 'Ödendi',
-    ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.'
+    ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.',
+    nav_belegliste: 'Kasa Defteri (GoBD)'
   }
 };
 
@@ -289,6 +294,7 @@ const SECTOR_PANELS = {
     { id: 'anamnese', icon: ICON.notes, key: 'nav_anamnese', roles: ['owner', 'employee'] },
     { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'] },
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
+    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
     { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
@@ -306,6 +312,7 @@ const SECTOR_PANELS = {
     { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'] },
     { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'] },
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
+    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
     { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
@@ -550,6 +557,7 @@ async function switchPanel(id) {
   if (id === 'beispielmodus') loadBeispielmodus();
   if (id === 'rechnungen') loadRechnungen();
   if (id === 'abrechnung') loadAbrechnung();
+  if (id === 'belegliste') loadBelegliste();
   if (id === 'anamnese') loadAnamnese();
 }
 
@@ -3710,6 +3718,11 @@ async function loadPatientDetailRezepte(leadId) {
         abrButton = `<button class="btn-ghost btn-sm rx-unmark-bereit" data-id="${rx.id}" style="color:#b45309;" title="Zurück auf offen">Rückgängig</button>`;
       }
     }
+
+    const paidButton = (rx.zuzahlung_eur > 0 && !rx.zuzahlung_befreit && abrStatus !== 'accepted')
+      ? `<button class="btn-ghost btn-sm rx-mark-paid" data-id="${rx.id}" style="color:#15803d;font-weight:600;" title="Zuzahlung als bezahlt markieren"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#15803d;">${ICON.checkCircle}</span>Zuzahlung erhalten</button>`
+      : '';
+
     return `<div class="pd-rech-item" style="padding:14px 20px;border-bottom:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
         <div>
@@ -3725,6 +3738,7 @@ async function loadPatientDetailRezepte(leadId) {
           ${abrBadge}
           ${abrButton}
           <button class="btn-ghost btn-sm rx-print-zuzahlung" data-id="${rx.id}" title="Zuzahlungsrechnung drucken"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.invoice}</span>Zuzahlung</button>
+          ${paidButton}
         </div>
       </div>
       <div style="font-size:13px;color:#555;margin-bottom:8px;">
@@ -3752,6 +3766,11 @@ async function loadPatientDetailRezepte(leadId) {
   content.querySelectorAll('.rx-unmark-bereit').forEach(btn => {
     btn.addEventListener('click', async () => {
       await flipAbrechnungStatus(btn.dataset.id, null, leadId);
+    });
+  });
+  content.querySelectorAll('.rx-mark-paid').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await flipAbrechnungStatus(btn.dataset.id, 'accepted', leadId);
     });
   });
   content.querySelectorAll('.rx-print-zuzahlung').forEach(btn => {
@@ -3785,12 +3804,34 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
       }
     }
 
+    if (newStatus === 'accepted') {
+      const { data: rxInfo, error: rxErr } = await supabase
+        .from('prescriptions')
+        .select('*, leads:patient_id(first_name, last_name)')
+        .eq('id', rxId)
+        .single();
+      if (rxErr) throw rxErr;
+
+      if (rxInfo && rxInfo.zuzahlung_eur > 0) {
+        const { error: blErr } = await supabase.from('belegliste').insert({
+          owner_id: getOwnerId(),
+          type: 'zuzahlung',
+          amount_eur: Number(rxInfo.zuzahlung_eur),
+          patient_id: rxInfo.patient_id,
+          prescription_id: rxId,
+          reference_text: `Zuzahlung erhalten: ${rxInfo.leads?.first_name || ''} ${rxInfo.leads?.last_name || ''}`.trim()
+        });
+        if (blErr) throw blErr;
+      }
+    }
+
     const { error } = await supabase
       .from('prescriptions')
       .update({ abrechnung_status: newStatus })
       .eq('id', rxId);
     if (error) throw error;
-    showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : 'Zurück auf offen ✓');
+    
+    showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : (newStatus === 'accepted' ? 'Zuzahlung als bezahlt gebucht ✓' : 'Zurück auf offen ✓'));
     await loadPatientDetailRezepte(leadId);
   } catch (e) {
     console.error('[abrechnung-status]', e);
@@ -9667,6 +9708,7 @@ async function init() {
       }
     }
     initRezeptScanner();
+    initBeleglisteUI();
   } catch (e) {
     console.error('[dashboard init]', e);
   } finally {
@@ -11804,4 +11846,185 @@ window.renderTaxierungList = renderTaxierungList;
 window._abState = _abState;
 window.openRezeptModal = openRezeptModal;
 window.openRezeptConfirmModal = openRezeptConfirmModal;
+
+// ============================================================================
+// GoBD-Kassenbuch (Belegliste) UI Mechanics (Feature 4)
+// ============================================================================
+
+async function loadBelegliste() {
+  const tbody = document.getElementById('beleglisteBody');
+  const empty = document.getElementById('beleglisteEmpty');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  
+  const from = document.getElementById('blFilterFrom')?.value || '';
+  const to = document.getElementById('blFilterTo')?.value || '';
+  const type = document.getElementById('blFilterType')?.value || 'all';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || '';
+
+  // Use the Express backend endpoint to fetch and filter Belege
+  const url = new URL(`${API}/billing/belegliste`);
+  if (type !== 'all') url.searchParams.append('type', type);
+  if (from) url.searchParams.append('from', from);
+  if (to) url.searchParams.append('to', to);
+
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || 'Serverfehler');
+    }
+
+    const rows = await res.json();
+
+    if (!rows || !rows.length) {
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+
+    rows.forEach(r => {
+      const dateStr = new Date(r.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
+      const isNegative = Number(r.amount_eur) < 0;
+      const color = isNegative ? '#b91c1c' : '#15803d';
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid var(--border)';
+      
+      const stornoBtn = r.type !== 'storno' 
+        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
+        : '';
+
+      tr.innerHTML = `
+        <td style="font-family:monospace;font-weight:600;color:var(--text-main);">${String(r.beleg_nr).padStart(6, '0')}</td>
+        <td style="color:var(--text-main);">${dateStr}</td>
+        <td><span class="badge" style="background:var(--border);color:var(--text-main);">${r.type}</span></td>
+        <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
+        <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
+        <td style="color:var(--text-muted);">System</td>
+        <td>${stornoBtn}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Wire Storno Event
+    tbody.querySelectorAll('.bl-storno-btn').forEach(btn => {
+      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref));
+    });
+  } catch (err) {
+    showToast('Kassenbuch Fehler: ' + err.message, 'error');
+  }
+}
+
+async function triggerStorno(belegNr, amount, originalRef) {
+  const confirm = await showConfirmModal({
+    title: 'Beleg Stornieren',
+    message: `Sind Sie sicher, dass Sie den Beleg Nr. ${belegNr} stornieren möchten? Es wird eine Gegenbuchung von -${amount} € erzeugt.`,
+    confirmText: 'Beleg Stornieren',
+    variant: 'danger'
+  });
+  if (!confirm) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || '';
+
+  try {
+    const res = await fetch(`${API}/billing/belegliste`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: 'storno',
+        amount_eur: -Number(amount),
+        reference_text: `STORNO für Beleg-Nr: ${belegNr} (${originalRef})`
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || 'Serverfehler');
+    }
+
+    showToast('Stornobuchung erzeugt ✓');
+    loadBelegliste();
+  } catch (err) {
+    showToast('Storno gescheitert: ' + err.message, 'error');
+  }
+}
+
+// Wire filters & actions once DOM is ready / loaded
+function initBeleglisteUI() {
+  document.getElementById('blFilterType')?.addEventListener('change', loadBelegliste);
+  document.getElementById('blFilterFrom')?.addEventListener('change', loadBelegliste);
+  document.getElementById('blFilterTo')?.addEventListener('change', loadBelegliste);
+
+  document.getElementById('blExportCsvBtn')?.addEventListener('click', async () => {
+    const from = document.getElementById('blFilterFrom')?.value || '';
+    const to = document.getElementById('blFilterTo')?.value || '';
+    const type = document.getElementById('blFilterType')?.value || 'all';
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || '';
+
+    // Directly trigger a browser download for the CSV file
+    const url = new URL(`${API}/billing/belegliste/export`);
+    url.searchParams.append('token', token);
+    if (type !== 'all') url.searchParams.append('type', type);
+    if (from) url.searchParams.append('from', from);
+    if (to) url.searchParams.append('to', to);
+
+    window.open(url.toString(), '_blank');
+  });
+
+  document.getElementById('blAddManualBtn')?.addEventListener('click', () => {
+    document.getElementById('blManualAmount').value = '';
+    document.getElementById('blManualRef').value = '';
+    openModal('manualBelegModal');
+  });
+
+  document.getElementById('blManualSaveBtn')?.addEventListener('click', async () => {
+    const amount = Number(document.getElementById('blManualAmount').value);
+    const ref = document.getElementById('blManualRef').value.trim();
+    if (!amount || amount <= 0) return showToast('Betrag muss > 0 sein', 'error');
+    if (!ref) return showToast('Referenztext erforderlich', 'error');
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || '';
+
+    try {
+      const res = await fetch(`${API}/billing/belegliste`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'barverkauf',
+          amount_eur: amount,
+          reference_text: ref
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Serverfehler');
+      }
+
+      closeModal('manualBelegModal');
+      showToast('Beleg erfolgreich gebucht ✓');
+      loadBelegliste();
+    } catch (err) {
+      showToast('Buchung gescheitert: ' + err.message, 'error');
+    }
+  });
+}
 
