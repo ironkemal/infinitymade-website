@@ -17,6 +17,8 @@ import { findPosition, resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes
 import { renderBegleitzettel } from '../pdf/begleitzettel.template.js';
 import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
+import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
+import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -688,6 +690,111 @@ router.patch('/prescription/:id/position', async (req, res) => {
   } catch (e) {
     console.error('[billing/prescription/position]', e);
     return res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/billing/prescription/:id/zuzahlungsrechnung
+// Renders print-ready co-payment invoice for a patient's prescription
+router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
+  try {
+    // ---- Auth ----
+    const authHdr = req.headers.authorization || '';
+    const token = req.query.token || (authHdr.startsWith('Bearer ') ? authHdr.slice(7) : authHdr || null);
+    if (!token) return res.status(401).send('Nicht autorisiert');
+    const { data: { user }, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !user) return res.status(401).send('Ungültiges Token');
+
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number')
+      .eq('id', user.id).single();
+    if (!profile) return res.status(403).send('Profil nicht gefunden');
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
+
+    // ---- Fetch Prescription + Leads + Arzt + Sessions ----
+    const { data: rx, error: rxErr } = await supabase
+      .from('prescriptions')
+      .select(`
+        *,
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city),
+        aerzte:arzt_id (arzt_name),
+        prescription_sessions (id, session_number, status, done_at)
+      `)
+      .eq('id', req.params.id)
+      .single();
+
+    if (rxErr || !rx) return res.status(404).send('Rezept nicht gefunden');
+    if (rx.owner_id !== tenantId) return res.status(403).send('Kein Zugriff');
+
+    // ---- Map Sessions & Calculate Totals ----
+    const storedPos = rx.heilmittel_position || '';
+    const pos = findPosition(storedPos, '22'); // default Physio code
+    const priceUnit = pos?.preis ?? 0;
+    const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
+
+    const doneSessions = (rx.prescription_sessions || [])
+      .filter(s => s.status === 'done');
+
+    const calcSessions = doneSessions.map(s => ({
+      preis_eur: priceUnit,
+      zuzahlung_eur_position: rx.zuzahlung_befreit ? 0 : coPayUnit,
+      position_frei: rx.zuzahlung_befreit
+    }));
+
+    const totals = calcAbrechnungsfallZuzahlung({
+      sessions: calcSessions,
+      patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
+      behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
+      verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
+    });
+
+    const printSessions = doneSessions.map(s => ({
+      datum: s.done_at,
+      position: storedPos,
+      bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
+      brutto: priceUnit,
+      zuzahlung: rx.zuzahlung_befreit ? 0 : coPayUnit
+    }));
+
+    // ---- Render PDF/HTML Template ----
+    const html = renderZuzahlungsrechnung({
+      praxis: {
+        name: profile.business_name || 'Praxis für Physiotherapie',
+        strasse: [profile.street, profile.house_number].filter(Boolean).join(' '),
+        plz_ort: [profile.zip, profile.city].filter(Boolean).join(' '),
+        telefon: profile.phone || '',
+        ik: profile.ik_number || rx.doctor_bsnr || '',
+        steuernummer: '',
+        email: user.email || ''
+      },
+      patient: {
+        nachname: rx.leads?.last_name || '',
+        vorname: rx.leads?.first_name || '',
+        strasse: rx.leads?.street || '',
+        plz: rx.leads?.plz || '',
+        ort: rx.leads?.city || '',
+        geburtsdatum: rx.leads?.geburtsdatum || '',
+        kvnr: rx.leads?.versichertennummer || ''
+      },
+      verordnung: {
+        ausstellungsdatum: rx.ausstellungsdatum,
+        krankenkasse: rx.leads?.krankenkasse,
+        arzt: rx.aerzte?.arzt_name || 'Hausarzt'
+      },
+      rechnung: {
+        nummer: `ZU-${rx.id.slice(0, 8).toUpperCase()}`,
+        datum: new Date(),
+        faelligkeit: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days due date
+      },
+      sessions: printSessions,
+      totals,
+      bankverbindung: 'DE89 1002 0030 0040 0500 00 (Musterbank)'
+    });
+
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (e) {
+    console.error('[zuzahlungsrechnung/print]', e);
+    return res.status(500).send('Server-Fehler: ' + e.message);
   }
 });
 

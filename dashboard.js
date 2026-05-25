@@ -3720,6 +3720,7 @@ async function loadPatientDetailRezepte(leadId) {
           ${flags}
           ${abrBadge}
           ${abrButton}
+          <button class="btn-ghost btn-sm rx-print-zuzahlung" data-id="${rx.id}" title="Zuzahlungsrechnung drucken"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.invoice}</span>Zuzahlung</button>
         </div>
       </div>
       <div style="font-size:13px;color:#555;margin-bottom:8px;">
@@ -3747,6 +3748,19 @@ async function loadPatientDetailRezepte(leadId) {
   content.querySelectorAll('.rx-unmark-bereit').forEach(btn => {
     btn.addEventListener('click', async () => {
       await flipAbrechnungStatus(btn.dataset.id, null, leadId);
+    });
+  });
+  content.querySelectorAll('.rx-print-zuzahlung').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      const printWindow = window.open(`${API}/billing/prescription/${btn.dataset.id}/zuzahlungsrechnung?token=${s.access_token}`, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      } else {
+        showToast('Popup-Blocker verhindert das Öffnen des Druckfensters.', 'error');
+      }
     });
   });
 }
@@ -10677,14 +10691,52 @@ async function showZaaErrors(abrechnungId) {
   if (!data?.length) {
     out.innerHTML = `<div style="padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#166534;">Keine Fehler — alles abgenommen.</div>`;
   } else {
-    out.innerHTML = `<table class="data-table"><thead><tr><th>Code</th><th>Status</th><th>Fehler</th><th>Lösung</th></tr></thead><tbody>
-      ${data.map(e => `<tr>
-        <td><code>${escapeHtml(e.fehler_code)}</code></td>
-        <td>${escapeHtml(e.status)}</td>
-        <td>${escapeHtml(e.uebersetzung || e.fehler_text || '')}</td>
-        <td style="color:#444;">${escapeHtml(e.loesung_hint || '')}</td>
-      </tr>`).join('')}
+    out.innerHTML = `<table class="data-table"><thead><tr><th>Code</th><th>Status</th><th>Fehler</th><th>Lösung</th><th>Aktion</th></tr></thead><tbody>
+      ${data.map(e => {
+        const actionLink = e.prescription_id
+          ? `<a href="#" class="zaa-fix-link" data-rx="${escapeHtml(e.prescription_id)}" style="color:var(--primary);text-decoration:underline;font-weight:600;">Beheben</a>`
+          : '—';
+        return `<tr>
+          <td><code>${escapeHtml(e.fehler_code)}</code></td>
+          <td>${escapeHtml(e.status)}</td>
+          <td>${escapeHtml(e.uebersetzung || e.fehler_text || '')}</td>
+          <td style="color:#444;">${escapeHtml(e.loesung_hint || '')}</td>
+          <td>${actionLink}</td>
+        </tr>`;
+      }).join('')}
     </tbody></table>`;
+
+    out.querySelectorAll('.zaa-fix-link').forEach(link => {
+      link.addEventListener('click', async (evt) => {
+        evt.preventDefault();
+        const rxId = link.dataset.rx;
+        closeModal('zaaModal');
+        
+        // Query patient (lead_id) associated with this prescription
+        const { data: rx } = await supabase
+          .from('prescriptions')
+          .select('patient_id')
+          .eq('id', rxId)
+          .single();
+          
+        if (rx?.patient_id) {
+          const { data: lead } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('id', rx.patient_id)
+            .single();
+            
+          if (lead) {
+            openPatientDetailModal(lead);
+            // Wait for tabs to render, then click the "Rezepte" tab
+            setTimeout(() => {
+              const tab = document.getElementById('pdTabRezepte');
+              if (tab) tab.click();
+            }, 300);
+          }
+        }
+      });
+    });
   }
   document.getElementById('zaaRunBtn').textContent = 'Schließen';
   document.getElementById('zaaRunBtn').onclick = () => {
