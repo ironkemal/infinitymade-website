@@ -19,8 +19,12 @@
   <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous"></script>
   <script src="/sentry-init.js?v=20260523c"></script>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>Termin Buchen</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Termin buchen — InfinityMade</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#F8F3E8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *,
     *::before,
@@ -31,19 +35,24 @@
     }
 
     :root {
-      --bg: #0f1115;
-      --card: #16181d;
-      --panel: #1a1d24;
-      --border: rgba(255, 255, 255, 0.08);
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --green: #22c55e;
-      --green-bg: rgba(34, 197, 94, 0.10);
-      --radius: 12px;
+      /* Soft-skill palette (was dark, now light) */
+      --bg: #F8F3E8;
+      --bg-warm: #F1E9D6;
+      --card: #FFFFFF;
+      --panel: #FAF7F0;
+      --border: rgba(26, 22, 17, 0.08);
+      --text: #1A1611;
+      --muted: #7A6F61;
+      --bronze: #6B5538;
+      --green: #1E3D2F;
+      --green-bg: rgba(30, 61, 47, 0.08);
+      --radius: 14px;
+      --serif: 'Fraunces', 'Times New Roman', serif;
+      --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
     }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -53,6 +62,18 @@
       justify-content: center;
       padding: 24px;
     }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.035;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    }
+    h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.02em; color: var(--text); }
+    h1 em, h2 em, h3 em { font-style: italic; font-weight: 400; color: var(--bronze); }
 
     /* ── Card ── */
     .card {

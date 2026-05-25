@@ -1,830 +1,1195 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>InfinityMade für Praxen – Direktabrechnung & Praxis-Management</title>
-    <meta name="description"
-        content="Automatisierte Direktabrechnung mit Krankenkassen (§ 302 SGB V). Spart 1-3% Gebühren. Inkl. Terminbuchung, E-Mail-Erinnerungen & KI-Unterstützung für Physiotherapie, Ergotherapie & Logopädie." />
-    <meta name="keywords"
-        content="Direktabrechnung Krankenkasse, Physiotherapie Software, Praxisverwaltung, EDIFACT, Dakota Zertifikat, Abrechnungszentrum Alternative, Ergotherapie Digitalisierung, Logopädie Verwaltung" />
-    <meta name="robots" content="index, follow" />
-    <meta name="author" content="InfinityMade" />
-    <link rel="canonical" href="https://infinitymade.de/praxis" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="InfinityMade" />
-    <meta property="og:title" content="InfinityMade für Praxen – Direktabrechnung & Praxis-Management" />
-    <meta property="og:description"
-        content="Automatisierte Direktabrechnung mit Krankenkassen. Spart 1-3% Gebühren pro Rezept." />
-    <meta property="og:url" content="https://infinitymade.de/praxis" />
+  <!-- ===== SEO ===== -->
+  <title>Praxura — Praxissoftware für Physiotherapie, Ergotherapie & Logopädie · DTA §302, KI-Rezept, Fahrtenbuch</title>
+  <meta name="description" content="Praxura ist die All-in-One Praxissoftware für Heilmittelerbringer: Online-Termine, KI-gestützte Rezeptprüfung, Direktabrechnung nach §302 SGB V und elektronisches Fahrtenbuch für Hausbesuche. DSGVO-konform, EU-Hosting." />
+  <meta name="keywords" content="Praxissoftware Physiotherapie, Praxissoftware Ergotherapie, Praxissoftware Logopädie, §302 DTA Abrechnung, Heilmittelabrechnung, Rezepte scannen Software, Praxissoftware mit Fahrtenbuch, Routenplanung Hausbesuche Therapeuten, Online-Terminbuchung Therapeuten, Abrechnungszentrum Alternative, Absetzungen vermeiden, Heilmittelerbringer Software" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="author" content="InfinityMade" />
+  <link rel="canonical" href="https://infinitymade.de/praxis.html" />
+  <link rel="alternate" hreflang="de" href="https://infinitymade.de/praxis.html" />
+  <link rel="alternate" hreflang="x-default" href="https://infinitymade.de/praxis.html" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#00c853" />
+  <!-- ===== Open Graph ===== -->
+  <meta property="og:type" content="product" />
+  <meta property="og:site_name" content="InfinityMade" />
+  <meta property="og:title" content="Praxura — Praxissoftware für Heilmittelerbringer" />
+  <meta property="og:description" content="All-in-One für Physio, Ergo & Logo: Termine, KI-Rezeptprüfung, §302 DTA Direktabrechnung und Fahrtenbuch in einem System." />
+  <meta property="og:url" content="https://infinitymade.de/praxis.html" />
+  <meta property="og:image" content="https://infinitymade.de/og-image.png" />
+  <meta property="og:locale" content="de_DE" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Praxura — Praxissoftware für Heilmittelerbringer" />
+  <meta name="twitter:description" content="Termine, KI-Rezeptprüfung, §302 DTA und Fahrtenbuch in einem System. DSGVO-konform." />
+  <meta name="twitter:image" content="https://infinitymade.de/og-image.png" />
 
-    <link rel="stylesheet" href="praxis.css" />
+  <!-- ===== Favicons ===== -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <!-- ===== Typography ===== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+  <!-- ===== Shared design system ===== -->
+  <link rel="stylesheet" href="assets/system.css?v=20260524" />
+
+  <!-- ===== Structured Data: SoftwareApplication ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Praxura",
+    "alternateName": "Praxura Praxissoftware",
+    "applicationCategory": "BusinessApplication",
+    "applicationSubCategory": "Praxismanagement",
+    "operatingSystem": "Web",
+    "url": "https://infinitymade.de/praxis.html",
+    "description": "All-in-One Praxissoftware für Physiotherapie, Ergotherapie und Logopädie. Online-Terminbuchung, KI-gestützte Rezeptprüfung, Direktabrechnung nach §302 SGB V, elektronisches Fahrtenbuch für Hausbesuche.",
+    "publisher": { "@id": "https://infinitymade.de/#organization" },
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "EUR",
+      "price": "0",
+      "description": "Individuelles Angebot nach Analysegespräch"
+    },
+    "featureList": [
+      "Online-Terminbuchung mit Kalendersync",
+      "KI-Rezeptprüfung mit OCR",
+      "DTA-Abrechnung nach §302 SGB V",
+      "Elektronisches Fahrtenbuch & Routenplanung",
+      "Digitale Patientenakte (ePA-ready)",
+      "DSGVO-konform, EU-Hosting"
+    ]
+  }
+  </script>
+
+  <!-- ===== Structured Data: BreadcrumbList ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "InfinityMade", "item": "https://infinitymade.de/" },
+      { "@type": "ListItem", "position": 2, "name": "Praxura", "item": "https://infinitymade.de/praxis.html" }
+    ]
+  }
+  </script>
+
+  <!-- ===== Structured Data: FAQPage ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kann ich mit Praxura die GKV-Abrechnung nach §302 SGB V selbst durchführen?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Praxura erzeugt vollständige DTA-Datenpakete nach §302 SGB V Anlage 1 TP5 V21 inklusive Begleitzettel. Sie übermitteln direkt an die Datenannahmestelle der zuständigen Kasse — ohne Abrechnungszentrum, ohne Komission von 2-5%." }
+      },
+      {
+        "@type": "Question",
+        "name": "Wie funktioniert die KI-Rezeptprüfung mit OCR?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Sie scannen das Rezept mit dem Smartphone oder Scanner. Die KI liest Diagnose, ICD-10, Heilmittelposition und Verordnungsmenge automatisch aus und prüft auf formale Fehler, die später zu Absetzungen führen würden — bevor die Behandlung beginnt." }
+      },
+      {
+        "@type": "Question",
+        "name": "Eignet sich Praxura auch für Hausbesuche?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja, Hausbesuche sind ein zentraler Anwendungsfall. Das elektronische Fahrtenbuch erfasst Wegstrecken automatisch, plant Routen für Tagestouren und übernimmt die korrekte Verordnung der Hausbesuchspauschalen in die Abrechnung." }
+      },
+      {
+        "@type": "Question",
+        "name": "Ist Praxura DSGVO-konform?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Alle Daten werden auf EU-Servern verarbeitet, ein Auftragsverarbeitungsvertrag (AVV) wird mit jedem Praxisinhaber abgeschlossen, sensible Patientendaten sind verschlüsselt gespeichert. Eine TOM-Übersicht liegt Ihnen vor Vertragsunterzeichnung vor." }
+      },
+      {
+        "@type": "Question",
+        "name": "Was kostet Praxura?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Der Preis hängt von Praxisgröße, Teamzahl und gewünschten Modulen ab. Wir kalkulieren transparent im Analysegespräch und stellen Ihnen vor Vertragsabschluss ein individuelles, schriftliches Angebot zur Verfügung." }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Analytics -->
   <script defer src="https://analytics.infinitymade.de/script.js" data-website-id="fa4b493b-35cd-4555-b667-b6a5439471e6"></script>
+
+  <style>
+    /* ============================================================
+       Page-specific: praxis.html (Praxura product page)
+       ============================================================ */
+
+    /* ── Hero ── */
+    .px-hero {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 9rem 2rem 5rem;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .px-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 1.8rem;
+    }
+    .px-eyebrow-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--bronze);
+      border-radius: 999px;
+    }
+    .px-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(2.4rem, 5.4vw, 4.4rem);
+      line-height: 1.02;
+      letter-spacing: -0.035em;
+      color: var(--ink);
+      margin-bottom: 1.8rem;
+    }
+    .px-title em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--bronze);
+    }
+    .px-lede {
+      font-size: 1.12rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      max-width: 32rem;
+      margin-bottom: 2.4rem;
+    }
+    .px-hero-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+
+    /* ── Hero right: USP stack ── */
+    .px-hero-card {
+      background: rgba(248, 243, 232, 0.85);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 2rem 1.8rem;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 24px 50px -24px rgba(26, 22, 17, 0.18),
+        0 4px 10px -3px rgba(26, 22, 17, 0.05);
+    }
+    .px-hero-card-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-top: 1px solid var(--line-soft);
+    }
+    .px-hero-card-row:first-of-type { border-top: 0; padding-top: 0; }
+    .px-hero-card-row:last-of-type { padding-bottom: 0; }
+    .px-hero-card-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      background: var(--bg-warm);
+      border-radius: 10px;
+      color: var(--bronze);
+    }
+    .px-hero-card-icon svg { width: 18px; height: 18px; }
+    .px-hero-card-title {
+      font-family: var(--serif);
+      font-size: 1.02rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.2rem;
+    }
+    .px-hero-card-sub {
+      font-size: 0.84rem;
+      color: var(--ink-mute);
+      line-height: 1.45;
+    }
+    .px-hero-card-stat {
+      margin-top: 1.6rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--line-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+    }
+    .px-hero-card-stat em {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.3rem;
+      letter-spacing: -0.02em;
+      color: var(--bronze);
+      text-transform: none;
+    }
+
+    /* ── Sectors strip ── */
+    .px-sectors {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 3rem;
+    }
+    .px-sectors-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+    }
+    .px-sectors-list { display: flex; gap: 2.4rem; flex-wrap: wrap; }
+    .px-sectors-list span {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.15rem;
+      color: var(--ink-soft);
+    }
+
+    /* ── Features grid (3 col) ── */
+    .px-features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    .px-feature {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: transform 360ms var(--ease-out), border-color 240ms var(--ease-out), box-shadow 360ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .px-feature:hover {
+        transform: translateY(-3px);
+        border-color: rgba(107, 85, 56, 0.22);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.7) inset,
+          0 18px 38px -16px rgba(26, 22, 17, 0.12),
+          0 4px 10px -3px rgba(26, 22, 17, 0.04);
+      }
+    }
+    .px-feature.span-2 { grid-column: span 2; }
+    .px-feature-inner {
+      padding: 2.2rem 2rem;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+    .px-feature-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      background: var(--bg-warm);
+      border-radius: 12px;
+      margin-bottom: 1.6rem;
+      color: var(--bronze);
+    }
+    .px-feature-icon svg { width: 22px; height: 22px; }
+    .px-feature-kw {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+      margin-bottom: 0.7rem;
+    }
+    .px-feature-title {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 1.45rem;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+    }
+    .px-feature-title em { font-style: italic; font-weight: 400; color: var(--bronze); }
+    .px-feature-text {
+      font-size: 0.94rem;
+      line-height: 1.55;
+      color: var(--ink-soft);
+      margin-bottom: auto;
+    }
+    .px-feature-foot {
+      margin-top: 1.4rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line-soft);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+
+    /* ── USP / Why ── */
+    .px-why-block {
+      background: var(--bg-warm);
+      border-radius: 28px;
+      padding: 5rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .px-why-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 1.4rem;
+    }
+    .px-why-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(1.85rem, 3.4vw, 2.7rem);
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 1.4rem;
+    }
+    .px-why-title em { font-style: italic; font-weight: 300; color: var(--bronze); }
+    .px-why-text {
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--ink-soft);
+    }
+    .px-why-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .px-why-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 1.5rem;
+      padding: 1.6rem 0;
+      border-top: 1px solid var(--line);
+      align-items: baseline;
+    }
+    .px-why-item:first-child { padding-top: 0; border-top: 0; }
+    .px-why-item:last-child { padding-bottom: 0; }
+    .px-why-num {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      color: var(--ink-quiet);
+    }
+    .px-why-h {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.4rem;
+    }
+    .px-why-h em { font-style: italic; font-weight: 400; color: var(--bronze); }
+    .px-why-p {
+      font-size: 0.94rem;
+      line-height: 1.55;
+      color: var(--ink-mute);
+    }
+
+    /* ── Process ── */
+    .px-process {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
+    .px-step {
+      padding: 2rem 1.75rem;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--bg-card);
+      min-height: 230px;
+      display: flex;
+      flex-direction: column;
+    }
+    .px-step-num {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      color: var(--bronze);
+      margin-bottom: 1.4rem;
+    }
+    .px-step-h {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+    }
+    .px-step-h em { font-style: italic; font-weight: 400; color: var(--bronze); }
+    .px-step-p {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--ink-mute);
+      margin-bottom: auto;
+    }
+    .px-step-when {
+      margin-top: 1.4rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--line-soft);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+    }
+
+    /* ── Branchen (sectors detail) ── */
+    .px-branchen {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    .px-br {
+      padding: 2.4rem 2rem;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--bg-card);
+      transition: transform 360ms var(--ease-out), border-color 240ms var(--ease-out), box-shadow 360ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .px-br:hover {
+        transform: translateY(-3px);
+        border-color: rgba(107, 85, 56, 0.22);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.7) inset,
+          0 18px 38px -16px rgba(26, 22, 17, 0.12);
+      }
+    }
+    .px-br-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 1rem;
+    }
+    .px-br-h {
+      font-family: var(--serif);
+      font-size: 1.55rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+    }
+    .px-br-h em { font-style: italic; font-weight: 400; color: var(--bronze); }
+    .px-br-p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      margin-bottom: 1.4rem;
+    }
+    .px-br-kw {
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      color: var(--ink-mute);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── FAQ ── */
+    .px-faq {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+    .px-faq details {
+      border-top: 1px solid var(--line);
+      padding: 1.6rem 0;
+    }
+    .px-faq details:last-of-type { border-bottom: 1px solid var(--line); }
+    .px-faq summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+      transition: color 240ms var(--ease-out);
+    }
+    .px-faq summary::-webkit-details-marker { display: none; }
+    @media (hover: hover) and (pointer: fine) {
+      .px-faq summary:hover { color: var(--bronze); }
+    }
+    .px-faq-toggle {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--ink-mute);
+      transition: transform 320ms var(--ease-spring), background 240ms var(--ease-out), color 240ms var(--ease-out);
+    }
+    .px-faq details[open] .px-faq-toggle {
+      transform: rotate(45deg);
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+    .px-faq-body {
+      margin-top: 1rem;
+      max-width: 42rem;
+      font-size: 0.98rem;
+      line-height: 1.65;
+      color: var(--ink-soft);
+    }
+
+    /* ── Closing CTA ── */
+    .px-closing {
+      max-width: 1320px;
+      margin: 0 auto 6rem;
+      padding: 0 2rem;
+    }
+    .px-closing-card {
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 28px;
+      padding: 4.5rem 4rem;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .px-closing-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 30%, rgba(201, 168, 118, 0.12) 0%, transparent 55%),
+        radial-gradient(circle at 82% 78%, rgba(78, 92, 69, 0.16) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .px-closing-eyebrow {
+      position: relative;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      margin-bottom: 1.6rem;
+    }
+    .px-closing-title {
+      position: relative;
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(1.85rem, 3.6vw, 2.85rem);
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      margin-bottom: 1.2rem;
+    }
+    .px-closing-title em { font-style: italic; font-weight: 300; color: var(--highlight); }
+    .px-closing-text {
+      position: relative;
+      color: rgba(248, 243, 232, 0.72);
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 28rem;
+    }
+    .px-closing-side {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      align-items: flex-start;
+    }
+    .px-closing-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.9rem 0.9rem 0.9rem 1.5rem;
+      background: var(--bg-card);
+      color: var(--ink);
+      font-weight: 500;
+      font-size: 0.95rem;
+      text-decoration: none;
+      border-radius: 999px;
+      transition: transform 280ms var(--ease-spring), background 240ms var(--ease-out);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.5) inset,
+        0 10px 22px -8px rgba(26, 22, 17, 0.3);
+    }
+    .px-closing-btn-circle {
+      width: 1.8rem; height: 1.8rem;
+      display: grid; place-items: center;
+      background: var(--ink); color: var(--bg);
+      border-radius: 999px;
+      transition: transform 320ms var(--ease-spring);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .px-closing-btn:hover {
+        background: var(--highlight);
+        transform: translateY(-3px);
+      }
+      .px-closing-btn:hover .px-closing-btn-circle { transform: translate(2px, -1px) scale(1.05); }
+    }
+    .px-closing-btn:active { transform: translateY(-1px) scale(0.97); }
+    .px-closing-side-quiet {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(248, 243, 232, 0.4);
+    }
+    .px-closing-side-mail {
+      color: rgba(248, 243, 232, 0.85);
+      text-decoration: none;
+      font-size: 0.92rem;
+      border-bottom: 1px solid rgba(248, 243, 232, 0.2);
+      padding-bottom: 2px;
+      transition: border-color 240ms ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .px-closing-side-mail:hover { border-color: var(--highlight); }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 1000px) {
+      .px-hero {
+        grid-template-columns: 1fr;
+        padding: 7rem 1.25rem 3rem;
+        gap: 3rem;
+        min-height: auto;
+      }
+      .px-sectors { padding: 0 1.25rem 3rem; padding-bottom: 2.5rem; gap: 1.2rem; }
+      .px-sectors-list { gap: 1.4rem; }
+      .px-features { grid-template-columns: 1fr; }
+      .px-feature.span-2 { grid-column: span 1; }
+      .px-feature-inner { min-height: auto; }
+      .px-why-block { grid-template-columns: 1fr; padding: 3rem 1.75rem; gap: 2.5rem; }
+      .px-process { grid-template-columns: 1fr 1fr; }
+      .px-branchen { grid-template-columns: 1fr; }
+      .px-closing-card { grid-template-columns: 1fr; padding: 2.8rem 1.8rem; gap: 2rem; }
+    }
+    @media (max-width: 600px) {
+      .px-process { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 
 <body>
 
-    <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-inner">
-            <a href="/index.html" class="nav-brand">
-                infinity<span class="nav-brand-accent">made</span>
-            </a>
-            <div class="nav-links">
-                <a href="#features">Leistungen</a>
-                <a href="#workflow">So funktioniert's</a>
-                <a href="#pricing">Preise</a>
-                <a href="#contact" class="nav-cta">Kostenlos beraten</a>
-            </div>
-            <button class="nav-mobile-toggle" aria-label="Menu">
-                <span></span><span></span><span></span>
-            </button>
+<!-- ────────────── Nav ────────────── -->
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Infinity<em>Made</em></a>
+  <a href="/#services" class="nav-link">Leistungen</a>
+  <a href="/praxis.html" class="nav-link" aria-current="page" style="color: var(--ink); background: rgba(26,22,17,0.04);">Praxura</a>
+  <a href="/blog/" class="nav-link">Insights</a>
+  <a href="/login.html" class="nav-login">Login</a>
+  <a href="#kontakt" class="nav-cta">
+    Analysegespräch
+    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  </a>
+</nav>
+
+<!-- ────────────── Hero ────────────── -->
+<header class="px-hero">
+  <div>
+    <span class="px-eyebrow">
+      <span class="px-eyebrow-dot"></span>
+      Praxura · Praxissoftware
+    </span>
+    <h1 class="px-title">
+      All-in-One für <em>Heilmittel-Praxen.</em>
+    </h1>
+    <p class="px-lede">
+      Praxura bündelt Online-Termine, KI-gestützte Rezeptprüfung, Direktabrechnung nach §302 SGB V und elektronisches Fahrtenbuch in einem System — speziell für Physiotherapie, Ergotherapie und Logopädie.
+    </p>
+    <div class="px-hero-actions">
+      <a href="#kontakt" class="btn btn-primary-arrow">
+        Analysegespräch buchen
+        <span class="arrow-pill" aria-hidden="true">↗</span>
+      </a>
+      <a href="#funktionen" class="btn btn-secondary">Funktionen ansehen</a>
+    </div>
+  </div>
+
+  <aside class="px-hero-card">
+    <div class="px-hero-card-row">
+      <div class="px-hero-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      </div>
+      <div>
+        <div class="px-hero-card-title">Online-Terminbuchung</div>
+        <div class="px-hero-card-sub">Patienten buchen selbst — 24/7, ohne Anrufe.</div>
+      </div>
+    </div>
+    <div class="px-hero-card-row">
+      <div class="px-hero-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="14" x2="15" y2="14" /><line x1="9" y1="18" x2="13" y2="18" />
+        </svg>
+      </div>
+      <div>
+        <div class="px-hero-card-title">KI-Rezeptprüfung</div>
+        <div class="px-hero-card-sub">Foto vom Rezept genügt — Daten landen automatisch im System.</div>
+      </div>
+    </div>
+    <div class="px-hero-card-row">
+      <div class="px-hero-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.34 0 4.47.9 6.07 2.37" /><polyline points="21 4 12 13 9 10" />
+        </svg>
+      </div>
+      <div>
+        <div class="px-hero-card-title">§302 Direktabrechnung</div>
+        <div class="px-hero-card-sub">Eigene DTA-Abrechnung — ohne Abrechnungszentrum.</div>
+      </div>
+    </div>
+    <div class="px-hero-card-stat">
+      <span>Heilmittelerbringer</span>
+      <em>Physio · Ergo · Logo</em>
+    </div>
+  </aside>
+</header>
+
+<!-- ────────────── Sectors ────────────── -->
+<div class="px-sectors">
+  <div class="px-sectors-label">Praxura ist für</div>
+  <div class="px-sectors-list">
+    <span>Physiotherapie</span>
+    <span>Ergotherapie</span>
+    <span>Logopädie</span>
+    <span>Podologie</span>
+    <span>Heilmittelerbringer (GKV §302)</span>
+  </div>
+</div>
+
+<!-- ────────────── 01 · Funktionen ────────────── -->
+<section class="block" id="funktionen">
+  <div class="section-head">
+    <div>
+      <div class="section-eyebrow">01 · Funktionen</div>
+    </div>
+    <div>
+      <h2 class="section-title">
+        Eine Software — der gesamte <em>Praxisalltag.</em>
+      </h2>
+      <p class="section-lede" style="margin-top: 1.4rem;">
+        Termin, Rezept, Abrechnung, Patientenakte und Fahrtenbuch sind nicht fünf Programme, sondern fünf Module derselben Oberfläche. Daten fließen automatisch.
+      </p>
+    </div>
+  </div>
+
+  <div class="px-features">
+
+    <!-- Feature 1: Online-Terminbuchung -->
+    <article class="px-feature">
+      <div class="px-feature-inner">
+        <div class="px-feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><circle cx="8" cy="15" r="1" fill="currentColor" /><circle cx="12" cy="15" r="1" fill="currentColor" /><circle cx="16" cy="15" r="1" fill="currentColor" />
+          </svg>
         </div>
-    </nav>
+        <div class="px-feature-kw">Online-Terminbuchung</div>
+        <h3 class="px-feature-title">Terminbuch ohne <em>Telefon-Chaos</em></h3>
+        <p class="px-feature-text">
+          Patienten sehen freie Slots Ihrer Praxis live und buchen selbstständig. Verordnungsdauer, Behandlungstyp und Therapeut werden automatisch berücksichtigt.
+        </p>
+        <div class="px-feature-foot">Kalendersync · Erinnerungen · 24/7</div>
+      </div>
+    </article>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <div class="hero-badge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
-                NEU: Direktabrechnung § 302 SGB V
-            </div>
-            <h1 class="hero-title">
-                Krankenkassen abrechnen ohne<br />
-                <span class="hero-highlight">Abrechnungszentrum</span>
-            </h1>
-            <p class="hero-sub">
-                Bisher zahlen Sie 1–3% Ihrer Einnahmen an ein Abrechnungszentrum.
-                InfinityMade ermöglicht Ihnen die direkte Abrechnung — mit 100% Ihrer Einnahmen,
-                automatischer EDIFACT-Generierung und nur <strong>15 Minuten pro Woche</strong> Verwaltungsaufwand.
-            </p>
-            <div class="hero-actions">
-                <a href="#contact" class="btn btn-primary">
-                    Kostenlose Demo vereinbaren
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                </a>
-                <a href="#features" class="btn btn-secondary">Mehr erfahren</a>
-            </div>
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <span class="hero-stat-value">100%</span>
-                    <span class="hero-stat-label">Ihrer Einnahmen</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-value">15 Min</span>
-                    <span class="hero-stat-label">pro Woche</span>
-                </div>
-                <div class="hero-stat">
-                    <span class="hero-stat-value">0%</span>
-                    <span class="hero-stat-label">Abrechnungsgebühr</span>
-                </div>
-            </div>
+    <!-- Feature 2: KI-Rezeptprüfung -->
+    <article class="px-feature span-2">
+      <div class="px-feature-inner">
+        <div class="px-feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="13" x2="15" y2="13" /><line x1="9" y1="17" x2="13" y2="17" />
+          </svg>
         </div>
-    </section>
+        <div class="px-feature-kw">KI-Rezeptprüfung · OCR</div>
+        <h3 class="px-feature-title">Absetzungen <em>vermeiden</em> statt nachbearbeiten.</h3>
+        <p class="px-feature-text">
+          Sie scannen das Rezept mit dem Smartphone. Die KI liest ICD-10, Heilmittelposition und Verordnungsmenge automatisch aus — und prüft auf formale Fehler, die später zu Absetzungen durch AOK, TK oder Barmer führen würden. Bevor die Behandlung beginnt, nicht danach.
+        </p>
+        <div class="px-feature-foot">OCR · Plausibilitätsprüfung · Frühwarnung</div>
+      </div>
+    </article>
 
-    <!-- Pain Points -->
-    <section class="pain-section">
-        <div class="container">
-            <div class="pain-grid">
-                <div class="pain-card">
-                    <div class="pain-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.5">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 8v4M12 16h.01" />
-                        </svg>
-                    </div>
-                    <h3>Teure Abrechnungszentren</h3>
-                    <p>1–3% pro Rezept geht an das Abrechnungszentrum. Bei 500€ Umsatz pro Woche sind das 2.500€ pro
-                        Jahr — nur für das Versenden von Dateien.</p>
-                </div>
-                <div class="pain-card">
-                    <div class="pain-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.5">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-                        </svg>
-                    </div>
-                    <h3>Berg an Papierkram</h3>
-                    <p>Begleitzettel, Zuzahlungsrechnungen, postalischer Versand — jeder Fehler bedeutet Verzögerung und
-                        verlorenes Geld.</p>
-                </div>
-                <div class="pain-card">
-                    <div class="pain-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.5">
-                            <path
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <h3>Unverständliche Fehler</h3>
-                    <p>ZAA-Dateien von Krankenkassen sind kryptisch. Ohne Expertenwissen wissen Sie nicht, was Sie
-                        korrigieren müssen.</p>
-                </div>
-            </div>
+    <!-- Feature 3: §302 DTA Abrechnung -->
+    <article class="px-feature span-2">
+      <div class="px-feature-inner">
+        <div class="px-feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.34 0 4.47.9 6.07 2.37" /><polyline points="21 4 12 13 9 10" />
+          </svg>
         </div>
-    </section>
+        <div class="px-feature-kw">§302 SGB V · Direktabrechnung</div>
+        <h3 class="px-feature-title">GKV-Abrechnung <em>selbst durchführen</em> — ohne Abrechnungszentrum.</h3>
+        <p class="px-feature-text">
+          Praxura erzeugt vollständige DTA-Datenpakete nach Anlage 1 TP5 V21 inklusive Begleitzettel und übermittelt direkt an die Datenannahmestelle der zuständigen Krankenkasse. Keine 2–5 % Komission, kein Verzicht auf Liquidität, volle Kontrolle über jeden Vorgang.
+        </p>
+        <div class="px-feature-foot">EDIFACT · Begleitzettel · alle Kassen</div>
+      </div>
+    </article>
 
-    <!-- Features Section -->
-    <section class="features-section" id="features">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Leistungen</span>
-                <h2 class="section-title">Alles, was Sie für die direkte Abrechnung brauchen</h2>
-                <p class="section-sub">Von der Rezeptdigitalisierung bis zur Fehlerkorrektur — vollautomatisch und
-                    DSGVO-konform.</p>
-            </div>
-
-            <div class="features-grid">
-                <!-- Feature 1 -->
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            <path d="M9 12l2 2 4-4" />
-                        </svg>
-                    </div>
-                    <h3>One-Click EDIFACT & Dakota Verschlüsselung</h3>
-                    <p class="feature-desc">Mit einem Klick auf das Dashboard generiert InfinityMade Ihre komplette,
-                        verschlüsselte Abrechnungsdatei (.dta.p7m) im EDIFACT-Standard — automatisch signiert mit Ihrem
-                        Dakota-Zertifikat.</p>
-                    <ul class="feature-list">
-                        <li>✓ Kein IT-Fachwissen nötig</li>
-                        <li>✓ Automatische Verschlüsselung</li>
-                        <li>✓ DSGVO-konforme Verarbeitung</li>
-                    </ul>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M16 13H8M16 17H8M10 9H8" />
-                        </svg>
-                    </div>
-                    <h3>Automatische Dokumenten-Generierung</h3>
-                    <p class="feature-desc">Neben der digitalen Abrechnungsdatei erstellt InfinityMade alle notwendigen
-                        PDF-Dokumente automatisch:</p>
-                    <ul class="feature-list">
-                        <li>✓ <strong->Begleitzettel</strong-> — Vorausgefülltes Postrouting für die Datenannahmestelle
-                        </li>
-                        <li>✓ <strong->Zuzahlungsrechnung</strong-> — Automatische Berechnung der Patienten-Zuzahlung
-                        </li>
-                        <li>✓ Sofort druckbereit oder digital versenden</li>
-                    </ul>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                    </div>
-                    <h3>KI-gestützte Fehlerdecodierung & ZAA-Parsing</h3>
-                    <p class="feature-desc">Wenn eine Krankenkasse eine Ablehnung sendet, laden Sie die ZAA-Datei hoch.
-                        InfinityMade übersetzt die kryptischen Fehlercodes in klare, umsetzbare Anweisungen.</p>
-                    <ul class="feature-list">
-                        <li>✓ Sofort wissen, was zu korrigieren ist</li>
-                        <li>✓ Direkt im System nachbessern</li>
-                        <li>✓ Schnelle Auszahlung ohne Geldverlust</li>
-                    </ul>
-                </div>
-
-                <!-- Feature 4 -->
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                    </div>
-                    <h3>Intelligente Termin- & Patientenverwaltung</h3>
-                    <p class="feature-desc">Alles aus einer Hand: Online-Terminbuchung, automatisierte Erinnerungen per
-                        <strong>E-Mail</strong>, Patientenakte und Rezeptverwaltung.
-                    </p>
-                    <ul class="feature-list">
-                        <li>✓ 24/7 Online-Buchung für Patienten</li>
-                        <li>✓ Automatische E-Mail-Erinnerungen</li>
-                        <li>✓ DSGVO-konformes Datenmanagement</li>
-                    </ul>
-                </div>
-
-                <!-- Feature 5 -->
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                            <polyline points="22,6 12,13 2,6" />
-                        </svg>
-                    </div>
-                    <h3>E-Mail-Erinnerungen statt WhatsApp</h3>
-                    <p class="feature-desc">Automatische Erinnerungsmails an Ihre Patienten — pünktlich und zuverlässig.
-                        Keine extra App nötig, keine Telefonnummer erforderlich.</p>
-                    <ul class="feature-list">
-                        <li>✓ Sofort einsatzbereit</li>
-                        <li>✓ Professionelle Kommunikation</li>
-                        <li>✓ Optional: WhatsApp in Zukunft</li>
-                    </ul>
-                </div>
-
-                <!-- Feature 6 -->
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path
-                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                    </div>
-                    <h3>KI-Rezeptvalidierung & Anamnese</h3>
-                    <p class="feature-desc">Rezeptfoto hochladen — unsere KI füllt automatisch alle Felder aus, prüft
-                        auf Fehler und validiert nach Heilmittel-Richtlinie.</p>
-                    <ul class="feature-list">
-                        <li>✓ Fotografieren, nicht tippen</li>
-                        <li>✓ Automatische Plausibilitätsprüfung</li>
-                        <li>✓ Keine Blankoverordnungs-Fehler</li>
-                    </ul>
-                </div>
-            </div>
+    <!-- Feature 4: Fahrtenbuch -->
+    <article class="px-feature">
+      <div class="px-feature-inner">
+        <div class="px-feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 13h18l-2-7H5l-2 7z" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" />
+          </svg>
         </div>
-    </section>
+        <div class="px-feature-kw">Fahrtenbuch · Hausbesuche</div>
+        <h3 class="px-feature-title">Routen, Wege, <em>Pauschalen</em> — automatisch.</h3>
+        <p class="px-feature-text">
+          Elektronisches Fahrtenbuch erfasst Wegstrecken, plant Tagestouren und überträgt Hausbesuchspauschalen korrekt in die Abrechnung.
+        </p>
+        <div class="px-feature-foot">Routenplanung · Steuer-konform · GPS</div>
+      </div>
+    </article>
 
-    <!-- Workflow Section -->
-    <section class="workflow-section" id="workflow">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">So funktioniert's</span>
-                <h2 class="section-title">In nur 15 Minuten zur Abrechnung</h2>
-                <p class="section-sub">Kein kompliziertes System, keine stundenlange Einarbeitung. Drei einfache
-                    Schritte.</p>
-            </div>
-
-            <div class="workflow-steps">
-                <div class="workflow-step">
-                    <div class="workflow-number">1</div>
-                    <div class="workflow-content">
-                        <h3>Erstellen & Generieren</h3>
-                        <p>Klicken Sie im Dashboard auf „Abrechnung erstellen". InfinityMade erstellt automatisch Ihre
-                            verschlüsselte .dta.p7m-Datei und alle benötigten PDF-Dokumente.</p>
-                        <div class="workflow-tools">
-                            <span class="workflow-tool">.dta.p7m</span>
-                            <span class="workflow-tool">Begleitzettel</span>
-                            <span class="workflow-tool">Zuzahlungsrechnung</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="workflow-connector">
-                    <svg width="40" height="24" viewBox="0 0 40 24" fill="none">
-                        <path d="M0 12h30M25 6l8 6-8 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </div>
-
-                <div class="workflow-step">
-                    <div class="workflow-number">2</div>
-                    <div class="workflow-content">
-                        <h3>Hochladen & Versenden</h3>
-                        <p>Laden Sie die .dta.p7m-Datei in Ihr Versichertenportal (z.B. Davaso, DDG, Bitmarck) hoch und
-                            senden Sie die unterschriebenen Papier-Rezepte mit dem automatisch generierten Begleitzettel
-                            per Post.</p>
-                        <div class="workflow-tools">
-                            <span class="workflow-tool">Davaso</span>
-                            <span class="workflow-tool">DDG</span>
-                            <span class="workflow-tool">Bitmarck</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="workflow-connector">
-                    <svg width="40" height="24" viewBox="0 0 40 24" fill="none">
-                        <path d="M0 12h30M25 6l8 6-8 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </div>
-
-                <div class="workflow-step">
-                    <div class="workflow-number">3</div>
-                    <div class="workflow-content">
-                        <h3>Auszahlung & Korrektur</h3>
-                        <p>Erhalten Sie 100% Ihrer Einnahmen direkt auf Ihr Konto innerhalb von 2–4 Wochen. Falls eine
-                            Korrektur nötig ist, hilft die KI-gestützte Fehlerdecodierung — einfach nachbessern und
-                            erneut einreichen.</p>
-                        <div class="workflow-tools">
-                            <span class="workflow-tool workflow-tool-success">100% Auszahlung</span>
-                            <span class="workflow-tool">2–4 Wochen</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Feature 5: ePA / Patientenakte -->
+    <article class="px-feature">
+      <div class="px-feature-inner">
+        <div class="px-feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+          </svg>
         </div>
-    </section>
+        <div class="px-feature-kw">Digitale Patientenakte</div>
+        <h3 class="px-feature-title">Papierlose <em>Praxis.</em></h3>
+        <p class="px-feature-text">
+          Anamnese, Befunde, Therapieberichte, Verordnungen — alles digital, durchsuchbar, ePA-ready.
+        </p>
+        <div class="px-feature-foot">DSGVO · TI-vorbereitet · Audit-Log</div>
+      </div>
+    </article>
 
-    <!-- Pricing Section -->
-    <section class="pricing-section" id="pricing">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Preise</span>
-                <h2 class="section-title">Flexible Preise für moderne Praxen</h2>
-                <p class="section-sub">Keine versteckten Kosten. Keine Umsatzprovisionen. Volle KI-Power.</p>
-            </div>
-
-            <div class="pricing-grid">
-                <!-- 1. Starter (Solo-Praxis) -->
-                <div class="pricing-card">
-                    <div class="pricing-tier">Starter</div>
-                    <div class="pricing-subtitle">Solo-Praxis</div>
-                    <div class="pricing-price">
-                        <span class="pricing-amount">69</span>
-                        <span class="pricing-currency">€</span>
-                        <span class="pricing-period">/Monat</span>
-                    </div>
-                    <p class="pricing-vat">zzgl. MwSt.</p>
-                    <p class="pricing-desc">Der ideale Einstieg für Therapeuten, die alleine oder zu zweit durchstarten wollen.</p>
-                    
-                    <div class="pricing-setup">
-                        <div class="pricing-setup-label">Einmalige Einrichtung:</div>
-                        <div class="pricing-setup-price"><span class="strike">149 €</span> <strong>0 €</strong></div>
-                        <div class="pricing-setup-note">Aktion: Jetzt 0 € bei Buchung des Website-Add-ons!</div>
-                    </div>
-                    
-                    <div class="pricing-capacity">
-                        <span class="pricing-capacity-label">Kapazität:</span> Max. 2 Behandler-Accounts<br>
-                        <span class="pricing-capacity-label">Standort:</span> Nur 1 Standort (Einrichtung)
-                    </div>
-                    
-                    <ul class="pricing-features">
-                        <li>✓ Intelligente Praxisverwaltung: Patientenakte, Rezeptverwaltung & digitale Anamnese</li>
-                        <li>✓ Smarter Terminplaner: Schnelle, intuitive Terminvergabe für das Praxisteam</li>
-                        <li>✓ Infinity-Abrechnung inklusive: Unbegrenzte Kassenabrechnung (§ 302 SGB V) via DTA-Datei/EDIFACT & Privatabrechnung (GebüTh) ohne Cent Provision!</li>
-                        <li>✓ KI-Rezeptvalidierung: Rezeptfoto hochladen – die KI prüft die Heilmittel-Richtlinie sekundenschnell auf Fehler</li>
-                        <li>✓ KI-Fehlerdecodierung: Krypto-Fehlercodes (ZAA) der Kassen werden verständlich entschlüsselt mit direkter Korrektur-Anleitung</li>
-                        <li>✓ Datenschutz: 100% DSGVO-konform inkl. AV-Vertrag</li>
-                    </ul>
-                    <a href="#contact" class="btn btn-outline">Jetzt starten</a>
-                </div>
-
-                <!-- 2. Professional (Klinik) -->
-                <div class="pricing-card featured">
-                    <div class="pricing-badge">Beliebt</div>
-                    <div class="pricing-tier">Professional</div>
-                    <div class="pricing-subtitle">Klinik</div>
-                    <div class="pricing-price">
-                        <span class="pricing-amount">129</span>
-                        <span class="pricing-currency">€</span>
-                        <span class="pricing-period">/Monat</span>
-                    </div>
-                    <p class="pricing-vat">zzgl. MwSt.</p>
-                    <p class="pricing-desc">Die Komplettlösung für wachsende Praxen, die ihr Team entlasten und Prozesse automatisieren möchten.</p>
-                    
-                    <div class="pricing-setup">
-                        <div class="pricing-setup-label">Einmalige Einrichtung:</div>
-                        <div class="pricing-setup-price"><span class="strike">299 €</span> <strong>0 €</strong></div>
-                        <div class="pricing-setup-note">Aktion: Jetzt 0 € bei Buchung des Website-Add-ons!</div>
-                    </div>
-                    
-                    <div class="pricing-capacity">
-                        <span class="pricing-capacity-label">Kapazität:</span> Max. 6 Behandler-Accounts<br>
-                        <span class="pricing-capacity-label">Standort:</span> Nur 1 Standort (Einrichtung)
-                    </div>
-                    
-                    <ul class="pricing-features">
-                        <li>✓ Alles aus dem Starter-Paket</li>
-                        <li>✓ <strong>KI Serientermin-Finder:</strong> Das Highlight für Ihre Rezeption. Die KI findet in Sekunden die perfekten Lücken für 6er- oder 10er-Heilmittelserien – kein manuelles Suchen mehr</li>
-                        <li>✓ <strong>Automatisierte Patienten-Benachrichtigungen:</strong> Serientermine werden sofort nach der Erstellung komplett per Mail/SMS an den Patienten gesendet</li>
-                        <li>✓ <strong>E-Mail-Erinnerungen:</strong> Automatische Terminerinnerungen vor dem Behandlungstag zur Reduzierung von No-Shows (Ausfällen)</li>
-                        <li>✓ <strong>Automatisierte B2B/B2C E-Mails:</strong> Vorlagenbasierte, automatisierte Kommunikation mit Ärzten, Kassen und Patienten</li>
-                        <li>✓ <strong>Multi-Language Support:</strong> Systemoberfläche und Patientenkommunikation in 2–4 Sprachen verfügbar</li>
-                        <li>✓ <strong>Digitales Fahrtenbuch:</strong> Einfache Kilometer-Erfassung für Hausbesuche</li>
-                    </ul>
-                    <a href="#contact" class="btn btn-primary">Kostenlos testen</a>
-                </div>
-
-                <!-- 3. Enterprise (Multi-Praxis) -->
-                <div class="pricing-card">
-                    <div class="pricing-tier">Enterprise</div>
-                    <div class="pricing-subtitle">Multi-Praxis</div>
-                    <div class="pricing-price">
-                        <span class="pricing-amount">299</span>
-                        <span class="pricing-currency">€</span>
-                        <span class="pricing-period">/Monat</span>
-                    </div>
-                    <p class="pricing-vat">zzgl. MwSt.</p>
-                    <p class="pricing-desc">Die ultimative Plattform für Unternehmer mit mehreren Filialen, Franchise-Systeme oder Großpraxen.</p>
-                    
-                    <div class="pricing-setup">
-                        <div class="pricing-setup-label">Einmalige Einrichtung:</div>
-                        <div class="pricing-setup-price"><span class="strike">499 €</span> <strong>0 €</strong></div>
-                        <div class="pricing-setup-note">Aktion: Jetzt 0 € bei Buchung des Website-Add-ons!</div>
-                    </div>
-                    
-                    <div class="pricing-capacity">
-                        <span class="pricing-capacity-label">Kapazität:</span> Unbegrenzte Behandler-Accounts<br>
-                        <span class="pricing-capacity-label">Standorte:</span> Unbegrenzte Standorte (Multi-Praxis-Verwaltung)
-                    </div>
-                    
-                    <ul class="pricing-features">
-                        <li>✓ Alles aus dem Professional-Paket</li>
-                        <li>✓ <strong>Zentrales Multi-Praxis Management:</strong> Verwalten Sie all Ihre Filialen über ein einziges, übersichtliches Dashboard</li>
-                        <li>✓ <strong>Cross-Mitarbeiter Funktion:</strong> Teilen Sie Therapeuten flexibel zwischen verschiedenen Standorten auf. Ein gemeinsamer, intelligenter Terminkalender verhindert Überschneidungen und optimiert die Auslastung</li>
-                        <li>✓ <strong>B2B-Modul für Kooperationen:</strong> Erweiterte Funktionen für die Abrechnung und Verwaltung von Firmenfitness, Heimen oder externen Partnern</li>
-                        <li>✓ <strong>Premium-KI-Limits:</strong> Höchste Priorität und unbegrenzte Kapazitäten für Rezept-OCR und Termin-Optimierung</li>
-                        <li>✓ <strong>Priorisierter Support:</strong> Direktleitung zu unseren Entwicklern für schnelle Hilfe im Praxisalltag</li>
-                    </ul>
-                    <a href="#contact" class="btn btn-outline">Angebot anfragen</a>
-                </div>
-            </div>
-
-            <!-- Website Add-on Highlight Box -->
-            <div class="pricing-addon">
-                <div class="addon-icon">🚀</div>
-                <div class="addon-content">
-                    <h3 class="addon-title">Beliebtes Add-on: Das Infinity-Marketingpaket</h3>
-                    <p class="addon-subtitle">Modernste Praxis-Website & Local SEO</p>
-                    <p class="addon-desc">Sie haben noch keine Website oder möchten unkompliziert mehr Patienten gewinnen? Wir bauen Ihre digitale Visitenkarte direkt mit Anbindung an Ihr InfinityMade-System.</p>
-                    
-                    <div class="addon-price-box">
-                        <div class="addon-price">199 € <span class="addon-price-note">(Einmalige Zahlung)</span></div>
-                        <div class="addon-benefit">🎉 Ihr Mega-Vorteil: Bei Buchung dieses Add-ons entfällt die komplette einmalige Einrichtungsgebühr Ihres gewählten Software-Tarifs (Sie sparen bis zu 499 €)!</div>
-                    </div>
-                    
-                    <div class="addon-features">
-                        <h4>Das ist drin:</h4>
-                        <ul>
-                            <li><strong>Praxis-Website:</strong> Modernes, responsives Design (optimiert für Smartphones), 100% DSGVO-konform mit rechtssicherem Impressum und Datenschutzerklärung</li>
-                            <li><strong>Google My Business Optimierung:</strong> Wir bringen Ihre Praxis in den lokalen Google-Suchergebnissen nach vorne</li>
-                            <li><strong>Review Routing (Automatisiertes Bewertungsmanagement):</strong> Unser System filtert Feedback intelligent. 5-Sterne-Bewertungen werden direkt zu Google weitergeleitet, um Ihren Ruf zu stärken. Kritische Rückmeldungen landen als interne Nachricht direkt bei Ihnen, damit Sie sofort reagieren können</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="addon-seo-note">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 16v-4M12 8h.01" />
-                        </svg>
-                        <span><strong>Hinweis:</strong> Für eine erfolgreiche SEO-Optimierung und lokale Google-Sichtbarkeit ist eine eigene Praxis-Website erforderlich. Buchen Sie dieses Add-on, um online gefunden zu werden!</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pricing-note">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 16v-4M12 8h.01" />
-                </svg>
-                <span><strong>Hinweis:</strong> Für die Direktabrechnung benötigen Sie ein Dakota-Zertifikat von der ITSG (ca. 50–100€/Jahr). Wir helfen Ihnen bei der Beantragung.</span>
-            </div>
+    <!-- Feature 6: DSGVO -->
+    <article class="px-feature">
+      <div class="px-feature-inner">
+        <div class="px-feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
         </div>
-    </section>
+        <div class="px-feature-kw">DSGVO · EU-Hosting</div>
+        <h3 class="px-feature-title">Patientendaten <em>sicher.</em></h3>
+        <p class="px-feature-text">
+          Server in der EU, AVV inklusive, Verschlüsselung im Ruhezustand und während der Übertragung. TOM-Übersicht vor Vertragsunterzeichnung.
+        </p>
+        <div class="px-feature-foot">Frankfurt-Hosting · AVV · TOMs</div>
+      </div>
+    </article>
 
-    <!-- Contact Section -->
-    <section class="contact-section" id="contact">
-        <div class="container">
-            <div class="contact-grid">
-                <div class="contact-content">
-                    <span class="section-tag">Kontakt</span>
-                    <h2 class="section-title">Bereit, 1–3% zu sparen?</h2>
-                    <p class="contact-text">
-                        Vereinbaren Sie jetzt Ihre kostenlose Demo und sehen Sie, wie InfinityMade Ihre Praxis
-                        revolutionieren kann.
-                        Keine Verpflichtung, keine versteckten Kosten.
-                    </p>
-                    <div class="contact-features">
-                        <div class="contact-feature">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                <polyline points="22 4 12 14.01 9 11.01" />
-                            </svg>
-                            <span>30 Minuten Live-Demo</span>
-                        </div>
-                        <div class="contact-feature">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                <polyline points="22 4 12 14.01 9 11.01" />
-                            </svg>
-                            <span>Individuelle Beratung</span>
-                        </div>
-                        <div class="contact-feature">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                <polyline points="22 4 12 14.01 9 11.01" />
-                            </svg>
-                            <span>14 Tage kostenlos testen</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="contact-form-wrapper">
-                    <form class="contact-form" id="contactForm">
-                        <div class="form-group">
-                            <label for="name">Name *</label>
-                            <input type="text" id="name" name="name" required placeholder="Dr. Maria Schmidt" />
-                        </div>
-                        <div class="form-group">
-                            <label for="email">E-Mail *</label>
-                            <input type="email" id="email" name="email" required placeholder="praxis@example.de" />
-                        </div>
-                        <div class="form-group">
-                            <label for="phone">Telefon</label>
-                            <input type="tel" id="phone" name="phone" placeholder="+49 123 456789" />
-                        </div>
-                        <div class="form-group">
-                            <label for="praxistyp">Praxistyp *</label>
-                            <select id="praxistyp" name="praxistyp" required>
-                                <option value="">Bitte wählen...</option>
-                                <option value="physio">Physiotherapie</option>
-                                <option value="ergo">Ergotherapie</option>
-                                <option value="logo">Logopädie</option>
-                                <option value="podo">Podologie</option>
-                                <option value="other">Andere</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="message">Nachricht</label>
-                            <textarea id="message" name="message" rows="3"
-                                placeholder="Ich möchte mehr über die Direktabrechnung erfahren..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-full">
-                            Kostenlose Demo anfragen
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </form>
-                </div>
-            </div>
+  </div>
+</section>
+
+<!-- ────────────── 02 · Warum Praxura ────────────── -->
+<section class="block" id="warum">
+  <div class="px-why-block">
+    <div>
+      <div class="px-why-eyebrow">02 · Warum Praxura</div>
+      <h2 class="px-why-title">
+        Weniger Verwaltung, mehr <em>Behandlung.</em>
+      </h2>
+      <p class="px-why-text">
+        Heilmittelerbringer verlieren wöchentlich Stunden an Telefonate, Papierkram und Rezeptkontrolle. Praxura nimmt diese Routinen ab — ohne Abrechnungszentrum, ohne Insel-Lösungen, ohne Lock-in auf veraltete Hardware.
+      </p>
+    </div>
+    <ul class="px-why-list">
+      <li class="px-why-item">
+        <span class="px-why-num">01</span>
+        <div>
+          <div class="px-why-h"><em>Selbstabrechner</em> statt Abrechnungszentrum</div>
+          <div class="px-why-p">DTA §302 direkt an die Kasse. 2–5 % Komission bleiben in der Praxis statt beim Mittler.</div>
         </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="faq-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">FAQ</span>
-                <h2 class="section-title">Häufige Fragen</h2>
-            </div>
-            <div class="faq-grid">
-                <div class="faq-item">
-                    <h3>Brauche ich ein spezielles Zertifikat?</h3>
-                    <p>Ja, für die Direktabrechnung benötigen Sie ein Dakota-Zertifikat von der ITSG (Informationsstelle
-                        für IT-Sicherheit im Gesundheitswesen). Die Kosten liegen bei ca. 50–100€ pro Jahr. Wir
-                        unterstützen Sie bei der Beantragung.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>Wie unterscheidet sich das von einem Abrechnungszentrum?</h3>
-                    <p>Bei einem Abrechnungszentrum zahlen Sie 1–3% pro Rezept — nur für das Versenden einer Datei. Mit
-                        InfinityMade behalten Sie 100% Ihrer Einnahmen und erledigen die Abrechnung in 15 Minuten
-                        selbst.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>Kann ich auch weiterhin ein Abrechnungszentrum nutzen?</h3>
-                    <p>Ja, InfinityMade ist flexibel. Sie können entweder direkt abrechnen oder weiterhin ein
-                        Abrechnungszentrum nutzen — ganz nach Ihrem Bedarf.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>Was passiert, wenn eine Abrechnung fehlerhaft ist?</h3>
-                    <p>Kein Problem! Die KI-gestützte Fehlerdecodierung zeigt Ihnen genau, was korrigiert werden muss.
-                        Sie können die Änderungen direkt im System vornehmen und erneut einreichen.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>Werden auch Zuzahlungen automatisch berechnet?</h3>
-                    <p>Ja. InfinityMade berechnet automatisch die gesetzlich vorgeschriebene Zuzahlung und erstellt die
-                        entsprechende Rechnung für Ihre Patienten — fehlerfrei und dokumentiert.</p>
-                </div>
-                <div class="faq-item">
-                    <h3>Kann ich auch WhatsApp-Erinnerungen bekommen?</h3>
-                    <p>Aktuell bieten wir E-Mail-Erinnerungen an. WhatsApp-Integration ist für die Zukunft geplant.
-                        Sprechen Sie uns an, wenn Sie daran interessiert sind!</p>
-                </div>
-                <div class="faq-item">
-                    <h3>Wie ist InfinityMade beim Datenschutz aufgestellt?</h3>
-                    <p>Datenschutz hat bei uns höchste Priorität! InfinityMade ist 100% DSGVO-konform. Alle Daten werden ausschließlich auf Servern in Deutschland gespeichert und verarbeitet. Wir erfüllen alle Anforderungen der EU-Datenschutz-Grundverordnung und bieten Ihnen selbstverständlich einen AV-Vertrag (Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO) an. So können Sie sicher sein, dass Ihre Patienten- und Abrechnungsdaten immer geschützt sind.</p>
-                </div>
-            </div>
+      </li>
+      <li class="px-why-item">
+        <span class="px-why-num">02</span>
+        <div>
+          <div class="px-why-h">Rezeptprüfung <em>vor</em> der Behandlung</div>
+          <div class="px-why-p">Fehler werden bei der Annahme erkannt, nicht beim Quartalsabschluss. Keine Absetzungen Monate später.</div>
         </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <a href="/index.html" class="footer-logo">infinity<span>made</span></a>
-                    <p>Digitalagentur für Praxen und KMU in Deutschland.</p>
-                </div>
-                <div class="footer-links">
-                    <h4>Produkt</h4>
-                    <a href="#features">Leistungen</a>
-                    <a href="#pricing">Preise</a>
-                    <a href="#workflow">So funktioniert's</a>
-                </div>
-                <div class="footer-links">
-                    <h4>Unternehmen</h4>
-                    <a href="/index.html">Über uns</a>
-                    <a href="/index.html#target">Branchen</a>
-                    <a href="/blog/index.html">Blog</a>
-                </div>
-                <div class="footer-links">
-                    <h4>Rechtliches</h4>
-                    <a href="/impressum.html">Impressum</a>
-                    <a href="/datenschutz.html">Datenschutz</a>
-                    <a href="/agb.html">AGB</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 InfinityMade. Alle Rechte vorbehalten.</p>
-            </div>
+      </li>
+      <li class="px-why-item">
+        <span class="px-why-num">03</span>
+        <div>
+          <div class="px-why-h">Fahrtenbuch <em>integriert</em></div>
+          <div class="px-why-p">Hausbesuche, Routenplanung und Pauschalen-Abrechnung in einem Modul — bei vielen Wettbewerbern kostet das extra oder fehlt komplett.</div>
         </div>
-    </footer>
+      </li>
+      <li class="px-why-item">
+        <span class="px-why-num">04</span>
+        <div>
+          <div class="px-why-h">Browser statt <em>Installation</em></div>
+          <div class="px-why-p">Praxura läuft im Browser auf jedem Gerät. Keine Lizenz pro Arbeitsplatz, kein Server in der Praxis, kein IT-Wartungsvertrag.</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
 
-    <script>
-        // Mobile menu toggle
-        const mobileToggle = document.querySelector('.nav-mobile-toggle');
-        const navLinks = document.querySelector('.nav-links');
-        mobileToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            mobileToggle.classList.toggle('active');
-        });
+<!-- ────────────── 03 · Prozess ────────────── -->
+<section class="block" id="prozess">
+  <div class="section-head">
+    <div>
+      <div class="section-eyebrow">03 · So funktioniert es</div>
+    </div>
+    <div>
+      <h2 class="section-title">
+        Vier Wochen vom Erstgespräch bis zur <em>laufenden Praxis.</em>
+      </h2>
+    </div>
+  </div>
 
-        // Form submission
-        document.getElementById('contactForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
+  <div class="px-process">
+    <div class="px-step">
+      <div class="px-step-num">01 · Woche 1</div>
+      <h3 class="px-step-h">Analyse</h3>
+      <p class="px-step-p">Gespräch über Praxisgröße, Sektor, aktuelle Tools und Pain-Points. Wir prüfen, ob Praxura passt.</p>
+      <div class="px-step-when">~ 45 Min · kostenfrei</div>
+    </div>
+    <div class="px-step">
+      <div class="px-step-num">02 · Woche 2</div>
+      <h3 class="px-step-h">Konfiguration</h3>
+      <p class="px-step-p">Praxura wird auf Ihre Behandlungstypen, Therapeutenpläne und Kassen-Setups eingerichtet. Sie sehen es live.</p>
+      <div class="px-step-when">~ 3–5 Werktage</div>
+    </div>
+    <div class="px-step">
+      <div class="px-step-num">03 · Woche 3</div>
+      <h3 class="px-step-h">Datenmigration</h3>
+      <p class="px-step-p">Bestehende Patientendaten, Termine und offene Rezepte werden DSGVO-konform übernommen.</p>
+      <div class="px-step-when">Parallelbetrieb möglich</div>
+    </div>
+    <div class="px-step">
+      <div class="px-step-num">04 · Woche 4</div>
+      <h3 class="px-step-h">Go-Live</h3>
+      <p class="px-step-p">Schulung des Teams (2–3 h), produktiver Start, erste Abrechnung gemeinsam. Support bleibt 90 Tage eng begleitend.</p>
+      <div class="px-step-when">Onboarding-Support inkl.</div>
+    </div>
+  </div>
+</section>
 
-            // Simple success feedback
-            const btn = this.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Anfrage gesendet!';
-            btn.disabled = true;
+<!-- ────────────── 04 · Branchen ────────────── -->
+<section class="block" id="branchen">
+  <div class="section-head">
+    <div>
+      <div class="section-eyebrow">04 · Branchen</div>
+    </div>
+    <div>
+      <h2 class="section-title">
+        Eine Software, drei <em>Sektor-Profile.</em>
+      </h2>
+      <p class="section-lede" style="margin-top: 1.4rem;">
+        Heilmittelerbringer arbeiten unterschiedlich. Praxura kennt die Spezifika von Physio, Ergo und Logo — von Behandlungspositionen bis Hausbesuchspauschalen.
+      </p>
+    </div>
+  </div>
 
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                this.reset();
-            }, 3000);
-        });
+  <div class="px-branchen">
+    <article class="px-br">
+      <span class="px-br-tag">Physiotherapie</span>
+      <h3 class="px-br-h">Praxissoftware für <em>Physiotherapie</em></h3>
+      <p class="px-br-p">
+        Manuelle Therapie, KG-ZNS, Lymphdrainage, Hausbesuche — alle Positionen vorkonfiguriert. Verordnungsdauer-Kontrolle und Folgerezept-Erinnerungen automatisch.
+      </p>
+      <div class="px-br-kw">Heilmittelkatalog · Behandlungsdokumentation · Berichte</div>
+    </article>
+    <article class="px-br">
+      <span class="px-br-tag">Ergotherapie</span>
+      <h3 class="px-br-h">Praxissoftware für <em>Ergotherapie</em></h3>
+      <p class="px-br-p">
+        Motorisch-funktionelle, sensomotorisch-perzeptive und psychisch-funktionelle Behandlungen. Eltern-Beratungen, Hilfsmittel-Empfehlungen und Therapieberichte digital.
+      </p>
+      <div class="px-br-kw">COPM · Therapieziele · Hausbesuche</div>
+    </article>
+    <article class="px-br">
+      <span class="px-br-tag">Logopädie</span>
+      <h3 class="px-br-h">Praxissoftware für <em>Logopädie</em></h3>
+      <p class="px-br-p">
+        Sprach-, Sprech-, Stimm- und Schlucktherapie mit dem gesamten Heilmittelkatalog. Anamnese-Vorlagen pro Diagnosegruppe, Verlaufsdokumentation und Berichtsexport.
+      </p>
+      <div class="px-br-kw">Anamnese · Verlauf · Berichte</div>
+    </article>
+  </div>
+</section>
 
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const href = this.getAttribute('href');
-                if (href !== '#') {
-                    e.preventDefault();
-                    const target = document.querySelector(href);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            });
-        });
-    </script>
+<!-- ────────────── 05 · FAQ ────────────── -->
+<section class="block" id="faq">
+  <div class="section-head">
+    <div>
+      <div class="section-eyebrow">05 · Häufige Fragen</div>
+    </div>
+    <div>
+      <h2 class="section-title">Praxura im <em>Detail.</em></h2>
+    </div>
+  </div>
 
-    <!-- Chatbot Widget -->
-    <script>
-        (function () {
-            var DATA = { "botName": "InfinityMade", "welcomeMessage": "Willkommen bei InfinityMade! Wir unterstützen kleine und mittelständische Betriebe dabei, im Internet sichtbar zu werden – einfach und schnell.", "noMatchMessage": "Dazu liegen mir aktuell keine Informationen vor. Bitte kontaktieren Sie uns direkt unter +49 1522 8033834 oder per E-Mail an info@infinitymade.de für weitere Hilfe.", "tone": "formal", "brandColor": "#059669", "avatar": { "type": "emoji", "emoji": "robot" }, "language": "de", "casualPrefixes": ["Klar, ", "Natürlich, "], "friendlySuffix": " Falls Sie weitere Fragen haben, schreiben Sie mir einfach!", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": { "minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500 }, "extraKnowledge": "DU BIST: InfinityBot — InfinityMade Assistent.\nInfinityMade: Digitalagentur aus Siegburg (NRW) für kleine Unternehmen.\n\nPOTENZIELLE KUNDEN: Physiotherapeuten, Friseure, Restaurantbesitzer, Fitnessstudio-Betreiber, Handwerker.\nSIE WOLLEN: Mehr Patienten/Kunden, weniger Bürokratie, weniger Stress.\nZIEL: Jeden Besucher zu einem KOSTENLOSEN DEMO-RANDVERVU lenken.\n\nWICHTIG:\n- Demo-Termin ist das Kraftvollste was wir anbieten. DORT sehen sie das komplette System live — WhatsApp-Bot, Buchungskalender, Dashboard, alle Automatisierungen.\n- Max 2-3 Sätze pro Antwort.\n- Sanfter CTA für Demo am Ende der meisten Antworten.\n- Niemals technische Details (Server, Hosting, Datenbank, API, Cloud).\n- Preise immer allgemein: \"ab 39€/Monat\", für Details Demo.\n- DSGVO erwähnen wenn nach Daten gefragt.\n- Keine quantitativen Versprechen (\"Sie sparen X Stunden\").\n\nANTWORTEN:\n- \"Was kostet das?\" → \"Das kommt auf Ihr Paket an. Für Physiotherapie startet es bei 59€/Monat. Am besten besprechen wir das in einem kurzen Demo — da zeige ich Ihnen alles live. Haben Sie 15 Minuten?\"\n\n- \"Ich bin Physiotherapeut\" → \"Absolut! Viele Physiopraxen nutzen uns: Patienten buchen über WhatsApp, Erinnerungen automatisch, alles in einem Dashboard. Soll ich Ihnen das in einem Demo zeigen?\"\n\n- \"Brauche ich technisches Wissen?\" → \"Nein, überhaupt nicht. Wir richten alles ein, Sie müssen nur noch benutzen. Im Demo zeige ich Ihnen wie einfach das ist.\"\n\n- \"Ist das DSGVO-konform?\" → \"Ja, vollständig. AV-Vertrag, Hosting in Deutschland, für Gesundheitsbetriebe gemacht.\"\n\n- \"Ich habe schon eine Website\" → \"Perfekt! Wir bauen unser System parallel ein — Patienten buchen trotzdem über WhatsApp. Im Demo sehen Sie den Unterschied!\"\n\n- \"Wie schnell geht das?\" → \"Die Einrichtung dauert 1-2 Tage. Viele Kunden sind am dritten Tag schon live. Im Demo zeige ich den genauen Ablauf.\"\n\n- \"Machen Sie auch für andere Branchen?\" → \"Ja! Friseure, Restaurants, Fitnessstudios, Handwerker — für jede Branche haben wir spezialisierte Pakete.\"\n\n- \"Kann ich das erstmal testen?\" → \"Der beste Weg ist ein kostenloses Demo — dort sehen Sie alles ohne etwas zu installieren. Haben Sie 15 Minuten diese Woche?\"\n\n- \"Ich will nicht abhängig sein\" → \"Sie behalten jederzeit Ihre Daten und können das System bei Bedarf exportieren. In einem Demo zeige ich Ihnen genau wie das funktioniert.\"\n\n- \"Was wenn das nicht funktioniert?\" → \"Die meisten Kunden sind nach dem ersten Monat begeistert. Wir bieten einen kostenlosen Demo-Termin an, damit Sie alles vorher sehen können.\"\n\n- \"Ich brauche mehr Patienten\" → \"Über unser System werden Sie bei Google besser gefunden und Patienten können einfacher bei Ihnen buchen — direkt über WhatsApp. Das Demo zeigt Ihnen genau wie das funktioniert.\"\n\nBEGRÜSSUNG: \"Hallo! 👋 Ich bin der InfinityBot. Wie kann ich Ihnen helfen? Gerne vereinbare ich auch einen kostenlosen Demo-Termin.\"\n\nVERBOTEN:\n- Server/Hosting/Datenbank/Technik erklären\n- Preise verhandeln oder Rabatte anbieten\n- Quantitative Versprechen (\"Sie sparen X Stunden\")\n- Eigene Kontodaten oder IBAN nennen\n- Garantien geben\n- Andere Firmen vergleichen\n\nERLAUBT:\n- \"Kostenloser Demo-Termin\"\n- \"24/7 verfügbar\"\n- \"DSGVO-konform\"\n- \"Keine technischen Kenntnisse nötig\"\n- \"In 1-2 Tagen live\"\n- \"Wir richten alles ein\"\n- \"Persönliche Betreuung\"\n- \"DE, TR, EN, AR\"", "qaPairs": [{ "question": "Welche Leistungen bietet InfinityMade an?", "answer": "Wir bieten moderne Websiteerstellung, WhatsApp KI-Assistenten, Online-Buchungssysteme, Google My Business Optimierung, digitale Speisekarten und Social-Media-Optimierung an.", "keywords": "leistungen, webdesign, chatbot, marketing, service" }, { "question": "Wie lange dauert die Erstellung einer Website?", "answer": "In der Regel ist Ihre Website innerhalb von 24 bis 48 Stunden fertig. Bei größeren Projekten mit individuellen Anforderungen kann es bis zu 5 Werktage dauern.", "keywords": "dauer, lieferzeit, website, erstellung, zeitraum" }, { "question": "Was kosten die Dienstleistungen für verschiedene Branchen?", "answer": "Die Preise starten ab 39 €/Monat für Friseure und Gastronomie. Handwerksbetriebe beginnen bei 49 €/Monat und Physiotherapie-Praxen bei 59 €/Monat.", "keywords": "preise, kosten, gebühren, monatlich, budget" }, { "question": "Benötige ich technisches Wissen für die Zusammenarbeit?", "answer": "Nein, wir kümmern uns um alles – von der Einrichtung bis zur Veröffentlichung. Sie müssen sich um keine technischen Details kümmern.", "keywords": "technik, vorkenntnisse, unterstützung, einrichtung, hilfe" }, { "question": "Kann ich meine Website später selbst bearbeiten?", "answer": "Ja, wir bauen Ihre Website so auf, dass Sie Texte und Bilder ohne Programmierkenntnisse selbst aktualisieren können. Auf Wunsch bieten wir auch Schulungen an.", "keywords": "bearbeiten, ändern, inhalte, aktualisierung, cms" }, { "question": "Wo befindet sich das Unternehmen?", "answer": "Wir sind Ihr lokaler Partner für den Raum Siegburg, Köln und Bonn und betreuen Kunden deutschlandweit.", "keywords": "standort, adresse, köln, bonn, siegburg" }, { "question": "Wie kann ich ein Beratungsgespräch buchen?", "answer": "Sie können ein kostenloses Demo-Gespräch direkt über unsere Website buchen oder uns eine Nachricht per E-Mail oder WhatsApp senden.", "keywords": "termin, beratung, demo, kontakt, gespräch" }, { "question": "Gibt es versteckte Kosten?", "answer": "Nein, unsere Preise sind transparent. Mögliche externe Kosten für Domain oder Hosting werden im Vorfeld klar mit Ihnen besprochen.", "keywords": "kosten, transparent, gebühren, hosting, domain" }] };
-            var EMOJI_MAP = { "infinity": "∞", "robot": "🤖", "star": "⭐", "heart": "❤️", "bulb": "💡", "rocket": "🚀", "smile": "😊" };
-            function applyTone(text) {
-                if (DATA.tone === 'formal') return text;
-                if (DATA.tone === 'casual') {
-                    var p = DATA.casualPrefixes || ['', ''];
-                    return p[Math.floor(Math.random() * p.length)] + text.charAt(0).toLowerCase() + text.slice(1);
-                }
-                if (DATA.tone === 'friendly') {
-                    var es = ['\ud83d\udc4b', '\u2728', '\ud83d\udc4d', '\ud83d\ude0a', '\ud83d\udcab'];
-                    return es[Math.floor(Math.random() * es.length)] + ' ' + text + (DATA.friendlySuffix || '');
-                }
-                return text;
-            }
-            var SESSION = { history: [], count: 0, strikes: 0, terminated: false, lastSent: 0 };
-            function fetchAnswer(msg) {
-                var cfg = {
-                    businessName: DATA.botName || '',
-                    language: DATA.language || 'de',
-                    welcomeMessage: DATA.welcomeMessage || '',
-                    noMatchMessage: DATA.noMatchMessage || '',
-                    contactInfo: DATA.noMatchMessage || '',
-                    extraKnowledge: DATA.extraKnowledge || '',
-                    qaPairs: DATA.qaPairs || []
-                };
-                return fetch(DATA.chatWebhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg, history: SESSION.history.slice(-10), config: cfg })
-                }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
-            }
-            var brand = DATA.brandColor;
-            var avatarHtml = DATA.avatar.type === 'image' && DATA.avatar.imageUrl
-                ? '<img src="' + DATA.avatar.imageUrl + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"/>'
-                : '<span>' + (EMOJI_MAP[DATA.avatar.emoji] || '\ud83e\udd16') + '</span>';
-            var css = '\
-.cwb-launcher{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:'+ brand + ';border:none;box-shadow:0 8px 24px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:white;font-size:24px;cursor:pointer;z-index:99998;overflow:hidden;transition:transform .2s ease;font-family:system-ui,sans-serif;}\
-.cwb-launcher:hover{transform:scale(1.1);}\
-.cwb-window{position:fixed;bottom:24px;right:24px;width:380px;height:520px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);background:white;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;transform:translateY(20px) scale(.95);opacity:0;pointer-events:none;transition:all .25s ease;z-index:99999;font-family:system-ui,sans-serif;}\
-.cwb-window.cwb-open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}\
-.cwb-header{background:'+ brand + ';color:white;padding:14px 16px;display:flex;align-items:center;gap:12px;}\
-.cwb-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0;}\
-.cwb-name{font-weight:600;font-size:15px;flex:1;}\
-.cwb-close{background:transparent;border:none;color:white;font-size:22px;width:28px;height:28px;border-radius:6px;cursor:pointer;}\
-.cwb-msgs{flex:1;overflow-y:auto;padding:16px;background:#fff;display:flex;flex-direction:column;gap:8px;}\
-.cwb-msg{display:flex;flex-direction:column;max-width:80%;}\
-.cwb-msg.cwb-bot{align-self:flex-start;align-items:flex-start;}\
-.cwb-msg.cwb-user{align-self:flex-end;align-items:flex-end;}\
-.cwb-bubble{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.4;word-wrap:break-word;color:#1a1a1a;user-select:text;-webkit-user-select:text;}\
-.cwb-bot .cwb-bubble{background:#f0f0f0;border-bottom-left-radius:4px;}\
-.cwb-user .cwb-bubble{background:'+ brand + ';color:white;border-bottom-right-radius:4px;}\
-.cwb-time{font-size:10px;color:#999;margin-top:3px;padding:0 4px;}\
-.cwb-typing{align-self:flex-start;background:#f0f0f0;border-radius:14px;border-bottom-left-radius:4px;padding:12px 14px;display:none;}\
-.cwb-typing.cwb-vis{display:flex;}\
-.cwb-typing span{width:6px;height:6px;background:#999;border-radius:50%;margin:0 2px;animation:cwb-bounce 1.2s infinite;}\
-.cwb-typing span:nth-child(2){animation-delay:.15s;}\
-.cwb-typing span:nth-child(3){animation-delay:.3s;}\
-@keyframes cwb-bounce{0%,60%,100%{transform:translateY(0);opacity:.6;}30%{transform:translateY(-5px);opacity:1;}}\
-.cwb-input-area{background:white;border-top:1px solid #ececec;padding:10px 12px;display:flex;align-items:center;gap:8px;}\
-.cwb-input-area input{flex:1;border:none;outline:none;padding:10px 4px;font-size:14px;color:#1a1a1a;background:transparent;}\
-.cwb-send{width:36px;height:36px;border-radius:50%;background:'+ brand + ';border:none;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}\
-';
-            var style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
-            var launcher = document.createElement('button'); launcher.className = 'cwb-launcher'; launcher.innerHTML = avatarHtml;
-            var win = document.createElement('div'); win.className = 'cwb-window'; win.setAttribute('lang', DATA.language || 'de');
-            win.innerHTML = '<div class="cwb-header"><div class="cwb-avatar">' + avatarHtml + '</div><div class="cwb-name">' + DATA.botName + '</div><button class="cwb-close" type="button">\u00d7</button></div><div class="cwb-msgs"><div class="cwb-typing"><span></span><span></span><span></span></div></div><div class="cwb-input-area"><input type="text" placeholder="' + (DATA.typeMessage || '') + '" /><button class="cwb-send" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>';
-            document.body.appendChild(launcher); document.body.appendChild(win);
-            var msgs = win.querySelector('.cwb-msgs'); var typing = win.querySelector('.cwb-typing'); var input = win.querySelector('input'); var send = win.querySelector('.cwb-send'); var closeBtn = win.querySelector('.cwb-close');
-            function timeNow() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
-            function addMsg(text, who) { var div = document.createElement('div'); div.className = 'cwb-msg cwb-' + who; div.innerHTML = '<div class="cwb-bubble"></div><div class="cwb-time">' + timeNow() + '</div>'; div.querySelector('.cwb-bubble').textContent = text; msgs.insertBefore(div, typing); msgs.scrollTop = msgs.scrollHeight; }
-            var inited = false;
-            launcher.addEventListener('click', function () { win.classList.add('cwb-open'); if (!inited) { inited = true; setTimeout(function () { addMsg(DATA.welcomeMessage, 'bot'); }, 200); } });
-            closeBtn.addEventListener('click', function () { win.classList.remove('cwb-open'); });
-            function lockSession(reasonText) { SESSION.terminated = true; input.disabled = true; input.value = ''; input.placeholder = DATA.sessionEnded || ''; addMsg((reasonText || DATA.sessionEnded) + ' ' + (DATA.noMatchMessage || ''), 'bot'); }
-            function userSend() {
-                if (SESSION.terminated) return;
-                var t = (input.value || '').trim();
-                if (!t) return;
-                if (t.length < (DATA.limits.minLen || 2)) { addMsg(DATA.errTooShort, 'bot'); return; }
-                if (t.length > (DATA.limits.maxLen || 500)) { addMsg(DATA.errTooLong, 'bot'); return; }
-                var now = Date.now();
-                if (now - SESSION.lastSent < (DATA.limits.cooldownMs || 1500)) { addMsg(DATA.errCooldown, 'bot'); return; }
-                SESSION.lastSent = now;
-                addMsg(t, 'user');
-                input.value = '';
-                SESSION.count++;
-                if (SESSION.count > (DATA.limits.maxMessagesPerSession || 30)) { lockSession(DATA.sessionLimit); return; }
-                typing.classList.add('cwb-vis'); msgs.scrollTop = msgs.scrollHeight;
-                fetchAnswer(t).then(function (data) {
-                    typing.classList.remove('cwb-vis');
-                    if (!data || data.error || !data.reply) { addMsg(DATA.errNetwork, 'bot'); return; }
-                    addMsg(applyTone(data.reply), 'bot');
-                    SESSION.history.push({ role: 'user', content: t });
-                    SESSION.history.push({ role: 'assistant', content: data.reply });
-                    if (data.offTopic) {
-                        SESSION.strikes++;
-                        if (SESSION.strikes >= (DATA.limits.maxOffTopicStrikes || 3)) {
-                            setTimeout(function () { lockSession(DATA.sessionEnded); }, 600);
-                        }
-                    }
-                }).catch(function (err) {
-                    typing.classList.remove('cwb-vis');
-                    addMsg(DATA.errNetwork, 'bot');
-                });
-            }
-            send.addEventListener('click', userSend);
-            input.addEventListener('keydown', function (e) { if (e.key === 'Enter') userSend(); });
-        })();
-    </script>
+  <div class="px-faq">
+    <details>
+      <summary>
+        <span>Kann ich mit Praxura die GKV-Abrechnung nach §302 SGB V selbst durchführen?</span>
+        <span class="px-faq-toggle" aria-hidden="true">+</span>
+      </summary>
+      <div class="px-faq-body">
+        Ja. Praxura erzeugt vollständige DTA-Datenpakete nach §302 SGB V (Anlage 1 TP5 V21) inklusive Begleitzettel. Sie übermitteln direkt an die Datenannahmestelle der zuständigen Kasse — ohne Abrechnungszentrum, ohne Komission von 2–5 %.
+      </div>
+    </details>
+    <details>
+      <summary>
+        <span>Wie funktioniert die KI-Rezeptprüfung mit OCR?</span>
+        <span class="px-faq-toggle" aria-hidden="true">+</span>
+      </summary>
+      <div class="px-faq-body">
+        Sie scannen das Rezept mit dem Smartphone oder Scanner. Die KI liest Diagnose, ICD-10, Heilmittelposition und Verordnungsmenge automatisch aus und prüft auf formale Fehler, die später zu Absetzungen führen würden — bevor die Behandlung beginnt.
+      </div>
+    </details>
+    <details>
+      <summary>
+        <span>Eignet sich Praxura auch für Hausbesuche?</span>
+        <span class="px-faq-toggle" aria-hidden="true">+</span>
+      </summary>
+      <div class="px-faq-body">
+        Ja, Hausbesuche sind ein zentraler Anwendungsfall. Das elektronische Fahrtenbuch erfasst Wegstrecken automatisch, plant Routen für Tagestouren und übernimmt die korrekte Verordnung der Hausbesuchspauschalen in die Abrechnung.
+      </div>
+    </details>
+    <details>
+      <summary>
+        <span>Ist Praxura DSGVO-konform?</span>
+        <span class="px-faq-toggle" aria-hidden="true">+</span>
+      </summary>
+      <div class="px-faq-body">
+        Ja. Alle Daten werden auf EU-Servern verarbeitet, ein Auftragsverarbeitungsvertrag (AVV) wird mit jedem Praxisinhaber abgeschlossen, sensible Patientendaten sind verschlüsselt gespeichert. Eine TOM-Übersicht liegt Ihnen vor Vertragsunterzeichnung vor.
+      </div>
+    </details>
+    <details>
+      <summary>
+        <span>Welche Geräte und Browser werden unterstützt?</span>
+        <span class="px-faq-toggle" aria-hidden="true">+</span>
+      </summary>
+      <div class="px-faq-body">
+        Praxura läuft im Browser — am Empfangs-PC, am Therapie-Tablet, am Smartphone unterwegs. Unterstützt werden alle aktuellen Versionen von Chrome, Edge, Safari und Firefox. Keine Installation, kein Server in der Praxis.
+      </div>
+    </details>
+    <details>
+      <summary>
+        <span>Was kostet Praxura?</span>
+        <span class="px-faq-toggle" aria-hidden="true">+</span>
+      </summary>
+      <div class="px-faq-body">
+        Der Preis hängt von Praxisgröße, Teamzahl und gewünschten Modulen ab. Wir kalkulieren transparent im Analysegespräch und stellen Ihnen vor Vertragsabschluss ein individuelles, schriftliches Angebot zur Verfügung.
+      </div>
+    </details>
+    <details>
+      <summary>
+        <span>Können wir aus einer anderen Praxissoftware (z. B. Buchner Flow, MediFox, Optica) migrieren?</span>
+        <span class="px-faq-toggle" aria-hidden="true">+</span>
+      </summary>
+      <div class="px-faq-body">
+        Ja. Wir unterstützen Sie beim Export aus Ihrer bisherigen Lösung und bei der DSGVO-konformen Übernahme von Patientenstammdaten, Terminhistorie und offenen Rezepten. Ein Parallelbetrieb während der Umstellung ist möglich.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ────────────── Closing CTA ────────────── -->
+<aside class="px-closing" id="kontakt">
+  <div class="px-closing-card">
+    <div>
+      <div class="px-closing-eyebrow">Analysegespräch · kostenfrei</div>
+      <h2 class="px-closing-title">
+        Sehen, ob Praxura zu Ihrer <em>Praxis passt.</em>
+      </h2>
+      <p class="px-closing-text">
+        45 Minuten. Wir hören zu, schauen uns Ihre aktuelle Lösung an, zeigen die Module, die Sie wirklich brauchen — und schicken Ihnen danach ein schriftliches Angebot. Unverbindlich.
+      </p>
+    </div>
+    <div class="px-closing-side">
+      <a href="mailto:kontakt@infinitymade.de?subject=Analysegespr%C3%A4ch%20Praxura" class="px-closing-btn">
+        Termin vorschlagen
+        <span class="px-closing-btn-circle" aria-hidden="true">↗</span>
+      </a>
+      <div class="px-closing-side-quiet">Oder direkt per E-Mail</div>
+      <a href="mailto:kontakt@infinitymade.de" class="px-closing-side-mail">kontakt@infinitymade.de</a>
+    </div>
+  </div>
+</aside>
+
+<!-- ────────────── Footer ────────────── -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Infinity<em>Made</em></div>
+      <div class="footer-tagline">KI-Studio aus Siegburg. Wir bauen Software, die Zeit zurückgibt — für Heilmittel-Praxen, Handwerk und KMU in Deutschland.</div>
+    </div>
+    <div class="footer-col">
+      <h4>InfinityMade</h4>
+      <ul>
+        <li><a href="/#services">Leistungen</a></li>
+        <li><a href="/#projekte">Projekte</a></li>
+        <li><a href="/#prozess">Prozess</a></li>
+        <li><a href="/#kontakt">Analysegespräch</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Produkte</h4>
+      <ul>
+        <li><a href="/praxis.html">Praxura</a></li>
+        <li><a href="/blog/">Insights</a></li>
+        <li><a href="/login.html">Login</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<script src="assets/system.js?v=20260524"></script>
+
 </body>
-
 </html>

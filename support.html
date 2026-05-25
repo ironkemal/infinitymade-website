@@ -3,94 +3,202 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Support &amp; Hilfe — InfinityMade</title>
-  <meta name="description" content="Support, FAQ und Datenschutz-Rechte (DSGVO) für InfinityMade Kunden. Wir antworten innerhalb von 24 Stunden werktags." />
+  <title>Support & Hilfe — InfinityMade</title>
+  <meta name="description" content="Support, FAQ und Datenschutz-Rechte (DSGVO) für InfinityMade Kunden. Antwortzeit innerhalb 24 Stunden werktags." />
+  <link rel="canonical" href="https://infinitymade.de/support.html" />
+
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0f172a; background: #fafbfc; line-height: 1.6; }
-    .container { max-width: 760px; margin: 0 auto; padding: 48px 24px; }
-    h1 { font-size: 2.2rem; margin: 0 0 12px; }
-    h2 { font-size: 1.3rem; margin: 32px 0 12px; color: #1e293b; }
-    .lead { font-size: 1.1rem; color: #475569; margin-bottom: 32px; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
-    .card h3 { margin: 0 0 8px; font-size: 1.05rem; }
-    .card p { margin: 4px 0; color: #475569; }
-    a.btn { display: inline-block; padding: 10px 18px; background: #22c55e; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 12px; }
-    a.btn.secondary { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; }
-    .meta { font-size: 0.85rem; color: #64748b; }
-    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
-    footer { text-align: center; padding: 32px 16px; color: #64748b; font-size: 0.9rem; }
-    footer a { color: #475569; margin: 0 8px; }
-  </style>
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="assets/system.css?v=20260524" />
+
   <script defer src="https://analytics.infinitymade.de/script.js" data-website-id="fa4b493b-35cd-4555-b667-b6a5439471e6"></script>
+
+  <style>
+    .sp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.6rem 0 2rem; }
+    .sp-card {
+      padding: 1.6rem 1.7rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      transition: transform 280ms var(--ease-out), border-color 200ms ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .sp-card:hover { transform: translateY(-2px); border-color: rgba(107, 85, 56, 0.22); }
+    }
+    .sp-card h3 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 1.1rem;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+      margin: 0 0 0.5rem;
+    }
+    .sp-card p { font-size: 0.92rem; line-height: 1.55; color: var(--ink-soft); margin: 0.3rem 0; }
+    .sp-card .sp-meta { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-quiet); letter-spacing: 0.05em; margin-top: 0.5rem; }
+    .sp-card code {
+      background: var(--bg-warm);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.84em;
+      color: var(--bronze);
+    }
+    .sp-card a {
+      color: var(--bronze);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+    .sp-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      background: var(--ink);
+      color: var(--bg);
+      text-decoration: none !important;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-top: 0.6rem;
+      transition: transform 240ms var(--ease-spring), background 200ms ease;
+    }
+    .sp-btn.secondary { background: var(--bg-card); color: var(--ink); border: 1px solid var(--line); }
+    @media (hover: hover) and (pointer: fine) {
+      .sp-btn:hover { transform: translateY(-2px); background: var(--emerald-deep); color: var(--bg); }
+      .sp-btn.secondary:hover { border-color: var(--bronze); }
+    }
+
+    @media (max-width: 700px) { .sp-grid { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Support &amp; Hilfe</h1>
-    <p class="lead">Wir antworten innerhalb von <strong>24 Stunden werktags</strong> (Mo–Fr, 9–18 Uhr CET).</p>
 
-    <h2>📧 Kontakt</h2>
-    <div class="card">
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Infinity<em>Made</em></a>
+  <a href="/#services" class="nav-link">Leistungen</a>
+  <a href="/praxis.html" class="nav-link">Praxura</a>
+  <a href="/blog/" class="nav-link">Insights</a>
+  <a href="/login.html" class="nav-login">Login</a>
+  <a href="/#kontakt" class="nav-cta">
+    Analysegespräch
+    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  </a>
+</nav>
+
+<main class="doc">
+  <span class="doc-eyebrow">
+    <span class="doc-eyebrow-dot"></span>
+    Support · Hilfe & DSGVO
+  </span>
+  <h1>Support <em>& Hilfe</em></h1>
+  <p class="doc-lede">Wir antworten innerhalb von <strong>24 Stunden werktags</strong> (Mo–Fr, 9–18 Uhr CET).</p>
+
+  <h2>Kontakt</h2>
+  <div class="sp-grid">
+    <div class="sp-card">
       <h3>E-Mail-Support</h3>
-      <p>Allgemeine Fragen, technische Probleme, Abrechnung:</p>
-      <p><a href="mailto:support@infinitymade.de" class="btn">support@infinitymade.de</a></p>
-      <p class="meta">Bitte geben Sie Ihre Geschäftsname-E-Mail an, damit wir Sie schneller zuordnen können.</p>
+      <p>Allgemeine Fragen, technische Probleme, Abrechnung.</p>
+      <a href="mailto:support@infinitymade.de" class="sp-btn">support@infinitymade.de ↗</a>
+      <div class="sp-meta">Bitte Geschäftsname-E-Mail angeben für schnellere Zuordnung.</div>
     </div>
-
-    <div class="card">
+    <div class="sp-card">
       <h3>Datenschutz / DSGVO</h3>
-      <p>Auskunft, Berichtigung, Löschung Ihrer Daten:</p>
-      <p><a href="mailto:datenschutz@infinitymade.de" class="btn secondary">datenschutz@infinitymade.de</a></p>
-    </div>
-
-    <h2>🔐 Ihre DSGVO-Rechte (Selbstbedienung)</h2>
-    <div class="card">
-      <h3>Recht auf Auskunft (Art. 15 DSGVO)</h3>
-      <p>Sie können jederzeit eine vollständige Kopie Ihrer bei uns gespeicherten Daten als JSON-Datei herunterladen:</p>
-      <p><strong>Im Dashboard:</strong> Einstellungen → Datenschutz → <em>Daten exportieren</em></p>
-      <p class="meta">Alternativ E-Mail an datenschutz@infinitymade.de — Bearbeitung innerhalb von 30 Tagen.</p>
-    </div>
-
-    <div class="card">
-      <h3>Recht auf Löschung (Art. 17 DSGVO)</h3>
-      <p>Sie können Ihr Konto und alle damit verbundenen personenbezogenen Daten dauerhaft löschen:</p>
-      <p><strong>Im Dashboard:</strong> Einstellungen → Datenschutz → <em>Konto löschen</em></p>
-      <p class="meta">Achtung: Abrechnungsdaten bleiben aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) <strong>anonymisiert</strong> für 10 Jahre erhalten.</p>
-    </div>
-
-    <h2>❓ Häufige Fragen</h2>
-    <div class="card">
-      <h3>Wie kann ich mein Abo kündigen?</h3>
-      <p>Dashboard → Einstellungen → Abo &amp; Zahlung → Stripe Customer Portal → <em>Abo kündigen</em>. Kündigung greift zum Ende der laufenden Abrechnungsperiode.</p>
-    </div>
-    <div class="card">
-      <h3>Mein Google-Kalender synchronisiert nicht.</h3>
-      <p>Kalender-Seite → Integration → <em>Google neu verbinden</em>. Falls das Problem bestehen bleibt: support@infinitymade.de mit Screenshot.</p>
-    </div>
-    <div class="card">
-      <h3>Wo finde ich meine Rechnungen?</h3>
-      <p>Dashboard → Einstellungen → Abo &amp; Zahlung → Stripe Portal → <em>Rechnungshistorie</em>.</p>
-    </div>
-    <div class="card">
-      <h3>Können Mitarbeiter sich selbst eintragen?</h3>
-      <p>Ja. Im Dashboard erhalten Sie einen <code>company_code</code> — geben Sie diesen Code an Ihre Mitarbeiter weiter, sie registrieren sich auf <code>/employee-signup.html</code>.</p>
-    </div>
-
-    <h2>📞 Eskalation</h2>
-    <div class="card">
-      <h3>Kritischer Ausfall (Buchungen nicht möglich, Datenverlust)</h3>
-      <p>Schreiben Sie eine E-Mail mit Betreff <strong>"DRINGEND"</strong> an support@infinitymade.de. Wir prüfen alle solchen Anfragen prioritär innerhalb 4h (werktags).</p>
+      <p>Auskunft, Berichtigung, Löschung Ihrer Daten.</p>
+      <a href="mailto:datenschutz@infinitymade.de" class="sp-btn secondary">datenschutz@infinitymade.de ↗</a>
     </div>
   </div>
 
-  <footer>
-    <a href="/">Startseite</a> ·
-    <a href="/impressum.html">Impressum</a> ·
-    <a href="/datenschutz.html">Datenschutz</a> ·
-    <a href="/agb.html">AGB</a> ·
-    <a href="/dpa.html">AVV</a>
-  </footer>
+  <h2>Ihre DSGVO-Rechte <em>(Selbstbedienung)</em></h2>
+  <div class="sp-grid">
+    <div class="sp-card">
+      <h3>Recht auf Auskunft (Art. 15 DSGVO)</h3>
+      <p>Vollständige Kopie Ihrer gespeicherten Daten als JSON-Export:</p>
+      <p><strong>Im Dashboard:</strong> Einstellungen → Datenschutz → <em>Daten exportieren</em></p>
+      <div class="sp-meta">Alternativ E-Mail — Bearbeitung innerhalb von 30 Tagen.</div>
+    </div>
+    <div class="sp-card">
+      <h3>Recht auf Löschung (Art. 17 DSGVO)</h3>
+      <p>Konto und alle personenbezogenen Daten dauerhaft löschen:</p>
+      <p><strong>Im Dashboard:</strong> Einstellungen → Datenschutz → <em>Konto löschen</em></p>
+      <div class="sp-meta">Abrechnungsdaten bleiben anonymisiert (§ 147 AO, § 304 SGB V).</div>
+    </div>
+  </div>
+
+  <h2>Häufige Fragen</h2>
+  <div class="sp-grid">
+    <div class="sp-card">
+      <h3>Wie kann ich mein Abo kündigen?</h3>
+      <p>Dashboard → Einstellungen → Abo & Zahlung → Stripe Customer Portal → <em>Abo kündigen</em>. Kündigung greift zum Ende der laufenden Abrechnungsperiode.</p>
+    </div>
+    <div class="sp-card">
+      <h3>Mein Google-Kalender synchronisiert nicht</h3>
+      <p>Kalender-Seite → Integration → <em>Google neu verbinden</em>. Falls das Problem bestehen bleibt: support@infinitymade.de mit Screenshot.</p>
+    </div>
+    <div class="sp-card">
+      <h3>Wo finde ich meine Rechnungen?</h3>
+      <p>Dashboard → Einstellungen → Abo & Zahlung → Stripe Portal → <em>Rechnungshistorie</em>.</p>
+    </div>
+    <div class="sp-card">
+      <h3>Können Mitarbeiter sich selbst eintragen?</h3>
+      <p>Ja. Im Dashboard erhalten Sie einen <code>company_code</code> — geben Sie diesen an Ihre Mitarbeiter, sie registrieren sich auf <code>/employee-signup.html</code>.</p>
+    </div>
+  </div>
+
+  <h2>Eskalation</h2>
+  <div class="sp-card">
+    <h3>Kritischer Ausfall (Buchungen nicht möglich, Datenverlust)</h3>
+    <p>E-Mail mit Betreff <strong>„DRINGEND"</strong> an support@infinitymade.de. Wir prüfen prioritär innerhalb 4 h (werktags).</p>
+  </div>
+
+  <div class="doc-meta">Stand: Mai 2026 · InfinityMade · Siegburg, NRW</div>
+</main>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Infinity<em>Made</em></div>
+      <div class="footer-tagline">KI-Studio aus Siegburg. Wir bauen Software, die Zeit zurückgibt — für Heilmittel-Praxen, Handwerk und KMU in Deutschland.</div>
+    </div>
+    <div class="footer-col">
+      <h4>InfinityMade</h4>
+      <ul>
+        <li><a href="/#services">Leistungen</a></li>
+        <li><a href="/#projekte">Projekte</a></li>
+        <li><a href="/#prozess">Prozess</a></li>
+        <li><a href="/#kontakt">Analysegespräch</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Produkte</h4>
+      <ul>
+        <li><a href="/praxis.html">Praxura</a></li>
+        <li><a href="/blog/">Insights</a></li>
+        <li><a href="/login.html">Login</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+        <li><a href="/widerruf.html">Widerruf</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<script src="assets/system.js?v=20260524"></script>
 </body>
 </html>

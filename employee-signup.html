@@ -9,9 +9,52 @@
   <!-- Sentry error tracking -->
   <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous"></script>
   <script src="/sentry-init.js?v=20260523c"></script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#F8F3E8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="login.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
+    /* Soft-skill repaint (overrides login.css dark theme) */
+    :root {
+      --bg-primary: #F8F3E8;
+      --bg-secondary: #F1E9D6;
+      --bg-card: #FFFFFF;
+      --border: rgba(26, 22, 17, 0.08);
+      --border-strong: rgba(26, 22, 17, 0.18);
+      --text-primary: #1A1611;
+      --text-secondary: #7A6F61;
+      --accent: #1E3D2F;
+      --accent-hover: #6B5538;
+      --danger: #9C3A3A;
+    }
+    html, body {
+      background: #F8F3E8 !important;
+      color: #1A1611 !important;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+    }
+    body {
+      background:
+        radial-gradient(ellipse at top, rgba(107, 85, 56, 0.05), transparent 60%),
+        #F8F3E8 !important;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 100;
+      opacity: 0.035; mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    }
+    .brand {
+      font-family: 'Fraunces', serif !important;
+      font-weight: 500 !important;
+      letter-spacing: -0.02em;
+    }
+    .brand em { font-style: italic; color: #6B5538; }
+    .step-title { font-family: 'Fraunces', serif; font-weight: 500; }
+    .company-badge { background: rgba(30, 61, 47, 0.08) !important; color: #1E3D2F !important; }
+
     .step { display: none; animation: fadeIn .25s ease; }
     .step.active { display: block; }
     @keyframes fadeIn { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform: translateY(0);} }
@@ -54,7 +97,7 @@
 </head>
 <body>
   <main class="login-wrap">
-    <a href="/" class="brand">InfinityMade</a>
+    <a href="/" class="brand">Infinity<em>Made</em></a>
 
     <div class="login-card">
       <h1 id="title">Mitarbeiter Konto</h1>

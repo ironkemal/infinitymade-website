@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -6,16 +6,214 @@
   <meta name="robots" content="noindex, nofollow" />
   <meta name="googlebot" content="noindex, nofollow" />
   <title>Login — InfinityMade</title>
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#F8F3E8" />
+
   <!-- Sentry error tracking -->
   <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous"></script>
   <script src="/sentry-init.js?v=20260523c"></script>
-  <link rel="stylesheet" href="login.css" />
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="assets/system.css?v=20260524" />
+
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+    .login-wrap { width: 100%; max-width: 460px; }
+    .brand {
+      display: inline-block;
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-decoration: none;
+      margin-bottom: 2.5rem;
+    }
+    .brand em { font-style: italic; color: var(--bronze); }
+    .login-card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 3rem 2.6rem;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.7) inset,
+        0 24px 48px -20px rgba(26, 22, 17, 0.18),
+        0 6px 14px -4px rgba(26, 22, 17, 0.05);
+    }
+    .login-card h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 2rem;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+    }
+    .sub {
+      font-size: 0.95rem;
+      color: var(--ink-mute);
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+    .lang-switch {
+      display: inline-flex;
+      gap: 0.25rem;
+      padding: 0.25rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      margin-bottom: 2rem;
+    }
+    .lang-switch button {
+      border: none;
+      background: transparent;
+      padding: 0.35rem 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-mute);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 200ms ease, color 200ms ease;
+    }
+    .lang-switch button.active {
+      background: var(--ink);
+      color: var(--bg);
+    }
+    form label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin: 1.1rem 0 0.5rem;
+    }
+    form label:first-of-type { margin-top: 0; }
+    form input {
+      width: 100%;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid rgba(26, 22, 17, 0.18);
+      border-radius: 12px;
+      font-family: var(--sans);
+      font-size: 0.98rem;
+      color: var(--ink);
+      background: var(--bg-warm);
+      transition: border-color 200ms ease, background 200ms ease, box-shadow 200ms ease;
+    }
+    form input:hover { border-color: rgba(26, 22, 17, 0.3); }
+    form input:focus {
+      outline: none;
+      border-color: var(--bronze);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(107, 85, 56, 0.12);
+    }
+    .btn-primary {
+      width: 100%;
+      padding: 0.95rem 1.4rem;
+      margin-top: 1.6rem;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 240ms var(--ease-spring), background 200ms ease, box-shadow 280ms ease;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.06) inset,
+        0 6px 14px -6px rgba(26, 22, 17, 0.25);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-primary:hover {
+        background: var(--emerald-deep);
+        transform: translateY(-2px);
+        box-shadow:
+          0 18px 30px -10px rgba(30, 61, 47, 0.4),
+          0 6px 12px -3px rgba(26, 22, 17, 0.1);
+      }
+    }
+    .btn-primary:active { transform: translateY(0) scale(0.98); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .msg {
+      display: none;
+    }
+    .msg.show {
+      display: block;
+      margin-top: 1rem;
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+    }
+    .msg.error { background: rgba(156, 58, 58, 0.08); color: var(--rose); border: 1px solid rgba(156, 58, 58, 0.2); }
+    .msg.success { background: rgba(78, 92, 69, 0.08); color: var(--sage); border: 1px solid rgba(78, 92, 69, 0.2); }
+    .msg.info { background: var(--bg-warm); color: var(--ink-soft); border: 1px solid var(--line); }
+
+    .links {
+      margin-top: 1.2rem;
+      text-align: center;
+    }
+    .links a {
+      font-size: 0.86rem;
+      color: var(--bronze);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .register-block {
+      margin-top: 2.4rem;
+      padding-top: 1.8rem;
+      border-top: 1px solid var(--line);
+      text-align: center;
+    }
+    .register-text {
+      font-size: 0.88rem;
+      color: var(--ink-mute);
+      margin-bottom: 0.9rem;
+    }
+    .btn-register {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: transform 240ms var(--ease-spring), border-color 200ms ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-register:hover { transform: translateY(-2px); border-color: var(--bronze); }
+    }
+
+    .back-home {
+      margin-top: 1.6rem;
+      text-align: center;
+      font-size: 0.84rem;
+    }
+    .back-home a {
+      color: var(--ink-mute);
+      text-decoration: none;
+    }
+    .back-home a:hover { color: var(--ink); }
+
+    @media (max-width: 500px) {
+      .login-card { padding: 2.2rem 1.6rem; }
+    }
+  </style>
 </head>
 <body>
   <main class="login-wrap">
-    <a href="/" class="brand">InfinityMade</a>
+    <a href="/" class="brand">Infinity<em>Made</em></a>
 
     <div class="login-card">
       <h1 id="title">Anmelden</h1>
@@ -52,6 +250,6 @@
     <p class="back-home"><a href="/" id="backLink">← Zurück zur Startseite</a></p>
   </main>
 
-  <script type="module" src="login.js?v=20260512j"></script>
+  <script type="module" src="login.js?v=20260524"></script>
 </body>
 </html>
