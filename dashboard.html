@@ -1083,6 +1083,92 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: MAHNWESEN ===== -->
+        <section class="panel" id="panel-mahnwesen">
+          <div class="panel-header">
+            <div>
+              <h2>Mahnwesen</h2>
+              <p class="panel-sub">Offene Zuzahlungen verwalten &amp; Mahnbriefe erstellen</p>
+            </div>
+          </div>
+
+          <!-- Summary bar -->
+          <div class="card" style="margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;background:var(--bg-card);border:1px solid var(--border);">
+            <div id="mwSummary" style="display:flex;gap:24px;flex-wrap:wrap;padding:4px 0;">
+              <span style="color:var(--text-muted);font-size:13px;">Lade…</span>
+            </div>
+          </div>
+
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border);">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th style="text-align:right;">Zuzahlung</th>
+                    <th>Letzte Mahnung</th>
+                    <th>Stufe</th>
+                    <th>Status</th>
+                    <th>Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody id="mahnwesenBody"></tbody>
+              </table>
+              <div id="mahnwesenEmpty" class="table-empty" style="padding:20px;text-align:center;color:var(--text-muted);" hidden>
+                Keine offenen Zuzahlungen. Alle Patienten haben bezahlt.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PANEL: STATISTIK ===== -->
+        <section class="panel" id="panel-statistik">
+          <div class="panel-header">
+            <div>
+              <h2>Statistik &amp; Auswertung</h2>
+              <p class="panel-sub">Umsatz, Patienten und Sitzungsübersicht</p>
+            </div>
+            <select class="form-select" id="statMonateSelect" style="width:auto;padding:6px 10px;background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);border-radius:6px;">
+              <option value="3">Letzte 3 Monate</option>
+              <option value="6" selected>Letzte 6 Monate</option>
+              <option value="12">Letzte 12 Monate</option>
+            </select>
+          </div>
+
+          <!-- KPI Cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;">
+            <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Patienten gesamt</div>
+              <div id="statPatGesamt" style="font-size:30px;font-weight:700;color:var(--text-main);">—</div>
+              <div id="statPatNeu" style="font-size:11px;color:#15803d;margin-top:4px;"></div>
+            </div>
+            <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Sitzungen (dieser Monat)</div>
+              <div id="statSitzDiesen" style="font-size:30px;font-weight:700;color:var(--text-main);">—</div>
+              <div id="statSitzDelta" style="font-size:11px;margin-top:4px;"></div>
+            </div>
+            <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Akzeptierte Abrechnungen</div>
+              <div id="statAbrAkz" style="font-size:30px;font-weight:700;color:var(--text-main);">—</div>
+              <div id="statAbrSumme" style="font-size:11px;color:#15803d;margin-top:4px;"></div>
+            </div>
+            <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Offene Zuzahlungen</div>
+              <div id="statOffeneZuz" style="font-size:30px;font-weight:700;color:#dc2626;">—</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">unbezahlte Rezepte</div>
+            </div>
+          </div>
+
+          <!-- Bar chart -->
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border);">
+            <div style="font-weight:600;font-size:14px;margin-bottom:16px;color:var(--text-main);">Monatlicher Kassenumsatz</div>
+            <div id="statBarChart" style="display:flex;align-items:flex-end;gap:8px;height:160px;padding-bottom:4px;border-bottom:1px solid var(--border);">
+              <div style="color:var(--text-muted);font-size:13px;">Lade…</div>
+            </div>
+            <div id="statBarLegend" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;justify-content:center;"></div>
+          </div>
+        </section>
+
         <!-- ===== PANEL: NOTIZEN ===== -->
         <section class="panel" id="panel-notizen">
           <div class="panel-header">

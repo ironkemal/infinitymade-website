@@ -76,7 +76,9 @@ const T = {
     ab_status_gesendet: 'Versendet', ab_status_accepted: 'Akzeptiert',
     ab_status_rejected: 'Abgelehnt', ab_status_paid: 'Bezahlt',
     ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.',
-    nav_belegliste: 'Kassenbuch (GoBD)'
+    nav_belegliste: 'Kassenbuch (GoBD)',
+    nav_mahnwesen: 'Mahnwesen',
+    nav_statistik: 'Statistik'
   },
   en: {
     logout: 'Sign out',
@@ -144,7 +146,9 @@ const T = {
     ab_status_gesendet: 'Sent', ab_status_accepted: 'Accepted',
     ab_status_rejected: 'Rejected', ab_status_paid: 'Paid',
     ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.',
-    nav_belegliste: 'Cash Ledger (GoBD)'
+    nav_belegliste: 'Cash Ledger (GoBD)',
+    nav_mahnwesen: 'Dunning',
+    nav_statistik: 'Statistics'
   },
   tr: {
     logout: 'Çıkış',
@@ -212,7 +216,9 @@ const T = {
     ab_status_gesendet: 'Gönderildi', ab_status_accepted: 'Kabul',
     ab_status_rejected: 'Red', ab_status_paid: 'Ödendi',
     ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.',
-    nav_belegliste: 'Kasa Defteri (GoBD)'
+    nav_belegliste: 'Kasa Defteri (GoBD)',
+    nav_mahnwesen: 'Tahsilat',
+    nav_statistik: 'İstatistik'
   }
 };
 
@@ -295,6 +301,8 @@ const SECTOR_PANELS = {
     { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'] },
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
     { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
+    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'] },
+    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'] },
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
     { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
@@ -313,6 +321,8 @@ const SECTOR_PANELS = {
     { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'] },
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
     { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
+    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'] },
+    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'] },
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
     { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
@@ -558,6 +568,8 @@ async function switchPanel(id) {
   if (id === 'rechnungen') loadRechnungen();
   if (id === 'abrechnung') loadAbrechnung();
   if (id === 'belegliste') loadBelegliste();
+  if (id === 'mahnwesen') loadMahnwesen();
+  if (id === 'statistik') loadStatistik();
   if (id === 'anamnese') loadAnamnese();
 }
 
@@ -12028,3 +12040,215 @@ function initBeleglisteUI() {
   });
 }
 
+// ============================================================================
+// Mahnwesen (Dunning) UI
+// ============================================================================
+
+async function loadMahnwesen() {
+  const tbody = document.getElementById('mahnwesenBody');
+  const empty = document.getElementById('mahnwesenEmpty');
+  const summary = document.getElementById('mwSummary');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted);">Lade…</td></tr>';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API}/billing/mahnwesen/offene`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+
+    tbody.innerHTML = '';
+    if (!rows.length) {
+      empty.hidden = false;
+      summary.innerHTML = '<span style="color:#15803d;font-size:13px;">Alle Zuzahlungen beglichen ✓</span>';
+      return;
+    }
+    empty.hidden = true;
+
+    // Summary
+    const totalOffen = rows.reduce((s, r) => s + Number(r.zuzahlung_eur), 0);
+    const fmtEur = n => Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    summary.innerHTML = `
+      <div><span style="font-size:11px;color:var(--text-muted);">Offen gesamt</span><br><strong style="color:#dc2626;">${fmtEur(totalOffen)}</strong></div>
+      <div><span style="font-size:11px;color:var(--text-muted);">Patienten</span><br><strong>${rows.length}</strong></div>
+    `;
+
+    const LEVEL_LABELS = { 1: 'Erinnerung', 2: '1. Mahnung', 3: '2. Mahnung' };
+    const LEVEL_COLORS = { 1: '#1d4ed8', 2: '#d97706', 3: '#dc2626' };
+
+    rows.forEach(r => {
+      const pname = `${escapeHtml(r.patient?.first_name || '')} ${escapeHtml(r.patient?.last_name || '')}`.trim();
+      const lm = r.latest_mahnung;
+      const nextLevel = lm ? Math.min(lm.level + 1, 3) : 1;
+      const levelColor = lm ? LEVEL_COLORS[lm.level] : '#6b7280';
+      const levelLabel = lm ? LEVEL_LABELS[lm.level] : '—';
+      const statusBadge = lm
+        ? `<span class="badge" style="background:${lm.status === 'bezahlt' ? '#dcfce7' : lm.status === 'abgeschrieben' ? '#f3f4f6' : '#fef3c7'};color:${lm.status === 'bezahlt' ? '#15803d' : lm.status === 'abgeschrieben' ? '#6b7280' : '#92400e'};">${escapeHtml(lm.status)}</span>`
+        : '<span class="badge badge-gray">neu</span>';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${pname}</strong></td>
+        <td style="text-align:right;font-weight:600;color:#dc2626;">${fmtEur(r.zuzahlung_eur)}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${lm ? new Date(lm.sent_at).toLocaleDateString('de-DE') : '—'}</td>
+        <td><span style="color:${levelColor};font-weight:600;font-size:12px;">${levelLabel}</span></td>
+        <td>${statusBadge}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-ghost btn-sm mw-send-btn"
+            data-rx="${r.id}"
+            data-level="${nextLevel}"
+            data-name="${escapeHtml(pname)}"
+            style="font-size:12px;">
+            ${LEVEL_LABELS[nextLevel]} senden
+          </button>
+          ${lm && lm.status === 'offen' ? `
+            <button class="btn-ghost btn-sm mw-paid-btn" data-mw="${lm.id}" style="font-size:12px;color:#15803d;">✓ Bezahlt</button>
+            <button class="btn-ghost btn-sm mw-write-off-btn" data-mw="${lm.id}" style="font-size:12px;color:#6b7280;">Abschreiben</button>
+          ` : ''}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Send Mahnung
+    tbody.querySelectorAll('.mw-send-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const level = parseInt(btn.dataset.level);
+        btn.disabled = true;
+        btn.textContent = 'Erstelle…';
+        try {
+          const res2 = await fetch(`${API}/billing/mahnwesen/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ prescriptionId: btn.dataset.rx, level })
+          });
+          if (!res2.ok) throw new Error(await res2.text());
+          const html = await res2.text();
+          const w = window.open('', '_blank');
+          if (w) {
+            w.document.write(html);
+            w.document.close();
+            w.onload = () => w.print();
+          } else {
+            showToast('Popup-Blocker aktiv — bitte Popups erlauben.', 'error');
+          }
+          showToast('Mahnung erstellt ✓');
+          loadMahnwesen();
+        } catch (e) {
+          showToast('Fehler: ' + e.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Erneut versuchen';
+        }
+      });
+    });
+
+    // Mark bezahlt / abgeschrieben
+    const updateStatus = async (mahnungId, status) => {
+      const res3 = await fetch(`${API}/billing/mahnwesen/${mahnungId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status })
+      });
+      if (!res3.ok) throw new Error(await res3.text());
+      showToast(status === 'bezahlt' ? 'Als bezahlt markiert ✓' : 'Abgeschrieben ✓');
+      loadMahnwesen();
+    };
+
+    tbody.querySelectorAll('.mw-paid-btn').forEach(btn => {
+      btn.addEventListener('click', () => updateStatus(btn.dataset.mw, 'bezahlt').catch(e => showToast(e.message, 'error')));
+    });
+    tbody.querySelectorAll('.mw-write-off-btn').forEach(btn => {
+      btn.addEventListener('click', () => updateStatus(btn.dataset.mw, 'abgeschrieben').catch(e => showToast(e.message, 'error')));
+    });
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#dc2626;padding:16px;">${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+async function loadStatistik() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+
+  const monate = document.getElementById('statMonateSelect')?.value || 6;
+  const fmtEur = n => Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  try {
+    const res = await fetch(`${API}/billing/statistik?monate=${monate}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const d = await res.json();
+
+    // KPI
+    setEl('statPatGesamt', d.patienten?.gesamt ?? '—');
+    const neuPat = d.patienten?.neu_diesen_monat ?? 0;
+    setEl('statPatNeu', neuPat > 0 ? `+${neuPat} diesen Monat` : 'Keine neuen diesen Monat');
+
+    const sitzDiesen = d.sitzungen?.diesen_monat ?? 0;
+    const sitzLetzt  = d.sitzungen?.letzten_monat ?? 0;
+    setEl('statSitzDiesen', sitzDiesen);
+    const deltaEl = document.getElementById('statSitzDelta');
+    if (deltaEl) {
+      const delta = sitzDiesen - sitzLetzt;
+      deltaEl.textContent = delta === 0 ? 'gleich wie Vormonat' : (delta > 0 ? `+${delta} vs. Vormonat` : `${delta} vs. Vormonat`);
+      deltaEl.style.color = delta >= 0 ? '#15803d' : '#dc2626';
+    }
+
+    setEl('statAbrAkz', d.abrechnung?.akzeptiert ?? '—');
+    setEl('statAbrSumme', fmtEur(d.abrechnung?.summe_akzeptiert));
+    setEl('statOffeneZuz', d.offene_zuzahlungen ?? '—');
+
+    // Bar chart
+    const chartEl = document.getElementById('statBarChart');
+    const legendEl = document.getElementById('statBarLegend');
+    if (!chartEl || !d.monatlich?.length) return;
+
+    chartEl.innerHTML = '';
+    legendEl.innerHTML = '';
+
+    const maxVal = Math.max(...d.monatlich.map(m => m.umsatz), 1);
+    const MO = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+    d.monatlich.forEach(m => {
+      const pct = Math.max((m.umsatz / maxVal) * 100, m.umsatz > 0 ? 4 : 0);
+      const [yr, mo] = m.monat.split('-');
+      const label = `${MO[parseInt(mo) - 1]} ${yr.slice(2)}`;
+
+      const col = document.createElement('div');
+      col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:28px;';
+
+      const bar = document.createElement('div');
+      bar.style.cssText = `width:100%;background:var(--primary);border-radius:4px 4px 0 0;height:${pct}%;min-height:${m.umsatz > 0 ? 4 : 0}px;transition:height 0.3s;cursor:default;`;
+      bar.title = `${label}: ${fmtEur(m.umsatz)}`;
+
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;';
+      lbl.textContent = label;
+
+      col.appendChild(bar);
+      col.appendChild(lbl);
+      chartEl.appendChild(col);
+
+      const leg = document.createElement('span');
+      leg.style.cssText = 'font-size:11px;color:var(--text-muted);';
+      leg.textContent = `${label}: ${fmtEur(m.umsatz)}`;
+      legendEl.appendChild(leg);
+    });
+
+  } catch (e) {
+    const chartEl = document.getElementById('statBarChart');
+    if (chartEl) chartEl.innerHTML = `<span style="color:#dc2626;font-size:13px;">${escapeHtml(e.message)}</span>`;
+  }
+}
+
+document.getElementById('statMonateSelect')?.addEventListener('change', () => {
+  if (document.getElementById('panel-statistik')?.classList.contains('active')) loadStatistik();
+});
