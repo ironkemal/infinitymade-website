@@ -4525,7 +4525,7 @@ function renderServices() {
         </button>
       </div>
       <div class="srv-chip-row">${durChips}</div>
-      <div class="service-meta service-emps">${empNames ? '👥 ' + escapeHtml(empNames) : '— Alle Mitarbeiter'}</div>
+      <div class="service-meta service-emps">${empNames ? '<span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">' + ICON.users + '</span>' + escapeHtml(empNames) : '— Alle Mitarbeiter'}</div>
     </div>`;
   }).join('') + addCard;
   grid.querySelectorAll('.service-card[data-srv-id]').forEach(card => {
@@ -7687,7 +7687,7 @@ async function renderOverviewWeekly(date) {
   // (çalışan çakışmalarının görünür olması için)
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('id, start_time, end_time, user_id, status, service_id, business_id, services(title, color)')
+    .select('id, start_time, end_time, user_id, status, service_id, business_id, hausbesuch, services(title, color)')
     .eq('owner_id', getOwnerId())
     .gte('start_time', weekStart.toISOString())
     .lte('start_time', weekEnd.toISOString())
@@ -7742,8 +7742,10 @@ async function renderOverviewWeekly(date) {
         const otherBizName = isOther ? (bizNameById.get(b.business_id) || 'Anderer Standort') : '';
         const cls = isOther ? 'ov-week-appt ov-week-appt-other' : 'ov-week-appt';
         const meta = isOther ? `<div class="ov-week-appt-other-tag">${escapeHtml(otherBizName)}</div>` : '';
-        html += `<div class="${cls}" data-booking="${b.id}" title="${isOther ? 'Termin in ' + escapeHtml(otherBizName) : ''}">
-          <span class="ov-week-appt-time">${t}</span> ${escapeHtml(svc)}
+        const hbIcon = b.hausbesuch ? `<span class="svg-icon ov-week-appt-hb" title="Hausbesuch" style="width:11px;height:11px;display:inline-flex;vertical-align:-1px;margin-left:3px;flex-shrink:0;">${ICON.car}</span>` : '';
+        const hbTitle = b.hausbesuch ? 'Hausbesuch' : '';
+        html += `<div class="${cls}${b.hausbesuch ? ' ov-week-appt-hausbesuch' : ''}" data-booking="${b.id}" title="${isOther ? 'Termin in ' + escapeHtml(otherBizName) : hbTitle}">
+          <span class="ov-week-appt-time">${t}</span> ${escapeHtml(svc)}${hbIcon}
           ${meta}
         </div>`;
       });
