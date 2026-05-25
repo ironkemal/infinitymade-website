@@ -1051,10 +1051,11 @@ router.get('/belegliste/export', async (req, res) => {
     }
 
     const csvContent = generateCsvString(rows);
+    const buffer = Buffer.from(csvContent, 'latin1');
 
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Type', 'text/csv; charset=ISO-8859-1');
     res.setHeader('Content-Disposition', 'attachment; filename=gobd_kassenbuch.csv');
-    return res.send(csvContent);
+    return res.send(buffer);
   } catch (e) {
     console.error('[belegliste/export]', e);
     return res.status(500).send('Server-Fehler bei CSV-Generierung: ' + e.message);

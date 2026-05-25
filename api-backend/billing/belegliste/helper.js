@@ -42,9 +42,7 @@ export function validateBelegEntry(type, amount) {
  * @returns {string} CSV formatted content
  */
 export function generateCsvString(rows) {
-  // UTF-8 BOM byte sequence to ensure Excel opens it correctly with UTF-8 encoding
-  let csv = '\uFEFF';
-  csv += 'sep=;\r\n';
+  let csv = 'sep=;\r\n';
   csv += 'Beleg-Nr;Datum;Uhrzeit;Typ;Betrag EUR;Referenztext\r\n';
 
   for (const r of (rows || [])) {
