@@ -227,6 +227,11 @@ export function preflight(input) {
     if (v.kostentraegerIk && !isValidIkChecksum(v.kostentraegerIk))
       E(errors, 'V:01008', `${at}.verordnung.kostentraegerIk`, 'Kostenträger-IK Prüfziffer ungültig');
 
+    if (v.berichtAngefordert && v.berichtStatus !== 'erledigt') {
+      E(errors, 'V:01009', `${at}.verordnung`, `Therapiebericht angefordert aber ausstehend (Status: "${v.berichtStatus || 'offen'}")`);
+    }
+
+
     // Tarif
     const t = p.tarif || {};
     const ac = t.abrechnungscode || '22';

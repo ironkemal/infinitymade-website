@@ -95,6 +95,8 @@ function mapPrescriptionToDtaShape(rx, lead, doctor) {
       zuzahlungskennzeichen:    rx.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:          rx.kostentraeger_ik,
       krankenkasseIk:           rx.kostentraeger_ik,
+      berichtAngefordert:       rx.bericht_angefordert,
+      berichtStatus:            rx.bericht_status,
     },
     tarif: {
       abrechnungscode,
@@ -191,6 +193,8 @@ router.post('/abrechnung/create', async (req, res) => {
         doctor_lanr, doctor_bsnr,
         zuzahlung_eur, zuzahlung_befreit,
         abrechnung_status,
+        bericht_angefordert,
+        bericht_status,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse),
         aerzte:arzt_id   (lanr, bsnr, arzt_name)
       `)
@@ -207,6 +211,9 @@ router.post('/abrechnung/create', async (req, res) => {
       }
       if (r.abrechnung_status && r.abrechnung_status !== 'bereit') {
         return res.status(409).json({ error: `Rezept ${r.id.slice(0,8)} ist bereits in einer Abrechnung (${r.abrechnung_status}).` });
+      }
+      if (r.bericht_angefordert && r.bericht_status !== 'erledigt') {
+        return res.status(400).json({ error: `Abrechnung blockiert: Das Rezept ${r.id.slice(0,8)} erfordert einen ausgefüllten Therapiebericht, der noch nicht 'erledigt' ist.` });
       }
     }
 

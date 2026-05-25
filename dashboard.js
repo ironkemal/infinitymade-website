@@ -3771,6 +3771,20 @@ async function loadPatientDetailRezepte(leadId) {
 
 async function flipAbrechnungStatus(rxId, newStatus, leadId) {
   try {
+    if (newStatus === 'bereit') {
+      const { data: rx, error: getErr } = await supabase
+        .from('prescriptions')
+        .select('bericht_angefordert, bericht_status')
+        .eq('id', rxId)
+        .single();
+      if (getErr) throw getErr;
+
+      if (rx && rx.bericht_angefordert && rx.bericht_status !== 'erledigt') {
+        showToast('Abgelehnt: Therapiebericht fehlt!', 'error');
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from('prescriptions')
       .update({ abrechnung_status: newStatus })
@@ -9193,6 +9207,8 @@ async function openRezeptModal(phone, leadId) {
   document.getElementById('rzDiagnose').value = '';
   document.getElementById('rzSitzungen').value = '10';
   document.getElementById('rzHausbesuch').checked = false;
+  document.getElementById('rzBerichtAngefordert').checked = false;
+  document.getElementById('rzBerichtStatus').value = 'offen';
   document.getElementById('rzBefund').value = '';
   if (leadId) {
     const { data } = await supabase.from('leads').select('title,arzt_id,hausbesuch').eq('id', leadId).single();
@@ -9221,6 +9237,8 @@ async function saveRezept() {
     diagnose: document.getElementById('rzDiagnose').value.trim(),
     sitzungen: parseInt(document.getElementById('rzSitzungen').value) || 10,
     hausbesuch: document.getElementById('rzHausbesuch').checked,
+    berichtAngefordert: document.getElementById('rzBerichtAngefordert').checked,
+    berichtStatus: document.getElementById('rzBerichtStatus').value,
     befund: document.getElementById('rzBefund').value.trim()
   };
   try {
@@ -9934,6 +9952,8 @@ function openRezeptConfirmModal(payload) {
   setChk('rxcHausbesuch', rez.hausbesuch);
   setChk('rxcBlanko', rez.is_blanko);
   setChk('rxcLhbBvb', rez.is_lhb_bvb);
+  setChk('rxcBerichtAngefordert', rez.bericht_angefordert);
+  setVal('rxcBerichtStatus', rez.bericht_status || 'offen');
 
   renderValidationBanner(payload.validation);
 
@@ -10048,7 +10068,9 @@ async function submitConfirm() {
         is_dringend: document.getElementById('rxcDringend').checked,
         hausbesuch: document.getElementById('rxcHausbesuch').checked,
         is_blanko: document.getElementById('rxcBlanko').checked,
-        is_lhb_bvb: document.getElementById('rxcLhbBvb').checked
+        is_lhb_bvb: document.getElementById('rxcLhbBvb').checked,
+        bericht_angefordert: document.getElementById('rxcBerichtAngefordert').checked,
+        bericht_status: document.getElementById('rxcBerichtStatus').value
       }
     };
 
@@ -10830,9 +10852,24 @@ function renderAbrechnungReady() {
               const zu = rx.zuzahlung_befreit
                 ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
                 : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
+              const isBlocked = rx.bericht_angefordert && rx.bericht_status !== 'erledigt';
+              const checkboxHtml = isBlocked
+                ? `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" disabled style="opacity:0.5;" />`
+                : `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked />`;
+
+              const reportBadge = isBlocked
+                ? `<div style="margin-top:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px;" title="Therapiebericht ausstehend!">
+                    <span class="svg-icon" style="width:12px;height:12px;display:inline-flex;color:#b91c1c;">${ICON.warning}</span>
+                    Bericht fehlt (${escapeHtml(rx.bericht_status)})
+                   </div>`
+                : '';
+
               return `<tr>
-                <td><input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked /></td>
-                <td>${escapeHtml(pname)}</td>
+                <td>${checkboxHtml}</td>
+                <td>
+                  <div>${escapeHtml(pname)}</div>
+                  ${reportBadge}
+                </td>
                 <td>
                   <div style="font-weight:500;">${escapeHtml(heilmittelText)}</div>
                   ${picker}
@@ -11765,4 +11802,6 @@ window.switchPanel = switchPanel;
 window.setWizardStep = setWizardStep;
 window.renderTaxierungList = renderTaxierungList;
 window._abState = _abState;
+window.openRezeptModal = openRezeptModal;
+window.openRezeptConfirmModal = openRezeptConfirmModal;
 
