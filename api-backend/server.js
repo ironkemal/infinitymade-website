@@ -1730,6 +1730,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         hausbesuch: !!rezept.hausbesuch,
         is_blanko: !!rezept.is_blanko,
         is_lhb_bvb: !!rezept.is_lhb_bvb,
+        bericht_angefordert: !!rezept.bericht_angefordert,
+        bericht_status: rezept.bericht_status || 'offen',
         doctor_lanr: arzt.lanr || null,
         doctor_bsnr: arzt.bsnr || null,
         kostentraeger_ik: kostentraegerIk,

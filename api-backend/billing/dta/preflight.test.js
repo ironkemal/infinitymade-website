@@ -185,5 +185,30 @@ test('catches empty prescriptions array', () => {
   assert.ok(hasErr(r, 'F:05001'));
 });
 
+test('blocks validation if physician report is requested but status is not completed', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.berichtAngefordert = true;
+  i.prescriptions[0].verordnung.berichtStatus = 'offen';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'V:01009'));
+});
+
+test('allows validation if physician report is requested and status is completed', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.berichtAngefordert = true;
+  i.prescriptions[0].verordnung.berichtStatus = 'erledigt';
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+});
+
+test('allows validation if physician report is not requested', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].verordnung.berichtAngefordert = false;
+  i.prescriptions[0].verordnung.berichtStatus = 'offen';
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

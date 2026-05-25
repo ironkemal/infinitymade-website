@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260525e" />
+  <link rel="stylesheet" href="dashboard.css?v=20260525f" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -2145,6 +2145,21 @@
             </label>
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group" style="align-self:end;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+              <input type="checkbox" id="rzBerichtAngefordert" /> Bericht angefordert
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bericht-Status</label>
+            <select class="form-select" id="rzBerichtStatus">
+              <option value="offen">Offen</option>
+              <option value="in_arbeit">In Arbeit</option>
+              <option value="erledigt">Erledigt</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">Befund</label>
           <textarea class="form-textarea" id="rzBefund" rows="3" placeholder="Befundbeschreibung…"></textarea>
@@ -2327,6 +2342,21 @@
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
                 <input type="checkbox" id="rxcLhbBvb" /> LHB / BVB
               </label>
+            </div>
+            <div class="form-row" style="margin-top:10px;">
+              <div class="form-group" style="align-self:end;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                  <input type="checkbox" id="rxcBerichtAngefordert" /> Bericht angefordert
+                </label>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bericht-Status</label>
+                <select class="form-select" id="rxcBerichtStatus">
+                  <option value="offen">Offen</option>
+                  <option value="in_arbeit">In Arbeit</option>
+                  <option value="erledigt">Erledigt</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -3196,7 +3226,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260525e"></script>
+  <script type="module" src="dashboard.js?v=20260525f"></script>
 </body>
 
 </html>
