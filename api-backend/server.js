@@ -11,6 +11,8 @@ import WebSocket from 'ws';
 import { google } from 'googleapis';
 import aiRouter from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
+import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
+import billingStatistikRouter from './billing/api/statistik.routes.js';
 import { defaultPositionForHeilmittel, resolvePositionsnummer } from './billing/codes/physio_positions.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
@@ -169,6 +171,12 @@ app.use('/api/ai', aiRouter);
 
 // § 302 SGB V Sammelabrechnung routes.
 app.use('/api/billing', billingAbrechnungRouter);
+
+// Mahnwesen (dunning) routes.
+app.use('/api/billing', billingMahnwesenRouter);
+
+// Statistik / analytics routes.
+app.use('/api/billing', billingStatistikRouter);
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', (req, res) => {
