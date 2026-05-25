@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Component Lab — InfinityMade</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+  <style>
+    /* ===========================================================
+       COMPONENT LAB
+       soft-skill aesthetic + emil-design-eng animation craft
+       Single-page catalog · hover, click, scan
+       =========================================================== */
+
+    :root {
+      --bg: #FDFBF7;
+      --bg-warm: #F6F1E7;
+      --bg-deep: #EFE7D6;
+      --ink: #1A1611;
+      --ink-soft: #4A4036;
+      --ink-mute: #7A6F61;
+      --ink-quiet: #B5AB99;
+      --line: rgba(26, 22, 17, 0.08);
+      --line-soft: rgba(26, 22, 17, 0.04);
+      --bronze: #6B5538;
+      --sage: #4E5C45;
+      --emerald: #1E3D2F;
+      --highlight: #C9A876;
+      --rose: #9C3A3A;
+      --rose-light: #FBE9E9;
+      --success: #3F7A50;
+      --success-light: #E8F3EB;
+
+      --serif: 'Fraunces', 'Times New Roman', serif;
+      --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+      --ease-quiet: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-weight: 400;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.04;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 80ms !important;
+        animation-duration: 80ms !important;
+        animation-iteration-count: 1 !important;
+      }
+      html { scroll-behavior: auto; }
+    }
+
+    /* ────────────── Nav ────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(253, 251, 247, 0.78);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .nav-brand em { font-style: italic; color: var(--bronze); }
+    .nav-back {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--ink-mute);
+      text-decoration: none;
+      transition: color 200ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .nav-back:hover { color: var(--ink); }
+    }
+
+    /* ────────────── Hero ────────────── */
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.35rem 0.8rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 1.75rem;
+    }
+    .hero-tag-dot {
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      background: var(--bronze);
+      animation: livePulse 2.6s var(--ease-quiet) infinite;
+    }
+    @keyframes livePulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.8); }
+      50%      { opacity: 1; transform: scale(1.1); }
+    }
+
+    .hero-title {
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 400;
+      line-height: 1.02;
+      letter-spacing: -0.035em;
+      color: var(--ink);
+      margin-bottom: 1rem;
+      font-variation-settings: "opsz" 144;
+    }
+    .hero-title em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--bronze);
+    }
+    .hero-lede {
+      font-size: 1.04rem;
+      color: var(--ink-soft);
+      max-width: 38rem;
+      line-height: 1.6;
+    }
+
+    /* ────────────── Section ────────────── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+    .section-head {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .section-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+      margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 500;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+    .section-title em { font-style: italic; color: var(--bronze); font-weight: 400; }
+    .section-count {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--ink-mute);
+    }
+
+    /* ────────────── Stage Grid ────────────── */
+    .stage-grid {
+      display: grid;
+      gap: 1.25rem;
+    }
+    .stage-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .stage-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .stage-grid.cols-icons { grid-template-columns: repeat(8, 1fr); gap: 0.8rem; }
+
+    .stage {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .stage-frame {
+      padding: 0.4rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 1.25rem;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 12px 30px -22px rgba(26, 22, 17, 0.18);
+    }
+    .stage-inner {
+      background: var(--bg);
+      border-radius: calc(1.25rem - 0.4rem);
+      box-shadow: 0 1px 1px rgba(255, 255, 255, 0.4) inset;
+      min-height: 130px;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+    }
+    .stage-inner.icon-tile { min-height: 92px; padding: 1rem; }
+
+    .stage-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0 0.25rem;
+    }
+    .stage-name {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+    }
+    .stage-sub {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      color: var(--ink-quiet);
+      letter-spacing: 0.02em;
+    }
+
+    /* ===========================================================
+       BUTTONS
+       =========================================================== */
+
+    /* Base button reset */
+    .btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.86rem;
+      letter-spacing: -0.005em;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 160ms var(--ease-out);
+      will-change: transform;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    /* Primary — solid ink */
+    .btn-primary {
+      padding: 0.7rem 1.1rem;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 999px;
+      transition: transform 160ms var(--ease-out), background 240ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-primary:hover { background: var(--emerald); }
+    }
+
+    /* Primary + nested arrow circle (signature) */
+    .btn-primary-arrow {
+      padding: 0.55rem 0.55rem 0.55rem 1.1rem;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 999px;
+      transition: transform 160ms var(--ease-out), background 240ms var(--ease-out);
+    }
+    .btn-primary-arrow .arrow-pill {
+      width: 1.65rem;
+      height: 1.65rem;
+      display: grid; place-items: center;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      transition: transform 260ms var(--ease-spring);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-primary-arrow:hover { background: var(--emerald); }
+      .btn-primary-arrow:hover .arrow-pill { transform: translate(2px, -1px) scale(1.05); }
+    }
+
+    /* Secondary — bordered, warm */
+    .btn-secondary {
+      padding: 0.7rem 1.1rem;
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      transition: transform 160ms var(--ease-out), border-color 240ms var(--ease-out), background 240ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-secondary:hover { background: var(--bg-warm); border-color: rgba(26, 22, 17, 0.16); }
+    }
+
+    /* Ghost */
+    .btn-ghost {
+      padding: 0.55rem 0.85rem;
+      color: var(--ink-soft);
+      border-radius: 8px;
+      transition: transform 160ms var(--ease-out), color 200ms var(--ease-out), background 200ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-ghost:hover { color: var(--ink); background: var(--bg-warm); }
+    }
+
+    /* Bronze accent */
+    .btn-bronze {
+      padding: 0.7rem 1.1rem;
+      background: var(--bronze);
+      color: var(--bg);
+      border-radius: 999px;
+      transition: transform 160ms var(--ease-out), background 240ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-bronze:hover { background: #523F26; }
+    }
+
+    /* Destructive (rose) */
+    .btn-destructive {
+      padding: 0.7rem 1.1rem;
+      background: var(--bg);
+      color: var(--rose);
+      border: 1px solid rgba(156, 58, 58, 0.2);
+      border-radius: 999px;
+      transition: transform 160ms var(--ease-out), background 240ms var(--ease-out), color 200ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-destructive:hover { background: var(--rose); color: var(--bg); }
+    }
+
+    /* Icon only */
+    .btn-icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      display: grid; place-items: center;
+      background: var(--bg);
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      transition: transform 160ms var(--ease-out), color 200ms var(--ease-out), background 200ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-icon:hover { color: var(--ink); background: var(--bg-warm); }
+    }
+
+    /* Toggle pill (selected state) */
+    .btn-toggle {
+      padding: 0.55rem 0.95rem;
+      background: var(--bg);
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      transition: transform 160ms var(--ease-out), background 220ms var(--ease-out), color 220ms var(--ease-out), border-color 220ms var(--ease-out);
+    }
+    .btn-toggle.is-active {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-toggle:not(.is-active):hover { background: var(--bg-warm); color: var(--ink); }
+    }
+
+    /* Underline reveal */
+    .btn-underline {
+      position: relative;
+      padding: 0.5rem 0;
+      color: var(--ink);
+      background: none;
+      font-weight: 500;
+    }
+    .btn-underline::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 1px;
+      background: var(--bronze);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 320ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-underline:hover::after { transform: scaleX(1); }
+    }
+
+    /* Loading button — text fades, spinner appears */
+    .btn-loading {
+      position: relative;
+      padding: 0.7rem 1.6rem;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 999px;
+      min-width: 140px;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .btn-loading .lbl {
+      transition: opacity 200ms var(--ease-out), transform 240ms var(--ease-out);
+    }
+    .btn-loading .spinner {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 16px; height: 16px;
+      margin-top: -8px;
+      margin-left: -8px;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      border-top-color: var(--bg);
+      border-radius: 999px;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 220ms var(--ease-out), transform 240ms var(--ease-spring);
+    }
+    .btn-loading.is-loading .lbl { opacity: 0; transform: translateY(-4px); }
+    .btn-loading.is-loading .spinner {
+      opacity: 1;
+      transform: scale(1);
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success state morph */
+    .btn-success-morph {
+      position: relative;
+      padding: 0.7rem 1.4rem;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 999px;
+      min-width: 140px;
+      justify-content: center;
+      transition: background 320ms var(--ease-out), padding 320ms var(--ease-out), transform 160ms var(--ease-out);
+      overflow: hidden;
+    }
+    .btn-success-morph.is-done {
+      background: var(--success);
+      padding: 0.7rem 1.1rem;
+    }
+    .btn-success-morph .check {
+      width: 16px; height: 16px;
+      opacity: 0;
+      transform: scale(0.6);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      transition: opacity 240ms var(--ease-out), transform 320ms var(--ease-spring);
+    }
+    .btn-success-morph .lbl {
+      transition: opacity 200ms var(--ease-out);
+    }
+    .btn-success-morph.is-done .lbl { opacity: 0; }
+    .btn-success-morph.is-done .check { opacity: 1; transform: scale(1); }
+
+    /* Hold to delete */
+    .btn-hold {
+      position: relative;
+      padding: 0.7rem 1.4rem;
+      background: var(--bg);
+      color: var(--rose);
+      border: 1px solid rgba(156, 58, 58, 0.2);
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 160px;
+      justify-content: center;
+      transition: transform 160ms var(--ease-out);
+    }
+    .btn-hold .lbl { position: relative; z-index: 2; transition: color 220ms var(--ease-out); }
+    .btn-hold .fill {
+      position: absolute; inset: 0;
+      background: var(--rose);
+      clip-path: inset(0 100% 0 0);
+      transition: clip-path 200ms var(--ease-out);
+      z-index: 1;
+    }
+    .btn-hold:active .fill {
+      clip-path: inset(0 0% 0 0);
+      transition: clip-path 1.6s linear;
+    }
+    .btn-hold:active .lbl { color: var(--bg); }
+
+    /* Magnetic (subtle JS-pull) */
+    .btn-magnetic {
+      padding: 0.7rem 1.4rem;
+      background: var(--bg);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      transition: transform 360ms var(--ease-out), background 220ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .btn-magnetic:hover { background: var(--bg-warm); }
+    }
+
+    /* ===========================================================
+       ICONS — emoji yerine ince line icons (1.5px stroke)
+       =========================================================== */
+
+    .icon-tile {
+      flex-direction: column;
+      gap: 0.5rem;
+      color: var(--ink-soft);
+      transition: color 200ms var(--ease-out), transform 240ms var(--ease-out);
+    }
+    .icon-tile svg {
+      width: 22px; height: 22px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .icon-emoji-ref {
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      color: var(--ink-quiet);
+    }
+
+    /* ===========================================================
+       CARD / PANEL HOVER VARIANTS
+       =========================================================== */
+
+    .card-demo {
+      width: 100%;
+      padding: 1.25rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      transition: transform 280ms var(--ease-out), border-color 240ms var(--ease-out), box-shadow 280ms var(--ease-out);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-demo-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.55rem;
+    }
+    .card-demo-title {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+    .card-demo-num {
+      font-family: var(--mono);
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .card-demo-num em { font-style: italic; color: var(--bronze); font-weight: 400; }
+    .card-demo-text {
+      font-size: 0.78rem;
+      color: var(--ink-mute);
+      line-height: 1.5;
+    }
+    .card-demo-arrow {
+      position: absolute;
+      top: 1.25rem; right: 1.25rem;
+      width: 1.5rem; height: 1.5rem;
+      display: grid; place-items: center;
+      color: var(--ink-quiet);
+      transition: color 240ms var(--ease-out), transform 320ms var(--ease-spring);
+    }
+
+    /* a) Lift */
+    @media (hover: hover) and (pointer: fine) {
+      .card-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 30px 50px -25px rgba(26, 22, 17, 0.15);
+      }
+    }
+
+    /* b) Border glow */
+    @media (hover: hover) and (pointer: fine) {
+      .card-border-glow:hover {
+        border-color: var(--bronze);
+        box-shadow: 0 0 0 4px rgba(107, 85, 56, 0.06);
+      }
+    }
+
+    /* c) Bronze underline reveal */
+    .card-underline::after {
+      content: '';
+      position: absolute;
+      left: 1.25rem; right: 1.25rem;
+      bottom: 0;
+      height: 1px;
+      background: var(--bronze);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 320ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .card-underline:hover::after { transform: scaleX(1); }
+      .card-underline:hover .card-demo-arrow { color: var(--bronze); transform: translate(2px, -1px); }
+    }
+
+    /* d) Spotlight (mouse-following light) */
+    .card-spotlight {
+      position: relative;
+      isolation: isolate;
+    }
+    .card-spotlight::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%),
+                                  rgba(201, 168, 118, 0.16), transparent 70%);
+      opacity: 0;
+      transition: opacity 280ms var(--ease-out);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .card-spotlight > * { position: relative; z-index: 1; }
+    @media (hover: hover) and (pointer: fine) {
+      .card-spotlight:hover::before { opacity: 1; }
+    }
+
+    /* e) Scale + bg shift */
+    .card-pressable {
+      transition: transform 200ms var(--ease-out), background 240ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .card-pressable:hover { background: var(--bg-warm); }
+    }
+    .card-pressable:active { transform: scale(0.985); }
+
+    /* f) Magnetic tilt (JS) */
+    .card-tilt {
+      transform-style: preserve-3d;
+      transition: transform 380ms var(--ease-out);
+      will-change: transform;
+    }
+
+    /* g) Sage left bar reveal */
+    .card-bar {
+      padding-left: 1.5rem;
+    }
+    .card-bar::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 1.25rem; bottom: 1.25rem;
+      width: 2px;
+      background: var(--sage);
+      transform: scaleY(0);
+      transform-origin: center top;
+      transition: transform 320ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .card-bar:hover::before { transform: scaleY(1); }
+    }
+
+    /* h) Double-bezel hover (signature soft-skill) */
+    .card-bezel-wrap {
+      padding: 0.4rem;
+      background: var(--bg-warm);
+      border-radius: 1rem;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: transform 280ms var(--ease-out), background 240ms var(--ease-out);
+      width: 100%;
+    }
+    .card-bezel-wrap .card-demo {
+      border: none;
+      border-radius: calc(1rem - 0.4rem);
+      box-shadow: 0 1px 1px rgba(255, 255, 255, 0.4) inset;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .card-bezel-wrap:hover { background: var(--bg-deep); transform: translateY(-2px); }
+    }
+
+    /* ===========================================================
+       LOADING / TOAST / FORM
+       =========================================================== */
+
+    /* Spinner (dot circle) */
+    .spin-circle {
+      width: 28px; height: 28px;
+      border: 2px solid var(--line-soft);
+      border-top-color: var(--bronze);
+      border-radius: 999px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Dot pulse */
+    .dot-pulse {
+      display: inline-flex; gap: 0.45rem;
+    }
+    .dot-pulse span {
+      width: 8px; height: 8px;
+      background: var(--bronze);
+      border-radius: 999px;
+      animation: dotPulse 1.2s var(--ease-quiet) infinite;
+    }
+    .dot-pulse span:nth-child(2) { animation-delay: 0.15s; }
+    .dot-pulse span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes dotPulse {
+      0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    /* Skeleton shimmer */
+    .skeleton {
+      width: 100%;
+      max-width: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .skeleton-row {
+      height: 10px;
+      border-radius: 6px;
+      background: linear-gradient(90deg,
+        var(--bg-warm) 0%,
+        var(--bg-deep) 40%,
+        var(--bg-warm) 80%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s var(--ease-quiet) infinite;
+    }
+    .skeleton-row.short { width: 60%; }
+    .skeleton-row.mid { width: 85%; }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      width: 100%; max-width: 240px;
+      height: 4px;
+      background: var(--bg-warm);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background: var(--bronze);
+      width: 0%;
+      border-radius: 999px;
+      animation: progressFill 2.4s var(--ease-out) infinite;
+    }
+    @keyframes progressFill {
+      0% { width: 0%; }
+      80% { width: 100%; }
+      100% { width: 100%; opacity: 0; }
+    }
+
+    /* Toast — success */
+    .toast {
+      width: 100%; max-width: 280px;
+      padding: 0.85rem 1rem;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      box-shadow: 0 20px 40px -15px rgba(26, 22, 17, 0.25);
+    }
+    .toast.toast-success { background: var(--success); }
+    .toast.toast-error { background: var(--rose); }
+    .toast.toast-info { background: var(--bg); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 20px 40px -15px rgba(26, 22, 17, 0.1); }
+    .toast-icon {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+    }
+    .toast-body {
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: -0.005em;
+      line-height: 1.35;
+    }
+    .toast-body small {
+      display: block;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-top: 2px;
+      font-size: 0.78rem;
+    }
+
+    /* Input — text */
+    .field {
+      width: 100%; max-width: 240px;
+      display: flex; flex-direction: column;
+      gap: 0.4rem;
+    }
+    .field-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .input {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 0.92rem;
+      color: var(--ink);
+      transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
+      outline: none;
+    }
+    .input::placeholder { color: var(--ink-quiet); }
+    .input:focus {
+      border-color: var(--bronze);
+      box-shadow: 0 0 0 4px rgba(107, 85, 56, 0.08);
+    }
+
+    /* Search input with icon */
+    .search-wrap { position: relative; width: 100%; max-width: 240px; }
+    .search-wrap svg {
+      position: absolute;
+      left: 0.85rem; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--ink-quiet);
+      stroke: currentColor; stroke-width: 1.5; fill: none;
+      stroke-linecap: round; stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .search-wrap .input { padding-left: 2.4rem; }
+
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      width: 38px; height: 22px;
+      background: var(--ink-quiet);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 280ms var(--ease-out);
+    }
+    .switch::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 18px; height: 18px;
+      background: var(--bg);
+      border-radius: 999px;
+      transition: transform 320ms var(--ease-spring);
+      box-shadow: 0 1px 3px rgba(26, 22, 17, 0.15);
+    }
+    .switch.is-on { background: var(--success); }
+    .switch.is-on::after { transform: translateX(16px); }
+
+    /* Segmented control */
+    .seg {
+      display: inline-flex;
+      padding: 0.3rem;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      gap: 0.15rem;
+    }
+    .seg-btn {
+      padding: 0.4rem 0.85rem;
+      background: transparent;
+      color: var(--ink-mute);
+      border: none;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 999px;
+      transition: color 220ms var(--ease-out), background 220ms var(--ease-out);
+    }
+    .seg-btn.is-active {
+      background: var(--bg);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(26, 22, 17, 0.06);
+    }
+
+    /* Checkbox */
+    .check-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      cursor: pointer;
+      font-size: 0.86rem;
+      color: var(--ink);
+    }
+    .check-box {
+      width: 18px; height: 18px;
+      border: 1.5px solid var(--ink-quiet);
+      border-radius: 5px;
+      display: grid; place-items: center;
+      background: var(--bg);
+      transition: border-color 220ms var(--ease-out), background 220ms var(--ease-out);
+    }
+    .check-box svg {
+      width: 12px; height: 12px;
+      stroke: var(--bg); stroke-width: 2.5;
+      fill: none; stroke-linecap: round; stroke-linejoin: round;
+      transform: scale(0.6);
+      opacity: 0;
+      transition: opacity 220ms var(--ease-out), transform 280ms var(--ease-spring);
+    }
+    .check-wrap.is-on .check-box {
+      border-color: var(--ink);
+      background: var(--ink);
+    }
+    .check-wrap.is-on .check-box svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ────────────── Mobile ────────────── */
+    @media (max-width: 900px) {
+      .hero { padding: 4rem 1.25rem 2rem; }
+      .section { padding: 2.5rem 1.25rem; }
+      .stage-grid.cols-3, .stage-grid.cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .stage-grid.cols-icons {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .stage-inner { min-height: 110px; }
+    }
+
+    @media (max-width: 540px) {
+      .stage-grid.cols-3, .stage-grid.cols-4 {
+        grid-template-columns: 1fr;
+      }
+      .stage-grid.cols-icons {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">Infinity<em>Made</em></a>
+    <a href="/blog/" class="nav-back">← zurück zum Blog</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <span class="hero-tag">
+    <span class="hero-tag-dot"></span>
+    Internal · Component Lab
+  </span>
+  <h1 class="hero-title">Komponenten-Katalog. <em>Hover. Click. Scan.</em></h1>
+  <p class="hero-lede">
+    Buttons, Icons, Karten, Inputs, Toasts. Soft-skill Editorial-Sprache, Emil-Animations-Handwerk.
+    Alle Varianten sind live — bewegen Sie die Maus, klicken Sie, halten Sie.
+  </p>
+</header>
+
+<!-- ===================== BUTTONS ===================== -->
+<section class="section">
+  <div class="section-head">
+    <div>
+      <p class="section-eyebrow">01 · Aktionen</p>
+      <h2 class="section-title">Buttons &amp; <em>Press-States</em></h2>
+    </div>
+    <span class="section-count">14 Varianten</span>
+  </div>
+
+  <div class="stage-grid cols-3">
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-primary">Termin buchen</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">primary</span>
+        <span class="stage-sub">solid · ink</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-primary-arrow">
+          Jetzt testen
+          <span class="arrow-pill">↗</span>
+        </button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">primary · arrow-pill</span>
+        <span class="stage-sub">signature</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-secondary">Mehr Details</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">secondary</span>
+        <span class="stage-sub">bordered</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-ghost">Zurück</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">ghost</span>
+        <span class="stage-sub">low-emphasis</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-bronze">Speichern</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">bronze</span>
+        <span class="stage-sub">accent</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-destructive">Termin stornieren</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">destructive</span>
+        <span class="stage-sub">rose · hover-fill</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-underline">Alle Rezepte ansehen</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">underline-reveal</span>
+        <span class="stage-sub">scaleX origin-left</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-icon" aria-label="Edit">
+          <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">icon-only</span>
+        <span class="stage-sub">circle · 2.4rem</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-toggle is-active">Woche</button>
+          <button class="btn btn-toggle">Monat</button>
+          <button class="btn btn-toggle">Jahr</button>
+        </div>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">toggle-pills</span>
+        <span class="stage-sub">selected · 220ms</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-loading" data-loading-btn>
+          <span class="lbl">Termin speichern</span>
+          <span class="spinner"></span>
+        </button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">loading-state</span>
+        <span class="stage-sub">click to see</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-success-morph" data-success-btn>
+          <span class="lbl">Bestätigen</span>
+          <svg class="check" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">success-morph</span>
+        <span class="stage-sub">click · 1.4s revert</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-hold">
+          <span class="fill"></span>
+          <span class="lbl">Gedrückt halten zum Löschen</span>
+        </button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">hold-to-delete</span>
+        <span class="stage-sub">1.6s linear · 200ms revert</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <button class="btn btn-magnetic" data-magnetic>Magnetic Hover</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">magnetic</span>
+        <span class="stage-sub">JS · spring follow</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="gap:0.5rem; display:flex;">
+        <button class="btn btn-primary" disabled style="opacity:0.4; cursor:not-allowed;">Disabled</button>
+        <button class="btn btn-secondary" disabled style="opacity:0.4; cursor:not-allowed;">Disabled</button>
+      </div></div>
+      <div class="stage-label">
+        <span class="stage-name">disabled-states</span>
+        <span class="stage-sub">opacity 0.4</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ICONS ===================== -->
+<section class="section">
+  <div class="section-head">
+    <div>
+      <p class="section-eyebrow">02 · Glyphen</p>
+      <h2 class="section-title">Icon-Set — <em>Emoji-Ersatz</em></h2>
+    </div>
+    <span class="section-count">24 Icons · 1.5px stroke</span>
+  </div>
+
+  <div class="stage-grid cols-icons">
+    <!-- Calendar (📅) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="icon-emoji-ref">📅</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">calendar</span></div>
+    </div>
+
+    <!-- Clock (⏰) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="icon-emoji-ref">⏰</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">clock</span></div>
+    </div>
+
+    <!-- Check (✅) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <span class="icon-emoji-ref">✅</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">check</span></div>
+    </div>
+
+    <!-- X / Close (❌) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span class="icon-emoji-ref">❌</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">close</span></div>
+    </div>
+
+    <!-- Warning (⚠️) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="m10.29 3.86-8.18 14a2 2 0 0 0 1.71 3h16.36a2 2 0 0 0 1.71-3l-8.18-14a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="icon-emoji-ref">⚠️</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">warning</span></div>
+    </div>
+
+    <!-- Info (ℹ️) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span class="icon-emoji-ref">ℹ️</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">info</span></div>
+    </div>
+
+    <!-- User (👤) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="icon-emoji-ref">👤</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">user</span></div>
+    </div>
+
+    <!-- Users (👥) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="icon-emoji-ref">👥</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">team</span></div>
+    </div>
+
+    <!-- Mail (✉️) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span class="icon-emoji-ref">✉️</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">mail</span></div>
+    </div>
+
+    <!-- Phone (📞) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span class="icon-emoji-ref">📞</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">phone</span></div>
+    </div>
+
+    <!-- Bell (🔔) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="icon-emoji-ref">🔔</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">bell</span></div>
+    </div>
+
+    <!-- Search (🔍) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="icon-emoji-ref">🔍</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">search</span></div>
+    </div>
+
+    <!-- Settings (⚙️) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="icon-emoji-ref">⚙️</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">settings</span></div>
+    </div>
+
+    <!-- Money (💰) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span class="icon-emoji-ref">💰</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">currency</span></div>
+    </div>
+
+    <!-- Document (📄) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="icon-emoji-ref">📄</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">document</span></div>
+    </div>
+
+    <!-- Plus (➕) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span class="icon-emoji-ref">➕</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">plus</span></div>
+    </div>
+
+    <!-- Trash (🗑) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span class="icon-emoji-ref">🗑</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">trash</span></div>
+    </div>
+
+    <!-- Edit (✏️) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span class="icon-emoji-ref">✏️</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">edit</span></div>
+    </div>
+
+    <!-- Location (📍) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span class="icon-emoji-ref">📍</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">location</span></div>
+    </div>
+
+    <!-- Car (🚗) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M5 17h14M5 17a2 2 0 0 1-2-2v-3l2-5h14l2 5v3a2 2 0 0 1-2 2M5 17v2a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-2m11 0v2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-2"/><circle cx="7.5" cy="14.5" r="0.5"/><circle cx="16.5" cy="14.5" r="0.5"/></svg>
+        <span class="icon-emoji-ref">🚗</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">vehicle</span></div>
+    </div>
+
+    <!-- Chart (📊) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="icon-emoji-ref">📊</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">chart</span></div>
+    </div>
+
+    <!-- Chat (💬) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="icon-emoji-ref">💬</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">chat</span></div>
+    </div>
+
+    <!-- Heart-pulse (medical) (❤️) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><polyline points="3 12 6 12 8 8 12 16 14 12 17 12"/></svg>
+        <span class="icon-emoji-ref">❤️</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">heart-pulse</span></div>
+    </div>
+
+    <!-- Lock (🔒) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner icon-tile">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span class="icon-emoji-ref">🔒</span>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">lock</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CARDS ===================== -->
+<section class="section">
+  <div class="section-head">
+    <div>
+      <p class="section-eyebrow">03 · Panels</p>
+      <h2 class="section-title">Card-Hover <em>Variationen</em></h2>
+    </div>
+    <span class="section-count">8 Varianten · hover testen</span>
+  </div>
+
+  <div class="stage-grid cols-4">
+    <!-- a) Lift -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem;">
+        <div class="card-demo card-lift">
+          <div class="card-demo-head"><span class="card-demo-title">Umsatz</span></div>
+          <div class="card-demo-num">€ 2.<em>847</em></div>
+          <p class="card-demo-text">Diese Woche, +12 %</p>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">lift</span><span class="stage-sub">−4px + shadow</span></div>
+    </div>
+
+    <!-- b) Border glow -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem;">
+        <div class="card-demo card-border-glow">
+          <div class="card-demo-head"><span class="card-demo-title">Termine</span></div>
+          <div class="card-demo-num"><em>14</em></div>
+          <p class="card-demo-text">Heute, Tagesplan</p>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">border-glow</span><span class="stage-sub">bronze ring</span></div>
+    </div>
+
+    <!-- c) Underline + arrow -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem;">
+        <div class="card-demo card-underline">
+          <span class="card-demo-arrow">↗</span>
+          <div class="card-demo-head"><span class="card-demo-title">Patient:innen</span></div>
+          <div class="card-demo-num">2<em>32</em></div>
+          <p class="card-demo-text">Aktiv im System</p>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">underline-arrow</span><span class="stage-sub">link-card</span></div>
+    </div>
+
+    <!-- d) Spotlight -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem;">
+        <div class="card-demo card-spotlight" data-spotlight>
+          <div class="card-demo-head"><span class="card-demo-title">Hausbesuche</span></div>
+          <div class="card-demo-num"><em>8</em></div>
+          <p class="card-demo-text">Diese Woche</p>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">spotlight</span><span class="stage-sub">mouse-tracking</span></div>
+    </div>
+
+    <!-- e) Pressable -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem;">
+        <div class="card-demo card-pressable">
+          <div class="card-demo-head"><span class="card-demo-title">Rezepte</span></div>
+          <div class="card-demo-num">1<em>9</em></div>
+          <p class="card-demo-text">Zur Prüfung</p>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">pressable</span><span class="stage-sub">click + bg shift</span></div>
+    </div>
+
+    <!-- f) Tilt -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem; perspective:800px;">
+        <div class="card-demo card-tilt" data-tilt>
+          <div class="card-demo-head"><span class="card-demo-title">No-Shows</span></div>
+          <div class="card-demo-num">3<em>%</em></div>
+          <p class="card-demo-text">Letzte 30 Tage</p>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">tilt-3d</span><span class="stage-sub">mouse-rotate JS</span></div>
+    </div>
+
+    <!-- g) Bar reveal -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem;">
+        <div class="card-demo card-bar">
+          <div class="card-demo-head"><span class="card-demo-title">Mehraufwand</span></div>
+          <div class="card-demo-num">€ <em>89,</em>34</div>
+          <p class="card-demo-text">Pro Blanko-Rezept</p>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">bar-reveal</span><span class="stage-sub">left sage line</span></div>
+    </div>
+
+    <!-- h) Double-bezel -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner" style="padding:0.85rem;">
+        <div class="card-bezel-wrap">
+          <div class="card-demo">
+            <div class="card-demo-head"><span class="card-demo-title">Wegegeld</span></div>
+            <div class="card-demo-num">€ <em>17,</em>20</div>
+            <p class="card-demo-text">Heute kumuliert</p>
+          </div>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">double-bezel</span><span class="stage-sub">signature</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LOADING / TOAST / FORM ===================== -->
+<section class="section">
+  <div class="section-head">
+    <div>
+      <p class="section-eyebrow">04 · Feedback</p>
+      <h2 class="section-title">Loading, Toast &amp; <em>Form-Inputs</em></h2>
+    </div>
+    <span class="section-count">12 Varianten</span>
+  </div>
+
+  <div class="stage-grid cols-4">
+    <!-- Spinner -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="spin-circle"></div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">spinner</span><span class="stage-sub">0.8s linear</span></div>
+    </div>
+
+    <!-- Dot pulse -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">dot-pulse</span><span class="stage-sub">stagger 150ms</span></div>
+    </div>
+
+    <!-- Skeleton -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="skeleton">
+          <div class="skeleton-row"></div>
+          <div class="skeleton-row mid"></div>
+          <div class="skeleton-row short"></div>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">skeleton-shimmer</span><span class="stage-sub">1.6s shift</span></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="progress-bar"><div class="progress-bar-inner"></div></div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">progress-bar</span><span class="stage-sub">bronze fill</span></div>
+    </div>
+
+    <!-- Toast success -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="toast toast-success">
+          <svg class="toast-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="toast-body">Termin gespeichert<small>Anna Müller · 14:30</small></div>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">toast-success</span><span class="stage-sub">sage bg</span></div>
+    </div>
+
+    <!-- Toast error -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="toast toast-error">
+          <svg class="toast-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="toast-body">Rezept abgelehnt<small>Hausbesuch-Kreuz fehlt</small></div>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">toast-error</span><span class="stage-sub">rose bg</span></div>
+    </div>
+
+    <!-- Toast info (light) -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="toast toast-info">
+          <svg class="toast-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div class="toast-body">Neue Verordnung erkannt<small>OCR · M24.41 · Schulter</small></div>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">toast-info</span><span class="stage-sub">light · bordered</span></div>
+    </div>
+
+    <!-- Toast dark default -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="toast">
+          <svg class="toast-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="toast-body">In 10 Minuten<small>Erinnerung: Anna Müller</small></div>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">toast-default</span><span class="stage-sub">ink · neutral</span></div>
+    </div>
+
+    <!-- Text input -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="field">
+          <label class="field-label">Patientenname</label>
+          <input class="input" type="text" placeholder="z. B. Anna Müller" />
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">input-text</span><span class="stage-sub">focus bronze ring</span></div>
+    </div>
+
+    <!-- Search input -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="input" type="search" placeholder="Patient suchen..." />
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">input-search</span><span class="stage-sub">left icon</span></div>
+    </div>
+
+    <!-- Switch -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div style="display:flex; align-items:center; gap:0.85rem;">
+          <span style="font-size:0.86rem; color:var(--ink-soft);">Online-Buchung</span>
+          <div class="switch is-on" data-switch></div>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">switch</span><span class="stage-sub">click · 320ms spring</span></div>
+    </div>
+
+    <!-- Segmented control -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div class="seg" data-seg>
+          <button class="seg-btn is-active">Tag</button>
+          <button class="seg-btn">Woche</button>
+          <button class="seg-btn">Monat</button>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">segmented</span><span class="stage-sub">switching</span></div>
+    </div>
+
+    <!-- Checkbox -->
+    <div class="stage">
+      <div class="stage-frame"><div class="stage-inner">
+        <div style="display:flex; flex-direction:column; gap:0.65rem;">
+          <label class="check-wrap is-on" data-check>
+            <span class="check-box">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            Hausbesuch dokumentiert
+          </label>
+          <label class="check-wrap" data-check>
+            <span class="check-box">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            Mehraufwand angewendet
+          </label>
+        </div>
+      </div></div>
+      <div class="stage-label"><span class="stage-name">checkbox</span><span class="stage-sub">spring scale check</span></div>
+    </div>
+  </div>
+</section>
+
+<footer style="border-top:1px solid var(--line); padding:3rem 2rem; margin-top:4rem; background:var(--bg-warm);">
+  <div style="max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+    <span style="font-family:var(--serif); font-size:1.2rem; color:var(--ink);">Infinity<em style="font-style:italic; color:var(--bronze);">Made</em></span>
+    <span style="font-family:var(--mono); font-size:0.75rem; color:var(--ink-mute);">component-lab · v1 · 2026-05-24</span>
+  </div>
+</footer>
+
+<script>
+  // Loading button: click → loading → revert after 1.6s
+  document.querySelectorAll('[data-loading-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('is-loading')) return;
+      btn.classList.add('is-loading');
+      setTimeout(() => btn.classList.remove('is-loading'), 1600);
+    });
+  });
+
+  // Success morph
+  document.querySelectorAll('[data-success-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('is-done')) return;
+      btn.classList.add('is-done');
+      setTimeout(() => btn.classList.remove('is-done'), 1400);
+    });
+  });
+
+  // Magnetic
+  document.querySelectorAll('[data-magnetic]').forEach(btn => {
+    let raf;
+    btn.addEventListener('mousemove', (e) => {
+      const r = btn.getBoundingClientRect();
+      const x = (e.clientX - (r.left + r.width / 2)) * 0.25;
+      const y = (e.clientY - (r.top + r.height / 2)) * 0.25;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        btn.style.transform = `translate(${x}px, ${y}px)`;
+      });
+    });
+    btn.addEventListener('mouseleave', () => {
+      cancelAnimationFrame(raf);
+      btn.style.transform = '';
+    });
+  });
+
+  // Spotlight cards
+  document.querySelectorAll('[data-spotlight]').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+
+  // 3D Tilt
+  document.querySelectorAll('[data-tilt]').forEach(card => {
+    let raf;
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        card.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg)`;
+      });
+    });
+    card.addEventListener('mouseleave', () => {
+      cancelAnimationFrame(raf);
+      card.style.transform = '';
+    });
+  });
+
+  // Toggle buttons (within stage-inner divs)
+  document.querySelectorAll('.btn-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const siblings = btn.parentElement.querySelectorAll('.btn-toggle');
+      siblings.forEach(s => s.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  });
+
+  // Switch
+  document.querySelectorAll('[data-switch]').forEach(sw => {
+    sw.addEventListener('click', () => sw.classList.toggle('is-on'));
+  });
+
+  // Segmented control
+  document.querySelectorAll('[data-seg] .seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.parentElement.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  });
+
+  // Checkbox
+  document.querySelectorAll('[data-check]').forEach(chk => {
+    chk.addEventListener('click', (e) => {
+      e.preventDefault();
+      chk.classList.toggle('is-on');
+    });
+  });
+</script>
+
+</body>
+</html>

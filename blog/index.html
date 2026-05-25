@@ -1,25 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9HFT4S0LTX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-9HFT4S0LTX', {
-  'anonymize_ip': true,
-  'cookie_flags': 'SameSite=None;Secure'
-});
-</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- SEO -->
-  <title>Blog — Digitalisierung für KMU | InfinityMade</title>
-  <meta name="description" content="Praxistipps zur Digitalisierung kleiner und mittelständischer Betriebe in NRW: WhatsApp Buchungssysteme, Webdesign Kosten, Google-Sichtbarkeit für Friseure, Restaurants, Handwerker & Fitnessstudios." />
-  <meta name="keywords" content="Digitalisierung KMU, WhatsApp Buchungssystem, Webdesign Kosten, Friseur App, Restaurant Online Reservierung, Handwerker Website, Fitnessstudio Software NRW" />
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <!-- ===== SEO ===== -->
+  <title>Insights — Praxis-Wissen für Heilmittelerbringer | InfinityMade</title>
+  <meta name="description" content="Fachartikel, Leitfäden und Checklisten für Physiotherapie-, Ergotherapie- und Logopädie-Praxen: Abrechnung nach §302 SGB V, Blankoverordnung, Hausbesuche, Digitalisierung und Heilmittelrichtlinien." />
+  <meta name="keywords" content="Praxis Insights, Physiotherapie Blog, Heilmittel Abrechnung, §302 SGB V, Blankoverordnung, Hausbesuch Wegegeld, Praxis digitalisieren, Heilmittelerbringer" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://infinitymade.de/blog/" />
   <meta name="author" content="InfinityMade Redaktion" />
 
@@ -27,35 +16,34 @@
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="de_DE" />
   <meta property="og:site_name" content="InfinityMade" />
-  <meta property="og:title" content="InfinityMade Blog — Digitalisierungstipps für lokale Unternehmen" />
-  <meta property="og:description" content="Praxistipps zur Digitalisierung: WhatsApp Buchungssysteme, Webdesign Kosten, Google-Sichtbarkeit für Friseure, Restaurants & Handwerker." />
+  <meta property="og:title" content="Insights — Praxis-Wissen für Heilmittelerbringer" />
+  <meta property="og:description" content="Fachartikel und Leitfäden für Physio-, Ergo- und Logopädie-Praxen: Abrechnung, Verordnungen, Digitalisierung." />
   <meta property="og:url" content="https://infinitymade.de/blog/" />
   <meta property="og:image" content="https://infinitymade.de/og-image.png" />
 
-  <!-- Fonts & Styles -->
-  
-  
-  <link href="fonts/inter.css" rel="stylesheet" />
-  <link rel="stylesheet" href="blog.css" />
+  <!-- Favicons -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <meta name="theme-color" content="#7c3aed" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="../assets/system.css?v=20260524" />
 
   <!-- Schema: Blog -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Blog",
-    "@id": "https://infinitymade.de/blog/#blog",
-    "name": "InfinityMade Blog",
-    "description": "Praxistipps zur Digitalisierung kleiner und mittelständischer Unternehmen in NRW",
+    "name": "InfinityMade Insights",
+    "description": "Fachartikel für Heilmittel-Praxen — Abrechnung, Verordnungen, Digitalisierung.",
     "url": "https://infinitymade.de/blog/",
     "inLanguage": "de-DE",
-    "publisher": {
-      "@type": "Organization",
-      "name": "InfinityMade",
-      "url": "https://infinitymade.de",
-      "logo": "https://infinitymade.de/og-image.png"
-    }
+    "publisher": { "@id": "https://infinitymade.de/#organization" }
   }
   </script>
 
@@ -65,223 +53,336 @@
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://infinitymade.de/" },
-      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://infinitymade.de/blog/" }
+      { "@type": "ListItem", "position": 1, "name": "InfinityMade", "item": "https://infinitymade.de/" },
+      { "@type": "ListItem", "position": 2, "name": "Insights", "item": "https://infinitymade.de/blog/" }
     ]
   }
   </script>
+
   <script defer src="https://analytics.infinitymade.de/script.js" data-website-id="fa4b493b-35cd-4555-b667-b6a5439471e6"></script>
+
+  <style>
+    /* ── Blog index hero ── */
+    .bi-hero {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 10rem 2rem 4rem;
+    }
+    .bi-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 1.8rem;
+    }
+    .bi-eyebrow-dot {
+      width: 5px; height: 5px;
+      background: var(--bronze);
+      border-radius: 999px;
+    }
+    .bi-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      margin-bottom: 1.6rem;
+      max-width: 36rem;
+    }
+    .bi-title em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--bronze);
+    }
+    .bi-lede {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      max-width: 38rem;
+    }
+
+    /* ── Posts grid ── */
+    .bi-posts {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 2rem 2rem 7rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .bi-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 360ms var(--ease-out), border-color 240ms var(--ease-out), box-shadow 360ms var(--ease-out);
+      min-height: 360px;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .bi-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(107, 85, 56, 0.22);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.7) inset,
+          0 22px 44px -18px rgba(26, 22, 17, 0.14),
+          0 6px 14px -4px rgba(26, 22, 17, 0.05);
+      }
+      .bi-card:hover .bi-card-arrow { transform: translate(3px, -3px); }
+    }
+    .bi-card.featured { grid-column: span 2; flex-direction: row; min-height: 380px; }
+    .bi-card.featured .bi-card-inner { padding: 3rem 2.5rem; }
+    .bi-card.featured .bi-card-title { font-size: 1.85rem; }
+
+    .bi-card-inner {
+      padding: 2.4rem 2rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .bi-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+    }
+    .bi-card-tag {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--bronze);
+    }
+    .bi-card-read {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--ink-quiet);
+      letter-spacing: 0.06em;
+    }
+    .bi-card-title {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 1.35rem;
+      line-height: 1.18;
+      letter-spacing: -0.018em;
+      color: var(--ink);
+      margin-bottom: 0.9rem;
+    }
+    .bi-card-title em { font-style: italic; font-weight: 400; color: var(--bronze); }
+    .bi-card-excerpt {
+      font-size: 0.94rem;
+      line-height: 1.55;
+      color: var(--ink-soft);
+      margin-bottom: auto;
+    }
+    .bi-card-foot {
+      margin-top: 1.6rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .bi-card-date {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: var(--ink-mute);
+    }
+    .bi-card-arrow {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      transition: transform 320ms var(--ease-spring), background 200ms ease, color 200ms ease, border-color 200ms ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .bi-card:hover .bi-card-arrow {
+        background: var(--ink);
+        color: var(--bg);
+        border-color: var(--ink);
+      }
+    }
+
+    @media (max-width: 1000px) {
+      .bi-hero { padding: 7rem 1.25rem 2rem; }
+      .bi-posts { padding: 1rem 1.25rem 4rem; grid-template-columns: 1fr; gap: 1rem; }
+      .bi-card.featured { grid-column: span 1; flex-direction: column; min-height: 320px; }
+      .bi-card.featured .bi-card-inner { padding: 2rem 1.6rem; }
+      .bi-card.featured .bi-card-title { font-size: 1.4rem; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="blog-nav">
-  <div class="blog-nav-inner">
-    <a href="/" class="blog-logo">InfinityMade</a>
-    <ul class="blog-nav-links">
-      <li><a href="/#services">Leistungen</a></li>
-      <li><a href="/#pricing">Preise</a></li>
-      <li><a href="/blog/" class="active">Blog</a></li>
-      <li><a href="/#contact">Kontakt</a></li>
-      <li><a href="/#booking" class="blog-nav-cta">Demo buchen</a></li>
-    </ul>
-  </div>
+<!-- Nav -->
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Infinity<em>Made</em></a>
+  <a href="/#services" class="nav-link">Leistungen</a>
+  <a href="/praxis.html" class="nav-link">Praxura</a>
+  <a href="/blog/" class="nav-link" aria-current="page" style="color: var(--ink); background: rgba(26,22,17,0.04);">Insights</a>
+  <a href="/login.html" class="nav-login">Login</a>
+  <a href="/#kontakt" class="nav-cta">
+    Analysegespräch
+    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  </a>
 </nav>
 
-<!-- HERO -->
-<section class="blog-index-hero">
-  <div class="blog-container">
-    <div class="blog-eyebrow">📚 Wissen &amp; Tipps</div>
-    <h1 class="blog-index-title">
-      Digitalisierung leicht gemacht —<br />
-      <span>für Ihren lokalen Betrieb</span>
-    </h1>
-    <p class="blog-index-sub">
-      Praxisnahe Anleitungen, Kosten-Breakdowns und Erfolgsbeispiele
-      für Friseure, Restaurants, Handwerker und Fitnessstudios in NRW.
-    </p>
-  </div>
-</section>
+<!-- Hero -->
+<header class="bi-hero">
+  <span class="bi-eyebrow">
+    <span class="bi-eyebrow-dot"></span>
+    Insights · Wissen für Heilmittel-Praxen
+  </span>
+  <h1 class="bi-title">
+    Praxis-Wissen, das <em>wirklich abrechenbar</em> ist.
+  </h1>
+  <p class="bi-lede">
+    Fachartikel, Leitfäden und Checklisten für Physiotherapie-, Ergotherapie- und Logopädie-Praxen — geschrieben für Inhaber, die ihre Verwaltung verstehen wollen, nicht nur outsourcen.
+  </p>
+</header>
 
-<!-- FILTER -->
-<div class="blog-container">
-  <div class="blog-filters" id="filterBtns">
-    <button class="blog-filter-btn active" data-filter="all" onclick="filterPosts('all', this)">Alle Themen</button>
-    <button class="blog-filter-btn" data-filter="friseur" onclick="filterPosts('friseur', this)">✂️ Friseur</button>
-    <button class="blog-filter-btn" data-filter="gastro" onclick="filterPosts('gastro', this)">🍽️ Restaurant</button>
-    <button class="blog-filter-btn" data-filter="handwerk" onclick="filterPosts('handwerk', this)">🔧 Handwerk</button>
-    <button class="blog-filter-btn" data-filter="fitness" onclick="filterPosts('fitness', this)">💪 Fitness</button>
-    <button class="blog-filter-btn" data-filter="webdesign" onclick="filterPosts('webdesign', this)">🌐 Webdesign</button>
-  </div>
-</div>
+<!-- Posts -->
+<div class="bi-posts">
 
-<!-- BLOG GRID -->
-<div class="blog-container">
-  <div class="blog-grid" id="blogGrid">
-
-    <!-- FEATURED: Friseur -->
-    <a href="/blog/friseur-whatsapp-terminbuchung.html" class="blog-card featured" data-cat="friseur" id="card-1">
-      <div class="blog-card-img">✂️</div>
-      <div class="blog-card-body">
-        <div class="blog-card-meta">
-          <span class="blog-cat-badge">✂️ Friseur</span>
-          <span class="blog-read-time">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            7 Min. Lesezeit
-          </span>
-        </div>
-        <h2 class="blog-card-title">WhatsApp Terminbuchung für Friseure: Mehr Buchungen, weniger Telefonstress — der komplette Guide 2025</h2>
-        <p class="blog-card-excerpt">40% aller Terminanfragen gehen verloren, weil das Telefon besetzt ist. So richtet Ihr Friseursalon WhatsApp-Automatisierung in 7 Tagen ein — inklusive Kosten-Vergleich der besten Systeme.</p>
-        <div class="blog-card-footer">
-          <span class="blog-card-date">10. Mai 2025</span>
-          <span class="blog-card-arrow">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
-          </span>
-        </div>
+  <!-- Featured: Blankoverordnung -->
+  <a href="/blog/blankoverordnung-physiotherapie-2026.html" class="bi-card featured">
+    <div class="bi-card-inner">
+      <div class="bi-card-meta">
+        <span class="bi-card-tag">Verordnungen · Physiotherapie</span>
+        <span class="bi-card-read">9 Min.</span>
       </div>
-    </a>
-
-    <!-- Restaurant -->
-    <a href="/blog/restaurant-online-reservierung.html" class="blog-card" data-cat="gastro" id="card-2">
-      <div class="blog-card-img">🍽️</div>
-      <div class="blog-card-body">
-        <div class="blog-card-meta">
-          <span class="blog-cat-badge" style="background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.25);color:#fbbf24;">🍽️ Restaurant</span>
-          <span class="blog-read-time">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            6 Min.
-          </span>
-        </div>
-        <h2 class="blog-card-title">No-Shows im Restaurant: Wie WhatsApp-Reservierungen Ihre Ausfallrate um 60% senken</h2>
-        <p class="blog-card-excerpt">Ein leerer Tisch kostet Sie 40—80€ pro Abend. Mit automatischen Erinnerungen und smarter Reservierungslogik halten Sie Ihren Saal voll — ohne Mehraufwand.</p>
-        <div class="blog-card-footer">
-          <span class="blog-card-date">8. Mai 2025</span>
-          <span class="blog-card-arrow">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
-          </span>
-        </div>
+      <h2 class="bi-card-title">
+        Blankoverordnung 2026 — Was Physio-Praxen jetzt <em>wirklich</em> wissen müssen
+      </h2>
+      <p class="bi-card-excerpt">
+        Seit November 2024 dürfen Praxen bei der Diagnosegruppe EX (Schulter) Heilmittel, Frequenz und Anzahl der Einheiten selbst festlegen — und werden mit +89,34 € pro Verordnung vergütet. Welche Voraussetzungen gelten, welche Fallstricke lauern, und wie Sie sauber dokumentieren.
+      </p>
+      <div class="bi-card-foot">
+        <span class="bi-card-date">24. Mai 2026</span>
+        <span class="bi-card-arrow" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </span>
       </div>
-    </a>
+    </div>
+  </a>
 
-    <!-- Handwerker -->
-    <a href="/blog/handwerker-website-kosten-2025.html" class="blog-card" data-cat="handwerk" id="card-3">
-      <div class="blog-card-img">🔧</div>
-      <div class="blog-card-body">
-        <div class="blog-card-meta">
-          <span class="blog-cat-badge" style="background:rgba(6,182,212,0.15);border-color:rgba(6,182,212,0.25);color:#22d3ee;">🔧 Handwerk</span>
-          <span class="blog-read-time">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            8 Min.
-          </span>
-        </div>
-        <h2 class="blog-card-title">Website für Handwerker: Realistische Kosten 2025 und was Sie wirklich brauchen</h2>
-        <p class="blog-card-excerpt">Von 99€ bis 5.000€+ — der Preisunterschied ist riesig. Wir erklären, was eine Handwerker-Website kosten sollte, welche Features wirklich wichtig sind und worauf Sie achten müssen.</p>
-        <div class="blog-card-footer">
-          <span class="blog-card-date">5. Mai 2025</span>
-          <span class="blog-card-arrow">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
-          </span>
-        </div>
+  <!-- Hausbesuch -->
+  <a href="/blog/hausbesuch-physiotherapie-abrechnen-2026.html" class="bi-card">
+    <div class="bi-card-inner">
+      <div class="bi-card-meta">
+        <span class="bi-card-tag">Abrechnung · Hausbesuch</span>
+        <span class="bi-card-read">8 Min.</span>
       </div>
-    </a>
-
-    <!-- Fitness -->
-    <a href="/blog/fitnessstudio-mitglieder-digital.html" class="blog-card" data-cat="fitness" id="card-4">
-      <div class="blog-card-img">💪</div>
-      <div class="blog-card-body">
-        <div class="blog-card-meta">
-          <span class="blog-cat-badge" style="background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.25);color:#4ade80;">💪 Fitness</span>
-          <span class="blog-read-time">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            6 Min.
-          </span>
-        </div>
-        <h2 class="blog-card-title">Fitnessstudio Mitglieder gewinnen: 5 digitale Strategien die 2025 wirklich funktionieren</h2>
-        <p class="blog-card-excerpt">Die meisten Studios verlieren monatlich 5—10% ihrer Mitglieder. Wie Sie mit digitalen Tools die Fluktuation stoppen und neue Mitglieder günstiger gewinnen als durch klassische Werbung.</p>
-        <div class="blog-card-footer">
-          <span class="blog-card-date">3. Mai 2025</span>
-          <span class="blog-card-arrow">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
-          </span>
-        </div>
+      <h2 class="bi-card-title">
+        Hausbesuch <em>abrechnen</em> 2026
+      </h2>
+      <p class="bi-card-excerpt">
+        Wegegeld (Pos. 18250), Hausbesuchs-Pauschale (Pos. 18510), Zeitzuschläge, GKV vs. PKV — der vollständige Praxis-Leitfaden für Therapeuten, die zum Patienten kommen.
+      </p>
+      <div class="bi-card-foot">
+        <span class="bi-card-date">24. Mai 2026</span>
+        <span class="bi-card-arrow" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </span>
       </div>
-    </a>
+    </div>
+  </a>
 
-    <!-- Webdesign NRW -->
-    <a href="/blog/webdesign-kosten-kmu-nrw.html" class="blog-card" data-cat="webdesign" id="card-5">
-      <div class="blog-card-img">🌐</div>
-      <div class="blog-card-body">
-        <div class="blog-card-meta">
-          <span class="blog-cat-badge" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.25);color:#f87171;">🌐 Webdesign</span>
-          <span class="blog-read-time">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            9 Min.
-          </span>
-        </div>
-        <h2 class="blog-card-title">Webdesign Kosten für kleine Unternehmen in NRW: Was kostet eine professionelle Website wirklich?</h2>
-        <p class="blog-card-excerpt">Preisvergleich: Freelancer vs. Agentur vs. Baukastensysteme. Welche Lösung sich für Ihr Budget in Siegburg, Köln, Bonn oder Troisdorf lohnt — mit echten Zahlen.</p>
-        <div class="blog-card-footer">
-          <span class="blog-card-date">1. Mai 2025</span>
-          <span class="blog-card-arrow">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l10-10M7 7h10v10"/></svg>
-          </span>
-        </div>
+  <!-- Checkliste -->
+  <a href="/blog/praxis-digitalisieren-7-schritte-checkliste.html" class="bi-card">
+    <div class="bi-card-inner">
+      <div class="bi-card-meta">
+        <span class="bi-card-tag">Praxismanagement · Digitalisierung</span>
+        <span class="bi-card-read">10 Min.</span>
       </div>
-    </a>
+      <h2 class="bi-card-title">
+        Praxis digitalisieren — die <em>7-Schritte</em> Checkliste
+      </h2>
+      <p class="bi-card-excerpt">
+        Von der Online-Terminbuchung bis zum KPI-Reporting: Sieben Schritte, mit denen Physio-, Ergo- und Logo-Praxen sauber digitalisieren — ohne Marketingfloskeln.
+      </p>
+      <div class="bi-card-foot">
+        <span class="bi-card-date">24. Mai 2026</span>
+        <span class="bi-card-arrow" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </span>
+      </div>
+    </div>
+  </a>
 
-  </div>
-</div>
-
-<!-- NEWSLETTER CTA -->
-<div class="blog-container" style="margin-bottom:80px;">
-  <div class="article-cta">
-    <div class="article-cta-emoji">🚀</div>
-    <h3>Bereit, Ihren Betrieb zu digitalisieren?</h3>
-    <p>Vereinbaren Sie ein kostenloses 15-Minuten Demo-Gespräch. Wir zeigen Ihnen live, was für Ihren Betrieb möglich ist.</p>
-    <div class="article-cta-buttons">
-      <a href="/#booking" class="btn-primary-blog">
-        Demo buchen
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
-      <a href="/#contact" class="btn-ghost-blog">Kontakt aufnehmen</a>
+  <!-- Coming soon placeholder card -->
+  <div class="bi-card" style="border-style: dashed; background: var(--bg-warm); cursor: default;">
+    <div class="bi-card-inner">
+      <div class="bi-card-meta">
+        <span class="bi-card-tag" style="color: var(--ink-quiet);">In Vorbereitung</span>
+      </div>
+      <h2 class="bi-card-title" style="color: var(--ink-mute);">
+        §302 DTA — der <em>Selbstabrechner</em>-Leitfaden
+      </h2>
+      <p class="bi-card-excerpt">
+        Wann sich die Direktabrechnung lohnt, was das Dakota-Zertifikat kostet, welche Datenannahmestellen welche Kassen bedienen — und wie der Quartalsabschluss in der Praxis abläuft.
+      </p>
+      <div class="bi-card-foot">
+        <span class="bi-card-date">Folgt</span>
+      </div>
     </div>
   </div>
+
 </div>
 
-<!-- FOOTER -->
-<footer class="blog-footer">
-  <div class="blog-container">
-    <p>© <span id="yr"></span> InfinityMade · Siegburg, NRW ·
-      <a href="/impressum.html">Impressum</a> ·
-      <a href="/datenschutz.html">Datenschutz</a> ·
-      <a href="/agb.html">AGB</a>
-    </p>
+<!-- Footer -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Infinity<em>Made</em></div>
+      <div class="footer-tagline">KI-Studio aus Siegburg. Wir bauen Software, die Zeit zurückgibt — für Heilmittel-Praxen, Handwerk und KMU in Deutschland.</div>
+    </div>
+    <div class="footer-col">
+      <h4>InfinityMade</h4>
+      <ul>
+        <li><a href="/#services">Leistungen</a></li>
+        <li><a href="/#projekte">Projekte</a></li>
+        <li><a href="/#prozess">Prozess</a></li>
+        <li><a href="/#kontakt">Analysegespräch</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Produkte</h4>
+      <ul>
+        <li><a href="/praxis.html">Praxura</a></li>
+        <li><a href="/blog/">Insights</a></li>
+        <li><a href="/login.html">Login</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
   </div>
 </footer>
 
-<script>
-document.getElementById('yr').textContent = new Date().getFullYear();
-
-function filterPosts(cat, btn) {
-  // Update buttons
-  document.querySelectorAll('.blog-filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  // Filter cards
-  document.querySelectorAll('.blog-card').forEach(card => {
-    if (cat === 'all' || card.dataset.cat === cat) {
-      card.style.display = 'flex';
-    } else {
-      card.style.display = 'none';
-    }
-  });
-
-  // Fix featured span for single column
-  const featured = document.querySelector('.blog-card.featured');
-  if (featured && featured.style.display !== 'none') {
-    featured.style.gridColumn = 'span 2';
-  }
-}
-</script>
+<script src="../assets/system.js?v=20260524"></script>
 </body>
 </html>

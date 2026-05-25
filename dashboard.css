@@ -1,29 +1,42 @@
 :root {
-  --bg-main: #0f1115;
-  --bg-card: rgba(25, 28, 36, 0.7);
-  --bg-card-solid: #181b23;
-  --bg-sidebar: rgba(13, 15, 20, 0.95);
-  --bg-topbar: rgba(13, 15, 20, 0.95);
-  --bg-input: rgba(255, 255, 255, 0.05);
-  --bg-hover: rgba(255, 255, 255, 0.05);
-  --primary: #22c55e;
-  --primary-hover: #16a34a;
-  --primary-dim: rgba(34, 197, 94, 0.15);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-faint: #475569;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
-  --danger: #ef4444;
-  --danger-dim: rgba(239, 68, 68, 0.15);
-  --warning: #f59e0b;
-  --warning-dim: rgba(245, 158, 11, 0.15);
-  --info: #3b82f6;
+  /* Soft-skill light palette (token VALUES swapped, names preserved for compat) */
+  --bg-main: #F8F3E8;
+  --bg-card: rgba(255, 254, 251, 0.75);
+  --bg-card-solid: #FFFEFB;
+  --bg-sidebar: rgba(241, 233, 214, 0.92);
+  --bg-topbar: rgba(248, 243, 232, 0.85);
+  --bg-input: rgba(26, 22, 17, 0.04);
+  --bg-hover: rgba(26, 22, 17, 0.05);
+  --primary: #1E3D2F;
+  --primary-hover: #6B5538;
+  --primary-dim: rgba(30, 61, 47, 0.12);
+  --text-main: #1A1611;
+  --text-muted: #7A6F61;
+  --text-faint: #B5AB99;
+  --border: rgba(26, 22, 17, 0.08);
+  --border-strong: rgba(26, 22, 17, 0.15);
+  --danger: #9C3A3A;
+  --danger-dim: rgba(156, 58, 58, 0.12);
+  --warning: #C9A876;
+  --warning-dim: rgba(201, 168, 118, 0.18);
+  --info: #4E5C45;
+
+  /* Brand tokens (additions) */
+  --bronze: #6B5538;
+  --bronze-deep: #523F26;
+  --emerald-deep: #1E3D2F;
+  --highlight: #C9A876;
+  --bg-warm: #F1E9D6;
+  --serif: 'Fraunces', 'Times New Roman', serif;
+  --mono: 'JetBrains Mono', monospace;
+
   --radius: 14px;
   --radius-sm: 8px;
   --sidebar-w: 260px;
   --topbar-h: 60px;
   --transition: 0.2s ease;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 *,
@@ -38,12 +51,31 @@ html,
 body {
   background: var(--bg-main);
   color: var(--text-main);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+h1, h2, h3, .dashboard-title, .modal-title, .page-title {
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+h1 em, h2 em, h3 em { font-style: italic; font-weight: 400; color: var(--bronze); }
 
 button {
   font-family: inherit;
@@ -684,16 +716,18 @@ textarea {
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
   width: 100%;
   text-align: left;
-  transition: var(--transition);
+  transition: background 240ms var(--ease-out), color 240ms var(--ease-out), transform 240ms var(--ease-spring);
   position: relative;
+  background: transparent;
+  border: none;
 }
 
 .sidebar-item:hover {
@@ -704,11 +738,30 @@ textarea {
 .sidebar-item.active {
   background: var(--primary-dim);
   color: var(--primary);
+  font-weight: 600;
+}
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 2px;
 }
 
 .sidebar-item .icon {
-  font-size: 16px;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+}
+.sidebar-item .icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .sidebar-item .lock {

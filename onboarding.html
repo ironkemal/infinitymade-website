@@ -11,13 +11,70 @@
 <title>Onboarding — InfinityMade</title>
 
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="theme-color" content="#F8F3E8" />
 <link rel="stylesheet" href="onboarding.css" />
+<style>
+  /* Soft-skill repaint of onboarding (overrides onboarding.css dark theme) */
+  :root {
+    --bg: #F8F3E8;
+    --bg-card: #FFFFFF;
+    --bg-input: #FAF7F0;
+    --border: rgba(26, 22, 17, 0.08);
+    --border-strong: rgba(26, 22, 17, 0.18);
+    --text: #1A1611;
+    --muted: #7A6F61;
+    --accent: #1E3D2F;
+    --accent-soft: rgba(30, 61, 47, 0.08);
+    --accent-hover: #6B5538;
+    --danger: #9C3A3A;
+  }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+    background: #F8F3E8 !important;
+    color: #1A1611 !important;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 100;
+    opacity: 0.035; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+  .ob-topbar {
+    background: rgba(248, 243, 232, 0.85) !important;
+    border-bottom: 1px solid rgba(26, 22, 17, 0.08);
+  }
+  .ob-brand {
+    font-family: 'Fraunces', serif !important;
+    font-weight: 500;
+    font-size: 1.15rem;
+    color: #1A1611 !important;
+    text-decoration: none;
+  }
+  .ob-brand em { font-style: italic; color: #6B5538; font-weight: 500; }
+  .ob-step h1, .ob-step h2, .ob-step h3, .ob-step-header h1 {
+    font-family: 'Fraunces', serif !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.025em;
+    color: #1A1611;
+  }
+  .ob-step-header h1 em { font-style: italic; font-weight: 300; color: #6B5538; }
+  .ob-step-tag {
+    font-family: 'JetBrains Mono', monospace !important;
+    color: #6B5538 !important;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+</style>
 </head>
 <body>
 
 <header class="ob-topbar">
-  <a href="/index.html" class="ob-brand">infinity<span class="ob-brand-accent">made</span></a>
+  <a href="/index.html" class="ob-brand">Infinity<em>Made</em></a>
   <div class="ob-progress">
     <div class="ob-progress-bar"><div class="ob-progress-fill" id="progressFill"></div></div>
     <span class="ob-progress-label"><span id="stepNum">1</span> / 7</span>
