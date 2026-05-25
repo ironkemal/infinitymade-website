@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260525c" />
+  <link rel="stylesheet" href="dashboard.css?v=20260525e" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -925,32 +925,108 @@
             </div>
           </div>
 
-          <div class="card" style="margin-bottom:24px;">
-            <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;" data-i18n="ab_ready">Abrechnungsbereit</h3>
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;" data-i18n="ab_hint_select">Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.</p>
-            <div id="abReadyContainer">
-              <div id="abReadyEmpty" class="table-empty" data-i18n="ab_no_ready">Keine abrechnungsbereiten Rezepte.</div>
-              <div id="abReadyGroups"></div>
+          <!-- Wizard Navigation (Stepper) -->
+          <div class="wizard-nav">
+            <button class="wiz-btn active" data-step="1" id="btn-wiz-step1">
+              <span class="svg-icon" id="wiz-icon-step1"></span>
+              <span data-i18n="wiz_step_1">1. Kontrolle</span>
+            </button>
+            <button class="wiz-btn" data-step="2" id="btn-wiz-step2" disabled>
+              <span class="svg-icon" id="wiz-icon-step2"></span>
+              <span data-i18n="wiz_step_2">2. Taxierung</span>
+            </button>
+            <button class="wiz-btn" data-step="3" id="btn-wiz-step3" disabled>
+              <span class="svg-icon" id="wiz-icon-step3"></span>
+              <span data-i18n="wiz_step_3">3. Export</span>
+            </button>
+            <button class="wiz-btn" data-step="4" id="btn-wiz-step4">
+              <span class="svg-icon" id="wiz-icon-step4"></span>
+              <span data-i18n="wiz_step_4">4. Archiv</span>
+            </button>
+          </div>
+
+          <!-- STAGE 1: Kontrolle (Validation) -->
+          <div class="wizard-panel active" id="abStep1">
+            <div class="card" style="margin-bottom:24px;">
+              <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;" data-i18n="ab_ready">Abrechnungsbereit</h3>
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;" data-i18n="ab_hint_select">Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.</p>
+              <div id="abReadyContainer">
+                <div id="abReadyEmpty" class="table-empty" data-i18n="ab_no_ready">Keine abrechnungsbereiten Rezepte.</div>
+                <div id="abReadyGroups"></div>
+              </div>
+            </div>
+            
+            <div class="card" id="preflightActionCard" style="display:none;margin-bottom:24px;">
+              <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;">Preflight-Check</h3>
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Prüfen Sie die ausgewählten Rezepte auf Datenvollständigkeit vor der Taxierung.</p>
+              <button class="btn-primary" id="abRunPreflightBtn" style="min-width:180px;">Preflight-Check ausführen</button>
+              <div id="abPreflightResults" style="margin-top:16px;"></div>
+              
+              <div style="display:flex;justify-content:flex-end;margin-top:20px;padding-top:12px;border-top:1px solid var(--border);" id="abStep1NextWrap" hidden>
+                <button class="btn-primary" id="abToStep2Btn">Weiter zur Taxierung ›</button>
+              </div>
             </div>
           </div>
 
-          <div class="card">
-            <h3 style="font-size:16px;font-weight:600;margin-bottom:14px;" data-i18n="ab_history">Abrechnungs-Historie</h3>
-            <div class="table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th data-i18n="ab_filename">Dateiname</th>
-                    <th data-i18n="ab_kk">Krankenkasse</th>
-                    <th data-i18n="ab_count">Rezepte</th>
-                    <th data-i18n="ab_total">Summe</th>
-                    <th data-i18n="ab_status">Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="abHistoryBody"></tbody>
-              </table>
-              <div id="abHistoryEmpty" class="table-empty" data-i18n="ab_no_history">Noch keine Abrechnungen erstellt.</div>
+          <!-- STAGE 2: Taxierung (Pricing Override) -->
+          <div class="wizard-panel" id="abStep2" hidden>
+            <div class="card" style="margin-bottom:24px;">
+              <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;">2. Taxierung: Heilmittelposition & Preise</h3>
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Kontrollieren Sie die Heilmittelpositionen und passen Sie diese bei Bedarf an. Die Zuzahlung wird automatisch kalkuliert.</p>
+              
+              <div id="abTaxierungContainer"></div>
+              
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:12px;border-top:1px solid var(--border);">
+                <button class="btn-ghost" id="abBackToStep1Btn">‹ Zurück zur Kontrolle</button>
+                <button class="btn-primary" id="abGenerateDtaBtn">Rechnung finalisieren & DTA erstellen ›</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAGE 3: Export (Download & Sign) -->
+          <div class="wizard-panel" id="abStep3" hidden>
+            <div class="card" style="margin-bottom:24px;">
+              <h3 style="font-size:16px;font-weight:600;margin-bottom:6px;">3. Export: EDIFACT-Paket & Begleitzettel</h3>
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Ihre Abrechnung wurde erfolgreich erstellt! Laden Sie die DTA-Paketdatei herunter, signieren Sie sie elektronisch und laden Sie das Ergebnis im DAS-Portal hoch.</p>
+              
+              <div id="abExportActiveBox" style="padding:20px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;">
+                <div style="font-weight:600;font-size:16px;margin-bottom:6px;" id="abExportKkName">—</div>
+                <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;" id="abExportDetails">—</div>
+                
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                  <button class="btn-primary" id="abDownloadActiveDta">DTA Datei Herunterladen</button>
+                  <button class="btn-ghost" id="abDownloadActiveBeg">Begleitzettel Herunterladen</button>
+                  <button class="btn-primary" id="abSignActiveDta">✍ Digital Signieren (.p7m)</button>
+                </div>
+              </div>
+              
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:12px;border-top:1px solid var(--border);">
+                <button class="btn-ghost" id="abBackToStep2Btn">‹ Zurück zur Taxierung</button>
+                <button class="btn-primary" id="abToStep4Btn">Weiter zum Archiv ›</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAGE 4: Archiv (History & ZAA) -->
+          <div class="wizard-panel" id="abStep4" hidden>
+            <div class="card">
+              <h3 style="font-size:16px;font-weight:600;margin-bottom:14px;" data-i18n="ab_history">Abrechnungs-Historie</h3>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="ab_filename">Dateiname</th>
+                      <th data-i18n="ab_kk">Krankenkasse</th>
+                      <th data-i18n="ab_count">Rezepte</th>
+                      <th data-i18n="ab_total">Summe</th>
+                      <th data-i18n="ab_status">Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="abHistoryBody"></tbody>
+                </table>
+                <div id="abHistoryEmpty" class="table-empty" data-i18n="ab_no_history">Noch keine Abrechnungen erstellt.</div>
+              </div>
             </div>
           </div>
         </section>
@@ -3120,7 +3196,7 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260525d"></script>
+  <script type="module" src="dashboard.js?v=20260525e"></script>
 </body>
 
 </html>

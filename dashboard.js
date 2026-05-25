@@ -9,6 +9,7 @@ const T = {
   de: {
     logout: 'Abmelden',
     nav_overview: 'Übersicht', nav_calendar: 'Termine', nav_kunden: 'Kunden Info',
+    wiz_step_1: '1. Kontrolle', wiz_step_2: '2. Taxierung', wiz_step_3: '3. Export', wiz_step_4: '4. Archiv',
     nav_services: 'Dienstleistungen', nav_hours: 'Arbeitszeiten',
     nav_team: 'Mitarbeiter', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Rechnungen', nav_feedback: 'Feedback', nav_settings: 'Einstellungen',
     overview_sub: 'Ihr heutiger Überblick',
@@ -77,6 +78,7 @@ const T = {
   en: {
     logout: 'Sign out',
     nav_overview: 'Overview', nav_calendar: 'Appointments', nav_kunden: 'Customers',
+    wiz_step_1: '1. Control', wiz_step_2: '2. Pricing', wiz_step_3: '3. Export', wiz_step_4: '4. Archive',
     nav_services: 'Services', nav_hours: 'Working Hours',
     nav_team: 'Team', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Invoices', nav_feedback: 'Feedback', nav_settings: 'Settings',
     overview_sub: 'Your daily overview',
@@ -143,6 +145,7 @@ const T = {
   tr: {
     logout: 'Çıkış',
     nav_overview: 'Genel Bakış', nav_calendar: 'Randevular', nav_kunden: 'Müşteri Bilgisi',
+    wiz_step_1: '1. Kontrol', wiz_step_2: '2. Fiyatlandırma', wiz_step_3: '3. Dışa Aktarım', wiz_step_4: '4. Arşiv',
     nav_services: 'Hizmetler', nav_hours: 'Çalışma Saatleri',
     nav_team: 'Personel', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Faturalar', nav_feedback: 'Geri Bildirim', nav_settings: 'Ayarlar',
     overview_sub: 'Günlük genel bakışınız',
@@ -522,6 +525,7 @@ function showMyBookingLink() {
 }
 
 async function switchPanel(id) {
+  window.switchPanel = switchPanel;
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + id);
@@ -10379,11 +10383,296 @@ function fmtEur(n) {
   return v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 }
 
+function setWizardStep(stepNum) {
+  _abState.activeStep = stepNum;
+  document.querySelectorAll('.wizard-panel').forEach((el, idx) => {
+    el.hidden = (idx + 1) !== stepNum;
+  });
+  document.querySelectorAll('.wiz-btn').forEach((btn, idx) => {
+    const active = (idx + 1) === stepNum;
+    btn.classList.toggle('active', active);
+    btn.style.color = active ? 'var(--primary)' : 'var(--text-muted)';
+  });
+}
+
+function runPreflightCheck() {
+  const activeIk = _abState.activeIk;
+  if (!activeIk) return;
+
+  const checks = document.querySelectorAll(`.ab-rx-check[data-ik="${activeIk}"]:checked`);
+  const selectedIds = [...checks].map(c => c.dataset.id);
+  
+  const resultsDiv = document.getElementById('abPreflightResults');
+  const nextWrap = document.getElementById('abStep1NextWrap');
+  if (!resultsDiv) return;
+  resultsDiv.innerHTML = '';
+  
+  if (!selectedIds.length) {
+    resultsDiv.innerHTML = `<div class="preflight-check-item error">
+      <span class="preflight-check-icon error" style="display:inline-flex;width:16px;height:16px;">${ICON.warning}</span>
+      <div>Bitte wählen Sie mindestens ein Rezept für den Preflight-Check aus.</div>
+    </div>`;
+    if (nextWrap) nextWrap.hidden = true;
+    document.getElementById('btn-wiz-step2').disabled = true;
+    return;
+  }
+
+  let hasErrors = false;
+  let validationHtml = '';
+
+  selectedIds.forEach(id => {
+    const rx = _abState.ready.find(r => r.id === id);
+    if (!rx) return;
+
+    const lead = rx.leads || {};
+    const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unbekannter Patient';
+    const heilmittelText = rx.heilmittel || '';
+    
+    const rxErrors = [];
+    const rxWarnings = [];
+
+    if (!lead.first_name || !lead.last_name) {
+      rxErrors.push('Patienten-Name ist unvollständig.');
+    }
+    if (!lead.versichertennummer) {
+      rxErrors.push('Versichertennummer fehlt.');
+    }
+    if (!rx.icd10) {
+      rxErrors.push('ICD-10 Diagnosecode fehlt.');
+    }
+    if (!rx.anzahl_einheiten || rx.anzahl_einheiten <= 0) {
+      rxErrors.push('Anzahl der Einheiten ist ungültig.');
+    }
+    if (!rx.heilmittel_position) {
+      rxWarnings.push('Keine Heilmittelposition (X-Code) zugewiesen. Die Zuzahlung und Abrechnungspreise können nicht exakt ermittelt werden.');
+    }
+
+    let statusClass = 'success';
+    let summaryText = '✓ Rezept fehlerfrei';
+    if (rxErrors.length > 0) {
+      statusClass = 'error';
+      summaryText = '⚠ Kritische Fehler';
+      hasErrors = true;
+    } else if (rxWarnings.length > 0) {
+      statusClass = 'warning';
+      summaryText = '⚠ Warnungen vorhanden';
+    }
+
+    validationHtml += `<div class="preflight-card">
+      <div class="preflight-group-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;">${escapeHtml(pname)} — ${escapeHtml(heilmittelText || 'Heilmittel')}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--text-muted);">${summaryText}</span>
+      </div>`;
+
+    if (rxErrors.length === 0 && rxWarnings.length === 0) {
+      validationHtml += `<div class="preflight-check-item success">
+        <span class="preflight-check-icon success" style="display:inline-flex;width:16px;height:16px;">${ICON.checkCircle}</span>
+        <div>Alle Pflichtfelder (Name, Versichertennummer, Einheiten, ICD-10, Heilmittel) sind korrekt ausgefüllt.</div>
+      </div>`;
+    }
+
+    rxErrors.forEach(err => {
+      validationHtml += `<div class="preflight-check-item error">
+        <span class="preflight-check-icon error" style="display:inline-flex;width:16px;height:16px;">${ICON.warning}</span>
+        <div><strong>Kritisch:</strong> ${escapeHtml(err)}</div>
+      </div>`;
+    });
+
+    rxWarnings.forEach(warn => {
+      validationHtml += `<div class="preflight-check-item warning">
+        <span class="preflight-check-icon warning" style="display:inline-flex;width:16px;height:16px;">${ICON.info}</span>
+        <div><strong>Hinweis:</strong> ${escapeHtml(warn)}</div>
+      </div>`;
+    });
+
+    validationHtml += `</div>`;
+  });
+
+  resultsDiv.innerHTML = validationHtml;
+
+  const summaryBox = document.createElement('div');
+  summaryBox.className = 'preflight-summary-box';
+  if (hasErrors) {
+    summaryBox.style.cssText = 'background:rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--text-main); display:flex; align-items:center; gap:12px; padding:16px; border-radius:var(--radius-md); margin-top:16px;';
+    summaryBox.innerHTML = `<span class="preflight-check-icon error" style="display:inline-flex;width:24px;height:24px;color:#ef4444;">${ICON.warning}</span>
+      <div>
+        <strong style="display:block;font-size:14px;margin-bottom:2px;">Validierung fehlgeschlagen</strong>
+        <span style="font-size:13px;color:var(--text-muted);">Einige Rezepte weisen kritische Fehler auf. Bitte korrigieren Sie diese in den Patientenakten, bevor Sie fortfahren.</span>
+      </div>`;
+    if (nextWrap) nextWrap.hidden = true;
+    document.getElementById('btn-wiz-step2').disabled = true;
+  } else {
+    summaryBox.style.cssText = 'background:rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); color: var(--text-main); display:flex; align-items:center; gap:12px; padding:16px; border-radius:var(--radius-md); margin-top:16px;';
+    summaryBox.innerHTML = `<span class="preflight-check-icon success" style="display:inline-flex;width:24px;height:24px;color:#22c55e;">${ICON.checkCircle}</span>
+      <div>
+        <strong style="display:block;font-size:14px;margin-bottom:2px;">Preflight-Check erfolgreich</strong>
+        <span style="font-size:13px;color:var(--text-muted);">Alle Rezepte sind strukturell valide. Sie können jetzt mit der Taxierung fortfahren.</span>
+      </div>`;
+    if (nextWrap) nextWrap.hidden = false;
+    document.getElementById('btn-wiz-step2').disabled = false;
+  }
+  resultsDiv.appendChild(summaryBox);
+}
+
+function renderTaxierungList() {
+  const activeIk = _abState.activeIk;
+  const container = document.getElementById('abTaxierungContainer');
+  if (!activeIk || !container) return;
+  
+  const kk = _abState.kkMap.get(activeIk);
+  const kkName = kk?.name || activeIk;
+  
+  const checks = document.querySelectorAll(`.ab-rx-check[data-ik="${activeIk}"]:checked`);
+  const selectedIds = [...checks].map(c => c.dataset.id);
+  const items = _abState.ready.filter(rx => selectedIds.includes(rx.id));
+  
+  if (!items.length) {
+    container.innerHTML = `<div class="table-empty">Keine Rezepte ausgewählt. Bitte gehen Sie zurück zu Schritt 1.</div>`;
+    return;
+  }
+  
+  container.innerHTML = `
+    <div style="margin-bottom:16px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-weight:600;font-size:15px;color:var(--text-main);">${escapeHtml(kkName)}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${activeIk !== '__unknown__' ? 'IK ' + escapeHtml(activeIk) : ''} &middot; ${items.length} ${t('ab_rezept')} zur Abrechnung</div>
+    </div>
+    
+    <div class="table-wrap" style="margin:0;">
+      <table class="data-table" style="margin:0;">
+        <thead>
+          <tr>
+            <th>${t('ab_patient')}</th>
+            <th>${t('ab_rezept')}</th>
+            <th>${t('ab_einheiten')}</th>
+            <th>${t('ab_zuzahlung')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(rx => {
+            const lead = rx.leads || {};
+            const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
+            const heilmittelText = rx.heilmittel || '—';
+            const currentPos = rx.heilmittel_position || '';
+            const picker = _abState.positionsLoaded
+              ? `<select class="ab-pos-select-step2" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
+              : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
+            
+            const _posLookup = (() => {
+              if (!currentPos) return null;
+              const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
+                : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
+                  : null;
+              return tpl ? _abState.positions.find(p => p.x === tpl) : null;
+            })();
+            const anzahl = rx.anzahl_einheiten || 1;
+            const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
+            const zuPerEin = _posLookup?.zuzahlung;
+            const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
+            const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
+            const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;
+            const zu = rx.zuzahlung_befreit
+              ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
+              : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
+              
+            return `<tr>
+              <td>${escapeHtml(pname)}</td>
+              <td>
+                <div style="font-weight:500;">${escapeHtml(heilmittelText)}</div>
+                ${picker}
+              </td>
+              <td>${rx.anzahl_einheiten || 0}</td>
+              <td>${zu}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  container.querySelectorAll('.ab-pos-select-step2').forEach(sel => {
+    sel.addEventListener('change', async (e) => {
+      const newVal = e.target.value;
+      if (!newVal) { e.target.value = e.target.dataset.prev || ''; return; }
+      await savePositionOverride(e.target.dataset.id, newVal, e.target);
+      renderTaxierungList();
+    });
+  });
+}
+
+async function renderExportStep() {
+  const abId = _abState.activeAbrechnungId;
+  const nextBtn = document.getElementById('btn-wiz-step3');
+  if (nextBtn) nextBtn.disabled = false;
+
+  if (!abId) {
+    document.getElementById('abExportActiveBox').innerHTML = `<p style="color:var(--text-muted);">Keine aktive Abrechnung im Export-Schritt vorhanden.</p>`;
+    return;
+  }
+
+  const { data: ab, error } = await supabase
+    .from('abrechnung')
+    .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, status, storage_path, begleitzettel_path, signed_storage_path')
+    .eq('id', abId)
+    .single();
+
+  if (error || !ab) {
+    console.error('[export/load]', error);
+    return;
+  }
+
+  const kk = _abState.kkMap.get(ab.kostentraeger_ik);
+  const kkName = kk?.name || ab.kostentraeger_ik || 'Krankenkasse';
+
+  document.getElementById('abExportKkName').textContent = kkName;
+  document.getElementById('abExportDetails').innerHTML = `
+    <strong>Datei:</strong> <code style="font-size:12px;font-family:monospace;">${escapeHtml(ab.dateiname || ab.rechnungsnummer || ab.id.slice(0, 8))}</code> &middot; 
+    <strong>Rezepte:</strong> ${ab.prescription_count || 0} &middot; 
+    <strong>Gesamtsumme:</strong> ${fmtEur(ab.total_eur)} &middot;
+    <strong>Status:</strong> <span class="badge ${ab.signed_storage_path ? 'badge-green' : 'badge-gray'}">${ab.signed_storage_path ? '✍ signiert' : 'unsigniert'}</span>
+  `;
+
+  const dlDta = document.getElementById('abDownloadActiveDta');
+  const dlBeg = document.getElementById('abDownloadActiveBeg');
+  const signBtn = document.getElementById('abSignActiveDta');
+
+  const newDlDta = dlDta.cloneNode(true);
+  const newDlBeg = dlBeg.cloneNode(true);
+  const newSignBtn = signBtn.cloneNode(true);
+
+  dlDta.parentNode.replaceChild(newDlDta, dlDta);
+  dlBeg.parentNode.replaceChild(newDlBeg, dlBeg);
+  signBtn.parentNode.replaceChild(newSignBtn, signBtn);
+
+  if (ab.storage_path) {
+    newDlDta.disabled = false;
+    newDlDta.addEventListener('click', () => downloadAbrechnungFile(ab.storage_path, ab.id, 'dta'));
+  } else {
+    newDlDta.disabled = true;
+  }
+
+  if (ab.begleitzettel_path) {
+    newDlBeg.disabled = false;
+    newDlBeg.addEventListener('click', () => downloadAbrechnungFile(ab.begleitzettel_path, null, 'begleit'));
+  } else {
+    newDlBeg.disabled = true;
+  }
+
+  if (ab.signed_storage_path) {
+    newSignBtn.innerHTML = '✓ Digital Signiert';
+    newSignBtn.disabled = true;
+    newSignBtn.className = 'btn-ghost';
+  } else {
+    newSignBtn.innerHTML = '✍ Digital Signieren (.p7m)';
+    newSignBtn.disabled = false;
+    newSignBtn.className = 'btn-primary';
+    newSignBtn.addEventListener('click', () => openSignModal(ab.id, { filename: ab.dateiname }));
+  }
+}
+
 async function loadAbrechnung() {
   const ownerId = getOwnerId();
   if (!ownerId) return;
 
-  // Pull ready prescriptions + Krankenkasse lookup + history in parallel
   const [readyRes, kkRes, histRes] = await Promise.all([
     supabase.from('prescriptions')
       .select('id, patient_id, kostentraeger_ik, heilmittel, heilmittel_position, anzahl_einheiten, zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb, leads:patient_id(first_name,last_name,krankenkasse,versichertennummer)')
@@ -10405,13 +10694,63 @@ async function loadAbrechnung() {
   _abState.kkMap = new Map((kkRes.data || []).map(r => [r.ik, r]));
   _abState.ready = readyRes.data || [];
 
-  // Fire-and-forget positions load; re-render once available so picker dropdowns populate.
   loadPhysioPositions().then(() => {
     if (_abState.ready.length) renderAbrechnungReady();
   });
 
   renderAbrechnungReady();
   renderAbrechnungHistory(histRes.data || []);
+
+  const icon1 = document.getElementById('wiz-icon-step1');
+  const icon2 = document.getElementById('wiz-icon-step2');
+  const icon3 = document.getElementById('wiz-icon-step3');
+  const icon4 = document.getElementById('wiz-icon-step4');
+  if (icon1 && !icon1.innerHTML) icon1.innerHTML = ICON.clipboard;
+  if (icon2 && !icon2.innerHTML) icon2.innerHTML = ICON.edit;
+  if (icon3 && !icon3.innerHTML) icon3.innerHTML = ICON.invoice;
+  if (icon4 && !icon4.innerHTML) icon4.innerHTML = ICON.clock;
+
+  if (!window.__abWizardBound) {
+    window.__abWizardBound = true;
+    document.querySelectorAll('.wiz-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!btn.disabled) setWizardStep(parseInt(btn.dataset.step));
+      });
+    });
+
+    const runPreflight = document.getElementById('abRunPreflightBtn');
+    if (runPreflight) runPreflight.addEventListener('click', runPreflightCheck);
+
+    const toStep2 = document.getElementById('abToStep2Btn');
+    if (toStep2) {
+      toStep2.addEventListener('click', () => {
+        renderTaxierungList();
+        setWizardStep(2);
+      });
+    }
+
+    const backToStep1 = document.getElementById('abBackToStep1Btn');
+    if (backToStep1) backToStep1.addEventListener('click', () => setWizardStep(1));
+
+    const generateDta = document.getElementById('abGenerateDtaBtn');
+    if (generateDta) {
+      generateDta.addEventListener('click', () => {
+        createAbrechnung(_abState.activeIk);
+      });
+    }
+
+    const backToStep2 = document.getElementById('abBackToStep2Btn');
+    if (backToStep2) backToStep2.addEventListener('click', () => setWizardStep(2));
+
+    const toStep4 = document.getElementById('abToStep4Btn');
+    if (toStep4) toStep4.addEventListener('click', () => setWizardStep(4));
+  }
+
+  if (!_abState.ready.length) {
+    setWizardStep(4);
+  } else {
+    setWizardStep(_abState.activeStep || 1);
+  }
 }
 
 function renderAbrechnungReady() {
@@ -10422,11 +10761,12 @@ function renderAbrechnungReady() {
 
   if (!_abState.ready.length) {
     empty.style.display = '';
+    const preflightCard = document.getElementById('preflightActionCard');
+    if (preflightCard) preflightCard.style.display = 'none';
     return;
   }
   empty.style.display = 'none';
 
-  // Group by Krankenkasse IK
   const groups = new Map();
   _abState.ready.forEach(rx => {
     const ik = rx.kostentraeger_ik || '__unknown__';
@@ -10443,7 +10783,6 @@ function renderAbrechnungReady() {
     wrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;';
 
     const ready = ik !== '__unknown__';
-    const totalBrutto = items.reduce((s, r) => s + (Number(r.zuzahlung_eur) || 0) + 0, 0); // placeholder; real brutto via tarif on server
     const totalCount = items.length;
 
     wrap.innerHTML = `
@@ -10452,7 +10791,7 @@ function renderAbrechnungReady() {
           <div style="font-weight:600;font-size:15px;">${escapeHtml(kkName)}</div>
           <div style="font-size:12px;color:var(--text-muted);">${ik !== '__unknown__' ? 'IK ' + escapeHtml(ik) : ''} · ${totalCount} ${t('ab_rezept')}</div>
         </div>
-        <button class="btn-primary ab-create-btn" data-ik="${escapeHtml(ik)}" ${ready ? '' : 'disabled'}>${t('ab_create')}</button>
+        <button class="btn-primary ab-select-group-btn" data-ik="${escapeHtml(ik)}" ${ready ? '' : 'disabled'}>Validieren &amp; Abrechnen</button>
       </div>
       <div class="table-wrap" style="margin:0;">
         <table class="data-table" style="margin:0;">
@@ -10467,35 +10806,31 @@ function renderAbrechnungReady() {
           </thead>
           <tbody>
             ${items.map(rx => {
-      const lead = rx.leads || {};
-      const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
-      const heilmittelText = rx.heilmittel || '—';
-      const currentPos = rx.heilmittel_position || '';
-      const picker = _abState.positionsLoaded
-        ? `<select class="ab-pos-select" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
-        : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
-      // Sprint 8+: compute zuzahlung from PHYSIO_POSITIONS at render time
-      // (DB column zuzahlung_eur isn't populated on insert — calculator
-      // runs server-side during abrechnung create). Formula:
-      //   zuzahlung = (per-Einheit-zuzahlung × anzahl) + 10€ Verordnungspauschale
-      //             capped so total ≤ brutto.
-      const _posLookup = (() => {
-        if (!currentPos) return null;
-        const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
-          : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
-            : null;
-        return tpl ? _abState.positions.find(p => p.x === tpl) : null;
-      })();
-      const anzahl = rx.anzahl_einheiten || 1;
-      const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
-      const zuPerEin = _posLookup?.zuzahlung;
-      const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
-      const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
-      const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;
-      const zu = rx.zuzahlung_befreit
-        ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
-        : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
-      return `<tr>
+              const lead = rx.leads || {};
+              const pname = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || '—';
+              const heilmittelText = rx.heilmittel || '—';
+              const currentPos = rx.heilmittel_position || '';
+              const picker = _abState.positionsLoaded
+                ? `<select class="ab-pos-select" data-id="${escapeHtml(rx.id)}" data-prev="${escapeHtml(currentPos)}" style="margin-top:4px;font-size:12px;max-width:280px;width:100%;">${buildPositionOptionsHtml(currentPos)}</select>`
+                : `<span style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentPos || '—')}</span>`;
+              
+              const _posLookup = (() => {
+                if (!currentPos) return null;
+                const tpl = /^X\d{4}$/.test(currentPos) ? currentPos
+                  : /^\d{5}$/.test(currentPos) ? 'X' + currentPos.slice(1)
+                    : null;
+                return tpl ? _abState.positions.find(p => p.x === tpl) : null;
+              })();
+              const anzahl = rx.anzahl_einheiten || 1;
+              const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
+              const zuPerEin = _posLookup?.zuzahlung;
+              const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
+              const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
+              const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;
+              const zu = rx.zuzahlung_befreit
+                ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
+                : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
+              return `<tr>
                 <td><input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked /></td>
                 <td>${escapeHtml(pname)}</td>
                 <td>
@@ -10505,7 +10840,7 @@ function renderAbrechnungReady() {
                 <td>${rx.anzahl_einheiten || 0}</td>
                 <td>${zu}</td>
               </tr>`;
-    }).join('')}
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -10513,17 +10848,36 @@ function renderAbrechnungReady() {
     container.appendChild(wrap);
   }
 
-  // Group select-all
   container.querySelectorAll('.ab-group-select-all').forEach(cb => {
     cb.addEventListener('change', (e) => {
       const ik = e.target.dataset.ik;
-      container.querySelectorAll(`.ab-rx-check[data-ik="${ik}"]`).forEach(c => { c.checked = e.target.checked; });
+      container.querySelectorAll(`.ab-rx-check[data-ik="${ik}"]`).forEach(c => {
+        c.checked = e.target.checked;
+      });
+      if (_abState.activeIk === ik) runPreflightCheck();
     });
   });
-  container.querySelectorAll('.ab-create-btn').forEach(btn => {
-    btn.addEventListener('click', () => createAbrechnung(btn.dataset.ik));
+
+  container.querySelectorAll('.ab-rx-check').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const ik = e.target.dataset.ik;
+      if (_abState.activeIk === ik) runPreflightCheck();
+    });
   });
-  // Inline position override (Sprint 7-1)
+
+  container.querySelectorAll('.ab-select-group-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ik = btn.dataset.ik;
+      _abState.activeIk = ik;
+      const preflightCard = document.getElementById('preflightActionCard');
+      if (preflightCard) {
+        preflightCard.style.display = '';
+        preflightCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      runPreflightCheck();
+    });
+  });
+
   container.querySelectorAll('.ab-pos-select').forEach(sel => {
     sel.addEventListener('change', (e) => {
       const newVal = e.target.value;
@@ -10594,8 +10948,6 @@ function renderAbrechnungHistory(rows) {
   });
 }
 
-// --- ZAA response file upload + error display ---
-
 function openZaaModal(abrechnungId, filename) {
   const modal = document.getElementById('zaaModal');
   if (!modal) return;
@@ -10606,8 +10958,7 @@ function openZaaModal(abrechnungId, filename) {
   btn.disabled = false;
   btn.textContent = 'Hochladen & analysieren';
   btn.dataset.abrechnung = abrechnungId;
-  document.getElementById('zaaTitle').textContent =
-    'ZAA-Antwortdatei' + (filename ? ' — ' + filename : '');
+  document.getElementById('zaaTitle').textContent = 'ZAA-Antwortdatei' + (filename ? ' — ' + filename : '');
   openModal('zaaModal');
 }
 
@@ -10711,24 +11062,11 @@ async function showZaaErrors(abrechnungId) {
         evt.preventDefault();
         const rxId = link.dataset.rx;
         closeModal('zaaModal');
-        
-        // Query patient (lead_id) associated with this prescription
-        const { data: rx } = await supabase
-          .from('prescriptions')
-          .select('patient_id')
-          .eq('id', rxId)
-          .single();
-          
+        const { data: rx } = await supabase.from('prescriptions').select('patient_id').eq('id', rxId).single();
         if (rx?.patient_id) {
-          const { data: lead } = await supabase
-            .from('leads')
-            .select('*')
-            .eq('id', rx.patient_id)
-            .single();
-            
+          const { data: lead } = await supabase.from('leads').select('*').eq('id', rx.patient_id).single();
           if (lead) {
             openPatientDetailModal(lead);
-            // Wait for tabs to render, then click the "Rezepte" tab
             setTimeout(() => {
               const tab = document.getElementById('pdTabRezepte');
               if (tab) tab.click();
@@ -10751,20 +11089,20 @@ async function downloadAbrechnungFile(path, abrechnungId, kind) {
     if (error) throw error;
     window.open(data.signedUrl, '_blank');
     if (abrechnungId && kind === 'dta') {
-      // First download → mark heruntergeladen (non-blocking)
       supabase.from('abrechnung')
         .update({ status: 'heruntergeladen' })
         .eq('id', abrechnungId)
         .eq('status', 'erstellt')
-        .then(() => loadAbrechnung());
+        .then(() => {
+          if (_abState.activeAbrechnungId === abrechnungId) renderExportStep();
+          loadAbrechnung();
+        });
     }
   } catch (e) {
     console.error('[abrechnung/download]', e);
     showToast('Download fehlgeschlagen: ' + e.message, 'error');
   }
 }
-
-// --- PKCS#7 browser-side signing of the DTA file ---
 
 let _forgeMod = null;
 async function loadForge() {
@@ -10854,20 +11192,18 @@ async function runSignAbrechnung() {
     const cert = certBag.cert;
     const privateKey = keyBag.key;
 
-    // Cert metadata for the server (no private key leaves the browser)
     const certDer = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
     const md = forge.md.sha1.create(); md.update(certDer); const certThumbprint = md.digest().toHex();
     const subjectAttrs = (cert.subject?.attributes || []).map(a => `${a.shortName || a.name}=${a.value}`).join(', ');
     const notAfter = cert.validity?.notAfter ? new Date(cert.validity.notAfter).toISOString() : null;
     const certSerial = cert.serialNumber || null;
 
-    // Validity guardrail
     if (cert.validity?.notAfter && cert.validity.notAfter < new Date()) {
       throw new Error(`Zertifikat abgelaufen (${cert.validity.notAfter.toLocaleDateString('de-DE')}).`);
     }
 
     stat.textContent = 'Erzeuge PKCS#7 SignedData…';
-    const dtaBytes = atob(dtaJson.contentBase64);  // binary string
+    const dtaBytes = atob(dtaJson.contentBase64);
 
     const p7 = forge.pkcs7.createSignedData();
     p7.content = forge.util.createBuffer(dtaBytes, 'binary');
@@ -10878,7 +11214,7 @@ async function runSignAbrechnung() {
       digestAlgorithm: forge.pki.oids.sha256,
       authenticatedAttributes: [
         { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
-        { type: forge.pki.oids.messageDigest /* auto-filled */ },
+        { type: forge.pki.oids.messageDigest },
         { type: forge.pki.oids.signingTime, value: new Date() },
       ],
     });
@@ -10907,8 +11243,15 @@ async function runSignAbrechnung() {
 
     showToast('Signiert ✓ Lade Sie die .p7m-Datei jetzt im DAS-Portal hoch.');
     closeModal('signModal');
-    loadAbrechnung();
-    // Sprint 8 — Walkthrough panel pushes the user to step 2 (DAS portal upload).
+    
+    _abState.activeAbrechnungId = abrechnungId;
+    await renderExportStep();
+    await loadAbrechnung();
+    
+    const step4Btn = document.getElementById('btn-wiz-step4');
+    if (step4Btn) step4Btn.disabled = false;
+    setWizardStep(4);
+    
     openDasGuideModal(abrechnungId, 2);
   } catch (e) {
     console.error('[abrechnung/sign]', e);
@@ -10930,7 +11273,7 @@ async function createAbrechnung(kostentraegerIk) {
     return;
   }
 
-  const btn = document.querySelector(`.ab-create-btn[data-ik="${kostentraegerIk}"]`);
+  const btn = document.getElementById('abGenerateDtaBtn');
   if (btn) { btn.disabled = true; btn.textContent = t('ab_creating'); }
   _abState.busy = true;
 
@@ -10954,16 +11297,20 @@ async function createAbrechnung(kostentraegerIk) {
     if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
 
     showToast(t('ab_created'));
+    _abState.activeAbrechnungId = json.abrechnungId;
+    await renderExportStep();
+    
+    const step3Btn = document.getElementById('btn-wiz-step3');
+    if (step3Btn) step3Btn.disabled = false;
+    
+    setWizardStep(3);
     await loadAbrechnung();
-    if (json.abrechnungId) {
-      openSignModal(json.abrechnungId, { filename: json.dateiname });
-    }
   } catch (e) {
     console.error('[abrechnung/create]', e);
     showToast('Fehler: ' + e.message, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = t('ab_create'); }
   } finally {
     _abState.busy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Rechnung finalisieren & DTA erstellen ›'; }
   }
 }
 
@@ -11413,3 +11760,9 @@ Object.assign(window.__fb, {
   saveQuick: () => saveQuickVehicleHandler().catch(e => { console.error('[fb.saveQuick]', e); showToast('Fahrzeug: ' + (e?.message || e), 'error'); }),
 });
 console.log('[fahrtenbuch] window.__fb ready', Object.keys(window.__fb));
+
+window.switchPanel = switchPanel;
+window.setWizardStep = setWizardStep;
+window.renderTaxierungList = renderTaxierungList;
+window._abState = _abState;
+
