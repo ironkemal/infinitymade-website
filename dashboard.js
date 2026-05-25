@@ -569,6 +569,21 @@ document.getElementById('langSelect').addEventListener('change', async (e) => {
   await renderSidebar();
   await supabase.from('profiles').update({ language: currentLang }).eq('id', currentSession.user.id);
 });
+// Theme toggle (light/dark) — persisted in localStorage, applied pre-paint in <head>
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+  else root.removeAttribute('data-theme');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'dark' ? '#14110C' : '#F8F3E8');
+}
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem('im-theme', next); } catch (e) {}
+});
+
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await supabase.auth.signOut();
   window.location.href = 'login.html';
