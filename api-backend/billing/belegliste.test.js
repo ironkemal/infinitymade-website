@@ -65,11 +65,11 @@ test('generateCsvString: outputs valid GoBD headers and formats German commas', 
   
   const csv = generateCsvString(mockRows);
   
-  // Verify UTF-8 BOM is present
-  assert.equal(csv.startsWith('\uFEFF'), true);
+  // Verify UTF-8 BOM and delimiter directive is present
+  assert.equal(csv.startsWith('\uFEFFsep=;\r\n'), true, 'CSV must start with UTF-8 BOM and delimiter declaration (sep=;)');
   
-  // Verify Headers
-  assert.ok(csv.includes('Beleg-Nr;Datum;Uhrzeit;Typ;Betrag EUR;Referenztext'), 'CSV headers mismatch');
+  // Verify Headers and CRLF line endings
+  assert.ok(csv.includes('Beleg-Nr;Datum;Uhrzeit;Typ;Betrag EUR;Referenztext\r\n'), 'CSV headers mismatch or missing CRLF');
   
   // Verify Sequential Padding
   assert.ok(csv.includes('"000001"'), 'Beleg-Nr should be padded to 6 digits');

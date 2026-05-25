@@ -93,7 +93,7 @@ router.get('/statistik', async (req, res) => {
       // 4. Abrechnung stats
       supabase
         .from('abrechnung')
-        .select('id, status, gesamtbetrag_eur, created_at')
+        .select('id, status, total_eur, created_at')
         .eq('owner_id', tenantId)
         .gte('created_at', cutoffIso),
 
@@ -149,7 +149,7 @@ router.get('/statistik', async (req, res) => {
     const abr_abgelehnt = abrRows.filter(a => a.status === 'rejected').length;
     const summe_akzeptiert = abrRows
       .filter(a => a.status === 'accepted')
-      .reduce((sum, a) => sum + Number(a.gesamtbetrag_eur || 0), 0);
+      .reduce((sum, a) => sum + Number(a.total_eur || 0), 0);
 
     // ── 5. Open prescriptions ────────────────────────────────────────────────
     const offene_zuzahlungen = offeneRxResult.count ?? (offeneRxResult.data || []).length;

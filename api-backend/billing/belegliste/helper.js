@@ -44,7 +44,8 @@ export function validateBelegEntry(type, amount) {
 export function generateCsvString(rows) {
   // UTF-8 BOM byte sequence to ensure Excel opens it correctly with UTF-8 encoding
   let csv = '\uFEFF';
-  csv += 'Beleg-Nr;Datum;Uhrzeit;Typ;Betrag EUR;Referenztext\n';
+  csv += 'sep=;\r\n';
+  csv += 'Beleg-Nr;Datum;Uhrzeit;Typ;Betrag EUR;Referenztext\r\n';
 
   for (const r of (rows || [])) {
     // Treat the date in Europe/Berlin local timezone
@@ -76,7 +77,7 @@ export function generateCsvString(rows) {
     // Double quote escape reference texts to protect CSV structure
     const escapedRef = (r.reference_text || '').replace(/"/g, '""');
     
-    csv += `"${String(r.beleg_nr).padStart(6, '0')}";"${dateStr}";"${timeStr}";"${r.type}";"${amountStr}";"${escapedRef}"\n`;
+    csv += `"${String(r.beleg_nr).padStart(6, '0')}";"${dateStr}";"${timeStr}";"${r.type}";"${amountStr}";"${escapedRef}"\r\n`;
   }
 
   return csv;
