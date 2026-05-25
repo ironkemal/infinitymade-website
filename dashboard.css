@@ -37,6 +37,7 @@
   --transition: 0.2s ease;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --micro-transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), background-color 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 *,
@@ -6133,3 +6134,188 @@ textarea {
   display: flex;
   justify-content: center;
 }
+
+/* Custom icon strip rules for booking slots in Übersicht */
+.bk-icon-strip svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+/* General utility class for standard inline SVG icons */
+.svg-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ==========================================================================
+   TASK C: COMPACT MODE FOR SHORT APPOINTMENTS (duration <= 20m)
+   ========================================================================== */
+
+/* Enforce sensible padding and vertical alignment for compact blocks */
+.dv-booking-block--compact {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+/* Hide the subtitle details to save precious vertical space */
+.dv-booking-block--compact .dv-booking-subtitle {
+  display: none !important;
+}
+
+/* Restrict padding and enforce strict ellipsis to avoid colliding with icons */
+.dv-booking-block--compact .dv-booking-name {
+  padding-right: 32px !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Center the icon strip vertically in the compact block */
+.dv-booking-block--compact .bk-icon-strip {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* ==========================================================================
+   TASK D: PREMIUM EDITORIAL MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* Unified premium micro-transition overrides using consistent ease and duration */
+.btn-primary,
+.btn-ghost,
+.btn-ghost-sm,
+.btn-danger,
+.btn-icon,
+.btn-outline-sm,
+.sidebar-item,
+.kpi-card,
+.schedule-card,
+.dv-booking-block,
+.ov-week-appt {
+  transition: var(--micro-transition) !important;
+}
+
+/* 1. BUTTONS & INTERACTIVE ELEMENTS */
+
+/* Subtle vertical lift on hover */
+.btn-primary:hover,
+.btn-ghost:hover,
+.btn-ghost-sm:hover,
+.btn-danger:hover,
+.btn-icon:hover,
+.btn-outline-sm:hover {
+  transform: translateY(-1px) !important;
+}
+
+/* Responsive, tactile active press state */
+.btn-primary:active,
+.btn-ghost:active,
+.btn-ghost-sm:active,
+.btn-danger:active,
+.btn-icon:active,
+.btn-outline-sm:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* 2. SIDEBAR NAVIGATION ITEMS */
+
+/* Refined horizontal slide on hover */
+.sidebar-item:hover {
+  transform: translateX(3px) !important;
+}
+
+/* Tactile press on active navigation click */
+.sidebar-item:active {
+  transform: translateX(1px) scale(0.99) !important;
+}
+
+/* 3. CARDS, PANELS & LIST ROWS */
+
+/* Soft premium shadow and lift for KPI panels */
+.kpi-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 8px 20px -4px rgba(26, 22, 17, 0.08) !important;
+}
+
+/* Gentle lift and premium shadow for calendar grid blocks */
+.dv-booking-block:hover {
+  filter: brightness(1.05) !important;
+  transform: translateY(-1px) !important;
+  z-index: 10 !important;
+  box-shadow: 0 4px 12px rgba(26, 22, 17, 0.12) !important;
+}
+
+/* Precise subtle lift + shadow for week list items */
+.ov-week-appt:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 6px rgba(26, 22, 17, 0.08) !important;
+}
+
+/* 4. ACCESSIBLE KEYBOARD FOCUS INDICATORS */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn-primary:focus-visible,
+.btn-ghost:focus-visible,
+.btn-ghost-sm:focus-visible,
+.btn-outline-sm:focus-visible,
+.sidebar-item:focus-visible,
+.dv-booking-block:focus-visible,
+.ov-week-appt:focus-visible,
+.schedule-card:focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--primary-dim) !important;
+}
+
+/* 5. GENTLE PAGELOAD ENTRANCE ANIMATION */
+@keyframes subtleEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kpi-card,
+.schedule-card {
+  animation: subtleEntrance 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) forwards !important;
+}
+
+/* 6. REDUCED MOTION ACCESSIBILITY CONSTRAINTS (HARD CONSTRAINT) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .kpi-card,
+  .schedule-card {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+

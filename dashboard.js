@@ -249,6 +249,14 @@ const ICON = {
   doctors:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M9 5h6"/><rect x="3" y="8" width="18" height="14" rx="2"/><path d="M9 14h6"/><path d="M12 11v6"/></svg>',
   bill_pro:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/><path d="M9 11V7a3 3 0 0 1 6 0v4"/><circle cx="12" cy="16" r="1"/></svg>',
   demo:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4V2h-4v2"/><path d="M16 8h2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8h2"/><path d="M6 8h12"/><path d="M9 12v4"/><path d="M15 12v4"/></svg>',
+  warning:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  info:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  edit:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',
+  flag:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+  checkCircle:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  whatsapp:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+  clipboard:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
+  link:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
 };
 
 const SECTOR_PANELS = {
@@ -990,6 +998,23 @@ async function loadScheduleBookings(date) {
       block.style.background = color + '25';
       block.style.borderColor = color;
       block.style.color = 'var(--text-main)';
+
+      const durationMin = eMin - sMin;
+      if (durationMin <= 20) {
+        block.classList.add('dv-booking-block--compact');
+      }
+
+      // Add descriptive hover tooltip
+      const startStr = s.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const endStr = e.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const timeStr = `${startStr} - ${endStr}`;
+      const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
+      const rx   = sess?.prescriptions || null;
+      const heilmittel = rx?.heilmittel || b.services?.code || '';
+      const dg = rx?.diagnosegruppe || '';
+      const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
+      block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
+
       block.innerHTML = renderBookingSlotInner(b);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -1043,25 +1068,25 @@ function renderBookingSlotInner(b) {
 
   // Right-aligned icon strip (clickable parent already wired)
   const icons = [
-    b.hausbesuch    ? '<span title="Hausbesuch">🚗</span>' : '',
-    rx?.is_dringend ? '<span title="Dringend" style="color:#fbbf24;">⚠</span>' : '',
+    b.hausbesuch    ? `<span title="Hausbesuch" style="width:13px;height:13px;display:inline-flex;">${ICON.car}</span>` : '',
+    rx?.is_dringend ? `<span title="Dringend" style="color:#fbbf24;width:13px;height:13px;display:inline-flex;">${ICON.warning}</span>` : '',
     rx?.is_blanko   ? '<span title="Blankoverordnung" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">BL</span>' : '',
     rx?.is_lhb_bvb  ? '<span title="LHB/BVB" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">LHB</span>' : '',
-    b.notes         ? '<span title="Notiz" style="opacity:0.85;">ℹ</span>' : '',
+    b.notes         ? `<span title="Notiz" style="opacity:0.85;width:13px;height:13px;display:inline-flex;">${ICON.info}</span>` : '',
   ].filter(Boolean).join(' ');
 
   return `
-    <div style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+    <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
       ${escapeHtml(displayName)}
       ${isReadyBadge}
     </div>
     ${subtitle || counter
-      ? `<div style="display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;">
+      ? `<div class="dv-booking-subtitle" style="display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;">
            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${subtitle}</span>
            ${counter ? `<span style="font-variant-numeric:tabular-nums;flex-shrink:0;">${counter}</span>` : ''}
          </div>`
       : ''}
-    ${icons ? `<div style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
+    ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
   `;
 }
 
@@ -1435,6 +1460,23 @@ async function renderDayView(dateStr) {
       block.style.background = color + '25';
       block.style.borderColor = color;
       block.style.color = 'var(--text-main)';
+
+      const durationMin = eMin - sMin;
+      if (durationMin <= 20) {
+        block.classList.add('dv-booking-block--compact');
+      }
+
+      // Add descriptive hover tooltip
+      const startStr = s.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const endStr = e.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      const timeStr = `${startStr} - ${endStr}`;
+      const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
+      const rx   = sess?.prescriptions || null;
+      const heilmittel = rx?.heilmittel || b.services?.code || '';
+      const dg = rx?.diagnosegruppe || '';
+      const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
+      block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
+
       block.innerHTML = renderBookingSlotInner(b);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
@@ -2882,7 +2924,7 @@ function renderAiSuggestions(json) {
     const shiftBadges = [];
     if (s.dateShiftDays != null && s.shiftedFromDate) {
       const sign = s.dateShiftDays > 0 ? '+' : '';
-      shiftBadges.push(`<span class="ai-slot-shift-badge" title="Wunschtag war ${fmtWd(s.shiftedFromDate)} — auf diesen Tag verschoben (Wunschtag voll belegt)">⚠ Tag verschoben (${sign}${s.dateShiftDays}d)</span>`);
+      shiftBadges.push(`<span class="ai-slot-shift-badge" title="Wunschtag war ${fmtWd(s.shiftedFromDate)} — auf diesen Tag verschoben (Wunschtag voll belegt)"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.warning}</span>Tag verschoben (${sign}${s.dateShiftDays}d)</span>`);
     } else if (s.timeShiftMin != null) {
       const sign = s.timeShiftMin > 0 ? '+' : '';
       shiftBadges.push(`<span class="ai-slot-shift-badge" title="Wunschzeit war belegt — um ${s.timeShiftMin} Min verschoben">⏱ Zeit verschoben (${sign}${s.timeShiftMin} Min)</span>`);
@@ -2890,9 +2932,9 @@ function renderAiSuggestions(json) {
     return `<div class="ai-slot-row">
       <div class="ai-slot-num">${i + 1}</div>
       <div class="ai-slot-main">
-        <div class="ai-slot-date">📅 ${wd} · ${escapeHtml(s.time)} Uhr ${shiftBadges.join(' ')}</div>
+        <div class="ai-slot-date"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;opacity:0.75;">${ICON.calendar}</span>${wd} · ${escapeHtml(s.time)} Uhr ${shiftBadges.join(' ')}</div>
         <div class="ai-slot-emp${isDifferent ? ' is-switch' : ''}">
-          👤 ${escapeHtml(empName)}${isDifferent ? '<span class="ai-slot-switch-badge">Wechsel</span>' : ''}
+          <span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;opacity:0.75;">${ICON.user}</span>${escapeHtml(empName)}${isDifferent ? '<span class="ai-slot-switch-badge">Wechsel</span>' : ''}
         </div>
       </div>
     </div>`;
@@ -2997,7 +3039,7 @@ function showConfirmModal({ title = 'Bestätigen', message = '', confirmText = '
     const okBtn = document.getElementById('confirmModalOk');
     const cancelBtn = document.getElementById('confirmModalCancel');
     const closeBtn = document.querySelector('#confirmModal .modal-close');
-    titleEl.textContent = title;
+    titleEl.innerHTML = title;
     textEl.textContent = message;
     okBtn.textContent = confirmText;
     cancelBtn.textContent = cancelText;
@@ -3459,10 +3501,10 @@ function renderLeads() {
       <td>${r.email || '—'}</td>
       <td>${escapeHtml(standort)}</td>
       <td>
-        ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? '<span class="badge badge-green" title="WhatsApp">💬</span> ' : ''}
+        ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? `<span class="badge badge-green" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;vertical-align:middle;"><span class="svg-icon" style="width:11px;height:11px;display:inline-flex;">${ICON.whatsapp}</span></span> ` : ''}
         <span class="badge ${leadStatusBadge(r.status)}">${r.status || '—'}</span>
       </td>
-      <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit">✏️</button></td>
+      <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit" title="Bearbeiten" style="display:inline-flex;align-items:center;justify-content:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;">${ICON.edit}</span></button></td>
     </tr>`;
   }).join('');
   tbody.querySelectorAll('.lead-row').forEach(row => {
@@ -3489,7 +3531,6 @@ function renderPdInfoBlock(lead) {
   const dobStr = dob ? new Date(dob).toLocaleDateString('de-DE') : '—';
   const addrParts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
   const addr = addrParts.length ? addrParts.join(', ') : '—';
-  const hausbesuch = md.hausbesuch ? '🚗 Ja' : 'Nein';
   const km = lead.distance_km != null ? `ca. ${Number(lead.distance_km).toFixed(1)} km` : '—';
   const dur = lead.duration_min != null ? `ca. ${lead.duration_min} min` : '—';
   const krankenkasse = lead.krankenkasse || md.krankenkasse || '—';
@@ -3500,6 +3541,11 @@ function renderPdInfoBlock(lead) {
       <div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">${label}</div>
       <div style="font-weight:500;">${escapeHtml(value)}</div>
     </div>`;
+  const cellHtml = (label, htmlValue) => `
+    <div>
+      <div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">${label}</div>
+      <div style="font-weight:500;display:flex;align-items:center;gap:4px;">${htmlValue}</div>
+    </div>`;
   grid.innerHTML = [
     cell('Name', displayName(lead) || '—'),
     cell('Geburtsdatum', dobStr),
@@ -3509,7 +3555,9 @@ function renderPdInfoBlock(lead) {
     cell('Krankenkasse', krankenkasse),
     cell('Versicherten-Nr.', vNr),
     cell('Adresse', addr),
-    cell('Hausbesuch', hausbesuch),
+    md.hausbesuch
+      ? cellHtml('Hausbesuch', `<span class="svg-icon" style="width:14px;height:14px;display:inline-flex;color:var(--text-main);">${ICON.car}</span> Ja`)
+      : cell('Hausbesuch', 'Nein'),
     cell('Entfernung', km),
     cell('Fahrzeit (einfach)', dur),
     cell('Status', lead.status || '—')
@@ -4181,9 +4229,9 @@ async function openLeadModal(lead) {
       const bks = meta.bookings || [];
       const wa = meta.wa;
       let html = '';
-      if (wa) html += `<div class="lead-hist-item lead-hist-wa">💬 WhatsApp: ${wa.customer_name || wa.wa_id}</div>`;
+      if (wa) html += `<div class="lead-hist-item lead-hist-wa" style="display:flex;align-items:center;gap:4px;"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;color:var(--text-main);">${ICON.whatsapp}</span>WhatsApp: ${wa.customer_name || wa.wa_id}</div>`;
       if (bks.length) {
-        html += bks.slice(0, 5).map(b => `<div class="lead-hist-item lead-hist-bk">📅 ${fmtDate(b.start_time)} — <span class="badge ${statusBadge(b.status)}">${b.status}</span></div>`).join('');
+        html += bks.slice(0, 5).map(b => `<div class="lead-hist-item lead-hist-bk" style="display:flex;align-items:center;gap:4px;"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;color:var(--text-muted);">${ICON.calendar}</span>${fmtDate(b.start_time)} — <span class="badge ${statusBadge(b.status)}">${b.status}</span></div>`).join('');
         if (bks.length > 5) html += `<div class="lead-hist-item" style="color:var(--text-muted)">+${bks.length - 5} weitere</div>`;
       }
       if (html) histEl.innerHTML = '<div class="lead-hist-title">Verlauf</div>' + html;
@@ -5109,8 +5157,8 @@ async function loadTeam() {
       <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
       ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
       <div class="emp-link-row">
-        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">🔗 ${escapeHtml(shortLink)}</a>
-        <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}">📋</button>
+        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">${ICON.link}</span>${escapeHtml(shortLink)}</a>
+        <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}" style="display:inline-flex;align-items:center;justify-content:center;"><span class="svg-icon" style="width:12px;height:12px;display:inline-flex;">${ICON.clipboard}</span></button>
       </div>
     </div>`;
   }).join('');
@@ -9235,8 +9283,8 @@ function renderBusinessesSection() {
     const fullAddr = [addr, cityLine].filter(Boolean).join(', ') || '—';
     const link = b.booking_slug ? `${baseUrl}/booking.html?u=${b.booking_slug}` : null;
     const linkHtml = link
-      ? `<div class="biz-row-link">🔗 <span>${escapeHtml(link.replace(/^https?:\/\/(www\.)?/, ''))}</span>
-           <button class="btn-icon-sm" data-copy-link="${link}" title="Link kopieren">📋</button>
+      ? `<div class="biz-row-link"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">${ICON.link}</span><span>${escapeHtml(link.replace(/^https?:\/\/(www\.)?/, ''))}</span>
+           <button class="btn-icon-sm" data-copy-link="${link}" title="Link kopieren" style="display:inline-flex;align-items:center;justify-content:center;"><span class="svg-icon" style="width:12px;height:12px;display:inline-flex;">${ICON.clipboard}</span></button>
          </div>`
       : `<div class="biz-row-link biz-row-link-missing">Kein Buchungs-Slug gesetzt</div>`;
     return `<div class="biz-row">
@@ -9876,19 +9924,19 @@ function renderValidationBanner(v) {
   }
   if (warnings.length) {
     html += `<div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px;margin-bottom:8px;">
-      <strong style="color:#a06200;">⚠️ Warnungen (${warnings.length}):</strong>
+      <strong style="color:#a06200;display:inline-flex;align-items:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#a06200;">${ICON.warning}</span>Warnungen (${warnings.length}):</strong>
       <ul style="margin:6px 0 0 18px;color:#6b4500;">${warnings.map(w => `<li>${w.message || w.code || w}</li>`).join('')}</ul>
     </div>`;
   }
   if (hinweise.length) {
     html += `<div style="background:#eef6ff;border:1px solid #2a73d3;border-radius:8px;padding:10px;margin-bottom:8px;">
-      <strong style="color:#1c4d8f;">ℹ️ Hinweise:</strong>
+      <strong style="color:#1c4d8f;display:inline-flex;align-items:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#1c4d8f;">${ICON.info}</span>Hinweise:</strong>
       <ul style="margin:6px 0 0 18px;color:#1c4d8f;">${hinweise.map(h => `<li>${h.message || h.code || h}</li>`).join('')}</ul>
     </div>`;
   }
   if (!html) {
-    html = `<div style="background:#eaf8ee;border:1px solid #2a8c4a;border-radius:8px;padding:10px;color:#1f6b38;">
-      ✅ Verordnung ist regelkonform.
+    html = `<div style="background:#eaf8ee;border:1px solid #2a8c4a;border-radius:8px;padding:10px;color:#1f6b38;display:inline-flex;align-items:center;gap:4px;width:100%;">
+      <span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;color:#1f6b38;">${ICON.checkCircle}</span>Verordnung ist regelkonform.
     </div>`;
   }
   el.innerHTML = html;
@@ -9898,7 +9946,7 @@ async function submitConfirm() {
   if (!rxLastUpload) return;
   const btn = document.getElementById('rxConfirmBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ Speichere…';
+  btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.clock}</span>Speichere…`;
   try {
     const { data: { session: s } } = await supabase.auth.getSession();
     if (!s?.access_token) throw new Error('Nicht angemeldet');
@@ -9918,13 +9966,13 @@ async function submitConfirm() {
       if (missing.length) {
         showToast('Hausbesuch erfordert: ' + missing.join(', '), 'error');
         btn.disabled = false;
-        btn.textContent = '✅ Bestätigen & Termine planen';
+        btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
         return;
       }
       if (!/^\d{5}$/.test(plz)) {
         showToast('PLZ muss 5-stellig sein.', 'error');
         btn.disabled = false;
-        btn.textContent = '✅ Bestätigen & Termine planen';
+        btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
         return;
       }
     }
@@ -9974,7 +10022,7 @@ async function submitConfirm() {
     if (blockers.length > 0) {
       const detail = (blockers.slice(0, 5).map(b => '• ' + (b.message || b.code || b)).join('\n'));
       proceedAnyway = await showConfirmModal({
-        title: `⚠ ${blockers.length} Blocker erkannt`,
+        title: `<span class="svg-icon" style="width:18px;height:18px;display:inline-flex;vertical-align:-4px;margin-right:6px;color:var(--danger);">${ICON.warning}</span>${blockers.length} Blocker erkannt`,
         message: `${detail}\n\nMöchten Sie trotzdem fortfahren? Der Override wird protokolliert.`,
         confirmText: 'Trotzdem fortfahren',
         cancelText: 'Abbrechen',
@@ -9982,7 +10030,7 @@ async function submitConfirm() {
       });
       if (!proceedAnyway) {
         btn.disabled = false;
-        btn.textContent = '✅ Bestätigen & Termine planen';
+        btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
         return;
       }
     }
@@ -10023,7 +10071,7 @@ async function submitConfirm() {
     showToast('Fehler: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = '✅ Bestätigen & Termine planen';
+    btn.innerHTML = `<span class="svg-icon" style="width:15px;height:15px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.checkCircle}</span>Bestätigen & Termine planen`;
   }
 }
 
@@ -10483,7 +10531,7 @@ function renderAbrechnungHistory(rows) {
         ${a.storage_path ? `<button class="btn-ghost btn-sm ab-dl-dta" data-path="${escapeHtml(a.storage_path)}" data-id="${escapeHtml(a.id)}">${t('ab_download_dta')}</button>` : ''}
         ${a.begleitzettel_path ? `<button class="btn-ghost btn-sm ab-dl-beg" data-path="${escapeHtml(a.begleitzettel_path)}">${t('ab_download_begleit')}</button>` : ''}
         <button class="btn-ghost btn-sm ab-zaa" data-id="${escapeHtml(a.id)}" data-name="${escapeHtml(a.dateiname || '')}" title="ZAA-Antwortdatei hochladen">📨 ZAA</button>
-        <button class="btn-ghost btn-sm ab-guide" data-id="${escapeHtml(a.id)}" title="Schritt-für-Schritt-Anleitung">📋 Anleitung</button>
+        <button class="btn-ghost btn-sm ab-guide" data-id="${escapeHtml(a.id)}" title="Schritt-für-Schritt-Anleitung" style="display:inline-flex;align-items:center;gap:4px;"><span class="svg-icon" style="width:12px;height:12px;display:inline-flex;">${ICON.clipboard}</span>Anleitung</button>
         ${a.status === 'rejected' || a.status === 'accepted'
         ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
         : ''}
