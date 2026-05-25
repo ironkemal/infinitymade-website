@@ -1031,6 +1031,58 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: GOBD BELEGLISTE ===== -->
+        <section class="panel" id="panel-belegliste">
+          <div class="panel-header">
+            <div>
+              <h2>GoBD-Kassenbuch (Belegliste)</h2>
+              <p class="panel-sub">Gesetzlich unveränderliche, fortlaufende Aufzeichnung aller Kassenbewegungen</p>
+            </div>
+            <button class="btn-primary" id="blAddManualBtn">+ Barverkauf eintragen</button>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:var(--bg-card);border:1px solid var(--border);">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:11px;color:var(--text-muted);">Von</label>
+              <input type="date" class="form-input" id="blFilterFrom" style="padding:4px 8px;width:auto;" />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:11px;color:var(--text-muted);">Bis</label>
+              <input type="date" class="form-input" id="blFilterTo" style="padding:4px 8px;width:auto;" />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:11px;color:var(--text-muted);">Typ</label>
+              <select class="form-select" id="blFilterType" style="padding:4px 8px;width:auto;background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);border-radius:4px;">
+                <option value="all">Alle Belege</option>
+                <option value="zuzahlung">Zuzahlung</option>
+                <option value="barverkauf">Barverkauf</option>
+                <option value="storno">Storno / Reversal</option>
+              </select>
+            </div>
+            <button class="btn-ghost" id="blExportCsvBtn" style="margin-top:14px;padding:6px 12px;font-size:13px;">CSV Export (Finanzamt)</button>
+          </div>
+
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border);">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Beleg-Nr.</th>
+                    <th>Datum &amp; Zeit</th>
+                    <th>Typ</th>
+                    <th style="text-align:right;">Betrag</th>
+                    <th>Referenztext</th>
+                    <th>Bediener</th>
+                    <th>Aktion</th>
+                  </tr>
+                </thead>
+                <tbody id="beleglisteBody"></tbody>
+              </table>
+              <div id="beleglisteEmpty" class="table-empty" style="padding:20px;text-align:center;color:var(--text-muted);" hidden>Keine Einträge vorhanden.</div>
+            </div>
+          </div>
+        </section>
+
         <!-- ===== PANEL: NOTIZEN ===== -->
         <section class="panel" id="panel-notizen">
           <div class="panel-header">
@@ -3226,7 +3278,37 @@
 
   <div id="toastContainer"></div>
 
-  <script type="module" src="dashboard.js?v=20260525f"></script>
+  <!-- ===== MODAL: BARVERKAUF EINTRAGEN ===== -->
+  <div class="modal-overlay" id="manualBelegModal" hidden>
+    <div class="modal" style="max-width:440px;background:var(--bg-card);color:var(--text-main);">
+      <div class="modal-header" style="border-bottom:1px solid var(--border);">
+        <span class="modal-title" style="font-weight:600;">Manuellen Beleg erstellen</span>
+        <button class="modal-close" data-modal="manualBelegModal">✕</button>
+      </div>
+      <div class="modal-body" style="padding:20px 0;">
+        <div class="form-group">
+          <label class="form-label" style="color:var(--text-muted);">Typ</label>
+          <select class="form-input" id="blManualType" style="background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);">
+            <option value="barverkauf">Barverkauf (Massage, Gutschein, etc.)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:var(--text-muted);">Betrag (EUR)</label>
+          <input class="form-input" id="blManualAmount" type="number" step="0.01" placeholder="25.00" style="background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:var(--text-muted);">Referenztext</label>
+          <input class="form-input" id="blManualRef" type="text" placeholder="z. B. 1x Gutschein Massage" style="background:var(--bg-card);color:var(--text-main);border:1px solid var(--border);" />
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--border);padding-top:12px;">
+        <button class="btn-ghost" data-modal="manualBelegModal">Abbrechen</button>
+        <button class="btn-primary" id="blManualSaveBtn">Beleg erzeugen</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="dashboard.js?v=20260525g"></script>
 </body>
 
 </html>
