@@ -382,7 +382,15 @@ async function renderBookingCalendar(year, month) {
         ? supabase.from('businesses').select('closed_days').eq('id', state.businessId).maybeSingle()
         : supabase.from('businesses').select('closed_days').eq('owner_id', state.ownerId).eq('is_default', true).maybeSingle()
     ]);
-    openDow = new Set((wh || []).filter(w => w.is_active).map(w => w.day_of_week));
+    let whRows = wh || [];
+    if (whRows.length === 0 && userId !== state.ownerId) {
+      const { data: ownerWh } = await supabase
+        .from('working_hours')
+        .select('day_of_week,is_active')
+        .eq('user_id', state.ownerId);
+      whRows = ownerWh || [];
+    }
+    openDow = new Set(whRows.filter(w => w.is_active).map(w => w.day_of_week));
     (cd || []).forEach(c => {
       if (!c.start_time && !c.end_time && (c.type === 'closed' || c.type === 'holiday')) closedDates.add(c.date);
     });

@@ -354,230 +354,237 @@ app.post('/api/apify/search', async (req, res) => {
   }
 });
 
+// Helper to calculate available slots for a user and date
+async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = 30) {
+  const dayOfWeek = berlinDayOfWeek(date);
+  const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
+
+  // Reject past dates entirely
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+  if (date < todayStr) return { slots: [] };
+
+  // For today, compute current Berlin minute for filtering below
+  let nowBerlinMinutes = null;
+  if (date === todayStr) {
+    nowBerlinMinutes = utcToBerlinMinutes(now);
+  }
+
+  // 1. Resolve owner_id
+  let ownerId = userId;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('owner_id')
+    .eq('id', userId)
+    .single();
+  if (profile?.owner_id) ownerId = profile.owner_id;
+
+  // 1.4 Check business closed_days (multi-business açılış günleri)
+  let activeBiz = null;
+  if (businessId) {
+    const { data: explicitBiz } = await supabase
+      .from('businesses')
+      .select('id, closed_days, owner_id')
+      .eq('id', businessId)
+      .maybeSingle();
+    // Güvenlik: business gerçekten bu owner'a ait mi?
+    if (explicitBiz && explicitBiz.owner_id === ownerId) {
+      activeBiz = explicitBiz;
+    }
+  }
+  if (!activeBiz && profile?.owner_id) {
+    // Employee — owner'in altinda employee'nin atandigi business'i bul
+    const { data: assigned } = await supabase
+      .from('employee_business_assignments')
+      .select('business_id, businesses(id, closed_days, is_default)')
+      .eq('employee_id', userId);
+    if (assigned && assigned.length) {
+      // Default'a atanmissa onu, degilse ilk
+      const def = assigned.find(a => a.businesses?.is_default);
+      activeBiz = (def || assigned[0])?.businesses || null;
+    }
+  }
+  if (!activeBiz) {
+    // Owner kendisi veya employee'nin atamasi yoksa: owner'in default business
+    const { data: defaultBiz } = await supabase
+      .from('businesses')
+      .select('id, closed_days')
+      .eq('owner_id', ownerId)
+      .eq('is_default', true)
+      .maybeSingle();
+    activeBiz = defaultBiz || null;
+  }
+
+  if (activeBiz && Array.isArray(activeBiz.closed_days) && activeBiz.closed_days.length) {
+    // berlinDayOfWeek server local TZ'den bağımsız (DST-safe)
+    const jsDow = berlinDayOfWeek(date);
+    if (activeBiz.closed_days.includes(jsDow)) {
+      return { slots: [], reason: 'business_closed_day' };
+    }
+  }
+
+  // 1.5 Check custom_days (shop-wide closed/holiday/special)
+  const { data: customDay } = await supabase
+    .from('custom_days')
+    .select('type,start_time,end_time')
+    .eq('owner_id', ownerId)
+    .eq('date', date)
+    .maybeSingle();
+
+  if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && !customDay.start_time && !customDay.end_time) {
+    return { slots: [], reason: 'custom_day_closed' };
+  }
+
+  // 2. Get Working Hours — employee first, fallback to owner
+  let wh = (await supabase
+    .from('working_hours')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('day_of_week', dayOfWeek)
+    .single()).data;
+
+  // Correct fallback logic: only fall back if the employee has no record at all (wh is null)
+  if (!wh) {
+    if (profile?.owner_id) {
+      wh = (await supabase
+        .from('working_hours')
+        .select('*')
+        .eq('user_id', profile.owner_id)
+        .eq('day_of_week', dayOfWeek)
+        .single()).data;
+    }
+  }
+
+  if (customDay && customDay.type === 'special' && customDay.start_time && customDay.end_time) {
+    wh = { start_time: customDay.start_time, end_time: customDay.end_time, is_active: true };
+  }
+
+  if (!wh || !wh.is_active) {
+    return { slots: [], reason: 'working_hours_inactive' };
+  }
+
+  const startMinutes = timeToMins(wh.start_time);
+  const endMinutes = timeToMins(wh.end_time);
+
+  // 2. Get existing bookings for this date (Supabase stores TIMESTAMPTZ as UTC)
+  const { data: bookings } = await supabase
+    .from('bookings')
+    .select('start_time, end_time')
+    .eq('user_id', userId)
+    .eq('status', 'confirmed')
+    .gte('start_time', dayStart)
+    .lte('start_time', dayEnd);
+
+  const bookedIntervals = (bookings || []).map(b => ({
+    start: utcToBerlinMinutes(new Date(b.start_time)),
+    end: utcToBerlinMinutes(new Date(b.end_time))
+  }));
+
+  if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && customDay.start_time && customDay.end_time) {
+    bookedIntervals.push({
+      start: timeToMins(customDay.start_time),
+      end: timeToMins(customDay.end_time)
+    });
+  }
+
+  // 2.6 Get Breaks/Pauses for this employee
+  const { data: breaksData } = await supabase
+    .from('breaks')
+    .select('start_time, end_time')
+    .eq('user_id', userId)
+    .eq('day_of_week', dayOfWeek);
+
+  (breaksData || []).forEach(b => {
+    bookedIntervals.push({
+      start: timeToMins(b.start_time),
+      end: timeToMins(b.end_time)
+    });
+  });
+
+  // 2.5 Get Time Offs (Beurlaubt) for this employee
+  const { data: timeOffs } = await supabase
+    .from('time_offs')
+    .select('start_date, end_date')
+    .eq('employee_id', userId)
+    .lte('start_date', dayEnd)
+    .gte('end_date', dayStart);
+
+  if (timeOffs) {
+    const dayStartMs = new Date(dayStart).getTime();
+    const dayEndMs = new Date(dayEnd).getTime();
+    timeOffs.forEach(t => {
+      const tStartMs = Math.max(new Date(t.start_date).getTime(), dayStartMs);
+      const tEndMs = Math.min(new Date(t.end_date).getTime(), dayEndMs);
+      bookedIntervals.push({
+        start: utcToBerlinMinutes(new Date(tStartMs)),
+        end: utcToBerlinMinutes(new Date(tEndMs))
+      });
+    });
+  }
+
+  // 3. Get Google Calendar Busy slots
+  const { data: integ } = await supabase
+    .from('calendar_integrations')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('provider', 'google')
+    .single();
+
+  if (integ && integ.access_token) {
+    const auth = newOAuthClient();
+    auth.setCredentials({ access_token: integ.access_token, refresh_token: integ.refresh_token });
+    const calendar = google.calendar({ version: 'v3', auth });
+
+    try {
+      const freeBusyRes = await calendar.freebusy.query({
+        requestBody: {
+          timeMin: dayStart,
+          timeMax: dayEnd,
+          timeZone: BUSINESS_TZ,
+          items: [{ id: 'primary' }]
+        }
+      });
+      const busy = freeBusyRes.data.calendars.primary.busy || [];
+      busy.forEach(b => {
+        bookedIntervals.push({
+          start: utcToBerlinMinutes(new Date(b.start)),
+          end: utcToBerlinMinutes(new Date(b.end))
+        });
+      });
+    } catch (err) {
+      console.error('Google API error, tokens might be expired', err.message);
+    }
+  }
+
+  // 4. Generate available slots
+  const totalBlock = parseInt(duration) + buffer;
+  const slots = [];
+  let currentMins = startMinutes;
+  while (currentMins + totalBlock <= endMinutes) {
+    const slotEnd = currentMins + totalBlock;
+    const hasOverlap = bookedIntervals.some(b => currentMins < b.end && slotEnd > b.start);
+    // Skip slots in the past (today only) + enforce 30-min lead time
+    const tooSoon = nowBerlinMinutes !== null && (currentMins + totalBlock) <= nowBerlinMinutes + 30;
+    if (!hasOverlap && !tooSoon) slots.push(minsToTime(currentMins));
+    currentMins += step;
+  }
+
+  return { slots };
+}
+
 // 2. Booking Routes (Get Slots & Create)
 app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
   const { userId, date, duration, businessId } = req.body; // date: YYYY-MM-DD
   if (!userId || !date || !duration) return res.status(400).json({ error: 'Missing params' });
 
   try {
-    const dayOfWeek = berlinDayOfWeek(date);
-    const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
-
-    // Reject past dates entirely
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
-    if (date < todayStr) return res.json({ slots: [] });
-
-    // For today, compute current Berlin minute for filtering below
-    let nowBerlinMinutes = null;
-    if (date === todayStr) {
-      nowBerlinMinutes = utcToBerlinMinutes(now);
-    }
-
-    // 1. Resolve owner_id
-    let ownerId = userId;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('owner_id')
-      .eq('id', userId)
-      .single();
-    if (profile?.owner_id) ownerId = profile.owner_id;
-
-    // 1.4 Check business closed_days (multi-business açılış günleri)
-    // Önce: request explicit businessId vermisse onu kullan. Yoksa:
-    // - userId bir employee mi? Atandığı business'i bul. Default'a atanmissa onu,
-    //   degilse ilk atamasi (created_at ASC); employee degilse owner default business.
-    let activeBiz = null;
-    if (businessId) {
-      const { data: explicitBiz } = await supabase
-        .from('businesses')
-        .select('id, closed_days, owner_id')
-        .eq('id', businessId)
-        .maybeSingle();
-      // Güvenlik: business gerçekten bu owner'a ait mi?
-      if (explicitBiz && explicitBiz.owner_id === ownerId) {
-        activeBiz = explicitBiz;
-      }
-    }
-    if (!activeBiz && profile?.owner_id) {
-      // Employee — owner'in altinda employee'nin atandigi business'i bul
-      const { data: assigned } = await supabase
-        .from('employee_business_assignments')
-        .select('business_id, businesses(id, closed_days, is_default)')
-        .eq('employee_id', userId);
-      if (assigned && assigned.length) {
-        // Default'a atanmissa onu, degilse ilk
-        const def = assigned.find(a => a.businesses?.is_default);
-        activeBiz = (def || assigned[0])?.businesses || null;
-      }
-    }
-    if (!activeBiz) {
-      // Owner kendisi veya employee'nin atamasi yoksa: owner'in default business
-      const { data: defaultBiz } = await supabase
-        .from('businesses')
-        .select('id, closed_days')
-        .eq('owner_id', ownerId)
-        .eq('is_default', true)
-        .maybeSingle();
-      activeBiz = defaultBiz || null;
-    }
-
-    if (activeBiz && Array.isArray(activeBiz.closed_days) && activeBiz.closed_days.length) {
-      // berlinDayOfWeek server local TZ'den bağımsız (DST-safe)
-      const jsDow = berlinDayOfWeek(date);
-      if (activeBiz.closed_days.includes(jsDow)) {
-        return res.json({ slots: [], reason: 'business_closed_day' });
-      }
-    }
-
-    // 1.5 Check custom_days (shop-wide closed/holiday/special)
-    const { data: customDay } = await supabase
-      .from('custom_days')
-      .select('type,start_time,end_time')
-      .eq('owner_id', ownerId)
-      .eq('date', date)
-      .maybeSingle();
-
-    if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && !customDay.start_time && !customDay.end_time) {
-      return res.json({ slots: [] });
-    }
-
-    // 2. Get Working Hours — employee first, fallback to owner
-    let wh = (await supabase
-      .from('working_hours')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('day_of_week', dayOfWeek)
-      .single()).data;
-
-    if (!wh || !wh.is_active) {
-      if (profile?.owner_id) {
-        wh = (await supabase
-          .from('working_hours')
-          .select('*')
-          .eq('user_id', profile.owner_id)
-          .eq('day_of_week', dayOfWeek)
-          .single()).data;
-      }
-    }
-
-    if (customDay && customDay.type === 'special' && customDay.start_time && customDay.end_time) {
-      wh = { start_time: customDay.start_time, end_time: customDay.end_time, is_active: true };
-    }
-
-    if (!wh || !wh.is_active) {
-      return res.json({ slots: [] });
-    }
-
-    const startMinutes = timeToMins(wh.start_time);
-    const endMinutes = timeToMins(wh.end_time);
-
-    // 2. Get existing bookings for this date (Supabase stores TIMESTAMPTZ as UTC)
-    const { data: bookings } = await supabase
-      .from('bookings')
-      .select('start_time, end_time')
-      .eq('user_id', userId)
-      .eq('status', 'confirmed')
-      .gte('start_time', dayStart)
-      .lte('start_time', dayEnd);
-
-    const bookedIntervals = (bookings || []).map(b => ({
-      start: utcToBerlinMinutes(new Date(b.start_time)),
-      end: utcToBerlinMinutes(new Date(b.end_time))
-    }));
-
-    if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && customDay.start_time && customDay.end_time) {
-      bookedIntervals.push({
-        start: timeToMins(customDay.start_time),
-        end: timeToMins(customDay.end_time)
-      });
-    }
-
-    // 2.6 Get Breaks/Pauses for this employee
-    const { data: breaksData } = await supabase
-      .from('breaks')
-      .select('start_time, end_time')
-      .eq('user_id', userId)
-      .eq('day_of_week', dayOfWeek);
-
-    (breaksData || []).forEach(b => {
-      bookedIntervals.push({
-        start: timeToMins(b.start_time),
-        end: timeToMins(b.end_time)
-      });
-    });
-
-    // 2.5 Get Time Offs (Beurlaubt) for this employee
-    const { data: timeOffs } = await supabase
-      .from('time_offs')
-      .select('start_date, end_date')
-      .eq('employee_id', userId)
-      .lte('start_date', dayEnd)
-      .gte('end_date', dayStart);
-
-    if (timeOffs) {
-      const dayStartMs = new Date(dayStart).getTime();
-      const dayEndMs = new Date(dayEnd).getTime();
-      timeOffs.forEach(t => {
-        const tStartMs = Math.max(new Date(t.start_date).getTime(), dayStartMs);
-        const tEndMs = Math.min(new Date(t.end_date).getTime(), dayEndMs);
-        bookedIntervals.push({
-          start: utcToBerlinMinutes(new Date(tStartMs)),
-          end: utcToBerlinMinutes(new Date(tEndMs))
-        });
-      });
-    }
-
-    // 3. Get Google Calendar Busy slots
-    const { data: integ } = await supabase
-      .from('calendar_integrations')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('provider', 'google')
-      .single();
-
-    if (integ && integ.access_token) {
-      const auth = newOAuthClient();
-      auth.setCredentials({ access_token: integ.access_token, refresh_token: integ.refresh_token });
-      const calendar = google.calendar({ version: 'v3', auth });
-
-      try {
-        const freeBusyRes = await calendar.freebusy.query({
-          requestBody: {
-            timeMin: dayStart,
-            timeMax: dayEnd,
-            timeZone: BUSINESS_TZ,
-            items: [{ id: 'primary' }]
-          }
-        });
-        const busy = freeBusyRes.data.calendars.primary.busy || [];
-        busy.forEach(b => {
-          bookedIntervals.push({
-            start: utcToBerlinMinutes(new Date(b.start)),
-            end: utcToBerlinMinutes(new Date(b.end))
-          });
-        });
-      } catch (err) {
-        console.error('Google API error, tokens might be expired', err.message);
-      }
-    }
-
-    // 4. Generate available slots
     const buffer = parseInt(req.body.buffer) || 0;
     const step   = parseInt(req.body.step)   || 30;
-    const totalBlock = parseInt(duration) + buffer;
-    const slots = [];
-    let currentMins = startMinutes;
-    while (currentMins + totalBlock <= endMinutes) {
-      const slotEnd = currentMins + totalBlock;
-      const hasOverlap = bookedIntervals.some(b => currentMins < b.end && slotEnd > b.start);
-      // Skip slots in the past (today only) + enforce 30-min lead time
-      const tooSoon = nowBerlinMinutes !== null && (currentMins + totalBlock) <= nowBerlinMinutes + 30;
-      if (!hasOverlap && !tooSoon) slots.push(minsToTime(currentMins));
-      currentMins += step;
+    const result = await getAvailableSlots(userId, date, duration, businessId, buffer, step);
+    if (result.reason) {
+      return res.json({ slots: [], reason: result.reason });
     }
-
-    res.json({ slots });
+    res.json({ slots: result.slots });
   } catch (error) {
     console.error('get-slots error:', error);
     res.status(500).json({ error: error.message });
@@ -600,6 +607,25 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
 
     const { data: service } = await supabase.from('services').select('*').eq('id', serviceId).single();
     if (!service) return res.status(400).json({ error: 'Service not found' });
+
+    // Closed-day and slot validation
+    const slotValidation = await getAvailableSlots(
+      userId,
+      date,
+      service.duration_minutes,
+      businessId,
+      parseInt(req.body.buffer) || 0,
+      parseInt(req.body.step) || 30
+    );
+    if (slotValidation.reason === 'business_closed_day') {
+      return res.status(400).json({ error: 'An diesem Wochentag ist das Geschäft geschlossen.' });
+    }
+    if (slotValidation.reason === 'custom_day_closed') {
+      return res.status(400).json({ error: 'An diesem Tag ist das Geschäft geschlossen.' });
+    }
+    if (slotValidation.reason === 'working_hours_inactive' || !slotValidation.slots.includes(time)) {
+      return res.status(400).json({ error: 'Der gewählte Termin ist leider nicht mehr verfügbar.' });
+    }
 
     // date+time arrive as Berlin local — convert to UTC for storage
     const start_time = berlinLocalToUTC(date, time);

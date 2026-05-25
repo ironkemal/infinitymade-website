@@ -158,11 +158,45 @@ export default async function handler(req, res) {
         });
         if (!profOk) console.error('[webhook] profile patch failed', profStatus, profData);
 
+        // 2.5 Create default business & save user preferences
+        const businessPayload = {
+          owner_id: userId,
+          business_name: od.business_name || 'Mein Geschäft',
+          sector: od.sector || null,
+          street: od.street || null,
+          house_number: od.house_number || null,
+          zip: od.zip || null,
+          city: od.city || null,
+          country: od.country || 'DE',
+          phone: od.phone || od.whatsapp_number || null,
+          email: pending.email || null,
+          booking_slug: od.booking_slug || null,
+          is_default: true,
+        };
+        const { ok: bizOk, status: bizStatus, data: bizData } = await adminFetch('/businesses', {
+          method: 'POST',
+          body: JSON.stringify(businessPayload),
+        });
+        if (!bizOk) console.error('[webhook] default business creation failed', bizStatus, bizData);
+        const businessId = bizData?.[0]?.id || null;
+
+        if (businessId) {
+          await adminFetch('/user_preferences', {
+            method: 'POST',
+            body: JSON.stringify({
+              user_id: userId,
+              preference_key: 'selected_business',
+              preference_value: businessId,
+            }),
+          });
+        }
+
         // 3. Insert services + link employee
         if (Array.isArray(od.services) && od.services.length) {
           const svcInserts = od.services.map(s => ({
             user_id: userId,
             owner_id: userId,
+            business_id: businessId,
             title: s.name,
             duration_minutes: s.duration_minutes || 30,
             price: s.price_eur || null,
@@ -173,7 +207,7 @@ export default async function handler(req, res) {
             const empRows = inserted.map(s => ({ employee_id: userId, service_id: s.id }));
             await adminFetch('/employee_services', { method: 'POST', body: JSON.stringify(empRows) });
             const bsInserts = od.services.map((s, i) => ({
-              business_id: userId,
+              business_id: businessId,
               name: s.name,
               duration_minutes: s.duration_minutes || 30,
               price_eur: s.price_eur || null,
@@ -189,6 +223,7 @@ export default async function handler(req, res) {
           const whRows = od.working_hours_rows.map(r => ({
             user_id: userId,
             owner_id: userId,
+            business_id: businessId,
             day_of_week: r.day_of_week,
             start_time: r.start_time || '00:00:00',
             end_time: r.end_time || '00:00:00',
