@@ -210,5 +210,34 @@ test('allows validation if physician report is not requested', () => {
   assert.equal(r.ok, true);
 });
 
+test('catches 14-day legal break (Behandlungsunterbrechung) violation', () => {
+  const i = clone(validInput);
+  // change last session from 2026-05-21 to 2026-06-10 (a gap of > 14 days)
+  i.prescriptions[0].sessions[5].datumLeistung = '2026-06-10';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'S:01010'));
+});
+
+test('catches missing therapist certificate qualification', () => {
+  const i = clone(validInput);
+  // require MT certificate but hasCert = false
+  i.prescriptions[0].sessions[0].requiredCert = 'MT';
+  i.prescriptions[0].sessions[0].hasCert = false;
+  i.prescriptions[0].sessions[0].therapistId = 'therapist-uuid-1';
+  const r = preflight(i);
+  assert.equal(r.ok, false);
+  assert.ok(hasErr(r, 'S:01011'));
+});
+
+test('allows therapist certificate qualification if hasCert = true', () => {
+  const i = clone(validInput);
+  i.prescriptions[0].sessions[0].requiredCert = 'MT';
+  i.prescriptions[0].sessions[0].hasCert = true;
+  i.prescriptions[0].sessions[0].therapistId = 'therapist-uuid-1';
+  const r = preflight(i);
+  assert.equal(r.ok, true);
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

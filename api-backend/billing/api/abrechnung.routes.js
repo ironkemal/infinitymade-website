@@ -20,6 +20,7 @@ import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
 import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
+import { buildTarifkennzeichen } from '../codes/anlage3_v22.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -47,8 +48,45 @@ function nameParts(lead) {
   return { vorname: lead?.first_name || '', nachname: lead?.last_name || '' };
 }
 
+function getBundeslandFromPlz(plz) {
+  if (!plz || typeof plz !== 'string') return 'NW';
+  const prefix = plz.substring(0, 2);
+  const prefixMap = {
+    '68': 'BW', '69': 'BW', '70': 'BW', '71': 'BW', '72': 'BW', '73': 'BW', '74': 'BW', '75': 'BW', '76': 'BW', '77': 'BW', '78': 'BW', '79': 'BW', '88': 'BW', '89': 'BW',
+    '63': 'BY', '80': 'BY', '81': 'BY', '82': 'BY', '83': 'BY', '84': 'BY', '85': 'BY', '86': 'BY', '87': 'BY', '90': 'BY', '91': 'BY', '92': 'BY', '93': 'BY', '94': 'BY', '95': 'BY', '96': 'BY', '97': 'BY',
+    '10': 'BE', '13': 'BE',
+    '14': 'BB', '15': 'BB', '16': 'BB', '19': 'BB',
+    '27': 'HB', '28': 'HB',
+    '20': 'HH', '21': 'HH', '22': 'HH',
+    '34': 'HE', '35': 'HE', '36': 'HE', '60': 'HE', '61': 'HE', '63': 'HE', '64': 'HE', '65': 'HE',
+    '17': 'MV', '18': 'MV', '19': 'MV',
+    '21': 'NI', '26': 'NI', '27': 'NI', '29': 'NI', '30': 'NI', '31': 'NI', '37': 'NI', '38': 'NI', '49': 'NI',
+    '32': 'NW', '33': 'NW', '40': 'NW', '41': 'NW', '42': 'NW', '44': 'NW', '45': 'NW', '46': 'NW', '47': 'NW', '48': 'NW', '50': 'NW', '51': 'NW', '52': 'NW', '53': 'NW', '57': 'NW', '58': 'NW', '59': 'NW',
+    '54': 'RP', '55': 'RP', '56': 'RP', '67': 'RP',
+    '66': 'SL',
+    '01': 'SN', '02': 'SN', '03': 'SN', '04': 'SN', '07': 'SN', '08': 'SN', '09': 'SN',
+    '06': 'ST', '38': 'ST', '39': 'ST',
+    '21': 'SH', '22': 'SH', '23': 'SH', '24': 'SH', '25': 'SH',
+    '07': 'TH', '36': 'TH', '37': 'TH', '98': 'TH', '99': 'TH'
+  };
+  if (plz.startsWith('10') || plz.startsWith('13') || (plz.startsWith('14') && parseInt(plz) <= 14199)) return 'BE';
+  return prefixMap[prefix] || 'NW';
+}
+
+function findPriceForDate(tariffs, positionNr, dateStr) {
+  if (!Array.isArray(tariffs) || tariffs.length === 0) return null;
+  const targetDate = new Date(dateStr);
+  const match = tariffs.find(t => {
+    if (t.position_nr !== positionNr) return false;
+    const ab = new Date(t.gueltig_ab);
+    const bis = t.gueltig_bis ? new Date(t.gueltig_bis) : null;
+    return targetDate >= ab && (!bis || targetDate <= bis);
+  });
+  return match;
+}
+
 // Map a DB prescription row → buildDtaFile prescription shape.
-function mapPrescriptionToDtaShape(rx, lead, doctor) {
+function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW') {
   const np = nameParts(lead);
   const abrechnungscode = '22'; // Physiotherapie (Faz A2 default)
 
@@ -57,18 +95,76 @@ function mapPrescriptionToDtaShape(rx, lead, doctor) {
   if (!stored) {
     throw new Error(`prescription ${rx.id}: heilmittel_position fehlt`);
   }
-  const pos = findPosition(stored, abrechnungscode);
-  const positionsnummer = pos?.positionsnummer || resolvePositionsnummer(stored, abrechnungscode);
-  const einzelbetrag    = pos?.preis ?? 0;
-  const zuzahlungProPos = pos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+  const resolvedPos = resolvePositionsnummer(stored, abrechnungscode);
 
-  const sessions = [{
-    positionsnummer,
-    datumLeistung: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-    anzahl:        rx.anzahl_einheiten || 1,
-    einzelbetrag:  einzelbetrag,
-    zuzahlungProPos: rx.zuzahlung_befreit ? 0 : zuzahlungProPos,
-  }];
+  const doneSessions = (rx.prescription_sessions || [])
+    .filter(s => s.status === 'done');
+
+  const sessions = doneSessions.map(s => {
+    const booking = s.bookings || s.booking_id || {};
+    const service = booking.services || booking.service_id || booking.service || {};
+    const requiredCert = service.required_certificate || null;
+    const therapistId = booking.user_id || null;
+    
+    const certSet = therapistCerts ? therapistCerts.get(therapistId) : null;
+    const hasCert = requiredCert ? !!(certSet && certSet.has(requiredCert)) : true;
+
+    const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
+
+    // Dynamic price lookup
+    let einzelbetrag = 0;
+    let zuzahlungProPos = 0;
+
+    const dbTarif = findPriceForDate(tariffs, resolvedPos, dateStr);
+    if (dbTarif) {
+      einzelbetrag = Number(dbTarif.preis_eur);
+      zuzahlungProPos = dbTarif.zuzahlung_pflicht ? einzelbetrag * 0.10 : 0;
+    } else {
+      const staticPos = findPosition(stored, abrechnungscode);
+      einzelbetrag = staticPos?.preis ?? 0;
+      zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+    }
+
+    return {
+      positionsnummer: resolvedPos,
+      datumLeistung: dateStr,
+      anzahl: 1,
+      einzelbetrag,
+      zuzahlungProPos: rx.zuzahlung_befreit ? 0 : zuzahlungProPos,
+      therapistId,
+      requiredCert,
+      hasCert,
+    };
+  });
+
+  if (sessions.length === 0) {
+    const dateStr = rx.ausstellungsdatum || new Date().toISOString().slice(0, 10);
+    
+    // Dynamic price lookup for fallback
+    let einzelbetrag = 0;
+    let zuzahlungProPos = 0;
+
+    const dbTarif = findPriceForDate(tariffs, resolvedPos, dateStr);
+    if (dbTarif) {
+      einzelbetrag = Number(dbTarif.preis_eur);
+      zuzahlungProPos = dbTarif.zuzahlung_pflicht ? einzelbetrag * 0.10 : 0;
+    } else {
+      const staticPos = findPosition(stored, abrechnungscode);
+      einzelbetrag = staticPos?.preis ?? 0;
+      zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+    }
+
+    sessions.push({
+      positionsnummer: resolvedPos,
+      datumLeistung: dateStr,
+      anzahl:        rx.anzahl_einheiten || 1,
+      einzelbetrag:  einzelbetrag,
+      zuzahlungProPos: rx.zuzahlung_befreit ? 0 : zuzahlungProPos,
+      therapistId: null,
+      requiredCert: null,
+      hasCert: true,
+    });
+  }
 
   return {
     patient: {
@@ -101,7 +197,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor) {
     },
     tarif: {
       abrechnungscode,
-      tarifkennzeichen: '00000000',
+      tarifkennzeichen: buildTarifkennzeichen(bundesland),
     },
     sessions,
   };
@@ -183,7 +279,23 @@ router.post('/abrechnung/create', async (req, res) => {
       dasName = kk.name;
     }
 
-    // ---- fetch prescriptions joined with patient & doctor ----
+    // ---- fetch therapist certificates ----
+    const { data: certs } = await supabase
+      .from('therapist_certificates')
+      .select('profile_id, certificate')
+      .eq('owner_id', tenantId);
+
+    const therapistCerts = new Map();
+    if (certs) {
+      for (const c of certs) {
+        if (!therapistCerts.has(c.profile_id)) {
+          therapistCerts.set(c.profile_id, new Set());
+        }
+        therapistCerts.get(c.profile_id).add(c.certificate);
+      }
+    }
+
+    // ---- fetch prescriptions joined with patient & doctor & sessions & bookings & services ----
     const { data: rxRows, error: rxErr } = await supabase
       .from('prescriptions')
       .select(`
@@ -197,7 +309,14 @@ router.post('/abrechnung/create', async (req, res) => {
         bericht_angefordert,
         bericht_status,
         leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse),
-        aerzte:arzt_id   (lanr, bsnr, arzt_name)
+        aerzte:arzt_id   (lanr, bsnr, arzt_name),
+        prescription_sessions (
+          id, session_number, status, done_at,
+          bookings:booking_id (
+            id, user_id, service_id,
+            services:service_id (id, required_certificate)
+          )
+        )
       `)
       .eq('owner_id', tenantId)
       .in('id', prescriptionIds);
@@ -231,8 +350,15 @@ router.post('/abrechnung/create', async (req, res) => {
     const datennummer = (weekCount || 0) + 1;  // integer; filename + envelope helpers pad internally
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
 
+    // ---- fetch tariffs for bundesland ----
+    const bundesland = getBundeslandFromPlz(profile.zip || profile.plz);
+    const { data: tariffs } = await supabase
+      .from('heilmittel_tarif')
+      .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
+      .eq('bundesland', bundesland);
+
     // ---- map prescriptions ----
-    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte));
+    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland));
 
     // ---- build DTA (preflight runs first; rejects file if DMRZ would reject) ----
     let dta;
@@ -1059,6 +1185,132 @@ router.get('/belegliste/export', async (req, res) => {
   } catch (e) {
     console.error('[belegliste/export]', e);
     return res.status(500).send('Server-Fehler bei CSV-Generierung: ' + e.message);
+  }
+});
+
+// POST /api/billing/abrechnung/preflight
+// Simulates billing DTA parsing to detect errors in Stage 1
+router.post('/abrechnung/preflight', async (req, res) => {
+  try {
+    // ---- auth ----
+    const hdr   = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') || hdr.startsWith('bearer ') ? (hdr.slice(7) || req.query.token) : req.query.token;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile, error: pErr } = await supabase
+      .from('profiles')
+      .select('id, role, owner_id, business_name')
+      .eq('id', u.user.id)
+      .single();
+    if (pErr || !profile) return res.status(403).json({ error: 'Profile not found' });
+
+    const tenantId = profile.role === 'employee' && profile.owner_id
+      ? profile.owner_id
+      : profile.id;
+
+    const { prescriptionIds } = req.body || {};
+    if (!Array.isArray(prescriptionIds) || !prescriptionIds.length) {
+      return res.status(400).json({ error: 'prescriptionIds required' });
+    }
+
+    // ---- fetch therapist cert / IK ----
+    let { data: cert } = await supabase
+      .from('terapeut_zertifikat')
+      .select('ik_nummer')
+      .eq('owner_id', tenantId)
+      .maybeSingle();
+
+    if (!cert?.ik_nummer) {
+      const { data: tenantProfile } = await supabase
+        .from('profiles').select('ik_number').eq('id', tenantId).maybeSingle();
+      if (tenantProfile?.ik_number) {
+        cert = { ik_nummer: tenantProfile.ik_number };
+      }
+    }
+    const myIk = cert?.ik_nummer || '888888888';
+
+    // ---- fetch therapist certificates ----
+    const { data: certs } = await supabase
+      .from('therapist_certificates')
+      .select('profile_id, certificate')
+      .eq('owner_id', tenantId);
+
+    const therapistCerts = new Map();
+    if (certs) {
+      for (const c of certs) {
+        if (!therapistCerts.has(c.profile_id)) {
+          therapistCerts.set(c.profile_id, new Set());
+        }
+        therapistCerts.get(c.profile_id).add(c.certificate);
+      }
+    }
+
+    // ---- fetch prescriptions joined with patient & doctor & sessions & bookings & services ----
+    const { data: rxRows, error: rxErr } = await supabase
+      .from('prescriptions')
+      .select(`
+        id, owner_id, patient_id, arzt_id, kostentraeger_ik,
+        ausstellungsdatum, behandlungsbeginn, icd10, diagnosegruppe,
+        heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
+        is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
+        doctor_lanr, doctor_bsnr,
+        zuzahlung_eur, zuzahlung_befreit,
+        abrechnung_status,
+        bericht_angefordert,
+        bericht_status,
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse),
+        aerzte:arzt_id   (lanr, bsnr, arzt_name),
+        prescription_sessions (
+          id, session_number, status, done_at,
+          bookings:booking_id (
+            id, user_id, service_id,
+            services:service_id (id, required_certificate)
+          )
+        )
+      `)
+      .eq('owner_id', tenantId)
+      .in('id', prescriptionIds);
+
+    if (rxErr) return res.status(500).json({ error: rxErr.message });
+    if (!rxRows || rxRows.length !== prescriptionIds.length) {
+      return res.status(400).json({ error: 'Einige Rezepte wurden nicht gefunden.' });
+    }
+
+    const firstRx = rxRows[0];
+    const kostentraegerIk = firstRx.kostentraeger_ik;
+
+    const { data: kk } = await supabase
+      .from('kostentraeger')
+      .select('ik, name, das_ik')
+      .eq('ik', kostentraegerIk)
+      .maybeSingle();
+
+    let dasIk = kk?.das_ik || kostentraegerIk || '108310400';
+    let dasName = kk?.name || 'Krankenkasse';
+
+    // ---- fetch tariffs for bundesland ----
+    const bundesland = getBundeslandFromPlz(profile.zip || profile.plz);
+    const { data: tariffs } = await supabase
+      .from('heilmittel_tarif')
+      .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
+      .eq('bundesland', bundesland);
+
+    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland));
+    const { preflight: runPreflight } = await import('../dta/preflight.js');
+
+    const results = runPreflight({
+      absender: { ik: myIk, name: profile.business_name || 'Praxis' },
+      empfaenger: { ik: dasIk, name: dasName },
+      rechnung: { sammelRechnungsnummer: 'TEST', datennummer: 1, datum: new Date() },
+      prescriptions
+    });
+
+    return res.json({ ok: true, results });
+  } catch (e) {
+    console.error('[abrechnung/preflight]', e);
+    return res.status(500).json({ error: e.message || 'Server error' });
   }
 });
 

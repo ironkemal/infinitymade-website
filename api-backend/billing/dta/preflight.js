@@ -246,6 +246,26 @@ export function preflight(input) {
     if (!Array.isArray(p.sessions) || p.sessions.length === 0) {
       E(errors, 'S:01001', `${at}.sessions`, 'Mindestens eine Leistung erforderlich');
     } else {
+      // 14-day legal break (Behandlungsunterbrechung) check
+      if (p.sessions.length > 1) {
+        const sorted = [...p.sessions].sort((a, b) => {
+          const da = parseDate(a.datumLeistung);
+          const db = parseDate(b.datumLeistung);
+          return (da ? da.getTime() : 0) - (db ? db.getTime() : 0);
+        });
+        for (let k = 1; k < sorted.length; k++) {
+          const prevD = parseDate(sorted[k - 1].datumLeistung);
+          const currD = parseDate(sorted[k].datumLeistung);
+          if (prevD && currD) {
+            const diffTime = currD.getTime() - prevD.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 14) {
+              E(errors, 'S:01010', `${at}.sessions`, `Unzulässige Behandlungsunterbrechung von ${diffDays} Tagen zwischen den Sitzungen vom ${sorted[k - 1].datumLeistung} und ${sorted[k].datumLeistung} (maximal 14 Tage erlaubt)`);
+            }
+          }
+        }
+      }
+
       let pBrutto = 0, pZu = 0;
       p.sessions.forEach((s, j) => {
         const sat = `${at}.sessions[${j}]`;
@@ -265,6 +285,11 @@ export function preflight(input) {
           // Rechnungsdatum muss >= letztes Leistungsdatum sein
           if (rechnungsDatum && sDate > rechnungsDatum)
             E(errors, 'S:01006', `${sat}.datumLeistung`, 'Leistungsdatum nach Rechnungsdatum');
+        }
+
+        // Therapist qualification certificate gating check
+        if (s.requiredCert && s.hasCert === false) {
+          E(errors, 'S:01011', `${sat}.therapist`, `Der Therapeut für die Sitzung am ${s.datumLeistung} (ID: ${s.therapistId || 'unbekannt'}) besitzt nicht das benötigte Zertifikat '${s.requiredCert}'.`);
         }
 
         const betrag = Number(s.einzelbetrag);

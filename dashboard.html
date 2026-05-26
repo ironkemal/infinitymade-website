@@ -472,6 +472,7 @@
                 <button class="tab-btn" data-tab="kalender">Kalender</button>
                 <button class="tab-btn" data-tab="hours" data-i18n="nav_hours">Arbeitszeiten</button>
                 <button class="tab-btn" data-tab="services" data-i18n="nav_services">Dienstleistungen</button>
+                <button class="tab-btn" data-tab="certificates">Zertifikate</button>
                 <button class="tab-btn" data-tab="permissions" id="empTabPermissions" hidden>Berechtigungen</button>
               </div>
               <div class="tab-content active" id="tab-info">
@@ -531,6 +532,27 @@
               </div>
               <div class="tab-content" id="tab-services">
                 <div id="empServicesGrid" class="employee-checkboxes"></div>
+              </div>
+              <div class="tab-content" id="tab-certificates">
+                <div class="form-group">
+                  <label class="form-label">Zertifikate &amp; Qualifikationen</label>
+                  <div class="form-hint" style="margin-bottom:12px;">Wählen Sie die Zusatzqualifikationen dieses Therapeuten aus, um specialized Treatments freizugeben.</div>
+                  <div id="empCertificatesGrid" class="employee-checkboxes" style="display:flex; flex-direction:column; gap:10px;">
+                    <label class="perm-item" style="display:flex; align-items:center; gap:8px;">
+                      <input type="checkbox" data-cert="MT" />
+                      <span><strong>MT</strong> — Manuelle Therapie</span>
+                    </label>
+                    <label class="perm-item" style="display:flex; align-items:center; gap:8px;">
+                      <input type="checkbox" data-cert="MLD" />
+                      <span><strong>MLD</strong> — Manuelle Lymphdrainage</span>
+                    </label>
+                    <label class="perm-item" style="display:flex; align-items:center; gap:8px;">
+                      <input type="checkbox" data-cert="KGG" />
+                      <span><strong>KGG</strong> — Krankengymnastik am Gerät</span>
+                    </label>
+                  </div>
+                </div>
+                <button class="btn-primary" id="empCertificatesSaveBtn" type="button" style="margin-top:10px;">Zertifikate speichern</button>
               </div>
               <div class="tab-content" id="tab-permissions">
                 <div class="form-group" id="empStandortWrap" hidden>
@@ -1116,6 +1138,50 @@
               </table>
               <div id="mahnwesenEmpty" class="table-empty" style="padding:20px;text-align:center;color:var(--text-muted);" hidden>
                 Keine offenen Zuzahlungen. Alle Patienten haben bezahlt.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== PANEL: WARTELISTE (Bekleme Listesi) ===== -->
+        <section class="panel" id="panel-warteliste">
+          <div class="panel-header">
+            <div>
+              <h2>Warteliste</h2>
+              <p class="panel-sub">Patienten auf der Warteliste verwalten &amp; bei Lücken automatisch benachrichtigen</p>
+            </div>
+            <button class="btn-primary" id="wlAddBtn" style="gap:6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Hinzufügen
+            </button>
+          </div>
+
+          <!-- Özet bar -->
+          <div class="card" style="margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;background:var(--bg-card);border:1px solid var(--border);">
+            <div id="wlSummary" style="display:flex;gap:24px;flex-wrap:wrap;padding:4px 0;">
+              <span style="color:var(--text-muted);font-size:13px;">Lade…</span>
+            </div>
+          </div>
+
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border);">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Leistung</th>
+                    <th>Bevorzugte Tage</th>
+                    <th>Uhrzeit</th>
+                    <th>Priorität</th>
+                    <th>Eingetragen</th>
+                    <th>Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody id="wlTableBody"></tbody>
+              </table>
+              <div id="wlEmpty" class="table-empty" style="padding:32px;text-align:center;color:var(--text-muted);" hidden>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;display:block;margin:0 auto 12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Keine Patienten auf der Warteliste.
               </div>
             </div>
           </div>
@@ -1747,6 +1813,20 @@
           </div>
 
           <div class="settings-sections">
+            <!-- Kompakt Modus -->
+            <div class="settings-section">
+              <div class="settings-section-title">Ansicht</div>
+              <div class="settings-section-body">
+                <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                  <div>
+                    <div style="font-weight:500;font-size:14px;">Kompakter Modus</div>
+                    <div class="form-hint">Reduziert Zeilenhöhe auf 32 px — ideal für Schreibtischarbeit.</div>
+                  </div>
+                  <input type="checkbox" id="compactModeToggle" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
+                </label>
+              </div>
+            </div>
+
             <div class="settings-section">
               <div class="settings-section-title" data-i18n="set_profile">Profil</div>
               <div class="settings-section-body">
@@ -2027,6 +2107,19 @@
                 <button class="btn-primary" id="aeAddBtn">Hinzufügen</button>
               </div>
             </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">Druck</div>
+              <div class="settings-section-body">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">
+                  Passen Sie die Position des Adressfensters für DIN-lang-Umschläge an.
+                </p>
+                <button class="btn-ghost" id="openDruckModalBtn" type="button">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  Druckeinstellungen öffnen
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -2272,6 +2365,55 @@
         <button class="btn-ghost" data-modal="aiSuggestModal">Abbrechen</button>
         <button class="btn-secondary" id="aiSuggestRetry">Andere Vorschl&auml;ge</button>
         <button class="btn-primary" id="aiSuggestConfirm">Termine erstellen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: SCHNELLERFASSUNG (Hızlı Hasta Kaydı) ===== -->
+  <div class="modal-overlay" id="schnellerfassungModal" hidden>
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <span class="modal-title">⚡ Schnellerfassung — Neuer Patient</span>
+        <button class="modal-close" id="schnellModalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+          Minimaldaten erfassen — Patient wird sofort im Termin eingetragen.
+        </p>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Vorname *</label>
+            <input class="form-input" id="sfVorname" type="text" autocomplete="off" placeholder="z. B. Maria" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nachname *</label>
+            <input class="form-input" id="sfNachname" type="text" autocomplete="off" placeholder="z. B. Müller" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Geburtsdatum</label>
+            <input class="form-input" id="sfGeburt" type="date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefon</label>
+            <input class="form-input" id="sfTelefon" type="tel" placeholder="+49…" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Geschlecht</label>
+          <select class="form-select" id="sfGeschlecht">
+            <option value="">— unbekannt —</option>
+            <option value="männlich">Männlich</option>
+            <option value="weiblich">Weiblich</option>
+            <option value="divers">Divers</option>
+          </select>
+        </div>
+        <div id="sfError" style="color:#dc2626;font-size:13px;margin-top:8px;display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="sfCancelBtn">Abbrechen</button>
+        <button class="btn-primary" id="sfSaveBtn">⚡ Speichern &amp; in Termin eintragen</button>
       </div>
     </div>
   </div>
@@ -3425,7 +3567,119 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260525g"></script>
+  <!-- ===== MODAL: WARTELISTE EINTRAG ===== -->
+  <div class="modal-overlay" id="wlModal" hidden>
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-header">
+        <span class="modal-title" id="wlModalTitle">Warteliste — Eintrag</span>
+        <button class="modal-close" data-modal="wlModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="wlEntryId" />
+        <div class="form-group">
+          <label class="form-label">Patient *</label>
+          <div class="patient-search-wrap" id="wlPatientWrap">
+            <input class="form-input" id="wlPatientSearch" type="text" autocomplete="off" placeholder="Patient suchen…" />
+            <ul class="patient-search-list" id="wlPatientList" hidden></ul>
+          </div>
+          <input type="hidden" id="wlPatientId" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Leistung</label>
+          <select class="form-select" id="wlService"><option value="">— Alle —</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bevorzugte Tage</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" value="Mo" class="wlDay"> Mo</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" value="Di" class="wlDay"> Di</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" value="Mi" class="wlDay"> Mi</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" value="Do" class="wlDay"> Do</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" value="Fr" class="wlDay"> Fr</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" value="Sa" class="wlDay"> Sa</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Uhrzeit von</label>
+            <input class="form-input" id="wlTimeFrom" type="time" value="08:00" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">bis</label>
+            <input class="form-input" id="wlTimeTo" type="time" value="18:00" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priorität</label>
+          <select class="form-select" id="wlPriority">
+            <option value="1">Normal</option>
+            <option value="2">Hoch</option>
+            <option value="3">Dringend</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notiz</label>
+          <textarea class="form-textarea" id="wlNotes" rows="2" placeholder="Besondere Anforderungen…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-danger" id="wlDeleteBtn" hidden>Löschen</button>
+        <button class="btn-ghost" data-modal="wlModal">Abbrechen</button>
+        <button class="btn-primary" id="wlSaveBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: DRUCKEINSTELLUNGEN (Baskı Hizalama) ===== -->
+  <div class="modal-overlay" id="druckModal" hidden>
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <span class="modal-title">🖨️ Druckeinstellungen — Fensterumschlag</span>
+        <button class="modal-close" data-modal="druckModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;">
+          Passen Sie die Adressfenster-Position an Ihren Umschlag an. Änderungen werden lokal gespeichert.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Horizontaler Versatz (mm): <strong id="offsetXVal">0</strong></label>
+          <input type="range" id="offsetXSlider" min="-20" max="20" value="0" step="0.5"
+            style="width:100%;accent-color:var(--primary);" />
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:2px;">
+            <span>−20 mm (links)</span><span>0</span><span>+20 mm (rechts)</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vertikaler Versatz (mm): <strong id="offsetYVal">0</strong></label>
+          <input type="range" id="offsetYSlider" min="-20" max="20" value="0" step="0.5"
+            style="width:100%;accent-color:var(--primary);" />
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:2px;">
+            <span>−20 mm (hoch)</span><span>0</span><span>+20 mm (runter)</span>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:16px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">VORSCHAU (DIN lang)</div>
+          <div id="druckPreview" style="position:relative;width:220px;height:110px;border:1px dashed var(--border);border-radius:4px;background:#fff;margin:0 auto;">
+            <div id="druckAdressBox" style="position:absolute;width:85px;height:45px;border:2px solid var(--primary);border-radius:3px;font-size:8px;padding:2px;color:#333;top:30px;left:20px;">
+              <div style="font-size:7px;font-weight:600;">Max Mustermann</div>
+              <div style="font-size:7px;">Hauptstr. 1</div>
+              <div style="font-size:7px;">53721 Siegburg</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn-ghost" id="druckResetBtn" style="flex:1;">Zurücksetzen</button>
+          <button class="btn-primary" id="druckSaveBtn" style="flex:2;">Einstellungen speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="dashboard.js?v=20260526_fixed"></script>
 </body>
 
 </html>
