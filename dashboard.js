@@ -13383,7 +13383,10 @@ function initDruckeinstellungen() {
   const adressBox = document.getElementById('druckAdressBox');
   const resetBtn = document.getElementById('druckResetBtn');
   const saveBtn = document.getElementById('druckSaveBtn');
+  const openBtn = document.getElementById('openDruckModalBtn');
   if (!xSlider || !ySlider) return;
+
+  openBtn?.addEventListener('click', () => openModal('druckModal'));
 
   // Kayıtlı değerleri yükle
   let saved = {};
