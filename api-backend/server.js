@@ -13,6 +13,7 @@ import aiRouter from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
+import wartelisteRouter from './billing/api/warteliste.routes.js';
 import { defaultPositionForHeilmittel, resolvePositionsnummer } from './billing/codes/physio_positions.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
@@ -177,6 +178,9 @@ app.use('/api/billing', billingMahnwesenRouter);
 
 // Statistik / analytics routes.
 app.use('/api/billing', billingStatistikRouter);
+
+// Warteliste (Bekleme Listesi) routes.
+app.use('/api/warteliste', wartelisteRouter);
 
 // 1. Google OAuth Routes
 app.get('/api/calendar/google-auth', (req, res) => {

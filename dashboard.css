@@ -6556,3 +6556,39 @@ textarea:focus-visible,
 }
 
 
+/* ================================================================
+   COMPACT MODE — Yoğun görünüm (masa başı kullanıcıları için)
+   ================================================================ */
+body.compact-mode .data-table td,
+body.compact-mode .data-table th {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+body.compact-mode .dv-slot {
+  height: 32px !important;
+  min-height: 32px !important;
+}
+body.compact-mode .dv-event {
+  min-height: 28px !important;
+  font-size: 11.5px !important;
+  padding: 2px 6px !important;
+}
+body.compact-mode .card {
+  padding: 12px 14px;
+}
+body.compact-mode .form-group {
+  margin-bottom: 10px;
+}
+body.compact-mode .form-input,
+body.compact-mode .form-select {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+body.compact-mode .panel-header {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+body.compact-mode .patient-row {
+  padding: 6px 10px;
+}

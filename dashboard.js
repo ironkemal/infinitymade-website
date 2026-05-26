@@ -7,6 +7,14 @@ const API = window.location.hostname === 'localhost' || window.location.hostname
   ? 'http://localhost:3000/api'
   : 'https://n8n.infinitymade.de/api';
 
+// Global business switcher state
+let currentBusiness = null;
+let myBusinesses = [];
+const BIZ_STORAGE_KEY = 'infinitymade.active_business';
+const BIZ_PREF_KEY = 'selected_business';
+const ENTERPRISE_PLANS = new Set(['enterprise']);
+
+
 const T = {
   de: {
     logout: 'Abmelden',
@@ -78,7 +86,8 @@ const T = {
     ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.',
     nav_belegliste: 'Kassenbuch (GoBD)',
     nav_mahnwesen: 'Mahnwesen',
-    nav_statistik: 'Statistik'
+    nav_statistik: 'Statistik',
+    nav_warteliste: 'Warteliste'
   },
   en: {
     logout: 'Sign out',
@@ -148,7 +157,8 @@ const T = {
     ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.',
     nav_belegliste: 'Cash Ledger (GoBD)',
     nav_mahnwesen: 'Dunning',
-    nav_statistik: 'Statistics'
+    nav_statistik: 'Statistics',
+    nav_warteliste: 'Waiting List'
   },
   tr: {
     logout: 'Çıkış',
@@ -218,7 +228,8 @@ const T = {
     ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.',
     nav_belegliste: 'Kasa Defteri (GoBD)',
     nav_mahnwesen: 'Tahsilat',
-    nav_statistik: 'İstatistik'
+    nav_statistik: 'İstatistik',
+    nav_warteliste: 'Bekleme Listesi'
   }
 };
 
@@ -302,6 +313,7 @@ const SECTOR_PANELS = {
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
     { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
     { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'] },
+    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'] },
     { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'] },
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
@@ -322,6 +334,7 @@ const SECTOR_PANELS = {
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
     { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
     { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'] },
+    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'] },
     { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'] },
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
@@ -363,41 +376,6 @@ let bkActionBookingCache = null;
 let bkActionTimer = null;
 let pdCurrentLeadId = null;
 
-(async function boot() {
-  try {
-    const { data: authData } = await supabase.auth.getSession();
-    const session = authData?.session;
-    if (!session) {
-      window.location.href = 'login.html';
-      return;
-    }
-    currentSession = session;
-
-    const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-    if (profErr) console.error('[profile]', profErr);
-    currentProfile = profile || { id: session.user.id, email: session.user.email, plan: 'starter', role: 'owner', is_active: true };
-    if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
-
-    if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,has_dta_pro').eq('id', currentProfile.owner_id).maybeSingle();
-      if (ownerErr) console.error('[ownerProfile]', ownerErr);
-      if (owner) {
-        ownerProfile = owner;
-        if (!currentProfile.sector || currentProfile.sector === 'default') {
-          currentProfile.sector = owner.sector || 'default';
-        }
-      }
-      console.log('[boot] owner_id=', currentProfile.owner_id, 'ownerProfile=', ownerProfile, 'currentProfile.sector=', currentProfile.sector);
-    } else {
-      console.log('[boot] skipping owner fetch. role=', currentProfile.role, 'owner_id=', currentProfile.owner_id);
-    }
-
-    await init();
-  } catch (e) {
-    console.error('[boot]', e);
-    window.location.href = 'login.html';
-  }
-})();
 
 function t(key) { return (T[currentLang] || T.de)[key] || key; }
 function escapeHtml(str) {
@@ -569,6 +547,7 @@ async function switchPanel(id) {
   if (id === 'abrechnung') loadAbrechnung();
   if (id === 'belegliste') loadBelegliste();
   if (id === 'mahnwesen') loadMahnwesen();
+  if (id === 'warteliste') loadWarteliste();
   if (id === 'statistik') loadStatistik();
   if (id === 'anamnese') loadAnamnese();
 }
@@ -2151,6 +2130,18 @@ async function triggerNoShowBot(booking) {
   console.log('[NoShowBot] Triggered for booking:', booking.id, booking.customer_name);
 }
 
+function handlePatientNichtErschienen() {
+  if (!bkActionBookingCache) return;
+  const btn = document.getElementById('bkActionNoShowBtn');
+  if (btn && btn.disabled) return;
+
+  closeModal('bkActionModal');
+  if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+
+  triggerNoShowBot(bkActionBookingCache);
+  showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
+}
+
 // ============================================================
 // Group Appointments: Helpers and UI Managers
 // ============================================================
@@ -2559,25 +2550,29 @@ async function initBkCustomerAutocomplete() {
   }
 
   function openNewLeadFlow() {
-    window._returnToBkModal = true;
-    window._bkModalState = {
-      id: document.getElementById('bk-id').value,
-      start: document.getElementById('bkStart').value,
-      employee: document.getElementById('bkEmployee').value,
-      service: document.getElementById('bkService').value,
-      notes: document.getElementById('bkNotes').value,
-      hausbesuch: document.getElementById('bkHausbesuch').checked,
-      seriesToggle: document.getElementById('bkSeriesToggle').checked
-    };
+    // Schnellerfassung: Booking modalı kapatmadan küçük mini-modal aç
     list.hidden = true;
-    closeModal('bookingModal');
-    openLeadModal(null);
-    // Prefill first name with what user typed so far
+    // Mevcut booking durumunu sakla (Schnellerfassung iptal edilirse geri dönmek için)
+    window._bkModalSnapshot = {
+      start: document.getElementById('bkStart')?.value,
+      employee: document.getElementById('bkEmployee')?.value,
+      service: document.getElementById('bkService')?.value,
+      notes: document.getElementById('bkNotes')?.value,
+    };
+    // Kullanıcının yazdığı metni ön dolgu olarak aktar
     const typed = (input.value || '').trim();
-    if (typed) {
-      const fn = document.getElementById('lead-first-name');
-      if (fn && !fn.value) fn.value = typed;
+    const sfVorname = document.getElementById('sfVorname');
+    const sfNachname = document.getElementById('sfNachname');
+    if (sfVorname && !sfVorname.value) {
+      // Tek kelimeyse Vorname, iki kelimeyse Vorname + Nachname
+      const parts = typed.split(' ');
+      sfVorname.value = parts[0] || '';
+      if (sfNachname && parts.length > 1) sfNachname.value = parts.slice(1).join(' ');
     }
+    document.getElementById('sfError').style.display = 'none';
+    const sfModal = document.getElementById('schnellerfassungModal');
+    if (sfModal) sfModal.hidden = false;
+    setTimeout(() => sfVorname?.focus(), 80);
   }
 
   function applyLeadById(id) {
@@ -6214,6 +6209,7 @@ function openEmpDetail(empId) {
       if (btn.dataset.tab === 'kalender') initEmpCalTab(empId);
       if (btn.dataset.tab === 'hours') loadEmpHours(empId);
       if (btn.dataset.tab === 'services') loadEmpServices(empId);
+      if (btn.dataset.tab === 'certificates') loadEmpCertificates(empId);
     });
   });
   detail.querySelector('.tab-btn[data-tab="info"]')?.classList.add('active');
@@ -6501,6 +6497,78 @@ async function loadEmpServices(empId) {
       showToast(toCheck ? 'Alle Dienstleistungen zugewiesen ✓' : 'Alle entfernt ✓');
     });
   });
+}
+
+async function loadEmpCertificates(empId) {
+  const container = document.getElementById('empCertificatesGrid');
+  if (!container) return;
+
+  container.querySelectorAll('input[data-cert]').forEach(cb => cb.checked = false);
+
+  try {
+    const { data, error } = await supabase
+      .from('therapist_certificates')
+      .select('certificate')
+      .eq('profile_id', empId);
+
+    if (error) {
+      console.error('[loadEmpCertificates] Error fetching certs:', error);
+      return;
+    }
+
+    if (data && data.length) {
+      const activeCerts = new Set(data.map(d => d.certificate));
+      container.querySelectorAll('input[data-cert]').forEach(cb => {
+        cb.checked = activeCerts.has(cb.dataset.cert);
+      });
+    }
+
+    const saveBtn = document.getElementById('empCertificatesSaveBtn');
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Wird gespeichert...';
+
+        try {
+          const checkedCerts = Array.from(container.querySelectorAll('input[data-cert]:checked')).map(cb => cb.dataset.cert);
+          
+          const { error: delErr } = await supabase
+            .from('therapist_certificates')
+            .delete()
+            .eq('profile_id', empId);
+
+          if (delErr) throw delErr;
+
+          if (checkedCerts.length > 0) {
+            const insertData = checkedCerts.map(cert => ({
+              profile_id: empId,
+              certificate: cert,
+              owner_id: getOwnerId()
+            }));
+            const { error: insErr } = await supabase
+              .from('therapist_certificates')
+              .insert(insertData);
+
+            if (insErr) throw insErr;
+          }
+
+          showToast('Zertifikate erfolgreich gespeichert ✓');
+          
+          if (typeof loadAbrechnung === 'function') {
+            loadAbrechnung().catch(e => console.warn('[loadAbrechnung] reload failed', e));
+          }
+        } catch (err) {
+          console.error('[saveEmpCertificates] error', err);
+          showToast('Fehler beim Speichern: ' + err.message, 'error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Zertifikate speichern';
+        }
+      };
+    }
+  } catch (err) {
+    console.error('[loadEmpCertificates] top level error', err);
+  }
 }
 
 let b2bCache = [];
@@ -9785,12 +9853,7 @@ async function saveRezept() {
 }
 
 // ===== Business Switcher (multi-business, Paket 3) =====
-let currentBusiness = null;
-let myBusinesses = [];
 
-const BIZ_STORAGE_KEY = 'infinitymade.active_business';
-const BIZ_PREF_KEY = 'selected_business';
-const ENTERPRISE_PLANS = new Set(['enterprise']);
 
 function isEnterprise() {
   const plan = (ownerProfile?.plan || currentProfile?.plan || '').toLowerCase();
@@ -11134,6 +11197,17 @@ function runPreflightCheck() {
       rxWarnings.push('Keine Heilmittelposition (X-Code) zugewiesen. Die Zuzahlung und Abrechnungspreise können nicht exakt ermittelt werden.');
     }
 
+    const issues = checkPrescriptionCompliance(rx, _abState.therapistCertsMap);
+    if (issues.isReportMissing) {
+      rxErrors.push(`Therapiebericht erforderlich, aber ausstehend (${rx.bericht_status || 'offen'}).`);
+    }
+    if (issues.missingCert) {
+      rxErrors.push(`Zertifikats-Fehler: Der Therapeut für die Sitzung am ${issues.missingCertDate} besitzt nicht das erforderliche Zertifikat '${issues.missingCertName}'.`);
+    }
+    if (issues.has14DayGap) {
+      rxErrors.push(`Yasal Kilit: Terapötik ara verme (Behandlungsunterbrechung) 14 takvim gününü aşmaktadır (${issues.gapDays} Tage, ${issues.gapDates}).`);
+    }
+
     let statusClass = 'success';
     let summaryText = '✓ Rezept fehlerfrei';
     if (rxErrors.length > 0) {
@@ -11360,9 +11434,21 @@ async function loadAbrechnung() {
   const ownerId = getOwnerId();
   if (!ownerId) return;
 
-  const [readyRes, kkRes, histRes] = await Promise.all([
+  const [readyRes, kkRes, histRes, certsRes] = await Promise.all([
     supabase.from('prescriptions')
-      .select('id, patient_id, kostentraeger_ik, heilmittel, heilmittel_position, anzahl_einheiten, zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb, leads:patient_id(first_name,last_name,krankenkasse,versichertennummer)')
+      .select(`
+        id, patient_id, kostentraeger_ik, heilmittel, heilmittel_position, anzahl_einheiten, 
+        zuzahlung_eur, zuzahlung_befreit, ausstellungsdatum, icd10, is_blanko, is_lhb_bvb, 
+        bericht_angefordert, bericht_status,
+        leads:patient_id(first_name,last_name,krankenkasse,versichertennummer),
+        prescription_sessions (
+          id, session_number, status, done_at,
+          bookings:booking_id (
+            id, user_id, service_id,
+            services:service_id (id, required_certificate)
+          )
+        )
+      `)
       .eq('owner_id', ownerId)
       .eq('abrechnung_status', 'bereit')
       .order('ausstellungsdatum', { ascending: true }),
@@ -11371,15 +11457,30 @@ async function loadAbrechnung() {
       .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, created_at')
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(50),
+    supabase.from('therapist_certificates')
+      .select('profile_id, certificate')
+      .eq('owner_id', ownerId)
   ]);
 
   if (readyRes.error) console.error('[abrechnung/ready]', readyRes.error);
   if (kkRes.error) console.error('[abrechnung/kk]', kkRes.error);
   if (histRes.error) console.error('[abrechnung/hist]', histRes.error);
+  if (certsRes.error) console.error('[abrechnung/certs]', certsRes.error);
 
   _abState.kkMap = new Map((kkRes.data || []).map(r => [r.ik, r]));
   _abState.ready = readyRes.data || [];
+
+  const therapistCertsMap = new Map();
+  if (certsRes.data) {
+    for (const c of certsRes.data) {
+      if (!therapistCertsMap.has(c.profile_id)) {
+        therapistCertsMap.set(c.profile_id, new Set());
+      }
+      therapistCertsMap.get(c.profile_id).add(c.certificate);
+    }
+  }
+  _abState.therapistCertsMap = therapistCertsMap;
 
   loadPhysioPositions().then(() => {
     if (_abState.ready.length) renderAbrechnungReady();
@@ -11438,6 +11539,57 @@ async function loadAbrechnung() {
   } else {
     setWizardStep(_abState.activeStep || 1);
   }
+}
+
+function checkPrescriptionCompliance(rx, therapistCertsMap) {
+  const issues = {
+    has14DayGap: false,
+    gapDays: 0,
+    gapDates: '',
+    missingCert: false,
+    missingCertName: '',
+    missingCertDate: '',
+    isReportMissing: !!(rx.bericht_angefordert && rx.bericht_status !== 'erledigt'),
+  };
+
+  const doneSessions = (rx.prescription_sessions || [])
+    .filter(s => s.status === 'done');
+
+  // Check 14-day gap
+  if (doneSessions.length > 1) {
+    const sorted = [...doneSessions].sort((a, b) => new Date(a.done_at) - new Date(b.done_at));
+    for (let k = 1; k < sorted.length; k++) {
+      const prevD = new Date(sorted[k - 1].done_at);
+      const currD = new Date(sorted[k].done_at);
+      const diffTime = currD - prevD;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 14) {
+        issues.has14DayGap = true;
+        issues.gapDays = diffDays;
+        issues.gapDates = `${new Date(sorted[k - 1].done_at).toLocaleDateString('de-DE')} - ${new Date(sorted[k].done_at).toLocaleDateString('de-DE')}`;
+        break; // Show first gap
+      }
+    }
+  }
+
+  // Check therapist certificates
+  for (const s of doneSessions) {
+    const booking = s.bookings || s.booking_id || {};
+    const service = booking.services || booking.service_id || booking.service || {};
+    const requiredCert = service.required_certificate;
+    if (requiredCert) {
+      const therapistId = booking.user_id;
+      const certSet = therapistCertsMap ? therapistCertsMap.get(therapistId) : null;
+      if (!therapistId || !certSet || !certSet.has(requiredCert)) {
+        issues.missingCert = true;
+        issues.missingCertName = requiredCert;
+        issues.missingCertDate = s.done_at ? new Date(s.done_at).toLocaleDateString('de-DE') : '';
+        break;
+      }
+    }
+  }
+
+  return issues;
 }
 
 function renderAbrechnungReady() {
@@ -11517,23 +11669,38 @@ function renderAbrechnungReady() {
               const zu = rx.zuzahlung_befreit
                 ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
                 : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
-              const isBlocked = rx.bericht_angefordert && rx.bericht_status !== 'erledigt';
+              
+              const issues = checkPrescriptionCompliance(rx, _abState.therapistCertsMap);
+              const isBlocked = issues.isReportMissing || issues.missingCert || issues.has14DayGap;
               const checkboxHtml = isBlocked
                 ? `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" disabled style="opacity:0.5;" />`
                 : `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked />`;
 
-              const reportBadge = isBlocked
-                ? `<div style="margin-top:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px;" title="Therapiebericht ausstehend!">
+              let badgesHtml = '';
+              if (issues.isReportMissing) {
+                badgesHtml += `<div style="margin-top:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500;" title="Therapiebericht ausstehend!">
                     <span class="svg-icon" style="width:12px;height:12px;display:inline-flex;color:#b91c1c;">${ICON.warning}</span>
                     Bericht fehlt (${escapeHtml(rx.bericht_status)})
-                   </div>`
-                : '';
+                   </div>`;
+              }
+              if (issues.missingCert) {
+                badgesHtml += `<div style="margin-top:4px; margin-left:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500;" title="Therapeut besitzt kein Zertifikat '${escapeHtml(issues.missingCertName)}' für die Sitzung am ${escapeHtml(issues.missingCertDate)}!">
+                    <span class="svg-icon" style="width:12px;height:12px;display:inline-flex;color:#b91c1c;">${ICON.warning}</span>
+                    Qualifikation fehlt (${escapeHtml(issues.missingCertName)})
+                   </div>`;
+              }
+              if (issues.has14DayGap) {
+                badgesHtml += `<div style="margin-top:4px; margin-left:4px; display:inline-flex; align-items:center; gap:4px; background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:4px; font-weight:500;" title="Unterbrechung von ${escapeHtml(issues.gapDays)} Tagen (${escapeHtml(issues.gapDates)}) überschreitet 14 Tage!">
+                    <span class="svg-icon" style="width:12px;height:12px;display:inline-flex;color:#b91c1c;">${ICON.warning}</span>
+                    Pause > 14 Tage (${escapeHtml(issues.gapDays)} Tg.)
+                   </div>`;
+              }
 
               return `<tr>
                 <td>${checkboxHtml}</td>
                 <td>
                   <div>${escapeHtml(pname)}</div>
-                  ${reportBadge}
+                  ${badgesHtml}
                 </td>
                 <td>
                   <div style="font-weight:500;">${escapeHtml(heilmittelText)}</div>
@@ -11554,7 +11721,7 @@ function renderAbrechnungReady() {
     cb.addEventListener('change', (e) => {
       const ik = e.target.dataset.ik;
       container.querySelectorAll(`.ab-rx-check[data-ik="${ik}"]`).forEach(c => {
-        c.checked = e.target.checked;
+        if (!c.disabled) c.checked = e.target.checked;
       });
       if (_abState.activeIk === ik) runPreflightCheck();
     });
@@ -12863,3 +13030,431 @@ async function loadStatistik() {
 document.getElementById('statMonateSelect')?.addEventListener('change', () => {
   if (document.getElementById('panel-statistik')?.classList.contains('active')) loadStatistik();
 });
+
+// =====================================================================
+// SCHNELLERFASSUNG — Hızlı Hasta Kaydı Mini-Modal
+// =====================================================================
+function initSchnellerfassung() {
+  const modal = document.getElementById('schnellerfassungModal');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('schnellModalClose');
+  const cancelBtn = document.getElementById('sfCancelBtn');
+  const saveBtn = document.getElementById('sfSaveBtn');
+  const errorEl = document.getElementById('sfError');
+
+  function closeSchnellModal() {
+    modal.hidden = true;
+    // Alanları temizle
+    ['sfVorname','sfNachname','sfGeburt','sfTelefon','sfGeschlecht'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    errorEl.style.display = 'none';
+  }
+
+  closeBtn?.addEventListener('click', closeSchnellModal);
+  cancelBtn?.addEventListener('click', closeSchnellModal);
+
+  saveBtn?.addEventListener('click', async () => {
+    const vorname = (document.getElementById('sfVorname')?.value || '').trim();
+    const nachname = (document.getElementById('sfNachname')?.value || '').trim();
+    if (!vorname) {
+      errorEl.textContent = 'Vorname ist Pflichtfeld.';
+      errorEl.style.display = 'block';
+      document.getElementById('sfVorname')?.focus();
+      return;
+    }
+    const geburt = document.getElementById('sfGeburt')?.value || null;
+    const telefon = (document.getElementById('sfTelefon')?.value || '').trim() || null;
+    const geschlecht = document.getElementById('sfGeschlecht')?.value || null;
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Speichere…';
+    try {
+      const ownerId = getOwnerId();
+      const title = `${vorname} ${nachname}`.trim();
+      const payload = {
+        owner_id: ownerId,
+        title,
+        first_name: vorname,
+        last_name: nachname,
+        phone: telefon,
+        geschlecht,
+      };
+      if (geburt) {
+        payload.metadata = { geburtsdatum: geburt };
+      }
+      const { data: newLead, error } = await supabase
+        .from('leads')
+        .insert(payload)
+        .select('id')
+        .single();
+      if (error) throw error;
+
+      // Leads listesini güncelle ve yeni lead'i seç
+      // loadBkLeads initBkCustomerAutocomplete içinde tanımlı; window üzerinden erişemeyiz.
+      // Direkt yüklüyoruz:
+      const { data: freshLeads } = await supabase
+        .from('leads')
+        .select('id,title,first_name,last_name,phone,metadata,street,plz,city,lat,lng,distance_km,duration_min,route_calculated_at')
+        .eq('owner_id', ownerId)
+        .order('title');
+      window.bkAllLeads = freshLeads || [];
+
+      if (window.bkSelectLead) window.bkSelectLead(newLead.id);
+      closeSchnellModal();
+      showToast(`✓ ${title} erfasst und eingetragen`, 'success');
+    } catch (err) {
+      errorEl.textContent = 'Fehler: ' + (err.message || 'Unbekannt');
+      errorEl.style.display = 'block';
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '⚡ Speichern & in Termin eintragen';
+    }
+  });
+
+  // ESC ile kapat
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSchnellModal();
+  });
+}
+
+// =====================================================================
+// COMPACT MODE — Yoğun Görünüm
+// =====================================================================
+function initCompactMode() {
+  const toggle = document.getElementById('compactModeToggle');
+  if (!toggle) return;
+
+  const STORAGE_KEY = 'infinitymade_compact_mode';
+
+  function applyCompact(enabled) {
+    if (enabled) {
+      document.body.classList.add('compact-mode');
+    } else {
+      document.body.classList.remove('compact-mode');
+    }
+  }
+
+  // Kaydedilmiş tercihi yükle
+  const saved = localStorage.getItem(STORAGE_KEY) === 'true';
+  toggle.checked = saved;
+  applyCompact(saved);
+
+  toggle.addEventListener('change', () => {
+    const enabled = toggle.checked;
+    localStorage.setItem(STORAGE_KEY, enabled);
+    applyCompact(enabled);
+    showToast(enabled ? 'Kompakter Modus aktiviert' : 'Kompakter Modus deaktiviert');
+  });
+}
+
+// Init çağrıları — DOMContentLoaded'dan sonra
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initSchnellerfassung();
+    initCompactMode();
+    initWlModal();
+    initDruckeinstellungen();
+  });
+} else {
+  initSchnellerfassung();
+  initCompactMode();
+  initWlModal();
+  initDruckeinstellungen();
+}
+
+// =====================================================================
+// WARTELISTE — Bekleme Listesi Yönetimi
+// =====================================================================
+async function loadWarteliste() {
+  const tbody = document.getElementById('wlTableBody');
+  const emptyEl = document.getElementById('wlEmpty');
+  const summaryEl = document.getElementById('wlSummary');
+  if (!tbody) return;
+
+  const ownerId = getOwnerId();
+  const { data: entries, error } = await supabase
+    .from('warteliste')
+    .select(`
+      id, preferred_days, preferred_time_from, preferred_time_to,
+      priority, status, created_at, notes,
+      leads:lead_id(id, title, first_name, last_name),
+      services:service_id(id, name)
+    `)
+    .eq('owner_id', ownerId)
+    .eq('status', 'waiting')
+    .order('priority', { ascending: false })
+    .order('created_at', { ascending: true });
+
+  if (error) { showToast('Fehler beim Laden der Warteliste: ' + error.message, 'error'); return; }
+
+  const rows = entries || [];
+  if (summaryEl) {
+    summaryEl.innerHTML = `<span style="font-size:13px;"><strong>${rows.length}</strong> Patient${rows.length !== 1 ? 'en' : ''} auf der Warteliste</span>`;
+  }
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+  if (emptyEl) emptyEl.hidden = true;
+
+  const PRIORITY_LABELS = { 1: 'Normal', 2: '<span style="color:#f59e0b;font-weight:600;">Hoch</span>', 3: '<span style="color:#dc2626;font-weight:700;">Dringend</span>' };
+
+  tbody.innerHTML = rows.map(e => {
+    const patName = e.leads ? `${e.leads.first_name || ''} ${e.leads.last_name || ''}`.trim() || e.leads.title : '—';
+    const srvName = e.services?.name || '—';
+    const days = Array.isArray(e.preferred_days) ? e.preferred_days.join(', ') || 'Egal' : 'Egal';
+    const time = (e.preferred_time_from && e.preferred_time_to)
+      ? `${e.preferred_time_from.slice(0,5)} – ${e.preferred_time_to.slice(0,5)}`
+      : 'Egal';
+    const prio = PRIORITY_LABELS[e.priority] || 'Normal';
+    const since = new Date(e.created_at).toLocaleDateString('de-DE');
+    return `<tr>
+      <td><strong>${patName}</strong></td>
+      <td>${srvName}</td>
+      <td>${days}</td>
+      <td>${time}</td>
+      <td>${prio}</td>
+      <td style="color:var(--text-muted);font-size:12px;">${since}</td>
+      <td>
+        <button class="btn-ghost" style="font-size:12px;padding:3px 8px;" onclick="openWlEntry('${e.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Bearbeiten
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.openWlEntry = async function(id) {
+  const modal = document.getElementById('wlModal');
+  if (!modal) return;
+  document.getElementById('wlEntryId').value = id;
+  document.getElementById('wlModalTitle').textContent = 'Warteliste — Eintrag bearbeiten';
+  document.getElementById('wlDeleteBtn').hidden = false;
+
+  const ownerId = getOwnerId();
+  const { data: e } = await supabase.from('warteliste')
+    .select('*, leads:lead_id(id,title,first_name,last_name), services:service_id(id,name)')
+    .eq('id', id).eq('owner_id', ownerId).single();
+  if (!e) return;
+
+  document.getElementById('wlPatientSearch').value = e.leads
+    ? `${e.leads.first_name || ''} ${e.leads.last_name || ''}`.trim() || e.leads.title : '';
+  document.getElementById('wlPatientId').value = e.lead_id || '';
+  document.getElementById('wlService').value = e.service_id || '';
+  document.getElementById('wlTimeFrom').value = e.preferred_time_from?.slice(0,5) || '08:00';
+  document.getElementById('wlTimeTo').value = e.preferred_time_to?.slice(0,5) || '18:00';
+  document.getElementById('wlPriority').value = e.priority || 1;
+  document.getElementById('wlNotes').value = e.notes || '';
+  // Günleri seç
+  document.querySelectorAll('.wlDay').forEach(cb => {
+    cb.checked = Array.isArray(e.preferred_days) && e.preferred_days.includes(cb.value);
+  });
+  modal.hidden = false;
+};
+
+async function openNewWlEntry() {
+  const modal = document.getElementById('wlModal');
+  if (!modal) return;
+  document.getElementById('wlEntryId').value = '';
+  document.getElementById('wlModalTitle').textContent = 'Warteliste — Neuer Eintrag';
+  document.getElementById('wlDeleteBtn').hidden = true;
+  document.getElementById('wlPatientSearch').value = '';
+  document.getElementById('wlPatientId').value = '';
+  document.getElementById('wlService').value = '';
+  document.getElementById('wlTimeFrom').value = '08:00';
+  document.getElementById('wlTimeTo').value = '18:00';
+  document.getElementById('wlPriority').value = '1';
+  document.getElementById('wlNotes').value = '';
+  document.querySelectorAll('.wlDay').forEach(cb => cb.checked = false);
+  modal.hidden = false;
+  await initWlPatientAutocomplete();
+  await populateWlServices();
+}
+
+async function populateWlServices() {
+  const sel = document.getElementById('wlService');
+  if (!sel || sel.options.length > 1) return;
+  const ownerId = getOwnerId();
+  const { data: srvs } = await supabase.from('services').select('id,name').eq('owner_id', ownerId).order('name');
+  (srvs || []).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id; opt.textContent = s.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function initWlPatientAutocomplete() {
+  const input = document.getElementById('wlPatientSearch');
+  const list = document.getElementById('wlPatientList');
+  const idH = document.getElementById('wlPatientId');
+  if (!input || !list || !idH) return;
+  if (input.dataset.wlBound) return;
+  input.dataset.wlBound = '1';
+
+  const ownerId = getOwnerId();
+  const { data: leads } = await supabase.from('leads')
+    .select('id,title,first_name,last_name').eq('owner_id', ownerId).order('title');
+  const allLeads = leads || [];
+
+  function renderWlList(q) {
+    const filtered = q ? allLeads.filter(l => {
+      const n = `${l.first_name||''} ${l.last_name||''} ${l.title||''}`.toLowerCase();
+      return n.includes(q.toLowerCase());
+    }) : allLeads.slice(0, 20);
+    list.innerHTML = filtered.map(l => {
+      const name = `${l.first_name||''} ${l.last_name||''}`.trim() || l.title;
+      return `<li data-id="${l.id}">${name}</li>`;
+    }).join('');
+    list.hidden = false;
+  }
+
+  input.addEventListener('input', () => renderWlList(input.value));
+  input.addEventListener('focus', () => renderWlList(input.value));
+  list.addEventListener('mousedown', e => {
+    const li = e.target.closest('li[data-id]');
+    if (!li) return;
+    e.preventDefault();
+    input.value = li.textContent;
+    idH.value = li.dataset.id;
+    list.hidden = true;
+  });
+  document.addEventListener('mousedown', e => {
+    if (!document.getElementById('wlPatientWrap')?.contains(e.target)) list.hidden = true;
+  });
+}
+
+function initWlModal() {
+  const addBtn = document.getElementById('wlAddBtn');
+  const saveBtn = document.getElementById('wlSaveBtn');
+  const deleteBtn = document.getElementById('wlDeleteBtn');
+
+  addBtn?.addEventListener('click', openNewWlEntry);
+
+  saveBtn?.addEventListener('click', async () => {
+    const id = document.getElementById('wlEntryId').value;
+    const patientId = document.getElementById('wlPatientId').value;
+    if (!patientId) { showToast('Bitte Patient auswählen', 'error'); return; }
+    const days = [...document.querySelectorAll('.wlDay:checked')].map(cb => cb.value);
+    const payload = {
+      owner_id: getOwnerId(),
+      lead_id: patientId,
+      service_id: document.getElementById('wlService').value || null,
+      preferred_days: days,
+      preferred_time_from: document.getElementById('wlTimeFrom').value || null,
+      preferred_time_to: document.getElementById('wlTimeTo').value || null,
+      priority: parseInt(document.getElementById('wlPriority').value) || 1,
+      notes: document.getElementById('wlNotes').value || null,
+      status: 'waiting',
+    };
+    const { error } = id
+      ? await supabase.from('warteliste').update(payload).eq('id', id)
+      : await supabase.from('warteliste').insert(payload);
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+    document.getElementById('wlModal').hidden = true;
+    showToast('Warteliste aktualisiert');
+    await loadWarteliste();
+  });
+
+  deleteBtn?.addEventListener('click', async () => {
+    const id = document.getElementById('wlEntryId').value;
+    if (!id || !confirm('Eintrag wirklich löschen?')) return;
+    await supabase.from('warteliste').delete().eq('id', id);
+    document.getElementById('wlModal').hidden = true;
+    showToast('Eintrag gelöscht');
+    await loadWarteliste();
+  });
+}
+
+// =====================================================================
+// DRUCKEINSTELLUNGEN — Milimetrik Baskı Hizalama
+// =====================================================================
+function initDruckeinstellungen() {
+  const STORAGE_KEY = 'infinitymade_print_offset';
+  const xSlider = document.getElementById('offsetXSlider');
+  const ySlider = document.getElementById('offsetYSlider');
+  const xVal = document.getElementById('offsetXVal');
+  const yVal = document.getElementById('offsetYVal');
+  const adressBox = document.getElementById('druckAdressBox');
+  const resetBtn = document.getElementById('druckResetBtn');
+  const saveBtn = document.getElementById('druckSaveBtn');
+  if (!xSlider || !ySlider) return;
+
+  // Kayıtlı değerleri yükle
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch {}
+  xSlider.value = saved.x ?? 0;
+  ySlider.value = saved.y ?? 0;
+
+  function updatePreview() {
+    const x = parseFloat(xSlider.value);
+    const y = parseFloat(ySlider.value);
+    if (xVal) xVal.textContent = (x >= 0 ? '+' : '') + x;
+    if (yVal) yVal.textContent = (y >= 0 ? '+' : '') + y;
+    if (adressBox) {
+      // 1mm ~ 2px approximately for preview
+      adressBox.style.transform = `translate(${x * 2}px, ${y * 2}px)`;
+    }
+  }
+
+  [xSlider, ySlider].forEach(el => el.addEventListener('input', updatePreview));
+  updatePreview();
+
+  resetBtn?.addEventListener('click', () => {
+    xSlider.value = 0;
+    ySlider.value = 0;
+    updatePreview();
+  });
+
+  saveBtn?.addEventListener('click', () => {
+    const offset = {
+      x: parseFloat(xSlider.value),
+      y: parseFloat(ySlider.value)
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(offset));
+    document.getElementById('druckModal').hidden = true;
+    showToast('Druckeinstellungen gespeichert ✓');
+  });
+}
+
+(async function boot() {
+  try {
+    const { data: authData } = await supabase.auth.getSession();
+    const session = authData?.session;
+    if (!session) {
+      window.location.href = 'login.html';
+      return;
+    }
+    currentSession = session;
+
+    const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+    if (profErr) console.error('[profile]', profErr);
+    currentProfile = profile || { id: session.user.id, email: session.user.email, plan: 'starter', role: 'owner', is_active: true };
+    if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
+
+    if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
+      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,has_dta_pro').eq('id', currentProfile.owner_id).maybeSingle();
+      if (ownerErr) console.error('[ownerProfile]', ownerErr);
+      if (owner) {
+        ownerProfile = owner;
+        if (!currentProfile.sector || currentProfile.sector === 'default') {
+          currentProfile.sector = owner.sector || 'default';
+        }
+      }
+      console.log('[boot] owner_id=', currentProfile.owner_id, 'ownerProfile=', ownerProfile, 'currentProfile.sector=', currentProfile.sector);
+    } else {
+      console.log('[boot] skipping owner fetch. role=', currentProfile.role, 'owner_id=', currentProfile.owner_id);
+    }
+
+    await init();
+  } catch (e) {
+    console.error('[boot]', e);
+    window.location.href = 'login.html';
+  }
+})();
+
