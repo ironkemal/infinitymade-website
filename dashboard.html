@@ -2188,7 +2188,13 @@
         <div id="bkSpecialBanner" class="bk-special-banner" hidden></div>
         <div id="bkDocAssignHint" class="bk-doc-hint" hidden></div>
         <div class="form-group" id="bkCustomerGroup">
-          <label class="form-label" data-i18n="lbl_manual_cust">Kunde</label>
+          <label class="form-label" data-i18n="lbl_manual_cust" style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+            <span>Kunde</span>
+            <span style="display:flex;gap:6px;">
+              <button class="btn-ghost" type="button" id="bkAddCustomerSchnell" style="font-size:11px;padding:2px 8px;height:24px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;gap:2px;cursor:pointer;">⚡ Schnell</button>
+              <button class="btn-ghost" type="button" id="bkAddCustomerNormal" style="font-size:11px;padding:2px 8px;height:24px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;gap:2px;cursor:pointer;">＋ Normal</button>
+            </span>
+          </label>
           <div class="patient-search-wrap" id="bkCustomerWrap">
             <input class="form-input" id="bkCustomerSearch" type="text" autocomplete="off" placeholder="Suchen oder auswählen…" />
             <ul class="patient-search-list" id="bkCustomerList" hidden></ul>
@@ -3679,7 +3685,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260526_hotfix3"></script>
+  <script type="module" src="dashboard.js?v=20260526_hotfix4"></script>
 </body>
 
 </html>
