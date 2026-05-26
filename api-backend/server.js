@@ -355,7 +355,7 @@ app.post('/api/apify/search', async (req, res) => {
 });
 
 // Helper to calculate available slots for a user and date
-async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = 30) {
+async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = 30, serviceId = null) {
   const dayOfWeek = berlinDayOfWeek(date);
   const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
 
@@ -378,6 +378,19 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
     .eq('id', userId)
     .single();
   if (profile?.owner_id) ownerId = profile.owner_id;
+
+  // 1.1 Fetch requested service if serviceId is provided to check if it's a group service
+  let isRequestedServiceGroup = false;
+  if (serviceId) {
+    const { data: svc } = await supabase
+      .from('services')
+      .select('is_group')
+      .eq('id', serviceId)
+      .maybeSingle();
+    if (svc && svc.is_group) {
+      isRequestedServiceGroup = true;
+    }
+  }
 
   // 1.4 Check business closed_days (multi-business açılış günleri)
   let activeBiz = null;
@@ -467,18 +480,50 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
   const endMinutes = timeToMins(wh.end_time);
 
   // 2. Get existing bookings for this date (Supabase stores TIMESTAMPTZ as UTC)
+  // Only query bookings where group_parent_id IS NULL to prevent child bookings
+  // from incorrectly blocking the time slots.
   const { data: bookings } = await supabase
     .from('bookings')
-    .select('start_time, end_time')
+    .select('id, start_time, end_time, is_group, group_capacity, service_id')
     .eq('user_id', userId)
     .eq('status', 'confirmed')
+    .is('group_parent_id', null)
     .gte('start_time', dayStart)
     .lte('start_time', dayEnd);
 
-  const bookedIntervals = (bookings || []).map(b => ({
-    start: utcToBerlinMinutes(new Date(b.start_time)),
-    end: utcToBerlinMinutes(new Date(b.end_time))
-  }));
+  // Query actual participant counts for group parent slots
+  const parentIds = (bookings || []).filter(b => b.is_group).map(b => b.id);
+  const participantCounts = {};
+  if (parentIds.length > 0) {
+    const { data: participants } = await supabase
+      .from('bookings')
+      .select('group_parent_id')
+      .in('group_parent_id', parentIds)
+      .eq('status', 'confirmed');
+    (participants || []).forEach(p => {
+      participantCounts[p.group_parent_id] = (participantCounts[p.group_parent_id] || 0) + 1;
+    });
+  }
+
+  const bookedIntervals = [];
+
+  (bookings || []).forEach(b => {
+    // If it's a group booking, and we are searching for slots for the SAME group service,
+    // and there is still remaining capacity, it's not a blocked slot!
+    if (b.is_group) {
+      const count = participantCounts[b.id] || 0;
+      const cap = b.group_capacity || 1;
+      if (isRequestedServiceGroup && b.service_id === serviceId && count < cap) {
+        // Safe to book here! Do not block this interval
+        return;
+      }
+    }
+
+    bookedIntervals.push({
+      start: utcToBerlinMinutes(new Date(b.start_time)),
+      end: utcToBerlinMinutes(new Date(b.end_time))
+    });
+  });
 
   if (customDay && (customDay.type === 'closed' || customDay.type === 'holiday') && customDay.start_time && customDay.end_time) {
     bookedIntervals.push({
@@ -574,13 +619,13 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
 
 // 2. Booking Routes (Get Slots & Create)
 app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
-  const { userId, date, duration, businessId } = req.body; // date: YYYY-MM-DD
+  const { userId, date, duration, businessId, serviceId } = req.body; // date: YYYY-MM-DD
   if (!userId || !date || !duration) return res.status(400).json({ error: 'Missing params' });
 
   try {
     const buffer = parseInt(req.body.buffer) || 0;
     const step   = parseInt(req.body.step)   || 30;
-    const result = await getAvailableSlots(userId, date, duration, businessId, buffer, step);
+    const result = await getAvailableSlots(userId, date, duration, businessId, buffer, step, serviceId);
     if (result.reason) {
       return res.json({ slots: [], reason: result.reason });
     }
@@ -592,7 +637,7 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
 });
 
 app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
-  const { userId, serviceId, date, time, customerName, customerEmail, customerPhone, businessId } = req.body;
+  const { userId, serviceId, date, time, customerName, customerEmail, customerPhone, businessId, leadId } = req.body;
   
   try {
     // Reject past dates and enforce minimum 30-min lead time
@@ -615,7 +660,8 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       service.duration_minutes,
       businessId,
       parseInt(req.body.buffer) || 0,
-      parseInt(req.body.step) || 30
+      parseInt(req.body.step) || 30,
+      serviceId
     );
     if (slotValidation.reason === 'business_closed_day') {
       return res.status(400).json({ error: 'An diesem Wochentag ist das Geschäft geschlossen.' });
@@ -631,9 +677,6 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     const start_time = berlinLocalToUTC(date, time);
     const end_time = new Date(start_time.getTime() + service.duration_minutes * 60000);
 
-    // Save Booking FIRST — exclusion constraint (no_overlapping_bookings) atomically rejects
-    // double-bookings. Doing this before any external side-effects (Google Meet) avoids
-    // orphaned calendar events when two clients race for the same slot.
     const owner_id = (req.body.ownerId != null) ? req.body.ownerId : userId; // solopreneur fallback
 
     // businessId verilmiş ve gerçekten bu owner'a aitse onu kullan, aksi halde trigger fallback
@@ -648,6 +691,69 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       if (biz) resolvedBusinessId = biz.id;
     }
 
+    // Resolve actual owner_id for lead (employee -> owner)
+    let resolvedOwnerId = owner_id;
+    if (!req.body.ownerId) {
+      const { data: empProfile } = await supabase.from('profiles').select('owner_id').eq('id', userId).maybeSingle();
+      resolvedOwnerId = empProfile?.owner_id || userId;
+    }
+
+    // Check if it's a group service
+    let parentBooking = null;
+    if (service.is_group) {
+      // Find an existing confirmed group booking at the exact same start_time for the same therapist
+      const { data: existingGroup } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('service_id', serviceId)
+        .eq('start_time', start_time.toISOString())
+        .eq('is_group', true)
+        .is('group_parent_id', null)
+        .eq('status', 'confirmed')
+        .maybeSingle();
+
+      if (existingGroup) {
+        // Enforce capacity check
+        const { count } = await supabase
+          .from('bookings')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_parent_id', existingGroup.id)
+          .eq('status', 'confirmed');
+        
+        const cap = existingGroup.group_capacity || 1;
+        if ((count || 0) >= cap) {
+          return res.status(400).json({ error: 'Diese Gruppe ist bereits voll belegt.' });
+        }
+        parentBooking = existingGroup;
+      } else {
+        // Create new parent group booking
+        const parentPayload = {
+          user_id: userId,
+          owner_id: owner_id,
+          service_id: serviceId,
+          start_time: start_time.toISOString(),
+          end_time: end_time.toISOString(),
+          customer_name: `Gruppe: ${service.title}`,
+          customer_email: 'group@booking.com',
+          is_group: true,
+          group_capacity: service.group_capacity || 5,
+          status: 'confirmed'
+        };
+        if (resolvedBusinessId) parentPayload.business_id = resolvedBusinessId;
+
+        const { data: newParent, error: parentErr } = await supabase
+          .from('bookings')
+          .insert(parentPayload)
+          .select()
+          .single();
+        
+        if (parentErr) throw parentErr;
+        parentBooking = newParent;
+      }
+    }
+
+    // Insert actual participant booking (child booking if parentBooking exists)
     const insertPayload = {
       user_id: userId,
       owner_id: owner_id,
@@ -657,9 +763,13 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       customer_name: customerName,
       customer_email: customerEmail || `wa${(customerPhone || 'anon').replace(/\D/g, '')}@whatsapp.local`,
       customer_phone: customerPhone,
-      status: 'confirmed'
+      status: 'confirmed',
+      lead_id: leadId || null
     };
     if (resolvedBusinessId) insertPayload.business_id = resolvedBusinessId;
+    if (parentBooking) {
+      insertPayload.group_parent_id = parentBooking.id;
+    }
 
     const { data: booking, error: dbErr } = await supabase.from('bookings').insert(insertPayload).select().single();
 
@@ -704,13 +814,6 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       }
     }
 
-    // Resolve actual owner_id for lead (employee -> owner)
-    let resolvedOwnerId = owner_id;
-    if (!req.body.ownerId) {
-      const { data: empProfile } = await supabase.from('profiles').select('owner_id').eq('id', userId).maybeSingle();
-      resolvedOwnerId = empProfile?.owner_id || userId;
-    }
-
     // Upsert lead into leads table
     try {
       const normPhone = customerPhone ? customerPhone.replace(/\D/g, '') : null;
@@ -718,78 +821,86 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
 
       console.log('[lead upsert]', { resolvedOwnerId, email, normPhone, customerName });
 
-      if (email) {
-        const { data: existing } = await supabase
-          .from('leads')
-          .select('*')
-          .eq('owner_id', resolvedOwnerId)
-          .eq('email', email)
-          .limit(1)
-          .maybeSingle();
+      let activeLeadId = leadId;
 
-        if (existing) {
-          const updates = {};
-          if (customerName && !existing.title) updates.title = customerName;
-          if (customerPhone && !existing.phone) { updates.phone = customerPhone; updates.phone_normalized = normPhone; }
-          if (existing.status !== 'booked') updates.status = 'booked';
-          if (Object.keys(updates).length > 0) {
-            updates.updated_at = new Date().toISOString();
-            await supabase.from('leads').update(updates).eq('id', existing.id);
-            console.log('[lead upsert] updated existing by email:', existing.id);
-          } else {
-            console.log('[lead upsert] existing lead found, no changes needed:', existing.id);
-          }
-        } else {
-          const nameParts = customerName ? customerName.split(/\s+/) : [];
-          const { data: newLead, error: leadInsertErr } = await supabase.from('leads').insert({
-            owner_id: resolvedOwnerId,
-            title: customerName || null,
-            email: email,
-            phone: customerPhone || null,
-            phone_normalized: normPhone,
-            first_name: nameParts[0] || null,
-            last_name: nameParts.slice(1).join(' ') || null,
-            status: 'booked'
-          }).select().single();
-          if (leadInsertErr) throw leadInsertErr;
-          console.log('[lead upsert] inserted new lead:', newLead?.id);
-        }
-      } else if (normPhone) {
-        const { data: existing } = await supabase
-          .from('leads')
-          .select('*')
-          .eq('owner_id', resolvedOwnerId)
-          .eq('phone_normalized', normPhone)
-          .limit(1)
-          .maybeSingle();
+      if (!activeLeadId) {
+        if (email) {
+          const { data: existing } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('owner_id', resolvedOwnerId)
+            .eq('email', email)
+            .limit(1)
+            .maybeSingle();
 
-        if (existing) {
-          const updates = {};
-          if (customerName && !existing.title) updates.title = customerName;
-          if (existing.status !== 'booked') updates.status = 'booked';
-          if (Object.keys(updates).length > 0) {
-            updates.updated_at = new Date().toISOString();
-            await supabase.from('leads').update(updates).eq('id', existing.id);
-            console.log('[lead upsert] updated existing by phone:', existing.id);
+          if (existing) {
+            activeLeadId = existing.id;
+            const updates = {};
+            if (customerName && !existing.title) updates.title = customerName;
+            if (customerPhone && !existing.phone) { updates.phone = customerPhone; updates.phone_normalized = normPhone; }
+            if (existing.status !== 'booked') updates.status = 'booked';
+            if (Object.keys(updates).length > 0) {
+              updates.updated_at = new Date().toISOString();
+              await supabase.from('leads').update(updates).eq('id', existing.id);
+              console.log('[lead upsert] updated existing by email:', existing.id);
+            }
           } else {
-            console.log('[lead upsert] existing lead found by phone, no changes:', existing.id);
+            const nameParts = customerName ? customerName.split(/\s+/) : [];
+            const { data: newLead, error: leadInsertErr } = await supabase.from('leads').insert({
+              owner_id: resolvedOwnerId,
+              title: customerName || null,
+              email: email,
+              phone: customerPhone || null,
+              phone_normalized: normPhone,
+              first_name: nameParts[0] || null,
+              last_name: nameParts.slice(1).join(' ') || null,
+              status: 'booked'
+            }).select().single();
+            if (leadInsertErr) throw leadInsertErr;
+            activeLeadId = newLead?.id;
+            console.log('[lead upsert] inserted new lead:', newLead?.id);
           }
-        } else {
-          const nameParts = customerName ? customerName.split(/\s+/) : [];
-          const { data: newLead, error: leadInsertErr } = await supabase.from('leads').insert({
-            owner_id: resolvedOwnerId,
-            title: customerName || null,
-            phone: customerPhone,
-            phone_normalized: normPhone,
-            first_name: nameParts[0] || null,
-            last_name: nameParts.slice(1).join(' ') || null,
-            status: 'booked'
-          }).select().single();
-          if (leadInsertErr) throw leadInsertErr;
-          console.log('[lead upsert] inserted new lead by phone:', newLead?.id);
+        } else if (normPhone) {
+          const { data: existing } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('owner_id', resolvedOwnerId)
+            .eq('phone_normalized', normPhone)
+            .limit(1)
+            .maybeSingle();
+
+          if (existing) {
+            activeLeadId = existing.id;
+            const updates = {};
+            if (customerName && !existing.title) updates.title = customerName;
+            if (existing.status !== 'booked') updates.status = 'booked';
+            if (Object.keys(updates).length > 0) {
+              updates.updated_at = new Date().toISOString();
+              await supabase.from('leads').update(updates).eq('id', existing.id);
+              console.log('[lead upsert] updated existing by phone:', existing.id);
+            }
+          } else {
+            const nameParts = customerName ? customerName.split(/\s+/) : [];
+            const { data: newLead, error: leadInsertErr } = await supabase.from('leads').insert({
+              owner_id: resolvedOwnerId,
+              title: customerName || null,
+              phone: customerPhone,
+              phone_normalized: normPhone,
+              first_name: nameParts[0] || null,
+              last_name: nameParts.slice(1).join(' ') || null,
+              status: 'booked'
+            }).select().single();
+            if (leadInsertErr) throw leadInsertErr;
+            activeLeadId = newLead?.id;
+            console.log('[lead upsert] inserted new lead by phone:', newLead?.id);
+          }
         }
-      } else {
-        console.log('[lead upsert] skipped — no email or phone provided');
+      }
+
+      // If a lead was created or found, and the booking doesn't have it, update it!
+      if (activeLeadId && !booking.lead_id) {
+        await supabase.from('bookings').update({ lead_id: activeLeadId }).eq('id', booking.id);
+        booking.lead_id = activeLeadId;
       }
     } catch (leadErr) {
       console.error('Lead upsert failed:', leadErr.message, leadErr);

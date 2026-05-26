@@ -2051,6 +2051,37 @@
           <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
           <select class="form-select" id="bkService"></select>
         </div>
+        <!-- Gruppentermin UI -->
+        <div class="form-group" id="bkGroupBlock" style="margin-top:12px;padding:12px;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.06);border:1px solid var(--border);border-radius:12px;display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600;">
+              <input type="checkbox" id="bkIsGroup" style="width:16px;height:16px;accent-color:var(--primary);" /> 👥 Gruppentermin
+            </label>
+            <div id="bkGroupCapacityWrap" style="display:none;align-items:center;gap:8px;">
+              <span style="font-size:12px;color:var(--text-muted);">Max. Kapazität:</span>
+              <input type="number" id="bkGroupCapacity" class="form-input" value="5" min="2" max="20" style="width:70px;padding:4px 8px;font-size:13px;text-align:center;" />
+            </div>
+          </div>
+          
+          <!-- Participants List -->
+          <div id="bkGroupParticipantsSection" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">
+            <div style="font-weight:600;font-size:12px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+              <span>Teilnehmer (<span id="bkGroupCount">0</span>/<span id="bkGroupMaxDisplay">5</span>)</span>
+            </div>
+            <ul id="bkGroupParticipantsList" style="list-style:none;padding:0;margin:0 0 10px 0;display:flex;flex-direction:column;gap:6px;">
+              <!-- Dynamically populated participants -->
+            </ul>
+            
+            <!-- Add Participant search input -->
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:11px;">Teilnehmer hinzufügen</label>
+              <div class="patient-search-wrap" id="bkGroupPatientSearchWrap">
+                <input class="form-input" id="bkGroupPatientSearch" type="text" autocomplete="off" placeholder="Nach Patient suchen…" style="padding:6px 10px;font-size:13px;" />
+                <ul class="patient-search-list" id="bkGroupPatientList" hidden style="max-height:150px;overflow-y:auto;z-index:100;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="form-group" id="bkDurationGroup" hidden>
           <label class="form-label">Dauer wählen</label>
           <div id="bkDurationOptions" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
