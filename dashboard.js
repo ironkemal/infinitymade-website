@@ -9744,22 +9744,71 @@ function parseFrequenzWoche(freq) {
   return n ? parseInt(n[1], 10) : null;
 }
 
-function matchServiceForHeilmittel(heilmittelCode) {
-  if (!heilmittelCode || !Array.isArray(ownerServices)) return null;
-  const hm = heilmittelCode.trim().toUpperCase();
-  // 1. exact code match
-  let hit = ownerServices.find(s => (s.code || '').toUpperCase() === hm);
-  if (hit) return hit;
-  // 2. title substring (e.g. "KG" inside "Krankengymnastik (KG)")
-  hit = ownerServices.find(s => (s.title || '').toUpperCase().includes(hm));
-  if (hit) return hit;
-  // 3. common long-form aliases
-  const aliases = {
-    KG: 'krankengymnastik', MT: 'manuelle therapie', MLD: 'lymphdrainage',
-    KMT: 'krankengymnastik', E: 'elektrotherapie', WT: 'wärme', KT: 'kälte'
+function matchServiceForHeilmittel(heilmittelText, positionCode) {
+  if (!Array.isArray(ownerServices)) return null;
+
+  const hm = (heilmittelText || '').trim().toUpperCase();
+  const pc = (positionCode || '').trim().toUpperCase();
+
+  // Helper to normalize position code or service code (e.g., 20507 -> X0507)
+  const normalizePositionCode = (code) => {
+    if (!code) return '';
+    let c = String(code).trim().toUpperCase();
+    if (c.length === 5 && /^\d/.test(c)) {
+      c = 'X' + c.slice(1);
+    }
+    return c;
   };
-  const long = aliases[hm];
-  if (long) return ownerServices.find(s => (s.title || '').toLowerCase().includes(long)) || null;
+
+  // 1. Match by position template or code (e.g. "X0507" or "20507") against the service code (s.code)
+  const normPC = normalizePositionCode(pc);
+  if (normPC) {
+    const hit = ownerServices.find(s => {
+      const normSC = normalizePositionCode(s.code);
+      return normSC && normSC === normPC;
+    });
+    if (hit) return hit;
+  }
+
+  if (hm) {
+    // 2. Match by exact remedy name (hm) against service code
+    let hit = ownerServices.find(s => (s.code || '').trim().toUpperCase() === hm);
+    if (hit) return hit;
+
+    // 3. Match by bidirectional title substring (title.includes(hm) || hm.includes(title))
+    hit = ownerServices.find(s => {
+      const title = (s.title || '').trim().toUpperCase();
+      if (!title) return false;
+      return title.includes(hm) || hm.includes(title);
+    });
+    if (hit) return hit;
+
+    // 4. Match by clinical aliases
+    const hmLower = hm.toLowerCase();
+    
+    // Special check for KG-GERÄT / KG-GERAET -> services containing "gerä"
+    if (hmLower.includes('kg-gerät') || hmLower.includes('kg-geraet')) {
+      const aliasHit = ownerServices.find(s => (s.title || '').toLowerCase().includes('gerä'));
+      if (aliasHit) return aliasHit;
+    }
+
+    const aliases = {
+      'kg': 'krankengymnastik',
+      'mt': 'manuelle therapie',
+      'mld': 'lymphdrainage',
+      'kmt': 'massage',
+      'bgm': 'bindegewebe',
+      'elektro': 'elektro'
+    };
+
+    for (const [key, term] of Object.entries(aliases)) {
+      if (hmLower === key || hmLower.includes(key)) {
+        const aliasHit = ownerServices.find(s => (s.title || '').toLowerCase().includes(term));
+        if (aliasHit) return aliasHit;
+      }
+    }
+  }
+
   return null;
 }
 
@@ -9794,11 +9843,49 @@ async function openBookingFromRxPreset(preset) {
     if (preset.hausbesuch) document.getElementById('bkHausbesuch').checked = true;
 
     // Service mapping
-    const srv = matchServiceForHeilmittel(preset.heilmittel);
+    const srv = matchServiceForHeilmittel(preset.heilmittel, preset.heilmittel_position);
     if (srv) {
+      // Automatically query Supabase's employee_services table for that service
+      const { data: assignments } = await supabase
+        .from('employee_services')
+        .select('employee_id')
+        .eq('service_id', srv.id);
+
+      const assignedEmpIds = (assignments || []).map(a => a.employee_id);
+      const eligibleEmps = teamMembers.filter(m => assignedEmpIds.includes(m.id));
+      const finalEmps = eligibleEmps.length > 0 ? eligibleEmps : teamMembers;
+
+      let selectedEmp = null;
+      if (finalEmps.length > 0) {
+        if (finalEmps.length === 1) {
+          selectedEmp = finalEmps[0];
+          showToast(`Therapeut "${selectedEmp.business_name || selectedEmp.email?.split('@')[0] || ''}" wurde automatisch ausgewählt.`, 'success');
+        } else {
+          const randIndex = Math.floor(Math.random() * finalEmps.length);
+          selectedEmp = finalEmps[randIndex];
+          showToast(`Therapeut "${selectedEmp.business_name || selectedEmp.email?.split('@')[0] || ''}" wurde zufällig zugewiesen.`, 'info');
+        }
+      }
+
+      // Assign employee ID to bkEmployee and dispatch 'change' event
+      const empSel = document.getElementById('bkEmployee');
+      if (empSel && selectedEmp) {
+        empSel.value = selectedEmp.id;
+        empSel.dispatchEvent(new Event('change'));
+      }
+
+      // Wait sequentially for employee selection change side effects to execute
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Re-populate service dropdown with our target service selected (ensures it is in list)
+      await populateSrvSelect(srv.id, selectedEmp ? selectedEmp.id : null);
+
+      // Assign service ID to bkService and dispatch 'change' event
       const srvSel = document.getElementById('bkService');
-      srvSel.value = srv.id;
-      srvSel.dispatchEvent(new Event('change'));
+      if (srvSel) {
+        srvSel.value = srv.id;
+        srvSel.dispatchEvent(new Event('change'));
+      }
     } else if (preset.heilmittel) {
       showToast(`Keine Dienstleistung für "${preset.heilmittel}" gefunden — bitte manuell auswählen.`, 'info');
     }
@@ -10167,6 +10254,7 @@ async function submitConfirm() {
       anzahl: parsedEdited.rezept.anzahl_einheiten,
       frequenz: parsedEdited.rezept.frequenz,
       heilmittel: parsedEdited.rezept.heilmittel,
+      heilmittel_position: parsedEdited.rezept.heilmittel_position,
       hausbesuch: parsedEdited.rezept.hausbesuch,
       is_dringend: parsedEdited.rezept.is_dringend,
       is_blanko: parsedEdited.rezept.is_blanko,
