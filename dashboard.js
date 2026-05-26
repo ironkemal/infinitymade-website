@@ -2408,9 +2408,11 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
     }
   }
 
-  // Customer-facing dropdown: exclude is_internal services (Blanko bonus etc.)
-  let visible = (data || []).filter(s => !s.is_internal);
-  if (allowedSet) visible = visible.filter(s => allowedSet.has(s.id));
+  // Customer-facing dropdown: exclude is_internal services (Blanko bonus etc.) unless it is the selected one
+  let visible = (data || []).filter(s => !s.is_internal || s.id === selectedId);
+  if (allowedSet) {
+    visible = visible.filter(s => allowedSet.has(s.id) || s.id === selectedId);
+  }
 
   el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + visible.map(s =>
     `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)}</option>`
@@ -9783,29 +9785,70 @@ function matchServiceForHeilmittel(heilmittelText, positionCode) {
     });
     if (hit) return hit;
 
-    // 4. Match by clinical aliases
+    // 4. Match by advanced synonym / clinical alias groups
     const hmLower = hm.toLowerCase();
-    
-    // Special check for KG-GERÄT / KG-GERAET -> services containing "gerä"
-    if (hmLower.includes('kg-gerät') || hmLower.includes('kg-geraet')) {
-      const aliasHit = ownerServices.find(s => (s.title || '').toLowerCase().includes('gerä'));
+
+    // 4.1. KG am Gerät / Kräftigungstraining
+    if (hmLower.includes('gerä') || hmLower.includes('geraet') || hmLower.includes('kgg') || hmLower.includes('kraft') || hmLower.includes('kräft')) {
+      const aliasHit = ownerServices.find(s => {
+        const t = (s.title || '').toLowerCase();
+        return t.includes('gerä') || t.includes('geraet') || t.includes('kraft') || t.includes('kräft') || t.includes('training');
+      });
       if (aliasHit) return aliasHit;
     }
 
-    const aliases = {
-      'kg': 'krankengymnastik',
-      'mt': 'manuelle therapie',
-      'mld': 'lymphdrainage',
-      'kmt': 'massage',
-      'bgm': 'bindegewebe',
-      'elektro': 'elektro'
-    };
+    // 4.2. Manuelle Therapie
+    if (hmLower.includes('manuelle') || hmLower.includes('mt')) {
+      const aliasHit = ownerServices.find(s => {
+        const t = (s.title || '').toLowerCase();
+        return t.includes('manuelle') || t.includes('mt');
+      });
+      if (aliasHit) return aliasHit;
+    }
 
-    for (const [key, term] of Object.entries(aliases)) {
-      if (hmLower === key || hmLower.includes(key)) {
-        const aliasHit = ownerServices.find(s => (s.title || '').toLowerCase().includes(term));
-        if (aliasHit) return aliasHit;
-      }
+    // 4.3. Lymphdrainage
+    if (hmLower.includes('lymph') || hmLower.includes('mld')) {
+      const aliasHit = ownerServices.find(s => {
+        const t = (s.title || '').toLowerCase();
+        return t.includes('lymph') || t.includes('mld');
+      });
+      if (aliasHit) return aliasHit;
+    }
+
+    // 4.4. Massage / KMT / Bindegewebe
+    if (hmLower.includes('massage') || hmLower.includes('kmt') || hmLower.includes('klassische massage') || hmLower.includes('bindegewebe') || hmLower.includes('bgm')) {
+      const aliasHit = ownerServices.find(s => {
+        const t = (s.title || '').toLowerCase();
+        return t.includes('massage') || t.includes('kmt') || t.includes('bindegewebe');
+      });
+      if (aliasHit) return aliasHit;
+    }
+
+    // 4.5. Elektrotherapie
+    if (hmLower.includes('elektro')) {
+      const aliasHit = ownerServices.find(s => {
+        const t = (s.title || '').toLowerCase();
+        return t.includes('elektro');
+      });
+      if (aliasHit) return aliasHit;
+    }
+
+    // 4.6. Ultraschall
+    if (hmLower.includes('ultraschall') || hmLower.includes('us')) {
+      const aliasHit = ownerServices.find(s => {
+        const t = (s.title || '').toLowerCase();
+        return t.includes('ultraschall') || t.includes('us');
+      });
+      if (aliasHit) return aliasHit;
+    }
+
+    // 4.7. General Krankengymnastik / Physiotherapie (KG / PT)
+    if (hmLower.includes('krankengymnastik') || hmLower.includes('kg') || hmLower.includes('physio') || hmLower.includes('pt')) {
+      const aliasHit = ownerServices.find(s => {
+        const t = (s.title || '').toLowerCase();
+        return t.includes('krankengymnastik') || t.includes('physio') || t.includes('pt') || t.includes('kg');
+      });
+      if (aliasHit) return aliasHit;
     }
   }
 
@@ -9867,17 +9910,13 @@ async function openBookingFromRxPreset(preset) {
         }
       }
 
-      // Assign employee ID to bkEmployee and dispatch 'change' event
+      // Assign employee ID to bkEmployee (set value directly to prevent race condition)
       const empSel = document.getElementById('bkEmployee');
       if (empSel && selectedEmp) {
         empSel.value = selectedEmp.id;
-        empSel.dispatchEvent(new Event('change'));
       }
 
-      // Wait sequentially for employee selection change side effects to execute
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // Re-populate service dropdown with our target service selected (ensures it is in list)
+      // Re-populate service dropdown with our target service selected (ensures it is in list and not filtered out)
       await populateSrvSelect(srv.id, selectedEmp ? selectedEmp.id : null);
 
       // Assign service ID to bkService and dispatch 'change' event
