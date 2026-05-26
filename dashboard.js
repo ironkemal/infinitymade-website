@@ -13181,7 +13181,7 @@ async function loadWarteliste() {
       id, preferred_days, preferred_time_from, preferred_time_to,
       priority, status, created_at, notes,
       leads:lead_id(id, title, first_name, last_name),
-      services:service_id(id, name)
+      services:service_id(id, title)
     `)
     .eq('owner_id', ownerId)
     .eq('status', 'waiting')
@@ -13206,7 +13206,7 @@ async function loadWarteliste() {
 
   tbody.innerHTML = rows.map(e => {
     const patName = e.leads ? `${e.leads.first_name || ''} ${e.leads.last_name || ''}`.trim() || e.leads.title : '—';
-    const srvName = e.services?.name || '—';
+    const srvName = e.services?.title || '—';
     const days = Array.isArray(e.preferred_days) ? e.preferred_days.join(', ') || 'Egal' : 'Egal';
     const time = (e.preferred_time_from && e.preferred_time_to)
       ? `${e.preferred_time_from.slice(0,5)} – ${e.preferred_time_to.slice(0,5)}`
@@ -13239,7 +13239,7 @@ window.openWlEntry = async function(id) {
 
   const ownerId = getOwnerId();
   const { data: e } = await supabase.from('warteliste')
-    .select('*, leads:lead_id(id,title,first_name,last_name), services:service_id(id,name)')
+    .select('*, leads:lead_id(id,title,first_name,last_name), services:service_id(id,title)')
     .eq('id', id).eq('owner_id', ownerId).single();
   if (!e) return;
 
@@ -13281,10 +13281,10 @@ async function populateWlServices() {
   const sel = document.getElementById('wlService');
   if (!sel || sel.options.length > 1) return;
   const ownerId = getOwnerId();
-  const { data: srvs } = await supabase.from('services').select('id,name').eq('owner_id', ownerId).order('name');
+  const { data: srvs } = await supabase.from('services').select('id,title').eq('owner_id', ownerId).order('title');
   (srvs || []).forEach(s => {
     const opt = document.createElement('option');
-    opt.value = s.id; opt.textContent = s.name;
+    opt.value = s.id; opt.textContent = s.title;
     sel.appendChild(opt);
   });
 }
