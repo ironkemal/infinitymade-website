@@ -3474,7 +3474,7 @@ function displayName(lead) {
 }
 function leadBirthDate(lead) {
   const md = lead.metadata || {};
-  return md.geburtsdatum || null;
+  return lead.geburtsdatum || md.geburtsdatum || null;
 }
 function displayNameWithBirth(lead) {
   const name = displayName(lead);
@@ -9740,6 +9740,10 @@ async function init() {
 function parseFrequenzWoche(freq) {
   // "2x pro Woche" / "2 x / Woche" / "2x wöchentlich" → 2
   if (!freq) return null;
+  const rangeMatch = freq.match(/(\d+)\s*[-–]\s*(\d+)\s*x?/i);
+  if (rangeMatch && rangeMatch[2]) {
+    return parseInt(rangeMatch[2], 10);
+  }
   const m = freq.match(/(\d+)\s*x?\s*(?:pro|\/)?\s*Woche|w[öo]ch/i);
   if (m && m[1]) return parseInt(m[1], 10);
   const n = freq.match(/^\s*(\d+)/);
