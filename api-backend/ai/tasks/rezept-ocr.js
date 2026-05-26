@@ -19,6 +19,7 @@ WICHTIG:
 - "is_lhb_bvb" = true wenn die Felder "Langfristiger Heilmittelbedarf" oder "Besonderer Verordnungsbedarf" angekreuzt sind.
 - "is_dringend" = true wenn "dringlicher Behandlungsbedarf innerhalb 14 Tagen" angekreuzt ist.
 - "hausbesuch" = true wenn "Hausbesuch ja" angekreuzt ist.
+- "bericht_angefordert" = true wenn "Therapiebericht" (meistens als Checkbox/Feld "[X] Therapiebericht" oder ähnlich) angekreuzt ist, sonst false.
 - ICD-10 Code muss dem Schema [A-Z][0-9]{2}(\\.[0-9]{1,2})? entsprechen (z. B. "M54.5", "M75.10").
 - Diagnosegruppe: zwei Buchstaben oder Buchstabe+Ziffer (z. B. "WS2", "EX", "ZN1", "SO4").
 - "heilmittel_feld_text" = exakt der Originaltext aus dem Heilmittel-Feld (mehrzeilig OK).
@@ -53,7 +54,8 @@ Schema:
     "is_dringend": boolean,
     "hausbesuch": boolean,
     "is_blanko": boolean,
-    "is_lhb_bvb": boolean
+    "is_lhb_bvb": boolean,
+    "bericht_angefordert": boolean
   },
   "ocr_confidence": number
 }`;
@@ -87,7 +89,8 @@ function mockResponse() {
       is_dringend: false,
       hausbesuch: false,
       is_blanko: false,
-      is_lhb_bvb: false
+      is_lhb_bvb: false,
+      bericht_angefordert: false
     },
     ocr_confidence: 0.92
   });
