@@ -2632,6 +2632,35 @@ async function initBkCustomerAutocomplete() {
         list.hidden = true;
       }
     });
+
+    const schnellBtn = document.getElementById('bkAddCustomerSchnell');
+    const normalBtn = document.getElementById('bkAddCustomerNormal');
+
+    if (schnellBtn && !schnellBtn.dataset.bound) {
+      schnellBtn.dataset.bound = '1';
+      schnellBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openNewLeadFlow();
+      });
+    }
+
+    if (normalBtn && !normalBtn.dataset.bound) {
+      normalBtn.dataset.bound = '1';
+      normalBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window._bkModalState = {
+          id: document.getElementById('bk-id')?.value || null,
+          start: document.getElementById('bkStart')?.value,
+          employee: document.getElementById('bkEmployee')?.value,
+          service: document.getElementById('bkService')?.value,
+          notes: document.getElementById('bkNotes')?.value,
+          hausbesuch: document.getElementById('bkHausbesuch')?.checked || false
+        };
+        window._returnToBkModal = true;
+        closeModal('bookingModal');
+        openLeadModal(null);
+      });
+    }
   }
 
   function selectLead(id) {
