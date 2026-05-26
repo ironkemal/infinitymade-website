@@ -1568,6 +1568,7 @@ app.post('/api/rezept/upload', requireAuthAI, async (req, res) => {
       hausbesuch: !!parsed.rezept?.hausbesuch,
       is_blanko: !!parsed.rezept?.is_blanko,
       is_lhb_bvb: !!parsed.rezept?.is_lhb_bvb,
+      bericht_angefordert: !!parsed.rezept?.bericht_angefordert,
       patient_geburtsdatum: parsed.patient?.geburtsdatum
     };
 
