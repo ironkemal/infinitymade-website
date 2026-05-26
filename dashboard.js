@@ -926,7 +926,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,services(title,color,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1021,7 +1021,9 @@ async function loadScheduleBookings(date) {
     }
 
     const empBookings = displayBookings.filter(b => b.user_id === emp.id);
-    empBookings.forEach(b => {
+    const parentBookings = empBookings.filter(b => !b.group_parent_id);
+    parentBookings.forEach(b => {
+      const childBookings = empBookings.filter(cb => cb.group_parent_id === b.id);
       const s = new Date(b.start_time);
       const e = new Date(b.end_time);
       const sMin = s.getHours() * 60 + s.getMinutes();
@@ -1054,7 +1056,7 @@ async function loadScheduleBookings(date) {
       const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
       block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
 
-      block.innerHTML = renderBookingSlotInner(b);
+      block.innerHTML = renderBookingSlotInner(b, childBookings);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingActionModal(b);
@@ -1075,7 +1077,63 @@ async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
 //   line 1 — "Nachname, Vorname"
 //   line 2 — Heilmittel · DG     (n/total)
 //   icons  — Hausbesuch, Dringend, Blanko, Notiz
-function renderBookingSlotInner(b) {
+function renderBookingSlotInner(b, childBookings = []) {
+  // Right-aligned icon strip (clickable parent already wired)
+  const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
+  const rx   = sess?.prescriptions || null;
+  const icons = [
+    b.hausbesuch    ? `<span title="Hausbesuch" style="width:13px;height:13px;display:inline-flex;">${ICON.car}</span>` : '',
+    rx?.is_dringend ? `<span title="Dringend" style="color:#fbbf24;width:13px;height:13px;display:inline-flex;">${ICON.warning}</span>` : '',
+    rx?.is_blanko   ? '<span title="Blankoverordnung" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">BL</span>' : '',
+    rx?.is_lhb_bvb  ? '<span title="LHB/BVB" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">LHB</span>' : '',
+    b.notes         ? `<span title="Notiz" style="opacity:0.85;width:13px;height:13px;display:inline-flex;">${ICON.info}</span>` : '',
+  ].filter(Boolean).join(' ');
+
+  if (b.is_group) {
+    const count = childBookings.length;
+    const capacity = b.group_capacity || 5;
+    
+    // Glassmorphic styling based on fill status
+    let badgeColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.12)';
+    let textColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 1)';
+    let borderColor = 'hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.22)';
+    
+    if (count >= capacity) {
+      badgeColor = 'rgba(34, 197, 94, 0.1)';
+      textColor = 'rgb(34, 197,  green-color)';
+      textColor = '#22c55e';
+      borderColor = 'rgba(34, 197, 94, 0.25)';
+    } else if (count === 0) {
+      badgeColor = 'rgba(156, 163, 175, 0.1)';
+      textColor = 'var(--text-muted)';
+      borderColor = 'rgba(156, 163, 175, 0.2)';
+    }
+    
+    const badge = `
+      <span class="group-capacity-badge" style="background: ${badgeColor}; color: ${textColor}; border: 1px solid ${borderColor}; border-radius: 6px; padding: 1px 5px; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; backdrop-filter: blur(4px);">
+        👥 ${count}/${capacity}
+      </span>
+    `;
+    
+    const partNames = childBookings.map(cb => {
+      const name = cb.customer_name || 'Teilnehmer';
+      return name.split(',')[0].trim();
+    }).join(', ');
+    
+    const subtitle = partNames ? escapeHtml(partNames) : '<span style="opacity: 0.6; font-style: italic;">Freier Gruppenslot</span>';
+    
+    return `
+      <div class="dv-booking-name" style="font-weight:700;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+        <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.services?.title || 'Gruppe')}</span>
+        ${badge}
+      </div>
+      <div class="dv-booking-subtitle" style="font-size:11px;line-height:1.2;opacity:0.9;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+        ${subtitle}
+      </div>
+      ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
+    `;
+  }
+
   // "Vorname Nachname" → "Nachname, Vorname" (best-effort). Single token or
   // already comma-formatted strings pass through.
   const raw = (b.customer_name || (b.services?.title) || 'Termin').trim();
@@ -1091,8 +1149,6 @@ function renderBookingSlotInner(b) {
     }
   }
 
-  const sess = (b.prescription_sessions && b.prescription_sessions[0]) || null;
-  const rx   = sess?.prescriptions || null;
   const heilmittel = rx?.heilmittel || b.services?.code || '';
   const dg = rx?.diagnosegruppe || '';
   const counter = (sess?.session_number && rx?.anzahl_einheiten)
@@ -1104,15 +1160,6 @@ function renderBookingSlotInner(b) {
     heilmittel ? escapeHtml(heilmittel) : '',
     dg ? `<span style="opacity:0.75;">${escapeHtml(dg)}</span>` : '',
   ].filter(Boolean).join(' · ');
-
-  // Right-aligned icon strip (clickable parent already wired)
-  const icons = [
-    b.hausbesuch    ? `<span title="Hausbesuch" style="width:13px;height:13px;display:inline-flex;">${ICON.car}</span>` : '',
-    rx?.is_dringend ? `<span title="Dringend" style="color:#fbbf24;width:13px;height:13px;display:inline-flex;">${ICON.warning}</span>` : '',
-    rx?.is_blanko   ? '<span title="Blankoverordnung" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">BL</span>' : '',
-    rx?.is_lhb_bvb  ? '<span title="LHB/BVB" style="font-size:9px;border:1px solid currentColor;padding:0 3px;border-radius:3px;">LHB</span>' : '',
-    b.notes         ? `<span title="Notiz" style="opacity:0.85;width:13px;height:13px;display:inline-flex;">${ICON.info}</span>` : '',
-  ].filter(Boolean).join(' ');
 
   return `
     <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
@@ -1436,7 +1483,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,services(title,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1482,7 +1529,9 @@ async function renderDayView(dateStr) {
     }
 
     const empBookings = (bookings || []).filter(b => b.user_id === emp.id);
-    empBookings.forEach(b => {
+    const parentBookings = empBookings.filter(b => !b.group_parent_id);
+    parentBookings.forEach(b => {
+      const childBookings = empBookings.filter(cb => cb.group_parent_id === b.id);
       const s = new Date(b.start_time);
       const e = new Date(b.end_time);
       const sMin = s.getHours() * 60 + s.getMinutes();
@@ -1516,7 +1565,7 @@ async function renderDayView(dateStr) {
       const subtitle = [heilmittel, dg].filter(Boolean).join(' · ');
       block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
 
-      block.innerHTML = renderBookingSlotInner(b);
+      block.innerHTML = renderBookingSlotInner(b, childBookings);
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingModal(b);
@@ -1568,11 +1617,20 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   document.getElementById('bkDocAssignHint').hidden = true;
+  
+  // Group Appointments Reset
+  const isGrpCheckbox = document.getElementById('bkIsGroup');
+  if (isGrpCheckbox) isGrpCheckbox.checked = false;
+  window.bkSelectedGroupPatients = [];
+  window.bkCurrentGroupParticipants = [];
+  refreshBkGroupPanel();
+  
   if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
   populateEmpSelects();
   await populateSrvSelect();
   openModal('bookingModal');
   await initBkCustomerAutocomplete();
+  await initBkGroupPatientAutocomplete().catch(() => {});
 }
 
 function computeSeriesPreview() {
@@ -2093,19 +2151,300 @@ async function triggerNoShowBot(booking) {
   console.log('[NoShowBot] Triggered for booking:', booking.id, booking.customer_name);
 }
 
-function handlePatientNichtErschienen() {
-  if (!bkActionBookingCache) return;
-  const btn = document.getElementById('bkActionNoShowBtn');
-  if (btn && btn.disabled) return;
+// ============================================================
+// Group Appointments: Helpers and UI Managers
+// ============================================================
 
-  closeModal('bkActionModal');
-  if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+window.bkSelectedGroupPatients = [];
+window.bkCurrentGroupParticipants = [];
 
-  // Mark linked prescription_session no_show (physio); non-blocking
-  markPrescriptionSession(bkActionBookingCache.id, 'no_show');
+function refreshBkGroupPanel(selectedServiceId = null) {
+  const bkId = document.getElementById('bk-id').value;
+  const srvId = selectedServiceId || document.getElementById('bkService').value;
+  const service = (window.ownerServices || []).find(s => s.id === srvId);
+  const isGroupService = service ? service.is_group : false;
+  
+  const block = document.getElementById('bkGroupBlock');
+  const isGroupCheckbox = document.getElementById('bkIsGroup');
+  const capWrap = document.getElementById('bkGroupCapacityWrap');
+  const participantsSection = document.getElementById('bkGroupParticipantsSection');
+  const customerGroup = document.getElementById('bkCustomerGroup');
+  const phoneGroup = document.getElementById('bkPhoneGroup');
+  
+  if (!block) return;
+  
+  // Show group block container if this is a group service OR if it's already checked OR if we are currently editing an existing booking that is a group
+  const shouldShow = isGroupService || isGroupCheckbox.checked || bkId;
+  
+  if (shouldShow) {
+    block.style.display = 'block';
+  } else {
+    block.style.display = 'none';
+    isGroupCheckbox.checked = false;
+    capWrap.style.display = 'none';
+    participantsSection.style.display = 'none';
+    customerGroup.style.display = 'block';
+    if (phoneGroup) phoneGroup.style.display = 'block';
+    
+    // Restore series fields
+    const seriesGroup = document.getElementById('bkSeriesToggle')?.closest('.form-group');
+    if (seriesGroup) seriesGroup.style.display = 'block';
+    return;
+  }
+  
+  // If it's a group service, default the checkbox to checked (unless editing an existing einzel appointment)
+  if (isGroupService && !bkId) {
+    isGroupCheckbox.checked = true;
+  }
+  
+  // Toggle series fields display - hide if group booking
+  const seriesGroup = document.getElementById('bkSeriesToggle')?.closest('.form-group');
+  if (seriesGroup) {
+    seriesGroup.style.display = isGroupCheckbox.checked ? 'none' : 'block';
+  }
+  
+  if (isGroupCheckbox.checked) {
+    capWrap.style.display = 'flex';
+    participantsSection.style.display = 'block';
+    // Hide single customer search since this is a group!
+    customerGroup.style.display = 'none';
+    if (phoneGroup) phoneGroup.style.display = 'none';
+    
+    // Set default group capacity from service
+    if (service && service.group_capacity && !bkId) {
+      document.getElementById('bkGroupCapacity').value = service.group_capacity;
+    }
+  } else {
+    capWrap.style.display = 'none';
+    participantsSection.style.display = 'none';
+    customerGroup.style.display = 'block';
+    if (phoneGroup) phoneGroup.style.display = 'block';
+  }
+}
 
-  triggerNoShowBot(bkActionBookingCache);
-  showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
+async function loadGroupParticipants(parentId, maxCapacity) {
+  const listEl = document.getElementById('bkGroupParticipantsList');
+  const countEl = document.getElementById('bkGroupCount');
+  const maxEl = document.getElementById('bkGroupMaxDisplay');
+  
+  if (!listEl) return;
+  listEl.innerHTML = '<li style="font-size:13px;color:var(--text-muted);padding:8px 0;text-align:center;">Lade Teilnehmer…</li>';
+  
+  const { data: children, error } = await supabase
+    .from('bookings')
+    .select('id,customer_name,customer_phone,lead_id')
+    .eq('group_parent_id', parentId)
+    .eq('status', 'confirmed');
+    
+  if (error) {
+    console.error('Error fetching group participants:', error);
+    listEl.innerHTML = '<li style="font-size:13px;color:#ef4444;padding:8px 0;">Fehler beim Laden.</li>';
+    return;
+  }
+  
+  window.bkCurrentGroupParticipants = children || [];
+  
+  const count = children ? children.length : 0;
+  countEl.textContent = count;
+  maxEl.textContent = maxCapacity;
+  
+  if (count === 0) {
+    listEl.innerHTML = '<li style="font-size:13px;color:var(--text-muted);padding:8px 0;text-align:center;font-style:italic;">Keine Teilnehmer gebucht</li>';
+    return;
+  }
+  
+  listEl.innerHTML = children.map(child => {
+    return `
+      <li style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;">
+        <span style="font-weight:500;">👥 ${escapeHtml(child.customer_name)}</span>
+        <button type="button" class="btn-ghost remove-group-part-btn" data-id="${child.id}" style="padding:2px 6px;font-size:11px;color:#ef4444;border-color:#fca5a5;">Entfernen</button>
+      </li>
+    `;
+  }).join('');
+  
+  // Wire up remove button click handlers
+  listEl.querySelectorAll('.remove-group-part-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const childId = e.target.dataset.id;
+      const child = window.bkCurrentGroupParticipants.find(c => c.id === childId);
+      if (!child) return;
+      
+      if (confirm(`Möchten Sie ${child.customer_name} wirklich aus dieser Gruppe entfernen?`)) {
+        e.target.disabled = true;
+        e.target.textContent = '…';
+        const { error: delErr } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', childId);
+        if (delErr) {
+          showToast('Fehler: ' + delErr.message, 'error');
+          e.target.disabled = false;
+          e.target.textContent = 'Entfernen';
+        } else {
+          showToast('Teilnehmer entfernt.');
+          await loadGroupParticipants(parentId, maxCapacity);
+          if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
+          if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+        }
+      }
+    });
+  });
+}
+
+function renderLocalGroupParticipants() {
+  const listEl = document.getElementById('bkGroupParticipantsList');
+  const countEl = document.getElementById('bkGroupCount');
+  const maxEl = document.getElementById('bkGroupMaxDisplay');
+  const maxCapacity = parseInt(document.getElementById('bkGroupCapacity').value) || 5;
+  
+  if (!listEl) return;
+  
+  const patients = window.bkSelectedGroupPatients || [];
+  countEl.textContent = patients.length;
+  maxEl.textContent = maxCapacity;
+  
+  if (patients.length === 0) {
+    listEl.innerHTML = '<li style="font-size:13px;color:var(--text-muted);padding:8px 0;text-align:center;font-style:italic;">Keine Teilnehmer ausgewählt</li>';
+    return;
+  }
+  
+  listEl.innerHTML = patients.map((p, idx) => {
+    return `
+      <li style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;">
+        <span style="font-weight:500;">👥 ${escapeHtml(p.name)}</span>
+        <button type="button" class="btn-ghost remove-local-part-btn" data-index="${idx}" style="padding:2px 6px;font-size:11px;color:#ef4444;border-color:#fca5a5;">Entfernen</button>
+      </li>
+    `;
+  }).join('');
+  
+  // Wire up remove local participant
+  listEl.querySelectorAll('.remove-local-part-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      window.bkSelectedGroupPatients.splice(idx, 1);
+      renderLocalGroupParticipants();
+    });
+  });
+}
+
+async function initBkGroupPatientAutocomplete() {
+  const input = document.getElementById('bkGroupPatientSearch');
+  const list = document.getElementById('bkGroupPatientList');
+  if (!input || !list) return;
+  
+  list.innerHTML = '';
+  list.hidden = true;
+  
+  // Reuse bkAllLeads if loaded, otherwise load them
+  if (!Array.isArray(window.bkAllLeads) || window.bkAllLeads.length === 0) {
+    const ownerId = getOwnerId();
+    const { data } = await supabase
+      .from('leads')
+      .select('id,title,first_name,last_name,phone,metadata,street,plz,city')
+      .eq('owner_id', ownerId)
+      .order('title');
+    window.bkAllLeads = data || [];
+  }
+  
+  input.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) {
+      list.hidden = true;
+      return;
+    }
+    
+    const filtered = (window.bkAllLeads || []).filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
+    
+    let html = '';
+    if (filtered.length === 0) {
+      html = '<li class="empty-item" style="font-size:12px;color:var(--text-muted);padding:6px 12px;">Keine Treffer</li>';
+    } else {
+      html = filtered.map(l => {
+        const name = displayNameWithBirth(l);
+        return `<li data-id="${l.id}" data-title="${escapeHtml(name)}" data-phone="${escapeHtml(l.phone || '')}" style="font-size:13px;padding:6px 12px;cursor:pointer;">👥 ${escapeHtml(name)}</li>`;
+      }).join('');
+    }
+    
+    list.innerHTML = html;
+    list.hidden = false;
+    
+    // Wire up list item click
+    list.querySelectorAll('li').forEach(li => {
+      li.addEventListener('click', async () => {
+        const leadId = li.dataset.id;
+        const leadName = li.dataset.title;
+        const leadPhone = li.dataset.phone;
+        
+        input.value = '';
+        list.hidden = true;
+        
+        const bkId = document.getElementById('bk-id').value;
+        const maxCapacity = parseInt(document.getElementById('bkGroupCapacity').value) || 5;
+        
+        if (bkId) {
+          // Editing existing booking -> immediately insert into database!
+          const { data: parent } = await supabase.from('bookings').select('*').eq('id', bkId).single();
+          if (!parent) return;
+          
+          // Check capacity limit
+          const currentCount = window.bkCurrentGroupParticipants ? window.bkCurrentGroupParticipants.length : 0;
+          if (currentCount >= (parent.group_capacity || 5)) {
+            showToast('Diese Gruppe ist bereits voll belegt.', 'error');
+            return;
+          }
+          
+          // Check if already in group
+          if (window.bkCurrentGroupParticipants.some(c => c.lead_id === leadId)) {
+            showToast('Patient ist bereits in dieser Gruppe.', 'error');
+            return;
+          }
+          
+          const childPayload = {
+            owner_id: parent.owner_id,
+            user_id: parent.user_id,
+            service_id: parent.service_id,
+            start_time: parent.start_time,
+            end_time: parent.end_time,
+            customer_name: leadName,
+            customer_phone: leadPhone || null,
+            group_parent_id: parent.id,
+            status: 'confirmed',
+            lead_id: leadId
+          };
+          
+          const { error: insErr } = await supabase.from('bookings').insert(childPayload);
+          if (insErr) {
+            showToast('Fehler beim Hinzufügen: ' + insErr.message, 'error');
+          } else {
+            showToast('Patient hinzugefügt.');
+            await loadGroupParticipants(parent.id, parent.group_capacity);
+            if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
+            if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+          }
+        } else {
+          // Creating a new booking -> add to local array!
+          if (!window.bkSelectedGroupPatients) window.bkSelectedGroupPatients = [];
+          
+          if (window.bkSelectedGroupPatients.length >= maxCapacity) {
+            showToast(`Maximale Kapazität von ${maxCapacity} Personen erreicht.`, 'error');
+            return;
+          }
+          
+          if (window.bkSelectedGroupPatients.some(p => p.id === leadId)) {
+            showToast('Patient bereits ausgewählt.', 'error');
+            return;
+          }
+          
+          window.bkSelectedGroupPatients.push({ id: leadId, name: leadName, phone: leadPhone });
+          renderLocalGroupParticipants();
+        }
+      });
+    });
+  });
+  
+  // Hide dropdown on blur
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !list.contains(e.target)) {
+      list.hidden = true;
+    }
+  });
 }
 
 async function openBookingModal(b) {
@@ -2148,6 +2487,22 @@ async function openBookingModal(b) {
   }
   populateEmpSelects(b.user_id);
   await populateSrvSelect(b.service_id);
+  
+  // Group Booking UI Populate
+  const isGrpCheckbox = document.getElementById('bkIsGroup');
+  if (isGrpCheckbox) isGrpCheckbox.checked = b.is_group || false;
+  if (b.is_group) {
+    document.getElementById('bkGroupCapacity').value = b.group_capacity || 5;
+    window.bkSelectedGroupPatients = [];
+    refreshBkGroupPanel(b.service_id);
+    await loadGroupParticipants(b.id, b.group_capacity || 5);
+  } else {
+    window.bkSelectedGroupPatients = [];
+    window.bkCurrentGroupParticipants = [];
+    refreshBkGroupPanel(b.service_id);
+  }
+  await initBkGroupPatientAutocomplete().catch(() => {});
+  
   if (b.service_id && b.start_time && b.end_time) {
     const actualDur = Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000);
     updateBkDuration(b.service_id, actualDur);
@@ -2483,6 +2838,7 @@ async function updateBkDuration(srvId, defaultValue = null) {
 
 document.getElementById('bkService').addEventListener('change', (e) => {
   updateBkDuration(e.target.value);
+  refreshBkGroupPanel(e.target.value);
   // Add listeners for new radio buttons after duration group is populated
   setTimeout(() => {
     const durGroup = document.getElementById('bkDurationGroup');
@@ -2494,6 +2850,16 @@ document.getElementById('bkService').addEventListener('change', (e) => {
       });
     }
   }, 10);
+});
+
+document.getElementById('bkIsGroup')?.addEventListener('change', () => {
+  refreshBkGroupPanel();
+});
+
+document.getElementById('bkGroupCapacity')?.addEventListener('change', () => {
+  if (!document.getElementById('bk-id').value) {
+    renderLocalGroupParticipants();
+  }
 });
 
 document.getElementById('bkPhone').addEventListener('blur', async () => {
@@ -2767,7 +3133,10 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       }
     }
   }
-  if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
+  const isGroup = document.getElementById('bkIsGroup')?.checked || false;
+  if (!isGroup) {
+    if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
+  }
 
   const startDate = new Date(startV);
   const now = new Date();
@@ -2841,6 +3210,111 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     } else {
       showToast(`${created.length} Termine erstellt.`);
     }
+    return;
+  }
+
+  if (isGroup) {
+    const groupCapacity = parseInt(document.getElementById('bkGroupCapacity').value) || 5;
+    if (id) {
+      // Update existing group booking
+      const parentPayload = {
+        user_id: empId,
+        service_id: srvId,
+        start_time: startIso,
+        end_time: endIso,
+        notes: notes || null,
+        hausbesuch: document.getElementById('bkHausbesuch').checked || false,
+        group_capacity: groupCapacity
+      };
+      
+      const { error: upErr } = await supabase
+        .from('bookings')
+        .update(parentPayload)
+        .eq('id', id);
+        
+      if (upErr) {
+        console.error('[group parent update]', upErr);
+        showToast(upErr.message || t('err_generic'), 'error');
+        return;
+      }
+      
+      // Keep children perfectly in sync
+      const { error: syncErr } = await supabase
+        .from('bookings')
+        .update({
+          user_id: empId,
+          service_id: srvId,
+          start_time: startIso,
+          end_time: endIso,
+          hausbesuch: parentPayload.hausbesuch
+        })
+        .eq('group_parent_id', id);
+        
+      if (syncErr) {
+        console.error('[group children sync]', syncErr);
+      }
+      
+      showToast('Gruppentermin erfolgreich aktualisiert.');
+    } else {
+      // Create a brand new group booking
+      const parentPayload = {
+        owner_id: getOwnerId(),
+        user_id: empId,
+        service_id: srvId,
+        start_time: startIso,
+        end_time: endIso,
+        customer_name: 'Gruppe: ' + ((window.ownerServices || []).find(s => s.id === srvId)?.title || 'Gruppentermin'),
+        customer_email: 'group@booking.com',
+        notes: notes || null,
+        hausbesuch: document.getElementById('bkHausbesuch').checked || false,
+        status: 'confirmed',
+        is_group: true,
+        group_capacity: groupCapacity
+      };
+      
+      const { data: parentBooking, error: pErr } = await supabase
+        .from('bookings')
+        .insert(parentPayload)
+        .select()
+        .single();
+        
+      if (pErr) {
+        console.error('[group parent save]', pErr);
+        showToast(pErr.message || t('err_generic'), 'error');
+        return;
+      }
+      
+      // Now insert child bookings
+      const patients = window.bkSelectedGroupPatients || [];
+      if (patients.length > 0) {
+        const childPayloads = patients.map(p => ({
+          owner_id: getOwnerId(),
+          user_id: empId,
+          service_id: srvId,
+          start_time: startIso,
+          end_time: endIso,
+          customer_name: p.name,
+          customer_phone: p.phone || null,
+          notes: notes || null,
+          hausbesuch: document.getElementById('bkHausbesuch').checked || false,
+          status: 'confirmed',
+          group_parent_id: parentBooking.id,
+          lead_id: p.id
+        }));
+        const { error: cErr } = await supabase.from('bookings').insert(childPayloads);
+        if (cErr) {
+          console.error('[group children save]', cErr);
+          showToast('Gruppe erstellt, Fehler bei Teilnehmern: ' + cErr.message, 'warning');
+        }
+      }
+      
+      showToast('Gruppentermin erfolgreich erstellt.');
+    }
+    
+    closeModal('bookingModal');
+    if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
+    if (activePanel === 'overview') await loadTodayBookings();
+    if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
     return;
   }
 
