@@ -861,6 +861,138 @@
       height: 12px;
       border-radius: 3px;
     }
+
+    /* Enterprise Badges styling */
+    .enterprise-badge {
+      background: linear-gradient(135deg, #C9A876, #6B5538);
+      color: white;
+      font-size: 10px;
+      border-radius: 20px;
+      padding: 2px 6px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .enterprise-sidebar-badge {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #C9A876, #6B5538);
+      color: white;
+      font-size: 8px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    /* Business Switcher Dropdown styling */
+    .biz-switcher-container {
+      position: relative;
+      display: inline-block;
+      margin-right: 12px;
+    }
+    .biz-switcher-chip {
+      background: var(--bg-card-solid);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      color: var(--text-main);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .biz-switcher-chip:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
+    }
+    .biz-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 290px;
+      background: var(--bg-card-solid);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      z-index: 999;
+      padding: 6px 0;
+      overflow: hidden;
+      text-align: left;
+    }
+    .biz-dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-main);
+      transition: background 0.15s ease;
+    }
+    .biz-dropdown-item:hover {
+      background: var(--bg-hover);
+    }
+    .biz-dropdown-item.active {
+      background: var(--bg-hover);
+      font-weight: 600;
+    }
+
+    /* Business Cards styling in settings */
+    .biz-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+      margin-bottom: 20px;
+    }
+    .biz-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      background: var(--bg-card-solid);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .biz-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+    }
+    .biz-card-title {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Calendar Monat Grid interactivity */
+    .cal-month-cell {
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .cal-month-cell:hover {
+      background: var(--bg-hover);
+    }
+    .cal-month-cell.today {
+      border: 2px solid var(--highlight) !important;
+    }
+
+    /* Dropdown alignment */
+    .dropdown-menu {
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card-solid);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
   </style>
 </head>
 
@@ -884,7 +1016,25 @@
         </button>
         <span class="brand">InfinityMade</span>
         <span class="sidebar-badge" style="margin-left: 8px; margin-right: 12px;">Demo</span>
-        <span class="biz-name" id="bizName" style="font-weight: 600; font-size: 13px; display: inline-block;">Physiotherapie Müller & Partner GmbH</span>
+        
+        <!-- Business Switcher Chip and Dropdown -->
+        <div class="biz-switcher-container">
+          <button id="bizSwitcherBtn" class="biz-switcher-chip" onclick="toggleBizDropdown(event)">
+            <span>🏢 <span id="bizSwitcherCurrentName">Physiotherapie Müller & Partner GmbH</span> ▾</span>
+          </button>
+          <div id="bizSwitcherDropdown" class="biz-dropdown">
+            <div id="bizDropdownList">
+              <!-- Rendered via JS -->
+            </div>
+            <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
+            <div class="biz-dropdown-item" onclick="openModal('modal-new-business'); event.stopPropagation(); closeBizDropdown();" style="color: var(--highlight); font-weight: 600; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px;">
+              <span>➕ Neues Geschäft hinzufügen</span>
+              <span class="enterprise-badge">Enterprise</span>
+            </div>
+          </div>
+        </div>
+
+        <span class="biz-name" id="bizName" style="font-weight: 600; font-size: 13px; display: inline-block; margin-left: 8px; opacity: 0.85;">Physiotherapie Müller & Partner GmbH</span>
       </div>
       <div class="topbar-right">
         <!-- Flags for languages -->
@@ -971,12 +1121,14 @@
           <button class="sidebar-item" onclick="switchPanel('panel-billing302')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             <span>Abrechnung §302</span>
+            <span class="enterprise-sidebar-badge" style="margin-left: 6px;">E</span>
             <span class="sidebar-badge">Demo</span>
           </button>
           
           <button class="sidebar-item" onclick="switchPanel('panel-cashbook')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             <span>Kassenbuch (GoBD)</span>
+            <span class="enterprise-sidebar-badge" style="margin-left: 6px;">E</span>
             <span class="sidebar-badge live">Live</span>
           </button>
           
@@ -993,6 +1145,7 @@
           <button class="sidebar-item" onclick="switchPanel('panel-statistics')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
             <span>Statistik</span>
+            <span class="enterprise-sidebar-badge">E</span>
           </button>
           
           <button class="sidebar-item" onclick="switchPanel('panel-b2b')">
@@ -1029,23 +1182,23 @@
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-label">Termine heute</div>
-              <div class="kpi-value kpi-green">5</div>
-              <div class="kpi-sub">Ausstehend: 1 · Bestätigt: 4</div>
+              <div class="kpi-value kpi-green" id="kpiTermine">15</div>
+              <div class="kpi-sub" id="kpiTermineSub">Ausstehend: 1 · Bestätigt: 14</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Umsatz Mai 2026</div>
-              <div class="kpi-value">€2.340</div>
-              <div class="kpi-sub">GKV: €1.358 · Privat: €982</div>
+              <div class="kpi-value" id="kpiUmsatz">€2.340</div>
+              <div class="kpi-sub" id="kpiUmsatzSub">GKV: €1.358 · Privat: €982</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Praxis-Auslastung</div>
-              <div class="kpi-value">78%</div>
-              <div class="kpi-sub">Optimaler Bereich (Ziel: 80%)</div>
+              <div class="kpi-value" id="kpiAuslastung">78%</div>
+              <div class="kpi-sub" id="kpiAuslastungSub">Optimaler Bereich (Ziel: 80%)</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Neupatienten</div>
-              <div class="kpi-value">3</div>
-              <div class="kpi-sub">Diesen Monat hinzugefügt</div>
+              <div class="kpi-value" id="kpiNeupatienten">3</div>
+              <div class="kpi-sub" id="kpiNeupatientenSub">Diesen Monat hinzugefügt</div>
             </div>
           </div>
 
@@ -1068,7 +1221,7 @@
                       <th>Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="overviewApptsTableBody">
                     <tr onclick="openApptDetailModal(0)">
                       <td><strong>09:00 - 09:20</strong></td>
                       <td>Klaus Bergmann <span class="badge badge-blue" style="font-size: 9px; padding: 1px 6px; margin-left: 6px;">GKV</span></td>
@@ -1117,26 +1270,26 @@
                 <div style="height: 120px; display: flex; align-items: flex-end; justify-content: space-between; padding-top: 10px;">
                   <!-- W1 €580 -->
                   <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                    <span style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€580</span>
-                    <div style="width: 28px; height: 58px; background: var(--primary); border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
+                    <span id="miniBarVal1" style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€580</span>
+                    <div id="miniBar1" style="width: 28px; height: 58px; background: var(--primary); border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
                     <span style="font-size: 9px; font-weight: 600; margin-top: 6px; color: var(--text-muted);">W1</span>
                   </div>
                   <!-- W2 €710 -->
                   <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                    <span style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€710</span>
-                    <div style="width: 28px; height: 71px; background: var(--highlight); border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
+                    <span id="miniBarVal2" style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€710</span>
+                    <div id="miniBar2" style="width: 28px; height: 71px; background: var(--highlight); border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
                     <span style="font-size: 9px; font-weight: 600; margin-top: 6px; color: var(--text-muted);">W2</span>
                   </div>
                   <!-- W3 €620 -->
                   <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                    <span style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€620</span>
-                    <div style="width: 28px; height: 62px; background: var(--primary); border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
+                    <span id="miniBarVal3" style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€620</span>
+                    <div id="miniBar3" style="width: 28px; height: 62px; background: var(--primary); border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
                     <span style="font-size: 9px; font-weight: 600; margin-top: 6px; color: var(--text-muted);">W3</span>
                   </div>
                   <!-- W4 €430 -->
                   <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                    <span style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€430</span>
-                    <div style="width: 28px; height: 43px; background: #7A6F61; border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
+                    <span id="miniBarVal4" style="font-size: 9px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 4px;">€430</span>
+                    <div id="miniBar4" style="width: 28px; height: 43px; background: #7A6F61; border-radius: 4px 4px 0 0; transition: height 0.5s ease;"></div>
                     <span style="font-size: 9px; font-weight: 600; margin-top: 6px; color: var(--text-muted);">W4</span>
                   </div>
                 </div>
@@ -1194,12 +1347,16 @@
               <h2>Terminkalender</h2>
               <p class="panel-sub">Verwalten Sie Termine und Belegungszeiten der Praxis</p>
             </div>
-            <div style="display: flex; gap: 12px;">
+            <div style="display: flex; gap: 12px; align-items: center;">
               <!-- View toggles -->
-              <span style="display: flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-card-solid);">
-                <button id="calViewWeekBtn" class="btn" style="font-size: 12px; padding: 6px 12px; background: var(--primary); color: white;" onclick="toggleCalView('week')">Woche</button>
-                <button id="calViewMonthBtn" class="btn" style="font-size: 12px; padding: 6px 12px;" onclick="toggleCalView('month')">Monat</button>
-              </span>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 6px;">
+                <span style="display: flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-card-solid);">
+                  <button id="calViewDayBtn" class="btn" style="font-size: 12px; padding: 6px 12px; background: none; color: var(--text-main); border-radius: 0; border: none; cursor: pointer;" onclick="toggleCalView('day')">Tag</button>
+                  <button id="calViewWeekBtn" class="btn" style="font-size: 12px; padding: 6px 12px; background: var(--primary); color: white; border-radius: 0; border: none; cursor: pointer;" onclick="toggleCalView('week')">Woche</button>
+                  <button id="calViewMonthBtn" class="btn" style="font-size: 12px; padding: 6px 12px; background: none; color: var(--text-main); border-radius: 0; border: none; cursor: pointer;" onclick="toggleCalView('month')">Monat</button>
+                </span>
+                <span class="enterprise-badge" style="font-size: 8px; padding: 1px 4px; border-radius: 10px; font-weight: 700;">Enterprise</span>
+              </div>
               <button class="btn btn-primary-arrow" style="padding: 6px 12px 6px 16px; font-size: 12px;" onclick="openModal('modal-new-appt')">
                 <span>+ Neuer Termin</span>
                 <span class="arrow-pill" style="width: 18px; height: 18px; font-size: 11px;">+</span>
@@ -1207,180 +1364,38 @@
             </div>
           </div>
 
-          <!-- Week View Content -->
-          <div id="calWeekContainer">
-            <div class="cal-grid-week">
-              <div class="cal-time-col">
-                <div class="cal-day-header"><span class="day-name">Uhrzeit</span></div>
-                <div class="cal-time-cell">08:00</div>
-                <div class="cal-time-cell">09:00</div>
-                <div class="cal-time-cell">10:00</div>
-                <div class="cal-time-cell">11:00</div>
-                <div class="cal-time-cell">12:00</div>
-                <div class="cal-time-cell">13:00</div>
-                <div class="cal-time-cell">14:00</div>
-                <div class="cal-time-cell">15:00</div>
-                <div class="cal-time-cell">16:00</div>
-                <div class="cal-time-cell">17:00</div>
-              </div>
-
-              <!-- Mon 25.05 -->
-              <div class="cal-day-col">
-                <div class="cal-day-header">Mo 25.05.</div>
-                <!-- Col is empty -->
-              </div>
-              
-              <!-- Tue 26.05 -->
-              <div class="cal-day-col">
-                <div class="cal-day-header">Di 26.05.</div>
-                <!-- Col is empty -->
-              </div>
-              
-              <!-- Wed 27.05 (Today) -->
-              <div class="cal-day-col" style="background: rgba(201, 168, 118, 0.03);">
-                <div class="cal-day-header today">Mi 27.05. (Heute)</div>
-                <!-- Klaus Bergmann 09:00 - 09:20 (offset 60px, height 20px) -->
-                <div class="cal-appointment-block block-blue" style="top: 100px; height: 35px;" onclick="openApptDetailModal(0)">
-                  <span class="apt-time">09:00 - 09:20</span>
-                  <span class="apt-patient">Klaus Bergmann</span>
-                </div>
-                
-                <!-- Maria Hoffmann 10:30 - 11:00 (offset 150px, height 30px) -->
-                <div class="cal-appointment-block block-blue" style="top: 190px; height: 50px;" onclick="openApptDetailModal(1)">
-                  <span class="apt-time">10:30 - 11:00</span>
-                  <span class="apt-patient">Maria Hoffmann</span>
-                </div>
-                
-                <!-- Stefan Wolff 11:00 - 11:20 (offset 180px, height 20px) -->
-                <div class="cal-appointment-block block-gold" style="top: 240px; height: 35px;" onclick="openApptDetailModal(2)">
-                  <span class="apt-time">11:00 - 11:20</span>
-                  <span class="apt-patient">Stefan Wolff</span>
-                </div>
-                
-                <!-- Ingrid Braun 14:00 - 14:20 (offset 360px, height 20px) -->
-                <div class="cal-appointment-block block-pending" style="top: 400px; height: 35px;" onclick="openApptDetailModal(3)">
-                  <span class="apt-time">14:00 - 14:20 (Ausstehend)</span>
-                  <span class="apt-patient">Ingrid Braun</span>
-                </div>
-                
-                <!-- Lukas Richter 15:30 - 16:00 (offset 450px, height 30px) -->
-                <div class="cal-appointment-block block-blue" style="top: 490px; height: 50px;" onclick="openApptDetailModal(4)">
-                  <span class="apt-time">15:30 - 16:00</span>
-                  <span class="apt-patient">Lukas Richter</span>
-                </div>
-              </div>
-              
-              <!-- Thu 28.05 -->
-              <div class="cal-day-col">
-                <div class="cal-day-header">Do 28.05.</div>
-                <!-- Add 3 appointments spread -->
-                <div class="cal-appointment-block block-blue" style="top: 160px; height: 35px;" onclick="showToast('Aktion im Demo-Modus: Termin-Detail geladen.')">
-                  <span class="apt-time">10:00 - 10:20</span>
-                  <span class="apt-patient">Sabine Fischer</span>
-                </div>
-                <div class="cal-appointment-block block-gold" style="top: 280px; height: 50px;" onclick="showToast('Aktion im Demo-Modus: Termin-Detail geladen.')">
-                  <span class="apt-time">12:00 - 12:30</span>
-                  <span class="apt-patient">Elena Vogel</span>
-                </div>
-              </div>
-              
-              <!-- Fri 29.05 -->
-              <div class="cal-day-col">
-                <div class="cal-day-header">Fr 29.05.</div>
-                <!-- Add 3 appointments spread -->
-                <div class="cal-appointment-block block-blue" style="top: 100px; height: 35px;" onclick="showToast('Aktion im Demo-Modus: Termin-Detail geladen.')">
-                  <span class="apt-time">09:00 - 09:20</span>
-                  <span class="apt-patient">Thomas Krause</span>
-                </div>
-                <div class="cal-appointment-block block-blue" style="top: 220px; height: 50px;" onclick="showToast('Aktion im Demo-Modus: Termin-Detail geladen.')">
-                  <span class="apt-time">11:00 - 11:30</span>
-                  <span class="apt-patient">Petra Schulz</span>
-                </div>
-                <div class="cal-appointment-block block-blue" style="top: 400px; height: 35px;" onclick="showToast('Aktion im Demo-Modus: Termin-Detail geladen.')">
-                  <span class="apt-time">14:00 - 14:20</span>
-                  <span class="apt-patient">Klaus Bergmann</span>
-                </div>
-              </div>
+          <!-- Employee Filter Chip Bar -->
+          <div style="margin-bottom: 20px;">
+            <div id="employeeChipsContainer" style="display: flex; gap: 10px; overflow-x: auto; padding: 6px 2px; border-bottom: 1px solid var(--border); -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+              <!-- Chips will be rendered dynamically by JavaScript -->
             </div>
           </div>
 
-          <!-- Month View Content (Hidden by default) -->
-          <div id="calMonthContainer" style="display: none;">
-            <div class="cal-grid-month">
-              <div class="cal-month-header-cell">Mo</div>
-              <div class="cal-month-header-cell">Di</div>
-              <div class="cal-month-header-cell">Mi</div>
-              <div class="cal-month-header-cell">Do</div>
-              <div class="cal-month-header-cell">Fr</div>
-              <div class="cal-month-header-cell">Sa</div>
-              <div class="cal-month-header-cell">So</div>
+          <!-- Header Navigation Row -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;">
+            <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="navigateCalendar(-1)">← Vorherige Woche</button>
+            <h3 style="font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--text-main);" id="calDateRangeLabel">27.05 – 31.05.2026</h3>
+            <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="navigateCalendar(1)">Nächste Woche →</button>
+          </div>
 
-              <!-- Dummy cells leading to May 2026 -->
-              <div class="cal-month-cell muted"><span class="cell-num">27</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">28</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">29</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">30</span></div>
-              
-              <!-- May starts on Friday -->
-              <div class="cal-month-cell"><span class="cell-num">1</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">2</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">3</span></div>
-              
-              <div class="cal-month-cell"><span class="cell-num">4</span></div>
-              <div class="cal-month-cell"><span class="cell-num">5</span></div>
-              <div class="cal-month-cell"><span class="cell-num">6</span></div>
-              <div class="cal-month-cell"><span class="cell-num">7</span></div>
-              <div class="cal-month-cell"><span class="cell-num">8</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">9</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">10</span></div>
+          <!-- Week View Container (Default) -->
+          <div id="calWeekContainer" class="ov-weekly">
+            <div class="ov-week-grid" id="calWeekGrid" style="--ov-day-count: 5;">
+              <!-- Grid Header & Rows will be rendered dynamically by JavaScript -->
+            </div>
+          </div>
 
-              <div class="cal-month-cell"><span class="cell-num">11</span></div>
-              <div class="cal-month-cell"><span class="cell-num">12</span></div>
-              <div class="cal-month-cell"><span class="cell-num">13</span></div>
-              <div class="cal-month-cell"><span class="cell-num">14</span></div>
-              <div class="cal-month-cell"><span class="cell-num">15</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">16</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">17</span></div>
+          <!-- Day View Container (Hidden by default) -->
+          <div id="calDayContainer" style="display: none; padding: 12px; overflow-x: auto;">
+            <div class="cal-grid-week" id="calDayGrid" style="grid-template-columns: 80px repeat(var(--ov-emp-count, 5), minmax(120px, 1fr)); min-width: 100%;">
+              <!-- Day view dynamic columns populated by JS -->
+            </div>
+          </div>
 
-              <div class="cal-month-cell"><span class="cell-num">18</span></div>
-              <div class="cal-month-cell"><span class="cell-num">19</span></div>
-              <div class="cal-month-cell"><span class="cell-num">20</span></div>
-              <div class="cal-month-cell"><span class="cell-num">21</span></div>
-              <div class="cal-month-cell"><span class="cell-num">22</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">23</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">24</span></div>
-
-              <!-- Week of May 25 -->
-              <div class="cal-month-cell"><span class="cell-num">25</span></div>
-              <div class="cal-month-cell"><span class="cell-num">26</span></div>
-              <!-- Today highlighted -->
-              <div class="cal-month-cell today">
-                <span class="cell-num">27</span>
-                <div class="cal-month-dots">
-                  <span class="cal-month-dot" style="background: #3B82F6;"></span>
-                  <span class="cal-month-dot" style="background: #3B82F6;"></span>
-                  <span class="cal-month-dot" style="background: #C9A876;"></span>
-                  <span class="cal-month-dot" style="background: #F59E0B;"></span>
-                  <span class="cal-month-dot" style="background: #3B82F6;"></span>
-                </div>
-              </div>
-              <div class="cal-month-cell">
-                <span class="cell-num">28</span>
-                <div class="cal-month-dots">
-                  <span class="cal-month-dot" style="background: #3B82F6;"></span>
-                  <span class="cal-month-dot" style="background: #C9A876;"></span>
-                </div>
-              </div>
-              <div class="cal-month-cell">
-                <span class="cell-num">29</span>
-                <div class="cal-month-dots">
-                  <span class="cal-month-dot" style="background: #3B82F6;"></span>
-                  <span class="cal-month-dot" style="background: #3B82F6;"></span>
-                  <span class="cal-month-dot" style="background: #3B82F6;"></span>
-                </div>
-              </div>
-              <div class="cal-month-cell muted"><span class="cell-num">30</span></div>
-              <div class="cal-month-cell muted"><span class="cell-num">31</span></div>
+          <!-- Month View Container (Hidden by default) -->
+          <div id="calMonthContainer" class="ov-monthly" style="display: none;">
+            <div class="ov-month-grid" id="calMonthGrid">
+              <!-- Month view grid cells populated by JS -->
             </div>
           </div>
         </section>
@@ -1415,7 +1430,7 @@
                   <th>Aktionen</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="patientsTableBody">
                 <tr onclick="openPatientDetailModal(0)">
                   <td><strong>Klaus Bergmann</strong></td>
                   <td>12.03.1965</td>
@@ -1950,7 +1965,7 @@
             <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; gap: 14px; align-items: center;">
-                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #3B82F6; color: white; font-weight: bold; display: grid; place-items: center; font-size: 18px;">TK</div>
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #22c55e; color: white; font-weight: bold; display: grid; place-items: center; font-size: 18px;">TK</div>
                   <div>
                     <h3 style="font-family: var(--serif); font-size: 16px;">Tobias Kern</h3>
                     <span style="font-size: 12px; color: var(--text-muted);">Physiotherapeut (Vollzeit) · tobias@mueller-physio.de</span>
@@ -1963,21 +1978,157 @@
               <div id="emp-det-1" class="emp-expanded-tabs" style="display: none;">
                 <!-- Sub Tabs for Employees -->
                 <div class="sub-tabs">
-                  <span class="sub-tab-btn active">Info</span>
-                  <span class="sub-tab-btn">Kalender</span>
-                  <span class="sub-tab-btn">Arbeitszeiten</span>
-                  <span class="sub-tab-btn">Dienstleistungen</span>
-                  <span class="sub-tab-btn">Zertifikate</span>
+                  <span class="sub-tab-btn active" data-tab="info" onclick="switchEmpTab('emp-det-1', 'info')">Info</span>
+                  <span class="sub-tab-btn" data-tab="arbeitszeiten" onclick="switchEmpTab('emp-det-1', 'arbeitszeiten')">Arbeitszeiten</span>
+                  <span class="sub-tab-btn" data-tab="berechtigungen" onclick="switchEmpTab('emp-det-1', 'berechtigungen')">Berechtigungen</span>
+                  <span class="sub-tab-btn" data-tab="dienstleistungen" onclick="switchEmpTab('emp-det-1', 'dienstleistungen')">Dienstleistungen</span>
+                  <span class="sub-tab-btn" data-tab="zertifikate" onclick="switchEmpTab('emp-det-1', 'zertifikate')">Zertifikate</span>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
-                  <div>
-                    <div class="detail-row"><span class="detail-label">Stunden pro Woche</span><span class="detail-value">40 Stunden</span></div>
-                    <div class="detail-row"><span class="detail-label">Eintrittsdatum</span><span class="detail-value">01.03.2023</span></div>
+                
+                <!-- Info Tab Content -->
+                <div class="emp-tab-content" data-tab="info" style="display: block; margin-top: 14px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Stunden pro Woche</span><span class="detail-value">40 Stunden</span></div>
+                      <div class="detail-row"><span class="detail-label">Eintrittsdatum</span><span class="detail-value">01.03.2023</span></div>
+                    </div>
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Zertifikate</span><span class="detail-value">Manuelle Lymphdrainage, KGG</span></div>
+                      <div class="detail-row"><span class="detail-label">Abrechnungscode</span><span class="detail-value">TK-88910</span></div>
+                    </div>
                   </div>
-                  <div>
-                    <div class="detail-row"><span class="detail-label">Zertifikate</span><span class="detail-value">Manuelle Lymphdrainage, KGG</span></div>
-                    <div class="detail-row"><span class="detail-label">Abrechnungscode</span><span class="detail-value">TK-88910</span></div>
+                </div>
+
+                <!-- Arbeitszeiten Tab Content -->
+                <div class="emp-tab-content" data-tab="arbeitszeiten" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Arbeitstage</span><span class="detail-value">Mo, Di, Mi, Do, Fr</span></div>
+                  <div class="detail-row"><span class="detail-label">Tägliche Arbeitszeit</span><span class="detail-value">08:00 - 17:00 Uhr</span></div>
+                  <div class="detail-row"><span class="detail-label">Pausenzeit</span><span class="detail-value">12:30 - 13:30 Uhr (Standard)</span></div>
+                </div>
+
+                <!-- Berechtigungen Tab Content -->
+                <div class="emp-tab-content" data-tab="berechtigungen" style="display: none; padding: 10px 0;">
+                  <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: var(--text-main);">Modul-Berechtigungen (Tobias Kern)</div>
+                  <div class="rbac-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; font-size: 12px;">
+                    <!-- ON by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Übersicht</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Termine</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Patienten</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Notizen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Fahrtenbuch</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Dienstleistungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Anamnese</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <!-- OFF by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Abrechnung §302</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Kassenbuch (GoBD)</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Mahnwesen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Statistik</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Einstellungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>B2B Kontakte</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
                   </div>
+                  
+                  <!-- Group Changer -->
+                  <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
+                    <span class="badge badge-gold">Gruppe: Mitarbeiter</span>
+                    <div style="position: relative; display: inline-block;">
+                      <a href="#" class="group-change-link" onclick="toggleGroupDropdown(event, 'emp-group-dropdown-1')" style="color: var(--highlight); font-size: 12px; font-weight: 600; text-decoration: none;">Gruppe ändern ▾</a>
+                      <div id="emp-group-dropdown-1" class="dropdown-menu" style="display: none; position: absolute; bottom: 25px; left: 0; background: var(--bg-card-solid); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; min-width: 140px; padding: 4px 0;">
+                        <a href="#" onclick="changeEmpGroup(event, 1, 'Mitarbeiter')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Mitarbeiter</a>
+                        <a href="#" onclick="changeEmpGroup(event, 1, 'Sekretär')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Sekretär</a>
+                        <a href="#" onclick="changeEmpGroup(event, 1, 'Benutzerdefiniert')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Benutzerdefiniert</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dienstleistungen Tab Content -->
+                <div class="emp-tab-content" data-tab="dienstleistungen" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Zugelassene Heilmittel</span><span class="detail-value">Krankengymnastik (KG), Manuelle Lymphdrainage (MLD)</span></div>
+                  <div class="detail-row"><span class="detail-label">Sonderzulassungen</span><span class="detail-value">Krankengymnastik am Gerät (KGG)</span></div>
+                </div>
+
+                <!-- Zertifikate Tab Content -->
+                <div class="emp-tab-content" data-tab="zertifikate" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Hauptexpertise</span><span class="detail-value">Zertifikat Manuelle Lymphdrainage (2022)</span></div>
+                  <div class="detail-row"><span class="detail-label">Zusatzqualifikation</span><span class="detail-value">Gerätegestützte Krankengymnastik KGG (2023)</span></div>
                 </div>
               </div>
             </div>
@@ -1986,7 +2137,7 @@
             <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; gap: 14px; align-items: center;">
-                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #EF4444; color: white; font-weight: bold; display: grid; place-items: center; font-size: 18px;">AS</div>
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #3b82f6; color: white; font-weight: bold; display: grid; place-items: center; font-size: 18px;">AS</div>
                   <div>
                     <h3 style="font-family: var(--serif); font-size: 16px;">Anna Schreiber</h3>
                     <span style="font-size: 12px; color: var(--text-muted);">Physiotherapeutin (Teilzeit) · anna@mueller-physio.de</span>
@@ -1999,21 +2150,673 @@
               <div id="emp-det-2" class="emp-expanded-tabs" style="display: none;">
                 <!-- Sub Tabs for Employees -->
                 <div class="sub-tabs">
-                  <span class="sub-tab-btn active">Info</span>
-                  <span class="sub-tab-btn">Kalender</span>
-                  <span class="sub-tab-btn">Arbeitszeiten</span>
-                  <span class="sub-tab-btn">Dienstleistungen</span>
-                  <span class="sub-tab-btn">Zertifikate</span>
+                  <span class="sub-tab-btn active" data-tab="info" onclick="switchEmpTab('emp-det-2', 'info')">Info</span>
+                  <span class="sub-tab-btn" data-tab="arbeitszeiten" onclick="switchEmpTab('emp-det-2', 'arbeitszeiten')">Arbeitszeiten</span>
+                  <span class="sub-tab-btn" data-tab="berechtigungen" onclick="switchEmpTab('emp-det-2', 'berechtigungen')">Berechtigungen</span>
+                  <span class="sub-tab-btn" data-tab="dienstleistungen" onclick="switchEmpTab('emp-det-2', 'dienstleistungen')">Dienstleistungen</span>
+                  <span class="sub-tab-btn" data-tab="zertifikate" onclick="switchEmpTab('emp-det-2', 'zertifikate')">Zertifikate</span>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
-                  <div>
-                    <div class="detail-row"><span class="detail-label">Stunden pro Woche</span><span class="detail-value">25 Stunden</span></div>
-                    <div class="detail-row"><span class="detail-label">Eintrittsdatum</span><span class="detail-value">15.09.2024</span></div>
+                
+                <!-- Info Tab Content -->
+                <div class="emp-tab-content" data-tab="info" style="display: block; margin-top: 14px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Stunden pro Woche</span><span class="detail-value">25 Stunden</span></div>
+                      <div class="detail-row"><span class="detail-label">Eintrittsdatum</span><span class="detail-value">15.09.2024</span></div>
+                    </div>
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Zertifikate</span><span class="detail-value">Manuelle Therapie, Bobath</span></div>
+                      <div class="detail-row"><span class="detail-label">Abrechnungscode</span><span class="detail-value">AS-77490</span></div>
+                    </div>
                   </div>
-                  <div>
-                    <div class="detail-row"><span class="detail-label">Zertifikate</span><span class="detail-value">Manuelle Therapie, Bobath</span></div>
-                    <div class="detail-row"><span class="detail-label">Abrechnungscode</span><span class="detail-value">AS-77490</span></div>
+                </div>
+
+                <!-- Arbeitszeiten Tab Content -->
+                <div class="emp-tab-content" data-tab="arbeitszeiten" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Arbeitstage</span><span class="detail-value">Mo, Di, Do, Fr</span></div>
+                  <div class="detail-row"><span class="detail-label">Tägliche Arbeitszeit</span><span class="detail-value">08:30 - 15:30 Uhr</span></div>
+                  <div class="detail-row"><span class="detail-label">Pausenzeit</span><span class="detail-value">12:00 - 12:30 Uhr (Standard)</span></div>
+                </div>
+
+                <!-- Berechtigungen Tab Content -->
+                <div class="emp-tab-content" data-tab="berechtigungen" style="display: none; padding: 10px 0;">
+                  <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: var(--text-main);">Modul-Berechtigungen (Anna Schreiber)</div>
+                  <div class="rbac-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; font-size: 12px;">
+                    <!-- ON by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Übersicht</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Termine</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Patienten</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Notizen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Fahrtenbuch</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Dienstleistungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Anamnese</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <!-- OFF by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Abrechnung §302</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Kassenbuch (GoBD)</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Mahnwesen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Statistik</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Einstellungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>B2B Kontakte</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
                   </div>
+                  
+                  <!-- Group Changer -->
+                  <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
+                    <span class="badge badge-gold">Gruppe: Mitarbeiter</span>
+                    <div style="position: relative; display: inline-block;">
+                      <a href="#" class="group-change-link" onclick="toggleGroupDropdown(event, 'emp-group-dropdown-2')" style="color: var(--highlight); font-size: 12px; font-weight: 600; text-decoration: none;">Gruppe ändern ▾</a>
+                      <div id="emp-group-dropdown-2" class="dropdown-menu" style="display: none; position: absolute; bottom: 25px; left: 0; background: var(--bg-card-solid); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; min-width: 140px; padding: 4px 0;">
+                        <a href="#" onclick="changeEmpGroup(event, 2, 'Mitarbeiter')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Mitarbeiter</a>
+                        <a href="#" onclick="changeEmpGroup(event, 2, 'Sekretär')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Sekretär</a>
+                        <a href="#" onclick="changeEmpGroup(event, 2, 'Benutzerdefiniert')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Benutzerdefiniert</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dienstleistungen Tab Content -->
+                <div class="emp-tab-content" data-tab="dienstleistungen" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Zugelassene Heilmittel</span><span class="detail-value">Krankengymnastik (KG), Manuelle Therapie (MT)</span></div>
+                  <div class="detail-row"><span class="detail-label">Sonderzulassungen</span><span class="detail-value">Bobath-Therapie (Neurologie)</span></div>
+                </div>
+
+                <!-- Zertifikate Tab Content -->
+                <div class="emp-tab-content" data-tab="zertifikate" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Hauptexpertise</span><span class="detail-value">Zertifikat Manuelle Therapie MT (2024)</span></div>
+                  <div class="detail-row"><span class="detail-label">Neurologie-Zulassung</span><span class="detail-value">Bobath-Konzept für Erwachsene (2025)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Employee Card 3: Jonas Weber -->
+            <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 14px; align-items: center;">
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #f59e0b; color: white; font-weight: bold; display: grid; place-items: center; font-size: 18px;">JW</div>
+                  <div>
+                    <h3 style="font-family: var(--serif); font-size: 16px;">Jonas Weber</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Physiotherapeut (Vollzeit) · jonas@mueller-physio.de</span>
+                  </div>
+                </div>
+                <button class="btn btn-secondary" onclick="toggleEmpDetails('emp-det-3')">Details ein-/ausblenden</button>
+              </div>
+
+              <!-- Collapsible Section -->
+              <div id="emp-det-3" class="emp-expanded-tabs" style="display: none;">
+                <!-- Sub Tabs for Employees -->
+                <div class="sub-tabs">
+                  <span class="sub-tab-btn active" data-tab="info" onclick="switchEmpTab('emp-det-3', 'info')">Info</span>
+                  <span class="sub-tab-btn" data-tab="arbeitszeiten" onclick="switchEmpTab('emp-det-3', 'arbeitszeiten')">Arbeitszeiten</span>
+                  <span class="sub-tab-btn" data-tab="berechtigungen" onclick="switchEmpTab('emp-det-3', 'berechtigungen')">Berechtigungen</span>
+                  <span class="sub-tab-btn" data-tab="dienstleistungen" onclick="switchEmpTab('emp-det-3', 'dienstleistungen')">Dienstleistungen</span>
+                  <span class="sub-tab-btn" data-tab="zertifikate" onclick="switchEmpTab('emp-det-3', 'zertifikate')">Zertifikate</span>
+                </div>
+                
+                <!-- Info Tab Content -->
+                <div class="emp-tab-content" data-tab="info" style="display: block; margin-top: 14px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Stunden pro Woche</span><span class="detail-value">40 Stunden</span></div>
+                      <div class="detail-row"><span class="detail-label">Eintrittsdatum</span><span class="detail-value">01.03.2024</span></div>
+                    </div>
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Zertifikate</span><span class="detail-value">Manuelle Therapie, KGG</span></div>
+                      <div class="detail-row"><span class="detail-label">Abrechnungscode</span><span class="detail-value">JW-55420</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Arbeitszeiten Tab Content -->
+                <div class="emp-tab-content" data-tab="arbeitszeiten" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Arbeitstage</span><span class="detail-value">Mo, Di, Mi, Do, Fr</span></div>
+                  <div class="detail-row"><span class="detail-label">Tägliche Arbeitszeit</span><span class="detail-value">08:00 - 17:00 Uhr</span></div>
+                  <div class="detail-row"><span class="detail-label">Pausenzeit</span><span class="detail-value">12:30 - 13:30 Uhr (Standard)</span></div>
+                </div>
+
+                <!-- Berechtigungen Tab Content -->
+                <div class="emp-tab-content" data-tab="berechtigungen" style="display: none; padding: 10px 0;">
+                  <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: var(--text-main);">Modul-Berechtigungen (Jonas Weber)</div>
+                  <div class="rbac-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; font-size: 12px;">
+                    <!-- ON by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Übersicht</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Termine</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Patienten</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Notizen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Fahrtenbuch</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Dienstleistungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Anamnese</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <!-- OFF by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Abrechnung §302</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Kassenbuch (GoBD)</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Mahnwesen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Statistik</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Einstellungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>B2B Kontakte</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- Group Changer -->
+                  <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
+                    <span class="badge badge-gold">Gruppe: Mitarbeiter</span>
+                    <div style="position: relative; display: inline-block;">
+                      <a href="#" class="group-change-link" onclick="toggleGroupDropdown(event, 'emp-group-dropdown-3')" style="color: var(--highlight); font-size: 12px; font-weight: 600; text-decoration: none;">Gruppe ändern ▾</a>
+                      <div id="emp-group-dropdown-3" class="dropdown-menu" style="display: none; position: absolute; bottom: 25px; left: 0; background: var(--bg-card-solid); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; min-width: 140px; padding: 4px 0;">
+                        <a href="#" onclick="changeEmpGroup(event, 3, 'Mitarbeiter')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Mitarbeiter</a>
+                        <a href="#" onclick="changeEmpGroup(event, 3, 'Sekretär')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Sekretär</a>
+                        <a href="#" onclick="changeEmpGroup(event, 3, 'Benutzerdefiniert')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Benutzerdefiniert</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dienstleistungen Tab Content -->
+                <div class="emp-tab-content" data-tab="dienstleistungen" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Zugelassene Heilmittel</span><span class="detail-value">Krankengymnastik (KG), Manuelle Therapie (MT)</span></div>
+                  <div class="detail-row"><span class="detail-label">Sonderzulassungen</span><span class="detail-value">Krankengymnastik am Gerät (KGG)</span></div>
+                </div>
+
+                <!-- Zertifikate Tab Content -->
+                <div class="emp-tab-content" data-tab="zertifikate" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Hauptexpertise</span><span class="detail-value">Zertifikat Manuelle Therapie MT (2023)</span></div>
+                  <div class="detail-row"><span class="detail-label">Zusatzqualifikation</span><span class="detail-value">Krankengymnastik am Gerät KGG (2024)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Employee Card 4: Lena Braun -->
+            <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 14px; align-items: center;">
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #a855f7; color: white; font-weight: bold; display: grid; place-items: center; font-size: 18px;">LB</div>
+                  <div>
+                    <h3 style="font-family: var(--serif); font-size: 16px;">Lena Braun</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Physiotherapeutin (Vollzeit) · lena@mueller-physio.de</span>
+                  </div>
+                </div>
+                <button class="btn btn-secondary" onclick="toggleEmpDetails('emp-det-4')">Details ein-/ausblenden</button>
+              </div>
+
+              <!-- Collapsible Section -->
+              <div id="emp-det-4" class="emp-expanded-tabs" style="display: none;">
+                <!-- Sub Tabs for Employees -->
+                <div class="sub-tabs">
+                  <span class="sub-tab-btn active" data-tab="info" onclick="switchEmpTab('emp-det-4', 'info')">Info</span>
+                  <span class="sub-tab-btn" data-tab="arbeitszeiten" onclick="switchEmpTab('emp-det-4', 'arbeitszeiten')">Arbeitszeiten</span>
+                  <span class="sub-tab-btn" data-tab="berechtigungen" onclick="switchEmpTab('emp-det-4', 'berechtigungen')">Berechtigungen</span>
+                  <span class="sub-tab-btn" data-tab="dienstleistungen" onclick="switchEmpTab('emp-det-4', 'dienstleistungen')">Dienstleistungen</span>
+                  <span class="sub-tab-btn" data-tab="zertifikate" onclick="switchEmpTab('emp-det-4', 'zertifikate')">Zertifikate</span>
+                </div>
+                
+                <!-- Info Tab Content -->
+                <div class="emp-tab-content" data-tab="info" style="display: block; margin-top: 14px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Stunden pro Woche</span><span class="detail-value">40 Stunden</span></div>
+                      <div class="detail-row"><span class="detail-label">Eintrittsdatum</span><span class="detail-value">15.09.2024</span></div>
+                    </div>
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Zertifikate</span><span class="detail-value">Manuelle Therapie, Bobath</span></div>
+                      <div class="detail-row"><span class="detail-label">Abrechnungscode</span><span class="detail-value">LB-44310</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Arbeitszeiten Tab Content -->
+                <div class="emp-tab-content" data-tab="arbeitszeiten" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Arbeitstage</span><span class="detail-value">Mo, Di, Mi, Do, Fr</span></div>
+                  <div class="detail-row"><span class="detail-label">Tägliche Arbeitszeit</span><span class="detail-value">08:00 - 17:00 Uhr</span></div>
+                  <div class="detail-row"><span class="detail-label">Pausenzeit</span><span class="detail-value">12:30 - 13:30 Uhr (Standard)</span></div>
+                </div>
+
+                <!-- Berechtigungen Tab Content -->
+                <div class="emp-tab-content" data-tab="berechtigungen" style="display: none; padding: 10px 0;">
+                  <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: var(--text-main);">Modul-Berechtigungen (Lena Braun)</div>
+                  <div class="rbac-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; font-size: 12px;">
+                    <!-- ON by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Übersicht</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Termine</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Patienten</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Notizen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Fahrtenbuch</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Dienstleistungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Anamnese</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <!-- OFF by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Abrechnung §302</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Kassenbuch (GoBD)</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Mahnwesen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Statistik</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Einstellungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>B2B Kontakte</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- Group Changer -->
+                  <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
+                    <span class="badge badge-gold">Gruppe: Mitarbeiter</span>
+                    <div style="position: relative; display: inline-block;">
+                      <a href="#" class="group-change-link" onclick="toggleGroupDropdown(event, 'emp-group-dropdown-4')" style="color: var(--highlight); font-size: 12px; font-weight: 600; text-decoration: none;">Gruppe ändern ▾</a>
+                      <div id="emp-group-dropdown-4" class="dropdown-menu" style="display: none; position: absolute; bottom: 25px; left: 0; background: var(--bg-card-solid); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; min-width: 140px; padding: 4px 0;">
+                        <a href="#" onclick="changeEmpGroup(event, 4, 'Mitarbeiter')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Mitarbeiter</a>
+                        <a href="#" onclick="changeEmpGroup(event, 4, 'Sekretär')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Sekretär</a>
+                        <a href="#" onclick="changeEmpGroup(event, 4, 'Benutzerdefiniert')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Benutzerdefiniert</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dienstleistungen Tab Content -->
+                <div class="emp-tab-content" data-tab="dienstleistungen" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Zugelassene Heilmittel</span><span class="detail-value">Krankengymnastik (KG), Manuelle Therapie (MT)</span></div>
+                  <div class="detail-row"><span class="detail-label">Sonderzulassungen</span><span class="detail-value">Bobath-Therapie (Neurologie)</span></div>
+                </div>
+
+                <!-- Zertifikate Tab Content -->
+                <div class="emp-tab-content" data-tab="zertifikate" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Hauptexpertise</span><span class="detail-value">Zertifikat Manuelle Therapie MT (2024)</span></div>
+                  <div class="detail-row"><span class="detail-label">Neurologie-Zulassung</span><span class="detail-value">Bobath-Konzept für Erwachsene (2025)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Employee Card 5: Michael Roth -->
+            <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 14px; align-items: center;">
+                  <div style="width: 44px; height: 44px; border-radius: 50%; background: #ef4444; color: white; font-weight: bold; display: grid; place-items: center; font-size: 18px;">MR</div>
+                  <div>
+                    <h3 style="font-family: var(--serif); font-size: 16px;">Michael Roth</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Physiotherapeut (Teilzeit) · michael@mueller-physio.de</span>
+                  </div>
+                </div>
+                <button class="btn btn-secondary" onclick="toggleEmpDetails('emp-det-5')">Details ein-/ausblenden</button>
+              </div>
+
+              <!-- Collapsible Section -->
+              <div id="emp-det-5" class="emp-expanded-tabs" style="display: none;">
+                <!-- Sub Tabs for Employees -->
+                <div class="sub-tabs">
+                  <span class="sub-tab-btn active" data-tab="info" onclick="switchEmpTab('emp-det-5', 'info')">Info</span>
+                  <span class="sub-tab-btn" data-tab="arbeitszeiten" onclick="switchEmpTab('emp-det-5', 'arbeitszeiten')">Arbeitszeiten</span>
+                  <span class="sub-tab-btn" data-tab="berechtigungen" onclick="switchEmpTab('emp-det-5', 'berechtigungen')">Berechtigungen</span>
+                  <span class="sub-tab-btn" data-tab="dienstleistungen" onclick="switchEmpTab('emp-det-5', 'dienstleistungen')">Dienstleistungen</span>
+                  <span class="sub-tab-btn" data-tab="zertifikate" onclick="switchEmpTab('emp-det-5', 'zertifikate')">Zertifikate</span>
+                </div>
+                
+                <!-- Info Tab Content -->
+                <div class="emp-tab-content" data-tab="info" style="display: block; margin-top: 14px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Stunden pro Woche</span><span class="detail-value">20 Stunden</span></div>
+                      <div class="detail-row"><span class="detail-label">Eintrittsdatum</span><span class="detail-value">01.01.2025</span></div>
+                    </div>
+                    <div>
+                      <div class="detail-row"><span class="detail-label">Zertifikate</span><span class="detail-value">Manuelle Lymphdrainage, Bobath</span></div>
+                      <div class="detail-row"><span class="detail-label">Abrechnungscode</span><span class="detail-value">MR-33210</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Arbeitszeiten Tab Content -->
+                <div class="emp-tab-content" data-tab="arbeitszeiten" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Arbeitstage</span><span class="detail-value">Mo, Di, Do</span></div>
+                  <div class="detail-row"><span class="detail-label">Tägliche Arbeitszeit</span><span class="detail-value">08:30 - 15:30 Uhr</span></div>
+                  <div class="detail-row"><span class="detail-label">Pausenzeit</span><span class="detail-value">12:00 - 12:30 Uhr (Standard)</span></div>
+                </div>
+
+                <!-- Berechtigungen Tab Content -->
+                <div class="emp-tab-content" data-tab="berechtigungen" style="display: none; padding: 10px 0;">
+                  <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: var(--text-main);">Modul-Berechtigungen (Michael Roth)</div>
+                  <div class="rbac-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; font-size: 12px;">
+                    <!-- ON by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Übersicht</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Termine</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Patienten</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Notizen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Fahrtenbuch</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Dienstleistungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Anamnese</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" checked onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <!-- OFF by default -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Abrechnung §302</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Kassenbuch (GoBD)</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Mahnwesen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Statistik</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>Einstellungen</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                      <span>B2B Kontakte</span>
+                      <label class="switch-label">
+                        <input type="checkbox" class="switch-input" onchange="showToast('Berechtigung aktualisiert')" />
+                        <span class="switch-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <!-- Group Changer -->
+                  <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
+                    <span class="badge badge-gold">Gruppe: Mitarbeiter</span>
+                    <div style="position: relative; display: inline-block;">
+                      <a href="#" class="group-change-link" onclick="toggleGroupDropdown(event, 'emp-group-dropdown-5')" style="color: var(--highlight); font-size: 12px; font-weight: 600; text-decoration: none;">Gruppe ändern ▾</a>
+                      <div id="emp-group-dropdown-5" class="dropdown-menu" style="display: none; position: absolute; bottom: 25px; left: 0; background: var(--bg-card-solid); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; min-width: 140px; padding: 4px 0;">
+                        <a href="#" onclick="changeEmpGroup(event, 5, 'Mitarbeiter')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Mitarbeiter</a>
+                        <a href="#" onclick="changeEmpGroup(event, 5, 'Sekretär')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Sekretär</a>
+                        <a href="#" onclick="changeEmpGroup(event, 5, 'Benutzerdefiniert')" style="display: block; padding: 6px 12px; font-size: 12px; color: var(--text-main); text-decoration: none;">Benutzerdefiniert</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dienstleistungen Tab Content -->
+                <div class="emp-tab-content" data-tab="dienstleistungen" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Zugelassene Heilmittel</span><span class="detail-value">Krankengymnastik (KG), Manuelle Lymphdrainage (MLD)</span></div>
+                  <div class="detail-row"><span class="detail-label">Sonderzulassungen</span><span class="detail-value">Bobath-Therapie (Neurologie)</span></div>
+                </div>
+
+                <!-- Zertifikate Tab Content -->
+                <div class="emp-tab-content" data-tab="zertifikate" style="display: none; padding: 10px 0; font-size: 13px;">
+                  <div class="detail-row"><span class="detail-label">Hauptexpertise</span><span class="detail-value">Zertifikat Manuelle Lymphdrainage (2023)</span></div>
+                  <div class="detail-row"><span class="detail-label">Neurologie-Zulassung</span><span class="detail-value">Bobath-Konzept für Erwachsene (2024)</span></div>
                 </div>
               </div>
             </div>
@@ -2584,26 +3387,26 @@
               <div style="height: 180px; display: flex; align-items: flex-end; justify-content: space-between; padding-top: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
                 <!-- W1 €580 -->
                 <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                  <span style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€580</span>
-                  <div style="width: 40px; height: 95px; background: var(--primary); border-radius: 4px 4px 0 0;"></div>
+                  <span id="statBarVal1" style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€580</span>
+                  <div id="statBar1" style="width: 40px; height: 95px; background: var(--primary); border-radius: 4px 4px 0 0;"></div>
                   <span style="font-size: 11px; font-weight: 600; margin-top: 8px; color: var(--text-muted);">Woche 1</span>
                 </div>
                 <!-- W2 €710 -->
                 <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                  <span style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€710</span>
-                  <div style="width: 40px; height: 125px; background: var(--highlight); border-radius: 4px 4px 0 0;"></div>
+                  <span id="statBarVal2" style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€710</span>
+                  <div id="statBar2" style="width: 40px; height: 125px; background: var(--highlight); border-radius: 4px 4px 0 0;"></div>
                   <span style="font-size: 11px; font-weight: 600; margin-top: 8px; color: var(--text-muted);">Woche 2</span>
                 </div>
                 <!-- W3 €620 -->
                 <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                  <span style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€620</span>
-                  <div style="width: 40px; height: 105px; background: var(--primary); border-radius: 4px 4px 0 0;"></div>
+                  <span id="statBarVal3" style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€620</span>
+                  <div id="statBar3" style="width: 40px; height: 105px; background: var(--primary); border-radius: 4px 4px 0 0;"></div>
                   <span style="font-size: 11px; font-weight: 600; margin-top: 8px; color: var(--text-muted);">Woche 3</span>
                 </div>
                 <!-- W4 €430 -->
                 <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                  <span style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€430</span>
-                  <div style="width: 40px; height: 75px; background: #7A6F61; border-radius: 4px 4px 0 0;"></div>
+                  <span id="statBarVal4" style="font-size: 10px; font-family: var(--mono); color: var(--text-muted); margin-bottom: 6px;">€430</span>
+                  <div id="statBar4" style="width: 40px; height: 75px; background: #7A6F61; border-radius: 4px 4px 0 0;"></div>
                   <span style="font-size: 11px; font-weight: 600; margin-top: 8px; color: var(--text-muted);">Woche 4</span>
                 </div>
               </div>
@@ -2821,6 +3624,7 @@
             <span class="sub-tab-btn" id="setNotifBtn" onclick="switchSettingsSubTab('notif')">Benachrichtigungen</span>
             <span class="sub-tab-btn" id="setIntegBtn" onclick="switchSettingsSubTab('integ')">Integrationen</span>
             <span class="sub-tab-btn" id="setAbonnBtn" onclick="switchSettingsSubTab('abonn')">Abonnement</span>
+            <span class="sub-tab-btn" id="setGeschaefteBtn" onclick="switchSettingsSubTab('geschaefte')">Geschäfte</span>
           </div>
 
           <!-- Sub Tab 1: Profil -->
@@ -2951,6 +3755,22 @@
               </button>
             </div>
           </div>
+
+          <!-- Sub Tab 5: Geschäfte -->
+          <div id="setTabGeschaefte" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+              <h3 style="font-family: var(--serif); font-size: 18px; margin: 0; color: var(--text-main);">Meine Standorte</h3>
+              <span class="enterprise-badge">Enterprise</span>
+            </div>
+            
+            <div id="geschaefteListContainer" class="biz-card-grid">
+              <!-- Rendered via JS -->
+            </div>
+            
+            <button class="btn btn-secondary" onclick="openModal('modal-new-business')" style="border: 2px dashed var(--border-strong); width: 100%; max-width: 320px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; font-weight: 600; background: none; color: var(--highlight); cursor: pointer;">
+              <span>➕ Neuer Standort hinzufügen</span>
+            </button>
+          </div>
         </section>
 
       </main>
@@ -2958,6 +3778,67 @@
   </div>
 
   <!-- ================= MODALS REGISTRY ================= -->
+
+  <!-- Modal 10: New Business / Branch -->
+  <div id="modal-new-business" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Neuen Standort hinzufügen</h3>
+        <button class="modal-close" onclick="closeModal(this.closest('.modal-overlay'))">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleNewBusinessSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Name des Standorts</label>
+            <input type="text" class="form-input" placeholder="z.B. Physio am Park" required id="nbName" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adresse</label>
+            <input type="text" class="form-input" placeholder="z.B. Schönhauser Allee 10, 10435 Berlin" required id="nbAddress" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefonnummer</label>
+            <input type="text" class="form-input" placeholder="z.B. 030-1234567" required id="nbPhone" />
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal(this.closest('.modal-overlay'))">Abbrechen</button>
+            <button type="submit" class="btn btn-primary">Standort hinzufügen</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 11: Edit Business / Branch -->
+  <div id="modal-edit-business" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Standort bearbeiten</h3>
+        <button class="modal-close" onclick="closeModal(this.closest('.modal-overlay'))">✕</button>
+      </div>
+      <div class="modal-body">
+        <form onsubmit="handleEditBusinessSubmit(event)">
+          <input type="hidden" id="ebId" />
+          <div class="form-group">
+            <label class="form-label">Name des Standorts</label>
+            <input type="text" class="form-input" required id="ebName" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adresse</label>
+            <input type="text" class="form-input" required id="ebAddress" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefonnummer</label>
+            <input type="text" class="form-input" required id="ebPhone" />
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal(this.closest('.modal-overlay'))">Abbrechen</button>
+            <button type="submit" class="btn btn-primary">Änderungen speichern</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal 1: New Appointment Booking -->
   <div id="modal-new-appt" class="modal-overlay" style="display: none;">
@@ -3005,9 +3886,12 @@
           </div>
           <div class="form-group">
             <label class="form-label">Therapeut</label>
-            <select class="form-select">
+            <select class="form-select" id="newApptTherapistSelect">
               <option>Tobias Kern (Vollzeit)</option>
               <option>Anna Schreiber (Teilzeit)</option>
+              <option>Jonas Weber (Vollzeit)</option>
+              <option>Lena Braun (Vollzeit)</option>
+              <option>Michael Roth (Teilzeit)</option>
             </select>
           </div>
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
@@ -3417,12 +4301,147 @@ Physiotherapie Müller</textarea>
   <!-- JS Logic -->
   <script>
     // Global datasets for triggers and detail views
+    // Global datasets for triggers and detail views
+    const THERAPISTS = [
+      { id: "tobias", name: "Tobias Kern", role: "Physiotherapeut", type: "Vollzeit", color: "#22c55e", initials: "TK", email: "tobias@mueller-physio.de", since: "2023-03" },
+      { id: "anna", name: "Anna Schreiber", role: "Physiotherapeutin", type: "Teilzeit", color: "#3b82f6", initials: "AS", email: "anna@mueller-physio.de", since: "2024-09" },
+      { id: "jonas", name: "Jonas Weber", role: "Physiotherapeut", type: "Vollzeit", color: "#f59e0b", initials: "JW", email: "jonas@mueller-physio.de", since: "2024-03" },
+      { id: "lena", name: "Lena Braun", role: "Physiotherapeutin", type: "Vollzeit", color: "#a855f7", initials: "LB", email: "lena@mueller-physio.de", since: "2024-09" },
+      { id: "michael", name: "Michael Roth", role: "Physiotherapeut", type: "Teilzeit", color: "#ef4444", initials: "MR", email: "michael@mueller-physio.de", since: "2025-01" }
+    ];
+
+    const WEEK_APPOINTMENTS = {
+      "2026-05-27": { // Monday (Heute)
+        "Tobias Kern": [
+          { time: "09:00 - 09:20", patient: "Klaus Bergmann", service: "KG Wirbelsäule (KG-WS)", status: "Bestätigt" },
+          { time: "11:00 - 11:20", patient: "Stefan Wolff", service: "KG Knie (KG-Knie)", status: "Bestätigt" },
+          { time: "14:00 - 14:20", patient: "Ingrid Braun", service: "KG Hüfte (KG-Hüfte)", status: "Ausstehend" },
+          { time: "16:30 - 16:50", patient: "Markus Neumann", service: "KG LWS (KG-LWS)", status: "Bestätigt" }
+        ],
+        "Anna Schreiber": [
+          { time: "10:30 - 11:00", patient: "Maria Hoffmann", service: "MT Schulter (MT-Schulter)", status: "Bestätigt" },
+          { time: "13:30 - 14:00", patient: "Thomas Krause", service: "MT Knie (MT-Knie)", status: "Bestätigt" },
+          { time: "15:30 - 16:00", patient: "Lukas Richter", service: "MT LWS (MT-LWS)", status: "Bestätigt" }
+        ],
+        "Jonas Weber": [
+          { time: "08:30 - 08:50", patient: "Petra Schulz", service: "KG Rücken (KG-Rücken)", status: "Bestätigt" },
+          { time: "13:00 - 13:30", patient: "Sabine Fischer", service: "MT Knie (MT-Knie)", status: "Bestätigt" },
+          { time: "16:00 - 16:20", patient: "Elena Vogel", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" }
+        ],
+        "Lena Braun": [
+          { time: "09:00 - 09:30", patient: "Markus Neumann", service: "MT LWS (MT-LWS)", status: "Bestätigt" },
+          { time: "11:30 - 11:50", patient: "Thomas Krause", service: "KG Hüfte (KG-Hüfte)", status: "Bestätigt" },
+          { time: "14:30 - 14:50", patient: "Felix Wagner", service: "KG Knie (KG-Knie)", status: "Bestätigt" }
+        ],
+        "Michael Roth": [
+          { time: "10:00 - 10:30", patient: "Greta Sommer", service: "MT Schulter (MT-Schulter)", status: "Bestätigt" },
+          { time: "15:00 - 15:20", patient: "Norbert Klein", service: "KG Rücken (KG-Rücken)", status: "Bestätigt" }
+        ]
+      },
+      "2026-05-28": { // Tuesday
+        "Tobias Kern": [
+          { time: "08:30 - 08:50", patient: "Maria Hoffmann", service: "KG Wirbelsäule (KG-WS)", status: "Bestätigt" },
+          { time: "11:00 - 11:30", patient: "Markus Neumann", service: "MT Knie (MT-Knie)", status: "Bestätigt" },
+          { time: "15:00 - 15:20", patient: "Klaus Bergmann", service: "KG Hüfte (KG-Hüfte)", status: "Bestätigt" }
+        ],
+        "Anna Schreiber": [
+          { time: "09:30 - 09:50", patient: "Petra Schulz", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" },
+          { time: "14:00 - 14:30", patient: "Felix Wagner", service: "MT LWS (MT-LWS)", status: "Bestätigt" }
+        ],
+        "Jonas Weber": [
+          { time: "10:00 - 10:30", patient: "Lukas Richter", service: "MT Wirbelsäule (MT-WS)", status: "Bestätigt" },
+          { time: "13:30 - 13:50", patient: "Ingrid Braun", service: "KG Knie (KG-Knie)", status: "Bestätigt" },
+          { time: "16:30 - 16:50", patient: "Sabine Fischer", service: "KG LWS (KG-LWS)", status: "Bestätigt" }
+        ],
+        "Lena Braun": [
+          { time: "08:00 - 08:20", patient: "Norbert Klein", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" },
+          { time: "12:00 - 12:30", patient: "Elena Vogel", service: "MT Knie (MT-Knie)", status: "Bestätigt" },
+          { time: "15:30 - 15:50", patient: "Thomas Krause", service: "KG Rücken (KG-Rücken)", status: "Bestätigt" }
+        ],
+        "Michael Roth": [
+          { time: "09:00 - 09:20", patient: "Greta Sommer", service: "KG Hüfte (KG-Hüfte)", status: "Bestätigt" },
+          { time: "14:30 - 15:00", patient: "Stefan Wolff", service: "MT Schulter (MT-Schulter)", status: "Bestätigt" }
+        ]
+      },
+      "2026-05-29": { // Wednesday
+        "Tobias Kern": [
+          { time: "09:00 - 09:20", patient: "Sabine Fischer", service: "KG Wirbelsäule (KG-WS)", status: "Bestätigt" },
+          { time: "14:00 - 14:30", patient: "Thomas Krause", service: "MT Schulter (MT-Schulter)", status: "Bestätigt" }
+        ],
+        "Anna Schreiber": [
+          { time: "08:30 - 08:50", patient: "Markus Neumann", service: "KG LWS (KG-LWS)", status: "Bestätigt" },
+          { time: "11:30 - 12:00", patient: "Klaus Bergmann", service: "MT Knie (MT-Knie)", status: "Bestätigt" },
+          { time: "16:00 - 16:20", patient: "Felix Wagner", service: "KG Hüfte (KG-Hüfte)", status: "Bestätigt" }
+        ],
+        "Jonas Weber": [
+          { time: "10:30 - 10:50", patient: "Ingrid Braun", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" },
+          { time: "14:30 - 15:00", patient: "Petra Schulz", service: "MT Wirbelsäule (MT-WS)", status: "Bestätigt" }
+        ],
+        "Lena Braun": [
+          { time: "09:30 - 09:50", patient: "Maria Hoffmann", service: "KG Knie (KG-Knie)", status: "Bestätigt" },
+          { time: "13:00 - 13:30", patient: "Lukas Richter", service: "MT LWS (MT-LWS)", status: "Bestätigt" },
+          { time: "15:00 - 15:20", patient: "Greta Sommer", service: "KG Wirbelsäule (KG-WS)", status: "Bestätigt" }
+        ],
+        "Michael Roth": [
+          { time: "11:00 - 11:30", patient: "Norbert Klein", service: "MT Hüfte (MT-Hüfte)", status: "Bestätigt" },
+          { time: "14:00 - 14:20", patient: "Elena Vogel", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" }
+        ]
+      },
+      "2026-05-30": { // Thursday
+        "Tobias Kern": [
+          { time: "08:00 - 08:20", patient: "Felix Wagner", service: "KG LWS (KG-LWS)", status: "Bestätigt" },
+          { time: "11:30 - 11:50", patient: "Petra Schulz", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" },
+          { time: "15:00 - 15:30", patient: "Stefan Wolff", service: "MT Wirbelsäule (MT-WS)", status: "Bestätigt" }
+        ],
+        "Anna Schreiber": [
+          { time: "09:30 - 10:00", patient: "Thomas Krause", service: "MT Knie (MT-Knie)", status: "Bestätigt" },
+          { time: "14:30 - 14:50", patient: "Elena Vogel", service: "KG Rücken (KG-Rücken)", status: "Bestätigt" }
+        ],
+        "Jonas Weber": [
+          { time: "08:30 - 09:00", patient: "Klaus Bergmann", service: "MT Hüfte (MT-Hüfte)", status: "Bestätigt" },
+          { time: "13:00 - 13:20", patient: "Markus Neumann", service: "KG Wirbelsäule (KG-WS)", status: "Bestätigt" },
+          { time: "16:00 - 16:20", patient: "Sabine Fischer", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" }
+        ],
+        "Lena Braun": [
+          { time: "10:00 - 10:20", patient: "Maria Hoffmann", service: "KG LWS (KG-LWS)", status: "Bestätigt" },
+          { time: "14:00 - 14:30", patient: "Norbert Klein", service: "MT Knie (MT-Knie)", status: "Bestätigt" }
+        ],
+        "Michael Roth": [
+          { time: "09:00 - 09:20", patient: "Lukas Richter", service: "KG Wirbelsäule (KG-WS)", status: "Bestätigt" },
+          { time: "15:30 - 16:00", patient: "Greta Sommer", service: "MT Schulter (MT-Schulter)", status: "Bestätigt" }
+        ]
+      },
+      "2026-05-31": { // Friday
+        "Tobias Kern": [
+          { time: "09:00 - 09:20", patient: "Ingrid Braun", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" },
+          { time: "13:30 - 14:00", patient: "Sabine Fischer", service: "MT LWS (MT-LWS)", status: "Bestätigt" }
+        ],
+        "Anna Schreiber": [
+          { time: "10:00 - 10:20", patient: "Felix Wagner", service: "KG Wirbelsäule (KG-WS)", status: "Bestätigt" },
+          { time: "15:00 - 15:20", patient: "Thomas Krause", service: "KG Hüfte (KG-Hüfte)", status: "Bestätigt" }
+        ],
+        "Jonas Weber": [
+          { time: "08:30 - 09:00", patient: "Stefan Wolff", service: "MT Knie (MT-Knie)", status: "Bestätigt" },
+          { time: "12:00 - 12:20", patient: "Petra Schulz", service: "KG LWS (KG-LWS)", status: "Bestätigt" }
+        ],
+        "Lena Braun": [
+          { time: "09:30 - 09:50", patient: "Markus Neumann", service: "KG Schulter (KG-Schulter)", status: "Bestätigt" },
+          { time: "14:00 - 14:30", patient: "Klaus Bergmann", service: "MT Wirbelsäule (MT-WS)", status: "Bestätigt" },
+          { time: "16:00 - 16:20", patient: "Maria Hoffmann", service: "KG Knie (KG-Knie)", status: "Bestätigt" }
+        ],
+        "Michael Roth": [
+          { time: "11:00 - 11:30", patient: "Lukas Richter", service: "MT Hüfte (MT-Hüfte)", status: "Bestätigt" },
+          { time: "14:30 - 14:50", patient: "Greta Sommer", service: "KG LWS (KG-LWS)", status: "Bestätigt" }
+        ]
+      }
+    };
+
     const APPOINTMENTS = [
-      { date: "Mittwoch, 27.05.2026", time: "09:00 - 09:20", patient: "Klaus Bergmann", treatment: "KG Wirbelsäule", therapist: "Tobias Kern", status: "Bestätigt" },
-      { date: "Mittwoch, 27.05.2026", time: "10:30 - 11:00", patient: "Maria Hoffmann", treatment: "MT Schulter", therapist: "Anna Schreiber", status: "Bestätigt" },
-      { date: "Mittwoch, 27.05.2026", time: "11:00 - 11:20", patient: "Stefan Wolff", treatment: "KG Knie", therapist: "Tobias Kern", status: "Bestätigt" },
-      { date: "Mittwoch, 27.05.2026", time: "14:00 - 14:20", patient: "Ingrid Braun", treatment: "KG Hüfte", therapist: "Tobias Kern", status: "Ausstehend" },
-      { date: "Mittwoch, 27.05.2026", time: "15:30 - 16:00", patient: "Lukas Richter", treatment: "MT LWS", therapist: "Anna Schreiber", status: "Bestätigt" }
+      { date: "Montag, 27.05.2026", time: "09:00 - 09:20", patient: "Klaus Bergmann", treatment: "KG Wirbelsäule (KG-WS)", therapist: "Tobias Kern", status: "Bestätigt" },
+      { date: "Montag, 27.05.2026", time: "10:30 - 11:00", patient: "Maria Hoffmann", treatment: "MT Schulter (MT-Schulter)", therapist: "Anna Schreiber", status: "Bestätigt" },
+      { date: "Montag, 27.05.2026", time: "11:00 - 11:20", patient: "Stefan Wolff", treatment: "KG Knie (KG-Knie)", therapist: "Tobias Kern", status: "Bestätigt" },
+      { date: "Montag, 27.05.2026", time: "14:00 - 14:20", patient: "Ingrid Braun", treatment: "KG Hüfte (KG-Hüfte)", therapist: "Tobias Kern", status: "Ausstehend" },
+      { date: "Montag, 27.05.2026", time: "15:30 - 16:00", patient: "Lukas Richter", treatment: "MT LWS (MT-LWS)", therapist: "Anna Schreiber", status: "Bestätigt" }
     ];
 
     const PATIENTS = [
@@ -3431,17 +4450,463 @@ Physiotherapie Müller</textarea>
       { name: "Stefan Wolff", DOB: "08.06.1990", type: "Privat", insurer: "Selbstzahler", lastTermin: "27.05.2026", therapist: "Tobias Kern", address: "Friedrichshain", anamnese: "Sportverletzung Knie. Zustand nach Außenmeniskus-Refixation." },
       { name: "Ingrid Braun", DOB: "17.09.1952", type: "GKV", insurer: "Barmer", lastTermin: "27.05.2026", therapist: "Tobias Kern", address: "Charlottenburg", anamnese: "Chronische Coxarthrose rechts. Physiotherapeutischer Muskelaufbau." },
       { name: "Lukas Richter", DOB: "28.02.1988", type: "GKV", insurer: "DAK", lastTermin: "27.05.2026", therapist: "Anna Schreiber", address: "Neukölln", anamnese: "Akute Lumbalgie (Hexenschuss) nach Heben schwerer Lasten." },
-      { name: "Petra Schulz", DOB: "14.07.1971", type: "GKV", insurer: "AOK Berlin", lastTermin: "25.05.2026", therapist: "Tobias Kern", address: "Tempelhof", anamnese: "Posttraumatische Gelenkschwellung nach Umknicken Sprunggelenk." },
-      { name: "Markus Neumann", DOB: "22.04.1983", type: "Privat", insurer: "Selbstzahler", lastTermin: "19.05.2026", therapist: "Anna Schreiber", address: "Steglitz", anamnese: "Haltungsbedingte Nackenbeschwerden mit Spannungskopfschmerz." },
-      { name: "Sabine Fischer", DOB: "05.12.1969", type: "GKV", insurer: "TK Berlin", lastTermin: "20.05.2026", therapist: "Anna Schreiber", address: "Pankow", anamnese: "Zervikobrachial-Syndrom. Ausstrahlende Nackenschmerzen." },
-      { name: "Thomas Krause", DOB: "30.08.1995", type: "GKV", insurer: "Barmer", lastTermin: "18.05.2026", therapist: "Tobias Kern", address: "Spandau", anamnese: "Knie-Reha nach Kreuzbandriss links." },
-      { name: "Elena Vogel", DOB: "18.01.2001", type: "Privat", insurer: "Selbstzahler", lastTermin: "15.05.2026", therapist: "Tobias Kern", address: "Mitte", anamnese: "Zustand nach Distorsion des Ellenbogengelenks bei Sturz." }
+      { name: "Petra Schulz", DOB: "14.07.1971", type: "GKV", insurer: "AOK Berlin", lastTermin: "25.05.2026", therapist: "Jonas Weber", address: "Tempelhof", anamnese: "Posttraumatische Gelenkschwellung nach Umknicken Sprunggelenk." },
+      { name: "Markus Neumann", DOB: "22.04.1983", type: "Privat", insurer: "Selbstzahler", lastTermin: "19.05.2026", therapist: "Lena Braun", address: "Steglitz", anamnese: "Haltungsbedingte Nackenbeschwerden mit Spannungskopfschmerz." },
+      { name: "Sabine Fischer", DOB: "05.12.1969", type: "GKV", insurer: "TK Berlin", lastTermin: "20.05.2026", therapist: "Jonas Weber", address: "Pankow", anamnese: "Zervikobrachial-Syndrom. Ausstrahlende Nackenschmerzen." },
+      { name: "Thomas Krause", DOB: "30.08.1995", type: "GKV", insurer: "Barmer", lastTermin: "18.05.2026", therapist: "Lena Braun", address: "Spandau", anamnese: "Knie-Reha nach Kreuzbandriss links." },
+      { name: "Elena Vogel", DOB: "18.01.2001", type: "Privat", insurer: "Selbstzahler", lastTermin: "15.05.2026", therapist: "Jonas Weber", address: "Mitte", anamnese: "Zustand nach Distorsion des Ellenbogengelenks bei Sturz." },
+      { name: "Felix Wagner", DOB: "15.04.1977", type: "GKV", insurer: "AOK", lastTermin: "26.05.2026", therapist: "Lena Braun", address: "Charlottenburg", anamnese: "Schultergelenksbeschwerden nach Sturz." },
+      { name: "Greta Sommer", DOB: "02.09.1991", type: "Privat", insurer: "Selbstzahler", lastTermin: "27.05.2026", therapist: "Michael Roth", address: "Wilmersdorf", anamnese: "Zustand nach Kreuzbandplastik Knie links." },
+      { name: "Norbert Klein", DOB: "20.11.1968", type: "GKV", insurer: "TK", lastTermin: "25.05.2026", therapist: "Michael Roth", address: "Halensee", anamnese: "LWS-Syndrom mit muskulärer Dysbalance." }
     ];
 
     const ANAMNESES = [
       { name: "Klaus Bergmann", date: "26.05.2026", text: "Rückenschmerzen seit 6 Monaten, keine Voroperationen, Schmerz 6/10", score: "6" },
       { name: "Maria Hoffmann", date: "24.05.2026", text: "Schulter-Impingement, Physiotherapie seit 3 Wochen, Schmerz 4/10", score: "4" }
     ];
+
+    // Multi-Practice Data Model
+    const BUSINESSES = {
+      1: {
+        name: "Physiotherapie Müller & Partner GmbH",
+        location: "Berlin Mitte",
+        address: "Rosenthaler Str. 40, 10178 Berlin",
+        phone: "030-2819034",
+        stats: { termine: 15, umsatz: "€2.340", auslastung: "78%", neupatienten: 3 },
+        appointments_today: [
+          { time: "08:30 - 08:50", patient: "Petra Schulz", therapist: "Jonas Weber", service: "KG Rücken (20 Min)", status: "Bestätigt", top: "70px", height: "35px", blockClass: "block-blue" },
+          { time: "09:00 - 09:20", patient: "Klaus Bergmann", therapist: "Tobias Kern", service: "KG Wirbelsäule (20 Min)", status: "Bestätigt", top: "100px", height: "35px", blockClass: "block-blue" },
+          { time: "09:00 - 09:30", patient: "Markus Neumann", therapist: "Lena Braun", service: "MT LWS (30 Min)", status: "Bestätigt", top: "100px", height: "50px", blockClass: "block-blue" },
+          { time: "10:00 - 10:30", patient: "Greta Sommer", therapist: "Michael Roth", service: "MT Schulter (30 Min)", status: "Bestätigt", top: "160px", height: "50px", blockClass: "block-blue" },
+          { time: "10:30 - 11:00", patient: "Maria Hoffmann", therapist: "Anna Schreiber", service: "MT Schulter (30 Min)", status: "Bestätigt", top: "190px", height: "50px", blockClass: "block-blue" },
+          { time: "11:00 - 11:20", patient: "Stefan Wolff", therapist: "Tobias Kern", service: "KG Knie (20 Min)", status: "Bestätigt", top: "240px", height: "35px", blockClass: "block-gold" },
+          { time: "11:30 - 11:50", patient: "Thomas Krause", therapist: "Lena Braun", service: "KG Hüfte (20 Min)", status: "Bestätigt", top: "270px", height: "35px", blockClass: "block-blue" },
+          { time: "13:00 - 13:30", patient: "Sabine Fischer", therapist: "Jonas Weber", service: "MT Knie (30 Min)", status: "Bestätigt", top: "360px", height: "50px", blockClass: "block-blue" },
+          { time: "13:30 - 14:00", patient: "Thomas Krause", therapist: "Anna Schreiber", service: "MT Knie (30 Min)", status: "Bestätigt", top: "390px", height: "50px", blockClass: "block-blue" },
+          { time: "14:00 - 14:20", patient: "Ingrid Braun", therapist: "Tobias Kern", service: "KG Hüfte (20 Min)", status: "Ausstehend", top: "400px", height: "35px", blockClass: "block-pending" },
+          { time: "14:30 - 14:50", patient: "Felix Wagner", therapist: "Lena Braun", service: "KG Knie (20 Min)", status: "Bestätigt", top: "430px", height: "35px", blockClass: "block-blue" },
+          { time: "15:00 - 15:20", patient: "Norbert Klein", therapist: "Michael Roth", service: "KG Rücken (20 Min)", status: "Bestätigt", top: "460px", height: "35px", blockClass: "block-blue" },
+          { time: "15:30 - 16:00", patient: "Lukas Richter", therapist: "Anna Schreiber", service: "MT LWS (30 Min)", status: "Bestätigt", top: "490px", height: "50px", blockClass: "block-blue" },
+          { time: "16:00 - 16:20", patient: "Elena Vogel", therapist: "Jonas Weber", service: "KG Schulter (20 Min)", status: "Bestätigt", top: "520px", height: "35px", blockClass: "block-blue" },
+          { time: "16:30 - 16:50", patient: "Markus Neumann", therapist: "Tobias Kern", service: "KG LWS (20 Min)", status: "Bestätigt", top: "550px", height: "35px", blockClass: "block-blue" }
+        ],
+        patients: PATIENTS,
+        stats_monthly: { bar: [580, 710, 620, 430] }
+      },
+      2: {
+        name: "Physio am Ku'damm",
+        location: "Berlin Charlottenburg",
+        address: "Kurfürstendamm 195, 10707 Berlin",
+        phone: "030-8834521",
+        stats: { termine: 3, umsatz: "€1.890", auslastung: "65%", neupatienten: 1 },
+        appointments_today: [
+          { time: "08:30 - 09:00", patient: "Felix Wagner", therapist: "Tobias Kern", service: "MT Schulter (30 Min)", status: "Bestätigt", top: "70px", height: "50px", blockClass: "block-blue" },
+          { time: "10:00 - 10:20", patient: "Greta Sommer", therapist: "Tobias Kern", service: "KG Knie (20 Min)", status: "Bestätigt", top: "160px", height: "35px", blockClass: "block-blue" },
+          { time: "14:30 - 14:50", patient: "Norbert Klein", therapist: "Anna Schreiber", service: "KG LWS (20 Min)", status: "Ausstehend", top: "430px", height: "35px", blockClass: "block-pending" }
+        ],
+        patients: [
+          { name: "Felix Wagner", DOB: "15.04.1977", type: "GKV", insurer: "AOK", lastTermin: "26.05.2026", therapist: "Tobias Kern", address: "Charlottenburg", anamnese: "Schultergelenksbeschwerden nach Sturz." },
+          { name: "Greta Sommer", DOB: "02.09.1991", type: "Privat", insurer: "Selbstzahler", lastTermin: "27.05.2026", therapist: "Tobias Kern", address: "Wilmersdorf", anamnese: "Zustand nach Kreuzbandplastik Knie links." },
+          { name: "Norbert Klein", DOB: "20.11.1968", type: "GKV", insurer: "TK", lastTermin: "25.05.2026", therapist: "Anna Schreiber", address: "Halensee", anamnese: "LWS-Syndrom mit muskulärer Dysbalance." },
+          { name: "Bettina Haas", DOB: "08.03.1980", type: "GKV", insurer: "Barmer", lastTermin: "22.05.2026", therapist: "Anna Schreiber", address: "Grunewald", anamnese: "Zervikale Instabilität, HWS-Syndrom." },
+          { name: "Dieter Vogt", DOB: "30.07.1955", type: "Privat", insurer: "Selbstzahler", lastTermin: "20.05.2026", therapist: "Tobias Kern", address: "Westend", anamnese: "Schultersteife (Frozen Shoulder) links." }
+        ],
+        stats_monthly: { bar: [420, 580, 510, 380] }
+      }
+    };
+
+    let activeBusiness = 1;
+
+    // Switcher Dropdown Handlers
+    function toggleBizDropdown(e) {
+      e.stopPropagation();
+      const dropdown = document.getElementById("bizSwitcherDropdown");
+      if (dropdown) {
+        const isVisible = dropdown.style.display === "block";
+        dropdown.style.display = isVisible ? "none" : "block";
+      }
+    }
+
+    function closeBizDropdown() {
+      const dropdown = document.getElementById("bizSwitcherDropdown");
+      if (dropdown) {
+        dropdown.style.display = "none";
+      }
+    }
+
+    function renderSwitcherDropdown() {
+      const list = document.getElementById("bizDropdownList");
+      if (!list) return;
+      list.innerHTML = "";
+      
+      for (const [id, biz] of Object.entries(BUSINESSES)) {
+        const isActive = parseInt(id) === activeBusiness;
+        const item = document.createElement("div");
+        item.className = `biz-dropdown-item${isActive ? ' active' : ''}`;
+        item.onclick = (e) => {
+          e.stopPropagation();
+          switchBusiness(parseInt(id));
+        };
+        
+        item.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--highlight); font-weight: bold; width: 14px; font-size: 14px;">${isActive ? '✓' : ''}</span>
+            <div>
+              <div style="font-weight: ${isActive ? '600' : '500'};">${biz.name}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${biz.location}</div>
+            </div>
+          </div>
+        `;
+        list.appendChild(item);
+      }
+    }
+
+    // Switch active business in-place
+    function switchBusiness(id) {
+      activeBusiness = id;
+      const biz = BUSINESSES[id];
+      if (!biz) return;
+      
+      // Update header chip and center label
+      document.getElementById("bizSwitcherCurrentName").textContent = biz.name;
+      document.getElementById("bizName").textContent = biz.name;
+      
+      // Re-render Übersicht KPI Cards
+      const stats = biz.stats;
+      document.getElementById("kpiTermine").textContent = stats.termine;
+      document.getElementById("kpiUmsatz").textContent = stats.umsatz;
+      document.getElementById("kpiAuslastung").textContent = stats.auslastung;
+      document.getElementById("kpiNeupatienten").textContent = stats.neupatienten;
+      
+      if (id === 1) {
+        document.getElementById("kpiTermineSub").textContent = "Ausstehend: 1 · Bestätigt: 14";
+        document.getElementById("kpiUmsatzSub").textContent = "GKV: €1.358 · Privat: €982";
+        document.getElementById("kpiAuslastungSub").textContent = "Optimaler Bereich (Ziel: 80%)";
+        document.getElementById("kpiNeupatientenSub").textContent = "Diesen Monat hinzugefügt";
+      } else {
+        document.getElementById("kpiTermineSub").textContent = "Ausstehend: 1 · Bestätigt: 2";
+        document.getElementById("kpiUmsatzSub").textContent = "GKV: €1.140 · Privat: €750";
+        document.getElementById("kpiAuslastungSub").textContent = "Geringe Auslastung (Ziel: 80%)";
+        document.getElementById("kpiNeupatientenSub").textContent = "Diesen Monat hinzugefügt";
+      }
+      
+      // Re-render sub components
+      renderTodayAppointments();
+      renderPatientsTable();
+      renderWeeklyBarCharts();
+      renderGeschaefteTab();
+      
+      // Re-render Terminkalender if on Day view
+      renderDayViewAppointments();
+      
+      // Toast notification
+      showToast(`Gewechselt zu: ${biz.name}`);
+      
+      // Close dropdown and refresh
+      closeBizDropdown();
+      renderSwitcherDropdown();
+    }
+
+    let showAllAppointmentsToday = false;
+
+    // Dynamic Heutige Termine renderer
+    function renderTodayAppointments() {
+      const tbody = document.getElementById("overviewApptsTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      
+      const appts = BUSINESSES[activeBusiness].appointments_today;
+      
+      // Determine which appointments to show
+      const toShow = showAllAppointmentsToday ? appts : appts.slice(0, 6);
+      
+      toShow.forEach((appt, idx) => {
+        const isGKV = idx % 2 === 0;
+        const insType = isGKV ? "GKV" : "Privat";
+        const insClass = isGKV ? "badge-blue" : "badge-gold";
+        
+        const isConfirmed = appt.status === "Bestätigt" || appt.status === "confirmed";
+        const statusText = isConfirmed ? "Bestätigt" : "Ausstehend";
+        const statusClass = isConfirmed ? "badge-green" : "badge-orange";
+        
+        // Find therapist color
+        const ther = THERAPISTS.find(t => t.name === appt.therapist);
+        const dotColor = ther ? ther.color : "#3B82F6";
+        
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.onclick = () => {
+          openApptDetailModal({
+            date: "Montag, 27.05.2026",
+            time: appt.time,
+            patient: appt.patient,
+            treatment: appt.service || appt.treatment || "Krankengymnastik",
+            therapist: appt.therapist,
+            status: statusText
+          });
+        };
+        
+        tr.innerHTML = `
+          <td><strong>${appt.time}</strong></td>
+          <td>${appt.patient} <span class="badge ${insClass}" style="font-size: 9px; padding: 1px 6px; margin-left: 6px;">${insType}</span></td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor}; display: inline-block;"></span>
+              <span>${appt.therapist}</span>
+            </div>
+          </td>
+          <td>${appt.service || appt.treatment || "MT Schulter"}</td>
+          <td><span class="badge ${statusClass}">${statusText}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      // If there are more than 6 appointments, render a toggle row
+      if (appts.length > 6) {
+        const toggleTr = document.createElement("tr");
+        toggleTr.style.background = "var(--bg-hover)";
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.style.textAlign = "center";
+        td.style.padding = "10px";
+        
+        const btn = document.createElement("button");
+        btn.className = "btn btn-secondary";
+        btn.style.fontSize = "11px";
+        btn.style.padding = "4px 12px";
+        btn.textContent = showAllAppointmentsToday ? "Weniger anzeigen" : `Alle ${appts.length} anzeigen`;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          showAllAppointmentsToday = !showAllAppointmentsToday;
+          renderTodayAppointments();
+        };
+        
+        td.appendChild(btn);
+        toggleTr.appendChild(td);
+        tbody.appendChild(toggleTr);
+      }
+    }
+
+    // Dynamic Patientenverzeichnis renderer
+    function renderPatientsTable() {
+      const tbody = document.getElementById("patientsTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      
+      const patients = BUSINESSES[activeBusiness].patients;
+      patients.forEach((p, idx) => {
+        const insClass = p.type === "GKV" ? "badge-blue" : "badge-gold";
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.onclick = () => {
+          document.getElementById("pmName").textContent = p.name;
+          document.getElementById("pmDOB").textContent = p.DOB || p.dob;
+          document.getElementById("pmType").textContent = `${p.type} (${p.insurer || p.kasse})`;
+          document.getElementById("pmAddress").textContent = p.address || p.location || "Berlin";
+          document.getElementById("pmTherapist").textContent = p.therapist || p.therapeut;
+          
+          const apptList = document.getElementById("pmApptListMock");
+          apptList.innerHTML = `
+            <div style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between;">
+              <span><strong>27.05.2026</strong> · 09:00 Uhr</span>
+              <span class="badge badge-green">Durchgeführt</span>
+            </div>
+            <div style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between;">
+              <span><strong>20.05.2026</strong> · 09:00 Uhr</span>
+              <span class="badge badge-green">Durchgeführt</span>
+            </div>
+          `;
+          
+          document.getElementById("pmAnamneseText").textContent = p.anamnese || "Keine Befunddaten hinterlegt.";
+          switchPatientModalTab('info');
+          openModal("modal-patient-details");
+        };
+        
+        tr.innerHTML = `
+          <td><strong>${p.name}</strong></td>
+          <td>${p.DOB || p.dob}</td>
+          <td><span class="badge ${insClass}">${p.type}</span></td>
+          <td>${p.insurer || p.kasse || "—"}</td>
+          <td>${p.lastTermin || p.letzterTermin}</td>
+          <td>${p.therapist || p.therapeut}</td>
+          <td><button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;">Akte einsehen</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Dynamic Weekly Bar Charts renderer
+    function renderWeeklyBarCharts() {
+      const bars = BUSINESSES[activeBusiness].stats_monthly.bar;
+      const miniMax = 800;
+      bars.forEach((val, idx) => {
+        const miniBar = document.getElementById(`miniBar${idx + 1}`);
+        const miniValText = document.getElementById(`miniBarVal${idx + 1}`);
+        if (miniBar && miniValText) {
+          miniValText.textContent = `€${val}`;
+          miniBar.style.height = `${Math.round((val / miniMax) * 100)}px`;
+        }
+        
+        const statBar = document.getElementById(`statBar${idx + 1}`);
+        const statValText = document.getElementById(`statBarVal${idx + 1}`);
+        if (statBar && statValText) {
+          statValText.textContent = `€${val}`;
+          statBar.style.height = `${Math.round((val / miniMax) * 150)}px`;
+        }
+      });
+    }
+
+    // Dynamic Settings Standort management renderer
+    function renderGeschaefteTab() {
+      const container = document.getElementById("geschaefteListContainer");
+      if (!container) return;
+      container.innerHTML = "";
+      
+      for (const [id, biz] of Object.entries(BUSINESSES)) {
+        const isCurrentActive = parseInt(id) === activeBusiness;
+        const card = document.createElement("div");
+        card.className = "biz-card";
+        
+        card.innerHTML = `
+          <div class="biz-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>${biz.name}</span>
+            ${isCurrentActive ? '<span class="badge badge-green" style="font-size: 10px;">Aktiver Standort</span>' : ''}
+          </div>
+          <div style="font-size: 13px; display: flex; flex-direction: column; gap: 6px; color: var(--text-muted);">
+            <div>📍 ${biz.location} · ${biz.address}</div>
+            <div>📞 ${biz.phone}</div>
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: auto; align-items: center;">
+            ${isCurrentActive ? 
+              `<button class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;" disabled>Bereits aktiv</button>` : 
+              `<button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;" onclick="switchBusiness(${id})">Als aktiv setzen</button>`
+            }
+            <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="openEditBusinessModal(${id})">Bearbeiten</button>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    // Branch administration modal handlers
+    function openEditBusinessModal(id) {
+      const biz = BUSINESSES[id];
+      if (biz) {
+        document.getElementById("ebId").value = id;
+        document.getElementById("ebName").value = biz.name;
+        document.getElementById("ebAddress").value = biz.address;
+        document.getElementById("ebPhone").value = biz.phone;
+        openModal("modal-edit-business");
+      }
+    }
+
+    function handleEditBusinessSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById("ebId").value;
+      const name = document.getElementById("ebName").value;
+      const address = document.getElementById("ebAddress").value;
+      const phone = document.getElementById("ebPhone").value;
+      
+      if (BUSINESSES[id]) {
+        BUSINESSES[id].name = name;
+        BUSINESSES[id].address = address;
+        BUSINESSES[id].phone = phone;
+        
+        if (parseInt(id) === activeBusiness) {
+          document.getElementById("bizSwitcherCurrentName").textContent = name;
+          document.getElementById("bizName").textContent = name;
+        }
+        
+        renderGeschaefteTab();
+        renderSwitcherDropdown();
+        showToast("Standortdaten erfolgreich aktualisiert!");
+        closeModal(document.getElementById("modal-edit-business"));
+      }
+    }
+
+    function handleNewBusinessSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById("nbName").value;
+      const address = document.getElementById("nbAddress").value;
+      const phone = document.getElementById("nbPhone").value;
+      const newId = Object.keys(BUSINESSES).length + 1;
+      
+      BUSINESSES[newId] = {
+        name: name,
+        location: "Filiale " + newId,
+        address: address,
+        phone: phone,
+        stats: { termine: 0, umsatz: "€0", auslastung: "0%", neupatienten: 0 },
+        appointments_today: [],
+        patients: [],
+        stats_monthly: { bar: [0, 0, 0, 0] }
+      };
+      
+      // Reset form
+      document.getElementById("nbName").value = "";
+      document.getElementById("nbAddress").value = "";
+      document.getElementById("nbPhone").value = "";
+      
+      renderGeschaefteTab();
+      renderSwitcherDropdown();
+      showToast("Neuer Standort wurde hinzugefügt");
+      closeModal(document.getElementById("modal-new-business"));
+    }
+
+    // Employee sub-tab switcher
+    function switchEmpTab(empId, tabName) {
+      const container = document.getElementById(empId);
+      if (!container) return;
+      
+      const tabBtns = container.querySelectorAll(".sub-tabs .sub-tab-btn");
+      tabBtns.forEach(btn => {
+        if (btn.getAttribute("data-tab") === tabName) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+      
+      const tabContents = container.querySelectorAll(".emp-tab-content");
+      tabContents.forEach(content => {
+        if (content.getAttribute("data-tab") === tabName) {
+          content.style.display = "block";
+        } else {
+          content.style.display = "none";
+        }
+      });
+    }
+
+    // Employee RBAC Handlers
+    function toggleGroupDropdown(e, id) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dropdown = document.getElementById(id);
+      if (dropdown) {
+        const isVisible = dropdown.style.display === "block";
+        document.querySelectorAll('[id^="emp-group-dropdown-"]').forEach(d => d.style.display = "none");
+        dropdown.style.display = isVisible ? "none" : "block";
+      }
+    }
+
+    function changeEmpGroup(e, empNum, groupName) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById(`emp-group-dropdown-${empNum}`).style.display = "none";
+      const badge = document.querySelector(`#emp-det-${empNum} .badge-gold`);
+      if (badge) {
+        badge.textContent = `Gruppe: ${groupName}`;
+      }
+      showToast(`Benutzergruppe aktualisiert auf: ${groupName}`);
+    }
+
+    // Attach global window listener to close custom dropdowns
+    window.addEventListener("click", () => {
+      closeBizDropdown();
+      document.querySelectorAll('[id^="emp-group-dropdown-"]').forEach(d => d.style.display = "none");
+    });
+
+
 
     // Page state variable
     let active302Step = 1;
@@ -3646,40 +5111,426 @@ Physiotherapie Müller</textarea>
     }
 
     // Appt Details loader
-    function openApptDetailModal(index) {
-      const a = APPOINTMENTS[index];
+    // Appt Details loader
+    function openApptDetailModal(dataOrIndex) {
+      let a;
+      if (typeof dataOrIndex === "number") {
+        a = APPOINTMENTS[dataOrIndex];
+      } else {
+        a = dataOrIndex;
+      }
       if (a) {
-        document.getElementById("adDate").textContent = a.date;
+        document.getElementById("adDate").textContent = a.date || "Montag, 27.05.2026";
         document.getElementById("adTime").textContent = a.time;
         document.getElementById("adPatient").textContent = a.patient;
-        document.getElementById("adTreatment").textContent = a.treatment;
+        document.getElementById("adTreatment").textContent = a.treatment || a.service || "Krankengymnastik";
         document.getElementById("adTherapist").textContent = a.therapist;
-        document.getElementById("adStatus").textContent = a.status;
+        document.getElementById("adStatus").textContent = a.status || "Bestätigt";
         openModal("modal-appt-details");
       }
     }
 
-    // Toggle cal week / month views
+    // Toggle cal day / week / month views
+    let activeCalView = "week";
+    let activeCalDay = 27; // Default to May 27th (Heute)
+    let activeTherapistFilter = "alle";
+
     function toggleCalView(view) {
+      activeCalView = view;
+      const dayBtn = document.getElementById("calViewDayBtn");
       const weekBtn = document.getElementById("calViewWeekBtn");
       const monthBtn = document.getElementById("calViewMonthBtn");
+      
+      const dayCont = document.getElementById("calDayContainer");
       const weekCont = document.getElementById("calWeekContainer");
       const monthCont = document.getElementById("calMonthContainer");
       
-      if (view === 'week') {
-        weekBtn.style.background = "var(--primary)";
-        weekBtn.style.color = "white";
-        monthBtn.style.background = "none";
-        monthBtn.style.color = "var(--text-main)";
-        weekCont.style.display = "block";
-        monthCont.style.display = "none";
+      // Reset button styles
+      [dayBtn, weekBtn, monthBtn].forEach(btn => {
+        if (btn) {
+          btn.style.background = "none";
+          btn.style.color = "var(--text-main)";
+        }
+      });
+      
+      // Hide all containers
+      if (dayCont) dayCont.style.display = "none";
+      if (weekCont) weekCont.style.display = "none";
+      if (monthCont) monthCont.style.display = "none";
+      
+      if (view === 'day') {
+        if (dayBtn) {
+          dayBtn.style.background = "var(--primary)";
+          dayBtn.style.color = "white";
+        }
+        if (dayCont) dayCont.style.display = "block";
+        renderDayViewAppointments();
+      } else if (view === 'week') {
+        if (weekBtn) {
+          weekBtn.style.background = "var(--primary)";
+          weekBtn.style.color = "white";
+        }
+        if (weekCont) weekCont.style.display = "block";
+        renderWeekView();
       } else {
-        monthBtn.style.background = "var(--primary)";
-        monthBtn.style.color = "white";
-        weekBtn.style.background = "none";
-        weekBtn.style.color = "var(--text-main)";
-        weekCont.style.display = "none";
-        monthCont.style.display = "block";
+        if (monthBtn) {
+          monthBtn.style.background = "var(--primary)";
+          monthBtn.style.color = "white";
+        }
+        if (monthCont) monthCont.style.display = "block";
+        renderMonthView();
+      }
+    }
+
+    function switchDayView(dayNumber) {
+      activeCalDay = dayNumber;
+      
+      let weekdayLabel = "Mi";
+      if (dayNumber === 25) weekdayLabel = "Mo";
+      else if (dayNumber === 26) weekdayLabel = "Di";
+      else if (dayNumber === 27) weekdayLabel = "Mi";
+      else if (dayNumber === 28) weekdayLabel = "Do";
+      else if (dayNumber === 29) weekdayLabel = "Fr";
+      else if (dayNumber === 30) weekdayLabel = "Sa";
+      else if (dayNumber === 31) weekdayLabel = "So";
+      else {
+        const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+        const d = new Date(2026, 4, dayNumber); // May 2026
+        weekdayLabel = days[d.getDay()];
+      }
+      
+      const labelText = `${weekdayLabel} ${String(dayNumber).padStart(2, "0")}.05.${dayNumber === 27 ? ' (Heute)' : ''}`;
+      // Update label in header
+      const labelEl = document.getElementById("calDateRangeLabel");
+      if (labelEl) labelEl.textContent = labelText;
+      
+      toggleCalView('day');
+    }
+
+    function navigateCalendar(direction) {
+      showToast("Aktion im Demo-Modus: Kalenderwoche gewechselt!");
+    }
+
+    function renderCalendarChips() {
+      const container = document.getElementById("employeeChipsContainer");
+      if (!container) return;
+      container.innerHTML = "";
+
+      const chips = [{ id: "alle", name: "Alle", color: "var(--primary)" }, ...THERAPISTS];
+      chips.forEach(c => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        const isActive = activeTherapistFilter === c.id;
+        
+        btn.style.cssText = `
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          padding: 6px 14px;
+          border-radius: 999px;
+          border: 1px solid ${isActive ? 'var(--primary)' : 'var(--border)'};
+          background: ${isActive ? 'var(--primary-dim)' : 'var(--bg-card-solid)'};
+          color: var(--text-main);
+          cursor: pointer;
+          font-weight: ${isActive ? '600' : '500'};
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        `;
+        
+        const dot = document.createElement("span");
+        dot.style.cssText = `
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: ${c.color || 'var(--text-main)'};
+          display: inline-block;
+        `;
+        
+        btn.appendChild(dot);
+        btn.appendChild(document.createTextNode(c.name));
+        
+        btn.onclick = () => {
+          activeTherapistFilter = c.id;
+          renderCalendarChips();
+          if (activeCalView === "week") {
+            renderWeekView();
+          } else if (activeCalView === "day") {
+            renderDayViewAppointments();
+          }
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function renderWeekView() {
+      const grid = document.getElementById("calWeekGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      // Set variable day count
+      grid.style.setProperty("--ov-day-count", "5");
+
+      // Header cells
+      const headerRow = ["Mitarbeiter", "Mo 27.05. (Heute)", "Di 28.05.", "Mi 29.05.", "Do 30.05.", "Fr 31.05."];
+      headerRow.forEach((label, idx) => {
+        const cell = document.createElement("div");
+        cell.className = "ov-week-head" + (idx === 1 ? " ov-week-head-today" : "");
+        cell.textContent = label;
+        grid.appendChild(cell);
+      });
+
+      // Determine which therapists to show
+      const filteredTherapists = activeTherapistFilter === "alle" 
+        ? THERAPISTS 
+        : THERAPISTS.filter(t => t.id === activeTherapistFilter);
+
+      // Populate rows
+      filteredTherapists.forEach(therapist => {
+        // Employee Cell
+        const empCell = document.createElement("div");
+        empCell.className = "ov-week-emp-cell";
+        empCell.style.cssText = "display: flex; align-items: center; gap: 8px;";
+        empCell.innerHTML = `
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${therapist.color}; display: inline-block;"></span>
+          <div>
+            <div style="font-weight: 600; line-height: 1.2;">${therapist.name}</div>
+            <div style="font-size: 10px; color: var(--text-muted);">${therapist.type}</div>
+          </div>
+        `;
+        grid.appendChild(empCell);
+
+        // Day Columns
+        const days = ["2026-05-27", "2026-05-28", "2026-05-29", "2026-05-30", "2026-05-31"];
+        days.forEach(day => {
+          const cell = document.createElement("div");
+          cell.className = "ov-week-cell";
+          
+          const dayAppts = (WEEK_APPOINTMENTS[day] && WEEK_APPOINTMENTS[day][therapist.name]) || [];
+          dayAppts.forEach(appt => {
+            const block = document.createElement("div");
+            block.className = "ov-week-appt";
+            block.style.borderLeftColor = therapist.color;
+            
+            // Get patient first name and service abbreviation
+            const firstName = appt.patient.split(" ")[0];
+            let serviceAbbr = appt.service;
+            if (appt.service.includes("(")) {
+              serviceAbbr = appt.service.match(/\(([^)]+)\)/)[1];
+            } else if (appt.service.includes("-")) {
+              serviceAbbr = appt.service.split("-")[1].trim();
+            } else {
+              serviceAbbr = appt.service.split(" ")[0];
+            }
+
+            block.innerHTML = `<span class="ov-week-appt-time">${appt.time.split(" - ")[0]}</span> <strong>${firstName}</strong> <span style="font-size: 9px; opacity: 0.85;">${serviceAbbr}</span>`;
+            block.onclick = (e) => {
+              e.stopPropagation();
+              openApptDetailModal({
+                date: getGermanDateLabel(day),
+                time: appt.time,
+                patient: appt.patient,
+                treatment: appt.service,
+                therapist: therapist.name,
+                status: appt.status
+              });
+            };
+            cell.appendChild(block);
+          });
+          grid.appendChild(cell);
+        });
+      });
+    }
+
+    function getGermanDateLabel(dayStr) {
+      const labels = {
+        "2026-05-27": "Montag, 27.05.2026",
+        "2026-05-28": "Dienstag, 28.05.2026",
+        "2026-05-29": "Mittwoch, 29.05.2026",
+        "2026-05-30": "Donnerstag, 30.05.2026",
+        "2026-05-31": "Freitag, 31.05.2026"
+      };
+      return labels[dayStr] || dayStr;
+    }
+
+    function renderDayViewAppointments() {
+      const grid = document.getElementById("calDayGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      // Determine which therapists to show
+      const filteredTherapists = activeTherapistFilter === "alle" 
+        ? THERAPISTS 
+        : THERAPISTS.filter(t => t.id === activeTherapistFilter);
+
+      grid.style.setProperty("--ov-emp-count", filteredTherapists.length);
+
+      // Uhrzeit cell in header
+      const timeHead = document.createElement("div");
+      timeHead.className = "ov-week-head";
+      timeHead.textContent = "Uhrzeit";
+      grid.appendChild(timeHead);
+
+      // Therapist header cells
+      filteredTherapists.forEach(therapist => {
+        const cell = document.createElement("div");
+        cell.className = "ov-week-head";
+        cell.style.cssText = "display: flex; align-items: center; justify-content: center; gap: 6px;";
+        cell.innerHTML = `
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${therapist.color}; display: inline-block;"></span>
+          <span>${therapist.name}</span>
+        `;
+        grid.appendChild(cell);
+      });
+
+      // Uhrzeit scale column
+      const timeScaleCol = document.createElement("div");
+      timeScaleCol.style.cssText = "display: flex; flex-direction: column;";
+      
+      const times = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"];
+      times.forEach(t => {
+        const cell = document.createElement("div");
+        cell.className = "cal-time-cell";
+        cell.style.height = "30px";
+        cell.style.borderBottom = "1px solid var(--border)";
+        cell.style.display = "flex";
+        cell.style.alignItems = "center";
+        cell.style.justifyContent = "center";
+        cell.style.fontSize = "11px";
+        cell.textContent = t;
+        timeScaleCol.appendChild(cell);
+      });
+      grid.appendChild(timeScaleCol);
+
+      const dateStr = `2026-05-${String(activeCalDay).padStart(2, "0")}`;
+
+      // Columns per therapist
+      filteredTherapists.forEach(therapist => {
+        const col = document.createElement("div");
+        col.className = "cal-day-col";
+        col.style.cssText = "position: relative; height: 570px; border-right: 1px solid var(--border); background: var(--bg-hover); border-radius: 6px;";
+        
+        const appts = (WEEK_APPOINTMENTS[dateStr] && WEEK_APPOINTMENTS[dateStr][therapist.name]) || [];
+        appts.forEach(appt => {
+          const block = document.createElement("div");
+          block.className = "cal-appointment-block";
+          block.style.borderLeft = `3px solid ${therapist.color}`;
+          block.style.background = therapist.color + "1a"; // 10% opacity
+          block.style.color = "var(--text-main)";
+          
+          const timeParts = appt.time.split(" - ")[0].split(":");
+          const sh = parseInt(timeParts[0]);
+          const sm = parseInt(timeParts[1]);
+          const startMinutes = (sh - 8) * 60 + sm;
+          
+          const endParts = appt.time.split(" - ")[1].split(":");
+          const eh = parseInt(endParts[0]);
+          const em = parseInt(endParts[1]);
+          const duration = (eh - sh) * 60 + (em - sm);
+          
+          block.style.top = `${startMinutes * 1.05}px`;
+          block.style.height = `${duration * 1.1}px`;
+          
+          const firstName = appt.patient.split(" ")[0];
+          let serviceAbbr = appt.service;
+          if (appt.service.includes("(")) {
+            serviceAbbr = appt.service.match(/\(([^)]+)\)/)[1];
+          } else if (appt.service.includes("-")) {
+            serviceAbbr = appt.service.split("-")[1].trim();
+          }
+
+          block.innerHTML = `
+            <span class="apt-time">${appt.time}</span>
+            <span class="apt-patient" style="font-weight: 700;">${firstName}</span>
+            <span style="font-size: 9px; opacity: 0.85; display: block;">${serviceAbbr}</span>
+          `;
+          block.onclick = (e) => {
+            e.stopPropagation();
+            openApptDetailModal({
+              date: getGermanDateLabel(dateStr),
+              time: appt.time,
+              patient: appt.patient,
+              treatment: appt.service,
+              therapist: therapist.name,
+              status: appt.status
+            });
+          };
+          col.appendChild(block);
+        });
+        grid.appendChild(col);
+      });
+    }
+
+    function renderMonthView() {
+      const grid = document.getElementById("calMonthGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      const headers = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+      headers.forEach(h => {
+        const cell = document.createElement("div");
+        cell.className = "cal-month-header-cell";
+        cell.textContent = h;
+        grid.appendChild(cell);
+      });
+
+      const aprilDays = [27, 28, 29, 30];
+      aprilDays.forEach(d => {
+        const cell = document.createElement("div");
+        cell.className = "cal-month-cell muted";
+        cell.innerHTML = `<span class="cell-num">${d}</span>`;
+        grid.appendChild(cell);
+      });
+
+      for (let d = 1; d <= 31; d++) {
+        const cell = document.createElement("div");
+        cell.className = "cal-month-cell";
+        
+        const isToday = d === 27;
+        if (isToday) {
+          cell.className += " today";
+          cell.style.border = "2px solid var(--highlight)";
+        }
+
+        cell.innerHTML = `<span class="cell-num">${d}</span>`;
+        cell.onclick = () => {
+          if (d >= 25 && d <= 31) {
+            switchDayView(d);
+          } else {
+            showToast(`Aktion im Demo-Modus: Tag ${d}.05.2026 ausgewählt.`);
+          }
+        };
+
+        const dotsCont = document.createElement("div");
+        dotsCont.className = "cal-month-dots";
+        
+        if (d >= 27 && d <= 31) {
+          const dateStr = `2026-05-${String(d).padStart(2, "0")}`;
+          const scheduled = [];
+          THERAPISTS.forEach(t => {
+            const appts = (WEEK_APPOINTMENTS[dateStr] && WEEK_APPOINTMENTS[dateStr][t.name]) || [];
+            if (appts.length > 0) scheduled.push(t.color);
+          });
+          scheduled.forEach(color => {
+            const dot = document.createElement("span");
+            dot.className = "cal-month-dot";
+            dot.style.background = color;
+            dotsCont.appendChild(dot);
+          });
+        } else {
+          const fakeCount = (d % 3 === 0) ? 2 : (d % 3 === 1 ? 1 : 0);
+          if (fakeCount > 0) {
+            const fakeColors = d % 2 === 0 ? ["#22c55e", "#3b82f6"] : ["#f59e0b", "#a855f7"];
+            for (let i = 0; i < fakeCount; i++) {
+              const dot = document.createElement("span");
+              dot.className = "cal-month-dot";
+              dot.style.background = fakeColors[i];
+              dotsCont.appendChild(dot);
+            }
+          }
+        }
+        cell.appendChild(dotsCont);
+        grid.appendChild(cell);
       }
     }
 
@@ -3711,11 +5562,13 @@ Physiotherapie Müller</textarea>
       document.getElementById("setNotifBtn").classList.remove("active");
       document.getElementById("setIntegBtn").classList.remove("active");
       document.getElementById("setAbonnBtn").classList.remove("active");
+      document.getElementById("setGeschaefteBtn").classList.remove("active");
       
       document.getElementById("setTabProfil").style.display = "none";
       document.getElementById("setTabNotif").style.display = "none";
       document.getElementById("setTabInteg").style.display = "none";
       document.getElementById("setTabAbonn").style.display = "none";
+      document.getElementById("setTabGeschaefte").style.display = "none";
       
       if (tab === 'profil') {
         document.getElementById("setProfilBtn").classList.add("active");
@@ -3726,9 +5579,12 @@ Physiotherapie Müller</textarea>
       } else if (tab === 'integ') {
         document.getElementById("setIntegBtn").classList.add("active");
         document.getElementById("setTabInteg").style.display = "block";
-      } else {
+      } else if (tab === 'abonn') {
         document.getElementById("setAbonnBtn").classList.add("active");
         document.getElementById("setTabAbonn").style.display = "block";
+      } else if (tab === 'geschaefte') {
+        document.getElementById("setGeschaefteBtn").classList.add("active");
+        document.getElementById("setTabGeschaefte").style.display = "block";
       }
     }
 
@@ -4032,6 +5888,15 @@ Physiotherapie Müller</textarea>
         showToast("Patient erfolgreich aus der Warteliste entfernt!");
       }
     }
+
+    // Initial render on page load
+    renderSwitcherDropdown();
+    renderTodayAppointments();
+    renderPatientsTable();
+    renderWeeklyBarCharts();
+    renderGeschaefteTab();
+    renderCalendarChips();
+    renderWeekView();
   </script>
 </body>
 
