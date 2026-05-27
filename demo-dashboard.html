@@ -1948,7 +1948,268 @@
               <input type="text" class="form-input" value="12:30–13:30 Uhr" onchange="showToast('Mittagspause gespeichert!')" />
             </div>
           </div>
+
+          <!-- Schließtage & Betriebsurlaub -->
+          <div class="card" style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Schließtage & Betriebsurlaub</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Tage, an denen die Praxis geschlossen ist</div>
+              </div>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 14px;" onclick="openModal('modal-add-schliesstag')">+ Schließtag hinzufügen</button>
+            </div>
+            <table class="table" style="font-size: 13px;">
+              <thead><tr><th>Zeitraum</th><th>Bezeichnung</th><th>Art</th><th>Betrifft</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>10.06.2026 – 18.06.2026</td>
+                  <td>Sommerurlaub</td>
+                  <td><span class="badge" style="background: rgba(59,130,246,0.12); color: #3b82f6;">Betriebsurlaub</span></td>
+                  <td>Gesamte Praxis</td>
+                  <td><button class="btn-ghost" style="font-size: 11px; padding: 2px 8px;" onclick="showToast('Schließtag entfernt')">Entfernen</button></td>
+                </tr>
+                <tr>
+                  <td>29.07.2026</td>
+                  <td>Teamausflug</td>
+                  <td><span class="badge" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Sonderurlaub</span></td>
+                  <td>Gesamte Praxis</td>
+                  <td><button class="btn-ghost" style="font-size: 11px; padding: 2px 8px;" onclick="showToast('Schließtag entfernt')">Entfernen</button></td>
+                </tr>
+                <tr>
+                  <td>24.12.2026 – 26.12.2026</td>
+                  <td>Weihnachtsferien</td>
+                  <td><span class="badge" style="background: rgba(59,130,246,0.12); color: #3b82f6;">Betriebsurlaub</span></td>
+                  <td>Gesamte Praxis</td>
+                  <td><button class="btn-ghost" style="font-size: 11px; padding: 2px 8px;" onclick="showToast('Schließtag entfernt')">Entfernen</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Gesetzliche Feiertage -->
+          <div class="card" style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Gesetzliche Feiertage Berlin 2026</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Automatisch gesperrt — keine Buchungen möglich</div>
+              </div>
+              <label class="switch-label" style="gap: 8px; display: flex; align-items: center; font-size: 13px; color: var(--text-muted);">
+                Automatisch sperren
+                <input type="checkbox" class="switch-input" checked onchange="showToast('Einstellung gespeichert')" />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${[
+                ['01.01', 'Neujahr'], ['18.04', 'Karfreitag'], ['21.04', 'Ostermontag'],
+                ['01.05', 'Tag der Arbeit'], ['29.05', 'Christi Himmelfahrt'], ['09.06', 'Pfingstmontag'],
+                ['03.10', 'Tag der Dt. Einheit'], ['25.12', '1. Weihnachtstag'], ['26.12', '2. Weihnachtstag']
+              ].map(([date, name]) => `
+                <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px;">
+                  <span style="color: var(--text-muted);">${date}</span>
+                  <span style="color: var(--text-main); font-weight: 500;">${name}</span>
+                </div>`).join('')}
+            </div>
+          </div>
+
+          <!-- Urlaubsverwaltung Mitarbeiter -->
+          <div class="card" style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Urlaubsverwaltung Mitarbeiter</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Urlaubstage pro Mitarbeiter — Jahr 2026</div>
+              </div>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 14px;" onclick="openModal('modal-add-urlaub')">+ Urlaub eintragen</button>
+            </div>
+            <table class="table" style="font-size: 13px;">
+              <thead>
+                <tr>
+                  <th>Mitarbeiter</th>
+                  <th>Anspruch</th>
+                  <th>Genommen</th>
+                  <th>Verbleibend</th>
+                  <th>Geplante Abwesenheiten</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; margin-right:6px;"></span>Tobias Kern</td>
+                  <td>30 Tage</td>
+                  <td>8 Tage</td>
+                  <td><strong style="color: var(--primary, #22c55e);">22 Tage</strong></td>
+                  <td><span style="font-size: 11px; color: var(--text-muted);">10.06–18.06 (Betriebsurlaub)</span></td>
+                </tr>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3b82f6; margin-right:6px;"></span>Anna Schreiber</td>
+                  <td>25 Tage</td>
+                  <td>5 Tage</td>
+                  <td><strong style="color: var(--primary, #22c55e);">20 Tage</strong></td>
+                  <td><span style="font-size: 11px; color: var(--text-muted);">10.06–18.06 (Betriebsurlaub)</span></td>
+                </tr>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-right:6px;"></span>Jonas Weber</td>
+                  <td>30 Tage</td>
+                  <td>12 Tage</td>
+                  <td><strong style="color: #f59e0b;">18 Tage</strong></td>
+                  <td><span style="font-size: 11px; color: var(--text-muted);">10.06–18.06 · 03.08–07.08</span></td>
+                </tr>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#a855f7; margin-right:6px;"></span>Lena Braun</td>
+                  <td>30 Tage</td>
+                  <td>3 Tage</td>
+                  <td><strong style="color: var(--primary, #22c55e);">27 Tage</strong></td>
+                  <td><span style="font-size: 11px; color: var(--text-muted);">10.06–18.06 (Betriebsurlaub)</span></td>
+                </tr>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-right:6px;"></span>Michael Roth</td>
+                  <td>20 Tage</td>
+                  <td>15 Tage</td>
+                  <td><strong style="color: #ef4444;">5 Tage</strong></td>
+                  <td><span style="font-size: 11px; color: var(--text-muted);">10.06–18.06 · 21.09–25.09</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Sonderregelungen -->
+          <div class="card" style="margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Sonderregelungen & Abwesenheiten</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Krankheit, Fortbildung, Sonderurlaub einzelner Mitarbeiter</div>
+              </div>
+              <button class="btn btn-primary" style="font-size: 12px; padding: 6px 14px;" onclick="openModal('modal-add-sonderregel')">+ Eintragen</button>
+            </div>
+            <table class="table" style="font-size: 13px;">
+              <thead><tr><th>Mitarbeiter</th><th>Zeitraum</th><th>Art</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-right:6px;"></span>Jonas Weber</td>
+                  <td>03.08 – 07.08.2026</td>
+                  <td>Jahresurlaub</td>
+                  <td><span class="badge" style="background: rgba(34,197,94,0.12); color: #22c55e;">Genehmigt</span></td>
+                  <td><button class="btn-ghost" style="font-size: 11px; padding: 2px 8px;" onclick="showToast('Eintrag entfernt')">Entfernen</button></td>
+                </tr>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-right:6px;"></span>Michael Roth</td>
+                  <td>21.09 – 25.09.2026</td>
+                  <td>Fortbildung</td>
+                  <td><span class="badge" style="background: rgba(34,197,94,0.12); color: #22c55e;">Genehmigt</span></td>
+                  <td><button class="btn-ghost" style="font-size: 11px; padding: 2px 8px;" onclick="showToast('Eintrag entfernt')">Entfernen</button></td>
+                </tr>
+                <tr>
+                  <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3b82f6; margin-right:6px;"></span>Anna Schreiber</td>
+                  <td>14.05.2026</td>
+                  <td>Krankheit</td>
+                  <td><span class="badge" style="background: rgba(239,68,68,0.12); color: #ef4444;">Abwesend</span></td>
+                  <td><button class="btn-ghost" style="font-size: 11px; padding: 2px 8px;" onclick="showToast('Eintrag entfernt')">Entfernen</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
         </section>
+
+        <!-- MODAL: Schließtag hinzufügen -->
+        <div class="modal-overlay" id="modal-add-schliesstag" hidden>
+          <div class="modal" style="max-width: 420px;">
+            <div class="modal-header">
+              <span class="modal-title">Schließtag hinzufügen</span>
+              <button class="modal-close" onclick="closeModal('modal-add-schliesstag')">✕</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label">Bezeichnung</label>
+                <input type="text" class="form-input" placeholder="z. B. Sommerurlaub" />
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Von</label>
+                  <input type="date" class="form-input" value="2026-06-10" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bis</label>
+                  <input type="date" class="form-input" value="2026-06-18" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Art</label>
+                <select class="form-input">
+                  <option>Betriebsurlaub</option>
+                  <option>Sonderurlaub</option>
+                  <option>Feiertag (manuell)</option>
+                  <option>Fortbildung</option>
+                  <option>Sonstiges</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Betrifft</label>
+                <select class="form-input">
+                  <option>Gesamte Praxis</option>
+                  <option>Tobias Kern</option>
+                  <option>Anna Schreiber</option>
+                  <option>Jonas Weber</option>
+                  <option>Lena Braun</option>
+                  <option>Michael Roth</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" onclick="closeModal('modal-add-schliesstag')">Abbrechen</button>
+              <button class="btn btn-primary" onclick="showToast('Schließtag wurde eingetragen'); closeModal('modal-add-schliesstag')">Speichern</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL: Urlaub eintragen -->
+        <div class="modal-overlay" id="modal-add-urlaub" hidden>
+          <div class="modal" style="max-width: 420px;">
+            <div class="modal-header">
+              <span class="modal-title">Urlaub eintragen</span>
+              <button class="modal-close" onclick="closeModal('modal-add-urlaub')">✕</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label">Mitarbeiter</label>
+                <select class="form-input">
+                  <option>Tobias Kern</option>
+                  <option>Anna Schreiber</option>
+                  <option>Jonas Weber</option>
+                  <option>Lena Braun</option>
+                  <option>Michael Roth</option>
+                </select>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                  <label class="form-label">Von</label>
+                  <input type="date" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bis</label>
+                  <input type="date" class="form-input" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Art</label>
+                <select class="form-input">
+                  <option>Jahresurlaub</option>
+                  <option>Sonderurlaub</option>
+                  <option>Fortbildung</option>
+                  <option>Krankheit</option>
+                  <option>Unbezahlter Urlaub</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notiz (optional)</label>
+                <input type="text" class="form-input" placeholder="z. B. Rückbestätigung ausstehend" />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" onclick="closeModal('modal-add-urlaub')">Abbrechen</button>
+              <button class="btn btn-primary" onclick="showToast('Urlaub wurde eingetragen'); closeModal('modal-add-urlaub')">Speichern</button>
+            </div>
+          </div>
+        </div>
 
         <!-- ================= PANEL 8: MITARBEITER ================= -->
         <section class="panel" id="panel-employees">
