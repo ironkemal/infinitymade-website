@@ -3,6 +3,8 @@
    Aesthetic: soft-skill Editorial Luxury
    =========================================================== */
 
+@import url('../fonts/system-fonts.css');
+
 :root {
   --bg: #F8F3E8;
   --bg-card: #FFFEFB;

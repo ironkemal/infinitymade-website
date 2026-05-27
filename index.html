@@ -46,8 +46,8 @@
   <link rel="apple-touch-icon" href="/favicon.svg" />
   <meta name="theme-color" content="#F8F3E8" />
 
-  <!-- ===== Typography ===== -->
-  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <!-- ===== Design System ===== -->
+  <link rel="stylesheet" href="assets/system.css" />
 
   <!-- ===== Structured Data: Organization ===== -->
   <script type="application/ld+json">
@@ -118,6 +118,7 @@
 
     :root {
       --bg: #F8F3E8;
+      --bg-card: #FFFEFB;
       --bg-warm: #F1E9D6;
       --bg-deep: #E8DCC0;
       --ink: #1A1611;
@@ -226,7 +227,7 @@
       transition: background 0.4s var(--ease-out), color 0.4s var(--ease-out);
     }
     @media (hover: hover) and (pointer: fine) {
-      .nav-link:hover { color: var(--ink); background: rgba(26, 22, 17, 0.04); }
+      .nav-link:hover { color: var(--ink); background: var(--line-soft); }
     }
 
     .nav-login {
@@ -274,7 +275,7 @@
         box-shadow:
           0 1px 0 rgba(255, 255, 255, 0.08) inset,
           0 12px 22px -8px rgba(30, 61, 47, 0.45),
-          0 4px 8px -2px rgba(26, 22, 17, 0.08);
+          0 4px 8px -2px var(--line);
       }
     }
     .nav-cta:active { transform: translateY(0) scale(0.97); }
@@ -392,7 +393,7 @@
       box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.06) inset,
         0 6px 14px -6px rgba(26, 22, 17, 0.25),
-        0 2px 4px -1px rgba(26, 22, 17, 0.08);
+        0 2px 4px -1px var(--line);
       transition:
         transform 280ms var(--ease-spring),
         background 240ms var(--ease-out),
@@ -432,7 +433,7 @@
       border-radius: 999px;
       box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.7) inset,
-        0 2px 4px -1px rgba(26, 22, 17, 0.04);
+        0 2px 4px -1px var(--line-soft);
       transition:
         transform 280ms var(--ease-spring),
         background 240ms var(--ease-out),
@@ -1022,7 +1023,7 @@
     .project-feature-cta a:active { transform: translateY(-1px) scale(0.97); }
     .project-feature-cta-circle {
       width: 1.7rem; height: 1.7rem;
-      background: rgba(26, 22, 17, 0.08);
+      background: var(--line);
       border-radius: 999px;
       display: grid; place-items: center;
       transition: transform 320ms var(--ease-spring);
@@ -1286,7 +1287,7 @@
       background: var(--ink);
     }
     .model.featured .model-inner {
-      background: linear-gradient(180deg, #2A2218 0%, var(--ink) 100%);
+      background: linear-gradient(180deg, var(--bronze-deep) 0%, var(--ink) 100%);
       color: rgba(248, 243, 232, 0.92);
     }
     .model.featured .model-tag,
@@ -1316,7 +1317,7 @@
     }
     .closing-inner {
       padding: 5rem 4rem;
-      background: linear-gradient(135deg, var(--emerald-deep) 0%, #2C5141 100%);
+      background: linear-gradient(135deg, var(--emerald-deep) 0%, var(--sage) 100%);
       border-radius: 1.45rem;
       color: var(--bg);
       display: grid;
@@ -1411,7 +1412,7 @@
     .closing-btn:active { transform: translateY(-1px) scale(0.97); }
     .closing-btn-circle {
       width: 2rem; height: 2rem;
-      background: rgba(26, 22, 17, 0.08);
+      background: var(--line);
       border-radius: 999px;
       display: grid; place-items: center;
       font-size: 0.95rem;
@@ -1601,20 +1602,20 @@
   <div>
     <span class="hero-eyebrow">
       <span class="hero-eyebrow-dot"></span>
-      KI-Studio · Made in NRW
+      Für Physiotherapie & Heilmittelpraxen · Made in NRW
     </span>
     <h1 class="hero-title">
-      Wir bauen Software, die <em>Zeit zurückgibt.</em>
+      Fokus auf den Patienten. <em>Nicht auf den Papierkram.</em>
     </h1>
     <p class="hero-lede">
-      Maßgeschneiderte KI-Agents und Workflow-Automatisierungen für deutsche Betriebe — vom Heilmittel-Sektor über Handwerk bis zur Steuerkanzlei. Verständlich, abrechenbar, DSGVO-konform.
+      Randevu, Abrechnung und Dokumentation — automatisch und DSGVO-konform. Damit du dich auf das konzentrierst, was wirklich zählt.
     </p>
     <div class="hero-actions">
-      <a href="#kontakt" class="btn btn-primary-arrow">
-        Analysegespräch buchen
+      <a href="demo-dashboard.html" target="_blank" class="btn btn-primary-arrow">
+        Demo starten
         <span class="arrow-pill" aria-hidden="true">↗</span>
       </a>
-      <a href="#projekte" class="btn btn-secondary">Projekte ansehen</a>
+      <a href="#features" class="btn btn-secondary">Mehr erfahren</a>
     </div>
   </div>
 
