@@ -913,15 +913,13 @@
     }
     .biz-dropdown {
       display: none;
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
+      position: fixed;
       min-width: 290px;
       background: var(--bg-card-solid);
       border: 1px solid var(--border-strong);
       border-radius: 10px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-      z-index: 999;
+      z-index: 99999;
       padding: 6px 0;
       overflow: hidden;
       text-align: left;
@@ -4623,9 +4621,16 @@ Physiotherapie Müller</textarea>
     function toggleBizDropdown(e) {
       e.stopPropagation();
       const dropdown = document.getElementById("bizSwitcherDropdown");
-      if (dropdown) {
-        const isVisible = dropdown.style.display === "block";
-        dropdown.style.display = isVisible ? "none" : "block";
+      if (!dropdown) return;
+      const isVisible = dropdown.style.display === "block";
+      if (isVisible) {
+        dropdown.style.display = "none";
+      } else {
+        const btn = document.getElementById("bizSwitcherBtn");
+        const rect = btn.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 6) + "px";
+        dropdown.style.left = rect.left + "px";
+        dropdown.style.display = "block";
       }
     }
 
