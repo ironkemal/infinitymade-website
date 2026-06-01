@@ -2234,6 +2234,7 @@ async function saveFahrtEndHandler() {
     kind_snapshot: kindSnapshot,
     start_km: b.start_km,
     end_km: endKm,
+    distance_km: (Number.isFinite(b.start_km) && Number.isFinite(endKm)) ? (endKm - b.start_km) : null,
     estimated_duration_min: leadDurationMin,
     fahrt_started_at: b.fahrt_started_at,
     fahrt_arrived_at: b.fahrt_arrived_at,
@@ -3534,7 +3535,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     customer_name: cust, customer_email: '', customer_phone: phone || null,
     notes: notes || null,
     hausbesuch: document.getElementById('bkHausbesuch').checked || false,
-    status: 'confirmed'
+    status: 'confirmed',
+    lead_id: custId || null
   };
   const { error } = id
     ? await supabase.from('bookings').update(payload).eq('id', id)
@@ -4984,8 +4986,8 @@ async function openLeadModal(lead) {
     kkSelect.innerHTML = '<option value="">-- Wählen --</option>' +
       krankenkassenCache.map(k => `<option value="${k.name}">${k.name}</option>`).join('');
 
-    kkSelect.value = md.krankenkasse || '';
-    document.getElementById('lead-krankenkassennummer').value = md.krankenkassennummer || '';
+    kkSelect.value = (lead?.krankenkasse || md.krankenkasse) || '';
+    document.getElementById('lead-krankenkassennummer').value = (lead?.versichertennummer || md.krankenkassennummer) || '';
     // New strukturlu adres alanları (kolonlar). Backward-compat: eski metadata.adresse'den parse et.
     const streetEl = document.getElementById('lead-street');
     const plzEl = document.getElementById('lead-plz');
@@ -5113,7 +5115,9 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     city: city || null,
     status: document.getElementById('lead-status').value,
     notes: document.getElementById('lead-notes').value.trim() || null,
-    metadata: Object.keys(metadata).length ? metadata : null
+    metadata: Object.keys(metadata).length ? metadata : null,
+    krankenkasse: document.getElementById('lead-krankenkasse').value || null,
+    versichertennummer: document.getElementById('lead-krankenkassennummer').value.trim() || null
   };
 
   // Adres değiştiyse cache'lenmiş rota geçersiz → temizle (Wave 3 Berechnen'de yeniden hesaplanır)
