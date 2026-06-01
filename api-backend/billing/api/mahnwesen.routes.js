@@ -26,7 +26,7 @@ async function resolveAuth(req, res) {
 
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
-    .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, email')
+    .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, email, bank_name, iban, bic')
     .eq('id', u.user.id)
     .single();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
@@ -167,7 +167,7 @@ router.post('/mahnwesen/create', async (req, res) => {
     if (profile.role === 'employee' && profile.owner_id) {
       const { data: ownerProf } = await supabase
         .from('profiles')
-        .select('id, business_name, phone, city, zip, street, house_number, ik_number, email')
+        .select('id, business_name, phone, city, zip, street, house_number, ik_number, email, bank_name, iban, bic')
         .eq('id', profile.owner_id)
         .single();
       if (ownerProf) praxisProfile = ownerProf;
@@ -209,6 +209,12 @@ router.post('/mahnwesen/create', async (req, res) => {
     const strasse = [praxisProfile.street, praxisProfile.house_number].filter(Boolean).join(' ');
     const plz_ort = [praxisProfile.zip, praxisProfile.city].filter(Boolean).join(' ').trim();
 
+    const bankverbindung = [
+      praxisProfile.bank_name,
+      praxisProfile.iban ? ('IBAN: ' + praxisProfile.iban) : null,
+      praxisProfile.bic ? ('BIC: ' + praxisProfile.bic) : null
+    ].filter(Boolean).join(' · ');
+
     const html = renderMahnung({
       praxis: {
         name:     praxisProfile.business_name || 'Praxis für Physiotherapie',
@@ -231,7 +237,7 @@ router.post('/mahnwesen/create', async (req, res) => {
       original_rechnung_nr,
       original_faelligkeit,
       neue_faelligkeit,
-      bankverbindung:         '', // owner fills this in their profile/settings — not stored yet
+      bankverbindung:         bankverbindung || '',
       datum:                  now,
     });
 
