@@ -4,6 +4,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const PRAXIS_SECTORS = ['physiotherapy', 'logopaedie', 'ergotherapie', 'podologie'];
+
 const STEPS = ['account', 'business', 'billing', 'owner', 'services', 'hours', 'plan', 'done'];
 
 const SERVICE_TEMPLATES = {
@@ -62,6 +64,30 @@ const SERVICE_TEMPLATES = {
     { name: 'Elektrotherapie', code: 'ES', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
     { name: 'Ultraschall', code: 'US', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
     { name: 'Schmerztherapie', code: null, price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
+  ],
+  logopaedie: [
+    { name: 'Erstdiagnostik/Befund', code: null, price_config: { durations: { '45': { price: 80, active: true }, '60': { price: 100, active: true } } } },
+    { name: 'Sprachtherapie', code: null, price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
+    { name: 'Sprechtherapie', code: null, price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
+    { name: 'Stimmtherapie', code: null, price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
+    { name: 'Schlucktherapie', code: null, price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 70, active: true }, '60': { price: 90, active: true } } } },
+    { name: 'Beratung', code: null, price_config: { durations: { '15': { price: 25, active: true }, '30': { price: 45, active: true } } } },
+  ],
+  ergotherapie: [
+    { name: 'Erstgespräch/Befund', code: null, price_config: { durations: { '45': { price: 75, active: true }, '60': { price: 95, active: true } } } },
+    { name: 'Motorisch-funktionelle Behandlung', code: null, price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
+    { name: 'Sensomotorisch-perzeptive Behandlung', code: null, price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
+    { name: 'Psychisch-funktionelle Behandlung', code: null, price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 65, active: true }, '60': { price: 85, active: true } } } },
+    { name: 'Hirnleistungstraining', code: null, price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true } } } },
+    { name: 'Beratung', code: null, price_config: { durations: { '15': { price: 25, active: true }, '30': { price: 45, active: true } } } },
+  ],
+  podologie: [
+    { name: 'Podologische Erstbehandlung', code: null, price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 48, active: true } } } },
+    { name: 'Hornhautabtragung', code: null, price_config: { durations: { '15': { price: 20, active: true }, '30': { price: 35, active: true } } } },
+    { name: 'Nagelbearbeitung', code: null, price_config: { durations: { '15': { price: 20, active: true }, '30': { price: 35, active: true } } } },
+    { name: 'Hühneraugenbehandlung', code: null, price_config: { durations: { '15': { price: 22, active: true }, '30': { price: 38, active: true } } } },
+    { name: 'Komplexbehandlung (beide Füße)', code: null, price_config: { durations: { '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
+    { name: 'Beratung', code: null, price_config: { durations: { '15': { price: 20, active: true }, '30': { price: 35, active: true } } } },
   ],
   restaurant: [
     { name: 'Tischreservierung', price_config: { durations: { '60': { price: 0, active: true }, '90': { price: 0, active: true }, '120': { price: 0, active: true } } } },
@@ -238,7 +264,7 @@ function prefillForms() {
 // ---- Navigation ----
 function isStepApplicable(stepName) {
   if (stepName === 'billing') {
-    return (profile?.sector || '') === 'physiotherapy';
+    return PRAXIS_SECTORS.includes(profile?.sector || '');
   }
   return true;
 }
@@ -384,8 +410,8 @@ function bindBusiness() {
 
     const booking_slug = cleanBookingSlug(business_name) || cleanBookingSlug((sessionStorage.getItem('onboarding_email') || '').slice(0, 8));
 
-    const isPhysio = sector === 'physiotherapy';
-    const nextStep = isPhysio ? 'billing' : 'owner';
+    const isPraxis = PRAXIS_SECTORS.includes(sector);
+    const nextStep = isPraxis ? 'billing' : 'owner';
 
     if (userId) {
       const { error } = await supabase.from('profiles').update({
@@ -743,8 +769,8 @@ function bindPlan() {
   const dtaLabel    = document.getElementById('dtaProPriceLabel');
   const refreshDtaVisibility = () => {
     if (!dtaCard) return;
-    const s = (profile?.sector || '').toLowerCase();
-    dtaCard.hidden = !(s === 'physiotherapy' || s === 'praxis');
+    const sector = (profile?.sector || '').toLowerCase();
+    dtaCard.hidden = !PRAXIS_SECTORS.includes(sector);
   };
   refreshDtaVisibility();
   window.__refreshDtaVisibility = refreshDtaVisibility;

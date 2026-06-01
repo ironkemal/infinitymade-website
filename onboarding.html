@@ -72,31 +72,25 @@
   <section class="ob-step" data-step="business" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 2 / 7</span>
-      <h1>Über Ihr <em>Unternehmen</em></h1>
-      <p>Diese Daten erscheinen im KI-Assistenten — er stellt sich Ihren Kunden mit dem richtigen Namen vor.</p>
+      <h1>Über Ihre <em>Praxis</em></h1>
+      <p>Diese Daten erscheinen auf Ihrer Online-Buchungsseite und auf Rechnungen.</p>
     </div>
     <form class="ob-form" id="businessForm">
       <!-- Hidden input to store booking slug cleanly and prevent JS crashes -->
       <input type="hidden" id="bookingSlug" />
 
       <label class="ob-form-field">
-        <span class="ob-field-label">Geschäftsname</span>
-        <input type="text" id="bizName" required placeholder="z.B. BlackBox2 Barbershop" />
+        <span class="ob-field-label">Name Ihrer Praxis</span>
+        <input type="text" id="bizName" required placeholder="z.B. Physiotherapie Müller" />
       </label>
       <label class="ob-form-field">
         <span class="ob-field-label">Branche</span>
         <select id="bizSector" required>
           <option value="">Bitte wählen…</option>
-          <option value="barber">Friseur / Barbershop</option>
-          <option value="beauty">Kosmetikstudio</option>
           <option value="physiotherapy">Physiotherapie</option>
-          <optgroup label="Bald verfügbar">
-            <option value="nails" disabled>Nagelstudio (bald)</option>
-            <option value="massage" disabled>Massagestudio (bald)</option>
-            <option value="spa" disabled>Spa / Wellness (bald)</option>
-            <option value="tattoo" disabled>Tattoostudio (bald)</option>
-            <option value="gym" disabled>Fitnessstudio (bald)</option>
-          </optgroup>
+          <option value="logopaedie">Logopädie</option>
+          <option value="ergotherapie">Ergotherapie</option>
+          <option value="podologie">Podologie</option>
         </select>
       </label>
       <div class="ob-row-2">
@@ -105,7 +99,7 @@
           <input type="text" id="bizCity" required placeholder="z.B. Koblenz" />
         </label>
         <label class="ob-form-field">
-          <span class="ob-field-label">Sprache des Bots</span>
+          <span class="ob-field-label">Sprache der Buchungsseite</span>
           <select id="bizLanguage" required>
             <option value="de" selected>Deutsch</option>
             <option value="tr">Türkçe</option>
@@ -198,13 +192,13 @@
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 3 / 7</span>
       <h1>Ihre <em>Inhaberdaten</em></h1>
-      <p>Wer führt die Termine durch? Ihre Kunden sehen diesen Namen bei der Online-Buchung.</p>
+      <p>Wer führt die Behandlungen durch? Ihre Patient(inn)en sehen diesen Namen bei der Online-Buchung.</p>
     </div>
     <form class="ob-form" id="ownerForm">
       <div class="ob-info-callout">
         <span class="ob-callout-icon">ℹ️</span>
         <div class="ob-callout-content">
-          <strong>Hinweis:</strong> Wenn Ihre Mitarbeiter sich später eintragen, werden sie automatisch für Kunden bei der Terminbuchung sichtbar. Diese Angaben gelten für Sie als Geschäftsinhaber, falls Sie selbst aktiv Dienstleistungen anbieten.
+          <strong>Hinweis:</strong> Wenn Ihre Mitarbeiter sich später eintragen, werden sie automatisch für Patient(inn)en bei der Terminbuchung sichtbar. Diese Angaben gelten für Sie als Praxisinhaber, falls Sie selbst aktiv Therapien anbieten.
         </div>
       </div>
       <div class="ob-row-2">
@@ -220,7 +214,7 @@
       
       <div class="ob-toggle-section">
         <span class="ob-toggle-title">Online-Terminbuchung aktivieren?</span>
-        <p class="ob-toggle-description">Sollen Kunden über Ihre Website direkt Termine bei Ihnen buchen können?</p>
+        <p class="ob-toggle-description">Sollen Patient(inn)en über Ihre Website direkt Termine bei Ihnen buchen können?</p>
         <div class="ob-toggle" id="bookingsToggle">
           <button type="button" class="ob-toggle-btn active" data-value="true">Ja, Terminbuchung erlauben</button>
           <button type="button" class="ob-toggle-btn" data-value="false">Nein, nur Anfragen</button>
@@ -239,7 +233,7 @@
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 4 / 7</span>
       <h1>Ihre <em>Dienstleistungen</em></h1>
-      <p>Welche Termine kann der Bot buchen? Sie können sie später jederzeit bearbeiten.</p>
+      <p>Welche Leistungen bieten Sie an? Diese erscheinen in Ihrer Online-Buchung — Sie können sie später jederzeit bearbeiten.</p>
     </div>
     <form class="ob-form" id="servicesForm">
       <div class="ob-services-header">
@@ -265,7 +259,7 @@
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 5 / 7</span>
       <h1>Ihre <em>Öffnungszeiten</em></h1>
-      <p>Diese Zeiten gelten für die KI — außerhalb dieser Stunden bietet der Bot keine Termine an.</p>
+      <p>Außerhalb dieser Zeiten sind online keine Termine buchbar.</p>
     </div>
     <form class="ob-form" id="hoursForm">
       <div class="ob-hours-grid" id="hoursGrid">
@@ -300,15 +294,14 @@
           <ul class="plan-features">
             <li>Online-Terminbuchung</li>
             <li>Kalender &amp; Termine</li>
-            <li>Kundenverwaltung</li>
+            <li>Patientenverwaltung</li>
             <li>1 Standort, bis 2 Mitarbeiter</li>
             <li>E-Mail-Support</li>
           </ul>
           <button type="button" class="ob-btn plan-select" data-plan="starter">Starter wählen</button>
         </div>
 
-        <div class="plan-card recommended" data-plan="professional">
-          <div class="plan-badge">Empfohlen</div>
+        <div class="plan-card" data-plan="professional">
           <div class="plan-name">Professional</div>
           <div class="plan-price"><span class="plan-price-num" data-month="49" data-year="42">49</span> €<small>/Monat</small></div>
           <div class="plan-billing" data-billing>monatlich abgerechnet</div>
@@ -320,10 +313,11 @@
             <li>CSV-Import / Export</li>
             <li>Priority Support</li>
           </ul>
-          <button type="button" class="ob-btn primary plan-select" data-plan="professional">Professional wählen</button>
+          <button type="button" class="ob-btn plan-select" data-plan="professional">Professional wählen</button>
         </div>
 
-        <div class="plan-card" data-plan="klinik">
+        <div class="plan-card recommended" data-plan="klinik">
+          <div class="plan-badge">Empfohlen</div>
           <div class="plan-name">Klinik</div>
           <div class="plan-price"><span class="plan-price-num" data-month="99" data-year="84">99</span> €<small>/Monat</small></div>
           <div class="plan-billing" data-billing>monatlich abgerechnet</div>
@@ -331,11 +325,11 @@
             <li>Alles aus Professional</li>
             <li>Patientennotizen &amp; Anamnese</li>
             <li>Rezeptverwaltung</li>
-            <li>Kassenabrechnung (§ 302)</li>
+            <li>§302-Abrechnung vorbereiten (DTA-Erstellung)</li>
             <li>API-Zugang</li>
             <li>Persönlicher Account Manager</li>
           </ul>
-          <button type="button" class="ob-btn plan-select" data-plan="klinik">Klinik wählen</button>
+          <button type="button" class="ob-btn primary plan-select" data-plan="klinik">Klinik wählen</button>
         </div>
 
         <div class="plan-card" data-plan="enterprise">
@@ -367,6 +361,15 @@
         </label>
       </div>
 
+      <!-- §302 liability / scope clarification (Tool, kein Abrechnungsdienstleister) -->
+      <div class="ob-stripe-callout">
+        <span class="ob-stripe-icon">ℹ️</span>
+        <div class="ob-stripe-content">
+          <strong>Was die §302-Abrechnung umfasst:</strong>
+          InfinityMade ist ein Software-Tool zur <em>Vorbereitung</em> Ihrer Abrechnung. Wir erstellen aus Ihren Daten die fertigen DTA-Dateien. Prüfung, Signatur mit Ihrem eigenen ITSG-Zertifikat und die Einreichung bei den Kostenträgern (DAS-Portal) nehmen Sie selbst vor. Wir sind <strong>kein Abrechnungszentrum / Abrechnungsdienstleister</strong> und übernehmen keine Gewähr für die inhaltliche Richtigkeit oder die Anerkennung der Abrechnung durch die Krankenkasse. Die abrechnungsrechtliche Verantwortung verbleibt bei Ihrer Praxis.
+        </div>
+      </div>
+
       <div class="ob-stripe-callout">
         <span class="ob-stripe-icon">🔒</span>
         <div class="ob-stripe-content">
@@ -386,7 +389,7 @@
         <label class="ob-consent-label">
           <input type="checkbox" id="consentAvv" required />
           <span class="ob-consent-text">
-            Ich schließe den <a href="/dpa.html" target="_blank"><strong>Auftragsverarbeitungsvertrag (AVV)</strong> nach Art. 28 DSGVO</a> ab. Mir ist bewusst, dass InfinityMade personenbezogene Daten meiner Kund:innen/Patient:innen in meinem Auftrag verarbeitet. <span class="ob-required-star">*</span>
+            Ich schließe den <a href="/dpa.html" target="_blank"><strong>Auftragsverarbeitungsvertrag (AVV)</strong> nach Art. 28 DSGVO</a> ab. Mir ist bewusst, dass InfinityMade personenbezogene Daten meiner Patient:innen in meinem Auftrag verarbeitet. <span class="ob-required-star">*</span>
           </span>
         </label>
         <div id="consentError" class="ob-consent-error">Bitte beide Zustimmungen ankreuzen, um fortzufahren.</div>
@@ -403,14 +406,13 @@
     <div class="ob-done">
       <div class="ob-done-emoji">🎉</div>
       <h1>Willkommen bei <em>InfinityMade</em>!</h1>
-      <p>Ihr KI-Assistent ist konfiguriert. Wir richten jetzt im Hintergrund den Webhook ein und melden uns innerhalb 24h für den Test-Anruf.</p>
+      <p>Ihre Praxis ist eingerichtet. Sie können jetzt Ihr Dashboard nutzen und Online-Buchungen empfangen.</p>
       
       <div class="ob-done-info-card">
         <h3>Was passiert als Nächstes?</h3>
         <ol class="ob-done-steps">
-          <li>Sie bekommen eine E-Mail mit dem Onboarding-Plan.</li>
-          <li>Wir testen den Bot mit Ihnen live (15 Min Anruf).</li>
-          <li>Aktivierung — Ihr Bot ist live.</li>
+          <li>Teilen Sie Ihren Buchungslink mit Ihren Patient:innen.</li>
+          <li>Verwalten Sie Termine und Abrechnung in Ihrem Dashboard.</li>
         </ol>
       </div>
       
