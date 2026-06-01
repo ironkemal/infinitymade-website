@@ -628,6 +628,15 @@ function showToast(msg, type = 'success') {
   setTimeout(() => d.remove(), 3500);
 }
 
+// Rohe Postgres-Fehler in verständliche Meldungen übersetzen (Termin speichern)
+function bookingErrMsg(error) {
+  const m = (error && error.message) || '';
+  if (m.includes('no_overlapping_bookings') || m.toLowerCase().includes('overlap') || m.includes('exclusion constraint')) {
+    return 'Dieser Zeitraum ist für diese:n Mitarbeiter:in bereits belegt. Bitte eine andere Uhrzeit wählen.';
+  }
+  return m || t('err_generic');
+}
+
 function fmtTime(iso) {
   if (!iso) return '—';
   return new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
@@ -1632,10 +1641,16 @@ async function renderDayView(dateStr) {
   const emps = teamMembers;
   if (!emps.length) return;
 
+  // Heute: vergangene Stunden ausblenden + Live-"Jetzt"-Linie
+  const _now = new Date();
+  const isToday = dateStr === toISODate(_now);
+  const nowMin = _now.getHours() * 60 + _now.getMinutes();
+
   for (let h = 8; h < 20; h++) {
     for (let m = 0; m < 60; m += 30) {
       const slot = document.createElement('div');
       slot.className = 'dv-slot';
+      if (isToday && (h * 60 + m + 30) <= nowMin) slot.classList.add('dv-slot--past');
       const label = document.createElement('div');
       label.className = 'dv-time-label';
       label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -1678,6 +1693,7 @@ async function renderDayView(dateStr) {
       for (let m = 0; m < 60; m += 30) {
         const slot = document.createElement('div');
         slot.className = 'dv-slot';
+        if (isToday && (h * 60 + m + 30) <= nowMin) slot.classList.add('dv-slot--past');
         const timeStr = `${dateStr}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         slot.dataset.time = timeStr;
         slot.dataset.empId = emp.id;
@@ -1692,6 +1708,14 @@ async function renderDayView(dateStr) {
         });
         slotWrap.appendChild(slot);
       }
+    }
+
+    // Live "Jetzt"-Linie (nur heute, innerhalb der Tagesansicht 08–20)
+    if (isToday && nowMin >= 8 * 60 && nowMin < 20 * 60) {
+      const nowLine = document.createElement('div');
+      nowLine.className = 'dv-now-line';
+      nowLine.style.top = (((nowMin - 8 * 60) / 30) * 56) + 'px';
+      slotWrap.appendChild(nowLine);
     }
 
     const empBookings = (bookings || []).filter(b => b.user_id === emp.id);
@@ -1732,6 +1756,7 @@ async function renderDayView(dateStr) {
       block.title = `${b.customer_name || b.services?.title || 'Termin'}\nZeit: ${timeStr}${subtitle ? '\nInfo: ' + subtitle : ''}`;
 
       block.innerHTML = renderBookingSlotInner(b, childBookings);
+      if (isToday && e < _now) block.classList.add('dv-booking-block--past');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
         openBookingModal(b);
@@ -1762,6 +1787,13 @@ document.getElementById('dayViewNext').addEventListener('click', () => {
   if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
   else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
 });
+
+// Tagesansicht "lebt": jede Minute die Jetzt-Linie verschieben & vergangene Stunden ausblenden
+setInterval(() => {
+  if (activePanel === 'calendar' && calendarView === 'day' && toISODate(dayViewDate) === toISODate(new Date())) {
+    renderDayView(toISODate(dayViewDate));
+  }
+}, 60000);
 
 async function prefillBookingModal(startStr) {
   document.getElementById('bk-id').value = '';
@@ -3524,7 +3556,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         
       if (pErr) {
         console.error('[group parent save]', pErr);
-        showToast(pErr.message || t('err_generic'), 'error');
+        showToast(bookingErrMsg(pErr), 'error');
         return;
       }
       
@@ -3576,7 +3608,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const { error } = id
     ? await supabase.from('bookings').update(payload).eq('id', id)
     : await supabase.from('bookings').insert(payload);
-  if (error) { console.error('[booking save]', error); showToast(error.message || t('err_generic'), 'error'); return; }
+  if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel === 'overview') await loadTodayBookings();

@@ -889,6 +889,12 @@ textarea {
 
 .panel.active {
   display: block;
+  animation: panelFade 0.24s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+@keyframes panelFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .panel-header {
@@ -1847,6 +1853,59 @@ textarea {
   color: var(--text-muted);
   z-index: 2;
   pointer-events: none;
+}
+
+/* ── Tagesansicht: vergangene Zeit verblasst + Live-"Jetzt"-Linie ── */
+.dv-slot {
+  transition: background-color 0.4s ease;
+}
+.dv-slot--past {
+  background: rgba(148, 163, 184, 0.07);
+}
+[data-theme="dark"] .dv-slot--past {
+  background: rgba(148, 163, 184, 0.05);
+}
+/* Vergangene Stunden in der Zeitspalte dezent ausblenden */
+.dv-time-col .dv-slot--past .dv-time-label {
+  opacity: 0.38;
+}
+
+/* Vergangene Termine entsättigen & abdunkeln, beim Hover wieder voll */
+.dv-booking-block--past {
+  opacity: 0.5;
+  filter: saturate(0.6);
+  transition: opacity 0.18s ease, filter 0.18s ease;
+}
+.dv-booking-block--past:hover {
+  opacity: 1;
+  filter: saturate(1) brightness(1.05);
+}
+
+/* Live "Jetzt"-Linie */
+.dv-now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid var(--danger);
+  z-index: 4;
+  pointer-events: none;
+}
+.dv-now-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+  animation: nowPulse 2.4s ease-in-out infinite;
+}
+@keyframes nowPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.55; }
 }
 
 /* Upcoming bookings (Übersicht widget) */
