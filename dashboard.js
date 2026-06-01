@@ -1068,6 +1068,20 @@ async function loadScheduleBookings(date) {
 
 async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
 
+// Nach einer Terminänderung alle relevanten Ansichten auffrischen.
+// Übersicht (heute) + Aktivität werden IMMER neu geladen — egal welches Panel
+// gerade aktiv ist — damit ein neuer Termin sofort in der Übersicht erscheint,
+// ohne dass die Seite neu geladen werden muss.
+async function refreshBookingViews() {
+  if (calendar) { try { await calendar.reloadMonth(); calendar.refresh(); } catch (e) {} }
+  // Übersicht-Tagesplan auffrischen (den aktuell gezeigten Tag beibehalten)
+  try { await loadScheduleBookings(scheduleDate instanceof Date ? scheduleDate : new Date()); } catch (e) {}
+  loadActivityFeed().catch(() => {});
+  if (activePanel === 'calendar' && calendarView === 'day') {
+    try { await renderDayView(toISODate(dayViewDate)); } catch (e) {}
+  }
+}
+
 function formatActivityTimestamp(iso) {
   try {
     if (!iso) return '';
@@ -3478,9 +3492,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const created = data.created || [];
     const conflicts = data.conflicts || [];
     closeModal('bookingModal');
-    if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-    if (activePanel === 'overview') await loadTodayBookings();
-    if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+    await refreshBookingViews();
     if (conflicts.length > 0) {
       showToast(`${created.length} Termine erstellt, ${conflicts.length} übersprungen (Konflikt).`);
     } else {
@@ -3588,9 +3600,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
     
     closeModal('bookingModal');
-    if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-    if (activePanel === 'overview') await loadTodayBookings();
-    if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+    await refreshBookingViews();
     return;
   }
 
@@ -3610,9 +3620,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     : await supabase.from('bookings').insert(payload);
   if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
   closeModal('bookingModal');
-  if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-  if (activePanel === 'overview') await loadTodayBookings();
-  if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+  await refreshBookingViews();
   showToast(t('saved'));
 });
 
@@ -3785,9 +3793,7 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     const json = await res.json();
     closeModal('aiSuggestModal');
     closeModal('bookingModal');
-    if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-    if (activePanel === 'overview') await loadTodayBookings();
-    if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+    await refreshBookingViews();
     if (json.conflicts?.length) {
       showToast(`${json.created?.length || 0} erstellt, ${json.conflicts.length} übersprungen (Konflikt).`);
     } else {
@@ -4188,9 +4194,7 @@ document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
 
   // 3. Complete the UI cancel flow
   closeModal('bookingModal');
-  if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-  if (activePanel === 'overview') await loadTodayBookings();
-  if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+  await refreshBookingViews();
   showToast(t('saved'));
 
   // 4. Await and process match results asynchronously (guaranteed not to block the cancel flow)
@@ -10709,9 +10713,7 @@ async function init() {
         filter: `owner_id=eq.${ownerId}`
       }, async (payload) => {
         console.log('[realtime] new booking detected:', payload.new?.id);
-        if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
-        if (activePanel === 'overview') await loadTodayBookings();
-        if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+        await refreshBookingViews();
       })
       .subscribe();
 
