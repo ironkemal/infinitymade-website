@@ -26,8 +26,8 @@ export default async function handler(req, res) {
   if (!pOk || !pRows?.[0]) return json(res, 404, { error: 'Profile not found' });
   const profile = pRows[0];
 
-  if (!['physiotherapy', 'praxis'].includes(profile.sector)) {
-    return json(res, 403, { error: 'DTA-Pro nur für Physio/Praxis verfügbar.' });
+  if (!['physiotherapy', 'logopaedie', 'ergotherapie', 'podologie', 'praxis'].includes(profile.sector)) {
+    return json(res, 403, { error: 'DTA-Pro nur für Heilmittelpraxen verfügbar.' });
   }
   if (!profile.stripe_subscription_id) {
     return json(res, 412, { error: 'Kein aktives Abonnement. Bitte zuerst einen Basis-Plan wählen.' });
