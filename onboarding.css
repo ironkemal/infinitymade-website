@@ -1,108 +1,214 @@
-/* InfinityMade Onboarding — multi-step form */
+/* ===========================================================
+   InfinityMade Onboarding — Visual Redesign
+   Aesthetic: soft-skill Editorial Luxury
+   Brand-coherent with index.html (Plus Jakarta Sans & Fraunces Serif)
+   =========================================================== */
+
 :root {
-  /* HSL Component Tokens */
-  --h-emerald: 153;
-  --s-emerald: 41%;
-  --l-emerald: 18%; /* #1E3D2F - Forest Luxury Emerald */
+  /* Brand Color Palette */
+  --bg: #F8F3E8;            /* Warm editorial cream */
+  --bg-card: #FFFFFF;       /* Clean paper white for step containers */
+  --bg-input: #FAF7F0;      /* Extremely soft sand cream for inputs */
+  --ink: #1A1611;           /* Elegant carbon ink black */
+  --ink-soft: #4A4036;      /* Subdued greyish brown */
+  --ink-mute: #7A6F61;      /* Neutral taupe grey */
+  --ink-quiet: #B5AB99;     /* Light sage-cream border color */
   
-  --h-bronze: 35;
-  --s-bronze: 31%;
-  --l-bronze: 32%;  /* #6B5538 - Heritage Bronze */
+  /* Brand Accents */
+  --accent: #1E3D2F;        /* Forest Luxury Emerald */
+  --accent-soft: rgba(30, 61, 47, 0.06);
+  --accent-glow: rgba(30, 61, 47, 0.12);
+  --accent-hover: #6B5538;  /* Heritage Bronze */
+  --accent-hover-soft: rgba(107, 85, 56, 0.08);
+  --danger: #9C3A3A;        /* Premium rose red */
+  --danger-soft: rgba(156, 58, 58, 0.06);
 
-  --h-charcoal: 240;
-  --s-charcoal: 10%;
-  --l-charcoal: 4%;  /* #0a0a0f - Deep Obsidian Black */
+  /* Typography */
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
 
-  /* Global Functional Colors mapped to tokens */
-  --primary-lux: hsl(var(--h-emerald), var(--s-emerald), var(--l-emerald));
-  --bronze-lux: hsl(var(--h-bronze), var(--s-bronze), var(--l-bronze));
-  --dark-lux: hsl(var(--h-charcoal), var(--s-charcoal), var(--l-charcoal));
-
-  /* Ultra-Premium Glassmorphism Presets */
-  --glass-blur: 20px;
-  --glass-bg-dark: rgba(18, 17, 14, 0.45);
-  --glass-bg-light: rgba(255, 254, 251, 0.65);
-  --glass-border-dark: rgba(255, 255, 255, 0.05);
-  --glass-border-light: rgba(26, 22, 17, 0.06);
-  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  
-  /* Spring Elastic curves */
-  --spring-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --spring-soft: cubic-bezier(0.175, 0.885, 0.32, 1.15);
-
-  --bg: #0a0a0a;
-  --bg-card: #1a1a1a;
-  --bg-input: #1f1f1f;
-  --border: rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.18);
-  --text: #f5f5f5;
-  --muted: #a0a0a0;
-  --accent: #00c853;
-  --accent-soft: rgba(0,200,83,0.12);
-  --accent-hover: #22c55e;
-  --danger: #ef4444;
+  /* Smooth Premium Transitions */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Base reset & styling */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.5;
+  font-family: var(--sans);
+  background-color: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  min-height: 100vh;
 }
 
-/* Topbar */
+/* Premium micro-grain texture overlay (mirroring landing page) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* Focus outline for accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* ===========================================================
+   1. Floating Header & Step Progress Bar
+   =========================================================== */
 .ob-topbar {
-  position: sticky; top: 0; z-index: 50;
-  display: flex; align-items: center; gap: 24px;
-  padding: 16px 24px;
-  background: rgba(10,10,10,0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(248, 243, 232, 0.85);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-bottom: 1px solid rgba(26, 22, 17, 0.06);
+  padding: 16px 0;
+  transition: var(--transition);
 }
+
+.ob-topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+/* Brand Logo */
 .ob-brand {
-  font-weight: 800; font-size: 1.15rem;
-  letter-spacing: -0.02em; text-decoration: none; color: inherit;
-}
-.ob-brand-accent { color: var(--accent); }
-.ob-progress {
-  flex: 1; display: flex; align-items: center; gap: 14px;
-  max-width: 500px; margin: 0 auto;
-}
-.ob-progress-bar {
-  flex: 1; height: 6px; background: var(--bg-card);
-  border-radius: 999px; overflow: hidden;
-}
-.ob-progress-fill {
-  height: 100%; background: var(--accent);
-  width: 14%; transition: width 0.3s ease;
-}
-.ob-progress-label {
-  font-size: 0.85rem; color: var(--muted);
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
-.ob-logout {
-  background: transparent; border: 1px solid var(--border);
-  color: var(--muted); padding: 8px 14px; border-radius: 8px;
-  cursor: pointer; font-size: 0.85rem;
-}
-.ob-logout:hover { color: var(--text); border-color: var(--border-strong); }
 
-/* Main */
-.ob-main {
-  max-width: 720px;
+.ob-brand em {
+  font-style: italic;
+  color: var(--accent-hover);
+  font-weight: 400;
+}
+
+/* Progress bar container */
+.ob-progress {
+  flex: 1;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
   margin: 0 auto;
-  padding: 48px 24px 80px;
 }
 
-.ob-step:not([hidden]) {
-  animation: slideStepIn 0.5s var(--spring-ease) forwards;
+.ob-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(26, 22, 17, 0.08);
+  border-radius: 99px;
+  overflow: hidden;
 }
+
+.ob-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  border-radius: 99px;
+  transition: width 0.4s var(--ease-out);
+}
+
+.ob-progress-label {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink-mute);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Logout Button */
+.ob-logout {
+  background: transparent;
+  border: 1px solid rgba(26, 22, 17, 0.15);
+  color: var(--ink-soft);
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.ob-logout:hover {
+  background: rgba(107, 85, 56, 0.05);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
+
+/* ===========================================================
+   2. Main Container & Card Layouts
+   =========================================================== */
+.ob-main {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 60px 24px 100px;
+  transition: max-width 0.4s var(--ease-out);
+}
+
+/* Expand main container dynamically for the plan selection grid */
+body:has([data-step="plan"]:not([hidden])) .ob-main {
+  max-width: 1200px;
+}
+
+/* Premium Card-based Step wrapper */
+.ob-step {
+  background: var(--bg-card);
+  border: 1px solid rgba(26, 22, 17, 0.06);
+  border-radius: 24px;
+  padding: 48px;
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 24px 60px -20px rgba(26, 22, 17, 0.06),
+    0 4px 12px -4px rgba(26, 22, 17, 0.02);
+  transition: var(--transition);
+}
+
+/* Step entry animation */
+.ob-step:not([hidden]) {
+  animation: slideStepIn 0.6s var(--ease-spring) forwards;
+}
+
 @keyframes slideStepIn {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -110,497 +216,616 @@ body {
   }
 }
 
-/* Step header */
-.ob-step-header { margin-bottom: 32px; }
+/* Step header inside the cards */
+.ob-step-header {
+  margin-bottom: 36px;
+}
+
 .ob-step-tag {
   display: inline-block;
-  font-size: 0.78rem; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--accent); background: var(--accent-soft);
-  padding: 5px 12px; border-radius: 999px;
-  margin-bottom: 14px;
-}
-.ob-step h1 {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 800; letter-spacing: -0.02em;
-  margin-bottom: 8px;
-}
-.ob-step > .ob-step-header > p {
-  color: var(--muted); font-size: 1rem; max-width: 580px;
-}
-
-/* Form */
-.ob-form { display: flex; flex-direction: column; gap: 16px; }
-.ob-form label {
-  display: flex; flex-direction: column; gap: 6px;
-}
-.ob-form label > span {
-  font-size: 0.88rem; font-weight: 600; color: var(--text);
-}
-.ob-form input,
-.ob-form select,
-.ob-form textarea {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  transition: border-color 0.2s;
-}
-.ob-form input:focus,
-.ob-form select:focus,
-.ob-form textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-.ob-form textarea { resize: vertical; min-height: 60px; }
-.ob-input-hint {
-  font-size: 0.78rem; color: var(--muted);
-  font-weight: 400;
-}
-.ob-input-hint code {
-  background: var(--bg-card);
-  padding: 1px 5px; border-radius: 4px;
-  font-size: 0.85em;
-}
-.ob-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-/* Hint */
-.ob-hint {
-  font-size: 0.82rem; color: var(--muted);
-  margin-top: -4px;
-}
-
-/* Actions */
-.ob-actions {
-  display: flex; gap: 10px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-.ob-btn {
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.92rem;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-  text-decoration: none;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.ob-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.ob-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #000;
-  margin-left: auto;
-}
-.ob-btn.primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  color: #000;
-}
-.ob-btn.ghost { /* default */ }
-.ob-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.ob-link-btn {
-  background: transparent; border: 0;
-  color: var(--accent); cursor: pointer;
-  font-size: 0.92rem; font-weight: 600;
-  padding: 8px 0; align-self: flex-start;
-  font-family: inherit;
-}
-.ob-link-btn:hover { color: var(--accent-hover); }
-
-/* Account toggle */
-.ob-toggle {
-  display: flex;
-  background: var(--bg-card);
-  border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 8px;
-  border: 1px solid var(--border);
-}
-.ob-toggle-btn {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  padding: 9px 14px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 0.88rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
   font-weight: 600;
-  font-family: inherit;
-  transition: all 0.2s;
-}
-.ob-toggle-btn.active {
-  background: var(--bg-input);
-  color: var(--text);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-hover);
+  background: var(--accent-hover-soft);
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-bottom: 16px;
 }
 
-/* Decision (InfinityBooking / WhatsApp Yes/No) */
-.ob-decision {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 24px;
+.ob-step h1 {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
 }
-.ob-decision-btn {
-  background: var(--glass-bg-dark);
-  border: 1px solid var(--glass-border-dark);
-  box-shadow: var(--glass-highlight), 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: 16px;
-  padding: 24px 20px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.3s var(--spring-soft);
+
+.ob-step h1 em {
+  font-style: italic;
+  color: var(--accent-hover);
+  font-weight: 300;
+}
+
+.ob-step-header p {
+  color: var(--ink-mute);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+/* Section titles (inside forms) */
+.ob-section-subtitle {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 24px 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(26, 22, 17, 0.06);
+}
+
+/* ===========================================================
+   3. Premium Forms, Inputs & Selects
+   =========================================================== */
+.ob-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ob-form-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: inherit;
-  color: var(--text);
+  width: 100%;
 }
-.ob-decision-btn:hover {
-  border-color: var(--accent);
-  background: rgba(0, 200, 83, 0.04);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-.ob-decision-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-.ob-decision-btn:active {
-  transform: scale(0.97);
-}
-.ob-decision-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px;
-  background: var(--accent);
-  color: #000;
-  border-radius: 50%;
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin: 0 auto 8px;
-}
-.ob-decision-btn strong { font-size: 1rem; }
-.ob-decision-btn small { color: var(--muted); font-size: 0.85rem; }
 
-.ob-decision-content {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+.ob-field-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.ob-form input[type="text"],
+.ob-form input[type="email"],
+.ob-form input[type="password"],
+.ob-form select {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 0.98rem;
+  color: var(--ink);
+  background-color: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.08);
+  border-radius: 12px;
+  padding: 14px 18px;
+  transition: var(--transition);
+  appearance: none; /* Reset standard styles */
+}
+
+/* Custom select dropdown arrows */
+.ob-form select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(26, 22, 17, 0.4)' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  background-size: 16px;
+  padding-right: 44px;
+}
+
+/* Focus and Active States */
+.ob-form input:focus,
+.ob-form select:focus {
+  outline: none;
+  background-color: var(--bg-card);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+}
+
+/* Input Placeholder */
+::placeholder {
+  color: var(--ink-mute);
+  opacity: 0.6;
+}
+
+.ob-field-hint {
+  font-size: 0.78rem;
+  color: var(--ink-mute);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.ob-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ===========================================================
+   4. Custom Segmented Toggle Controls
+   =========================================================== */
+.ob-toggle {
+  display: flex;
+  background: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.06);
   border-radius: 14px;
-  padding: 24px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.ob-toggle-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--ink-mute);
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.ob-toggle-btn:hover {
+  color: var(--ink);
+}
+
+.ob-toggle-btn.active {
+  background: #FFFFFF;
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: 
+    0 1px 3px rgba(26, 22, 17, 0.04), 
+    0 8px 16px -4px rgba(26, 22, 17, 0.06);
+}
+
+/* Checkbox Wrappers */
+.ob-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 10px 0;
+  cursor: pointer;
+  line-height: 1.45;
+  font-size: 0.88rem;
+  user-select: none;
+}
+
+.ob-checkbox-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  margin-top: 2px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid rgba(26, 22, 17, 0.15);
+  background-color: var(--bg-input);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.ob-checkbox-text {
+  color: var(--ink-soft);
+}
+
+.ob-checkbox-text a {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.ob-checkbox-text a:hover {
+  color: var(--accent);
+}
+
+/* ===========================================================
+   5. Buttons (Primary, Ghost & Secondary)
+   =========================================================== */
+.ob-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 14px 28px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+/* Primary Button */
+.ob-btn.primary {
+  background-color: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px var(--accent-soft);
+}
+
+.ob-btn.primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  box-shadow: 0 6px 18px var(--accent-hover-soft);
+}
+
+/* Ghost / Outlined / Secondary Button */
+.ob-btn.ghost {
+  background-color: transparent;
+  border-color: rgba(26, 22, 17, 0.14);
+  color: var(--ink);
+}
+
+.ob-btn.ghost:hover:not(:disabled) {
+  background-color: var(--accent-hover-soft);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
+
+.ob-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Link Button */
+.ob-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent-hover);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 8px 0;
+  align-self: flex-start;
+  text-decoration: underline;
+  transition: var(--transition);
+}
+
+.ob-link-btn:hover {
+  color: var(--accent);
+}
+
+/* Layout actions spacing (Pushes back to left, others to right) */
+.ob-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ob-actions .ob-btn[data-back] {
+  margin-right: auto;
+}
+
+/* ===========================================================
+   6. Callout Cards (Info/Alert Blocks)
+   =========================================================== */
+.ob-info-callout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px 24px;
+  background-color: var(--bg-input);
+  border-left: 3px solid var(--accent-hover);
+  border-radius: 12px;
   margin-bottom: 24px;
 }
-.ob-decision-content h3 {
-  font-size: 1.1rem; margin-bottom: 14px;
-}
-.ob-steps-list {
-  margin: 0 0 18px 18px;
-  font-size: 0.95rem;
-  line-height: 1.8;
-}
-.ob-steps-list a { color: var(--accent); }
-.ob-steps-list code {
-  background: var(--bg-input);
-  padding: 1px 6px; border-radius: 4px;
-  font-size: 0.85em;
+
+.ob-callout-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-top: 2px;
 }
 
-/* Test result */
-.ob-test-result {
-  font-size: 0.9rem;
-  padding: 10px 14px;
-  border-radius: 8px;
-  display: none;
-}
-.ob-test-result.success {
-  display: block;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid rgba(0,200,83,0.3);
-}
-.ob-test-result.error {
-  display: block;
-  background: rgba(239,68,68,0.1);
-  color: var(--danger);
-  border: 1px solid rgba(239,68,68,0.3);
+.ob-callout-content {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
 }
 
-/* Services list */
+.ob-callout-content strong {
+  color: var(--ink);
+}
+
+.ob-toggle-section {
+  margin-top: 28px;
+  border-top: 1px solid rgba(26, 22, 17, 0.06);
+  padding-top: 24px;
+}
+
+.ob-toggle-title {
+  display: block;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.ob-toggle-description {
+  font-size: 0.88rem;
+  color: var(--ink-mute);
+  margin-bottom: 16px;
+}
+
+/* ===========================================================
+   7. Service Grid & Rows (Step 4)
+   =========================================================== */
 .ob-services-header {
   display: grid;
-  grid-template-columns: 24px 1fr 100px 100px 28px;
-  gap: 10px;
+  grid-template-columns: 36px 1fr 120px 120px 36px;
+  gap: 12px;
   align-items: center;
-  padding: 0 12px 4px;
-  font-size: 0.75rem;
+  padding: 0 16px 8px;
+  font-family: var(--sans);
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-mute);
+  border-bottom: 1px solid rgba(26, 22, 17, 0.06);
 }
+
 .ob-services-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin: 16px 0;
 }
+
 .ob-service-row {
   display: grid;
-  grid-template-columns: 24px 1fr 100px 100px 28px;
-  gap: 10px;
-  align-items: center;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-.ob-service-row input[type="checkbox"] {
-  width: 18px; height: 18px; accent-color: var(--accent);
-  cursor: pointer;
-}
-.ob-service-row input[type="text"],
-.ob-service-row input[type="number"] {
-  padding: 6px 10px;
-  font-size: 0.88rem;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-}
-.ob-service-row input:disabled { opacity: 0.4; }
-.ob-service-row .ob-service-remove {
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 1.1rem;
-  padding: 0;
-}
-.ob-service-row .ob-service-remove:hover { color: var(--danger); }
-
-/* Hours */
-.ob-hours-grid {
-  display: flex; flex-direction: column;
-  gap: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-}
-.ob-hours-row {
-  display: grid;
-  grid-template-columns: 100px 1fr 140px 14px 140px;
+  grid-template-columns: 36px 1fr 120px 120px 36px;
   gap: 12px;
   align-items: center;
-  font-size: 0.92rem;
-}
-.ob-hours-row.is-closed input[type="time"] {
-  opacity: 0.3; pointer-events: none;
-}
-.ob-hours-row label {
-  display: flex; align-items: center; gap: 8px;
-  color: var(--muted);
-}
-.ob-hours-row input[type="checkbox"] {
-  accent-color: var(--accent); width: 16px; height: 16px;
-}
-.ob-hours-row input[type="time"] {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 0.92rem;
-  width: 100%;
-  min-width: 0;
-}
-.ob-hours-row .day-name { font-weight: 600; color: var(--text); }
-.ob-hours-row .ob-dash { text-align: center; color: var(--muted); }
-
-/* Collapse details */
-.ob-collapse {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background-color: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.05);
   border-radius: 12px;
-  padding: 14px 16px;
-}
-.ob-collapse summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--text);
-  font-size: 0.92rem;
-}
-.ob-collapse[open] summary {
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.ob-collapse > label { margin-top: 10px; }
-
-/* Callout (info note above/below forms) */
-.ob-callout {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 10px;
-  padding: 14px 18px;
-  font-size: 0.92rem;
-  color: var(--text);
-  line-height: 1.55;
-  margin-bottom: 16px;
-}
-.ob-callout strong { color: var(--accent); margin-right: 4px; }
-.ob-callout code {
-  background: var(--bg-input);
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 0.86em;
-  color: var(--accent);
-}
-.ob-callout em { color: var(--muted); font-style: normal; font-weight: 600; }
-.ob-callout-ai {
-  border-left-color: #8b5cf6;
-  margin-top: 8px;
-  margin-bottom: 0;
-}
-.ob-callout-ai strong { color: #a78bfa; }
-
-/* Done */
-.ob-done {
-  text-align: center;
-  padding: 40px 20px;
-}
-.ob-done-emoji { font-size: 72px; margin-bottom: 18px; }
-.ob-done h1 { margin-bottom: 16px; }
-.ob-done > p {
-  color: var(--muted);
-  max-width: 540px; margin: 0 auto 14px;
-}
-.ob-done-info {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 22px 28px;
-  text-align: left;
-  margin: 28px auto;
-  font-size: 0.95rem;
-  line-height: 1.8;
+  padding: 10px 16px;
+  transition: var(--transition);
 }
 
-/* Error toast */
-.ob-error {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--danger);
-  color: white;
-  padding: 12px 18px;
-  border-radius: 10px;
+.ob-service-row:hover {
+  background-color: var(--bg-card);
+  border-color: rgba(26, 22, 17, 0.12);
+  box-shadow: 0 4px 12px rgba(26, 22, 17, 0.02);
+}
+
+/* Styling service row inputs */
+.ob-service-row input[type="text"],
+.ob-service-row input[type="number"] {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(26, 22, 17, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
   font-size: 0.9rem;
+  color: var(--ink);
+  width: 100%;
+}
+
+.ob-service-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.ob-service-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.ob-service-row .ob-service-remove {
+  background: transparent;
+  border: none;
+  color: var(--ink-mute);
+  font-size: 1.5rem;
+  cursor: pointer;
+  height: 36px;
+  width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.ob-service-row .ob-service-remove:hover {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* ===========================================================
+   8. Working Hours Grid (Step 5)
+   =========================================================== */
+.ob-hours-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.ob-hours-row {
+  display: grid;
+  grid-template-columns: 140px 110px 1fr 20px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 20px;
+  background-color: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.04);
+  border-radius: 14px;
+  transition: var(--transition);
+}
+
+.ob-hours-row:hover {
+  background-color: var(--bg-card);
+  border-color: rgba(26, 22, 17, 0.1);
+  box-shadow: 0 4px 12px rgba(26, 22, 17, 0.02);
+}
+
+.ob-hours-row .day-name {
   font-weight: 600;
-  box-shadow: 0 8px 24px rgba(239,68,68,0.3);
-  z-index: 100;
-  max-width: 90%;
+  font-size: 0.98rem;
+  color: var(--ink);
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .ob-progress-label { display: none; }
-  .ob-row-2 { grid-template-columns: 1fr; }
-  .ob-decision { grid-template-columns: 1fr; }
-  .ob-services-header { display: none; }
-  .ob-service-row { grid-template-columns: 24px 1fr; gap: 8px; }
-  .ob-service-row > *:nth-child(n+3) {
-    grid-column: 2 / -1;
-  }
-  .ob-hours-row {
-    grid-template-columns: 90px 1fr;
-    grid-template-rows: auto auto;
-  }
-  .ob-hours-row > input[type="time"]:nth-of-type(1),
-  .ob-hours-row > input[type="time"]:nth-of-type(2),
-  .ob-hours-row > .ob-dash {
-    grid-column: 2 / -1;
-  }
-  .ob-btn.primary { margin-left: 0; flex: 1; }
+/* Switch opened/closed switch design */
+.ob-hours-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  cursor: pointer;
 }
 
-/* ===== Step 8: Plan & Payment ===== */
+.ob-hours-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+/* Time Picker input styling */
+.ob-hours-row input[type="time"] {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(26, 22, 17, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  color: var(--ink);
+  text-align: center;
+  width: 100%;
+}
+
+.ob-hours-row input[type="time"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.ob-hours-row .ob-dash {
+  color: var(--ink-mute);
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Closed state overrides */
+.ob-hours-row.is-closed {
+  opacity: 0.55;
+  background-color: rgba(26, 22, 17, 0.02);
+}
+
+.ob-hours-row.is-closed input[type="time"] {
+  opacity: 0.25;
+  pointer-events: none;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.ob-hours-row.is-closed .ob-dash {
+  opacity: 0.25;
+}
+
+/* ===========================================================
+   9. Plan Card Grid & Pricing Cards (Step 6)
+   =========================================================== */
 .plan-toggle {
   display: inline-flex;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 999px;
-  padding: 4px;
-  margin: 0 auto 28px;
+  background: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.06);
+  border-radius: 100px;
+  padding: 6px;
+  margin: 0 auto 36px;
   gap: 4px;
+  align-self: center;
 }
+
 .plan-toggle-btn {
-  padding: 10px 22px;
-  border-radius: 999px;
+  padding: 10px 24px;
+  border-radius: 100px;
   border: none;
   background: transparent;
-  color: var(--text-muted, #8b8aa0);
+  color: var(--ink-mute);
+  font-family: var(--sans);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition);
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
+
 .plan-toggle-btn.active {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(124,58,237,0.3);
-}
-.plan-toggle-save {
-  font-size: 0.75rem;
-  background: rgba(0,200,83,0.2);
-  color: #00c853;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-weight: 700;
+  background-color: var(--accent);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px var(--accent-soft);
 }
 
+.plan-toggle-save {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(30, 61, 47, 0.1);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 100px;
+  transition: var(--transition);
+}
+
+.plan-toggle-btn.active .plan-toggle-save {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* 4-Column Pricing Card Grid */
 .plan-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  margin-top: 20px;
+  margin-top: 10px;
+  align-items: stretch;
 }
 
+/* Elegant pricing cards */
 .plan-card {
   position: relative;
-  padding: 28px 24px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  transition: all 0.3s ease;
+  background: #FFFFFF;
+  border: 1px solid rgba(26, 22, 17, 0.08);
+  border-radius: 20px;
+  padding: 36px 24px;
   display: flex;
   flex-direction: column;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(26, 22, 17, 0.01);
 }
+
 .plan-card:hover {
-  border-color: rgba(124,58,237,0.5);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  border-color: rgba(26, 22, 17, 0.16);
+  box-shadow: 
+    0 16px 36px -12px rgba(26, 22, 17, 0.06),
+    0 4px 12px -4px rgba(26, 22, 17, 0.02);
 }
+
+/* Recommended card border & glow */
 .plan-card.recommended {
-  border-color: #7c3aed;
-  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(245,158,11,0.04));
+  border: 2px solid var(--accent);
+  box-shadow: 0 20px 40px var(--accent-glow);
+}
+
+.plan-card.recommended:hover {
+  box-shadow: 
+    0 24px 50px -12px var(--accent-glow),
+    0 16px 36px -16px rgba(26, 22, 17, 0.08);
 }
 
 .plan-badge {
@@ -608,72 +833,521 @@ body {
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  background-color: var(--accent);
+  color: #FFFFFF;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 5px 14px;
-  border-radius: 999px;
+  padding: 4px 12px;
+  border-radius: 100px;
   white-space: nowrap;
 }
 
 .plan-name {
-  font-size: 0.85rem;
+  font-family: var(--sans);
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-muted, #8b8aa0);
-  margin-bottom: 8px;
+  color: var(--ink-mute);
+  margin-bottom: 12px;
 }
 
 .plan-price {
-  font-size: 2.4rem;
-  font-weight: 800;
-  color: var(--text, #f1f0f8);
+  font-family: var(--serif);
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--ink);
   line-height: 1;
 }
+
 .plan-price small {
-  font-size: 0.95rem;
+  font-family: var(--sans);
+  font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-muted, #8b8aa0);
+  color: var(--ink-mute);
   margin-left: 4px;
 }
 
 .plan-billing {
-  font-size: 0.85rem;
-  color: var(--text-muted, #8b8aa0);
-  margin-top: 4px;
-  margin-bottom: 20px;
+  font-size: 0.82rem;
+  color: var(--ink-mute);
+  margin-top: 6px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(26, 22, 17, 0.05);
 }
 
+/* Plan Features checklist */
 .plan-features {
   list-style: none;
   padding: 0;
-  margin: 0 0 24px;
+  margin-bottom: 28px;
   flex: 1;
 }
+
 .plan-features li {
-  padding: 8px 0;
-  color: var(--text, #f1f0f8);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  padding: 6px 0;
   position: relative;
-  padding-left: 26px;
+  padding-left: 24px;
+  line-height: 1.4;
 }
+
+/* Beautiful custom pure-CSS emerald checkmark */
 .plan-features li::before {
-  content: '✓';
+  content: '';
   position: absolute;
-  left: 0;
-  top: 8px;
-  color: #00c853;
-  font-weight: 700;
+  left: 2px;
+  top: 10px;
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: rotate(-45deg);
 }
 
 .plan-select {
   width: 100%;
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  background-color: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.1);
+  color: var(--ink);
 }
 
-@media (max-width: 720px) {
-  .plan-grid { grid-template-columns: 1fr; }
+.plan-select:hover {
+  background-color: var(--accent-hover-soft);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
+
+.plan-card.recommended .plan-select {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #FFFFFF;
+}
+
+.plan-card.recommended .plan-select:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* ===========================================================
+   10. Stripe & DTA Callouts & Legal Consents (Plan Step)
+   =========================================================== */
+/* DTA-Pro add-on container */
+.ob-dta-card {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px dashed rgba(30, 61, 47, 0.25);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(30, 61, 47, 0.02), rgba(255, 255, 255, 0.8));
+  transition: var(--transition);
+}
+
+.ob-dta-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px var(--accent-soft);
+}
+
+.ob-dta-label {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.ob-dta-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.ob-dta-content {
+  flex: 1;
+}
+
+.ob-dta-title {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ob-dta-badge {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(30, 61, 47, 0.08);
+  padding: 2px 10px;
+  border-radius: 100px;
+  margin-left: 6px;
+}
+
+.ob-dta-description {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Stripe Callout box */
+.ob-stripe-callout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 20px;
+  background-color: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.05);
+  border-radius: 12px;
+  margin-top: 24px;
+}
+
+.ob-stripe-icon {
+  font-size: 1.25rem;
+}
+
+.ob-stripe-content {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.ob-stripe-content strong {
+  color: var(--ink);
+}
+
+/* Legal consents card */
+.ob-consents-card {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid rgba(26, 22, 17, 0.06);
+  border-radius: 16px;
+  background-color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(26, 22, 17, 0.01);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ob-consent-label {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ob-consent-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.ob-consent-text {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.ob-consent-text a {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.ob-consent-text a:hover {
+  color: var(--accent);
+}
+
+.ob-required-star {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.ob-consent-error {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+  border: 1px solid rgba(156, 58, 58, 0.15);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ===========================================================
+   11. Success View (Step Done)
+   =========================================================== */
+.ob-done {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.ob-done-emoji {
+  font-size: 4.5rem;
+  margin-bottom: 20px;
+  line-height: 1;
+}
+
+.ob-done h1 {
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  margin-bottom: 16px;
+}
+
+.ob-done > p {
+  color: var(--ink-mute);
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin: 0 auto 32px;
+}
+
+.ob-done-info-card {
+  max-width: 480px;
+  margin: 32px auto;
+  padding: 28px 32px;
+  background-color: var(--bg-input);
+  border: 1px solid rgba(26, 22, 17, 0.05);
+  border-radius: 16px;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(26, 22, 17, 0.02);
+}
+
+.ob-done-info-card h3 {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+
+.ob-done-steps {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ob-done-steps li {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  position: relative;
+  padding-left: 28px;
+  line-height: 1.45;
+}
+
+/* Custom step circular bullets */
+.ob-done-steps li::before {
+  content: counter(step-counter);
+  counter-increment: step-counter;
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  background-color: var(--accent);
+  color: #FFFFFF;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ob-done-steps {
+  counter-reset: step-counter;
+}
+
+/* ===========================================================
+   12. Error Toast box
+   =========================================================== */
+.ob-error {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--danger);
+  color: #FFFFFF;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: 0 16px 40px rgba(156, 58, 58, 0.25);
+  z-index: 10000;
+  max-width: 90%;
+  animation: slideToastUp 0.3s var(--ease-spring);
+}
+
+@keyframes slideToastUp {
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* ===========================================================
+   13. Responsive Adaptations (Grids and Layouts)
+   =========================================================== */
+@media (max-width: 1024px) {
+  /* Pricing layout wraps gracefully on tablets */
+  .plan-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  body:has([data-step="plan"]:not([hidden])) .ob-main {
+    max-width: 720px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* General screen padding */
+  .ob-main {
+    padding: 32px 16px 60px;
+  }
+  
+  .ob-step {
+    padding: 28px 20px;
+    border-radius: 20px;
+  }
+
+  .ob-step h1 {
+    font-size: 1.75rem;
+  }
+
+  .ob-row-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .ob-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .ob-actions .ob-btn {
+    width: 100%;
+  }
+
+  .ob-actions .ob-btn[data-back] {
+    margin-right: 0;
+    order: 2; /* Move back button beneath save button on mobile */
+  }
+
+  .ob-progress-label {
+    display: none;
+  }
+
+  /* ---------------- Service Row Mobile Stacking Grid ---------------- */
+  .ob-services-header {
+    display: none;
+  }
+
+  .ob-service-row {
+    grid-template-columns: 36px 1fr 36px;
+    grid-template-areas:
+      "active name remove"
+      ". duration price";
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .ob-service-row input[type="checkbox"].svc-active {
+    grid-area: active;
+    margin-top: 10px;
+  }
+
+  .ob-service-row input[type="text"].svc-name {
+    grid-area: name;
+    width: 100%;
+  }
+
+  .ob-service-row .ob-service-remove {
+    grid-area: remove;
+    margin-top: 2px;
+  }
+
+  .ob-service-row input[type="number"].svc-duration {
+    grid-area: duration;
+    width: 100%;
+  }
+
+  .ob-service-row input[type="number"].svc-price {
+    grid-area: price;
+    width: 100%;
+  }
+
+  /* ---------------- Hours Row Mobile Stacking Grid ---------------- */
+  .ob-hours-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "name label"
+      "from to";
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid rgba(26, 22, 17, 0.06);
+  }
+
+  .ob-hours-row .day-name {
+    grid-area: name;
+    font-size: 1rem;
+  }
+
+  .ob-hours-row label {
+    grid-area: label;
+    justify-self: end;
+  }
+
+  .ob-hours-row input[type="time"].day-from {
+    grid-area: from;
+  }
+
+  .ob-hours-row input[type="time"].day-to {
+    grid-area: to;
+  }
+
+  .ob-hours-row .ob-dash {
+    display: none;
+  }
+
+  /* ---------------- Plan Grid Mobile Stacking ---------------- */
+  .plan-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  body:has([data-step="plan"]:not([hidden])) .ob-main {
+    max-width: 480px;
+  }
+
+  .plan-card {
+    padding: 32px 20px;
+  }
+
+  .ob-dta-card {
+    padding: 16px;
+  }
+  
+  .ob-consents-card {
+    padding: 16px;
+  }
 }

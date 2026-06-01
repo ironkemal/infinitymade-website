@@ -1,11 +1,10 @@
-// InfinityMade Onboarding — 7 step state machine + Supabase saves
+// InfinityMade Onboarding — 8 step state machine + Supabase saves
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 2026-05-22: WhatsApp adımı kaldırıldı (rafa kaldırıldı, fokus buchungssystem). 7 adım kaldı.
-const STEPS = ['account', 'business', 'owner', 'services', 'hours', 'templates', 'plan', 'done'];
+const STEPS = ['account', 'business', 'billing', 'owner', 'services', 'hours', 'plan', 'done'];
 
 const SERVICE_TEMPLATES = {
   barber: [
@@ -54,15 +53,15 @@ const SERVICE_TEMPLATES = {
     { name: 'Entspannungsmassage', price_config: { durations: { '60': { price: 65, active: true }, '90': { price: 90, active: true }, '120': { price: 115, active: true } } } },
   ],
   physiotherapy: [
-    { name: 'Erstberatung', price_config: { durations: { '15': { price: 30, active: true }, '30': { price: 45, active: true } } } },
-    { name: 'Physiotherapie', price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 65, active: true }, '60': { price: 85, active: true } } } },
-    { name: 'Manuelle Therapie', price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 70, active: true }, '60': { price: 90, active: true } } } },
-    { name: 'Lymphdrainage', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
-    { name: 'Kräftigungstraining', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
-    { name: 'Sportmassage', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
-    { name: 'Elektrotherapie', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
-    { name: 'Ultraschall', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
-    { name: 'Schmerztherapie', price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
+    { name: 'Erstberatung', code: null, price_config: { durations: { '15': { price: 30, active: true }, '30': { price: 45, active: true } } } },
+    { name: 'Krankengymnastik (KG)', code: 'KG', price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 65, active: true }, '60': { price: 85, active: true } } } },
+    { name: 'Manuelle Therapie', code: 'MT', price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 70, active: true }, '60': { price: 90, active: true } } } },
+    { name: 'Manuelle Lymphdrainage', code: 'MLD', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
+    { name: 'Kräftigungstraining', code: null, price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
+    { name: 'Klassische Massage / Sportmassage', code: 'KMT', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
+    { name: 'Elektrotherapie', code: 'ES', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
+    { name: 'Ultraschall', code: 'US', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
+    { name: 'Schmerztherapie', code: null, price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
   ],
   restaurant: [
     { name: 'Tischreservierung', price_config: { durations: { '60': { price: 0, active: true }, '90': { price: 0, active: true }, '120': { price: 0, active: true } } } },
@@ -126,10 +125,10 @@ async function init() {
 
   bindAccount();
   bindBusiness();
+  bindBilling();
   bindOwner();
   bindServices();
   bindHours();
-  bindTemplates();
   bindPlan();
 
   const { data: { session } } = await supabase.auth.getSession();
@@ -144,8 +143,8 @@ async function init() {
     } else {
       stepName = profile?.onboarding_step || 'business';
     }
-    // 2026-05-22: WhatsApp adımı kaldırıldı, eski profillerin onboarding_step='whatsapp' değeri olabilir
-    if (stepName === 'whatsapp') stepName = 'templates';
+    // WhatsApp/templates steps are purged. Map legacy 'whatsapp' or 'templates' values to 'plan'
+    if (stepName === 'whatsapp' || stepName === 'templates') stepName = 'plan';
     if (stepName === 'done') {
       window.location.href = 'dashboard.html';
       return;
@@ -154,7 +153,7 @@ async function init() {
   } else {
     // New onboarding flow: no auth yet, load from sessionStorage
     loadSessionProfile();
-    goToStep(0);
+    goToStep(STEPS.indexOf('account'));
   }
 }
 
@@ -225,21 +224,43 @@ function prefillForms() {
 
   if (profile.booking_slug) document.getElementById('bookingSlug').value = profile.booking_slug;
 
-  if (profile.whatsapp_number) document.getElementById('waNumber').value = profile.whatsapp_number;
-  if (profile.whatsapp_phone_number_id) document.getElementById('waPhoneNumberId').value = profile.whatsapp_phone_number_id;
-  if (profile.whatsapp_waba_id) document.getElementById('waBaId').value = profile.whatsapp_waba_id;
-
-  const tpl = profile.message_templates || {};
-  if (tpl.greeting) document.getElementById('tplGreeting').value = tpl.greeting;
-  if (tpl.opt_in) document.getElementById('tplOptIn').value = tpl.opt_in;
-  if (tpl.reminder) document.getElementById('tplReminder').value = tpl.reminder;
-  if (tpl.reactivation) document.getElementById('tplReactivation').value = tpl.reactivation;
+  if (profile.ik_number) document.getElementById('bizIk').value = profile.ik_number;
+  if (profile.bank_name) document.getElementById('bizBankName').value = profile.bank_name;
+  if (profile.iban) document.getElementById('bizIban').value = profile.iban;
+  if (profile.bic) document.getElementById('bizBic').value = profile.bic;
+  if (profile.steuernummer) document.getElementById('bizSteuernummer').value = profile.steuernummer;
+  if (profile.ust_id) document.getElementById('bizUstId').value = profile.ust_id;
+  if (profile.tax_exempt_note !== undefined && profile.tax_exempt_note !== null) {
+    document.getElementById('bizTaxExempt').checked = profile.tax_exempt_note === '§ 4 Nr. 14 UStG';
+  }
 }
 
 // ---- Navigation ----
+function isStepApplicable(stepName) {
+  if (stepName === 'billing') {
+    return (profile?.sector || '') === 'physiotherapy';
+  }
+  return true;
+}
+
 function goToStep(idx) {
   if (idx < 0) idx = 0;
   if (idx >= STEPS.length) idx = STEPS.length - 1;
+
+  const direction = idx - currentStep;
+  
+  if (direction > 0) {
+    while (idx < STEPS.length && !isStepApplicable(STEPS[idx])) {
+      idx++;
+    }
+    if (idx >= STEPS.length) idx = STEPS.length - 1;
+  } else if (direction < 0) {
+    while (idx >= 0 && !isStepApplicable(STEPS[idx])) {
+      idx--;
+    }
+    if (idx < 0) idx = 0;
+  }
+
   currentStep = idx;
   const stepName = STEPS[idx];
 
@@ -248,10 +269,29 @@ function goToStep(idx) {
   });
 
   // Progress
-  const visibleSteps = STEPS.length - 1; // exclude 'done'
-  const pct = stepName === 'done' ? 100 : Math.round(((idx + 1) / visibleSteps) * 100);
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('stepNum').textContent = stepName === 'done' ? '✓' : (idx + 1);
+  const applicableSteps = STEPS.filter(name => name !== 'done' && isStepApplicable(name));
+  const currentOrdinal = applicableSteps.indexOf(stepName) + 1;
+  const totalCount = applicableSteps.length;
+
+  const pct = stepName === 'done' ? 100 : Math.round((currentOrdinal / totalCount) * 100);
+  
+  const progressFillEl = document.getElementById('progressFill');
+  if (progressFillEl) progressFillEl.style.width = pct + '%';
+  
+  const stepNumEl = document.getElementById('stepNum');
+  if (stepNumEl) stepNumEl.textContent = stepName === 'done' ? '✓' : currentOrdinal;
+
+  const totalStepsEl = document.getElementById('totalSteps');
+  if (totalStepsEl) totalStepsEl.textContent = totalCount;
+
+  // Update dynamic step-tag in the active step header
+  const currentStepEl = document.querySelector(`.ob-step[data-step="${stepName}"]`);
+  if (currentStepEl) {
+    const tagEl = currentStepEl.querySelector('.ob-step-tag');
+    if (tagEl && stepName !== 'done') {
+      tagEl.textContent = `Schritt ${currentOrdinal} / ${totalCount}`;
+    }
+  }
 
   // Step-specific render hooks
   if (stepName === 'services') renderServices();
@@ -305,7 +345,7 @@ function bindAccount() {
         sessionStorage.setItem('onboarding_password', password);
         profile = { ...profile, email };
         saveSessionProfile();
-        goToStep(1);
+        goToStep(STEPS.indexOf('business'));
       } else {
         // Existing user sign in
         const result = await supabase.auth.signInWithPassword({ email, password });
@@ -320,7 +360,7 @@ function bindAccount() {
         userId = session.user.id;
         document.getElementById('logoutBtn').hidden = false;
         await loadProfile();
-        goToStep(1);
+        goToStep(STEPS.indexOf('business'));
       }
     } catch (err) {
       showError(err.message || 'Anmeldung fehlgeschlagen');
@@ -344,9 +384,12 @@ function bindBusiness() {
 
     const booking_slug = cleanBookingSlug(business_name) || cleanBookingSlug((sessionStorage.getItem('onboarding_email') || '').slice(0, 8));
 
+    const isPhysio = sector === 'physiotherapy';
+    const nextStep = isPhysio ? 'billing' : 'owner';
+
     if (userId) {
       const { error } = await supabase.from('profiles').update({
-        business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner'
+        business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: nextStep
       }).eq('id', userId);
       if (error) return showError(error.message);
 
@@ -380,13 +423,76 @@ function bindBusiness() {
         console.warn('[onboarding] default business upsert failed', bizErr);
       }
     }
-    profile = { ...profile, business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: 'owner' };
+    profile = { ...profile, business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: nextStep };
     saveSessionProfile();
-    goToStep(2);
+    goToStep(STEPS.indexOf(nextStep));
   });
 }
 
-// ---- Step 2: Owner Info ----
+// ---- Step 2: Billing (§302) ----
+function bindBilling() {
+  const form = document.getElementById('billingForm');
+  const skipBtn = document.getElementById('billingSkip');
+
+  async function handleSave(skipValidation = false) {
+    const ik_number = document.getElementById('bizIk').value.trim() || null;
+    const bank_name = document.getElementById('bizBankName').value.trim() || null;
+    let iban = document.getElementById('bizIban').value.trim() || null;
+    const bic = document.getElementById('bizBic').value.trim() || null;
+    const steuernummer = document.getElementById('bizSteuernummer').value.trim() || null;
+    const ust_id = document.getElementById('bizUstId').value.trim() || null;
+    const taxExempt = document.getElementById('bizTaxExempt').checked;
+    const tax_exempt_note = taxExempt ? '§ 4 Nr. 14 UStG' : null;
+
+    if (iban) {
+      iban = iban.replace(/\s+/g, '');
+    }
+
+    if (!skipValidation) {
+      if (ik_number && !/^\d{9}$/.test(ik_number)) {
+        showError('Die IK-Nummer muss genau 9 Ziffern enthalten.');
+        return;
+      }
+      if (iban && iban.length < 15) {
+        showError('Bitte geben Sie eine gültige IBAN ein (mindestens 15 Zeichen).');
+        return;
+      }
+    }
+
+    const billingFields = {
+      ik_number,
+      bank_name,
+      iban,
+      bic,
+      steuernummer,
+      ust_id,
+      tax_exempt_note
+    };
+
+    if (userId) {
+      const { error } = await supabase.from('profiles').update({
+        ...billingFields,
+        onboarding_step: 'owner'
+      }).eq('id', userId);
+      if (error) return showError(error.message);
+    }
+
+    profile = { ...profile, ...billingFields, onboarding_step: 'owner' };
+    saveSessionProfile();
+    goToStep(STEPS.indexOf('owner'));
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleSave(false);
+  });
+
+  skipBtn.addEventListener('click', () => {
+    handleSave(true);
+  });
+}
+
+// ---- Step 3: Owner Info ----
 function bindOwner() {
   let acceptsBookings = true;
   document.querySelectorAll('#bookingsToggle .ob-toggle-btn').forEach(btn => {
@@ -411,17 +517,16 @@ function bindOwner() {
     }
     profile = { ...profile, owner_first_name, owner_last_name, accepts_bookings: acceptsBookings, onboarding_step: 'services' };
     saveSessionProfile();
-    goToStep(3);
+    goToStep(STEPS.indexOf('services'));
   });
 }
 
-// ---- Step 3: Services ----
+// ---- Step 4: Services ----
 function renderServices() {
   const list = document.getElementById('servicesList');
   list.innerHTML = '';
 
   const tpl = SERVICE_TEMPLATES[profile?.sector] || SERVICE_TEMPLATES.other;
-  // Merge: existing services first, then template suggestions not yet present
   const existingNames = new Set((services || []).map(s => s.name.toLowerCase()));
   const rows = [
     ...(services || []).map(s => ({
@@ -430,16 +535,18 @@ function renderServices() {
       duration: s.duration_minutes || 30,
       price: s.price_eur || '',
       id: s.id,
+      code: s.code || null,
     })),
     ...tpl.filter(t => !existingNames.has(t.name.toLowerCase())).map(t => ({
       checked: true,
       name: t.name,
       duration: t.duration,
       price: t.price || '',
+      code: t.code || null,
     })),
   ];
 
-  if (rows.length === 0) rows.push({ checked: true, name: '', duration: 30, price: '' });
+  if (rows.length === 0) rows.push({ checked: true, name: '', duration: 30, price: '', code: null });
 
   rows.forEach(r => list.appendChild(createServiceRow(r)));
 }
@@ -455,6 +562,7 @@ function createServiceRow(r = {}) {
     <button type="button" class="ob-service-remove" title="Entfernen">×</button>
   `;
   if (r.id) div.dataset.svcId = r.id;
+  div.dataset.code = r.code || '';
   div.querySelector('.ob-service-remove').addEventListener('click', () => div.remove());
   return div;
 }
@@ -475,6 +583,7 @@ function bindServices() {
       price_eur: parseFloat(String(row.querySelector('.svc-price').value).replace(',', '.')) || null,
       is_active: row.querySelector('.svc-active').checked,
       display_order: i,
+      code: row.dataset.code || null,
     })).filter(s => s.name);
 
     if (items.length === 0) return showError('Mindestens eine Dienstleistung wird benötigt.');
@@ -493,7 +602,6 @@ function bindServices() {
 
         const svcInserts = items.map(s => {
           if (s.price_config) {
-            // New format with durations
             return {
               user_id: userId,
               owner_id: userId,
@@ -535,11 +643,11 @@ function bindServices() {
 
     services = items;
     saveSessionProfile();
-    goToStep(4);
+    goToStep(STEPS.indexOf('hours'));
   });
 }
 
-// ---- Step 4: Hours ----
+// ---- Step 5: Hours ----
 function renderHours() {
   const grid = document.getElementById('hoursGrid');
   grid.innerHTML = '';
@@ -605,22 +713,15 @@ function bindHours() {
         if (whErr) console.error('working_hours insert', whErr);
       }
       const { error } = await supabase.from('profiles').update({
-        working_hours: out, onboarding_step: 'templates',
+        working_hours: out, onboarding_step: 'plan',
       }).eq('id', userId);
       if (error) return showError(error.message);
     }
 
-    profile = { ...profile, working_hours: out, working_hours_rows: whRows, onboarding_step: 'templates' };
+    profile = { ...profile, working_hours: out, working_hours_rows: whRows, onboarding_step: 'plan' };
     saveSessionProfile();
-    goToStep(5);  // hours sonrası direkt templates (whatsapp atlandı)
+    goToStep(STEPS.indexOf('plan'));
   });
-}
-
-// ---- Step 5 (eski WhatsApp) — 2026-05-22'de kaldırıldı ----
-function bindWhatsapp() { /* no-op: artık çağrılmıyor */ }
-
-function normalizePhone(input) {
-  return (input || '').replace(/[\s\-()]/g, '');
 }
 
 function cleanBookingSlug(input) {
@@ -632,37 +733,11 @@ function cleanBookingSlug(input) {
     .replace(/^-|-$/g, '');
 }
 
-// ---- Step 6: Templates ----
-function bindTemplates() {
-  document.getElementById('templatesForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const message_templates = {
-      greeting: document.getElementById('tplGreeting').value,
-      opt_in: document.getElementById('tplOptIn').value,
-      reminder: document.getElementById('tplReminder').value,
-      reactivation: document.getElementById('tplReactivation').value,
-    };
-
-    if (userId) {
-      const { error } = await supabase.from('profiles').update({
-        message_templates,
-        onboarding_step: 'plan',
-      }).eq('id', userId);
-      if (error) return showError(error.message);
-    }
-
-    profile = { ...profile, message_templates, onboarding_step: 'plan' };
-    saveSessionProfile();
-    goToStep(7);
-  });
-}
-
-// ---- Step 8: Plan & Payment ----
+// ---- Step 6: Plan & Payment ----
 function bindPlan() {
   const intervalBtns = document.querySelectorAll('.plan-toggle-btn');
   let currentInterval = 'month';
 
-  // DTA-Pro opt-in card (physiotherapy / praxis sectors only).
   const dtaCard     = document.getElementById('dtaProOptIn');
   const dtaCheckbox = document.getElementById('dtaProCheckbox');
   const dtaLabel    = document.getElementById('dtaProPriceLabel');
@@ -684,7 +759,6 @@ function bindPlan() {
       intervalBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentInterval = btn.dataset.interval;
-      // Update prices + billing label
       document.querySelectorAll('.plan-price-num').forEach(el => {
         el.textContent = currentInterval === 'year' ? el.dataset.year : el.dataset.month;
       });
@@ -766,14 +840,23 @@ function bindPlan() {
           owner_last_name: profile.owner_last_name || null,
           accepts_bookings: profile.accepts_bookings !== false,
           booking_slug: profile.booking_slug || null,
-          whatsapp_number: profile.whatsapp_number || null,
-          whatsapp_phone_number_id: profile.whatsapp_phone_number_id || null,
-          whatsapp_waba_id: profile.whatsapp_waba_id || null,
-          whatsapp_access_token: profile.whatsapp_access_token || null,
-          message_templates: profile.message_templates || null,
+          ik_number: profile.ik_number || null,
+          bank_name: profile.bank_name || null,
+          iban: profile.iban || null,
+          bic: profile.bic || null,
+          steuernummer: profile.steuernummer || null,
+          ust_id: profile.ust_id || null,
+          tax_exempt_note: profile.tax_exempt_note || null,
           working_hours: profile.working_hours || null,
           working_hours_rows: profile.working_hours_rows || null,
-          services: services || [],
+          services: services.map(s => ({
+            name: s.name,
+            duration_minutes: s.duration_minutes,
+            price_eur: s.price_eur,
+            is_active: s.is_active,
+            display_order: s.display_order,
+            code: s.code || null
+          })),
           plan: planSlug,
           billing_interval: currentInterval,
           dta_pro: dtaPro,

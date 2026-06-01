@@ -138,10 +138,6 @@ export default async function handler(req, res) {
           owner_last_name: od.owner_last_name || null,
           accepts_bookings: od.accepts_bookings !== false,
           booking_slug: od.booking_slug || null,
-          whatsapp_number: od.whatsapp_number || null,
-          whatsapp_phone_number_id: od.whatsapp_phone_number_id || null,
-          whatsapp_waba_id: od.whatsapp_waba_id || null,
-          message_templates: od.message_templates || null,
           working_hours: od.working_hours || null,
           plan: od.plan || null,
           billing_interval: od.billing_interval || null,
@@ -151,6 +147,13 @@ export default async function handler(req, res) {
           is_active: true,
           onboarding_step: 'done',
           role: 'owner',
+          bank_name: od.bank_name || null,
+          iban: od.iban || null,
+          bic: od.bic || null,
+          steuernummer: od.steuernummer || null,
+          ust_id: od.ust_id || null,
+          tax_exempt_note: od.tax_exempt_note || null,
+          ik_number: od.ik_number || null,
         };
         const { ok: profOk, status: profStatus, data: profData } = await adminFetch(`/profiles?id=eq.${userId}`, {
           method: 'PATCH',
@@ -168,10 +171,11 @@ export default async function handler(req, res) {
           zip: od.zip || null,
           city: od.city || null,
           country: od.country || 'DE',
-          phone: od.phone || od.whatsapp_number || null,
+          phone: od.phone || null,
           email: pending.email || null,
           booking_slug: od.booking_slug || null,
           is_default: true,
+          ik_number: od.ik_number || null,
         };
         const { ok: bizOk, status: bizStatus, data: bizData } = await adminFetch('/businesses', {
           method: 'POST',
@@ -201,6 +205,7 @@ export default async function handler(req, res) {
             duration_minutes: s.duration_minutes || 30,
             price: s.price_eur || null,
             is_online_meeting: false,
+            code: s.code || null,
           }));
           const { data: inserted } = await adminFetch('/services', { method: 'POST', body: JSON.stringify(svcInserts) });
           if (inserted?.length) {
@@ -232,13 +237,7 @@ export default async function handler(req, res) {
           await adminFetch('/working_hours', { method: 'POST', body: JSON.stringify(whRows) });
         }
 
-        // 5. Save WhatsApp secret if present
-        if (od.whatsapp_access_token) {
-          await adminFetch('/rpc/business_save_secret', {
-            method: 'POST',
-            body: JSON.stringify({ p_user_id: userId, p_secret_kind: 'whatsapp_access_token', p_secret_value: od.whatsapp_access_token }),
-          });
-        }
+
 
         // 6. Delete pending signup
         await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}`, { method: 'DELETE' });
