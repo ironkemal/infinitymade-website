@@ -4970,12 +4970,14 @@ async function openLeadModal(lead) {
   const sectorFieldsEl = document.getElementById('lead-sector-fields');
   const physioRow = document.getElementById('lead-physio-row');
   const physioRow2 = document.getElementById('lead-physio-row2');
+  const arztRow = document.getElementById('lead-arzt-row');
   const hausbesuchRow = document.getElementById('lead-hausbesuch-row');
 
   if (sector === 'physiotherapy') {
     sectorFieldsEl.style.display = 'block';
     physioRow.style.display = 'grid';
     physioRow2.style.display = 'grid';
+    if (arztRow) arztRow.style.display = 'grid';
     hausbesuchRow.style.display = 'grid';
 
     if (krankenkassenCache.length === 0) {
@@ -4988,6 +4990,17 @@ async function openLeadModal(lead) {
 
     kkSelect.value = (lead?.krankenkasse || md.krankenkasse) || '';
     document.getElementById('lead-krankenkassennummer').value = (lead?.versichertennummer || md.krankenkassennummer) || '';
+
+    if (!aerzteCache || aerzteCache.length === 0) {
+      await loadAerzte();
+    } else {
+      populateLeadArztSelect();
+    }
+    const arztSelect = document.getElementById('lead-arzt');
+    if (arztSelect) {
+      arztSelect.value = lead?.arzt_id || '';
+    }
+
     // New strukturlu adres alanları (kolonlar). Backward-compat: eski metadata.adresse'den parse et.
     const streetEl = document.getElementById('lead-street');
     const plzEl = document.getElementById('lead-plz');
@@ -5006,6 +5019,7 @@ async function openLeadModal(lead) {
     sectorFieldsEl.style.display = 'none';
     physioRow.style.display = 'none';
     physioRow2.style.display = 'none';
+    if (arztRow) arztRow.style.display = 'none';
     hausbesuchRow.style.display = 'none';
   }
 
@@ -5117,7 +5131,8 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     notes: document.getElementById('lead-notes').value.trim() || null,
     metadata: Object.keys(metadata).length ? metadata : null,
     krankenkasse: document.getElementById('lead-krankenkasse').value || null,
-    versichertennummer: document.getElementById('lead-krankenkassennummer').value.trim() || null
+    versichertennummer: document.getElementById('lead-krankenkassennummer').value.trim() || null,
+    arzt_id: document.getElementById('lead-arzt')?.value || null
   };
 
   // Adres değiştiyse cache'lenmiş rota geçersiz → temizle (Wave 3 Berechnen'de yeniden hesaplanır)
@@ -9610,6 +9625,9 @@ async function loadAnamneseRxContext(patientId) {
 
 async function fillAnamneseForm(patientId) {
   loadAnamneseRxContext(patientId).catch(() => { });
+  if (!aerzteCache || aerzteCache.length === 0) {
+    await loadAerzte();
+  }
   if (!patientId) { resetAnamneseForm(); return; }
   currentAnamnesePatientId = patientId;
   const ownerId = getOwnerId();
@@ -9843,6 +9861,20 @@ function bindAnamneseEvents() {
   const printBtn = document.getElementById('anamPrintBtn');
   if (printBtn) printBtn.onclick = printAnamneseInline;
 
+  const anamArztName = document.getElementById('anamArztName');
+  if (anamArztName) {
+    anamArztName.addEventListener('input', () => {
+      const val = anamArztName.value.trim();
+      const matched = aerzteCache.find(a => a.arzt_name === val);
+      if (matched && matched.arzt_nummer) {
+        const numInput = document.getElementById('anamArztNummer');
+        if (numInput && !numInput.value.trim()) {
+          numInput.value = matched.arzt_nummer;
+        }
+      }
+    });
+  }
+
   const slider = document.getElementById('anamSchmerzSkala');
   const skalaVal = document.getElementById('anamSkalaVal');
   if (slider && skalaVal) {
@@ -9961,9 +9993,28 @@ function bindInvEvents() {
 
 let aerzteCache = [];
 
+function populateAerzteDatalist() {
+  const datalist = document.getElementById('aerzteDatalist');
+  if (!datalist) return;
+  if (!Array.isArray(aerzteCache)) return;
+  datalist.innerHTML = aerzteCache.map(a => `<option value="${escapeHtml(a.arzt_name)}"></option>`).join('');
+}
+
+function populateLeadArztSelect() {
+  const arztSelect = document.getElementById('lead-arzt');
+  if (!arztSelect) return;
+  if (!Array.isArray(aerzteCache)) return;
+  arztSelect.innerHTML = '<option value="">— Kein Arzt —</option>' +
+    aerzteCache.map(a => `<option value="${a.id}">${escapeHtml(a.arzt_name)}</option>`).join('');
+}
+
 async function loadAerzte() {
   const { data } = await supabase.from('aerzte').select('*').order('arzt_name', { ascending: true });
   aerzteCache = data || [];
+
+  populateAerzteDatalist();
+  populateLeadArztSelect();
+
   const list = document.getElementById('aerzteList');
   if (!list) return;
   if (!aerzteCache.length) { list.innerHTML = '<p class="text-muted">Keine Ärzte.</p>'; return; }
@@ -10464,7 +10515,20 @@ async function init() {
       if (!sel || !sel.value) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
       openRezeptModal(null, sel.value);
     });
-    if (activePanel === 'settings') await loadAerzte();
+    const rxcArztName = document.getElementById('rxcArztName');
+    if (rxcArztName) {
+      rxcArztName.addEventListener('input', () => {
+        const val = rxcArztName.value.trim();
+        const matched = aerzteCache.find(a => a.arzt_name === val);
+        if (matched && matched.arzt_nummer) {
+          const lanr = document.getElementById('rxcLanr');
+          const bsnr = document.getElementById('rxcBsnr');
+          if (lanr && !lanr.value.trim()) lanr.value = matched.arzt_nummer;
+          if (bsnr && !bsnr.value.trim()) bsnr.value = matched.arzt_nummer;
+        }
+      });
+    }
+    await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
     if (adminLink && currentSession?.user?.id) {
       const { data: adminRow } = await supabase
@@ -10843,7 +10907,10 @@ async function uploadRezeptImage(dataUri) {
   }
 }
 
-function openRezeptConfirmModal(payload) {
+async function openRezeptConfirmModal(payload) {
+  if (!aerzteCache || aerzteCache.length === 0) {
+    await loadAerzte();
+  }
   const p = payload.parsed || {};
   const pat = p.patient || {};
   const arzt = p.arzt || {};
