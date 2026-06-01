@@ -7823,7 +7823,8 @@ document.getElementById('billingSaveBtn')?.addEventListener('click', async () =>
     bic: v('setBic') || null,
     steuernummer: v('setSteuernummer') || null,
     ust_id: v('setUstId') || null,
-    tax_exempt_note: v('setTaxExempt') || null
+    tax_exempt_note: v('setTaxExempt') || null,
+    ik_number: v('setIkNumber') || null
   };
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
