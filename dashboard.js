@@ -6446,7 +6446,7 @@ function openEmpDetail(empId) {
     document.getElementById('teamDetailView').hidden = true;
   };
 
-  supabase.from('calendar_integrations').select('*').eq('user_id', m.id).eq('provider', 'google').single()
+  supabase.from('calendar_integrations').select('*').eq('user_id', m.id).eq('provider', 'google').maybeSingle()
     .then(({ data }) => {
       document.getElementById('empGoogleStatus').textContent = data?.access_token ? t('status_connected') : t('status_disconnected');
     });
@@ -7335,7 +7335,7 @@ async function loadSettings() {
   }
 
   const { data: integ } = await supabase.from('calendar_integrations')
-    .select('*').eq('user_id', currentSession.user.id).eq('provider', 'google').single();
+    .select('*').eq('user_id', currentSession.user.id).eq('provider', 'google').maybeSingle();
   const calStatus = document.getElementById('googleCalStatus');
   const calBtn = document.getElementById('googleCalBtn');
   if (integ?.access_token) {

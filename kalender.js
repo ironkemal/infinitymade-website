@@ -448,7 +448,7 @@ document.getElementById('btn-save-hours').addEventListener('click', async () => 
 
 // ================= INTEGRATIONS =================
 async function loadIntegrations() {
-  const { data: integ } = await supabase.from('calendar_integrations').select('*').eq('employee_id', session.user.id).eq('provider', 'google').single();
+  const { data: integ } = await supabase.from('calendar_integrations').select('*').eq('employee_id', session.user.id).eq('provider', 'google').maybeSingle();
   const status = document.getElementById('google-status');
   const btn = document.getElementById('google-connect-btn');
   

@@ -787,7 +787,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     // Google Meet — only after booking exists. Failures here don't roll back the booking;
     // we just return without a meeting link and log for ops.
     let meetingLink = null;
-    const { data: integ } = await supabase.from('calendar_integrations').select('*').eq('user_id', userId).eq('provider', 'google').single();
+    const { data: integ } = await supabase.from('calendar_integrations').select('*').eq('user_id', userId).eq('provider', 'google').maybeSingle();
 
     if (service.is_online_meeting && integ && integ.access_token) {
       const auth = newOAuthClient();
