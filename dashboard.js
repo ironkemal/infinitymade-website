@@ -4402,7 +4402,9 @@ async function loadPatientDetailRezepte(leadId) {
     let abrButton = '';
     if (showAbrControls) {
       const statusBadges = {
-        bereit: '<span class="badge" style="background:#dcfce7;color:#15803d;">Abrechnungsbereit</span>',
+        bereit: rx.kostentraeger_ik
+          ? '<span class="badge" style="background:#dcfce7;color:#15803d;">Abrechnungsbereit</span>'
+          : '<span class="badge" style="background:var(--warning-dim);color:var(--warning);">⚠ Krankenkasse fehlt</span>',
         in_abrechnung: '<span class="badge" style="background:#dbeafe;color:#1e40af;">In Abrechnung</span>',
         rejected: '<span class="badge" style="background:#fee2e2;color:#b91c1c;">ZAA abgelehnt</span>',
         accepted: '<span class="badge" style="background:#d1fae5;color:#065f46;">Bezahlt</span>',
@@ -11665,7 +11667,7 @@ async function loadAbrechnung() {
       .eq('owner_id', ownerId)
       .eq('abrechnung_status', 'bereit')
       .order('ausstellungsdatum', { ascending: true }),
-    supabase.from('kostentraeger').select('ik, name, das_ik'),
+    supabase.from('kostentraeger').select('ik, name, das_ik, active'),
     supabase.from('abrechnung')
       .select('id, kostentraeger_ik, dateiname, rechnungsnummer, total_eur, zuzahlung_total, prescription_count, status, storage_path, begleitzettel_path, signed_storage_path, signed_at, created_at')
       .eq('owner_id', ownerId)
@@ -11834,8 +11836,32 @@ function renderAbrechnungReady() {
     wrap.className = 'ab-group';
     wrap.style.cssText = 'border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;';
 
-    const ready = ik !== '__unknown__';
     const totalCount = items.length;
+
+    let controlHtml = '';
+    if (ik === '__unknown__') {
+      const activeKks = Array.from(_abState.kkMap.values())
+        .filter(kk => kk.active)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      const optionsHtml = activeKks.map(kk => 
+        `<option value="${escapeHtml(kk.ik)}">${escapeHtml(kk.name || kk.ik)}</option>`
+      ).join('');
+
+      const rxIds = items.map(rx => rx.id).join(',');
+
+      controlHtml = `
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select class="ab-assign-kk-select" style="font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);">
+            <option value="">Kostenträger wählen…</option>
+            ${optionsHtml}
+          </select>
+          <button class="btn-primary ab-assign-kk-btn" data-ids="${escapeHtml(rxIds)}" disabled style="padding:6px 12px;font-size:13px;">Zuweisen</button>
+        </div>
+      `;
+    } else {
+      controlHtml = `<button class="btn-primary ab-select-group-btn" data-ik="${escapeHtml(ik)}">Validieren &amp; Abrechnen</button>`;
+    }
 
     wrap.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-card);">
@@ -11843,7 +11869,7 @@ function renderAbrechnungReady() {
           <div style="font-weight:600;font-size:15px;">${escapeHtml(kkName)}</div>
           <div style="font-size:12px;color:var(--text-muted);">${ik !== '__unknown__' ? 'IK ' + escapeHtml(ik) : ''} · ${totalCount} ${t('ab_rezept')}</div>
         </div>
-        <button class="btn-primary ab-select-group-btn" data-ik="${escapeHtml(ik)}" ${ready ? '' : 'disabled'}>Validieren &amp; Abrechnen</button>
+        ${controlHtml}
       </div>
       <div class="table-wrap" style="margin:0;">
         <table class="data-table" style="margin:0;">
@@ -11958,6 +11984,45 @@ function renderAbrechnungReady() {
       }
       runPreflightCheck();
     });
+  });
+
+  container.querySelectorAll('.ab-group').forEach(groupWrap => {
+    const select = groupWrap.querySelector('.ab-assign-kk-select');
+    const button = groupWrap.querySelector('.ab-assign-kk-btn');
+    if (select && button) {
+      select.addEventListener('change', () => {
+        button.disabled = !select.value;
+      });
+      button.addEventListener('click', async () => {
+        const selectedIk = select.value;
+        if (!selectedIk) return;
+        const rxIds = button.dataset.ids.split(',');
+        const ownerId = getOwnerId();
+        if (!ownerId) {
+          showToast('Fehler: Keine gültige Owner-ID gefunden', 'error');
+          return;
+        }
+        
+        button.disabled = true;
+        button.textContent = '⏳ Zuweisen…';
+        try {
+          const { error } = await supabase
+            .from('prescriptions')
+            .update({ kostentraeger_ik: selectedIk })
+            .eq('owner_id', ownerId)
+            .in('id', rxIds);
+            
+          if (error) throw error;
+          
+          showToast('Kostenträger zugewiesen ✓');
+          await loadAbrechnung();
+        } catch (err) {
+          showToast(err.message || 'Fehler beim Zuweisen des Kostenträgers', 'error');
+          button.disabled = false;
+          button.textContent = 'Zuweisen';
+        }
+      });
+    }
   });
 
   container.querySelectorAll('.ab-pos-select').forEach(sel => {
