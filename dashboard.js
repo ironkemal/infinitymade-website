@@ -527,6 +527,10 @@ async function switchPanel(id) {
   if (target) target.classList.add('active');
   await renderSidebar();
   closeSidebar();
+  if (id === 'overview') {
+    loadTodayBookings().catch(() => {});
+    loadActivityFeed().catch(() => {});
+  }
   if (id === 'calendar') {
     showMyBookingLink();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
@@ -669,6 +673,7 @@ async function renderOverview() {
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
 
   await loadTodayBookings();
+  loadActivityFeed().catch(() => {});
   loadPhysioRezKpis().catch(() => { });
 }
 
@@ -1051,6 +1056,185 @@ async function loadScheduleBookings(date) {
 }
 
 async function loadTodayBookings() { return loadScheduleBookings(new Date()); }
+
+function formatActivityTimestamp(iso) {
+  try {
+    if (!iso) return '';
+    const date = new Date(iso);
+    if (isNaN(date.getTime())) return '';
+    const now = new Date();
+    
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const itemDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+    
+    if (itemDate.getTime() === today.getTime()) {
+      return `Heute ${timeStr} Uhr`;
+    } else if (itemDate.getTime() === yesterday.getTime()) {
+      return `Gestern ${timeStr} Uhr`;
+    } else {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}.${month}.${year} ${timeStr} Uhr`;
+    }
+  } catch (e) {
+    console.error('[formatActivityTimestamp]', e);
+    return '';
+  }
+}
+
+async function loadActivityFeed() {
+  const container = document.getElementById('activityFeedList');
+  if (!container) return;
+  
+  try {
+    const ownerId = getOwnerId();
+    
+    const [notesRes, invoicesRes, fahrtenRes, bookingsRes, leadsRes] = await Promise.all([
+      supabase.from('patient_notes')
+        .select('id, created_at, lead_id, leads:lead_id(first_name,last_name)')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase.from('invoices')
+        .select('id, created_at, invoice_number, total_patient, patient_name, status')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase.from('fahrten')
+        .select('id, created_at, distance_km, lead_id, leads:lead_id(first_name,last_name)')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase.from('bookings')
+        .select('id, created_at, customer_name')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+      supabase.from('leads')
+        .select('id, created_at, first_name, last_name')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false })
+        .limit(10)
+    ]);
+
+    const activities = [];
+
+    if (notesRes.data) {
+      notesRes.data.forEach(item => {
+        const lead = item.leads;
+        const name = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : '';
+        if (name) {
+          activities.push({
+            type: 'note',
+            ts: item.created_at,
+            name: name
+          });
+        }
+      });
+    }
+
+    if (invoicesRes.data) {
+      invoicesRes.data.forEach(item => {
+        if (item.status === 'paid' || item.status === 'bezahlt') {
+          const name = item.patient_name || '';
+          activities.push({
+            type: 'invoice',
+            ts: item.created_at,
+            invoice_number: item.invoice_number || '',
+            total_patient: item.total_patient || 0,
+            name: name
+          });
+        }
+      });
+    }
+
+    if (fahrtenRes.data) {
+      fahrtenRes.data.forEach(item => {
+        activities.push({
+          type: 'fahrt',
+          ts: item.created_at,
+          distance_km: item.distance_km != null ? item.distance_km : 0
+        });
+      });
+    }
+
+    if (bookingsRes.data) {
+      bookingsRes.data.forEach(item => {
+        const name = item.customer_name || '';
+        if (name) {
+          activities.push({
+            type: 'booking',
+            ts: item.created_at,
+            name: name
+          });
+        }
+      });
+    }
+
+    if (leadsRes.data) {
+      leadsRes.data.forEach(item => {
+        if (item.first_name && item.first_name.trim()) {
+          const name = `${item.first_name} ${item.last_name || ''}`.trim();
+          activities.push({
+            type: 'lead',
+            ts: item.created_at,
+            name: name
+          });
+        }
+      });
+    }
+
+    activities.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    const topActivities = activities.slice(0, 7);
+
+    if (topActivities.length === 0) {
+      container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); padding: 4px 0;">Noch keine Aktivität.</div>`;
+      return;
+    }
+
+    container.innerHTML = topActivities.map(item => {
+      let icon = '';
+      let text = '';
+      if (item.type === 'note') {
+        icon = '📝';
+        text = `Notiz hinzugefügt für <strong>${escapeHtml(item.name)}</strong>.`;
+      } else if (item.type === 'invoice') {
+        icon = '💶';
+        const formattedAmount = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(item.total_patient) + ' €';
+        text = `Rechnung <strong>${escapeHtml(item.invoice_number)}</strong> (${escapeHtml(formattedAmount)}) für ${escapeHtml(item.name)} bezahlt.`;
+      } else if (item.type === 'fahrt') {
+        icon = '🚗';
+        text = `Fahrt gebucht (${escapeHtml(item.distance_km)} km).`;
+      } else if (item.type === 'lead') {
+        icon = '👤';
+        text = `${escapeHtml(item.name)} neu als Patient:in registriert.`;
+      } else if (item.type === 'booking') {
+        icon = '📅';
+        text = `Neuer Termin von <strong>${escapeHtml(item.name)}</strong> gebucht.`;
+      }
+      
+      return `
+        <div style="display: flex; gap: 10px; font-size: 12px; color: var(--text-main); text-align: left;">
+          <span style="font-size: 14px; flex-shrink: 0; line-height: 1.4;">${icon}</span>
+          <div style="flex-grow: 1;">
+            <div style="line-height: 1.4; color: var(--text-main);">${text}</div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">${escapeHtml(formatActivityTimestamp(item.ts))}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('[loadActivityFeed] error', error);
+    container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); padding: 4px 0;">Aktivität konnte nicht geladen werden.</div>`;
+  }
+}
 
 // Render the inner HTML for a calendar booking block. Physio-friendly:
 //   line 1 — "Nachname, Vorname"
