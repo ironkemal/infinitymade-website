@@ -10884,6 +10884,7 @@ function openRezeptConfirmModal(payload) {
   setVal('rxcBsnr', arzt.bsnr);
   setVal('rxcIcd', rez.icd10);
   setVal('rxcDg', rez.diagnosegruppe);
+  setVal('rxcLeitsymptomatik', rez.leitsymptomatik);
   // Heilmittel — handled by setupRezeptConfirmDropdowns
   // (we still pass the raw OCR text below)
   setVal('rxcAnzahl', rez.anzahl_einheiten);
@@ -11000,6 +11001,7 @@ async function submitConfirm() {
         icd10: document.getElementById('rxcIcd').value.trim() || null,
         diagnosegruppe: document.getElementById('rxcDg').value.trim() || null,
         heilmittel: document.getElementById('rxcHm').value.trim() || null,
+        leitsymptomatik: document.getElementById('rxcLeitsymptomatik')?.value.trim() || null,
         heilmittel_position: document.getElementById('rxcHmPosition').value.trim() || null,
         heilmittel_feld_text: rxLastUpload.parsed?.rezept?.heilmittel_feld_text || null,
         anzahl_einheiten: parseInt(document.getElementById('rxcAnzahl').value, 10) || null,
