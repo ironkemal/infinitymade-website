@@ -10,74 +10,28 @@
 <script src="/sentry-init.js?v=20260523c"></script>
 <title>Onboarding — InfinityMade</title>
 
-
 <link rel="stylesheet" href="fonts/system-fonts.css" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="theme-color" content="#F8F3E8" />
 <link rel="stylesheet" href="onboarding.css" />
-<style>
-  /* Soft-skill repaint of onboarding (overrides onboarding.css dark theme) */
-  :root {
-    --bg: #F8F3E8;
-    --bg-card: #FFFFFF;
-    --bg-input: #FAF7F0;
-    --border: rgba(26, 22, 17, 0.08);
-    --border-strong: rgba(26, 22, 17, 0.18);
-    --text: #1A1611;
-    --muted: #7A6F61;
-    --accent: #1E3D2F;
-    --accent-soft: rgba(30, 61, 47, 0.08);
-    --accent-hover: #6B5538;
-    --danger: #9C3A3A;
-  }
-  body {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
-    background: #F8F3E8 !important;
-    color: #1A1611 !important;
-  }
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    pointer-events: none; z-index: 100;
-    opacity: 0.035; mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  }
-  .ob-topbar {
-    background: rgba(248, 243, 232, 0.85) !important;
-    border-bottom: 1px solid rgba(26, 22, 17, 0.08);
-  }
-  .ob-brand {
-    font-family: 'Fraunces', serif !important;
-    font-weight: 500;
-    font-size: 1.15rem;
-    color: #1A1611 !important;
-    text-decoration: none;
-  }
-  .ob-brand em { font-style: italic; color: #6B5538; font-weight: 500; }
-  .ob-step h1, .ob-step h2, .ob-step h3, .ob-step-header h1 {
-    font-family: 'Fraunces', serif !important;
-    font-weight: 400 !important;
-    letter-spacing: -0.025em;
-    color: #1A1611;
-  }
-  .ob-step-header h1 em { font-style: italic; font-weight: 300; color: #6B5538; }
-  .ob-step-tag {
-    font-family: 'JetBrains Mono', monospace !important;
-    color: #6B5538 !important;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-</style>
 </head>
 <body>
 
 <header class="ob-topbar">
-  <a href="/index.html" class="ob-brand">Infinity<em>Made</em></a>
-  <div class="ob-progress">
-    <div class="ob-progress-bar"><div class="ob-progress-fill" id="progressFill"></div></div>
-    <span class="ob-progress-label"><span id="stepNum">1</span> / 7</span>
+  <div class="ob-topbar-inner">
+    <a href="/index.html" class="ob-brand">Infinity<em>Made</em></a>
+    
+    <div class="ob-progress">
+      <div class="ob-progress-bar">
+        <div class="ob-progress-fill" id="progressFill"></div>
+      </div>
+      <span class="ob-progress-label">
+        Schritt <span id="stepNum">1</span> von <span id="totalSteps">7</span>
+      </span>
+    </div>
+    
+    <button class="ob-logout" id="logoutBtn" hidden>Abmelden</button>
   </div>
-  <button class="ob-logout" id="logoutBtn" hidden>Abmelden</button>
 </header>
 
 <main class="ob-main">
@@ -86,7 +40,7 @@
   <section class="ob-step" data-step="account">
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 1 / 7</span>
-      <h1>Konto erstellen</h1>
+      <h1>Konto <em>erstellen</em></h1>
       <p>Sie melden sich später mit E-Mail und Passwort in Ihrem Dashboard an.</p>
     </div>
     <form class="ob-form" id="accountForm">
@@ -94,18 +48,20 @@
         <button type="button" class="ob-toggle-btn active" data-mode="signup">Neues Konto</button>
         <button type="button" class="ob-toggle-btn" data-mode="signin">Ich habe bereits ein Konto</button>
       </div>
-      <label>
-        <span>E-Mail</span>
+      <label class="ob-form-field">
+        <span class="ob-field-label">E-Mail</span>
         <input type="email" id="accountEmail" required autocomplete="email" placeholder="ihr@firma.de" />
       </label>
-      <label>
-        <span>Passwort</span>
+      <label class="ob-form-field">
+        <span class="ob-field-label">Passwort</span>
         <input type="password" id="accountPassword" required minlength="8" autocomplete="new-password" placeholder="Mindestens 8 Zeichen" />
       </label>
-      <label class="ob-accept" style="display:flex;align-items:flex-start;gap:10px;margin:12px 0;cursor:pointer;font-size:14px;line-height:1.5;">
-        <input type="checkbox" id="accountAccept" required style="width:18px;height:18px;accent-color:var(--accent);margin-top:2px;flex-shrink:0;" />
-        <span>Ich habe die <a href="/agb.html" target="_blank" rel="noopener">AGB</a> und die <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
+      
+      <label class="ob-checkbox-wrapper">
+        <input type="checkbox" id="accountAccept" required />
+        <span class="ob-checkbox-text">Ich habe die <a href="/agb.html" target="_blank" rel="noopener">AGB</a> und die <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
       </label>
+      
       <div class="ob-actions">
         <button type="submit" class="ob-btn primary" id="accountSubmit">Konto erstellen &amp; weiter →</button>
       </div>
@@ -116,16 +72,19 @@
   <section class="ob-step" data-step="business" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 2 / 7</span>
-      <h1>Über Ihr Unternehmen</h1>
+      <h1>Über Ihr <em>Unternehmen</em></h1>
       <p>Diese Daten erscheinen im KI-Assistenten — er stellt sich Ihren Kunden mit dem richtigen Namen vor.</p>
     </div>
     <form class="ob-form" id="businessForm">
-      <label>
-        <span>Geschäftsname</span>
+      <!-- Hidden input to store booking slug cleanly and prevent JS crashes -->
+      <input type="hidden" id="bookingSlug" />
+
+      <label class="ob-form-field">
+        <span class="ob-field-label">Geschäftsname</span>
         <input type="text" id="bizName" required placeholder="z.B. BlackBox2 Barbershop" />
       </label>
-      <label>
-        <span>Branche</span>
+      <label class="ob-form-field">
+        <span class="ob-field-label">Branche</span>
         <select id="bizSector" required>
           <option value="">Bitte wählen…</option>
           <option value="barber">Friseur / Barbershop</option>
@@ -141,33 +100,35 @@
         </select>
       </label>
       <div class="ob-row-2">
-        <label>
-          <span>Stadt</span>
+        <label class="ob-form-field">
+          <span class="ob-field-label">Stadt</span>
           <input type="text" id="bizCity" required placeholder="z.B. Koblenz" />
         </label>
-        <label>
-          <span>Sprache des Bots</span>
+        <label class="ob-form-field">
+          <span class="ob-field-label">Sprache des Bots</span>
           <select id="bizLanguage" required>
             <option value="de" selected>Deutsch</option>
             <option value="tr">Türkçe</option>
-            <option value="ar">Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</option>
+            <option value="ar">العربية</option>
             <option value="en">English</option>
           </select>
         </label>
       </div>
-      <div style="margin:16px 0 8px;font-weight:600;font-size:0.9rem;color:var(--text-muted, #94a3b8);">Adresse</div>
+      
+      <div class="ob-section-subtitle">Adresse</div>
+      
       <div class="ob-row-2">
-        <label>
-          <span>PLZ</span>
+        <label class="ob-form-field">
+          <span class="ob-field-label">PLZ</span>
           <input type="text" id="bizZip" required placeholder="z.B. 56068" maxlength="10" />
         </label>
-        <label>
-          <span>Hausnummer</span>
+        <label class="ob-form-field">
+          <span class="ob-field-label">Hausnummer</span>
           <input type="text" id="bizHouse" required placeholder="z.B. 12a" />
         </label>
       </div>
-      <label>
-        <span>Straße</span>
+      <label class="ob-form-field">
+        <span class="ob-field-label">Straße</span>
         <input type="text" id="bizStreet" required placeholder="z.B. Hauptstraße" />
       </label>
       <div class="ob-actions">
@@ -177,35 +138,95 @@
     </form>
   </section>
 
+  <!-- Step 2: Billing (§302) -->
+  <section class="ob-step" data-step="billing" hidden>
+    <div class="ob-step-header">
+      <span class="ob-step-tag">Schritt 3 / 7</span>
+      <h1>Abrechnung &amp; <em>Finanzen</em></h1>
+      <p>Geben Sie Ihre Abrechnungsdaten für die gesetzliche Krankenversicherung (§302) ein. Diese Angaben sind optional und können später ergänzt werden.</p>
+    </div>
+    <form class="ob-form" id="billingForm">
+      <label class="ob-form-field">
+        <span class="ob-field-label">Institutionskennzeichen (IK-Nummer)</span>
+        <input type="text" id="bizIk" inputmode="numeric" placeholder="9-stellige IK-Nummer" />
+        <span class="ob-field-hint">Für die Kassenabrechnung (§302). Kann später im Dashboard ergänzt werden.</span>
+      </label>
+
+      <div class="ob-section-subtitle">Bankverbindung</div>
+      <label class="ob-form-field">
+        <span class="ob-field-label">Bankverbindung Name</span>
+        <input type="text" id="bizBankName" placeholder="z.B. Sparkasse" />
+      </label>
+      <div class="ob-row-2">
+        <label class="ob-form-field">
+          <span class="ob-field-label">IBAN</span>
+          <input type="text" id="bizIban" placeholder="DE..." />
+        </label>
+        <label class="ob-form-field">
+          <span class="ob-field-label">BIC</span>
+          <input type="text" id="bizBic" placeholder="z.B. WELADED1..." />
+        </label>
+      </div>
+
+      <div class="ob-section-subtitle">Steuerdaten</div>
+      <div class="ob-row-2">
+        <label class="ob-form-field">
+          <span class="ob-field-label">Steuernummer</span>
+          <input type="text" id="bizSteuernummer" placeholder="z.B. 12/345/67890" />
+        </label>
+        <label class="ob-form-field">
+          <span class="ob-field-label">USt-IdNr. (optional)</span>
+          <input type="text" id="bizUstId" placeholder="z.B. DE123456789" />
+        </label>
+      </div>
+
+      <label class="ob-checkbox-wrapper">
+        <input type="checkbox" id="bizTaxExempt" checked />
+        <span class="ob-checkbox-text">Steuerbefreit nach § 4 Nr. 14 UStG (medizinische Heilmittel)</span>
+      </label>
+
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="button" class="ob-btn ghost" id="billingSkip">Später ausfüllen</button>
+        <button type="submit" class="ob-btn primary">Weiter →</button>
+      </div>
+    </form>
+  </section>
+
   <!-- Step 2: Owner Info -->
   <section class="ob-step" data-step="owner" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 3 / 7</span>
-      <h1>Inhaberdaten</h1>
+      <h1>Ihre <em>Inhaberdaten</em></h1>
       <p>Wer führt die Termine durch? Ihre Kunden sehen diesen Namen bei der Online-Buchung.</p>
     </div>
     <form class="ob-form" id="ownerForm">
-      <div class="ob-callout" style="margin:0 0 20px;padding:14px 16px;background:rgba(34,197,94,0.06);border-radius:10px;border:1px solid rgba(34,197,94,0.15);font-size:13px;color:var(--text-muted);line-height:1.5;">
-        <strong style="color:var(--text);">ℹ️ Hinweis:</strong> Wenn Ihre Mitarbeiter sich später eintragen, werden sie automatisch für Kunden bei der Terminbuchung sichtbar. Diese Angaben gelten für Sie als Geschäftsinhaber, falls Sie selbst aktiv Dienstleistungen anbieten.
+      <div class="ob-info-callout">
+        <span class="ob-callout-icon">ℹ️</span>
+        <div class="ob-callout-content">
+          <strong>Hinweis:</strong> Wenn Ihre Mitarbeiter sich später eintragen, werden sie automatisch für Kunden bei der Terminbuchung sichtbar. Diese Angaben gelten für Sie als Geschäftsinhaber, falls Sie selbst aktiv Dienstleistungen anbieten.
+        </div>
       </div>
       <div class="ob-row-2">
-        <label>
-          <span>Vorname</span>
+        <label class="ob-form-field">
+          <span class="ob-field-label">Vorname</span>
           <input type="text" id="ownerFirstName" required placeholder="z.B. Mustafa" />
         </label>
-        <label>
-          <span>Nachname</span>
+        <label class="ob-form-field">
+          <span class="ob-field-label">Nachname</span>
           <input type="text" id="ownerLastName" required placeholder="z.B. Yilmaz" />
         </label>
       </div>
-      <div class="ob-callout" style="margin-top:20px;">
-        <strong>Online-Terminbuchung aktivieren?</strong>
-        <p style="margin:8px 0 0;font-size:0.9rem;color:var(--text-muted);">Sollen Kunden über Ihre Website direkt Termine bei Ihnen buchen können?</p>
+      
+      <div class="ob-toggle-section">
+        <span class="ob-toggle-title">Online-Terminbuchung aktivieren?</span>
+        <p class="ob-toggle-description">Sollen Kunden über Ihre Website direkt Termine bei Ihnen buchen können?</p>
+        <div class="ob-toggle" id="bookingsToggle">
+          <button type="button" class="ob-toggle-btn active" data-value="true">Ja, Terminbuchung erlauben</button>
+          <button type="button" class="ob-toggle-btn" data-value="false">Nein, nur Anfragen</button>
+        </div>
       </div>
-      <div class="ob-toggle" id="bookingsToggle" style="margin-top:12px;">
-        <button type="button" class="ob-toggle-btn active" data-value="true">Ja, Terminbuchung erlauben</button>
-        <button type="button" class="ob-toggle-btn" data-value="false">Nein, nur Anfragen</button>
-      </div>
+      
       <div class="ob-actions">
         <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
         <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
@@ -217,8 +238,8 @@
   <section class="ob-step" data-step="services" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 4 / 7</span>
-      <h1>Ihre Dienstleistungen</h1>
-      <p>Welche Termine kann der Bot buchen? Sie können später jederzeit bearbeiten.</p>
+      <h1>Ihre <em>Dienstleistungen</em></h1>
+      <p>Welche Termine kann der Bot buchen? Sie können sie später jederzeit bearbeiten.</p>
     </div>
     <form class="ob-form" id="servicesForm">
       <div class="ob-services-header">
@@ -243,7 +264,7 @@
   <section class="ob-step" data-step="hours" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 5 / 7</span>
-      <h1>Öffnungszeiten</h1>
+      <h1>Ihre <em>Öffnungszeiten</em></h1>
       <p>Diese Zeiten gelten für die KI — außerhalb dieser Stunden bietet der Bot keine Termine an.</p>
     </div>
     <form class="ob-form" id="hoursForm">
@@ -257,53 +278,11 @@
     </form>
   </section>
 
-  <!-- Step 5: Templates (WhatsApp-Schritt 2026-05-22 entfernt — Fokus auf Buchungssystem) -->
-  <section class="ob-step" data-step="templates" hidden>
-    <div class="ob-step-header">
-      <span class="ob-step-tag">Schritt 6 / 7</span>
-      <h1>Nachrichten anpassen</h1>
-      <p>Diese Texte verwendet der Bot. Sie können sie jetzt oder später ändern.</p>
-    </div>
-    <div class="ob-callout">
-      <strong>💡 Hinweis zu Variablen:</strong>
-      Bitte lassen Sie Platzhalter wie <code>{{name}}</code>, <code>{{time}}</code> oder <code>{{business}}</code> stehen — diese werden vom System automatisch durch den Namen des Kunden, die Termin-Uhrzeit oder Ihren Geschäftsnamen ersetzt.
-    </div>
-
-    <form class="ob-form" id="templatesForm">
-      <label>
-        <span>Begrüßung</span>
-        <textarea id="tplGreeting" rows="2">Hallo {{name}}! Wie kann ich Ihnen helfen? 😊</textarea>
-      </label>
-      <label>
-        <span>Opt-in Aufforderung (DSGVO)</span>
-        <textarea id="tplOptIn" rows="3">Hallo! Damit wir Ihnen automatisch antworten dürfen, bestätigen Sie bitte mit "JA". Sie können jederzeit widerrufen mit "STOP".</textarea>
-      </label>
-      <label>
-        <span>Erinnerung (24h vor Termin)</span>
-        <textarea id="tplReminder" rows="2">Hallo {{name}}, wir freuen uns auf Sie morgen um {{time}} bei {{business}}. Antworten Sie mit "OK" zur Bestätigung.</textarea>
-      </label>
-      <label>
-        <span>Reaktivierung (60 Tage)</span>
-        <textarea id="tplReactivation" rows="2">Hallo {{name}}, lange nichts gehört. Sollen wir wieder einen Termin vereinbaren?</textarea>
-      </label>
-
-      <div class="ob-callout ob-callout-ai">
-        <strong>🤖 So funktioniert der Bot:</strong>
-        Diese Texte sind nur die <em>Eröffnungs-</em> und <em>Systemnachrichten</em>. Sobald ein Kunde antwortet, übernimmt die KI und führt das Gespräch in natürlicher Sprache weiter — sie bucht Termine, beantwortet Fragen und passt sich an den Tonfall des Kunden an.
-      </div>
-
-      <div class="ob-actions">
-        <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
-        <button type="submit" class="ob-btn primary">Weiter zur Bezahlung →</button>
-      </div>
-    </form>
-  </section>
-
   <!-- Step 8: Plan & Payment -->
   <section class="ob-step" data-step="plan" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 7 / 7</span>
-      <h1>Wählen Sie Ihren Plan</h1>
+      <h1>Wählen Sie Ihren <em>Plan</em></h1>
       <p>14 Tage kostenlos testen. Kreditkarte wird hinterlegt, aber erst nach 14 Tagen belastet. Jederzeit kündbar.</p>
     </div>
 
@@ -325,7 +304,7 @@
             <li>1 Standort, bis 2 Mitarbeiter</li>
             <li>E-Mail-Support</li>
           </ul>
-          <button type="button" class="ob-btn primary plan-select" data-plan="starter">Starter wählen</button>
+          <button type="button" class="ob-btn plan-select" data-plan="starter">Starter wählen</button>
         </div>
 
         <div class="plan-card recommended" data-plan="professional">
@@ -356,59 +335,61 @@
             <li>API-Zugang</li>
             <li>Persönlicher Account Manager</li>
           </ul>
-          <button type="button" class="ob-btn primary plan-select" data-plan="klinik">Klinik wählen</button>
+          <button type="button" class="ob-btn plan-select" data-plan="klinik">Klinik wählen</button>
         </div>
 
         <div class="plan-card" data-plan="enterprise">
-          <div class="plan-badge" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);">Enterprise</div>
           <div class="plan-name">Enterprise</div>
           <div class="plan-price"><span class="plan-price-num" data-month="149" data-year="127">149</span> €<small>/Monat</small></div>
           <div class="plan-billing" data-billing>monatlich abgerechnet</div>
           <ul class="plan-features">
             <li>Alles aus Klinik</li>
-            <li><strong>Mehrere Standorte</strong> (unbegrenzt)</li>
-            <li><strong>Mitarbeitergruppen</strong> &amp; Berechtigungen (RBAC)</li>
-            <li><strong>Wochen- &amp; Monatsansicht</strong> im Kalender</li>
+            <li>Mehrere Standorte (unbegrenzt)</li>
+            <li>Mitarbeitergruppen &amp; Berechtigungen</li>
+            <li>Wochen- &amp; Monatsansicht</li>
             <li>Standortübergreifende Mitarbeiter</li>
             <li>Dedizierter Support</li>
           </ul>
-          <button type="button" class="ob-btn primary plan-select" data-plan="enterprise">Enterprise wählen</button>
+          <button type="button" class="ob-btn plan-select" data-plan="enterprise">Enterprise wählen</button>
         </div>
       </div>
 
       <!-- DTA-Pro Add-on (physiotherapy/praxis only) -->
-      <div id="dtaProOptIn" hidden style="margin-top:20px;padding:16px;border:1px solid #93c5fd;border-radius:10px;background:linear-gradient(135deg,#eff6ff,#fafbfc);">
-        <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
-          <input type="checkbox" id="dtaProCheckbox" style="margin-top:4px;flex-shrink:0;" />
-          <div style="flex:1;">
-            <div style="font-weight:600;font-size:15px;">🏥 DTA-Pro Add-on hinzufügen <span style="font-size:12px;font-weight:400;color:#1d4ed8;">+ <span id="dtaProPriceLabel">29 €/Monat</span></span></div>
-            <div style="font-size:13px;color:#444;margin-top:6px;line-height:1.5;">
+      <div id="dtaProOptIn" class="ob-dta-card" hidden>
+        <label class="ob-dta-label">
+          <input type="checkbox" id="dtaProCheckbox" />
+          <div class="ob-dta-content">
+            <div class="ob-dta-title">🏥 DTA-Pro Add-on hinzufügen <span class="ob-dta-badge">+ <span id="dtaProPriceLabel">29 €/Monat</span></span></div>
+            <div class="ob-dta-description">
               §302 SGB V Sammelabrechnung an Krankenkassen — Sie erzeugen DTA-Dateien, signieren lokal mit Ihrem ITSG-Zertifikat (.p12), laden im DAS-Portal hoch und verarbeiten ZAA-Antworten direkt im Dashboard. <strong>Inkl. 14 Tage gratis</strong>; jederzeit kündbar.
             </div>
           </div>
         </label>
       </div>
 
-      <div class="ob-callout" style="margin-top: 24px;">
-        <strong>🔒 Sicher zahlen mit Stripe:</strong>
-        Ihre Kreditkartendaten werden direkt bei Stripe verarbeitet — wir sehen sie nie. Mit Klick auf "Plan wählen" werden Sie zur sicheren Stripe-Zahlungsseite weitergeleitet.
+      <div class="ob-stripe-callout">
+        <span class="ob-stripe-icon">🔒</span>
+        <div class="ob-stripe-content">
+          <strong>Sicher zahlen mit Stripe:</strong>
+          Ihre Kreditkartendaten werden direkt bei Stripe verarbeitet — wir sehen sie nie. Mit Klick auf "Plan wählen" werden Sie zur sicheren Stripe-Zahlungsseite weitergeleitet.
+        </div>
       </div>
 
       <!-- Legal consents (DSGVO Art. 28 AVV + AGB) -->
-      <div style="margin-top:20px;padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#fafbfc;">
-        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px;">
-          <input type="checkbox" id="consentAgb" style="margin-top:4px;flex-shrink:0;" required />
-          <span style="font-size:13px;line-height:1.5;color:#374151;">
-            Ich akzeptiere die <a href="/agb.html" target="_blank">AGB</a>, die <a href="/widerruf.html" target="_blank">Widerrufsbelehrung</a> und die <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a>. <span style="color:#dc2626;">*</span>
+      <div class="ob-consents-card">
+        <label class="ob-consent-label">
+          <input type="checkbox" id="consentAgb" required />
+          <span class="ob-consent-text">
+            Ich akzeptiere die <a href="/agb.html" target="_blank">AGB</a>, die <a href="/widerruf.html" target="_blank">Widerrufsbelehrung</a> und die <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a>. <span class="ob-required-star">*</span>
           </span>
         </label>
-        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
-          <input type="checkbox" id="consentAvv" style="margin-top:4px;flex-shrink:0;" required />
-          <span style="font-size:13px;line-height:1.5;color:#374151;">
-            Ich schließe den <a href="/dpa.html" target="_blank"><strong>Auftragsverarbeitungsvertrag (AVV)</strong> nach Art. 28 DSGVO</a> ab. Mir ist bewusst, dass InfinityMade personenbezogene Daten meiner Kund:innen/Patient:innen in meinem Auftrag verarbeitet. <span style="color:#dc2626;">*</span>
+        <label class="ob-consent-label">
+          <input type="checkbox" id="consentAvv" required />
+          <span class="ob-consent-text">
+            Ich schließe den <a href="/dpa.html" target="_blank"><strong>Auftragsverarbeitungsvertrag (AVV)</strong> nach Art. 28 DSGVO</a> ab. Mir ist bewusst, dass InfinityMade personenbezogene Daten meiner Kund:innen/Patient:innen in meinem Auftrag verarbeitet. <span class="ob-required-star">*</span>
           </span>
         </label>
-        <div id="consentError" style="display:none;margin-top:10px;color:#dc2626;font-size:13px;">Bitte beide Zustimmungen ankreuzen, um fortzufahren.</div>
+        <div id="consentError" class="ob-consent-error">Bitte beide Zustimmungen ankreuzen, um fortzufahren.</div>
       </div>
 
       <div class="ob-actions">
@@ -421,14 +402,18 @@
   <section class="ob-step" data-step="done" hidden>
     <div class="ob-done">
       <div class="ob-done-emoji">🎉</div>
-      <h1>Willkommen bei InfinityMade!</h1>
-      <p>Ihr KI-Assistent ist konfiguriert. Wir richten jetzt im Hintergrund den WhatsApp-Webhook ein und melden uns innerhalb 24h für den Test-Anruf.</p>
-      <p class="ob-done-info">
-        <strong>Was passiert als Nächstes?</strong><br>
-        1. Sie bekommen eine E-Mail mit dem Onboarding-Plan.<br>
-        2. Wir testen den Bot mit Ihnen live (15 Min Anruf).<br>
-        3. Aktivierung — Ihr Bot ist live.
-      </p>
+      <h1>Willkommen bei <em>InfinityMade</em>!</h1>
+      <p>Ihr KI-Assistent ist konfiguriert. Wir richten jetzt im Hintergrund den Webhook ein und melden uns innerhalb 24h für den Test-Anruf.</p>
+      
+      <div class="ob-done-info-card">
+        <h3>Was passiert als Nächstes?</h3>
+        <ol class="ob-done-steps">
+          <li>Sie bekommen eine E-Mail mit dem Onboarding-Plan.</li>
+          <li>Wir testen den Bot mit Ihnen live (15 Min Anruf).</li>
+          <li>Aktivierung — Ihr Bot ist live.</li>
+        </ol>
+      </div>
+      
       <div class="ob-actions" style="justify-content:center;">
         <a href="/dashboard.html" class="ob-btn primary">Dashboard öffnen →</a>
       </div>
