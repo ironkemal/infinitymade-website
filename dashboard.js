@@ -639,7 +639,7 @@ function fmtDate(iso) {
 
 function statusBadge(s) {
   if (s === 'confirmed' || s === 'accepted') return 'badge-green';
-  if (s === 'cancelled' || s === 'canceled') return 'badge-red';
+  if (s === 'cancelled' || s === 'canceled' || s === 'no_show') return 'badge-red';
   if (s === 'pending') return 'badge-yellow';
   return 'badge-gray';
 }
@@ -1327,7 +1327,7 @@ function renderBookingSlotInner(b, childBookings = []) {
   ].filter(Boolean).join(' · ');
 
   return `
-    <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+    <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${b.status === 'no_show' ? 'text-decoration:line-through;opacity:0.6;' : ''}">
       ${escapeHtml(displayName)}
       ${isReadyBadge}
     </div>
@@ -2319,7 +2319,7 @@ async function triggerNoShowBot(booking) {
   console.log('[NoShowBot] Triggered for booking:', booking.id, booking.customer_name);
 }
 
-function handlePatientNichtErschienen() {
+async function handlePatientNichtErschienen() {
   if (!bkActionBookingCache) return;
   const btn = document.getElementById('bkActionNoShowBtn');
   if (btn && btn.disabled) return;
@@ -2327,8 +2327,38 @@ function handlePatientNichtErschienen() {
   closeModal('bkActionModal');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
-  triggerNoShowBot(bkActionBookingCache);
-  showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
+  try {
+    const { error: bkErr } = await supabase
+      .from('bookings')
+      .update({ status: 'no_show' })
+      .eq('id', bkActionBookingCache.id);
+
+    if (bkErr) throw bkErr;
+
+    const { error: sessErr } = await supabase
+      .from('prescription_sessions')
+      .update({ status: 'no_show' })
+      .eq('booking_id', bkActionBookingCache.id);
+
+    if (sessErr) throw sessErr;
+
+    triggerNoShowBot(bkActionBookingCache);
+    showToast('Patient nicht erschienen — Bot wurde ausgelöst.');
+
+    const cal = window.calendar || calendar;
+    if (cal) {
+      await cal.reloadMonth();
+      cal.refresh();
+    }
+    if (activePanel === 'overview') {
+      await loadTodayBookings();
+    }
+    if (activePanel === 'calendar' && calendarView === 'day') {
+      await renderDayView(toISODate(dayViewDate));
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 // ============================================================
@@ -5013,7 +5043,7 @@ async function loadPatientDetailTermine(leadId) {
       <div class="pd-term-item">
         <div class="pd-term-row">
           <span class="pd-term-date">${dateStr} · ${timeStr}</span>
-          <span class="badge ${b.status === 'confirmed' ? 'badge-green' : b.status === 'cancelled' ? 'badge-red' : 'badge-gray'}">${b.status || '—'}</span>
+          <span class="badge ${b.status === 'confirmed' ? 'badge-green' : (b.status === 'cancelled' || b.status === 'no_show') ? 'badge-red' : 'badge-gray'}">${b.status || '—'}</span>
         </div>
         <div class="pd-term-service">${escapeHtml(serviceTitle)} ${svcCode4 ? '<span style="font-size:11px;color:var(--text-muted);margin-left:6px;background:var(--bg-elevated);padding:1px 5px;border-radius:3px;">' + escapeHtml(svcCode4) + '</span>' : ''} ${dur ? '· ' + dur : ''}</div>
       </div>
