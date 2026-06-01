@@ -76,7 +76,7 @@ const T = {
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
     lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.',
-    nav_abrechnung: 'Kassenabrechnung', abrechnung_sub: 'Sammelrechnung § 302 SGB V an Krankenkassen',
+    nav_abrechnung: '§302-Abrechnung vorbereiten', abrechnung_sub: 'Sammelrechnung § 302 SGB V an Krankenkassen vorbereiten',
     ab_ready: 'Abrechnungsbereit', ab_history: 'Abrechnungs-Historie',
     ab_kk: 'Krankenkasse', ab_patient: 'Patient', ab_rezept: 'Rezept', ab_einheiten: 'Einheiten',
     ab_brutto: 'Brutto', ab_zuzahlung: 'Zuzahlung', ab_select_all: 'Alle wählen',
@@ -147,7 +147,7 @@ const T = {
     lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
     lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
     lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.',
-    nav_abrechnung: 'Insurance Billing', abrechnung_sub: '§ 302 SGB V batch billing to health insurers',
+    nav_abrechnung: 'Prepare §302 Billing', abrechnung_sub: 'Prepare § 302 SGB V batch billing to health insurers',
     ab_ready: 'Ready to bill', ab_history: 'Billing history',
     ab_kk: 'Insurer', ab_patient: 'Patient', ab_rezept: 'Rx', ab_einheiten: 'Units',
     ab_brutto: 'Gross', ab_zuzahlung: 'Co-pay', ab_select_all: 'Select all',
@@ -218,7 +218,7 @@ const T = {
     lbl_doctor_notes: 'Doktor notları', lbl_therapist_notes: 'Terapist notları',
     lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
     lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.',
-    nav_abrechnung: 'Kasa Faturalandırması', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası',
+    nav_abrechnung: 'Kasa Faturası Hazırlama', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası hazırlama',
     ab_ready: 'Faturalandırmaya hazır', ab_history: 'Fatura geçmişi',
     ab_kk: 'Sigorta', ab_patient: 'Hasta', ab_rezept: 'Reçete', ab_einheiten: 'Birim',
     ab_brutto: 'Brüt', ab_zuzahlung: 'Katkı', ab_select_all: 'Tümünü seç',
@@ -395,9 +395,13 @@ function getSector() {
   console.log('[getSector]', s, { role: currentProfile.role, owner_id: currentProfile.owner_id, ownerProfile, currentProfileSector: currentProfile.sector });
   return s;
 }
+const PRAXIS_SECTORS = ['physiotherapy', 'logopaedie', 'ergotherapie', 'podologie', 'praxis'];
+function isPraxisSector(sector) {
+  return PRAXIS_SECTORS.includes(sector);
+}
 function getSidebarItems() {
   const sector = getSector();
-  return SECTOR_PANELS[sector] || SECTOR_PANELS.default;
+  return SECTOR_PANELS[sector] || (isPraxisSector(sector) ? SECTOR_PANELS.physiotherapy : SECTOR_PANELS.default);
 }
 
 // True when the tenant has the DTA-Pro Stripe addon (gates §302 Sammelabrechnung).
@@ -1372,7 +1376,7 @@ let _rezKpiCache = null;
 async function loadPhysioRezKpis() {
   const block = document.getElementById('physioRezKpi');
   if (!block) return;
-  if (getSector() !== 'physiotherapy') { block.style.display = 'none'; return; }
+  if (!isPraxisSector(getSector())) { block.style.display = 'none'; return; }
 
   const ownerId = getOwnerId();
   const { data, error } = await bizScope(supabase
@@ -1584,7 +1588,7 @@ async function initCalendar() {
       const displayServices = empServices.length > 0 ? empServices : ownerServices;
       const items = [];
       displayServices.forEach(s => {
-        const isPhysio = getSector() === 'physiotherapy';
+        const isPhysio = isPraxisSector(getSector());
         const durKeys = isPhysio && s.price_config?.durations
           ? Object.keys(s.price_config.durations).filter(k => s.price_config.durations[k].active)
           : [];
@@ -4508,7 +4512,7 @@ async function openPatientDetailModal(lead) {
   openModal('patientDetailModal');
 
   const leadId = lead.id;
-  const isPhysio = getSector() === 'physiotherapy';
+  const isPhysio = isPraxisSector(getSector());
   const rezTab = document.getElementById('pdTabRezepte');
   if (rezTab) rezTab.style.display = isPhysio ? '' : 'none';
 
@@ -4598,7 +4602,7 @@ async function loadPatientDetailRezepte(leadId) {
     // Sprint 8+: abrechnung_status badge + manual "bereit setzen" button (physio only)
     const abrStatus = rx.abrechnung_status;
     const sector = getSector();
-    const showAbrControls = (sector === 'physiotherapy' || sector === 'praxis');
+    const showAbrControls = isPraxisSector(sector);
     let abrBadge = '';
     let abrButton = '';
     if (showAbrControls) {
@@ -5172,7 +5176,7 @@ async function openLeadModal(lead) {
   const arztRow = document.getElementById('lead-arzt-row');
   const hausbesuchRow = document.getElementById('lead-hausbesuch-row');
 
-  if (sector === 'physiotherapy') {
+  if (isPraxisSector(sector)) {
     sectorFieldsEl.style.display = 'block';
     physioRow.style.display = 'grid';
     physioRow2.style.display = 'grid';
@@ -5284,7 +5288,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   const city = document.getElementById('lead-city').value.trim();
   let street = null, plz = null, hausbesuch = false;
 
-  if (sector === 'physiotherapy') {
+  if (isPraxisSector(sector)) {
     street = document.getElementById('lead-street').value.trim() || null;
     plz = document.getElementById('lead-plz').value.trim() || null;
     hausbesuch = document.getElementById('lead-hausbesuch').checked;
@@ -5307,7 +5311,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
   }
 
   const metadata = { geburtsdatum };
-  if (sector === 'physiotherapy') {
+  if (isPraxisSector(sector)) {
     metadata.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
     metadata.krankenkassennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
     metadata.hausbesuch = hausbesuch;
@@ -7589,7 +7593,7 @@ async function loadSettings() {
   const abrSection = document.getElementById('settingsAbrechnungSection');
   if (abrSection) {
     const sec = getSector();
-    if (sec === 'physiotherapy' || sec === 'praxis') {
+    if (isPraxisSector(sec)) {
       abrSection.style.display = '';
       renderDtaProCard();
       document.getElementById('setIkNumber').value = currentProfile.ik_number || '';
@@ -7654,7 +7658,7 @@ function renderDtaProCard() {
     if (addMonthBtn) addMonthBtn.style.display = 'none';
     if (addYearBtn) addYearBtn.style.display = 'none';
     if (removeBtn) removeBtn.style.display = '';
-    if (desc) desc.innerHTML = 'Sie nutzen den DTA-Pro Add-on. Die <strong>Kassenabrechnung</strong> ist in der Seitenleiste verfügbar.';
+    if (desc) desc.innerHTML = 'Sie nutzen den DTA-Pro Add-on. Die <strong>§302-Abrechnungsvorbereitung</strong> ist in der Seitenleiste verfügbar.';
   } else {
     if (badge) badge.style.display = 'none';
     if (addMonthBtn) addMonthBtn.style.display = '';
@@ -7693,7 +7697,7 @@ async function dtaProAdd(interval) {
     renderDtaProCard();
     if (typeof renderSidebar === 'function') await renderSidebar();
     showToast('DTA-Pro aktiviert.');
-    if (msg) { msg.textContent = 'Aktiv. Kassenabrechnung ist jetzt in der Seitenleiste verfügbar.'; msg.style.color = '#15803d'; }
+    if (msg) { msg.textContent = 'Aktiv. Die §302-Abrechnungsvorbereitung ist jetzt in der Seitenleiste verfügbar.'; msg.style.color = '#15803d'; }
   } catch (e) {
     console.error('[dta-pro/add]', e);
     if (msg) { msg.textContent = 'Fehler: ' + e.message; msg.style.color = '#b91c1c'; }
@@ -7716,7 +7720,7 @@ async function dtaProRemove() {
     renderDtaProCard();
     if (typeof renderSidebar === 'function') await renderSidebar();
     showToast('Add-on gekündigt.');
-    if (msg) { msg.textContent = 'Add-on entfernt. Die Kassenabrechnung wurde ausgeblendet.'; msg.style.color = '#444'; }
+    if (msg) { msg.textContent = 'Add-on entfernt. Die §302-Abrechnungsvorbereitung wurde ausgeblendet.'; msg.style.color = '#444'; }
   } catch (e) {
     console.error('[dta-pro/remove]', e);
     if (msg) { msg.textContent = 'Fehler: ' + e.message; msg.style.color = '#b91c1c'; }
@@ -9794,7 +9798,7 @@ function resetAnamneseForm() {
 async function loadAnamneseRxContext(patientId) {
   const box = document.getElementById('anamRxContext');
   if (!box) return;
-  if (!patientId || getSector() !== 'physiotherapy') { box.style.display = 'none'; return; }
+  if (!patientId || !isPraxisSector(getSector())) { box.style.display = 'none'; return; }
 
   const { data: rx } = await supabase
     .from('prescriptions')
@@ -11157,7 +11161,7 @@ let rxLastUpload = null;  // { storage_path, parsed, validation, ocr_confidence,
 function initRezeptScanner() {
   const btn = document.getElementById('rezeptScanBtn');
   if (!btn) return;
-  if (getSector() === 'physiotherapy') btn.style.display = '';
+  if (isPraxisSector(getSector())) btn.style.display = '';
 
   btn.addEventListener('click', openRezeptScanModal);
 
@@ -12286,7 +12290,7 @@ function renderAbrechnungReady() {
         </div>
       `;
     } else {
-      controlHtml = `<button class="btn-primary ab-select-group-btn" data-ik="${escapeHtml(ik)}">Validieren &amp; Abrechnen</button>`;
+      controlHtml = `<button class="btn-primary ab-select-group-btn" data-ik="${escapeHtml(ik)}">Validieren &amp; DTA vorbereiten</button>`;
     }
 
     wrap.innerHTML = `
@@ -12494,7 +12498,7 @@ function renderAbrechnungHistory(rows) {
         ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
         : ''}
         ${a.status === 'rejected'
-        ? `<button class="btn-ghost btn-sm ab-revert-rejected" data-id="${escapeHtml(a.id)}">🔄 Korrigieren & erneut abrechnen</button>`
+        ? `<button class="btn-ghost btn-sm ab-revert-rejected" data-id="${escapeHtml(a.id)}">🔄 Korrigieren & erneut vorbereiten</button>`
         : ''}
       </td>
     `;
