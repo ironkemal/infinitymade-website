@@ -2322,6 +2322,7 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn-ghost" id="bkWlMatchBtn" style="gap:6px;display:inline-flex;align-items:center;" hidden>🔍 Warteliste</button>
         <button class="btn-danger" id="bkDeleteBtn" hidden data-i18n="lead_delete">Löschen</button>
         <button class="btn-ghost" id="bkMoveBtn" hidden>Verschieben</button>
         <button class="btn-ghost" data-modal="bookingModal" data-i18n="lead_cancel">Abbrechen</button>
@@ -3657,6 +3658,27 @@
         <button class="btn-danger" id="wlDeleteBtn" hidden>Löschen</button>
         <button class="btn-ghost" data-modal="wlModal">Abbrechen</button>
         <button class="btn-primary" id="wlSaveBtn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: WARTELISTE MATCH ===== -->
+  <div class="modal-overlay" id="wlMatchModal" hidden>
+    <div class="modal" style="max-width:550px;">
+      <div class="modal-header">
+        <span class="modal-title">🔍 Passende Warteliste-Patienten</span>
+        <button class="modal-close" data-modal="wlMatchModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:15px;line-height:1.5;">
+          Folgende Patienten aus der Warteliste passen auf den stornierten/freien Termin (nach Dienstleistung, Wochentag und Uhrzeit gefiltert):
+        </p>
+        <div id="wlMatchList" style="display:flex;flex-direction:column;gap:12px;max-height:350px;overflow-y:auto;padding-right:4px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+      <div class="modal-footer" style="margin-top:15px;display:flex;justify-content:flex-end;">
+        <button class="btn-primary" data-modal="wlMatchModal">Schließen</button>
       </div>
     </div>
   </div>
