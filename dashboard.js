@@ -1486,6 +1486,7 @@ async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, s
   const startIso = `${dateStr}T${timeStr}:00`;
   document.getElementById('bk-id').value = '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
+  document.getElementById('bkWlMatchBtn').hidden = true;
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkStart').value = startIso.substring(0, 16);
   document.getElementById('bkCustomer').value = '';
@@ -1763,6 +1764,7 @@ document.getElementById('dayViewNext').addEventListener('click', () => {
 async function prefillBookingModal(startStr) {
   document.getElementById('bk-id').value = '';
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
+  document.getElementById('bkWlMatchBtn').hidden = true;
   document.getElementById('bkDeleteBtn').hidden = true;
   document.getElementById('bkMoveBtn').hidden = true;
   const bkStartEl = document.getElementById('bkStart');
@@ -2630,6 +2632,7 @@ async function openBookingModal(b) {
   document.getElementById('bookingModalTitle').textContent = t('lbl_manual_title');
   // Show "Sitzung N/M" if this booking is linked to a prescription session
   if (b.id) decorateBookingTitleWithSession(b.id).catch(() => { });
+  document.getElementById('bkWlMatchBtn').hidden = false;
   document.getElementById('bkDeleteBtn').hidden = false;
   document.getElementById('bkMoveBtn').hidden = false;
   document.getElementById('bkStart').value = b.start_time ? b.start_time.substring(0, 16) : '';
@@ -4092,13 +4095,138 @@ document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
     variant: 'danger'
   });
   if (!ok) return;
-  await supabase.from('bookings').delete().eq('id', id);
+
+  // 1. Pre-trigger the match API call before deletion so the backend can fetch the booking details
+  let matchPromise = null;
+  try {
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    matchPromise = fetch(`${API}/warteliste/match`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ booking_id: id })
+    }).then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    });
+  } catch (err) {
+    console.error('[warteliste-match pre-trigger error]', err);
+  }
+
+  // 2. Perform the deletion
+  const { error: delErr } = await supabase.from('bookings').delete().eq('id', id);
+  if (delErr) {
+    showToast('Fehler beim Löschen des Termins: ' + delErr.message, 'error');
+    return;
+  }
+
+  // 3. Complete the UI cancel flow
   closeModal('bookingModal');
   if (calendar) { await calendar.reloadMonth(); calendar.refresh(); }
   if (activePanel === 'overview') await loadTodayBookings();
   if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
   showToast(t('saved'));
+
+  // 4. Await and process match results asynchronously (guaranteed not to block the cancel flow)
+  if (matchPromise) {
+    try {
+      const matchRes = await matchPromise;
+      const { candidates, total } = matchRes;
+      if (total > 0) {
+        showWaitlistMatchModal(candidates);
+      } else {
+        showToast("Keine passenden Warteliste-Patienten.", "info");
+      }
+    } catch (err) {
+      console.error('[warteliste-match fetch error]', err);
+      showToast("Keine passenden Warteliste-Patienten.", "info");
+    }
+  }
 });
+
+// Click handler for search button in edit/details modal
+document.getElementById('bkWlMatchBtn')?.addEventListener('click', async () => {
+  const id = document.getElementById('bk-id').value;
+  if (!id) return;
+  try {
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    const res = await fetch(`${API}/warteliste/match`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ booking_id: id })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { candidates, total } = await res.json();
+    if (total > 0) {
+      showWaitlistMatchModal(candidates);
+    } else {
+      showToast("Keine passenden Warteliste-Patienten.", "info");
+    }
+  } catch (err) {
+    console.error('[bkWlMatchBtn error]', err);
+    showToast("Warteliste-Abgleich fehlgeschlagen: " + err.message, "error");
+  }
+});
+
+// Render matched candidates in the wlMatchModal
+function showWaitlistMatchModal(candidates) {
+  const listEl = document.getElementById('wlMatchList');
+  if (!listEl) return;
+
+  listEl.innerHTML = candidates.map(c => {
+    const firstName = c.leads?.first_name || '';
+    const lastName = c.leads?.last_name || '';
+    const name = (firstName + ' ' + lastName).trim() || 'Unbekannter Patient';
+    const phone = c.leads?.phone || '';
+    const email = c.leads?.email || '';
+    const priority = c.priority || 1;
+    const notes = c.notes || '';
+
+    let priorityBadge = '';
+    if (priority === 3) {
+      priorityBadge = `<span class="badge badge-red">Dringend</span>`;
+    } else if (priority === 2) {
+      priorityBadge = `<span class="badge badge-yellow">Hoch</span>`;
+    } else {
+      priorityBadge = `<span class="badge badge-gray">Normal</span>`;
+    }
+
+    const contactMethods = [];
+    if (phone) {
+      contactMethods.push(`<a href="tel:${escapeHtml(phone)}" style="color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:500;">📞 ${escapeHtml(phone)}</a>`);
+    }
+    if (email) {
+      contactMethods.push(`<a href="mailto:${escapeHtml(email)}" style="color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:500;">✉️ ${escapeHtml(email)}</a>`);
+    }
+    const contactsHtml = contactMethods.length > 0
+      ? `<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;">${contactMethods.join('')}</div>`
+      : `<div style="color:var(--text-muted);font-size:12px;margin-top:8px;">Keine Kontaktdaten vorhanden.</div>`;
+
+    const notesHtml = notes
+      ? `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);word-break:break-word;">
+           <strong>Notiz:</strong> ${escapeHtml(notes)}
+         </div>`
+      : '';
+
+    return `
+      <div class="wl-candidate-card" style="border:1px solid var(--border);background:var(--bg-card);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <strong style="font-size:14px;color:var(--text);">${escapeHtml(name)}</strong>
+          ${priorityBadge}
+        </div>
+        ${contactsHtml}
+        ${notesHtml}
+      </div>
+    `;
+  }).join('');
+
+  openModal('wlMatchModal');
+}
 
 (function bindSeriesEvents() {
   const toggle = document.getElementById('bkSeriesToggle');
