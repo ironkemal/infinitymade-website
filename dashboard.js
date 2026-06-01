@@ -13,6 +13,8 @@ let myBusinesses = [];
 const BIZ_STORAGE_KEY = 'infinitymade.active_business';
 const BIZ_PREF_KEY = 'selected_business';
 const ENTERPRISE_PLANS = new Set(['enterprise']);
+const PLAN_EMPLOYEE_LIMITS = { starter: 2, professional: 8, klinik: 15, enterprise: Infinity };
+function employeeLimit() { return PLAN_EMPLOYEE_LIMITS[(currentProfile?.plan || 'starter').toLowerCase()] ?? 2; }
 
 
 const T = {
@@ -8440,6 +8442,9 @@ async function saveEmployee() {
 
   const password = generatePassword(12);
   const ownerId = getOwnerId();
+  const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('owner_id', ownerId).eq('role','employee');
+  const lim = employeeLimit();
+  if (Number.isFinite(lim) && (count ?? 0) >= lim) { showToast(`Plan-Limit erreicht: max. ${lim} Mitarbeiter im ${(currentProfile?.plan||'starter')}-Paket. Bitte upgraden.`, 'error'); return; }
   const businessName = firstName + ' ' + lastName;
 
   const { data: { session: oldSession } } = await supabase.auth.getSession();
@@ -10462,6 +10467,10 @@ function wireBusinessModal() {
         return;
       }
     } else {
+      const isEnterprise = ENTERPRISE_PLANS.has((currentProfile?.plan||'starter').toLowerCase());
+      const existingCount = Array.isArray(myBusinesses) ? myBusinesses.length : 0;
+      if (!isEnterprise && existingCount >= 1) { showToast('Mehrere Standorte sind nur im Enterprise-Paket verfügbar.', 'error'); return; }
+
       payload.owner_id = currentSession.user.id;
       payload.sector = currentProfile?.sector || null;
       const { data: created, error } = await supabase.from('businesses').insert(payload).select().single();
