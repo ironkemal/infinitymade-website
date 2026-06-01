@@ -10,6 +10,9 @@ const API = window.location.hostname === 'localhost' || window.location.hostname
 // Global business switcher state
 let currentBusiness = null;
 let myBusinesses = [];
+// Cross-business data sharing policy (per owner). true = shared across all Standorte, false = separate per business.
+// Missing DB row => all false (separate). Loaded by loadDataSharing() during init.
+let dataSharing = { patients: false, services: false, activities: false, finance: false, network: false };
 const BIZ_STORAGE_KEY = 'infinitymade.active_business';
 const BIZ_PREF_KEY = 'selected_business';
 const ENTERPRISE_PLANS = new Set(['enterprise']);
@@ -1121,31 +1124,31 @@ async function loadActivityFeed() {
     const ownerId = getOwnerId();
     
     const [notesRes, invoicesRes, fahrtenRes, bookingsRes, leadsRes] = await Promise.all([
-      supabase.from('patient_notes')
+      bizScope(supabase.from('patient_notes')
         .select('id, created_at, lead_id, leads:lead_id(first_name,last_name)')
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false })
-        .limit(10),
-      supabase.from('invoices')
+        .limit(10), 'activities'),
+      bizScope(supabase.from('invoices')
         .select('id, created_at, invoice_number, total_patient, patient_name, status')
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false })
-        .limit(10),
-      supabase.from('fahrten')
+        .limit(10), 'activities'),
+      bizScope(supabase.from('fahrten')
         .select('id, created_at, distance_km, lead_id, leads:lead_id(first_name,last_name)')
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false })
-        .limit(10),
-      supabase.from('bookings')
+        .limit(10), 'activities'),
+      bizScope(supabase.from('bookings')
         .select('id, created_at, customer_name')
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false })
-        .limit(10),
-      supabase.from('leads')
+        .limit(10), 'activities'),
+      bizScope(supabase.from('leads')
         .select('id, created_at, first_name, last_name')
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false })
-        .limit(10)
+        .limit(10), 'activities')
     ]);
 
     const activities = [];
@@ -1372,11 +1375,11 @@ async function loadPhysioRezKpis() {
   if (getSector() !== 'physiotherapy') { block.style.display = 'none'; return; }
 
   const ownerId = getOwnerId();
-  const { data, error } = await supabase
+  const { data, error } = await bizScope(supabase
     .from('prescriptions')
     .select('id, status, gueltig_bis, patient_id, heilmittel')
     .eq('owner_id', ownerId)
-    .not('status', 'in', '(completed,billed,cancelled)');
+    .not('status', 'in', '(completed,billed,cancelled)'), 'patients');
   if (error) { console.warn('[rez-kpi]', error); block.style.display = 'none'; return; }
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -1538,9 +1541,9 @@ async function initCalendar() {
       : currentSession.user.id;
   }
 
-  const { data: srvData } = await supabase.from('services')
+  const { data: srvData } = await bizScope(supabase.from('services')
     .select('*,employee_services(employee_id)')
-    .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`);
+    .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`), 'services');
   ownerServices = srvData || [];
   console.log('[DASHBOARD] ownerServices loaded:', ownerServices.length);
 
@@ -2338,9 +2341,9 @@ async function handleTerminStarten() {
   if (patientName) {
     // Strip the " · YYYY-MM-DD" birth date suffix that displayNameWithBirth appends
     const cleanName = patientName.split('·')[0].trim().toLowerCase();
-    const { data: leads } = await supabase.from('leads')
+    const { data: leads } = await bizScope(supabase.from('leads')
       .select('id,first_name,last_name,title,phone,metadata')
-      .eq('owner_id', ownerId);
+      .eq('owner_id', ownerId), 'patients');
     if (leads && leads.length > 0) {
       const lead = leads.find(l => {
         const composed = [l.first_name, l.last_name].filter(Boolean).join(' ').toLowerCase();
@@ -2591,11 +2594,11 @@ async function initBkGroupPatientAutocomplete() {
   // Reuse bkAllLeads if loaded, otherwise load them
   if (!Array.isArray(window.bkAllLeads) || window.bkAllLeads.length === 0) {
     const ownerId = getOwnerId();
-    const { data } = await supabase
+    const { data } = await bizScope(supabase
       .from('leads')
       .select('id,title,first_name,last_name,phone,metadata,street,plz,city')
       .eq('owner_id', ownerId)
-      .order('title');
+      .order('title'), 'patients');
     window.bkAllLeads = data || [];
   }
   
@@ -2781,11 +2784,11 @@ async function initBkCustomerAutocomplete() {
 
   async function loadBkLeads() {
     const ownerId = getOwnerId();
-    const { data } = await supabase
+    const { data } = await bizScope(supabase
       .from('leads')
       .select('id,title,first_name,last_name,phone,metadata,street,plz,city,lat,lng,distance_km,duration_min,route_calculated_at')
       .eq('owner_id', ownerId)
-      .order('title');
+      .order('title'), 'patients');
     window.bkAllLeads = data || [];
   }
   await loadBkLeads();
@@ -3035,7 +3038,7 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
   let q = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
-  if (currentBusiness?.id) q = q.eq('business_id', currentBusiness.id);
+  q = bizScope(q, 'services');
   const { data } = await q;
 
   // Update global cache with full data including price_config
@@ -4365,7 +4368,7 @@ function displayNameWithBirth(lead) {
 async function loadLeads() {
   const ownerId = getOwnerId();
   let q = supabase.from('leads').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
-  if (currentBusiness?.id) q = q.eq('business_id', currentBusiness.id);
+  q = bizScope(q, 'patients');
   const { data } = await q;
   leadsCache = data || [];
   const phones = leadsCache.map(l => l.phone_normalized).filter(Boolean);
@@ -4373,7 +4376,7 @@ async function loadLeads() {
   if (phones.length) {
     let bkQ = supabase.from('bookings').select('id,customer_phone_normalized,start_time,status')
       .eq('owner_id', ownerId).in('customer_phone_normalized', phones).order('start_time', { ascending: true });
-    if (currentBusiness?.id) bkQ = bkQ.eq('business_id', currentBusiness.id);
+    bkQ = bizScope(bkQ, 'patients');
     const { data: bkData } = await bkQ;
     // wa_contacts tablosu 2026-05-22'de DROP edildi (WhatsApp shelved). wa metadata kalktı.
     (bkData || []).forEach(b => {
@@ -5481,7 +5484,7 @@ async function loadServices() {
   let q = supabase.from('services')
     .select('*,employee_services(employee_id),price_config,code')
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
-  if (currentBusiness?.id) q = q.eq('business_id', currentBusiness.id);
+  q = bizScope(q, 'services');
   const { data } = await q;
   servicesCache = data || [];
   renderServices();
@@ -6857,7 +6860,7 @@ async function loadEmpServices(empId) {
   let allQ = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,color')
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`)
     .order('title');
-  if (currentBusiness?.id) allQ = allQ.eq('business_id', currentBusiness.id);
+  allQ = bizScope(allQ, 'services');
   const [{ data: all }, { data: assigned }] = await Promise.all([
     allQ,
     supabase.from('employee_services').select('service_id').eq('employee_id', empId)
@@ -7004,8 +7007,8 @@ async function loadEmpCertificates(empId) {
 let b2bCache = [];
 
 async function loadB2B() {
-  const { data } = await supabase.from('b2b_contacts')
-    .select('*').eq('owner_id', getOwnerId()).order('created_at', { ascending: false });
+  const { data } = await bizScope(supabase.from('b2b_contacts')
+    .select('*').eq('owner_id', getOwnerId()).order('created_at', { ascending: false }), 'network');
   b2bCache = data || [];
   renderB2B();
 }
@@ -9074,9 +9077,9 @@ function formatEur(n) {
 
 async function loadRechnungen() {
   const ownerId = getOwnerId();
-  const { data, error } = await supabase.from('invoices')
+  const { data, error } = await bizScope(supabase.from('invoices')
     .select('*, prescriptions ( rezept_typ, status, dmrz_exported_at, heilmittel )')
-    .eq('owner_id', ownerId).order('created_at', { ascending: false });
+    .eq('owner_id', ownerId).order('created_at', { ascending: false }), 'finance');
   if (error) { console.error('[invoices]', error); return; }
   invListCache = data || [];
   renderInvList();
@@ -10209,7 +10212,7 @@ function populateLeadArztSelect() {
 }
 
 async function loadAerzte() {
-  const { data } = await supabase.from('aerzte').select('*').order('arzt_name', { ascending: true });
+  const { data } = await bizScope(supabase.from('aerzte').select('*').order('arzt_name', { ascending: true }), 'network');
   aerzteCache = data || [];
 
   populateAerzteDatalist();
@@ -10387,6 +10390,70 @@ async function bootBusinessSwitcher() {
   renderBizSwitcher();
   wireBizSwitcherEvents();
   renderBusinessesSection();
+  renderDataSharingSection();
+}
+
+// ===== Settings > Datenfreigabe zwischen Standorten =====
+const DATA_SHARING_CATS = [
+  { key: 'patients',   label: 'Patienten & Akten',        desc: 'Patientenliste, Notizen, Anamnese, Rezepte, Überweisungen, Warteliste' },
+  { key: 'services',   label: 'Dienstleistungen',          desc: 'Angebotene Leistungen und deren Mitarbeiter-Zuordnung' },
+  { key: 'activities', label: 'Aktivitäten',               desc: 'Der „Letzte Aktivitäten"-Verlauf in der Übersicht' },
+  { key: 'finance',    label: 'Rechnungen',                desc: 'Patientenrechnungen aller Standorte' },
+  { key: 'network',    label: 'Netzwerk (Ärzte & Praxen)', desc: 'Ärzteverzeichnis und B2B-Kontakte' }
+];
+
+function renderDataSharingSection() {
+  const section = document.getElementById('settingsDataSharingSection');
+  const listEl = document.getElementById('dataSharingList');
+  if (!section || !listEl) return;
+
+  // Only relevant for Enterprise owners with more than one Standort.
+  const show = isEnterprise() && currentProfile?.role === 'owner' && myBusinesses.length > 1;
+  section.hidden = !show;
+  if (!show) return;
+
+  listEl.innerHTML = DATA_SHARING_CATS.map(c => `
+    <label style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+      <input type="checkbox" data-share="${c.key}" ${dataSharing[c.key] ? 'checked' : ''} style="margin-top:2px;width:18px;height:18px;flex-shrink:0;accent-color:var(--primary);cursor:pointer;" />
+      <span style="flex-grow:1;">
+        <span style="display:block;font-weight:600;color:var(--text-main);">${escapeHtml(c.label)}</span>
+        <span style="display:block;font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.4;">${escapeHtml(c.desc)}</span>
+      </span>
+    </label>`).join('');
+
+  if (!section.dataset.wired) {
+    section.dataset.wired = '1';
+    document.getElementById('dataSharingSaveBtn')?.addEventListener('click', saveDataSharing);
+  }
+}
+
+async function saveDataSharing() {
+  const btn = document.getElementById('dataSharingSaveBtn');
+  if (btn) btn.disabled = true;
+  const next = { patients: false, services: false, activities: false, finance: false, network: false };
+  document.querySelectorAll('#dataSharingList input[data-share]').forEach(cb => {
+    next[cb.dataset.share] = cb.checked;
+  });
+  try {
+    const { error } = await supabase
+      .from('data_sharing_settings')
+      .upsert({ owner_id: getOwnerId(), ...next, updated_at: new Date().toISOString() }, { onConflict: 'owner_id' });
+    if (error) throw error;
+    dataSharing = next;
+    showToast('Datenfreigabe gespeichert ✓');
+    // Re-fetch the scoped views so the change is visible immediately.
+    loadActivityFeed?.().catch(() => {});
+    if (typeof loadLeads === 'function') loadLeads().catch(() => {});
+    if (typeof loadServices === 'function') loadServices().catch(() => {});
+    if (typeof loadRechnungen === 'function') loadRechnungen().catch(() => {});
+    if (typeof loadB2B === 'function') loadB2B().catch(() => {});
+    if (typeof loadAerzte === 'function') loadAerzte().catch(() => {});
+  } catch (e) {
+    console.error('[saveDataSharing]', e);
+    showToast(t('err_generic') || 'Fehler beim Speichern', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 // ===== Settings > Geschäfte (Multi-Business CRUD) =====
@@ -10678,6 +10745,38 @@ function getActiveBusinessId() {
   return currentBusiness?.id || null;
 }
 
+// Apply the active-business filter to a query UNLESS this category is shared across Standorte.
+//   dataSharing[cat] === true  -> shared (owner-wide, no business filter)
+//   dataSharing[cat] === false -> separate (only the active business)
+// Single-business owners (no currentBusiness) are never filtered.
+function bizScope(query, cat) {
+  if (dataSharing[cat]) return query;
+  if (!currentBusiness?.id) return query;
+  return query.eq('business_id', currentBusiness.id);
+}
+
+// Load the owner's cross-business sharing policy. Absent row keeps the defaults (all separate).
+async function loadDataSharing() {
+  try {
+    const { data } = await supabase
+      .from('data_sharing_settings')
+      .select('patients,services,activities,finance,network')
+      .eq('owner_id', getOwnerId())
+      .maybeSingle();
+    if (data) {
+      dataSharing = {
+        patients: !!data.patients,
+        services: !!data.services,
+        activities: !!data.activities,
+        finance: !!data.finance,
+        network: !!data.network
+      };
+    }
+  } catch (e) {
+    console.warn('[loadDataSharing] falling back to defaults (all separate)', e);
+  }
+}
+
 async function init() {
   try {
     console.log('[init] start');
@@ -10689,6 +10788,8 @@ async function init() {
     console.log('[init] i18n ok');
     await bootBusinessSwitcher();
     console.log('[init] bizSwitcher ok');
+    await loadDataSharing();
+    console.log('[init] dataSharing ok');
     await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();

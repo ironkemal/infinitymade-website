@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260601b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260601c" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -1888,6 +1888,21 @@
               </div>
             </div>
 
+            <!-- Datenfreigabe zwischen Standorten (Multi-Business) -->
+            <div class="settings-section" id="settingsDataSharingSection" hidden>
+              <div class="settings-section-title">Datenfreigabe zwischen Standorten</div>
+              <div class="settings-section-body">
+                <p class="form-hint" style="margin-bottom:14px;">
+                  Legen Sie fest, welche Daten über alle Ihre Standorte hinweg <strong>gemeinsam</strong> genutzt werden.
+                  Eingeschaltet = alle Standorte greifen auf dieselben Daten zu. Ausgeschaltet = jeder Standort hat
+                  seine eigenen, getrennten Daten. <em>Termine/Kalender sind aus Sicherheitsgründen immer
+                  standortübergreifend sichtbar (zur Vermeidung von Mitarbeiter-Doppelbuchungen).</em>
+                </p>
+                <div id="dataSharingList" style="display:flex;flex-direction:column;gap:0;"></div>
+                <button class="btn-primary" id="dataSharingSaveBtn" type="button" style="margin-top:14px;">Speichern</button>
+              </div>
+            </div>
+
             <!-- Business edit/create modal -->
             <div class="modal-overlay" id="businessModal" hidden>
               <div class="modal">
@@ -3732,7 +3747,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260601b"></script>
+  <script type="module" src="dashboard.js?v=20260601c"></script>
 </body>
 
 </html>
