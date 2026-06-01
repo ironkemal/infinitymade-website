@@ -12321,6 +12321,9 @@ function renderAbrechnungHistory(rows) {
         ${a.status === 'rejected' || a.status === 'accepted'
         ? `<button class="btn-ghost btn-sm ab-show-errors" data-id="${escapeHtml(a.id)}">🔍 Fehler</button>`
         : ''}
+        ${a.status === 'rejected'
+        ? `<button class="btn-ghost btn-sm ab-revert-rejected" data-id="${escapeHtml(a.id)}">🔄 Korrigieren & erneut abrechnen</button>`
+        : ''}
       </td>
     `;
     body.appendChild(tr);
@@ -12346,6 +12349,32 @@ function renderAbrechnungHistory(rows) {
   });
   body.querySelectorAll('.ab-guide').forEach(btn => {
     btn.addEventListener('click', () => openDasGuideModal(btn.dataset.id));
+  });
+  body.querySelectorAll('.ab-revert-rejected').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const abId = btn.dataset.id;
+      if (!confirm("Die Rezepte dieser Abrechnung werden zur Korrektur freigegeben und erscheinen wieder unter 'Bereit'. Fortfahren?")) {
+        return;
+      }
+      try {
+        const ownerId = getOwnerId();
+        if (!ownerId) {
+          showToast('Fehler: Keine gültige Owner-ID gefunden', 'error');
+          return;
+        }
+        const { error } = await supabase.from('prescriptions')
+          .update({ abrechnung_status: 'bereit', abrechnung_id: null })
+          .eq('owner_id', ownerId)
+          .eq('abrechnung_id', abId);
+          
+        if (error) throw error;
+        
+        showToast('Rezepte zur Korrektur freigegeben ✓');
+        await loadAbrechnung();
+      } catch (err) {
+        showToast(err.message || 'Fehler beim Freigeben der Rezepte', 'error');
+      }
+    });
   });
 }
 
