@@ -7560,7 +7560,18 @@ async function loadSettings() {
     calStatus.textContent = t('status_connected');
     calStatus.className = 'integration-status connected';
     calBtn.textContent = t('btn_disconnect');
-    calBtn.onclick = async () => { await supabase.from('calendar_integrations').delete().eq('id', integ.id); loadSettings(); };
+    calBtn.onclick = async () => {
+      const okDisc = await showConfirmModal({
+        title: 'Google Kalender trennen?',
+        message: 'Die Verbindung zu Google Kalender wird getrennt. Termine werden dann nicht mehr automatisch synchronisiert. Sie können die Verbindung jederzeit wiederherstellen.',
+        confirmText: 'Trennen',
+        cancelText: 'Abbrechen',
+        variant: 'danger'
+      });
+      if (!okDisc) return;
+      await supabase.from('calendar_integrations').delete().eq('id', integ.id);
+      loadSettings();
+    };
   } else {
     calStatus.textContent = t('status_disconnected');
     calStatus.className = 'integration-status';
@@ -9612,6 +9623,15 @@ async function downloadDmrzForInvoice() {
   const invId = window._currentInvoiceId;
   if (!invId) { showToast('Bitte zuerst die Rechnung speichern.', 'error'); return; }
 
+  const okExport = await showConfirmModal({
+    title: 'DMRZ-Export (§302) erstellen?',
+    message: 'Die Rechnung wird als „abgerechnet" markiert und die §302-Exportdatei wird erzeugt. Dieser Schritt ist verbindlich und kann nicht rückgängig gemacht werden.',
+    confirmText: 'Exportieren',
+    cancelText: 'Abbrechen',
+    variant: 'danger'
+  });
+  if (!okExport) return;
+
   try {
     const ownerId = getOwnerId();
     const { data: invoice, error: e1 } = await supabase.from('invoices')
@@ -10429,11 +10449,28 @@ function renderDataSharingSection() {
 
 async function saveDataSharing() {
   const btn = document.getElementById('dataSharingSaveBtn');
-  if (btn) btn.disabled = true;
   const next = { patients: false, services: false, activities: false, finance: false, network: false };
   document.querySelectorAll('#dataSharingList input[data-share]').forEach(cb => {
     next[cb.dataset.share] = cb.checked;
   });
+
+  // Confirm when a category is newly switched ON (off -> on): data becomes visible across all Standorte.
+  const enabling = Object.keys(next).filter(k => next[k] && !dataSharing[k]);
+  if (enabling.length) {
+    const labels = enabling.map(k => DATA_SHARING_CATS.find(c => c.key === k)?.label || k).join(', ');
+    const okShare = await showConfirmModal({
+      title: 'Daten standortübergreifend freigeben?',
+      message: `Folgende Daten werden künftig für ALLE Ihre Standorte sichtbar: ${labels}. ` +
+               `Mitarbeiter aller Standorte können diese Daten dann einsehen. Es werden keine Daten kopiert — ` +
+               `Sie können diese Einstellung jederzeit wieder zurücksetzen.`,
+      confirmText: 'Freigeben',
+      cancelText: 'Abbrechen',
+      variant: 'primary'
+    });
+    if (!okShare) return;
+  }
+
+  if (btn) btn.disabled = true;
   try {
     const { error } = await supabase
       .from('data_sharing_settings')

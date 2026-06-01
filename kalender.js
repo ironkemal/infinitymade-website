@@ -457,6 +457,7 @@ async function loadIntegrations() {
     status.textContent = T[lang].status_connected;
     btn.textContent = T[lang].btn_disconnect;
     btn.onclick = async () => {
+      if (!confirm('Google Kalender trennen? Termine werden dann nicht mehr automatisch synchronisiert. Sie können die Verbindung jederzeit wiederherstellen.')) return;
       await supabase.from('calendar_integrations').delete().eq('id', integ.id);
       loadIntegrations();
     };
