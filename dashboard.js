@@ -10786,10 +10786,10 @@ async function init() {
     console.log('[init] bookingSlug ok');
     applyI18n();
     console.log('[init] i18n ok');
-    await bootBusinessSwitcher();
-    console.log('[init] bizSwitcher ok');
     await loadDataSharing();
     console.log('[init] dataSharing ok');
+    await bootBusinessSwitcher();
+    console.log('[init] bizSwitcher ok');
     await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();
