@@ -10215,6 +10215,19 @@ async function openRezeptModal(phone, leadId) {
       }
     }
     if (data?.hausbesuch) document.getElementById('rzHausbesuch').checked = true;
+
+    // Fetch and populate leitsymptomatik
+    const { data: rx } = await supabase
+      .from('prescriptions')
+      .select('leitsymptomatik')
+      .eq('patient_id', leadId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const leitsymptomatikEl = document.getElementById('rxcLeitsymptomatik');
+    if (leitsymptomatikEl) {
+      leitsymptomatikEl.value = rx?.leitsymptomatik || '';
+    }
   }
   openModal('rezeptModal');
 }
