@@ -6,7 +6,7 @@
 
   <!-- ===== SEO ===== -->
   <title>Praxura — All-in-One Praxissoftware für Physiotherapie, Ergotherapie &amp; Logopädie</title>
-  <meta name="description" content="Praxura ist die moderne All-in-One Praxissoftware für Heilmittelerbringer (Physio, Ergo, Logo, Podo). Online-Terminbuchung, KI-Rezeptprüfung, §302 Direktabrechnung &amp; Fahrtenbuch." />
+  <meta name="description" content="Praxura ist die moderne All-in-One Praxissoftware für Heilmittelerbringer (Physio, Ergo, Logo, Podo). Online-Terminbuchung, KI-Rezeptprüfung, §302 DTA-Abrechnung &amp; Fahrtenbuch." />
   <meta name="keywords" content="Praxissoftware Physiotherapie, Praxissoftware Ergotherapie, Praxissoftware Logopädie, Praxissoftware Podologie, §302 DTA Abrechnung, Heilmittelabrechnung, Rezepte scannen Software, Praxissoftware mit Fahrtenbuch, Online-Terminbuchung Therapeuten" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="author" content="InfinityMade" />
@@ -16,14 +16,14 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Praxura" />
   <meta property="og:title" content="Praxura — All-in-One Praxissoftware für Therapeuten" />
-  <meta property="og:description" content="Praxissoftware für Physiotherapie, Ergotherapie, Logopädie &amp; Podologie. Online-Termine, KI-Rezeptprüfung, §302 SGB V Direktabrechnung &amp; Fahrtenbuch." />
+  <meta property="og:description" content="Praxissoftware für Physiotherapie, Ergotherapie, Logopädie &amp; Podologie. Online-Termine, KI-Rezeptprüfung, §302 SGB V DTA-Abrechnung &amp; Fahrtenbuch." />
   <meta property="og:url" content="https://praxura.de/" />
   <meta property="og:image" content="https://praxura.de/og-image.png" />
   <meta property="og:locale" content="de_DE" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Praxura — All-in-One Praxissoftware für Therapeuten" />
-  <meta name="twitter:description" content="All-in-One Praxissoftware für Physio, Ergo &amp; Logo: Termine, KI-Rezeptprüfung, §302 SGB V Direktabrechnung und Fahrtenbuch." />
+  <meta name="twitter:description" content="All-in-One Praxissoftware für Physio, Ergo &amp; Logo: Termine, KI-Rezeptprüfung, §302 SGB V DTA-Abrechnung und Fahrtenbuch." />
   <meta name="twitter:image" content="https://praxura.de/og-image.png" />
 
   <!-- ===== Favicons ===== -->
@@ -49,7 +49,7 @@
     "applicationSubCategory": "Praxismanagement",
     "operatingSystem": "Web",
     "url": "https://praxura.de/",
-    "description": "All-in-One Praxissoftware für Heilmittelerbringer (Physiotherapie, Ergotherapie, Logopädie, Podologie). Online-Terminbuchung, KI-gestützte Rezeptprüfung, Direktabrechnung nach §302 SGB V, elektronisches Fahrtenbuch.",
+    "description": "All-in-One Praxissoftware für Heilmittelerbringer (Physiotherapie, Ergotherapie, Logopädie, Podologie). Online-Terminbuchung, KI-gestützte Rezeptprüfung, DTA-Abrechnung nach §302 SGB V, elektronisches Fahrtenbuch.",
     "publisher": {
       "@type": "Organization",
       "@id": "https://infinitymade.de/#organization",
@@ -203,12 +203,38 @@
       width: 100%;
       height: auto;
       display: block;
-      border-radius: 18px;
-      box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.7) inset,
-        0 30px 60px -28px rgba(26, 22, 17, 0.30),
-        0 6px 16px -6px rgba(26, 22, 17, 0.08);
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      /* drop-shadow follows the alpha outline of a cut-out PNG (no box) */
+      filter: drop-shadow(0 22px 38px rgba(26, 22, 17, 0.16));
     }
+
+    /* ── Photo placeholders (live preview — replace with real images) ── */
+    .px-photo-band { max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem 3.5rem; }
+    .px-photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .px-photo-ph {
+      border: 2px dashed var(--bronze);
+      border-radius: 16px;
+      background: rgba(107, 85, 56, 0.045);
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 0.65rem;
+      padding: 2.2rem 1.6rem;
+    }
+    .px-photo-ph .ph-badge {
+      font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--bronze);
+      border: 1px solid var(--bronze); border-radius: 999px; padding: 0.25rem 0.75rem;
+    }
+    .px-photo-ph .ph-title { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); }
+    .px-photo-ph .ph-desc { font-size: 0.86rem; line-height: 1.55; max-width: 30rem; color: var(--ink-soft); }
+    .px-photo-ph .ph-dim { font-family: var(--mono); font-size: 0.64rem; color: var(--ink-quiet); }
+    @media (max-width: 720px) { .px-photo-grid { grid-template-columns: 1fr; } }
 
     /* ── Interactive demo ── */
     .px-demo { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem 2rem; }
@@ -494,8 +520,8 @@
     /* ── Pricing ── */
     .px-pricing-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
       margin-top: 3rem;
     }
     .px-pricing-card {
@@ -725,11 +751,12 @@
       .px-why-block { grid-template-columns: 1fr; padding: 3rem 1.75rem; gap: 2.5rem; }
       .px-zielgruppen-grid { grid-template-columns: repeat(2, 1fr); }
       .px-br-p { min-height: auto; }
-      .px-pricing-grid { grid-template-columns: 1fr; }
+      .px-pricing-grid { grid-template-columns: repeat(2, 1fr); }
       .px-closing-card { grid-template-columns: 1fr; padding: 2.8rem 1.8rem; gap: 2rem; }
     }
     @media (max-width: 600px) {
       .px-zielgruppen-grid { grid-template-columns: 1fr; }
+      .px-pricing-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -761,7 +788,7 @@
       All-in-One für <em>Heilmittel-Praxen.</em>
     </h1>
     <p class="px-lede">
-      Praxura bündelt Online-Terminbuchung, KI-Rezeptprüfung, §302 Direktabrechnung (DTA) und ein elektronisches Fahrtenbuch in einem einzigen, intuitiven System — maßgeschneidert für Therapeuten.
+      Praxura bündelt Online-Terminbuchung, KI-Rezeptprüfung, §302-Abrechnungsvorbereitung (DTA) und ein elektronisches Fahrtenbuch in einem einzigen, intuitiven System — maßgeschneidert für Therapeuten.
     </p>
     <div class="px-hero-actions">
       <a href="https://app.praxura.de" class="btn btn-primary-arrow">
@@ -831,7 +858,7 @@
       <div class="px-why-eyebrow">Die Praxura-Lösung</div>
       <h2 class="px-why-title">Automatisierung an <em>einem zentralen Ort.</em></h2>
       <p class="px-why-text" style="margin-bottom: 1.5rem;">
-        Praxura vereint alle Kernprozesse in einer einzigen Weboberfläche. Unsere OCR-gestützte KI prüft Rezepte sofort beim Scan auf Fehler. Die Direktabrechnung erzeugt zertifizierte DTA-Datenpakete, sodass Sie ohne Mittler abrechnen können. Das integrierte Fahrtenbuch erfasst Fahrten automatisch.
+        Praxura vereint alle Kernprozesse in einer einzigen Weboberfläche. Unsere OCR-gestützte KI prüft Rezepte sofort beim Scan auf Fehler. Die §302-Vorbereitung erzeugt zertifizierte DTA-Datenpakete, sodass Sie ohne Abrechnungszentrum direkt mit den Kassen abrechnen können — die Einreichung nehmen Sie selbst vor. Das integrierte Fahrtenbuch erfasst Fahrten automatisch.
       </p>
       <ul class="px-why-list">
         <li class="px-why-item">
@@ -850,6 +877,16 @@
     </div>
   </div>
 </section>
+
+<!-- ░░ FOTO-PLATZHALTER (Bild 1) ░░ -->
+<div class="px-photo-band" data-reveal>
+  <div class="px-photo-ph">
+    <span class="ph-badge">Bild 1 · hier kommt ein Foto</span>
+    <span class="ph-title">Dashboard-Übersicht (Screenshot)</span>
+    <span class="ph-desc">Echter Screenshot der Praxura-Tagesübersicht: Termine, Auslastung und offene Rezepte. Hell, aufgeräumt, ohne echte Patientendaten.</span>
+    <span class="ph-dim">Querformat · ca. 2000×1300 px · PNG</span>
+  </div>
+</div>
 
 <!-- ────────────── 01 · Funktionen ────────────── -->
 <section class="block" id="funktionen" data-reveal>
@@ -902,7 +939,7 @@
       </div>
     </article>
 
-    <!-- Card 3: §302 Direktabrechnung -->
+    <!-- Card 3: §302 DTA-Abrechnung -->
     <article class="px-feature">
       <div class="px-feature-inner">
         <div class="px-feature-icon" aria-hidden="true">
@@ -944,6 +981,24 @@
     </a>
   </div>
 </section>
+
+<!-- ░░ FOTO-PLATZHALTER (Bild 2 + 3) ░░ -->
+<div class="px-photo-band" data-reveal>
+  <div class="px-photo-grid">
+    <div class="px-photo-ph">
+      <span class="ph-badge">Bild 2 · hier kommt ein Foto</span>
+      <span class="ph-title">KI-Rezeptprüfung in Aktion</span>
+      <span class="ph-desc">Rezept wird per Smartphone abfotografiert — die KI erkennt die Heilmittel-Position und markiert Fehler &amp; Absetzungsrisiken in Echtzeit.</span>
+      <span class="ph-dim">Hoch- oder Querformat · ca. 1400×1600 px</span>
+    </div>
+    <div class="px-photo-ph">
+      <span class="ph-badge">Bild 3 · hier kommt ein Foto</span>
+      <span class="ph-title">§302 DTA-Datei / Belegliste</span>
+      <span class="ph-desc">Screenshot der fertig vorbereiteten DTA-Datei bzw. Belegliste — bereit zum Signieren und Einreichen durch die Praxis selbst.</span>
+      <span class="ph-dim">Querformat · ca. 1600×1100 px</span>
+    </div>
+  </div>
+</div>
 
 <!-- ────────────── 02 · Zielgruppe ────────────── -->
 <section class="block" id="zielgruppe" data-reveal>
@@ -1004,6 +1059,16 @@
   </div>
 </section>
 
+<!-- ░░ FOTO-PLATZHALTER (Bild 4) ░░ -->
+<div class="px-photo-band" data-reveal>
+  <div class="px-photo-ph">
+    <span class="ph-badge">Bild 4 · hier kommt ein Foto</span>
+    <span class="ph-title">Therapeut:in im Praxisalltag</span>
+    <span class="ph-desc">Authentisches Foto: Physio-/Ergo-/Logopädie-Therapeut:in in heller Praxis mit Tablet oder Smartphone — Praxura im Einsatz, Fokus auf den Patienten.</span>
+    <span class="ph-dim">Querformat · ca. 2000×1300 px · echtes Foto, kein Stock-Klischee</span>
+  </div>
+</div>
+
 <!-- ────────────── Trust Banner ────────────── -->
 <section class="block" id="trust" data-reveal style="padding-top: 2rem; padding-bottom: 4rem;">
   <div style="background: var(--bg-warm); border-radius: 20px; padding: 3.5rem 2rem; border: 1px solid var(--line); text-align: center;">
@@ -1039,9 +1104,17 @@
     <div>
       <h2 class="section-title">Transparente Preise für <em>jede Praxisgröße.</em></h2>
       <p class="section-lede" style="margin-top: 1.4rem;">
-        Testen Sie alle Tarife 14 Tage kostenlos und unverbindlich. Keine Kreditkarte erforderlich. Monatlich kündbar. Alle Preise zzgl. gesetzlicher MwSt.
+        Transparente Festpreise — keine Provision, keine versteckten Gebühren. Testen Sie alle Tarife 14 Tage kostenlos und unverbindlich. Keine Kreditkarte erforderlich. Monatlich kündbar. Alle Preise zzgl. gesetzlicher MwSt.
       </p>
     </div>
+  </div>
+
+  <!-- Transparenz-Streifen -->
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.7rem; margin-top:2rem;">
+    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine Einrichtungsgebühr</span>
+    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine Provision auf Ihre Abrechnung</span>
+    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Monatlich kündbar</span>
+    <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine versteckten Kosten</span>
   </div>
 
   <div class="px-pricing-grid">
@@ -1057,9 +1130,9 @@
       <p class="px-pricing-desc">Alles, was Sie für den Einstieg in die digitale Praxisverwaltung benötigen.</p>
       <ul class="px-pricing-features">
         <li>✓ 1 Therapeut / Login</li>
-        <li>✓ Online-Terminbuchung inkl.</li>
+        <li>✓ Online-Terminbuchung 24/7</li>
         <li>✓ Digitale Patientenakte</li>
-        <li>✓ §302 Abrechnungsmodul (DTA)</li>
+        <li>✓ Erinnerungen &amp; Warteliste</li>
         <li>✓ Support via E-Mail</li>
       </ul>
       <a href="https://app.praxura.de" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
@@ -1076,9 +1149,9 @@
       </div>
       <p class="px-pricing-desc">Die Komplettlösung für Praxen mit Angestellten und Hausbesuchen.</p>
       <ul class="px-pricing-features">
-        <li>✓ Bis zu 5 Therapeuten inklusive</li>
+        <li>✓ Bis zu 5 Therapeut:innen</li>
         <li>✓ KI-Rezeptprüfung (OCR)</li>
-        <li>✓ §302 SGB V Direktabrechnung</li>
+        <li>✓ §302 DTA-Abrechnung vorbereiten</li>
         <li>✓ Elektronisches Fahrtenbuch</li>
         <li>✓ Vorrangiger Support (Mail &amp; Tel)</li>
       </ul>
@@ -1097,16 +1170,45 @@
         <span class="amount">99</span>
         <span class="period">/ monatlich</span>
       </div>
-      <p class="px-pricing-desc">Maximale Leistung für interdisziplinäre Praxen und mehrere Standorte.</p>
+      <p class="px-pricing-desc">Maximale Leistung für interdisziplinäre Praxen mit großen Teams.</p>
       <ul class="px-pricing-features">
-        <li>✓ Unbegrenzte Therapeuten</li>
-        <li>✓ Alle Module &amp; Features</li>
+        <li>✓ Unbegrenzte Therapeut:innen</li>
+        <li>✓ Alle Module inklusive</li>
         <li>✓ Rechte- &amp; Rollenverwaltung</li>
         <li>✓ Bevorzugte Datenmigration</li>
         <li>✓ Eigener Onboarding-Manager</li>
       </ul>
       <a href="https://app.praxura.de" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
     </article>
+
+    <!-- Plan 4: Enterprise -->
+    <article class="px-pricing-card">
+      <div class="px-pricing-tag">Mehrere Standorte</div>
+      <h3 class="px-pricing-title">Enterprise</h3>
+      <div class="px-pricing-price">
+        <span class="amount" style="font-size:2rem; letter-spacing:-0.01em;">Individuell</span>
+      </div>
+      <p class="px-pricing-desc">Für Praxisverbünde &amp; mehrere Standorte mit individuellen Anforderungen.</p>
+      <ul class="px-pricing-features">
+        <li>✓ Alles aus Klinik</li>
+        <li>✓ Multi-Standort-Verwaltung</li>
+        <li>✓ Standortübergreifende Auswertung</li>
+        <li>✓ Persönlicher Ansprechpartner &amp; SLA</li>
+        <li>✓ Individuelle Anbindung</li>
+      </ul>
+      <a href="mailto:kontakt@infinitymade.de?subject=Enterprise%20Anfrage%20Praxura" class="btn btn-secondary px-pricing-btn">Gespräch vereinbaren</a>
+    </article>
+  </div>
+
+  <!-- §302 Klarstellung: kein Abrechnungsdienstleister -->
+  <div style="max-width:60rem; margin:2.4rem auto 0; padding:1.4rem 1.6rem; border:1px solid var(--line); border-radius:14px; background:rgba(107,85,56,0.04);">
+    <p style="font-size:0.9rem; line-height:1.6; color:var(--ink-soft); margin:0;">
+      <strong style="color:var(--ink);">§302-Abrechnung, ehrlich erklärt:</strong>
+      Praxura erstellt aus Ihren Behandlungsdaten die fertigen, verschlüsselten DTA-Dateien. Die Signatur mit Ihrem
+      eigenen ITSG-Zertifikat und die Einreichung beim Kostenträger nehmen <strong>Sie selbst</strong> vor. Praxura ist
+      ein Software-Werkzeug zur <em>Vorbereitung</em> Ihrer Abrechnung — <strong>kein Abrechnungszentrum und kein
+      Abrechnungsdienstleister.</strong> Genau deshalb zahlen Sie bei uns <strong>keine Provision</strong> auf Ihren Umsatz.
+    </p>
   </div>
 </section>
 
