@@ -235,6 +235,16 @@
     .px-photo-ph .ph-desc { font-size: 0.86rem; line-height: 1.55; max-width: 30rem; color: var(--ink-soft); }
     .px-photo-ph .ph-dim { font-family: var(--mono); font-size: 0.64rem; color: var(--ink-quiet); }
     @media (max-width: 720px) { .px-photo-grid { grid-template-columns: 1fr; } }
+    /* shape variants so each placeholder hints its image format */
+    .px-photo-band .px-photo-grid { align-items: center; }
+    .px-photo-ph.is-wide { aspect-ratio: 16 / 9; min-height: 0; }
+    .px-photo-ph.is-portrait { aspect-ratio: 4 / 5; min-height: 0; }
+    .px-photo-ph.is-phone { aspect-ratio: 9 / 16; max-width: 300px; width: 100%; min-height: 0; margin: 0 auto; }
+    .px-photo-ph.is-avatar { aspect-ratio: 1; width: 150px; min-height: 0; border-radius: 999px; padding: 1rem; flex-shrink: 0; gap: 0.3rem; }
+    .px-testimonial-ph {
+      display: flex; gap: 1.6rem; align-items: center; flex-wrap: wrap; justify-content: center;
+      border: 2px dashed var(--bronze); border-radius: 16px; background: rgba(107, 85, 56, 0.045); padding: 2rem 1.8rem;
+    }
 
     /* ── Interactive demo ── */
     .px-demo { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem 2rem; }
@@ -880,11 +890,11 @@
 
 <!-- ░░ FOTO-PLATZHALTER (Bild 1) ░░ -->
 <div class="px-photo-band" data-reveal>
-  <div class="px-photo-ph">
-    <span class="ph-badge">Bild 1 · hier kommt ein Foto</span>
-    <span class="ph-title">Dashboard-Übersicht (Screenshot)</span>
-    <span class="ph-desc">Echter Screenshot der Praxura-Tagesübersicht: Termine, Auslastung und offene Rezepte. Hell, aufgeräumt, ohne echte Patientendaten.</span>
-    <span class="ph-dim">Querformat · ca. 2000×1300 px · PNG</span>
+  <div class="px-photo-ph is-wide">
+    <span class="ph-badge">Bild 1 · echtes Foto (kein Screenshot)</span>
+    <span class="ph-title">Mehr Zeit für den Patienten</span>
+    <span class="ph-desc">Warmes, authentisches Foto: Therapeut:in lächelt und arbeitet entspannt mit einem Patienten in heller Praxis — vermittelt „weniger Papierkram, mehr Mensch". Editorial-Look, weiche Töne, keine sterile Stock-Optik.</span>
+    <span class="ph-dim">Querformat 16:9 · ca. 2000×1125 px · echtes Foto</span>
   </div>
 </div>
 
@@ -985,17 +995,17 @@
 <!-- ░░ FOTO-PLATZHALTER (Bild 2 + 3) ░░ -->
 <div class="px-photo-band" data-reveal>
   <div class="px-photo-grid">
-    <div class="px-photo-ph">
-      <span class="ph-badge">Bild 2 · hier kommt ein Foto</span>
-      <span class="ph-title">KI-Rezeptprüfung in Aktion</span>
-      <span class="ph-desc">Rezept wird per Smartphone abfotografiert — die KI erkennt die Heilmittel-Position und markiert Fehler &amp; Absetzungsrisiken in Echtzeit.</span>
-      <span class="ph-dim">Hoch- oder Querformat · ca. 1400×1600 px</span>
+    <div class="px-photo-ph is-phone">
+      <span class="ph-badge">Bild 2 · Smartphone-Mockup</span>
+      <span class="ph-title">KI-Rezeptprüfung am Handy</span>
+      <span class="ph-desc">Praxura-Screen in einem schicken Smartphone-Rahmen: Rezept wird abfotografiert, die KI markiert Heilmittel-Position &amp; Absetzungsrisiken. Das eine mobile Produkt-Mockup.</span>
+      <span class="ph-dim">Hochformat 9:16 · Screenshot im Phone-Frame</span>
     </div>
-    <div class="px-photo-ph">
-      <span class="ph-badge">Bild 3 · hier kommt ein Foto</span>
-      <span class="ph-title">§302 DTA-Datei / Belegliste</span>
-      <span class="ph-desc">Screenshot der fertig vorbereiteten DTA-Datei bzw. Belegliste — bereit zum Signieren und Einreichen durch die Praxis selbst.</span>
-      <span class="ph-dim">Querformat · ca. 1600×1100 px</span>
+    <div class="px-photo-ph is-wide">
+      <span class="ph-badge">Bild 3 · echtes Foto (kein Screenshot)</span>
+      <span class="ph-title">Hausbesuch &amp; Fahrtenbuch</span>
+      <span class="ph-desc">Authentisches Foto: Therapeut:in mit Tablet/Smartphone unterwegs zum Hausbesuch (vor dem Auto oder an der Haustür) — verbindet das elektronische Fahrtenbuch mit dem echten Praxisalltag.</span>
+      <span class="ph-dim">Querformat 16:9 · ca. 2000×1125 px · echtes Foto</span>
     </div>
   </div>
 </div>
@@ -1061,11 +1071,25 @@
 
 <!-- ░░ FOTO-PLATZHALTER (Bild 4) ░░ -->
 <div class="px-photo-band" data-reveal>
-  <div class="px-photo-ph">
-    <span class="ph-badge">Bild 4 · hier kommt ein Foto</span>
-    <span class="ph-title">Therapeut:in im Praxisalltag</span>
-    <span class="ph-desc">Authentisches Foto: Physio-/Ergo-/Logopädie-Therapeut:in in heller Praxis mit Tablet oder Smartphone — Praxura im Einsatz, Fokus auf den Patienten.</span>
-    <span class="ph-dim">Querformat · ca. 2000×1300 px · echtes Foto, kein Stock-Klischee</span>
+  <div class="px-photo-ph is-wide">
+    <span class="ph-badge">Bild 4 · echtes Foto (kein Screenshot)</span>
+    <span class="ph-title">Echte Behandlungsmomente</span>
+    <span class="ph-desc">Authentische Behandlungsszene aus einer der vier Fachrichtungen (Physio · Ergo · Logo · Podo) — Therapeut:in mit Patient, warm und konkret. Schafft Branchen-Nähe: „diese Software ist für genau meinen Beruf gemacht". Kein Stock-Klischee.</span>
+    <span class="ph-dim">Querformat 16:9 · ca. 2000×1125 px · echtes Foto</span>
+  </div>
+</div>
+
+<!-- ░░ FOTO-PLATZHALTER (Bild 5 · Testimonial) ░░ -->
+<div class="px-photo-band" data-reveal>
+  <div class="px-testimonial-ph">
+    <div class="px-photo-ph is-avatar">
+      <span class="ph-badge" style="font-size:0.58rem; padding:0.2rem 0.55rem;">Bild 5</span>
+    </div>
+    <div style="flex:1; min-width:260px; max-width:34rem;">
+      <span class="ph-badge">Testimonial · hier kommt ein echtes Kundenzitat</span>
+      <p style="font-family:var(--serif); font-size:1.15rem; color:var(--ink); line-height:1.5; margin:0.6rem 0;">„Zitat einer echten Therapeutin / eines Praxisinhabers über die Zeitersparnis und weniger Absetzungen mit Praxura."</p>
+      <span class="ph-dim">Rundes Porträtfoto (freundlich, echt) + Name · Praxis · Ort</span>
+    </div>
   </div>
 </div>
 
