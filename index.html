@@ -453,31 +453,65 @@
     }
     .btn-secondary:active { transform: translateY(-1px) scale(0.98); }
 
-    /* Hero right: stacked offset cards (preview UI fragments) */
+    /* Hero right: product photo with floating preview cards */
     .hero-aside {
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
       position: relative;
+    }
+
+    .hero-visual {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      margin-left: auto;
+    }
+
+    .hero-photo {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 36px 56px rgba(26, 22, 17, 0.20));
+      animation: heroFloat 7.5s var(--ease-quiet) infinite;
+    }
+
+    @keyframes heroFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-12px); }
     }
 
     .preview-card {
       padding: 0.4rem;
-      background: var(--bg-warm);
+      background: rgba(248, 243, 232, 0.82);
+      -webkit-backdrop-filter: blur(7px);
+      backdrop-filter: blur(7px);
       border: 1px solid var(--line);
       border-radius: 1.25rem;
       box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.7) inset,
-        0 30px 60px -28px rgba(26, 22, 17, 0.16);
+        0 30px 60px -24px rgba(26, 22, 17, 0.26);
       transition: transform 380ms var(--ease-out);
     }
 
-    .preview-card:nth-child(2) { margin-left: 2.25rem; transform: rotate(0.4deg); }
-    .preview-card:nth-child(3) { margin-left: 4rem; transform: rotate(-0.3deg); }
+    .hero-visual .preview-card {
+      position: absolute;
+      width: 248px;
+      z-index: 2;
+      animation: cardFloat 6.5s var(--ease-quiet) infinite;
+      will-change: transform;
+    }
 
-    .preview-card:hover { transform: translateY(-3px); }
-    .preview-card:nth-child(2):hover { transform: translateY(-3px) rotate(0.4deg); }
-    .preview-card:nth-child(3):hover { transform: translateY(-3px) rotate(-0.3deg); }
+    .preview-card--float1 { top: 2%;  left: -8%;  animation-delay: 0s; }
+    .preview-card--float2 { top: 44%; right: -4%; animation-delay: 1.1s; }
+    .preview-card--float3 { bottom: 1%; left: -5%; animation-delay: 2.3s; }
+
+    @keyframes cardFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-9px); }
+    }
+
+    .hero-visual .preview-card:hover {
+      transform: translateY(-9px) scale(1.025);
+      animation-play-state: paused;
+    }
 
     .preview-inner {
       padding: 1.1rem 1.2rem;
@@ -519,6 +553,130 @@
       font-size: 0.78rem;
       color: var(--ink-mute);
       margin-top: 0.15rem;
+    }
+
+    /* ────────────── Live-Demo ────────────── */
+    .demo-section { padding-top: 2rem; }
+    .demo-head { margin-bottom: 2.75rem; }
+
+    .demo-frame {
+      display: block;
+      position: relative;
+      max-width: 1080px;
+      margin: 0 auto;
+      border-radius: 1.4rem;
+      overflow: hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 50px 90px -42px rgba(26, 22, 17, 0.42);
+      text-decoration: none;
+      transition:
+        transform 460ms var(--ease-spring),
+        box-shadow 460ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .demo-frame:hover {
+        transform: translateY(-7px);
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.7) inset,
+          0 64px 120px -42px rgba(26, 22, 17, 0.52);
+      }
+    }
+
+    .demo-browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.1rem;
+      background: var(--bg-warm);
+      border-bottom: 1px solid var(--line);
+    }
+    .demo-dot { width: 11px; height: 11px; border-radius: 999px; }
+    .demo-dot:nth-child(1) { background: #E0726A; }
+    .demo-dot:nth-child(2) { background: #E6B450; }
+    .demo-dot:nth-child(3) { background: #6FB48A; }
+    .demo-url {
+      margin-left: 0.85rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+      color: var(--ink-mute);
+      background: var(--bg);
+      padding: 0.28rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+
+    .demo-shot { position: relative; line-height: 0; }
+    .demo-shot > img { width: 100%; height: auto; display: block; }
+
+    .demo-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.6rem;
+      background: linear-gradient(180deg, rgba(30, 61, 47, 0.10) 0%, rgba(30, 61, 47, 0.30) 100%);
+      transition: background 380ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .demo-frame:hover .demo-overlay {
+        background: linear-gradient(180deg, rgba(30, 61, 47, 0.16) 0%, rgba(30, 61, 47, 0.44) 100%);
+      }
+    }
+
+    .demo-play {
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 18px 44px -12px rgba(26, 22, 17, 0.5);
+      transition: transform 380ms var(--ease-spring);
+    }
+    .demo-play svg { width: 26px; height: 26px; fill: var(--emerald-deep); margin-left: 4px; }
+    @media (hover: hover) and (pointer: fine) {
+      .demo-frame:hover .demo-play { transform: scale(1.09); }
+    }
+
+    .demo-popup {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 1.1rem;
+      padding: 1.15rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 26px 54px -18px rgba(26, 22, 17, 0.45);
+    }
+    .demo-popup-title {
+      font-family: var(--serif);
+      font-size: 1.08rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.8rem;
+    }
+    .demo-popup-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--emerald-deep);
+      color: var(--bg);
+      padding: 0.62rem 1.25rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: transform 280ms var(--ease-spring);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .demo-frame:hover .demo-popup-btn { transform: translateY(-2px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-photo, .hero-visual .preview-card { animation: none; }
     }
 
     /* ────────────── Trust strip ────────────── */
@@ -1539,8 +1697,23 @@
         min-height: auto;
       }
       .hero-aside { margin-top: 1rem; }
-      .preview-card:nth-child(2),
-      .preview-card:nth-child(3) { margin-left: 0; transform: none; }
+      .hero-visual { max-width: 420px; margin: 0 auto; }
+      .hero-visual .preview-card {
+        position: static;
+        width: 100%;
+        margin-top: 0.85rem;
+        animation: none;
+        background: var(--bg-warm);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+      .preview-card--float1 { margin-top: 1.25rem; }
+
+      .demo-overlay { gap: 1rem; }
+      .demo-play { width: 60px; height: 60px; }
+      .demo-play svg { width: 21px; height: 21px; }
+      .demo-popup { padding: 0.9rem 1.1rem; }
+      .demo-url { display: none; }
 
       .trust { padding: 1rem 1.25rem 3rem; }
       .trust-sectors { gap: 1.2rem; }
@@ -1620,39 +1793,45 @@
   </div>
 
   <aside class="hero-aside">
-    <div class="preview-card">
-      <div class="preview-inner">
-        <div class="preview-tag">Sprach-Agent · Live</div>
-        <div class="preview-row">
-          <div>
-            <div class="preview-title">Eingehender Anruf</div>
-            <div class="preview-sub">Anna Müller · Termin verschieben</div>
+    <div class="hero-visual">
+      <img src="assets/img/hero-praxura.png?v=20260602"
+           alt="Praxura — Therapeutin mit Rezepten und der App in der Hand"
+           class="hero-photo" width="2000" height="1414" loading="eager" decoding="async" />
+
+      <div class="preview-card preview-card--float1">
+        <div class="preview-inner">
+          <div class="preview-tag">Sprach-Agent · Live</div>
+          <div class="preview-row">
+            <div>
+              <div class="preview-title">Eingehender Anruf</div>
+              <div class="preview-sub">Anna Müller · Termin verschieben</div>
+            </div>
+            <div class="preview-num"><em>0,8</em>s</div>
           </div>
-          <div class="preview-num"><em>0,8</em>s</div>
         </div>
       </div>
-    </div>
-    <div class="preview-card">
-      <div class="preview-inner">
-        <div class="preview-tag">Beleg-Automation</div>
-        <div class="preview-row">
-          <div>
-            <div class="preview-title">Rezept erkannt &amp; verbucht</div>
-            <div class="preview-sub">Blanko · Schulter · vollständig</div>
+      <div class="preview-card preview-card--float2">
+        <div class="preview-inner">
+          <div class="preview-tag">Beleg-Automation</div>
+          <div class="preview-row">
+            <div>
+              <div class="preview-title">Rezept erkannt &amp; verbucht</div>
+              <div class="preview-sub">Blanko · Schulter · vollständig</div>
+            </div>
+            <div class="preview-num">€ <em>89,</em>34</div>
           </div>
-          <div class="preview-num">€ <em>89,</em>34</div>
         </div>
       </div>
-    </div>
-    <div class="preview-card">
-      <div class="preview-inner">
-        <div class="preview-tag">Dashboard · diese Woche</div>
-        <div class="preview-row">
-          <div>
-            <div class="preview-title">Automatisierte Termine</div>
-            <div class="preview-sub">+34 % vs. Vorwoche</div>
+      <div class="preview-card preview-card--float3">
+        <div class="preview-inner">
+          <div class="preview-tag">Dashboard · diese Woche</div>
+          <div class="preview-row">
+            <div>
+              <div class="preview-title">Automatisierte Termine</div>
+              <div class="preview-sub">+34 % vs. Vorwoche</div>
+            </div>
+            <div class="preview-num"><em>248</em></div>
           </div>
-          <div class="preview-num"><em>248</em></div>
         </div>
       </div>
     </div>
@@ -1670,6 +1849,47 @@
     <span>Steuerberatung</span>
     <span>Bildung</span>
   </div>
+</section>
+
+
+<!-- ────────────── Live-Demo ────────────── -->
+<section class="block demo-section" id="demo">
+  <div class="section-head demo-head">
+    <div>
+      <p class="section-eyebrow">Live-Demo · Interaktiv</p>
+      <h2 class="section-title">
+        Hast Du Lust auf einen <em>kleinen Einblick?</em>
+      </h2>
+    </div>
+    <p class="section-lede">
+      Klick Dich durch die echte Oberfläche — Terminkalender, Rezeptscan und
+      Abrechnungsvorbereitung. Kein Login, keine Installation.
+    </p>
+  </div>
+
+  <a href="demo-dashboard.html" target="_blank" rel="noopener"
+     class="demo-frame" aria-label="Interaktive Demo starten">
+    <div class="demo-browser-bar">
+      <span class="demo-dot"></span>
+      <span class="demo-dot"></span>
+      <span class="demo-dot"></span>
+      <span class="demo-url">app.infinitymade.de/dashboard</span>
+    </div>
+    <div class="demo-shot">
+      <img src="assets/img/demo-preview.png?v=20260602"
+           alt="InfinityMade Dashboard — Vorschau der Live-Demo"
+           loading="lazy" decoding="async" />
+      <div class="demo-overlay">
+        <div class="demo-play" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <div class="demo-popup">
+          <div class="demo-popup-title">Eindruck gewinnen?</div>
+          <span class="demo-popup-btn">Dann los! <span aria-hidden="true">↗</span></span>
+        </div>
+      </div>
+    </div>
+  </a>
 </section>
 
 
