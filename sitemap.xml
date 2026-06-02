@@ -12,6 +12,16 @@
     <priority>0.9</priority>
     <lastmod>2026-05-25</lastmod>
   </url>
+
+  <!-- Fachbereich-Landingpages -->
+  <url><loc>https://praxura.de/praxissoftware-physiotherapie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-02</lastmod></url>
+  <url><loc>https://praxura.de/praxissoftware-ergotherapie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-02</lastmod></url>
+  <url><loc>https://praxura.de/praxissoftware-logopaedie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-02</lastmod></url>
+  <url><loc>https://praxura.de/praxissoftware-podologie.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-02</lastmod></url>
+
+  <!-- Themen-Landingpages -->
+  <url><loc>https://praxura.de/heilmittelabrechnung-software.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-02</lastmod></url>
+  <url><loc>https://praxura.de/ti-anbindung-heilmittel.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-02</lastmod></url>
   <url>
     <loc>https://praxura.de/support.html</loc>
     <changefreq>monthly</changefreq>
