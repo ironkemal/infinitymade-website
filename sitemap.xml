@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://infinitymade.de/</loc>
+    <loc>https://praxura.de/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <lastmod>2026-05-25</lastmod>
   </url>
   <url>
-    <loc>https://infinitymade.de/praxis.html</loc>
+    <loc>https://praxura.de/praxis.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <lastmod>2026-05-25</lastmod>
   </url>
   <url>
-    <loc>https://infinitymade.de/support.html</loc>
+    <loc>https://praxura.de/support.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <lastmod>2026-05-25</lastmod>
   </url>
   <url>
-    <loc>https://infinitymade.de/llms.txt</loc>
+    <loc>https://praxura.de/llms.txt</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <lastmod>2026-05-12</lastmod>
@@ -27,25 +27,25 @@
 
   <!-- Blog & Insights -->
   <url>
-    <loc>https://infinitymade.de/blog/</loc>
+    <loc>https://praxura.de/blog/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <lastmod>2026-05-25</lastmod>
   </url>
   <url>
-    <loc>https://infinitymade.de/blog/blankoverordnung-physiotherapie-2026.html</loc>
+    <loc>https://praxura.de/blog/blankoverordnung-physiotherapie-2026.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2026-05-25</lastmod>
   </url>
   <url>
-    <loc>https://infinitymade.de/blog/hausbesuch-physiotherapie-abrechnen-2026.html</loc>
+    <loc>https://praxura.de/blog/hausbesuch-physiotherapie-abrechnen-2026.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2026-05-25</lastmod>
   </url>
   <url>
-    <loc>https://infinitymade.de/blog/praxis-digitalisieren-7-schritte-checkliste.html</loc>
+    <loc>https://praxura.de/blog/praxis-digitalisieren-7-schritte-checkliste.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <lastmod>2026-05-25</lastmod>
