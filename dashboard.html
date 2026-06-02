@@ -9,7 +9,7 @@
   <!-- Sentry error tracking (loader + custom init with PII scrub) -->
   <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous"></script>
   <script src="/sentry-init.js?v=20260523c"></script>
-  <title>Dashboard – InfinityMade</title>
+  <title>Dashboard – Praxura</title>
   <meta name="robots" content="noindex" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/favicon.svg" />
@@ -37,7 +37,7 @@
         <button class="hamburger" id="hamburger" aria-label="Menü">
           <span></span><span></span><span></span>
         </button>
-        <a href="/" class="brand">InfinityMade</a>
+        <a href="/" class="brand">Praxura</a>
         <span class="biz-name" id="bizName"></span>
 
         <!-- Business Switcher (multi-business, Paket 3) -->
@@ -81,9 +81,9 @@
         <div id="welcome-banner" class="dash-banner welcome" hidden>
           <div class="dash-banner-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/><circle cx="12" cy="12" r="4"/></svg></div>
           <div class="dash-banner-content">
-            <strong>Willkommen bei InfinityMade!</strong>
-            <p>{{ 'Ihr 14-tägiger Test läuft. Wir richten Ihren WhatsApp-Webhook ein — Sie hören in den nächsten 24
-              Stunden von uns.' | encodeURI }}</p>
+            <strong>Willkommen bei Praxura!</strong>
+            <p>{{ 'Ihr 14-tägiger Test läuft. Richten Sie Ihre Praxis ein — Services, Öffnungszeiten und Online-Terminbuchung
+              sind in wenigen Minuten startklar.' | encodeURI }}</p>
           </div>
           <button class="dash-banner-close" onclick="this.closest('.dash-banner').hidden=true">✕</button>
         </div>
@@ -2881,7 +2881,7 @@
           <div class="form-hint" style="font-size:12px;color:#555;margin-top:6px;">
             Das ist die <strong>PIN, die Sie bei der Beantragung Ihres ITSG-/Dakota-Zertifikats selbst festgelegt</strong>
             (oder per Post erhalten) haben — schützt den privaten Schlüssel in der <code>.p12</code>-Datei.
-            <em>Nicht</em> Ihr InfinityMade-Login-Passwort, <em>nicht</em> Ihr Krankenkassen-Portal-Passwort.
+            <em>Nicht</em> Ihr Praxura-Login-Passwort, <em>nicht</em> Ihr Krankenkassen-Portal-Passwort.
           </div>
         </div>
         <div id="signStatus" style="font-size:13px;color:var(--text-muted);margin:8px 0;"></div>
@@ -3312,7 +3312,7 @@
             </div>
             <div class="emp-result-row">
               <span class="emp-result-label">Login-Link</span>
-              <span class="emp-result-val" id="ae-res-link">infinitymade.de/login.html</span>
+              <span class="emp-result-val" id="ae-res-link">app.praxura.de/login.html</span>
               <button class="btn-icon" id="aeCopyLinkBtn" title="Kopieren">⎘</button>
             </div>
           </div>

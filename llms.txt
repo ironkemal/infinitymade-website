@@ -1,68 +1,56 @@
-# llms.txt — InfinityMade
-# https://infinitymade.de/llms.txt
-# A machine-readable overview of InfinityMade for AI crawlers and LLMs.
+# llms.txt — Praxura
+# https://praxura.de/llms.txt
+# A machine-readable overview of Praxura for AI crawlers and LLMs.
 
 # Entity
-InfinityMade is a German SaaS company based in Siegburg, NRW. It provides an all-in-one digital platform for small and medium-sized businesses (KMU) including website creation, WhatsApp AI receptionist, online booking system, and Google Business Profile optimization.
-Wikidata: https://www.wikidata.org/wiki/Q139764488
+Praxura is an all-in-one practice management software (Praxissoftware) for German healthcare therapy providers (Heilmittelerbringer). It is a product of InfinityMade (Einzelunternehmen, Yavuz Kemal Demir), based in Siegburg, NRW, Germany. DSGVO-compliant with EU hosting.
 
-# Sectors served
-- Hairdressers / Barbers (Friseur)
-- Restaurants & Cafés (Gastronomie)
-- Physiotherapy practices (Physiotherapie)
-- Medical practices (Praxis)
-- Fitness studios (Fitnessstudio)
-- Nail salons (Nagelstudio)
-- Tattoo studios (Tattoo)
-- Spas & Wellness (Spa)
-- Craftsmen / Handwerker
-- Other small businesses
+# Target audience (practice types)
+- Physiotherapie (physiotherapy practices)
+- Ergotherapie (occupational therapy practices)
+- Logopädie (speech therapy practices)
+- Podologie (podiatry practices)
 
-# Key products & services
-1. Website creation — modern, responsive, fast-loading websites
-2. WhatsApp AI Receptionist — 24/7 automated booking and customer communication via WhatsApp Business API
-3. Online booking system — calendar widget with working hours, employee selection, service selection
-4. Google Business Profile optimization — local SEO for Google Maps
-5. Digital menu (QR code) — for restaurants
-6. Social media management support
+# Key features
+1. Online-Terminbuchung — public booking page with services, working hours, employee selection
+2. KI-gestützte Rezeptprüfung — AI-assisted prescription (Heilmittelverordnung) scanning and validation
+3. §302 SGB V Direktabrechnung (DTA) — prepares direct billing data exchange with the Kostenträger
+4. Elektronisches Fahrtenbuch — digital trip log and route planning for home visits (Hausbesuche)
+5. Dashboard & Mitarbeiterverwaltung — practice dashboard, multi-employee scheduling and reporting
 
 # Languages supported
-German (de), English (en), Turkish (tr), Arabic (ar)
+German (de), English (en), Turkish (tr)
 
 # Geographic focus
-Primary: Siegburg, Köln, Bonn, Troisdorf, Hennef, Sankt Augustin, Lohmar (NRW, Germany)
-Nationwide: Remote support available across Germany via cloud-based SaaS
+Germany (nationwide), cloud-based SaaS. Operator based in Siegburg, NRW.
 
 # Pricing model
-Subscription-based SaaS with tiered plans (Starter, Professional, Enterprise). One-time setup fees for web design.
+Subscription-based SaaS with tiered plans: Starter (€29/mo), Professional (€49/mo), Klinik (€99/mo). 14-day free trial.
 
 # Contact
-- Website: https://infinitymade.de
+- Product: https://praxura.de
+- App: https://app.praxura.de
 - Email: kontakt@infinitymade.de
 - Phone: +49 152 28033834
-- Address: Industriestraße 33, 53721 Siegburg, Germany
+- Operator / Anbieter: InfinityMade (Einzelunternehmen), Industriestraße 33, 53721 Siegburg, Germany
 
 # Technical stack
 - Frontend: Vanilla HTML/CSS/JS
 - Hosting: Vercel
 - Database & Auth: Supabase
-- AI / Automation: n8n workflows on Hetzner VPS
-- WhatsApp: Twilio WhatsApp Business API
+- AI / Automation: n8n workflows + Azure AI gateway on Hetzner VPS
 - Payments: Stripe
 - Calendar API: Custom Node.js/Express on Hetzner VPS
 
 # Important pages
-/                           — Homepage
-/webdesign-siegburg.html    — Local webdesign landing page (Siegburg)
-/webdesign-koeln.html       — Local webdesign landing page (Köln)
-/webdesign-bonn.html        — Local webdesign landing page (Bonn)
-/webdesign-troisdorf.html   — Local webdesign landing page (Troisdorf)
-/webdesign-hennef.html      — Local webdesign landing page (Hennef)
-/whatsapp-bot-friseur.html      — Sector landing page (hairdresser)
-/whatsapp-bot-restaurant.html   — Sector landing page (restaurant)
-/whatsapp-bot-physiotherapie.html — Sector landing page (physiotherapy)
-/whatsapp-bot-fitness.html      — Sector landing page (fitness)
-/blog/                      — Blog with guides for SMBs
+/                — Homepage (Praxura product overview)
+/praxis.html     — Detailed product / feature page
+/blog/           — Blog with guides for Heilmittelerbringer
+/impressum.html  — Imprint (operator: InfinityMade)
+/datenschutz.html — Privacy policy (DSGVO)
+/agb.html        — Terms of service
+/dpa.html        — Data processing agreement (AVV, Art. 28 DSGVO)
+/widerruf.html   — Right of withdrawal
 
 # Last updated
-2026-05-12
+2026-06-02

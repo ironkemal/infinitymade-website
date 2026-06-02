@@ -240,9 +240,9 @@ const T = {
 
 const PLAN_FEATURES = {
   starter: {
-    de: ['WhatsApp KI-Assistent (24/7)', 'Automatische Erinnerungen', 'Warteliste-Automation', 'InfinityMade Online-Terminbuchung', 'DSGVO-konform'],
-    en: ['WhatsApp AI Assistant (24/7)', 'Automatic reminders', 'Waitlist automation', 'InfinityMade online booking', 'GDPR-compliant'],
-    tr: ['WhatsApp KI Asistanı (7/24)', 'Otomatik hatırlatmalar', 'Bekleme listesi otomasyonu', 'InfinityMade online randevu', 'DSGVO uyumlu']
+    de: ['Online-Terminbuchung 24/7', 'Automatische Erinnerungen', 'Warteliste-Automation', 'Eigene Praxura Buchungsseite', 'DSGVO-konform'],
+    en: ['24/7 online appointment booking', 'Automatic reminders', 'Waitlist automation', 'Your own Praxura booking page', 'GDPR-compliant'],
+    tr: ['7/24 online randevu', 'Otomatik hatırlatmalar', 'Bekleme listesi otomasyonu', 'Kendi Praxura rezervasyon sayfanız', 'DSGVO uyumlu']
   },
   professional: {
     de: ['Alles aus Starter', 'Reaktivierungskampagne', 'Upsell-Vorschläge', 'Auslastungs-Dashboard', 'Mitarbeiter-Routing'],
@@ -7950,7 +7950,7 @@ document.getElementById('dsgvoExportBtn')?.addEventListener('click', async () =>
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `infinitymade-daten-${new Date().toISOString().slice(0,10)}.json`;
+    a.download = `praxura-daten-${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -8444,7 +8444,7 @@ document.getElementById('notesSendBtn').addEventListener('click', async () => {
 
   mailPreviewLeadId = leadId;
 
-  const fromLabel = (currentProfile.b2b_sender_name || currentProfile.business_name || 'InfinityMade')
+  const fromLabel = (currentProfile.b2b_sender_name || currentProfile.business_name || 'Praxura')
     + ' <' + currentProfile.b2b_from_email + '>';
   document.getElementById('mailPreviewFrom').value = fromLabel;
   document.getElementById('mailPreviewTo').value = displayName(lead) + ' <' + lead.email + '>';
@@ -8467,7 +8467,7 @@ document.getElementById('mailPreviewSendBtn').addEventListener('click', async ()
         to_name: displayName(lead),
         subject: 'Ihr Therapie-Bericht',
         body: summary,
-        sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || 'InfinityMade',
+        sender_name: currentProfile.b2b_sender_name || currentProfile.business_name || 'Praxura',
         from_email: currentProfile.b2b_from_email
       })
     });
