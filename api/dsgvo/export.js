@@ -80,7 +80,7 @@ export default async function handler(req, res) {
     generated_at: new Date().toISOString(),
     user_id: userId,
     legal_basis: 'DSGVO Art. 15 (Recht auf Auskunft)',
-    note: 'Vollständige Kopie der zu Ihrer Person gespeicherten Daten. Bei Fragen: support@infinitymade.de',
+    note: 'Vollständige Kopie der zu Ihrer Person gespeicherten Daten. Bei Fragen: support@praxura.de',
     auth: auth_meta,
     data,
     errors_per_table: Object.keys(errors).length ? errors : undefined,

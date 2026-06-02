@@ -8588,7 +8588,7 @@ function showAddEmployeeResult(email, password) {
 
   const loginUrl = 'https://app.praxura.de/login.html';
   const shareText = encodeURIComponent(
-    'Hallo! Dein InfinityMade Zugang:' +
+    'Hallo! Dein Praxura Zugang:' +
     '\nE-Mail: ' + email +
     '\nPasswort: ' + password +
     '\nLogin: ' + loginUrl
