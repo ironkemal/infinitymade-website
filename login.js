@@ -83,7 +83,7 @@ document.querySelectorAll('.lang-switch button').forEach(btn => {
 
 applyLang();
 
-const ADMIN_URL = 'https://admin.infinitymade.de/';
+const ADMIN_URL = 'https://admin.praxura.de/';
 
 async function isAdmin(userId) {
   const { data } = await supabase

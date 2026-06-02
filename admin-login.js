@@ -9,7 +9,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 const ADMIN_HOME = '/admin.html';
-const TENANT_LOGIN = 'https://app.infinitymade.de/login.html';
+const TENANT_LOGIN = 'https://app.praxura.de/login.html';
 
 const msg = document.getElementById('message');
 function showMsg(text, type) { msg.textContent = text; msg.className = `msg show ${type}`; }

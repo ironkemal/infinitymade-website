@@ -501,7 +501,7 @@ async function renderSidebar() {
 function buildBookingUrl(profile) {
   if (!profile) return '';
   const slug = (profile.booking_slug || '').trim();
-  const base = (window.location.origin || 'https://infinitymade.de');
+  const base = (window.location.origin || 'https://app.praxura.de');
   // If empty: use UUID
   if (!slug) return base + '/booking.html?u=' + profile.id;
   // Already a full URL (http/https)?
@@ -8586,7 +8586,7 @@ function showAddEmployeeResult(email, password) {
   document.getElementById('ae-res-email').textContent = email;
   document.getElementById('ae-res-password').textContent = password;
 
-  const loginUrl = 'https://infinitymade.de/login.html';
+  const loginUrl = 'https://app.praxura.de/login.html';
   const shareText = encodeURIComponent(
     'Hallo! Dein InfinityMade Zugang:' +
     '\nE-Mail: ' + email +
@@ -10512,7 +10512,7 @@ function renderBusinessesSection() {
     return;
   }
 
-  const baseUrl = (window.location.origin || 'https://infinitymade.de');
+  const baseUrl = (window.location.origin || 'https://app.praxura.de');
   listEl.innerHTML = myBusinesses.map(b => {
     const addr = [b.street, b.house_number].filter(Boolean).join(' ');
     const cityLine = [b.zip, b.city].filter(Boolean).join(' ');
@@ -10562,7 +10562,7 @@ function updateBizSlugPreview() {
   const slug = document.getElementById('bizFormSlug')?.value?.trim();
   const preview = document.getElementById('bizSlugPreview');
   if (!preview) return;
-  const base = (window.location.origin || 'https://infinitymade.de') + '/booking.html?u=';
+  const base = (window.location.origin || 'https://app.praxura.de') + '/booking.html?u=';
   preview.textContent = slug ? base + slug : base + '<slug>';
 }
 
@@ -10895,7 +10895,7 @@ async function init() {
         .maybeSingle();
       if (adminRow) {
         adminLink.style.display = '';
-        adminLink.href = 'https://admin.infinitymade.de/';
+        adminLink.href = 'https://admin.praxura.de/';
       }
     }
     initRezeptScanner();

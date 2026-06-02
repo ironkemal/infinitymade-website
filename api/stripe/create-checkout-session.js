@@ -5,7 +5,7 @@
 import { adminFetch, json } from '../_lib/auth.js';
 import { stripeRequest, priceIdFor } from '../_lib/stripe.js';
 
-const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://infinitymade.de';
+const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://app.praxura.de';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
