@@ -257,6 +257,22 @@
     .px-photo-img.is-wide { aspect-ratio: 16 / 9; }
     .px-photo-img.is-43 { aspect-ratio: 4 / 3; }
     .px-photo-img.is-portrait { aspect-ratio: 4 / 5; max-width: 360px; margin: 0 auto; }
+    /* TI-Anbindung add-on */
+    .px-ti { border: 1px solid var(--line); border-radius: 16px; background: var(--bg-warm); padding: 2rem 1.8rem; }
+    .px-ti-head { text-align: center; max-width: 42rem; margin: 0 auto 1.6rem; }
+    .px-ti-title { font-family: var(--serif); font-weight: 400; font-size: clamp(1.5rem, 3vw, 2rem); color: var(--ink); margin: 0.5rem 0; line-height: 1.15; }
+    .px-ti-title em { font-style: italic; font-weight: 300; color: var(--bronze); }
+    .px-ti-lede { font-size: 0.95rem; line-height: 1.55; color: var(--ink-soft); }
+    .px-ti-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .px-ti-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 1.4rem 1.2rem; text-align: center; }
+    .px-ti-card.is-hl { border-color: var(--bronze); background: #FFFEFB; }
+    .px-ti-label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-quiet); }
+    .px-ti-val { font-family: var(--serif); font-size: 2rem; color: var(--ink); margin: 0.4rem 0; letter-spacing: -0.02em; }
+    .px-ti-val small { font-size: 0.8rem; color: var(--ink-mute); margin-left: 0.15rem; }
+    .px-ti-card.is-hl .px-ti-val { color: var(--bronze); }
+    .px-ti-sub { font-size: 0.76rem; line-height: 1.45; color: var(--ink-soft); }
+    .px-ti-note { font-size: 0.72rem; color: var(--ink-quiet); text-align: center; margin: 1.2rem auto 0; max-width: 50rem; }
+    @media (max-width: 640px) { .px-ti-grid { grid-template-columns: 1fr; } }
 
     /* ── Interactive demo ── */
     .px-demo { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem 2rem; }
@@ -1227,6 +1243,35 @@
       ein Software-Werkzeug zur <em>Vorbereitung</em> Ihrer Abrechnung — <strong>kein Abrechnungszentrum und kein
       Abrechnungsdienstleister.</strong> Genau deshalb zahlen Sie bei uns <strong>keine Provision</strong> auf Ihren Umsatz.
     </p>
+  </div>
+
+  <!-- TI-Anbindung Zusatzmodul -->
+  <div style="max-width:62rem; margin:1.6rem auto 0;">
+    <div class="px-ti">
+      <div class="px-ti-head">
+        <p class="px-demo-eyebrow">Zusatzmodul · optional</p>
+        <h3 class="px-ti-title">TI-Anbindung — <em>vollständig GKV-refinanziert</em></h3>
+        <p class="px-ti-lede">Die Anbindung an die Telematikinfrastruktur (TI) wird zum 01.10.2027 Pflicht. Mit Praxura sind Sie schon heute startklar — als optionales Zusatzmodul, dessen Kosten die GKV über die Förderpauschale in voller Höhe erstattet.</p>
+      </div>
+      <div class="px-ti-grid">
+        <div class="px-ti-card is-hl">
+          <div class="px-ti-label">Ihre Kosten</div>
+          <div class="px-ti-val">0 €</div>
+          <div class="px-ti-sub">netto — die Förderpauschale deckt die TI-Kosten.</div>
+        </div>
+        <div class="px-ti-card">
+          <div class="px-ti-label">TI-Anschluss &amp; Karten</div>
+          <div class="px-ti-val">221,61 €<small>/Monat</small></div>
+          <div class="px-ti-sub">Kartenterminal einmalig 593,81 €, TI-Karten 1.045 €, TI-Anschluss 194,30 €/Monat — auf 5 Jahre gerechnet.</div>
+        </div>
+        <div class="px-ti-card">
+          <div class="px-ti-label">GKV-Refinanzierung</div>
+          <div class="px-ti-val">221,74 €<small>/Monat</small></div>
+          <div class="px-ti-sub">Förderpauschale Physiotherapie mit 1 eHBA, Stand 2026 (GKV-Spitzenverband).</div>
+        </div>
+      </div>
+      <p class="px-ti-note">Rechenbeispiel, Stand 2026 · Beträge abhängig von Praxisform &amp; Anzahl der eHBA (Ergo / Logo / Podo: 213,52 €/Monat) · Bereitstellung über einen zertifizierten TI-Dienstleister · alle Angaben ohne Gewähr.</p>
+    </div>
   </div>
 </section>
 
