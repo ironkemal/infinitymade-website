@@ -247,7 +247,7 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       if (error) throw error;
 
       const emailEnc = encodeURIComponent(uinfo.email);
-      return res.redirect(`https://infinitymade.de/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}#b2b`);
+      return res.redirect(`https://app.praxura.de/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}#b2b`);
     }
 
     const { error } = await supabase
@@ -262,10 +262,10 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       
     if (error) throw error;
     
-    res.redirect('https://infinitymade.de/dashboard.html#calendar?success=google_connected');
+    res.redirect('https://app.praxura.de/dashboard.html#calendar?success=google_connected');
   } catch (error) {
     console.error('OAuth callback error:', error);
-    res.redirect('https://infinitymade.de/dashboard.html#calendar?error=google_failed');
+    res.redirect('https://app.praxura.de/dashboard.html#calendar?error=google_failed');
   }
 });
 

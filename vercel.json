@@ -244,7 +244,28 @@
       ],
       "destination": "https://app.infinitymade.de/employee-signup.html",
       "permanent": false
-    }
+    },
+
+    { "source": "/", "has": [{ "type": "host", "value": "admin.praxura.de" }], "destination": "/admin.html", "permanent": false },
+    { "source": "/index.html", "has": [{ "type": "host", "value": "admin.praxura.de" }], "destination": "/admin.html", "permanent": false },
+    { "source": "/login", "has": [{ "type": "host", "value": "admin.praxura.de" }], "destination": "/admin-login.html", "permanent": false },
+    { "source": "/login.html", "has": [{ "type": "host", "value": "admin.praxura.de" }], "destination": "/admin-login.html", "permanent": false },
+
+    { "source": "/", "has": [{ "type": "host", "value": "app.praxura.de" }], "destination": "/login.html", "permanent": false },
+    { "source": "/index.html", "has": [{ "type": "host", "value": "app.praxura.de" }], "destination": "/login.html", "permanent": false },
+
+    { "source": "/admin.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://admin.praxura.de/admin.html", "permanent": false },
+    { "source": "/admin.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://admin.praxura.de/admin.html", "permanent": false },
+    { "source": "/login.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/login.html", "permanent": false },
+    { "source": "/login.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/login.html", "permanent": false },
+    { "source": "/dashboard.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/dashboard.html", "permanent": false },
+    { "source": "/dashboard.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/dashboard.html", "permanent": false },
+    { "source": "/onboarding.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/onboarding.html", "permanent": false },
+    { "source": "/onboarding.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/onboarding.html", "permanent": false },
+    { "source": "/kalender.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/kalender.html", "permanent": false },
+    { "source": "/kalender.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/kalender.html", "permanent": false },
+    { "source": "/employee-signup.html", "has": [{ "type": "host", "value": "praxura.de" }], "destination": "https://app.praxura.de/employee-signup.html", "permanent": false },
+    { "source": "/employee-signup.html", "has": [{ "type": "host", "value": "www.praxura.de" }], "destination": "https://app.praxura.de/employee-signup.html", "permanent": false }
   ],
   "rewrites": [
     {
