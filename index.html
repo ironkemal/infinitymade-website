@@ -197,6 +197,66 @@
       text-transform: none;
     }
 
+    /* ── Hero right: product photo ── */
+    .px-hero-visual { position: relative; }
+    .px-hero-photo {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.7) inset,
+        0 30px 60px -28px rgba(26, 22, 17, 0.30),
+        0 6px 16px -6px rgba(26, 22, 17, 0.08);
+    }
+
+    /* ── Interactive demo ── */
+    .px-demo { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem 2rem; }
+    .px-demo-head { text-align: center; max-width: 40rem; margin: 0 auto 2.6rem; }
+    .px-demo-eyebrow {
+      font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--bronze);
+    }
+    .px-demo-title {
+      font-family: var(--serif); font-weight: 400;
+      font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.1;
+      letter-spacing: -0.03em; color: var(--ink); margin: 0.8rem 0;
+    }
+    .px-demo-title em { font-style: italic; font-weight: 300; color: var(--bronze); }
+    .px-demo-lede { color: var(--ink-soft); font-size: 1.02rem; line-height: 1.6; }
+    .px-demo-frame {
+      display: block; border: 1px solid var(--line); border-radius: 16px;
+      overflow: hidden; background: var(--bg-warm); text-decoration: none;
+      box-shadow: 0 30px 70px -30px rgba(26, 22, 17, 0.32);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .px-demo-frame:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 40px 90px -34px rgba(26, 22, 17, 0.40);
+    }
+    .px-demo-bar {
+      display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1rem;
+      background: rgba(26, 22, 17, 0.04); border-bottom: 1px solid var(--line-soft);
+    }
+    .px-demo-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--line); }
+    .px-demo-url {
+      margin-left: 0.8rem; font-family: var(--mono); font-size: 0.74rem; color: var(--ink-quiet);
+    }
+    .px-demo-shot { position: relative; }
+    .px-demo-shot img { width: 100%; height: auto; display: block; }
+    .px-demo-overlay {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      background: linear-gradient(180deg, rgba(26, 22, 17, 0) 45%, rgba(26, 22, 17, 0.30));
+      opacity: 0; transition: opacity 0.25s ease;
+    }
+    .px-demo-frame:hover .px-demo-overlay { opacity: 1; }
+    .px-demo-popup {
+      background: var(--ink); color: var(--bg-warm); padding: 0.8rem 1.4rem;
+      border-radius: 999px; font-family: var(--mono); font-size: 0.8rem;
+      letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 0.5rem;
+      box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.4);
+    }
+
     /* ── Sectors strip ── */
     .px-sectors {
       max-width: 1320px;
@@ -712,55 +772,10 @@
     </div>
   </div>
 
-  <aside class="px-hero-card" data-reveal class="is-visible">
-    <div class="px-hero-card-row">
-      <div class="px-hero-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-      </div>
-      <div>
-        <div class="px-hero-card-title">Online-Terminbuchung</div>
-        <div class="px-hero-card-sub">Entlastung für Ihr Telefon. Patienten buchen 24/7 online.</div>
-      </div>
-    </div>
-    <div class="px-hero-card-row">
-      <div class="px-hero-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="14" x2="15" y2="14" /><line x1="9" y1="18" x2="13" y2="18" />
-        </svg>
-      </div>
-      <div>
-        <div class="px-hero-card-title">KI-Rezeptprüfung</div>
-        <div class="px-hero-card-sub">Scan per Smartphone — Fehler und Absetzungen sofort vermeiden.</div>
-      </div>
-    </div>
-    <div class="px-hero-card-row">
-      <div class="px-hero-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.34 0 4.47.9 6.07 2.37" /><polyline points="21 4 12 13 9 10" />
-        </svg>
-      </div>
-      <div>
-        <div class="px-hero-card-title">§302 SGB V Direktabrechnung</div>
-        <div class="px-hero-card-sub">Eigene DTA-Abrechnung mit den Kassen — ohne Provisionen.</div>
-      </div>
-    </div>
-    <div class="px-hero-card-row">
-      <div class="px-hero-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 13h18l-2-7H5l-2 7z" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" />
-        </svg>
-      </div>
-      <div>
-        <div class="px-hero-card-title">Elektronisches Fahrtenbuch</div>
-        <div class="px-hero-card-sub">Hausbesuche, Touren &amp; Pauschalen automatisch verbuchen.</div>
-      </div>
-    </div>
-    <div class="px-hero-card-stat">
-      <span>Für Therapeuten</span>
-      <em>14 Tage kostenlos</em>
-    </div>
+  <aside class="px-hero-visual is-visible" data-reveal>
+    <img src="assets/img/hero-praxura.png?v=20260602"
+         alt="Praxura — Therapeutin mit Rezepten und der App in der Hand"
+         class="px-hero-photo" width="2000" height="1414" loading="eager" decoding="async" />
   </aside>
 </header>
 
@@ -775,6 +790,32 @@
     <span>Heilmittelerbringer (GKV §302)</span>
   </div>
 </div>
+
+<!-- ────────────── Interactive Demo ────────────── -->
+<section class="px-demo" id="demo">
+  <div class="px-demo-head" data-reveal>
+    <p class="px-demo-eyebrow">Live-Demo · Interaktiv</p>
+    <h2 class="px-demo-title">Lust auf einen <em>kleinen Einblick?</em></h2>
+    <p class="px-demo-lede">
+      Klicken Sie sich durch die echte Oberfläche — Terminkalender, Rezeptscan und
+      Abrechnungsvorbereitung. Kein Login, keine Installation.
+    </p>
+  </div>
+  <a href="demo-dashboard.html" target="_blank" rel="noopener"
+     class="px-demo-frame" data-reveal aria-label="Interaktive Demo starten">
+    <div class="px-demo-bar">
+      <span class="px-demo-dot"></span><span class="px-demo-dot"></span><span class="px-demo-dot"></span>
+      <span class="px-demo-url">app.praxura.de/dashboard</span>
+    </div>
+    <div class="px-demo-shot">
+      <img src="assets/img/demo-preview.png?v=20260602"
+           alt="Praxura Dashboard — Vorschau der Live-Demo" loading="lazy" decoding="async" />
+      <div class="px-demo-overlay">
+        <span class="px-demo-popup">Demo starten <span aria-hidden="true">↗</span></span>
+      </div>
+    </div>
+  </a>
+</section>
 
 <!-- ────────────── Problem & Lösung ────────────── -->
 <section class="block" id="problem-loesung" data-reveal>
