@@ -1,6 +1,6 @@
 {
-  "name": "InfinityMade Dashboard",
-  "short_name": "InfinityMade",
+  "name": "Praxura",
+  "short_name": "Praxura",
   "description": "WhatsApp KI-Bot, Online-Buchung und Webdesign-Dashboard für KMU",
   "start_url": "/dashboard.html",
   "scope": "/",
