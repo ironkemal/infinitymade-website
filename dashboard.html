@@ -952,8 +952,8 @@
         <section class="panel" id="panel-abrechnung">
           <div class="panel-header">
             <div>
-              <h2 data-i18n="nav_abrechnung">Kassenabrechnung</h2>
-              <p class="panel-sub" data-i18n="abrechnung_sub">Sammelrechnung § 302 SGB V an Krankenkassen</p>
+              <h2 data-i18n="nav_abrechnung">§302-Abrechnung vorbereiten</h2>
+              <p class="panel-sub" data-i18n="abrechnung_sub">Sammelrechnung § 302 SGB V an Krankenkassen vorbereiten</p>
             </div>
           </div>
 
@@ -2082,7 +2082,7 @@
             </div>
 
             <div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
-              <div class="settings-section-title">Abrechnung (Krankenkasse)</div>
+              <div class="settings-section-title">Abrechnungs-Vorbereitung (Krankenkasse)</div>
               <div class="settings-section-body">
 
                 <div id="dtaProCard" style="margin-bottom:16px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);">
@@ -2093,7 +2093,7 @@
                         <span id="dtaProStatusBadge" style="display:none;font-size:11px;padding:2px 8px;border-radius:10px;background:var(--primary-dim);color:var(--primary);border:1px solid rgba(74,222,128,0.3);">Aktiv</span>
                       </div>
                       <div id="dtaProDesc" class="form-hint" style="margin-top:6px;">
-                        Aktiviert das §302 SGB V Sammelabrechnungs-Modul (PKCS#7-Signatur, ZAA-Loop, Begleitzettel).
+                        Aktiviert das §302 SGB V Sammelabrechnungs-Vorbereitungsmodul (PKCS#7-Signatur, ZAA-Loop, Begleitzettel).
                         <strong>+29 €/Monat</strong> oder <strong>+290 €/Jahr</strong> (2 Monate gratis).
                       </div>
                     </div>
@@ -2109,7 +2109,7 @@
                 <div class="form-group">
                   <label class="form-label">Institutionskennzeichen (IK)</label>
                   <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
-                  <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung (Datei „Kassenabrechnung“ in der Seitenleiste).</div>
+                  <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung (Menüpunkt „§302-Abrechnung vorbereiten“ in der Seitenleiste).</div>
                 </div>
                 <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
                 <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
@@ -2898,7 +2898,7 @@
   <div class="modal-overlay" id="dasGuideModal" hidden>
     <div class="modal" style="max-width:680px;">
       <div class="modal-header">
-        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Sammelabrechnung — nächste Schritte</h3>
+        <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> §302-Abrechnung vorbereiten — nächste Schritte</h3>
         <button class="modal-close" data-modal="dasGuideModal">✕</button>
       </div>
       <div class="modal-body">
