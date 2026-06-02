@@ -245,6 +245,18 @@
       display: flex; gap: 1.6rem; align-items: center; flex-wrap: wrap; justify-content: center;
       border: 2px dashed var(--bronze); border-radius: 16px; background: rgba(107, 85, 56, 0.045); padding: 2rem 1.8rem;
     }
+    /* real photos */
+    .px-photo-img {
+      border-radius: 16px; overflow: hidden; background: var(--bg-warm);
+      box-shadow: 0 26px 54px -28px rgba(26, 22, 17, 0.30), 0 4px 12px -5px rgba(26, 22, 17, 0.07);
+    }
+    .px-photo-img img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      filter: saturate(1.04) contrast(1.02);
+    }
+    .px-photo-img.is-wide { aspect-ratio: 16 / 9; }
+    .px-photo-img.is-43 { aspect-ratio: 4 / 3; }
+    .px-photo-img.is-portrait { aspect-ratio: 4 / 5; max-width: 360px; margin: 0 auto; }
 
     /* ── Interactive demo ── */
     .px-demo { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem 2rem; }
@@ -890,12 +902,11 @@
 
 <!-- ░░ FOTO-PLATZHALTER (Bild 1) ░░ -->
 <div class="px-photo-band" data-reveal>
-  <div class="px-photo-ph is-wide">
-    <span class="ph-badge">Bild 1 · echtes Foto (kein Screenshot)</span>
-    <span class="ph-title">Mehr Zeit für den Patienten</span>
-    <span class="ph-desc">Warmes, authentisches Foto: Therapeut:in lächelt und arbeitet entspannt mit einem Patienten in heller Praxis — vermittelt „weniger Papierkram, mehr Mensch". Editorial-Look, weiche Töne, keine sterile Stock-Optik.</span>
-    <span class="ph-dim">Querformat 16:9 · ca. 2000×1125 px · echtes Foto</span>
-  </div>
+  <figure class="px-photo-img is-wide">
+    <img src="assets/img/foto-empfang.webp?v=20260602"
+         alt="Freundliche Empfangskraft berät einen Patienten am Tresen einer modernen Heilmittel-Praxis"
+         loading="lazy" decoding="async" />
+  </figure>
 </div>
 
 <!-- ────────────── 01 · Funktionen ────────────── -->
@@ -995,18 +1006,16 @@
 <!-- ░░ FOTO-PLATZHALTER (Bild 2 + 3) ░░ -->
 <div class="px-photo-band" data-reveal>
   <div class="px-photo-grid">
-    <div class="px-photo-ph is-phone">
-      <span class="ph-badge">Bild 2 · Smartphone-Mockup</span>
-      <span class="ph-title">KI-Rezeptprüfung am Handy</span>
-      <span class="ph-desc">Praxura-Screen in einem schicken Smartphone-Rahmen: Rezept wird abfotografiert, die KI markiert Heilmittel-Position &amp; Absetzungsrisiken. Das eine mobile Produkt-Mockup.</span>
-      <span class="ph-dim">Hochformat 9:16 · Screenshot im Phone-Frame</span>
-    </div>
-    <div class="px-photo-ph is-wide">
-      <span class="ph-badge">Bild 3 · echtes Foto (kein Screenshot)</span>
-      <span class="ph-title">Hausbesuch &amp; Fahrtenbuch</span>
-      <span class="ph-desc">Authentisches Foto: Therapeut:in mit Tablet/Smartphone unterwegs zum Hausbesuch (vor dem Auto oder an der Haustür) — verbindet das elektronische Fahrtenbuch mit dem echten Praxisalltag.</span>
-      <span class="ph-dim">Querformat 16:9 · ca. 2000×1125 px · echtes Foto</span>
-    </div>
+    <figure class="px-photo-img is-portrait">
+      <img src="assets/img/foto-rezept-scan.webp?v=20260602"
+           alt="Praxura App auf dem Smartphone: KI-Rezeptprüfung einer Heilmittelverordnung mit Absetzungsprüfung"
+           loading="lazy" decoding="async" />
+    </figure>
+    <figure class="px-photo-img is-43">
+      <img src="assets/img/foto-hausbesuch.webp?v=20260602"
+           alt="Therapeutin mit Tablet vor dem Auto auf dem Weg zum Hausbesuch"
+           loading="lazy" decoding="async" />
+    </figure>
   </div>
 </div>
 
@@ -1071,26 +1080,11 @@
 
 <!-- ░░ FOTO-PLATZHALTER (Bild 4) ░░ -->
 <div class="px-photo-band" data-reveal>
-  <div class="px-photo-ph is-wide">
-    <span class="ph-badge">Bild 4 · echtes Foto (kein Screenshot)</span>
-    <span class="ph-title">Echte Behandlungsmomente</span>
-    <span class="ph-desc">Authentische Behandlungsszene aus einer der vier Fachrichtungen (Physio · Ergo · Logo · Podo) — Therapeut:in mit Patient, warm und konkret. Schafft Branchen-Nähe: „diese Software ist für genau meinen Beruf gemacht". Kein Stock-Klischee.</span>
-    <span class="ph-dim">Querformat 16:9 · ca. 2000×1125 px · echtes Foto</span>
-  </div>
-</div>
-
-<!-- ░░ FOTO-PLATZHALTER (Bild 5 · Testimonial) ░░ -->
-<div class="px-photo-band" data-reveal>
-  <div class="px-testimonial-ph">
-    <div class="px-photo-ph is-avatar">
-      <span class="ph-badge" style="font-size:0.58rem; padding:0.2rem 0.55rem;">Bild 5</span>
-    </div>
-    <div style="flex:1; min-width:260px; max-width:34rem;">
-      <span class="ph-badge">Testimonial · hier kommt ein echtes Kundenzitat</span>
-      <p style="font-family:var(--serif); font-size:1.15rem; color:var(--ink); line-height:1.5; margin:0.6rem 0;">„Zitat einer echten Therapeutin / eines Praxisinhabers über die Zeitersparnis und weniger Absetzungen mit Praxura."</p>
-      <span class="ph-dim">Rundes Porträtfoto (freundlich, echt) + Name · Praxis · Ort</span>
-    </div>
-  </div>
+  <figure class="px-photo-img is-43" style="max-width: 820px; margin: 0 auto;">
+    <img src="assets/img/foto-behandlung.webp?v=20260602"
+         alt="Physiotherapeutin behandelt die Schulter eines Patienten in einer hellen Praxis"
+         loading="lazy" decoding="async" />
+  </figure>
 </div>
 
 <!-- ────────────── Trust Banner ────────────── -->
