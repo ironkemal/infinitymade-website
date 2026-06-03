@@ -2,9 +2,16 @@
 .agents/
 .claude/
 .mcp.json
+.roo/
 skills-lock.json
 node_modules/
 .env
 .env.local
 .env.*.local
 azure-credentials.local.txt
+
+# Captured browser traffic — can contain live auth tokens (audit 2026-06-03)
+*.har
+
+# Local-only security audit reports (do not publish to public repo)
+SECURITY_AUDIT_*.md
