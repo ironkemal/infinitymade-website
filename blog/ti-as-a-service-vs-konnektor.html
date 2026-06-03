@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9HFT4S0LTX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9HFT4S0LTX', { 'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure' });
+  </script>
+  <script defer src="https://analytics.infinitymade.de/script.js"
+          data-website-id="fa4b493b-35cd-4555-b667-b6a5439471e6"></script>
+
+  <title>TI-as-a-Service vs. lokaler Konnektor: Vergleich für Heilmittel-Praxen 2026 | Praxura</title>
+  <meta name="description" content="TIaaS oder lokaler Konnektor? Was passt für Physio-, Ergo-, Logo- und Podologie-Praxen? Kosten, Wartung, Ausfallsicherheit & Förderfähigkeit im direkten Vergleich." />
+  <meta name="keywords" content="TI as a Service, TIaaS Heilmittel, TI-Gateway, lokaler Konnektor, Konnektor Ablösung, TI Cloud, RISE TI-Gateway, secunet Konnektor" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://praxura.de/blog/ti-as-a-service-vs-konnektor.html" />
+  <meta name="author" content="Praxura Redaktion" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="de_DE" />
+  <meta property="og:site_name" content="Praxura" />
+  <meta property="og:title" content="TI-as-a-Service vs. lokaler Konnektor: Vergleich für Heilmittel-Praxen 2026" />
+  <meta property="og:description" content="Welche TI-Anbindungsform passt zur Heilmittel-Praxis? Cloud-Gateway oder Hardware vor Ort? Kosten, Wartung, Ausfallsicherheit im Detail." />
+  <meta property="og:url" content="https://praxura.de/blog/ti-as-a-service-vs-konnektor.html" />
+  <meta property="og:image" content="https://praxura.de/og-image.png" />
+  <meta property="article:published_time" content="2026-06-03T14:00:00+02:00" />
+  <meta property="article:section" content="Telematikinfrastruktur" />
+  <meta property="article:tag" content="TIaaS" />
+  <meta property="article:tag" content="Konnektor" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="TIaaS oder Konnektor? Ein klarer Vergleich für Heilmittel-Praxen" />
+  <meta name="twitter:description" content="Cloud-Gateway oder lokale Hardware? Kosten, Wartung und Förderfähigkeit im Detail." />
+
+  <link rel="stylesheet" href="../fonts/system-fonts.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#FAFAF9" />
+  <link rel="stylesheet" href="../assets/system.css" />
+  <link rel="stylesheet" href="blog.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "TI-as-a-Service vs. lokaler Konnektor: Vergleich für Heilmittel-Praxen 2026",
+    "description": "Vergleich der TI-Anbindungsoptionen für Heilmittel-Praxen: Cloud-Gateway (TIaaS) gegen lokalen Hardware-Konnektor. Kosten, Wartung, Ausfallsicherheit, Förderfähigkeit.",
+    "author": { "@type": "Person", "name": "Praxura Redaktion" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "InfinityMade",
+      "logo": { "@type": "ImageObject", "url": "https://praxura.de/og-image.png" }
+    },
+    "datePublished": "2026-06-03T14:00:00+02:00",
+    "dateModified": "2026-06-03T14:00:00+02:00",
+    "inLanguage": "de-DE",
+    "mainEntityOfPage": "https://praxura.de/blog/ti-as-a-service-vs-konnektor.html",
+    "image": "https://praxura.de/og-image.png",
+    "articleSection": "Telematikinfrastruktur"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://praxura.de/" },
+      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://praxura.de/blog/" },
+      { "@type": "ListItem", "position": 3, "name": "TIaaS vs. Konnektor", "item": "https://praxura.de/blog/ti-as-a-service-vs-konnektor.html" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Was ist der Unterschied zwischen TIaaS und lokalem Konnektor?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Der lokale Konnektor ist eine Hardware-Box, die in der Praxis steht und den verschlüsselten TI-Tunnel aufbaut. TIaaS (TI as a Service) verschiebt diese Funktion in das Rechenzentrum eines zertifizierten Anbieters — die Praxis nutzt eine Cloud-VPN-Anbindung statt eigener Hardware." }
+      },
+      {
+        "@type": "Question",
+        "name": "Was empfiehlt die gematik für neue Anschlüsse?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Die gematik treibt aktiv die Ablösung der Hardware-Konnektoren voran. Neue Praxen sollten direkt mit TIaaS starten — alte Hardware-Konnektoren werden mit Auslaufen ihrer Zertifikate (typisch 5 Jahre) sukzessive abgeschaltet." }
+      },
+      {
+        "@type": "Question",
+        "name": "Kostet TIaaS weniger als ein Hardware-Konnektor?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Über die Gesamtlaufzeit ja. Hardware-Konnektoren verursachen einmalige Anschaffungskosten von oft 1.500–2.500 €, plus Wartung und Zertifikats-Tausch. TIaaS hat keine Anschaffungskosten und stattdessen eine monatliche Pauschale (typisch 50–80 €), die über die GKV-TI-Pauschale refinanziert wird." }
+      },
+      {
+        "@type": "Question",
+        "name": "Ist TIaaS sicher genug?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. TIaaS-Anbieter müssen exakt dieselben gematik-Sicherheitsanforderungen erfüllen wie Hardware-Konnektoren. Der einzige Unterschied ist der physische Standort der Krypto-Komponente — die kryptografische Sicherheit ist identisch." }
+      },
+      {
+        "@type": "Question",
+        "name": "Welche TI-Anbindung unterstützt Praxura?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Praxura arbeitet bevorzugt mit TIaaS-Partnern zusammen, da diese den geringsten Wartungsaufwand für die Praxis bedeuten. Bestehende Hardware-Konnektoren können in der Übergangszeit weiter genutzt werden." }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Prax<em>ura</em></a>
+  <a href="/praxis.html" class="nav-link">Funktionen</a>
+  <a href="/#preise" class="nav-link">Preise</a>
+  <a href="/blog/" class="nav-link" aria-current="page" style="color: var(--ink); background: rgba(26,22,17,0.04);">Insights</a>
+  <a href="https://app.praxura.de" class="nav-login">Login</a>
+  <a href="/#kontakt" class="nav-cta">Demo<span class="nav-cta-circle" aria-hidden="true">↗</span></a>
+</nav>
+
+<header class="hero">
+  <div class="hero-meta" data-reveal>
+    <span><strong>Telematikinfrastruktur</strong></span>
+    <span class="hero-meta-divider" aria-hidden="true"></span>
+    <span>8 Minuten Lesezeit</span>
+    <span class="hero-meta-divider" aria-hidden="true"></span>
+    <span>Veröffentlicht Juni 2026</span>
+  </div>
+  <h1 class="hero-title" data-reveal>
+    TI-as-a-Service vs. lokaler Konnektor.<br />
+    <span class="hero-title-soft">Der ehrliche Vergleich für Heilmittel-Praxen 2026/2027</span>
+  </h1>
+  <p class="hero-lede" data-reveal>
+    Wer 2026 oder 2027 eine TI-Anbindung neu aufsetzt, steht vor einer Architektur-Entscheidung: Hardware-Konnektor in der Praxis aufstellen oder Cloud-Gateway (TIaaS) nutzen? Beide Wege sind gematik-zertifiziert. Aber sie unterscheiden sich massiv bei Kosten, Wartung und Zukunftssicherheit. Dieser Artikel zeigt, was für welche Praxis-Größe wirklich Sinn ergibt.
+  </p>
+
+  <div data-reveal style="margin-top: 2rem; padding: 1.5rem 1.75rem; border-left: 3px solid var(--ink); background: var(--surface); border-radius: 0 12px 12px 0;">
+    <strong style="display: block; margin-bottom: 0.5rem; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);">Kurz und knapp — TIaaS oder Konnektor?</strong>
+    <p style="margin: 0; line-height: 1.6;">
+      <strong>Neue Praxis:</strong> immer TIaaS — keine Hardware, automatische Updates. <strong>Bestehender Konnektor mit auslaufendem Zertifikat:</strong> wechseln. <strong>5-Jahres-Kosten:</strong> Konnektor ≈ 5.900 €, TIaaS ≈ 3.900 € (rund 2.000 € Vorteil für TIaaS). <strong>Förderpauschale:</strong> beide gleich anspruchsberechtigt. <strong>gematik-Roadmap (TI 2.0):</strong> Hardware-Konnektoren werden abgelöst.
+    </p>
+  </div>
+</header>
+
+<section class="steps-section">
+  <aside class="progress" aria-label="Fortschritt">
+    <div class="progress-head">Inhalt</div>
+    <button class="progress-item" data-target="step-1"><span class="progress-num">1</span><span>Was ist was?</span></button>
+    <button class="progress-item" data-target="step-2"><span class="progress-num">2</span><span>Direktvergleich</span></button>
+    <button class="progress-item" data-target="step-3"><span class="progress-num">3</span><span>Kosten</span></button>
+    <button class="progress-item" data-target="step-4"><span class="progress-num">4</span><span>Migration</span></button>
+    <button class="progress-item" data-target="step-5"><span class="progress-num">5</span><span>Empfehlung</span></button>
+  </aside>
+
+  <div class="steps">
+    <article class="step" id="step-1">
+      <div class="step-num-row" data-reveal>
+        <span class="step-num">01 / 05</span>
+        <span class="step-num-line"></span>
+        <span class="step-tag">Grundlagen</span>
+      </div>
+      <h2 class="step-title" data-reveal>Was sind Konnektor und TIaaS überhaupt?</h2>
+      <p class="step-lede" data-reveal>
+        Beide Begriffe beschreiben dasselbe Ziel: den verschlüsselten Zugang Ihrer Praxis-IT zur Telematikinfrastruktur. Unterschieden wird nur, <em>wo</em> diese sicherheitskritische Komponente physisch läuft.
+      </p>
+
+      <div class="step-grid">
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Lokaler Konnektor</span>
+          <p class="step-block-text">
+            Eine zertifizierte Hardware-Box steht in Ihrer Praxis (typischerweise im Serverraum oder neben dem Router). Sie baut den VPN-Tunnel zur TI auf, verarbeitet Karten-Authentifizierungen und stellt Fachdienste bereit. Hersteller: secunet, RISE, CGM, KoCoBox. Geräte sind teils EOL (End-of-Life) und werden nicht mehr verkauft.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">TIaaS (TI as a Service)</span>
+          <p class="step-block-text">
+            Die Konnektor-Funktion läuft im Rechenzentrum eines zertifizierten Anbieters. Ihre Praxis verbindet sich per VPN-Client direkt mit dem Cloud-Konnektor. Hardware vor Ort: lediglich Kartenterminal und Router/Internet — kein eigener Konnektor mehr. Die gematik unterstützt diese Architektur als Standard für die nächsten Jahre.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Hybride Modelle</span>
+          <p class="step-block-text">
+            Manche Anbieter kombinieren lokal installierte Mini-Boxen (für die Karten-Authentifizierung) mit Cloud-Gateway (für die TI-Anbindung). Diese hybriden Lösungen sind ein guter Übergang für Praxen mit ungewöhnlichen Netzwerk-Setups oder mehreren Standorten.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">TI 2.0 als Zielbild</span>
+          <p class="step-block-text">
+            Die gematik-Roadmap "TI 2.0" entfernt sukzessive den Konnektor als zwingendes Hardware-Element. Stattdessen kommunizieren Praxis-Anwendungen direkt mit der TI per Identity-Federation. TIaaS ist damit die zukunftssichere Brückenarchitektur.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <article class="step" id="step-2">
+      <div class="step-num-row" data-reveal>
+        <span class="step-num">02 / 05</span>
+        <span class="step-num-line"></span>
+        <span class="step-tag">Vergleich</span>
+      </div>
+      <h2 class="step-title" data-reveal>Direktvergleich: 8 Kriterien</h2>
+      <p class="step-lede" data-reveal>
+        In der folgenden Tabelle vergleichen wir die beiden Optionen anhand der für Praxis-Inhaber entscheidenden Kriterien. Die Bewertung ist eine Marktbeobachtung 2026 — Einzelangebote können abweichen.
+      </p>
+
+      <div class="table-container" style="overflow-x: auto; margin: 2rem 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);" data-reveal>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--line); background: var(--line-soft);">
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">Kriterium</th>
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">Lokaler Konnektor</th>
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">TIaaS (Cloud)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Einmalige Anschaffung</td>
+              <td style="padding: 1rem; color: var(--ink-3);">1.500–2.500 € (Hardware-Konnektor)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">0 € (keine Hardware)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Laufende Kosten</td>
+              <td style="padding: 1rem; color: var(--ink-3);">30–50 €/Monat (Wartung &amp; Update-Verträge)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">50–80 €/Monat (alles inkl.)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Wartung &amp; Updates</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Vor-Ort durch DVO, oft mit Wartezeit</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Automatisch durch Anbieter, ohne Praxis-Ausfall</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Zertifikats-Tausch (alle 5 J.)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Manuell, kostenintensiv (oft Konnektor-Tausch)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Automatisch, ohne Zusatzkosten</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Ausfallsicherheit</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Single Point of Failure in der Praxis</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Redundantes Rechenzentrum, &gt; 99,5 % SLA</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Mehrere Standorte</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Pro Standort ein Konnektor</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Ein Cloud-Konnektor für alle Standorte</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Förderpauschale GKV</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Ja (gleicher Anspruch)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Ja (gleicher Anspruch)</td>
+            </tr>
+            <tr>
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Zukunftssicherheit (TI 2.0)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Auslaufend / Ablösung geplant</td>
+              <td style="padding: 1rem; color: var(--ink-3);">Aktiv geförderte Zielarchitektur</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p data-reveal>
+        <strong>Kurzfazit der Tabelle:</strong> TIaaS gewinnt bei sieben von acht Kriterien. Der einzige Punkt, bei dem ein lokaler Konnektor noch leicht punkten kann, sind die laufenden Monatskosten in der Ist-Sicht — aber nur, wenn man die Einmal-Anschaffung außen vorlässt. Über fünf Jahre gerechnet ist TIaaS in der Regel deutlich günstiger.
+      </p>
+    </article>
+
+    <article class="step" id="step-3">
+      <div class="step-num-row" data-reveal>
+        <span class="step-num">03 / 05</span>
+        <span class="step-num-line"></span>
+        <span class="step-tag">Kosten</span>
+      </div>
+      <h2 class="step-title" data-reveal>5-Jahres-Kostenrechnung im Beispiel</h2>
+      <p class="step-lede" data-reveal>
+        Zahlen lügen nicht. Wir rechnen eine typische Einzel-Praxis (Physiotherapie, 4 Therapeut:innen, 1 Standort) über 5 Jahre durch — einmal mit lokalem Konnektor, einmal mit TIaaS. Pauschalen sind Stand 2026, alle Angaben ohne Gewähr.
+      </p>
+
+      <div class="table-container" style="overflow-x: auto; margin: 2rem 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);" data-reveal>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--line); background: var(--line-soft);">
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">Position (über 5 Jahre)</th>
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">Lokaler Konnektor</th>
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">TIaaS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Anschaffung Konnektor</td>
+              <td style="padding: 1rem; color: var(--ink-3);">2.000 €</td>
+              <td style="padding: 1rem; color: var(--ink-3);">0 €</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Wartung (40 €/M × 60)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">2.400 €</td>
+              <td style="padding: 1rem; color: var(--ink-3);">—</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">TIaaS-Gebühr (65 €/M × 60)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">—</td>
+              <td style="padding: 1rem; color: var(--ink-3);">3.900 €</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Zertifikats-/Hardware-Tausch nach 5 J.</td>
+              <td style="padding: 1rem; color: var(--ink-3);">1.500 € (anstehend)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">0 €</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Brutto-Kosten Praxis</td>
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 600;">5.900 €</td>
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 600;">3.900 €</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);">
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">GKV-TI-Pauschale (213,75 € × 60)</td>
+              <td style="padding: 1rem; color: var(--ink-3);">12.825 €</td>
+              <td style="padding: 1rem; color: var(--ink-3);">12.825 €</td>
+            </tr>
+            <tr>
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Netto-Ergebnis</td>
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 600;">+ 6.925 €</td>
+              <td style="padding: 1rem; color: var(--ink-2); font-weight: 600;">+ 8.925 €</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="font-size: 0.8rem; color: var(--ink-4); font-style: italic;" data-reveal>
+        Hinweis: Beispielrechnung für eine Physio-Einzelpraxis, eine SMC-B, ohne eHBA-Zuschläge (die werden separat erstattet). Die genaue Pauschalenhöhe variiert je nach Fachbereich (vgl. <a href="/blog/telematikinfrastruktur-heilmittelerbringer-2027.html">TI-Anschluss 2027</a>).
+      </p>
+
+      <p data-reveal>
+        Ergebnis: Beide Modelle laufen für die Praxis ins Plus, da die GKV-Pauschale die Kosten überkompensiert. <strong>TIaaS ist über 5 Jahre rund 2.000 € günstiger</strong> — und vermeidet zusätzlich den Aufwand von Hardware-Tausch, Vor-Ort-Wartung und potenziellen Ausfällen.
+      </p>
+    </article>
+
+    <article class="step" id="step-4">
+      <div class="step-num-row" data-reveal>
+        <span class="step-num">04 / 05</span>
+        <span class="step-num-line"></span>
+        <span class="step-tag">Umstieg</span>
+      </div>
+      <h2 class="step-title" data-reveal>Migration: vom Konnektor zu TIaaS</h2>
+      <p class="step-lede" data-reveal>
+        Wer bereits einen lokalen Konnektor hat, muss nicht panisch wechseln — aber wer einen Konnektor mit auslaufendem Zertifikat hat, sollte den Wechsel ins Auge fassen. Der Migrationsprozess ist deutlich einfacher als die Erstanbindung.
+      </p>
+
+      <div class="step-grid">
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Schritt 1: SMC-B prüfen</span>
+          <p class="step-block-text">
+            Die SMC-B-Karte bleibt erhalten und wird einfach im neuen TIaaS-Setup registriert. Keine neue Karten-Bestellung nötig — das spart 2–4 Wochen Wartezeit.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Schritt 2: TIaaS-Anbieter wählen</span>
+          <p class="step-block-text">
+            Achten Sie auf Anbieter, die auch Ihr Praxis-IT-Setup unterstützen (Windows/Mac, Anbindung Kartenterminal, Praxissoftware-Schnittstellen). Praxura arbeitet mit etablierten TIaaS-Partnern, sodass Sie nicht selbst recherchieren müssen.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Schritt 3: Parallelbetrieb</span>
+          <p class="step-block-text">
+            Idealerweise läuft der TIaaS-Tunnel zunächst parallel zum bestehenden Konnektor. Sie testen Karten-Authentifizierung, KIM und §302-Versand. Erst nach erfolgreichem Test wird der alte Konnektor stillgelegt.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Schritt 4: Pauschale aktualisieren</span>
+          <p class="step-block-text">
+            Melden Sie den Wechsel bei Ihrer Zulassungsstelle. Die GKV-Pauschale läuft weiter, der Auszahlungsweg bleibt identisch. Lediglich der Komponenten-Nachweis muss aktualisiert werden.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <article class="step" id="step-5">
+      <div class="step-num-row" data-reveal>
+        <span class="step-num">05 / 05</span>
+        <span class="step-num-line"></span>
+        <span class="step-tag">Empfehlung</span>
+      </div>
+      <h2 class="step-title" data-reveal>Unsere Empfehlung für Heilmittel-Praxen</h2>
+      <p class="step-lede" data-reveal>
+        Aus Kosten-, Wartungs- und Zukunfts-Perspektive ist die Empfehlung klar — wobei die Größe der Praxis und vorhandene Hardware berücksichtigt werden sollten.
+      </p>
+
+      <div class="step-grid">
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Neue Praxis / Erstanbindung</span>
+          <p class="step-block-text">
+            <strong>TIaaS, eindeutig.</strong> Keine Hardware-Investition, sofort startklar, automatische Updates, geringeres Ausfallrisiko. Auch die <a href="/blog/praxis-digitalisieren-7-schritte-checkliste.html">Praxis-Digitalisierungs-Checkliste</a> empfiehlt den Cloud-Weg als Standard.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Bestehender Konnektor (jung)</span>
+          <p class="step-block-text">
+            Hat Ihr Konnektor noch &gt; 2 Jahre Zertifikat-Laufzeit, läuft alles stabil und sind Sie an einem Standort — keine Eile. Geplant umstellen, wenn die Wartungsverträge auslaufen.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Bestehender Konnektor (alt)</span>
+          <p class="step-block-text">
+            Läuft Ihr Zertifikat in &lt; 12 Monaten aus oder steht ein teurer Konnektor-Tausch an? <strong>Jetzt auf TIaaS wechseln.</strong> Sie sparen den Hardware-Tausch und gewinnen die Komfort-Vorteile.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Mehrere Standorte</span>
+          <p class="step-block-text">
+            Filialbetriebe profitieren am stärksten von TIaaS: Ein Cloud-Konnektor bedient alle Standorte, Sie sparen die Anschaffung mehrerer Hardware-Boxen. Auch der zentrale <a href="/blog/heilmittel-selbst-abrechnen-vs-abrechnungszentrum.html">§302-Versand</a> wird damit einfacher.
+          </p>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<div class="pull" data-reveal>
+  <p class="pull-text">
+    "Der lokale Konnektor war eine pragmatische Lösung der TI-1.0-Ära. Heute ist er Wartungslast — TIaaS ist der ehrlichere Weg."
+  </p>
+  <p class="pull-attribution">Praxura Redaktion</p>
+</div>
+
+<section class="cta-section" data-reveal>
+  <div class="cta">
+    <div class="cta-label">TI ohne Hardware-Last</div>
+    <h3 class="cta-title">Praxura kombiniert TIaaS, KIM und §302-Abrechnung in einer Oberfläche.</h3>
+    <p class="cta-text">
+      Lassen Sie sich in einer kostenlosen Demo zeigen, wie der TIaaS-Anschluss in Praxura aussieht — vom Kartenterminal-Onboarding über die KIM-Adresse bis zum signierten §302-Versand. Eine Oberfläche, ein Vertrag, ein Ansprechpartner.
+    </p>
+    <div class="cta-actions">
+      <a href="/#kontakt" class="btn-primary">
+        Demo vereinbaren
+        <span class="btn-primary-arrow" aria-hidden="true">↗</span>
+      </a>
+      <a href="/ti-anbindung-heilmittel.html" class="btn-quiet">TI-Modul ansehen</a>
+    </div>
+  </div>
+</section>
+
+<section class="faq-section" data-reveal>
+  <div class="faq-head">
+    <h2 class="faq-title">Häufige Fragen zu TIaaS vs. Konnektor</h2>
+    <p class="faq-sub">Was Praxisinhaber:innen beim Wechsel beachten sollten.</p>
+  </div>
+  <div class="faq-list">
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Was ist der Unterschied zwischen TIaaS und lokalem Konnektor?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Der lokale Konnektor ist eine Hardware-Box in Ihrer Praxis. TIaaS verschiebt dieselbe Funktion in das Rechenzentrum eines zertifizierten Anbieters — Sie nutzen einen Cloud-VPN-Tunnel statt eigener Hardware. Sicherheits-Niveau ist identisch.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Was empfiehlt die gematik für neue Anschlüsse?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Die gematik treibt aktiv die Ablösung der Hardware-Konnektoren voran (TI 2.0). Neue Praxen sollten direkt mit TIaaS starten — alte Konnektoren werden mit Auslaufen ihrer Zertifikate sukzessive abgeschaltet.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Kostet TIaaS weniger als ein Hardware-Konnektor?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Über 5 Jahre gerechnet ja — in unserem Rechenbeispiel ca. 2.000&nbsp;€ Vorteil für TIaaS. Hardware-Konnektoren erzeugen einmalige Anschaffung (1.500–2.500&nbsp;€) plus Wartung; TIaaS hat nur eine monatliche Pauschale, die über die GKV-TI-Pauschale refinanziert wird.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Ist TIaaS sicher genug?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Ja. TIaaS-Anbieter erfüllen exakt dieselben gematik-Sicherheitsanforderungen wie Hardware-Konnektoren. Der einzige Unterschied ist der physische Standort der Krypto-Komponente. Rechtlich und kryptografisch gleichwertig.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Welche TI-Anbindung unterstützt Praxura?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Praxura arbeitet bevorzugt mit TIaaS-Partnern zusammen, da diese den geringsten Wartungsaufwand bedeuten. Bestehende Hardware-Konnektoren können in der Übergangszeit weiter genutzt und später migriert werden — wir unterstützen den Wechsel.
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Prax<em>ura</em></div>
+      <div class="footer-tagline">Praxissoftware für Heilmittelerbringer — TI-ready, KI-gestützt, kommissionsfrei.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Produkt</h4>
+      <ul>
+        <li><a href="/praxis.html">Funktionen</a></li>
+        <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
+        <li><a href="/heilmittelabrechnung-software.html">§302-Abrechnung</a></li>
+        <li><a href="/blog/">Insights</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Fachbereiche</h4>
+      <ul>
+        <li><a href="/praxissoftware-physiotherapie.html">Physiotherapie</a></li>
+        <li><a href="/praxissoftware-ergotherapie.html">Ergotherapie</a></li>
+        <li><a href="/praxissoftware-logopaedie.html">Logopädie</a></li>
+        <li><a href="/praxissoftware-podologie.html">Podologie</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<script src="../assets/system.js?v=20260524"></script>
+<script>
+  document.querySelectorAll('.faq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      const body = btn.nextElementSibling;
+      if (body) body.style.maxHeight = expanded ? null : body.scrollHeight + 'px';
+    });
+  });
+</script>
+</body>
+</html>

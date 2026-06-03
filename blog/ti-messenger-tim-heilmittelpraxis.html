@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9HFT4S0LTX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9HFT4S0LTX', { 'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure' });
+  </script>
+  <script defer src="https://analytics.infinitymade.de/script.js"
+          data-website-id="fa4b493b-35cd-4555-b667-b6a5439471e6"></script>
+
+  <title>TI-Messenger (TIM): Live-Chat über die Telematikinfrastruktur 2026 | Praxura</title>
+  <meta name="description" content="TIM (TI-Messenger) ist der Echtzeit-Chat der Telematikinfrastruktur — Matrix-basiert, Ende-zu-Ende-verschlüsselt. Was Heilmittel-Praxen über TIM wissen müssen, Unterschiede zu KIM, Anwendungsfälle." />
+  <meta name="keywords" content="TI-Messenger, TIM, Matrix Heilmittel, Echtzeit Kommunikation TI, TIM vs KIM, gematik Messenger, Heilmittel Chat" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://praxura.de/blog/ti-messenger-tim-heilmittelpraxis.html" />
+  <meta name="author" content="Praxura Redaktion" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="de_DE" />
+  <meta property="og:site_name" content="Praxura" />
+  <meta property="og:title" content="TI-Messenger (TIM): Live-Chat über die Telematikinfrastruktur 2026" />
+  <meta property="og:description" content="Matrix-basierter Echtzeit-Chat in der TI — was Heilmittel-Praxen wissen müssen." />
+  <meta property="og:url" content="https://praxura.de/blog/ti-messenger-tim-heilmittelpraxis.html" />
+  <meta property="og:image" content="https://praxura.de/og-image.png" />
+  <meta property="article:published_time" content="2026-06-03T17:00:00+02:00" />
+  <meta property="article:section" content="Telematikinfrastruktur" />
+  <meta property="article:tag" content="TIM" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="TI-Messenger (TIM) für Heilmittel-Praxen" />
+  <meta name="twitter:description" content="Matrix-basierter Echtzeit-Chat der TI — Anwendungsfälle und Unterschiede zu KIM." />
+
+  <link rel="stylesheet" href="../fonts/system-fonts.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#FAFAF9" />
+  <link rel="stylesheet" href="../assets/system.css" />
+  <link rel="stylesheet" href="blog.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "TI-Messenger (TIM): Live-Chat über die Telematikinfrastruktur 2026",
+    "description": "TIM ist der Matrix-basierte Echtzeit-Messenger der TI für Leistungserbringer. Funktionen, Unterschiede zu KIM und Anwendungsfälle in Heilmittel-Praxen.",
+    "author": { "@type": "Person", "name": "Praxura Redaktion" },
+    "publisher": { "@type": "Organization", "name": "InfinityMade", "logo": { "@type": "ImageObject", "url": "https://praxura.de/og-image.png" } },
+    "datePublished": "2026-06-03T17:00:00+02:00",
+    "dateModified": "2026-06-03T17:00:00+02:00",
+    "inLanguage": "de-DE",
+    "mainEntityOfPage": "https://praxura.de/blog/ti-messenger-tim-heilmittelpraxis.html",
+    "image": "https://praxura.de/og-image.png",
+    "articleSection": "Telematikinfrastruktur"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://praxura.de/" },
+      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://praxura.de/blog/" },
+      { "@type": "ListItem", "position": 3, "name": "TI-Messenger (TIM)", "item": "https://praxura.de/blog/ti-messenger-tim-heilmittelpraxis.html" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Was ist der TI-Messenger?", "acceptedAnswer": { "@type": "Answer", "text": "TIM ist der Echtzeit-Chat der Telematikinfrastruktur, technisch auf dem offenen Matrix-Protokoll basierend. Im Gegensatz zu KIM (E-Mail-artig, asynchron) ermöglicht TIM synchrone Chat-Kommunikation, Gruppenräume und perspektivisch Audio-/Video-Calls — Ende-zu-Ende-verschlüsselt." } },
+      { "@type": "Question", "name": "Was unterscheidet TIM von KIM?", "acceptedAnswer": { "@type": "Answer", "text": "KIM ist asynchrone, formale Korrespondenz (vergleichbar verschlüsselte E-Mail) — ideal für Therapieberichte und rechtssicheren Austausch. TIM ist synchrone Echtzeit-Kommunikation (Chat, Push-Benachrichtigungen) — ideal für schnelle Rückfragen und Koordination." } },
+      { "@type": "Question", "name": "Brauche ich TIM in einer Heilmittelpraxis?", "acceptedAnswer": { "@type": "Answer", "text": "TIM ist optional. Sinnvoll für Praxen mit hoher Frequenz an Arzt-Rückfragen, Klinik-Anbindungen oder Praxen, die schnelle Koordination mit Pflegediensten und Reha-Einrichtungen benötigen. Pflicht ist es nicht." } },
+      { "@type": "Question", "name": "Was kostet TIM?", "acceptedAnswer": { "@type": "Answer", "text": "TIM-Postfächer werden meist als Bestandteil von TI-as-a-Service-Paketen oder durch separate TIM-Anbieter angeboten. Kosten typischerweise 5–10 €/Monat pro Praxis. In Kombi-Paketen oft inkludiert. Refinanzierung über TI-Förderpauschale ist anbieterabhängig." } },
+      { "@type": "Question", "name": "Ist TIM sicher?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. TIM nutzt Ende-zu-Ende-Verschlüsselung (Matrix-Standard mit gematik-Profilen). Identitäten sind über SMC-B/eHBA verifiziert — kein Spam, kein Phishing. Server stehen in deutschen, ISO-zertifizierten Rechenzentren." } }
+    ]
+  }
+  </script>
+</head>
+<body>
+
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Prax<em>ura</em></a>
+  <a href="/praxis.html" class="nav-link">Funktionen</a>
+  <a href="/#preise" class="nav-link">Preise</a>
+  <a href="/blog/" class="nav-link" aria-current="page" style="color: var(--ink); background: rgba(26,22,17,0.04);">Insights</a>
+  <a href="https://app.praxura.de" class="nav-login">Login</a>
+  <a href="/#kontakt" class="nav-cta">Demo<span class="nav-cta-circle" aria-hidden="true">↗</span></a>
+</nav>
+
+<header class="hero">
+  <div class="hero-meta" data-reveal>
+    <span><strong>Telematikinfrastruktur</strong></span>
+    <span class="hero-meta-divider" aria-hidden="true"></span>
+    <span>7 Minuten Lesezeit</span>
+    <span class="hero-meta-divider" aria-hidden="true"></span>
+    <span>Veröffentlicht Juni 2026</span>
+  </div>
+  <h1 class="hero-title" data-reveal>
+    TI-Messenger (TIM).<br />
+    <span class="hero-title-soft">Echtzeit-Chat in der Telematikinfrastruktur — und was er für Heilmittel-Praxen leistet</span>
+  </h1>
+  <p class="hero-lede" data-reveal>
+    KIM für die formale, rechtssichere Korrespondenz — TIM für die schnelle, alltägliche Rückfrage. Der TI-Messenger ergänzt das KIM-Postfach um eine Echtzeit-Komponente: Chat, Gruppenräume, Push-Benachrichtigungen — alles über ein offenes Matrix-Protokoll, Ende-zu-Ende verschlüsselt. Dieser Leitfaden zeigt, was TIM wirklich kann und ob er sich für Heilmittel-Praxen lohnt.
+  </p>
+
+  <div data-reveal style="margin-top: 2rem; padding: 1.5rem 1.75rem; border-left: 3px solid var(--ink); background: var(--surface); border-radius: 0 12px 12px 0;">
+    <strong style="display: block; margin-bottom: 0.5rem; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);">Kurz und knapp — TIM vs. KIM</strong>
+    <p style="margin: 0; line-height: 1.6;">
+      <strong>KIM:</strong> asynchron (E-Mail-artig) — für Therapieberichte und formale Korrespondenz. <strong>TIM:</strong> synchron (Chat-artig) — für schnelle Arzt-Rückfragen, Reha-Gruppenräume mit Klinik + Pflegedienst, Push-Benachrichtigungen. <strong>Pflicht:</strong> nein. <strong>Kosten:</strong> 5–10 €/Monat, oft im TIaaS-Paket inkludiert. <strong>Sicherheit:</strong> Matrix-Protokoll, Ende-zu-Ende-Verschlüsselung, SMC-B-verifizierte Identitäten.
+    </p>
+  </div>
+</header>
+
+<section class="steps-section">
+  <aside class="progress" aria-label="Fortschritt">
+    <div class="progress-head">Inhalt</div>
+    <button class="progress-item" data-target="step-1"><span class="progress-num">1</span><span>Was ist TIM?</span></button>
+    <button class="progress-item" data-target="step-2"><span class="progress-num">2</span><span>TIM vs. KIM</span></button>
+    <button class="progress-item" data-target="step-3"><span class="progress-num">3</span><span>Anwendungsfälle</span></button>
+    <button class="progress-item" data-target="step-4"><span class="progress-num">4</span><span>Einrichtung</span></button>
+    <button class="progress-item" data-target="step-5"><span class="progress-num">5</span><span>Praxura &amp; TIM</span></button>
+  </aside>
+
+  <div class="steps">
+    <article class="step" id="step-1">
+      <div class="step-num-row" data-reveal><span class="step-num">01 / 05</span><span class="step-num-line"></span><span class="step-tag">Grundlagen</span></div>
+      <h2 class="step-title" data-reveal>Was ist der TI-Messenger?</h2>
+      <p class="step-lede" data-reveal>
+        Der TI-Messenger (TIM) ist die Echtzeit-Kommunikations-Plattform der Telematikinfrastruktur. Technisch basiert er auf dem offenen <strong>Matrix-Protokoll</strong> — demselben, das auch hinter Element, Riot und vielen Government-Messengers steht. Die gematik hat das Protokoll mit eigenen Profilen für die TI angepasst und bietet eine zertifizierte Infrastruktur an.
+      </p>
+
+      <div class="step-grid">
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Föderiert &amp; offen</span>
+          <p class="step-block-text">
+            Wie E-Mail ist Matrix föderiert: Verschiedene Anbieter betreiben verschiedene Server, alle können untereinander kommunizieren. Sie sind also nicht an einen einzigen Anbieter gebunden — Wechsel und Wettbewerb sind eingebaut.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Ende-zu-Ende-verschlüsselt</span>
+          <p class="step-block-text">
+            Wie bei KIM: Nachrichten verlassen Ihr Gerät nur verschlüsselt. Selbst der TIM-Anbieter kann den Inhalt nicht einsehen. Schlüssel werden über die SMC-B / den eHBA verwaltet.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Mehr als Text</span>
+          <p class="step-block-text">
+            TIM unterstützt Textnachrichten, Datei-Anhänge, Gruppenräume (z. B. ein dauerhafter "OP-Nachsorge"-Raum mit Klinik und drei umliegenden Heilmittel-Praxen) und perspektivisch Audio-/Video-Calls.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Verifizierte Identitäten</span>
+          <p class="step-block-text">
+            Jeder TIM-Account ist an eine SMC-B-Karte gebunden — Sie wissen immer, mit welcher Praxis Sie chatten. Spam und Phishing sind damit praktisch ausgeschlossen.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <article class="step" id="step-2">
+      <div class="step-num-row" data-reveal><span class="step-num">02 / 05</span><span class="step-num-line"></span><span class="step-tag">Vergleich</span></div>
+      <h2 class="step-title" data-reveal>TIM vs. KIM — wann brauche ich was?</h2>
+      <p class="step-lede" data-reveal>
+        TIM ersetzt KIM nicht — die beiden Dienste lösen unterschiedliche Probleme. Eine ausgereifte Praxis nutzt beide: TIM für die schnelle Koordination, KIM für die formale, signierte Korrespondenz.
+      </p>
+
+      <div class="table-container" style="overflow-x: auto; margin: 2rem 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);" data-reveal>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--line); background: var(--line-soft);">
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">Kriterium</th>
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">KIM</th>
+              <th style="padding: 1rem; font-weight: 600; color: var(--ink);">TIM</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Kommunikationsart</td><td style="padding: 1rem; color: var(--ink-3);">Asynchron (E-Mail-artig)</td><td style="padding: 1rem; color: var(--ink-3);">Synchron (Chat-artig)</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Ideal für</td><td style="padding: 1rem; color: var(--ink-3);">Therapieberichte, Befunde, formale Korrespondenz</td><td style="padding: 1rem; color: var(--ink-3);">Schnelle Rückfragen, Koordination, Gruppenräume</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Push-Benachrichtigungen</td><td style="padding: 1rem; color: var(--ink-3);">Optional</td><td style="padding: 1rem; color: var(--ink-3);">Nativ</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Gruppen-/Mehrteilnehmer</td><td style="padding: 1rem; color: var(--ink-3);">Nicht vorgesehen</td><td style="padding: 1rem; color: var(--ink-3);">Ja, dauerhafte Räume</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Audio-/Video-Calls</td><td style="padding: 1rem; color: var(--ink-3);">Nein</td><td style="padding: 1rem; color: var(--ink-3);">Geplant / teilweise verfügbar</td></tr>
+            <tr><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Rechtsverbindlichkeit</td><td style="padding: 1rem; color: var(--ink-3);">Hoch (Empfangsbestätigung)</td><td style="padding: 1rem; color: var(--ink-3);">Niedriger (informell)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p data-reveal>
+        Faustregel: <strong>"Würde ich das per Brief schicken?" → KIM. "Würde ich kurz anrufen oder eine SMS schicken?" → TIM.</strong>
+      </p>
+    </article>
+
+    <article class="step" id="step-3">
+      <div class="step-num-row" data-reveal><span class="step-num">03 / 05</span><span class="step-num-line"></span><span class="step-tag">Use-Cases</span></div>
+      <h2 class="step-title" data-reveal>Konkrete Anwendungsfälle in der Heilmittelpraxis</h2>
+      <p class="step-lede" data-reveal>
+        TIM ist kein "must-have"-Werkzeug für jede Praxis. Aber für die folgenden Szenarien ist er erheblich besser als Telefon oder unverschlüsselte WhatsApp.
+      </p>
+
+      <div class="step-grid">
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Schnelle Arzt-Rückfrage</span>
+          <p class="step-block-text">
+            "Patient X hat starke Schmerzen, sollen wir die heutige MT pausieren?" — als TIM-Nachricht statt 20 Minuten in der Telefon-Schleife. Antwort kommt während der Behandlung.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">OP-Nachsorge-Raum</span>
+          <p class="step-block-text">
+            Klinik, Hausarzt und Heilmittel-Praxis teilen einen TIM-Raum für jeden post-operativen Patienten. Reha-Fortschritt und auffällige Symptome werden zentral kommuniziert — keiner muss "auf den anderen warten".
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Pflegedienst-Koordination</span>
+          <p class="step-block-text">
+            Hausbesuchs-Termine mit Pflegediensten abstimmen ("Patient ist heute beim Hausarzt — bitte Termin verschieben"). Schneller und sicherer als Faxe oder unverschlüsselte E-Mail.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Heilmittel-Verbund-Räume</span>
+          <p class="step-block-text">
+            Mehrere Heilmittel-Praxen mit Schwerpunkten (Physio + Logopädie + Ergotherapie) koordinieren komplexe Reha-Fälle in einem gemeinsamen Raum — über Praxis-Grenzen hinweg, datenschutzkonform.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <article class="step" id="step-4">
+      <div class="step-num-row" data-reveal><span class="step-num">04 / 05</span><span class="step-num-line"></span><span class="step-tag">Setup</span></div>
+      <h2 class="step-title" data-reveal>Einrichtung in der Praxis</h2>
+      <p class="step-lede" data-reveal>
+        Die Einrichtung ist deutlich schlanker als die initiale TI-Anbindung. Voraussetzung: aktive SMC-B und ein TI-Gateway.
+      </p>
+
+      <div class="step-grid">
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">1. TIM-Anbieter wählen</span>
+          <p class="step-block-text">
+            Etablierte TIM-Anbieter sind u. a. Akquinet, BeeKeeper.AI, CGM, T-Systems. Häufig im TI-as-a-Service-Paket inkludiert.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">2. Account anlegen</span>
+          <p class="step-block-text">
+            Der Anbieter erstellt einen TIM-Account, gebunden an Ihre SMC-B. Adressformat ähnlich wie KIM (z. B. <em>@praxis-mueller:tim.anbieter.de</em>).
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">3. Client / App</span>
+          <p class="step-block-text">
+            TIM kann über zertifizierte Desktop-Clients oder über die Praxissoftware genutzt werden. Browser-Versionen sind ebenfalls möglich.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">4. Verifizierte Kontakte hinzufügen</span>
+          <p class="step-block-text">
+            Über den zentralen Verzeichnisdienst (denselben wie für KIM) suchen Sie Praxen, Ärzte und Kliniken. Erst nach gegenseitiger Zustimmung tauschen die beiden Accounts Schlüssel aus — danach läuft der Chat.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <article class="step" id="step-5">
+      <div class="step-num-row" data-reveal><span class="step-num">05 / 05</span><span class="step-num-line"></span><span class="step-tag">Praxura</span></div>
+      <h2 class="step-title" data-reveal>So integriert Praxura TIM in den Praxisalltag</h2>
+      <p class="step-lede" data-reveal>
+        Wie bei <a href="/blog/kim-dienst-heilmittelpraxis.html">KIM</a> gilt: Eine separate App ist eine zusätzliche Anwendung — und damit ein zusätzlicher Kontextwechsel. Praxura bindet TIM direkt in die Patientenakte und das Terminmanagement ein.
+      </p>
+
+      <div class="step-grid">
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Patientenbezogene Chats</span>
+          <p class="step-block-text">
+            Aus jedem Patientendossier können Sie einen TIM-Chat mit dem überweisenden Arzt eröffnen. Eingehende Antworten landen direkt im Patientendossier — kein "wo war noch der Chat?".
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Push in den Termin-Kalender</span>
+          <p class="step-block-text">
+            Eingehende TIM-Nachrichten erscheinen als Banner im aktuellen Termin: "Hausarzt zu Patient Müller hat geantwortet" — ohne dass Sie eine zweite App öffnen müssen.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Räume aus dem Reha-Plan</span>
+          <p class="step-block-text">
+            Bei komplexen Reha-Fällen erstellt Praxura auf Knopfdruck einen TIM-Raum mit allen involvierten Leistungserbringern. Sie wählen die Beteiligten, der Raum entsteht.
+          </p>
+        </div>
+        <div class="step-block" data-reveal>
+          <span class="step-block-label">Audit-Log</span>
+          <p class="step-block-text">
+            Auch TIM-Aktivitäten werden — soweit dem Patientenbezug zuordenbar — revisionssicher protokolliert. So bleibt nachvollziehbar, wer wann welche Information ausgetauscht hat.
+          </p>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<div class="pull" data-reveal>
+  <p class="pull-text">
+    "TIM macht aus dem 'kurz anrufen' eine asynchron-synchrone Echtzeit-Kommunikation, die sicher, dokumentiert und stressfrei ist."
+  </p>
+  <p class="pull-attribution">Praxura Redaktion</p>
+</div>
+
+<section class="cta-section" data-reveal>
+  <div class="cta">
+    <div class="cta-label">TIM ohne App-Wechsel</div>
+    <h3 class="cta-title">Praxura macht TIM zum Teil Ihrer Patientenakte.</h3>
+    <p class="cta-text">
+      Sehen Sie in einer kostenlosen Demo, wie patientenbezogene TIM-Chats aus dem Dossier eröffnet werden, wie Push-Benachrichtigungen in den Kalender wandern und wie Reha-Räume in Sekunden entstehen.
+    </p>
+    <div class="cta-actions">
+      <a href="/#kontakt" class="btn-primary">Demo vereinbaren<span class="btn-primary-arrow" aria-hidden="true">↗</span></a>
+      <a href="/ti-anbindung-heilmittel.html" class="btn-quiet">TI-Modul ansehen</a>
+    </div>
+  </div>
+</section>
+
+<section class="faq-section" data-reveal>
+  <div class="faq-head">
+    <h2 class="faq-title">Häufige Fragen zum TI-Messenger</h2>
+    <p class="faq-sub">Was Heilmittel-Praxen über TIM wissen sollten.</p>
+  </div>
+  <div class="faq-list">
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Was ist der TI-Messenger?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        TIM ist der Echtzeit-Chat der Telematikinfrastruktur, technisch auf dem Matrix-Protokoll basierend. Im Gegensatz zu KIM ermöglicht TIM synchrone Kommunikation, Gruppenräume und perspektivisch Audio-/Video-Calls — Ende-zu-Ende-verschlüsselt.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Was unterscheidet TIM von KIM?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        KIM ist asynchrone, formale Korrespondenz (E-Mail-artig) — ideal für Therapieberichte. TIM ist synchroner Chat — ideal für schnelle Rückfragen und Koordination. Beide ergänzen sich.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Brauche ich TIM in einer Heilmittelpraxis?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Optional. Sinnvoll bei hoher Frequenz an Arzt-Rückfragen, Klinik-Anbindungen, oder bei Praxen, die eng mit Pflegediensten und Reha-Einrichtungen koordinieren. Pflicht ist es nicht.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Was kostet TIM?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Typischerweise 5–10&nbsp;€/Monat pro Praxis, oft als Bestandteil von TIaaS-Paketen inkludiert. Refinanzierung über die TI-Förderpauschale ist anbieterabhängig.
+      </div></div>
+    </div>
+    <div class="faq">
+      <button class="faq-btn" aria-expanded="false">
+        <span>Ist TIM sicher?</span>
+        <svg class="faq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="faq-body"><div class="faq-body-inner">
+        Ja. Ende-zu-Ende-Verschlüsselung (Matrix mit gematik-Profilen). Identitäten verifiziert über SMC-B/eHBA — kein Spam, kein Phishing. Server in deutschen ISO-zertifizierten Rechenzentren.
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Prax<em>ura</em></div>
+      <div class="footer-tagline">Praxissoftware für Heilmittelerbringer — TI-ready, KI-gestützt, kommissionsfrei.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Produkt</h4>
+      <ul>
+        <li><a href="/praxis.html">Funktionen</a></li>
+        <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
+        <li><a href="/heilmittelabrechnung-software.html">§302-Abrechnung</a></li>
+        <li><a href="/blog/">Insights</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Fachbereiche</h4>
+      <ul>
+        <li><a href="/praxissoftware-physiotherapie.html">Physiotherapie</a></li>
+        <li><a href="/praxissoftware-ergotherapie.html">Ergotherapie</a></li>
+        <li><a href="/praxissoftware-logopaedie.html">Logopädie</a></li>
+        <li><a href="/praxissoftware-podologie.html">Podologie</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<script src="../assets/system.js?v=20260524"></script>
+<script>
+  document.querySelectorAll('.faq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      const body = btn.nextElementSibling;
+      if (body) body.style.maxHeight = expanded ? null : body.scrollHeight + 'px';
+    });
+  });
+</script>
+</body>
+</html>
