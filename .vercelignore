@@ -1,0 +1,32 @@
+# --- Security: keep non-web content out of the public Vercel build ---
+# (audit 2026-06-03 — these were all reachable with HTTP 200 on praxura.de)
+
+# Docs, plans, internal notes
+*.md
+.plans/
+.planning/
+compliance/
+competitor-research/
+
+# Database schema & scripts (full DB blueprint — do not publish)
+*.sql
+*.py
+
+# VPS backend (deployed separately, not via Vercel)
+api-backend/
+
+# Editor / agent config (contained an n8n API key)
+.roo/
+.agents/
+.claude/
+
+# Captured browser traffic (contained live auth tokens) & junk screenshots
+*.har
+cache/
+app ss/
+web foto/
+dashboard_debug.png
+dashboard_logged_in.png
+gobd_kassenbuch_screenshot.png
+landing_page.png
+zuzahlung_button_rendered.png
