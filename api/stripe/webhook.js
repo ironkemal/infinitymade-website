@@ -7,7 +7,7 @@
 //   - invoice.payment_failed
 //   - checkout.session.completed (initial bind)
 
-import { adminFetch, adminAuthFetch, json } from '../_lib/auth.js';
+import { adminFetch, adminAuthFetch, adminRpc, json } from '../_lib/auth.js';
 import { verifyWebhook, dtaProPriceIds } from '../_lib/stripe.js';
 
 const SECRET = process.env.STRIPE_WEBHOOK_SECRET;
@@ -111,14 +111,19 @@ export default async function handler(req, res) {
         const pendingId = session.metadata?.pending_id;
         if (!pendingId) break;
 
-        const { ok: pOk, data: pRows } = await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}&select=*`);
+        const { ok: pOk, data: pRows } = await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}&select=email,onboarding_data`);
         if (!pOk || !pRows?.[0]) { console.error('[webhook] pending signup not found', pendingId); break; }
         const pending = pRows[0];
+
+        // Decrypt the temp password from Vault (no longer stored as plaintext).
+        const { ok: pwOk, data: pwData } = await adminRpc('pending_signup_consume', { p_pending_id: pendingId });
+        const pendingPassword = typeof pwData === 'string' ? pwData : null;
+        if (!pwOk || !pendingPassword) { console.error('[webhook] could not retrieve pending password', pendingId); break; }
 
         // 1. Create Supabase auth user
         const { ok: uOk, data: uData } = await adminAuthFetch('/admin/users', {
           method: 'POST',
-          body: JSON.stringify({ email: pending.email, password: pending.password, email_confirm: true }),
+          body: JSON.stringify({ email: pending.email, password: pendingPassword, email_confirm: true }),
         });
         if (!uOk) { console.error('[webhook] user creation failed', uData); break; }
         const userId = uData.id;
@@ -239,8 +244,8 @@ export default async function handler(req, res) {
 
 
 
-        // 6. Delete pending signup
-        await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}`, { method: 'DELETE' });
+        // 6. Delete pending signup (+ its Vault secret)
+        await adminRpc('pending_signup_delete', { p_pending_id: pendingId });
         break;
       }
 
