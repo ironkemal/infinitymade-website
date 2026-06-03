@@ -3,7 +3,7 @@
 // Body: { email, password, onboarding_data: object }
 // Returns: { pending_id }
 
-import { adminFetch, json } from '../_lib/auth.js';
+import { adminFetch, adminRpc, json } from '../_lib/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
@@ -16,19 +16,18 @@ export default async function handler(req, res) {
     return json(res, 400, { error: 'onboarding_data fehlt.' });
   }
 
-  // Remove any existing stale pending signup for this email
-  await adminFetch(`/pending_signups?email=eq.${encodeURIComponent(email)}`, { method: 'DELETE' });
-
-  const { ok, data, status } = await adminFetch('/pending_signups', {
-    method: 'POST',
-    body: JSON.stringify({ email, password, onboarding_data }),
+  // Store onboarding data + encrypt the temp password in Vault (no plaintext at rest).
+  // The RPC also purges any prior pending signup (+ its vault secret) for this email.
+  const { ok, data } = await adminRpc('pending_signup_store', {
+    p_email: email,
+    p_onboarding: onboarding_data,
+    p_password: password,
   });
 
-  if (!ok) {
+  const pendingId = typeof data === 'string' ? data : null;
+  if (!ok || !pendingId) {
     return json(res, 502, { error: 'Speichern fehlgeschlagen', details: data });
   }
-
-  const pendingId = data[0]?.id;
 
   // DSGVO Art. 28 / TTDSG: log AGB + AVV consent with IP + timestamp (audit trail).
   // Pre-signup: user_id is null, linked later via pending_id when account is created.
