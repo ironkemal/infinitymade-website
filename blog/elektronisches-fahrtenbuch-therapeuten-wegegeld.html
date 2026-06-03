@@ -51,6 +51,35 @@
   <!-- Link block style -->
   <link rel="stylesheet" href="blog.css" />
 
+  <!-- Schema: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://praxura.de/#organization",
+    "name": "Praxura",
+    "legalName": "InfinityMade (Yavuz Kemal Demir)",
+    "url": "https://praxura.de/",
+    "logo": "https://praxura.de/logo.png",
+    "founder": { "@type": "Person", "name": "Yavuz Kemal Demir" },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Industriestraße 33",
+      "postalCode": "53721",
+      "addressLocality": "Siegburg",
+      "addressRegion": "NRW",
+      "addressCountry": "DE"
+    },
+    "email": "kontakt@infinitymade.de",
+    "areaServed": { "@type": "Country", "name": "Germany" },
+    "knowsAbout": [
+      "Praxissoftware", "Heilmittelabrechnung", "§302 SGB V", "Telematikinfrastruktur",
+      "Physiotherapie", "Ergotherapie", "Logopädie", "Podologie", "Heilmittelerbringer"
+    ],
+    "sameAs": ["https://www.wikidata.org/wiki/Q139764488"]
+  }
+  </script>
+
   <!-- Structured Data: Article -->
   <script type="application/ld+json">
   {
@@ -59,11 +88,7 @@
     "headline": "Elektronisches Fahrtenbuch für Therapeuten: Hausbesuche, Wegegeld & Routenplanung steuerkonform",
     "description": "Elektronisches Fahrtenbuch für Therapeuten: So erfassen Sie Wegegeld, Hausbesuchspauschalen & Routen finanzamts- & GoBD-konform mit Praxura.",
     "author": { "@type": "Organization", "name": "Praxura", "url": "https://praxura.de" },
-    "publisher": {
-      "@type": "Organization",
-      "name": "InfinityMade",
-      "logo": { "@type": "ImageObject", "url": "https://praxura.de/og-image.png" }
-    },
+    "publisher": { "@id": "https://praxura.de/#organization" },
     "datePublished": "2026-06-03",
     "dateModified": "2026-06-03",
     "inLanguage": "de-DE",

@@ -40,6 +40,35 @@
   <!-- ===== Shared design system ===== -->
   <link rel="stylesheet" href="assets/system.css?v=20260524" />
 
+  <!-- ===== Structured Data: Organization ===== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://praxura.de/#organization",
+    "name": "Praxura",
+    "legalName": "InfinityMade (Yavuz Kemal Demir)",
+    "url": "https://praxura.de/",
+    "logo": "https://praxura.de/logo.png",
+    "founder": { "@type": "Person", "name": "Yavuz Kemal Demir" },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Industriestraße 33",
+      "postalCode": "53721",
+      "addressLocality": "Siegburg",
+      "addressRegion": "NRW",
+      "addressCountry": "DE"
+    },
+    "email": "kontakt@infinitymade.de",
+    "areaServed": { "@type": "Country", "name": "Germany" },
+    "knowsAbout": [
+      "Praxissoftware", "Heilmittelabrechnung", "§302 SGB V", "Telematikinfrastruktur",
+      "Physiotherapie", "Ergotherapie", "Logopädie", "Podologie", "Heilmittelerbringer"
+    ],
+    "sameAs": ["https://www.wikidata.org/wiki/Q139764488"]
+  }
+  </script>
+
   <!-- ===== Structured Data: SoftwareApplication ===== -->
   <script type="application/ld+json">
   {
@@ -52,12 +81,7 @@
     "operatingSystem": "Web",
     "url": "https://praxura.de/ti-anbindung-heilmittel.html",
     "description": "All-in-One Praxissoftware mit optionaler Schnittstelle zur Telematikinfrastruktur (TI) für Heilmittelpraxen (Physiotherapie, Ergotherapie, Logopädie, Podologie).",
-    "publisher": {
-      "@type": "Organization",
-      "@id": "https://infinitymade.de/#organization",
-      "name": "InfinityMade",
-      "url": "https://infinitymade.de/"
-    },
+    "publisher": { "@id": "https://praxura.de/#organization" },
     "offers": {
       "@type": "Offer",
       "priceCurrency": "EUR",
