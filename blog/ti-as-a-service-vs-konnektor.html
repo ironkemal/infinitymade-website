@@ -43,6 +43,35 @@
   <link rel="stylesheet" href="../assets/system.css" />
   <link rel="stylesheet" href="blog.css" />
 
+  <!-- Schema: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://praxura.de/#organization",
+    "name": "Praxura",
+    "legalName": "InfinityMade (Yavuz Kemal Demir)",
+    "url": "https://praxura.de/",
+    "logo": "https://praxura.de/logo.png",
+    "founder": { "@type": "Person", "name": "Yavuz Kemal Demir" },
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Industriestraße 33",
+      "postalCode": "53721",
+      "addressLocality": "Siegburg",
+      "addressRegion": "NRW",
+      "addressCountry": "DE"
+    },
+    "email": "kontakt@infinitymade.de",
+    "areaServed": { "@type": "Country", "name": "Germany" },
+    "knowsAbout": [
+      "Praxissoftware", "Heilmittelabrechnung", "§302 SGB V", "Telematikinfrastruktur",
+      "Physiotherapie", "Ergotherapie", "Logopädie", "Podologie", "Heilmittelerbringer"
+    ],
+    "sameAs": ["https://www.wikidata.org/wiki/Q139764488"]
+  }
+  </script>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -50,11 +79,7 @@
     "headline": "TI-as-a-Service vs. lokaler Konnektor: Vergleich für Heilmittel-Praxen 2026",
     "description": "Vergleich der TI-Anbindungsoptionen für Heilmittel-Praxen: Cloud-Gateway (TIaaS) gegen lokalen Hardware-Konnektor. Kosten, Wartung, Ausfallsicherheit, Förderfähigkeit.",
     "author": { "@type": "Person", "name": "Praxura Redaktion" },
-    "publisher": {
-      "@type": "Organization",
-      "name": "InfinityMade",
-      "logo": { "@type": "ImageObject", "url": "https://praxura.de/og-image.png" }
-    },
+    "publisher": { "@id": "https://praxura.de/#organization" },
     "datePublished": "2026-06-03T14:00:00+02:00",
     "dateModified": "2026-06-03T14:00:00+02:00",
     "inLanguage": "de-DE",
