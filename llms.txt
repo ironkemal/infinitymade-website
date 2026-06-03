@@ -39,6 +39,10 @@ Subscription-based SaaS with a 14-day free trial. Tiers:
 - Klinik — €99/month (most popular; includes §302-Abrechnungsvorbereitung)
 - Enterprise — custom pricing (multi-location, §302, advanced)
 
+# Knowledge graph
+- Wikidata: https://www.wikidata.org/wiki/Q140044615 (Praxura)
+- Developer / operator: InfinityMade — https://www.wikidata.org/wiki/Q139764488
+
 # Languages supported
 German (de), English (en), Turkish (tr)
 
