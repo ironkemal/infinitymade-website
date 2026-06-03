@@ -60,7 +60,7 @@ async function init() {
   console.log('[booking] identifier:', identifier);
   if (!identifier) { showError('Ungültiger Buchungslink.'); return; }
   const isUUID = s => s.length === 36 && s.includes('-');
-  let q = supabase.from('profiles_public').select('id,business_name,company_code,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
+  let q = supabase.from('profiles_public').select('id,business_name,owner_first_name,owner_last_name,accepts_bookings,role,owner_id');
   // Slug can be stored either as a bare slug ("kemal") or a full URL
   // ("https://praxura.de/booking.html?u=kemal") — match both shapes.
   let slug = identifier;
@@ -71,7 +71,11 @@ async function init() {
   if (isUUID(slug)) {
     q = q.eq('id', slug);
   } else if (slug.toUpperCase().startsWith('INF-')) {
-    q = q.eq('company_code', slug.toUpperCase());
+    // company_code is no longer a public column (privacy); resolve it via a
+    // narrow RPC that only returns the owner id for a code the caller supplied.
+    const { data: ownerId } = await supabase.rpc('find_owner_id_by_code', { p_code: slug.toUpperCase() });
+    if (!ownerId) { showError('Unternehmen nicht gefunden.'); return; }
+    q = q.eq('id', ownerId);
   } else {
     // Match either the bare slug or the full URL containing it
     q = q.or(`booking_slug.eq.${slug},booking_slug.ilike.%booking.html?u=${slug}`);
@@ -121,7 +125,7 @@ async function init() {
   }
 
   if (isEmployee) {
-    state.employeeName = profile.business_name || profile.email?.split('@')[0] || 'Mitarbeiter';
+    state.employeeName = profile.business_name || [profile.owner_first_name, profile.owner_last_name].filter(Boolean).join(' ') || 'Mitarbeiter';
     state.ownerId = profile.owner_id || profile.id;
     updateSidebar();
     document.getElementById('backToEmp').style.display = 'none';
@@ -132,7 +136,7 @@ async function init() {
   updateSidebar();
 
   const { data: employees } = await supabase.from('profiles_public')
-    .select('id,business_name,email,role,avatar_url')
+    .select('id,business_name,owner_first_name,owner_last_name,role,avatar_url')
     .or(`id.eq.${state.ownerId},owner_id.eq.${state.ownerId}`);
 
   let visibleEmps = employees || [];
@@ -154,7 +158,7 @@ async function init() {
   }
 
   document.getElementById('empList').innerHTML = visibleEmps.map(e => {
-    const name = e.business_name || e.email.split('@')[0];
+    const name = e.business_name || [e.owner_first_name, e.owner_last_name].filter(Boolean).join(' ') || 'Mitarbeiter';
     const initial = (name[0] || '?').toUpperCase();
     const avatar = e.avatar_url ? `<img src="${e.avatar_url}" alt="">` : initial;
     return `<button class="list-btn emp-btn" data-id="${e.id}" data-name="${name}">
