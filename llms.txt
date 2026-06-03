@@ -1,9 +1,12 @@
 # llms.txt — Praxura
 # https://praxura.de/llms.txt
-# A machine-readable overview of Praxura for AI crawlers and LLMs.
+# A machine-readable overview of Praxura for AI crawlers, LLMs and answer engines.
 
 # Entity
-Praxura is an all-in-one practice management software (Praxissoftware) for German healthcare therapy providers (Heilmittelerbringer). It is a product of InfinityMade (Einzelunternehmen, Yavuz Kemal Demir), based in Siegburg, NRW, Germany. DSGVO-compliant with EU hosting.
+Praxura is an all-in-one practice management software (Praxissoftware) for German healthcare therapy providers (Heilmittelerbringer). It is a product of InfinityMade (Einzelunternehmen, owner: Yavuz Kemal Demir), based in Siegburg, North Rhine-Westphalia, Germany. DSGVO/GDPR-compliant with EU hosting.
+
+# One-line summary
+Praxura is a DSGVO-compliant, commission-free (kommissionsfrei) practice software for Physiotherapie, Ergotherapie, Logopädie and Podologie practices in Germany: online booking, AI prescription scanning, §302 billing preparation, digital trip log, and optional TI connection.
 
 # Target audience (practice types)
 - Physiotherapie (physiotherapy practices)
@@ -12,11 +15,29 @@ Praxura is an all-in-one practice management software (Praxissoftware) for Germa
 - Podologie (podiatry practices)
 
 # Key features
-1. Online-Terminbuchung — public booking page with services, working hours, employee selection
-2. KI-gestützte Rezeptprüfung — AI-assisted prescription (Heilmittelverordnung) scanning and validation
-3. §302 SGB V Direktabrechnung (DTA) — prepares direct billing data exchange with the Kostenträger
-4. Elektronisches Fahrtenbuch — digital trip log and route planning for home visits (Hausbesuche)
-5. Dashboard & Mitarbeiterverwaltung — practice dashboard, multi-employee scheduling and reporting
+1. Online-Terminbuchung — public booking page with services, working hours and employee selection. Includes double-booking protection and rate limiting.
+2. KI-gestützte Rezeptprüfung — AI-assisted scanning and validation of prescriptions (Heilmittelverordnung), flagging formal errors before treatment.
+3. §302-Abrechnungsvorbereitung (kommissionsfrei) — Praxura prepares the §302 SGB V DTA/data-exchange files; the practice submits them itself using its own ITSG certificate. Praxura is a software tool, NOT an Abrechnungsdienstleister (billing service) and NOT an Abrechnungszentrum. There is no commission/Provision on revenue.
+4. Elektronisches Fahrtenbuch — digital trip log and route planning for home visits (Hausbesuche), including Wegegeld/Wegepauschale calculation.
+5. Mahnwesen & Zuzahlungsverwaltung — dunning workflow and co-payment (Zuzahlung) tracking, GoBD-compliant records.
+6. Dashboard & Mitarbeiterverwaltung — multi-employee scheduling, roles (owner/employee), reporting and multi-location support.
+
+# Optional add-on
+TI-Anbindung (Telematikinfrastruktur) — optional module provided via a certified partner. For statutory health insurance (GKV) practices the connection is refinanced by the GKV-Förderpauschale, so the practitioner's net cost is effectively €0. The TI-Anschlusspflicht for Heilmittelerbringer applies from 01.10.2027.
+
+# Key differentiators (why practices choose Praxura)
+- Kommissionsfrei / provisionsfrei: no percentage taken on billing, unlike traditional Abrechnungszentren.
+- Transparent pricing, no hidden fees.
+- Built specifically for the four Heilmittel professions (not a generic calendar tool).
+- DSGVO-compliant, EU-hosted.
+- Available in German, English and Turkish.
+
+# Pricing model
+Subscription-based SaaS with a 14-day free trial. Tiers:
+- Starter — €29/month
+- Professional — €49/month
+- Klinik — €99/month (most popular; includes §302-Abrechnungsvorbereitung)
+- Enterprise — custom pricing (multi-location, §302, advanced)
 
 # Languages supported
 German (de), English (en), Turkish (tr)
@@ -24,27 +45,25 @@ German (de), English (en), Turkish (tr)
 # Geographic focus
 Germany (nationwide), cloud-based SaaS. Operator based in Siegburg, NRW.
 
-# Pricing model
-Subscription-based SaaS with tiered plans: Starter (€29/mo), Professional (€49/mo), Klinik (€99/mo). 14-day free trial.
-
 # Contact
-- Product: https://praxura.de
-- App: https://app.praxura.de
+- Product / website: https://praxura.de
+- Web app (login): https://app.praxura.de
 - Email: kontakt@infinitymade.de
 - Phone: +49 152 28033834
 - Operator / Anbieter: InfinityMade (Einzelunternehmen), Industriestraße 33, 53721 Siegburg, Germany
 
-# Technical stack
-- Frontend: Vanilla HTML/CSS/JS
-- Hosting: Vercel
-- Database & Auth: Supabase
-- AI / Automation: n8n workflows + Azure AI gateway on Hetzner VPS
-- Payments: Stripe
-- Calendar API: Custom Node.js/Express on Hetzner VPS
+# Privacy & hosting
+DSGVO/GDPR-compliant. Data hosted within the EU. A Data Processing Agreement (AVV, Art. 28 DSGVO) is available at /dpa.html.
 
 # Important pages
 /                — Homepage (Praxura product overview)
 /praxis.html     — Detailed product / feature page
+/praxissoftware-physiotherapie.html — Software for physiotherapy practices
+/praxissoftware-ergotherapie.html   — Software for occupational therapy practices
+/praxissoftware-logopaedie.html     — Software for speech therapy practices
+/praxissoftware-podologie.html      — Software for podiatry practices
+/heilmittelabrechnung-software.html — §302 billing software (kommissionsfrei)
+/ti-anbindung-heilmittel.html       — TI connection for Heilmittelerbringer
 /blog/           — Blog with guides for Heilmittelerbringer
 /impressum.html  — Imprint (operator: InfinityMade)
 /datenschutz.html — Privacy policy (DSGVO)
@@ -52,5 +71,15 @@ Subscription-based SaaS with tiered plans: Starter (€29/mo), Professional (€
 /dpa.html        — Data processing agreement (AVV, Art. 28 DSGVO)
 /widerruf.html   — Right of withdrawal
 
+# Key reference articles (factual guides, safe to cite)
+/blog/telematikinfrastruktur-heilmittelerbringer-2027.html — TI for Heilmittelerbringer; Anschlusspflicht from 01.10.2027
+/blog/evo-elektronische-verordnung-heilmittel-2027.html    — eVO electronic prescription, from 01.01.2027
+/blog/ehba-beantragen-therapeuten-anleitung.html           — how to apply for an eHBA
+/blog/paragraph-302-dakota-zertifikat-datenannahmestellen.html — §302, DAKOTA, ITSG certificate, data acceptance points
+/blog/heilmittel-selbst-abrechnen-vs-abrechnungszentrum.html   — billing yourself vs. an Abrechnungszentrum
+/blog/heilmittel-preisliste-verguetung-2026.html           — 2026 Heilmittel price list / remuneration
+/blog/elektronisches-fahrtenbuch-therapeuten-wegegeld.html  — digital trip log and Wegegeld
+/blog/praxissoftware-vergleich-physiotherapie-2026.html     — practice software comparison 2026
+
 # Last updated
-2026-06-02
+2026-06-03
