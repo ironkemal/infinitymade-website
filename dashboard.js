@@ -6028,8 +6028,12 @@ document.getElementById('hoursCalNext').addEventListener('click', () => {
 
 function renderSpecialDaysList() {
   const list = document.getElementById('specialDaysList');
-  if (!hoursCustomDays.length) { list.innerHTML = '<div style="color:var(--text-faint);font-size:13px;">Keine Sondertage vorhanden.</div>'; return; }
-  const sorted = [...hoursCustomDays].sort((a, b) => a.date.localeCompare(b.date));
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  // Geçmiş tarihli sondertage'ları listede gösterme (tatil bitince düşer)
+  const upcoming = hoursCustomDays.filter(d => d.date >= todayStr);
+  if (!upcoming.length) { list.innerHTML = '<div style="color:var(--text-faint);font-size:13px;">Keine Sondertage vorhanden.</div>'; return; }
+  const sorted = [...upcoming].sort((a, b) => a.date.localeCompare(b.date));
   list.innerHTML = sorted.map(d => {
     const timeRange = d.start_time && d.end_time ? ` ${d.start_time.substring(0, 5)}–${d.end_time.substring(0, 5)}` : '';
     return `
