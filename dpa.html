@@ -69,7 +69,7 @@
     <li>Daten nur auf dokumentierte Weisung des Kunden zu verarbeiten;</li>
     <li>InfinityMade informiert den Kunden unverzüglich, wenn InfinityMade der Auffassung ist, dass eine Weisung des Kunden gegen die DSGVO oder gegen andere Datenschutzbestimmungen der Union oder der Mitgliedstaaten verstößt.</li>
     <li>Die Vertraulichkeit der Daten zu gewährleisten und seine Mitarbeiter entsprechend zu verpflichten;</li>
-    <li>Geeignete technische und organisatorische Maßnahmen (TOM) gemäß Art. 32 DSGVO zu treffen — insbesondere TLS-Verschlüsselung, Vault-basierte Speicherung sensibler Schlüssel, Zugriffskontrollen, regelmäßige Backups;</li>
+    <li>Geeignete technische und organisatorische Maßnahmen (TOM) gemäß Art. 32 DSGVO zu treffen — insbesondere Transportverschlüsselung, verschlüsselte Speicherung sensibler Daten, Zugriffskontrollen und regelmäßige Backups;</li>
     <li>Den Kunden bei der Erfüllung von Betroffenenrechten (Auskunft, Löschung, Datenübertragbarkeit) zu unterstützen;</li>
     <li>Datenschutzverletzungen unverzüglich, spätestens innerhalb von 72 Stunden, an den Kunden zu melden;</li>
     <li>InfinityMade unterstützt den Kunden unter Berücksichtigung der Art der Verarbeitung und der ihm zur Verfügung stehenden Informationen bei der Einhaltung der in den Artikeln 32 bis 36 DSGVO genannten Pflichten (Sicherheit der Verarbeitung, Meldung von Verletzungen des Schutzes personenbezogener Daten, Datenschutz-Folgenabschätzung sowie vorherige Konsultation der Aufsichtsbehörde).</li>
@@ -81,8 +81,8 @@
   <p>Der Kunde willigt ein, dass InfinityMade folgende Unterauftragsverarbeiter zur Erbringung der Dienste einsetzt:</p>
   <div class="dpa-grid">
     <div class="dpa-card"><h3>Supabase Inc.</h3><p>Datenbank- und Authentifizierungs-Service. Hosting in Frankfurt (EU). <a href="https://supabase.com/privacy" target="_blank" rel="noopener">DPA</a></p></div>
-    <div class="dpa-card"><h3>Hetzner Online GmbH</h3><p>VPS-Hosting für Kalender-API und Workflows. Nürnberg, Deutschland. <a href="https://www.hetzner.com/legal/privacy-policy/" target="_blank" rel="noopener">DPA</a></p></div>
-    <div class="dpa-card"><h3>Vercel Inc.</h3><p>Hosting der Website-Anwendung. Serverless ausschließlich in Frankfurt (EU). <a href="https://vercel.com/legal/dpa" target="_blank" rel="noopener">DPA</a></p></div>
+    <div class="dpa-card"><h3>Hetzner Online GmbH</h3><p>Server-Hosting für Anwendungsdienste. Deutschland. <a href="https://www.hetzner.com/legal/privacy-policy/" target="_blank" rel="noopener">DPA</a></p></div>
+    <div class="dpa-card"><h3>Vercel Inc.</h3><p>Hosting der Website-Anwendung. Verarbeitung auf Servern in der EU. <a href="https://vercel.com/legal/dpa" target="_blank" rel="noopener">DPA</a></p></div>
     <div class="dpa-card"><h3>Stripe Payments Europe Ltd.</h3><p>Zahlungsabwicklung. Sitz in Irland. <a href="https://stripe.com/legal/dpa" target="_blank" rel="noopener">DPA</a></p></div>
     <div class="dpa-card"><h3>Microsoft Ireland Operations Ltd. (Azure AI Foundry)</h3><p>KI-Verarbeitung von Praxis-Dokumenten in der EU-Region Sweden Central. Keine Drittlandübermittlung. <a href="https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA" target="_blank" rel="noopener">DPA</a></p></div>
     <div class="dpa-card"><h3>Sentry (Functional Software, Inc.)</h3><p>Fehler-Monitoring mit PII-Scrubbing. EU-Region. <a href="https://sentry.io/legal/dpa/" target="_blank" rel="noopener">DPA</a></p></div>
@@ -96,13 +96,13 @@
   <h2>§ 7 Technische und organisatorische Maßnahmen (TOMs)</h2>
   <ul>
     <li><strong>Zutrittskontrolle:</strong> Server in zertifizierten Rechenzentren der Sub-Prozessoren</li>
-    <li><strong>Zugangskontrolle:</strong> Authentifizierung über Supabase Auth, JWT-Tokens, Multi-Faktor-Authentifizierung möglich</li>
-    <li><strong>Zugriffskontrolle:</strong> Row-Level-Security in der Datenbank, RBAC im Dashboard</li>
-    <li><strong>Weitergabekontrolle:</strong> TLS 1.2+ für alle Verbindungen</li>
-    <li><strong>Eingabekontrolle:</strong> Logging aller Änderungen mit Zeitstempel</li>
-    <li><strong>Verfügbarkeitskontrolle:</strong> Tägliche Backups, geografische Redundanz</li>
-    <li><strong>Trennungskontrolle:</strong> Multi-Tenant-Architektur mit business-bezogener Isolation</li>
-    <li><strong>Verschlüsselung sensibler Daten:</strong> Supabase Vault für API-Keys, AES-256</li>
+    <li><strong>Zugangskontrolle:</strong> gesicherte Authentifizierung mit Token-Verfahren, Multi-Faktor-Authentifizierung möglich</li>
+    <li><strong>Zugriffskontrolle:</strong> zeilenbasierte Zugriffsbeschränkung in der Datenbank, rollenbasierte Rechtevergabe im Dashboard</li>
+    <li><strong>Weitergabekontrolle:</strong> Transportverschlüsselung (TLS) für alle Verbindungen</li>
+    <li><strong>Eingabekontrolle:</strong> Protokollierung von Änderungen mit Zeitstempel</li>
+    <li><strong>Verfügbarkeitskontrolle:</strong> regelmäßige Backups</li>
+    <li><strong>Trennungskontrolle:</strong> mandantengetrennte Speicherung der Daten</li>
+    <li><strong>Verschlüsselung sensibler Daten:</strong> verschlüsselte Ablage von Schlüsseln und Geheimnissen nach anerkanntem Standard</li>
   </ul>
 
   <h2>§ 8 Rechte und Pflichten des Kunden</h2>
