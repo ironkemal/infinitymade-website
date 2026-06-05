@@ -241,7 +241,12 @@
       border-bottom: 1px solid var(--border);
       gap: 24px;
       margin-bottom: 20px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
+    .sub-tabs::-webkit-scrollbar { display: none; }
 
     .sub-tab-btn {
       padding: 10px 4px;
@@ -251,7 +256,10 @@
       border-bottom: 2px solid transparent;
       cursor: pointer;
       transition: all 0.2s ease;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
+    @media (max-width: 640px) { .sub-tabs { gap: 14px; } }
 
     .sub-tab-btn:hover {
       color: var(--text-main);
