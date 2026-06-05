@@ -239,12 +239,16 @@ textarea {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 0 0 auto;
 }
 
 .live-clock {
@@ -283,12 +287,28 @@ textarea {
 
 .biz-name {
   font-size: 13px;
+  font-weight: 600;
   color: var(--text-muted);
   max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-left: 8px;
+  opacity: 0.85;
 }
+
+/* Business Switcher CHIP (demo-dashboard) — topbar'da sarmayı/taşmayı engelle */
+.biz-switcher-container { display: inline-flex; align-items: center; min-width: 0; }
+.biz-switcher-chip { max-width: 260px; white-space: nowrap; overflow: hidden; }
+.biz-switcher-chip > span {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#bizSwitcherCurrentName { overflow: hidden; text-overflow: ellipsis; }
 
 /* Business Switcher (multi-business, Paket 3) — dark theme uyumlu */
 .biz-switcher {
@@ -4446,6 +4466,11 @@ textarea {
   }
 
   .biz-name {
+    display: none;
+  }
+
+  /* Telefonda switcher chip sadece ikon (🏢 ▾) kalsın — isim gizlensin */
+  #bizSwitcherCurrentName {
     display: none;
   }
 

@@ -50,6 +50,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   position: relative;
   min-height: 100vh;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* Premium micro-grain texture overlay (mirroring landing page) */
@@ -353,10 +355,11 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
   border-radius: 14px;
   padding: 4px;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .ob-toggle-btn {
-  flex: 1;
+  flex: 1 1 200px;
   background: transparent;
   border: none;
   color: var(--ink-mute);
@@ -367,7 +370,13 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
   border-radius: 10px;
   cursor: pointer;
   transition: var(--transition);
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 44px;
 }
 
 .ob-toggle-btn:hover {
@@ -1221,6 +1230,24 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
   }
 }
 
+/* Tablet centering & sizing optimization (min-width: 641px and max-width: 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .ob-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 40px;
+    padding-bottom: 60px;
+  }
+}
+
 @media (max-width: 640px) {
   /* General screen padding */
   .ob-main {
@@ -1258,6 +1285,26 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
 
   .ob-progress-label {
     display: none;
+  }
+
+  /* Ensure touch targets >= 44px on mobile */
+  .ob-form input[type="text"],
+  .ob-form input[type="email"],
+  .ob-form input[type="password"],
+  .ob-form select,
+  .ob-btn,
+  .ob-logout,
+  .ob-link-btn,
+  .ob-hours-row input[type="time"],
+  .ob-service-row input[type="text"],
+  .ob-service-row input[type="number"] {
+    min-height: 44px;
+  }
+
+  .ob-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* ---------------- Service Row Mobile Stacking Grid ---------------- */
