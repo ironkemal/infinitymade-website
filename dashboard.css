@@ -2405,6 +2405,9 @@ textarea {
   overflow-x: auto;
 }
 
+/* Grid/flex içindeki kartlar track'e küçülebilsin → geniş tablolar .table-wrap içinde kaysın (yatay taşma önlemi) */
+.two-col-grid > * { min-width: 0; }
+
 .table-empty {
   padding: 40px;
   text-align: center;
@@ -4472,6 +4475,11 @@ textarea {
   /* Telefonda switcher chip sadece ikon (🏢 ▾) kalsın — isim gizlensin */
   #bizSwitcherCurrentName {
     display: none;
+  }
+
+  /* Mobilde grid/flex kartlar küçülebilsin → geniş içerik/tablolar paneli yatay taşırmasın */
+  .main-area .card {
+    min-width: 0;
   }
 
   .services-grid {
