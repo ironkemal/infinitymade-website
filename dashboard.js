@@ -92,7 +92,8 @@ const T = {
     nav_belegliste: 'Kassenbuch (GoBD)',
     nav_mahnwesen: 'Mahnwesen',
     nav_statistik: 'Statistik',
-    nav_warteliste: 'Warteliste'
+    nav_warteliste: 'Warteliste',
+    cal_emp_all: 'Alle'
   },
   en: {
     logout: 'Sign out',
@@ -163,7 +164,8 @@ const T = {
     nav_belegliste: 'Cash Ledger (GoBD)',
     nav_mahnwesen: 'Dunning',
     nav_statistik: 'Statistics',
-    nav_warteliste: 'Waiting List'
+    nav_warteliste: 'Waiting List',
+    cal_emp_all: 'All'
   },
   tr: {
     logout: 'Çıkış',
@@ -234,7 +236,8 @@ const T = {
     nav_belegliste: 'Kasa Defteri (GoBD)',
     nav_mahnwesen: 'Tahsilat',
     nav_statistik: 'İstatistik',
-    nav_warteliste: 'Bekleme Listesi'
+    nav_warteliste: 'Bekleme Listesi',
+    cal_emp_all: 'Tümü'
   }
 };
 
@@ -361,13 +364,14 @@ let ownerProfile = null;
 let teamMembers = [];
 let calendar = null;
 let selectedEmployeeId = null;
+let calEmpFilter = 'all';
 let ownerServices = [];
 let activePanel = 'overview';
 let calendarView = 'day';
 let dayViewDate = new Date();
 let moveBooking = null;
 let moveGhostEl = null;
-const EMP_COLORS = ['#1E3D2F', '#6B5538', '#4E5C45', '#8B6B47', '#523F26'];
+const EMP_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#ec4899'];
 let ovEmpPage = 0;
 let leadFilter = 'all';
 let leadSearchVal = '';
@@ -1458,6 +1462,46 @@ function renderCalEmpList() {
   });
 }
 
+function renderCalEmpChips() {
+  const container = document.getElementById('calEmpChips');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const chips = [{ id: 'all', name: t('cal_emp_all'), color: 'var(--primary)' }];
+  teamMembers.forEach((emp, idx) => {
+    chips.push({
+      id: emp.id,
+      name: emp.business_name || emp.email?.split('@')[0] || '—',
+      color: EMP_COLORS[idx % EMP_COLORS.length]
+    });
+  });
+
+  chips.forEach(c => {
+    const btn = document.createElement('button');
+    const isActive = calEmpFilter === c.id;
+    btn.className = `cal-emp-chip ${isActive ? 'active' : ''}`;
+    
+    if (isActive && c.id !== 'all') {
+      btn.style.borderColor = c.color;
+      btn.style.backgroundColor = c.color + '20';
+    }
+
+    const dot = document.createElement('span');
+    dot.className = 'cal-emp-chip-dot';
+    dot.style.backgroundColor = c.color;
+    
+    btn.appendChild(dot);
+    btn.appendChild(document.createTextNode(c.name));
+    
+    btn.addEventListener('click', () => {
+      calEmpFilter = c.id;
+      renderCalEmpChips();
+      if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
+    });
+    container.appendChild(btn);
+  });
+}
+
 async function getEmployeeWorkingHours(empId) {
   const { data: wh } = await supabase.from('working_hours')
     .select('day_of_week, is_active').eq('user_id', empId);
@@ -1552,6 +1596,7 @@ async function initCalendar() {
   console.log('[DASHBOARD] ownerServices loaded:', ownerServices.length);
 
   renderCalEmpList();
+  renderCalEmpChips();
 
   const wh = await getEmployeeWorkingHours(selectedEmployeeId);
   const offWeekdays = [];
@@ -1659,7 +1704,7 @@ async function renderDayView(dateStr) {
   timeCol.innerHTML = '';
   colsWrap.innerHTML = '';
 
-  const emps = teamMembers;
+  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
   if (!emps.length) return;
 
   // Heute: vergangene Stunden ausblenden + Live-"Jetzt"-Linie
@@ -1697,10 +1742,10 @@ async function renderDayView(dateStr) {
     .lte('start_date', dEnd)
     .gte('end_date', dStart);
 
-  emps.forEach((emp, idx) => {
+  emps.forEach((emp) => {
     const col = document.createElement('div');
     col.className = 'dv-col';
-    const color = EMP_COLORS[idx % EMP_COLORS.length];
+    const color = EMP_COLORS[teamMembers.findIndex(e => e.id === emp.id) % EMP_COLORS.length];
 
     const header = document.createElement('div');
     header.className = 'dv-col-header';
@@ -6141,6 +6186,14 @@ async function loadTeam() {
     }];
   }
   teamMembers = data;
+
+  if (activePanel === 'calendar') {
+    renderCalEmpList();
+    renderCalEmpChips();
+    if (calendarView === 'day') {
+      try { await renderDayView(toISODate(dayViewDate)); } catch (e) {}
+    }
+  }
 
   if (currentProfile.role !== 'owner') return;
   const code = currentProfile.company_code || '—';

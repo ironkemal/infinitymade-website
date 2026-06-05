@@ -1388,6 +1388,48 @@ textarea {
   padding: 18px;
 }
 
+.cal-emp-chips {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 6px 2px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.cal-emp-chips::-webkit-scrollbar {
+  display: none;
+}
+.cal-emp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card-solid);
+  color: var(--text-main);
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 500;
+  transition: all .15s ease;
+}
+.cal-emp-chip:hover {
+  border-color: var(--primary);
+}
+.cal-emp-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-dim);
+  font-weight: 600;
+}
+.cal-emp-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .cal-emp-list {
   display: flex;
   flex-direction: column;
