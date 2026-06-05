@@ -1006,95 +1006,279 @@
 <section class="block" id="funktionen" data-reveal>
   <div class="section-head">
     <div>
-      <div class="section-eyebrow">01 · Kernmodule</div>
+      <div class="section-eyebrow">01 · Funktionen</div>
     </div>
     <div>
       <h2 class="section-title">
-        Vier Module — ein perfekt <em>abgestimmter Workflow.</em>
+        Sehen Sie, wie Praxura <em>wirklich arbeitet.</em>
       </h2>
       <p class="section-lede" style="margin-top: 1.4rem;">
-        Statt mühsam zwischen verschiedenen Software-Inseln zu wechseln, steuern Sie Ihre gesamte Praxis über eine einheitliche Oberfläche. Daten fließen nahtlos von der Buchung bis zur Abrechnung.
+        Jede Funktion — Schritt für Schritt in der echten Oberfläche erklärt. Wählen Sie ein Modul und sehen Sie genau, was auf dem Bildschirm passiert: vom KI-Rezept-Scan über die §302-Abrechnung bis zum Fahrtenbuch.
       </p>
     </div>
   </div>
 
-  <div class="px-features-2x2">
-    <!-- Card 1: Online-Terminbuchung -->
-    <article class="px-feature">
-      <div class="px-feature-inner">
-        <div class="px-feature-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><circle cx="8" cy="15" r="1" fill="currentColor" /><circle cx="12" cy="15" r="1" fill="currentColor" /><circle cx="16" cy="15" r="1" fill="currentColor" />
-          </svg>
-        </div>
-        <div class="px-feature-kw">Terminbuchung · 24/7</div>
-        <h3 class="px-feature-title">Terminbuch <em>ohne Telefon-Stress</em></h3>
-        <p class="px-feature-text">
-          Patienten sehen freie Kapazitäten Ihrer Praxis online und buchen selbstständig. Behandlungstypen, Mindestlaufzeiten und Therapeutenpläne werden automatisch berücksichtigt und live synchronisiert.
-        </p>
-        <div class="px-feature-foot">Kalendersync · Erinnerungen · Entlastung</div>
-      </div>
-    </article>
+  <!-- ░░ Interaktiver Funktionen-Walkthrough ░░ -->
+  <style>
+    #fnx.fnx-wrap{display:grid;grid-template-columns:288px 1fr;gap:2.4rem;align-items:start;margin-top:3rem;}
+    .fnx-rail{display:flex;flex-direction:column;gap:2px;max-height:600px;overflow-y:auto;padding-right:6px;}
+    .fnx-rail::-webkit-scrollbar{width:6px;}
+    .fnx-rail::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+    .fnx-cat{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-quiet);margin:1.2rem 0 .4rem .9rem;}
+    .fnx-cat:first-child{margin-top:0;}
+    .fnx-fn{display:block;width:100%;text-align:left;background:none;border:0;border-left:2px solid transparent;padding:.55rem .9rem;font-family:var(--sans);font-size:.92rem;color:var(--ink-soft);cursor:pointer;border-radius:0 6px 6px 0;transition:background .15s,color .15s,border-color .15s;}
+    .fnx-fn:hover{background:var(--bg-warm);color:var(--ink);}
+    .fnx-fn[aria-selected="true"]{background:var(--bg-card);border-left-color:var(--bronze);color:var(--ink);font-weight:600;box-shadow:0 1px 0 var(--line);}
+    .fnx-stage{position:sticky;top:90px;}
+    .fnx-screen{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -28px rgba(26,22,17,.4);}
+    .fnx-bar{display:flex;align-items:center;gap:7px;padding:.7rem 1rem;background:var(--bg-warm);border-bottom:1px solid var(--line);}
+    .fnx-bdot{width:10px;height:10px;border-radius:50%;background:var(--ink-quiet);opacity:.5;}
+    .fnx-url{font-family:var(--mono);font-size:.72rem;color:var(--ink-mute);margin-left:.6rem;}
+    .fnx-shot{position:relative;aspect-ratio:16/10;background:var(--bg-deep);}
+    .fnx-shot img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block;animation:fnxFade .45s ease;}
+    @keyframes fnxFade{from{opacity:0}to{opacity:1}}
+    .fnx-caption{padding:1.5rem .4rem .2rem;}
+    .fnx-kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--bronze);margin-bottom:.55rem;}
+    .fnx-step-title{font-family:var(--serif);font-size:1.35rem;line-height:1.25;color:var(--ink);margin:0 0 .5rem;font-weight:500;}
+    .fnx-step-desc{font-family:var(--sans);font-size:.98rem;line-height:1.55;color:var(--ink-soft);margin:0;max-width:48ch;min-height:3em;}
+    .fnx-controls{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.4rem;min-height:34px;}
+    .fnx-dots{display:flex;align-items:center;gap:8px;}
+    .fnx-dot{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:var(--ink-quiet);opacity:.45;cursor:pointer;transition:all .2s;}
+    .fnx-dot:hover{opacity:.85;}
+    .fnx-dot[aria-selected="true"]{opacity:1;background:var(--bronze);width:26px;border-radius:5px;}
+    .fnx-nav{display:flex;align-items:center;gap:.5rem;}
+    .fnx-count{font-family:var(--mono);font-size:.72rem;color:var(--ink-quiet);margin-right:.3rem;letter-spacing:.05em;}
+    .fnx-arrow,.fnx-play{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--bg-card);color:var(--ink-soft);font-size:1.05rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+    .fnx-arrow:hover,.fnx-play:hover{background:var(--bronze);color:#fff;border-color:var(--bronze);}
+    .fnx-play{font-size:.78rem;}
+    @media (max-width:860px){
+      #fnx.fnx-wrap{grid-template-columns:1fr;gap:1.3rem;}
+      .fnx-rail{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;max-height:none;gap:6px;padding:0 0 8px;}
+      .fnx-cat{display:none;}
+      .fnx-fn{flex:0 0 auto;border-left:0;border:1px solid var(--line);border-radius:20px;padding:.45rem .95rem;font-size:.85rem;white-space:nowrap;}
+      .fnx-fn[aria-selected="true"]{border-color:var(--bronze);box-shadow:none;}
+      .fnx-stage{position:static;}
+      .fnx-step-desc{max-width:none;min-height:0;}
+    }
+    /* Interaktive Radar-Hotspots auf dem Screenshot */
+    .fnx-shot{cursor:default;}
+    .fnx-hotlayer{position:absolute;inset:0;pointer-events:none;}
+    .fnx-hot{position:absolute;width:18px;height:18px;transform:translate(-50%,-50%);background:none;border:0;padding:0;pointer-events:auto;cursor:pointer;z-index:4;}
+    .fnx-hot i{position:absolute;inset:0;border-radius:50%;background:var(--rose);box-shadow:0 0 0 3px rgba(255,254,251,.85),0 2px 7px rgba(0,0,0,.35);}
+    .fnx-hot::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid var(--rose);animation:fnxRadar 1.8s ease-out infinite;}
+    @keyframes fnxRadar{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.2);opacity:0}}
+    .fnx-bubble{position:absolute;left:50%;transform:translateX(-50%);bottom:155%;background:var(--ink);color:var(--bg-card);font-family:var(--sans);font-size:.78rem;font-weight:500;line-height:1.35;padding:.5rem .72rem;border-radius:9px;width:max-content;max-width:190px;box-shadow:0 10px 26px -8px rgba(0,0,0,.5);z-index:5;pointer-events:none;}
+    .fnx-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink);}
+    .fnx-hot.below .fnx-bubble{bottom:auto;top:155%;}
+    .fnx-hot.below .fnx-bubble::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--ink);}
+    .fnx-hot.bleft .fnx-bubble{left:-2px;transform:none;}
+    .fnx-hot.bleft .fnx-bubble::after{left:14px;}
+    .fnx-hot.bright .fnx-bubble{left:auto;right:-2px;transform:none;}
+    .fnx-hot.bright .fnx-bubble::after{left:auto;right:14px;transform:none;}
+    @media (prefers-reduced-motion:reduce){.fnx-shot img{animation:none;}.fnx-hot::after{animation:none;}}
+  </style>
 
-    <!-- Card 2: KI-Rezeptprüfung -->
-    <article class="px-feature">
-      <div class="px-feature-inner">
-        <div class="px-feature-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="13" x2="15" y2="13" /><line x1="9" y1="17" x2="13" y2="17" />
-          </svg>
+  <div class="fnx-wrap" id="fnx">
+    <nav class="fnx-rail" id="fnxRail" aria-label="Funktionsliste"></nav>
+    <div class="fnx-stage">
+      <div class="fnx-screen">
+        <div class="fnx-bar">
+          <span class="fnx-bdot"></span><span class="fnx-bdot"></span><span class="fnx-bdot"></span>
+          <span class="fnx-url" id="fnxUrl">app.praxura.de/dashboard</span>
         </div>
-        <div class="px-feature-kw">KI-Prüfung · OCR</div>
-        <h3 class="px-feature-title">Absetzungen <em>vorab vermeiden</em></h3>
-        <p class="px-feature-text">
-          Fotografieren Sie Verordnungen einfach per Smartphone. Die intelligente OCR-Texterkennung liest Diagnosen, Heilmittelpositionen und ICD-10-Codes aus und prüft sie auf gesetzliche Gültigkeitsfehler.
-        </p>
-        <div class="px-feature-foot">Echtzeit-OCR · Fehlererkennung · Heilmittelkatalog</div>
-      </div>
-    </article>
-
-    <!-- Card 3: §302 DTA-Abrechnung -->
-    <article class="px-feature">
-      <div class="px-feature-inner">
-        <div class="px-feature-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.34 0 4.47.9 6.07 2.37" /><polyline points="21 4 12 13 9 10" />
-          </svg>
+        <div class="fnx-shot">
+          <img id="fnxImg" alt="" decoding="async" />
+          <div class="fnx-hotlayer" id="fnxHot"></div>
         </div>
-        <div class="px-feature-kw">§302 SGB V · DTA-Abrechnung</div>
-        <h3 class="px-feature-title">100 % Umsatz <em>ohne Mittlergebühr</em></h3>
-        <p class="px-feature-text">
-          Erstellen Sie verschlüsselte DTA-Datenpakete gemäß §302 SGB V TP5 V21 und übermitteln Sie diese direkt an die Krankenkassen. Sparen Sie die Kommission von 2–5 % der Abrechnungszentren.
-        </p>
-        <div class="px-feature-foot">Direct billing · EDIFACT-Standard · Volle Liquidität</div>
       </div>
-    </article>
-
-    <!-- Card 4: Fahrtenbuch -->
-    <article class="px-feature">
-      <div class="px-feature-inner">
-        <div class="px-feature-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 13h18l-2-7H5l-2 7z" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" />
-          </svg>
+      <div class="fnx-caption">
+        <div class="fnx-kicker" id="fnxTag"></div>
+        <h3 class="fnx-step-title" id="fnxTitle"></h3>
+        <p class="fnx-step-desc" id="fnxDesc"></p>
+        <div class="fnx-controls">
+          <div class="fnx-dots" id="fnxDots" role="tablist" aria-label="Schritte"></div>
+          <div class="fnx-nav">
+            <span class="fnx-count" id="fnxCount"></span>
+            <button class="fnx-arrow" id="fnxPrev" type="button" aria-label="Vorheriger Schritt">‹</button>
+            <button class="fnx-play" id="fnxPlay" type="button" aria-label="Wiedergabe pausieren">❚❚</button>
+            <button class="fnx-arrow" id="fnxNext" type="button" aria-label="Nächster Schritt">›</button>
+          </div>
         </div>
-        <div class="px-feature-kw">Hausbesuche · Routenplanung</div>
-        <h3 class="px-feature-title">Fahrten &amp; Pauschalen <em>voll automatisiert</em></h3>
-        <p class="px-feature-text">
-          Das elektronische Fahrtenbuch erfasst Strecken finanzamtskonform. Es plant die optimale Tagesroute Ihrer Therapeuten für Hausbesuche und rechnet Kilometer- und Hausbesuchspauschalen korrekt ab.
-        </p>
-        <div class="px-feature-foot">GPS-Fahrtenbuch · Google Maps · Steuersicher</div>
       </div>
-    </article>
-  </div>
-
-  <div style="text-align: center; margin-top: 3.5rem;">
-    <a href="/praxis.html" class="btn btn-secondary">
-      Alle Funktionen im Detail ansehen
-      <span style="font-family: var(--mono); margin-left: 0.5rem;">→</span>
-    </a>
+    </div>
   </div>
 </section>
+<script>
+(function(){
+  // FN_I18N için yapı: ileride { en:{slug:{name,tag,steps:[{t,d}]}}, tr:{...} } eklenebilir; yoksa de fallback.
+  // hx/hy = Hotspot-Position in % auf dem Screenshot · hi = Info-Bubble · dur = Auto-Dauer(ms)
+  var FN = {
+    'rezept-scan':{name:'KI-Rezept-Scan',tag:'Verordnung scannen — KI prüft auf Absetzung',steps:[
+      {img:'rezept-1',t:'Verordnung fotografieren',d:'Rezept per Smartphone abfotografieren oder als PDF hochladen.',hx:68,hy:81,hi:'KI prüft Rezept in 2 Sek.',dur:2800},
+      {img:'rezept-2',t:'KI-Texterkennung läuft',d:'Die OCR-KI liest Diagnose, ICD-10-Code und Heilmittelpositionen automatisch aus.',hx:50,hy:65,hi:'OCR liest Diagnose & ICD-10',dur:1400},
+      {img:'rezept-3',t:'Geprüft & übernommen',d:'Alle Felder erkannt und sofort auf formale Absetzungsgründe geprüft — kein teurer Rückläufer.',hx:68,hy:88,hi:'0 Absetzungen, 0 Rückläufer',dur:4400}
+    ]},
+    'billing302':{name:'§302 DTA-Abrechnung',tag:'Direkt mit den Kassen abrechnen — 0 % Provision',steps:[
+      {img:'billing302',t:'Abrechnungsbereite Rezepte',d:'Alle fälligen Heilmittelverordnungen auf einen Blick, Gesamtbetrag live berechnet.',hx:90,hy:49,hi:'Direkt mit Kassen — 0 % Provision'},
+      {img:'billing302-w1',t:'Plausibilitätsprüfung',d:'Jedes Rezept wird auf Vollständigkeit und Abrechnungsfähigkeit geprüft.',hx:65,hy:66,hi:'Plausibilität automatisch geprüft'},
+      {img:'billing302-w2',t:'Digitale Signatur',d:'Die Sammelabrechnung wird rechtskonform digital signiert.',hx:62,hy:68,hi:'Rechtskonform digital signiert'},
+      {img:'billing302-w3',t:'DTA-Paket erstellt',d:'Verschlüsseltes DTA-Paket fertig zum eigenständigen Upload ins Kassenportal.',hx:66,hy:73,hi:'DTA-Paket startklar'}
+    ]},
+    'calendar':{name:'Terminkalender',tag:'Mehr-Therapeuten-Kalender ohne Doppelbuchung',steps:[
+      {img:'calendar',t:'Alle Therapeuten in einer Ansicht',d:'Termine farbcodiert je Therapeut — Tag-, Wochen- und Monatsansicht.',hx:93,hy:12,hi:'Termin in 10 Sek. anlegen'},
+      {img:'calendar-new',t:'Termin in Sekunden anlegen',d:'Patient, Leistung und Therapeut wählen — der Slot wird automatisch geprüft.',hx:63,hy:73,hi:'Slot-Konflikte automatisch geprüft'}
+    ]},
+    'b2c':{name:'Online-Buchung (B2C)',tag:'Patienten buchen 24/7 selbst',steps:[
+      {img:'b2c',t:'Selbstbuchung per Link & QR',d:'Persönlicher Buchungslink und QR-Code; gebuchte Termine fließen direkt in den Kalender.',hx:66,hy:30,hi:'Patienten buchen 24/7 selbst'}
+    ]},
+    'patients':{name:'Patientenakte',tag:'Digitale Karteikarte mit ganzer Historie',steps:[
+      {img:'patients',t:'Alle Patienten zentral',d:'Durchsuchbare Liste mit Krankenkasse, Therapeut und Status.',hx:92,hy:37,hi:'Ganze Historie auf einen Klick'},
+      {img:'patients-detail',t:'Vollständige Akte',d:'Stammdaten, Termine und Anamnese pro Patient an einem Ort.',hx:67,hy:68,hi:'Stammdaten, Termine & Anamnese'}
+    ]},
+    'waitinglist':{name:'Warteliste',tag:'Freie Slots automatisch nachbesetzen',steps:[
+      {img:'waitinglist',t:'Lücken sofort füllen',d:'Bei Absagen rücken wartende Patienten automatisch nach.',hx:82,hy:25,hi:'Lücken automatisch nachbesetzen'}
+    ]},
+    'anamnese':{name:'Anamnese & Befund',tag:'Strukturierte Erstbefundung',steps:[
+      {img:'anamnese',t:'Befundungen verwalten',d:'Alle Anamnesen je Patient sauber dokumentiert.',hx:93,hy:11,hi:'Strukturierte Erstbefundung'},
+      {img:'anamnese-wizard',t:'Geführte Befundung',d:'Schritt-für-Schritt-Assistent für die Erstaufnahme.',hx:65,hy:70,hi:'Geführter Befund-Assistent'}
+    ]},
+    'notes':{name:'Notizen',tag:'Schnelle interne Absprachen',steps:[
+      {img:'notes',t:'Team-Notizen zentral',d:'Interne Vermerke und Absprachen an einem Ort.',hx:94,hy:11,hi:'Team-Absprachen an einem Ort'}
+    ]},
+    'invoices':{name:'Rechnungen',tag:'Privatrechnungen mit einem Klick',steps:[
+      {img:'invoices',t:'Rechnungsübersicht',d:'Alle Rechnungen mit Status: bezahlt, offen, gesendet.',hx:91,hy:32,hi:'Privatrechnung in einem Klick'},
+      {img:'invoices-pdf',t:'Profi-Rechnung als PDF',d:'Fertige Rechnung drucken oder direkt versenden.',hx:68,hy:78,hi:'Profi-PDF mit Ihrem Logo'}
+    ]},
+    'cashbook':{name:'Kassenbuch (GoBD)',tag:'Revisionssichere Barkasse',steps:[
+      {img:'cashbook',t:'GoBD-konforme Kasse',d:'Bargeldbewegungen finanzamtsfest und revisionssicher erfassen.',hx:93,hy:11,hi:'GoBD-konforme Barkasse'}
+    ]},
+    'dunning':{name:'Mahnwesen',tag:'Offene Posten automatisch anmahnen',steps:[
+      {img:'dunning',t:'Offene Posten im Blick',d:'Überfällige Rechnungen werden automatisch erkannt.',hx:90,hy:25,hi:'Überfällige Posten automatisch erkannt'},
+      {img:'dunning-modal',t:'Mahnung in einem Klick',d:'Zahlungserinnerung und Mahnstufen automatisch erstellt.',hx:62,hy:66,hi:'Mahnstufen vollautomatisch'}
+    ]},
+    'fahrtenbuch':{name:'Fahrtenbuch',tag:'Hausbesuche & Pauschalen automatisch',steps:[
+      {img:'fahrtenbuch',t:'Elektronisches Fahrtenbuch',d:'Hausbesuchsfahrten GoBD-konform und steuersicher dokumentiert.',hx:94,hy:11,hi:'GoBD-konform & steuersicher'},
+      {img:'fahrtenbuch-new',t:'Fahrt in Sekunden erfassen',d:'Strecke, Patient und Pauschale werden automatisch berechnet.',hx:64,hy:69,hi:'Pauschale automatisch berechnet'}
+    ]},
+    'statistics':{name:'Statistik & Berichte',tag:'Praxis-Kennzahlen auf einen Blick',steps:[
+      {img:'statistics',t:'Umsatz & Auslastung',d:'Umsatzentwicklung, Auslastung und GKV/Privat-Anteil sofort sichtbar.',hx:92,hy:11,hi:'Umsatz & Auslastung live'}
+    ]},
+    'overview':{name:'Dashboard-Übersicht',tag:'Ihr Praxistag auf einen Blick',steps:[
+      {img:'overview',t:'Tagesstart in Sekunden',d:'Termine heute, Umsatz, Auslastung und letzte Aktivitäten kompakt.',hx:66,hy:40,hi:'Ihr Praxistag auf einen Blick'}
+    ]},
+    'employees':{name:'Mitarbeiter',tag:'Team & Rollen verwalten',steps:[
+      {img:'employees',t:'Team zentral steuern',d:'Mitarbeiter, Rollen und Berechtigungen an einem Ort.',hx:92,hy:11,hi:'Team, Rollen & Rechte'}
+    ]},
+    'services':{name:'Dienstleistungen',tag:'Leistungskatalog pflegen',steps:[
+      {img:'services',t:'Behandlungen definieren',d:'Leistungen mit Dauer und Preis festlegen.',hx:93,hy:11,hi:'Leistungen mit Dauer & Preis'}
+    ]},
+    'hours':{name:'Arbeitszeiten',tag:'Verfügbarkeiten je Therapeut',steps:[
+      {img:'hours',t:'Arbeits- & Öffnungszeiten',d:'Verfügbarkeiten steuern die Online-Buchung automatisch.',hx:95,hy:11,hi:'Verfügbarkeiten je Therapeut'}
+    ]},
+    'doctors':{name:'Ärzte',tag:'Verordner-Verzeichnis',steps:[
+      {img:'doctors',t:'Ärzte-Verzeichnis',d:'Verordnende Ärzte für schnelle Rezeptzuordnung pflegen.',hx:94,hy:11,hi:'Verordner-Verzeichnis'}
+    ]},
+    'b2b':{name:'B2B-Kontakte',tag:'Zuweiser & Partner',steps:[
+      {img:'b2b',t:'Kooperationspartner pflegen',d:'B2B-Kontakte und Zuweiser zentral verwalten.',hx:93,hy:11,hi:'Zuweiser & Pflegekassen'}
+    ]},
+    'settings':{name:'Einstellungen',tag:'Praxis-Konfiguration',steps:[
+      {img:'settings',t:'Praxis-Einstellungen',d:'Stammdaten, Integrationen und Konfiguration zentral.',hx:92,hy:11,hi:'Praxis-Konfiguration zentral'}
+    ]}
+  };
+  var GROUPS = [
+    {cat:'KI & Abrechnung',fns:['rezept-scan','billing302']},
+    {cat:'Termine & Patienten',fns:['calendar','b2c','patients','waitinglist','anamnese','notes']},
+    {cat:'Finanzen & Compliance',fns:['invoices','cashbook','dunning','fahrtenbuch','statistics']},
+    {cat:'Praxis & Team',fns:['overview','employees','services','hours','doctors','b2b','settings']}
+  ];
+  var ORDER = GROUPS.reduce(function(a,g){return a.concat(g.fns);},[]);
+  var BASE = 'assets/img/fn/';
+  var $ = function(id){return document.getElementById(id);};
+  var curFn = ORDER[0], curStep = 0, playing = false, timer = null;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  function preload(slug){var i=new Image();i.src=BASE+slug+'.webp';}
+
+  function buildRail(){
+    var rail=$('fnxRail'),h='';
+    GROUPS.forEach(function(g){
+      h+='<div class="fnx-cat">'+g.cat+'</div>';
+      g.fns.forEach(function(s){
+        h+='<button class="fnx-fn" type="button" role="tab" data-fn="'+s+'" aria-selected="false">'+FN[s].name+'</button>';
+      });
+    });
+    rail.innerHTML=h;
+    rail.querySelectorAll('.fnx-fn').forEach(function(b){
+      b.addEventListener('click',function(){curFn=b.dataset.fn;curStep=0;pause();render();});
+    });
+  }
+
+  function render(){
+    var fn=FN[curFn],st=fn.steps[curStep],img=$('fnxImg');
+    img.src=BASE+st.img+'.webp';
+    img.alt=fn.name+' — '+st.t;
+    img.style.animation='none';void img.offsetHeight;img.style.animation='';
+    $('fnxTag').textContent=fn.tag;
+    $('fnxTitle').textContent=st.t;
+    $('fnxDesc').textContent=st.d;
+    $('fnxRail').querySelectorAll('.fnx-fn').forEach(function(b){
+      var on=b.dataset.fn===curFn;
+      b.setAttribute('aria-selected',on?'true':'false');
+      if(on)b.scrollIntoView({block:'nearest',inline:'nearest'});
+    });
+    var dots=$('fnxDots');
+    if(fn.steps.length>1){
+      var d='';
+      fn.steps.forEach(function(s,i){d+='<button class="fnx-dot" type="button" data-i="'+i+'" aria-selected="'+(i===curStep)+'" aria-label="Schritt '+(i+1)+'"></button>';});
+      dots.innerHTML=d;
+      dots.querySelectorAll('.fnx-dot').forEach(function(b){b.addEventListener('click',function(){curStep=+b.dataset.i;pause();render();});});
+      $('fnxCount').textContent=('0'+(curStep+1)).slice(-2)+' / '+('0'+fn.steps.length).slice(-2);
+    } else {
+      dots.innerHTML='';$('fnxCount').textContent='';
+    }
+    // Radar-Hotspot + Info-Bubble auf dem Screenshot
+    var hot=$('fnxHot');
+    if(st.hx!=null){
+      var cls='fnx-hot';
+      if(st.hy<22)cls+=' below';
+      if(st.hx<18)cls+=' bleft';else if(st.hx>82)cls+=' bright';
+      var safe=st.hi.replace(/"/g,'&quot;');
+      hot.innerHTML='<button class="'+cls+'" type="button" style="left:'+st.hx+'%;top:'+st.hy+'%" aria-label="'+safe+'"><i></i><span class="fnx-bubble">'+st.hi+'</span></button>';
+      hot.firstChild.addEventListener('click',function(){pause();advance(1);});
+    } else { hot.innerHTML=''; }
+    var nf=FN[ORDER[(ORDER.indexOf(curFn)+1)%ORDER.length]];
+    preload(curStep+1<fn.steps.length?fn.steps[curStep+1].img:nf.steps[0].img);
+  }
+
+  function advance(dir){
+    var fn=FN[curFn],i=curStep+dir;
+    if(i>=fn.steps.length){curFn=ORDER[(ORDER.indexOf(curFn)+1)%ORDER.length];curStep=0;}
+    else if(i<0){curFn=ORDER[(ORDER.indexOf(curFn)-1+ORDER.length)%ORDER.length];curStep=FN[curFn].steps.length-1;}
+    else{curStep=i;}
+    render();
+  }
+
+  function scheduleNext(){
+    clearTimeout(timer);
+    var st=FN[curFn].steps[curStep];
+    timer=setTimeout(function(){advance(1);if(playing)scheduleNext();},st.dur||3600);
+  }
+  function play(){if(reduce)return;playing=true;$('fnxPlay').textContent='❚❚';$('fnxPlay').setAttribute('aria-label','Wiedergabe pausieren');scheduleNext();}
+  function pause(){playing=false;$('fnxPlay').textContent='▶';$('fnxPlay').setAttribute('aria-label','Automatisch abspielen');clearTimeout(timer);}
+
+  buildRail();render();
+  $('fnxPrev').addEventListener('click',function(){pause();advance(-1);});
+  $('fnxNext').addEventListener('click',function(){pause();advance(1);});
+  $('fnxPlay').addEventListener('click',function(){playing?pause():play();});
+  var wrap=$('fnx');
+  wrap.addEventListener('mouseenter',function(){if(playing)clearTimeout(timer);});
+  wrap.addEventListener('mouseleave',function(){if(playing)scheduleNext();});
+  if(!reduce){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){play();io.disconnect();}});},{threshold:.25});
+    io.observe(wrap);
+  } else { pause(); }
+})();
+</script>
 
 <!-- ░░ FOTO-PLATZHALTER (Bild 2 + 3) ░░ -->
 <div class="px-photo-band" data-reveal>
