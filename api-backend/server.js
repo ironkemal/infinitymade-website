@@ -45,6 +45,17 @@ app.use(cors({
     return cb(null, CORS_ALLOWED_ORIGINS.includes(origin));
   },
 }));
+app.disable('x-powered-by');
+// Baseline security headers (dependency-free — helmet not installed). Traefik
+// terminates TLS but injects no security headers, so set them here for every
+// API response.
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 app.use(express.json({ limit: '15mb' })); // raised for rezept image base64 payloads
 
 // ============================================================================
@@ -77,10 +88,12 @@ const verifyCodeLimiter = rateLimit({
   message: { error: 'Zu viele Versuche. Bitte warten Sie 10 Minuten.' },
 });
 
-// Request logger — used to debug what the n8n bot is actually sending.
+// Request logger — path only. Request bodies are deliberately NOT logged: they
+// carry PHI (patient names, phone numbers, base64 Rezept images) and logging
+// them violates DSGVO Art. 5(1)(f) once logs ship to disk/Sentry.
 app.use((req, _res, next) => {
   if (req.path !== '/health') {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} body=${JSON.stringify(req.body)}`);
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   }
   next();
 });
@@ -296,7 +309,25 @@ app.post('/api/gmail/send', async (req, res) => {
 
     const oauth = newOAuthClient();
     oauth.setCredentials({ refresh_token: profile.b2b_gmail_refresh_token });
-    const { credentials } = await oauth.refreshAccessToken();
+    let credentials;
+    try {
+      ({ credentials } = await oauth.refreshAccessToken());
+    } catch (refreshErr) {
+      // Refresh token dead (invalid_grant): revoked, expired, or minted by a
+      // now-rotated OAuth client. It can never recover — clear it so the
+      // dashboard stops showing "connected" and prompts a reconnect. The
+      // "Gmail token" wording is what the front-end matches to surface the
+      // reconnect toast.
+      console.error('[gmail/send] refresh failed, clearing dead token:', refreshErr.message);
+      await supabase.from('profiles')
+        .update({ b2b_gmail_refresh_token: null })
+        .eq('id', userId);
+      return res.status(401).json({
+        success: false,
+        code: 'gmail_reauth_required',
+        error: 'Gmail token expired — please reconnect Gmail in B2B setup'
+      });
+    }
 
     const fromLabel = sender_name ? `${sender_name} <${profile.b2b_from_email}>` : profile.b2b_from_email;
     const toLabel   = to_name ? `${to_name} <${to_email}>` : to_email;
@@ -327,7 +358,8 @@ app.post('/api/gmail/send', async (req, res) => {
   }
 });
 
-app.post('/api/apify/search', async (req, res) => {
+app.post('/api/apify/search', requireAuthAI, async (req, res) => {
+  req.body.userId = req.auth.userId; // pin to authenticated user — no body spoofing
   const { query, limit, userId } = req.body;
   if (!query || !userId) return res.status(400).json({ error: 'Missing params' });
   const safeLimit = Math.min(parseInt(limit)||20, 50);
@@ -838,7 +870,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       const normPhone = customerPhone ? customerPhone.replace(/\D/g, '') : null;
       const email = (customerEmail || '').trim().toLowerCase();
 
-      console.log('[lead upsert]', { resolvedOwnerId, email, normPhone, customerName });
+      console.log('[lead upsert]', { resolvedOwnerId }); // PHI (email/phone/name) omitted — DSGVO
 
       let activeLeadId = leadId;
 
