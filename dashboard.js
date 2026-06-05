@@ -7320,8 +7320,12 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
     });
     const json = await res.json();
     if (!json.success) {
-      if (json.error && json.error.includes('Gmail token')) {
-        showToast('Gmail nicht verbunden — bitte in Konfiguration neu verbinden', 'error');
+      if (json.code === 'gmail_reauth_required' || (json.error && json.error.includes('Gmail token'))) {
+        // Backend cleared the dead token — reflect that locally so the badge
+        // flips back to "not connected" and prompts a fresh OAuth connect.
+        currentProfile.b2b_from_email = null;
+        gmailConnectedEmail = null;
+        showToast('Gmail-Verbindung abgelaufen — bitte in der Konfiguration neu verbinden', 'error');
         return;
       }
       throw new Error(json.error || 'Senden fehlgeschlagen');
