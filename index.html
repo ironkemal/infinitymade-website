@@ -1224,7 +1224,7 @@
     $('fnxRail').querySelectorAll('.fnx-fn').forEach(function(b){
       var on=b.dataset.fn===curFn;
       b.setAttribute('aria-selected',on?'true':'false');
-      if(on)b.scrollIntoView({block:'nearest',inline:'nearest'});
+      if(on&&inited)b.scrollIntoView({block:'nearest',inline:'nearest'});
     });
     var dots=$('fnxDots');
     if(fn.steps.length>1){
@@ -1266,7 +1266,8 @@
   function play(){if(reduce)return;playing=true;$('fnxPlay').textContent='❚❚';$('fnxPlay').setAttribute('aria-label','Wiedergabe pausieren');scheduleNext();}
   function pause(){playing=false;$('fnxPlay').textContent='▶';$('fnxPlay').setAttribute('aria-label','Automatisch abspielen');clearTimeout(timer);}
 
-  buildRail();render();
+  var inited=false;
+  buildRail();render();inited=true;
   $('fnxPrev').addEventListener('click',function(){pause();advance(-1);});
   $('fnxNext').addEventListener('click',function(){pause();advance(1);});
   $('fnxPlay').addEventListener('click',function(){playing?pause():play();});
