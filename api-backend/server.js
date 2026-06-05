@@ -296,7 +296,25 @@ app.post('/api/gmail/send', async (req, res) => {
 
     const oauth = newOAuthClient();
     oauth.setCredentials({ refresh_token: profile.b2b_gmail_refresh_token });
-    const { credentials } = await oauth.refreshAccessToken();
+    let credentials;
+    try {
+      ({ credentials } = await oauth.refreshAccessToken());
+    } catch (refreshErr) {
+      // Refresh token dead (invalid_grant): revoked, expired, or minted by a
+      // now-rotated OAuth client. It can never recover — clear it so the
+      // dashboard stops showing "connected" and prompts a reconnect. The
+      // "Gmail token" wording is what the front-end matches to surface the
+      // reconnect toast.
+      console.error('[gmail/send] refresh failed, clearing dead token:', refreshErr.message);
+      await supabase.from('profiles')
+        .update({ b2b_gmail_refresh_token: null })
+        .eq('id', userId);
+      return res.status(401).json({
+        success: false,
+        code: 'gmail_reauth_required',
+        error: 'Gmail token expired — please reconnect Gmail in B2B setup'
+      });
+    }
 
     const fromLabel = sender_name ? `${sender_name} <${profile.b2b_from_email}>` : profile.b2b_from_email;
     const toLabel   = to_name ? `${to_name} <${to_email}>` : to_email;
