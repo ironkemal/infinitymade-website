@@ -241,7 +241,8 @@ textarea {
   gap: 12px;
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  /* overflow:hidden burada YOK — biz-switcher dropdown'unu kırpıyordu (altında kalıyordu).
+     Yatay taşma koruması zaten çocuklarda: .biz-name + switcher-current ellipsis, .brand kısa. */
 }
 
 .topbar-right {
