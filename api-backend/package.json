@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "start:cluster": "pm2-runtime start server.js -i 2 --node-args=\"--import ./instrument.js\""
   },
   "dependencies": {
     "@sentry/node": "^8.55.2",
@@ -16,6 +17,7 @@
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
     "googleapis": "^134.0.0",
+    "pm2": "^5.4.3",
     "ws": "^8.16.0"
   }
 }

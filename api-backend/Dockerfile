@@ -18,8 +18,9 @@ EXPOSE 3000
 
 # Run as non-root for safety
 RUN addgroup -S app && adduser -S app -G app && chown -R app:app /app
+ENV PM2_HOME=/tmp/.pm2
 USER app
 
 # ESM mode: Sentry must be loaded via --import to instrument Express BEFORE
 # the app code runs. See https://docs.sentry.io/platforms/javascript/guides/express/install/esm/
-CMD ["node", "--import", "./instrument.js", "server.js"]
+CMD ["pm2-runtime", "start", "server.js", "-i", "2", "--node-args", "--import ./instrument.js"]
