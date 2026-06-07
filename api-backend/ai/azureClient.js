@@ -115,14 +115,28 @@ export async function chat({
     ...(responseFormat ? { response_format: responseFormat } : {})
   };
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': API_KEY
-    },
-    body: JSON.stringify(body)
-  });
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 45000);
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': API_KEY
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Azure OpenAI request timed out after 45s');
+    }
+    throw err;
+  } finally {
+    clearTimeout(t);
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');

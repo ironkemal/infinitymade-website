@@ -130,6 +130,19 @@ function newOAuthClient() {
 // Helpers
 const BUSINESS_TZ = 'Europe/Berlin'; // All working_hours and date inputs are interpreted in this timezone
 
+// Süreli fetch — dış API asılı kalırsa AbortController ile keser, böylece
+// event-loop slot'u süresiz tutulmaz (eşzamanlı yük altında kritik).
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+
 function timeToMins(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
@@ -260,9 +273,9 @@ app.get('/api/calendar/google-callback', async (req, res) => {
     const { tokens } = await newOAuthClient().getToken(code);
 
     if (flowType === 'gmail') {
-      const uRes  = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      const uRes  = await fetchWithTimeout('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: 'Bearer ' + tokens.access_token }
-      });
+      }, 10000);
       const uinfo = await uRes.json();
       if (!uinfo.email) throw new Error('No email from Google');
 
@@ -343,11 +356,11 @@ app.post('/api/gmail/send', async (req, res) => {
     ].join('\r\n');
     const encoded = Buffer.from(rawEmail).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 
-    const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    const gmailRes = await fetchWithTimeout('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + credentials.access_token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ raw: encoded })
-    });
+    }, 15000);
     const gmailJson = await gmailRes.json();
     if (!gmailRes.ok) throw new Error(gmailJson.error?.message || 'Gmail API error');
 
@@ -374,10 +387,11 @@ app.post('/api/apify/search', requireAuthAI, async (req, res) => {
     if ((weekCount||0) >= WEEKLY_LIMIT)
       return res.status(429).json({ success: false, error: `Wöchentliches Limit von ${WEEKLY_LIMIT} erreicht (Reset in 7 Tagen)` });
     const allowed = Math.min(safeLimit, WEEKLY_LIMIT - (weekCount||0));
-    const apifyRes = await fetch(
+    const apifyRes = await fetchWithTimeout(
       `https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${token}&timeout=120&memory=512`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchStringsArray: [query], maxCrawledPlacesPerSearch: allowed, language: 'de', includeHistogram: false, includeImages: false }) }
+        body: JSON.stringify({ searchStringsArray: [query], maxCrawledPlacesPerSearch: allowed, language: 'de', includeHistogram: false, includeImages: false }) },
+      130000
     );
     if (!apifyRes.ok) throw new Error('Apify HTTP ' + apifyRes.status);
     const items = await apifyRes.json();
@@ -639,7 +653,7 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
           timeZone: BUSINESS_TZ,
           items: [{ id: 'primary' }]
         }
-      });
+      }, { timeout: 10000 });
       const busy = freeBusyRes.data.calendars.primary.busy || [];
       busy.forEach(b => {
         bookedIntervals.push({
@@ -854,7 +868,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
               createRequest: { requestId: `meet-${booking.id}`, conferenceSolutionKey: { type: 'hangoutsMeet' } }
             }
           }
-        });
+        }, { timeout: 15000 });
         meetingLink = eventRes.data.hangoutLink || null;
         if (meetingLink) {
           await supabase.from('bookings').update({ meeting_link: meetingLink }).eq('id', booking.id);
@@ -960,7 +974,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     // Trigger n8n webhook
     const n8nWebhook = process.env.N8N_WEBHOOK_URL;
     if (n8nWebhook) {
-      await fetch(n8nWebhook, {
+      await fetchWithTimeout(n8nWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -973,7 +987,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
           time: start_time.toISOString(),
           meetingLink
         })
-      }).catch(e => console.error('n8n webhook failed', e.message));
+      }, 10000).catch(e => console.error('n8n webhook failed', e.message));
     }
 
     // DSGVO audit — anonymous booking creates a patient record on owner's behalf
@@ -1477,11 +1491,11 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
     const N8N_AI_URL = process.env.N8N_AI_SERIES_URL || 'https://n8n.infinitymade.de/webhook/ai-series-scheduler';
     let aiResult = { selected: [], report: '' };
     try {
-      const aiRes = await fetch(N8N_AI_URL, {
+      const aiRes = await fetchWithTimeout(N8N_AI_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(aiPayload)
-      });
+      }, 30000);
       if (aiRes.ok) {
         aiResult = await aiRes.json();
       } else {
@@ -2190,6 +2204,27 @@ if (process.env.DEBUG_SENTRY === '1') {
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);
+});
+
+// Asılı soketlerin birikmesini önle (yavaş/zombi client'lar event-loop'u tüketmesin).
+// Sıralama mantığı: requestTimeout (tüm istek) en büyük; headersTimeout > keepAliveTimeout
+// olmalı, aksi halde keep-alive bağlantısı header ortasında kapanma race'i yaşanır.
+server.requestTimeout = 120000;  // 15mb rezept upload yavaş mobil hatta uzun sürebilir
+server.headersTimeout = 66000;
+server.keepAliveTimeout = 65000;
+
+// Yakalanmamış hata ağları — process'i sessizce öldürmesinler.
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+  try { Sentry.captureException(reason); } catch {}
+  // Bilinçli olarak process'i ÖLDÜRMÜYORUZ — tek bir kayıp promise tüm API'yi düşürmemeli.
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+  try { Sentry.captureException(err); } catch {}
+  // uncaughtException sonrası state bozuk olabilir; Sentry'ye yolla ama hemen çıkma —
+  // PM2/docker restart politikası varsa yine de en güvenlisi temiz çıkış: 1sn sonra exit.
+  setTimeout(() => process.exit(1), 1000).unref();
 });
