@@ -999,6 +999,158 @@
       border-radius: 8px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
+
+    /* ==========================================================
+       MOBILE (<=640px) RESPONSIVE OVERRIDES (Praxura Dashboard)
+       ========================================================== */
+    @media (max-width: 640px) {
+      /* 1. Modal Overlay z-index raise */
+      .modal-overlay {
+        z-index: 10001 !important;
+      }
+
+      /* 2. Demo Banner tall vertical space reduction */
+      .demo-banner {
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+        gap: 8px !important;
+      }
+      .demo-banner-left {
+        gap: 6px !important;
+      }
+      .demo-banner-cta {
+        padding: 3px 8px !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+      }
+
+      /* 3. Topbar overcrowded fixes */
+      .topbar-langs,
+      .live-clock,
+      #liveClock {
+        display: none !important;
+      }
+      .topbar-left {
+        min-width: 0 !important;
+        flex-shrink: 1 !important;
+      }
+      .biz-switcher-chip {
+        max-width: 150px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+      }
+      .biz-switcher-chip > span {
+        display: inline-block !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+      #bizSwitcherCurrentName {
+        display: inline !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      /* 4. Main content padding */
+      .main-area {
+        padding: 14px !important;
+      }
+      .panel-header {
+        margin-bottom: 14px !important;
+        gap: 8px !important;
+      }
+
+      /* 5. Oversized typography */
+      .panel h1,
+      .panel-header h2,
+      .modal-title,
+      .kpi-value {
+        font-size: 22px !important;
+      }
+
+      /* 6. Invoice PDF modal layout fixes */
+      #modal-invoice-pdf .modal-body {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+      .invoice-pdf-mock {
+        padding: 20px !important;
+        min-width: 450px !important;
+      }
+      .invoice-pdf-mock > div:first-child {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+      }
+      .invoice-pdf-mock > div:first-child > div:last-child {
+        text-align: left !important;
+      }
+      .invoice-pdf-mock table {
+        width: 100% !important;
+      }
+      .invoice-pdf-mock th,
+      .invoice-pdf-mock td {
+        padding-left: 10px !important;
+      }
+      .invoice-pdf-mock th:first-child,
+      .invoice-pdf-mock td:first-child {
+        padding-left: 0 !important;
+      }
+      .invoice-pdf-mock th:not(:first-child),
+      .invoice-pdf-mock td:not(:first-child) {
+        white-space: nowrap !important;
+      }
+
+      /* 7. billing302 panel footer overlap */
+      #panel-billing302 .card > div:last-child:not(.table-wrap) {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+      }
+
+      /* 8. Multi-column grids and form rows to single column */
+      .rz-grid,
+      .two-col-grid,
+      .stat-charts-grid,
+      .form-row,
+      .biz-card-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* 9. Calendar week grid squeezing & horizontal scroll */
+      #calWeekContainer,
+      #calDayContainer {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+      .ov-week-grid {
+        min-width: 850px !important;
+      }
+      .cal-grid-week {
+        min-width: 750px !important;
+      }
+
+      /* 10. Tables mobile responsiveness & cell padding */
+      .table-wrap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+      .data-table th {
+        padding: 8px 10px !important;
+        white-space: nowrap !important;
+      }
+      .data-table td {
+        padding: 10px 10px !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .biz-switcher-chip {
+        max-width: 120px !important;
+      }
+    }
   </style>
 </head>
 
@@ -1045,7 +1197,7 @@
       </div>
       <div class="topbar-right">
         <!-- Flags for languages -->
-        <span style="display: flex; gap: 6px; margin-right: 14px; opacity: 0.7;">
+        <span class="topbar-langs" style="display: flex; gap: 6px; margin-right: 14px; opacity: 0.7;">
           <span style="font-size: 12px; font-weight: bold; cursor: pointer;" title="Deutsch">DE</span> · 
           <span style="font-size: 12px; font-weight: bold; cursor: pointer;" title="English">EN</span> · 
           <span style="font-size: 12px; font-weight: bold; cursor: pointer;" title="Türkçe">TR</span>
