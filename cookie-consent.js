@@ -22,7 +22,7 @@
 
     var text = document.createElement('span');
     text.style.cssText = 'flex:1;min-width:200px;';
-    text.textContent = 'Diese Website verwendet Analyse-Cookies (Umami), um die Nutzung zu verstehen.';
+    text.textContent = 'Diese Website verwendet Umami Analytics (cookie-frei) zur anonymen Nutzungsanalyse. Keine personenbezogenen Daten werden gespeichert.';
 
     var btnStyle = 'background:transparent;border:1px solid #fff;color:#fff;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:14px;';
 

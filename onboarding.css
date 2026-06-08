@@ -1248,6 +1248,23 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
   }
 }
 
+@media (max-width: 768px) {
+  .ob-form input[type="text"],
+  .ob-form input[type="email"],
+  .ob-form input[type="password"],
+  .ob-form input[type="tel"],
+  .ob-form input[type="number"],
+  .ob-form select,
+  .ob-form textarea {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ob-topbar-inner { gap: 12px; }
+  .ob-logout { padding: 5px 10px; font-size: 0.75rem; }
+}
+
 @media (max-width: 640px) {
   /* General screen padding */
   .ob-main {

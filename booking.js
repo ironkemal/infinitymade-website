@@ -469,6 +469,24 @@ document.getElementById('backToCal').addEventListener('click', () => goStep('dat
 
 document.getElementById('bookingForm').addEventListener('submit', async e => {
   e.preventDefault();
+
+  // Guard: ensure all required selections are made
+  if (!state.selectedTime || !state.selectedDate || !state.serviceId) {
+    alert('Bitte wählen Sie einen Termin aus.');
+    return;
+  }
+  if (!state.employeeId) {
+    alert('Kein Anbieter ausgewählt. Bitte starten Sie die Buchung neu.');
+    return;
+  }
+
+  // Guard: validate email format
+  const emailVal = document.getElementById('custEmail')?.value || '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+    alert('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
+    return;
+  }
+
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true; btn.textContent = 'Wird gebucht…';
   try {

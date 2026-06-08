@@ -28,11 +28,10 @@ async function countRows(path) {
 }
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
   const { user, error: authErr } = await getAuthedUser(req);
   if (authErr || !user) return json(res, 401, { error: 'Unauthorized' });
   if (!(await isAdmin(user.id))) return json(res, 403, { error: 'Forbidden' });
-
-  if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
 
   const type = req.query?.type || 'stats';
   const monthStart = startOfMonthISO();

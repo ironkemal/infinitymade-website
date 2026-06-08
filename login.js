@@ -143,8 +143,12 @@ document.getElementById('forgotLink').addEventListener('click', async (e) => {
   const t = T[lang];
   const email = prompt(t.reset_prompt);
   if (!email) return;
-  await supabase.auth.resetPasswordForEmail(email, {
+  const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/login.html`
   });
-  showMsg(t.reset_success, 'success');
+  if (resetError) {
+    showMsg(resetError.message || 'Fehler beim Zurücksetzen des Passworts.', 'error');
+  } else {
+    showMsg(t.reset_success, 'success');
+  }
 });

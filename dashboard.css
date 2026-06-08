@@ -4496,11 +4496,16 @@ textarea {
 
   .data-table {
     font-size: 12px;
+    min-width: 560px;
   }
 
   .data-table th,
   .data-table td {
     padding: 8px 10px;
+  }
+
+  input, select, textarea {
+    font-size: 16px !important;
   }
 
   .upcoming-item {
@@ -4565,6 +4570,10 @@ textarea {
     font-size: 12px !important;
     margin-right: 0 !important;
   }
+}
+
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {

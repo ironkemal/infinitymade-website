@@ -228,9 +228,8 @@ app.use('/api/billing', billingStatistikRouter);
 app.use('/api/warteliste', wartelisteRouter);
 
 // 1. Google OAuth Routes
-app.get('/api/calendar/google-auth', (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
+  const userId = req.auth.userId;  // pin to authenticated user
 
   const url = newOAuthClient().generateAuthUrl({
     access_type: 'offline',
@@ -245,9 +244,8 @@ app.get('/api/calendar/google-auth', (req, res) => {
   res.redirect(url);
 });
 
-app.get('/api/gmail/connect', (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+app.get('/api/gmail/connect', requireAuthAI, (req, res) => {
+  const userId = req.auth.userId;  // pin to authenticated user
 
   const url = newOAuthClient().generateAuthUrl({
     access_type: 'offline',
@@ -314,9 +312,10 @@ app.get('/api/calendar/google-callback', async (req, res) => {
   }
 });
 
-app.post('/api/gmail/send', async (req, res) => {
-  const { userId, to_email, to_name, subject, body, sender_name } = req.body;
-  if (!userId || !to_email || !subject || !body) return res.status(400).json({ error: 'Missing params' });
+app.post('/api/gmail/send', requireAuthAI, async (req, res) => {
+  const userId = req.auth.userId;  // pin to authenticated user, never trust body
+  const { to_email, to_name, subject, body, sender_name } = req.body;
+  if (!to_email || !subject || !body) return res.status(400).json({ error: 'Missing params' });
 
   try {
     const { data: profile, error: pErr } = await supabase
@@ -1035,8 +1034,18 @@ app.post('/api/verify-code', verifyCodeLimiter, async (req, res) => {
 // Get Team Members (Bypasses RLS)
 app.get('/api/team', requireAuthAI, async (req, res) => {
   try {
-    const { owner_id } = req.query;
-    if (!owner_id) return res.status(400).json({ error: 'owner_id is required' });
+    // Use authenticated user's tenant context, not caller-supplied owner_id
+    const authUserId = req.auth.userId;
+    // Fetch the user's own profile to determine their owner context
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, role, owner_id')
+      .eq('id', authUserId)
+      .single();
+    if (!profile) return res.status(403).json({ error: 'Forbidden' });
+    // owner sees their own team; employee sees their owner's team
+    const owner_id = profile.role === 'owner' ? profile.id : profile.owner_id;
+    if (!owner_id) return res.status(400).json({ error: 'owner_id could not be resolved' });
 
     const { data, error } = await supabase
       .from('profiles')

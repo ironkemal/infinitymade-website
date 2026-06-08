@@ -8,7 +8,7 @@
 //   - checkout.session.completed (initial bind)
 
 import { adminFetch, adminAuthFetch, adminRpc, json } from '../_lib/auth.js';
-import { verifyWebhook, dtaProPriceIds } from '../_lib/stripe.js';
+import { verifyWebhook, dtaProPriceIds, stripeRequest } from '../_lib/stripe.js';
 
 const SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -109,6 +109,51 @@ export default async function handler(req, res) {
       case 'checkout.session.completed': {
         const session = event.data.object;
         const pendingId = session.metadata?.pending_id;
+        const existingUserId = session.metadata?.user_id;
+
+        if (!pendingId && !existingUserId) break;
+
+        if (!pendingId && existingUserId) {
+          // Existing authenticated user completed checkout — activate their plan
+          const subscriptionId = session.subscription;
+          const customerId = session.customer;
+          const planSlug = session.metadata?.plan || session.metadata?.planSlug || session.metadata?.plan_slug || null;
+          const interval = session.metadata?.interval || session.metadata?.billing_interval || 'month';
+
+          if (subscriptionId) {
+            let trialEnd = null;
+            try {
+              const { ok: subOk, data: subData } = await stripeRequest(`/subscriptions/${subscriptionId}`);
+              if (subOk && subData?.trial_end) {
+                trialEnd = new Date(subData.trial_end * 1000).toISOString();
+              }
+            } catch (e) {
+              console.error('[webhook] could not retrieve subscription for trial_end:', e.message);
+            }
+
+            const patch = {
+              stripe_subscription_id: subscriptionId,
+              stripe_customer_id: customerId,
+              plan_status: trialEnd ? 'trial' : 'active',
+              billing_interval: interval,
+              is_active: true,
+              trial_ends_at: trialEnd,
+            };
+            if (planSlug) patch.plan = planSlug;
+
+            const { ok: patchOk, status: patchStatus, data: patchData } = await adminFetch(`/profiles?id=eq.${existingUserId}`, {
+              method: 'PATCH',
+              body: JSON.stringify(patch),
+            });
+            if (!patchOk) {
+              console.error('[webhook] checkout.session.completed existing user profile update failed', patchStatus, patchData);
+            } else {
+              console.log('[webhook] checkout.session.completed existing user plan activated:', existingUserId, planSlug);
+            }
+          }
+          break;
+        }
+
         if (!pendingId) break;
 
         const { ok: pOk, data: pRows } = await adminFetch(`/pending_signups?id=eq.${encodeURIComponent(pendingId)}&select=email,onboarding_data`);

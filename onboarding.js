@@ -897,17 +897,23 @@ function bindPlan() {
           consents,
         };
 
-        const pendingRes = await fetch('/api/onboarding/pending', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, onboarding_data }),
-        });
-        const pendingData = await pendingRes.json();
-        if (!pendingRes.ok || !pendingData.pending_id) {
-          showError(pendingData.error || 'Vorbereitung fehlgeschlagen.');
-          btn.disabled = false;
-          btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
-          return;
+        let pendingData;
+        try {
+          const pendingRes = await fetch('/api/onboarding/pending', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, onboarding_data }),
+          });
+          pendingData = await pendingRes.json();
+          if (!pendingRes.ok || !pendingData.pending_id) {
+            showError(pendingData.error || 'Vorbereitung fehlgeschlagen.');
+            btn.disabled = false;
+            btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
+            return;
+          }
+        } finally {
+          // Clear plaintext password from sessionStorage as soon as it's been sent
+          sessionStorage.removeItem('onboarding_password');
         }
 
         const checkoutRes = await fetch('/api/stripe/create-checkout-session', {
@@ -922,6 +928,9 @@ function bindPlan() {
           btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
           return;
         }
+        // Safety net: clear any remaining sensitive data before redirect
+        sessionStorage.removeItem('onboarding_password');
+        sessionStorage.removeItem('onboarding_email');
         window.location.href = checkoutData.url;
       } catch (err) {
         showError(err.message);
