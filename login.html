@@ -232,6 +232,71 @@
         font-size: 16px !important;
       }
     }
+
+    /* Email-not-confirmed banner */
+    .confirm-banner {
+      margin-top: 1rem;
+      padding: 0.9rem 1.1rem;
+      background: rgba(107, 85, 56, 0.07);
+      border: 1px solid rgba(107, 85, 56, 0.2);
+      border-radius: 10px;
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+    .confirm-banner p { margin: 0 0 0.6rem; }
+    .btn-resend {
+      width: 100%;
+      padding: 0.65rem 1.1rem;
+      background: transparent;
+      border: 1px solid var(--bronze);
+      color: var(--bronze);
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 200ms, color 200ms;
+    }
+    .btn-resend:hover { background: var(--bronze); color: var(--bg); }
+    .btn-resend:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Reset + new-pw panels share form label/input styles from parent */
+    #resetPanel label, #newPwPanel label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin: 1.1rem 0 0.5rem;
+    }
+    #resetPanel label:first-of-type, #newPwPanel label:first-of-type { margin-top: 0; }
+    #resetPanel input, #newPwPanel input {
+      width: 100%;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid rgba(26,22,17,0.18);
+      border-radius: 12px;
+      font-family: var(--sans);
+      font-size: 0.98rem;
+      color: var(--ink);
+      background: var(--bg-warm);
+      transition: border-color 200ms, background 200ms, box-shadow 200ms;
+    }
+    #resetPanel input:focus, #newPwPanel input:focus {
+      outline: none;
+      border-color: var(--bronze);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(107,85,56,0.12);
+    }
+    #newPwPanel h2 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.7rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -259,10 +324,40 @@
 
         <div id="message" class="msg"></div>
 
+        <!-- email-not-confirmed banner -->
+        <div id="confirmBanner" class="confirm-banner" style="display:none">
+          <p id="confirmBannerText">Ihre E-Mail-Adresse wurde noch nicht bestätigt. Bitte klicken Sie den Link in der Bestätigungs-E-Mail.</p>
+          <button type="button" class="btn-resend" id="resendBtn">Bestätigungsmail erneut senden</button>
+        </div>
+
         <div class="links">
           <a href="#" id="forgotLink">Passwort vergessen?</a>
         </div>
       </form>
+
+      <!-- Forgot-password panel -->
+      <div id="resetPanel" style="display:none">
+        <p class="sub" id="resetSub">Geben Sie Ihre E-Mail-Adresse ein — wir schicken Ihnen einen Reset-Link.</p>
+        <label id="lbl_reset_email">E-Mail</label>
+        <input type="email" id="resetEmail" autocomplete="email" />
+        <button type="button" class="btn-primary" id="resetSubmitBtn" style="margin-top:1.2rem">Link senden</button>
+        <div id="resetMsg" class="msg" style="margin-top:0.8rem"></div>
+        <div class="links" style="margin-top:1rem">
+          <a href="#" id="resetBackLink">← Zurück zur Anmeldung</a>
+        </div>
+      </div>
+
+      <!-- New-password panel (shown after clicking recovery email link) -->
+      <div id="newPwPanel" style="display:none">
+        <h2 id="newPwTitle">Neues Passwort</h2>
+        <p class="sub" id="newPwSub">Wählen Sie ein neues Passwort für Ihr Konto.</p>
+        <label id="lbl_new_pw">Neues Passwort</label>
+        <input type="password" id="newPw" autocomplete="new-password" minlength="8" />
+        <label id="lbl_new_pw2">Passwort bestätigen</label>
+        <input type="password" id="newPw2" autocomplete="new-password" />
+        <button type="button" class="btn-primary" id="newPwSubmitBtn" style="margin-top:1.2rem">Passwort ändern</button>
+        <div id="newPwMsg" class="msg" style="margin-top:0.8rem"></div>
+      </div>
 
       <div class="register-block">
         <p class="register-text" id="regText">Noch kein Konto?</p>
@@ -273,7 +368,7 @@
     <p class="back-home"><a href="/" id="backLink">← Zurück zur Startseite</a></p>
   </main>
 
-  <script type="module" src="login.js?v=20260608"></script>
+  <script type="module" src="login.js?v=20260609"></script>
 <footer style="text-align:center;padding:1.5rem 1rem;font-size:0.82rem;color:#888;">
   <a href="/impressum.html" style="color:#888;text-decoration:underline;margin:0 0.5rem;">Impressum</a> ·
   <a href="/datenschutz.html" style="color:#888;text-decoration:underline;margin:0 0.5rem;">Datenschutz</a> ·
