@@ -910,9 +910,6 @@ function bindPlan() {
           btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
           return;
         }
-        // Clear plaintext password only after successful submission
-        sessionStorage.removeItem('onboarding_password');
-
         const checkoutRes = await fetch('/api/stripe/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -925,7 +922,7 @@ function bindPlan() {
           btn.textContent = `${planSlug.charAt(0).toUpperCase() + planSlug.slice(1)} wählen`;
           return;
         }
-        // Safety net: clear any remaining sensitive data before redirect
+        // Clear sensitive data only right before leaving — keeps retry possible if checkout failed
         sessionStorage.removeItem('onboarding_password');
         sessionStorage.removeItem('onboarding_email');
         window.location.href = checkoutData.url;
