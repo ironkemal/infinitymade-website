@@ -833,7 +833,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
   try {
     // ---- Auth ----
     const authHdr = req.headers.authorization || '';
-    const token = req.query.token || (authHdr.startsWith('Bearer ') ? authHdr.slice(7) : authHdr || null);
+    const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (authHdr || null);
     if (!token) return res.status(401).send('Nicht autorisiert');
     const { data: { user }, error: uErr } = await supabase.auth.getUser(token);
     if (uErr || !user) return res.status(401).send('Ungültiges Token');
@@ -1102,7 +1102,7 @@ router.get('/belegliste/export', async (req, res) => {
   try {
     // ---- Auth scoping ----
     const hdr   = req.headers.authorization || '';
-    const token = hdr.startsWith('Bearer ') || hdr.startsWith('bearer ') ? (hdr.slice(7) || req.query.token) : req.query.token;
+    const token = (hdr.startsWith('Bearer ') || hdr.startsWith('bearer ')) ? hdr.slice(7) : null;
     
     if (!token) return res.status(401).send('Nicht autorisiert: Fehlender Token');
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
@@ -1194,7 +1194,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
   try {
     // ---- auth ----
     const hdr   = req.headers.authorization || '';
-    const token = hdr.startsWith('Bearer ') || hdr.startsWith('bearer ') ? (hdr.slice(7) || req.query.token) : req.query.token;
+    const token = (hdr.startsWith('Bearer ') || hdr.startsWith('bearer ')) ? hdr.slice(7) : null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
     if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });

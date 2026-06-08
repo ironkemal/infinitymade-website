@@ -18,7 +18,7 @@ const supabase = createClient(
 // ---------- shared auth helper ----------
 
 async function resolveAuth(req, res) {
-  const token = req.query.token || req.headers.authorization?.slice(7);
+  const token = req.headers.authorization?.slice(7);
   if (!token) { res.status(401).json({ error: 'Missing bearer token' }); return null; }
 
   const { data: u, error: uErr } = await supabase.auth.getUser(token);

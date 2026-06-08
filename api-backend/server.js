@@ -29,21 +29,25 @@ const app = express();
 // Trust proxy (Traefik) so rate-limit can read real client IP from X-Forwarded-For
 app.set('trust proxy', 1);
 
-// CORS: restrict browser callers to our own front-ends (was wildcard `cors()`).
+// CORS: restrict browser callers to our own front-ends.
 // Non-browser callers (no Origin header: server-to-server, curl, health checks)
-// are allowed through. Override/extend via CORS_ALLOWED_ORIGINS (comma-separated).
-const CORS_ALLOWED_ORIGINS = (process.env.CORS_ALLOWED_ORIGINS
-  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(s => s.trim())
-  : [
-      'https://praxura.de', 'https://www.praxura.de', 'https://app.praxura.de',
-      'https://infinitymade.de', 'https://www.infinitymade.de', 'https://app.infinitymade.de',
-    ]
-).filter(Boolean);
+// are allowed through.
+const ALLOWED_ORIGINS = [
+  'https://praxura.de',
+  'https://www.praxura.de',
+  'https://app.praxura.de',
+  'https://admin.praxura.de',
+  'https://infinitymade.de',
+  'https://www.infinitymade.de',
+  'https://app.infinitymade.de',
+  'https://admin.infinitymade.de',
+];
 app.use(cors({
-  origin(origin, cb) {
-    if (!origin) return cb(null, true); // server-to-server / curl / mobile
-    return cb(null, CORS_ALLOWED_ORIGINS.includes(origin));
+  origin: function (origin, callback) {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error('CORS: origin not allowed'));
   },
+  credentials: true,
 }));
 app.disable('x-powered-by');
 // Baseline security headers (dependency-free — helmet not installed). Traefik
