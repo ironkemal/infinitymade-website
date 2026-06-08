@@ -12,11 +12,12 @@
     return;
   }
 
-  // Environment — currently hardcoded to 'test'. When going live (first real
-  // paying customer), change this single line to 'production'. PRE_LAUNCH_
-  // CHECKLIST.md has this step listed.
-  var environment = 'test';
-  var isProd = false;
+  var environment = (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.endsWith('.vercel.app')
+  ) ? 'test' : 'production';
+  var isProd = environment === 'production';
 
   // PII patterns to scrub from event payloads (mirrors backend access-log redactor).
   var PII_PATTERNS = [

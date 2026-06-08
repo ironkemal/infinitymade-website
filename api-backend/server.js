@@ -1029,7 +1029,7 @@ app.post('/api/verify-code', verifyCodeLimiter, async (req, res) => {
 });
 
 // Get Team Members (Bypasses RLS)
-app.get('/api/team', async (req, res) => {
+app.get('/api/team', requireAuthAI, async (req, res) => {
   try {
     const { owner_id } = req.query;
     if (!owner_id) return res.status(400).json({ error: 'owner_id is required' });
@@ -1046,7 +1046,7 @@ app.get('/api/team', async (req, res) => {
   }
 });
 
-app.post('/api/booking/batch-create', async (req, res) => {
+app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   const { userId, ownerId, serviceId, startDate, time, recurrence, weekdays, count, customerName, customerPhone, notes, duration } = req.body;
 
   if (!userId || !ownerId || !startDate || !time || !count || count < 1 || count > 52) {
@@ -1152,7 +1152,7 @@ app.post('/api/booking/batch-create', async (req, res) => {
 });
 
 // 5b. AI Series Scheduler — enumerate candidate slots, send to n8n+OpenAI for ranking
-app.post('/api/booking/ai-suggest-series', async (req, res) => {
+app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
   try {
     const {
       ownerId, serviceId, customerId, employeeId,
@@ -1577,7 +1577,7 @@ app.post('/api/booking/ai-suggest-series', async (req, res) => {
 });
 
 // 5c. Batch-create with explicit slots (used after AI confirmation)
-app.post('/api/booking/batch-create-explicit', async (req, res) => {
+app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) => {
   const { ownerId, serviceId, slots, customerName, customerPhone, notes, hausbesuch, duration } = req.body;
   if (!ownerId || !Array.isArray(slots) || slots.length === 0) {
     return res.status(400).json({ error: 'ownerId and slots[] required' });
@@ -1633,7 +1633,7 @@ app.post('/api/booking/batch-create-explicit', async (req, res) => {
 });
 
 // 6. Manual Booking (From Admin Panel)
-app.post('/api/booking/manual-create', async (req, res) => {
+app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
   try {
     const { ownerId, employeeId, title, start_time, end_time, customerName, customerPhone } = req.body;
     
@@ -1994,7 +1994,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
   }
 });
 
-app.post('/api/rezept/save', async (req, res) => {
+app.post('/api/rezept/save', requireAuthAI, async (req, res) => {
   try {
     const { ownerId, patientId, arztName, arztNummer, diagnose, sitzungen, hausbesuch, befund, rezeptDatum } = req.body;
     if (!ownerId || !patientId || !arztName) {
@@ -2080,7 +2080,7 @@ app.post('/api/rezept/save', async (req, res) => {
 // `get_active_prescription` toolHttpRequest. Server-internal: no JWT
 // (matches the existing booking tools), but ownerId is required so we
 // never leak across tenants.
-app.post('/api/prescription/lookup-by-phone', async (req, res) => {
+app.post('/api/prescription/lookup-by-phone', requireAuthAI, async (req, res) => {
   try {
     const { ownerId, phone } = req.body || {};
     if (!ownerId || !phone) {
