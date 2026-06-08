@@ -355,6 +355,10 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
   height: 18px;
 }
 
+.ob-pw-toggle svg[hidden] {
+  display: none !important;
+}
+
 /* Focus and Active States */
 .ob-form input:focus,
 .ob-form select:focus {
