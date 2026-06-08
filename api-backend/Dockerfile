@@ -23,4 +23,9 @@ USER app
 
 # ESM mode: Sentry must be loaded via --import to instrument Express BEFORE
 # the app code runs. See https://docs.sentry.io/platforms/javascript/guides/express/install/esm/
-CMD ["pm2-runtime", "start", "server.js", "-i", "2", "--node-args", "--import ./instrument.js"]
+#
+# Explicit path to the pm2-runtime bin: node_modules/.bin is NOT on the image
+# PATH, so a bare "pm2-runtime" CMD fails with MODULE_NOT_FOUND (verified in a
+# real container). --node-args forwards --import to each forked cluster worker
+# so Sentry instruments every worker, not just the PM2 master.
+CMD ["./node_modules/.bin/pm2-runtime", "start", "server.js", "-i", "2", "--node-args", "--import ./instrument.js"]
