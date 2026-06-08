@@ -6155,8 +6155,8 @@ async function loadTeam() {
   }
 
   // Enterprise + multi-business: aktif business'a atanmamış employee'leri filtrele
-  // (owner her zaman görünür)
-  if (isEnterprise() && currentBusiness?.id && myBusinesses.length > 1) {
+  // Sadece owner için — employee rolü tüm ekibi görür (business ataması olmaksızın)
+  if (currentProfile.role === 'owner' && isEnterprise() && currentBusiness?.id && myBusinesses.length > 1) {
     const { data: assigned } = await supabase
       .from('employee_business_assignments')
       .select('employee_id')
@@ -6194,20 +6194,14 @@ async function loadTeam() {
     }
   }
 
-  if (currentProfile.role !== 'owner') return;
-  const code = currentProfile.company_code || '—';
-  document.getElementById('inviteCode').textContent = code;
-  const inviteUrl = code === '—' ? '—' : `${location.origin}/employee-signup.html?code=${encodeURIComponent(code)}`;
-  document.getElementById('inviteLink').textContent = inviteUrl;
-  document.getElementById('copyInviteBtn').onclick = () => {
-    navigator.clipboard.writeText(code);
-    showToast(t('copied'));
-  };
-  document.getElementById('copyInviteLinkBtn').onclick = () => {
-    navigator.clipboard.writeText(inviteUrl);
-    showToast(t('copied'));
-  };
+  // Hide owner-only elements for employees
+  const isOwner = currentProfile.role === 'owner';
+  const inviteCard = document.querySelector('#panel-team .invite-card');
+  if (inviteCard) inviteCard.hidden = !isOwner;
+  const addBtn = document.getElementById('teamAddBtn');
+  if (addBtn) addBtn.hidden = !isOwner;
 
+  // Render employee list — visible to both owner and employee
   const list = document.getElementById('employeeList');
   list.innerHTML = data.map(m => {
     const name = m.business_name || m.email?.split('@')[0] || '—';
@@ -6246,6 +6240,22 @@ async function loadTeam() {
       showToast(t('copied'));
     });
   });
+
+  if (!isOwner) return;
+
+  // Owner-only: invite code + registration link
+  const code = currentProfile.company_code || '—';
+  document.getElementById('inviteCode').textContent = code;
+  const inviteUrl = code === '—' ? '—' : `${location.origin}/employee-signup.html?code=${encodeURIComponent(code)}`;
+  document.getElementById('inviteLink').textContent = inviteUrl;
+  document.getElementById('copyInviteBtn').onclick = () => {
+    navigator.clipboard.writeText(code);
+    showToast(t('copied'));
+  };
+  document.getElementById('copyInviteLinkBtn').onclick = () => {
+    navigator.clipboard.writeText(inviteUrl);
+    showToast(t('copied'));
+  };
 }
 
 let detailEmpId = null;
@@ -6715,7 +6725,7 @@ function openEmpDetail(empId) {
   };
 
   const isOwn = m.id === currentSession.user.id;
-  document.getElementById('empRemoveBtn').hidden = isOwn;
+  document.getElementById('empRemoveBtn').hidden = isOwn || currentProfile.role !== 'owner';
   document.getElementById('empRemoveBtn').onclick = async () => {
     if (!confirm(t('btn_remove') + '?')) return;
     await supabase.from('profiles').update({ owner_id: null, role: 'owner' }).eq('id', m.id);
@@ -7182,7 +7192,7 @@ document.getElementById('b2cComposeBtn').addEventListener('click', () => {
 
 async function checkB2cSetup() {
   gmailConnectedEmail = currentProfile.b2b_from_email || null;
-  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name;
+  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name && currentProfile.b2b_from_email;
   document.getElementById('b2cSetupCard').hidden = !!setupDone;
   document.getElementById('b2cMainContent').hidden = !setupDone;
   if (setupDone) {
@@ -7192,20 +7202,26 @@ async function checkB2cSetup() {
   } else {
     const nameInput = document.getElementById('b2cSetupSenderName');
     if (currentProfile.b2b_sender_name) nameInput.value = currentProfile.b2b_sender_name;
+    setGmailUI(gmailConnectedEmail,
+      document.getElementById('b2cSetupGmailDot'),
+      document.getElementById('b2cSetupGmailLabel'),
+      document.getElementById('b2cSetupGmailBtn'));
     updateB2cSetupFinishBtn();
   }
 }
 
 function updateB2cSetupFinishBtn() {
   const nameOk = document.getElementById('b2cSetupSenderName').value.trim().length > 0;
-  document.getElementById('b2cSetupFinishBtn').disabled = !nameOk;
+  const mailOk = !!gmailConnectedEmail;
+  document.getElementById('b2cSetupFinishBtn').disabled = !(nameOk && mailOk);
 }
 
 document.getElementById('b2cSetupSenderName').addEventListener('input', updateB2cSetupFinishBtn);
+document.getElementById('b2cSetupGmailBtn').addEventListener('click', startGmailOAuth);
 
 document.getElementById('b2cSetupFinishBtn').addEventListener('click', async () => {
   const name = document.getElementById('b2cSetupSenderName').value.trim();
-  if (!name) return;
+  if (!name || !gmailConnectedEmail) return;
   const { error } = await supabase.from('profiles')
     .update({ b2b_sender_name: name, b2b_setup_done: true })
     .eq('id', currentSession.user.id);
@@ -7251,7 +7267,7 @@ function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
 
 async function checkB2bSetup() {
   gmailConnectedEmail = currentProfile.b2b_from_email || null;
-  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name;
+  const setupDone = currentProfile.b2b_setup_done && currentProfile.b2b_sender_name && currentProfile.b2b_from_email;
   document.getElementById('b2bSetupCard').hidden = !!setupDone;
   document.getElementById('b2bMainContent').hidden = !setupDone;
   if (setupDone) {
@@ -7262,20 +7278,26 @@ async function checkB2bSetup() {
   } else {
     const nameInput = document.getElementById('setupSenderName');
     if (currentProfile.b2b_sender_name) nameInput.value = currentProfile.b2b_sender_name;
+    setGmailUI(gmailConnectedEmail,
+      document.getElementById('b2bSetupGmailDot'),
+      document.getElementById('b2bSetupGmailLabel'),
+      document.getElementById('b2bSetupGmailBtn'));
     updateSetupFinishBtn();
   }
 }
 
 function updateSetupFinishBtn() {
   const nameOk = document.getElementById('setupSenderName').value.trim().length > 0;
-  document.getElementById('b2bSetupFinishBtn').disabled = !nameOk;
+  const mailOk = !!gmailConnectedEmail;
+  document.getElementById('b2bSetupFinishBtn').disabled = !(nameOk && mailOk);
 }
 
 document.getElementById('setupSenderName').addEventListener('input', updateSetupFinishBtn);
+document.getElementById('b2bSetupGmailBtn').addEventListener('click', startGmailOAuth);
 
 document.getElementById('b2bSetupFinishBtn').addEventListener('click', async () => {
   const name = document.getElementById('setupSenderName').value.trim();
-  if (!name) return;
+  if (!name || !gmailConnectedEmail) return;
   const { error } = await supabase.from('profiles')
     .update({ b2b_sender_name: name, b2b_setup_done: true })
     .eq('id', currentSession.user.id);
