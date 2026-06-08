@@ -179,7 +179,7 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             type: 'signup',
             email: pending.email,
-            options: { redirectTo: 'https://praxura.de/login.html?verified=1' },
+            options: { redirectTo: 'https://app.praxura.de/login.html?verified=1' },
           }),
         });
         if (!emailOk) console.error('[webhook] confirmation email (generate_link) failed', emailStatus, emailData);
