@@ -176,13 +176,13 @@ function validateStep2(ownerMap = null) {
     }
     if (ownerMap) {
       const owner = ownerMap[h.day_of_week];
-      if (owner && owner.is_active) {
-        if (h.start_time < owner.start_time || h.end_time > owner.end_time) {
-          $('err-wh').style.display = 'block';
-          $('err-wh').textContent =
-            'Ihre Zeiten liegen außerhalb der Betriebszeiten. Bitte passen Sie die Zeiten an.';
-          return false;
-        }
+      const os = owner?.start_time?.slice(0, 5);
+      const oe = owner?.end_time?.slice(0, 5);
+      const ownerValid = owner?.is_active === true && os && oe && os !== oe && os !== '00:00';
+      if (ownerValid && (h.start_time < os || h.end_time > oe)) {
+        $('err-wh').style.display = 'block';
+        $('err-wh').textContent = 'Ihre Zeiten liegen außerhalb der Betriebszeiten. Bitte passen Sie die Zeiten an.';
+        return false;
       }
     }
   }
