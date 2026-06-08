@@ -165,16 +165,17 @@ export default async function handler(req, res) {
         if (!uOk) { console.error('[webhook] user creation failed', uData); break; }
         const userId = uData.id;
 
-        // Admin API ile oluşturulan kullanıcıya Supabase otomatik mail atmaz — elle tetikle.
-        const { ok: emailOk, status: emailStatus, data: emailData } = await adminAuthFetch('/admin/generate_link', {
+        // generate_link sadece link döndürür, mail atmaz. /resend tetikler.
+        const { ok: emailOk, status: emailStatus, data: emailData } = await adminAuthFetch('/resend', {
           method: 'POST',
           body: JSON.stringify({
             type: 'signup',
             email: pending.email,
-            options: { redirectTo: 'https://app.praxura.de/login.html?verified=1' },
+            gotrue_meta_security: {},
           }),
         });
-        if (!emailOk) console.error('[webhook] confirmation email (generate_link) failed', emailStatus, emailData);
+        if (!emailOk) console.error('[webhook] confirmation email (resend) failed', emailStatus, emailData);
+        else console.log('[webhook] confirmation email sent via resend to', pending.email);
 
         const od = pending.onboarding_data || {};
 
