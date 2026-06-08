@@ -4,6 +4,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 let currentStep = 1;
+let resolvedOwnerId = null;   // set early from verify-code, reused on submit
 
 /* ─── Helpers ─── */
 function $(id) { return document.getElementById(id); }
@@ -31,17 +32,30 @@ function clearStep1Errors() {
 function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
 /* ─── Working Hours UI ─── */
-function renderWorkingHours() {
-  $('workingHoursList').innerHTML = DAYS.map((label, i) => `
-    <div class="wh-row" data-day="${i}">
-      <label><input type="checkbox" class="wh-active" checked /> <span>${label}</span></label>
+function renderWorkingHours(ownerHours = null) {
+  $('workingHoursList').innerHTML = DAYS.map((label, i) => {
+    const ownerDay = ownerHours?.find(h => h.day_of_week === i);
+    const ownerActive = !ownerHours || (ownerDay && ownerDay.is_active);
+    const startVal  = ownerDay?.start_time?.slice(0, 5) || '09:00';
+    const endVal    = ownerDay?.end_time?.slice(0, 5)   || '18:00';
+    const minAttr   = ownerActive && ownerDay ? `min="${ownerDay.start_time.slice(0,5)}"` : '';
+    const maxAttr   = ownerActive && ownerDay ? `max="${ownerDay.end_time.slice(0,5)}"` : '';
+    const closedAttr = ownerActive ? '' : 'data-owner-closed';
+    const checkedAttr  = ownerActive ? 'checked' : '';
+    const disabledAttr = ownerActive ? '' : 'disabled';
+    return `
+    <div class="wh-row" data-day="${i}" ${closedAttr}>
+      <label>
+        <input type="checkbox" class="wh-active" ${checkedAttr} ${disabledAttr} />
+        <span>${label}</span>
+      </label>
       <div class="wh-times">
-        <input type="time" class="wh-start" value="09:00" />
-        <span style="color:var(--text-secondary);">–</span>
-        <input type="time" class="wh-end" value="18:00" />
+        <input type="time" class="wh-start" value="${startVal}" ${minAttr} ${maxAttr} ${disabledAttr} />
+        <span class="wh-sep">–</span>
+        <input type="time" class="wh-end" value="${endVal}" ${minAttr} ${maxAttr} ${disabledAttr} />
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   document.querySelectorAll('.wh-active').forEach(cb => {
     cb.addEventListener('change', e => {
@@ -50,7 +64,22 @@ function renderWorkingHours() {
     });
   });
 }
-renderWorkingHours();
+
+/* ─── Fetch owner hours and init working-hours step ─── */
+async function initWorkingHours() {
+  if (!resolvedOwnerId) { renderWorkingHours(); return; }
+  try {
+    const { data: ownerHours, error } = await supabase
+      .from('working_hours')
+      .select('day_of_week, is_active, start_time, end_time')
+      .eq('user_id', resolvedOwnerId);
+    if (error || !ownerHours?.length) throw new Error('no working_hours rows');
+    renderWorkingHours(ownerHours);
+  } catch {
+    // Graceful degradation: render unconstrained if owner hours unavailable
+    renderWorkingHours();
+  }
+}
 
 function collectWorkingHours() {
   return [...document.querySelectorAll('.wh-row')].map(row => ({
@@ -61,12 +90,31 @@ function collectWorkingHours() {
   }));
 }
 
-/* ─── Auto-fill company code ─── */
+/* ─── Auto-fill company code + early owner lookup ─── */
 const params = new URLSearchParams(location.search);
 const urlCode = params.get('code');
 if (urlCode) {
   $('company_code').value = urlCode.toUpperCase();
 }
+
+// Resolve owner early so working hours can be fetched before step 2 is shown.
+// If the code is missing or the call fails, initWorkingHours() falls back to
+// unconstrained hours — no error is surfaced to the user at this point.
+(async () => {
+  if (!urlCode) { renderWorkingHours(); return; }
+  try {
+    const res = await fetch('https://n8n.infinitymade.de/api/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: urlCode.toUpperCase() })
+    });
+    if (res.ok) {
+      const { ownerId } = await res.json();
+      resolvedOwnerId = ownerId || null;
+    }
+  } catch { /* network error — proceed unconstrained */ }
+  await initWorkingHours();
+})();
 
 const msg = $('message');
 function showMsg(text, type) {
@@ -95,14 +143,40 @@ function validateStep1() {
 }
 
 /* ─── Step 2 validation ─── */
-function validateStep2() {
+async function fetchOwnerHoursMap() {
+  if (!resolvedOwnerId) return null;
+  try {
+    const { data, error } = await supabase
+      .from('working_hours')
+      .select('day_of_week, is_active, start_time, end_time')
+      .eq('user_id', resolvedOwnerId);
+    if (error || !data?.length) return null;
+    return Object.fromEntries(data.map(h => [h.day_of_week, h]));
+  } catch { return null; }
+}
+
+function validateStep2(ownerMap = null) {
   $('err-wh').style.display = 'none';
   const wh = collectWorkingHours();
   const active = wh.filter(h => h.is_active);
   if (active.length === 0) { $('err-wh').style.display = 'block'; return false; }
   for (const h of active) {
-    if (h.start_time >= h.end_time) { $('err-wh').style.display = 'block'; return false; }
+    if (!h.start_time || !h.end_time || h.start_time >= h.end_time) {
+      $('err-wh').style.display = 'block'; return false;
+    }
+    if (ownerMap) {
+      const owner = ownerMap[h.day_of_week];
+      if (owner && owner.is_active) {
+        if (h.start_time < owner.start_time || h.end_time > owner.end_time) {
+          $('err-wh').style.display = 'block';
+          $('err-wh').textContent =
+            'Ihre Zeiten liegen außerhalb der Betriebszeiten. Bitte passen Sie die Zeiten an.';
+          return false;
+        }
+      }
+    }
   }
+  $('err-wh').textContent = 'Bitte aktivieren Sie mindestens einen Tag mit gültigen Zeiten.';
   return true;
 }
 
@@ -123,8 +197,9 @@ $('btnStep1').addEventListener('click', () => {
 });
 
 $('backStep2').addEventListener('click', () => showStep(1));
-$('btnStep2').addEventListener('click', () => {
-  if (!validateStep2()) return;
+$('btnStep2').addEventListener('click', async () => {
+  const ownerMap = await fetchOwnerHoursMap();
+  if (!validateStep2(ownerMap)) return;
   updateSummary();
   showStep(3);
 });
@@ -155,14 +230,17 @@ $('signupForm').addEventListener('submit', async (e) => {
   btn.textContent = 'Lädt...';
 
   try {
-    // 1. Verify company code
-    const res = await fetch('https://n8n.infinitymade.de/api/verify-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: companyCode })
-    });
-    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Ungültiger Unternehmens-Code.'); }
-    const { ownerId } = await res.json();
+    // 1. Verify company code (reuse early-resolved ownerId if available)
+    let ownerId = resolvedOwnerId;
+    if (!ownerId) {
+      const res = await fetch('https://n8n.infinitymade.de/api/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: companyCode })
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Ungültiger Unternehmens-Code.'); }
+      ({ ownerId } = await res.json());
+    }
 
     // 2. Store pending registration data so confirm.html can apply it after email verification
     const { error: pendingErr } = await supabase

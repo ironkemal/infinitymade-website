@@ -118,7 +118,7 @@
     .step label:first-of-type { margin-top: 0; }
 
     /* ── Inputs & Select ── */
-    .step input,
+    .step input:not([type="checkbox"]):not([type="time"]):not([type="hidden"]),
     .step select {
       box-sizing: border-box;
       display: block;
@@ -134,17 +134,58 @@
       appearance: none;
       -webkit-appearance: none;
     }
-    .step input:hover,
+    .step input:not([type="checkbox"]):not([type="time"]):not([type="hidden"]):hover,
     .step select:hover { border-color: rgba(26, 22, 17, 0.3); }
-    .step input:focus,
+    .step input:not([type="checkbox"]):not([type="time"]):not([type="hidden"]):focus,
     .step select:focus {
       outline: none;
       border-color: var(--bronze);
       background: #fff;
       box-shadow: 0 0 0 3px rgba(107, 85, 56, 0.12);
     }
-    .step input.error,
+    .step input:not([type="checkbox"]):not([type="time"]):not([type="hidden"]).error,
     .step select.error { border-color: var(--rose) !important; }
+
+    /* ── Custom checkbox ── */
+    .step input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      border: 1.5px solid var(--line);
+      border-radius: 5px;
+      background: var(--bg-warm);
+      cursor: pointer;
+      position: relative;
+      transition: background 150ms ease, border-color 150ms ease;
+      display: inline-block;
+      vertical-align: middle;
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+    .step input[type="checkbox"]:checked {
+      background: var(--emerald-deep);
+      border-color: var(--emerald-deep);
+    }
+    .step input[type="checkbox"]:checked::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 2px;
+      left: 5px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+    .step input[type="checkbox"]:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
 
     /* Select chevron */
     .step select {
@@ -239,6 +280,7 @@
       flex-wrap: wrap;
       padding: 8px 0;
       border-bottom: 1px solid var(--line);
+      transition: opacity 150ms ease;
     }
     .wh-row:last-child { border-bottom: none; }
     .wh-row label {
@@ -246,28 +288,29 @@
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      min-width: 70px;
+      min-width: 60px;
       font-family: var(--sans);
       font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--ink);
       letter-spacing: normal;
       text-transform: none;
-      color: var(--ink-soft);
-      font-weight: 500;
       margin: 0;
     }
     .wh-row .wh-times { display: flex; align-items: center; gap: 6px; flex: 1; }
+    .wh-row .wh-sep { color: var(--ink-mute); font-size: 0.9rem; }
     .wh-row input[type="time"] {
       box-sizing: border-box;
       flex: 1;
       min-width: 90px;
-      width: auto;
-      background: var(--bg-warm);
-      border: 1px solid rgba(26, 22, 17, 0.18);
-      color: var(--ink);
-      padding: 8px 10px;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--line);
       border-radius: 8px;
-      font-family: var(--sans);
+      background: var(--bg-warm);
       font-size: 0.88rem;
+      color: var(--ink);
+      appearance: none;
+      -webkit-appearance: none;
     }
     .wh-row input[type="time"]:disabled { opacity: 0.35; cursor: not-allowed; }
     .wh-row input[type="time"]:focus {
@@ -275,6 +318,15 @@
       border-color: var(--bronze);
       background: #fff;
       box-shadow: 0 0 0 3px rgba(107, 85, 56, 0.12);
+    }
+
+    /* ── Owner-closed rows ── */
+    .wh-row[data-owner-closed] {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .wh-row[data-owner-closed] .wh-times {
+      visibility: hidden;
     }
 
     /* ── Summary rows ── */
@@ -331,13 +383,13 @@
       body { padding: 1.5rem 1rem 3rem; }
       .login-wrap { padding-top: 2rem; }
       .login-card { padding: 2.2rem 1.6rem; }
-      .step input,
+      .step input:not([type="checkbox"]):not([type="time"]):not([type="hidden"]),
       .step select,
       .btn-primary,
       .step-actions .btn-secondary { min-height: 44px; }
     }
     @media (max-width: 768px) {
-      .step input,
+      .step input:not([type="checkbox"]):not([type="time"]):not([type="hidden"]),
       .step select,
       textarea {
         font-size: 16px !important;
