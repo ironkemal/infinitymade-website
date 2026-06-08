@@ -353,11 +353,16 @@ body:has([data-step="plan"]:not([hidden])) .ob-main {
 .ob-pw-toggle svg {
   width: 18px;
   height: 18px;
+  display: block;
 }
 
-.ob-pw-toggle svg[hidden] {
-  display: none !important;
-}
+/* kapalı göz default görünür, açık göz gizli */
+.ob-pw-toggle .ob-eye-icon { display: none; }
+.ob-pw-toggle .ob-eye-off-icon { display: block; }
+
+/* şifre görünürken: açık göz göster, kapalı gizle */
+.ob-pw-toggle.is-visible .ob-eye-icon { display: block; }
+.ob-pw-toggle.is-visible .ob-eye-off-icon { display: none; }
 
 /* Focus and Active States */
 .ob-form input:focus,
