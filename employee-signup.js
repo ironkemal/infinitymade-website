@@ -165,28 +165,43 @@ async function fetchOwnerHoursMap() {
   } catch { return null; }
 }
 
+function isOwnerDayOpen(owner) {
+  if (!owner || owner.is_active !== true) return false;
+  const s = owner.start_time?.slice(0, 5);
+  const e = owner.end_time?.slice(0, 5);
+  return s && e && s !== e && s !== '00:00';
+}
+
 function validateStep2(ownerMap = null) {
-  $('err-wh').style.display = 'none';
+  const errEl = $('err-wh');
+  errEl.style.display = 'none';
+  errEl.textContent = 'Bitte aktivieren Sie mindestens einen Tag mit gültigen Zeiten.';
+
   const wh = collectWorkingHours();
   const active = wh.filter(h => h.is_active);
-  if (active.length === 0) { $('err-wh').style.display = 'block'; return false; }
+  if (active.length === 0) { errEl.style.display = 'block'; return false; }
+
   for (const h of active) {
     if (!h.start_time || !h.end_time || h.start_time >= h.end_time) {
-      $('err-wh').style.display = 'block'; return false;
+      errEl.style.display = 'block'; return false;
     }
     if (ownerMap) {
       const owner = ownerMap[h.day_of_week];
-      const os = owner?.start_time?.slice(0, 5);
-      const oe = owner?.end_time?.slice(0, 5);
-      const ownerValid = owner?.is_active === true && os && oe && os !== oe && os !== '00:00';
-      if (ownerValid && (h.start_time < os || h.end_time > oe)) {
-        $('err-wh').style.display = 'block';
-        $('err-wh').textContent = 'Ihre Zeiten liegen außerhalb der Betriebszeiten. Bitte passen Sie die Zeiten an.';
+      // Hard-block: employee cannot select a day the owner has closed
+      if (!isOwnerDayOpen(owner)) {
+        errEl.textContent = 'Sie haben einen geschlossenen Tag ausgewählt. Bitte deaktivieren Sie diesen Tag.';
+        errEl.style.display = 'block';
+        return false;
+      }
+      const os = owner.start_time.slice(0, 5);
+      const oe = owner.end_time.slice(0, 5);
+      if (h.start_time < os || h.end_time > oe) {
+        errEl.textContent = 'Ihre Zeiten liegen außerhalb der Betriebszeiten. Bitte passen Sie die Zeiten an.';
+        errEl.style.display = 'block';
         return false;
       }
     }
   }
-  $('err-wh').textContent = 'Bitte aktivieren Sie mindestens einen Tag mit gültigen Zeiten.';
   return true;
 }
 
