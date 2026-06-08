@@ -351,7 +351,14 @@ function bindAccount() {
 
   document.getElementById('accountForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const email = document.getElementById('accountEmail').value.trim();
+    const password = document.getElementById('accountPassword').value;
+
+    if (!email) { showError('Bitte geben Sie Ihre E-Mail-Adresse ein.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Bitte geben Sie eine gültige E-Mail-Adresse ein.'); return; }
+    if (!password) { showError('Bitte geben Sie ein Passwort ein.'); return; }
     if (mode === 'signup') {
+      if (password.length < 8) { showError('Das Passwort muss mindestens 8 Zeichen lang sein.'); return; }
       const accepted = document.getElementById('accountAccept')?.checked;
       if (!accepted) { showError('Bitte akzeptieren Sie die AGB und die Datenschutzerklärung.'); return; }
     }
@@ -359,9 +366,6 @@ function bindAccount() {
     submit.disabled = true;
     const orig = submit.textContent;
     submit.textContent = 'Bitte warten…';
-
-    const email = document.getElementById('accountEmail').value.trim();
-    const password = document.getElementById('accountPassword').value;
 
     try {
       if (mode === 'signup') {
@@ -405,6 +409,13 @@ function bindBusiness() {
     const zip = document.getElementById('bizZip').value.trim();
     const street = document.getElementById('bizStreet').value.trim();
     const house_number = document.getElementById('bizHouse').value.trim();
+
+    if (!business_name) { showError('Bitte geben Sie den Namen Ihrer Praxis ein.'); return; }
+    if (!sector) { showError('Bitte wählen Sie Ihre Branche aus.'); return; }
+    if (!city) { showError('Bitte geben Sie Ihre Stadt ein.'); return; }
+    if (!zip) { showError('Bitte geben Sie Ihre Postleitzahl ein.'); return; }
+    if (!street) { showError('Bitte geben Sie Ihre Straße ein.'); return; }
+    if (!house_number) { showError('Bitte geben Sie Ihre Hausnummer ein.'); return; }
 
     const booking_slug = cleanBookingSlug(business_name) || cleanBookingSlug((sessionStorage.getItem('onboarding_email') || '').slice(0, 8));
 

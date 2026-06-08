@@ -43,7 +43,7 @@
       <h1>Konto <em>erstellen</em></h1>
       <p>Sie melden sich später mit E-Mail und Passwort in Ihrem Dashboard an.</p>
     </div>
-    <form class="ob-form" id="accountForm">
+    <form class="ob-form" id="accountForm" novalidate>
       <div id="accountToggle" class="ob-toggle">
         <button type="button" class="ob-toggle-btn active" data-mode="signup">Neues Konto</button>
         <button type="button" class="ob-toggle-btn" data-mode="signin">Ich habe bereits ein Konto</button>
@@ -75,7 +75,7 @@
       <h1>Über Ihre <em>Praxis</em></h1>
       <p>Diese Daten erscheinen auf Ihrer Online-Buchungsseite und auf Rechnungen.</p>
     </div>
-    <form class="ob-form" id="businessForm">
+    <form class="ob-form" id="businessForm" novalidate>
       <!-- Hidden input to store booking slug cleanly and prevent JS crashes -->
       <input type="hidden" id="bookingSlug" />
 
@@ -128,7 +128,7 @@
       <h1>Abrechnung &amp; <em>Finanzen</em></h1>
       <p>Geben Sie Ihre Abrechnungsdaten für die gesetzliche Krankenversicherung (§302) ein. Diese Angaben sind optional und können später ergänzt werden.</p>
     </div>
-    <form class="ob-form" id="billingForm">
+    <form class="ob-form" id="billingForm" novalidate>
       <label class="ob-form-field">
         <span class="ob-field-label">Institutionskennzeichen (IK-Nummer)</span>
         <input type="text" id="bizIk" inputmode="numeric" placeholder="9-stellige IK-Nummer" />
@@ -183,7 +183,7 @@
       <h1>Ihre <em>Inhaberdaten</em></h1>
       <p>Wer führt die Behandlungen durch? Ihre Patient(inn)en sehen diesen Namen bei der Online-Buchung.</p>
     </div>
-    <form class="ob-form" id="ownerForm">
+    <form class="ob-form" id="ownerForm" novalidate>
       <div class="ob-info-callout">
         <span class="ob-callout-icon">ℹ️</span>
         <div class="ob-callout-content">
@@ -224,7 +224,7 @@
       <h1>Ihre <em>Dienstleistungen</em></h1>
       <p>Welche Leistungen bieten Sie an? Diese erscheinen in Ihrer Online-Buchung — Sie können sie später jederzeit bearbeiten.</p>
     </div>
-    <form class="ob-form" id="servicesForm">
+    <form class="ob-form" id="servicesForm" novalidate>
       <div class="ob-services-header">
         <span></span>
         <span>Dienstleistung</span>
@@ -250,7 +250,7 @@
       <h1>Ihre <em>Öffnungszeiten</em></h1>
       <p>Außerhalb dieser Zeiten sind online keine Termine buchbar.</p>
     </div>
-    <form class="ob-form" id="hoursForm">
+    <form class="ob-form" id="hoursForm" novalidate>
       <div class="ob-hours-grid" id="hoursGrid">
         <!-- populated by JS: 7 days -->
       </div>
@@ -415,6 +415,6 @@
 
 <div class="ob-error" id="errorBox" hidden></div>
 
-<script type="module" src="onboarding.js?v=20260608a"></script>
+<script type="module" src="onboarding.js?v=20260608b"></script>
 </body>
 </html>
