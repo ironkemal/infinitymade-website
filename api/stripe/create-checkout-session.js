@@ -132,7 +132,7 @@ export default async function handler(req, res) {
         trial_period_days: 14,
         metadata: { pending_id, plan_slug: planSlug, interval },
       },
-      success_url: `${PUBLIC_URL}/dashboard.html?welcome=1&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${PUBLIC_URL}/onboarding-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${PUBLIC_URL}/onboarding.html?step=plan&canceled=1`,
       allow_promotion_codes: true,
       billing_address_collection: 'required',

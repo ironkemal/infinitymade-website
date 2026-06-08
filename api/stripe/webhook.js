@@ -168,7 +168,7 @@ export default async function handler(req, res) {
         // 1. Create Supabase auth user
         const { ok: uOk, data: uData } = await adminAuthFetch('/admin/users', {
           method: 'POST',
-          body: JSON.stringify({ email: pending.email, password: pendingPassword, email_confirm: true }),
+          body: JSON.stringify({ email: pending.email, password: pendingPassword, email_confirm: false }),
         });
         if (!uOk) { console.error('[webhook] user creation failed', uData); break; }
         const userId = uData.id;

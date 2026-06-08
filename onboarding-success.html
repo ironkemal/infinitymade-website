@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Konto wird eingerichtet — Praxura</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#F8F3E8" />
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20260608" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .wrap { width: 100%; max-width: 520px; text-align: center; }
+    .brand {
+      display: inline-block;
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-decoration: none;
+      margin-bottom: 2.5rem;
+    }
+    .brand em { font-style: italic; color: var(--bronze); }
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 3rem 2.6rem;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.7) inset,
+        0 24px 48px -20px rgba(26,22,17,0.18),
+        0 6px 14px -4px rgba(26,22,17,0.05);
+    }
+    .check-circle {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(30,61,47,0.1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 1.6rem;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 2rem;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+      line-height: 1.15;
+    }
+    .sub {
+      font-size: 0.95rem;
+      color: var(--ink-mute);
+      line-height: 1.65;
+      margin-bottom: 2rem;
+    }
+    .steps {
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    .step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.55rem 0;
+    }
+    .step-row + .step-row {
+      border-top: 1px solid var(--line);
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--bg);
+      font-size: 0.72rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .step-num.done {
+      background: rgba(30,61,47,0.15);
+      color: var(--emerald-deep, #1E3D2F);
+      font-size: 0.9rem;
+    }
+    .step-text {
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+      line-height: 1.45;
+    }
+    .step-text strong { color: var(--ink); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.8rem;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 240ms, background 200ms ease;
+    }
+    .btn:hover { background: var(--emerald-deep, #1E3D2F); transform: translateY(-2px); }
+    .hint {
+      margin-top: 1.4rem;
+      font-size: 0.82rem;
+      color: var(--ink-mute);
+      line-height: 1.6;
+    }
+    .hint a { color: var(--bronze); text-decoration: underline; text-underline-offset: 3px; }
+    @media (max-width: 640px) {
+      .card { padding: 2.2rem 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" class="brand">Prax<em>ura</em></a>
+    <div class="card">
+      <div class="check-circle">✓</div>
+      <h1>Zahlung erfolgreich!</h1>
+      <p class="sub">
+        Ihr Praxura-Konto wird gerade eingerichtet.<br/>
+        Sie erhalten gleich eine <strong>Bestätigungs-E-Mail</strong> — klicken Sie den Link, um Ihr Konto zu aktivieren.
+      </p>
+
+      <div class="steps">
+        <div class="step-row">
+          <div class="step-num done">✓</div>
+          <div class="step-text"><strong>Zahlung abgeschlossen</strong><br/>Ihr 14-tägiger Testzeitraum hat begonnen.</div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>E-Mail bestätigen</strong><br/>Öffnen Sie Ihr Postfach und klicken Sie auf „Konto aktivieren".</div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>Dashboard aufrufen</strong><br/>Nach der Bestätigung können Sie sich anmelden und loslegen.</div>
+        </div>
+      </div>
+
+      <a href="/login.html" class="btn">Zur Anmeldung →</a>
+
+      <p class="hint">
+        Keine E-Mail erhalten? Prüfen Sie Ihren Spam-Ordner.<br/>
+        Bei Fragen: <a href="mailto:support@praxura.de">support@praxura.de</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
