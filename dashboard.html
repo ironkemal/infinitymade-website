@@ -604,7 +604,7 @@
           <div class="b2b-setup-card" id="b2bSetupCard" hidden>
             <div class="setup-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg></div>
             <h3 class="setup-heading">B2B E-Mail einrichten</h3>
-            <p class="setup-sub">Geben Sie Ihren Absendernamen ein, um den KI-Assistenten zu nutzen.</p>
+            <p class="setup-sub">Geben Sie Ihren Absendernamen ein und verbinden Sie Ihr Google-Konto.</p>
             <div class="setup-fields">
               <div class="form-group">
                 <label class="form-label">Absendername <span class="req">*</span></label>
@@ -612,9 +612,18 @@
                   placeholder="z.B. Max Müller / Muster GmbH" />
                 <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
               </div>
+              <div class="form-group">
+                <label class="form-label">E-Mail-Konto <span class="req">*</span></label>
+                <div class="setup-gmail-row">
+                  <div class="setup-gmail-status">
+                    <span class="status-dot" id="b2bSetupGmailDot"></span>
+                    <span id="b2bSetupGmailLabel">Kein Konto verbunden</span>
+                  </div>
+                  <button type="button" class="btn-outline-sm" id="b2bSetupGmailBtn">Mit Google verbinden</button>
+                </div>
+              </div>
             </div>
-            <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschließen
-              ✓</button>
+            <button class="btn-primary setup-finish-btn" id="b2bSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
           </div>
 
           <!-- MAIN CONTENT -->
@@ -695,7 +704,7 @@
           <div class="b2b-setup-card" id="b2cSetupCard" hidden>
             <div class="setup-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg></div>
             <h3 class="setup-heading">E-Mail einrichten</h3>
-            <p class="setup-sub">Geben Sie Ihren Absendernamen ein und verbinden Sie Ihr E-Mail-Konto.</p>
+            <p class="setup-sub">Geben Sie Ihren Absendernamen ein und verbinden Sie Ihr Google-Konto.</p>
             <div class="setup-fields">
               <div class="form-group">
                 <label class="form-label">Absendername <span class="req">*</span></label>
@@ -703,9 +712,18 @@
                   placeholder="z.B. Max Müller / Muster GmbH" />
                 <div class="form-hint">Dieser Name erscheint in der E-Mail-Unterschrift.</div>
               </div>
+              <div class="form-group">
+                <label class="form-label">E-Mail-Konto <span class="req">*</span></label>
+                <div class="setup-gmail-row">
+                  <div class="setup-gmail-status">
+                    <span class="status-dot" id="b2cSetupGmailDot"></span>
+                    <span id="b2cSetupGmailLabel">Kein Konto verbunden</span>
+                  </div>
+                  <button type="button" class="btn-outline-sm" id="b2cSetupGmailBtn">Mit Google verbinden</button>
+                </div>
+              </div>
             </div>
-            <button class="btn-primary setup-finish-btn" id="b2cSetupFinishBtn" disabled>Einrichtung abschließen
-              ✓</button>
+            <button class="btn-primary setup-finish-btn" id="b2cSetupFinishBtn" disabled>Einrichtung abschließen ✓</button>
           </div>
 
           <div id="b2cMainContent" hidden>
@@ -3727,7 +3745,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260605"></script>
+  <script type="module" src="dashboard.js?v=20260608b"></script>
 </body>
 
 </html>

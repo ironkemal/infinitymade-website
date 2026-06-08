@@ -6203,6 +6203,7 @@ async function loadTeam() {
 
   // Render employee list — visible to both owner and employee
   const list = document.getElementById('employeeList');
+  if (!list) return;
   list.innerHTML = data.map(m => {
     const name = m.business_name || m.email?.split('@')[0] || '—';
     const initial = (name[0] || '?').toUpperCase();
