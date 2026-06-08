@@ -14,6 +14,7 @@ COPY ai ./ai
 COPY billing ./billing
 
 ENV NODE_ENV=production
+ENV PORT=3000
 EXPOSE 3000
 
 # Run as non-root for safety
