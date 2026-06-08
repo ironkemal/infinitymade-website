@@ -12,8 +12,8 @@
   --bg-deep: #E8DCC0;
   --ink: #1A1611;
   --ink-soft: #4A4036;
-  --ink-mute: #7A6F61;
-  --ink-quiet: #B5AB99;
+  --ink-mute: #685E52;
+  --ink-quiet: #6E6458;
   --line: rgba(26, 22, 17, 0.08);
   --line-soft: rgba(26, 22, 17, 0.04);
   --bronze: #6B5538;
@@ -576,4 +576,59 @@ footer {
 
 @media (max-width: 600px) {
   .footer-grid { grid-template-columns: 1fr; }
+  .px-hero-actions { flex-direction: column; }
+  .px-hero-actions .btn-primary-arrow { width: 100%; justify-content: center; }
 }
+
+/* ────────────── Form error states ────────────── */
+.input-error,
+input.input-error,
+select.input-error,
+textarea.input-error {
+  border-color: var(--rose) !important;
+  box-shadow: 0 0 0 3px rgba(156, 58, 58, 0.12) !important;
+  outline: none;
+}
+.form-error {
+  color: var(--rose);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+.form-error::before {
+  content: '!';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.7em;
+  flex-shrink: 0;
+  margin-top: 0.1em;
+  font-weight: 700;
+}
+
+/* ────────────── Mobile CTA button (drawer nav) ────────────── */
+.nav-mobile-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.8rem;
+  background: var(--ink);
+  color: var(--bg) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  border-radius: 999px;
+  text-decoration: none;
+  margin-top: 0.5rem;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 6px 18px -6px rgba(26, 22, 17, 0.28);
+  transition: background 200ms ease, transform 200ms ease;
+}
+.nav-mobile-cta-btn:hover { opacity: 1 !important; background: var(--emerald-deep); transform: translateY(-2px); }

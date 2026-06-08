@@ -11,8 +11,8 @@
   --bg-input: #FAF7F0;      /* Extremely soft sand cream for inputs */
   --ink: #1A1611;           /* Elegant carbon ink black */
   --ink-soft: #4A4036;      /* Subdued greyish brown */
-  --ink-mute: #7A6F61;      /* Neutral taupe grey */
-  --ink-quiet: #B5AB99;     /* Light sage-cream border color */
+  --ink-mute: #685E52;      /* Neutral taupe grey */
+  --ink-quiet: #6E6458;     /* Subtle muted text — WCAG AA compliant */
   
   /* Brand Accents */
   --accent: #1E3D2F;        /* Forest Luxury Emerald */
