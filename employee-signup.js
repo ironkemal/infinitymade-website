@@ -260,10 +260,17 @@ $('signupForm').addEventListener('submit', async (e) => {
       password,
       options: {
         data: { full_name: name },
-        emailRedirectTo: 'https://praxura.de/confirm.html',
+        emailRedirectTo: 'https://app.praxura.de/confirm.html',
       }
     });
     if (authErr) throw authErr;
+
+    // resend() as fallback — 60s cooldown prevents double-send if signUp already sent
+    await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: 'https://app.praxura.de/confirm.html' },
+    }).catch(() => {});
 
     // 4. Show confirmation message — profile setup happens in confirm.html after click
     showMsg(
