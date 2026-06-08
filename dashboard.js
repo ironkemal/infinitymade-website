@@ -7231,9 +7231,10 @@ let gmailConnectedEmail = null;
 let currentDraftContactId = null;
 let mailPreviewLeadId = null;
 
-function startGmailOAuth() {
-  const userId = currentSession.user.id;
-  window.location.href = 'https://n8n.infinitymade.de/api/gmail/connect?userId=' + encodeURIComponent(userId);
+async function startGmailOAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || '';
+  window.location.href = 'https://n8n.infinitymade.de/api/gmail/connect?token=' + encodeURIComponent(token);
 }
 
 function setGmailUI(email, dotEl, labelEl, connectBtnEl) {
@@ -7640,7 +7641,11 @@ async function loadSettings() {
     calStatus.textContent = t('status_disconnected');
     calStatus.className = 'integration-status';
     calBtn.textContent = t('btn_connect');
-    calBtn.onclick = () => { window.location.href = `${API}/calendar/google-auth?userId=${currentSession.user.id}`; };
+    calBtn.onclick = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || '';
+  window.location.href = `${API}/calendar/google-auth?token=${encodeURIComponent(token)}`;
+};
   }
 
   const features = (PLAN_FEATURES[currentProfile.plan] || PLAN_FEATURES.starter)[currentLang] || [];

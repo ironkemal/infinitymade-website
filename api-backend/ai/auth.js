@@ -15,7 +15,8 @@ const supabase = createClient(
 export async function requireAuth(req, res, next) {
   try {
     const hdr = req.headers.authorization || '';
-    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    // Also accept ?token= query param for browser-redirect OAuth flows (gmail/connect, calendar/google-auth)
+    const token = (hdr.startsWith('Bearer ') ? hdr.slice(7) : null) || req.query.token || null;
     if (!token) return res.status(401).json({ error: 'Missing bearer token' });
 
     const { data, error } = await supabase.auth.getUser(token);
