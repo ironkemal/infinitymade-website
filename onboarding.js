@@ -338,8 +338,8 @@ document.querySelectorAll('.ob-pw-toggle').forEach(btn => {
     if (!input) return;
     const show = input.type === 'password';
     input.type = show ? 'text' : 'password';
-    btn.querySelector('.ob-eye-icon').hidden = show;
-    btn.querySelector('.ob-eye-off-icon').hidden = !show;
+    btn.querySelector('.ob-eye-icon').hidden = !show;     // açık göz: şifre görünürken
+    btn.querySelector('.ob-eye-off-icon').hidden = show;  // kapalı göz: şifre gizliyken
     btn.setAttribute('aria-label', show ? 'Passwort verbergen' : 'Passwort anzeigen');
   });
 });
