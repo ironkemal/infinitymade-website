@@ -43,6 +43,9 @@ function renderWorkingHours(ownerHours = null) {
     const closedAttr = ownerActive ? '' : 'data-owner-closed';
     const checkedAttr  = ownerActive ? 'checked' : '';
     const disabledAttr = ownerActive ? '' : 'disabled';
+    const hintHtml = ownerActive && ownerDay
+      ? `<span class="wh-hint">${startVal}–${endVal}</span>`
+      : ownerHours ? `<span class="wh-hint wh-hint--closed">Geschlossen</span>` : '';
     return `
     <div class="wh-row" data-day="${i}" ${closedAttr}>
       <label>
@@ -54,6 +57,7 @@ function renderWorkingHours(ownerHours = null) {
         <span class="wh-sep">–</span>
         <input type="time" class="wh-end" value="${endVal}" ${minAttr} ${maxAttr} ${disabledAttr} />
       </div>
+      ${hintHtml}
     </div>`;
   }).join('');
 

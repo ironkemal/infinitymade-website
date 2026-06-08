@@ -329,6 +329,25 @@
       visibility: hidden;
     }
 
+    /* ── Business hours hint ── */
+    .wh-hint {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      color: var(--ink-mute);
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+    .wh-hint--closed {
+      color: var(--rose);
+      background: rgba(156, 58, 58, 0.05);
+      border-color: rgba(156, 58, 58, 0.15);
+    }
+
     /* ── Summary rows ── */
     .summary-row {
       display: flex;
