@@ -13,6 +13,7 @@
 // These are anonymized (PII stripped, IDs kept) rather than purged.
 
 import { getAuthedUser, adminFetch, adminAuthFetch, json } from '../_lib/auth.js';
+import { stripeRequest } from '../_lib/stripe.js';
 
 // Tables to anonymize (legal retention) — set personal fields to NULL, keep row for audit
 // invoices: 10y retention (§ 147 AO) — strip patient PII, keep IDs/amounts for audit.
@@ -75,6 +76,48 @@ export default async function handler(req, res) {
   const userId = user.id;
 
   const log = { user_id: userId, started_at: new Date().toISOString(), steps: [] };
+
+  // 0. Stripe cleanup (DSGVO Art. 17 — cancel subscription + delete customer)
+  //    Run BEFORE Supabase deletes so we can still read stripe IDs from profiles.
+  //    Stripe errors must NOT block the deletion — warn and continue.
+  {
+    const { ok: profOk, data: profData } = await adminFetch(
+      `/profiles?id=eq.${encodeURIComponent(userId)}&select=stripe_subscription_id,stripe_customer_id`,
+      { method: 'GET' }
+    );
+
+    if (profOk && Array.isArray(profData) && profData.length > 0) {
+      const { stripe_subscription_id, stripe_customer_id } = profData[0];
+
+      if (stripe_subscription_id) {
+        try {
+          const { ok, status } = await stripeRequest(
+            `/subscriptions/${stripe_subscription_id}`,
+            { method: 'DELETE' }
+          );
+          log.steps.push({ step: 'stripe:cancel_subscription', ok, status });
+        } catch (err) {
+          console.warn('[dsgvo/delete] Stripe subscription cancel failed:', err.message);
+          log.steps.push({ step: 'stripe:cancel_subscription', ok: false, error: err.message });
+        }
+      }
+
+      if (stripe_customer_id) {
+        try {
+          const { ok, status } = await stripeRequest(
+            `/customers/${stripe_customer_id}`,
+            { method: 'DELETE' }
+          );
+          log.steps.push({ step: 'stripe:delete_customer', ok, status });
+        } catch (err) {
+          console.warn('[dsgvo/delete] Stripe customer delete failed:', err.message);
+          log.steps.push({ step: 'stripe:delete_customer', ok: false, error: err.message });
+        }
+      }
+    } else {
+      log.steps.push({ step: 'stripe:profile_fetch', ok: profOk, note: 'no profile row or no stripe IDs' });
+    }
+  }
 
   // 1. Anonymize retention-protected tables
   for (const { table, filter, nullify } of ANONYMIZE_TABLES) {

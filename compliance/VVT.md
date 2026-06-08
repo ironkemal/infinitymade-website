@@ -5,8 +5,8 @@
 | | |
 |---|---|
 | **Verantwortliche Stelle** | InfinityMade (Einzelunternehmen) |
-| **Inhaber / DSB** | [Inhaber Name], ironkemal5@gmail.com |
-| **Adresse** | [Geschäftsadresse einfügen] |
+| **Inhaber / DSB** | Yavuz Kemal Demir, ironkemal5@gmail.com |
+| **Adresse** | Industriestraße 33, 53721 Siegburg, Deutschland |
 | **Aufsichtsbehörde** | Landesbeauftragter für Datenschutz NRW |
 | **Letzte Aktualisierung** | 2026-05-23 |
 | **Version** | 1.0 |

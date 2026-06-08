@@ -56,7 +56,11 @@
         <span class="ob-field-label">Passwort</span>
         <input type="password" id="accountPassword" required minlength="8" autocomplete="new-password" placeholder="Mindestens 8 Zeichen" />
       </label>
-      
+      <label class="ob-form-field" id="accountConfirmWrap">
+        <span class="ob-field-label">Passwort bestätigen</span>
+        <input type="password" id="accountPasswordConfirm" minlength="8" autocomplete="new-password" placeholder="Passwort wiederholen" />
+      </label>
+
       <label class="ob-checkbox-wrapper">
         <input type="checkbox" id="accountAccept" required />
         <span class="ob-checkbox-text">Ich habe die <a href="/agb.html" target="_blank" rel="noopener">AGB</a> und die <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
@@ -339,19 +343,6 @@
           </ul>
           <a href="mailto:info@praxura.de" class="ob-btn">Kontakt aufnehmen →</a>
         </div>
-      </div>
-
-      <!-- DTA-Pro Add-on (physiotherapy/praxis only) -->
-      <div id="dtaProOptIn" class="ob-dta-card" hidden>
-        <label class="ob-dta-label">
-          <input type="checkbox" id="dtaProCheckbox" />
-          <div class="ob-dta-content">
-            <div class="ob-dta-title">🏥 DTA-Pro Add-on hinzufügen <span class="ob-dta-badge">+ <span id="dtaProPriceLabel">29 €/Monat</span></span></div>
-            <div class="ob-dta-description">
-              §302 SGB V Sammelabrechnung an Krankenkassen — Sie erzeugen DTA-Dateien, signieren lokal mit Ihrem ITSG-Zertifikat (.p12), laden im DAS-Portal hoch und verarbeiten ZAA-Antworten direkt im Dashboard. <strong>Inkl. 14 Tage gratis</strong>; jederzeit kündbar.
-            </div>
-          </div>
-        </label>
       </div>
 
       <!-- §302 liability / scope clarification (Tool, kein Abrechnungsdienstleister) -->

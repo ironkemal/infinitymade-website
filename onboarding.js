@@ -335,6 +335,7 @@ async function saveStepProgress(nextStepName) {
 function bindAccount() {
   let mode = 'signup';
   const acceptWrap = document.querySelector('#accountForm .ob-accept');
+  const confirmWrap = document.getElementById('accountConfirmWrap');
   document.querySelectorAll('#accountToggle .ob-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#accountToggle .ob-toggle-btn').forEach(b => b.classList.remove('active'));
@@ -346,6 +347,7 @@ function bindAccount() {
       const pwInput = document.getElementById('accountPassword');
       pwInput.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
       if (acceptWrap) acceptWrap.style.display = mode === 'signup' ? 'flex' : 'none';
+      if (confirmWrap) confirmWrap.style.display = mode === 'signup' ? '' : 'none';
     });
   });
 
@@ -359,6 +361,9 @@ function bindAccount() {
     if (!password) { showError('Bitte geben Sie ein Passwort ein.'); return; }
     if (mode === 'signup') {
       if (password.length < 8) { showError('Das Passwort muss mindestens 8 Zeichen lang sein.'); return; }
+      const confirmPassword = document.getElementById('accountPasswordConfirm').value;
+      if (!confirmPassword) { showError('Bitte bestätigen Sie Ihr Passwort.'); return; }
+      if (password !== confirmPassword) { showError('Die Passwörter stimmen nicht überein.'); return; }
       const accepted = document.getElementById('accountAccept')?.checked;
       if (!accepted) { showError('Bitte akzeptieren Sie die AGB und die Datenschutzerklärung.'); return; }
     }
@@ -773,22 +778,6 @@ function bindPlan() {
   const intervalBtns = document.querySelectorAll('.plan-toggle-btn');
   let currentInterval = 'month';
 
-  const dtaCard     = document.getElementById('dtaProOptIn');
-  const dtaCheckbox = document.getElementById('dtaProCheckbox');
-  const dtaLabel    = document.getElementById('dtaProPriceLabel');
-  const refreshDtaVisibility = () => {
-    if (!dtaCard) return;
-    const sector = (profile?.sector || '').toLowerCase();
-    dtaCard.hidden = !PRAXIS_SECTORS.includes(sector);
-  };
-  refreshDtaVisibility();
-  window.__refreshDtaVisibility = refreshDtaVisibility;
-  const updateDtaLabel = () => {
-    if (!dtaLabel) return;
-    dtaLabel.textContent = currentInterval === 'year' ? '290 €/Jahr (2 Monate gratis)' : '29 €/Monat';
-  };
-  updateDtaLabel();
-
   intervalBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       intervalBtns.forEach(b => b.classList.remove('active'));
@@ -802,14 +791,12 @@ function bindPlan() {
           ? 'jährlich abgerechnet · 15% gespart'
           : 'monatlich abgerechnet';
       });
-      updateDtaLabel();
     });
   });
 
   document.querySelectorAll('.plan-select').forEach(btn => {
     btn.addEventListener('click', async () => {
       const planSlug = btn.dataset.plan;
-      const dtaPro   = !!(dtaCheckbox && dtaCheckbox.checked && !dtaCard?.hidden);
 
       const consentAgb = document.getElementById('consentAgb');
       const consentAvv = document.getElementById('consentAvv');
@@ -841,7 +828,7 @@ function bindPlan() {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session.access_token}`,
             },
-            body: JSON.stringify({ planSlug, interval: currentInterval, dtaPro, consents }),
+            body: JSON.stringify({ planSlug, interval: currentInterval, consents }),
           });
           const data = await res.json();
           if (!res.ok || !data.url) {
@@ -893,7 +880,6 @@ function bindPlan() {
           })),
           plan: planSlug,
           billing_interval: currentInterval,
-          dta_pro: dtaPro,
           consents,
         };
 
@@ -913,7 +899,7 @@ function bindPlan() {
         const checkoutRes = await fetch('/api/stripe/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pending_id: pendingData.pending_id, planSlug, interval: currentInterval, dtaPro }),
+          body: JSON.stringify({ pending_id: pendingData.pending_id, planSlug, interval: currentInterval }),
         });
         const checkoutData = await checkoutRes.json();
         if (!checkoutRes.ok || !checkoutData.url) {

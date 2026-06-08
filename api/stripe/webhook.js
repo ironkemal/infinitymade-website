@@ -8,7 +8,7 @@
 //   - checkout.session.completed (initial bind)
 
 import { adminFetch, adminAuthFetch, adminRpc, json } from '../_lib/auth.js';
-import { verifyWebhook, dtaProPriceIds, stripeRequest } from '../_lib/stripe.js';
+import { verifyWebhook, stripeRequest } from '../_lib/stripe.js';
 
 const SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -59,16 +59,10 @@ async function updateProfileBySubscription(sub, overrides = {}) {
     'pending';
 
   const items = sub.items?.data || [];
-  // First non-addon item drives interval/price. Addon items live alongside.
-  const dtaProIds = dtaProPriceIds();
-  const baseItem = items.find(it => !dtaProIds.includes(it.price?.id)) || items[0];
+  const baseItem = items[0];
   const interval = baseItem?.price?.recurring?.interval || null;
   const priceId  = baseItem?.price?.id || null;
   const planSlug = planSlugFromMetadata(sub.metadata || {});
-
-  // DTA-Pro addon detection (multi-item subscription).
-  const dtaProItem = items.find(it => dtaProIds.includes(it.price?.id));
-  const hasDtaPro  = !!dtaProItem && ['trialing', 'active', 'past_due'].includes(sub.status);
 
   const patch = {
     plan_status: planStatus,
@@ -78,8 +72,6 @@ async function updateProfileBySubscription(sub, overrides = {}) {
     trial_ends_at: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
     current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
     is_active: ['trial', 'active', 'past_due'].includes(planStatus),
-    has_dta_pro: hasDtaPro,
-    dta_pro_subscription_item_id: hasDtaPro ? dtaProItem.id : null,
     ...overrides,
   };
   if (planSlug) patch.plan = planSlug;

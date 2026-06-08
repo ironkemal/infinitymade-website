@@ -12,7 +12,7 @@ const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://app.praxura.de';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
-  const { pending_id, planSlug, interval, dtaPro, consents } = req.body || {};
+  const { pending_id, planSlug, interval, consents } = req.body || {};
 
   if (!['starter', 'professional', 'klinik', 'enterprise'].includes(planSlug)) {
     return json(res, 400, { error: 'Invalid planSlug' });
@@ -24,16 +24,7 @@ export default async function handler(req, res) {
   const priceId = priceIdFor(planSlug, interval);
   if (!priceId) return json(res, 500, { error: `Price ID not configured for ${planSlug}/${interval}` });
 
-  // Optional DTA-Pro addon — adds a second line_item on the same subscription.
-  // Webhook detects DTA-Pro price ID in sub.items[] and flips profiles.has_dta_pro.
   const lineItems = [{ price: priceId, quantity: 1 }];
-  if (dtaPro) {
-    const dtaProPrice = priceIdFor('dta_pro', interval);
-    if (!dtaProPrice) {
-      return json(res, 500, { error: `DTA-Pro price not configured (${interval})` });
-    }
-    lineItems.push({ price: dtaProPrice, quantity: 1 });
-  }
 
   // ── Flow 1: Authenticated existing user ──────────────────────────────────
   const authHeader = req.headers.authorization || req.headers.Authorization;

@@ -91,4 +91,4 @@ Eine erneute DSFA ist erforderlich, wenn:
 
 | Verantwortlicher | Unterschrift | Datum |
 |---|---|---|
-| [Inhaber InfinityMade] | _______ | _______ |
+| Yavuz Kemal Demir, InfinityMade | _______ | 2026-06-08 |

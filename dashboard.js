@@ -408,11 +408,10 @@ function getSidebarItems() {
   return SECTOR_PANELS[sector] || (isPraxisSector(sector) ? SECTOR_PANELS.physiotherapy : SECTOR_PANELS.default);
 }
 
-// True when the tenant has the DTA-Pro Stripe addon (gates §302 Sammelabrechnung).
-// Owner → own flag. Employee → owner's flag (fetched into ownerProfile).
-function hasDtaPro() {
-  if (currentProfile?.role === 'owner') return !!currentProfile.has_dta_pro;
-  return !!(ownerProfile?.has_dta_pro);
+// True when the tenant's plan includes §302 (Professional, Klinik, Enterprise).
+function has302Access() {
+  const plan = currentProfile?.role === 'owner' ? currentProfile?.plan : ownerProfile?.plan;
+  return ['professional', 'klinik', 'enterprise'].includes(plan);
 }
 
 function applyI18n() {
@@ -471,7 +470,7 @@ async function renderSidebar() {
   const role = currentProfile.role || 'owner';
 
   if (role === 'employee' && !ownerProfile && currentProfile.owner_id) {
-    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,has_dta_pro,plan,plan_status').eq('id', currentProfile.owner_id).maybeSingle();
+    const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status').eq('id', currentProfile.owner_id).maybeSingle();
     if (ownerErr) console.error('[renderSidebar ownerProfile]', ownerErr);
     if (owner) {
       ownerProfile = owner;
@@ -489,7 +488,7 @@ async function renderSidebar() {
   console.log('[renderSidebar] items count=', items.length, items.map(i => i.id));
   items.forEach(item => {
     if (!item.roles.includes(role)) return;
-    if (item.id === 'abrechnung' && !hasDtaPro()) return;
+    if (item.id === 'abrechnung' && !has302Access()) return;
     // RBAC scope check (sadece employee için)
     const moduleKey = SIDEBAR_TO_MODULE[item.id];
     if (role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) return;
@@ -7656,7 +7655,6 @@ async function loadSettings() {
     const sec = getSector();
     if (isPraxisSector(sec)) {
       abrSection.style.display = '';
-      renderDtaProCard();
       document.getElementById('setIkNumber').value = currentProfile.ik_number || '';
       // Pull existing terapeut_zertifikat metadata (IK takes precedence here if set)
       supabase.from('terapeut_zertifikat')
@@ -7692,103 +7690,6 @@ document.getElementById('befSaveBtn')?.addEventListener('click', () => {
 
 document.getElementById('signRunBtn')?.addEventListener('click', runSignAbrechnung);
 
-// ---------- Sprint 7-3 / s11: DTA-Pro addon card ----------
-
-function renderDtaProCard() {
-  const card = document.getElementById('dtaProCard');
-  if (!card) return;
-  const role = currentProfile?.role || 'owner';
-  if (role !== 'owner') {
-    // Employees should not see billing controls.
-    card.style.display = 'none';
-    return;
-  }
-  card.style.display = '';
-
-  const active = hasDtaPro();
-  const badge = document.getElementById('dtaProStatusBadge');
-  const addMonthBtn = document.getElementById('dtaProAddMonthBtn');
-  const addYearBtn = document.getElementById('dtaProAddYearBtn');
-  const removeBtn = document.getElementById('dtaProRemoveBtn');
-  const desc = document.getElementById('dtaProDesc');
-  const msg = document.getElementById('dtaProMsg');
-  if (msg) msg.textContent = '';
-
-  if (active) {
-    if (badge) badge.style.display = '';
-    if (addMonthBtn) addMonthBtn.style.display = 'none';
-    if (addYearBtn) addYearBtn.style.display = 'none';
-    if (removeBtn) removeBtn.style.display = '';
-    if (desc) desc.innerHTML = 'Sie nutzen den DTA-Pro Add-on. Die <strong>§302-Abrechnungsvorbereitung</strong> ist in der Seitenleiste verfügbar.';
-  } else {
-    if (badge) badge.style.display = 'none';
-    if (addMonthBtn) addMonthBtn.style.display = '';
-    if (addYearBtn) addYearBtn.style.display = '';
-    if (removeBtn) removeBtn.style.display = 'none';
-  }
-}
-
-async function callDtaProEndpoint(endpoint, body) {
-  const { data: { session: s } } = await supabase.auth.getSession();
-  if (!s?.access_token) throw new Error('Nicht angemeldet');
-  const res = await fetch(`/api/stripe/${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + s.access_token,
-    },
-    body: JSON.stringify(body || {}),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
-  return json;
-}
-
-async function dtaProAdd(interval) {
-  const msg = document.getElementById('dtaProMsg');
-  const btns = ['dtaProAddMonthBtn', 'dtaProAddYearBtn'].map(id => document.getElementById(id));
-  btns.forEach(b => b && (b.disabled = true));
-  if (msg) { msg.textContent = 'Wird aktiviert…'; msg.style.color = ''; }
-  try {
-    await callDtaProEndpoint('dta-pro-add', { interval });
-    // Refresh local profile so sidebar + card pick up the change.
-    const { data: refreshed } = await supabase.from('profiles')
-      .select('*').eq('id', currentSession.user.id).single();
-    if (refreshed) currentProfile = refreshed;
-    renderDtaProCard();
-    if (typeof renderSidebar === 'function') await renderSidebar();
-    showToast('DTA-Pro aktiviert.');
-    if (msg) { msg.textContent = 'Aktiv. Die §302-Abrechnungsvorbereitung ist jetzt in der Seitenleiste verfügbar.'; msg.style.color = '#15803d'; }
-  } catch (e) {
-    console.error('[dta-pro/add]', e);
-    if (msg) { msg.textContent = 'Fehler: ' + e.message; msg.style.color = '#b91c1c'; }
-  } finally {
-    btns.forEach(b => b && (b.disabled = false));
-  }
-}
-
-async function dtaProRemove() {
-  if (!confirm('DTA-Pro Add-on kündigen? Sie können das Modul jederzeit wieder aktivieren.')) return;
-  const msg = document.getElementById('dtaProMsg');
-  const btn = document.getElementById('dtaProRemoveBtn');
-  if (btn) btn.disabled = true;
-  if (msg) { msg.textContent = 'Wird gekündigt…'; msg.style.color = ''; }
-  try {
-    await callDtaProEndpoint('dta-pro-remove', {});
-    const { data: refreshed } = await supabase.from('profiles')
-      .select('*').eq('id', currentSession.user.id).single();
-    if (refreshed) currentProfile = refreshed;
-    renderDtaProCard();
-    if (typeof renderSidebar === 'function') await renderSidebar();
-    showToast('Add-on gekündigt.');
-    if (msg) { msg.textContent = 'Add-on entfernt. Die §302-Abrechnungsvorbereitung wurde ausgeblendet.'; msg.style.color = '#444'; }
-  } catch (e) {
-    console.error('[dta-pro/remove]', e);
-    if (msg) { msg.textContent = 'Fehler: ' + e.message; msg.style.color = '#b91c1c'; }
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
 
 // ---------- Sprint 8: DAS-Portal walkthrough modal ----------
 
@@ -7908,9 +7809,6 @@ document.getElementById('dgZaaBtn')?.addEventListener('click', () => {
   }
 });
 
-document.getElementById('dtaProAddMonthBtn')?.addEventListener('click', () => dtaProAdd('month'));
-document.getElementById('dtaProAddYearBtn')?.addEventListener('click', () => dtaProAdd('year'));
-document.getElementById('dtaProRemoveBtn')?.addEventListener('click', dtaProRemove);
 document.getElementById('zaaRunBtn')?.addEventListener('click', runZaaUpload);
 
 document.getElementById('ikSaveBtn')?.addEventListener('click', async () => {
@@ -14239,7 +14137,7 @@ function initDruckeinstellungen() {
     if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,has_dta_pro').eq('id', currentProfile.owner_id).maybeSingle();
+      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan').eq('id', currentProfile.owner_id).maybeSingle();
       if (ownerErr) console.error('[ownerProfile]', ownerErr);
       if (owner) {
         ownerProfile = owner;

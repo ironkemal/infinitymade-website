@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Praxura – Google API Nutzung &amp; Datenschutz</title>
+  <meta name="description" content="Informationen zur Nutzung von Google APIs durch Praxura — welche Daten wir verwenden, warum und wie wir die Google API Services User Data Policy einhalten." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://praxura.de/oauth.html" />
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20260524" />
+
+  <style>
+    .scope-table { width: 100%; border-collapse: collapse; margin: 1.2rem 0 1.6rem; font-size: 0.9rem; }
+    .scope-table th { text-align: left; padding: 0.6rem 0.9rem; background: var(--bg-warm); border-bottom: 1px solid var(--line); font-weight: 600; color: var(--ink); }
+    .scope-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--line-soft); color: var(--ink-soft); vertical-align: top; }
+    .scope-table tr:last-child td { border-bottom: none; }
+    .scope-table code { font-family: var(--mono); font-size: 0.82rem; background: var(--bg-warm); padding: 0.15em 0.4em; border-radius: 4px; }
+
+    .info-card { padding: 1.1rem 1.3rem; background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; margin: 1rem 0 1.4rem; }
+    .info-card p { margin: 0; font-size: 0.92rem; color: var(--ink-soft); line-height: 1.6; }
+    .info-card strong { color: var(--ink); }
+
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1rem 0 1.6rem; }
+    .badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; border: 1px solid var(--line); border-radius: 999px; font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); background: var(--bg-card); }
+    .badge-yes { border-color: #4E5C4533; color: var(--sage); background: rgba(78, 92, 69, 0.05); }
+    .badge-no  { border-color: #9C3A3A33; color: var(--rose); background: rgba(156, 58, 58, 0.05); }
+
+    .policy-link-box { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.2rem; background: var(--bg-warm); border: 1px solid var(--line); border-radius: 12px; margin: 1rem 0 1.4rem; font-size: 0.9rem; }
+    .policy-link-box a { color: var(--bronze); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Prax<em>ura</em></a>
+  <a href="/#services" class="nav-link">Leistungen</a>
+  <a href="/praxis.html" class="nav-link">Praxura</a>
+  <a href="/blog/" class="nav-link">Insights</a>
+  <a href="/login.html" class="nav-login">Login</a>
+  <a href="/#kontakt" class="nav-cta">
+    Analysegespräch
+    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  </a>
+</nav>
+
+<main class="doc">
+  <span class="doc-eyebrow">
+    <span class="doc-eyebrow-dot"></span>
+    Google API · Offenlegung
+  </span>
+  <h1><em>Google API-Nutzung</em> &amp; Datenschutz</h1>
+  <p class="doc-lede">Diese Seite beschreibt, welche Google APIs Praxura nutzt, welche Daten dabei verarbeitet werden und wie wir die Anforderungen der Google API Services User Data Policy erfüllen.</p>
+
+  <h2>1. Was ist Praxura?</h2>
+  <p>
+    Praxura ist eine <strong>Praxisverwaltungssoftware für Heilmittelerbringer</strong> in Deutschland — insbesondere für Physiotherapeuten, Logopäden, Ergotherapeuten und Podologen. Die Software unterstützt Praxisinhaber bei der Online-Terminbuchung, der Rezeptprüfung sowie der Abrechnung nach §&nbsp;302 SGB V.
+  </p>
+
+  <h2>2. Warum nutzt Praxura Google APIs?</h2>
+  <p>
+    Praxisinhaber können ihr <strong>Google-Konto freiwillig mit Praxura verbinden</strong>. Nach der Verknüpfung ist Praxura in der Lage, im Auftrag der Praxis automatisch E-Mails zu versenden — zum Beispiel:
+  </p>
+  <ul>
+    <li>Terminbestätigungen an Patienten</li>
+    <li>Terminerinnerungen (z.&nbsp;B. 24 Stunden vor dem Termin)</li>
+    <li>Abrechnungshinweise und Statusnachrichten</li>
+  </ul>
+  <p>
+    Die E-Mails werden dabei <strong>von der offiziellen Praxis-E-Mail-Adresse</strong> (der verknüpften Google-E-Mail) versendet, sodass Patienten den Absender kennen und vertrauen. Die Google-Verbindung ist jederzeit widerrufbar.
+  </p>
+
+  <h2>3. Welche Berechtigungen werden angefordert?</h2>
+  <p>Praxura fordert ausschließlich die folgenden eingeschränkten Google-Berechtigungen (Scopes) an:</p>
+
+  <table class="scope-table">
+    <thead>
+      <tr>
+        <th>Scope</th>
+        <th>Zweck</th>
+        <th>Sensitivität</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>https://www.googleapis.com/auth/gmail.send</code></td>
+        <td>Automatischen Versand von Terminbenachrichtigungen im Namen der Praxis</td>
+        <td>Eingeschränkt (Restricted)</td>
+      </tr>
+      <tr>
+        <td><code>https://www.googleapis.com/auth/calendar.events</code></td>
+        <td>Lesen und Anlegen von Terminen im Google Kalender des Praxisinhabers zur Vermeidung von Doppelbuchungen</td>
+        <td>Eingeschränkt (Restricted)</td>
+      </tr>
+      <tr>
+        <td><code>openid</code>, <code>email</code>, <code>profile</code></td>
+        <td>Identifikation des Kontos bei der Erstverknüpfung (OAuth-Anmeldung)</td>
+        <td>Nicht eingeschränkt</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Was Praxura mit den Daten macht — und was nicht</h2>
+
+  <div class="badge-row">
+    <span class="badge badge-yes">✓ E-Mails versenden (gmail.send)</span>
+    <span class="badge badge-yes">✓ Termine lesen/anlegen (calendar.events)</span>
+    <span class="badge badge-no">✗ E-Mails lesen oder analysieren</span>
+    <span class="badge badge-no">✗ E-Mails löschen</span>
+    <span class="badge badge-no">✗ Kalendereinträge löschen</span>
+    <span class="badge badge-no">✗ Daten an Dritte weitergeben</span>
+    <span class="badge badge-no">✗ Daten für Werbung oder KI-Training verwenden</span>
+  </div>
+
+  <div class="info-card">
+    <p>
+      <strong>Wichtig:</strong> Die über die Google Gmail API gewonnenen Daten werden ausschließlich für den Versand von praxisbezogenen Benachrichtigungen genutzt. Sie werden weder an Dritte weitergegeben noch für eigene Werbezwecke, für maschinelles Lernen oder für andere Zwecke außerhalb des beschriebenen Funktionsumfangs verwendet.
+    </p>
+  </div>
+
+  <h2>5. Datenspeicherung und Sicherheit</h2>
+  <p>
+    Die Google OAuth-Zugangsdaten (Refresh Tokens) werden verschlüsselt in unserem Datenbanksystem (Supabase Vault, EU-Region Frankfurt) gespeichert. Der Zugriff auf diese Token erfolgt ausschließlich serverseitig und nur für den beschriebenen Zweck. Praxura hält alle Anforderungen an ein sicheres OAuth 2.0-Verfahren ein.
+  </p>
+  <ul>
+    <li>Tokens werden nicht im Browser oder in Logs gespeichert</li>
+    <li>Die Verbindung zum Google-Konto kann jederzeit im Dashboard unter <em>Einstellungen → Integrationen</em> oder direkt über <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a> widerrufen werden</li>
+    <li>Bei Kündigung des Praxura-Kontos werden alle gespeicherten Token gelöscht</li>
+  </ul>
+
+  <h2>6. Einhaltung der Google-Nutzungsrichtlinien</h2>
+  <p>
+    Die Nutzung der Google APIs durch Praxura entspricht der
+    <strong>Google API Services User Data Policy</strong>, einschließlich der Anforderungen der Limited Use Policy.
+  </p>
+
+  <div class="policy-link-box">
+    <span>📄</span>
+    <span>
+      <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">
+        Google API Services User Data Policy
+      </a>
+      — offizielle Richtlinien für die Nutzung von Google-Nutzerdaten durch Anwendungen
+    </span>
+  </div>
+
+  <h2>7. Datenschutzerklärung</h2>
+  <p>
+    Ausführliche Informationen zur Verarbeitung personenbezogener Daten durch Praxura, einschließlich Ihrer Rechte nach DSGVO, finden Sie in unserer vollständigen Datenschutzerklärung:
+  </p>
+  <div class="policy-link-box">
+    <span>🔒</span>
+    <span>
+      <a href="/datenschutz.html">Datenschutzerklärung von Praxura</a>
+      — gemäß Art. 13 DSGVO, inkl. Auskunfts-, Löschungs- und Widerspruchsrecht
+    </span>
+  </div>
+
+  <h2>8. Kontakt</h2>
+  <p>
+    Bei Fragen zur Nutzung von Google APIs durch Praxura oder zum Datenschutz wenden Sie sich bitte an:
+  </p>
+  <p>
+    <strong>Praxura Support</strong><br />
+    E-Mail: <a href="mailto:support@praxura.de">support@praxura.de</a><br />
+    Betreiber: InfinityMade (Yavuz Kemal Demir), Industriestraße 33, 53721 Siegburg
+  </p>
+
+  <div class="doc-meta">Stand: Juni 2026 · InfinityMade · Siegburg, NRW</div>
+</main>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Prax<em>ura</em></div>
+      <div class="footer-tagline">KI-Studio aus Siegburg. Wir bauen Software, die Zeit zurückgibt — für Heilmittel-Praxen und KMU in Deutschland.</div>
+    </div>
+    <div class="footer-col">
+      <h4>InfinityMade</h4>
+      <ul>
+        <li><a href="/#services">Leistungen</a></li>
+        <li><a href="/#projekte">Projekte</a></li>
+        <li><a href="/#prozess">Prozess</a></li>
+        <li><a href="/#kontakt">Analysegespräch</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Produkte</h4>
+      <ul>
+        <li><a href="/praxis.html">Praxura</a></li>
+        <li><a href="/blog/">Insights</a></li>
+        <li><a href="/login.html">Login</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+        <li><a href="/widerruf.html">Widerruf</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<script src="assets/system.js?v=20260524"></script>
+</body>
+</html>
