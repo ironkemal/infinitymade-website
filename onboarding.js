@@ -331,6 +331,19 @@ async function saveStepProgress(nextStepName) {
   if (profile) profile.onboarding_step = nextStepName;
 }
 
+// ---- Password reveal toggles ----
+document.querySelectorAll('.ob-pw-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    if (!input) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.querySelector('.ob-eye-icon').hidden = show;
+    btn.querySelector('.ob-eye-off-icon').hidden = !show;
+    btn.setAttribute('aria-label', show ? 'Passwort verbergen' : 'Passwort anzeigen');
+  });
+});
+
 // ---- Step 0: Account ----
 function bindAccount() {
   let mode = 'signup';
