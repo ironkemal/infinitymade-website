@@ -1,0 +1,115 @@
+<!--
+  SUPABASE EMAIL TEMPLATE — "Confirm signup"
+  Yapıştırılacağı yer: Supabase Dashboard → Authentication → Email Templates → Confirm signup
+  Subject: Ihr Praxura-Konto bestätigen
+  Konu: {{ .Email }} için gönderilir, {{ .ConfirmationURL }} onay linkidir
+-->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Mail bestätigen — Praxura</title>
+</head>
+<body style="margin:0;padding:0;background:#F0EAD9;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F0EAD9;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+          <!-- Logo / Wordmark -->
+          <tr>
+            <td align="center" style="padding-bottom:28px;">
+              <a href="https://praxura.de" style="text-decoration:none;">
+                <span style="font-size:22px;font-weight:500;letter-spacing:-0.02em;color:#1A1611;">
+                  Prax<em style="font-style:italic;color:#6B5538;">ura</em>
+                </span>
+              </a>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background:#FFFDF8;border:1px solid rgba(26,22,17,0.1);border-radius:20px;padding:44px 44px 36px;box-shadow:0 4px 24px -8px rgba(26,22,17,0.12);">
+
+              <!-- Icon -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding-bottom:24px;">
+                    <div style="display:inline-block;width:56px;height:56px;border-radius:50%;background:rgba(30,61,47,0.1);line-height:56px;text-align:center;font-size:24px;">✉</div>
+                  </td>
+                </tr>
+
+                <!-- Headline -->
+                <tr>
+                  <td align="center" style="padding-bottom:10px;">
+                    <h1 style="margin:0;font-size:26px;font-weight:400;letter-spacing:-0.025em;color:#1A1611;line-height:1.2;">
+                      E-Mail bestätigen
+                    </h1>
+                  </td>
+                </tr>
+
+                <!-- Subtext -->
+                <tr>
+                  <td align="center" style="padding-bottom:32px;">
+                    <p style="margin:0;font-size:15px;color:#7A6F61;line-height:1.6;max-width:380px;">
+                      Klicken Sie auf die Schaltfläche unten, um Ihre E-Mail-Adresse zu bestätigen und Ihr Praxura-Konto zu aktivieren.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- CTA Button -->
+                <tr>
+                  <td align="center" style="padding-bottom:32px;">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;padding:14px 36px;background:#1A1611;color:#F8F3E8;font-size:15px;font-weight:500;letter-spacing:0.01em;text-decoration:none;border-radius:999px;box-shadow:0 4px 12px -4px rgba(26,22,17,0.3);">
+                      Konto aktivieren →
+                    </a>
+                  </td>
+                </tr>
+
+                <!-- Divider -->
+                <tr>
+                  <td style="border-top:1px solid rgba(26,22,17,0.08);padding-top:24px;padding-bottom:16px;">
+                    <p style="margin:0;font-size:12px;color:#9E9690;line-height:1.7;text-align:center;">
+                      Falls Sie sich nicht bei Praxura registriert haben, können Sie diese E-Mail ignorieren.<br/>
+                      Der Link ist <strong>24 Stunden</strong> gültig.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Manual link fallback -->
+                <tr>
+                  <td style="padding-top:8px;">
+                    <p style="margin:0;font-size:11px;color:#B0A99F;line-height:1.6;text-align:center;word-break:break-all;">
+                      Falls der Button nicht funktioniert, kopieren Sie diesen Link in Ihren Browser:<br/>
+                      <span style="color:#6B5538;">{{ .ConfirmationURL }}</span>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding-top:28px;">
+              <p style="margin:0;font-size:12px;color:#9E9690;line-height:1.8;">
+                <a href="https://praxura.de/impressum.html" style="color:#9E9690;text-decoration:none;">Impressum</a>
+                &nbsp;·&nbsp;
+                <a href="https://praxura.de/datenschutz.html" style="color:#9E9690;text-decoration:none;">Datenschutz</a>
+                &nbsp;·&nbsp;
+                <a href="https://praxura.de" style="color:#9E9690;text-decoration:none;">praxura.de</a>
+              </p>
+              <p style="margin:6px 0 0;font-size:11px;color:#B0A99F;">
+                InfinityMade GmbH · Deutschland
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

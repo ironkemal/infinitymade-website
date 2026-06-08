@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>E-Mail bestätigen — Praxura</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#F8F3E8" />
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20260608" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .wrap { width: 100%; max-width: 460px; text-align: center; }
+    .brand {
+      display: inline-block;
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-decoration: none;
+      margin-bottom: 2.5rem;
+    }
+    .brand em { font-style: italic; color: var(--bronze); }
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 3rem 2.6rem;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.7) inset,
+        0 24px 48px -20px rgba(26,22,17,0.18),
+        0 6px 14px -4px rgba(26,22,17,0.05);
+    }
+    .icon {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.4rem;
+      font-size: 1.6rem;
+    }
+    .icon.loading { background: rgba(107,85,56,0.1); animation: pulse 1.5s ease-in-out infinite; }
+    .icon.success { background: rgba(30,61,47,0.1); }
+    .icon.error   { background: rgba(156,58,58,0.1); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+    .card h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.7rem;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+    }
+    .sub {
+      font-size: 0.95rem;
+      color: var(--ink-mute);
+      line-height: 1.6;
+      margin-bottom: 1.8rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.8rem;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 240ms var(--ease-spring), background 200ms ease;
+    }
+    .btn:hover { background: var(--emerald-deep); transform: translateY(-2px); }
+    .btn-ghost {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.86rem;
+      color: var(--bronze);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+    @media (max-width: 640px) {
+      .card { padding: 2.2rem 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" class="brand">Prax<em>ura</em></a>
+    <div class="card">
+      <div class="icon loading" id="icon">⏳</div>
+      <h1 id="title">Wird bestätigt…</h1>
+      <p class="sub" id="sub">Bitte warten Sie einen Moment.</p>
+      <div id="actions" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const icon    = document.getElementById('icon');
+    const title   = document.getElementById('title');
+    const sub     = document.getElementById('sub');
+    const actions = document.getElementById('actions');
+
+    function showSuccess(msg) {
+      icon.className = 'icon success';
+      icon.textContent = '✓';
+      title.textContent = 'E-Mail bestätigt';
+      sub.textContent = msg;
+    }
+    function showError(msg) {
+      icon.className = 'icon error';
+      icon.textContent = '✕';
+      title.textContent = 'Bestätigung fehlgeschlagen';
+      sub.textContent = msg;
+      actions.style.display = 'block';
+      actions.innerHTML = `
+        <a href="/employee-signup.html" class="btn">Erneut registrieren</a>
+        <a href="/login.html" class="btn-ghost">Zur Anmeldung</a>
+      `;
+    }
+
+    async function applyPendingEmployeeData(session) {
+      const email = session.user.email;
+      const userId = session.user.id;
+
+      const { data: pending } = await supabase
+        .from('pending_employee_registrations')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (!pending) return; // no pending employee data — regular password reset or similar
+
+      // Update profile
+      await supabase.from('profiles').update({
+        role: 'employee',
+        owner_id: pending.owner_id,
+        business_name: pending.full_name,
+        anrede: pending.anrede,
+        plan: 'mitarbeiter',
+        billing: null,
+        plan_status: 'active',
+      }).eq('id', userId);
+
+      // Insert working hours
+      const whRows = (pending.working_hours || []).map(h => ({
+        user_id: userId,
+        day_of_week: h.day_of_week,
+        start_time: h.start_time,
+        end_time: h.end_time,
+        is_active: h.is_active,
+      }));
+      if (whRows.length) {
+        await supabase.from('working_hours').insert(whRows);
+      }
+
+      // Assign to owner's default business
+      try {
+        const { data: defaultBiz } = await supabase
+          .from('businesses')
+          .select('id')
+          .eq('owner_id', pending.owner_id)
+          .eq('is_default', true)
+          .maybeSingle();
+        if (defaultBiz?.id) {
+          const { data: mitGroup } = await supabase
+            .from('employee_groups')
+            .select('id')
+            .eq('business_id', defaultBiz.id)
+            .eq('name', 'Mitarbeiter')
+            .maybeSingle();
+          await supabase.from('employee_business_assignments').upsert({
+            employee_id: userId,
+            business_id: defaultBiz.id,
+            group_id: mitGroup?.id || null,
+          }, { onConflict: 'employee_id,business_id' });
+        }
+      } catch {
+        // Non-fatal: profile is set up correctly, business assignment can be retried
+      }
+
+      // Clean up pending record
+      await supabase.from('pending_employee_registrations').delete().eq('email', email);
+    }
+
+    async function run() {
+      const params = new URLSearchParams(window.location.search);
+      const tokenHash = params.get('token_hash');
+      const type = params.get('type') || 'signup';
+
+      if (!tokenHash) {
+        // No token in URL — check if user already has a session (e.g. navigated here directly)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          window.location.href = '/dashboard.html';
+        } else {
+          showError('Kein Bestätigungslink gefunden. Bitte registrieren Sie sich erneut.');
+        }
+        return;
+      }
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type,
+      });
+
+      if (error) {
+        // Link may have expired or already been used
+        showError('Der Bestätigungslink ist abgelaufen oder wurde bereits verwendet. Bitte registrieren Sie sich erneut.');
+        return;
+      }
+
+      const session = data.session;
+      if (!session) {
+        showError('Bestätigung nicht erfolgreich. Bitte versuchen Sie es erneut.');
+        return;
+      }
+
+      await applyPendingEmployeeData(session);
+
+      showSuccess('Ihr Konto ist jetzt aktiv. Sie werden zum Dashboard weitergeleitet…');
+      actions.style.display = 'block';
+      actions.innerHTML = `<a href="/dashboard.html" class="btn">Zum Dashboard →</a>`;
+
+      setTimeout(() => { window.location.href = '/dashboard.html'; }, 2500);
+    }
+
+    run().catch(err => {
+      console.error('[confirm]', err);
+      showError('Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+    });
+  </script>
+</body>
+</html>

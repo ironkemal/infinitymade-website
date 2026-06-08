@@ -155,6 +155,7 @@ $('signupForm').addEventListener('submit', async (e) => {
   btn.textContent = 'Lädt...';
 
   try {
+    // 1. Verify company code
     const res = await fetch('https://n8n.infinitymade.de/api/verify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -163,52 +164,37 @@ $('signupForm').addEventListener('submit', async (e) => {
     if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Ungültiger Unternehmens-Code.'); }
     const { ownerId } = await res.json();
 
+    // 2. Store pending registration data so confirm.html can apply it after email verification
+    const { error: pendingErr } = await supabase
+      .from('pending_employee_registrations')
+      .upsert({
+        email,
+        owner_id: ownerId,
+        anrede: $('anrede').value || null,
+        full_name: name,
+        working_hours: collectWorkingHours(),
+      }, { onConflict: 'email' });
+    if (pendingErr) console.warn('[employee-signup] pending insert failed', pendingErr);
+
+    // 3. Sign up — email confirmation required; session will be null until confirmed
     const { data: authData, error: authErr } = await supabase.auth.signUp({
-      email, password, options: { data: { full_name: name } }
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: 'https://praxura.de/confirm.html',
+      }
     });
     if (authErr) throw authErr;
 
-    if (authData.user) {
-      await supabase.from('profiles').update({
-        role: 'employee', owner_id: ownerId, business_name: name,
-        anrede: $('anrede').value || null,
-        plan: 'mitarbeiter', billing: null, plan_status: 'active'
-      }).eq('id', authData.user.id);
-
-      const whRows = collectWorkingHours().map(h => ({
-        user_id: authData.user.id, day_of_week: h.day_of_week,
-        start_time: h.start_time, end_time: h.end_time, is_active: h.is_active
-      }));
-      await supabase.from('working_hours').insert(whRows);
-
-      // Faz 3: Employee'yi owner'ın default business'ına Mitarbeiter olarak ata
-      try {
-        const { data: defaultBiz } = await supabase
-          .from('businesses')
-          .select('id')
-          .eq('owner_id', ownerId)
-          .eq('is_default', true)
-          .maybeSingle();
-        if (defaultBiz?.id) {
-          const { data: mitGroup } = await supabase
-            .from('employee_groups')
-            .select('id')
-            .eq('business_id', defaultBiz.id)
-            .eq('name', 'Mitarbeiter')
-            .maybeSingle();
-          await supabase.from('employee_business_assignments').upsert({
-            employee_id: authData.user.id,
-            business_id: defaultBiz.id,
-            group_id: mitGroup?.id || null,
-          }, { onConflict: 'employee_id,business_id' });
-        }
-      } catch (eba) {
-        console.warn('[employee-signup] eba upsert failed', eba);
-      }
-    }
-
-    showMsg('Konto erfolgreich erstellt! Sie werden weitergeleitet...', 'success');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+    // 4. Show confirmation message — profile setup happens in confirm.html after click
+    showMsg(
+      'Bestätigungs-E-Mail gesendet. Bitte prüfen Sie Ihr Postfach und klicken Sie den Link, um Ihr Konto zu aktivieren.',
+      'success'
+    );
+    btn.textContent = 'E-Mail bestätigen…';
+    // Hide form steps so user doesn't accidentally resubmit
+    document.querySelectorAll('.step').forEach(s => s.hidden = true);
 
   } catch (error) {
     showMsg(error.message || 'Ein Fehler ist aufgetreten.', 'error');
