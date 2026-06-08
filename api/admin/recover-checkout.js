@@ -122,6 +122,17 @@ export default async function handler(req, res) {
     }
     const userId = uData.id;
 
+    // Send email confirmation (admin API doesn't auto-send)
+    const { ok: emailOk, status: emailStatus, data: emailData } = await adminAuthFetch('/admin/generate_link', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'signup',
+        email: pending.email,
+        options: { redirectTo: 'https://praxura.de/login.html?verified=1' },
+      }),
+    });
+    if (!emailOk) console.error('[recover-checkout] confirmation email failed', emailStatus, emailData);
+
     const od = pending.onboarding_data || {};
 
     // 7c. Update profile (auth trigger handle_new_user() already inserted (id, email))
