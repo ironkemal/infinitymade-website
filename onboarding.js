@@ -237,7 +237,6 @@ function prefillForms() {
   if (profile.business_name) document.getElementById('bizName').value = profile.business_name;
   if (profile.sector) document.getElementById('bizSector').value = profile.sector;
   if (profile.city) document.getElementById('bizCity').value = profile.city;
-  if (profile.language) document.getElementById('bizLanguage').value = profile.language;
   if (profile.zip) document.getElementById('bizZip').value = profile.zip;
   if (profile.street) document.getElementById('bizStreet').value = profile.street;
   if (profile.house_number) document.getElementById('bizHouse').value = profile.house_number;
@@ -403,7 +402,6 @@ function bindBusiness() {
     const business_name = document.getElementById('bizName').value.trim();
     const sector = document.getElementById('bizSector').value;
     const city = document.getElementById('bizCity').value.trim();
-    const language = document.getElementById('bizLanguage').value;
     const zip = document.getElementById('bizZip').value.trim();
     const street = document.getElementById('bizStreet').value.trim();
     const house_number = document.getElementById('bizHouse').value.trim();
@@ -415,7 +413,7 @@ function bindBusiness() {
 
     if (userId) {
       const { error } = await supabase.from('profiles').update({
-        business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: nextStep
+        business_name, sector, city, zip, street, house_number, booking_slug, onboarding_step: nextStep
       }).eq('id', userId);
       if (error) return showError(error.message);
 
@@ -449,7 +447,7 @@ function bindBusiness() {
         console.warn('[onboarding] default business upsert failed', bizErr);
       }
     }
-    profile = { ...profile, business_name, sector, city, language, zip, street, house_number, booking_slug, onboarding_step: nextStep };
+    profile = { ...profile, business_name, sector, city, zip, street, house_number, booking_slug, onboarding_step: nextStep };
     saveSessionProfile();
     goToStep(STEPS.indexOf(nextStep));
   });
@@ -858,7 +856,6 @@ function bindPlan() {
           business_name: profile.business_name || null,
           sector: profile.sector || null,
           city: profile.city || null,
-          language: profile.language || null,
           zip: profile.zip || null,
           street: profile.street || null,
           house_number: profile.house_number || null,
