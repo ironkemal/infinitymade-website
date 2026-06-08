@@ -35,17 +35,23 @@ function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 function renderWorkingHours(ownerHours = null) {
   $('workingHoursList').innerHTML = DAYS.map((label, i) => {
     const ownerDay = ownerHours?.find(h => h.day_of_week === i);
-    const ownerActive = !ownerHours || (ownerDay && ownerDay.is_active);
-    const startVal  = ownerDay?.start_time?.slice(0, 5) || '09:00';
-    const endVal    = ownerDay?.end_time?.slice(0, 5)   || '18:00';
-    const minAttr   = ownerActive && ownerDay ? `min="${ownerDay.start_time.slice(0,5)}"` : '';
-    const maxAttr   = ownerActive && ownerDay ? `max="${ownerDay.end_time.slice(0,5)}"` : '';
-    const closedAttr = ownerActive ? '' : 'data-owner-closed';
+    const start5 = ownerDay?.start_time?.slice(0, 5);
+    const end5   = ownerDay?.end_time?.slice(0, 5);
+    // Valid open day: is_active true AND has a real (non-midnight, non-equal) time range
+    const isValidRange = start5 && end5 && start5 !== end5 && start5 !== '00:00' && end5 !== '00:00';
+    const ownerActive = !ownerHours || (ownerDay?.is_active === true && isValidRange);
+    const startVal  = ownerActive ? (start5 || '09:00') : '09:00';
+    const endVal    = ownerActive ? (end5   || '18:00') : '18:00';
+    const minAttr   = ownerActive && start5 ? `min="${start5}"` : '';
+    const maxAttr   = ownerActive && end5   ? `max="${end5}"`   : '';
+    const closedAttr   = ownerActive ? '' : 'data-owner-closed';
     const checkedAttr  = ownerActive ? 'checked' : '';
     const disabledAttr = ownerActive ? '' : 'disabled';
-    const hintHtml = ownerActive && ownerDay
-      ? `<span class="wh-hint">${startVal}–${endVal}</span>`
-      : ownerHours ? `<span class="wh-hint wh-hint--closed">Geschlossen</span>` : '';
+    const hintHtml = ownerHours
+      ? (ownerActive
+          ? `<span class="wh-hint">${startVal}–${endVal}</span>`
+          : `<span class="wh-hint wh-hint--closed">Geschlossen</span>`)
+      : '';
     return `
     <div class="wh-row" data-day="${i}" ${closedAttr}>
       <label>
@@ -56,8 +62,8 @@ function renderWorkingHours(ownerHours = null) {
         <input type="time" class="wh-start" value="${startVal}" ${minAttr} ${maxAttr} ${disabledAttr} />
         <span class="wh-sep">–</span>
         <input type="time" class="wh-end" value="${endVal}" ${minAttr} ${maxAttr} ${disabledAttr} />
+        ${hintHtml}
       </div>
-      ${hintHtml}
     </div>`;
   }).join('');
 

@@ -297,8 +297,8 @@
       text-transform: none;
       margin: 0;
     }
-    .wh-row .wh-times { display: flex; align-items: center; gap: 6px; flex: 1; }
-    .wh-row .wh-sep { color: var(--ink-mute); font-size: 0.9rem; }
+    .wh-row .wh-times { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+    .wh-row .wh-sep { color: var(--ink-mute); font-size: 0.9rem; flex-shrink: 0; }
     .wh-row input[type="time"] {
       box-sizing: border-box;
       flex: 1;
@@ -329,9 +329,10 @@
       visibility: hidden;
     }
 
-    /* ── Business hours hint ── */
+    /* ── Business hours hint (inside .wh-times, pushed right) ── */
     .wh-hint {
       margin-left: auto;
+      flex-shrink: 0;
       font-family: var(--mono);
       font-size: 0.68rem;
       letter-spacing: 0.06em;
