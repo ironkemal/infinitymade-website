@@ -2366,8 +2366,7 @@ async function handleTerminStarten() {
   const patientPhone = b.customer_phone || '';
   const ownerId = getOwnerId();
 
-  // Fahrtenbuch: Hausbesuch ise fahrt_status'u 'in_progress'e geçir — kullanıcı geri dönüp
-  // Fahrt Beenden tıklayabilsin. Eğer henüz fahrt_arrived değilse blokla.
+  // Hausbesuch: fahrt_status'u in_progress yap, modal'da kal — Fahrt Beenden göster
   if (b.hausbesuch) {
     if (b.fahrt_status !== 'fahrt_arrived' && b.fahrt_status !== 'in_progress') {
       showToast('Bitte zuerst "Fahrt Starten" → "Ich bin angekommen" durchlaufen.', 'error');
@@ -2377,12 +2376,15 @@ async function handleTerminStarten() {
       await supabase.from('bookings').update({ fahrt_status: 'in_progress' }).eq('id', b.id);
       b.fahrt_status = 'in_progress';
     }
+    markPrescriptionSession(b.id, 'done');
+    await renderBkActionFahrtState(b, true);
+    return;
   }
 
+  // Normal randevu: modal kapat, anamnese/notizen'e yönlendir
   closeModal('bkActionModal');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
-  // Mark linked prescription_session done (physio); non-blocking
   markPrescriptionSession(b.id, 'done');
 
   const sessionText = document.getElementById('bkActionSession').textContent;
@@ -2391,7 +2393,6 @@ async function handleTerminStarten() {
 
   let leadId = null;
   if (patientName) {
-    // Strip the " · YYYY-MM-DD" birth date suffix that displayNameWithBirth appends
     const cleanName = patientName.split('·')[0].trim().toLowerCase();
     const { data: leads } = await bizScope(supabase.from('leads')
       .select('id,first_name,last_name,title,phone,metadata')
