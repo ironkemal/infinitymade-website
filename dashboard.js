@@ -3739,10 +3739,12 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
 
   window._aiCtx = { payload, baseEmpId: empId };
 
+  const aiToken = (await supabase.auth.getSession()).data.session?.access_token;
+
   try {
     const res = await fetch(AI_SUGGEST_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + aiToken },
       body: JSON.stringify(payload)
     });
     const json = await res.json();
@@ -3800,10 +3802,11 @@ document.getElementById('aiSuggestRetry').addEventListener('click', async () => 
   if (!window._aiCtx?.payload) return;
   closeModal('aiSuggestModal');
   showToast('🤖 Suche andere Vorschläge…', 'info');
+  const retryToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
     const res = await fetch(AI_SUGGEST_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + retryToken },
       body: JSON.stringify(window._aiCtx.payload)
     });
     const json = await res.json();
@@ -3838,10 +3841,11 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     hausbesuch
   };
 
+  const batchToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
     const res = await fetch(AI_BATCH_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + batchToken },
       body: JSON.stringify(payload)
     });
     const json = await res.json();
