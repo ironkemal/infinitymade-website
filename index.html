@@ -1241,7 +1241,7 @@
     $('fnxRail').querySelectorAll('.fnx-fn').forEach(function(b){
       var on=b.dataset.fn===curFn;
       b.setAttribute('aria-selected',on?'true':'false');
-      if(on&&inited)b.scrollIntoView({block:'nearest',inline:'nearest'});
+      if(on&&inited){var rail=b.closest('.fnx-rail');if(rail){var bTop=b.offsetTop,bBot=bTop+b.offsetHeight,rTop=rail.scrollTop,rBot=rTop+rail.clientHeight;if(bTop<rTop)rail.scrollTop=bTop;else if(bBot>rBot)rail.scrollTop=bBot-rail.clientHeight;}}
     });
     var dots=$('fnxDots');
     if(fn.steps.length>1){
