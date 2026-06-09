@@ -1250,14 +1250,49 @@
     renderRight();
   }
 
+  function showLoading(on) {
+    const btn   = document.getElementById("submitBtn");
+    const label = document.getElementById("submitLabel");
+    if (!btn || !label) return;
+    if (on) {
+      btn.disabled = true;
+      label.innerHTML = `<div class="spinner"></div> Wird gespeichert…`;
+    } else {
+      btn.disabled = false;
+      label.textContent = rescheduleToken ? 'Termin verschieben' : 'Termin bestätigen';
+    }
+  }
+
+  function clearError() {
+    const el = document.getElementById("formError");
+    if (el) el.innerHTML = "";
+  }
+
   async function submitForm() {
+    if (rescheduleToken) {
+      // Reschedule mode — no form fields needed
+      showLoading(true);
+      clearError();
+      try {
+        const data = await rescheduleBooking({
+          token: rescheduleToken,
+          new_date: state.selectedDate,
+          new_time: state.selectedTime
+        });
+        state.confirmData = { rescheduled: true, meet_link: data.meet_link };
+        state.step = 3;
+        renderRight();
+      } catch(e) {
+        showLoading(false);
+        showError(e.message || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+      }
+      return;
+    }
+
     const name    = document.getElementById("f-name")?.value.trim();
     const email   = document.getElementById("f-email")?.value.trim();
     const company = document.getElementById("f-company")?.value.trim();
     const message = document.getElementById("f-message")?.value.trim();
-    const errorEl = document.getElementById("formError");
-    const btn     = document.getElementById("submitBtn");
-    const label   = document.getElementById("submitLabel");
 
     // Validate
     if (!name) { showError("Bitte geben Sie Ihren Namen ein."); return; }
@@ -1266,45 +1301,60 @@
       return;
     }
 
-    // Loading state
-    errorEl.innerHTML = "";
-    btn.disabled = true;
-    label.innerHTML = `<div class="spinner"></div> Wird gespeichert…`;
+    showLoading(true);
+    clearError();
 
+    state.confirmedName = name.split(" ")[0];
+
+    await submitBooking({ name, email, company, message });
+  }
+
+  async function submitBooking(formData) {
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/demo_bookings`, {
-        method: "POST",
-        headers: {
-          "apikey": SUPABASE_ANON,
-          "Authorization": `Bearer ${SUPABASE_ANON}`,
-          "Content-Type": "application/json",
-          "Prefer": "return=minimal"
-        },
+      const res = await fetch('/api/demo-booking/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          email,
-          company: company || null,
-          message: message || null,
+          name:         formData.name,
+          email:        formData.email,
+          company:      formData.company || null,
+          message:      formData.message || null,
           booking_date: state.selectedDate,
-          booking_time: state.selectedTime
-        })
+          booking_time: state.selectedTime,
+        }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errBody = await res.text();
-        throw new Error(errBody || `HTTP ${res.status}`);
+        showLoading(false);
+        showError(data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+        return;
       }
 
-      state.confirmedName = name.split(" ")[0];
+      state.confirmData = {
+        meet_link:        data.meet_link,
+        reschedule_token: data.reschedule_token,
+      };
       state.step = 3;
       renderRight();
 
-    } catch (err) {
-      btn.disabled = false;
-      label.textContent = "Termin bestätigen";
-      showError("Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-      console.error("[demo-booking] submit error:", err);
+    } catch(e) {
+      showLoading(false);
+      showError('Verbindungsfehler. Bitte überprüfen Sie Ihre Internetverbindung.');
+      console.error("[demo-booking] submit error:", e);
     }
+  }
+
+  async function rescheduleBooking({ token, new_date, new_time }) {
+    const res = await fetch('/api/demo-booking/reschedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, new_date, new_time }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Fehler beim Verschieben des Termins.');
+    return data;
   }
 
   function showError(msg) {
@@ -1324,16 +1374,24 @@
   /* ─────────────────────────────────────────
      CONFIRM (Step 3)
   ───────────────────────────────────────── */
-  function renderConfirm() {
-    return `
+  function showConfirmation({ meet_link, reschedule_token, rescheduled }) {
+    const panel = document.getElementById('rightPanel');
+    const heading = rescheduled
+      ? 'Termin erfolgreich verschoben!'
+      : `Vielen Dank${state.confirmedName ? ", " + state.confirmedName : ""}!`;
+    const subtext = rescheduled
+      ? 'Ihr Termin wurde verschoben. Eine aktualisierte Bestätigung wurde an Ihre E-Mail-Adresse gesendet.'
+      : 'Ihr Termin wurde erfolgreich gebucht. Sie erhalten in Kürze eine Bestätigungs-E-Mail.';
+
+    panel.innerHTML = `
       <div class="confirm-wrap">
         <div class="confirm-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3>Vielen Dank${state.confirmedName ? ", " + state.confirmedName : ""}!</h3>
-        <p>Ihr Termin wurde erfolgreich gebucht. Sie erhalten in Kürze eine Bestätigungs-E-Mail.</p>
+        <h3>${heading}</h3>
+        <p>${subtext}</p>
 
         <div class="confirm-detail">
           <div class="confirm-detail-row">
@@ -1352,11 +1410,22 @@
             </svg>
             <strong>${state.selectedTime} Uhr</strong> · 30 Minuten · Video-Call
           </div>
+          ${meet_link ? `<div class="confirm-detail-row" style="margin-top:12px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+            <a href="${meet_link}" target="_blank" rel="noopener noreferrer" style="color:var(--bronze);font-weight:600;font-size:14px">
+              Google Meet beitreten →
+            </a>
+          </div>` : ''}
         </div>
 
-        <a href="index.html" class="confirm-back">
-          Zurück zur Startseite
-        </a>
+        ${reschedule_token ? `<p style="font-size:13px;color:var(--ink-mute);margin-top:8px">
+          <a href="/demo-booking.html?reschedule=${reschedule_token}" style="color:var(--bronze)">Termin verschieben</a>
+        </p>` : ''}
+
+        <a href="index.html" class="confirm-back">← Zurück zur Startseite</a>
       </div>`;
   }
 </script>
