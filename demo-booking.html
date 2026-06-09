@@ -226,6 +226,39 @@
       font-weight: 600;
     }
 
+    /* ── Host Avatar ── */
+    .host-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .host-avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2.5px solid var(--highlight);
+      box-shadow:
+        0 0 0 5px rgba(201,168,118,0.18),
+        0 4px 14px -4px rgba(26,22,17,0.18);
+    }
+
+    .host-name {
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .host-title {
+      font-size: 0.75rem;
+      color: var(--ink-mute);
+      margin-top: -4px;
+    }
+
     /* ── Middle Panel (Calendar) ── */
     .panel-middle {
       padding: 28px 24px;
@@ -792,6 +825,15 @@
 
       <!-- Left Panel -->
       <div class="panel-left">
+        <!-- Host -->
+        <div class="host-wrap">
+          <img src="web%20foto/Kemal%20Demir.png" alt="Kemal Demir" class="host-avatar">
+          <div>
+            <div class="host-name">Kemal Demir</div>
+            <div class="host-title">Praxura</div>
+          </div>
+        </div>
+
         <div>
           <span class="badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px">
