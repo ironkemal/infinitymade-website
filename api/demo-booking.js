@@ -259,8 +259,13 @@ function handleSetupCalendar(req, res) {
   const expected = process.env.SETUP_SECRET;
   if (!expected) return json(res, 403, { error: 'Forbidden: SETUP_SECRET env var is not set on Vercel' });
   if (req.query.secret !== expected) return json(res, 403, { error: 'Forbidden: wrong secret', hint: `SETUP_SECRET is set (length ${expected.length}), but provided value does not match` });
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) return json(res, 500, { error: 'GOOGLE_CLIENT_ID env var is not set on Vercel' });
+  if (req.query.debug === '1') {
+    return json(res, 200, { client_id_first20: clientId.slice(0, 20), client_id_length: clientId.length, redirect_uri: CAL_REDIRECT });
+  }
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID,
+    client_id: clientId,
     redirect_uri: CAL_REDIRECT,
     response_type: 'code',
     scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
