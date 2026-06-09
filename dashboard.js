@@ -2354,8 +2354,9 @@ async function saveFahrtEndHandler() {
   b.fahrt_ended_at = nowIso;
 
   closeModal('fahrtEndModal');
-  await renderBkActionFahrtState(b, true);
+  closeModal('bkActionModal');
   showToast('🏁 Fahrt abgeschlossen — im Fahrtenbuch eingetragen.');
+  switchPanel('fahrtenbuch');
 }
 
 async function handleTerminStarten() {
@@ -13109,9 +13110,9 @@ async function loadFahrtenbuchPanel() {
       document.getElementById('vehEditKind')?.addEventListener('change', updateVehEditKindHint);
       document.getElementById('fbReportRefresh')?.addEventListener('click', loadFbReports);
 
-      // Default filters
+      // Default filters — son 30 gün
       const today = new Date();
-      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthStart = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
       const fromEl = document.getElementById('fbFahrtenFrom');
       const toEl = document.getElementById('fbFahrtenTo');
       const monthEl = document.getElementById('fbReportMonth');
