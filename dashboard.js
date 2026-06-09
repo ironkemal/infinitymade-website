@@ -2268,7 +2268,7 @@ async function markArrivedHandler() {
 function openFahrtEndModal() {
   const b = bkActionBookingCache;
   if (!b) { showToast('Buchung nicht gefunden.', 'error'); return; }
-  document.getElementById('feStartKm').textContent = b.start_km != null ? b.start_km + ' km' : '—';
+  document.getElementById('feStartKm').value = b.start_km != null ? b.start_km : '';
   document.getElementById('feEndKm').value = '';
   document.getElementById('feDistance').style.display = 'none';
   document.getElementById('feError').style.display = 'none';
@@ -2276,13 +2276,13 @@ function openFahrtEndModal() {
 }
 
 function updateEndKmPreview(value) {
-  const b = bkActionBookingCache;
   const end = parseInt(value, 10);
+  const startKm = parseInt(document.getElementById('feStartKm').value, 10);
   const distEl = document.getElementById('feDistance');
-  if (!b || !Number.isFinite(end) || b.start_km == null) {
+  if (!Number.isFinite(end) || !Number.isFinite(startKm)) {
     distEl.style.display = 'none'; return;
   }
-  const diff = end - b.start_km;
+  const diff = end - startKm;
   if (diff < 0) {
     distEl.textContent = '⚠ End-KM darf nicht kleiner als Start-KM sein.';
     distEl.style.color = '#c00';
@@ -2295,6 +2295,7 @@ function updateEndKmPreview(value) {
 
 async function saveFahrtEndHandler() {
   const b = bkActionBookingCache;
+  const startKmInput = parseInt(document.getElementById('feStartKm').value, 10);
   const endKm = parseInt(document.getElementById('feEndKm').value, 10);
   const err = document.getElementById('feError');
   err.style.display = 'none';
@@ -2302,7 +2303,8 @@ async function saveFahrtEndHandler() {
   if (!Number.isFinite(endKm) || endKm < 0) {
     err.textContent = 'Bitte einen gültigen End-KM eingeben.'; err.style.display = ''; return;
   }
-  if (b.start_km != null && endKm < b.start_km) {
+  const startKm = Number.isFinite(startKmInput) ? startKmInput : (b.start_km ?? null);
+  if (startKm != null && endKm < startKm) {
     err.textContent = 'End-KM darf nicht kleiner als Start-KM sein.'; err.style.display = ''; return;
   }
 
@@ -2336,17 +2338,20 @@ async function saveFahrtEndHandler() {
     vehicle_id: b.vehicle_id || null,
     kennzeichen_snapshot: kzSnapshot,
     kind_snapshot: kindSnapshot,
-    start_km: b.start_km,
+    start_km: startKm,
     end_km: endKm,
-    distance_km: (Number.isFinite(b.start_km) && Number.isFinite(endKm)) ? (endKm - b.start_km) : null,
+    distance_km: (startKm != null && Number.isFinite(endKm)) ? (endKm - startKm) : null,
     estimated_duration_min: leadDurationMin,
-    fahrt_started_at: b.fahrt_started_at,
+    fahrt_started_at: b.fahrt_started_at || nowIso,
     fahrt_arrived_at: b.fahrt_arrived_at,
     fahrt_ended_at: nowIso
   }, { onConflict: 'booking_id' });
   if (fErr) {
     console.error('[fahrten-insert]', fErr);
-    showToast('Buchung aktualisiert, aber Fahrtenbuch-Log fehlgeschlagen: ' + fErr.message, 'error');
+    const errEl = document.getElementById('feError');
+    errEl.textContent = 'Fahrtenbuch-Eintrag fehlgeschlagen: ' + fErr.message;
+    errEl.style.display = '';
+    return;
   }
 
   b.fahrt_status = 'fahrt_completed';
