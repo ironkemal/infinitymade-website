@@ -8460,6 +8460,9 @@ document.getElementById('notesSaveBtn').addEventListener('click', async () => {
     : await supabase.from('patient_notes').insert(payload);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   showToast(t('saved'));
+  if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'in_progress') {
+    setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
+  }
 });
 
 document.getElementById('aiGenBtn').addEventListener('click', async () => {
