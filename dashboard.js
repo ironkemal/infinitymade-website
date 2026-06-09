@@ -7436,10 +7436,11 @@ document.getElementById('composeSendBtn').addEventListener('click', async () => 
 
   const btn = document.getElementById('composeSendBtn');
   btn.disabled = true; btn.textContent = '⏳';
+  const gmailToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
     const res = await fetch('https://n8n.infinitymade.de/api/gmail/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gmailToken },
       body: JSON.stringify({
         userId: currentSession.user.id,
         to_email: toEmail, to_name: toName,
