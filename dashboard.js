@@ -6157,12 +6157,22 @@ async function loadTeam() {
   // Enterprise + multi-business: aktif business'a atanmamış employee'leri filtrele
   // Sadece owner için — employee rolü tüm ekibi görür (business ataması olmaksızın)
   if (currentProfile.role === 'owner' && isEnterprise() && currentBusiness?.id && myBusinesses.length > 1) {
-    const { data: assigned } = await supabase
+    const { data: assigned, error: asnErr } = await supabase
       .from('employee_business_assignments')
       .select('employee_id')
       .eq('business_id', currentBusiness.id);
-    const assignedIds = new Set((assigned || []).map(a => a.employee_id));
-    data = data.filter(p => p.role === 'owner' || assignedIds.has(p.id));
+    if (asnErr) {
+      console.error('[loadTeam] enterprise filter query failed — showing all employees', asnErr);
+    } else {
+      const assignedIds = new Set((assigned || []).map(a => a.employee_id));
+      const filtered = data.filter(p => p.role === 'owner' || assignedIds.has(p.id));
+      // Safety: only apply filter if at least 1 employee remains; otherwise show all
+      if (filtered.filter(p => p.role !== 'owner').length > 0) {
+        data = filtered;
+      } else {
+        console.warn('[loadTeam] enterprise filter returned 0 employees — showing all (business_id:', currentBusiness.id, 'assigned:', assigned?.length ?? 'null', ')');
+      }
+    }
   }
 
   // Fallback: legacy VPS endpoint (kept for any RLS edge cases).
