@@ -373,6 +373,7 @@ let moveBooking = null;
 let moveGhostEl = null;
 const EMP_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#ec4899'];
 let ovEmpPage = 0;
+let ovColsPerPage = 6;
 let leadFilter = 'all';
 let leadSearchVal = '';
 let invLines = [];
@@ -984,7 +985,7 @@ async function loadScheduleBookings(date) {
   });
 
   const isMobile = window.innerWidth < 768;
-  const colsPerPage = isMobile ? 1 : 3;
+  const colsPerPage = isMobile ? 1 : ovColsPerPage;
   const totalPages = Math.ceil(allEmps.length / colsPerPage);
   ovEmpPage = Math.min(ovEmpPage, Math.max(0, totalPages - 1));
   const start = ovEmpPage * colsPerPage;
@@ -8224,15 +8225,41 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
 function loadBeispielmodus() {
   const wrap = document.getElementById('zygoteWrap');
   if (!wrap) return;
-  if (wrap.dataset.loaded === '1') return;
-  wrap.dataset.loaded = '1';
   wrap.innerHTML = '';
+
+  function showFallback() {
+    wrap.innerHTML = `
+      <div class="zygote-fallback">
+        <div class="zygote-fallback-icon">🫁</div>
+        <div class="zygote-fallback-title">3D-Anatomie — Zygote Body</div>
+        <div class="zygote-fallback-text">Der externe Inhalt kann nicht direkt eingebettet werden. Öffnen Sie die Anwendung im neuen Tab:</div>
+        <a class="btn btn-primary zygote-fallback-btn" href="https://www.zygotebody.com/" target="_blank" rel="noopener">↗ Zygote Body öffnen</a>
+      </div>`;
+  }
+
   const frame = document.createElement('iframe');
   frame.id = 'zygoteFrame';
   frame.src = 'https://www.zygotebody.com/';
   frame.allow = 'fullscreen';
   frame.setAttribute('allowfullscreen', '');
   frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+
+  let loaded = false;
+  const timer = setTimeout(() => { if (!loaded) showFallback(); }, 4000);
+
+  frame.addEventListener('load', () => {
+    loaded = true;
+    clearTimeout(timer);
+    try {
+      const doc = frame.contentDocument || frame.contentWindow?.document;
+      if (!doc || doc.URL === 'about:blank' || doc.body?.innerHTML === '') showFallback();
+    } catch (e) {
+      // cross-origin — frame loaded but we can't inspect; assume it worked
+    }
+  });
+
+  frame.addEventListener('error', () => { clearTimeout(timer); showFallback(); });
+
   wrap.appendChild(frame);
 
   const fsBtn = document.createElement('button');
@@ -8246,16 +8273,6 @@ function loadBeispielmodus() {
     else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
   });
   wrap.appendChild(fsBtn);
-
-  const newTab = document.createElement('a');
-  newTab.className = 'zygote-fs-btn';
-  newTab.id = 'zygoteNewTabBtn';
-  newTab.href = 'https://www.zygotebody.com/';
-  newTab.target = '_blank';
-  newTab.rel = 'noopener';
-  newTab.style.cssText = 'right:auto;left:12px;display:none;';
-  newTab.textContent = '↗ Neuer Tab';
-  wrap.appendChild(newTab);
 }
 
 async function loadNotizen() {
@@ -8986,9 +9003,18 @@ function setupScheduleNav() {
   });
   if (ovNext) ovNext.addEventListener('click', () => {
     const allEmps = teamMembers.length ? teamMembers : [currentProfile];
-    const cpp = window.innerWidth < 768 ? 1 : 3;
+    const cpp = window.innerWidth < 768 ? 1 : ovColsPerPage;
     const totalPages = Math.ceil(allEmps.length / cpp);
     if (ovEmpPage < totalPages - 1) { ovEmpPage++; loadScheduleBookings(scheduleDate); }
+  });
+  document.querySelectorAll('.ov-count-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const n = parseInt(btn.dataset.count, 10);
+      ovColsPerPage = n;
+      ovEmpPage = 0;
+      document.querySelectorAll('.ov-count-btn').forEach(b => b.classList.toggle('active', b === btn));
+      loadScheduleBookings(scheduleDate instanceof Date ? scheduleDate : new Date());
+    });
   });
 
   const gPrev = document.getElementById('gapsPrev');
