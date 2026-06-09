@@ -945,8 +945,10 @@ async function loadScheduleBookings(date) {
     displayBookings = displayBookings.filter(b => b.start_time >= nowIso);
   }
   if (isToday) {
-    const myBookings = displayBookings.filter(b => b.user_id === currentSession.user.id);
-    document.getElementById('kpi-today').textContent = myBookings.length;
+    const countToday = currentProfile.role === 'owner'
+      ? displayBookings.length
+      : displayBookings.filter(b => b.user_id === currentSession.user.id).length;
+    document.getElementById('kpi-today').textContent = countToday;
   }
 
   if (displayBookings.length === 0) { emptyEl.hidden = false; return; }
