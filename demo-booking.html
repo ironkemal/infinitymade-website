@@ -1151,13 +1151,7 @@
     const slotsHtml = CONFIG.timeSlots.map(t => {
       const isBooked   = state.bookedTimes.includes(t);
       const isSelected = (t === state.selectedTime);
-      if (isBooked) {
-        return `
-        <button class="slot-btn" disabled style="opacity:0.45;cursor:not-allowed;color:var(--ink-quiet)">
-          <span>${t} Uhr</span>
-          <span style="font-size:0.72rem;font-family:var(--mono);letter-spacing:0.06em;color:var(--ink-quiet)">Vergeben</span>
-        </button>`;
-      }
+      if (isBooked) return '';
       const selected = isSelected ? " selected" : "";
       return `
         <button class="slot-btn${selected}" onclick="selectTime('${t}')">
