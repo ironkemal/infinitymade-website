@@ -1,9 +1,21 @@
 import { adminFetch, json } from '../_lib/auth.js';
+import nodemailer from 'nodemailer';
 
-const RESEND_KEY = process.env.RESEND_API_KEY;
 const OWNER_EMAIL = 'ironkemal5@gmail.com';
-const FROM = 'noreply@praxura.de';
+const FROM = 'Praxura <noreply@praxura.de>';
 const BASE_URL = 'https://praxura.de';
+
+function createTransport() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: Number(process.env.SMTP_PORT) === 465,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Google Calendar helpers
@@ -70,7 +82,7 @@ function formatDateDE(dateStr) {
 }
 
 async function sendRescheduleConfirmation(booking, meetLink) {
-  if (!RESEND_KEY) return;
+  if (!process.env.SMTP_HOST) return;
 
   const dateStr = formatDateDE(booking.booking_date);
 
@@ -101,27 +113,10 @@ async function sendRescheduleConfirmation(booking, meetLink) {
       ${meetLink ? `<p><a href="${meetLink}">Google Meet beitreten</a></p>` : ''}
     </div>`;
 
+  const t = createTransport();
   await Promise.all([
-    fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: FROM,
-        to: booking.email,
-        subject: `Termin verschoben: ${dateStr} ${booking.booking_time} Uhr`,
-        html: bookerHtml,
-      }),
-    }),
-    fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: FROM,
-        to: OWNER_EMAIL,
-        subject: `[Praxura] Termin verschoben: ${booking.name} – ${dateStr}`,
-        html: ownerHtml,
-      }),
-    }),
+    t.sendMail({ from: FROM, to: booking.email, subject: `Termin verschoben: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml }),
+    t.sendMail({ from: FROM, to: OWNER_EMAIL, subject: `[Praxura] Termin verschoben: ${booking.name} – ${dateStr}`, html: ownerHtml }),
   ]);
 }
 
