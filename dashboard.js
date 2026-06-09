@@ -2232,6 +2232,32 @@ async function saveFahrtStartHandler() {
   closeModal('fahrtStartModal');
   await renderBkActionFahrtState(b, true);
   showToast('🚗 Fahrt gestartet — Adresse kopieren und losfahren.');
+
+  // Anında fahrten kaydı oluştur — sayfa yenileme sonrasında veri kaybolmaz
+  try {
+    let kzSnap = null, kindSnap = null;
+    const { data: veh } = await supabase.from('vehicles').select('kennzeichen,kind').eq('id', vehicleId).maybeSingle();
+    if (veh) { kzSnap = veh.kennzeichen; kindSnap = veh.kind; }
+    let earlyLeadId = null;
+    if (b.customer_phone) {
+      const { data: lead } = await supabase.from('leads').select('id')
+        .eq('owner_id', b.owner_id).eq('phone', b.customer_phone).maybeSingle();
+      if (lead) earlyLeadId = lead.id;
+    }
+    await supabase.from('fahrten').upsert({
+      owner_id: b.owner_id,
+      user_id: currentSession.user.id,
+      booking_id: b.id,
+      lead_id: earlyLeadId,
+      vehicle_id: vehicleId,
+      kennzeichen_snapshot: kzSnap,
+      kind_snapshot: kindSnap,
+      start_km: startKm,
+      fahrt_started_at: nowIso
+    }, { onConflict: 'booking_id' });
+  } catch (e) {
+    console.error('[fahrten-early-insert]', e);
+  }
 }
 
 async function copyHausbesuchAddress() {
@@ -13168,7 +13194,7 @@ async function loadFbFahrten() {
   const userFilter = document.getElementById('fbFahrtenUser')?.value || '';
 
   let q = supabase.from('fahrten')
-    .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,leads(first_name,last_name,title)')
+    .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,notes,leads(first_name,last_name,title)')
     .eq('owner_id', getOwnerId())
     .order('fahrt_started_at', { ascending: false });
   if (from) q = q.gte('fahrt_started_at', from + 'T00:00:00Z');
@@ -13206,7 +13232,7 @@ async function loadFbFahrten() {
       ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000) + ' min'
       : '—';
     const art = f.kind_snapshot === 'gewerblich' ? '🏢 Gewerblich' : (f.kind_snapshot === 'privat' ? '🚙 Privat' : '—');
-    return `<tr>
+    return `<tr data-fahrt-id="${f.id}">
       <td>${dtStr}</td>
       <td>${escapeHtml(patient)}</td>
       <td>${escapeHtml(therapist)}</td>
@@ -13216,8 +13242,15 @@ async function loadFbFahrten() {
       <td>${f.end_km ?? '—'}</td>
       <td>${f.distance_km != null ? f.distance_km + ' km' : '—'}</td>
       <td>${duration}</td>
+      <td><button class="btn-icon" data-action="fb-edit" data-fahrt-id="${f.id}" title="Bearbeiten">✏️</button></td>
     </tr>`;
   }).join('');
+  tbody.querySelectorAll('[data-action="fb-edit"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const fahrt = (data || []).find(f => f.id === btn.dataset.fahrtId);
+      if (fahrt) openFbFahrtEditModal(fahrt);
+    });
+  });
   // Cache for CSV export
   window._fbFahrtenCache = data.map(f => ({
     ...f,
@@ -13225,6 +13258,52 @@ async function loadFbFahrten() {
     _therapist: userMap[f.user_id] || ''
   }));
 }
+
+function openFbFahrtEditModal(f) {
+  document.getElementById('fbEditFahrtId').value = f.id;
+  document.getElementById('fbEditKennzeichen').value = f.kennzeichen_snapshot || '';
+  document.getElementById('fbEditStartKm').value = f.start_km ?? '';
+  document.getElementById('fbEditEndKm').value = f.end_km ?? '';
+  // datetime-local format: "YYYY-MM-DDTHH:MM"
+  const toLocal = iso => iso ? iso.slice(0, 16) : '';
+  document.getElementById('fbEditStartedAt').value = toLocal(f.fahrt_started_at);
+  document.getElementById('fbEditEndedAt').value = toLocal(f.fahrt_ended_at);
+  document.getElementById('fbEditNotes').value = f.notes || '';
+  document.getElementById('fbEditError').style.display = 'none';
+  openModal('fbFahrtEditModal');
+}
+
+document.getElementById('fbEditSaveBtn').addEventListener('click', async () => {
+  const id = document.getElementById('fbEditFahrtId').value;
+  const startKm = parseInt(document.getElementById('fbEditStartKm').value, 10);
+  const endKm = parseInt(document.getElementById('fbEditEndKm').value, 10);
+  const errEl = document.getElementById('fbEditError');
+  errEl.style.display = 'none';
+  if (!id) return;
+
+  const startedAtVal = document.getElementById('fbEditStartedAt').value;
+  const endedAtVal = document.getElementById('fbEditEndedAt').value;
+
+  const payload = {
+    kennzeichen_snapshot: document.getElementById('fbEditKennzeichen').value.trim() || null,
+    start_km: Number.isFinite(startKm) ? startKm : null,
+    end_km: Number.isFinite(endKm) ? endKm : null,
+    distance_km: (Number.isFinite(startKm) && Number.isFinite(endKm) && endKm >= startKm) ? (endKm - startKm) : null,
+    fahrt_started_at: startedAtVal ? new Date(startedAtVal).toISOString() : null,
+    fahrt_ended_at: endedAtVal ? new Date(endedAtVal).toISOString() : null,
+    notes: document.getElementById('fbEditNotes').value.trim() || null
+  };
+
+  const { error } = await supabase.from('fahrten').update(payload).eq('id', id);
+  if (error) {
+    errEl.textContent = 'Fehler: ' + error.message;
+    errEl.style.display = '';
+    return;
+  }
+  closeModal('fbFahrtEditModal');
+  showToast('Fahrt aktualisiert.');
+  loadFbFahrten();
+});
 
 function exportFbFahrtenCsv() {
   const rows = window._fbFahrtenCache || [];
