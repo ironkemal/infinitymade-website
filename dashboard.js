@@ -10145,11 +10145,19 @@ async function saveAnamnese() {
     const { error } = await supabase.from('anamnese').update(payload).eq('id', currentAnamneseId);
     if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
     showToast('Anamnese aktualisiert.');
+    // Hausbesuch flow: termin in_progress → fahrt beenden ekranını göster
+    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'in_progress') {
+      setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
+    }
   } else {
     const { data, error } = await supabase.from('anamnese').insert(payload).select();
     if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
     if (data && data[0]) currentAnamneseId = data[0].id;
     showToast('Anamnese gespeichert.');
+    // Hausbesuch flow: termin in_progress → fahrt beenden ekranını göster
+    if (bkActionBookingCache?.hausbesuch && bkActionBookingCache?.fahrt_status === 'in_progress') {
+      setTimeout(() => openBookingActionModal(bkActionBookingCache), 300);
+    }
   }
   document.getElementById('anamPrintBtn').hidden = false;
 }
@@ -13151,6 +13159,7 @@ async function loadFbFahrten() {
 
   let q = supabase.from('fahrten')
     .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,leads(first_name,last_name,title)')
+    .eq('owner_id', getOwnerId())
     .order('fahrt_started_at', { ascending: false });
   if (from) q = q.gte('fahrt_started_at', from + 'T00:00:00Z');
   if (to) q = q.lte('fahrt_started_at', to + 'T23:59:59Z');
