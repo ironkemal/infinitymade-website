@@ -1021,7 +1021,7 @@
   ───────────────────────────────────────── */
   async function loadAvailability(dateStr) {
     try {
-      const res = await fetch(`/api/demo-booking/availability?date=${dateStr}`);
+      const res = await fetch(`/api/demo-booking?action=availability&date=${dateStr}`);
       const data = await res.json();
       return data.bookedTimes || [];
     } catch { return []; }
@@ -1311,7 +1311,7 @@
 
   async function submitBooking(formData) {
     try {
-      const res = await fetch('/api/demo-booking/create', {
+      const res = await fetch('/api/demo-booking?action=create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1347,7 +1347,7 @@
   }
 
   async function rescheduleBooking({ token, new_date, new_time }) {
-    const res = await fetch('/api/demo-booking/reschedule', {
+    const res = await fetch('/api/demo-booking?action=reschedule', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, new_date, new_time }),
