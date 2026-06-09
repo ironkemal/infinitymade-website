@@ -10371,13 +10371,22 @@ async function bootBusinessSwitcher() {
     let allBiz = list || [];
 
     // Employees only see businesses they're assigned to — prevents wrong-business RBAC lockout
-    if (currentProfile.role !== 'owner' && allBiz.length > 1) {
-      const { data: assigned } = await supabase
+    // Filter applies for ANY number of businesses (not just >1) so a single-business tenant
+    // doesn't land the employee on a business they have no assignment for.
+    if (currentProfile.role !== 'owner' && allBiz.length > 0) {
+      const { data: assigned, error: asnErr } = await supabase
         .from('employee_business_assignments')
         .select('business_id')
         .eq('employee_id', currentSession.user.id);
-      const assignedIds = new Set((assigned || []).map(a => a.business_id));
-      allBiz = allBiz.filter(b => assignedIds.has(b.id));
+      if (asnErr) {
+        console.warn('[bizSwitcher] employee_business_assignments query failed', asnErr);
+        // On error: keep allBiz as-is so the employee can still access the dashboard
+      } else {
+        const assignedIds = new Set((assigned || []).map(a => a.business_id));
+        const filtered = allBiz.filter(b => assignedIds.has(b.id));
+        // Only apply filter if it leaves at least one business; otherwise fall back to all visible
+        allBiz = filtered.length > 0 ? filtered : allBiz;
+      }
     }
 
     myBusinesses = allBiz;
@@ -14182,7 +14191,7 @@ function initDruckeinstellungen() {
     if (currentProfile.language && !localStorage.getItem('infinity_lang')) currentLang = currentProfile.language;
 
     if (currentProfile.role !== 'owner' && currentProfile.owner_id) {
-      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan').eq('id', currentProfile.owner_id).maybeSingle();
+      const { data: owner, error: ownerErr } = await supabase.from('profiles').select('sector,plan,plan_status').eq('id', currentProfile.owner_id).maybeSingle();
       if (ownerErr) console.error('[ownerProfile]', ownerErr);
       if (owner) {
         ownerProfile = owner;
