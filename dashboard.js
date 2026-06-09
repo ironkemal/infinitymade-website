@@ -629,7 +629,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 function openModal(id) { const el = document.getElementById(id); if (el) el.hidden = false; }
-function closeModal(id) { const el = document.getElementById(id); if (el) el.hidden = true; if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } }
+function closeModal(id) { const el = document.getElementById(id); if (el) el.hidden = true; if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } if (id === 'aiSuggestModal') { const wrap = document.getElementById('aiRetryFeedbackWrap'); if (wrap) { wrap.style.display = 'none'; const ta = document.getElementById('aiRetryFeedback'); if (ta) ta.value = ''; } } }
 
 function showToast(msg, type = 'success') {
   const d = document.createElement('div');
@@ -3685,6 +3685,27 @@ const AI_SUGGEST_URL = 'https://n8n.infinitymade.de/api/booking/ai-suggest-serie
 const AI_BATCH_URL = 'https://n8n.infinitymade.de/api/booking/batch-create-explicit';
 window._aiCtx = null; // holds last context for retry
 
+function showAiLoading(label = 'KI sucht passende Termine…') {
+  const overlay = document.getElementById('aiLoadingOverlay');
+  document.getElementById('aiLoadingLabel').textContent = label;
+  const bar = document.getElementById('aiLoadingBar');
+  bar.style.width = '0%';
+  overlay.hidden = false;
+  // Animate: 0→70% in 4s, then stall
+  let pct = 0;
+  overlay._interval = setInterval(() => {
+    pct = pct < 70 ? pct + 2 : pct < 85 ? pct + 0.3 : pct;
+    bar.style.width = pct + '%';
+  }, 120);
+}
+
+function hideAiLoading() {
+  const overlay = document.getElementById('aiLoadingOverlay');
+  clearInterval(overlay._interval);
+  document.getElementById('aiLoadingBar').style.width = '100%';
+  setTimeout(() => { overlay.hidden = true; }, 350);
+}
+
 document.getElementById('bkAiSuggestBtn').addEventListener('click', () => {
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
@@ -3722,7 +3743,7 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
 
   closeModal('aiPrefsModal');
 
-  showToast('🤖 KI sucht passende Termine…', 'info');
+  showAiLoading();
 
   const payload = {
     ownerId: getOwnerId(),
@@ -3749,17 +3770,21 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
     });
     const json = await res.json();
     if (!res.ok || !json.success) {
+      hideAiLoading();
       showToast('Fehler: ' + (json.error || 'Vorschlag fehlgeschlagen'), 'error');
       return;
     }
     if (!json.selected || json.selected.length === 0) {
+      hideAiLoading();
       showToast('Keine passenden Termine im Suchzeitraum.', 'error');
       return;
     }
     window._aiCtx.lastResult = json;
+    hideAiLoading();
     renderAiSuggestions(json);
   } catch (err) {
     console.error('[ai-suggest]', err);
+    hideAiLoading();
     showToast('Netzwerkfehler beim Abrufen der Vorschläge.', 'error');
   }
 });
@@ -3796,27 +3821,34 @@ function renderAiSuggestions(json) {
     </div>`;
   }).join('');
   openModal('aiSuggestModal');
+  document.getElementById('aiRetryFeedbackWrap').style.display = 'block';
 }
 
 document.getElementById('aiSuggestRetry').addEventListener('click', async () => {
   if (!window._aiCtx?.payload) return;
   closeModal('aiSuggestModal');
-  showToast('🤖 Suche andere Vorschläge…', 'info');
+  const retryFeedback = document.getElementById('aiRetryFeedback').value.trim();
+  const retryPayload = { ...window._aiCtx.payload, userFeedback: retryFeedback || undefined };
+  showAiLoading('KI sucht andere Vorschläge…');
   const retryToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
     const res = await fetch(AI_SUGGEST_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + retryToken },
-      body: JSON.stringify(window._aiCtx.payload)
+      body: JSON.stringify(retryPayload)
     });
     const json = await res.json();
     if (json.success && json.selected?.length) {
       window._aiCtx.lastResult = json;
+      hideAiLoading();
       renderAiSuggestions(json);
+      document.getElementById('aiRetryFeedback').value = '';
     } else {
+      hideAiLoading();
       showToast('Keine weiteren Vorschläge.', 'error');
     }
   } catch (err) {
+    hideAiLoading();
     showToast('Netzwerkfehler.', 'error');
   }
 });
