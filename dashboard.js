@@ -10368,7 +10368,19 @@ async function bootBusinessSwitcher() {
       .select('*')
       .order('is_default', { ascending: false })
       .order('business_name', { ascending: true });
-    myBusinesses = list || [];
+    let allBiz = list || [];
+
+    // Employees only see businesses they're assigned to — prevents wrong-business RBAC lockout
+    if (currentProfile.role !== 'owner' && allBiz.length > 1) {
+      const { data: assigned } = await supabase
+        .from('employee_business_assignments')
+        .select('business_id')
+        .eq('employee_id', currentSession.user.id);
+      const assignedIds = new Set((assigned || []).map(a => a.business_id));
+      allBiz = allBiz.filter(b => assignedIds.has(b.id));
+    }
+
+    myBusinesses = allBiz;
   } catch (e) {
     console.warn('[bizSwitcher] list failed', e);
     myBusinesses = [];
@@ -10379,6 +10391,11 @@ async function bootBusinessSwitcher() {
   // Aktif business'ı çöz
   let activeId = null;
   try { activeId = localStorage.getItem(BIZ_STORAGE_KEY); } catch {}
+  // Clear stale localStorage if saved business is not in myBusinesses
+  if (activeId && !myBusinesses.find(b => b.id === activeId)) {
+    try { localStorage.removeItem(BIZ_STORAGE_KEY); } catch {}
+    activeId = null;
+  }
   if (!activeId) {
     const { data: pref } = await supabase
       .from('user_preferences')
