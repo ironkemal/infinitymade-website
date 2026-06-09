@@ -827,7 +827,7 @@
       <div class="panel-left">
         <!-- Host -->
         <div class="host-wrap">
-          <img src="images/kemal-demir-v3.png" alt="Kemal Demir" class="host-avatar">
+          <img src="images/kemal-demir-v4.png" alt="Kemal Demir" class="host-avatar">
           <div>
             <div class="host-name">Kemal Demir</div>
             <div class="host-title">Praxura</div>
@@ -934,15 +934,18 @@
     skipToday: true
   };
 
-  const SUPABASE_URL = "https://njvuclullotbksskpwgk.supabase.co";
-  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qdnVjbHVsbG90Ymtzc2twd2drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTgyNDEsImV4cCI6MjA5MjM3NDI0MX0.KLABvM3skC9TMM1N2NTEKjWHLA9aUY0pfS-EbzLfLug";
-
   const MONTHS_DE = [
     "Januar","Februar","März","April","Mai","Juni",
     "Juli","August","September","Oktober","November","Dezember"
   ];
 
   const DAYS_DE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+
+  /* ─────────────────────────────────────────
+     RESCHEDULE MODE
+  ───────────────────────────────────────── */
+  const urlParams = new URLSearchParams(window.location.search);
+  const rescheduleToken = urlParams.get('reschedule');
 
   /* ─────────────────────────────────────────
      STATE
@@ -953,7 +956,10 @@
     selectedDate: null,   // "YYYY-MM-DD"
     selectedTime: null,   // "HH:MM"
     step: 1,              // 1=slots, 2=form, 3=confirm
-    confirmedName: ""
+    confirmedName: "",
+    bookedTimes: [],      // times already booked for selectedDate
+    loadingSlots: false,
+    confirmData: {}       // meet_link, reschedule_token from API response
   };
 
   /* ─────────────────────────────────────────
@@ -963,6 +969,14 @@
     const now = new Date();
     state.calYear  = now.getFullYear();
     state.calMonth = now.getMonth();
+
+    if (rescheduleToken) {
+      const h1 = document.querySelector('.page-title h1');
+      const p  = document.querySelector('.page-title p');
+      if (h1) h1.textContent = 'Termin verschieben';
+      if (p)  p.textContent  = 'Wählen Sie Ihren neuen Wunschtermin.';
+    }
+
     renderCalendar();
     renderRight();
   })();
@@ -1000,6 +1014,17 @@
 
     if (d < minDate || d > maxDate) return false;
     return CONFIG.availableDays.includes(d.getDay());
+  }
+
+  /* ─────────────────────────────────────────
+     AVAILABILITY API
+  ───────────────────────────────────────── */
+  async function loadAvailability(dateStr) {
+    try {
+      const res = await fetch(`/api/demo-booking/availability?date=${dateStr}`);
+      const data = await res.json();
+      return data.bookedTimes || [];
+    } catch { return []; }
   }
 
   /* ─────────────────────────────────────────
@@ -1067,11 +1092,18 @@
     renderCalendar();
   }
 
-  function selectDate(dateStr) {
+  async function selectDate(dateStr) {
     state.selectedDate = dateStr;
     state.selectedTime = null;
     state.step = 1;
+    state.bookedTimes = [];
+    state.loadingSlots = true;
     renderCalendar();
+    renderRight();
+
+    const booked = await loadAvailability(dateStr);
+    state.bookedTimes = booked;
+    state.loadingSlots = false;
     renderRight();
   }
 
@@ -1082,7 +1114,7 @@
     const panel = document.getElementById("rightPanel");
 
     if (state.step === 3) {
-      panel.innerHTML = renderConfirm();
+      showConfirmation(state.confirmData);
       return;
     }
 
@@ -1107,8 +1139,26 @@
       return;
     }
 
+    if (state.loadingSlots) {
+      panel.innerHTML = `
+        <div class="slots-empty">
+          <div class="spinner" style="border-top-color:var(--bronze);border-color:var(--line);width:22px;height:22px"></div>
+          <span>Verfügbare Zeiten werden geladen…</span>
+        </div>`;
+      return;
+    }
+
     const slotsHtml = CONFIG.timeSlots.map(t => {
-      const selected = (t === state.selectedTime) ? " selected" : "";
+      const isBooked   = state.bookedTimes.includes(t);
+      const isSelected = (t === state.selectedTime);
+      if (isBooked) {
+        return `
+        <button class="slot-btn" disabled style="opacity:0.45;cursor:not-allowed;color:var(--ink-quiet)">
+          <span>${t} Uhr</span>
+          <span style="font-size:0.72rem;font-family:var(--mono);letter-spacing:0.06em;color:var(--ink-quiet)">Vergeben</span>
+        </button>`;
+      }
+      const selected = isSelected ? " selected" : "";
       return `
         <button class="slot-btn${selected}" onclick="selectTime('${t}')">
           <span>${t} Uhr</span>
@@ -1135,6 +1185,7 @@
      FORM (Step 2)
   ───────────────────────────────────────── */
   function renderForm() {
+    const submitLabel = rescheduleToken ? 'Termin verschieben' : 'Termin bestätigen';
     return `
       <div class="form-wrap">
         <div class="selection-summary">
@@ -1151,6 +1202,7 @@
           <button class="btn-change" onclick="changeSelection()">Ändern</button>
         </div>
 
+        ${rescheduleToken ? '' : `
         <div class="form-fields">
           <div class="form-group">
             <label>Vor- und Nachname <span class="req">*</span></label>
@@ -1168,10 +1220,10 @@
             <label>Nachricht <span style="color:var(--ink-quiet);font-weight:400;font-family:var(--sans);text-transform:none;letter-spacing:0">(optional)</span></label>
             <textarea id="f-message" placeholder="Was möchten Sie in dem Gespräch besprechen?"></textarea>
           </div>
-        </div>
+        </div>`}
 
         <button class="btn-primary" id="submitBtn" onclick="submitForm()">
-          <span id="submitLabel">Termin bestätigen</span>
+          <span id="submitLabel">${submitLabel}</span>
           <span class="arrow-pill">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
