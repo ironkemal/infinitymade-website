@@ -7147,12 +7147,24 @@ function renderB2B() {
       <td>${r.contact_name || '—'}</td>
       <td>${r.phone || '—'}</td>
       <td><span class="badge ${b2bStatusBadge(r.status)}">${r.status || '—'}</span></td>
-      <td><button class="btn-icon" data-b2b-id="${r.id}" data-action="edit">✏️</button></td>
+      <td>
+        <button class="btn-icon" data-b2b-id="${r.id}" data-action="edit">✏️</button>
+        <button class="btn-icon" data-b2b-id="${r.id}" data-action="delete" style="color:var(--danger,#ef4444);">🗑️</button>
+      </td>
     </tr>`).join('');
   tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
     btn.addEventListener('click', () => {
       const c = b2bCache.find(x => x.id === btn.dataset.b2bId);
       if (c) openB2BModal(c);
+    });
+  });
+  tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Lead wirklich löschen?')) return;
+      const { error } = await supabase.from('b2b_contacts').delete().eq('id', btn.dataset.b2bId);
+      if (error) { showToast('Fehler beim Löschen.', 'error'); return; }
+      b2bCache = b2bCache.filter(x => x.id !== btn.dataset.b2bId);
+      renderB2B();
     });
   });
 }
