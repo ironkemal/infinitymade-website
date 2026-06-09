@@ -6,113 +6,145 @@
   <title>Analysegespräch buchen · Praxura</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #09090f;
-      --card: #0f0f18;
-      --card-hover: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.08);
-      --border-light: rgba(255,255,255,0.12);
-      --primary: #7c3aed;
-      --accent: #f59e0b;
-      --accent-dim: rgba(245,158,11,0.12);
-      --accent-hover: #fbbf24;
-      --text: #f1f0f8;
-      --text-muted: #8b8aa0;
-      --text-dim: #4a4960;
-      --danger: #ef4444;
-      --success: #22c55e;
+      --bg: #F8F3E8;
+      --bg-card: #FFFEFB;
+      --bg-warm: #F1E9D6;
+      --ink: #1A1611;
+      --ink-soft: #4A4036;
+      --ink-mute: #685E52;
+      --ink-quiet: #6E6458;
+      --line: rgba(26,22,17,0.08);
+      --line-soft: rgba(26,22,17,0.04);
+      --bronze: #6B5538;
+      --bronze-deep: #523F26;
+      --highlight: #C9A876;
+      --emerald-deep: #1E3D2F;
+      --serif: 'Fraunces', 'Times New Roman', serif;
+      --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    ::selection {
+      background: rgba(107,85,56,0.2);
+      color: var(--ink);
     }
 
     body {
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
-      color: var(--text);
+      color: var(--ink);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
     }
 
-    /* ── Navbar ── */
-    nav {
+    /* ── Floating Island Nav ── */
+    .nav {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      height: 60px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      position: sticky;
-      top: 0;
-      background: rgba(9,9,15,0.92);
-      backdrop-filter: blur(20px);
-      z-index: 100;
+      gap: 0.25rem;
+      padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+      background: rgba(248,243,232,0.85);
+      backdrop-filter: blur(20px) saturate(140%);
+      border: 1px solid rgba(26,22,17,0.08);
+      border-radius: 999px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.6) inset,
+        0 20px 50px -20px rgba(26,22,17,0.15),
+        0 4px 12px -4px rgba(26,22,17,0.05);
+      white-space: nowrap;
     }
 
-    .nav-logo {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
+    .nav-brand {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
       text-decoration: none;
-      background: linear-gradient(135deg, #fff, #7c3aed);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
+      padding-right: 1rem;
+      border-right: 1px solid var(--line);
+      margin-right: 0.5rem;
     }
 
-    .nav-logo em {
-      font-style: normal;
-      background: linear-gradient(135deg, #7c3aed, #06b6d4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .nav-brand em {
+      font-style: italic;
+      color: var(--bronze);
     }
 
-    .nav-back {
-      display: flex;
+    .nav-login {
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--text-muted);
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.85rem;
       text-decoration: none;
-      transition: color 0.15s;
+      transition: background 240ms, transform 280ms;
     }
 
-    .nav-back:hover { color: var(--text); }
+    .nav-login:hover {
+      background: var(--bronze-deep);
+      transform: translateY(-1px);
+    }
 
-    .nav-back svg { width: 14px; height: 14px; }
+    .nav-login svg {
+      width: 13px;
+      height: 13px;
+    }
 
     /* ── Main Layout ── */
     .page-wrap {
-      max-width: 1000px;
+      max-width: 1020px;
       margin: 0 auto;
-      padding: 40px 20px 80px;
+      padding: 7rem 20px 80px;
     }
 
     .page-title {
       text-align: center;
-      margin-bottom: 36px;
+      margin-bottom: 2.5rem;
     }
 
     .page-title h1 {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 6px;
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 2rem;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
     }
 
     .page-title p {
-      font-size: 14px;
-      color: var(--text-muted);
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+      line-height: 1.6;
     }
 
     /* ── Booking Card ── */
     .booking-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
       overflow: hidden;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.7) inset,
+        0 24px 50px -24px rgba(26,22,17,0.18),
+        0 4px 10px -3px rgba(26,22,17,0.05);
     }
 
     .booking-grid {
@@ -124,7 +156,8 @@
     /* ── Left Panel ── */
     .panel-left {
       padding: 32px 24px;
-      border-right: 1px solid var(--border);
+      background: var(--bg-warm);
+      border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -134,12 +167,13 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: var(--accent-dim);
-      border: 1px solid rgba(245,158,11,0.3);
-      color: var(--accent);
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      background: rgba(107,85,56,0.08);
+      border: 1px solid rgba(107,85,56,0.2);
+      color: var(--bronze);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       padding: 4px 10px;
       border-radius: 20px;
@@ -147,10 +181,12 @@
     }
 
     .panel-left h2 {
-      font-size: 20px;
-      font-weight: 700;
-      line-height: 1.3;
-      color: var(--text);
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.6rem;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      color: var(--ink);
     }
 
     .meta-list {
@@ -163,37 +199,37 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 14px;
-      color: var(--text-muted);
+      font-size: 0.875rem;
+      color: var(--ink-soft);
     }
 
     .meta-item svg {
-      width: 16px;
-      height: 16px;
-      color: var(--primary);
+      width: 15px;
+      height: 15px;
+      color: var(--bronze);
       flex-shrink: 0;
     }
 
     .divider {
       border: none;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--line);
     }
 
     .panel-left .desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.6;
+      font-size: 0.825rem;
+      color: var(--ink-soft);
+      line-height: 1.65;
     }
 
     .panel-left .desc strong {
-      color: var(--text);
-      font-weight: 500;
+      color: var(--ink);
+      font-weight: 600;
     }
 
     /* ── Middle Panel (Calendar) ── */
     .panel-middle {
       padding: 28px 24px;
-      border-right: 1px solid var(--border);
+      border-right: 1px solid var(--line);
     }
 
     .cal-header {
@@ -204,17 +240,20 @@
     }
 
     .cal-header h3 {
-      font-size: 15px;
-      font-weight: 600;
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.05rem;
+      color: var(--ink);
+      letter-spacing: -0.01em;
     }
 
     .cal-nav-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
       width: 30px;
       height: 30px;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -223,9 +262,9 @@
     }
 
     .cal-nav-btn:hover:not(:disabled) {
-      border-color: rgba(255,255,255,0.12);
-      color: var(--text);
-      background: rgba(255,255,255,0.04);
+      border-color: rgba(26,22,17,0.16);
+      color: var(--ink);
+      background: rgba(26,22,17,0.04);
     }
 
     .cal-nav-btn:disabled {
@@ -244,12 +283,12 @@
 
     .cal-weekday {
       text-align: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--ink-quiet);
+      letter-spacing: 0.1em;
       padding: 4px 0;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
     }
 
     .cal-days {
@@ -264,37 +303,38 @@
       align-items: center;
       justify-content: center;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 0.8rem;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.15s;
       border: 1px solid transparent;
       position: relative;
+      font-family: var(--sans);
     }
 
     .cal-day.empty { cursor: default; }
 
     .cal-day.disabled {
-      color: var(--text-dim);
+      color: var(--ink-quiet);
       cursor: not-allowed;
-      opacity: 0.4;
+      opacity: 0.35;
     }
 
     .cal-day.available {
-      color: var(--text);
+      color: var(--ink);
     }
 
     .cal-day.available:hover {
-      background: var(--accent-dim);
-      border-color: rgba(245,158,11,0.3);
-      color: var(--accent);
+      background: rgba(107,85,56,0.08);
+      color: var(--bronze);
     }
 
     .cal-day.selected {
-      background: var(--accent);
-      color: #000;
-      font-weight: 700;
-      border-color: var(--accent);
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 8px;
+      font-weight: 600;
+      border-color: var(--ink);
     }
 
     .cal-day.today-marker::after {
@@ -306,11 +346,11 @@
       width: 4px;
       height: 4px;
       border-radius: 50%;
-      background: var(--accent);
+      background: var(--bronze);
     }
 
     .cal-day.selected.today-marker::after {
-      background: #000;
+      background: rgba(248,243,232,0.6);
     }
 
     /* ── Right Panel (Slots / Form / Confirm) ── */
@@ -322,12 +362,12 @@
 
     /* Time slots */
     .slots-header {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--ink-mute);
       margin-bottom: 14px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.1em;
     }
 
     .slots-empty {
@@ -336,10 +376,10 @@
       align-items: center;
       justify-content: center;
       flex: 1;
-      color: var(--text-dim);
-      font-size: 14px;
+      color: var(--ink-quiet);
+      font-size: 0.875rem;
       text-align: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .slots-empty svg {
@@ -355,22 +395,24 @@
       overflow-y: auto;
       max-height: 440px;
       padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
     }
 
     .slots-list::-webkit-scrollbar { width: 4px; }
     .slots-list::-webkit-scrollbar-track { background: transparent; }
-    .slots-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .slots-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 
     .slot-btn {
       width: 100%;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      color: var(--text);
-      font-size: 14px;
+      padding: 11px 16px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      font-size: 0.875rem;
       font-weight: 500;
-      font-family: inherit;
+      font-family: var(--sans);
       cursor: pointer;
       text-align: left;
       transition: all 0.15s;
@@ -380,16 +422,15 @@
     }
 
     .slot-btn:hover {
-      border-color: var(--accent);
-      background: var(--accent-dim);
-      color: var(--accent);
+      border-color: var(--bronze);
+      background: rgba(107,85,56,0.04);
+      color: var(--bronze);
     }
 
     .slot-btn.selected {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
     }
 
     .slot-btn .slot-arrow {
@@ -414,19 +455,19 @@
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      background: var(--accent-dim);
-      border: 1px solid rgba(245,158,11,0.25);
+      background: rgba(107,85,56,0.06);
+      border: 1px solid rgba(107,85,56,0.2);
       border-radius: 10px;
       padding: 12px 14px;
       margin-bottom: 20px;
     }
 
     .selection-summary svg {
-      width: 16px;
-      height: 16px;
-      color: var(--accent);
+      width: 15px;
+      height: 15px;
+      color: var(--bronze);
       flex-shrink: 0;
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
     .selection-summary-text {
@@ -434,31 +475,32 @@
     }
 
     .selection-summary-text .date-str {
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 600;
-      color: var(--accent);
+      color: var(--ink);
     }
 
     .selection-summary-text .time-str {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 1px;
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+      margin-top: 2px;
     }
 
     .btn-change {
       background: none;
       border: none;
-      color: var(--text-dim);
-      font-size: 11px;
+      color: var(--bronze);
+      font-size: 0.75rem;
       cursor: pointer;
-      font-family: inherit;
+      font-family: var(--mono);
       text-decoration: underline;
       white-space: nowrap;
       padding: 0;
+      letter-spacing: 0.04em;
       transition: color 0.15s;
     }
 
-    .btn-change:hover { color: var(--text-muted); }
+    .btn-change:hover { color: var(--bronze-deep); }
 
     .form-fields {
       display: flex;
@@ -474,25 +516,26 @@
     }
 
     .form-group label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-      letter-spacing: 0.3px;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--ink-mute);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     .form-group label .req {
-      color: var(--accent);
+      color: var(--bronze);
       margin-left: 2px;
     }
 
     .form-group input,
     .form-group textarea {
-      background: var(--card-hover);
-      border: 1px solid var(--border);
+      background: var(--bg);
+      border: 1px solid var(--line);
       border-radius: 8px;
-      color: var(--text);
-      font-size: 14px;
-      font-family: inherit;
+      color: var(--ink);
+      font-size: 0.875rem;
+      font-family: var(--sans);
       padding: 10px 12px;
       outline: none;
       transition: border-color 0.15s;
@@ -501,61 +544,81 @@
 
     .form-group input::placeholder,
     .form-group textarea::placeholder {
-      color: var(--text-dim);
+      color: var(--ink-quiet);
+      opacity: 0.6;
     }
 
     .form-group input:focus,
     .form-group textarea:focus {
-      border-color: var(--accent);
+      border-color: var(--bronze);
     }
 
     .form-group textarea {
       height: 80px;
     }
 
-    .btn-submit {
+    /* ── Primary Button ── */
+    .btn-primary {
       margin-top: 16px;
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #7c3aed, #9333ea);
+      padding: 0.7rem 0.7rem 0.7rem 1.3rem;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.9rem;
       border: none;
-      border-radius: 50px;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 700;
-      font-family: inherit;
       cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 0 30px rgba(124,58,237,0.4);
+      gap: 0.5rem;
+      width: 100%;
+      justify-content: space-between;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.06) inset,
+        0 6px 14px -6px rgba(26,22,17,0.25);
+      transition: transform 280ms, background 240ms, box-shadow 280ms;
     }
 
-    .btn-submit:hover:not(:disabled) {
-      opacity: 0.9;
+    .btn-primary:hover:not(:disabled) {
+      background: var(--emerald-deep);
+      transform: translateY(-2px);
     }
 
-    .btn-submit:active:not(:disabled) {
-      transform: scale(0.99);
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
     }
 
-    .btn-submit:disabled {
+    .btn-primary:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+
+    .btn-primary .arrow-pill {
+      width: 1.85rem;
+      height: 1.85rem;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.12);
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .btn-primary .arrow-pill svg {
+      width: 14px;
+      height: 14px;
     }
 
     .error-alert {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
+      background: rgba(156,58,58,0.08);
+      border: 1px solid rgba(156,58,58,0.25);
       border-radius: 8px;
       padding: 10px 12px;
-      font-size: 13px;
-      color: var(--danger);
+      font-size: 0.8rem;
+      color: #9C3A3A;
       margin-top: 10px;
     }
 
@@ -576,8 +639,8 @@
     .confirm-icon {
       width: 60px;
       height: 60px;
-      background: rgba(34,197,94,0.12);
-      border: 1px solid rgba(34,197,94,0.3);
+      background: rgba(107,85,56,0.1);
+      border: 1px solid rgba(107,85,56,0.25);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -585,26 +648,29 @@
     }
 
     .confirm-icon svg {
-      width: 28px;
-      height: 28px;
-      color: var(--success);
+      width: 26px;
+      height: 26px;
+      color: var(--bronze);
     }
 
     .confirm-wrap h3 {
-      font-size: 20px;
-      font-weight: 700;
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.5rem;
+      color: var(--ink);
+      letter-spacing: -0.02em;
     }
 
     .confirm-wrap p {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.6;
+      font-size: 0.875rem;
+      color: var(--ink-soft);
+      line-height: 1.65;
       max-width: 280px;
     }
 
     .confirm-detail {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
       border-radius: 12px;
       padding: 14px 18px;
       width: 100%;
@@ -614,64 +680,45 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      color: var(--text-muted);
+      font-size: 0.825rem;
+      color: var(--ink-soft);
       padding: 4px 0;
     }
 
     .confirm-detail-row svg {
-      width: 14px;
-      height: 14px;
-      color: var(--accent);
+      width: 13px;
+      height: 13px;
+      color: var(--bronze);
     }
 
     .confirm-detail-row strong {
-      color: var(--text);
-      font-weight: 500;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .confirm-back {
+      color: var(--bronze);
+      font-size: 0.825rem;
+      text-decoration: underline;
+      margin-top: 4px;
+    }
+
+    .confirm-back:hover {
+      color: var(--bronze-deep);
     }
 
     /* ── Spinner ── */
     .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgba(248,243,232,0.3);
+      border-top-color: var(--bg);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-      .booking-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .panel-left {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 24px 20px;
-      }
-
-      .panel-middle {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 24px 20px;
-      }
-
-      .panel-right {
-        padding: 24px 20px;
-      }
-
-      .page-wrap {
-        padding: 24px 12px 60px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .cal-day { font-size: 12px; }
-    }
 
     /* ── Transitions ── */
     .panel-right > * {
@@ -682,15 +729,51 @@
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .booking-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-left {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        padding: 24px 20px;
+      }
+
+      .panel-middle {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        padding: 24px 20px;
+      }
+
+      .panel-right {
+        padding: 24px 20px;
+      }
+
+      .page-wrap {
+        padding: 6rem 12px 60px;
+      }
+
+      .page-title h1 {
+        font-size: 1.55rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .cal-day { font-size: 0.75rem; }
+      .nav { padding: 0.4rem 0.4rem 0.4rem 1.1rem; }
+    }
   </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav>
-  <a href="index.html" class="nav-logo">Prax<em>ura</em></a>
-  <a href="index.html" class="nav-back">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<!-- Floating Island Nav -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Prax<em>ura</em></a>
+  <a href="index.html" class="nav-login">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6"/>
     </svg>
     Zurück
@@ -711,7 +794,7 @@
       <div class="panel-left">
         <div>
           <span class="badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px">
               <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 .01h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/>
             </svg>
             Kostenlos
@@ -779,8 +862,8 @@
           <div class="cal-weekday">Mi</div>
           <div class="cal-weekday">Do</div>
           <div class="cal-weekday">Fr</div>
-          <div class="cal-weekday" style="color:var(--text-dim)">Sa</div>
-          <div class="cal-weekday" style="color:var(--text-dim)">So</div>
+          <div class="cal-weekday" style="opacity:0.45">Sa</div>
+          <div class="cal-weekday" style="opacity:0.45">So</div>
         </div>
 
         <div class="cal-days" id="calDays"></div>
@@ -988,7 +1071,7 @@
         <button class="slot-btn${selected}" onclick="selectTime('${t}')">
           <span>${t} Uhr</span>
           <span class="slot-arrow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </span>
@@ -1036,17 +1119,22 @@
             <input type="email" id="f-email" placeholder="maria@praxis-muster.de" autocomplete="email">
           </div>
           <div class="form-group">
-            <label>Praxis / Klinik <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+            <label>Praxis / Klinik <span style="color:var(--ink-quiet);font-weight:400;font-family:var(--sans);text-transform:none;letter-spacing:0">(optional)</span></label>
             <input type="text" id="f-company" placeholder="Physiotherapie Musterpraxis GmbH" autocomplete="organization">
           </div>
           <div class="form-group">
-            <label>Nachricht <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+            <label>Nachricht <span style="color:var(--ink-quiet);font-weight:400;font-family:var(--sans);text-transform:none;letter-spacing:0">(optional)</span></label>
             <textarea id="f-message" placeholder="Was möchten Sie in dem Gespräch besprechen?"></textarea>
           </div>
         </div>
 
-        <button class="btn-submit" id="submitBtn" onclick="submitForm()">
+        <button class="btn-primary" id="submitBtn" onclick="submitForm()">
           <span id="submitLabel">Termin bestätigen</span>
+          <span class="arrow-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
         </button>
         <div id="formError"></div>
       </div>`;
@@ -1172,7 +1260,7 @@
           </div>
         </div>
 
-        <a href="index.html" style="color:var(--text-muted);font-size:13px;text-decoration:underline;margin-top:4px;">
+        <a href="index.html" class="confirm-back">
           Zurück zur Startseite
         </a>
       </div>`;
