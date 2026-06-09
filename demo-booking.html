@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysegespräch buchen · Praxura</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09090f;
+      --card: #0f0f18;
+      --card-hover: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --border-light: rgba(255,255,255,0.12);
+      --primary: #7c3aed;
+      --accent: #f59e0b;
+      --accent-dim: rgba(245,158,11,0.12);
+      --accent-hover: #fbbf24;
+      --text: #f1f0f8;
+      --text-muted: #8b8aa0;
+      --text-dim: #4a4960;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 60px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      position: sticky;
+      top: 0;
+      background: rgba(9,9,15,0.92);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      background: linear-gradient(135deg, #fff, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-logo em {
+      font-style: normal;
+      background: linear-gradient(135deg, #7c3aed, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-back:hover { color: var(--text); }
+
+    .nav-back svg { width: 14px; height: 14px; }
+
+    /* ── Main Layout ── */
+    .page-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .page-title h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .page-title p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ── Booking Card ── */
+    .booking-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .booking-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr 1fr;
+      min-height: 500px;
+    }
+
+    /* ── Left Panel ── */
+    .panel-left {
+      padding: 32px 24px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel-left .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    .panel-left h2 {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--text);
+    }
+
+    .meta-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .meta-item svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .panel-left .desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .panel-left .desc strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── Middle Panel (Calendar) ── */
+    .panel-middle {
+      padding: 28px 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .cal-header h3 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .cal-nav-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .cal-nav-btn:hover:not(:disabled) {
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .cal-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .cal-nav-btn svg { width: 14px; height: 14px; }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      margin-bottom: 6px;
+    }
+
+    .cal-weekday {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      padding: 4px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      position: relative;
+    }
+
+    .cal-day.empty { cursor: default; }
+
+    .cal-day.disabled {
+      color: var(--text-dim);
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+
+    .cal-day.available {
+      color: var(--text);
+    }
+
+    .cal-day.available:hover {
+      background: var(--accent-dim);
+      border-color: rgba(245,158,11,0.3);
+      color: var(--accent);
+    }
+
+    .cal-day.selected {
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      border-color: var(--accent);
+    }
+
+    .cal-day.today-marker::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .cal-day.selected.today-marker::after {
+      background: #000;
+    }
+
+    /* ── Right Panel (Slots / Form / Confirm) ── */
+    .panel-right {
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Time slots */
+    .slots-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .slots-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: var(--text-dim);
+      font-size: 14px;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .slots-empty svg {
+      width: 32px;
+      height: 32px;
+      opacity: 0.3;
+    }
+
+    .slots-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      max-height: 440px;
+      padding-right: 4px;
+    }
+
+    .slots-list::-webkit-scrollbar { width: 4px; }
+    .slots-list::-webkit-scrollbar-track { background: transparent; }
+    .slots-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .slot-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .slot-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .slot-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+    }
+
+    .slot-btn .slot-arrow {
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .slot-btn:hover .slot-arrow,
+    .slot-btn.selected .slot-arrow {
+      opacity: 1;
+    }
+
+    /* ── Form (Step 2) ── */
+    .form-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+    }
+
+    .selection-summary {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+    }
+
+    .selection-summary svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .selection-summary-text {
+      flex: 1;
+    }
+
+    .selection-summary-text .date-str {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .selection-summary-text .time-str {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .btn-change {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: underline;
+      white-space: nowrap;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .btn-change:hover { color: var(--text-muted); }
+
+    .form-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+
+    .form-group label .req {
+      color: var(--accent);
+      margin-left: 2px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      background: var(--card-hover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      resize: none;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .form-group textarea {
+      height: 80px;
+    }
+
+    .btn-submit {
+      margin-top: 16px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #7c3aed, #9333ea);
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 0 30px rgba(124,58,237,0.4);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .error-alert {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--danger);
+      margin-top: 10px;
+    }
+
+    .error-alert svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ── Step 3: Confirm ── */
+    .confirm-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px 16px;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .confirm-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .confirm-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--success);
+    }
+
+    .confirm-wrap h3 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .confirm-wrap p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+
+    .confirm-detail {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px 18px;
+      width: 100%;
+    }
+
+    .confirm-detail-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 4px 0;
+    }
+
+    .confirm-detail-row svg {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+    }
+
+    .confirm-detail-row strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .booking-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 24px 20px;
+      }
+
+      .panel-middle {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 24px 20px;
+      }
+
+      .panel-right {
+        padding: 24px 20px;
+      }
+
+      .page-wrap {
+        padding: 24px 12px 60px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .cal-day { font-size: 12px; }
+    }
+
+    /* ── Transitions ── */
+    .panel-right > * {
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+  <a href="index.html" class="nav-logo">Prax<em>ura</em></a>
+  <a href="index.html" class="nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Zurück
+  </a>
+</nav>
+
+<!-- Page Content -->
+<div class="page-wrap">
+  <div class="page-title">
+    <h1>Kostenloses Analysegespräch buchen</h1>
+    <p>Lernen Sie Praxura kennen und erfahren Sie, wie wir Ihre Praxis digitalisieren können.</p>
+  </div>
+
+  <div class="booking-card">
+    <div class="booking-grid">
+
+      <!-- Left Panel -->
+      <div class="panel-left">
+        <div>
+          <span class="badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px">
+              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 .01h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/>
+            </svg>
+            Kostenlos
+          </span>
+        </div>
+
+        <div>
+          <h2>Analysegespräch</h2>
+        </div>
+
+        <div class="meta-list">
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            30 Minuten
+          </div>
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+            Video-Call (Google Meet)
+          </div>
+          <div class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+            </svg>
+            Europe/Berlin
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <p class="desc">
+          Erfahren Sie, wie Praxura Ihre Abrechnung nach <strong>§ 302 SGB V</strong> vereinfacht,
+          Termine automatisiert und Ihrem Team Zeit spart.
+        </p>
+      </div>
+
+      <!-- Middle Panel: Calendar -->
+      <div class="panel-middle" id="calendarPanel">
+        <div class="cal-header">
+          <h3 id="calMonthLabel"></h3>
+          <div style="display:flex;gap:6px">
+            <button class="cal-nav-btn" id="calPrev" onclick="changeMonth(-1)" title="Vorheriger Monat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <button class="cal-nav-btn" id="calNext" onclick="changeMonth(1)" title="Nächster Monat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="cal-weekdays">
+          <div class="cal-weekday">Mo</div>
+          <div class="cal-weekday">Di</div>
+          <div class="cal-weekday">Mi</div>
+          <div class="cal-weekday">Do</div>
+          <div class="cal-weekday">Fr</div>
+          <div class="cal-weekday" style="color:var(--text-dim)">Sa</div>
+          <div class="cal-weekday" style="color:var(--text-dim)">So</div>
+        </div>
+
+        <div class="cal-days" id="calDays"></div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="panel-right" id="rightPanel">
+        <!-- Content injected by JS -->
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ─────────────────────────────────────────
+     CONFIG
+  ───────────────────────────────────────── */
+  const CONFIG = {
+    availableDays: [1, 2, 3, 4, 5], // Mon-Fri
+    timeSlots: [
+      "09:00","09:30","10:00","10:30","11:00","11:30",
+      "13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"
+    ],
+    lookAheadDays: 35,
+    skipToday: true
+  };
+
+  const SUPABASE_URL = "https://njvuclullotbksskpwgk.supabase.co";
+  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qdnVjbHVsbG90Ymtzc2twd2drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTgyNDEsImV4cCI6MjA5MjM3NDI0MX0.KLABvM3skC9TMM1N2NTEKjWHLA9aUY0pfS-EbzLfLug";
+
+  const MONTHS_DE = [
+    "Januar","Februar","März","April","Mai","Juni",
+    "Juli","August","September","Oktober","November","Dezember"
+  ];
+
+  const DAYS_DE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+
+  /* ─────────────────────────────────────────
+     STATE
+  ───────────────────────────────────────── */
+  let state = {
+    calYear: null,
+    calMonth: null,       // 0-indexed
+    selectedDate: null,   // "YYYY-MM-DD"
+    selectedTime: null,   // "HH:MM"
+    step: 1,              // 1=slots, 2=form, 3=confirm
+    confirmedName: ""
+  };
+
+  /* ─────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────── */
+  (function init() {
+    const now = new Date();
+    state.calYear  = now.getFullYear();
+    state.calMonth = now.getMonth();
+    renderCalendar();
+    renderRight();
+  })();
+
+  /* ─────────────────────────────────────────
+     HELPERS
+  ───────────────────────────────────────── */
+  function pad(n) { return String(n).padStart(2, "0"); }
+
+  function toDateStr(year, month, day) {
+    return `${year}-${pad(month + 1)}-${pad(day)}`;
+  }
+
+  function parseDate(str) {
+    const [y, m, d] = str.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function formatDateDE(str) {
+    if (!str) return "";
+    const d = parseDate(str);
+    return `${DAYS_DE[d.getDay()]}, ${d.getDate()}. ${MONTHS_DE[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  function isAvailableDate(year, month, day) {
+    const dateStr = toDateStr(year, month, day);
+    const d = parseDate(dateStr);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const minDate = new Date(today);
+    if (CONFIG.skipToday) minDate.setDate(minDate.getDate() + 1);
+
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + CONFIG.lookAheadDays);
+
+    if (d < minDate || d > maxDate) return false;
+    return CONFIG.availableDays.includes(d.getDay());
+  }
+
+  /* ─────────────────────────────────────────
+     CALENDAR RENDER
+  ───────────────────────────────────────── */
+  function renderCalendar() {
+    const year  = state.calYear;
+    const month = state.calMonth;
+
+    document.getElementById("calMonthLabel").textContent =
+      `${MONTHS_DE[month]} ${year}`;
+
+    // Disable prev if we're already on current month
+    const now = new Date();
+    const prevBtn = document.getElementById("calPrev");
+    prevBtn.disabled = (year === now.getFullYear() && month === now.getMonth());
+
+    // Build days grid — week starts Monday
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    // Shift: Mon=0 ... Sun=6
+    const startOffset = (firstDay + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const grid = document.getElementById("calDays");
+    grid.innerHTML = "";
+
+    // Empty cells
+    for (let i = 0; i < startOffset; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cal-day empty";
+      grid.appendChild(cell);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cell = document.createElement("div");
+      const dateStr = toDateStr(year, month, day);
+      const thisDate = parseDate(dateStr);
+      const available = isAvailableDate(year, month, day);
+      const isToday = thisDate.getTime() === today.getTime();
+      const isSelected = (dateStr === state.selectedDate);
+
+      let cls = "cal-day";
+      if (!available) cls += " disabled";
+      else cls += " available";
+      if (isSelected) cls += " selected";
+      if (isToday) cls += " today-marker";
+
+      cell.className = cls;
+      cell.textContent = day;
+
+      if (available) {
+        cell.addEventListener("click", () => selectDate(dateStr));
+      }
+
+      grid.appendChild(cell);
+    }
+  }
+
+  function changeMonth(delta) {
+    state.calMonth += delta;
+    if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+    if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+    renderCalendar();
+  }
+
+  function selectDate(dateStr) {
+    state.selectedDate = dateStr;
+    state.selectedTime = null;
+    state.step = 1;
+    renderCalendar();
+    renderRight();
+  }
+
+  /* ─────────────────────────────────────────
+     RIGHT PANEL RENDER
+  ───────────────────────────────────────── */
+  function renderRight() {
+    const panel = document.getElementById("rightPanel");
+
+    if (state.step === 3) {
+      panel.innerHTML = renderConfirm();
+      return;
+    }
+
+    if (state.step === 2) {
+      panel.innerHTML = renderForm();
+      setupForm();
+      return;
+    }
+
+    // Step 1: Slots
+    if (!state.selectedDate) {
+      panel.innerHTML = `
+        <div class="slots-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>Bitte wählen Sie<br>einen Tag im Kalender aus.</span>
+        </div>`;
+      return;
+    }
+
+    const slotsHtml = CONFIG.timeSlots.map(t => {
+      const selected = (t === state.selectedTime) ? " selected" : "";
+      return `
+        <button class="slot-btn${selected}" onclick="selectTime('${t}')">
+          <span>${t} Uhr</span>
+          <span class="slot-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
+        </button>`;
+    }).join("");
+
+    panel.innerHTML = `
+      <div class="slots-header">${formatDateDE(state.selectedDate)}</div>
+      <div class="slots-list">${slotsHtml}</div>`;
+  }
+
+  function selectTime(time) {
+    state.selectedTime = time;
+    state.step = 2;
+    renderRight();
+  }
+
+  /* ─────────────────────────────────────────
+     FORM (Step 2)
+  ───────────────────────────────────────── */
+  function renderForm() {
+    return `
+      <div class="form-wrap">
+        <div class="selection-summary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <div class="selection-summary-text">
+            <div class="date-str">${formatDateDE(state.selectedDate)}</div>
+            <div class="time-str">${state.selectedTime} Uhr · 30 Minuten · Video-Call</div>
+          </div>
+          <button class="btn-change" onclick="changeSelection()">Ändern</button>
+        </div>
+
+        <div class="form-fields">
+          <div class="form-group">
+            <label>Vor- und Nachname <span class="req">*</span></label>
+            <input type="text" id="f-name" placeholder="Dr. Maria Müller" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label>E-Mail-Adresse <span class="req">*</span></label>
+            <input type="email" id="f-email" placeholder="maria@praxis-muster.de" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>Praxis / Klinik <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+            <input type="text" id="f-company" placeholder="Physiotherapie Musterpraxis GmbH" autocomplete="organization">
+          </div>
+          <div class="form-group">
+            <label>Nachricht <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+            <textarea id="f-message" placeholder="Was möchten Sie in dem Gespräch besprechen?"></textarea>
+          </div>
+        </div>
+
+        <button class="btn-submit" id="submitBtn" onclick="submitForm()">
+          <span id="submitLabel">Termin bestätigen</span>
+        </button>
+        <div id="formError"></div>
+      </div>`;
+  }
+
+  function setupForm() {
+    // Enter key on inputs
+    ["f-name","f-email","f-company"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("keydown", e => {
+        if (e.key === "Enter") submitForm();
+      });
+    });
+  }
+
+  function changeSelection() {
+    state.selectedTime = null;
+    state.step = 1;
+    renderRight();
+  }
+
+  async function submitForm() {
+    const name    = document.getElementById("f-name")?.value.trim();
+    const email   = document.getElementById("f-email")?.value.trim();
+    const company = document.getElementById("f-company")?.value.trim();
+    const message = document.getElementById("f-message")?.value.trim();
+    const errorEl = document.getElementById("formError");
+    const btn     = document.getElementById("submitBtn");
+    const label   = document.getElementById("submitLabel");
+
+    // Validate
+    if (!name) { showError("Bitte geben Sie Ihren Namen ein."); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showError("Bitte geben Sie eine gültige E-Mail-Adresse ein.");
+      return;
+    }
+
+    // Loading state
+    errorEl.innerHTML = "";
+    btn.disabled = true;
+    label.innerHTML = `<div class="spinner"></div> Wird gespeichert…`;
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/demo_bookings`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_ANON,
+          "Authorization": `Bearer ${SUPABASE_ANON}`,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          company: company || null,
+          message: message || null,
+          booking_date: state.selectedDate,
+          booking_time: state.selectedTime
+        })
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(errBody || `HTTP ${res.status}`);
+      }
+
+      state.confirmedName = name.split(" ")[0];
+      state.step = 3;
+      renderRight();
+
+    } catch (err) {
+      btn.disabled = false;
+      label.textContent = "Termin bestätigen";
+      showError("Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
+      console.error("[demo-booking] submit error:", err);
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("formError");
+    if (!el) return;
+    el.innerHTML = `
+      <div class="error-alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        ${msg}
+      </div>`;
+  }
+
+  /* ─────────────────────────────────────────
+     CONFIRM (Step 3)
+  ───────────────────────────────────────── */
+  function renderConfirm() {
+    return `
+      <div class="confirm-wrap">
+        <div class="confirm-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h3>Vielen Dank${state.confirmedName ? ", " + state.confirmedName : ""}!</h3>
+        <p>Ihr Termin wurde erfolgreich gebucht. Sie erhalten in Kürze eine Bestätigungs-E-Mail.</p>
+
+        <div class="confirm-detail">
+          <div class="confirm-detail-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <strong>${formatDateDE(state.selectedDate)}</strong>
+          </div>
+          <div class="confirm-detail-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <strong>${state.selectedTime} Uhr</strong> · 30 Minuten · Video-Call
+          </div>
+        </div>
+
+        <a href="index.html" style="color:var(--text-muted);font-size:13px;text-decoration:underline;margin-top:4px;">
+          Zurück zur Startseite
+        </a>
+      </div>`;
+  }
+</script>
+
+</body>
+</html>
