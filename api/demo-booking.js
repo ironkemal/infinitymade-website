@@ -256,7 +256,9 @@ async function handleReschedule(req, res) {
 }
 
 function handleSetupCalendar(req, res) {
-  if (req.query.secret !== process.env.SETUP_SECRET) return json(res, 403, { error: 'Forbidden' });
+  const expected = process.env.SETUP_SECRET;
+  if (!expected) return json(res, 403, { error: 'Forbidden: SETUP_SECRET env var is not set on Vercel' });
+  if (req.query.secret !== expected) return json(res, 403, { error: 'Forbidden: wrong secret', hint: `SETUP_SECRET is set (length ${expected.length}), but provided value does not match` });
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
     redirect_uri: CAL_REDIRECT,
