@@ -876,6 +876,41 @@
       .px-zielgruppen-grid { grid-template-columns: 1fr; }
       .px-pricing-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── Micro CTA strips ── */
+    .px-mid-cta {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--line-soft);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .px-mid-cta--alt {
+      background: var(--bg-warm);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      margin: 0 2rem;
+      max-width: none;
+      width: auto;
+    }
+    .px-mid-cta-text {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      font-style: italic;
+    }
+    .px-mid-cta-btn { white-space: nowrap; }
+    @media (max-width: 600px) {
+      .px-mid-cta { flex-direction: column; text-align: center; gap: 1rem; padding: 1.8rem 1.2rem; }
+      .px-mid-cta--alt { margin: 0 1rem; }
+    }
   </style>
 </head>
 
@@ -975,6 +1010,15 @@
     </div>
   </a>
 </section>
+
+<!-- ── Demo → Booking micro-CTA ── -->
+<div class="px-mid-cta" data-reveal>
+  <p class="px-mid-cta-text">Genug gesehen?</p>
+  <a href="/demo-booking.html" class="btn btn-primary-arrow px-mid-cta-btn">
+    Jetzt Termin buchen
+    <span class="btn-arrow" aria-hidden="true">→</span>
+  </a>
+</div>
 
 <!-- ────────────── Problem & Lösung ────────────── -->
 <section class="block" id="problem-loesung" data-reveal>
@@ -1125,6 +1169,16 @@
     </div>
   </div>
 </section>
+
+<!-- ── Funktionen → Booking micro-CTA ── -->
+<div class="px-mid-cta px-mid-cta--alt" data-reveal>
+  <p class="px-mid-cta-text">Alle Funktionen live erleben?</p>
+  <a href="/demo-booking.html" class="btn btn-primary-arrow px-mid-cta-btn">
+    Kostenloses Gespräch buchen
+    <span class="btn-arrow" aria-hidden="true">→</span>
+  </a>
+</div>
+
 <script>
 (function(){
   // FN_I18N için yapı: ileride { en:{slug:{name,tag,steps:[{t,d}]}}, tr:{...} } eklenebilir; yoksa de fallback.
