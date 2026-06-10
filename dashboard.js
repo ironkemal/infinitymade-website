@@ -14480,42 +14480,318 @@ function initDruckeinstellungen() {
 function showPlanWall(lastPlan) {
   document.body.style.overflow = 'hidden';
   const plans = [
-    { slug: 'starter',      label: 'Starter',      price: 29, yearPrice: 25 },
-    { slug: 'professional', label: 'Professional',  price: 49, yearPrice: 42 },
-    { slug: 'klinik',       label: 'Klinik',        price: 99, yearPrice: 84 },
+    { slug: 'starter',      label: 'Starter',      tag: 'Für Einzelpraxen',      price: 29, yearPrice: 25 },
+    { slug: 'professional', label: 'Professional',  tag: 'Für Praxen mit Team',   price: 49, yearPrice: 42 },
+    { slug: 'klinik',       label: 'Klinik',        tag: 'Maximale Leistung',     price: 99, yearPrice: 84 },
   ];
   let interval = 'month';
 
+  // Inject wall-specific styles once
+  if (!document.getElementById('plan-wall-styles')) {
+    const s = document.createElement('style');
+    s.id = 'plan-wall-styles';
+    s.textContent = `
+      #plan-wall {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: var(--bg-main, #F8F3E8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+        overflow-y: auto;
+      }
+      #plan-wall-inner {
+        max-width: 860px;
+        width: 100%;
+        text-align: center;
+      }
+      #plan-wall h1 {
+        font-family: var(--serif, 'Fraunces', serif);
+        font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+        font-weight: 500;
+        color: var(--text-main, #1A1611);
+        margin-bottom: 0.6rem;
+        letter-spacing: -0.02em;
+      }
+      #plan-wall-sub {
+        font-size: 0.95rem;
+        color: var(--text-muted, #7A6F61);
+        margin-bottom: 2rem;
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.55;
+      }
+      #plan-wall-lock {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        background: var(--bg-card-solid, #FFFEFB);
+        border: 1px solid var(--border-strong, rgba(26,22,17,0.15));
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+        color: var(--bronze, #6B5538);
+      }
+      /* Billing toggle — mirrors .px-billing-toggle */
+      #plan-wall-toggle {
+        display: inline-flex;
+        align-items: center;
+        background: var(--bg-card-solid, #FFFEFB);
+        border: 1px solid var(--border, rgba(26,22,17,0.08));
+        border-radius: 999px;
+        padding: 0.3rem;
+        gap: 0;
+        margin-bottom: 2.5rem;
+      }
+      .pw-billing-btn {
+        font-family: var(--mono, monospace);
+        font-size: 0.74rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0.55rem 1.4rem;
+        border-radius: 999px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted, #7A6F61);
+        cursor: pointer;
+        transition: background 180ms, color 180ms;
+        line-height: 1;
+      }
+      .pw-billing-btn.active {
+        background: var(--bronze, #6B5538);
+        color: var(--bg-card-solid, #FFFEFB);
+        font-weight: 600;
+      }
+      .pw-billing-save {
+        font-size: 0.62rem;
+        background: rgba(107,85,56,0.15);
+        color: var(--bronze, #6B5538);
+        border-radius: 999px;
+        padding: 0.1rem 0.45rem;
+        margin-left: 0.35rem;
+        font-weight: 600;
+      }
+      .pw-billing-btn.active .pw-billing-save {
+        background: rgba(255,255,255,0.22);
+        color: #fff;
+      }
+      /* Card grid — mirrors .px-pricing-grid */
+      #plan-wall-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+        text-align: left;
+      }
+      @media (max-width: 680px) {
+        #plan-wall-grid { grid-template-columns: 1fr; }
+      }
+      /* Cards — mirrors .px-pricing-card */
+      .pw-card {
+        background: var(--bg-card-solid, #FFFEFB);
+        border: 1px solid var(--border, rgba(26,22,17,0.08));
+        border-radius: 18px;
+        padding: 2rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        transition: transform 360ms cubic-bezier(0.23,1,0.32,1),
+                    border-color 240ms cubic-bezier(0.23,1,0.32,1),
+                    box-shadow 360ms cubic-bezier(0.23,1,0.32,1);
+      }
+      .pw-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(107,85,56,0.22);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset,
+                    0 18px 38px -16px rgba(26,22,17,0.12);
+      }
+      /* Featured card — mirrors .px-pricing-card.featured */
+      .pw-card.featured {
+        border-color: var(--bronze, #6B5538);
+        background: var(--bg-card-solid, #FFFEFB);
+        box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset,
+                    0 24px 50px -24px rgba(107,85,56,0.18),
+                    0 4px 10px -3px rgba(107,85,56,0.05);
+        position: relative;
+      }
+      /* Tag — mirrors .px-pricing-tag */
+      .pw-card-tag {
+        font-family: var(--mono, monospace);
+        font-size: 0.68rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-faint, #B5AB99);
+        margin-bottom: 0.8rem;
+      }
+      .pw-card-tag.featured-tag {
+        color: var(--bronze, #6B5538);
+        font-weight: 600;
+      }
+      /* Last-plan badge */
+      .pw-last-plan-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-family: var(--mono, monospace);
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--bronze, #6B5538);
+        background: rgba(107,85,56,0.1);
+        border-radius: 999px;
+        padding: 0.2rem 0.6rem;
+        margin-bottom: 0.6rem;
+        align-self: flex-start;
+      }
+      /* Title — mirrors .px-pricing-title */
+      .pw-card-title {
+        font-family: var(--serif, 'Fraunces', serif);
+        font-size: 1.7rem;
+        font-weight: 500;
+        color: var(--text-main, #1A1611);
+        margin-bottom: 0.9rem;
+        letter-spacing: -0.01em;
+      }
+      /* Price block — mirrors .px-pricing-price */
+      .pw-card-price {
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 0.3rem;
+      }
+      .pw-card-price .currency {
+        font-family: var(--serif, 'Fraunces', serif);
+        font-size: 1.4rem;
+        font-weight: 500;
+        color: var(--text-main, #1A1611);
+        margin-right: 0.12rem;
+      }
+      .pw-card-price .amount {
+        font-family: var(--serif, 'Fraunces', serif);
+        font-size: 3rem;
+        font-weight: 500;
+        line-height: 1;
+        color: var(--text-main, #1A1611);
+        letter-spacing: -0.03em;
+      }
+      .pw-card-price .period {
+        font-size: 0.88rem;
+        color: var(--text-faint, #B5AB99);
+        margin-left: 0.4rem;
+      }
+      /* Billing label — mirrors .px-pricing-billing */
+      .pw-card-billing {
+        font-family: var(--mono, monospace);
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+        color: var(--text-faint, #B5AB99);
+        margin-bottom: 1.8rem;
+      }
+      /* Activate button */
+      .pw-card-btn {
+        margin-top: auto;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-family: var(--mono, monospace);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: var(--text-main, #1A1611);
+        color: var(--bg-card-solid, #FFFEFB);
+        transition: background 180ms, transform 120ms;
+      }
+      .pw-card-btn:hover { transform: translateY(-1px); }
+      .pw-card-btn:active { transform: translateY(0); }
+      .pw-card.featured .pw-card-btn {
+        background: var(--bronze, #6B5538);
+      }
+      .pw-card-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      /* Footer */
+      #plan-wall-footer {
+        font-family: var(--mono, monospace);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        color: var(--text-faint, #B5AB99);
+        margin-bottom: 1rem;
+      }
+      #plan-wall-signout {
+        background: none;
+        border: none;
+        color: var(--text-faint, #B5AB99);
+        font-size: 0.82rem;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      #plan-wall-signout:hover { color: var(--text-muted, #7A6F61); }
+    `;
+    document.head.appendChild(s);
+  }
+
   const wall = document.createElement('div');
   wall.id = 'plan-wall';
-  wall.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f5f0e8;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:system-ui,sans-serif;';
 
   function render() {
     const isYear = interval === 'year';
     wall.innerHTML = `
-      <div style="max-width:780px;width:100%;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:1rem;">🔒</div>
-        <h1 style="font-size:1.8rem;font-weight:700;color:#1a1610;margin-bottom:0.5rem;">Ihr Abonnement wurde beendet</h1>
-        <p style="color:#6b6050;font-size:1rem;margin-bottom:2rem;max-width:480px;margin-left:auto;margin-right:auto;">
+      <div id="plan-wall-inner">
+        <div id="plan-wall-lock">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h1>Ihr Abonnement wurde beendet</h1>
+        <p id="plan-wall-sub">
           Wählen Sie einen Plan, um wieder Zugang zu erhalten. Da Sie bereits eine Testphase genutzt haben, beginnt Ihr Abonnement sofort.
         </p>
-        <div style="display:inline-flex;background:#fff;border:1px solid #e0d8cc;border-radius:999px;padding:0.25rem;margin-bottom:2rem;gap:0;">
-          <button onclick="window.__pwInterval='month';window.__pwRender();" style="padding:0.5rem 1.2rem;border-radius:999px;border:none;cursor:pointer;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;background:${!isYear?'#6b5538':'transparent'};color:${!isYear?'#fff':'#6b5538'};">MONATLICH</button>
-          <button onclick="window.__pwInterval='year';window.__pwRender();" style="padding:0.5rem 1.2rem;border-radius:999px;border:none;cursor:pointer;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;background:${isYear?'#6b5538':'transparent'};color:${isYear?'#fff':'#6b5538'};">JÄHRLICH <span style="background:rgba(107,85,56,0.15);color:#6b5538;border-radius:999px;padding:0.1rem 0.4rem;font-size:0.65rem;">−15%</span></button>
+
+        <div id="plan-wall-toggle">
+          <button type="button" class="pw-billing-btn${!isYear ? ' active' : ''}"
+            onclick="window.__pwInterval='month';window.__pwRender();">Monatlich</button>
+          <button type="button" class="pw-billing-btn${isYear ? ' active' : ''}"
+            onclick="window.__pwInterval='year';window.__pwRender();">Jährlich
+            <span class="pw-billing-save">−15%</span>
+          </button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
-          ${plans.map(p => `
-            <div style="background:#fff;border:2px solid ${p.slug===lastPlan?'#6b5538':'#e0d8cc'};border-radius:16px;padding:1.5rem;text-align:left;">
-              <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;color:#9a8a78;text-transform:uppercase;margin-bottom:0.5rem;">${p.slug===lastPlan?'Ihr letzter Plan':''}&nbsp;</div>
-              <div style="font-size:1.2rem;font-weight:700;color:#1a1610;margin-bottom:0.3rem;">${p.label}</div>
-              <div style="font-size:2rem;font-weight:700;color:#1a1610;line-height:1;">€${isYear?p.yearPrice:p.price}<span style="font-size:0.85rem;font-weight:400;color:#9a8a78;">/Monat</span></div>
-              ${isYear?`<div style="font-size:0.72rem;color:#9a8a78;margin-top:0.25rem;">jährlich abgerechnet</div>`:'<div style="font-size:0.72rem;color:#9a8a78;margin-top:0.25rem;">monatlich abgerechnet</div>'}
-              <button onclick="window.__pwActivate('${p.slug}')" style="margin-top:1.2rem;width:100%;padding:0.7rem;border-radius:10px;border:none;cursor:pointer;font-size:0.85rem;font-weight:600;background:${p.slug===lastPlan?'#6b5538':'#1a1610'};color:#fff;">Jetzt aktivieren</button>
-            </div>
-          `).join('')}
+
+        <div id="plan-wall-grid">
+          ${plans.map(p => {
+            const isFeatured = p.slug === 'klinik';
+            const isLast     = p.slug === lastPlan;
+            return `
+            <article class="pw-card${isFeatured ? ' featured' : ''}">
+              <div class="pw-card-tag${isFeatured ? ' featured-tag' : ''}">${isFeatured ? 'Beliebteste Wahl' : p.tag}</div>
+              ${isLast ? '<span class="pw-last-plan-badge">↩ Ihr letzter Plan</span>' : ''}
+              <h2 class="pw-card-title">${p.label}</h2>
+              <div class="pw-card-price">
+                <span class="currency">€</span>
+                <span class="amount">${isYear ? p.yearPrice : p.price}</span>
+                <span class="period">/Monat</span>
+              </div>
+              <div class="pw-card-billing">${isYear ? 'jährlich abgerechnet' : 'monatlich abgerechnet'}</div>
+              <button class="pw-card-btn" onclick="window.__pwActivate('${p.slug}', this)">
+                Jetzt aktivieren
+              </button>
+            </article>`;
+          }).join('')}
         </div>
-        <p style="font-size:0.78rem;color:#9a8a78;">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Alle Preise zzgl. MwSt.</p>
-        <button onclick="supabase.auth.signOut().then(()=>location.href='login.html')" style="margin-top:1rem;background:none;border:none;color:#9a8a78;font-size:0.8rem;cursor:pointer;text-decoration:underline;">Abmelden</button>
+
+        <p id="plan-wall-footer">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Alle Preise zzgl. MwSt.</p>
+        <button id="plan-wall-signout"
+          onclick="supabase.auth.signOut().then(()=>location.href='login.html')">
+          Abmelden
+        </button>
       </div>`;
   }
 
@@ -14524,9 +14800,8 @@ function showPlanWall(lastPlan) {
     interval = window.__pwInterval;
     render();
   };
-  window.__pwActivate = async function(planSlug) {
-    const btn = wall.querySelector(`button[onclick*="${planSlug}"][onclick*="Activate"]`) ||
-                [...wall.querySelectorAll('button')].find(b => b.textContent.includes('Jetzt aktivieren') && b.getAttribute('onclick')?.includes(planSlug));
+  window.__pwActivate = async function(planSlug, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Bitte warten…'; }
     try {
       const token = currentSession?.access_token;
       if (!token) { location.href = 'login.html'; return; }
@@ -14537,9 +14812,13 @@ function showPlanWall(lastPlan) {
       });
       const data = await res.json();
       if (data.url) location.href = data.url;
-      else alert('Fehler: ' + (data.error || 'Unbekannt'));
+      else {
+        alert('Fehler: ' + (data.error || 'Unbekannt'));
+        if (btn) { btn.disabled = false; btn.textContent = 'Jetzt aktivieren'; }
+      }
     } catch (e) {
       alert('Netzwerkfehler');
+      if (btn) { btn.disabled = false; btn.textContent = 'Jetzt aktivieren'; }
     }
   };
 
