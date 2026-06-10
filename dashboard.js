@@ -14881,14 +14881,20 @@ function showPlanWall(lastPlan) {
       }
       #plan-wall-signout {
         background: none;
-        border: none;
-        color: var(--text-faint, #B5AB99);
-        font-size: 0.82rem;
+        border: 1px solid var(--text-muted, #7A6F61);
+        color: var(--text-muted, #7A6F61);
+        font-size: 0.9rem;
+        font-weight: 500;
         cursor: pointer;
-        text-decoration: underline;
-        text-underline-offset: 2px;
+        padding: 8px 20px;
+        border-radius: 6px;
+        margin-top: 8px;
+        transition: background 0.15s, color 0.15s;
       }
-      #plan-wall-signout:hover { color: var(--text-muted, #7A6F61); }
+      #plan-wall-signout:hover {
+        background: var(--text-muted, #7A6F61);
+        color: #fff;
+      }
     `;
     document.head.appendChild(s);
   }
@@ -14966,8 +14972,7 @@ function showPlanWall(lastPlan) {
         </div>
 
         <p id="plan-wall-footer">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Alle Preise zzgl. MwSt.</p>
-        <button id="plan-wall-signout"
-          onclick="supabase.auth.signOut().then(()=>location.href='login.html')">
+        <button id="plan-wall-signout" onclick="window.__pwSignOut()">
           Abmelden
         </button>
       </div>`;
@@ -14978,6 +14983,11 @@ function showPlanWall(lastPlan) {
     interval = window.__pwInterval;
     render();
   };
+  window.__pwSignOut = async function() {
+    await supabase.auth.signOut();
+    location.href = 'login.html';
+  };
+
   window.__pwActivate = async function(planSlug, btn) {
     if (btn) { btn.disabled = true; btn.textContent = 'Bitte warten…'; }
     try {
