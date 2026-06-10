@@ -2366,7 +2366,6 @@ async function saveFahrtEndHandler() {
     kind_snapshot: kindSnapshot,
     start_km: startKm,
     end_km: endKm,
-    distance_km: (startKm != null && Number.isFinite(endKm)) ? (endKm - startKm) : null,
     estimated_duration_min: leadDurationMin,
     fahrt_started_at: b.fahrt_started_at || nowIso,
     fahrt_arrived_at: b.fahrt_arrived_at,
@@ -3986,7 +3985,16 @@ function openMailOfferModal({ hasEmail, patientName }) {
     const emailInput = document.getElementById('mailOfferEmail');
     const yesBtn = document.getElementById('mailOfferYesBtn');
     const noBtn = document.getElementById('mailOfferNoBtn');
+    const footer = document.getElementById('mailOfferFooter');
+    const content = document.getElementById('mailOfferContent');
+    const progressWrap = document.getElementById('mailOfferProgressWrap');
     const closeBtn = modal.querySelector('.modal-close');
+
+    // Reset to initial state
+    content.hidden = false;
+    progressWrap.hidden = true;
+    footer.hidden = false;
+    closeBtn.style.visibility = '';
 
     textEl.textContent = hasEmail
       ? `Möchten Sie ${patientName || 'dem Patienten'} die erstellten Termine per E-Mail bestätigen?`
@@ -3994,11 +4002,13 @@ function openMailOfferModal({ hasEmail, patientName }) {
     emailWrap.hidden = hasEmail;
     emailInput.value = '';
 
-    const cleanup = () => {
+    const cleanupNo = () => {
       yesBtn.onclick = null; noBtn.onclick = null; closeBtn.onclick = null;
       closeModal('mailOfferModal');
     };
+
     yesBtn.onclick = () => {
+      let resolvedEmail;
       if (!hasEmail) {
         const val = (emailInput.value || '').trim();
         if (!val.includes('@')) {
@@ -4006,15 +4016,18 @@ function openMailOfferModal({ hasEmail, patientName }) {
           emailInput.style.borderColor = '#e74c3c';
           return;
         }
-        cleanup();
-        resolve({ ok: true, email: val });
-      } else {
-        cleanup();
-        resolve({ ok: true });
+        resolvedEmail = val;
       }
+      // Switch modal to loading state — keep modal open until fetch completes
+      yesBtn.onclick = null; noBtn.onclick = null; closeBtn.onclick = null;
+      content.hidden = true;
+      footer.hidden = true;
+      closeBtn.style.visibility = 'hidden';
+      progressWrap.hidden = false;
+      resolve({ ok: true, email: resolvedEmail });
     };
-    noBtn.onclick = () => { cleanup(); resolve({ ok: false }); };
-    closeBtn.onclick = () => { cleanup(); resolve({ ok: false }); };
+    noBtn.onclick = () => { cleanupNo(); resolve({ ok: false }); };
+    closeBtn.onclick = () => { cleanupNo(); resolve({ ok: false }); };
 
     openModal('mailOfferModal');
   });
@@ -4154,7 +4167,6 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
       }
     };
 
-    showToast('⏳ KI bereitet Bestätigungs-E-Mail vor…');
     const res = await fetch(`${AI_GATEWAY_BASE}/appointment-confirm-draft`, {
       method: 'POST',
       headers: {
@@ -4163,6 +4175,7 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
       },
       body: JSON.stringify(payload)
     });
+    closeModal('mailOfferModal');
     const json = await res.json();
     if (!json.success || !json.draft) throw new Error(json.error || 'Entwurf fehlgeschlagen');
 
@@ -4174,6 +4187,7 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
     window._composePostFlow = () => proceedToRechnungForPhysio({ patientId: custId, patientName: custName });
     openComposeModal(draft);
   } catch (e) {
+    closeModal('mailOfferModal');
     console.error('[appointment-confirm-draft]', e);
     showToast('Fehler: ' + e.message, 'error');
   }
@@ -13288,7 +13302,6 @@ document.getElementById('fbEditSaveBtn').addEventListener('click', async () => {
     kennzeichen_snapshot: document.getElementById('fbEditKennzeichen').value.trim() || null,
     start_km: Number.isFinite(startKm) ? startKm : null,
     end_km: Number.isFinite(endKm) ? endKm : null,
-    distance_km: (Number.isFinite(startKm) && Number.isFinite(endKm) && endKm >= startKm) ? (endKm - startKm) : null,
     fahrt_started_at: startedAtVal ? new Date(startedAtVal).toISOString() : null,
     fahrt_ended_at: endedAtVal ? new Date(endedAtVal).toISOString() : null,
     notes: document.getElementById('fbEditNotes').value.trim() || null
