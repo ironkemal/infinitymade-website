@@ -13232,7 +13232,7 @@ async function loadFbFahrten() {
   const userFilter = document.getElementById('fbFahrtenUser')?.value || '';
 
   let q = supabase.from('fahrten')
-    .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,notes,zweck,abfahrtsort,zielort,leads(first_name,last_name,title,street,plz,city)')
+    .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,notes,zweck,abfahrtsort,zielort,leads(first_name,last_name,title,street,plz,city),bookings(customer_name)')
     .eq('owner_id', getOwnerId())
     .order('fahrt_started_at', { ascending: false });
   if (from) q = q.gte('fahrt_started_at', from + 'T00:00:00Z');
@@ -13265,8 +13265,8 @@ async function loadFbFahrten() {
     const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at) : null;
     const dtStr = dt ? dt.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
     const patient = f.leads
-      ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || '—')
-      : '—';
+      ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || f.bookings?.customer_name || '—')
+      : (f.bookings?.customer_name || '—');
     const therapist = userMap[f.user_id] || '—';
     const duration = (f.fahrt_started_at && f.fahrt_ended_at)
       ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000) + ' min'
@@ -13298,7 +13298,9 @@ async function loadFbFahrten() {
   // Cache for CSV export
   window._fbFahrtenCache = data.map(f => ({
     ...f,
-    _patient: f.leads ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || '') : '',
+    _patient: f.leads
+      ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || f.bookings?.customer_name || '')
+      : (f.bookings?.customer_name || ''),
     _therapist: userMap[f.user_id] || '',
     _zielort: f.zielort || (f.leads ? [f.leads.street, [f.leads.plz, f.leads.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '')
   }));
@@ -13351,6 +13353,24 @@ document.getElementById('fbEditSaveBtn').addEventListener('click', async () => {
   }
   closeModal('fbFahrtEditModal');
   showToast('Fahrt aktualisiert.');
+  loadFbFahrten();
+});
+
+document.getElementById('fbEditDeleteBtn').addEventListener('click', async () => {
+  const id = document.getElementById('fbEditFahrtId').value;
+  if (!id) return;
+  const ok = await showConfirmModal({
+    title: 'Fahrt-Eintrag löschen?',
+    message: 'Dieser Fahrtenbuch-Eintrag wird dauerhaft gelöscht.',
+    confirmText: 'Löschen',
+    cancelText: 'Abbrechen',
+    variant: 'danger'
+  });
+  if (!ok) return;
+  const { error } = await supabase.from('fahrten').delete().eq('id', id);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  closeModal('fbFahrtEditModal');
+  showToast('Fahrt-Eintrag gelöscht.');
   loadFbFahrten();
 });
 
