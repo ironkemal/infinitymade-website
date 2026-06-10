@@ -157,13 +157,30 @@ export default async function handler(req, res) {
         const pendingPassword = typeof pwData === 'string' ? pwData : null;
         if (!pwOk || !pendingPassword) { console.error('[webhook] could not retrieve pending password', pendingId); break; }
 
-        // 1. Create Supabase auth user
+        // 1. Create Supabase auth user (or reuse existing if email already registered)
+        let userId = null;
         const { ok: uOk, data: uData } = await adminAuthFetch('/admin/users', {
           method: 'POST',
           body: JSON.stringify({ email: pending.email, password: pendingPassword, email_confirm: false }),
         });
-        if (!uOk) { console.error('[webhook] user creation failed', uData); break; }
-        const userId = uData.id;
+        if (uOk) {
+          userId = uData.id;
+        } else {
+          // Email already exists — look up the existing user
+          const isEmailTaken = uData?.msg?.includes('already been registered') ||
+                               uData?.message?.includes('already') ||
+                               uData?.code === 'email_exists';
+          if (isEmailTaken || !uOk) {
+            const { ok: luOk, data: luData } = await adminAuthFetch(
+              `/admin/users?email=${encodeURIComponent(pending.email)}`
+            );
+            if (luOk && luData?.users?.[0]) {
+              userId = luData.users[0].id;
+              console.log('[webhook] reusing existing user for email:', pending.email, userId);
+            }
+          }
+          if (!userId) { console.error('[webhook] user creation failed and no existing user found', uData); break; }
+        }
 
         // generate_link sadece link döndürür, mail atmaz. /resend tetikler.
         const { ok: emailOk, status: emailStatus, data: emailData } = await adminAuthFetch('/resend', {
