@@ -638,10 +638,10 @@
     /* ── Pricing ── */
     .px-pricing-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 1.25rem;
       margin-top: 3rem;
-      max-width: 960px;
+      max-width: 1200px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -746,6 +746,56 @@
       margin-top: auto;
       width: 100%;
       justify-content: space-between;
+    }
+    /* ── Pricing show-more ── */
+    .px-pricing-extras {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .px-pricing-card.is-expanded .px-pricing-extras {
+      max-height: 500px;
+    }
+    .px-pricing-extras-list {
+      border-top: none;
+      padding-top: 0.6rem;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    .px-pricing-card:has(.px-pricing-more-btn) .px-pricing-features:first-of-type {
+      margin-bottom: 0;
+    }
+    .px-pricing-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: none;
+      border: 1px solid rgba(107,85,56,0.25);
+      border-radius: 999px;
+      cursor: pointer;
+      padding: 0.55rem 1.1rem;
+      margin: 1rem 0 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.73rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      transition: border-color 0.2s, background 0.2s;
+      align-self: flex-start;
+    }
+    .px-pricing-more-btn:hover {
+      border-color: var(--bronze);
+      background: rgba(107,85,56,0.05);
+    }
+    .px-more-arrow {
+      display: inline-block;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-style: normal;
+    }
+    .px-pricing-card.is-expanded .px-more-arrow { transform: rotate(180deg); }
+    .px-pricing-features li.px-feat-dim {
+      color: var(--ink-quiet);
+      font-size: 0.85rem;
     }
     /* ── Pricing billing toggle ── */
     .px-billing-toggle {
@@ -1620,6 +1670,24 @@
         <li>✓ Erinnerungen &amp; Warteliste</li>
         <li>✓ Support via E-Mail</li>
       </ul>
+      <div class="px-pricing-extras">
+        <ul class="px-pricing-features px-pricing-extras-list">
+          <li>✓ Kalenderansicht (Woche &amp; Monat)</li>
+          <li>✓ Manuelle Terminverwaltung</li>
+          <li>✓ Behandlungsdokumentation</li>
+          <li>✓ GKV / Privat / Selbstzahler</li>
+          <li>✓ Rezeptverwaltung &amp; Dokumente</li>
+          <li>✓ Öffentliches Buchungsformular</li>
+          <li>✓ PDF-Export Termine &amp; Patienten</li>
+          <li class="px-feat-dim">✗ KI-Rezeptprüfung — ab Professional</li>
+          <li class="px-feat-dim">✗ Fahrtenbuch — ab Professional</li>
+          <li class="px-feat-dim">✗ §302-Abrechnung — ab Klinik</li>
+        </ul>
+      </div>
+      <button class="px-pricing-more-btn" type="button">
+        <span class="px-more-text">Mehr anzeigen</span>
+        <em class="px-more-arrow">↓</em>
+      </button>
       <a href="https://app.praxura.de/onboarding.html" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
     </article>
 
@@ -1635,12 +1703,29 @@
       <div class="px-pricing-billing" data-billing>monatlich abgerechnet</div>
       <p class="px-pricing-desc">Vollständige Lösung für wachsende Praxen mit Team und Hausbesuchen.</p>
       <ul class="px-pricing-features">
+        <li>✓ Alles aus Starter</li>
         <li>✓ Bis zu 5 Therapeut:innen</li>
         <li>✓ KI-Rezeptprüfung (OCR)</li>
         <li>✓ Elektronisches Fahrtenbuch</li>
         <li>✓ Lead-Management</li>
-        <li>✓ Vorrangiger Support (Mail &amp; Tel)</li>
       </ul>
+      <div class="px-pricing-extras">
+        <ul class="px-pricing-features px-pricing-extras-list">
+          <li>✓ Teamkalender &amp; geteilte Verfügbarkeit</li>
+          <li>✓ Hausbesuchs-Routing (Google Maps)</li>
+          <li>✓ Rezept-Laufzeitkontrolle &amp; Mahnwesen</li>
+          <li>✓ Umsatz- &amp; Auslastungsstatistiken</li>
+          <li>✓ Individuelle Zeiten pro Therapeut:in</li>
+          <li>✓ Rollen: Therapeut / Rezeptionist</li>
+          <li>✓ Vorrangiger Support (Mail &amp; Telefon)</li>
+          <li class="px-feat-dim">✗ §302-Abrechnung — ab Klinik</li>
+          <li class="px-feat-dim">✗ Multi-Standort — Enterprise</li>
+        </ul>
+      </div>
+      <button class="px-pricing-more-btn" type="button">
+        <span class="px-more-text">Mehr anzeigen</span>
+        <em class="px-more-arrow">↓</em>
+      </button>
       <a href="https://app.praxura.de/onboarding.html" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
     </article>
 
@@ -1656,24 +1741,67 @@
       <div class="px-pricing-billing" data-billing>monatlich abgerechnet</div>
       <p class="px-pricing-desc">Maximale Leistung inkl. GKV-Abrechnung für interdisziplinäre Praxen.</p>
       <ul class="px-pricing-features">
+        <li>✓ Alles aus Professional</li>
         <li>✓ Unbegrenzte Therapeut:innen</li>
         <li>✓ §302 DTA-Abrechnung vorbereiten</li>
         <li>✓ Rechte- &amp; Rollenverwaltung</li>
         <li>✓ Persönlicher Account Manager</li>
-        <li>✓ Prioritäts-Support</li>
       </ul>
+      <div class="px-pricing-extras">
+        <ul class="px-pricing-features px-pricing-extras-list">
+          <li>✓ ITSG-konforme DTA-Dateierstellung</li>
+          <li>✓ 93 Krankenkassen inkl. Stammdaten</li>
+          <li>✓ Zuzahlung-Nachweis &amp; Quittungen</li>
+          <li>✓ GoBD-konforme Belegliste</li>
+          <li>✓ Therapiebericht-Erstellung</li>
+          <li>✓ Abrechnung ohne Provision (0 %)</li>
+          <li>✓ Prioritäts-Support</li>
+        </ul>
+      </div>
+      <button class="px-pricing-more-btn" type="button">
+        <span class="px-more-text">Mehr anzeigen</span>
+        <em class="px-more-arrow">↓</em>
+      </button>
       <a href="https://app.praxura.de/onboarding.html" class="btn btn-primary-arrow px-pricing-btn-primary">
         Kostenlos starten
         <span class="arrow-pill">↗</span>
       </a>
     </article>
 
-  </div>
+    <!-- Plan 4: Enterprise -->
+    <article class="px-pricing-card">
+      <div class="px-pricing-tag">Mehrere Standorte</div>
+      <h3 class="px-pricing-title">Enterprise</h3>
+      <div class="px-pricing-price">
+        <span class="amount" style="font-size:2rem; letter-spacing:-0.01em;">Individuell</span>
+      </div>
+      <div class="px-pricing-billing" style="visibility:hidden">–</div>
+      <p class="px-pricing-desc">Für Praxisverbünde &amp; mehrere Standorte mit individuellen Anforderungen.</p>
+      <ul class="px-pricing-features">
+        <li>✓ Alles aus Klinik</li>
+        <li>✓ Multi-Standort-Verwaltung</li>
+        <li>✓ Standortübergreifende Auswertung</li>
+        <li>✓ Persönlicher Ansprechpartner &amp; SLA</li>
+        <li>✓ Individuelle Anbindung</li>
+      </ul>
+      <div class="px-pricing-extras">
+        <ul class="px-pricing-features px-pricing-extras-list">
+          <li>✓ Getrennte Datenhaltung pro Standort</li>
+          <li>✓ Zentrales Reporting-Dashboard</li>
+          <li>✓ Rollen &amp; Rechte standortübergreifend</li>
+          <li>✓ Dediziertes Onboarding</li>
+          <li>✓ Custom API-Anbindung auf Anfrage</li>
+          <li>✓ Vertragslaufzeit individuell verhandelbar</li>
+        </ul>
+      </div>
+      <button class="px-pricing-more-btn" type="button">
+        <span class="px-more-text">Mehr anzeigen</span>
+        <em class="px-more-arrow">↓</em>
+      </button>
+      <a href="mailto:info@praxura.de?subject=Enterprise%20Anfrage%20Praxura" class="btn btn-secondary px-pricing-btn">Gespräch vereinbaren</a>
+    </article>
 
-  <!-- Enterprise callout (no public card — custom offer via direct link) -->
-  <p style="text-align:center; margin-top:1.8rem; font-family:var(--mono); font-size:0.75rem; letter-spacing:0.05em; color:var(--ink-quiet);">
-    Mehrere Standorte oder ein individuelles Angebot? <a href="mailto:info@praxura.de?subject=Praxura%20Anfrage%20mehrere%20Standorte" style="color:var(--bronze); text-decoration:underline;">Schreiben Sie uns →</a>
-  </p>
+  </div>
 
   <!-- §302 Klarstellung: kein Abrechnungsdienstleister -->
   <div style="max-width:60rem; margin:2.4rem auto 0; padding:1.4rem 1.6rem; border:1px solid var(--line); border-radius:14px; background:rgba(107,85,56,0.04);">
@@ -1863,6 +1991,18 @@
       billings.forEach(function(el) {
         el.textContent = isYear ? 'jährlich abgerechnet · 2 Monate gratis' : 'monatlich abgerechnet';
       });
+    });
+  });
+})();
+</script>
+
+<script>
+(function() {
+  document.querySelectorAll('.px-pricing-more-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var card = btn.closest('.px-pricing-card');
+      var expanded = card.classList.toggle('is-expanded');
+      btn.querySelector('.px-more-text').textContent = expanded ? 'Weniger anzeigen' : 'Mehr anzeigen';
     });
   });
 })();
