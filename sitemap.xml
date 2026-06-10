@@ -31,13 +31,6 @@
   <url><loc>https://praxura.de/heilmittelabrechnung-software.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
   <url><loc>https://praxura.de/ti-anbindung-heilmittel.html</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>2026-06-10</lastmod></url>
 
-  <!-- Legal / Pflichtseiten -->
-  <url><loc>https://praxura.de/impressum.html</loc><changefreq>yearly</changefreq><priority>0.3</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/datenschutz.html</loc><changefreq>yearly</changefreq><priority>0.3</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/agb.html</loc><changefreq>yearly</changefreq><priority>0.3</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/widerruf.html</loc><changefreq>yearly</changefreq><priority>0.2</priority><lastmod>2026-06-10</lastmod></url>
-  <url><loc>https://praxura.de/dpa.html</loc><changefreq>yearly</changefreq><priority>0.2</priority><lastmod>2026-06-10</lastmod></url>
-
   <!-- AI / LLM Discovery -->
   <url>
     <loc>https://praxura.de/llms.txt</loc>
