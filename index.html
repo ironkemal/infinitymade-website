@@ -793,9 +793,47 @@
       font-style: normal;
     }
     .px-pricing-card.is-expanded .px-more-arrow { transform: rotate(180deg); }
-    .px-pricing-features li.px-feat-dim {
+    .px-plan-base {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line-soft);
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 0.82rem;
       color: var(--ink-quiet);
+      margin-bottom: 0.55rem;
+    }
+    .px-plan-base::before {
+      content: '↳';
+      font-style: normal;
       font-size: 0.85rem;
+      opacity: 0.3;
+      flex-shrink: 0;
+    }
+    .px-plan-und-noch {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      opacity: 0.6;
+      margin-bottom: 0.9rem;
+    }
+    .px-plan-und-noch::before,
+    .px-plan-und-noch::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(107,85,56,0.18);
+    }
+    .px-pricing-features--sub {
+      border-top: none;
+      padding-top: 0;
     }
     /* ── Pricing billing toggle ── */
     .px-billing-toggle {
@@ -1679,9 +1717,6 @@
           <li>✓ Rezeptverwaltung &amp; Dokumente</li>
           <li>✓ Öffentliches Buchungsformular</li>
           <li>✓ PDF-Export Termine &amp; Patienten</li>
-          <li class="px-feat-dim">✗ KI-Rezeptprüfung — ab Professional</li>
-          <li class="px-feat-dim">✗ Fahrtenbuch — ab Professional</li>
-          <li class="px-feat-dim">✗ §302-Abrechnung — ab Klinik</li>
         </ul>
       </div>
       <button class="px-pricing-more-btn" type="button">
@@ -1702,12 +1737,14 @@
       </div>
       <div class="px-pricing-billing" data-billing>monatlich abgerechnet</div>
       <p class="px-pricing-desc">Vollständige Lösung für wachsende Praxen mit Team und Hausbesuchen.</p>
-      <ul class="px-pricing-features">
-        <li>✓ Alles aus Starter</li>
+      <div class="px-plan-base">Alles aus Starter</div>
+      <div class="px-plan-und-noch">und noch</div>
+      <ul class="px-pricing-features px-pricing-features--sub">
         <li>✓ Bis zu 5 Therapeut:innen</li>
         <li>✓ KI-Rezeptprüfung (OCR)</li>
         <li>✓ Elektronisches Fahrtenbuch</li>
         <li>✓ Lead-Management</li>
+        <li>✓ Vorrangiger Support (Mail &amp; Tel)</li>
       </ul>
       <div class="px-pricing-extras">
         <ul class="px-pricing-features px-pricing-extras-list">
@@ -1717,9 +1754,6 @@
           <li>✓ Umsatz- &amp; Auslastungsstatistiken</li>
           <li>✓ Individuelle Zeiten pro Therapeut:in</li>
           <li>✓ Rollen: Therapeut / Rezeptionist</li>
-          <li>✓ Vorrangiger Support (Mail &amp; Telefon)</li>
-          <li class="px-feat-dim">✗ §302-Abrechnung — ab Klinik</li>
-          <li class="px-feat-dim">✗ Multi-Standort — Enterprise</li>
         </ul>
       </div>
       <button class="px-pricing-more-btn" type="button">
@@ -1740,11 +1774,13 @@
       </div>
       <div class="px-pricing-billing" data-billing>monatlich abgerechnet</div>
       <p class="px-pricing-desc">Maximale Leistung inkl. GKV-Abrechnung für interdisziplinäre Praxen.</p>
-      <ul class="px-pricing-features">
-        <li>✓ Alles aus Professional</li>
+      <div class="px-plan-base">Alles aus Professional</div>
+      <div class="px-plan-und-noch">und noch</div>
+      <ul class="px-pricing-features px-pricing-features--sub">
         <li>✓ Unbegrenzte Therapeut:innen</li>
         <li>✓ §302 DTA-Abrechnung vorbereiten</li>
         <li>✓ Rechte- &amp; Rollenverwaltung</li>
+        <li>✓ Abrechnung ohne Provision (0 %)</li>
         <li>✓ Persönlicher Account Manager</li>
       </ul>
       <div class="px-pricing-extras">
@@ -1754,7 +1790,6 @@
           <li>✓ Zuzahlung-Nachweis &amp; Quittungen</li>
           <li>✓ GoBD-konforme Belegliste</li>
           <li>✓ Therapiebericht-Erstellung</li>
-          <li>✓ Abrechnung ohne Provision (0 %)</li>
           <li>✓ Prioritäts-Support</li>
         </ul>
       </div>
@@ -1777,19 +1812,20 @@
       </div>
       <div class="px-pricing-billing" style="visibility:hidden">–</div>
       <p class="px-pricing-desc">Für Praxisverbünde &amp; mehrere Standorte mit individuellen Anforderungen.</p>
-      <ul class="px-pricing-features">
-        <li>✓ Alles aus Klinik</li>
+      <div class="px-plan-base">Alles aus Klinik</div>
+      <div class="px-plan-und-noch">und noch</div>
+      <ul class="px-pricing-features px-pricing-features--sub">
         <li>✓ Multi-Standort-Verwaltung</li>
         <li>✓ Standortübergreifende Auswertung</li>
         <li>✓ Persönlicher Ansprechpartner &amp; SLA</li>
         <li>✓ Individuelle Anbindung</li>
+        <li>✓ Dediziertes Onboarding</li>
       </ul>
       <div class="px-pricing-extras">
         <ul class="px-pricing-features px-pricing-extras-list">
           <li>✓ Getrennte Datenhaltung pro Standort</li>
           <li>✓ Zentrales Reporting-Dashboard</li>
           <li>✓ Rollen &amp; Rechte standortübergreifend</li>
-          <li>✓ Dediziertes Onboarding</li>
           <li>✓ Custom API-Anbindung auf Anfrage</li>
           <li>✓ Vertragslaufzeit individuell verhandelbar</li>
         </ul>
