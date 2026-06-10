@@ -1357,6 +1357,8 @@
                   <tr>
                     <th>Datum</th>
                     <th>Patient</th>
+                    <th>Fahrtzweck</th>
+                    <th>Zielort</th>
                     <th>Therapeut</th>
                     <th>Kennzeichen</th>
                     <th>Art</th>
@@ -3524,6 +3526,20 @@
           </div>
         </div>
         <div class="form-group">
+          <label class="form-label">Fahrtzweck <span style="color:var(--text-muted);font-weight:400;">(Finanzamt)</span></label>
+          <input class="form-input" type="text" id="fbEditZweck" placeholder="z.B. Hausbesuch Max Müller" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Abfahrtsort</label>
+            <input class="form-input" type="text" id="fbEditAbfahrtsort" placeholder="z.B. Praxis Berlin" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Zielort</label>
+            <input class="form-input" type="text" id="fbEditZielort" placeholder="z.B. Musterstr. 1, 10115 Berlin" />
+          </div>
+        </div>
+        <div class="form-group">
           <label class="form-label">Notizen</label>
           <textarea class="form-input" id="fbEditNotes" rows="2" style="resize:vertical;"></textarea>
         </div>
@@ -3833,7 +3849,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260611"></script>
+  <script type="module" src="dashboard.js?v=20260612"></script>
 </body>
 
 </html>

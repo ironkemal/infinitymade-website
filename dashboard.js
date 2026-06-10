@@ -2349,12 +2349,33 @@ async function saveFahrtEndHandler() {
     if (v) { kzSnapshot = v.kennzeichen; kindSnapshot = v.kind; }
   }
 
-  let leadId = null, leadDurationMin = null;
-  if (b.customer_phone) {
-    const { data: l } = await supabase.from('leads').select('id,duration_min')
-      .eq('owner_id', b.owner_id).eq('phone', b.customer_phone).maybeSingle();
-    if (l) { leadId = l.id; leadDurationMin = l.duration_min; }
+  // Lead lookup: booking.lead_id first (direct), then phone fallback
+  let lead = null;
+  if (b.lead_id) {
+    const { data: l } = await supabase.from('leads')
+      .select('id,duration_min,first_name,last_name,title,street,plz,city')
+      .eq('id', b.lead_id).maybeSingle();
+    if (l) lead = l;
   }
+  if (!lead && b.customer_phone) {
+    const { data: l } = await supabase.from('leads')
+      .select('id,duration_min,first_name,last_name,title,street,plz,city')
+      .eq('owner_id', b.owner_id).eq('phone', b.customer_phone).maybeSingle();
+    if (l) lead = l;
+  }
+  const leadId = lead?.id || null;
+  const leadDurationMin = lead?.duration_min || null;
+  const patientName = lead
+    ? (lead.title || [lead.first_name, lead.last_name].filter(Boolean).join(' '))
+    : (b.customer_name || null);
+  const zweck = patientName ? `Hausbesuch ${patientName}` : 'Hausbesuch';
+  const zielort = lead
+    ? [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+    : null;
+  const abfahrtsort = [
+    currentProfile?.street,
+    [currentProfile?.plz, currentProfile?.city].filter(Boolean).join(' ')
+  ].filter(Boolean).join(', ') || (currentProfile?.city || null);
 
   const { error: fErr } = await supabase.from('fahrten').upsert({
     owner_id: b.owner_id,
@@ -2369,7 +2390,10 @@ async function saveFahrtEndHandler() {
     estimated_duration_min: leadDurationMin,
     fahrt_started_at: b.fahrt_started_at || nowIso,
     fahrt_arrived_at: b.fahrt_arrived_at,
-    fahrt_ended_at: nowIso
+    fahrt_ended_at: nowIso,
+    zweck,
+    abfahrtsort: abfahrtsort || null,
+    zielort: zielort || null
   }, { onConflict: 'booking_id' });
   if (fErr) {
     console.error('[fahrten-insert]', fErr);
@@ -13208,7 +13232,7 @@ async function loadFbFahrten() {
   const userFilter = document.getElementById('fbFahrtenUser')?.value || '';
 
   let q = supabase.from('fahrten')
-    .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,notes,leads(first_name,last_name,title)')
+    .select('id,owner_id,user_id,booking_id,lead_id,vehicle_id,kennzeichen_snapshot,kind_snapshot,start_km,end_km,distance_km,estimated_duration_min,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,notes,zweck,abfahrtsort,zielort,leads(first_name,last_name,title,street,plz,city)')
     .eq('owner_id', getOwnerId())
     .order('fahrt_started_at', { ascending: false });
   if (from) q = q.gte('fahrt_started_at', from + 'T00:00:00Z');
@@ -13240,15 +13264,21 @@ async function loadFbFahrten() {
   tbody.innerHTML = data.map(f => {
     const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at) : null;
     const dtStr = dt ? dt.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-    const patient = f.leads ? (f.leads.title || [f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ')) : '—';
+    const patient = f.leads
+      ? (f.leads.title || [f.leads.first_name, f.leads.last_name].filter(Boolean).join(' '))
+      : '—';
     const therapist = userMap[f.user_id] || '—';
     const duration = (f.fahrt_started_at && f.fahrt_ended_at)
       ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000) + ' min'
       : '—';
     const art = f.kind_snapshot === 'gewerblich' ? '🏢 Gewerblich' : (f.kind_snapshot === 'privat' ? '🚙 Privat' : '—');
+    const zweckDisplay = f.zweck || '—';
+    const zielDisplay = f.zielort || (f.leads ? [f.leads.street, [f.leads.plz, f.leads.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '') || '—';
     return `<tr data-fahrt-id="${f.id}">
       <td>${dtStr}</td>
       <td>${escapeHtml(patient)}</td>
+      <td title="${escapeHtml(zweckDisplay)}" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(zweckDisplay)}</td>
+      <td title="${escapeHtml(zielDisplay)}" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(zielDisplay)}</td>
       <td>${escapeHtml(therapist)}</td>
       <td>${escapeHtml(f.kennzeichen_snapshot || '—')}</td>
       <td>${art}</td>
@@ -13269,7 +13299,8 @@ async function loadFbFahrten() {
   window._fbFahrtenCache = data.map(f => ({
     ...f,
     _patient: f.leads ? (f.leads.title || [f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ')) : '',
-    _therapist: userMap[f.user_id] || ''
+    _therapist: userMap[f.user_id] || '',
+    _zielort: f.zielort || (f.leads ? [f.leads.street, [f.leads.plz, f.leads.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '')
   }));
 }
 
@@ -13278,10 +13309,12 @@ function openFbFahrtEditModal(f) {
   document.getElementById('fbEditKennzeichen').value = f.kennzeichen_snapshot || '';
   document.getElementById('fbEditStartKm').value = f.start_km ?? '';
   document.getElementById('fbEditEndKm').value = f.end_km ?? '';
-  // datetime-local format: "YYYY-MM-DDTHH:MM"
   const toLocal = iso => iso ? iso.slice(0, 16) : '';
   document.getElementById('fbEditStartedAt').value = toLocal(f.fahrt_started_at);
   document.getElementById('fbEditEndedAt').value = toLocal(f.fahrt_ended_at);
+  document.getElementById('fbEditZweck').value = f.zweck || '';
+  document.getElementById('fbEditAbfahrtsort').value = f.abfahrtsort || '';
+  document.getElementById('fbEditZielort').value = f._zielort || f.zielort || '';
   document.getElementById('fbEditNotes').value = f.notes || '';
   document.getElementById('fbEditError').style.display = 'none';
   openModal('fbFahrtEditModal');
@@ -13304,6 +13337,9 @@ document.getElementById('fbEditSaveBtn').addEventListener('click', async () => {
     end_km: Number.isFinite(endKm) ? endKm : null,
     fahrt_started_at: startedAtVal ? new Date(startedAtVal).toISOString() : null,
     fahrt_ended_at: endedAtVal ? new Date(endedAtVal).toISOString() : null,
+    zweck: document.getElementById('fbEditZweck').value.trim() || null,
+    abfahrtsort: document.getElementById('fbEditAbfahrtsort').value.trim() || null,
+    zielort: document.getElementById('fbEditZielort').value.trim() || null,
     notes: document.getElementById('fbEditNotes').value.trim() || null
   };
 
@@ -13321,23 +13357,28 @@ document.getElementById('fbEditSaveBtn').addEventListener('click', async () => {
 function exportFbFahrtenCsv() {
   const rows = window._fbFahrtenCache || [];
   if (!rows.length) { showToast('Keine Daten zum Exportieren.', 'error'); return; }
-  const header = ['Datum', 'Patient', 'Therapeut', 'Kennzeichen', 'Art', 'Start-KM', 'End-KM', 'Strecke (km)', 'Dauer (min)'];
+  const header = ['Datum', 'Patient', 'Fahrtzweck', 'Abfahrtsort', 'Zielort', 'Therapeut', 'Kennzeichen', 'Art', 'Start-KM', 'End-KM', 'Strecke (km)', 'Dauer (min)', 'Notizen'];
   const lines = [header.join(';')];
   for (const f of rows) {
     const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at).toLocaleString('de-DE') : '';
     const dur = (f.fahrt_started_at && f.fahrt_ended_at)
       ? Math.round((new Date(f.fahrt_ended_at) - new Date(f.fahrt_started_at)) / 60000)
       : '';
+    const q = s => `"${(s || '').replace(/"/g, '""')}"`;
     lines.push([
       dt,
-      `"${(f._patient || '').replace(/"/g, '""')}"`,
-      `"${(f._therapist || '').replace(/"/g, '""')}"`,
+      q(f._patient),
+      q(f.zweck),
+      q(f.abfahrtsort),
+      q(f._zielort || f.zielort),
+      q(f._therapist),
       f.kennzeichen_snapshot || '',
       f.kind_snapshot || '',
       f.start_km ?? '',
       f.end_km ?? '',
       f.distance_km ?? '',
-      dur
+      dur,
+      q(f.notes)
     ].join(';'));
   }
   const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
