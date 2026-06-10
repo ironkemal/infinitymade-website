@@ -322,9 +322,16 @@ export default async function handler(req, res) {
       }
 
       case 'customer.subscription.deleted': {
-        await updateProfileBySubscription(event.data.object, {
+        const deletedSub = event.data.object;
+        await updateProfileBySubscription(deletedSub, {
           plan_status: 'canceled',
           is_active: false,
+        });
+        // Schedule account deletion 30 days after cancellation
+        const deletionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        await adminFetch(`/profiles?stripe_subscription_id=eq.${deletedSub.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ deletion_scheduled_at: deletionDate }),
         });
         break;
       }

@@ -1432,7 +1432,7 @@ async function loadPhysioRezKpis() {
   });
 })();
 
-async function openStripePortal() {
+async function _doStripePortalRedirect() {
   if (!currentProfile.stripe_subscription_id) { window.location.href = '/onboarding.html?step=plan'; return; }
   try {
     const { data: { session: s } } = await supabase.auth.getSession();
@@ -1440,6 +1440,118 @@ async function openStripePortal() {
     const { url } = await res.json();
     if (url) window.location.href = url;
   } catch { showToast(t('err_generic'), 'error'); }
+}
+
+async function openStripePortal() {
+  // Show cancellation warning modal before redirecting to Stripe portal
+  const existingModal = document.getElementById('cancel-subscription-modal');
+  if (existingModal) existingModal.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'cancel-subscription-modal';
+  overlay.style.cssText = `
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(26,22,17,0.55); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background: var(--bg-card-solid, #FFFEFB);
+      border: 1px solid var(--border-strong, rgba(26,22,17,0.15));
+      border-radius: 18px;
+      padding: 2.5rem 2rem;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 24px 60px -20px rgba(26,22,17,0.22);
+    ">
+      <h2 style="
+        font-family: var(--serif, 'Fraunces', serif);
+        font-size: 1.45rem;
+        font-weight: 500;
+        color: var(--text-main, #1A1611);
+        margin: 0 0 1.25rem;
+        letter-spacing: -0.02em;
+      ">Abonnement kündigen</h2>
+
+      <p style="font-size: 0.92rem; color: var(--text-muted, #7A6F61); line-height: 1.6; margin-bottom: 1.5rem;">
+        Nach der Kündigung haben Sie noch <strong style="color: var(--text-main, #1A1611);">30 Tage</strong> Zugriff auf Ihre Daten.
+        Danach werden alle Praxisdaten und Patientendaten unwiderruflich gelöscht.
+        Buchhaltungsbelege bleiben gemäß §257 HGB für 10 Jahre erhalten.
+      </p>
+
+      <a href="/api/dsgvo/export" download style="
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        font-family: var(--mono, monospace); font-size: 0.75rem;
+        letter-spacing: 0.06em; text-transform: uppercase;
+        color: var(--bronze, #6B5538); text-decoration: none;
+        border: 1px solid rgba(107,85,56,0.3); border-radius: 8px;
+        padding: 0.55rem 1rem; margin-bottom: 1.75rem;
+        transition: background 180ms;
+      " onmouseover="this.style.background='rgba(107,85,56,0.06)'" onmouseout="this.style.background='transparent'">
+        &#x1F4E5; Daten jetzt exportieren
+      </a>
+
+      <label style="
+        display: flex; align-items: flex-start; gap: 0.75rem;
+        font-size: 0.88rem; color: var(--text-muted, #7A6F61);
+        line-height: 1.5; cursor: pointer; margin-bottom: 2rem;
+      ">
+        <input type="checkbox" id="cancel-consent-checkbox" style="
+          margin-top: 0.18rem; flex-shrink: 0;
+          accent-color: var(--bronze, #6B5538); width: 16px; height: 16px; cursor: pointer;
+        ">
+        Ich habe verstanden, dass meine Daten 30 Tage nach Kündigung unwiderruflich gelöscht werden.
+      </label>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button id="cancel-modal-abort" type="button" style="
+          padding: 0.65rem 1.4rem; border-radius: 10px;
+          border: 1px solid var(--border-strong, rgba(26,22,17,0.15));
+          background: transparent; color: var(--text-muted, #7A6F61);
+          font-family: var(--mono, monospace); font-size: 0.76rem;
+          font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+          cursor: pointer; transition: background 180ms;
+        ">Abbrechen</button>
+        <button id="cancel-modal-proceed" type="button" disabled style="
+          padding: 0.65rem 1.4rem; border-radius: 10px; border: none;
+          background: var(--text-main, #1A1611); color: var(--bg-card-solid, #FFFEFB);
+          font-family: var(--mono, monospace); font-size: 0.76rem;
+          font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+          cursor: not-allowed; opacity: 0.45; transition: opacity 180ms, transform 120ms;
+        ">Weiter zur Kündigung</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const checkbox = overlay.querySelector('#cancel-consent-checkbox');
+  const proceedBtn = overlay.querySelector('#cancel-modal-proceed');
+  const abortBtn = overlay.querySelector('#cancel-modal-abort');
+
+  checkbox.addEventListener('change', () => {
+    proceedBtn.disabled = !checkbox.checked;
+    proceedBtn.style.opacity = checkbox.checked ? '1' : '0.45';
+    proceedBtn.style.cursor = checkbox.checked ? 'pointer' : 'not-allowed';
+  });
+
+  abortBtn.addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+  proceedBtn.addEventListener('click', async () => {
+    proceedBtn.disabled = true;
+    proceedBtn.textContent = 'Bitte warten…';
+    try {
+      await supabase.from('profiles').update({
+        deletion_consent_at: new Date().toISOString()
+      }).eq('id', currentProfile.id);
+    } catch (e) {
+      console.error('[openStripePortal] consent save failed:', e);
+    }
+    overlay.remove();
+    await _doStripePortalRedirect();
+  });
 }
 
 function renderCalEmpList() {
@@ -14755,6 +14867,29 @@ function showPlanWall(lastPlan) {
         <p id="plan-wall-sub">
           Wählen Sie einen Plan, um wieder Zugang zu erhalten. Da Sie bereits eine Testphase genutzt haben, beginnt Ihr Abonnement sofort.
         </p>
+        ${currentProfile?.deletion_scheduled_at ? `
+        <p style="
+          font-family: var(--mono, monospace); font-size: 0.8rem;
+          letter-spacing: 0.03em; color: #C0392B;
+          background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.2);
+          border-radius: 8px; padding: 0.6rem 1rem;
+          display: inline-block; margin-bottom: 1.25rem;
+        ">
+          &#x26A0;&#xFE0F; Ihre Daten werden am <strong>${new Date(currentProfile.deletion_scheduled_at).toLocaleDateString('de-DE')}</strong> gelöscht.
+        </p>
+        ` : ''}
+        <div style="margin-bottom: 1.75rem;">
+          <a href="/api/dsgvo/export" download style="
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            font-family: var(--mono, monospace); font-size: 0.74rem;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--bronze, #6B5538); text-decoration: none;
+            border: 1px solid rgba(107,85,56,0.3); border-radius: 8px;
+            padding: 0.5rem 1rem; transition: background 180ms;
+          " onmouseover="this.style.background='rgba(107,85,56,0.06)'" onmouseout="this.style.background='transparent'">
+            &#x1F4E5; Daten exportieren
+          </a>
+        </div>
 
         <div id="plan-wall-toggle">
           <button type="button" class="pw-billing-btn${!isYear ? ' active' : ''}"
