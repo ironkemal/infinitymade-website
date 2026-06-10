@@ -2366,7 +2366,7 @@ async function saveFahrtEndHandler() {
   const leadId = lead?.id || null;
   const leadDurationMin = lead?.duration_min || null;
   const patientName = lead
-    ? (lead.title || [lead.first_name, lead.last_name].filter(Boolean).join(' '))
+    ? ([lead.first_name, lead.last_name].filter(Boolean).join(' ') || b.customer_name || null)
     : (b.customer_name || null);
   const zweck = patientName ? `Hausbesuch ${patientName}` : 'Hausbesuch';
   const zielort = lead
@@ -13265,7 +13265,7 @@ async function loadFbFahrten() {
     const dt = f.fahrt_started_at ? new Date(f.fahrt_started_at) : null;
     const dtStr = dt ? dt.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '—';
     const patient = f.leads
-      ? (f.leads.title || [f.leads.first_name, f.leads.last_name].filter(Boolean).join(' '))
+      ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || '—')
       : '—';
     const therapist = userMap[f.user_id] || '—';
     const duration = (f.fahrt_started_at && f.fahrt_ended_at)
@@ -13298,7 +13298,7 @@ async function loadFbFahrten() {
   // Cache for CSV export
   window._fbFahrtenCache = data.map(f => ({
     ...f,
-    _patient: f.leads ? (f.leads.title || [f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ')) : '',
+    _patient: f.leads ? ([f.leads.first_name, f.leads.last_name].filter(Boolean).join(' ') || '') : '',
     _therapist: userMap[f.user_id] || '',
     _zielort: f.zielort || (f.leads ? [f.leads.street, [f.leads.plz, f.leads.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '')
   }));
