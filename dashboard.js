@@ -679,6 +679,49 @@ async function renderOverview() {
     ? currentProfile.plan.charAt(0).toUpperCase() + currentProfile.plan.slice(1) : '—';
   document.getElementById('setStatusValue').textContent = currentProfile.is_active ? t('status_active') : t('status_inactive');
 
+  // Trial countdown / deletion warning in settings
+  (function renderSubscriptionBanner() {
+    const el = document.getElementById('subscriptionStatusBanner');
+    if (!el) return;
+    const ps = currentProfile.plan_status;
+
+    if (ps === 'trial' && currentProfile.trial_ends_at) {
+      const msLeft = new Date(currentProfile.trial_ends_at) - Date.now();
+      const daysLeft = Math.ceil(msLeft / 86400000);
+      if (daysLeft > 0) {
+        el.innerHTML = `
+          <div style="margin-top:14px;padding:12px 14px;border-radius:8px;background:rgba(177,137,27,0.12);border:1px solid rgba(177,137,27,0.35);font-size:13px;line-height:1.5;color:var(--text-main);">
+            <strong>Testphase aktiv</strong> — endet in <strong>${daysLeft} Tag${daysLeft === 1 ? '' : 'en'}</strong>.<br>
+            <span style="color:var(--text-muted);">Danach wird Ihr hinterlegtes Zahlungsmittel belastet.</span>
+          </div>`;
+        el.hidden = false;
+      }
+    } else if ((ps === 'canceled' || ps === 'expired') && currentProfile.deletion_scheduled_at) {
+      const delDate = new Date(currentProfile.deletion_scheduled_at);
+      const msLeft = delDate - Date.now();
+      const daysLeft = Math.max(0, Math.ceil(msLeft / 86400000));
+      const formatted = delDate.toLocaleDateString('de-DE', { day:'2-digit', month:'long', year:'numeric' });
+      el.innerHTML = `
+        <div style="margin-top:14px;padding:12px 14px;border-radius:8px;background:rgba(220,53,53,0.10);border:1px solid rgba(220,53,53,0.35);font-size:13px;line-height:1.6;color:var(--text-main);">
+          <strong>⚠ Konto deaktiviert</strong><br>
+          Ihre Daten werden am <strong>${formatted}</strong> (in ${daysLeft} Tag${daysLeft === 1 ? '' : 'en'}) unwiderruflich gelöscht.<br>
+          <span style="color:var(--text-muted);">Buchhaltungsbelege bleiben gem. §257 HGB 10 Jahre erhalten.</span><br>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="/api/dsgvo/export?token=" id="deletionExportLink" class="btn-ghost" style="font-size:12px;padding:5px 10px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+              ⬇ Daten exportieren
+            </a>
+          </div>
+        </div>`;
+      // Attach access token to export link
+      (async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const link = document.getElementById('deletionExportLink');
+        if (link && session?.access_token) link.href = `/api/dsgvo/export?token=${encodeURIComponent(session.access_token)}`;
+      })();
+      el.hidden = false;
+    }
+  })();
+
   ['welcome-banner', 'pastdue-banner'].forEach(id => {
     const el = document.getElementById(id); if (el) el.hidden = true;
   });
