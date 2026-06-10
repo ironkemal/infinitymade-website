@@ -638,9 +638,12 @@
     /* ── Pricing ── */
     .px-pricing-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 1.25rem;
       margin-top: 3rem;
+      max-width: 960px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .px-pricing-card {
       background: var(--bg-card);
@@ -1665,24 +1668,12 @@
       </a>
     </article>
 
-    <!-- Plan 4: Enterprise -->
-    <article class="px-pricing-card">
-      <div class="px-pricing-tag">Mehrere Standorte</div>
-      <h3 class="px-pricing-title">Enterprise</h3>
-      <div class="px-pricing-price">
-        <span class="amount" style="font-size:2rem; letter-spacing:-0.01em;">Individuell</span>
-      </div>
-      <p class="px-pricing-desc">Für Praxisverbünde &amp; mehrere Standorte mit individuellen Anforderungen.</p>
-      <ul class="px-pricing-features">
-        <li>✓ Alles aus Klinik</li>
-        <li>✓ Multi-Standort-Verwaltung</li>
-        <li>✓ Standortübergreifende Auswertung</li>
-        <li>✓ Persönlicher Ansprechpartner &amp; SLA</li>
-        <li>✓ Individuelle Anbindung</li>
-      </ul>
-      <a href="mailto:info@praxura.de?subject=Enterprise%20Anfrage%20Praxura" class="btn btn-secondary px-pricing-btn">Gespräch vereinbaren</a>
-    </article>
   </div>
+
+  <!-- Enterprise callout (no public card — custom offer via direct link) -->
+  <p style="text-align:center; margin-top:1.8rem; font-family:var(--mono); font-size:0.75rem; letter-spacing:0.05em; color:var(--ink-quiet);">
+    Mehrere Standorte oder ein individuelles Angebot? <a href="mailto:info@praxura.de?subject=Praxura%20Anfrage%20mehrere%20Standorte" style="color:var(--bronze); text-decoration:underline;">Schreiben Sie uns →</a>
+  </p>
 
   <!-- §302 Klarstellung: kein Abrechnungsdienstleister -->
   <div style="max-width:60rem; margin:2.4rem auto 0; padding:1.4rem 1.6rem; border:1px solid var(--line); border-radius:14px; background:rgba(107,85,56,0.04);">
