@@ -12,7 +12,7 @@ const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://app.praxura.de';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
 
-  const { pending_id, planSlug, interval, consents } = req.body || {};
+  const { pending_id, planSlug, interval, consents, reactivate } = req.body || {};
 
   if (!['starter', 'professional', 'klinik', 'enterprise'].includes(planSlug)) {
     return json(res, 400, { error: 'Invalid planSlug' });
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Create Checkout Session with 14-day trial
+    // Create Checkout Session — no trial on reactivation
     const { ok, data } = await stripeRequest('/checkout/sessions', {
       method: 'POST',
       body: {
@@ -72,11 +72,11 @@ export default async function handler(req, res) {
         customer: customerId,
         line_items: lineItems,
         subscription_data: {
-          trial_period_days: 14,
+          ...(reactivate ? {} : { trial_period_days: 14 }),
           metadata: { user_id: userId, plan_slug: planSlug, interval },
         },
         success_url: `${PUBLIC_URL}/dashboard.html?welcome=1&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${PUBLIC_URL}/onboarding.html?step=plan&canceled=1`,
+        cancel_url: `${PUBLIC_URL}/dashboard.html`,
         allow_promotion_codes: true,
         billing_address_collection: 'required',
         automatic_tax: { enabled: false },

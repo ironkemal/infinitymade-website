@@ -23,10 +23,10 @@ function employeeLimit() { return PLAN_EMPLOYEE_LIMITS[(currentProfile?.plan || 
 const T = {
   de: {
     logout: 'Abmelden',
-    nav_overview: 'Übersicht', nav_calendar: 'Termine', nav_kunden: 'Kunden Info',
+    nav_overview: 'Dashboard', nav_calendar: 'Terminkalender', nav_kunden: 'Patienten',
     wiz_step_1: '1. Kontrolle', wiz_step_2: '2. Taxierung', wiz_step_3: '3. Export', wiz_step_4: '4. Archiv',
-    nav_services: 'Dienstleistungen', nav_hours: 'Arbeitszeiten',
-    nav_team: 'Mitarbeiter', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Rechnungen', nav_feedback: 'Feedback', nav_settings: 'Einstellungen',
+    nav_services: 'Leistungen', nav_hours: 'Verfügbarkeit',
+    nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Bewertungen', nav_settings: 'Einstellungen',
     overview_sub: 'Ihr heutiger Überblick',
     welcome_text: 'Willkommen',
     kpi_plan: 'Paket', kpi_status: 'Status', kpi_today_bookings: 'Heute', kpi_today_sub: 'Termine', kpi_support: 'Support',
@@ -70,13 +70,13 @@ const T = {
     saved: 'Gespeichert.', pw_changed: 'Passwort geändert.', err_generic: 'Ein Fehler ist aufgetreten.',
     copied: 'Kopiert!', csv_imported: 'Importiert: ', csv_error: 'CSV-Fehler: ',
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
-    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Beispielmodus', nav_anamnese: 'Anamnese',
+    nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Demo-Modus', nav_anamnese: 'Anamnese',
     doctors_sub: 'Ärzte in der Nähe finden', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
     beispielmodus_sub: 'Anatomie-Haritas für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
     lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.',
-    nav_abrechnung: '§302-Abrechnung vorbereiten', abrechnung_sub: 'Sammelrechnung § 302 SGB V an Krankenkassen vorbereiten',
+    nav_abrechnung: '§302-Abrechnung', abrechnung_sub: 'Sammelrechnung § 302 SGB V an Krankenkassen vorbereiten',
     ab_ready: 'Abrechnungsbereit', ab_history: 'Abrechnungs-Historie',
     ab_kk: 'Krankenkasse', ab_patient: 'Patient', ab_rezept: 'Rezept', ab_einheiten: 'Einheiten',
     ab_brutto: 'Brutto', ab_zuzahlung: 'Zuzahlung', ab_select_all: 'Alle wählen',
@@ -89,18 +89,18 @@ const T = {
     ab_status_gesendet: 'Versendet', ab_status_accepted: 'Akzeptiert',
     ab_status_rejected: 'Abgelehnt', ab_status_paid: 'Bezahlt',
     ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.',
-    nav_belegliste: 'Kassenbuch (GoBD)',
+    nav_belegliste: 'Kassenbuch',
     nav_mahnwesen: 'Mahnwesen',
-    nav_statistik: 'Statistik',
+    nav_statistik: 'Auswertungen',
     nav_warteliste: 'Warteliste',
     cal_emp_all: 'Alle'
   },
   en: {
     logout: 'Sign out',
-    nav_overview: 'Overview', nav_calendar: 'Appointments', nav_kunden: 'Customers',
+    nav_overview: 'Dashboard', nav_calendar: 'Calendar', nav_kunden: 'Patients',
     wiz_step_1: '1. Control', wiz_step_2: '2. Pricing', wiz_step_3: '3. Export', wiz_step_4: '4. Archive',
-    nav_services: 'Services', nav_hours: 'Working Hours',
-    nav_team: 'Team', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Invoices', nav_feedback: 'Feedback', nav_settings: 'Settings',
+    nav_services: 'Services', nav_hours: 'Availability',
+    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Reviews', nav_settings: 'Settings',
     overview_sub: 'Your daily overview',
     welcome_text: 'Welcome',
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
@@ -148,7 +148,7 @@ const T = {
     lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
     lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
     lbl_select_patient: 'Select patient', lbl_notes_empty: 'No notes available.',
-    nav_abrechnung: 'Prepare §302 Billing', abrechnung_sub: 'Prepare § 302 SGB V batch billing to health insurers',
+    nav_abrechnung: '§302 Billing', abrechnung_sub: 'Prepare § 302 SGB V batch billing to health insurers',
     ab_ready: 'Ready to bill', ab_history: 'Billing history',
     ab_kk: 'Insurer', ab_patient: 'Patient', ab_rezept: 'Rx', ab_einheiten: 'Units',
     ab_brutto: 'Gross', ab_zuzahlung: 'Co-pay', ab_select_all: 'Select all',
@@ -161,18 +161,18 @@ const T = {
     ab_status_gesendet: 'Sent', ab_status_accepted: 'Accepted',
     ab_status_rejected: 'Rejected', ab_status_paid: 'Paid',
     ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.',
-    nav_belegliste: 'Cash Ledger (GoBD)',
+    nav_belegliste: 'Cash Ledger',
     nav_mahnwesen: 'Dunning',
-    nav_statistik: 'Statistics',
+    nav_statistik: 'Analytics',
     nav_warteliste: 'Waiting List',
     cal_emp_all: 'All'
   },
   tr: {
     logout: 'Çıkış',
-    nav_overview: 'Genel Bakış', nav_calendar: 'Randevular', nav_kunden: 'Müşteri Bilgisi',
+    nav_overview: 'Dashboard', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
     wiz_step_1: '1. Kontrol', wiz_step_2: '2. Fiyatlandırma', wiz_step_3: '3. Dışa Aktarım', wiz_step_4: '4. Arşiv',
-    nav_services: 'Hizmetler', nav_hours: 'Çalışma Saatleri',
-    nav_team: 'Personel', nav_b2b: 'B2B', nav_b2c: 'B2C Mail', nav_rechnungen: 'Faturalar', nav_feedback: 'Geri Bildirim', nav_settings: 'Ayarlar',
+    nav_services: 'Hizmetler', nav_hours: 'Müsaitlik',
+    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Değerlendirmeler', nav_settings: 'Ayarlar',
     overview_sub: 'Günlük genel bakışınız',
     welcome_text: 'Hoşgeldin',
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
@@ -214,13 +214,13 @@ const T = {
     saved: 'Kaydedildi.', pw_changed: 'Şifre değiştirildi.', err_generic: 'Bir hata oluştu.',
     copied: 'Kopyalandı!', csv_imported: 'İçe aktarıldı: ', csv_error: 'CSV hatası: ',
     apify_error: 'Apify hatası: ', apify_done: 'İçe aktarıldı: ', me: '(Siz)',
-    nav_doctors: 'Doktorlar', nav_notizen: 'Notlar', nav_fahrtenbuch: 'Sürüş Defteri', nav_beispielmodus: 'Örnek Modu', nav_anamnese: 'Anamnez',
+    nav_doctors: 'Doktorlar', nav_notizen: 'Notlar', nav_fahrtenbuch: 'Sürüş Defteri', nav_beispielmodus: 'Demo Modu', nav_anamnese: 'Anamnez',
     doctors_sub: 'Yakındaki doktorları bul', notizen_sub: 'Hasta notları ve raporlar', b2c_sub: 'Müşteri maileri ve AI asistanı',
     beispielmodus_sub: 'Hasta görüşmeleri için anatomi haritaları', anamnese_sub: 'Dijital anamnez formu',
     lbl_doctor_notes: 'Doktor notları', lbl_therapist_notes: 'Terapist notları',
     lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
     lbl_select_patient: 'Hasta seç', lbl_notes_empty: 'Not bulunmuyor.',
-    nav_abrechnung: 'Kasa Faturası Hazırlama', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası hazırlama',
+    nav_abrechnung: '§302 Faturalama', abrechnung_sub: '§ 302 SGB V Krankenkasse toplu faturası hazırlama',
     ab_ready: 'Faturalandırmaya hazır', ab_history: 'Fatura geçmişi',
     ab_kk: 'Sigorta', ab_patient: 'Hasta', ab_rezept: 'Reçete', ab_einheiten: 'Birim',
     ab_brutto: 'Brüt', ab_zuzahlung: 'Katkı', ab_select_all: 'Tümünü seç',
@@ -233,9 +233,9 @@ const T = {
     ab_status_gesendet: 'Gönderildi', ab_status_accepted: 'Kabul',
     ab_status_rejected: 'Red', ab_status_paid: 'Ödendi',
     ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.',
-    nav_belegliste: 'Kasa Defteri (GoBD)',
+    nav_belegliste: 'Kasa Defteri',
     nav_mahnwesen: 'Tahsilat',
-    nav_statistik: 'İstatistik',
+    nav_statistik: 'Analizler',
     nav_warteliste: 'Bekleme Listesi',
     cal_emp_all: 'Tümü'
   }
@@ -14463,10 +14463,87 @@ function initDruckeinstellungen() {
       console.log('[boot] skipping owner fetch. role=', currentProfile.role, 'owner_id=', currentProfile.owner_id);
     }
 
+    // Plan enforcement — canceled/expired accounts see a reactivation wall
+    const ps = currentProfile.plan_status;
+    if (ps === 'canceled' || ps === 'expired') {
+      showPlanWall(currentProfile.plan || 'starter');
+      return;
+    }
+
     await init();
   } catch (e) {
     console.error('[boot]', e);
     window.location.href = 'login.html';
   }
 })();
+
+function showPlanWall(lastPlan) {
+  document.body.style.overflow = 'hidden';
+  const plans = [
+    { slug: 'starter',      label: 'Starter',      price: 29, yearPrice: 25 },
+    { slug: 'professional', label: 'Professional',  price: 49, yearPrice: 42 },
+    { slug: 'klinik',       label: 'Klinik',        price: 99, yearPrice: 84 },
+  ];
+  let interval = 'month';
+
+  const wall = document.createElement('div');
+  wall.id = 'plan-wall';
+  wall.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#f5f0e8;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:system-ui,sans-serif;';
+
+  function render() {
+    const isYear = interval === 'year';
+    wall.innerHTML = `
+      <div style="max-width:780px;width:100%;text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">🔒</div>
+        <h1 style="font-size:1.8rem;font-weight:700;color:#1a1610;margin-bottom:0.5rem;">Ihr Abonnement wurde beendet</h1>
+        <p style="color:#6b6050;font-size:1rem;margin-bottom:2rem;max-width:480px;margin-left:auto;margin-right:auto;">
+          Wählen Sie einen Plan, um wieder Zugang zu erhalten. Da Sie bereits eine Testphase genutzt haben, beginnt Ihr Abonnement sofort.
+        </p>
+        <div style="display:inline-flex;background:#fff;border:1px solid #e0d8cc;border-radius:999px;padding:0.25rem;margin-bottom:2rem;gap:0;">
+          <button onclick="window.__pwInterval='month';window.__pwRender();" style="padding:0.5rem 1.2rem;border-radius:999px;border:none;cursor:pointer;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;background:${!isYear?'#6b5538':'transparent'};color:${!isYear?'#fff':'#6b5538'};">MONATLICH</button>
+          <button onclick="window.__pwInterval='year';window.__pwRender();" style="padding:0.5rem 1.2rem;border-radius:999px;border:none;cursor:pointer;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;background:${isYear?'#6b5538':'transparent'};color:${isYear?'#fff':'#6b5538'};">JÄHRLICH <span style="background:rgba(107,85,56,0.15);color:#6b5538;border-radius:999px;padding:0.1rem 0.4rem;font-size:0.65rem;">−15%</span></button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+          ${plans.map(p => `
+            <div style="background:#fff;border:2px solid ${p.slug===lastPlan?'#6b5538':'#e0d8cc'};border-radius:16px;padding:1.5rem;text-align:left;">
+              <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;color:#9a8a78;text-transform:uppercase;margin-bottom:0.5rem;">${p.slug===lastPlan?'Ihr letzter Plan':''}&nbsp;</div>
+              <div style="font-size:1.2rem;font-weight:700;color:#1a1610;margin-bottom:0.3rem;">${p.label}</div>
+              <div style="font-size:2rem;font-weight:700;color:#1a1610;line-height:1;">€${isYear?p.yearPrice:p.price}<span style="font-size:0.85rem;font-weight:400;color:#9a8a78;">/Monat</span></div>
+              ${isYear?`<div style="font-size:0.72rem;color:#9a8a78;margin-top:0.25rem;">jährlich abgerechnet</div>`:'<div style="font-size:0.72rem;color:#9a8a78;margin-top:0.25rem;">monatlich abgerechnet</div>'}
+              <button onclick="window.__pwActivate('${p.slug}')" style="margin-top:1.2rem;width:100%;padding:0.7rem;border-radius:10px;border:none;cursor:pointer;font-size:0.85rem;font-weight:600;background:${p.slug===lastPlan?'#6b5538':'#1a1610'};color:#fff;">Jetzt aktivieren</button>
+            </div>
+          `).join('')}
+        </div>
+        <p style="font-size:0.78rem;color:#9a8a78;">Kein Testzeitraum · Sofort aktiv · Jederzeit kündbar · Alle Preise zzgl. MwSt.</p>
+        <button onclick="supabase.auth.signOut().then(()=>location.href='login.html')" style="margin-top:1rem;background:none;border:none;color:#9a8a78;font-size:0.8rem;cursor:pointer;text-decoration:underline;">Abmelden</button>
+      </div>`;
+  }
+
+  window.__pwInterval = interval;
+  window.__pwRender = function() {
+    interval = window.__pwInterval;
+    render();
+  };
+  window.__pwActivate = async function(planSlug) {
+    const btn = wall.querySelector(`button[onclick*="${planSlug}"][onclick*="Activate"]`) ||
+                [...wall.querySelectorAll('button')].find(b => b.textContent.includes('Jetzt aktivieren') && b.getAttribute('onclick')?.includes(planSlug));
+    try {
+      const token = currentSession?.access_token;
+      if (!token) { location.href = 'login.html'; return; }
+      const res = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ planSlug, interval: window.__pwInterval, reactivate: true }),
+      });
+      const data = await res.json();
+      if (data.url) location.href = data.url;
+      else alert('Fehler: ' + (data.error || 'Unbekannt'));
+    } catch (e) {
+      alert('Netzwerkfehler');
+    }
+  };
+
+  render();
+  document.body.appendChild(wall);
+}
 
