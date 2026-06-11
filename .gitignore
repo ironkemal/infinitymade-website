@@ -1,4 +1,5 @@
 *.pdf
+INFRASTRUCTURE.md
 .agents/
 .claude/
 .mcp.json
@@ -17,3 +18,5 @@ azure-credentials.local.txt
 SECURITY_AUDIT_*.md
 AUDIT_SECURITY.md
 AUDIT_*.md
+.vercel
+.env*

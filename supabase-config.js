@@ -1,4 +1,10 @@
-// Supabase project credentials
-// Get these from: Supabase Dashboard → Project Settings → API
-export const SUPABASE_URL = 'https://njvuclullotbksskpwgk.supabase.co';
-export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qdnVjbHVsbG90Ymtzc2twd2drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3OTgyNDEsImV4cCI6MjA5MjM3NDI0MX0.KLABvM3skC9TMM1N2NTEKjWHLA9aUY0pfS-EbzLfLug';
+// Public config loaded from server — keys never stored in source code
+const _res = await fetch('/api/config').catch(() => null);
+const _cfg = (_res?.ok) ? await _res.json() : {};
+
+if (!_cfg.supabaseUrl || !_cfg.supabaseAnonKey) {
+  console.error('[supabase-config] /api/config failed — set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel env vars');
+}
+
+export const SUPABASE_URL = _cfg.supabaseUrl || '';
+export const SUPABASE_ANON_KEY = _cfg.supabaseAnonKey || '';
