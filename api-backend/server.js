@@ -139,6 +139,24 @@ function newOAuthClient() {
   );
 }
 
+// OAuth CSRF protection — per-user nonces, 10-minute TTL
+const oauthNonces = new Map();
+function createOAuthState(userId, flowType) {
+  const nonce = crypto.randomBytes(16).toString('hex');
+  oauthNonces.set(`${userId}:${flowType}`, { nonce, exp: Date.now() + 600_000 });
+  return Buffer.from(JSON.stringify({ userId, flowType, nonce })).toString('base64url');
+}
+function verifyOAuthState(rawState) {
+  try {
+    const { userId, flowType, nonce } = JSON.parse(Buffer.from(rawState, 'base64url').toString());
+    const key = `${userId}:${flowType}`;
+    const stored = oauthNonces.get(key);
+    if (!stored || stored.nonce !== nonce || Date.now() > stored.exp) return null;
+    oauthNonces.delete(key);
+    return { userId, flowType };
+  } catch { return null; }
+}
+
 // Helpers
 const BUSINESS_TZ = 'Europe/Berlin'; // All working_hours and date inputs are interpreted in this timezone
 
@@ -246,7 +264,7 @@ app.get('/api/calendar/google-auth', requireAuthAI, (req, res) => {
       'https://www.googleapis.com/auth/calendar.events',
       'https://www.googleapis.com/auth/calendar.readonly'
     ],
-    state: userId
+    state: createOAuthState(userId, 'calendar')
   });
 
   res.redirect(url);
@@ -259,7 +277,7 @@ app.get('/api/gmail/connect', requireAuthAI, (req, res) => {
     access_type: 'offline',
     prompt: 'consent select_account',
     scope: ['email', 'profile', 'openid', 'https://www.googleapis.com/auth/gmail.send'],
-    state: JSON.stringify({ userId, type: 'gmail' })
+    state: createOAuthState(userId, 'gmail')
   });
 
   res.redirect(url);
@@ -269,15 +287,11 @@ app.get('/api/calendar/google-callback', async (req, res) => {
   const { code, state: rawState } = req.query;
   if (!code) return res.status(400).json({ error: 'No code provided' });
 
-  let userId, flowType;
-  try {
-    const parsed = JSON.parse(rawState);
-    userId   = parsed.userId;
-    flowType = parsed.type || 'calendar';
-  } catch {
-    userId   = rawState;
-    flowType = 'calendar';
+  const verified = verifyOAuthState(rawState);
+  if (!verified) {
+    return res.redirect('https://app.praxura.de/dashboard.html?error=oauth_state_invalid');
   }
+  const { userId, flowType } = verified;
 
   try {
     const { tokens } = await newOAuthClient().getToken(code);
@@ -289,13 +303,12 @@ app.get('/api/calendar/google-callback', async (req, res) => {
       const uinfo = await uRes.json();
       if (!uinfo.email) throw new Error('No email from Google');
 
-      const { error } = await supabase.from('profiles')
-        .update({
-          b2b_from_email: uinfo.email,
-          b2b_gmail_refresh_token: tokens.refresh_token || null
-        })
-        .eq('id', userId);
+      const updateData = { b2b_from_email: uinfo.email };
+      const { error } = await supabase.from('profiles').update(updateData).eq('id', userId);
       if (error) throw error;
+      if (tokens.refresh_token) {
+        await supabase.rpc('set_gmail_token', { p_user_id: userId, p_token: tokens.refresh_token });
+      }
 
       const emailEnc = encodeURIComponent(uinfo.email);
       return res.redirect(`https://app.praxura.de/dashboard.html?gmail_ok=1&gmail_email=${emailEnc}#b2b`);
@@ -326,13 +339,15 @@ app.post('/api/gmail/send', requireAuthAI, async (req, res) => {
   if (!to_email || !subject || !body) return res.status(400).json({ error: 'Missing params' });
 
   try {
-    const { data: profile, error: pErr } = await supabase
-      .from('profiles').select('b2b_gmail_refresh_token, b2b_from_email').eq('id', userId).single();
+    const [{ data: profile, error: pErr }, { data: gmailToken }] = await Promise.all([
+      supabase.from('profiles').select('b2b_from_email').eq('id', userId).single(),
+      supabase.rpc('get_gmail_token', { p_user_id: userId })
+    ]);
     if (pErr || !profile) throw new Error('Profile not found');
-    if (!profile.b2b_gmail_refresh_token) throw new Error('No Gmail token — please reconnect Gmail in B2B setup');
+    if (!gmailToken) throw new Error('No Gmail token — please reconnect Gmail in B2B setup');
 
     const oauth = newOAuthClient();
-    oauth.setCredentials({ refresh_token: profile.b2b_gmail_refresh_token });
+    oauth.setCredentials({ refresh_token: gmailToken });
     let credentials;
     try {
       ({ credentials } = await oauth.refreshAccessToken());
@@ -343,9 +358,7 @@ app.post('/api/gmail/send', requireAuthAI, async (req, res) => {
       // "Gmail token" wording is what the front-end matches to surface the
       // reconnect toast.
       console.error('[gmail/send] refresh failed, clearing dead token:', refreshErr.message);
-      await supabase.from('profiles')
-        .update({ b2b_gmail_refresh_token: null })
-        .eq('id', userId);
+      await supabase.rpc('clear_gmail_token', { p_user_id: userId });
       return res.status(401).json({
         success: false,
         code: 'gmail_reauth_required',

@@ -722,12 +722,26 @@ router.post('/abrechnung/:id/mark-sent', async (req, res) => {
     const { data: u, error: uErr } = await supabase.auth.getUser(token);
     if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
 
-    const id = req.params.id;
+    // Resolve tenant ID (employees map to their owner)
+    const { data: profile } = await supabase
+      .from('profiles').select('id, role, owner_id').eq('id', u.user.id).single();
+    const tenantId = profile?.role === 'employee' && profile?.owner_id
+      ? profile.owner_id
+      : u.user.id;
+
+    const abrechnungId = req.params.id;
+
+    // Ownership check — fetch the record and verify it belongs to this tenant
+    const { data: abrech } = await supabase
+      .from('abrechnung').select('owner_id').eq('id', abrechnungId).maybeSingle();
+    if (!abrech || abrech.owner_id !== tenantId) {
+      return res.status(403).json({ error: 'Nicht berechtigt' });
+    }
+
     const { error } = await supabase
       .from('abrechnung')
       .update({ status: 'gesendet', zaa_uploaded_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('owner_id', u.user.id);
+      .eq('id', abrechnungId);
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ ok: true });
   } catch (e) {
