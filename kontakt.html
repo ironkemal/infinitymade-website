@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kontakt — Praxura</title>
+  <meta name="description" content="Schreiben Sie uns — das Praxura-Team antwortet innerhalb von 24 Stunden." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://praxura.de/kontakt.html" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20260524" />
+  <link rel="stylesheet" href="/cookie-consent.css?v=20260610" />
+
+  <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous"></script>
+  <script src="/sentry-init.js?v=20260523c"></script>
+
+  <style>
+    .kx-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    /* ── Left info column ── */
+    .kx-info {}
+    .kx-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 1.6rem;
+    }
+    .kx-eyebrow-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--bronze);
+      border-radius: 999px;
+    }
+    .kx-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      margin-bottom: 1.4rem;
+    }
+    .kx-title em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--bronze);
+    }
+    .kx-lede {
+      font-size: 1.05rem;
+      line-height: 1.65;
+      color: var(--ink-soft);
+      max-width: 30rem;
+      margin-bottom: 2.8rem;
+    }
+    .kx-meta-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+    }
+    .kx-meta-icon {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      background: var(--bg-warm);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--bronze);
+    }
+    .kx-meta-icon svg { width: 17px; height: 17px; }
+    .kx-meta-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+      margin-bottom: 0.2rem;
+    }
+    .kx-meta-val {
+      font-size: 0.93rem;
+      color: var(--ink);
+    }
+    .kx-meta-val a {
+      color: var(--bronze);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(107,85,56,0.25);
+      padding-bottom: 1px;
+      transition: border-color 200ms;
+    }
+    .kx-meta-val a:hover { border-color: var(--bronze); }
+
+    .kx-divider {
+      width: 40px;
+      height: 1px;
+      background: var(--line);
+      margin: 2.2rem 0;
+    }
+
+    .kx-alt-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.75rem 1.3rem;
+      background: transparent;
+      border: 1px solid var(--bronze);
+      color: var(--bronze);
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: background 220ms, color 220ms;
+    }
+    .kx-alt-cta:hover {
+      background: var(--bronze);
+      color: var(--bg);
+    }
+
+    /* ── Right form column ── */
+    .kx-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 2.8rem 2.4rem;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.7) inset,
+        0 28px 56px -28px rgba(26,22,17,0.14),
+        0 4px 12px -4px rgba(26,22,17,0.05);
+    }
+    .kx-card-head {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.5rem;
+      color: var(--ink);
+      margin-bottom: 0.35rem;
+    }
+    .kx-card-sub {
+      font-size: 0.86rem;
+      color: var(--ink-mute);
+      margin-bottom: 2rem;
+    }
+
+    .kx-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .kx-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    .kx-field.kx-full { grid-column: 1 / -1; }
+    .kx-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+    }
+    .kx-label span { color: var(--bronze); margin-left: 2px; }
+    .kx-input,
+    .kx-textarea {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      color: var(--ink);
+      width: 100%;
+      transition: border-color 180ms, box-shadow 180ms;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .kx-input::placeholder,
+    .kx-textarea::placeholder { color: var(--ink-quiet); }
+    .kx-input:focus,
+    .kx-textarea:focus {
+      border-color: var(--bronze);
+      box-shadow: 0 0 0 3px rgba(107,85,56,0.1);
+    }
+    .kx-textarea {
+      min-height: 130px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .kx-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.6rem;
+      background: var(--bronze);
+      color: var(--bg);
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
+      transition: background 220ms, transform 220ms var(--ease-spring), box-shadow 220ms;
+      box-shadow: 0 2px 8px rgba(107,85,56,0.25);
+    }
+    .kx-submit:hover:not(:disabled) {
+      background: var(--bronze-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(107,85,56,0.3);
+    }
+    .kx-submit:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+    .kx-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .kx-submit-arrow {
+      width: 1.65rem;
+      height: 1.65rem;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .kx-notice {
+      margin-top: 1.2rem;
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      display: none;
+      line-height: 1.5;
+    }
+    .kx-notice.is-success {
+      display: block;
+      background: rgba(78,92,69,0.1);
+      border: 1px solid rgba(78,92,69,0.25);
+      color: var(--sage);
+    }
+    .kx-notice.is-error {
+      display: block;
+      background: rgba(156,58,58,0.07);
+      border: 1px solid rgba(156,58,58,0.2);
+      color: var(--rose);
+    }
+
+    .kx-privacy {
+      margin-top: 1rem;
+      font-size: 0.74rem;
+      color: var(--ink-quiet);
+      text-align: center;
+      line-height: 1.55;
+    }
+    .kx-privacy a { color: var(--ink-quiet); text-decoration: underline; }
+    .kx-privacy a:hover { color: var(--bronze); }
+
+    /* ── Mobile ── */
+    @media (max-width: 860px) {
+      .kx-wrap {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        padding: 7rem 1.25rem 4rem;
+      }
+      .kx-card { padding: 2rem 1.4rem; }
+    }
+    @media (max-width: 480px) {
+      .kx-form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ────────────── Nav ────────────── -->
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Prax<em>ura</em></a>
+  <a href="/#funktionen" class="nav-link">Funktionen</a>
+  <a href="/#zielgruppe" class="nav-link">Zielgruppe</a>
+  <a href="/#preise" class="nav-link">Preise</a>
+  <a href="/praxis.html" class="nav-link">Details</a>
+  <a href="/kontakt.html" class="nav-link" style="color:var(--bronze)">Kontakt</a>
+  <a href="https://app.praxura.de" class="nav-login">Login</a>
+  <a href="https://app.praxura.de/onboarding.html" class="nav-cta">
+    Kostenlos starten
+    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  </a>
+  <button class="nav-hamburger" id="navHamburger" aria-label="Menü öffnen" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-mobile-menu" id="navMobileMenu" role="dialog" aria-modal="true" aria-label="Navigation">
+  <button class="nav-mobile-close" id="navMobileClose" aria-label="Menü schließen">✕</button>
+  <a href="/#funktionen">Funktionen</a>
+  <a href="/#zielgruppe">Zielgruppe</a>
+  <a href="/#preise">Preise</a>
+  <a href="/praxis.html">Details</a>
+  <a href="/kontakt.html">Kontakt</a>
+  <a href="https://app.praxura.de">Login</a>
+  <a href="https://app.praxura.de/onboarding.html" class="nav-mobile-cta-btn">Kostenlos starten ↗</a>
+</div>
+
+<!-- ────────────── Main ────────────── -->
+<main>
+  <div class="kx-wrap">
+
+    <!-- ── Left: info ── -->
+    <div class="kx-info" data-reveal>
+      <span class="kx-eyebrow">
+        <span class="kx-eyebrow-dot"></span>
+        Kontakt · Praxura
+      </span>
+      <h1 class="kx-title">
+        Schreiben Sie <em>uns.</em>
+      </h1>
+      <p class="kx-lede">
+        Fragen zur Software, zum Onboarding oder zur §302-Abrechnung — unser Team antwortet innerhalb von einem Werktag.
+      </p>
+
+      <div class="kx-meta-row">
+        <div class="kx-meta-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="kx-meta-label">E-Mail</div>
+          <div class="kx-meta-val"><a href="mailto:info@praxura.de">info@praxura.de</a></div>
+        </div>
+      </div>
+
+      <div class="kx-meta-row">
+        <div class="kx-meta-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div>
+          <div class="kx-meta-label">Antwortzeit</div>
+          <div class="kx-meta-val">Innerhalb von 1 Werktag</div>
+        </div>
+      </div>
+
+      <div class="kx-meta-row">
+        <div class="kx-meta-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="kx-meta-label">Standort</div>
+          <div class="kx-meta-val">Siegburg · NRW · Deutschland</div>
+        </div>
+      </div>
+
+      <div class="kx-divider"></div>
+
+      <p style="font-size:0.88rem;color:var(--ink-mute);margin-bottom:1.2rem">Lieber ein persönliches Gespräch?</p>
+      <a href="/demo-booking.html" class="kx-alt-cta">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Kostenlosen Termin buchen
+      </a>
+    </div>
+
+    <!-- ── Right: form ── -->
+    <div class="kx-card" data-reveal>
+      <h2 class="kx-card-head">Nachricht senden</h2>
+      <p class="kx-card-sub">Alle mit <span style="color:var(--bronze)">*</span> markierten Felder sind Pflichtfelder.</p>
+
+      <form id="contactForm" novalidate>
+        <div class="kx-form-row">
+          <div class="kx-field">
+            <label class="kx-label" for="vorname">Vorname <span>*</span></label>
+            <input class="kx-input" type="text" id="vorname" name="vorname" placeholder="Maria" autocomplete="given-name" required />
+          </div>
+          <div class="kx-field">
+            <label class="kx-label" for="nachname">Nachname <span>*</span></label>
+            <input class="kx-input" type="text" id="nachname" name="nachname" placeholder="Müller" autocomplete="family-name" required />
+          </div>
+        </div>
+
+        <div class="kx-form-row">
+          <div class="kx-field">
+            <label class="kx-label" for="firma">Praxis / Firma</label>
+            <input class="kx-input" type="text" id="firma" name="firma" placeholder="Physiotherapie Müller" autocomplete="organization" />
+          </div>
+          <div class="kx-field">
+            <label class="kx-label" for="email">E-Mail-Adresse <span>*</span></label>
+            <input class="kx-input" type="email" id="email" name="email" placeholder="maria@praxis.de" autocomplete="email" required />
+          </div>
+        </div>
+
+        <div class="kx-field" style="margin-bottom:0.5rem">
+          <label class="kx-label" for="nachricht">Ihre Nachricht <span>*</span></label>
+          <textarea class="kx-textarea" id="nachricht" name="nachricht" placeholder="Ich interessiere mich für Praxura und hätte Fragen zu…" required></textarea>
+        </div>
+
+        <div class="kx-notice" id="contactNotice" role="alert"></div>
+
+        <button type="submit" class="kx-submit" id="contactSubmit">
+          Nachricht senden
+          <span class="kx-submit-arrow" aria-hidden="true">→</span>
+        </button>
+
+        <p class="kx-privacy">
+          Mit dem Absenden stimmen Sie der Verarbeitung Ihrer Daten gemäß unserer
+          <a href="/datenschutz.html">Datenschutzerklärung</a> zu.
+        </p>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<!-- ────────────── Footer ────────────── -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Prax<em>ura</em></div>
+      <div class="footer-tagline">
+        Die moderne All-in-One Praxissoftware für Heilmittelerbringer. Ein Produkt von InfinityMade.
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Produkt</h4>
+      <ul>
+        <li><a href="/#funktionen">Funktionen</a></li>
+        <li><a href="/#preise">Preise</a></li>
+        <li><a href="/praxis.html">Alle Details</a></li>
+        <li><a href="/heilmittelabrechnung-software.html">§302-Abrechnung</a></li>
+        <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Fachbereiche</h4>
+      <ul>
+        <li><a href="/praxissoftware-physiotherapie.html">Physiotherapie</a></li>
+        <li><a href="/praxissoftware-ergotherapie.html">Ergotherapie</a></li>
+        <li><a href="/praxissoftware-logopaedie.html">Logopädie</a></li>
+        <li><a href="/praxissoftware-podologie.html">Podologie</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Kontakt</h4>
+      <ul>
+        <li><a href="/kontakt.html">Uns schreiben</a></li>
+        <li><a href="/demo-booking.html">Termin buchen</a></li>
+        <li><a href="mailto:info@praxura.de">info@praxura.de</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<script src="assets/system.js?v=20260524"></script>
+<script src="/cookie-consent.js?v=20260610"></script>
+
+<script>
+(function() {
+  var btn = document.getElementById('navHamburger');
+  var menu = document.getElementById('navMobileMenu');
+  var close = document.getElementById('navMobileClose');
+  if (!btn || !menu) return;
+  function openMenu() { menu.classList.add('is-open'); btn.setAttribute('aria-expanded','true'); document.body.style.overflow='hidden'; }
+  function closeMenu() { menu.classList.remove('is-open'); btn.setAttribute('aria-expanded','false'); document.body.style.overflow=''; }
+  btn.addEventListener('click', openMenu);
+  if (close) close.addEventListener('click', closeMenu);
+  menu.addEventListener('click', function(e) { if (e.target === menu) closeMenu(); });
+  menu.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', closeMenu); });
+})();
+</script>
+
+<script type="module">
+const form     = document.getElementById('contactForm');
+const notice   = document.getElementById('contactNotice');
+const submitBtn = document.getElementById('contactSubmit');
+
+form.addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const vorname  = form.vorname.value.trim();
+  const nachname = form.nachname.value.trim();
+  const firma    = form.firma.value.trim();
+  const email    = form.email.value.trim();
+  const nachricht = form.nachricht.value.trim();
+
+  if (!vorname || !nachname || !email || !nachricht) {
+    showNotice('error', 'Bitte füllen Sie alle Pflichtfelder aus.');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Wird gesendet…';
+
+  try {
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vorname, nachname, firma, email, nachricht }),
+    });
+    const data = await res.json();
+
+    if (res.ok && data.ok) {
+      showNotice('success', 'Vielen Dank! Ihre Nachricht wurde gesendet. Wir melden uns innerhalb eines Werktages.');
+      form.reset();
+    } else {
+      showNotice('error', data.error || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+    }
+  } catch {
+    showNotice('error', 'Verbindungsfehler. Bitte versuchen Sie es später erneut.');
+  }
+
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = 'Nachricht senden <span class="kx-submit-arrow" aria-hidden="true">→</span>';
+});
+
+function showNotice(type, msg) {
+  notice.className = 'kx-notice is-' + type;
+  notice.textContent = msg;
+  notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+
+</body>
+</html>
