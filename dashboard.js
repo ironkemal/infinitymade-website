@@ -6530,7 +6530,8 @@ async function loadTeam() {
   // Fallback: legacy VPS endpoint (kept for any RLS edge cases).
   if (!data.length) {
     try {
-      const res = await fetch(`${API}/team?owner_id=${ownerId}`);
+      const tok = (await supabase.auth.getSession()).data.session?.access_token;
+      const res = await fetch(`${API}/team?owner_id=${ownerId}`, tok ? { headers: { Authorization: `Bearer ${tok}` } } : {});
       if (res.ok) data = await res.json();
     } catch (e) {
       console.warn('[loadTeam] VPS fallback failed', e);
