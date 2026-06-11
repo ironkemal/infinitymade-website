@@ -38,6 +38,9 @@
   <!-- ===== Shared design system ===== -->
   <link rel="stylesheet" href="assets/system.css?v=20260524" />
 
+  <!-- ===== Cookie consent banner ===== -->
+  <link rel="stylesheet" href="/cookie-consent.css?v=20260610" />
+
   <!-- ===== Sentry error tracking ===== -->
   <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous"></script>
   <script src="/sentry-init.js?v=20260523c"></script>
@@ -1994,7 +1997,7 @@
 </footer>
 
 <script src="assets/system.js?v=20260524"></script>
-<script src="/cookie-consent.js?v=20260608"></script>
+<script src="/cookie-consent.js?v=20260610"></script>
 
 <script>
 (function() {
@@ -2041,6 +2044,180 @@
       btn.querySelector('.px-more-text').textContent = expanded ? 'Weniger anzeigen' : 'Mehr anzeigen';
     });
   });
+})();
+</script>
+
+
+<!-- Chatbot Widget -->
+<script>
+(function(){
+  var DATA = {"botName":"Praxura","welcomeMessage":"Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.","noMatchMessage":"Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de","tone":"formal","brandColor":"#b1891b","language":"de","typeMessage":"Nachricht schreiben...","errTooShort":"Bitte schreiben Sie eine längere Nachricht.","errTooLong":"Ihre Nachricht ist zu lang (max. 500 Zeichen).","errCooldown":"Bitte warten Sie einen Moment...","errNetwork":"Verbindungsproblem. Bitte später erneut versuchen.","sessionEnded":"Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.","sessionLimit":"Das Nachrichtenlimit dieser Sitzung wurde erreicht.","chatWebhookUrl":"https://n8n.infinitymade.de/webhook/chat","limits":{"minLen":2,"maxLen":500,"maxMessagesPerSession":30,"maxOffTopicStrikes":3,"cooldownMs":1500},"extraKnowledge":"Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Juni 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Direktabrechnung nach §302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: InfinityMade (Siegburg, NRW) · Website: praxura.de · App: app.praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde (Enterprise). Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, automatische Erinnerungen, Teamkalender ab Professional. 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 KI-Rezeptprüfung (OCR): Heilmittelverordnung fotografieren, KI liest Diagnose und Menge aus, gleicht mit Heilmittelkatalog ab, markiert Absetzungsrisiken sofort. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: GPS-Routing, GoBD-konform, ab Professional. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei Enterprise. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, Pflicht ab 01.10.2027, netto 0 € durch GKV-Förderpauschale (Physio 221,74 €/Monat 2026). 4. Preise: Starter 29 €/Monat (25 € jährlich) — 1 Therapeut, Einzelpraxis. Professional 49 €/Monat (42 € jährlich) — bis 5 Therapeut:innen, KI-Rezeptprüfung, Fahrtenbuch. Klinik 99 €/Monat (84 € jährlich) — unbegrenzte Therapeut:innen, §302-Abrechnung, persönlicher Account Manager. Enterprise: individuell, mehrere Standorte, SLA. Alle Preise zzgl. MwSt., monatlich kündbar, 14 Tage kostenlos ohne Kreditkarte. 5. Onboarding: 14 Tage Testzugang, kein Vertrag, Datenmigration auf Anfrage, kostenloses Einrichtungsgespräch. 6. DSGVO: ISO-27001-Rechenzentrum Frankfurt, AVV nach Art.28, TLS-Verschlüsselung, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de (alle Tarife), Telefon ab Professional, Account Manager ab Klinik, SLA bei Enterprise. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? 14 Tage, keine Kreditkarte. TI-Anbindung? Ja, netto 0 €. DSGVO-konform? Ja, Frankfurt. Smartphone? Ja, vollständig responsiv. Kündigung? Monatlich, keine Mindestlaufzeit.","qaPairs":[{"question":"Was ist Praxura?","answer":"Praxura ist eine moderne All-in-One Praxissoftware für Heilmittelerbringer wie Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, KI-Rezeptprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch.","keywords":"praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"},{"question":"Kann ich mit Praxura direkt nach §302 SGB V abrechnen?","answer":"Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.","keywords":"abrechnung, §302, dta, kassenabrechnung, provision, einsparung"},{"question":"Was kostet Praxura?","answer":"Praxura bietet drei transparente Tarife: Starter 29 €/Monat, Professional 49 €/Monat und Klinik 99 €/Monat (zzgl. MwSt.). Alle Tarife sind monatlich kündbar und 14 Tage kostenlos testbar.","keywords":"preise, kosten, tarife, starter, professional, klinik"},{"question":"Wie funktioniert die KI-Rezeptprüfung?","answer":"Sie fotografieren die Heilmittelverordnung ab. Die OCR-gestützte KI liest Diagnose, Heilmittel und Menge aus, gleicht sie mit dem Heilmittelkatalog ab und warnt Sie sofort vor Absetzungsrisiken — bevor Sie behandeln.","keywords":"rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"},{"question":"Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?","answer":"Ja, vollständig DSGVO-konform. Alle Daten werden ausschließlich in zertifizierten deutschen Rechenzentren (ISO 27001) in Frankfurt am Main gespeichert. Ein AVV nach Art. 28 DSGVO wird standardmäßig bereitgestellt.","keywords":"datenschutz, dsgvo, frankfurt, hosting, avv, sicherheit"},{"question":"Kann ich Praxura kostenlos testen?","answer":"Ja, alle Tarife sind 14 Tage lang kostenlos, unverbindlich und ohne Kreditkarte testbar. Monatlich kündbar.","keywords":"testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"},{"question":"Bietet Praxura eine TI-Anbindung?","answer":"Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten werden über die GKV-Förderpauschale vollständig refinanziert — netto 0 € für Ihre Praxis.","keywords":"ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"},{"question":"Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?","answer":"Sie können ein kostenfreies 30-minütiges Analysegespräch direkt unter praxura.de/demo-booking.html buchen oder uns per E-Mail an kontakt@praxura.de erreichen.","keywords":"kontakt, e-mail, beratung, support, termin, demo"}]};
+
+  var brand = DATA.brandColor;
+
+  // 3D gold infinity SVG — used in launcher button and chat header
+  var SVG_INF = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="100%" height="100%" aria-hidden="true"><defs>'
+    + '<radialGradient id="cwb-gbg" cx="45%" cy="32%" r="65%"><stop offset="0%" stop-color="#f2cf5a"/><stop offset="50%" stop-color="#c49820"/><stop offset="100%" stop-color="#7a5810"/></radialGradient>'
+    + '<linearGradient id="cwb-ginf" x1="15%" y1="0%" x2="85%" y2="100%"><stop offset="0%" stop-color="#fffbe8"/><stop offset="28%" stop-color="#f5d870"/><stop offset="65%" stop-color="#c49820"/><stop offset="100%" stop-color="#8a6210"/></linearGradient>'
+    + '<filter id="cwb-gsh" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#4a3008" flood-opacity="0.45"/></filter>'
+    + '</defs>'
+    + '<circle cx="28" cy="28" r="28" fill="url(#cwb-gbg)"/>'
+    + '<ellipse cx="28" cy="13" rx="13" ry="4.5" fill="rgba(255,255,255,0.18)"/>'
+    + '<path filter="url(#cwb-gsh)" d="M28,28 C28,22.5 24,18 19,18 C12,18 11,23.5 11,28 C11,32.5 12,38 19,38 C24,38 28,33.5 28,28 C28,22.5 32,18 37,18 C44,18 45,23.5 45,28 C45,32.5 44,38 37,38 C32,38 28,33.5 28,28 Z" fill="none" stroke="url(#cwb-ginf)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg>';
+
+  function applyTone(text){
+    if(DATA.tone === 'formal') return text;
+    return text;
+  }
+
+  var SESSION = { history:[], count:0, strikes:0, terminated:false, lastSent:0 };
+
+  function fetchAnswer(msg){
+    var cfg = {
+      businessName: DATA.botName,
+      language: DATA.language,
+      welcomeMessage: DATA.welcomeMessage,
+      noMatchMessage: DATA.noMatchMessage,
+      contactInfo: DATA.noMatchMessage,
+      extraKnowledge: DATA.extraKnowledge,
+      qaPairs: DATA.qaPairs
+    };
+    return fetch(DATA.chatWebhookUrl, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message:msg, history:SESSION.history.slice(-10), config:cfg })
+    }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  }
+
+  var css = ''
+    + '.cwb-launcher{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:transparent;border:none;padding:0;box-shadow:0 6px 22px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:99998;transition:transform .2s ease,box-shadow .2s ease;}'
+    + '.cwb-launcher:hover{transform:scale(1.1);box-shadow:0 10px 30px rgba(0,0,0,.4);}'
+    + '.cwb-window{position:fixed;bottom:24px;right:24px;width:380px;height:520px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;transform:translateY(20px) scale(.95);opacity:0;pointer-events:none;transition:all .25s ease;z-index:99999;font-family:system-ui,-apple-system,sans-serif;}'
+    + '.cwb-window.cwb-open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}'
+    + '.cwb-header{background:'+brand+';padding:14px 16px;display:flex;align-items:center;gap:12px;}'
+    + '.cwb-hav{width:34px;height:34px;flex-shrink:0;}'
+    + '.cwb-name{font-weight:600;font-size:15px;flex:1;color:#fff;}'
+    + '.cwb-close{background:transparent;border:none;color:rgba(255,255,255,.8);font-size:22px;width:28px;height:28px;border-radius:6px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}'
+    + '.cwb-close:hover{color:#fff;background:rgba(0,0,0,.15);}'
+    + '.cwb-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;}'
+    + '.cwb-msg{display:flex;flex-direction:column;max-width:82%;}'
+    + '.cwb-msg.cwb-bot{align-self:flex-start;align-items:flex-start;}'
+    + '.cwb-msg.cwb-user{align-self:flex-end;align-items:flex-end;}'
+    + '.cwb-bubble{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;word-wrap:break-word;}'
+    + '.cwb-bot .cwb-bubble{background:#f1f0ee;color:#1a1612;border-bottom-left-radius:4px;}'
+    + '.cwb-user .cwb-bubble{background:'+brand+';color:#fff;border-bottom-right-radius:4px;}'
+    + '.cwb-time{font-size:10px;color:#aaa;margin-top:3px;padding:0 4px;}'
+    + '.cwb-typing{align-self:flex-start;background:#f1f0ee;border-radius:14px;border-bottom-left-radius:4px;padding:12px 14px;display:none;}'
+    + '.cwb-typing.cwb-vis{display:flex;gap:4px;}'
+    + '.cwb-typing span{width:6px;height:6px;background:#aaa;border-radius:50%;animation:cwb-bounce 1.2s infinite;}'
+    + '.cwb-typing span:nth-child(2){animation-delay:.15s;}'
+    + '.cwb-typing span:nth-child(3){animation-delay:.3s;}'
+    + '@keyframes cwb-bounce{0%,60%,100%{transform:translateY(0);opacity:.6;}30%{transform:translateY(-5px);opacity:1;}}'
+    + '.cwb-input-area{border-top:1px solid #ece9e3;padding:10px 12px;display:flex;align-items:center;gap:8px;}'
+    + '.cwb-input-area input{flex:1;border:none;outline:none;padding:10px 4px;font-size:14px;color:#1a1612;background:transparent;}'
+    + '.cwb-send{width:36px;height:36px;border-radius:50%;background:'+brand+';border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity .15s;}'
+    + '.cwb-send:hover{opacity:.85;}';
+
+  var style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  var launcher = document.createElement('button');
+  launcher.className = 'cwb-launcher';
+  launcher.setAttribute('aria-label', 'Chat öffnen');
+  launcher.innerHTML = SVG_INF;
+
+  var win = document.createElement('div');
+  win.className = 'cwb-window';
+  win.setAttribute('lang', DATA.language);
+  win.innerHTML = ''
+    + '<div class="cwb-header">'
+    +   '<div class="cwb-hav">' + SVG_INF + '</div>'
+    +   '<div class="cwb-name">' + DATA.botName + '</div>'
+    +   '<button class="cwb-close" type="button" aria-label="Schließen">&#215;</button>'
+    + '</div>'
+    + '<div class="cwb-msgs"><div class="cwb-typing"><span></span><span></span><span></span></div></div>'
+    + '<div class="cwb-input-area">'
+    +   '<input type="text" placeholder="' + DATA.typeMessage + '" aria-label="Nachricht" />'
+    +   '<button class="cwb-send" type="button" aria-label="Senden">'
+    +     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
+    +   '</button>'
+    + '</div>';
+
+  document.body.appendChild(launcher);
+  document.body.appendChild(win);
+
+  var msgs    = win.querySelector('.cwb-msgs');
+  var typing  = win.querySelector('.cwb-typing');
+  var input   = win.querySelector('input');
+  var sendBtn = win.querySelector('.cwb-send');
+  var closeBtn= win.querySelector('.cwb-close');
+
+  function timeNow(){
+    var d = new Date();
+    return ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
+  }
+
+  function addMsg(text, who){
+    var div = document.createElement('div');
+    div.className = 'cwb-msg cwb-' + who;
+    div.innerHTML = '<div class="cwb-bubble"></div><div class="cwb-time">' + timeNow() + '</div>';
+    div.querySelector('.cwb-bubble').textContent = text;
+    msgs.insertBefore(div, typing);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  var inited = false;
+  launcher.addEventListener('click', function(){
+    win.classList.add('cwb-open');
+    input.focus();
+    if(!inited){ inited = true; setTimeout(function(){ addMsg(DATA.welcomeMessage, 'bot'); }, 200); }
+  });
+  closeBtn.addEventListener('click', function(){ win.classList.remove('cwb-open'); });
+
+  function lockSession(reasonText){
+    SESSION.terminated = true;
+    input.disabled = true;
+    input.placeholder = DATA.sessionEnded;
+    addMsg(reasonText || DATA.sessionEnded, 'bot');
+  }
+
+  function userSend(){
+    if(SESSION.terminated) return;
+    var t = (input.value || '').trim();
+    if(!t) return;
+    if(t.length < DATA.limits.minLen){ addMsg(DATA.errTooShort, 'bot'); return; }
+    if(t.length > DATA.limits.maxLen){ addMsg(DATA.errTooLong, 'bot'); return; }
+    var now = Date.now();
+    if(now - SESSION.lastSent < DATA.limits.cooldownMs){ addMsg(DATA.errCooldown, 'bot'); return; }
+    SESSION.lastSent = now;
+    addMsg(t, 'user');
+    input.value = '';
+    SESSION.count++;
+    if(SESSION.count > DATA.limits.maxMessagesPerSession){ lockSession(DATA.sessionLimit); return; }
+    typing.classList.add('cwb-vis');
+    msgs.scrollTop = msgs.scrollHeight;
+    fetchAnswer(t).then(function(data){
+      typing.classList.remove('cwb-vis');
+      if(!data || data.error || !data.reply){ addMsg(DATA.errNetwork, 'bot'); return; }
+      addMsg(applyTone(data.reply), 'bot');
+      SESSION.history.push({role:'user', content:t});
+      SESSION.history.push({role:'assistant', content:data.reply});
+      if(data.offTopic){
+        SESSION.strikes++;
+        if(SESSION.strikes >= DATA.limits.maxOffTopicStrikes){
+          setTimeout(function(){ lockSession(DATA.sessionEnded); }, 600);
+        }
+      }
+    }).catch(function(){
+      typing.classList.remove('cwb-vis');
+      addMsg(DATA.errNetwork, 'bot');
+    });
+  }
+
+  sendBtn.addEventListener('click', userSend);
+  input.addEventListener('keydown', function(e){ if(e.key === 'Enter') userSend(); });
 })();
 </script>
 
