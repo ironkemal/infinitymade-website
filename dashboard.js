@@ -6363,20 +6363,10 @@ window.deleteSpecialDay = async function (id) {
   await renderHoursMiniCal();
 };
 
-document.getElementById('sdAddBtn').addEventListener('click', async () => {
-  const von = document.getElementById('sdDate').value;
-  const bis = document.getElementById('sdBis').value;
-  const startTime = document.getElementById('sdStartTime').value;
-  const endTime = document.getElementById('sdEndTime').value;
-  const type = document.getElementById('sdType').value;
-  const note = document.getElementById('sdNote').value.trim();
-  if (!von) { showToast('Von Datum wählen', 'error'); return; }
-
+async function saveSpecialDays(von, bis, startTime, endTime, type, note) {
   const end = bis || von;
   const startDate = new Date(von);
   const endDate = new Date(end);
-  if (endDate < startDate) { showToast('Bis darf nicht vor Von liegen', 'error'); return; }
-
   const ownerId = getOwnerId();
   const rows = [];
   const d = new Date(startDate);
@@ -6399,7 +6389,82 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
   document.getElementById('sdStartTime').value = '';
   document.getElementById('sdEndTime').value = '';
   await renderHoursMiniCal();
+}
+
+document.getElementById('sdAddBtn').addEventListener('click', async () => {
+  const von = document.getElementById('sdDate').value;
+  const bis = document.getElementById('sdBis').value;
+  const startTime = document.getElementById('sdStartTime').value;
+  const endTime = document.getElementById('sdEndTime').value;
+  const type = document.getElementById('sdType').value;
+  const note = document.getElementById('sdNote').value.trim();
+  if (!von) { showToast('Von Datum wählen', 'error'); return; }
+
+  const end = bis || von;
+  const startDate = new Date(von);
+  const endDate = new Date(end);
+  if (endDate < startDate) { showToast('Bis darf nicht vor Von liegen', 'error'); return; }
+
+  // Kapatılan tarih aralığındaki aktif randevuları kontrol et
+  const rangeStart = von + 'T00:00:00';
+  const rangeEnd = end + 'T23:59:59';
+  const ownerId = getOwnerId();
+  const { data: conflicts } = await supabase
+    .from('bookings')
+    .select('id, start_time, end_time, customer_name, services(title)')
+    .eq('owner_id', ownerId)
+    .gte('start_time', rangeStart)
+    .lte('start_time', rangeEnd)
+    .not('status', 'in', '("cancelled","completed","no_show")');
+
+  if (conflicts && conflicts.length > 0) {
+    showSdConflictModal(conflicts, () => saveSpecialDays(von, bis, startTime, endTime, type, note));
+    return;
+  }
+
+  await saveSpecialDays(von, bis, startTime, endTime, type, note);
 });
+
+function showSdConflictModal(conflicts, onConfirm) {
+  const existing = document.getElementById('sdConflictModal');
+  if (existing) existing.remove();
+
+  const fmt = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })
+      + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const listHtml = conflicts.map(b => {
+    const svc = b.services?.title || '';
+    const name = b.customer_name || '';
+    return `<li><strong>${fmt(b.start_time)}</strong>${name ? ' — ' + name : ''}${svc ? ' (' + svc + ')' : ''}</li>`;
+  }).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'sdConflictModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:var(--bg-card-solid,#1e1e2e);border:1px solid var(--border-color,#333);border-radius:14px;padding:28px 32px;max-width:480px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,.5);">
+      <h3 style="margin:0 0 8px;color:var(--text-main,#fff);font-size:17px;">⚠️ Aktive Termine in diesem Zeitraum</h3>
+      <p style="margin:0 0 16px;color:var(--text-faint,#aaa);font-size:14px;">
+        Es gibt <strong style="color:#f59e0b;">${conflicts.length} Termin${conflicts.length > 1 ? 'e' : ''}</strong>, die in den gesperrten Zeitraum fallen. Bitte verschiebe sie zuerst.
+      </p>
+      <ul style="margin:0 0 20px;padding-left:18px;color:var(--text-main,#fff);font-size:13.5px;line-height:1.8;">${listHtml}</ul>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button id="sdConflictCancel" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border-color,#444);background:transparent;color:var(--text-main,#fff);cursor:pointer;font-size:14px;">Abbrechen</button>
+        <button id="sdConflictForce" style="padding:8px 18px;border-radius:8px;border:none;background:#dc2626;color:#fff;cursor:pointer;font-size:14px;font-weight:600;">Trotzdem schließen</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  document.getElementById('sdConflictCancel').addEventListener('click', () => modal.remove());
+  document.getElementById('sdConflictForce').addEventListener('click', () => {
+    modal.remove();
+    onConfirm();
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
 
 async function loadTeam() {
   const ownerId = getOwnerId();
