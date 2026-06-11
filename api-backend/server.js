@@ -60,6 +60,14 @@ app.use((_req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
+// Reject oversized payloads early for all non-rezept routes (prevents memory exhaustion).
+app.use((req, res, next) => {
+  const cl = parseInt(req.headers['content-length'] || '0', 10);
+  if (cl > 256 * 1024 && !req.path.startsWith('/api/rezept/')) {
+    return res.status(413).json({ error: 'Payload zu groß' });
+  }
+  next();
+});
 app.use(express.json({ limit: '15mb' })); // raised for rezept image base64 payloads
 
 // ============================================================================
@@ -689,6 +697,9 @@ async function getAvailableSlots(userId, date, duration, businessId, buffer = 0,
 app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
   const { userId, date, duration, businessId, serviceId } = req.body; // date: YYYY-MM-DD
   if (!userId || !date || !duration) return res.status(400).json({ error: 'Missing params' });
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ error: 'Ungültiges Datumsformat (YYYY-MM-DD erwartet)' });
+  }
 
   try {
     const buffer = parseInt(req.body.buffer) || 0;
@@ -700,11 +711,11 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
     res.json({ slots: result.slots });
   } catch (error) {
     console.error('get-slots error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });
 
-app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
+app.post('/api/booking/create', requireAuthAI, async (req, res) => {
   const { userId, serviceId, date, time, customerName, customerEmail, customerPhone, businessId, leadId } = req.body;
   
   try {
@@ -745,7 +756,8 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     const start_time = berlinLocalToUTC(date, time);
     const end_time = new Date(start_time.getTime() + service.duration_minutes * 60000);
 
-    const owner_id = (req.body.ownerId != null) ? req.body.ownerId : userId; // solopreneur fallback
+    const owner_id = req.auth.tenantId; // always from JWT — never trust body
+    const resolvedOwnerId = req.auth.tenantId;
 
     // businessId verilmiş ve gerçekten bu owner'a aitse onu kullan, aksi halde trigger fallback
     let resolvedBusinessId = null;
@@ -757,13 +769,6 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
         .eq('owner_id', owner_id)
         .maybeSingle();
       if (biz) resolvedBusinessId = biz.id;
-    }
-
-    // Resolve actual owner_id for lead (employee -> owner)
-    let resolvedOwnerId = owner_id;
-    if (!req.body.ownerId) {
-      const { data: empProfile } = await supabase.from('profiles').select('owner_id').eq('id', userId).maybeSingle();
-      resolvedOwnerId = empProfile?.owner_id || userId;
     }
 
     // Check if it's a group service
@@ -1004,7 +1009,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
     res.json({ success: true, booking });
   } catch (err) {
     console.error('Booking create error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });
 
@@ -1027,7 +1032,7 @@ app.post('/api/verify-code', verifyCodeLimiter, async (req, res) => {
     
     res.json({ ownerId: data.id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });
 
@@ -1055,12 +1060,13 @@ app.get('/api/team', requireAuthAI, async (req, res) => {
     if (error) throw error;
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });
 
 app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
-  const { userId, ownerId, serviceId, startDate, time, recurrence, weekdays, count, customerName, customerPhone, notes, duration } = req.body;
+  const { userId, serviceId, startDate, time, recurrence, weekdays, count, customerName, customerPhone, notes, duration } = req.body;
+  const ownerId = req.auth.tenantId; // never trust body — always from JWT
 
   if (!userId || !ownerId || !startDate || !time || !count || count < 1 || count > 52) {
     return res.status(400).json({ error: 'Missing or invalid params' });
@@ -1151,13 +1157,13 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
         if (dbErr.code === '23P01') {
           conflicts.push({ date: dateStr, reason: 'Slot bereits belegt' });
         } else {
-          conflicts.push({ date: dateStr, reason: dbErr.message });
+          conflicts.push({ date: dateStr, reason: 'Datenbankfehler' });
         }
       } else {
         created.push({ id: booking.id, date: dateStr, start_time: booking.start_time });
       }
     } catch (err) {
-      conflicts.push({ date: dateStr, reason: err.message });
+      conflicts.push({ date: dateStr, reason: 'Datenbankfehler' });
     }
   }
 
@@ -1168,11 +1174,12 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
 app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
   try {
     const {
-      ownerId, serviceId, customerId, employeeId,
+      serviceId, customerId, employeeId,
       count = 8, recurrence = 'weekly',
       startDate, weekdays,
       preferredTime, preferences = {}
     } = req.body;
+    const ownerId = req.auth.tenantId; // never trust body — always from JWT
     if (!ownerId || !serviceId || !count) {
       return res.status(400).json({ error: 'ownerId, serviceId, count required' });
     }
@@ -1591,7 +1598,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
 
 // 5c. Batch-create with explicit slots (used after AI confirmation)
 app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) => {
-  const { ownerId, serviceId, slots, customerName, customerPhone, notes, hausbesuch, duration } = req.body;
+  const { serviceId, slots, customerName, customerPhone, notes, hausbesuch, duration } = req.body;
+  const ownerId = req.auth.tenantId; // never trust body — always from JWT
   if (!ownerId || !Array.isArray(slots) || slots.length === 0) {
     return res.status(400).json({ error: 'ownerId and slots[] required' });
   }
@@ -1634,12 +1642,12 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
         status: 'confirmed'
       }).select().single();
       if (error) {
-        conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : error.message });
+        conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : 'Datenbankfehler' });
       } else {
         created.push({ id: bk.id, date: s.date, time: s.time, employeeId: s.employeeId });
       }
     } catch (err) {
-      conflicts.push({ slot: s, reason: err.message });
+      conflicts.push({ slot: s, reason: 'Datenbankfehler' });
     }
   }
   res.json({ created, conflicts, count: created.length });
@@ -1648,8 +1656,9 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
 // 6. Manual Booking (From Admin Panel)
 app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
   try {
-    const { ownerId, employeeId, title, start_time, end_time, customerName, customerPhone } = req.body;
-    
+    const { employeeId, title, start_time, end_time, customerName, customerPhone } = req.body;
+    const ownerId = req.auth.tenantId; // never trust body — always from JWT
+
     const { data, error } = await supabase.from('bookings').insert({
       owner_id: ownerId,
       user_id: employeeId,
@@ -1669,7 +1678,7 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
     }
     res.json({ success: true, booking: data });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Interner Serverfehler' });
   }
 });
 
@@ -2009,7 +2018,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
 
 app.post('/api/rezept/save', requireAuthAI, async (req, res) => {
   try {
-    const { ownerId, patientId, arztName, arztNummer, diagnose, sitzungen, hausbesuch, befund, rezeptDatum } = req.body;
+    const { patientId, arztName, arztNummer, diagnose, sitzungen, hausbesuch, befund, rezeptDatum } = req.body;
+    const ownerId = req.auth.tenantId; // never trust body — always from JWT
     if (!ownerId || !patientId || !arztName) {
       return res.status(400).json({ error: 'ownerId, patientId, arztName required' });
     }
@@ -2095,9 +2105,10 @@ app.post('/api/rezept/save', requireAuthAI, async (req, res) => {
 // never leak across tenants.
 app.post('/api/prescription/lookup-by-phone', requireAuthAI, async (req, res) => {
   try {
-    const { ownerId, phone } = req.body || {};
+    const { phone } = req.body || {};
+    const ownerId = req.auth.tenantId; // never trust body — always from JWT
     if (!ownerId || !phone) {
-      return res.status(400).json({ error: 'ownerId and phone required' });
+      return res.status(400).json({ error: 'phone required' });
     }
     const normalized = String(phone).replace(/\s+/g, '');
 

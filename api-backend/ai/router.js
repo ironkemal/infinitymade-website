@@ -25,7 +25,7 @@ const TASKS = {
 
 const router = express.Router();
 
-router.get('/_health', (_req, res) => {
+router.get('/_health', requireAuth, (req, res) => {
   res.json({ ok: true, tasks: Object.keys(TASKS), azure: configSummary() });
 });
 
