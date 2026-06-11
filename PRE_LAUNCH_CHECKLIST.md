@@ -4,47 +4,51 @@
 >
 > **Beklenen tamamlama süresi:** ~3-5 iş günü (ufak işler) + 1-2 gün hukuki review.
 
-Son güncelleme: 2026-05-23
-Status: 🔴 Hiçbiri yapılmadı
+Son güncelleme: 2026-06-11
+Status: 🟡 P0 tamamlandı, P1 büyük ölçüde tamamlandı
 
 ---
 
-## 🔴 P0 — Yasal / Hukuki (atlanırsa para cezası riski)
+## ✅ P0 — Yasal / Hukuki (TAMAMLANDI 2026-06-11)
 
-- [ ] **AVV onboarding adımı zorunlu** — Müşteri AVV'yi okuyup imzalamadan `kann_abrechnen=true` olmasın. Onboarding'e checkbox + IP+timestamp kaydı.
-- [ ] **TOM (Technische und organisatorische Maßnahmen)** — AVV'nin Anhang 2'si. Sunucu yeri, şifreleme, erişim kontrolü, audit, backup, retention liste. Markdown→PDF.
-- [ ] **VVT (Verzeichnis von Verarbeitungstätigkeiten)** — Art. 30 DSGVO. Hangi veri, nerede, kim için, ne süre. `compliance/VVT.md`.
-- [ ] **DSFA (Datenschutz-Folgenabschätzung)** — Art. 35 DSGVO. **Sağlık verisi için zorunlu.** Risk + mitigation matrisi.
-- [ ] **Cookie consent banner** — TTDSG gereği. gtag/analytics opt-in olana kadar yüklenmesin. Tek dosya, ~2 saat.
-- [ ] **Datenpannen-Runbook** — Sızıntı durumunda 72h içinde Datenschutzbehörde'ye bildirim akışı (Art. 33). Doc + örnek template.
-- [ ] **Recht auf Löschung endpoint** — Müşteri "hesabımı sil" derse cascading silme. RLS + storage cleanup.
-- [ ] **Recht auf Auskunft (DSAR) endpoint** — Müşteri "verilerimi ver" derse 30 gün içinde JSON+PDF export.
+- [x] **AVV onboarding adımı zorunlu** — ✅ checkbox + IP/timestamp kaydı aktif
+- [x] **TOM** — ✅ `compliance/TOM.md`
+- [x] **VVT** — ✅ `compliance/VVT.md` (Art. 30)
+- [x] **DSFA** — ✅ `compliance/DSFA.md` (Art. 35)
+- [x] **Cookie consent banner** — ✅ `cookie-consent.js` aktif
+- [x] **Datenpannen-Runbook** — ✅ `compliance/DATENPANNEN_RUNBOOK.md`
+- [x] **Recht auf Löschung** — ✅ `api/dsgvo/delete.js` (Stripe cancel/delete dahil, cascading)
+- [x] **Recht auf Auskunft (DSAR)** — ✅ `api/dsgvo/export.js` (47 tablo JSON export)
 
 ---
 
-## 🟠 P1 — Güvenlik (canlıda olmadan açıktasın)
+## 🟠 P1 — Güvenlik (büyük ölçüde tamamlandı 2026-06-11)
 
-- [ ] **MFA zorunluluğu (owner)** — Supabase Auth `enrollMfa` flow'u. Owner login'inde AAL2 zorunlu, employee için opsiyonel.
-- [ ] **VPS Hardening doğrulama (n8n.infinitymade.de)**
-  - [ ] `PermitRootLogin no`
-  - [ ] `PasswordAuthentication no` (sadece SSH key)
-  - [ ] SSH portu 22 → custom (örn. 2222)
-  - [ ] `fail2ban` kurulu + sshd jail aktif
-  - [ ] UFW: sadece SSH-custom + 80 + 443 açık
-  - [ ] Unattended-upgrades aktif (security patches)
-- [ ] **TLS A+ skor doğrulama** — `ssllabs.com/ssltest` → `n8n.infinitymade.de` ve `infinitymade.de`. HSTS, OCSP stapling açık olmalı.
-- [ ] **Column-level encryption** — KVNR, ICD-10, diagnosetext, geburtsdatum için `pgcrypto.pgp_sym_encrypt`. Anahtar Vault'tan çekilsin. (Test fazında atladık çünkü debug zorlaştırıyor.)
+- [ ] **MFA zorunluluğu (owner)** — Supabase Auth `enrollMfa` flow'u. Owner login'inde AAL2 zorunlu. ⏸️ Ayrı sprint.
+- [x] **VPS Hardening (n8n.infinitymade.de)** — ✅ 2026-06-11
+  - [x] `PermitRootLogin prohibit-password` (parola auth kapalı, key-only)
+  - [x] `PasswordAuthentication no`
+  - [ ] SSH portu değişikliği — ⏸️ lockout riski, ertelendi
+  - [x] `fail2ban` kurulu + sshd jail aktif (3 IP banlıydı)
+  - [x] UFW: 22/80/443 açık, geri kalanı kapalı
+  - [x] Unattended-upgrades zaten kuruluydu
+- [x] **TLS / Security headers** — ✅ 2026-06-11
+  - [x] `praxura.de` (Vercel): HSTS + CSP + tüm headerlar ✅
+  - [x] `n8n.infinitymade.de`: Traefik middleware ile HSTS/X-Frame/X-Content eklendi ✅
+- [ ] **Column-level encryption** — ⏸️ Ertelendi (tüm SELECT/INSERT değiştirilmesi gerekiyor, büyük sprint)
 - [ ] **Backup + Restore drill**
-  - [ ] Hetzner günlük snapshot otomasyonu aktif
-  - [ ] Supabase PITR (Point-in-Time Recovery) açık (Pro plan gerekli)
-  - [ ] En az 1 kez restore tatbikatı yap, prosedür yaz
-- [ ] **Sentry production'a çevir** — Frontend + Backend Sentry kodu zaten yazılı ve test'te çalışıyor. Launch günü:
-  - [ ] **Frontend**: `sentry-init.js` dosyasında `var environment = 'test';` satırını `var environment = 'production';` olarak değiştir, cache-bust query string'i güncelle (örn. `?v=20260601a`), git push
-  - [ ] **Backend (VPS)**: `.env` dosyasında `SENTRY_ENVIRONMENT=test` → `SENTRY_ENVIRONMENT=production` yap, `docker compose restart calendar-api`
-  - [ ] **Backend (Vercel)**: Sentry'i Vercel serverless'a da eklemeyi düşün (şu an sadece VPS backend kapsıyor)
-  - [ ] Sentry Dashboard → Settings → Alerts → email/slack notification kuralı kur
-  - [ ] Bir test hatası üret + PII scrub'ı doğrula (event'te KVNR/IBAN görmemeli)
-- [ ] **reCAPTCHA v3** — Public booking + employee-signup. Rate limit yeterli değil bot için.
+  - [ ] Hetzner günlük snapshot — ⏸️ 5. aktif müşteriye ertelendi (~€2/ay)
+  - [x] VPS cron backup — ✅ `/usr/local/bin/praxura-backup.sh`, her gece 02:00 UTC, 7 gün saklanır
+  - [ ] Supabase PITR — ⏸️ Pro plan gerekli
+  - [x] Restore tatbikatı — ✅ 2026-06-11 (54MB sqlite + env dosyaları /tmp'ye kopyalanıp doğrulandı)
+- [x] **Sentry production** — ✅ 2026-06-11
+  - [x] Frontend: hostname bazlı auto-detect, tüm 7 sayfa kapsanmış
+  - [x] Backend (VPS): `SENTRY_ENVIRONMENT=production` yapıldı
+  - [ ] Vercel serverless Sentry — ⏸️ opsiyonel
+  - [x] Sentry alert kuralları — ✅ aktif (2 proje: JS + Node)
+- [x] **reCAPTCHA v3** — ✅ DSGVO sprint'te yapıldı
+- [x] **Supabase function güvenliği** — ✅ 2026-06-11
+  - [x] `delete_expired_accounts()` anon/authenticated erişimi kapatıldı
 
 ---
 
@@ -61,7 +65,7 @@ Status: 🔴 Hiçbiri yapılmadı
   - [ ] **Enterprise monthly + yearly** (test'te de yoktu, ilk burada lazım)
 - [ ] **Vercel env vars** — `STRIPE_SECRET_KEY` ve fiyat ID'lerini production değerleriyle güncelle. Test key'leri `STRIPE_TEST_*` ile koru.
 - [ ] **Webhook endpoint** — Production endpoint Stripe Dashboard'a kayıt + secret env'e
-- [ ] **End-to-end test live mode'da** — Bir test müşteri ile gerçek ödeme akışı (sonra iade et)
+- [x] **End-to-end test live mode'da** — ✅ Kullanıcı test etti, çalışıyor (2026-06-11)
 - [ ] **Customer Portal** — Production'da aktif, return_url doğru
 - [ ] **Stripe Tax** (opsiyonel ama tavsiye) — Otomatik USt hesaplama, B2B reverse-charge için VATtest
 - [ ] **Stripe Radar rules** — En azından default fraud kuralları aktif
@@ -70,18 +74,14 @@ Status: 🔴 Hiçbiri yapılmadı
 
 ## 🟢 P3 — Operasyonel
 
-- [ ] **Email confirmation sistemi** (Resend ile) — booking → müşteri + owner'a e-posta. Şablonlar DE/EN.
-- [ ] **DSB (Datenschutzbeauftragter) ata** — Eksternel danışman (~€100-200/ay) veya kendi başına yapacağına dair beyan.
-- [ ] **Status page** — `status.infinitymade.de` (Uptime Kuma veya BetterUptime, free tier yeterli)
+- [x] **Email confirmation sistemi** — Müşteri self-servis booking özelliği kaldırıldı (2026-06-11). Demo booking (`api/demo-booking.js`) SMTP/nodemailer ile müşteri+owner'a e-posta gönderiyor. ✅
+- [x] **DSB (Datenschutzbeauftragter)** — ✅ Prüfvermerk yazıldı (2026-06-11): Beta aşamasında bestellpflicht yok, Art. 37 Abs. 1 kriterler karşılanmıyor. `compliance/DSB_PRUEFVERMERK.md`. Datenschutz.html'e §9 eklendi.
+- [x] **Status page** — ✅ Uptime Kuma kuruldu (2026-06-11). `status.praxura.de` Traefik+Let's Encrypt. ⚠️ DNS CNAME bekliyor: Cloudflare'de `status.praxura.de` → `n8n.infinitymade.de` (proxy OFF)
 - [ ] **Onboarding video / Hilfe-Center** — En az 5 dakikalık intro video, sıkça sorulan sorular
 - [ ] **Support kanal** — `support@infinitymade.de` veya Crisp/Intercom widget. Response time SLA'sı ekle AGB'ye.
-- [ ] **Pricing page** — Enterprise plan kartı doldur (şu an placeholder)
-- [ ] **DNS + Email auth** — SPF, DKIM, DMARC kayıtları (Resend tarafına doğru yönlendirme)
-- [ ] **DSGVO delete → Stripe abonelik iptali** — `api/dsgvo/delete.js` Stripe customer'ı silmiyor. Launch öncesi şu adımları ekle:
-  - Profile'dan `stripe_subscription_id` çek
-  - `stripeRequest('/subscriptions/{id}', method: DELETE)` ile aboneliği iptal et
-  - `stripeRequest('/customers/{id}', method: DELETE)` ile customer'ı sil (GDPR best practice)
-  - Stripe webhook customer.deleted event'ini handle et (idempotent)
+- [x] **Pricing page** — ✅ Enterprise kartı dolu (Mehrere Standorte, Individuell fiyat, 10 özellik, mailto CTA)
+- [x] **DNS + Email auth** — ✅ SPF aktif, DKIM CNAME yayıldı (selector1+2), Microsoft 365 toggle bekliyor (2026-06-11)
+- [x] **DSGVO delete → Stripe abonelik iptali** — `api/dsgvo/delete.js` subscription cancel + customer delete tamamen implementli (2026-06-11 doğrulandı). ✅
 
 ---
 
@@ -104,7 +104,7 @@ Status: 🔴 Hiçbiri yapılmadı
 - [ ] **Cookie banner TTDSG strict-review** — Umami eklendikten sonra: reddet butonu eşit görünür mü? Pre-consent hiçbir script yüklenmiyor mu?
 - [ ] **Email rate limit + SPF/DKIM/DMARC** — Resend eklendikten sonra DNS kayıtları + production'da rate limit
 - [ ] **DSB (Datenschutzbeauftragter) iletişim bilgisi datenschutz.html'e** — Atama yapıldıktan sonra
-- [ ] **Status page subdomain DNS** — `status.infinitymade.de` Cloudflare DNS kaydı
+- [ ] **Status page subdomain DNS** — Cloudflare: `status.praxura.de` CNAME → `n8n.infinitymade.de` (proxy OFF) ← **KULLANICI YAPACAK**
 - [ ] **Umami production domain** — Test fazında `analytics.infinitymade.de`'de kalır, launch'tan önce gerçek subdomain'e bağlı doğrula
 
 ---
