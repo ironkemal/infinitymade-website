@@ -82,7 +82,7 @@ export default async function handler(req, res) {
         automatic_tax: { enabled: false },
         metadata: { user_id: userId, plan_slug: planSlug, interval },
       },
-      idempotencyKey: `checkout_user_${userId}_${planSlug}_${interval}`,
+      idempotencyKey: `checkout_user_${userId}_${planSlug}_${interval}${reactivate ? '_reactivate' : ''}`,
     });
 
     if (!ok) return json(res, 502, { error: 'Checkout session failed', details: data });

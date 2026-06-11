@@ -175,6 +175,8 @@ export default async function handler(req, res) {
       user_id: userId,
       owner_id: userId,
       action: 'dsgvo_deletion',
+      method: 'POST',
+      path: '/api/dsgvo/delete',
       resource: 'profile',
       resource_id: userId,
       metadata: log,
