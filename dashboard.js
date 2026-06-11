@@ -3697,6 +3697,28 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   const now = new Date();
   if (startDate < now) { showToast('Termine in der Vergangenheit können nicht gebucht werden.', 'error'); return; }
 
+  // Working hours check: kapalı gün veya mesai dışı saat → engelle
+  {
+    const dow = startDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
+    const { data: wh } = await supabase
+      .from('working_hours')
+      .select('start_time,end_time,is_active')
+      .eq('user_id', empId)
+      .eq('day_of_week', dow)
+      .eq('is_active', true);
+    if (!wh || wh.length === 0) {
+      showToast('Dieser Tag ist kein Arbeitstag für den gewählten Mitarbeiter.', 'error');
+      return;
+    }
+    const hhmm = startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const withinAny = wh.some(w => hhmm >= w.start_time.substring(0,5) && hhmm < w.end_time.substring(0,5));
+    if (!withinAny) {
+      const ranges = wh.map(w => `${w.start_time.substring(0,5)}–${w.end_time.substring(0,5)}`).join(', ');
+      showToast(`Uhrzeit liegt außerhalb der Arbeitszeit (${ranges}).`, 'error');
+      return;
+    }
+  }
+
   const durGroup = document.getElementById('bkDurationGroup');
   const durOptions = document.getElementById('bkDurationOptions');
   let dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
