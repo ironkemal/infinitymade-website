@@ -42,8 +42,9 @@
   <link rel="stylesheet" href="/cookie-consent.css?v=20260610" />
 
   <!-- ===== Sentry error tracking ===== -->
-  <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous"></script>
-  <script src="/sentry-init.js?v=20260523c"></script>
+  <link rel="preload" href="assets/img/hero-praxura.webp?v=20260611" as="image" type="image/webp" fetchpriority="high" />
+  <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous" async></script>
+  <script src="/sentry-init.js?v=20260523c" defer></script>
 
   <!-- ===== Structured Data: Organization ===== -->
   <script type="application/ld+json">
@@ -1113,9 +1114,12 @@
   </div>
 
   <aside class="px-hero-visual is-visible" data-reveal>
-    <img src="assets/img/hero-praxura.png?v=20260602"
-         alt="Praxura — Therapeutin mit Rezepten und der App in der Hand"
-         class="px-hero-photo" width="2000" height="1414" loading="eager" decoding="async" />
+    <picture>
+      <source srcset="assets/img/hero-praxura.webp?v=20260611" type="image/webp" />
+      <img src="assets/img/hero-praxura.png?v=20260602"
+           alt="Praxura — Therapeutin mit Rezepten und der App in der Hand"
+           class="px-hero-photo" width="2000" height="1414" loading="eager" decoding="async" fetchpriority="high" />
+    </picture>
   </aside>
 </header>
 
@@ -1148,8 +1152,11 @@
       <span class="px-demo-url">app.praxura.de/dashboard</span>
     </div>
     <div class="px-demo-shot">
-      <img src="assets/img/demo-preview.png?v=20260602"
-           alt="Praxura Dashboard — Vorschau der Live-Demo" loading="lazy" decoding="async" />
+      <picture>
+        <source srcset="assets/img/demo-preview.webp?v=20260611" type="image/webp" />
+        <img src="assets/img/demo-preview.png?v=20260602"
+             alt="Praxura Dashboard — Vorschau der Live-Demo" loading="lazy" decoding="async" />
+      </picture>
       <div class="px-demo-overlay">
         <span class="px-demo-popup">Demo starten <span aria-hidden="true">↗</span></span>
       </div>

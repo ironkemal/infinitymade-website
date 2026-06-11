@@ -707,7 +707,7 @@ async function renderOverview() {
           Ihre Daten werden am <strong>${formatted}</strong> (in ${daysLeft} Tag${daysLeft === 1 ? '' : 'en'}) unwiderruflich gelöscht.<br>
           <span style="color:var(--text-muted);">Buchhaltungsbelege bleiben gem. §257 HGB 10 Jahre erhalten.</span><br>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="/api/dsgvo/export?token=" id="deletionExportLink" class="btn-ghost" style="font-size:12px;padding:5px 10px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
+            <a href="/api/dsgvo?action=export&token=" id="deletionExportLink" class="btn-ghost" style="font-size:12px;padding:5px 10px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
               ⬇ Daten exportieren
             </a>
           </div>
@@ -716,7 +716,7 @@ async function renderOverview() {
       (async () => {
         const { data: { session } } = await supabase.auth.getSession();
         const link = document.getElementById('deletionExportLink');
-        if (link && session?.access_token) link.href = `/api/dsgvo/export?token=${encodeURIComponent(session.access_token)}`;
+        if (link && session?.access_token) link.href = `/api/dsgvo?action=export&token=${encodeURIComponent(session.access_token)}`;
       })();
       el.hidden = false;
     }
@@ -1523,7 +1523,7 @@ async function openStripePortal() {
         Buchhaltungsbelege bleiben gemäß §257 HGB für 10 Jahre erhalten.
       </p>
 
-      <a href="/api/dsgvo/export" download style="
+      <a href="/api/dsgvo?action=export" download style="
         display: inline-flex; align-items: center; gap: 0.4rem;
         font-family: var(--mono, monospace); font-size: 0.75rem;
         letter-spacing: 0.06em; text-transform: uppercase;
@@ -8301,7 +8301,7 @@ document.getElementById('dsgvoExportBtn')?.addEventListener('click', async () =>
   btn.textContent = 'Wird vorbereitet...';
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch('/api/dsgvo/export', {
+    const res = await fetch('/api/dsgvo?action=export', {
       headers: { 'Authorization': `Bearer ${session.access_token}` },
     });
     if (!res.ok) {
@@ -8347,7 +8347,7 @@ document.getElementById('dsgvoDeleteBtn')?.addEventListener('click', async () =>
   btn.textContent = 'Wird gelöscht...';
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch('/api/dsgvo/delete', {
+    const res = await fetch('/api/dsgvo?action=delete', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${session.access_token}`,
@@ -15016,7 +15016,7 @@ function showPlanWall(lastPlan) {
         </p>
         ` : ''}
         <div style="margin-bottom: 1.75rem;">
-          <a href="/api/dsgvo/export" download style="
+          <a href="/api/dsgvo?action=export" download style="
             display: inline-flex; align-items: center; gap: 0.4rem;
             font-family: var(--mono, monospace); font-size: 0.74rem;
             letter-spacing: 0.06em; text-transform: uppercase;
