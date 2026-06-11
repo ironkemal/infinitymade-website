@@ -15,3 +15,5 @@ azure-credentials.local.txt
 
 # Local-only security audit reports (do not publish to public repo)
 SECURITY_AUDIT_*.md
+AUDIT_SECURITY.md
+AUDIT_*.md

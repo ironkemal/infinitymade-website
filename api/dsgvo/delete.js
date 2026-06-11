@@ -75,6 +75,14 @@ export default async function handler(req, res) {
   if (!user) return json(res, 401, { error: error || 'Unauthorized' });
   const userId = user.id;
 
+  // Rate limit: reject if a deletion was already logged for this account.
+  const { ok: rlOk, data: rlRows } = await adminFetch(
+    `/data_access_log?user_id=eq.${encodeURIComponent(userId)}&action=eq.dsgvo_deletion&select=id&limit=1`
+  );
+  if (rlOk && Array.isArray(rlRows) && rlRows.length > 0) {
+    return json(res, 429, { error: 'Ihr Konto befindet sich bereits im Löschprozess.' });
+  }
+
   const log = { user_id: userId, started_at: new Date().toISOString(), steps: [] };
 
   // 0. Stripe cleanup (DSGVO Art. 17 — cancel subscription + delete customer)

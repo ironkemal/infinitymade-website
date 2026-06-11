@@ -82,7 +82,7 @@ export default async function handler(req, res) {
         automatic_tax: { enabled: false },
         metadata: { user_id: userId, plan_slug: planSlug, interval },
       },
-      idempotencyKey: `checkout_user_${userId}_${planSlug}_${interval}_${Date.now()}`,
+      idempotencyKey: `checkout_user_${userId}_${planSlug}_${interval}`,
     });
 
     if (!ok) return json(res, 502, { error: 'Checkout session failed', details: data });
@@ -130,7 +130,7 @@ export default async function handler(req, res) {
       automatic_tax: { enabled: false },
       metadata: { pending_id, plan_slug: planSlug, interval },
     },
-    idempotencyKey: `checkout_pending_${pending_id}_${planSlug}_${interval}_${Date.now()}`,
+    idempotencyKey: `checkout_pending_${pending_id}_${planSlug}_${interval}`,
   });
 
   if (!ok) return json(res, 502, { error: 'Checkout session failed', details: data });
