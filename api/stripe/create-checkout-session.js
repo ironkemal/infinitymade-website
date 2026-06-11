@@ -99,6 +99,17 @@ export default async function handler(req, res) {
   if (!pOk || !pendingRows?.[0]) return json(res, 404, { error: 'Pending signup not found' });
   const pending = pendingRows[0];
 
+  // Reject if pending signup is older than 48 hours (expired)
+  const createdAt = new Date(pending.created_at);
+  if (Date.now() - createdAt.getTime() > 48 * 60 * 60 * 1000) {
+    return json(res, 410, { error: 'Anmeldung abgelaufen. Bitte erneut registrieren.' });
+  }
+
+  // Reject if a checkout session was already created (replay prevention)
+  if (pending.stripe_checkout_session_id) {
+    return json(res, 409, { error: 'Checkout bereits gestartet. Bitte E-Mail prüfen.' });
+  }
+
   // Create Stripe customer
   const { ok: cOk, data: cData } = await stripeRequest('/customers', {
     method: 'POST',
