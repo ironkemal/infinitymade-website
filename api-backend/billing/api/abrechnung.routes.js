@@ -18,6 +18,9 @@ import { renderBegleitzettel } from '../pdf/begleitzettel.template.js';
 import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
 import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js';
+import { renderRechnung } from '../pdf/rechnung.template.js';
+import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
+import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
 import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
 import { buildTarifkennzeichen } from '../codes/anlage3_v22.js';
@@ -965,6 +968,178 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     return res.send(html);
   } catch (e) {
     console.error('[zuzahlungsrechnung/print]', e);
+    return res.status(500).send('Server-Fehler: ' + e.message);
+  }
+});
+
+// GET /api/billing/prescription/:id/rechnung?type=TYPE
+// Renders print-ready document for rechnung_privat|selbstzahler|eigenanteil|sonder|bg,
+// rzg_quittung, or rezeptvorderseite — applies owner's default vorlage settings.
+router.get('/prescription/:id/rechnung', async (req, res) => {
+  const VALID_TYPES = ['rechnung_privat','rechnung_selbstzahler','rechnung_eigenanteil',
+                       'rechnung_sonder','rechnung_bg','rzg_quittung','rezeptvorderseite'];
+  const type = req.query.type;
+  if (!type || !VALID_TYPES.includes(type)) {
+    return res.status(400).send('Ungültiger Dokumenttyp');
+  }
+
+  try {
+    // ---- Auth ----
+    const authHdr = req.headers.authorization || '';
+    const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (req.query.token || null);
+    if (!token) return res.status(401).send('Nicht autorisiert');
+    const { data: { user }, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !user) return res.status(401).send('Ungültiges Token');
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text')
+      .eq('id', user.id).single();
+    if (!profile) return res.status(403).send('Profil nicht gefunden');
+    const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
+
+    // ---- Owner's default vorlage for this type ----
+    const { data: vorlage } = await supabase
+      .from('document_vorlagen')
+      .select('content_json')
+      .eq('owner_id', tenantId)
+      .eq('vorlage_type', type)
+      .eq('is_default', true)
+      .maybeSingle();
+    const cj = vorlage?.content_json || {};
+
+    // ---- Fetch Prescription + Patient + Arzt + Sessions ----
+    const { data: rx, error: rxErr } = await supabase
+      .from('prescriptions')
+      .select(`
+        *,
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city),
+        aerzte:arzt_id (arzt_name),
+        prescription_sessions (id, session_number, status, done_at)
+      `)
+      .eq('id', req.params.id)
+      .single();
+
+    if (rxErr || !rx) return res.status(404).send('Rezept nicht gefunden');
+    if (rx.owner_id !== tenantId) return res.status(403).send('Kein Zugriff');
+
+    // ---- Shared data ----
+    const storedPos = rx.heilmittel_position || '';
+    const pos = findPosition(storedPos, '22');
+    const priceUnit = pos?.preis ?? 0;
+    const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
+    const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
+
+    const praxisData = {
+      name: profile.business_name || 'Praxis für Physiotherapie',
+      strasse: [profile.street, profile.house_number].filter(Boolean).join(' '),
+      plz_ort: [profile.zip, profile.city].filter(Boolean).join(' '),
+      telefon: profile.phone || '',
+      ik: profile.ik_number || '',
+      steuernummer: '',
+      email: user.email || ''
+    };
+    const patientData = {
+      nachname: rx.leads?.last_name || '',
+      vorname: rx.leads?.first_name || '',
+      strasse: rx.leads?.street || '',
+      plz: rx.leads?.plz || '',
+      ort: rx.leads?.city || '',
+      geburtsdatum: rx.leads?.geburtsdatum || '',
+      kvnr: rx.leads?.versichertennummer || ''
+    };
+    const verordnungData = {
+      ausstellungsdatum: rx.ausstellungsdatum,
+      krankenkasse: rx.leads?.krankenkasse || '',
+      arzt: rx.aerzte?.arzt_name || 'Hausarzt',
+      icd10: rx.icd10 || '',
+      heilmittel: rx.heilmittel || '',
+      frequenz: rx.frequenz || ''
+    };
+    const logoUrl = profile.praxis_logo_url || '';
+    const invoiceFooterText = cj.fusszeile || profile.invoice_footer_text || '';
+
+    let html = '';
+
+    if (type === 'rezeptvorderseite') {
+      html = renderRezeptvorderseite({
+        praxis: praxisData,
+        patient: patientData,
+        verordnung: verordnungData,
+        logoUrl,
+        praxisZusatz: cj.praxis_zusatz || null,
+        stempelHinweis: cj.stempel_hinweis || null
+      });
+
+    } else if (type === 'rzg_quittung') {
+      const calcSessions = doneSessions.map(s => ({
+        preis_eur: priceUnit,
+        zuzahlung_eur_position: rx.zuzahlung_befreit ? 0 : coPayUnit,
+        position_frei: rx.zuzahlung_befreit
+      }));
+      const totals = calcAbrechnungsfallZuzahlung({
+        sessions: calcSessions,
+        patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
+        behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
+        verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
+      });
+      const printSessions = doneSessions.map(s => ({
+        datum: s.done_at,
+        position: storedPos,
+        bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
+        zuzahlung: rx.zuzahlung_befreit ? 0 : coPayUnit
+      }));
+      html = renderRzgQuittung({
+        praxis: praxisData,
+        patient: patientData,
+        verordnung: verordnungData,
+        rechnung: {
+          nummer: `RZG-${rx.id.slice(0, 8).toUpperCase()}`,
+          datum: new Date()
+        },
+        sessions: printSessions,
+        totals,
+        logoUrl,
+        invoiceFooterText,
+        unterschriftLabel: cj.unterschrift_label || null,
+        fusszeile: cj.fusszeile || null
+      });
+
+    } else {
+      // rechnung_privat | rechnung_selbstzahler | rechnung_eigenanteil | rechnung_sonder | rechnung_bg
+      const zahlungszielTage = parseInt(cj.zahlungsziel_tage, 10) || 14;
+      const bruttoSum = doneSessions.length * priceUnit;
+      const printSessions = doneSessions.map(s => ({
+        datum: s.done_at,
+        position: storedPos,
+        bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
+        brutto: priceUnit
+      }));
+      html = renderRechnung({
+        type,
+        praxis: praxisData,
+        patient: patientData,
+        verordnung: verordnungData,
+        rechnung: {
+          nummer: `RE-${rx.id.slice(0, 8).toUpperCase()}`,
+          datum: new Date(),
+          faelligkeit: new Date(Date.now() + zahlungszielTage * 24 * 60 * 60 * 1000),
+          kvnr: rx.leads?.versichertennummer || '',
+          bg_aktenzeichen: rx.bg_aktenzeichen || ''
+        },
+        sessions: printSessions,
+        totals: { brutto: bruttoSum, netto: bruttoSum, mwst: 0, gesamt: bruttoSum },
+        bankverbindung: 'DE89 1002 0030 0040 0500 00 (Musterbank)',
+        logoUrl,
+        invoiceFooterText,
+        betreff: cj.betreff || null
+      });
+    }
+
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (e) {
+    console.error('[rechnung/print]', e);
     return res.status(500).send('Server-Fehler: ' + e.message);
   }
 });
