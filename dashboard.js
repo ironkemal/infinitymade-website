@@ -2368,8 +2368,79 @@ async function openBookingActionModal(booking) {
     bkActionTimer = setInterval(() => updateNoShowButton(booking.start_time), 30000);
   }
 
-  // No-show geçmiş uyarısı
+  // --- Hasta profil kartı + aktif reçeteler ---
   const leadId = booking.lead_id || null;
+  const patientCard = document.getElementById('bkPatientCard');
+  const patientInfo = document.getElementById('bkPatientInfo');
+  if (patientCard) patientCard.hidden = true;
+
+  if (leadId) {
+    // Lead + aktif Heilmittelverordnungen paralel yükle
+    const [{ data: lead }, { data: aktiveRxs }] = await Promise.all([
+      supabase.from('leads')
+        .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status')
+        .eq('id', leadId).maybeSingle(),
+      supabase.from('heilmittel_rezepte')
+        .select('id,heilmittel,heilmittel_position,anzahl_behandlungen,ausstellungsdatum,status')
+        .eq('patient_id', leadId)
+        .not('status', 'in', '("completed","billed","cancelled")')
+        .order('created_at', { ascending: false })
+        .limit(5)
+    ]);
+
+    if (lead && patientCard) {
+      const md = lead.metadata || {};
+      const dob = lead.geburtsdatum || md.geburtsdatum || '';
+      const dobStr = dob ? new Date(dob).toLocaleDateString('de-DE') : '—';
+      const krankenkasse = lead.krankenkasse || md.krankenkasse || '—';
+      const vNr = lead.versichertennummer || md.krankenkassennummer || '—';
+      const addrParts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
+      const addr = addrParts.length ? addrParts.join(', ') : '—';
+      const sex = md.geschlecht || lead.geschlecht || '—';
+
+      const row = (label, val) => `
+        <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
+        <div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val||'—'))}</div></div>`;
+
+      patientInfo.innerHTML = [
+        row('Geburtsdatum', dobStr),
+        row('Geschlecht', sex),
+        row('Telefon', lead.phone || '—'),
+        row('E-Mail', lead.email || '—'),
+        row('Krankenkasse', krankenkasse),
+        row('Versicherten-Nr.', vNr),
+        row('Adresse', addr),
+        row('Status', lead.status || '—'),
+      ].join('');
+
+      // "Vollständiges Profil" button
+      const openBtn = document.getElementById('bkOpenPatientBtn');
+      if (openBtn) openBtn.onclick = () => openPatientDetailModal(lead);
+
+      patientCard.hidden = false;
+    }
+
+    // Aktive Verordnungen
+    const rezWrap = document.getElementById('bkRezepteWrap');
+    const rezList = document.getElementById('bkRezepteList');
+    if (rezWrap && rezList && aktiveRxs && aktiveRxs.length > 0) {
+      rezList.innerHTML = aktiveRxs.map(rx => {
+        const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+        return `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <span style="color:var(--text-main);font-weight:500;">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</span>
+            <span style="color:var(--text-muted);margin-left:4px;">${issued}</span>
+          </div>
+          <span style="color:var(--text-muted);">${rx.anzahl_behandlungen || '?'}×</span>
+        </div>`;
+      }).join('');
+      rezWrap.hidden = false;
+    } else if (rezWrap) {
+      rezWrap.hidden = true;
+    }
+  }
+
+  // No-show geçmiş uyarısı
   const noShowWarningEl = document.getElementById('bkActionNoShowWarning');
   if (noShowWarningEl) {
     noShowWarningEl.hidden = true;

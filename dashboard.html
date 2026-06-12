@@ -2204,48 +2204,7 @@
               </div>
             </div>
 
-            <!-- Vorlage create/edit modal -->
-            <div class="modal-overlay" id="vorlagenModal" hidden>
-              <div class="modal" style="max-width:560px;">
-                <div class="modal-header">
-                  <span class="modal-title" id="vorlagenModalTitle">Neue Vorlage</span>
-                  <button class="modal-close" onclick="document.getElementById('vorlagenModal').hidden=true">✕</button>
-                </div>
-                <div class="modal-body">
-                  <input type="hidden" id="vorlagenEditId" />
-                  <div class="form-group">
-                    <label class="form-label">Name *</label>
-                    <input class="form-input" id="vorlagenName" type="text" placeholder="z. B. Standard-Quittung 2026" maxlength="80" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Typ *</label>
-                    <select class="form-select" id="vorlagenType" onchange="renderVorlagenContentForm(this.value, {})">
-                      <option value="quittung_zuzahlung">Quittung Zuzahlung</option>
-                      <option value="rechnung_bg">Rechnung BG</option>
-                      <option value="rechnung_privat">Rechnung Privat</option>
-                      <option value="rechnung_eigenanteil">Rechnung Eigenanteil</option>
-                      <option value="rechnung_selbstzahler">Rechnung Selbstzahler</option>
-                      <option value="rechnung_sonder">Rechnung Sonder</option>
-                      <option value="rezeptvorderseite">Rezeptvorderseite</option>
-                      <option value="rzg_quittung">RZG-Quittung</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                      <input type="checkbox" id="vorlagenIsDefault" style="width:16px;height:16px;accent-color:var(--accent);" />
-                      Als Standard für diesen Typ setzen
-                    </label>
-                    <div class="form-hint">Es kann pro Typ nur eine Standard-Vorlage geben.</div>
-                  </div>
-                  <div id="vorlagenContentForm" style="display:flex;flex-direction:column;gap:10px;"></div>
-                  <div class="form-hint" style="margin-top:4px;">Felder je nach Vorlagen-Typ. Leer lassen = Standardwert.</div>
-                  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('vorlagenModal').hidden=true">Abbrechen</button>
-                    <button type="button" class="btn-primary" id="vorlagenSaveBtn">Speichern</button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- vorlagenModal moved to body level -->
 
             <div class="settings-section" id="settingsAccountSection">
               <div class="settings-section-title" data-i18n="set_account">Konto</div>
@@ -3600,6 +3559,20 @@
           <div id="bkDetailDuration" style="font-size:12px;color:var(--text-muted);"></div>
         </div>
 
+        <!-- Hasta Profil Kartı -->
+        <div id="bkPatientCard" hidden style="border:1px solid var(--border,#374151);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Patient</div>
+            <button id="bkOpenPatientBtn" class="btn-ghost btn-sm" style="font-size:11px;">Vollständiges Profil →</button>
+          </div>
+          <div id="bkPatientInfo" style="padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px;"></div>
+          <!-- Aktive Rezepte -->
+          <div id="bkRezepteWrap" hidden style="padding:0 12px 10px;">
+            <div style="font-size:10px;font-weight:600;color:var(--accent,#b1891b);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Aktive Verordnungen</div>
+            <div id="bkRezepteList"></div>
+          </div>
+        </div>
+
         <!-- Heilmittel / Rezept Bilgisi -->
         <div id="bkRxInfoCard" hidden style="background:rgba(177,137,27,0.08);border:1px solid rgba(177,137,27,0.25);border-radius:8px;padding:10px;margin-bottom:12px;">
           <div style="font-size:11px;font-weight:600;color:var(--accent,#b1891b);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Heilmittelverordnung</div>
@@ -4204,6 +4177,49 @@
     </div>
   </div>
 </div>
+
+  <!-- Vorlage create/edit modal — body-level so it works from any panel -->
+  <div class="modal-overlay" id="vorlagenModal" hidden>
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <span class="modal-title" id="vorlagenModalTitle">Neue Vorlage</span>
+        <button class="modal-close" onclick="document.getElementById('vorlagenModal').hidden=true">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="vorlagenEditId" />
+        <div class="form-group">
+          <label class="form-label">Name *</label>
+          <input class="form-input" id="vorlagenName" type="text" placeholder="z. B. Standard-Quittung 2026" maxlength="80" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Typ *</label>
+          <select class="form-select" id="vorlagenType" onchange="renderVorlagenContentForm(this.value, {})">
+            <option value="quittung_zuzahlung">Quittung Zuzahlung</option>
+            <option value="rechnung_bg">Rechnung BG</option>
+            <option value="rechnung_privat">Rechnung Privat</option>
+            <option value="rechnung_eigenanteil">Rechnung Eigenanteil</option>
+            <option value="rechnung_selbstzahler">Rechnung Selbstzahler</option>
+            <option value="rechnung_sonder">Rechnung Sonder</option>
+            <option value="rezeptvorderseite">Rezeptvorderseite</option>
+            <option value="rzg_quittung">RZG-Quittung</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="vorlagenIsDefault" style="width:16px;height:16px;accent-color:var(--accent);" />
+            Als Standard für diesen Typ setzen
+          </label>
+          <div class="form-hint">Es kann pro Typ nur eine Standard-Vorlage geben.</div>
+        </div>
+        <div id="vorlagenContentForm" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div class="form-hint" style="margin-top:4px;">Felder je nach Vorlagen-Typ. Leer lassen = Standardwert.</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+          <button type="button" class="btn-secondary" onclick="document.getElementById('vorlagenModal').hidden=true">Abbrechen</button>
+          <button type="button" class="btn-primary" id="vorlagenSaveBtn">Speichern</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="dashboard.js?v=20260612"></script>
 </body>
