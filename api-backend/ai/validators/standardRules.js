@@ -119,7 +119,8 @@ export function validateStandard(rezept) {
 
   // Zuzahlung
   const under18 = isUnder18(rezept.patient_geburtsdatum, ausstellung);
-  const zuzahlungRequired = !under18;
+  const isPrivat = rezept?.insurance_type === 'privat';
+  const zuzahlungRequired = !under18 && !isPrivat;
   if (under18 && rezept.patient_geburtsdatum) {
     warnings.push({
       code: 'ZUZAHLUNG_BEFREIT',

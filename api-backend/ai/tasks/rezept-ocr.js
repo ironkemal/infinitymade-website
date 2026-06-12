@@ -101,7 +101,8 @@ function mockResponse() {
       unterschrift_vorhanden: true,
       signature_confidence: 'high'
     },
-    ocr_confidence: 0.92
+    ocr_confidence: 0.92,
+    insurance_type_hint: 'gkv'
   });
 }
 
@@ -162,9 +163,14 @@ export async function run(payload) {
     ? Math.max(0, Math.min(1, parsed.ocr_confidence))
     : null;
 
+  // Derive a hint from OCR: KVNR present → likely GKV; absent → likely Privat
+  const kvnr = parsed?.patient?.versichertennummer;
+  const insurance_type_hint = kvnr ? 'gkv' : 'privat';
+
   return {
     parsed,
     ocr_confidence,
+    insurance_type_hint,
     _meta: {
       model: result.model,
       deployment: result.deployment,

@@ -44,6 +44,10 @@ export function calcAbrechnungsfallZuzahlung({
   behandlungsende,
   verordnung_zuzahlungsfrei = false,
 }) {
+  if (patient?.insurance_type === 'privat') {
+    return { zuzahlung_eur: 0, befreit: false, grund: 'privat' };
+  }
+
   const brutto = r2(sessions.reduce((a, s) => a + (+s.preis_eur || 0), 0));
 
   let befreiungsgrund = null;

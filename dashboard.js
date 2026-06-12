@@ -401,6 +401,7 @@ let leadFilter = 'all';
 let leadSearchVal = '';
 let invLines = [];
 let invPatientId = null;
+let invPatientInsuranceType = null;
 let invPrescriptionId = null;
 let invListCache = [];
 let prefillNotesPatientId = null;
@@ -2417,7 +2418,7 @@ async function openBookingActionModal(booking) {
     // Lead + aktif Heilmittelverordnungen paralel yükle
     const [{ data: lead }, { data: aktiveRxs }, { data: anamneseData }, { data: patNotesData }, { data: zuzahlBefreiung }] = await Promise.all([
       supabase.from('leads')
-        .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status')
+        .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
       supabase.from('prescriptions')
         .select('id,heilmittel,heilmittel_position,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend')
@@ -2482,6 +2483,22 @@ async function openBookingActionModal(booking) {
           zbBadge.hidden = false;
         } else {
           zbBadge.hidden = true;
+        }
+      }
+
+      // Insurance type badge
+      const insBadge = document.getElementById('bkInsuranceBadge');
+      if (insBadge) {
+        if (lead.insurance_type === 'gkv') {
+          insBadge.textContent = 'GKV';
+          insBadge.style.cssText = 'font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);';
+          insBadge.hidden = false;
+        } else if (lead.insurance_type === 'privat') {
+          insBadge.textContent = 'Privat';
+          insBadge.style.cssText = 'font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(177,137,27,0.15);color:#b1891b;border:1px solid rgba(177,137,27,0.3);';
+          insBadge.hidden = false;
+        } else {
+          insBadge.hidden = true;
         }
       }
 
@@ -5541,8 +5558,11 @@ function renderLeads() {
     const bd = leadBirthDate(r);
     const sessionLabel = bkCount > 0 ? `Seans ${bkCount + 1}` : '';
     const standort = bizNameById.get(r.business_id) || '—';
+    const insBadge = r.insurance_type
+      ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${r.insurance_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:#60a5fa;' : 'background:rgba(177,137,27,0.15);color:#b1891b;'}">${r.insurance_type.toUpperCase()}</span>`
+      : '';
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
-      <td>${displayName(r)}${bd ? ` <span style="color:var(--text-muted);font-size:12px;">· ${bd}</span>` : ''}</td>
+      <td>${displayName(r)}${insBadge}${bd ? ` <span style="color:var(--text-muted);font-size:12px;">· ${bd}</span>` : ''}</td>
       <td>${r.city || '—'}</td>
       <td>${r.phone || '—'}</td>
       <td>${r.email || '—'}</td>
@@ -6371,10 +6391,12 @@ async function openLeadModal(lead) {
   const physioRow2 = document.getElementById('lead-physio-row2');
   const arztRow = document.getElementById('lead-arzt-row');
   const hausbesuchRow = document.getElementById('lead-hausbesuch-row');
+  const insuranceRow = document.getElementById('lead-insurance-row');
 
   if (isPraxisSector(sector)) {
     sectorFieldsEl.style.display = 'block';
-    physioRow.style.display = 'grid';
+    if (insuranceRow) insuranceRow.style.display = 'grid';
+    // physioRow (Krankenkasse) only shown if GKV is selected — toggled by radio listener
     physioRow2.style.display = 'grid';
     if (arztRow) arztRow.style.display = 'grid';
     hausbesuchRow.style.display = 'grid';
@@ -6414,8 +6436,21 @@ async function openLeadModal(lead) {
     const hb = !!md.hausbesuch;
     document.getElementById('lead-hausbesuch').checked = hb;
     toggleLeadHausbesuchUI(hb);
+
+    // Populate insurance_type radio on edit
+    const insType = lead?.insurance_type || '';
+    // Reset first
+    document.querySelectorAll('input[name="lead_insurance_type"]').forEach(r => { r.checked = false; });
+    if (insType) {
+      const radio = document.querySelector(`input[name="lead_insurance_type"][value="${insType}"]`);
+      if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+    } else {
+      // No insurance type set: hide the Krankenkasse row until user picks one
+      physioRow.style.display = 'none';
+    }
   } else {
     sectorFieldsEl.style.display = 'none';
+    if (insuranceRow) insuranceRow.style.display = 'none';
     physioRow.style.display = 'none';
     physioRow2.style.display = 'none';
     if (arztRow) arztRow.style.display = 'none';
@@ -6470,6 +6505,15 @@ function toggleLeadHausbesuchUI(checked) {
 
 document.getElementById('lead-hausbesuch')?.addEventListener('change', e => {
   toggleLeadHausbesuchUI(e.target.checked);
+});
+
+document.querySelectorAll('input[name="lead_insurance_type"]').forEach(r => {
+  r.addEventListener('change', () => {
+    const isGkv = document.getElementById('lead-ins-gkv').checked;
+    document.getElementById('lead-physio-row').style.display = isGkv ? 'grid' : 'none';
+    const arztRow = document.getElementById('lead-arzt-row');
+    if (arztRow) arztRow.style.display = 'grid';
+  });
 });
 
 document.getElementById('leadSaveBtn').addEventListener('click', async () => {
@@ -6531,7 +6575,8 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     metadata: Object.keys(metadata).length ? metadata : null,
     krankenkasse: document.getElementById('lead-krankenkasse').value || null,
     versichertennummer: document.getElementById('lead-krankenkassennummer').value.trim() || null,
-    arzt_id: document.getElementById('lead-arzt')?.value || null
+    arzt_id: document.getElementById('lead-arzt')?.value || null,
+    insurance_type: document.querySelector('input[name="lead_insurance_type"]:checked')?.value || null
   };
 
   // Adres değiştiyse cache'lenmiş rota geçersiz → temizle (Wave 3 Berechnen'de yeniden hesaplanır)
@@ -6691,6 +6736,13 @@ async function loadServices() {
   renderSrvEmpCheckboxes();
 }
 
+const GKV_PRICES = {
+  'X0501': 29.63, 'X1201': 35.59, 'X0205': 35.97, 'X0201': 53.94,
+  'X0202': 71.94, 'X0710': 47.06, 'X0106': 21.63, 'X1104': 8.63,
+  'X0301': 13.68, 'X0507': 55.81, 'X0702': 88.94, 'X1302': 8.43,
+  'X1501': 16.16, 'X1534': 11.95
+};
+
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
   const addCard = `<div class="service-card add-service-card" id="addServiceCard">
@@ -6721,6 +6773,13 @@ function renderServices() {
     }
 
     const codeTag = s.code ? `<span class="srv-code-badge">${escapeHtml(s.code)}</span>` : '';
+    const gkvPrice = s.gkv_position_nr ? GKV_PRICES[s.gkv_position_nr] : null;
+    const privatPrice = s.price != null ? parseFloat(s.price) : null;
+    const priceInfo = gkvPrice
+      ? `<span style="font-size:11px;color:var(--text-muted);">GKV: <b style="color:#60a5fa;">€${gkvPrice.toFixed(2).replace('.',',')} </b> | Privat: <b style="color:var(--accent,#b1891b);">€${privatPrice != null ? privatPrice.toFixed(2).replace('.',',') : '—'}</b></span>`
+      : privatPrice != null
+        ? `<span style="font-size:11px;color:var(--text-muted);">Privat: <b style="color:var(--accent,#b1891b);">€${privatPrice.toFixed(2).replace('.',',')}</b></span>`
+        : '';
     return `<div class="service-card" data-srv-id="${s.id}">
       <div class="service-card-head">
         <div class="service-title">${escapeHtml(s.title)} ${codeTag}</div>
@@ -6729,6 +6788,7 @@ function renderServices() {
         </button>
       </div>
       <div class="srv-chip-row">${durChips}</div>
+      ${priceInfo ? `<div class="service-meta" style="margin-top:4px;">${priceInfo}</div>` : ''}
       <div class="service-meta service-emps">${empNames ? '<span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">' + ICON.users + '</span>' + escapeHtml(empNames) : '— Alle Mitarbeiter'}</div>
     </div>`;
   }).join('') + addCard;
@@ -6767,6 +6827,7 @@ function resetServiceForm() {
   document.getElementById('srvEditId').value = '';
   document.getElementById('srvTitle').value = '';
   document.getElementById('srvCode').value = '';
+  document.getElementById('srvGkvPosition').value = '';
   document.getElementById('srvDur').value = '30';
   document.getElementById('srvPrice').value = '0';
   document.getElementById('srvEmpAll').checked = true;
@@ -6800,6 +6861,7 @@ function openServiceEdit(id) {
     }
   }
   renderPhysioServiceCards(durations);
+  document.getElementById('srvGkvPosition').value = s.gkv_position_nr || '';
 
   const assignedIds = new Set((s.employee_services || []).map(es => es.employee_id));
   const allChecked = assignedIds.size === 0 || assignedIds.size === teamMembers.length;
@@ -6905,6 +6967,7 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   // Backward-compat fields use the smallest active duration
   const payload = {
     title, code,
+    gkv_position_nr: document.getElementById('srvGkvPosition').value || null,
     price_config: { durations },
     duration_minutes: activeDurs[0].minutes,
     price: activeDurs[0].price
@@ -9285,9 +9348,9 @@ async function loadVorlagenPanel() {
           <div class="vorlage-card-title" data-vorlage-id="${v.id}" title="Doppelklick zum Umbenennen" style="cursor:text;">${escapeHtml(v.name)}</div>
           <div class="vorlage-card-type">${escapeHtml(typeLabel)}${isDefault ? ' <span class="vorlage-default-badge">Standard</span>' : ''}</div>
           <div class="vorlage-card-actions">
-            <button class="btn-ghost btn-sm" onclick="openVorlagenEdit('${v.id}')">Bearbeiten</button>
-            <button class="btn-ghost btn-sm" onclick="duplicateVorlage('${v.id}')">Kopieren</button>
-            <button class="btn-ghost btn-sm" style="color:#f87171;" onclick="deleteVorlage('${v.id}')">Löschen</button>
+            <button class="btn-ghost btn-sm" data-action="bearbeiten">Bearbeiten</button>
+            <button class="btn-ghost btn-sm" data-action="kopieren">Kopieren</button>
+            <button class="btn-ghost btn-sm" style="color:#f87171;" data-action="loeschen">Löschen</button>
           </div>
         </div>
       </div>`;
@@ -9311,7 +9374,7 @@ async function loadVorlagenPanel() {
     });
   }, 50);
 
-  // Click listeners: preview click → Ansicht modal; title double-click → inline rename
+  // Click listeners: preview click → Ansicht modal; title double-click → inline rename; buttons
   setTimeout(() => {
     grid.querySelectorAll('.vorlage-card').forEach(card => {
       const vId = card.getAttribute('data-vorlage-id');
@@ -9324,6 +9387,10 @@ async function loadVorlagenPanel() {
           startVorlagenInlineRename(titleEl, vId, vorlagen);
         });
       }
+
+      card.querySelector('[data-action="bearbeiten"]')?.addEventListener('click', (e) => { e.stopPropagation(); openVorlagenEdit(vId); });
+      card.querySelector('[data-action="kopieren"]')?.addEventListener('click', (e) => { e.stopPropagation(); duplicateVorlage(vId); });
+      card.querySelector('[data-action="loeschen"]')?.addEventListener('click', (e) => { e.stopPropagation(); deleteVorlage(vId); });
     });
   }, 100);
 }
@@ -9342,6 +9409,7 @@ function escHTML(s) {
 function getVorlagenSampleHtml(v, editMode = false) {
   const cj = (typeof v.content_json === 'object' && v.content_json) ? v.content_json : {};
   const praxisName = (typeof currentProfile !== 'undefined' && currentProfile?.business_name) || 'Muster-Praxis GmbH';
+  const logoUrl = (typeof currentProfile !== 'undefined' && currentProfile?.praxis_logo_url) || '';
   const hinweis = cj.hinweis || '';
   const fusszeile = cj.fusszeile || `${praxisName} · Musterstr. 1 · 10115 Berlin`;
   const betreff = cj.betreff || '';
@@ -9415,8 +9483,11 @@ td{padding:2mm 3mm;border-bottom:1px solid #e6eaef}
 .num{text-align:right}
 .total-row{font-weight:700;font-size:11pt;border-top:2px solid ${accent}}
 .hinweis{background:#fff8e6;border:1px solid #f4d56b;border-radius:3pt;padding:3mm;margin:4mm 0;font-size:8.5pt}
-footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #ccc;font-size:7.5pt;color:#666;display:flex;gap:10mm}
+footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #ccc;font-size:7.5pt;color:#666;display:flex;gap:10mm;align-items:flex-end}
 footer div{flex:1}
+.logo-block{text-align:right;flex-shrink:0}
+.logo-block img{max-height:40px;max-width:120px;object-fit:contain}
+@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.doc{outline:1pt solid #ddd}}
 ${editMode ? `
 .vl-edit { outline:none; border-bottom:2px dashed rgba(177,137,27,0.7); padding:1px 3px; border-radius:2px; cursor:text; min-width:20px; display:inline-block; }
 .vl-edit:hover { border-bottom-color:#b1891b; background:rgba(177,137,27,0.08); }
@@ -9467,6 +9538,7 @@ ${customTypeHtml}
 <footer>
   <div>${fusszeileHtml}</div>
   <div><strong>Bankverbindung</strong><br>IBAN: DE00 0000 0000 0000 0000 00</div>
+  ${logoUrl ? `<div class="logo-block"><img src="${logoUrl}" alt="Logo" /></div>` : ''}
 </footer>
 </div></body></html>`;
 }
@@ -11312,8 +11384,11 @@ function renderInvList() {
     const payBadge = inv.payment_status === 'paid'
       ? `<span class="badge badge-green" title="${inv.payment_method || ''}" style="margin-left:4px;">✓ Bezahlt</span>`
       : (inv.payment_status === 'pending' ? '<span class="badge badge-gray" style="margin-left:4px;">Offen</span>' : '');
+    const invTypeBadgeHtml = inv.invoice_type
+      ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${inv.invoice_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:#60a5fa;' : 'background:rgba(177,137,27,0.15);color:#b1891b;'}">${inv.invoice_type==='gkv'?'GKV':'Privat'}</span>`
+      : '';
     return `<tr>
-      <td><strong>${inv.invoice_number || '—'}</strong></td>
+      <td><strong>${inv.invoice_number || '—'}</strong>${invTypeBadgeHtml}</td>
       <td>${escapeHtml(inv.patient_name || '')}</td>
       <td>${date}</td>
       <td>${total}</td>
@@ -11522,14 +11597,14 @@ function renderRezeptBadges(inv) {
 async function loadInvPatients() {
   const ownerId = getOwnerId();
   const { data } = await supabase.from('leads')
-    .select('id,first_name,last_name,title,phone,email,metadata')
+    .select('id,first_name,last_name,title,phone,email,metadata,insurance_type')
     .eq('owner_id', ownerId).order('first_name', { ascending: true });
   const sel = document.getElementById('invPatientSelect');
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Patient auswählen --</option>' +
     (data || []).map(l => {
       const name = displayNameWithBirth(l);
-      return `<option value="${l.id}" data-phone="${escapeHtml(l.phone || '')}" data-email="${escapeHtml(l.email || '')}">${escapeHtml(name)}</option>`;
+      return `<option value="${l.id}" data-phone="${escapeHtml(l.phone || '')}" data-email="${escapeHtml(l.email || '')}" data-insurance="${escapeHtml(l.insurance_type || '')}">${escapeHtml(name)}</option>`;
     }).join('');
 }
 
@@ -11608,7 +11683,16 @@ function renderInvLines() {
     sel.onchange = () => {
       const opt = sel.options[sel.selectedIndex];
       invLines[i].title = opt.value;
-      invLines[i].unit_price = parseFloat(opt.dataset.price) || 0;
+      let unitPrice = parseFloat(opt.dataset.price) || 0;
+      // Use GKV tariff price if patient is GKV and service has a position number
+      if (invPatientInsuranceType === 'gkv') {
+        const srv = ownerServices.find(s => (s.title || '') === opt.value);
+        if (srv && srv.gkv_position_nr && typeof GKV_PRICES !== 'undefined') {
+          const gkvP = GKV_PRICES[srv.gkv_position_nr];
+          if (gkvP) unitPrice = gkvP;
+        }
+      }
+      invLines[i].unit_price = unitPrice;
       renderInvLines(); calcInvTotals();
     };
   });
@@ -11623,11 +11707,38 @@ function renderInvLines() {
   });
 }
 
+function updateInvForInsuranceType() {
+  const isGkv = invPatientInsuranceType === 'gkv';
+  const isPrivat = invPatientInsuranceType === 'privat';
+
+  // Zuzahlung section: visible for GKV, hidden for Privat
+  const zuzRow = document.getElementById('invZuzahlungRow');
+  if (zuzRow) zuzRow.style.display = (isPrivat) ? 'none' : '';
+
+  // Invoice type badge/label
+  const typeBadge = document.getElementById('invTypeBadge');
+  if (typeBadge) {
+    if (isGkv) {
+      typeBadge.textContent = 'GKV-Rechnung';
+      typeBadge.style.cssText = 'display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);margin-left:8px;';
+    } else if (isPrivat) {
+      typeBadge.textContent = 'Privatrechnung';
+      typeBadge.style.cssText = 'display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(177,137,27,0.15);color:#b1891b;border:1px solid rgba(177,137,27,0.3);margin-left:8px;';
+    } else {
+      typeBadge.textContent = '';
+      typeBadge.style.display = 'none';
+    }
+  }
+
+  calcInvTotals();
+}
+
 function calcInvTotals() {
+  const enforceNoZuzahlung = invPatientInsuranceType === 'privat';
   const sub = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
-  const eigenPct = parseFloat(document.getElementById('invEigenPct').value) || 0;
+  const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
   const eigenEur = sub * (eigenPct / 100);
-  const kasse = parseFloat(document.getElementById('invKasse').value) || 0;
+  const kasse = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invKasse').value) || 0);
   const total = eigenEur + kasse;
   document.getElementById('invSubtotal').textContent = formatEur(sub);
   document.getElementById('invEigenEur').textContent = formatEur(eigenEur);
@@ -11689,8 +11800,9 @@ async function openInvEditor(invoiceId) {
     const dmrzBtn = document.getElementById('invDmrzBtn');
     if (dmrzBtn) dmrzBtn.disabled = false;
     window._currentInvoiceId = inv.id;
+    invPatientInsuranceType = inv.invoice_type || null;
     renderInvLines();
-    calcInvTotals();
+    updateInvForInsuranceType();
   } else {
     document.getElementById('invPatientSelect').focus();
   }
@@ -11731,10 +11843,11 @@ async function saveInvoice() {
   invLines = aggregateInvLines(invLines);
   renderInvLines(); calcInvTotals();
   const subtotal = invLines.reduce((s, l) => s + (l.quantity || 1) * (l.unit_price || 0), 0);
-  const eigenPct = parseFloat(document.getElementById('invEigenPct').value) || 0;
+  const enforceNoZuzahlung = invPatientInsuranceType === 'privat';
+  const eigenPct = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invEigenPct').value) || 0);
   const eigenEur = subtotal * (eigenPct / 100);
-  const kasse = parseFloat(document.getElementById('invKasse').value) || 0;
-  const total = eigenEur + kasse;
+  const kasse = enforceNoZuzahlung ? 0 : (parseFloat(document.getElementById('invKasse').value) || 0);
+  const total = enforceNoZuzahlung ? subtotal : (eigenEur + kasse);
   const ownerId = getOwnerId();
   const patientName = patientSel.options[patientSel.selectedIndex].text;
   const invoiceNumber = await generateInvNumber();
@@ -11751,7 +11864,8 @@ async function saveInvoice() {
     status: 'draft',
     invoice_number: invoiceNumber,
     prescription_id: invPrescriptionId || null,
-    notes: document.getElementById('invNotes').value || null
+    notes: document.getElementById('invNotes').value || null,
+    invoice_type: invPatientInsuranceType || null
   };
   const { data: inserted, error } = await supabase.from('invoices').insert(payload).select('id').maybeSingle();
   if (error) { console.error('[invoice save]', error); showToast('Fehler beim Speichern: ' + error.message, 'error'); return; }
@@ -12471,16 +12585,27 @@ function bindInvEvents() {
     const wrap = document.getElementById('invBookingChecks');
     if (!wrap) return;
     const checked = Array.from(wrap.querySelectorAll('input[type="checkbox"]:checked'));
-    invLines = checked.map(cb => ({
-      title: cb.dataset.svc || 'Leistung',
-      quantity: 1,
-      unit_price: parseFloat(cb.dataset.price) || 0
-    }));
+    invLines = checked.map(cb => {
+      const title = cb.dataset.svc || 'Leistung';
+      let unitPrice = parseFloat(cb.dataset.price) || 0;
+      // Use GKV tariff price if patient is GKV and service has a position number
+      if (invPatientInsuranceType === 'gkv' && typeof GKV_PRICES !== 'undefined') {
+        const srv = ownerServices.find(s => (s.title || '') === title);
+        if (srv && srv.gkv_position_nr) {
+          const gkvP = GKV_PRICES[srv.gkv_position_nr];
+          if (gkvP) unitPrice = gkvP;
+        }
+      }
+      return { title, quantity: 1, unit_price: unitPrice };
+    });
     renderInvLines(); calcInvTotals();
   }
 
   document.getElementById('invPatientSelect').onchange = async (e) => {
     invPatientId = e.target.value;
+    const selectedOpt = e.target.options[e.target.selectedIndex];
+    invPatientInsuranceType = selectedOpt ? (selectedOpt.dataset.insurance || null) : null;
+    updateInvForInsuranceType();
     const bookingWrap = document.getElementById('invBookingWrap');
     const checksWrap = document.getElementById('invBookingChecks');
     if (!invPatientId) {

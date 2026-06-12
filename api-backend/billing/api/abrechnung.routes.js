@@ -87,6 +87,13 @@ function findPriceForDate(tariffs, positionNr, dateStr) {
 
 // Map a DB prescription row → buildDtaFile prescription shape.
 function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW') {
+  if (!rx.kostentraeger_ik) {
+    const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
+    err.status = 422;
+    err.code = 'PRIVAT_PATIENT_NO_DTA';
+    throw err;
+  }
+
   const np = nameParts(lead);
   const abrechnungscode = '22'; // Physiotherapie (Faz A2 default)
 
