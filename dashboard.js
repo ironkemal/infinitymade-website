@@ -740,7 +740,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 function openModal(id) { const el = document.getElementById(id); if (el) el.hidden = false; }
-function closeModal(id) { const el = document.getElementById(id); if (el) { el.hidden = true; if (id === 'bkActionModal') { el.style.display = 'none'; document.getElementById('mainArea')?.style.removeProperty('padding-right'); } } if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } if (id === 'aiSuggestModal') { const wrap = document.getElementById('aiRetryFeedbackWrap'); if (wrap) { wrap.style.display = 'none'; const ta = document.getElementById('aiRetryFeedback'); if (ta) ta.value = ''; } } }
+function closeModal(id) { const el = document.getElementById(id); if (el) { el.hidden = true; if (id === 'bkActionModal') { el.style.display = 'none'; document.getElementById('mainArea')?.style.removeProperty('padding-right'); const calWrap = document.getElementById('calMainWrap'); if (calWrap) calWrap.style.paddingRight = ''; } } if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } if (id === 'aiSuggestModal') { const wrap = document.getElementById('aiRetryFeedbackWrap'); if (wrap) { wrap.style.display = 'none'; const ta = document.getElementById('aiRetryFeedback'); if (ta) ta.value = ''; } } }
 
 function showToast(msg, type = 'success') {
   const d = document.createElement('div');
@@ -2395,74 +2395,28 @@ async function openBookingActionModal(booking) {
   const bkModal = document.getElementById('bkActionModal');
   if (bkModal) { bkModal.hidden = false; bkModal.style.display = 'flex'; }
   document.getElementById('mainArea')?.style.setProperty('padding-right', '396px');
+  // Takvim paneli açıksa calMainWrap'ı da sola it
+  const calWrap = document.getElementById('calMainWrap');
+  if (calWrap && document.getElementById('panel-calendar')?.classList.contains('active')) {
+    calWrap.style.paddingRight = '396px';
+  }
 }
 
 // ===== Calendar Right Panel (madde 13) =====
 
 function initCalRightPanel() {
-  document.getElementById('calRpClose')?.addEventListener('click', closeCalRightPanel);
+  // Unified with bkActionModal
 }
 
 function openCalRightPanel(booking) {
-  const panel = document.getElementById('calRightPanel');
-  if (!panel) return;
-
-  // Inline panel: show by removing hidden AND adjusting calendar layout
-  panel.hidden = false;
-  const calWrap = document.getElementById('calMainWrap');
-  if (calWrap) calWrap.style.paddingRight = '300px';
-
-  const title = document.getElementById('calRpTitle');
-  const content = document.getElementById('calRpContent');
-  if (title) title.textContent = booking.customer_name || 'Termin-Details';
-  if (content) {
-    const svcName = booking.services?.title || booking.service_name || '—';
-    const start = booking.start_time ? new Date(booking.start_time).toLocaleString('de-DE', { weekday: 'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
-    const end = booking.end_time ? new Date(booking.end_time).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) : '—';
-    const statusMap = { confirmed: '✓ Bestätigt', cancelled: '✗ Storniert', no_show: '⚠ Nicht erschienen', completed: '✓ Erledigt' };
-
-    content.innerHTML = `
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Patient</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-main);">${escapeHtml(booking.customer_name || '—')}</div>
-        ${booking.customer_phone ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">📞 ${escapeHtml(booking.customer_phone)}</div>` : ''}
-      </div>
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Leistung</div>
-        <div style="color:var(--text-main);">${escapeHtml(svcName)}</div>
-      </div>
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Zeit</div>
-        <div style="color:var(--text-main);">${start} – ${end}</div>
-      </div>
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Status</div>
-        <div style="color:var(--text-main);">${statusMap[booking.status] || booking.status || '—'}</div>
-      </div>
-      ${booking.notes ? `<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Notiz</div><div style="color:var(--text-main);font-size:12px;">${escapeHtml(booking.notes)}</div></div>` : ''}
-      <button id="calRpEditBtn" class="btn-primary" style="width:100%;margin-bottom:14px;font-size:13px;">✏ Termin bearbeiten</button>
-      <div id="calRpRezeptSection" style="margin-top:8px;"><div style="color:var(--text-muted);font-size:12px;">Rezept wird geladen…</div></div>
-      <div id="calRpSessionSection" style="margin-top:8px;"></div>
-    `;
-
-    // "Bearbeiten" butonuna mevcut booking action modal'ı bağla
-    const editBtn = document.getElementById('calRpEditBtn');
-    if (editBtn) editBtn.addEventListener('click', () => openBookingModal(booking));
-  }
-
-  // Asenkron: lead_id üzerinden rezept ve seans bilgisi yükle
-  if (booking.lead_id) {
-    loadCalRpRezeptInfo(booking.lead_id);
-    loadCalRpUnverga(booking.lead_id);
-  } else {
-    const unverga = document.getElementById('calRpUnverga');
-    if (unverga) unverga.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Alle Heilmittel vergaben.</div>';
-  }
+  openBookingActionModal(booking);
 }
 
 function closeCalRightPanel() {
-  const panel = document.getElementById('calRightPanel');
-  if (panel) panel.hidden = true;
+  // bkActionModal'ı kapat
+  const bkModal = document.getElementById('bkActionModal');
+  if (bkModal) { bkModal.style.display = 'none'; bkModal.hidden = true; }
+  document.getElementById('mainArea')?.style.removeProperty('padding-right');
   const calWrap = document.getElementById('calMainWrap');
   if (calWrap) calWrap.style.paddingRight = '';
 }
@@ -9133,37 +9087,200 @@ async function loadVorlagenPanel() {
         </div>
       </div>`;
   }).join('');
+
+  // Iframe preview'larını async olarak yükle
+  setTimeout(() => {
+    grid.querySelectorAll('.vorlage-preview-placeholder').forEach(placeholder => {
+      const vId = placeholder.dataset.vorlagenId;
+      const v = vorlagen.find(x => x.id === vId);
+      if (!v) return;
+      const html = getVorlagenSampleHtml(v);
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'width:595px;height:842px;border:none;transform:scale(0.24);transform-origin:top left;pointer-events:none;';
+      iframe.srcdoc = html;
+      placeholder.innerHTML = '';
+      placeholder.appendChild(iframe);
+      // Container'ı overflow:hidden yap
+      placeholder.style.overflow = 'hidden';
+    });
+  }, 100);
+
+  // Kartlara click listener ekle
+  setTimeout(() => {
+    grid.querySelectorAll('.vorlage-card').forEach(card => {
+      card.querySelector('.vorlage-preview-placeholder')?.addEventListener('click', () => {
+        const vId = card.dataset.vorlagenId;
+        openVorlagenAnsicht(vId, vorlagen);
+      });
+      card.querySelector('.vorlage-card-title')?.addEventListener('click', () => {
+        const vId = card.dataset.vorlagenId;
+        openVorlagenAnsicht(vId, vorlagen);
+      });
+    });
+  }, 200);
 }
 
 function buildVorlagenPreview(v) {
+  // Placeholder div — iframe srcdoc via setTimeout in loadVorlagenPanel
+  return `<div class="vorlage-preview-placeholder" data-vorlage-id="${v.id}" style="width:100%;height:100%;background:#f9fafb;display:flex;align-items:center;justify-content:center;">
+    <div style="color:#9ca3af;font-size:11px;">Lade Vorschau…</div>
+  </div>`;
+}
+
+function escHTML(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function getVorlagenSampleHtml(v) {
+  const cj = (typeof v.content_json === 'object' && v.content_json) ? v.content_json : {};
+  const praxisName = (typeof currentProfile !== 'undefined' && currentProfile?.business_name) || 'Muster-Praxis GmbH';
+  const hinweis = cj.hinweis || '';
+  const fusszeile = cj.fusszeile || `${praxisName} · Musterstr. 1 · 10115 Berlin`;
+  const betreff = cj.betreff || '';
+  const zahlungsziel = cj.zahlungsziel_tage || 14;
+
   const typeColors = {
     quittung_zuzahlung: '#0a4a7a',
+    rechnung_bg: '#2a3a8c',
     rechnung_privat: '#2a5c3a',
-    rechnung_selbstzahler: '#5c2a2a',
-    rechnung_bg: '#3a2a5c',
     rechnung_eigenanteil: '#5c4a2a',
+    rechnung_selbstzahler: '#5c2a2a',
     rechnung_sonder: '#2a4a5c',
-    rezeptvorderseite: '#2a5c4a',
-    rzg_quittung: '#5c3a2a',
+    rezeptvorderseite: '#1a6b4a',
+    rzg_quittung: '#6b3a1a',
   };
-  const accentColor = typeColors[v.vorlage_type] || '#374151';
-  return `
-    <div style="position:absolute;inset:0;background:#fff;border-radius:3px;overflow:hidden;font-family:sans-serif;">
-      <div style="background:${accentColor};height:18px;width:100%;"></div>
-      <div style="padding:6px;">
-        <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:4px;width:70%;"></div>
-        <div style="height:3px;background:#e5e7eb;border-radius:2px;margin-bottom:3px;width:50%;"></div>
-        <div style="height:3px;background:#e5e7eb;border-radius:2px;margin-bottom:6px;width:60%;"></div>
-        <div style="height:1px;background:#e5e7eb;margin-bottom:4px;"></div>
-        <div style="height:2px;background:#f3f4f6;margin-bottom:2px;"></div>
-        <div style="height:2px;background:#f3f4f6;margin-bottom:2px;"></div>
-        <div style="height:2px;background:#f3f4f6;margin-bottom:2px;"></div>
-        <div style="height:2px;background:#f3f4f6;margin-bottom:6px;"></div>
-        <div style="display:flex;justify-content:flex-end;">
-          <div style="width:50%;height:3px;background:${accentColor};opacity:0.5;border-radius:1px;"></div>
+  const typeLabels = {
+    quittung_zuzahlung: 'Zuzahlungs-Quittung',
+    rechnung_bg: 'Rechnung BG',
+    rechnung_privat: 'Rechnung Privat',
+    rechnung_eigenanteil: 'Rechnung Eigenanteil',
+    rechnung_selbstzahler: 'Rechnung Selbstzahler',
+    rechnung_sonder: 'Rechnung Sonderkostenträger',
+    rezeptvorderseite: 'Rezept Vorderseite',
+    rzg_quittung: 'RZG Quittung',
+  };
+  const accent = typeColors[v.vorlage_type] || '#374151';
+  const title = typeLabels[v.vorlage_type] || v.vorlage_type || 'Dokument';
+
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<style>
+@page{size:A4;margin:15mm 18mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:10.5pt/1.4 Arial,sans-serif;color:#1a1a1a}
+.doc{max-width:174mm;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${accent};padding-bottom:5mm;margin-bottom:6mm}
+h1{color:${accent};font-size:15pt;margin-bottom:2mm}
+.sub{font-size:8pt;color:#666}
+.praxis{font-size:9pt}
+.addr-block{display:flex;gap:20mm;margin:6mm 0}
+.addr-box{flex:1}
+.addr-label{font-size:7.5pt;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:2mm 8mm;font-size:8.5pt;margin:4mm 0 6mm}
+.meta dt{color:#666}.meta dd{font-weight:600}
+table{width:100%;border-collapse:collapse;margin:4mm 0;font-size:9pt}
+th{background:#f3f6fa;padding:2mm 3mm;border-bottom:2px solid #ccc;text-align:left;font-size:8pt}
+td{padding:2mm 3mm;border-bottom:1px solid #e6eaef}
+.num{text-align:right}
+.total-row{font-weight:700;font-size:11pt;border-top:2px solid ${accent}}
+.hinweis{background:#fff8e6;border:1px solid #f4d56b;border-radius:3pt;padding:3mm;margin:4mm 0;font-size:8.5pt}
+footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #ccc;font-size:7.5pt;color:#666;display:flex;gap:10mm}
+footer div{flex:1}
+</style></head><body><div class="doc">
+<header>
+  <div class="praxis">
+    <strong>${escHTML(praxisName)}</strong><br>
+    Musterstraße 1<br>10115 Berlin<br>Tel.: 030 123 456<br>IK: 123456789
+  </div>
+  <div style="text-align:right">
+    <h1>${escHTML(title)}</h1>
+    <div class="sub">${betreff ? escHTML(betreff) : 'Musterdokument'}</div>
+  </div>
+</header>
+<div class="addr-block">
+  <div class="addr-box">
+    <div class="addr-label">Empfänger</div>
+    <strong>Maria Mustermann</strong><br>Beispielweg 7<br>10117 Berlin
+  </div>
+  <div class="addr-box">
+    <dl class="meta">
+      <dt>Rechnungs-Nr.</dt><dd>RE-2026-001</dd>
+      <dt>Datum</dt><dd>01.06.2026</dd>
+      <dt>Fällig am</dt><dd>${zahlungsziel} Tage</dd>
+      <dt>Krankenkasse</dt><dd>AOK Bayern</dd>
+    </dl>
+  </div>
+</div>
+<table>
+  <thead><tr><th>Datum</th><th>Leistung</th><th class="num">Betrag</th></tr></thead>
+  <tbody>
+    <tr><td>05.05.2026</td><td>Krankengymnastik 30 Min.</td><td class="num">15,00 €</td></tr>
+    <tr><td>07.05.2026</td><td>Manuelle Therapie 30 Min.</td><td class="num">15,00 €</td></tr>
+    <tr><td>12.05.2026</td><td>Krankengymnastik 30 Min.</td><td class="num">15,00 €</td></tr>
+    <tr class="total-row"><td colspan="2">Gesamt</td><td class="num">45,00 €</td></tr>
+  </tbody>
+</table>
+${hinweis ? `<div class="hinweis"><strong>Hinweis:</strong> ${escHTML(hinweis)}</div>` : ''}
+<footer>
+  <div>${escHTML(fusszeile)}</div>
+  <div><strong>Bankverbindung</strong><br>IBAN: DE00 0000 0000 0000 0000 00</div>
+</footer>
+</div></body></html>`;
+}
+
+function openVorlagenAnsicht(vorlagenId, vorlagenList) {
+  const v = vorlagenList.find(x => x.id === vorlagenId);
+  if (!v) return;
+
+  let modal = document.getElementById('vorlagenAnsichtModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'vorlagenAnsichtModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+      <div style="background:var(--bg-card-solid,#1f2937);border-radius:12px;width:min(700px,95vw);height:min(85vh,800px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+          <div>
+            <div id="vorlagenAnsichtTitle" style="font-size:15px;font-weight:700;color:var(--text-main);">Vorschau</div>
+            <div id="vorlagenAnsichtType" style="font-size:12px;color:var(--text-muted);"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button id="vorlagenAnsichtAnpassenBtn" class="btn-primary btn-sm">✏ Anpassen</button>
+            <button id="vorlagenAnsichtDefaultBtn" class="btn-ghost btn-sm">⭐ Als Standard</button>
+            <button onclick="document.getElementById('vorlagenAnsichtModal').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;">✕</button>
+          </div>
         </div>
-      </div>
-    </div>`;
+        <div style="flex:1;overflow:auto;padding:16px;background:#f0f0f0;">
+          <iframe id="vorlagenAnsichtIframe" style="width:210mm;min-height:297mm;border:none;box-shadow:0 2px 16px rgba(0,0,0,0.2);display:block;margin:0 auto;background:#fff;"></iframe>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+  }
+
+  const typeLabels = {
+    quittung_zuzahlung: 'Zuzahlungs-Quittung', rechnung_bg: 'Rechnung BG',
+    rechnung_privat: 'Rechnung Privat', rechnung_eigenanteil: 'Rechnung Eigenanteil',
+    rechnung_selbstzahler: 'Rechnung Selbstzahler', rechnung_sonder: 'Rechnung Sonderkostenträger',
+    rezeptvorderseite: 'Rezept Vorderseite', rzg_quittung: 'RZG Quittung',
+  };
+
+  document.getElementById('vorlagenAnsichtTitle').textContent = v.name;
+  document.getElementById('vorlagenAnsichtType').textContent = typeLabels[v.vorlage_type] || v.vorlage_type;
+  document.getElementById('vorlagenAnsichtAnpassenBtn').onclick = () => {
+    modal.style.display = 'none';
+    openVorlagenEdit(v.id);
+  };
+  document.getElementById('vorlagenAnsichtDefaultBtn').onclick = async () => {
+    await supabase.from('document_vorlagen').update({ is_default: false }).eq('owner_id', getOwnerId()).eq('vorlage_type', v.vorlage_type);
+    await supabase.from('document_vorlagen').update({ is_default: true }).eq('id', v.id);
+    showToast('Als Standard gesetzt');
+    modal.style.display = 'none';
+    loadVorlagenPanel();
+  };
+
+  const iframe = document.getElementById('vorlagenAnsichtIframe');
+  iframe.srcdoc = getVorlagenSampleHtml(v);
+  modal.style.display = 'flex';
 }
 
 // ===== Vorlage System (Madde 11) =====
