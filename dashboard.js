@@ -9435,6 +9435,8 @@ ${hinweis ? `<div class="hinweis"><strong>Hinweis:</strong> ${escHTML(hinweis)}<
 </div></body></html>`;
 }
 
+let _ansichtEditState = null;
+
 function openVorlagenAnsicht(vorlagenId, vorlagenList) {
   const v = vorlagenList.find(x => x.id === vorlagenId);
   if (!v) return;
@@ -9443,27 +9445,48 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'vorlagenAnsichtModal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
-      <div style="background:var(--bg-card-solid,#1f2937);border-radius:12px;width:min(700px,95vw);height:min(85vh,800px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
-          <div>
-            <div id="vorlagenAnsichtTitle" style="font-size:15px;font-weight:700;color:var(--text-main);">Vorschau</div>
+      <div id="vorlagenAnsichtCard" style="background:var(--bg-card-solid,#1f2937);border-radius:12px;width:min(720px,95vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;gap:12px;">
+          <div style="min-width:0;flex:1;">
+            <div id="vorlagenAnsichtTitle" style="font-size:15px;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
             <div id="vorlagenAnsichtType" style="font-size:12px;color:var(--text-muted);"></div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div id="vorlagenAnsichtViewBtns" style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
             <button id="vorlagenAnsichtAnpassenBtn" class="btn-primary btn-sm">✏ Anpassen</button>
-            <button id="vorlagenAnsichtDefaultBtn" class="btn-ghost btn-sm">⭐ Als Standard</button>
-            <button onclick="document.getElementById('vorlagenAnsichtModal').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;">✕</button>
+            <button id="vorlagenAnsichtDefaultBtn" class="btn-ghost btn-sm">⭐ Standard</button>
+            <button id="vorlagenAnsichtCloseBtn" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:0 4px;">✕</button>
+          </div>
+          <div id="vorlagenAnsichtEditBtns" style="display:none;gap:8px;align-items:center;flex-shrink:0;">
+            <button id="vorlagenAnsichtSaveBtn" class="btn-primary btn-sm">Speichern</button>
+            <button id="vorlagenAnsichtCancelEditBtn" class="btn-ghost btn-sm">Abbrechen</button>
+            <button id="vorlagenAnsichtCloseBtn2" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:22px;line-height:1;padding:0 4px;">✕</button>
           </div>
         </div>
-        <div style="flex:1;overflow:auto;padding:16px;background:#f0f0f0;">
-          <iframe id="vorlagenAnsichtIframe" style="width:210mm;min-height:297mm;border:none;box-shadow:0 2px 16px rgba(0,0,0,0.2);display:block;margin:0 auto;background:#fff;"></iframe>
+        <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
+          <div id="vorlagenPreviewArea" style="flex:1;overflow:auto;padding:16px;background:#f0f0f0;min-width:0;">
+            <iframe id="vorlagenAnsichtIframe" style="width:210mm;min-height:297mm;border:none;box-shadow:0 2px 16px rgba(0,0,0,0.2);display:block;margin:0 auto;background:#fff;"></iframe>
+          </div>
+          <div id="vorlagenAnsichtEditPanel" style="width:0;overflow:hidden;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid transparent;">
+            <div style="padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;width:290px;">
+              <div>
+                <label style="display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">Vorlagenname</label>
+                <input class="form-input" id="vorlagenAnsichtNameInput" type="text" maxlength="80" style="font-size:13px;width:100%;" />
+              </div>
+              <div id="vorlagenAnsichtFieldsContainer" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+          </div>
         </div>
       </div>`;
     document.body.appendChild(modal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+    const closeModal = () => { modal.style.display = 'none'; _exitAnsichtEditMode(); };
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.getElementById('vorlagenAnsichtCloseBtn').onclick = closeModal;
+    document.getElementById('vorlagenAnsichtCloseBtn2').onclick = closeModal;
   }
+
+  _exitAnsichtEditMode(); // reset to view mode on each open
 
   const typeLabels = {
     quittung_zuzahlung: 'Zuzahlungs-Quittung', rechnung_bg: 'Rechnung BG',
@@ -9474,10 +9497,7 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
 
   document.getElementById('vorlagenAnsichtTitle').textContent = v.name;
   document.getElementById('vorlagenAnsichtType').textContent = typeLabels[v.vorlage_type] || v.vorlage_type;
-  document.getElementById('vorlagenAnsichtAnpassenBtn').onclick = () => {
-    modal.style.display = 'none';
-    openVorlagenEdit(v.id);
-  };
+  document.getElementById('vorlagenAnsichtAnpassenBtn').onclick = () => _enterAnsichtEditMode(v, modal);
   document.getElementById('vorlagenAnsichtDefaultBtn').onclick = async () => {
     await supabase.from('document_vorlagen').update({ is_default: false }).eq('owner_id', getOwnerId()).eq('vorlage_type', v.vorlage_type);
     await supabase.from('document_vorlagen').update({ is_default: true }).eq('id', v.id);
@@ -9486,9 +9506,133 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
     loadVorlagenPanel();
   };
 
-  const iframe = document.getElementById('vorlagenAnsichtIframe');
-  iframe.srcdoc = getVorlagenSampleHtml(v);
+  document.getElementById('vorlagenAnsichtIframe').srcdoc = getVorlagenSampleHtml(v);
   modal.style.display = 'flex';
+}
+
+function _exitAnsichtEditMode() {
+  _ansichtEditState = null;
+  const card = document.getElementById('vorlagenAnsichtCard');
+  if (card) card.style.width = 'min(720px,95vw)';
+  const panel = document.getElementById('vorlagenAnsichtEditPanel');
+  if (panel) { panel.style.width = '0'; panel.style.borderLeftColor = 'transparent'; panel.style.overflow = 'hidden'; }
+  const vb = document.getElementById('vorlagenAnsichtViewBtns');
+  if (vb) vb.style.display = 'flex';
+  const eb = document.getElementById('vorlagenAnsichtEditBtns');
+  if (eb) eb.style.display = 'none';
+}
+
+function _enterAnsichtEditMode(v, modal) {
+  _ansichtEditState = { originalJson: JSON.parse(JSON.stringify(v.content_json || {})), originalName: v.name, v };
+
+  // Widen modal & open side panel
+  const card = document.getElementById('vorlagenAnsichtCard');
+  if (card) card.style.width = 'min(1020px,95vw)';
+  const panel = document.getElementById('vorlagenAnsichtEditPanel');
+  if (panel) { panel.style.width = '306px'; panel.style.borderLeftColor = 'var(--border)'; panel.style.overflow = 'visible'; }
+
+  document.getElementById('vorlagenAnsichtViewBtns').style.display = 'none';
+  document.getElementById('vorlagenAnsichtEditBtns').style.display = 'flex';
+
+  // Name field
+  document.getElementById('vorlagenAnsichtNameInput').value = v.name;
+
+  // Content fields (reuse same FIELDS map as renderVorlagenContentForm)
+  const FIELDS = {
+    quittung_zuzahlung: [
+      { key: 'hinweis', label: 'Hinweis-Text', type: 'textarea', placeholder: 'z. B. Zuzahlung gemäß §32 Abs. 2 SGB V erhalten.' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: 'Praxisname · Adresse · Telefon' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' },
+    ],
+    rechnung_bg: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Rechnung für Physiotherapie' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '30' },
+    ],
+    rechnung_privat: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Privatrechnung Physiotherapie' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' },
+    ],
+    rechnung_eigenanteil: [
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+    ],
+    rechnung_selbstzahler: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Selbstzahler-Rechnung' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' },
+    ],
+    rechnung_sonder: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: '' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+    ],
+    rezeptvorderseite: [
+      { key: 'praxis_zusatz', label: 'Praxis-Zusatz', type: 'text', placeholder: 'Physiotherapie & Manuelle Therapie' },
+      { key: 'stempel_hinweis', label: 'Stempel-Hinweis', type: 'text', placeholder: 'Bitte Stempel beifügen' },
+    ],
+    rzg_quittung: [
+      { key: 'unterschrift_label', label: 'Unterschrift-Zeile', type: 'text', placeholder: 'Empfang bestätigt:' },
+      { key: 'hinweis', label: 'Rechtlicher Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+    ],
+  };
+
+  const fields = FIELDS[v.vorlage_type] || [{ key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' }];
+  const cj = v.content_json || {};
+  const container = document.getElementById('vorlagenAnsichtFieldsContainer');
+
+  container.innerHTML = fields.map(f => {
+    const val = escapeHtml(cj[f.key] || '');
+    const labelHtml = `<label style="display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">${f.label}</label>`;
+    if (f.type === 'textarea') {
+      return `<div>${labelHtml}<textarea class="form-input vorlagen-ansicht-field" data-key="${f.key}" rows="3" placeholder="${f.placeholder}" style="font-size:12px;width:100%;resize:vertical;">${val}</textarea></div>`;
+    }
+    return `<div>${labelHtml}<input class="form-input vorlagen-ansicht-field" data-key="${f.key}" type="${f.type}" placeholder="${f.placeholder}" value="${val}" style="font-size:12px;width:100%;" /></div>`;
+  }).join('');
+
+  // Live preview on any change
+  const iframe = document.getElementById('vorlagenAnsichtIframe');
+  const updatePreview = () => {
+    const liveJson = {};
+    container.querySelectorAll('.vorlagen-ansicht-field').forEach(el => {
+      if (el.dataset.key) liveJson[el.dataset.key] = el.value;
+    });
+    iframe.srcdoc = getVorlagenSampleHtml({ ...v, content_json: liveJson });
+  };
+  container.querySelectorAll('.vorlagen-ansicht-field').forEach(el => el.addEventListener('input', updatePreview));
+
+  // Save
+  document.getElementById('vorlagenAnsichtSaveBtn').onclick = async () => {
+    const name = document.getElementById('vorlagenAnsichtNameInput').value.trim();
+    if (!name) { showToast('Name ist erforderlich', 'error'); return; }
+    const content_json = {};
+    container.querySelectorAll('.vorlagen-ansicht-field').forEach(el => {
+      if (el.dataset.key) content_json[el.dataset.key] = el.value.trim();
+    });
+    const { error } = await supabase.from('document_vorlagen').update({ name, content_json }).eq('id', v.id);
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+    v.name = name;
+    v.content_json = content_json;
+    document.getElementById('vorlagenAnsichtTitle').textContent = name;
+    iframe.srcdoc = getVorlagenSampleHtml(v);
+    showToast('Vorlage gespeichert', 'success');
+    _exitAnsichtEditMode();
+    loadVorlagenPanel();
+    loadVorlagen();
+  };
+
+  // Cancel — restore original
+  document.getElementById('vorlagenAnsichtCancelEditBtn').onclick = () => {
+    v.content_json = _ansichtEditState.originalJson;
+    v.name = _ansichtEditState.originalName;
+    iframe.srcdoc = getVorlagenSampleHtml(v);
+    _exitAnsichtEditMode();
+  };
 }
 
 // ===== Vorlage System (Madde 11) =====
