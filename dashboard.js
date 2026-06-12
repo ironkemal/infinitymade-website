@@ -9286,7 +9286,7 @@ async function loadVorlagenPanel() {
           <div class="vorlage-card-type">${escapeHtml(typeLabel)}${isDefault ? ' <span class="vorlage-default-badge">Standard</span>' : ''}</div>
           <div class="vorlage-card-actions">
             <button class="btn-ghost btn-sm" onclick="openVorlagenEdit('${v.id}')">Bearbeiten</button>
-            <button class="btn-ghost btn-sm" onclick="duplicateVorlage('${v.id}','${escapeHtml(v.name).replace(/'/g,'&#39;')}')">Kopieren</button>
+            <button class="btn-ghost btn-sm" onclick="duplicateVorlage('${v.id}')">Kopieren</button>
             <button class="btn-ghost btn-sm" style="color:#f87171;" onclick="deleteVorlage('${v.id}')">Löschen</button>
           </div>
         </div>
@@ -9296,7 +9296,7 @@ async function loadVorlagenPanel() {
   // Iframe previews — dynamic scale based on card width
   setTimeout(() => {
     grid.querySelectorAll('.vorlage-preview-placeholder').forEach(placeholder => {
-      const vId = placeholder.dataset.vorlagenId;
+      const vId = placeholder.getAttribute('data-vorlage-id');
       const v = vorlagen.find(x => x.id === vId);
       if (!v) return;
       const html = getVorlagenSampleHtml(v);
@@ -9314,7 +9314,7 @@ async function loadVorlagenPanel() {
   // Click listeners: preview click → Ansicht modal; title double-click → inline rename
   setTimeout(() => {
     grid.querySelectorAll('.vorlage-card').forEach(card => {
-      const vId = card.dataset.vorlagenId;
+      const vId = card.getAttribute('data-vorlage-id');
       card.querySelector('.vorlage-preview-placeholder')?.addEventListener('click', () => openVorlagenAnsicht(vId, vorlagen));
 
       const titleEl = card.querySelector('.vorlage-card-title');
@@ -9660,10 +9660,10 @@ async function deleteVorlage(id) {
   if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
 }
 
-async function duplicateVorlage(id, currentName) {
+async function duplicateVorlage(id) {
   const { data: src, error } = await supabase.from('document_vorlagen').select('*').eq('id', id).single();
   if (error || !src) { showToast('Fehler beim Kopieren', 'error'); return; }
-  const newName = currentName + ' (1)';
+  const newName = src.name + ' (1)';
   const { error: insErr } = await supabase.from('document_vorlagen').insert({
     owner_id: getOwnerId(),
     name: newName,

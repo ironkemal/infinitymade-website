@@ -6856,5 +6856,11 @@ body.compact-mode .patient-row {
 }
 .vorlage-card-actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.btn-sm {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
 }
