@@ -1985,6 +1985,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         is_lhb_bvb: !!rezept.is_lhb_bvb,
         bericht_angefordert: !!rezept.bericht_angefordert,
         bericht_status: rezept.bericht_status || 'offen',
+        unterschrift_vorhanden: rezept.unterschrift_vorhanden ?? null,
+        signature_confidence: rezept.signature_confidence || null,
         doctor_lanr: arzt.lanr || null,
         doctor_bsnr: arzt.bsnr || null,
         kostentraeger_ik: kostentraegerIk,

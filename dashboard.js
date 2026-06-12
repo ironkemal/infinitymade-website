@@ -23,7 +23,7 @@ function employeeLimit() { return PLAN_EMPLOYEE_LIMITS[(currentProfile?.plan || 
 const T = {
   de: {
     logout: 'Abmelden',
-    nav_overview: 'Dashboard', nav_calendar: 'Terminkalender', nav_kunden: 'Patienten',
+    nav_overview: 'Dashboard', nav_ueberblick: 'Überblick', nav_calendar: 'Terminkalender', nav_kunden: 'Patienten',
     wiz_step_1: '1. Kontrolle', wiz_step_2: '2. Taxierung', wiz_step_3: '3. Export', wiz_step_4: '4. Archiv',
     nav_services: 'Leistungen', nav_hours: 'Verfügbarkeit',
     nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Bewertungen', nav_settings: 'Einstellungen',
@@ -97,7 +97,7 @@ const T = {
   },
   en: {
     logout: 'Sign out',
-    nav_overview: 'Dashboard', nav_calendar: 'Calendar', nav_kunden: 'Patients',
+    nav_overview: 'Dashboard', nav_ueberblick: 'Overview Hub', nav_calendar: 'Calendar', nav_kunden: 'Patients',
     wiz_step_1: '1. Control', wiz_step_2: '2. Pricing', wiz_step_3: '3. Export', wiz_step_4: '4. Archive',
     nav_services: 'Services', nav_hours: 'Availability',
     nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Reviews', nav_settings: 'Settings',
@@ -169,7 +169,7 @@ const T = {
   },
   tr: {
     logout: 'Çıkış',
-    nav_overview: 'Dashboard', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
+    nav_overview: 'Dashboard', nav_ueberblick: 'Genel Bakış', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
     wiz_step_1: '1. Kontrol', wiz_step_2: '2. Fiyatlandırma', wiz_step_3: '3. Dışa Aktarım', wiz_step_4: '4. Arşiv',
     nav_services: 'Hizmetler', nav_hours: 'Müsaitlik',
     nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Değerlendirmeler', nav_settings: 'Ayarlar',
@@ -294,62 +294,82 @@ const ICON = {
 
 const SECTOR_PANELS = {
   default: [
-    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'] },
-    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'] },
-    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'] },
-    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'] },
-    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'] },
-    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'] },
-    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'] },
-    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
-    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
-    { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'] },
-    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'] }
+    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   physiotherapy: [
-    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'] },
-    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'] },
-    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'] },
-    { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'] },
-    { id: 'fahrtenbuch', icon: ICON.car, key: 'nav_fahrtenbuch', roles: ['owner', 'employee'] },
-    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'] },
-    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'] },
-    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'] },
-    { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'] },
-    { id: 'anamnese', icon: ICON.notes, key: 'nav_anamnese', roles: ['owner', 'employee'] },
-    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'] },
-    { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
-    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
-    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'] },
-    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'] },
-    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'] },
-    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
-    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
-    { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
-    { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'] },
-    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'] }
+    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'fahrtenbuch', icon: ICON.car, key: 'nav_fahrtenbuch', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'], group: 'rezepte' },
+    { id: 'anamnese', icon: ICON.notes, key: 'nav_anamnese', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'], group: 'abrechnung' },
+    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'], group: 'abrechnung' },
+    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'], group: 'abrechnung' },
+    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'], group: 'patienten' },
+    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'], group: 'abrechnung' },
+    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   praxis: [
-    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'] },
-    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'] },
-    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'] },
-    { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'] },
-    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'] },
-    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'] },
-    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'] },
-    { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'] },
-    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'] },
-    { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'] },
-    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'] },
-    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'] },
-    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'] },
-    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'] },
-    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'] },
-    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'] },
-    { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'] },
-    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'] }
+    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
+    { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'], group: 'rezepte' },
+    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'], group: 'abrechnung' },
+    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'], group: 'abrechnung' },
+    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'], group: 'abrechnung' },
+    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'], group: 'patienten' },
+    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'], group: 'abrechnung' },
+    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
   ]
 };
+
+const NAV_GROUPS = [
+  { id: 'uebersicht',    labelDe: 'Übersicht',     labelEn: 'Overview',      labelTr: 'Genel Bakış',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>' },
+  { id: 'termine',       labelDe: 'Termine',        labelEn: 'Appointments',  labelTr: 'Randevular',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' },
+  { id: 'patienten',     labelDe: 'Patienten',      labelEn: 'Patients',      labelTr: 'Hastalar',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id: 'rezepte',       labelDe: 'Rezepte',        labelEn: 'Prescriptions', labelTr: 'Reçeteler',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
+  { id: 'abrechnung',    labelDe: 'Abrechnung',     labelEn: 'Billing',       labelTr: 'Faturalama',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>' },
+  { id: 'team',          labelDe: 'Team',           labelEn: 'Team',          labelTr: 'Ekip',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id: 'einstellungen', labelDe: 'Einstellungen',  labelEn: 'Settings',      labelTr: 'Ayarlar',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' },
+];
 
 const DAYS = {
   de: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
@@ -482,23 +502,66 @@ async function renderSidebar() {
     }
   }
 
-  // RBAC: aktif business için modül erişimlerini yükle
   await loadModulePermissions();
-
   const items = getSidebarItems();
   console.log('[renderSidebar] items count=', items.length, items.map(i => i.id));
-  items.forEach(item => {
-    if (!item.roles.includes(role)) return;
-    if (item.id === 'abrechnung' && !has302Access()) return;
-    // RBAC scope check (sadece employee için)
-    const moduleKey = SIDEBAR_TO_MODULE[item.id];
-    if (role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) return;
-    const btn = document.createElement('button');
-    btn.className = 'sidebar-item' + (item.id === activePanel ? ' active' : '');
-    btn.dataset.panel = item.id;
-    btn.innerHTML = `<span class="icon">${item.icon}</span><span>${t(item.key)}</span>`;
-    btn.addEventListener('click', () => switchPanel(item.id));
-    nav.appendChild(btn);
+
+  const openGroups = JSON.parse(localStorage.getItem('sidebar_open_groups') || '["uebersicht","termine"]');
+  const activeItem = items.find(i => i.id === activePanel);
+  const activeGroupId = activeItem?.group || null;
+
+  NAV_GROUPS.forEach(group => {
+    const groupItems = items.filter(item => {
+      if (item.group !== group.id) return false;
+      if (!item.roles.includes(role)) return false;
+      if (item.id === 'abrechnung' && !has302Access()) return false;
+      const moduleKey = SIDEBAR_TO_MODULE[item.id];
+      if (role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) return false;
+      return true;
+    });
+    if (groupItems.length === 0) return;
+
+    const hasActive = groupItems.some(i => i.id === activePanel);
+    const isOpen = hasActive || openGroups.includes(group.id);
+    const label = currentLang === 'en' ? group.labelEn : currentLang === 'tr' ? group.labelTr : group.labelDe;
+
+    const groupEl = document.createElement('div');
+    groupEl.className = 'nav-group' + (isOpen ? ' open' : '');
+    groupEl.dataset.groupId = group.id;
+
+    const header = document.createElement('button');
+    header.className = 'nav-group-header' + (hasActive ? ' has-active' : '');
+    header.setAttribute('type', 'button');
+    header.innerHTML = '<span class="nav-group-icon">' + group.icon + '</span>' +
+      '<span class="nav-group-label">' + label + '</span>' +
+      '<span class="nav-group-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>';
+
+    header.addEventListener('click', () => {
+      groupEl.classList.toggle('open');
+      const stored = JSON.parse(localStorage.getItem('sidebar_open_groups') || '[]');
+      if (groupEl.classList.contains('open')) {
+        if (!stored.includes(group.id)) stored.push(group.id);
+      } else {
+        const idx = stored.indexOf(group.id);
+        if (idx > -1) stored.splice(idx, 1);
+      }
+      localStorage.setItem('sidebar_open_groups', JSON.stringify(stored));
+    });
+    groupEl.appendChild(header);
+
+    const itemsEl = document.createElement('div');
+    itemsEl.className = 'nav-group-items';
+    groupItems.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'sidebar-item' + (item.id === activePanel ? ' active' : '');
+      btn.dataset.panel = item.id;
+      btn.setAttribute('type', 'button');
+      btn.innerHTML = '<span class="icon">' + item.icon + '</span><span>' + t(item.key) + '</span>';
+      btn.addEventListener('click', () => switchPanel(item.id));
+      itemsEl.appendChild(btn);
+    });
+    groupEl.appendChild(itemsEl);
+    nav.appendChild(groupEl);
   });
 }
 
@@ -534,6 +597,21 @@ function showMyBookingLink() {
 
 async function switchPanel(id) {
   window.switchPanel = switchPanel;
+  const panelId = id;
+  // Aktif panelin grubunu otomatik aç
+  const _allItems = getSidebarItems ? getSidebarItems() : [];
+  const _activeNavItem = _allItems.find(i => i.id === panelId);
+  if (_activeNavItem?.group) {
+    const _groupEl = document.querySelector('[data-group-id="' + _activeNavItem.group + '"]');
+    if (_groupEl && !_groupEl.classList.contains('open')) {
+      _groupEl.classList.add('open');
+      const stored = JSON.parse(localStorage.getItem('sidebar_open_groups') || '[]');
+      if (!stored.includes(_activeNavItem.group)) {
+        stored.push(_activeNavItem.group);
+        localStorage.setItem('sidebar_open_groups', JSON.stringify(stored));
+      }
+    }
+  }
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + id);
@@ -545,18 +623,23 @@ async function switchPanel(id) {
     loadActivityFeed().catch(() => {});
   }
   if (id === 'calendar') {
+    if (!window._calRpInited) {
+      window._calRpInited = true;
+      initCalRightPanel();
+    }
     showMyBookingLink();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
     setCalendarView('day');
   }
   if (id === 'fahrtenbuch') loadFahrtenbuchPanel();
-  if (id === 'kunden') loadLeads();
+  if (id === 'kunden') { loadLeads(); initPatTableView(); }
+  if (id === 'ueberblick') loadUeberblick();
   if (id === 'services') loadServices();
   if (id === 'hours') loadHoursPanel();
   if (id === 'team') loadTeam();
   if (id === 'b2b') { loadB2B(); checkB2bSetup(); }
   if (id === 'b2c') { loadB2C(); checkB2cSetup(); }
-  if (id === 'settings') loadSettings();
+  if (id === 'settings') { loadSettings(); loadVorlagen(); }
   if (id === 'doctors') loadDoctors();
   if (id === 'notizen') loadNotizen();
   if (id === 'beispielmodus') loadBeispielmodus();
@@ -1929,6 +2012,25 @@ async function renderDayView(dateStr) {
           const bkEmp = document.getElementById('bkEmployee');
           if (bkEmp) bkEmp.value = emp.id;
         });
+
+        // Drag & Drop for prescription sessions (madde 13)
+        slot.addEventListener('dragover', e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          slot.style.background = 'rgba(177,137,27,0.2)';
+        });
+        slot.addEventListener('dragleave', () => {
+          slot.style.background = '';
+        });
+        slot.addEventListener('drop', async e => {
+          e.preventDefault();
+          slot.style.background = '';
+          const sessionId = e.dataTransfer.getData('sessionId');
+          if (sessionId) {
+            await handleSessionDrop(sessionId, slot.dataset.time, slot.dataset.empId);
+          }
+        });
+
         slotWrap.appendChild(slot);
       }
     }
@@ -2162,7 +2264,279 @@ async function openBookingActionModal(booking) {
     bkActionTimer = setInterval(() => updateNoShowButton(booking.start_time), 30000);
   }
 
+  // No-show geçmiş uyarısı
+  const leadId = booking.lead_id || null;
+  const noShowWarningEl = document.getElementById('bkActionNoShowWarning');
+  if (noShowWarningEl) {
+    noShowWarningEl.hidden = true;
+    noShowWarningEl.textContent = '';
+  }
+  if (leadId) {
+    const { data: prevNoShows } = await supabase
+      .from('bookings')
+      .select('id,start_time')
+      .eq('lead_id', leadId)
+      .eq('status', 'no_show')
+      .neq('id', booking.id)
+      .order('start_time', { ascending: false })
+      .limit(5);
+
+    if (prevNoShows && prevNoShows.length > 0 && noShowWarningEl) {
+      const lastDate = new Date(prevNoShows[0].start_time).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+      noShowWarningEl.textContent = `⚠ ${prevNoShows.length}× nicht erschienen – zuletzt ${lastDate}`;
+      noShowWarningEl.hidden = false;
+    }
+  }
+
+  openCalRightPanel(booking);
   openModal('bkActionModal');
+}
+
+// ===== Calendar Right Panel (madde 13) =====
+
+function initCalRightPanel() {
+  document.getElementById('calRpClose')?.addEventListener('click', closeCalRightPanel);
+}
+
+function openCalRightPanel(booking) {
+  const panel = document.getElementById('calRightPanel');
+  if (!panel) return;
+  panel.hidden = false;
+
+  const title = document.getElementById('calRpTitle');
+  const content = document.getElementById('calRpContent');
+  if (title) title.textContent = booking.customer_name || 'Termin-Details';
+  if (content) {
+    const svcName = booking.services?.title || booking.service_name || '—';
+    const start = booking.start_time ? new Date(booking.start_time).toLocaleString('de-DE', { weekday: 'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+    const end = booking.end_time ? new Date(booking.end_time).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) : '—';
+    const statusMap = { confirmed: '✓ Bestätigt', cancelled: '✗ Storniert', no_show: '⚠ Nicht erschienen', completed: '✓ Erledigt' };
+
+    content.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Patient</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-main);">${escapeHtml(booking.customer_name || '—')}</div>
+        ${booking.customer_phone ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">📞 ${escapeHtml(booking.customer_phone)}</div>` : ''}
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Leistung</div>
+        <div style="color:var(--text-main);">${escapeHtml(svcName)}</div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Zeit</div>
+        <div style="color:var(--text-main);">${start} – ${end}</div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Status</div>
+        <div style="color:var(--text-main);">${statusMap[booking.status] || booking.status || '—'}</div>
+      </div>
+      ${booking.notes ? `<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Notiz</div><div style="color:var(--text-main);font-size:12px;">${escapeHtml(booking.notes)}</div></div>` : ''}
+      <div id="calRpRezeptSection" style="margin-top:8px;"><div style="color:var(--text-muted);font-size:12px;">Rezept wird geladen…</div></div>
+      <div id="calRpSessionSection" style="margin-top:8px;"></div>
+    `;
+  }
+
+  // Asenkron: lead_id üzerinden rezept ve seans bilgisi yükle
+  if (booking.lead_id) {
+    loadCalRpRezeptInfo(booking.lead_id);
+    loadCalRpUnverga(booking.lead_id);
+  } else {
+    const unverga = document.getElementById('calRpUnverga');
+    if (unverga) unverga.textContent = '—';
+  }
+}
+
+function closeCalRightPanel() {
+  const panel = document.getElementById('calRightPanel');
+  if (panel) panel.hidden = true;
+}
+
+async function loadCalRpRezeptInfo(leadId) {
+  const section = document.getElementById('calRpRezeptSection');
+  if (!section) return;
+
+  const { data: rxs } = await supabase
+    .from('prescriptions')
+    .select('id, rezept_typ, status, heilmittel, ausstellungsdatum, anzahl_einheiten, prescription_sessions(id, session_number, status)')
+    .eq('patient_id', leadId)
+    .not('status', 'in', '("completed","billed","cancelled")')
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  if (!rxs || rxs.length === 0) {
+    section.innerHTML = '<div style="font-size:11px;color:var(--text-muted);">Kein aktives Rezept</div>';
+    return;
+  }
+
+  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+
+  section.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Rezepte</div>` +
+    rxs.map(rx => {
+      const sessions = rx.prescription_sessions || [];
+      const done = sessions.filter(s => s.status === 'done').length;
+      const total = rx.anzahl_einheiten || sessions.length || 0;
+      return `<div style="padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:6px;">
+        <div style="color:var(--text-main);font-size:12px;font-weight:600;">${escapeHtml(rx.heilmittel || rx.rezept_typ || '—')}</div>
+        <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Ausgestellt: ${fmt(rx.ausstellungsdatum)}</div>
+        <div style="margin-top:6px;">
+          <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+            <div style="width:${total ? Math.round((done/total)*100) : 0}%;height:100%;background:#22c55e;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${done}/${total} Sitzungen</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+async function loadCalRpUnverga(leadId) {
+  const section = document.getElementById('calRpUnverga');
+  if (!section) return;
+
+  // Planlanmamış prescription_sessions
+  const { data: sessions } = await supabase
+    .from('prescription_sessions')
+    .select('id, session_number, prescriptions!prescription_id(heilmittel, patient_id)')
+    .eq('status', 'planned')
+    .is('booking_id', null)
+    .filter('prescriptions.patient_id', 'eq', leadId)
+    .limit(10);
+
+  if (!sessions || sessions.length === 0) {
+    section.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Alle Heilmittel vergeben.</div>';
+    return;
+  }
+
+  section.innerHTML = sessions.map(s => `
+    <div class="calrp-heilmittel-item" draggable="true" data-session-id="${s.id}"
+      style="padding:6px 8px;background:rgba(177,137,27,0.1);border:1px solid rgba(177,137,27,0.3);border-radius:6px;margin-bottom:4px;cursor:grab;font-size:12px;color:var(--text-main);">
+      📋 Sitzung ${s.session_number || '?'} — ${escapeHtml(s.prescriptions?.heilmittel || 'Heilmittel')}
+    </div>
+  `).join('');
+
+  // Drag start events
+  section.querySelectorAll('.calrp-heilmittel-item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('sessionId', el.dataset.sessionId);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+  });
+}
+
+async function findMatchingServiceId(heilmittel) {
+  let list = ownerServices || [];
+  if (!list.length) {
+    const ownerId = getOwnerId();
+    const { data } = await bizScope(supabase.from('services')
+      .select('id,title,code')
+      .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`), 'services');
+    list = data || [];
+  }
+  if (!list.length) return null;
+  const hmLower = (heilmittel || '').toLowerCase();
+  const match = list.find(s => 
+    (s.title && s.title.toLowerCase().includes(hmLower)) ||
+    (s.code && s.code.toLowerCase().includes(hmLower))
+  );
+  if (match) return match.id;
+  return list[0].id;
+}
+
+async function handleSessionDrop(sessionId, timeStr, empId) {
+  try {
+    const { data: sess, error: sessErr } = await supabase
+      .from('prescription_sessions')
+      .select('*, prescriptions!prescription_id(*)')
+      .eq('id', sessionId)
+      .single();
+
+    if (sessErr || !sess) {
+      showToast('Fehler beim Laden der Sitzung: ' + (sessErr?.message || 'Nicht gefunden'), 'error');
+      return;
+    }
+
+    const patientId = sess.prescriptions?.patient_id;
+    if (!patientId) {
+      showToast('Diese Verordnung hat keinen verknüpften Patienten.', 'error');
+      return;
+    }
+
+    const { data: lead, error: leadErr } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('id', patientId)
+      .single();
+
+    if (leadErr || !lead) {
+      showToast('Fehler beim Laden des Patienten: ' + (leadErr?.message || 'Nicht gefunden'), 'error');
+      return;
+    }
+
+    const serviceId = await findMatchingServiceId(sess.prescriptions.heilmittel);
+    if (!serviceId) {
+      showToast('Kein passender Service für dieses Heilmittel gefunden.', 'error');
+      return;
+    }
+
+    const isHausbesuch = sess.prescriptions.hausbesuch || false;
+    let dur = 30;
+    const srv = ownerServices.find(s => s.id === serviceId);
+    if (srv && srv.duration_minutes) {
+      dur = srv.duration_minutes;
+    }
+
+    let totalBlockMin = dur;
+    if (isHausbesuch && lead.duration_min != null) {
+      totalBlockMin = Number(lead.duration_min) * 2 + dur + HAUSBESUCH_BUFFER_MIN;
+    }
+
+    const startIso = new Date(timeStr).toISOString();
+    const endIso = new Date(new Date(timeStr).getTime() + totalBlockMin * 60 * 1000).toISOString();
+    const custName = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.title || 'Patient';
+
+    const payload = {
+      owner_id: getOwnerId(),
+      user_id: empId,
+      service_id: serviceId,
+      start_time: startIso,
+      end_time: endIso,
+      customer_name: custName,
+      customer_email: lead.email || '',
+      customer_phone: lead.phone || null,
+      notes: `Sitzung ${sess.session_number} — ${sess.prescriptions.heilmittel || ''}`,
+      hausbesuch: isHausbesuch,
+      status: 'confirmed',
+      lead_id: lead.id
+    };
+
+    const { data: newBooking, error: insErr } = await supabase
+      .from('bookings')
+      .insert(payload)
+      .select('id')
+      .single();
+
+    if (insErr || !newBooking) {
+      showToast('Fehler beim Erstellen des Termins: ' + (insErr?.message || 'Unbekannt'), 'error');
+      return;
+    }
+
+    const { error: updErr } = await supabase
+      .from('prescription_sessions')
+      .update({ booking_id: newBooking.id })
+      .eq('id', sessionId);
+
+    if (updErr) {
+      showToast('Termin erstellt, aber Verknüpfung fehlgeschlagen: ' + updErr.message, 'warning');
+    } else {
+      showToast('Termin erfolgreich für Sitzung ' + sess.session_number + ' erstellt.');
+    }
+
+    await refreshBookingViews();
+    await loadCalRpUnverga(lead.id);
+
+  } catch (err) {
+    console.error('[handleSessionDrop]', err);
+    showToast('Ein unerwarteter Fehler ist aufgetreten: ' + err.message, 'error');
+  }
 }
 
 // Fahrtenbuch: bkActionModal'ı booking.hausbesuch + fahrt_status'a göre render eder
@@ -2641,7 +3015,7 @@ async function handlePatientNichtErschienen() {
   try {
     const { error: bkErr } = await supabase
       .from('bookings')
-      .update({ status: 'no_show' })
+      .update({ status: 'no_show', no_show: true, no_show_noted_at: new Date().toISOString() })
       .eq('id', bkActionBookingCache.id);
 
     if (bkErr) throw bkErr;
@@ -3780,11 +4154,14 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const conflicts = data.conflicts || [];
     closeModal('bookingModal');
     await refreshBookingViews();
-    if (conflicts.length > 0) {
-      showToast(`${created.length} Termine erstellt, ${conflicts.length} übersprungen (Konflikt).`);
-    } else {
-      showToast(`${created.length} Termine erstellt.`);
-    }
+
+    // Terminbestätigung drucken dialog
+    showSeriterminConfirmDialog({
+      patientName: cust,
+      createdCount: created.length,
+      conflictCount: conflicts.length,
+      appointments: created
+    });
     return;
   }
 
@@ -3910,6 +4287,96 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   await refreshBookingViews();
   showToast(t('saved'));
 });
+
+function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount, appointments }) {
+  const existing = document.getElementById('_seriterminConfirmOverlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = '_seriterminConfirmOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+  const conflictNote = conflictCount > 0
+    ? `<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:6px;padding:8px 12px;font-size:12px;color:#fbbf24;margin-bottom:12px;">${conflictCount} Termin(e) wegen Überschneidung übersprungen.</div>`
+    : '';
+
+  const apptList = (appointments || []).slice(0, 20).map(a => {
+    const dt = a.start_time ? new Date(a.start_time).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    return `<li style="padding:3px 0;font-size:13px;color:var(--text-main,#f9fafb);">${dt}</li>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;">
+      <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">✓ ${createdCount} Serientermin(e) erstellt</h3>
+      <p style="margin:0 0 12px;font-size:13px;color:var(--text-muted,#9ca3af);">Patient: <strong style="color:var(--text-main,#f9fafb);">${escapeHtml(patientName || '—')}</strong></p>
+      ${conflictNote}
+      ${apptList ? `<ul style="margin:0 0 16px;padding-left:16px;list-style:disc;">${apptList}</ul>` : ''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="_scPrintBtn" style="flex:1;padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">🖨 Terminbestätigung drucken</button>
+        <button id="_scCloseBtn" style="flex:1;padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Schließen</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('_scCloseBtn').addEventListener('click', () => overlay.remove());
+  document.getElementById('_scPrintBtn').addEventListener('click', () => {
+    printSeriterminConfirmation({ patientName, appointments });
+    overlay.remove();
+  });
+}
+
+function printSeriterminConfirmation({ patientName, appointments }) {
+  const apptRows = (appointments || []).map(a => {
+    const dt = a.start_time ? new Date(a.start_time).toLocaleString('de-DE', {
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '';
+    return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee;">${dt} Uhr</td></tr>`;
+  }).join('');
+
+  const logoUrl = currentProfile?.praxis_logo_url || '';
+  const footerText = currentProfile?.invoice_footer_text || '';
+  const bizName = currentProfile?.business_name || '';
+  const logoHtml = logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height:60px;max-width:200px;margin-bottom:16px;display:block;" />` : '';
+  const headerName = bizName ? `<div style="font-size:13px;color:#555;margin-bottom:4px;">${escapeHtml(bizName)}</div>` : '';
+  const footerHtml = footerText
+    ? escapeHtml(footerText).replace(/\n/g, '<br>')
+    : 'Bitte bringen Sie dieses Dokument zu Ihrem nächsten Termin mit.<br>Bei Fragen wenden Sie sich an uns.';
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Terminbestätigung</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; color: #222; }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    p { margin: 6px 0; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { text-align: left; padding: 8px 12px; background: #f5f5f5; font-size: 13px; font-weight: 600; }
+    td { font-size: 13px; }
+    .footer { margin-top: 40px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 16px; }
+    @media print { body { margin: 20px; } }
+  </style>
+  </head><body>
+  ${logoHtml}${headerName}
+  <h1>Terminbestätigung</h1>
+  <p>Patient: <strong>${escapeHtml(patientName || '—')}</strong></p>
+  <p>Ausgestellt am: ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+  <table>
+    <thead><tr><th>Termin</th></tr></thead>
+    <tbody>${apptRows}</tbody>
+  </table>
+  <div class="footer">${footerHtml}</div>
+  </body></html>`;
+
+  const w = window.open('', '_blank', 'width=700,height=600');
+  if (w) {
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 400);
+  } else {
+    showToast('Popup-Blocker verhindert das Drucken.', 'error');
+  }
+}
 
 // ============================================================
 // AI Series Scheduler — KI-Vorschlag flow
@@ -4175,6 +4642,44 @@ function showConfirmModal({ title = 'Bestätigen', message = '', confirmText = '
     cancelBtn.onclick = () => cleanup(false);
     closeBtn.onclick = () => cleanup(false);
     openModal('confirmModal');
+  });
+}
+
+function showInputModal({ title, message, inputLabel, inputPlaceholder, confirmText, cancelText, variant }) {
+  return new Promise(resolve => {
+    const existing = document.getElementById('_inputModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_inputModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:420px;';
+
+    box.innerHTML = `
+      <h3 style="margin:0 0 8px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">${title}</h3>
+      <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted,#9ca3af);">${message}</p>
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);margin-bottom:6px;">${inputLabel || ''}</label>
+      <input id="_inputModalField" type="text" placeholder="${inputPlaceholder || ''}"
+        style="width:100%;padding:9px 12px;background:var(--bg-input,#111827);border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-main,#f9fafb);font-size:13px;box-sizing:border-box;outline:none;" />
+      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+        <button id="_inputModalCancel" style="padding:8px 16px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">${cancelText || 'Abbrechen'}</button>
+        <button id="_inputModalConfirm" style="padding:8px 16px;background:${variant === 'danger' ? '#dc2626' : 'var(--accent,#b1891b)'};border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">${confirmText || 'OK'}</button>
+      </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    const field = document.getElementById('_inputModalField');
+    field.focus();
+
+    const cleanup = (val) => { overlay.remove(); resolve(val); };
+
+    document.getElementById('_inputModalCancel').addEventListener('click', () => cleanup(null));
+    document.getElementById('_inputModalConfirm').addEventListener('click', () => cleanup(field.value));
+    field.addEventListener('keydown', e => { if (e.key === 'Enter') cleanup(field.value); if (e.key === 'Escape') cleanup(null); });
   });
 }
 
@@ -4856,6 +5361,55 @@ async function openPatientDetailModal(lead) {
   loadPatientDetailMails(leadId);
 }
 
+function computeRxDeadlineAlerts(rx) {
+  const alerts = [];
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  if (!rx.ausstellungsdatum) return alerts;
+  const issued = new Date(rx.ausstellungsdatum);
+
+  // Tamamlanmış / faturalandırılmış reçetelerde deadline gösterme
+  if (['completed','billed','cancelled'].includes(rx.status)) return alerts;
+
+  const started = rx.behandlungsbeginn ? new Date(rx.behandlungsbeginn) : null;
+
+  // --- 28-Tage Startfrist ---
+  if (!started) {
+    const deadline28 = new Date(issued.getTime() + 28 * 86400000);
+    const daysLeft = Math.round((deadline28 - now) / 86400000);
+    if (daysLeft < 0) {
+      alerts.push({ level: 'danger', icon: '🔴', msg: `Behandlungsbeginn-Frist abgelaufen (seit ${Math.abs(daysLeft)} Tagen)` });
+    } else if (daysLeft <= 14) {
+      alerts.push({ level: 'warning', icon: '🟡', msg: `Behandlungsbeginn-Frist: noch ${daysLeft} Tag${daysLeft !== 1 ? 'e' : ''}` });
+    }
+  }
+
+  // --- 3/6 Monate Abschluss-Frist ---
+  if (started) {
+    const deadline3m = new Date(started.getTime() + 90 * 86400000);
+    const deadline6m = new Date(started.getTime() + 180 * 86400000);
+    const activeDeadline = deadline3m; // Standard: 3 Monate (6M für LHB/BVB — hier vereinfacht 3M)
+    const daysLeft = Math.round((activeDeadline - now) / 86400000);
+    if (daysLeft < 0 && rx.status !== 'completed') {
+      alerts.push({ level: 'warning', icon: '🟡', msg: `Therapie-Frist abgelaufen (${Math.abs(daysLeft)} Tage überschritten)` });
+    }
+  }
+
+  // --- 9 Monate Abrechnungsfrist ---
+  if (started && !['billed'].includes(rx.status)) {
+    const deadline9m = new Date(started.getTime() + 274 * 86400000);
+    const daysLeft9m = Math.round((deadline9m - now) / 86400000);
+    if (daysLeft9m < 0) {
+      alerts.push({ level: 'danger', icon: '🔴', msg: `Abrechnungsfrist abgelaufen (${Math.abs(daysLeft9m)} Tage überschritten)` });
+    } else if (daysLeft9m <= 60) {
+      alerts.push({ level: 'warning', icon: '🟡', msg: `Abrechnungsfrist in ${daysLeft9m} Tagen (bis ${deadline9m.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' })})` });
+    }
+  }
+
+  return alerts;
+}
+
 async function loadPatientDetailRezepte(leadId) {
   const content = document.getElementById('pdRezContent');
   const loading = document.getElementById('pdRezLoading');
@@ -4868,6 +5422,7 @@ async function loadPatientDetailRezepte(leadId) {
       .select(`
         id, rezept_typ, status, icd10, diagnosegruppe, heilmittel,
         heilmittel_position, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
+        behandlungsbeginn, deadline_reminders,
         is_dringend, hausbesuch, dmrz_exported_at, created_at,
         abrechnung_status, kostentraeger_ik, zuzahlung_befreit,
         prescription_sessions ( id, session_number, status, done_at )
@@ -4899,6 +5454,18 @@ async function loadPatientDetailRezepte(leadId) {
   const sessStatusCls = { planned: 'badge-gray', done: 'badge-green', no_show: 'badge-red', cancelled: 'badge-gray' };
 
   content.innerHTML = rxs.map(rx => {
+    const deadlineAlerts = computeRxDeadlineAlerts(rx);
+    const deadlineBannersHtml = deadlineAlerts.length > 0
+      ? `<div style="margin-bottom:10px;width:100%;">` +
+        deadlineAlerts.map(a =>
+          `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;margin-bottom:4px;background:${a.level === 'danger' ? 'rgba(239,68,68,0.1)' : 'rgba(251,191,36,0.1)'};border:1px solid ${a.level === 'danger' ? 'rgba(239,68,68,0.3)' : 'rgba(251,191,36,0.3)'};">
+            <span>${a.icon}</span>
+            <span style="font-size:12px;font-weight:600;color:var(--text-main);">${a.msg}</span>
+          </div>`
+        ).join('') +
+        `</div>`
+      : '';
+
     const sessions = (rx.prescription_sessions || []).sort((a, b) => a.session_number - b.session_number);
     const total = rx.anzahl_einheiten || sessions.length || 0;
     const done = sessions.filter(s => s.status === 'done').length;
@@ -4964,9 +5531,11 @@ async function loadPatientDetailRezepte(leadId) {
           ${rx.heilmittel_position ? `<span style="font-family:monospace;font-size:11px;color:#666;margin-left:6px;">${escapeHtml(rx.heilmittel_position)}</span>` : ''}
           <span style="color:#888;margin-left:8px;font-size:13px;">${escapeHtml(rx.icd10 || '')}${rx.diagnosegruppe ? ' · ' + escapeHtml(rx.diagnosegruppe) : ''}</span>
         </div>
+        ${deadlineBannersHtml}
         <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
           <span class="badge badge-blue">${typLabel[rx.rezept_typ] || rx.rezept_typ}</span>
           <span class="badge badge-gray">${statusLabel[rx.status] || rx.status}</span>
+          ${rx.zuzahlung_befreit ? '<span class="badge badge-green" title="Zuzahlungsbefreiung aktiv">Befreit</span>' : ''}
           ${dmrz}
           ${flags}
           ${abrBadge}
@@ -5187,6 +5756,19 @@ async function saveBefreiung(leadId) {
   };
   const { error } = await supabase.from('zuzahlung_befreiung').upsert(row, { onConflict: 'patient_id,jahr' });
   if (error) { errEl.textContent = 'Speicherfehler: ' + error.message; return; }
+
+  // Prescriptions otomatik befreit işaretle
+  try {
+    await supabase
+      .from('prescriptions')
+      .update({ zuzahlung_befreit: true, zuzahlung_eur: 0 })
+      .eq('patient_id', leadId)
+      .eq('owner_id', ownerId)
+      .filter('ausstellungsdatum', 'gte', `${jahr}-01-01`)
+      .filter('ausstellungsdatum', 'lte', `${jahr}-12-31`);
+  } catch (autoErr) {
+    console.warn('[befreiung auto-mark]', autoErr);
+  }
 
   closeModal('befreiungModal');
   showToast('Befreiung gespeichert ✓');
@@ -6620,6 +7202,91 @@ async function loadTeam() {
     navigator.clipboard.writeText(inviteUrl);
     showToast(t('copied'));
   };
+
+  // Urlaub section (sadece owner)
+  const urlaubSection = document.getElementById('urlaubSection');
+  if (urlaubSection) {
+    urlaubSection.hidden = false;
+    // Dropdown'u team members ile doldur
+    const empSelect = document.getElementById('urlaubEmpSelect');
+    if (empSelect) {
+      empSelect.innerHTML = '<option value="">— Mitarbeiter wählen —</option>' +
+        data.map(m => `<option value="${m.id}">${escapeHtml(m.business_name || m.email?.split('@')[0] || '—')} (${m.role === 'owner' ? 'Inhaber' : 'Mitarbeiter'})</option>`).join('');
+      empSelect.addEventListener('change', () => loadUrlaubListe(empSelect.value));
+    }
+    // Wire eintragen button
+    const eintragenBtn = document.getElementById('urlaubEintragenBtn');
+    if (eintragenBtn) {
+      eintragenBtn.onclick = null;
+      eintragenBtn.addEventListener('click', saveUrlaub);
+    }
+  }
+}
+
+async function saveUrlaub() {
+  const empId = document.getElementById('urlaubEmpSelect')?.value;
+  const von = document.getElementById('urlaubVon')?.value;
+  const bis = document.getElementById('urlaubBis')?.value;
+  const type = document.getElementById('urlaubType')?.value || 'urlaub';
+
+  if (!empId) { showToast('Bitte Mitarbeiter auswählen.', 'error'); return; }
+  if (!von || !bis) { showToast('Bitte Von- und Bis-Datum eingeben.', 'error'); return; }
+  if (von > bis) { showToast('Von-Datum muss vor Bis-Datum liegen.', 'error'); return; }
+
+  const { error } = await supabase.from('time_offs').insert({
+    employee_id: empId,
+    owner_id: getOwnerId(),
+    start_date: von + 'T00:00:00+01:00',
+    end_date: bis + 'T23:59:59+01:00',
+    type,
+    reason: type === 'urlaub' ? 'Jahresurlaub' : type,
+  });
+
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  showToast('Urlaub eingetragen ✓');
+
+  // Reset dates
+  document.getElementById('urlaubVon').value = '';
+  document.getElementById('urlaubBis').value = '';
+
+  loadUrlaubListe(empId);
+}
+
+async function loadUrlaubListe(empId) {
+  const listeEl = document.getElementById('urlaubListe');
+  if (!listeEl || !empId) return;
+
+  listeEl.innerHTML = '<span style="opacity:0.5;">Lade…</span>';
+
+  const { data, error } = await supabase
+    .from('time_offs')
+    .select('id,start_date,end_date,type,reason')
+    .eq('employee_id', empId)
+    .order('start_date', { ascending: false })
+    .limit(10);
+
+  if (error || !data || data.length === 0) {
+    listeEl.innerHTML = '<span style="opacity:0.5;">Keine Einträge vorhanden.</span>';
+    return;
+  }
+
+  const typeLabel = { urlaub: '🏖 Urlaub', krank: '🤒 Krankmeldung', frei: '📅 Freier Tag', elternzeit: '👶 Elternzeit' };
+  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+
+  listeEl.innerHTML = `<div style="margin-top:8px;">` + data.map(e => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <span style="flex:1;color:var(--text-main);">${typeLabel[e.type] || e.type} · ${fmt(e.start_date)} – ${fmt(e.end_date)}</span>
+      <button class="btn-ghost btn-sm" onclick="deleteUrlaub('${e.id}', '${empId}')" style="color:#dc2626;font-size:11px;">Löschen</button>
+    </div>
+  `).join('') + `</div>`;
+}
+
+async function deleteUrlaub(timeOffId, empId) {
+  if (!confirm('Urlaub-Eintrag löschen?')) return;
+  const { error } = await supabase.from('time_offs').delete().eq('id', timeOffId);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  showToast('Gelöscht.');
+  loadUrlaubListe(empId);
 }
 
 let detailEmpId = null;
@@ -8085,7 +8752,152 @@ async function loadSettings() {
       abrSection.style.display = 'none';
     }
   }
+
+  // Praxis-Branding (Madde 8)
+  const logoUrl = currentProfile.praxis_logo_url || '';
+  const logoInput = document.getElementById('setBrandingLogo');
+  const footerInput = document.getElementById('setBrandingFooter');
+  if (logoInput) logoInput.value = logoUrl;
+  if (footerInput) footerInput.value = currentProfile.invoice_footer_text || '';
+  updateBrandingLogoPreview(logoUrl);
 }
+
+function updateBrandingLogoPreview(url) {
+  const preview = document.getElementById('brandingLogoPreview');
+  const img = document.getElementById('brandingLogoImg');
+  if (!preview || !img) return;
+  if (url && url.startsWith('http')) {
+    img.src = url;
+    preview.style.display = '';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+document.getElementById('setBrandingLogo')?.addEventListener('input', e => updateBrandingLogoPreview(e.target.value));
+
+document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
+  const logoUrl = (document.getElementById('setBrandingLogo')?.value || '').trim();
+  const footerText = (document.getElementById('setBrandingFooter')?.value || '').trim();
+  const { error } = await supabase.from('profiles').update({
+    praxis_logo_url: logoUrl || null,
+    invoice_footer_text: footerText || null
+  }).eq('id', currentSession.user.id);
+  if (error) { showToast('Fehler beim Speichern: ' + error.message, 'error'); return; }
+  currentProfile.praxis_logo_url = logoUrl;
+  currentProfile.invoice_footer_text = footerText;
+  updateBrandingLogoPreview(logoUrl);
+  showToast('Branding gespeichert', 'success');
+});
+
+// ===== Vorlage System (Madde 11) =====
+
+const VORLAGE_TYPE_LABELS = {
+  quittung_zuzahlung: 'Quittung Zuzahlung',
+  rechnung_bg: 'Rechnung BG',
+  rechnung_privat: 'Rechnung Privat',
+  rechnung_eigenanteil: 'Rechnung Eigenanteil',
+  rechnung_selbstzahler: 'Rechnung Selbstzahler',
+  rechnung_sonder: 'Rechnung Sonder',
+  rezeptvorderseite: 'Rezeptvorderseite',
+  rzg_quittung: 'RZG-Quittung'
+};
+
+async function loadVorlagen() {
+  const list = document.getElementById('vorlagenList');
+  if (!list) return;
+  list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Wird geladen…</div>';
+
+  const { data, error } = await supabase
+    .from('document_vorlagen')
+    .select('id, name, vorlage_type, is_default, created_at, content_json')
+    .eq('owner_id', getOwnerId())
+    .order('vorlage_type').order('name');
+
+  if (error) { list.innerHTML = `<div style="color:#f87171;">Fehler: ${error.message}</div>`; return; }
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Noch keine Vorlagen erstellt.</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(v => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:6px;gap:8px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(v.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHtml(VORLAGE_TYPE_LABELS[v.vorlage_type] || v.vorlage_type)}${v.is_default ? ' · <span style="color:#f59e0b;font-weight:600;">Standard</span>' : ''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn-ghost btn-sm" onclick="openVorlagenEdit('${v.id}')" style="font-size:12px;">Bearbeiten</button>
+        <button class="btn-ghost btn-sm" onclick="deleteVorlage('${v.id}')" style="font-size:12px;color:#f87171;">Löschen</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+let _vorlagenCache = {};
+
+async function openVorlagenEdit(id) {
+  const { data } = await supabase.from('document_vorlagen').select('*').eq('id', id).single();
+  if (!data) return;
+  _vorlagenCache[id] = data;
+  document.getElementById('vorlagenModalTitle').textContent = 'Vorlage bearbeiten';
+  document.getElementById('vorlagenEditId').value = id;
+  document.getElementById('vorlagenName').value = data.name;
+  document.getElementById('vorlagenType').value = data.vorlage_type;
+  document.getElementById('vorlagenIsDefault').checked = data.is_default;
+  document.getElementById('vorlagenContentJson').value = JSON.stringify(data.content_json || {}, null, 2);
+  document.getElementById('vorlagenModal').hidden = false;
+}
+
+function openVorlagenNew() {
+  document.getElementById('vorlagenModalTitle').textContent = 'Neue Vorlage';
+  document.getElementById('vorlagenEditId').value = '';
+  document.getElementById('vorlagenName').value = '';
+  document.getElementById('vorlagenType').value = 'quittung_zuzahlung';
+  document.getElementById('vorlagenIsDefault').checked = false;
+  document.getElementById('vorlagenContentJson').value = '{}';
+  document.getElementById('vorlagenModal').hidden = false;
+}
+
+async function saveVorlage() {
+  const id = document.getElementById('vorlagenEditId').value;
+  const name = document.getElementById('vorlagenName').value.trim();
+  const vorlage_type = document.getElementById('vorlagenType').value;
+  const is_default = document.getElementById('vorlagenIsDefault').checked;
+  const rawJson = document.getElementById('vorlagenContentJson').value.trim();
+
+  if (!name) { showToast('Name ist erforderlich', 'error'); return; }
+
+  let content_json = {};
+  try { content_json = rawJson ? JSON.parse(rawJson) : {}; }
+  catch { showToast('Ungültiges JSON im Inhalt-Feld', 'error'); return; }
+
+  const payload = { name, vorlage_type, is_default, content_json };
+
+  if (id) {
+    const { error } = await supabase.from('document_vorlagen').update(payload).eq('id', id);
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  } else {
+    const { error } = await supabase.from('document_vorlagen').insert({ ...payload, owner_id: getOwnerId() });
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  }
+
+  document.getElementById('vorlagenModal').hidden = true;
+  showToast('Vorlage gespeichert', 'success');
+  loadVorlagen();
+}
+
+async function deleteVorlage(id) {
+  const ok = await showConfirmModal({ title: 'Vorlage löschen?', message: 'Diese Vorlage wird unwiderruflich gelöscht.', confirmText: 'Löschen', variant: 'danger' });
+  if (!ok) return;
+  const { error } = await supabase.from('document_vorlagen').delete().eq('id', id);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  showToast('Vorlage gelöscht', 'success');
+  loadVorlagen();
+}
+
+document.getElementById('vorlagenNewBtn')?.addEventListener('click', openVorlagenNew);
+document.getElementById('vorlagenSaveBtn')?.addEventListener('click', saveVorlage);
 
 document.getElementById('befSaveBtn')?.addEventListener('click', () => {
   const lead = document.getElementById('befSaveBtn').dataset.lead;
@@ -9508,12 +10320,15 @@ function renderInvList() {
     const date = new Date(inv.issued_at || inv.created_at).toLocaleDateString('de-DE');
     const total = formatEur(inv.total_patient || 0);
     const st = inv.status || 'draft';
+    const payBadge = inv.payment_status === 'paid'
+      ? `<span class="badge badge-green" title="${inv.payment_method || ''}" style="margin-left:4px;">✓ Bezahlt</span>`
+      : (inv.payment_status === 'pending' ? '<span class="badge badge-gray" style="margin-left:4px;">Offen</span>' : '');
     return `<tr>
       <td><strong>${inv.invoice_number || '—'}</strong></td>
       <td>${escapeHtml(inv.patient_name || '')}</td>
       <td>${date}</td>
       <td>${total}</td>
-      <td><span class="badge ${statusCls[st] || 'badge-gray'}">${statusMap[st] || st}</span></td>
+      <td><span class="badge ${statusCls[st] || 'badge-gray'}">${statusMap[st] || st}</span>${payBadge}</td>
       <td>${renderRezeptBadges(inv)}</td>
       <td><button class="btn-ghost-sm inv-view-btn" data-id="${inv.id}">Ansehen</button></td>
     </tr>`;
@@ -9947,7 +10762,105 @@ async function saveInvoice() {
   const dmrzBtn = document.getElementById('invDmrzBtn');
   if (dmrzBtn) dmrzBtn.disabled = false;
   window._currentInvoiceId = inserted?.id || null;
+
+  // Payment status dialog
+  const invoiceIdForPayment = inserted?.id;
+  if (invoiceIdForPayment) {
+    await askInvoicePaymentStatus(invoiceIdForPayment);
+  }
+
   await loadRechnungen();
+}
+
+async function askInvoicePaymentStatus(invoiceId) {
+  return new Promise(resolve => {
+    const existing = document.getElementById('_paymentStatusModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_paymentStatusModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    overlay.innerHTML = `
+      <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:400px;">
+        <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">Wurde bereits bezahlt?</h3>
+        <p style="margin:0 0 18px;font-size:13px;color:var(--text-muted,#9ca3af);">Bitte wählen Sie den Zahlungsstatus für diese Rechnung.</p>
+
+        <div id="_psMethodWrap" style="display:none;margin-bottom:16px;">
+          <p style="margin:0 0 8px;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);">Zahlungsart:</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="bar" style="accent-color:var(--accent,#b1891b);"> Bar</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="karte" style="accent-color:var(--accent,#b1891b);"> Karte</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="ueberweisung" style="accent-color:var(--accent,#b1891b);"> Überweisung</label>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button id="_psYes" style="padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Ja — sofort bezahlt</button>
+          <button id="_psLater" style="padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Nein — Zahlung ausstehend</button>
+          <button id="_psIban" style="padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Lastschrift (IBAN)</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const psYes = document.getElementById('_psYes');
+    const psLater = document.getElementById('_psLater');
+    const psIban = document.getElementById('_psIban');
+    const methodWrap = document.getElementById('_psMethodWrap');
+
+    let selectedMethod = 'bar';
+
+    psYes.addEventListener('click', async () => {
+      methodWrap.style.display = 'block';
+      psYes.textContent = '✓ Bestätigen (bezahlt)';
+      psYes.style.background = '#16a34a';
+
+      // Remove previous confirm handler and add new one
+      const oldConf = document.getElementById('_psConfirmFinal');
+      if (oldConf) oldConf.remove();
+      const confBtn = document.createElement('button');
+      confBtn.id = '_psConfirmFinal';
+      confBtn.style.cssText = 'margin-top:8px;padding:10px;background:#16a34a;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;width:100%;';
+      confBtn.textContent = 'Zahlung speichern';
+      methodWrap.parentNode.insertBefore(confBtn, methodWrap.nextSibling);
+
+      // Wire method radios
+      overlay.querySelectorAll('input[name="_psMethod"]').forEach(r => {
+        r.addEventListener('change', () => { selectedMethod = r.value; });
+      });
+      // Default bar checked
+      const barRadio = overlay.querySelector('input[value="bar"]');
+      if (barRadio) { barRadio.checked = true; selectedMethod = 'bar'; }
+
+      confBtn.addEventListener('click', async () => {
+        overlay.remove();
+        await supabase.from('invoices').update({
+          payment_status: 'paid',
+          payment_method: selectedMethod,
+          paid_at: new Date().toISOString(),
+          status: 'paid'
+        }).eq('id', invoiceId);
+        showToast('Zahlung gespeichert ✓');
+        resolve();
+      });
+    });
+
+    psLater.addEventListener('click', async () => {
+      overlay.remove();
+      await supabase.from('invoices').update({ payment_status: 'pending' }).eq('id', invoiceId);
+      showToast('Rechnung als ausstehend markiert.');
+      resolve();
+    });
+
+    psIban.addEventListener('click', async () => {
+      overlay.remove();
+      await supabase.from('invoices').update({ payment_status: 'pending', payment_method: 'lastschrift' }).eq('id', invoiceId);
+      showToast('Lastschrift vorgemerkt.');
+      resolve();
+    });
+  });
 }
 
 // ===== DMRZ XML export (Phase 3) =====
@@ -11746,6 +12659,10 @@ async function openRezeptConfirmModal(payload) {
   setVal('rxcBerichtStatus', rez.bericht_status || 'offen');
 
   renderValidationBanner(payload.validation);
+
+  // Signature warning: show when AI detected missing doctor signature
+  const sigWarn = document.getElementById('rxSignatureWarning');
+  if (sigWarn) sigWarn.style.display = rez.unterschrift_vorhanden === false ? 'flex' : 'none';
 
   // Sprint 8+: populate KK + Heilmittel datalists and run AI fuzzy match on OCR text.
   setupRezeptConfirmDropdowns(pat.krankenkasse, rez.heilmittel);
@@ -13950,6 +14867,7 @@ async function loadBelegliste() {
         <td><span class="badge" style="background:var(--border);color:var(--text-main);">${r.type}</span></td>
         <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
         <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
+        <td style="color:var(--text-muted);font-size:12px;">${escapeHtml(r.storno_reason || (r.type === 'storno' ? '—' : ''))}</td>
         <td style="color:var(--text-muted);">System</td>
         <td>${stornoBtn}</td>
       `;
@@ -13966,13 +14884,17 @@ async function loadBelegliste() {
 }
 
 async function triggerStorno(belegNr, amount, originalRef) {
-  const confirm = await showConfirmModal({
+  // Storno reason input modal
+  const reason = await showInputModal({
     title: 'Beleg Stornieren',
-    message: `Sind Sie sicher, dass Sie den Beleg Nr. ${belegNr} stornieren möchten? Es wird eine Gegenbuchung von -${amount} € erzeugt.`,
+    message: `Beleg Nr. ${belegNr} stornieren? Es wird eine Gegenbuchung von -${amount} € erzeugt.`,
+    inputLabel: 'Storno-Grund (optional)',
+    inputPlaceholder: 'z. B. Doppelbuchung, falscher Betrag …',
     confirmText: 'Beleg Stornieren',
+    cancelText: 'Abbrechen',
     variant: 'danger'
   });
-  if (!confirm) return;
+  if (reason === null) return; // null = abgebrochen
 
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token || '';
@@ -13987,7 +14909,8 @@ async function triggerStorno(belegNr, amount, originalRef) {
       body: JSON.stringify({
         type: 'storno',
         amount_eur: -Number(amount),
-        reference_text: `STORNO für Beleg-Nr: ${belegNr} (${originalRef})`
+        reference_text: `STORNO für Beleg-Nr: ${belegNr} (${originalRef})`,
+        storno_reason: reason || null
       })
     });
 
@@ -14402,6 +15325,181 @@ function initCompactMode() {
   });
 }
 
+// ============================================================
+// Kiosk / Tablet Mode (madde 4)
+// ============================================================
+
+let _kioskPinMode = 'exit'; // 'exit' or 'setup'
+
+function initKioskMode() {
+  const startBtn = document.getElementById('kioskStartBtn');
+  if (startBtn) {
+    startBtn.addEventListener('click', handleKioskStart);
+  }
+
+  const exitBtn = document.getElementById('kioskExitBtn');
+  if (exitBtn) {
+    exitBtn.addEventListener('click', () => showKioskPinModal('exit'));
+  }
+
+  // PIN entry modal
+  document.getElementById('kioskPinCancelBtn')?.addEventListener('click', hideKioskPinModal);
+  document.getElementById('kioskPinConfirmBtn')?.addEventListener('click', handleKioskPinConfirm);
+  document.getElementById('kioskPinForgotBtn')?.addEventListener('click', handleKioskPinForgot);
+
+  // Setup modal
+  document.getElementById('kioskSetupCancelBtn')?.addEventListener('click', () => {
+    document.getElementById('kioskPinSetupModal').hidden = true;
+  });
+  document.getElementById('kioskSetupSaveBtn')?.addEventListener('click', handleKioskPinSetup);
+
+  // PIN digit auto-advance
+  ['kioskPin1','kioskPin2','kioskPin3','kioskPin4'].forEach((id, idx, arr) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      el.value = el.value.replace(/[^0-9]/g, '').slice(0, 1);
+      if (el.value && idx < arr.length - 1) {
+        document.getElementById(arr[idx + 1])?.focus();
+      }
+      if (idx === arr.length - 1 && el.value) {
+        handleKioskPinConfirm();
+      }
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !el.value && idx > 0) {
+        document.getElementById(arr[idx - 1])?.focus();
+      }
+    });
+  });
+}
+
+async function handleKioskStart() {
+  const pin = currentProfile?.tablet_kiosk_pin;
+  if (!pin) {
+    // İlk kez — PIN kur
+    document.getElementById('kioskSetupPin').value = '';
+    document.getElementById('kioskSetupPinConfirm').value = '';
+    document.getElementById('kioskSetupError').textContent = '';
+    document.getElementById('kioskPinSetupModal').hidden = false;
+  } else {
+    enterKioskMode();
+  }
+}
+
+async function handleKioskPinSetup() {
+  const pin = document.getElementById('kioskSetupPin').value;
+  const confirm2 = document.getElementById('kioskSetupPinConfirm').value;
+  const errEl = document.getElementById('kioskSetupError');
+
+  if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'PIN muss genau 4 Ziffern haben.'; return; }
+  if (pin !== confirm2) { errEl.textContent = 'PINs stimmen nicht überein.'; return; }
+
+  const { error } = await supabase.from('profiles').update({ tablet_kiosk_pin: pin }).eq('id', currentSession.user.id);
+  if (error) { errEl.textContent = 'Fehler: ' + error.message; return; }
+
+  currentProfile.tablet_kiosk_pin = pin;
+  document.getElementById('kioskPinSetupModal').hidden = true;
+  enterKioskMode();
+}
+
+function enterKioskMode() {
+  const overlay = document.getElementById('kioskOverlay');
+  if (!overlay) return;
+
+  // Anamnese formunu kiosk overlay'e kopyala (event'lerin çalışması için clone yerine taşıyoruz)
+  const formContent = document.getElementById('kioskFormContent');
+  const originalForm = document.querySelector('#panel-anamnese .card');
+
+  if (formContent && originalForm) {
+    formContent.innerHTML = '';
+    const anamPanel = document.getElementById('panel-anamnese');
+    if (anamPanel) {
+      // kioskStartBtn'ı gizle
+      const startBtn = document.getElementById('kioskStartBtn');
+      if (startBtn) startBtn.style.display = 'none';
+
+      formContent.appendChild(anamPanel);
+      anamPanel.classList.add('active');
+    }
+  }
+
+  overlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+  // Fullscreen iste
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+}
+
+function exitKioskMode() {
+  const overlay = document.getElementById('kioskOverlay');
+  if (overlay) overlay.hidden = true;
+  document.body.style.overflow = '';
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  }
+
+  const anamPanel = document.getElementById('panel-anamnese');
+  const mainArea = document.getElementById('mainArea');
+  if (anamPanel && mainArea) {
+    const startBtn = document.getElementById('kioskStartBtn');
+    if (startBtn) startBtn.style.display = '';
+
+    mainArea.appendChild(anamPanel);
+  }
+}
+
+function showKioskPinModal(mode) {
+  _kioskPinMode = mode;
+  ['kioskPin1','kioskPin2','kioskPin3','kioskPin4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('kioskPinError').textContent = '';
+  document.getElementById('kioskPinTitle').textContent = 'PIN eingeben';
+  document.getElementById('kioskPinSubtitle').textContent = 'Geben Sie Ihren 4-stelligen PIN ein, um den Kiosk-Modus zu beenden.';
+  document.getElementById('kioskPinModal').hidden = false;
+  document.getElementById('kioskPin1')?.focus();
+}
+
+function hideKioskPinModal() {
+  document.getElementById('kioskPinModal').hidden = true;
+}
+
+function handleKioskPinConfirm() {
+  const entered = ['kioskPin1','kioskPin2','kioskPin3','kioskPin4']
+    .map(id => document.getElementById(id)?.value || '').join('');
+
+  if (entered.length < 4) {
+    document.getElementById('kioskPinError').textContent = 'Bitte alle 4 Stellen eingeben.';
+    return;
+  }
+
+  const storedPin = currentProfile?.tablet_kiosk_pin;
+  if (!storedPin || entered === storedPin) {
+    hideKioskPinModal();
+    exitKioskMode();
+  } else {
+    document.getElementById('kioskPinError').textContent = 'Falscher PIN. Bitte erneut versuchen.';
+    ['kioskPin1','kioskPin2','kioskPin3','kioskPin4'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('kioskPin1')?.focus();
+  }
+}
+
+function handleKioskPinForgot() {
+  hideKioskPinModal();
+  exitKioskMode();
+  showToast('Kiosk-Modus beendet. Bitte neuen PIN in den Einstellungen festlegen.', 'error');
+  // Eski PIN'i sil → bir sonraki kiosk başlatmada yeniden kurulum gerekir
+  supabase.from('profiles').update({ tablet_kiosk_pin: null }).eq('id', currentSession.user.id).then(() => {
+    if (currentProfile) currentProfile.tablet_kiosk_pin = null;
+  });
+}
+
 // Init çağrıları — DOMContentLoaded'dan sonra
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
@@ -14409,12 +15507,14 @@ if (document.readyState === 'loading') {
     initCompactMode();
     initWlModal();
     initDruckeinstellungen();
+    initKioskMode();
   });
 } else {
   initSchnellerfassung();
   initCompactMode();
   initWlModal();
   initDruckeinstellungen();
+  initKioskMode();
 }
 
 // =====================================================================
@@ -15101,4 +16201,384 @@ function showPlanWall(lastPlan) {
   render();
   document.body.appendChild(wall);
 }
+
+// ===== Qikbee-style Patienten+Rezept Tabelle (madde 14) =====
+
+let _patTableViewActive = false;
+
+function initPatTableView() {
+  const toggleBtn = document.getElementById('patTableViewToggle');
+  if (!toggleBtn) return;
+  
+  if (!toggleBtn.dataset.patTableViewInit) {
+    toggleBtn.dataset.patTableViewInit = 'true';
+    toggleBtn.addEventListener('click', () => {
+      _patTableViewActive = !_patTableViewActive;
+      const tableWrap = document.querySelector('#panel-kunden .table-wrap');
+      const patDetailTable = document.getElementById('patDetailTable');
+      if (tableWrap) tableWrap.style.display = _patTableViewActive ? 'none' : '';
+      if (patDetailTable) patDetailTable.hidden = !_patTableViewActive;
+      toggleBtn.style.background = _patTableViewActive ? 'var(--accent,#b1891b)' : '';
+      toggleBtn.style.color = _patTableViewActive ? '#fff' : '';
+      if (_patTableViewActive) loadPatRxTable();
+    });
+
+    document.getElementById('patRxDetailClose')?.addEventListener('click', () => {
+      document.getElementById('patRxDetailPanel').hidden = true;
+    });
+  }
+
+  // If already active, refresh layout/data
+  const tableWrap = document.querySelector('#panel-kunden .table-wrap');
+  const patDetailTable = document.getElementById('patDetailTable');
+  if (tableWrap) tableWrap.style.display = _patTableViewActive ? 'none' : '';
+  if (patDetailTable) patDetailTable.hidden = !_patTableViewActive;
+  toggleBtn.style.background = _patTableViewActive ? 'var(--accent,#b1891b)' : '';
+  toggleBtn.style.color = _patTableViewActive ? '#fff' : '';
+  if (_patTableViewActive) loadPatRxTable();
+}
+
+async function loadPatRxTable() {
+  const tbody = document.getElementById('patRxTableBody');
+  const emptyEl = document.getElementById('patRxEmpty');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);">Lade…</td></tr>';
+
+  const ownerId = getOwnerId();
+
+  // Leads + prescriptions + aerzte join
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .select(`
+      id, ausstellungsdatum, status, created_at,
+      leads!patient_id ( id, first_name, last_name ),
+      aerzte!arzt_id ( name:arzt_name )
+    `)
+    .eq('owner_id', ownerId)
+    .order('ausstellungsdatum', { ascending: false })
+    .limit(100);
+
+  if (error || !data || data.length === 0) {
+    tbody.innerHTML = '';
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+  if (emptyEl) emptyEl.hidden = true;
+
+  const statusColors = {
+    parsed:    { bg: '#fef9c3', color: '#854d0e', label: 'Geparst' },
+    confirmed: { bg: '#dcfce7', color: '#166534', label: 'Bestätigt' },
+    active:    { bg: '#dbeafe', color: '#1d4ed8', label: 'Aktiv' },
+    completed: { bg: '#f3f4f6', color: '#374151', label: 'Abgeschlossen' },
+    rejected:  { bg: '#fee2e2', color: '#991b1b', label: 'Abgelehnt' },
+    billed:    { bg: '#ede9fe', color: '#5b21b6', label: 'Abgerechnet' },
+  };
+
+  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+  const fmtShort = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' }) : '—';
+
+  tbody.innerHTML = data.map((rx, i) => {
+    const sc = statusColors[rx.status] || { bg: '#f3f4f6', color: '#374151', label: rx.status || '—' };
+    const lastName = rx.leads?.last_name || '—';
+    const firstName = rx.leads?.first_name || '—';
+    const arztName = rx.aerzte?.name || '—';
+    const rxNr = rx.id.slice(0, 8).toUpperCase();
+
+    return `<tr class="pat-rx-row" data-rx-id="${rx.id}" data-lead-id="${rx.leads?.id || ''}" style="cursor:pointer;">
+      <td style="font-weight:600;color:var(--text-main);">${escapeHtml(lastName)}</td>
+      <td style="color:var(--text-main);">${escapeHtml(firstName)}</td>
+      <td style="color:var(--text-muted);">${fmtShort(rx.ausstellungsdatum)}</td>
+      <td style="font-family:monospace;font-size:11px;color:var(--text-muted);">${rxNr}</td>
+      <td><span style="padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color};">${sc.label}</span></td>
+      <td style="color:var(--text-muted);">${fmtShort(rx.created_at)}</td>
+      <td style="color:var(--text-muted);">${escapeHtml(arztName)}</td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.pat-rx-row').forEach(row => {
+    row.addEventListener('click', () => openPatRxDetail(row.dataset.rxId, row.dataset.leadId));
+    row.addEventListener('mouseenter', () => row.style.background = 'rgba(255,255,255,0.04)');
+    row.addEventListener('mouseleave', () => row.style.background = '');
+  });
+}
+
+async function openPatRxDetail(rxId, leadId) {
+  const panel = document.getElementById('patRxDetailPanel');
+  const content = document.getElementById('patRxDetailContent');
+  const title = document.getElementById('patRxDetailName');
+  if (!panel || !content) return;
+
+  panel.hidden = false;
+  content.innerHTML = 'Lade…';
+
+  const { data: rx } = await supabase
+    .from('prescriptions')
+    .select('*, leads!patient_id(*), aerzte!arzt_id(name:arzt_name)')
+    .eq('id', rxId)
+    .maybeSingle();
+
+  if (!rx) { content.innerHTML = 'Fehler beim Laden.'; return; }
+
+  const p = rx.leads || {};
+  const fullName = [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
+  title.textContent = fullName;
+
+  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Patient</div><div style="color:var(--text-main);font-weight:600;">${escapeHtml(fullName)}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Geburtsdatum</div><div style="color:var(--text-main);">${fmt(p.geburtsdatum)}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Versichertennummer</div><div style="color:var(--text-main);font-family:monospace;">${escapeHtml(p.versichertennummer || '—')}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Krankenkasse</div><div style="color:var(--text-main);">${escapeHtml(p.krankenkasse || '—')}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Rezept-Typ</div><div style="color:var(--text-main);">${escapeHtml(rx.rezept_typ || '—')}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Heilmittel</div><div style="color:var(--text-main);">${escapeHtml(rx.heilmittel || '—')}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Ausstellungsdatum</div><div style="color:var(--text-main);">${fmt(rx.ausstellungsdatum)}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Gültig bis</div><div style="color:var(--text-main);">${fmt(rx.gueltig_bis)}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Arzt</div><div style="color:var(--text-main);">${escapeHtml(rx.aerzte?.name || '—')}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">ICD-10</div><div style="color:var(--text-main);font-family:monospace;">${escapeHtml(rx.icd10 || '—')}</div></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-primary btn-sm" onclick="switchPanel('kunden');openPatientDetail('${leadId}')">Patient öffnen →</button>
+    </div>
+  `;
+}
+
+// ===== Überblick Hub (madde 15) =====
+
+async function loadUeberblick() {
+  const ownerId = getOwnerId();
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  // Refresh butonu
+  document.getElementById('ueberblickRefreshBtn')?.addEventListener('click', loadUeberblick);
+
+  // --- 1. Rezept-Fristen ---
+  loadUeberblickDeadlines(ownerId, todayStr);
+
+  // --- 2. Geburtstage (nächste 7 Tage) ---
+  loadUeberblickBirthdays(ownerId, today);
+
+  // --- 3. Letzte No-Shows ---
+  loadUeberblickNoShows(ownerId);
+
+  // --- 4. Aktuelle Abwesenheiten ---
+  loadUeberblickVacations(ownerId, todayStr);
+}
+
+async function loadUeberblickDeadlines(ownerId, todayStr) {
+  const el = document.getElementById('ublDeadlinesList');
+  if (!el) return;
+
+  // 28 Tage Startfrist
+  const plus28 = new Date(new Date(todayStr).getTime() + 28 * 86400000).toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .select('id, ausstellungsdatum, behandlungsbeginn, status, leads!patient_id(first_name, last_name)')
+    .eq('owner_id', ownerId)
+    .not('status', 'in', '(completed,billed,rejected)')
+    .order('ausstellungsdatum', { ascending: true })
+    .limit(50);
+
+  if (error || !data || data.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine ausstehenden Rezepte.</div>';
+    return;
+  }
+
+  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+
+  const alerts = [];
+  data.forEach(rx => {
+    const name = [rx.leads?.first_name, rx.leads?.last_name].filter(Boolean).join(' ') || '—';
+    const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum) : null;
+    const started = rx.behandlungsbeginn ? new Date(rx.behandlungsbeginn) : null;
+
+    if (issued) {
+      // 28-Tage Behandlungsbeginn Frist
+      const deadline28 = new Date(issued.getTime() + 28 * 86400000);
+      if (!started && deadline28 >= new Date(todayStr) && deadline28 <= new Date(plus28)) {
+        const daysLeft = Math.round((deadline28 - new Date(todayStr)) / 86400000);
+        alerts.push({ type: 'warning', text: `${escapeHtml(name)} — Behandlungsbeginn in ${daysLeft} Tagen fällig (bis ${fmt(deadline28)})` });
+      }
+      if (!started && deadline28 < new Date(todayStr)) {
+        alerts.push({ type: 'danger', text: `${escapeHtml(name)} — Behandlungsbeginn-Frist ABGELAUFEN (seit ${fmt(deadline28)})` });
+      }
+    }
+
+    if (started) {
+      // 9-Monate Abrechnungsfrist
+      const deadline9m = new Date(started.getTime() + 274 * 86400000);
+      const days9Left = Math.round((deadline9m - new Date(todayStr)) / 86400000);
+      if (days9Left <= 60 && days9Left > 0) {
+        alerts.push({ type: 'warning', text: `${escapeHtml(name)} — Abrechnungsfrist in ${days9Left} Tagen (bis ${fmt(deadline9m)})` });
+      } else if (days9Left <= 0) {
+        alerts.push({ type: 'danger', text: `${escapeHtml(name)} — Abrechnungsfrist ABGELAUFEN (${fmt(deadline9m)})` });
+      }
+    }
+  });
+
+  if (alerts.length === 0) {
+    el.innerHTML = '<div style="color:#22c55e;font-size:13px;">✓ Keine dringenden Fristen.</div>';
+    return;
+  }
+
+  el.innerHTML = alerts.map(a => `
+    <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:16px;">${a.type === 'danger' ? '🔴' : '🟡'}</span>
+      <span style="font-size:13px;color:var(--text-main);">${a.text}</span>
+    </div>
+  `).join('');
+}
+
+async function loadUeberblickBirthdays(ownerId, today) {
+  const el = document.getElementById('ublBirthdaysList');
+  if (!el) return;
+
+  const { data, error } = await supabase
+    .from('leads')
+    .select('id, first_name, last_name, geburtsdatum')
+    .eq('owner_id', ownerId)
+    .not('geburtsdatum', 'is', null);
+
+  if (error || !data || data.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine Geburtstage gefunden.</div>';
+    return;
+  }
+
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const in7Days = new Date(todayMidnight.getTime() + 7 * 86400000 + 86399999);
+
+  const upcoming = data.filter(p => {
+    if (!p.geburtsdatum) return false;
+    const bd = new Date(p.geburtsdatum);
+    let bday = new Date(todayMidnight.getFullYear(), bd.getMonth(), bd.getDate());
+    if (bday < todayMidnight) {
+      bday.setFullYear(todayMidnight.getFullYear() + 1);
+    }
+    return bday >= todayMidnight && bday <= in7Days;
+  });
+
+  if (upcoming.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine Geburtstage in den nächsten 7 Tagen.</div>';
+    return;
+  }
+
+  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'long' }) : '—';
+  el.innerHTML = upcoming.map(p => {
+    const bd = new Date(p.geburtsdatum);
+    let bday = new Date(todayMidnight.getFullYear(), bd.getMonth(), bd.getDate());
+    if (bday < todayMidnight) {
+      bday.setFullYear(todayMidnight.getFullYear() + 1);
+    }
+    const daysLeft = Math.round((bday - todayMidnight) / 86400000);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:16px;">🎂</span>
+      <span style="font-size:13px;color:var(--text-main);">${escapeHtml([p.first_name,p.last_name].filter(Boolean).join(' '))} — ${fmt(p.geburtsdatum)}${daysLeft === 0 ? ' <strong style="color:#f59e0b;">(Heute!)</strong>' : ` (in ${daysLeft} Tag${daysLeft !== 1 ? 'en' : ''})`}</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadUeberblickNoShows(ownerId) {
+  const el = document.getElementById('ublNoShowList');
+  if (!el) return;
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('id, start_time, customer_name, lead_id')
+    .eq('owner_id', ownerId)
+    .eq('status', 'no_show')
+    .order('start_time', { ascending: false })
+    .limit(10);
+
+  if (error || !data || data.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen No-Shows.</div>';
+    return;
+  }
+
+  const fmt = d => d ? new Date(d).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+  el.innerHTML = data.map(b => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:16px;">⚠</span>
+      <span style="font-size:13px;color:var(--text-main);">${escapeHtml(b.customer_name || '—')} — ${fmt(b.start_time)}</span>
+    </div>
+  `).join('');
+}
+
+async function loadUeberblickVacations(ownerId, todayStr) {
+  const el = document.getElementById('ublVacationList');
+  if (!el) return;
+
+  const { data: emps } = await supabase
+    .from('profiles')
+    .select('id, business_name, email')
+    .or(`id.eq.${ownerId},owner_id.eq.${ownerId}`);
+  const empIds = (emps || []).map(e => e.id);
+  if (empIds.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen Abwesenheiten.</div>';
+    return;
+  }
+
+  let { data, error } = await supabase
+    .from('time_offs')
+    .select('id, start_date, end_date, type, profiles!employee_id(business_name, email)')
+    .in('employee_id', empIds)
+    .gte('end_date', todayStr + 'T00:00:00')
+    .order('start_date', { ascending: true })
+    .limit(20);
+
+  if (error || !data) {
+    console.warn('time_offs join failed, falling back to manual profiles mapping', error);
+    const { data: rawData, error: rawError } = await supabase
+      .from('time_offs')
+      .select('id, start_date, end_date, type, employee_id')
+      .in('employee_id', empIds)
+      .gte('end_date', todayStr + 'T00:00:00')
+      .order('start_date', { ascending: true })
+      .limit(20);
+
+    if (rawError || !rawData || rawData.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen Abwesenheiten.</div>';
+      return;
+    }
+
+    const empMap = {};
+    (emps || []).forEach(e => { empMap[e.id] = e; });
+    data = rawData.map(v => ({
+      ...v,
+      profiles: empMap[v.employee_id] || null
+    }));
+  }
+
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine aktuellen Abwesenheiten.</div>';
+    return;
+  }
+
+  const typeEmoji = { urlaub: '🏖', krank: '🤒', frei: '📅', elternzeit: '👶' };
+  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }) : '—';
+  el.innerHTML = data.map(v => {
+    const empName = v.profiles?.business_name || v.profiles?.email?.split('@')[0] || '—';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:16px;">${typeEmoji[v.type] || '📅'}</span>
+      <span style="font-size:13px;color:var(--text-main);">${escapeHtml(empName)} — ${v.type} · ${fmt(v.start_date)} – ${fmt(v.end_date)}</span>
+    </div>`;
+  }).join('');
+}
+
+window.openPatientDetail = async function(leadId) {
+  if (!leadId) return;
+  let lead = (window.leadsCache || []).find(l => l.id === leadId);
+  if (!lead) {
+    const { data } = await supabase.from('leads').select('*').eq('id', leadId).maybeSingle();
+    lead = data;
+  }
+  if (lead) {
+    openPatientDetailModal(lead);
+  } else {
+    showToast('Patient konnte nicht gefunden werden.', 'error');
+  }
+};
+
 

@@ -32,6 +32,7 @@ export function renderZuzahlungsrechnung(opts) {
   const {
     praxis = {}, patient = {}, verordnung = {}, rechnung = {},
     sessions = [], totals = {}, bankverbindung = '',
+    logoUrl = '', invoiceFooterText = '',
   } = opts;
 
   const sessionRows = sessions.map(s => `
@@ -82,6 +83,7 @@ export function renderZuzahlungsrechnung(opts) {
 
   <header>
     <div class="praxis">
+      ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height:50px;max-width:160px;display:block;margin-bottom:6px;" />` : ''}
       <strong>${escapeHtml(praxis.name || '')}</strong><br>
       ${escapeHtml(praxis.strasse || '')}<br>
       ${escapeHtml(praxis.plz_ort || '')}<br>
@@ -142,7 +144,9 @@ export function renderZuzahlungsrechnung(opts) {
   </p>
 
   <footer>
-    <div>
+    ${invoiceFooterText
+      ? `<div style="grid-column:1/-1;font-size:8pt;color:#555;">${escapeHtml(invoiceFooterText).replace(/\n/g, '<br>')}</div>`
+      : `<div>
       <strong>${escapeHtml(praxis.name || '')}</strong><br>
       Steuer-Nr.: ${escapeHtml(praxis.steuernummer || '')}<br>
       E-Mail: ${escapeHtml(praxis.email || '')}
@@ -156,7 +160,7 @@ export function renderZuzahlungsrechnung(opts) {
       Bitte überweisen Sie den Betrag bis zum
       <strong>${fmtDate(rechnung.faelligkeit)}</strong> unter Angabe der
       Rechnungsnummer <strong>${escapeHtml(rechnung.nummer || '')}</strong>.
-    </div>
+    </div>`}
   </footer>
 
 </div>

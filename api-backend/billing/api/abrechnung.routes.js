@@ -853,7 +853,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     if (uErr || !user) return res.status(401).send('Ungültiges Token');
 
     const { data: profile } = await supabase
-      .from('profiles').select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number')
+      .from('profiles').select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text')
       .eq('id', user.id).single();
     if (!profile) return res.status(403).send('Profil nicht gefunden');
     const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
@@ -935,7 +935,9 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       },
       sessions: printSessions,
       totals,
-      bankverbindung: 'DE89 1002 0030 0040 0500 00 (Musterbank)'
+      bankverbindung: 'DE89 1002 0030 0040 0500 00 (Musterbank)',
+      logoUrl: profile.praxis_logo_url || '',
+      invoiceFooterText: profile.invoice_footer_text || ''
     });
 
     res.set('Content-Type', 'text/html; charset=utf-8');
@@ -1057,7 +1059,7 @@ router.post('/belegliste', async (req, res) => {
       : profile.id;
 
     // ---- Input Validation ----
-    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id } = req.body || {};
+    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id, storno_reason } = req.body || {};
     
     const validation = validateBelegEntry(type, amount_eur);
     if (!validation.isValid) {
@@ -1077,7 +1079,8 @@ router.post('/belegliste', async (req, res) => {
           prescription_id: prescription_id || null,
           abrechnung_id: abrechnung_id || null,
           reference_text: reference_text || null,
-          created_by: u.user.id
+          created_by: u.user.id,
+          storno_reason: (type === 'storno' ? (storno_reason || null) : null)
         })
         .select()
         .single();
@@ -1097,7 +1100,8 @@ router.post('/belegliste', async (req, res) => {
           abrechnung_id: abrechnung_id || null,
           reference_text: reference_text || null,
           created_at: new Date().toISOString(),
-          created_by: u.user.id
+          created_by: u.user.id,
+          storno_reason: (type === 'storno' ? (storno_reason || null) : null)
         };
       } else {
         throw dbErr;

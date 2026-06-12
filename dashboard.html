@@ -20,7 +20,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260609" />
+  <link rel="stylesheet" href="dashboard.css?v=20260612" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -207,6 +207,39 @@
 
         </section>
 
+        <!-- ===== PANEL: ÜBERBLICK (Alerts Hub, madde 15) ===== -->
+        <section class="panel" id="panel-ueberblick">
+          <div class="panel-header">
+            <div>
+              <h2>Überblick</h2>
+              <p class="panel-sub">Fristen, Geburtstage, Abwesenheiten</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-ghost" id="ueberblickRefreshBtn" title="Aktualisieren">↻ Aktualisieren</button>
+            </div>
+          </div>
+
+          <div id="ueberblickContent">
+            <!-- Sections rendered by JS -->
+            <div id="ublDeadlinesSection" class="card" style="margin-bottom:16px;">
+              <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:var(--text-main);">⏰ Rezept-Fristen</h3>
+              <div id="ublDeadlinesList">Lade…</div>
+            </div>
+            <div id="ublBirthdaysSection" class="card" style="margin-bottom:16px;">
+              <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:var(--text-main);">🎂 Geburtstage (nächste 7 Tage)</h3>
+              <div id="ublBirthdaysList">Lade…</div>
+            </div>
+            <div id="ublNoShowSection" class="card" style="margin-bottom:16px;">
+              <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:var(--text-main);">⚠ Letzte Nicht-Erscheiner</h3>
+              <div id="ublNoShowList">Lade…</div>
+            </div>
+            <div id="ublVacationSection" class="card" style="margin-bottom:16px;">
+              <h3 style="margin:0 0 12px;font-size:15px;font-weight:700;color:var(--text-main);">🏖 Aktuelle Abwesenheiten</h3>
+              <div id="ublVacationList">Lade…</div>
+            </div>
+          </div>
+        </section>
+
         <!-- ===== PANEL 2: KALENDER ===== -->
         <section class="panel" id="panel-calendar">
           <div class="panel-header">
@@ -244,6 +277,19 @@
             <div class="dv-time-col" id="dvTimeCol"></div>
             <div class="dv-cols-wrap" id="dvColsWrap"></div>
           </div>
+
+          <!-- Calendar Right Panel (madde 13) -->
+          <div id="calRightPanel" hidden style="position:fixed;top:0;right:0;bottom:0;width:300px;background:var(--bg-card-solid,#1f2937);border-left:1px solid var(--border,#374151);z-index:500;display:flex;flex-direction:column;font-size:13px;overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);">
+              <span style="font-weight:700;color:var(--text-main);font-size:14px;" id="calRpTitle">Termin-Details</span>
+              <button id="calRpClose" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0 4px;">✕</button>
+            </div>
+            <div id="calRpContent" style="padding:14px;flex:1;overflow-y:auto;color:var(--text-muted);"></div>
+            <div style="border-top:1px solid var(--border);padding:12px 14px;">
+              <div style="font-weight:700;color:var(--text-main);font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Unvergabene Heilmittel</div>
+              <div id="calRpUnverga" style="color:var(--text-muted);font-size:12px;"></div>
+            </div>
+          </div>
         </section>
 
         <!-- ===== PANEL 3: KUNDEN INFO ===== -->
@@ -255,6 +301,9 @@
             </div>
             <div class="panel-actions">
               <input type="file" id="csvFile" accept=".csv,.json" hidden />
+              <button class="btn-ghost" id="patTableViewToggle" title="Tabellenansicht umschalten" style="padding:7px 10px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:16px;height:16px;vertical-align:-3px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              </button>
               <button class="btn-ghost" id="csvImportBtn" data-i18n="leads_import">CSV importieren</button>
               <button class="btn-primary" id="leadAddBtn" data-i18n="leads_add">+ Neuer Lead</button>
             </div>
@@ -286,6 +335,34 @@
               <tbody id="leadTableBody"></tbody>
             </table>
             <div id="leadEmpty" class="table-empty" hidden data-i18n="leads_empty">Noch keine Leads.</div>
+          </div>
+          <!-- Qikbee-style Patienten-Tabelle (madde 14) -->
+          <div id="patDetailTable" hidden style="margin-top:12px;">
+            <div style="overflow-x:auto;">
+              <table class="data-table" id="patRxTable">
+                <thead>
+                  <tr>
+                    <th>Nachname</th>
+                    <th>Vorname</th>
+                    <th>Rezeptdatum</th>
+                    <th>Rezept-Nr</th>
+                    <th>Status</th>
+                    <th>Erfassungsdatum</th>
+                    <th>Arzt</th>
+                  </tr>
+                </thead>
+                <tbody id="patRxTableBody"></tbody>
+              </table>
+              <div id="patRxEmpty" hidden style="text-align:center;padding:32px;color:var(--text-muted);font-size:14px;">Keine Patienten gefunden.</div>
+            </div>
+            <!-- Inline detail panel -->
+            <div id="patRxDetailPanel" hidden style="margin-top:12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:18px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h3 id="patRxDetailName" style="margin:0;font-size:16px;font-weight:700;color:var(--text-main);">—</h3>
+                <button id="patRxDetailClose" class="btn-ghost btn-sm">✕ Schließen</button>
+              </div>
+              <div id="patRxDetailContent" style="font-size:13px;color:var(--text-muted);">Laden…</div>
+            </div>
           </div>
         </section>
 
@@ -471,6 +548,40 @@
                 <span class="form-hint" style="margin:0;">Klicken Sie auf "Hinzufügen", um sie auch hier arbeiten zu lassen.</span>
               </div>
               <div id="otherStandortEmpsList"></div>
+            </div>
+
+            <!-- Urlaub eintragen (madde 3) -->
+            <div id="urlaubSection" style="margin-top:24px;" hidden>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text-main);">Urlaub eintragen für:</h3>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px;">
+                <div style="flex:1;min-width:180px;">
+                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Mitarbeiter</label>
+                  <select id="urlaubEmpSelect" style="width:100%;padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
+                    <option value="">— Mitarbeiter wählen —</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Von</label>
+                  <input type="date" id="urlaubVon" style="padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Bis</label>
+                  <input type="date" id="urlaubBis" style="padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">Art</label>
+                  <select id="urlaubType" style="padding:8px 10px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);font-size:13px;">
+                    <option value="urlaub">Urlaub</option>
+                    <option value="krank">Krankmeldung</option>
+                    <option value="frei">Freier Tag</option>
+                    <option value="elternzeit">Elternzeit</option>
+                  </select>
+                </div>
+                <button id="urlaubEintragenBtn" class="btn-primary" style="white-space:nowrap;">Eintragen</button>
+              </div>
+              <div id="urlaubListe" style="font-size:13px;color:var(--text-muted);"></div>
             </div>
           </div>
 
@@ -1131,6 +1242,7 @@
                     <th>Typ</th>
                     <th style="text-align:right;">Betrag</th>
                     <th>Referenztext</th>
+                    <th>Storno-Grund</th>
                     <th>Bediener</th>
                     <th>Aktion</th>
                   </tr>
@@ -1483,6 +1595,11 @@
             <div>
               <h2 data-i18n="nav_anamnese">Anamnese</h2>
               <p class="panel-sub" data-i18n="anamnese_sub">Digitales Anamnese-Formular</p>
+            </div>
+            <div class="panel-actions">
+              <button class="btn-primary" id="kioskStartBtn" title="Tablet an Patient übergeben">
+                📋 An Patient übergeben
+              </button>
             </div>
           </div>
 
@@ -2025,6 +2142,87 @@
                   <div class="form-hint">Für Physiotherapie: meist § 4 Nr. 14 UStG umsatzsteuerfrei.</div>
                 </div>
                 <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
+              </div>
+            </div>
+
+            <!-- Praxis-Branding (Madde 8) -->
+            <div class="settings-section" id="settingsBrandingSection">
+              <div class="settings-section-title">Praxis-Branding</div>
+              <div class="settings-section-body">
+                <div class="form-group">
+                  <label class="form-label">Logo-URL</label>
+                  <input class="form-input" id="setBrandingLogo" type="url" placeholder="https://…/logo.png" />
+                  <div class="form-hint">Wird auf Rechnungen und Quittungen angezeigt. Empfohlen: PNG mit transparentem Hintergrund, min. 200 × 80 px.</div>
+                </div>
+                <div id="brandingLogoPreview" style="display:none;margin-bottom:12px;">
+                  <img id="brandingLogoImg" alt="Logo" style="max-height:60px;max-width:200px;border-radius:4px;border:1px solid var(--border);padding:4px;background:#fff;" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fußzeile auf Rechnungen</label>
+                  <textarea class="form-input" id="setBrandingFooter" rows="3" placeholder="z. B. Ihre Physiotherapiepraxis · Praxisinhaber: Max Mustermann · Steuernummer: 220/5070/0815&#10;Bankverbindung: IBAN DE89 3704 0044 0532 0130 00 · BIC: COBADEFFXXX"></textarea>
+                  <div class="form-hint">Erscheint im unteren Bereich auf Rechnungen, Quittungen und §302-Dokumenten.</div>
+                </div>
+                <button class="btn-primary" id="brandingSaveBtn">Branding speichern</button>
+              </div>
+            </div>
+
+            <!-- Dokument-Vorlagen (Madde 11) -->
+            <div class="settings-section" id="settingsVorlagenSection">
+              <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                <span>Dokument-Vorlagen</span>
+                <button class="btn-ghost btn-sm" id="vorlagenNewBtn" type="button" style="font-size:12px;">＋ Neue Vorlage</button>
+              </div>
+              <div class="settings-section-body">
+                <p class="form-hint" style="margin-bottom:12px;">Erstellen Sie individuelle Vorlagen für Quittungen, Rechnungen und §302-Dokumente. Die als Standard markierte Vorlage wird automatisch verwendet.</p>
+                <div id="vorlagenList" style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="color:var(--text-muted);font-size:13px;">Wird geladen…</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vorlage create/edit modal -->
+            <div class="modal-overlay" id="vorlagenModal" hidden>
+              <div class="modal" style="max-width:560px;">
+                <div class="modal-header">
+                  <span class="modal-title" id="vorlagenModalTitle">Neue Vorlage</span>
+                  <button class="modal-close" onclick="document.getElementById('vorlagenModal').hidden=true">✕</button>
+                </div>
+                <div class="modal-body">
+                  <input type="hidden" id="vorlagenEditId" />
+                  <div class="form-group">
+                    <label class="form-label">Name *</label>
+                    <input class="form-input" id="vorlagenName" type="text" placeholder="z. B. Standard-Quittung 2026" maxlength="80" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Typ *</label>
+                    <select class="form-select" id="vorlagenType">
+                      <option value="quittung_zuzahlung">Quittung Zuzahlung</option>
+                      <option value="rechnung_bg">Rechnung BG</option>
+                      <option value="rechnung_privat">Rechnung Privat</option>
+                      <option value="rechnung_eigenanteil">Rechnung Eigenanteil</option>
+                      <option value="rechnung_selbstzahler">Rechnung Selbstzahler</option>
+                      <option value="rechnung_sonder">Rechnung Sonder</option>
+                      <option value="rezeptvorderseite">Rezeptvorderseite</option>
+                      <option value="rzg_quittung">RZG-Quittung</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                      <input type="checkbox" id="vorlagenIsDefault" style="width:16px;height:16px;accent-color:var(--accent);" />
+                      Als Standard für diesen Typ setzen
+                    </label>
+                    <div class="form-hint">Es kann pro Typ nur eine Standard-Vorlage geben.</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Inhalt (JSON)</label>
+                    <textarea class="form-input" id="vorlagenContentJson" rows="6" placeholder='{"header":"","body":"","footer":""}'></textarea>
+                    <div class="form-hint">Freies JSON-Objekt mit den Inhaltsbausteinen dieser Vorlage.</div>
+                  </div>
+                  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('vorlagenModal').hidden=true">Abbrechen</button>
+                    <button type="button" class="btn-primary" id="vorlagenSaveBtn">Speichern</button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -2575,6 +2773,13 @@
       </div>
       <div class="modal-body">
         <div id="rxValidationBanner" style="margin-bottom:14px;"></div>
+        <div id="rxSignatureWarning" style="display:none;margin-bottom:14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.4);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">⚠️</span>
+          <div>
+            <div style="font-weight:700;color:#f87171;font-size:13px;">Arzt-Unterschrift fehlt</div>
+            <div style="color:#fca5a5;font-size:12px;margin-top:2px;">Das Rezept ist möglicherweise nicht gültig. Bitte prüfen Sie das Original.</div>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start;">
           <div>
             <img id="rxConfirmImg" alt="Rezept" style="width:100%;border-radius:8px;border:1px solid #ddd;" />
@@ -3372,6 +3577,9 @@
           <div class="bk-action-session" id="bkActionSession">—</div>
         </div>
 
+        <div id="bkActionNoShowWarning" hidden
+          style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;color:#f87171;margin-top:8px;"></div>
+
         <!-- Hausbesuch info card -->
         <div id="bkActionHbInfo" class="hb-info-card" hidden>
           <div class="hb-info-head">
@@ -3838,6 +4046,46 @@
       0%   { transform: translateX(-150%); }
       100% { transform: translateX(380%); }
     }
+
+/* ===== Grouped sidebar navigation (madde 12) ===== */
+.nav-group { margin: 1px 0; }
+
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #6b7280);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 7px;
+  transition: background 0.14s, color 0.14s;
+  text-align: left;
+  user-select: none;
+}
+.nav-group-header:hover { color: var(--text-main, #f9fafb); background: rgba(255,255,255,0.05); }
+.nav-group-header.has-active { color: var(--text-main, #f9fafb); }
+
+.nav-group-icon { width: 15px; height: 15px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.nav-group-icon svg { width: 15px; height: 15px; }
+.nav-group-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav-group-chevron { width: 13px; height: 13px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; flex-shrink: 0; }
+.nav-group-chevron svg { width: 13px; height: 13px; }
+.nav-group.open .nav-group-chevron { transform: rotate(180deg); }
+
+.nav-group-items {
+  display: none;
+  flex-direction: column;
+  padding: 1px 0 3px 6px;
+}
+.nav-group.open .nav-group-items { display: flex; }
+/* ===== END grouped nav ===== */
   </style>
 
   <div id="aiLoadingOverlay" hidden style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;">
@@ -3850,6 +4098,70 @@
       <div style="color:var(--text-muted);font-size:12px;margin-top:10px;">Einen Moment bitte…</div>
     </div>
   </div>
+
+<!-- Kiosk Mode Overlay (madde 4) -->
+<div id="kioskOverlay" hidden style="position:fixed;inset:0;z-index:99999;background:var(--bg-main,#111827);display:flex;flex-direction:column;overflow:auto;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-card-solid,#1f2937);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">📋</span>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-main);">Anamnese-Formular</div>
+        <div style="font-size:12px;color:var(--text-muted);">Bitte alle Felder ausfüllen</div>
+      </div>
+    </div>
+    <button id="kioskExitBtn" style="padding:8px 16px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#f87171;cursor:pointer;font-size:13px;font-weight:600;">
+      🔒 Beenden (PIN)
+    </button>
+  </div>
+  <div id="kioskFormContent" style="flex:1;padding:20px;max-width:700px;margin:0 auto;width:100%;box-sizing:border-box;">
+    <!-- Anamnese form content will be cloned here -->
+  </div>
+</div>
+
+<!-- Kiosk PIN Entry Modal -->
+<div id="kioskPinModal" hidden style="position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:320px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:12px;">🔐</div>
+    <h3 id="kioskPinTitle" style="margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text-main);">PIN eingeben</h3>
+    <p id="kioskPinSubtitle" style="margin:0 0 20px;font-size:13px;color:var(--text-muted);">Geben Sie Ihren 4-stelligen PIN ein</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;">
+      <input type="password" id="kioskPin1" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+      <input type="password" id="kioskPin2" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+      <input type="password" id="kioskPin3" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+      <input type="password" id="kioskPin4" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+    </div>
+    <div id="kioskPinError" style="color:#f87171;font-size:13px;margin-bottom:12px;min-height:18px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button id="kioskPinCancelBtn" style="flex:1;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;">Abbrechen</button>
+      <button id="kioskPinConfirmBtn" style="flex:1;padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Bestätigen</button>
+    </div>
+    <button id="kioskPinForgotBtn" style="margin-top:12px;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;">PIN vergessen?</button>
+  </div>
+</div>
+
+<!-- Kiosk PIN Setup Modal (erstmaliger PIN) -->
+<div id="kioskPinSetupModal" hidden style="position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:340px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:12px;">🔑</div>
+    <h3 style="margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text-main);">PIN festlegen</h3>
+    <p style="margin:0 0 20px;font-size:13px;color:var(--text-muted);">Legen Sie einen 4-stelligen PIN fest, um den Kiosk-Modus zu beenden.</p>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:left;">PIN (4 Ziffern)</label>
+      <input type="password" id="kioskSetupPin" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="0000"
+        style="width:100%;padding:10px;text-align:center;font-size:20px;letter-spacing:8px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);box-sizing:border-box;outline:none;">
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:left;">PIN wiederholen</label>
+      <input type="password" id="kioskSetupPinConfirm" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="0000"
+        style="width:100%;padding:10px;text-align:center;font-size:20px;letter-spacing:8px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);box-sizing:border-box;outline:none;">
+    </div>
+    <div id="kioskSetupError" style="color:#f87171;font-size:13px;margin-bottom:12px;min-height:18px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button id="kioskSetupCancelBtn" style="flex:1;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;">Abbrechen</button>
+      <button id="kioskSetupSaveBtn" style="flex:1;padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">PIN speichern & starten</button>
+    </div>
+  </div>
+</div>
 
   <script type="module" src="dashboard.js?v=20260612"></script>
 </body>

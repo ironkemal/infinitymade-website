@@ -55,10 +55,17 @@ Schema:
     "hausbesuch": boolean,
     "is_blanko": boolean,
     "is_lhb_bvb": boolean,
-    "bericht_angefordert": boolean
+    "bericht_angefordert": boolean,
+    "unterschrift_vorhanden": boolean|null,   // true = Arzt-Unterschrift sichtbar; false = fehlt; null = nicht erkennbar
+    "signature_confidence": "high"|"medium"|"low"|null  // Konfidenz der Unterschrift-Erkennung
   },
   "ocr_confidence": number
 }`;
+
+// Instruction: "unterschrift_vorhanden" = true wenn eine handgeschriebene Arzt-Unterschrift im Formular sichtbar ist.
+// Typisch im unteren Bereich des Formulars, meist über/neben "Datum, Unterschrift und Stempel des Arztes".
+// false = das Feld ist leer/fehlt. null = Bildqualität zu schlecht um sicher zu urteilen.
+// "signature_confidence" = "high" wenn klar erkennbar, "medium" wenn wahrscheinlich, "low" wenn unsicher.
 
 function mockResponse() {
   return JSON.stringify({
@@ -90,7 +97,9 @@ function mockResponse() {
       hausbesuch: false,
       is_blanko: false,
       is_lhb_bvb: false,
-      bericht_angefordert: false
+      bericht_angefordert: false,
+      unterschrift_vorhanden: true,
+      signature_confidence: 'high'
     },
     ocr_confidence: 0.92
   });
