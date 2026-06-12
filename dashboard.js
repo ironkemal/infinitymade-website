@@ -665,6 +665,22 @@ document.getElementById('hamburger').addEventListener('click', () => {
   document.getElementById('sidebar').classList.contains('open') ? closeSidebar() : openSidebar();
 });
 document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+// Sidebar collapse toggle (desktop)
+document.getElementById('sidebarCollapseBtn')?.addEventListener('click', () => {
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebarCollapseBtn');
+  const collapsed = sidebar.classList.toggle('collapsed');
+  if (btn) btn.textContent = collapsed ? '›' : '‹';
+  localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+});
+// Restore collapse state on load
+if (localStorage.getItem('sidebar_collapsed') === '1') {
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebarCollapseBtn');
+  if (sidebar) sidebar.classList.add('collapsed');
+  if (btn) btn.textContent = '›';
+}
 document.getElementById('langSelect').addEventListener('change', async (e) => {
   currentLang = e.target.value;
   localStorage.setItem('infinity_lang', currentLang);
@@ -2084,7 +2100,7 @@ async function renderDayView(dateStr) {
       if (isToday && e < _now) block.classList.add('dv-booking-block--past');
       block.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        openBookingModal(b);
+        openCalRightPanel(b);
       });
       slotWrap.appendChild(block);
     });
@@ -2288,7 +2304,6 @@ async function openBookingActionModal(booking) {
     }
   }
 
-  openCalRightPanel(booking);
   openModal('bkActionModal');
 }
 
@@ -2301,7 +2316,11 @@ function initCalRightPanel() {
 function openCalRightPanel(booking) {
   const panel = document.getElementById('calRightPanel');
   if (!panel) return;
+
+  // Inline panel: show by removing hidden AND adjusting calendar layout
   panel.hidden = false;
+  const calWrap = document.getElementById('calMainWrap');
+  if (calWrap) calWrap.style.paddingRight = '300px';
 
   const title = document.getElementById('calRpTitle');
   const content = document.getElementById('calRpContent');
@@ -2331,9 +2350,14 @@ function openCalRightPanel(booking) {
         <div style="color:var(--text-main);">${statusMap[booking.status] || booking.status || '—'}</div>
       </div>
       ${booking.notes ? `<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Notiz</div><div style="color:var(--text-main);font-size:12px;">${escapeHtml(booking.notes)}</div></div>` : ''}
+      <button id="calRpEditBtn" class="btn-primary" style="width:100%;margin-bottom:14px;font-size:13px;">✏ Termin bearbeiten</button>
       <div id="calRpRezeptSection" style="margin-top:8px;"><div style="color:var(--text-muted);font-size:12px;">Rezept wird geladen…</div></div>
       <div id="calRpSessionSection" style="margin-top:8px;"></div>
     `;
+
+    // "Bearbeiten" butonuna mevcut booking action modal'ı bağla
+    const editBtn = document.getElementById('calRpEditBtn');
+    if (editBtn) editBtn.addEventListener('click', () => openBookingModal(booking));
   }
 
   // Asenkron: lead_id üzerinden rezept ve seans bilgisi yükle
@@ -2342,13 +2366,15 @@ function openCalRightPanel(booking) {
     loadCalRpUnverga(booking.lead_id);
   } else {
     const unverga = document.getElementById('calRpUnverga');
-    if (unverga) unverga.textContent = '—';
+    if (unverga) unverga.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Alle Heilmittel vergaben.</div>';
   }
 }
 
 function closeCalRightPanel() {
   const panel = document.getElementById('calRightPanel');
   if (panel) panel.hidden = true;
+  const calWrap = document.getElementById('calMainWrap');
+  if (calWrap) calWrap.style.paddingRight = '';
 }
 
 async function loadCalRpRezeptInfo(leadId) {
@@ -4155,12 +4181,18 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     closeModal('bookingModal');
     await refreshBookingViews();
 
-    // Terminbestätigung drucken dialog
+    // Terminbestätigung drucken dialog — pass patient email if available
+    let _serPatEmail = '';
+    if (custId && Array.isArray(window.bkAllLeads)) {
+      const _serLead = window.bkAllLeads.find(l => l.id === custId);
+      _serPatEmail = _serLead?.email || '';
+    }
     showSeriterminConfirmDialog({
       patientName: cust,
       createdCount: created.length,
       conflictCount: conflicts.length,
-      appointments: created
+      appointments: created,
+      patientEmail: _serPatEmail
     });
     return;
   }
@@ -4288,7 +4320,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   showToast(t('saved'));
 });
 
-function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount, appointments }) {
+function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount, appointments, patientEmail }) {
   const existing = document.getElementById('_seriterminConfirmOverlay');
   if (existing) existing.remove();
 
@@ -4305,6 +4337,8 @@ function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount,
     return `<li style="padding:3px 0;font-size:13px;color:var(--text-main,#f9fafb);">${dt}</li>`;
   }).join('');
 
+  const emailBtnHtml = `<button id="_scEmailBtn" style="flex:1;padding:10px;background:var(--primary,#2563eb);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">✉ E-Mail senden</button>`;
+
   overlay.innerHTML = `
     <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;">
       <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">✓ ${createdCount} Serientermin(e) erstellt</h3>
@@ -4312,7 +4346,8 @@ function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount,
       ${conflictNote}
       ${apptList ? `<ul style="margin:0 0 16px;padding-left:16px;list-style:disc;">${apptList}</ul>` : ''}
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button id="_scPrintBtn" style="flex:1;padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">🖨 Terminbestätigung drucken</button>
+        ${emailBtnHtml}
+        <button id="_scPrintBtn" style="flex:1;padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">🖨 Drucken</button>
         <button id="_scCloseBtn" style="flex:1;padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Schließen</button>
       </div>
     </div>
@@ -4324,6 +4359,24 @@ function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount,
   document.getElementById('_scPrintBtn').addEventListener('click', () => {
     printSeriterminConfirmation({ patientName, appointments });
     overlay.remove();
+  });
+  document.getElementById('_scEmailBtn').addEventListener('click', () => {
+    overlay.remove();
+    // E-Mail für Serientermin-Bestätigung vorbereiten
+    const apptLines = (appointments || []).map(a => {
+      const dt = a.start_time ? new Date(a.start_time).toLocaleString('de-DE', { weekday: 'long', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+      const empName = a.employee_name || '';
+      return `- ${dt} Uhr${empName ? ` (Therapeut: ${empName})` : ''}`;
+    }).join('\n');
+    const praxisName = currentProfile.business_name || 'unserer Praxis';
+    const city = currentProfile.city || '';
+    const body = `Sehr geehrte/r ${patientName},\n\nhiermit bestätigen wir Ihre Termine zur podologischen Behandlung in ${praxisName}${city ? ' in ' + city : ''}:\n\n${apptLines}\n\nBitte erscheinen Sie pünktlich zu Ihren Terminen. Sollten Sie einen Termin nicht wahrnehmen können, bitten wir um eine kurze Rückmeldung mindestens 24 Stunden vorher.\n\nBei Fragen erreichen Sie uns telefonisch unter: ${currentProfile.phone || '—'}\n\nMit freundlichen Grüßen\n${praxisName}`;
+    openComposeModal({
+      to_name: patientName,
+      to_email: patientEmail || '',
+      subject: `Ihre Termine zur podologischen Behandlung`,
+      body
+    });
   });
 }
 

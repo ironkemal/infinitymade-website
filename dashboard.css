@@ -810,7 +810,22 @@ textarea {
   overflow-y: auto;
   overflow-x: hidden;
   backdrop-filter: blur(12px);
-  transition: transform var(--transition);
+  transition: width 0.22s ease, transform var(--transition);
+  position: relative;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  border-right: none;
+  overflow: hidden;
+}
+
+.sidebar.collapsed #sidebarCollapseBtn {
+  right: -20px;
+}
+
+#sidebarCollapseBtn {
+  transition: transform 0.22s ease;
 }
 
 .sidebar nav {

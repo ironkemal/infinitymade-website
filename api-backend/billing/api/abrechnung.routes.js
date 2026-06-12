@@ -977,7 +977,7 @@ router.get('/belegliste', async (req, res) => {
     const { from, to, type } = req.query || {};
     let query = supabase
       .from('belegliste')
-      .select('id, owner_id, beleg_nr, type, amount_eur, patient_id, prescription_id, abrechnung_id, reference_text, created_at, created_by')
+      .select('id, owner_id, beleg_nr, type, amount_eur, patient_id, prescription_id, abrechnung_id, reference_text, storno_reason, created_at, created_by')
       .eq('owner_id', tenantId)
       .order('beleg_nr', { ascending: false });
 

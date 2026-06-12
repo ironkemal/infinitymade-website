@@ -74,6 +74,7 @@
 
       <aside class="sidebar" id="sidebar">
         <nav id="sidebarNav"></nav>
+        <button id="sidebarCollapseBtn" title="Menü ein-/ausblenden" style="position:absolute;bottom:16px;right:-12px;width:24px;height:24px;border-radius:50%;background:var(--bg-card-solid);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;z-index:10;padding:0;line-height:1;">‹</button>
       </aside>
 
       <main class="main-area" id="mainArea">
@@ -279,7 +280,7 @@
           </div>
 
           <!-- Calendar Right Panel (madde 13) -->
-          <div id="calRightPanel" hidden style="position:fixed;top:0;right:0;bottom:0;width:300px;background:var(--bg-card-solid,#1f2937);border-left:1px solid var(--border,#374151);z-index:500;display:flex;flex-direction:column;font-size:13px;overflow:hidden;">
+          <div id="calRightPanel" hidden style="position:fixed;top:56px;right:0;bottom:0;width:300px;background:var(--bg-card-solid,#1f2937);border-left:1px solid var(--border,#374151);z-index:200;display:flex;flex-direction:column;font-size:13px;overflow:hidden;box-shadow:-4px 0 16px rgba(0,0,0,0.15);">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);">
               <span style="font-weight:700;color:var(--text-main);font-size:14px;" id="calRpTitle">Termin-Details</span>
               <button id="calRpClose" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0 4px;">✕</button>
