@@ -2291,29 +2291,28 @@ async function openBookingActionModal(booking) {
     document.getElementById('bkDetailDuration').textContent = `${durationMin} Min.`;
   }
 
-  // --- Heilmittel / Rezept kalan seans ---
+  // --- Termin notları ---
+  const bkNotesCd = document.getElementById('bkBookingNotesCard');
+  if (bkNotesCd) {
+    const notesText = booking.notes || '';
+    document.getElementById('bkBookingNotesText').textContent = notesText;
+    bkNotesCd.hidden = !notesText.trim();
+  }
+
+  // --- Heilmittel / Rezept kalan seans (prescription_sessions join'den) ---
   const rxCard = document.getElementById('bkRxInfoCard');
   if (rxCard) {
     rxCard.hidden = true;
-    const rxId = booking.rx_id || booking.prescription_id || null;
-    if (rxId) {
-      const { data: rx } = await supabase.from('heilmittel_rezepte')
-        .select('anzahl_behandlungen, behandlungsbeginn')
-        .eq('id', rxId)
-        .maybeSingle();
-      if (rx) {
-        const { count: doneCount } = await supabase.from('bookings')
-          .select('id', { count: 'exact', head: true })
-          .eq('rx_id', rxId)
-          .in('status', ['confirmed', 'completed']);
-        const total = rx.anzahl_behandlungen || 0;
-        const done = doneCount || 0;
-        const remaining = Math.max(0, total - done);
-        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-        document.getElementById('bkRxRemainingFill').style.width = pct + '%';
-        document.getElementById('bkRxRemainingText').textContent = `${done} von ${total} Behandlungen erbracht — noch ${remaining} offen`;
-        rxCard.hidden = false;
-      }
+    const ps = Array.isArray(booking.prescription_sessions) ? booking.prescription_sessions[0] : null;
+    const rx = ps?.prescriptions;
+    if (rx && rx.anzahl_einheiten) {
+      const total = rx.anzahl_einheiten;
+      const current = ps.session_number || 1;
+      const remaining = Math.max(0, total - current);
+      const pct = Math.round((current / total) * 100);
+      document.getElementById('bkRxRemainingFill').style.width = pct + '%';
+      document.getElementById('bkRxRemainingText').textContent = `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`;
+      rxCard.hidden = false;
     }
   }
 
@@ -2389,16 +2388,33 @@ async function openBookingActionModal(booking) {
 
   if (leadId) {
     // Lead + aktif Heilmittelverordnungen paralel yükle
-    const [{ data: lead }, { data: aktiveRxs }] = await Promise.all([
+    const [{ data: lead }, { data: aktiveRxs }, { data: anamneseData }, { data: patNotesData }, { data: zuzahlBefreiung }] = await Promise.all([
       supabase.from('leads')
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status')
         .eq('id', leadId).maybeSingle(),
-      supabase.from('heilmittel_rezepte')
-        .select('id,heilmittel,heilmittel_position,anzahl_behandlungen,ausstellungsdatum,status')
+      supabase.from('prescriptions')
+        .select('id,heilmittel,heilmittel_position,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend')
         .eq('patient_id', leadId)
         .not('status', 'in', '("completed","billed","cancelled")')
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(5),
+      supabase.from('anamnese')
+        .select('hauptbeschwerde,diagnose,schmerz_skala,schmerz_art,medikamente,allergien,vorerkrankungen,arzt_name,besondere_wuensche,notizen,updated_at')
+        .eq('patient_id', leadId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from('patient_notes')
+        .select('doctor_notes,therapist_notes,ai_summary,updated_at')
+        .eq('lead_id', leadId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from('zuzahlung_befreiung')
+        .select('befreit_ab,befreit_bis,nachweis_art,notiz')
+        .eq('patient_id', leadId)
+        .eq('jahr', new Date().getFullYear())
+        .maybeSingle()
     ]);
 
     if (lead && patientCard) {
@@ -2430,7 +2446,66 @@ async function openBookingActionModal(booking) {
       const openBtn = document.getElementById('bkOpenPatientBtn');
       if (openBtn) openBtn.onclick = () => openPatientDetailModal(lead);
 
+      // Zuzahlungsbefreiung badge
+      const zbBadge = document.getElementById('bkZuzahlungBadge');
+      if (zbBadge) {
+        if (zuzahlBefreiung) {
+          const bis = zuzahlBefreiung.befreit_bis ? new Date(zuzahlBefreiung.befreit_bis).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+          zbBadge.textContent = bis ? `Zuzahlungsbefreit bis ${bis}` : 'Zuzahlungsbefreit';
+          zbBadge.hidden = false;
+        } else {
+          zbBadge.hidden = true;
+        }
+      }
+
       patientCard.hidden = false;
+    }
+
+    // --- Anamnese özeti ---
+    const anamCard = document.getElementById('bkAnamneseCard');
+    const anamContent = document.getElementById('bkAnamneseContent');
+    const anamDatum = document.getElementById('bkAnamneseDatum');
+    if (anamCard && anamContent) {
+      if (anamneseData) {
+        const aRow = (label, val) => val ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val))}</div></div>` : '';
+        const skalaBadge = anamneseData.schmerz_skala != null
+          ? `<span style="background:${anamneseData.schmerz_skala>=7?'rgba(239,68,68,0.15)':anamneseData.schmerz_skala>=4?'rgba(245,158,11,0.15)':'rgba(34,197,94,0.15)'};color:${anamneseData.schmerz_skala>=7?'#f87171':anamneseData.schmerz_skala>=4?'#fbbf24':'#4ade80'};border-radius:4px;padding:1px 6px;font-size:11px;font-weight:700;">${anamneseData.schmerz_skala}/10</span>` : '';
+        const rows = [
+          anamneseData.hauptbeschwerde ? `<div style="grid-column:1/-1;"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">Hauptbeschwerde</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(anamneseData.hauptbeschwerde)}</div></div>` : '',
+          anamneseData.diagnose ? `<div style="grid-column:1/-1;"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">Diagnose</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(anamneseData.diagnose)}</div></div>` : '',
+          anamneseData.schmerz_skala != null ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">Schmerzskala</div><div>${skalaBadge}${anamneseData.schmerz_art ? ' · ' + escapeHtml(anamneseData.schmerz_art) : ''}</div></div>` : '',
+          aRow('Arzt', anamneseData.arzt_name),
+          aRow('Medikamente', anamneseData.medikamente),
+          aRow('Allergien', anamneseData.allergien),
+          aRow('Vorerkrankungen', anamneseData.vorerkrankungen),
+          anamneseData.besondere_wuensche ? `<div style="grid-column:1/-1;">${aRow('Besondere Wünsche', anamneseData.besondere_wuensche)}</div>` : '',
+          anamneseData.notizen ? `<div style="grid-column:1/-1;">${aRow('Notizen', anamneseData.notizen)}</div>` : '',
+        ].filter(Boolean);
+        anamContent.innerHTML = rows.join('');
+        if (anamDatum && anamneseData.updated_at) {
+          anamDatum.textContent = new Date(anamneseData.updated_at).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+        }
+        anamCard.hidden = false;
+      } else {
+        anamCard.hidden = true;
+      }
+    }
+
+    // --- Therapeuten-/Arztnotizen ---
+    const patNotCard = document.getElementById('bkPatNotesCard');
+    const patNotContent = document.getElementById('bkPatNotesContent');
+    if (patNotCard && patNotContent) {
+      if (patNotesData && (patNotesData.doctor_notes || patNotesData.therapist_notes || patNotesData.ai_summary)) {
+        const noteBlock = (label, text, color) => text ? `<div><div style="font-size:10px;font-weight:600;color:${color};text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">${label}</div><div style="color:var(--text-main);font-size:12px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(text)}</div></div>` : '';
+        patNotContent.innerHTML = [
+          noteBlock('Arztnotizen', patNotesData.doctor_notes, 'var(--accent,#b1891b)'),
+          noteBlock('Therapeutennotizen', patNotesData.therapist_notes, '#60a5fa'),
+          noteBlock('KI-Zusammenfassung', patNotesData.ai_summary, 'var(--text-muted)'),
+        ].filter(Boolean).join('');
+        patNotCard.hidden = false;
+      } else {
+        patNotCard.hidden = true;
+      }
     }
 
     // Aktive Verordnungen
@@ -2444,7 +2519,7 @@ async function openBookingActionModal(booking) {
             <span style="color:var(--text-main);font-weight:500;">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</span>
             <span style="color:var(--text-muted);margin-left:4px;">${issued}</span>
           </div>
-          <span style="color:var(--text-muted);">${rx.anzahl_behandlungen || '?'}×</span>
+          <span style="color:var(--text-muted);">${rx.anzahl_einheiten || '?'}×</span>
         </div>`;
       }).join('');
       rezWrap.hidden = false;
@@ -9144,68 +9219,86 @@ async function loadVorlagenPanel() {
 
   if (error) { grid.innerHTML = '<div style="color:#f87171;">Fehler beim Laden.</div>'; return; }
 
-  let vorlagen = initialData;
+  let vorlagen = initialData || [];
 
-  if (!vorlagen || vorlagen.length === 0) {
-    // Auto-seed default templates for new accounts
-    await seedDefaultVorlagen();
-    const { data: seeded } = await supabase.from('document_vorlagen').select('*').eq('owner_id', ownerId).order('created_at', { ascending: true });
-    if (!seeded || seeded.length === 0) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:32px;margin-bottom:12px;">📄</div><div style="font-size:14px;margin-bottom:8px;">Noch keine Vorlagen.</div></div>`;
-      return;
-    }
-    // Re-run with seeded data
-    vorlagen = seeded;
+  // Seed missing types (new accounts get all 8, existing accounts get any missing ones)
+  const REQUIRED_TYPES = DEFAULT_VORLAGE_SEEDS.map(s => s.vorlage_type);
+  const existingTypes = new Set(vorlagen.map(v => v.vorlage_type));
+  const missingTypes = REQUIRED_TYPES.filter(t => !existingTypes.has(t));
+  if (missingTypes.length > 0) {
+    await seedMissingVorlagen(missingTypes);
+    const { data: refreshed } = await supabase.from('document_vorlagen').select('*').eq('owner_id', ownerId).order('created_at', { ascending: true });
+    vorlagen = refreshed || [];
   }
+
+  if (vorlagen.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:32px;margin-bottom:12px;">📄</div><div style="font-size:14px;margin-bottom:8px;">Noch keine Vorlagen.</div></div>`;
+    return;
+  }
+
+  // Sort by REQUIRED_TYPES order, then by name for custom ones
+  vorlagen.sort((a, b) => {
+    const ai = REQUIRED_TYPES.indexOf(a.vorlage_type);
+    const bi = REQUIRED_TYPES.indexOf(b.vorlage_type);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
 
   grid.innerHTML = vorlagen.map(v => {
     const typeLabel = VORLAGE_TYPE_LABELS[v.vorlage_type] || v.vorlage_type;
     const isDefault = v.is_default;
-    const previewHtml = buildVorlagenPreview(v);
     return `
       <div class="vorlage-card" data-vorlage-id="${v.id}">
-        <div class="vorlage-preview">${previewHtml}</div>
+        <div class="vorlage-preview vorlage-preview-placeholder" data-vorlage-id="${v.id}" style="cursor:pointer;">
+          <div style="color:#9ca3af;font-size:11px;">Lade Vorschau…</div>
+        </div>
         <div class="vorlage-card-footer">
-          <div class="vorlage-card-title">${escapeHtml(v.name)}</div>
+          <div class="vorlage-card-title" data-vorlage-id="${v.id}" title="Doppelklick zum Umbenennen" style="cursor:text;">${escapeHtml(v.name)}</div>
           <div class="vorlage-card-type">${escapeHtml(typeLabel)}${isDefault ? ' <span class="vorlage-default-badge">Standard</span>' : ''}</div>
           <div class="vorlage-card-actions">
             <button class="btn-ghost btn-sm" onclick="openVorlagenEdit('${v.id}')">Bearbeiten</button>
+            <button class="btn-ghost btn-sm" onclick="duplicateVorlage('${v.id}','${escapeHtml(v.name).replace(/'/g,'&#39;')}')">Kopieren</button>
             <button class="btn-ghost btn-sm" style="color:#f87171;" onclick="deleteVorlage('${v.id}')">Löschen</button>
           </div>
         </div>
       </div>`;
   }).join('');
 
-  // Iframe preview'larını async olarak yükle
+  // Iframe previews — dynamic scale based on card width
   setTimeout(() => {
     grid.querySelectorAll('.vorlage-preview-placeholder').forEach(placeholder => {
       const vId = placeholder.dataset.vorlagenId;
       const v = vorlagen.find(x => x.id === vId);
       if (!v) return;
       const html = getVorlagenSampleHtml(v);
+      const containerW = placeholder.offsetWidth || 200;
+      const scale = (containerW / 595).toFixed(4);
       const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'width:595px;height:842px;border:none;transform:scale(0.24);transform-origin:top left;pointer-events:none;';
+      iframe.style.cssText = `width:595px;height:842px;border:none;transform:scale(${scale});transform-origin:top left;pointer-events:none;display:block;`;
       iframe.srcdoc = html;
       placeholder.innerHTML = '';
+      placeholder.style.cssText += ';overflow:hidden;display:block;';
       placeholder.appendChild(iframe);
-      // Container'ı overflow:hidden yap
-      placeholder.style.overflow = 'hidden';
     });
-  }, 100);
+  }, 50);
 
-  // Kartlara click listener ekle
+  // Click listeners: preview click → Ansicht modal; title double-click → inline rename
   setTimeout(() => {
     grid.querySelectorAll('.vorlage-card').forEach(card => {
-      card.querySelector('.vorlage-preview-placeholder')?.addEventListener('click', () => {
-        const vId = card.dataset.vorlagenId;
-        openVorlagenAnsicht(vId, vorlagen);
-      });
-      card.querySelector('.vorlage-card-title')?.addEventListener('click', () => {
-        const vId = card.dataset.vorlagenId;
-        openVorlagenAnsicht(vId, vorlagen);
-      });
+      const vId = card.dataset.vorlagenId;
+      card.querySelector('.vorlage-preview-placeholder')?.addEventListener('click', () => openVorlagenAnsicht(vId, vorlagen));
+
+      const titleEl = card.querySelector('.vorlage-card-title');
+      if (titleEl) {
+        titleEl.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          startVorlagenInlineRename(titleEl, vId, vorlagen);
+        });
+      }
     });
-  }, 200);
+  }, 100);
 }
 
 function buildVorlagenPreview(v) {
@@ -9540,16 +9633,76 @@ async function deleteVorlage(id) {
   if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
 }
 
+async function duplicateVorlage(id, currentName) {
+  const { data: src, error } = await supabase.from('document_vorlagen').select('*').eq('id', id).single();
+  if (error || !src) { showToast('Fehler beim Kopieren', 'error'); return; }
+  const newName = currentName + ' (1)';
+  const { error: insErr } = await supabase.from('document_vorlagen').insert({
+    owner_id: getOwnerId(),
+    name: newName,
+    vorlage_type: src.vorlage_type,
+    is_default: false,
+    content_json: src.content_json || {},
+  });
+  if (insErr) { showToast('Fehler: ' + insErr.message, 'error'); return; }
+  showToast('Vorlage kopiert: ' + newName, 'success');
+  loadVorlagen();
+  if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
+}
+
+function startVorlagenInlineRename(titleEl, vorlagenId, vorlagenList) {
+  const currentName = titleEl.textContent;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = currentName;
+  input.style.cssText = 'width:100%;font-size:13px;font-weight:600;background:var(--bg-input,#111827);color:var(--text-main,#f9fafb);border:1px solid var(--accent,#b1891b);border-radius:4px;padding:2px 6px;outline:none;';
+
+  const commit = async () => {
+    const newName = input.value.trim();
+    if (!newName || newName === currentName) { titleEl.textContent = currentName; titleEl.style.display = ''; input.remove(); return; }
+    const { error } = await supabase.from('document_vorlagen').update({ name: newName }).eq('id', vorlagenId);
+    if (error) { showToast('Fehler: ' + error.message, 'error'); titleEl.textContent = currentName; }
+    else {
+      titleEl.textContent = newName;
+      const v = vorlagenList.find(x => x.id === vorlagenId);
+      if (v) v.name = newName;
+      showToast('Umbenannt', 'success');
+    }
+    titleEl.style.display = '';
+    input.remove();
+    loadVorlagen();
+  };
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } if (e.key === 'Escape') { titleEl.textContent = currentName; titleEl.style.display = ''; input.remove(); } });
+  input.addEventListener('blur', commit);
+
+  titleEl.style.display = 'none';
+  titleEl.parentNode.insertBefore(input, titleEl.nextSibling);
+  input.focus();
+  input.select();
+}
+
+const DEFAULT_VORLAGE_SEEDS = [
+  { name: 'Quittung Zuzahlung', vorlage_type: 'quittung_zuzahlung', is_default: true, content_json: { hinweis: 'Zuzahlung gemäß §32 Abs. 2 SGB V erhalten.', fusszeile: '' } },
+  { name: 'Rechnung BG', vorlage_type: 'rechnung_bg', is_default: true, content_json: { betreff: 'Rechnung für Berufsgenossenschaft', zahlungsziel_tage: '30', fusszeile: '' } },
+  { name: 'Rechnung Privat', vorlage_type: 'rechnung_privat', is_default: true, content_json: { betreff: 'Rechnung für physiotherapeutische Leistungen', zahlungsziel_tage: '14', fusszeile: '' } },
+  { name: 'Rechnung Eigenanteil', vorlage_type: 'rechnung_eigenanteil', is_default: true, content_json: { hinweis: 'Eigenanteil gemäß Heilmittelrichtlinien.', fusszeile: '' } },
+  { name: 'Rechnung Selbstzahler', vorlage_type: 'rechnung_selbstzahler', is_default: true, content_json: { betreff: 'Selbstzahler-Rechnung', zahlungsziel_tage: '14', fusszeile: '' } },
+  { name: 'Rechnung Sonder', vorlage_type: 'rechnung_sonder', is_default: true, content_json: { betreff: 'Rechnung Sonderkostenträger', fusszeile: '' } },
+  { name: 'Rezeptvorderseite', vorlage_type: 'rezeptvorderseite', is_default: true, content_json: { praxis_zusatz: 'Physiotherapie & Manuelle Therapie', stempel_hinweis: 'Bitte Stempel beifügen' } },
+  { name: 'RZG-Quittung', vorlage_type: 'rzg_quittung', is_default: true, content_json: { unterschrift_label: 'Empfang bestätigt:', hinweis: '', fusszeile: '' } },
+];
+
 async function seedDefaultVorlagen() {
   const ownerId = getOwnerId();
-  const defaults = [
-    { owner_id: ownerId, name: 'Zuzahlungsquittung', vorlage_type: 'quittung_zuzahlung', is_default: true, content_json: { hinweis: 'Bitte überweisen Sie den Betrag fristgerecht.', fusszeile: '' } },
-    { owner_id: ownerId, name: 'Privatrechnung', vorlage_type: 'rechnung_privat', is_default: true, content_json: { betreff: 'Rechnung für physiotherapeutische Leistungen', zahlungsziel_tage: '14', fusszeile: '' } },
-    { owner_id: ownerId, name: 'BG-Rechnung', vorlage_type: 'rechnung_bg', is_default: true, content_json: { betreff: 'Rechnung für Berufsgenossenschaft', zahlungsziel_tage: '30', fusszeile: '' } },
-    { owner_id: ownerId, name: 'Erstbefundbericht', vorlage_type: 'erstbefund', is_default: true, content_json: {} },
-    { owner_id: ownerId, name: 'Verordnungsbegleitschein', vorlage_type: 'verordnungsbegleitschein', is_default: true, content_json: {} },
-  ];
-  await supabase.from('document_vorlagen').insert(defaults);
+  const rows = DEFAULT_VORLAGE_SEEDS.map(s => ({ ...s, owner_id: ownerId }));
+  await supabase.from('document_vorlagen').insert(rows);
+}
+
+async function seedMissingVorlagen(missingTypes) {
+  const ownerId = getOwnerId();
+  const rows = DEFAULT_VORLAGE_SEEDS.filter(s => missingTypes.includes(s.vorlage_type)).map(s => ({ ...s, owner_id: ownerId }));
+  if (rows.length > 0) await supabase.from('document_vorlagen').insert(rows);
 }
 
 document.getElementById('vorlagenNewBtn')?.addEventListener('click', openVorlagenNew);
