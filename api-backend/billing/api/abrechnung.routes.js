@@ -858,6 +858,19 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     if (!profile) return res.status(403).send('Profil nicht gefunden');
     const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
 
+    // ---- Fetch owner's default Zuzahlung vorlage for custom hinweis/fusszeile ----
+    const { data: vorlage } = await supabase
+      .from('document_vorlagen')
+      .select('content_json')
+      .eq('owner_id', tenantId)
+      .eq('vorlage_type', 'quittung_zuzahlung')
+      .eq('is_default', true)
+      .maybeSingle();
+    const vorlagenJson = vorlage?.content_json || {};
+    const customHinweis = vorlagenJson.hinweis || null;
+    const customFusszeile = vorlagenJson.fusszeile || null;
+    const zahlungszielTage = parseInt(vorlagenJson.zahlungsziel_tage, 10) || 14;
+
     // ---- Fetch Prescription + Leads + Arzt + Sessions ----
     const { data: rx, error: rxErr } = await supabase
       .from('prescriptions')
@@ -931,13 +944,14 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       rechnung: {
         nummer: `ZU-${rx.id.slice(0, 8).toUpperCase()}`,
         datum: new Date(),
-        faelligkeit: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days due date
+        faelligkeit: new Date(Date.now() + zahlungszielTage * 24 * 60 * 60 * 1000)
       },
       sessions: printSessions,
       totals,
       bankverbindung: 'DE89 1002 0030 0040 0500 00 (Musterbank)',
       logoUrl: profile.praxis_logo_url || '',
-      invoiceFooterText: profile.invoice_footer_text || ''
+      invoiceFooterText: customFusszeile || profile.invoice_footer_text || '',
+      hinweisText: customHinweis
     });
 
     res.set('Content-Type', 'text/html; charset=utf-8');

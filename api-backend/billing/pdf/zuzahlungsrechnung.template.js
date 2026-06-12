@@ -32,8 +32,12 @@ export function renderZuzahlungsrechnung(opts) {
   const {
     praxis = {}, patient = {}, verordnung = {}, rechnung = {},
     sessions = [], totals = {}, bankverbindung = '',
-    logoUrl = '', invoiceFooterText = '',
+    logoUrl = '', invoiceFooterText = '', hinweisText = null,
   } = opts;
+
+  const hinweisContent = hinweisText
+    ? escapeHtml(hinweisText)
+    : 'Die Zuzahlung ist gesetzlich vorgeschrieben (§ 32 Abs. 2 i.V.m. § 61 SGB V). Wenden Sie sich an Ihre Krankenkasse, wenn Sie wegen Erreichens der Belastungsgrenze (§ 62 SGB V) von der Zuzahlung befreit sind — die Befreiungsbescheinigung kann auch noch nachgereicht werden. Versicherte unter 18 Jahren sind grundsätzlich zuzahlungsfrei.';
 
   const sessionRows = sessions.map(s => `
     <tr>
@@ -138,9 +142,7 @@ export function renderZuzahlungsrechnung(opts) {
   </div>
 
   <p class="hinweis">
-    <strong>Hinweis:</strong> Die Zuzahlung ist gesetzlich vorgeschrieben (§ 32 Abs. 2 i.V.m. § 61 SGB V). Wenden Sie sich an Ihre Krankenkasse,
-    wenn Sie wegen Erreichens der Belastungsgrenze (§ 62 SGB V) von der Zuzahlung befreit sind — die Befreiungsbescheinigung kann auch noch
-    nachgereicht werden. Versicherte unter 18 Jahren sind grundsätzlich zuzahlungsfrei.
+    <strong>Hinweis:</strong> ${hinweisContent}
   </p>
 
   <footer>

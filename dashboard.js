@@ -9339,13 +9339,17 @@ function escHTML(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function getVorlagenSampleHtml(v) {
+function getVorlagenSampleHtml(v, editMode = false) {
   const cj = (typeof v.content_json === 'object' && v.content_json) ? v.content_json : {};
   const praxisName = (typeof currentProfile !== 'undefined' && currentProfile?.business_name) || 'Muster-Praxis GmbH';
   const hinweis = cj.hinweis || '';
   const fusszeile = cj.fusszeile || `${praxisName} · Musterstr. 1 · 10115 Berlin`;
   const betreff = cj.betreff || '';
   const zahlungsziel = cj.zahlungsziel_tage || 14;
+
+  const E = (field, value, fallback, block) => editMode
+    ? `<span contenteditable="true" data-field="${field}" class="${block ? 'vl-edit-block' : 'vl-edit'}">${value || fallback || ''}</span>`
+    : escHTML(value || '');
 
   const typeColors = {
     quittung_zuzahlung: '#0a4a7a',
@@ -9370,6 +9374,26 @@ function getVorlagenSampleHtml(v) {
   const accent = typeColors[v.vorlage_type] || '#374151';
   const title = typeLabels[v.vorlage_type] || v.vorlage_type || 'Dokument';
 
+  const hinweisHtml = editMode
+    ? `<div class="hinweis">${E('hinweis', hinweis, 'Hinweis eingeben…', true)}</div>`
+    : (hinweis ? `<div class="hinweis"><strong>Hinweis:</strong> ${escHTML(hinweis)}</div>` : '');
+
+  const fusszeileHtml = editMode
+    ? E('fusszeile', fusszeile, 'Fußzeile eingeben…')
+    : escHTML(fusszeile);
+
+  let customTypeHtml = '';
+  if (v.vorlage_type === 'rezeptvorderseite') {
+    customTypeHtml = `<div style="margin-top:8mm;border:1px dashed #ccc;padding:4mm;width:60mm;text-align:center;font-size:9pt;color:#666;">
+      <strong>Stempel / Unterschrift</strong><br><br>
+      ${E('stempel_hinweis', cj.stempel_hinweis, 'Stempel-Hinweis eingeben…')}
+    </div>`;
+  } else if (v.vorlage_type === 'rzg_quittung') {
+    customTypeHtml = `<div style="margin-top:8mm;border-top:1px dotted #999;padding-top:2mm;width:60mm;font-size:9pt;">
+      ${E('unterschrift_label', cj.unterschrift_label, 'Unterschrift-Text eingeben…')}
+    </div>`;
+  }
+
   return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
 <style>
 @page{size:A4;margin:15mm 18mm}
@@ -9393,15 +9417,26 @@ td{padding:2mm 3mm;border-bottom:1px solid #e6eaef}
 .hinweis{background:#fff8e6;border:1px solid #f4d56b;border-radius:3pt;padding:3mm;margin:4mm 0;font-size:8.5pt}
 footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #ccc;font-size:7.5pt;color:#666;display:flex;gap:10mm}
 footer div{flex:1}
-</style></head><body><div class="doc">
+${editMode ? `
+.vl-edit { outline:none; border-bottom:2px dashed rgba(177,137,27,0.7); padding:1px 3px; border-radius:2px; cursor:text; min-width:20px; display:inline-block; }
+.vl-edit:hover { border-bottom-color:#b1891b; background:rgba(177,137,27,0.08); }
+.vl-edit:focus { border-bottom-color:#b1891b; background:rgba(177,137,27,0.12); box-shadow:0 0 0 2px rgba(177,137,27,0.2); }
+.vl-edit-block { outline:none; border:1.5px dashed rgba(177,137,27,0.5); border-radius:3px; padding:2mm 3mm; cursor:text; min-height:1em; }
+.vl-edit-block:hover, .vl-edit-block:focus { border-color:#b1891b; background:rgba(177,137,27,0.07); }
+.vl-hint { background:#fffbeb; border:1px solid #f0d060; border-radius:3pt; padding:2mm 4mm; margin:0 0 5mm; font-size:8pt; color:#92400e; }
+` : ''}
+</style></head><body>
+${editMode ? `<div class="vl-hint">✏ Markierte Felder anklicken und Text direkt bearbeiten.</div>` : ''}
+<div class="doc">
 <header>
   <div class="praxis">
     <strong>${escHTML(praxisName)}</strong><br>
+    ${v.vorlage_type === 'rezeptvorderseite' ? `<div style="margin-top: 2px;">${E('praxis_zusatz', cj.praxis_zusatz, 'Fachbereich eingeben…')}</div>` : ''}
     Musterstraße 1<br>10115 Berlin<br>Tel.: 030 123 456<br>IK: 123456789
   </div>
   <div style="text-align:right">
     <h1>${escHTML(title)}</h1>
-    <div class="sub">${betreff ? escHTML(betreff) : 'Musterdokument'}</div>
+    <div class="sub">${editMode ? E('betreff', betreff, 'Betreff eingeben…') : (betreff ? escHTML(betreff) : 'Musterdokument')}</div>
   </div>
 </header>
 <div class="addr-block">
@@ -9413,7 +9448,7 @@ footer div{flex:1}
     <dl class="meta">
       <dt>Rechnungs-Nr.</dt><dd>RE-2026-001</dd>
       <dt>Datum</dt><dd>01.06.2026</dd>
-      <dt>Fällig am</dt><dd>${zahlungsziel} Tage</dd>
+      <dt>Fällig am</dt><dd>${E('zahlungsziel_tage', String(zahlungsziel), '14')} Tage</dd>
       <dt>Krankenkasse</dt><dd>AOK Bayern</dd>
     </dl>
   </div>
@@ -9427,15 +9462,30 @@ footer div{flex:1}
     <tr class="total-row"><td colspan="2">Gesamt</td><td class="num">45,00 €</td></tr>
   </tbody>
 </table>
-${hinweis ? `<div class="hinweis"><strong>Hinweis:</strong> ${escHTML(hinweis)}</div>` : ''}
+${hinweisHtml}
+${customTypeHtml}
 <footer>
-  <div>${escHTML(fusszeile)}</div>
+  <div>${fusszeileHtml}</div>
   <div><strong>Bankverbindung</strong><br>IBAN: DE00 0000 0000 0000 0000 00</div>
 </footer>
 </div></body></html>`;
 }
 
 let _ansichtEditState = null;
+let _resizeVorlagenIframeListening = false;
+
+function _resizeVorlagenIframe() {
+  const area = document.getElementById('vorlagenPreviewArea');
+  const outer = document.getElementById('vorlagenScaleOuter');
+  const iframe = document.getElementById('vorlagenAnsichtIframe');
+  if (!area || !outer || !iframe) return;
+  const availW = area.clientWidth - 40;
+  const availH = area.clientHeight - 40;
+  const scale = Math.min(availW / 794, availH / 1122, 1);
+  outer.style.width = Math.round(794 * scale) + 'px';
+  outer.style.height = Math.round(1122 * scale) + 'px';
+  iframe.style.transform = `scale(${scale})`;
+}
 
 function openVorlagenAnsicht(vorlagenId, vorlagenList) {
   const v = vorlagenList.find(x => x.id === vorlagenId);
@@ -9449,8 +9499,9 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
     modal.innerHTML = `
       <div id="vorlagenAnsichtCard" style="background:var(--bg-card-solid,#1f2937);border-radius:12px;width:min(720px,95vw);height:min(96vh,1100px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;gap:12px;">
-          <div style="min-width:0;flex:1;">
+          <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;">
             <div id="vorlagenAnsichtTitle" style="font-size:15px;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+            <input class="form-input" id="vorlagenAnsichtNameInput" type="text" maxlength="80" style="font-size:13px;width:100%;max-width:300px;display:none;padding:4px 8px;" placeholder="Vorlagenname" />
             <div id="vorlagenAnsichtType" style="font-size:12px;color:var(--text-muted);"></div>
           </div>
           <div id="vorlagenAnsichtViewBtns" style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
@@ -9465,16 +9516,9 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
           </div>
         </div>
         <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
-          <div id="vorlagenPreviewArea" style="flex:1;overflow:auto;padding:24px 32px;background:#e5e7eb;min-width:0;">
-            <iframe id="vorlagenAnsichtIframe" style="width:210mm;height:297mm;border:none;box-shadow:0 4px 24px rgba(0,0,0,0.25);display:block;margin:0 auto;background:#fff;"></iframe>
-          </div>
-          <div id="vorlagenAnsichtEditPanel" style="width:0;overflow:hidden;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid transparent;">
-            <div style="padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;width:290px;">
-              <div>
-                <label style="display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">Vorlagenname</label>
-                <input class="form-input" id="vorlagenAnsichtNameInput" type="text" maxlength="80" style="font-size:13px;width:100%;" />
-              </div>
-              <div id="vorlagenAnsichtFieldsContainer" style="display:flex;flex-direction:column;gap:10px;"></div>
+          <div id="vorlagenPreviewArea" style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#e5e7eb;padding:20px;min-height:0;">
+            <div id="vorlagenScaleOuter" style="position:relative;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
+              <iframe id="vorlagenAnsichtIframe" style="width:794px;height:1122px;border:none;background:#fff;position:absolute;top:0;left:0;transform-origin:top left;pointer-events:none;display:block;"></iframe>
             </div>
           </div>
         </div>
@@ -9484,6 +9528,11 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     document.getElementById('vorlagenAnsichtCloseBtn').onclick = closeModal;
     document.getElementById('vorlagenAnsichtCloseBtn2').onclick = closeModal;
+  }
+
+  if (!_resizeVorlagenIframeListening) {
+    window.addEventListener('resize', _resizeVorlagenIframe);
+    _resizeVorlagenIframeListening = true;
   }
 
   _exitAnsichtEditMode(); // reset to view mode on each open
@@ -9508,130 +9557,90 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
 
   document.getElementById('vorlagenAnsichtIframe').srcdoc = getVorlagenSampleHtml(v);
   modal.style.display = 'flex';
+  setTimeout(_resizeVorlagenIframe, 50);
 }
 
 function _exitAnsichtEditMode() {
   _ansichtEditState = null;
   const card = document.getElementById('vorlagenAnsichtCard');
   if (card) card.style.width = 'min(720px,95vw)';
-  const panel = document.getElementById('vorlagenAnsichtEditPanel');
-  if (panel) { panel.style.width = '0'; panel.style.borderLeftColor = 'transparent'; panel.style.overflow = 'hidden'; }
+  const titleDiv = document.getElementById('vorlagenAnsichtTitle');
+  if (titleDiv) titleDiv.style.display = 'block';
+  const nameInput = document.getElementById('vorlagenAnsichtNameInput');
+  if (nameInput) nameInput.style.display = 'none';
+  const iframe = document.getElementById('vorlagenAnsichtIframe');
+  if (iframe) iframe.style.pointerEvents = 'none';
   const vb = document.getElementById('vorlagenAnsichtViewBtns');
   if (vb) vb.style.display = 'flex';
   const eb = document.getElementById('vorlagenAnsichtEditBtns');
   if (eb) eb.style.display = 'none';
+  setTimeout(_resizeVorlagenIframe, 50);
 }
 
 function _enterAnsichtEditMode(v, modal) {
   _ansichtEditState = { originalJson: JSON.parse(JSON.stringify(v.content_json || {})), originalName: v.name, v };
 
-  // Widen modal & open side panel
-  const card = document.getElementById('vorlagenAnsichtCard');
-  if (card) card.style.width = 'min(1020px,95vw)';
-  const panel = document.getElementById('vorlagenAnsichtEditPanel');
-  if (panel) { panel.style.width = '306px'; panel.style.borderLeftColor = 'var(--border)'; panel.style.overflow = 'visible'; }
+  const titleDiv = document.getElementById('vorlagenAnsichtTitle');
+  if (titleDiv) titleDiv.style.display = 'none';
+  const nameInput = document.getElementById('vorlagenAnsichtNameInput');
+  if (nameInput) {
+    nameInput.value = v.name;
+    nameInput.style.display = 'block';
+  }
 
   document.getElementById('vorlagenAnsichtViewBtns').style.display = 'none';
   document.getElementById('vorlagenAnsichtEditBtns').style.display = 'flex';
 
-  // Name field
-  document.getElementById('vorlagenAnsichtNameInput').value = v.name;
-
-  // Content fields (reuse same FIELDS map as renderVorlagenContentForm)
-  const FIELDS = {
-    quittung_zuzahlung: [
-      { key: 'hinweis', label: 'Hinweis-Text', type: 'textarea', placeholder: 'z. B. Zuzahlung gemäß §32 Abs. 2 SGB V erhalten.' },
-      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: 'Praxisname · Adresse · Telefon' },
-      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' },
-    ],
-    rechnung_bg: [
-      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Rechnung für Physiotherapie' },
-      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
-      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
-      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '30' },
-    ],
-    rechnung_privat: [
-      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Privatrechnung Physiotherapie' },
-      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
-      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
-      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' },
-    ],
-    rechnung_eigenanteil: [
-      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
-      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
-    ],
-    rechnung_selbstzahler: [
-      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Selbstzahler-Rechnung' },
-      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
-      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
-      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' },
-    ],
-    rechnung_sonder: [
-      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: '' },
-      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
-      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
-    ],
-    rezeptvorderseite: [
-      { key: 'praxis_zusatz', label: 'Praxis-Zusatz', type: 'text', placeholder: 'Physiotherapie & Manuelle Therapie' },
-      { key: 'stempel_hinweis', label: 'Stempel-Hinweis', type: 'text', placeholder: 'Bitte Stempel beifügen' },
-    ],
-    rzg_quittung: [
-      { key: 'unterschrift_label', label: 'Unterschrift-Zeile', type: 'text', placeholder: 'Empfang bestätigt:' },
-      { key: 'hinweis', label: 'Rechtlicher Hinweis', type: 'textarea', placeholder: '' },
-      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
-    ],
-  };
-
-  const fields = FIELDS[v.vorlage_type] || [{ key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' }];
-  const cj = v.content_json || {};
-  const container = document.getElementById('vorlagenAnsichtFieldsContainer');
-
-  container.innerHTML = fields.map(f => {
-    const val = escapeHtml(cj[f.key] || '');
-    const labelHtml = `<label style="display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">${f.label}</label>`;
-    if (f.type === 'textarea') {
-      return `<div>${labelHtml}<textarea class="form-input vorlagen-ansicht-field" data-key="${f.key}" rows="3" placeholder="${f.placeholder}" style="font-size:12px;width:100%;resize:vertical;">${val}</textarea></div>`;
-    }
-    return `<div>${labelHtml}<input class="form-input vorlagen-ansicht-field" data-key="${f.key}" type="${f.type}" placeholder="${f.placeholder}" value="${val}" style="font-size:12px;width:100%;" /></div>`;
-  }).join('');
-
-  // Live preview on any change
   const iframe = document.getElementById('vorlagenAnsichtIframe');
-  const updatePreview = () => {
-    const liveJson = {};
-    container.querySelectorAll('.vorlagen-ansicht-field').forEach(el => {
-      if (el.dataset.key) liveJson[el.dataset.key] = el.value;
-    });
-    iframe.srcdoc = getVorlagenSampleHtml({ ...v, content_json: liveJson });
-  };
-  container.querySelectorAll('.vorlagen-ansicht-field').forEach(el => el.addEventListener('input', updatePreview));
+  if (iframe) {
+    iframe.style.pointerEvents = 'auto';
+    iframe.srcdoc = getVorlagenSampleHtml(v, true);
+  }
 
-  // Save
+  setTimeout(_resizeVorlagenIframe, 50);
+
+  // Save button logic:
   document.getElementById('vorlagenAnsichtSaveBtn').onclick = async () => {
     const name = document.getElementById('vorlagenAnsichtNameInput').value.trim();
     if (!name) { showToast('Name ist erforderlich', 'error'); return; }
+    const iframe = document.getElementById('vorlagenAnsichtIframe');
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
     const content_json = {};
-    container.querySelectorAll('.vorlagen-ansicht-field').forEach(el => {
-      if (el.dataset.key) content_json[el.dataset.key] = el.value.trim();
-    });
+    if (iframeDoc) {
+      iframeDoc.querySelectorAll('[contenteditable][data-field]').forEach(el => {
+        content_json[el.dataset.field] = el.innerText.trim();
+      });
+    }
     const { error } = await supabase.from('document_vorlagen').update({ name, content_json }).eq('id', v.id);
     if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
     v.name = name;
     v.content_json = content_json;
     document.getElementById('vorlagenAnsichtTitle').textContent = name;
-    iframe.srcdoc = getVorlagenSampleHtml(v);
+    const iframe2 = document.getElementById('vorlagenAnsichtIframe');
+    if (iframe2) {
+      iframe2.style.pointerEvents = 'none';
+      iframe2.srcdoc = getVorlagenSampleHtml(v, false);
+    }
     showToast('Vorlage gespeichert', 'success');
     _exitAnsichtEditMode();
+    setTimeout(_resizeVorlagenIframe, 50);
     loadVorlagenPanel();
     loadVorlagen();
   };
 
-  // Cancel — restore original
+  // Cancel button logic:
   document.getElementById('vorlagenAnsichtCancelEditBtn').onclick = () => {
-    v.content_json = _ansichtEditState.originalJson;
-    v.name = _ansichtEditState.originalName;
-    iframe.srcdoc = getVorlagenSampleHtml(v);
+    if (_ansichtEditState) {
+      v.content_json = _ansichtEditState.originalJson;
+      v.name = _ansichtEditState.originalName;
+    }
+    const iframe = document.getElementById('vorlagenAnsichtIframe');
+    if (iframe) {
+      iframe.style.pointerEvents = 'none';
+      iframe.srcdoc = getVorlagenSampleHtml(v, false);
+    }
     _exitAnsichtEditMode();
+    setTimeout(_resizeVorlagenIframe, 50);
   };
 }
 
