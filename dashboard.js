@@ -5843,7 +5843,24 @@ async function loadPatientDetailRezepte(leadId) {
           ${flags}
           ${abrBadge}
           ${abrButton}
-          <button class="btn-ghost btn-sm rx-print-zuzahlung" data-id="${rx.id}" title="Zuzahlungsrechnung drucken"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.invoice}</span>Zuzahlung</button>
+          <div class="rx-drucken-wrap" style="position:relative;display:inline-block;" data-id="${rx.id}">
+            <button class="btn-ghost btn-sm rx-drucken-toggle" data-id="${rx.id}" style="display:flex;align-items:center;gap:4px;">
+              <span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;">${ICON.invoice}</span>
+              Drucken ▾
+            </button>
+            <div class="rx-drucken-menu" style="display:none;position:absolute;right:0;top:100%;z-index:1000;background:var(--bg-card-solid,#1e2a3a);border:1px solid var(--border,#2d3a4a);border-radius:8px;min-width:190px;padding:4px 0;box-shadow:0 4px 16px rgba(0,0,0,.4);margin-top:2px;">
+              <div class="rx-drucken-item" data-type="quittung_zuzahlung" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">💶 Zuzahlungsrechnung</div>
+              <div class="rx-drucken-item" data-type="rzg_quittung" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">🧾 RZG-Quittung</div>
+              <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
+              <div class="rx-drucken-item" data-type="rechnung_privat" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Privat</div>
+              <div class="rx-drucken-item" data-type="rechnung_selbstzahler" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Selbstzahler</div>
+              <div class="rx-drucken-item" data-type="rechnung_eigenanteil" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Eigenanteil</div>
+              <div class="rx-drucken-item" data-type="rechnung_sonder" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Sonder</div>
+              <div class="rx-drucken-item" data-type="rechnung_bg" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung BG</div>
+              <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
+              <div class="rx-drucken-item" data-type="rezeptvorderseite" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">🗒 Rezeptvorderseite</div>
+            </div>
+          </div>
           ${paidButton}
         </div>
       </div>
@@ -5879,19 +5896,50 @@ async function loadPatientDetailRezepte(leadId) {
       await flipAbrechnungStatus(btn.dataset.id, 'accepted', leadId);
     });
   });
-  content.querySelectorAll('.rx-print-zuzahlung').forEach(btn => {
-    btn.addEventListener('click', async () => {
+  // Drucken dropdown: toggle open/close
+  content.querySelectorAll('.rx-drucken-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wrap = btn.closest('.rx-drucken-wrap');
+      const menu = wrap.querySelector('.rx-drucken-menu');
+      const isOpen = menu.style.display === 'block';
+      // Close all other open menus first
+      content.querySelectorAll('.rx-drucken-menu').forEach(m => { m.style.display = 'none'; });
+      menu.style.display = isOpen ? 'none' : 'block';
+    });
+  });
+
+  // Drucken dropdown: item click → open print window
+  content.querySelectorAll('.rx-drucken-item').forEach(item => {
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const wrap = item.closest('.rx-drucken-wrap');
+      const rxId = wrap.dataset.id;
+      const type = item.dataset.type;
+      wrap.querySelector('.rx-drucken-menu').style.display = 'none';
       const { data: { session: s } } = await supabase.auth.getSession();
-      const printWindow = window.open(`${API}/billing/prescription/${btn.dataset.id}/zuzahlungsrechnung?token=${s.access_token}`, '_blank');
+      const url = type === 'quittung_zuzahlung'
+        ? `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${s.access_token}`
+        : `${API}/billing/prescription/${rxId}/rechnung?type=${type}&token=${s.access_token}`;
+      const printWindow = window.open(url, '_blank');
       if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print();
-        };
+        printWindow.onload = () => { printWindow.print(); };
       } else {
         showToast('Popup-Blocker verhindert das Öffnen des Druckfensters.', 'error');
       }
     });
+    // hover effect
+    item.addEventListener('mouseenter', () => { item.style.background = 'var(--bg-hover,rgba(255,255,255,0.07))'; });
+    item.addEventListener('mouseleave', () => { item.style.background = ''; });
   });
+
+  // Close dropdown on outside click (cleanup-safe)
+  const _druckenOutsideHandler = () => {
+    content.querySelectorAll('.rx-drucken-menu').forEach(m => { m.style.display = 'none'; });
+  };
+  document.removeEventListener('click', content._druckenOutsideHandler);
+  content._druckenOutsideHandler = _druckenOutsideHandler;
+  document.addEventListener('click', content._druckenOutsideHandler);
 }
 
 async function flipAbrechnungStatus(rxId, newStatus, leadId) {
@@ -6736,11 +6784,41 @@ async function loadServices() {
   renderSrvEmpCheckboxes();
 }
 
+// §125 SGB V Bundesvertrag 2026 — bundeseinheitliche Vergütung (gilt in allen Bundesländern)
 const GKV_PRICES = {
-  'X0501': 29.63, 'X1201': 35.59, 'X0205': 35.97, 'X0201': 53.94,
-  'X0202': 71.94, 'X0710': 47.06, 'X0106': 21.63, 'X1104': 8.63,
-  'X0301': 13.68, 'X0507': 55.81, 'X0702': 88.94, 'X1302': 8.43,
-  'X1501': 16.16, 'X1534': 11.95
+  // Massage
+  'X0102': 33.75, 'X0106': 21.63, 'X0107': 25.98, 'X0108': 21.63,
+  // Lymphdrainage
+  'X0201': 53.94, 'X0202': 71.94, 'X0204': 22.92, 'X0205': 35.97,
+  // Übungsbehandlung (Einzel + Gruppe)
+  'X0301': 13.68, 'X0305': 32.88, 'X0306': 20.43,
+  'X0401':  8.43, 'X0402': 24.00, 'X0405': 16.28,
+  // Krankengymnastik
+  'X0501': 29.63, 'X0521': 29.63, 'X0507': 55.81,
+  'X0601': 13.26, 'X0621': 13.26,
+  'X0902': 33.87, 'X1004': 24.16, 'X1005': 15.97,
+  // KG-Atemtherapie (Muko)
+  'X0702': 88.94, 'X0722': 88.94,
+  // KG-ZNS Kinder (keine Zuzahlung)
+  'X0708': 58.83, 'X0709': 58.83, 'X0728': 58.83, 'X0805': 16.57,
+  // KG-ZNS Erwachsene
+  'X0710': 47.06, 'X0711': 47.06, 'X0712': 47.06, 'X0720': 47.06,
+  // Traktion + Manuelle Therapie
+  'X1104':  8.63,
+  'X1201': 35.59, 'X1221': 35.59,
+  // Elektrotherapie
+  'X1302':  8.43, 'X1303': 18.70, 'X1310': 14.48, 'X1312': 27.61,
+  // Wärmetherapie + Kältetherapie
+  'X1501': 16.16, 'X1517':  7.43, 'X1530': 13.47, 'X1531': 14.66,
+  'X1532': 55.39, 'X1533': 42.84, 'X1534': 11.95,
+  // Bäder
+  'X1714': 27.72, 'X1732': 26.30, 'X1733': 26.30,
+  // Inhalation
+  'X1801': 12.34,
+  // Bericht + Standard-HM-Kombination
+  'X1906': 67.69, 'X2001': 70.45,
+  // Hausbesuch-Zuschläge
+  'X9922': 22.78, 'X9950': 22.78, 'X9951': 13.09,
 };
 
 function renderServices() {

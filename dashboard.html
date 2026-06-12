@@ -398,28 +398,95 @@
                 <select class="form-select" id="srvGkvPosition">
                   <option value="">— Keine GKV-Position (Privatleistung) —</option>
                   <optgroup label="Krankengymnastik">
-                    <option value="X0501">X0501 — KG Allgemein Einzel (€29,63)</option>
-                    <option value="X0710">X0710 — KG-ZNS Bobath Erwachsene (€47,06)</option>
-                    <option value="X0507">X0507 — KG-Gerät parallel (€55,81)</option>
-                    <option value="X0702">X0702 — KG-Muko Einzel (€88,94)</option>
-                    <option value="X0301">X0301 — Übungsbehandlung Einzel (€13,68)</option>
+                    <option value="X0501">X0501 — KG Allgemein Einzel (15–25 Min · €29,63)</option>
+                    <option value="X0521">X0521 — KG Einzel telemedizinisch (15–25 Min · €29,63)</option>
+                    <option value="X0601">X0601 — KG Gruppe 2–5 (20–30 Min · €13,26)</option>
+                    <option value="X0621">X0621 — KG Gruppe 2–5 telemedizinisch (20–30 Min · €13,26)</option>
+                    <option value="X0902">X0902 — KG Bewegungsbad Einzel (20–30 Min · €33,87)</option>
+                    <option value="X1004">X1004 — KG Bewegungsbad Gruppe 2–3 (20–30 Min · €24,16)</option>
+                    <option value="X1005">X1005 — KG Bewegungsbad Gruppe 4–5 (20–30 Min · €15,97)</option>
+                  </optgroup>
+                  <optgroup label="KG-Gerät">
+                    <option value="X0507">X0507 — KG-Gerät parallel bis 3 Pat. (60 Min · €55,81)</option>
+                  </optgroup>
+                  <optgroup label="KG-ZNS Erwachsene">
+                    <option value="X0710">X0710 — KG-ZNS Bobath Erwachsene Einzel (25–35 Min · €47,06)</option>
+                    <option value="X0711">X0711 — KG-ZNS Vojta Erwachsene Einzel (25–35 Min · €47,06)</option>
+                    <option value="X0712">X0712 — KG-ZNS PNF Einzel (25–35 Min · €47,06)</option>
+                    <option value="X0720">X0720 — KG-ZNS Bobath telemedizinisch (25–35 Min · €47,06)</option>
+                  </optgroup>
+                  <optgroup label="KG-ZNS Kinder (keine Zuzahlung)">
+                    <option value="X0708">X0708 — KG-ZNS Kinder Bobath Einzel (30–45 Min · €58,83)</option>
+                    <option value="X0709">X0709 — KG-ZNS Kinder Vojta Einzel (30–45 Min · €58,83)</option>
+                    <option value="X0728">X0728 — KG-ZNS Kinder Bobath telemedizinisch (30–45 Min · €58,83)</option>
+                    <option value="X0805">X0805 — KG Gruppe cerebral Kinder 2–4 (20–30 Min · €16,57)</option>
+                  </optgroup>
+                  <optgroup label="KG-Atemtherapie (Muko)">
+                    <option value="X0702">X0702 — KG-Muko Einzel (60 Min · €88,94)</option>
+                    <option value="X0722">X0722 — KG-Muko Einzel telemedizinisch (60 Min · €88,94)</option>
                   </optgroup>
                   <optgroup label="Manuelle Therapie">
-                    <option value="X1201">X1201 — Manuelle Therapie Einzel (€35,59)</option>
+                    <option value="X1201">X1201 — Manuelle Therapie Einzel (15–25 Min · €35,59)</option>
+                    <option value="X1221">X1221 — Manuelle Therapie telemedizinisch (15–25 Min · €35,59)</option>
                   </optgroup>
                   <optgroup label="Lymphdrainage">
-                    <option value="X0205">X0205 — MLD 30 Min (€35,97)</option>
-                    <option value="X0201">X0201 — MLD 45 Min (€53,94)</option>
-                    <option value="X0202">X0202 — MLD 60 Min (€71,94)</option>
+                    <option value="X0205">X0205 — MLD 30 Min / Teilbehandlung (€35,97)</option>
+                    <option value="X0201">X0201 — MLD 45 Min / Großbehandlung (€53,94)</option>
+                    <option value="X0202">X0202 — MLD 60 Min / Ganzbehandlung (€71,94)</option>
+                    <option value="X0204">X0204 — Kompressionsbandagierung (€22,92)</option>
                   </optgroup>
                   <optgroup label="Massage">
-                    <option value="X0106">X0106 — Klassische Massagetherapie KMT (€21,63)</option>
+                    <option value="X0106">X0106 — Klassische Massagetherapie KMT (15–20 Min · €21,63)</option>
+                    <option value="X0107">X0107 — Bindegewebsmassage BGM (20–30 Min · €25,98)</option>
+                    <option value="X0108">X0108 — Segment-/Periost-/Colonmassage (15–20 Min · €21,63)</option>
+                    <option value="X0102">X0102 — Unterwasserdruckstrahlmassage (15–20 Min · €33,75)</option>
                   </optgroup>
-                  <optgroup label="Physikalische Therapie">
-                    <option value="X1104">X1104 — Traktionsbehandlung mit Gerät (€8,63)</option>
-                    <option value="X1302">X1302 — Elektrotherapie Einzel (€8,43)</option>
-                    <option value="X1501">X1501 — Warmpackung (€16,16)</option>
-                    <option value="X1534">X1534 — Kältetherapie (€11,95)</option>
+                  <optgroup label="Übungsbehandlung">
+                    <option value="X0301">X0301 — Übungsbehandlung Einzel (10–20 Min · €13,68)</option>
+                    <option value="X0305">X0305 — Übungsbehandlung Bewegungsbad Einzel (20–30 Min · €32,88)</option>
+                    <option value="X0306">X0306 — Chirogymnastik Einzel (15–20 Min · €20,43)</option>
+                    <option value="X0401">X0401 — Übungsbehandlung Gruppe 2–5 (10–20 Min · €8,43)</option>
+                    <option value="X0402">X0402 — ÜB Bewegungsbad Gruppe 2–3 (20–30 Min · €24,00)</option>
+                    <option value="X0405">X0405 — ÜB Bewegungsbad Gruppe 4–5 (20–30 Min · €16,28)</option>
+                  </optgroup>
+                  <optgroup label="Traktion">
+                    <option value="X1104">X1104 — Traktionsbehandlung mit Gerät (10–20 Min · €8,63)</option>
+                  </optgroup>
+                  <optgroup label="Elektrotherapie">
+                    <option value="X1302">X1302 — Elektrotherapie Einzel (10–20 Min · €8,43)</option>
+                    <option value="X1303">X1303 — Elektrostimulation bei Paresen (5–10 Min · €18,70)</option>
+                    <option value="X1310">X1310 — Hydroelektr. Teilbad / Zwei-/Vierzellenbad (10–20 Min · €14,48)</option>
+                    <option value="X1312">X1312 — Hydroelektr. Vollbad / Stangerbad (10–20 Min · €27,61)</option>
+                  </optgroup>
+                  <optgroup label="Wärmetherapie">
+                    <option value="X1501">X1501 — Warmpackung (20–30 Min · €16,16)</option>
+                    <option value="X1517">X1517 — Wärmetherapie Heißluft (10–20 Min · €7,43)</option>
+                    <option value="X1530">X1530 — Heiße Rolle (10–15 Min · €13,47)</option>
+                    <option value="X1531">X1531 — Ultraschall-Wärmetherapie (10–20 Min · €14,66)</option>
+                    <option value="X1532">X1532 — Peloid-Vollbad (15–45 Min · €55,39)</option>
+                    <option value="X1533">X1533 — Peloid-Teilbad (15–45 Min · €42,84)</option>
+                  </optgroup>
+                  <optgroup label="Kältetherapie">
+                    <option value="X1534">X1534 — Kältetherapie (5–10 Min · €11,95)</option>
+                  </optgroup>
+                  <optgroup label="Bäder">
+                    <option value="X1714">X1714 — Kohlensäurebad (10–20 Min · €27,72)</option>
+                    <option value="X1732">X1732 — CO2-Trockenbad Voll-/Dreiviertel-/Halbbad (10–20 Min · €26,30)</option>
+                    <option value="X1733">X1733 — CO2-Trockenbad Teilbad (45–60 Min · €26,30)</option>
+                  </optgroup>
+                  <optgroup label="Inhalation">
+                    <option value="X1801">X1801 — Inhalationstherapie (5–30 Min · €12,34)</option>
+                  </optgroup>
+                  <optgroup label="Standardisierte Heilmittelkombination">
+                    <option value="X2001">X2001 — D1 Standardisierte Heilmittelkombination (60 Min · €70,45)</option>
+                  </optgroup>
+                  <optgroup label="Bericht">
+                    <option value="X1906">X1906 — Physiotherapeutischer Bericht (auf Anforderung · €67,69)</option>
+                  </optgroup>
+                  <optgroup label="Hausbesuch-Zuschläge">
+                    <option value="X9922">X9922 — Hausbesuch Kurzzeit-/Verhinderungs-/Tagespflege (€22,78)</option>
+                    <option value="X9950">X9950 — Hausbesuch inkl. Wegegeld / Einsatzpauschale (€22,78)</option>
+                    <option value="X9951">X9951 — Hausbesuch soz. Einrichtung inkl. Wegegeld (€13,09)</option>
                   </optgroup>
                 </select>
               </div>
