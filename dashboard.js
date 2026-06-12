@@ -2268,7 +2268,11 @@ async function openBookingActionModal(booking) {
   bkActionBookingCache = booking;
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
-  const patientName = booking.customer_name || (booking.services?.title) || 'Termin';
+  // "Frank Becker · 1977-04-05" formatını ayır
+  const rawName = booking.customer_name || '';
+  const dotMatch = rawName.match(/^(.+?)\s*·\s*(\d{4}-\d{2}-\d{2})$/);
+  const patientName = dotMatch ? dotMatch[1].trim() : (rawName || booking.services?.title || 'Termin');
+  const parsedDob = dotMatch ? dotMatch[2] : null;
   const patientPhone = booking.customer_phone || '';
   document.getElementById('bkActionPatient').textContent = patientName;
 
@@ -2374,17 +2378,40 @@ async function openBookingActionModal(booking) {
     const { data: fl } = await supabase.from('leads').select('id').eq('owner_id', ownerId).eq('phone', booking.customer_phone).maybeSingle();
     if (fl) leadId = fl.id;
   }
-  if (!leadId && booking.customer_name) {
-    const nameParts = booking.customer_name.trim().split(/\s+/);
+  if (!leadId && patientName) {
+    const nameParts = patientName.trim().split(/\s+/);
     if (nameParts.length >= 2) {
       const lastName = nameParts[nameParts.length - 1];
-      const { data: fl } = await supabase.from('leads').select('id').eq('owner_id', ownerId).eq('last_name', lastName).maybeSingle();
+      const firstName = nameParts[0];
+      // İsim + soyisim ile eşleştir (daha güvenli)
+      let q = supabase.from('leads').select('id').eq('owner_id', ownerId).eq('last_name', lastName);
+      if (firstName) q = q.eq('first_name', firstName);
+      const { data: fl } = await q.maybeSingle();
       if (fl) leadId = fl.id;
     }
   }
   const patientCard = document.getElementById('bkPatientCard');
   const patientInfo = document.getElementById('bkPatientInfo');
   if (patientCard) patientCard.hidden = true;
+
+  // Lead bulunamasa bile booking'deki bilgileri göster
+  if (!leadId && patientCard && patientInfo) {
+    const row = (label, val) => val && val !== '—' ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val))}</div></div>` : '';
+    const dobStr = parsedDob ? new Date(parsedDob).toLocaleDateString('de-DE') : null;
+    const rows = [
+      row('Geburtsdatum', dobStr),
+      row('Telefon', patientPhone),
+      row('Name', patientName),
+    ].filter(Boolean);
+    if (rows.length) {
+      patientInfo.innerHTML = rows.join('');
+      const openBtn = document.getElementById('bkOpenPatientBtn');
+      if (openBtn) openBtn.style.display = 'none';
+      const zbBadge = document.getElementById('bkZuzahlungBadge');
+      if (zbBadge) zbBadge.hidden = true;
+      patientCard.hidden = false;
+    }
+  }
 
   if (leadId) {
     // Lead + aktif Heilmittelverordnungen paralel yükle
@@ -2444,7 +2471,7 @@ async function openBookingActionModal(booking) {
 
       // "Vollständiges Profil" button
       const openBtn = document.getElementById('bkOpenPatientBtn');
-      if (openBtn) openBtn.onclick = () => openPatientDetailModal(lead);
+      if (openBtn) { openBtn.style.display = ''; openBtn.onclick = () => openPatientDetailModal(lead); }
 
       // Zuzahlungsbefreiung badge
       const zbBadge = document.getElementById('bkZuzahlungBadge');
