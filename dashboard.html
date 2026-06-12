@@ -3703,12 +3703,53 @@
         </div>
 
         <!-- Heilmittel / Rezept Bilgisi -->
-        <div id="bkRxInfoCard" hidden style="background:rgba(177,137,27,0.08);border:1px solid rgba(177,137,27,0.25);border-radius:8px;padding:10px;margin-bottom:12px;">
-          <div style="font-size:11px;font-weight:600;color:var(--accent,#b1891b);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Heilmittelverordnung</div>
-          <div id="bkRxRemainingBar" style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;margin-bottom:6px;overflow:hidden;">
-            <div id="bkRxRemainingFill" style="height:100%;background:var(--accent,#b1891b);border-radius:4px;width:0%;transition:width 0.4s;"></div>
+        <div id="bkRxInfoCard" hidden style="border:1px solid rgba(177,137,27,0.3);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(177,137,27,0.08);border-bottom:1px solid rgba(177,137,27,0.2);">
+            <div style="font-size:11px;font-weight:600;color:var(--accent,#b1891b);text-transform:uppercase;letter-spacing:.05em;">Rezeptinfo</div>
+            <span id="bkRxStatusBadge" style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;"></span>
           </div>
-          <div id="bkRxRemainingText" style="font-size:12px;color:var(--text-muted);"></div>
+          <div style="padding:8px 12px;display:grid;grid-template-columns:76px 1fr;gap:4px 8px;font-size:12px;">
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Nummer</div>
+            <div id="bkRxNummer" style="color:var(--text-main);font-weight:500;"></div>
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Arzt</div>
+            <div id="bkRxArzt" style="color:var(--text-main);font-weight:500;"></div>
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Datum</div>
+            <div id="bkRxDatum" style="color:var(--text-main);font-weight:500;"></div>
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Verordnung</div>
+            <div id="bkRxVerordnung" style="color:var(--text-main);font-weight:500;line-height:1.4;"></div>
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">RZG</div>
+            <div id="bkRxRZG" style="color:var(--text-main);font-weight:500;"></div>
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Mandant</div>
+            <div id="bkRxMandant" style="color:var(--text-main);font-weight:500;"></div>
+          </div>
+          <div style="padding:0 12px 10px;">
+            <div id="bkRxRemainingBar" style="background:rgba(255,255,255,0.08);border-radius:4px;height:5px;margin-bottom:5px;overflow:hidden;">
+              <div id="bkRxRemainingFill" style="height:100%;background:var(--accent,#b1891b);border-radius:4px;width:0%;transition:width 0.4s;"></div>
+            </div>
+            <div id="bkRxRemainingText" style="font-size:11px;color:var(--text-muted);"></div>
+          </div>
+        </div>
+
+        <!-- Sitzungsübersicht -->
+        <div id="bkSitzungCard" hidden style="border:1px solid var(--border,#374151);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Sitzungsübersicht</div>
+            <span id="bkSitzungCount" style="font-size:11px;color:var(--text-muted);"></span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="bkSitzungTable" style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border,#374151);">
+                  <th style="padding:5px 8px;text-align:center;color:var(--text-muted);font-weight:500;width:28px;">#</th>
+                  <th style="padding:5px 6px;text-align:center;color:var(--text-muted);font-weight:500;width:24px;">St.</th>
+                  <th style="padding:5px 6px;text-align:left;color:var(--text-muted);font-weight:500;">Leistung</th>
+                  <th style="padding:5px 6px;text-align:center;color:var(--text-muted);font-weight:500;width:34px;">Ther.</th>
+                  <th style="padding:5px 8px;text-align:right;color:var(--text-muted);font-weight:500;white-space:nowrap;">Datum &amp; Zeit</th>
+                </tr>
+              </thead>
+              <tbody id="bkSitzungBody"></tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Anamnese Özeti -->

@@ -1087,7 +1087,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1999,7 +1999,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(session_number,prescriptions(heilmittel,heilmittel_position,diagnosegruppe,anzahl_einheiten,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2306,18 +2306,99 @@ async function openBookingActionModal(booking) {
 
   // --- Heilmittel / Rezept kalan seans (prescription_sessions join'den) ---
   const rxCard = document.getElementById('bkRxInfoCard');
-  if (rxCard) {
-    rxCard.hidden = true;
-    const ps = Array.isArray(booking.prescription_sessions) ? booking.prescription_sessions[0] : null;
-    const rx = ps?.prescriptions;
-    if (rx && rx.anzahl_einheiten) {
-      const total = rx.anzahl_einheiten;
-      const current = ps.session_number || 1;
-      const remaining = Math.max(0, total - current);
-      const pct = Math.round((current / total) * 100);
-      document.getElementById('bkRxRemainingFill').style.width = pct + '%';
-      document.getElementById('bkRxRemainingText').textContent = `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`;
-      rxCard.hidden = false;
+  const sitzungCard = document.getElementById('bkSitzungCard');
+  if (rxCard) rxCard.hidden = true;
+  if (sitzungCard) sitzungCard.hidden = true;
+  const ps = Array.isArray(booking.prescription_sessions) ? booking.prescription_sessions[0] : null;
+  const rx = ps?.prescriptions;
+  if (rxCard && rx && rx.anzahl_einheiten) {
+    const total = rx.anzahl_einheiten;
+    const current = ps.session_number || 1;
+    const remaining = Math.max(0, total - current);
+    const pct = Math.round((current / total) * 100);
+    document.getElementById('bkRxRemainingFill').style.width = pct + '%';
+    document.getElementById('bkRxRemainingText').textContent = `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`;
+
+    // Rezeptinfo structured fields
+    const shortId = rx.id ? rx.id.slice(-4).toUpperCase() : '—';
+    const icdPart = rx.icd10 ? ` (${rx.icd10})` : '';
+    const nummerEl = document.getElementById('bkRxNummer');
+    if (nummerEl) nummerEl.textContent = `${shortId}-${current}${icdPart}`;
+
+    const datumEl = document.getElementById('bkRxDatum');
+    if (datumEl) datumEl.textContent = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
+
+    const verordnungEl = document.getElementById('bkRxVerordnung');
+    if (verordnungEl) {
+      const hm = rx.heilmittel_feld_text || rx.heilmittel || '—';
+      const typ = rx.rezept_typ ? ` · ${rx.rezept_typ}` : '';
+      verordnungEl.textContent = `${rx.anzahl_einheiten}x ${hm}${typ}`;
+    }
+
+    const rzgEl = document.getElementById('bkRxRZG');
+    if (rzgEl) {
+      if (rx.zuzahlung_befreit) {
+        rzgEl.innerHTML = '<span style="color:#4ade80;font-weight:600;">befreit</span>';
+      } else if (rx.zuzahlung_eur != null) {
+        rzgEl.textContent = `${rx.zuzahlung_eur.toFixed(2)} €`;
+      } else {
+        rzgEl.textContent = '—';
+      }
+    }
+
+    const mandantEl = document.getElementById('bkRxMandant');
+    if (mandantEl) mandantEl.textContent = empName || '—';
+
+    const statusBadge = document.getElementById('bkRxStatusBadge');
+    if (statusBadge) {
+      const statusMap = {
+        in_behandlung: { label: 'In Behandlung', bg: 'rgba(34,197,94,0.15)', color: '#4ade80', border: 'rgba(34,197,94,0.3)' },
+        completed:     { label: 'Abgeschlossen', bg: 'rgba(100,116,139,0.15)', color: '#94a3b8', border: 'rgba(100,116,139,0.3)' },
+        billed:        { label: 'Abgerechnet',   bg: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: 'rgba(59,130,246,0.3)' },
+      };
+      const st = statusMap[rx.status] || { label: rx.status || '—', bg: 'rgba(177,137,27,0.15)', color: '#b1891b', border: 'rgba(177,137,27,0.3)' };
+      statusBadge.textContent = st.label;
+      statusBadge.style.cssText = `font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:${st.bg};color:${st.color};border:1px solid ${st.border};`;
+    }
+
+    rxCard.hidden = false;
+
+    // Sitzungsübersicht table
+    if (sitzungCard && rx.id) {
+      const rxId = rx.id;
+      sitzungCard.hidden = false;
+      const sitzungBody = document.getElementById('bkSitzungBody');
+      const sitzungCount = document.getElementById('bkSitzungCount');
+      if (sitzungBody) sitzungBody.innerHTML = '<tr><td colspan="5" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Lade…</td></tr>';
+      supabase.from('prescription_sessions')
+        .select('id,session_number,status,done_at,booking_id,bookings(id,start_time,end_time,employee_name,status)')
+        .eq('prescription_id', rxId)
+        .order('session_number', { ascending: true })
+        .then(({ data: sessions }) => {
+          if (!sessions || !sitzungBody) return;
+          const done = sessions.filter(s => s.status === 'completed' || s.status === 'no_show').length;
+          if (sitzungCount) sitzungCount.textContent = `${done} / ${total} erledigt`;
+          const hmKurz = (rx.heilmittel || '—').split(/[,;]/)[0].trim().slice(0, 20);
+          sitzungBody.innerHTML = sessions.map(s => {
+            const bk = s.bookings;
+            const isCurrent = s.booking_id === booking.id;
+            const statusIcon = s.status === 'completed' ? '✓' : s.status === 'no_show' ? '✗' : '○';
+            const statusColor = s.status === 'completed' ? '#4ade80' : s.status === 'no_show' ? '#f87171' : 'var(--text-muted)';
+            const dateStr = bk?.start_time
+              ? new Date(bk.start_time).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'2-digit'})
+                + ' ' + new Date(bk.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
+              : '—';
+            const empI = (bk?.employee_name || '').split(/\s+/).map(w => w[0]||'').join('').toUpperCase().slice(0,3) || '—';
+            const rowBg = isCurrent ? 'background:rgba(177,137,27,0.12);' : '';
+            return `<tr style="border-bottom:1px solid var(--border,#374151);${rowBg}">
+              <td style="padding:5px 8px;text-align:center;color:var(--text-muted);">${s.session_number}</td>
+              <td style="padding:5px 6px;text-align:center;font-weight:700;color:${statusColor};">${statusIcon}</td>
+              <td style="padding:5px 6px;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;max-width:90px;white-space:nowrap;">${escapeHtml(hmKurz)}</td>
+              <td style="padding:5px 6px;text-align:center;color:var(--text-muted);font-size:11px;">${escapeHtml(empI)}</td>
+              <td style="padding:5px 8px;text-align:right;color:var(--text-muted);white-space:nowrap;font-size:11px;">${escapeHtml(dateStr)}</td>
+            </tr>`;
+          }).join('') || '<tr><td colspan="5" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Keine Sitzungsdaten.</td></tr>';
+        });
     }
   }
 
@@ -2399,9 +2480,10 @@ async function openBookingActionModal(booking) {
   if (!leadId && patientCard && patientInfo) {
     const row = (label, val) => val && val !== '—' ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val))}</div></div>` : '';
     const dobStr = parsedDob ? new Date(parsedDob).toLocaleDateString('de-DE') : null;
+    const telRowFb = (label, phone) => phone ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="color:var(--text-main);font-weight:500;"><a href="tel:${escapeHtml(phone)}" style="color:var(--accent,#b1891b);text-decoration:none;">${escapeHtml(phone)}</a></div></div>` : '';
     const rows = [
       row('Geburtsdatum', dobStr),
-      row('Telefon', patientPhone),
+      telRowFb('Telefon', patientPhone),
       row('Name', patientName),
     ].filter(Boolean);
     if (rows.length) {
@@ -2458,11 +2540,14 @@ async function openBookingActionModal(booking) {
       const row = (label, val) => `
         <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
         <div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val||'—'))}</div></div>`;
+      const telRow = (label, phone) => `
+        <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
+        <div style="color:var(--text-main);font-weight:500;">${phone ? `<a href="tel:${escapeHtml(phone)}" style="color:var(--accent,#b1891b);text-decoration:none;">${escapeHtml(phone)}</a>` : '—'}</div></div>`;
 
       patientInfo.innerHTML = [
         row('Geburtsdatum', dobStr),
         row('Geschlecht', sex),
-        row('Telefon', lead.phone || '—'),
+        telRow('Telefon', lead.phone),
         row('E-Mail', lead.email || '—'),
         row('Krankenkasse', krankenkasse),
         row('Versicherten-Nr.', vNr),
@@ -2504,6 +2589,11 @@ async function openBookingActionModal(booking) {
 
       patientCard.hidden = false;
     }
+
+    // --- Rezeptinfo: Arzt alanını anamnese'den doldur ---
+    const arztEl = document.getElementById('bkRxArzt');
+    if (arztEl && anamneseData?.arzt_name) arztEl.textContent = anamneseData.arzt_name;
+    else if (arztEl && !arztEl.textContent) arztEl.textContent = '—';
 
     // --- Anamnese özeti ---
     const anamCard = document.getElementById('bkAnamneseCard');
