@@ -268,6 +268,11 @@
               <span class="cal-view-date" id="dayViewDateLabel">—</span>
               <button class="btn-icon" id="dayViewNext" type="button">›</button>
             </div>
+            <div class="cal-view-toggle">
+              <button class="cal-view-btn" data-view="day">Tag</button>
+              <button class="cal-view-btn active" data-view="week">Woche</button>
+              <button class="cal-view-btn" data-view="month">Monat</button>
+            </div>
           </div>
           <div class="cal-emp-chips" id="calEmpChips"></div>
 
@@ -279,6 +284,11 @@
           <div class="day-view-grid" id="dayViewGrid" style="display:none;">
             <div class="dv-time-col" id="dvTimeCol"></div>
             <div class="dv-cols-wrap" id="dvColsWrap"></div>
+          </div>
+
+          <div class="week-view-grid" id="weekViewGrid" style="display:none;">
+            <div class="dv-time-col" id="wvTimeCol"></div>
+            <div class="dv-cols-wrap" id="wvColsWrap"></div>
           </div>
 
           <!-- Calendar Right Panel unified with bkActionModal -->
@@ -3727,6 +3737,11 @@
               <div id="bkRxRemainingFill" style="height:100%;background:var(--accent,#b1891b);border-radius:4px;width:0%;transition:width 0.4s;"></div>
             </div>
             <div id="bkRxRemainingText" style="font-size:11px;color:var(--text-muted);"></div>
+          </div>
+          <div id="bkRxZuzahlungWarn" hidden style="margin:6px 12px 8px;padding:5px 10px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:6px;font-size:11px;color:#fbbf24;font-weight:600;"></div>
+          <div id="bkRxLetzterTermin" hidden style="margin:6px 12px 8px;padding:6px 10px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:6px;font-size:11px;color:#4ade80;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+            <span>🎯 Letzte Behandlung dieser Verordnung</span>
+            <span style="font-size:10px;opacity:0.8;">→ Abrechnung prüfen</span>
           </div>
         </div>
 

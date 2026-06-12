@@ -633,7 +633,7 @@ async function switchPanel(id) {
     }
     showMyBookingLink();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
-    setCalendarView('day');
+    setCalendarView('week');
   }
   if (id === 'fahrtenbuch') loadFahrtenbuchPanel();
   if (id === 'kunden') { loadLeads(); initPatTableView(); }
@@ -1445,6 +1445,19 @@ function renderBookingSlotInner(b, childBookings = []) {
     b.notes         ? `<span title="Notiz" style="opacity:0.85;width:13px;height:13px;display:inline-flex;">${ICON.info}</span>` : '',
   ].filter(Boolean).join(' ');
 
+  const heilmittel = rx?.heilmittel || b.services?.code || '';
+  const hmColor = (() => {
+    const hm = (heilmittel || '').toUpperCase();
+    if (hm.startsWith('KG') || hm.startsWith('MT')) return '#60a5fa';
+    if (hm.startsWith('VO') || hm.startsWith('KT')) return '#a78bfa';
+    if (hm.startsWith('ET') || hm.startsWith('ERGO')) return '#34d399';
+    if (hm.startsWith('LOG') || hm.startsWith('SP')) return '#f472b6';
+    if (hm.startsWith('PO') || hm.startsWith('PODO')) return '#fb923c';
+    if (rx?.is_dringend) return '#fbbf24';
+    return null;
+  })();
+  const hmBorder = hmColor ? `border-left:3px solid ${hmColor};padding-left:4px;` : '';
+
   if (b.is_group) {
     const count = childBookings.length;
     const capacity = b.group_capacity || 5;
@@ -1478,7 +1491,7 @@ function renderBookingSlotInner(b, childBookings = []) {
     
     const subtitle = partNames ? escapeHtml(partNames) : '<span style="opacity: 0.6; font-style: italic;">Freier Gruppenslot</span>';
     
-    return `
+    return `<div style="height:100%;${hmBorder}">
       <div class="dv-booking-name" style="font-weight:700;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;">
         <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.services?.title || 'Gruppe')}</span>
         ${badge}
@@ -1487,7 +1500,7 @@ function renderBookingSlotInner(b, childBookings = []) {
         ${subtitle}
       </div>
       ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
-    `;
+    </div>`;
   }
 
   // "Vorname Nachname" → "Nachname, Vorname" (best-effort). Single token or
@@ -1505,7 +1518,6 @@ function renderBookingSlotInner(b, childBookings = []) {
     }
   }
 
-  const heilmittel = rx?.heilmittel || b.services?.code || '';
   const dg = rx?.diagnosegruppe || '';
   const counter = (sess?.session_number && rx?.anzahl_einheiten)
     ? `(${sess.session_number}/${rx.anzahl_einheiten})`
@@ -1517,7 +1529,7 @@ function renderBookingSlotInner(b, childBookings = []) {
     dg ? `<span style="opacity:0.75;">${escapeHtml(dg)}</span>` : '',
   ].filter(Boolean).join(' · ');
 
-  return `
+  return `<div style="height:100%;${hmBorder}">
     <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${b.status === 'no_show' ? 'text-decoration:line-through;opacity:0.6;' : ''}">
       ${escapeHtml(displayName)}
       ${isReadyBadge}
@@ -1529,8 +1541,36 @@ function renderBookingSlotInner(b, childBookings = []) {
          </div>`
       : ''}
     ${icons ? `<div class="bk-icon-strip" style="position:absolute;top:2px;right:4px;display:flex;gap:3px;font-size:11px;line-height:1;pointer-events:none;">${icons}</div>` : ''}
-  `;
+  </div>`;
 }
+
+(function setupCalTimeTooltip() {
+  const existing = document.getElementById('calTimeTooltip');
+  if (existing) return;
+  const tip = document.createElement('div');
+  tip.id = 'calTimeTooltip';
+  tip.style.cssText = 'position:fixed;background:rgba(0,0,0,0.75);color:#fff;font-size:11px;padding:2px 7px;border-radius:4px;pointer-events:none;display:none;z-index:9999;white-space:nowrap;';
+  document.body.appendChild(tip);
+
+  document.addEventListener('mousemove', (e) => {
+    const calWrap = document.getElementById('calMainWrap');
+    if (!calWrap || !calWrap.contains(e.target)) { tip.style.display = 'none'; return; }
+    const grid = calWrap.querySelector('.cal-time-grid, .cal-grid, [data-cal-grid]');
+    if (!grid) { tip.style.display = 'none'; return; }
+    const rect = grid.getBoundingClientRect();
+    const relY = e.clientY - rect.top;
+    const totalH = rect.height;
+    if (relY < 0 || relY > totalH) { tip.style.display = 'none'; return; }
+    const totalMinutes = 24 * 60;
+    const minuteOfDay = Math.round((relY / totalH) * totalMinutes / 15) * 15;
+    const hh = String(Math.floor(minuteOfDay / 60)).padStart(2, '0');
+    const mm = String(minuteOfDay % 60).padStart(2, '0');
+    tip.textContent = `${hh}:${mm}`;
+    tip.style.display = 'block';
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top = (e.clientY - 10) + 'px';
+  });
+})();
 
 let _rezKpiCache = null;
 
@@ -1766,6 +1806,7 @@ function renderCalEmpChips() {
       calEmpFilter = c.id;
       renderCalEmpChips();
       if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
+      else if (calendarView === 'week') renderWeekView(toISODate(dayViewDate));
     });
     container.appendChild(btn);
   });
@@ -1949,6 +1990,10 @@ document.getElementById('calAddLeaveBtn').addEventListener('click', () => {
   openModal('leaveModal');
 });
 
+document.querySelectorAll('.cal-view-toggle .cal-view-btn').forEach(btn => {
+  btn.addEventListener('click', () => setCalendarView(btn.dataset.view));
+});
+
 function toISODate(d) { return d.toISOString().split('T')[0]; }
 
 function formatDateDE(d) {
@@ -1960,10 +2005,12 @@ function setCalendarView(view) {
   calendarView = view;
   document.getElementById('monthViewWrap').style.display = view === 'month' ? '' : 'none';
   document.getElementById('dayViewGrid').style.display = view === 'day' ? 'flex' : 'none';
+  document.getElementById('weekViewGrid').style.display = view === 'week' ? 'flex' : 'none';
   document.querySelectorAll('.cal-view-toggle .cal-view-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.view === view);
   });
   if (view === 'day') renderDayView(toISODate(dayViewDate));
+  else if (view === 'week') renderWeekView(toISODate(dayViewDate));
 }
 
 async function renderDayView(dateStr) {
@@ -2131,15 +2178,122 @@ async function renderDayView(dateStr) {
   });
 }
 
+async function renderWeekView(dateStr) {
+  const base = new Date(dateStr + 'T12:00:00');
+  const dow = base.getDay(); // 0=Sun
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(base);
+  monday.setDate(base.getDate() + mondayOffset);
+
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(d);
+  }
+
+  const fmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  document.getElementById('dayViewDateLabel').textContent = `${fmt(days[0])} – ${fmt(days[6])}`;
+
+  const timeCol = document.getElementById('wvTimeCol');
+  const colsWrap = document.getElementById('wvColsWrap');
+  timeCol.innerHTML = '';
+  colsWrap.innerHTML = '';
+
+  for (let h = 8; h < 20; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const slot = document.createElement('div');
+      slot.className = 'dv-slot';
+      const label = document.createElement('div');
+      label.className = 'dv-time-label';
+      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      slot.appendChild(label);
+      timeCol.appendChild(slot);
+    }
+  }
+
+  const ownerId = getOwnerId();
+  const dStart = new Date(days[0]);
+  dStart.setHours(0, 0, 0, 0);
+  const dEnd = new Date(days[6]);
+  dEnd.setHours(23, 59, 59, 999);
+
+  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
+  const empIds = emps.map(e => e.id);
+
+  const { data: bookings } = await supabase.from('bookings')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,status,services(title)')
+    .eq('owner_id', ownerId)
+    .gte('start_time', dStart.toISOString())
+    .lte('start_time', dEnd.toISOString())
+    .in('user_id', empIds.length ? empIds : ['none'])
+    .neq('status', 'cancelled');
+
+  const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const startHour = 8;
+  const totalSlots = (20 - 8) * 2;
+
+  days.forEach(d => {
+    const col = document.createElement('div');
+    col.className = 'dv-col';
+    col.style.minWidth = '100px';
+
+    const header = document.createElement('div');
+    header.className = 'dv-col-header';
+    const isToday = toISODate(d) === toISODate(new Date());
+    header.style.cssText = `padding:6px 4px;text-align:center;font-size:12px;font-weight:${isToday ? '700' : '500'};color:${isToday ? 'var(--primary)' : 'var(--text-muted)'};border-bottom:1px solid var(--border);`;
+    header.textContent = `${DAY_NAMES[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`;
+    col.appendChild(header);
+
+    const inner = document.createElement('div');
+    inner.style.cssText = `position:relative;height:${totalSlots * 28}px;`;
+
+    const dayISO = toISODate(d);
+    const dayBookings = (bookings || []).filter(b => b.start_time && b.start_time.startsWith(dayISO));
+
+    dayBookings.forEach(b => {
+      const start = new Date(b.start_time);
+      const end = new Date(b.end_time || b.start_time);
+      const startMin = start.getHours() * 60 + start.getMinutes();
+      const endMin = end.getHours() * 60 + end.getMinutes();
+      const topPx = ((startMin - startHour * 60) / 30) * 28;
+      const heightPx = Math.max(((endMin - startMin) / 30) * 28, 28);
+      const empIdx = teamMembers.findIndex(e => e.id === b.user_id);
+      const color = EMP_COLORS[empIdx % EMP_COLORS.length] || 'var(--primary)';
+
+      const block = document.createElement('div');
+      block.style.cssText = `position:absolute;top:${topPx}px;left:2px;right:2px;height:${heightPx}px;background:${color}22;border-left:3px solid ${color};border-radius:4px;padding:2px 4px;font-size:10px;overflow:hidden;cursor:pointer;`;
+      block.title = `${b.services?.title || 'Termin'} – ${b.customer_name || ''}`;
+      block.textContent = b.services?.title || 'Termin';
+      inner.appendChild(block);
+    });
+
+    col.appendChild(inner);
+    colsWrap.appendChild(col);
+  });
+}
+
 document.getElementById('dayViewPrev').addEventListener('click', () => {
-  dayViewDate.setDate(dayViewDate.getDate() - 1);
-  if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-  else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+  if (calendarView === 'week') {
+    dayViewDate = new Date(dayViewDate);
+    dayViewDate.setDate(dayViewDate.getDate() - 7);
+    renderWeekView(toISODate(dayViewDate));
+  } else {
+    dayViewDate.setDate(dayViewDate.getDate() - 1);
+    if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
+    else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+  }
 });
 document.getElementById('dayViewNext').addEventListener('click', () => {
-  dayViewDate.setDate(dayViewDate.getDate() + 1);
-  if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-  else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+  if (calendarView === 'week') {
+    dayViewDate = new Date(dayViewDate);
+    dayViewDate.setDate(dayViewDate.getDate() + 7);
+    renderWeekView(toISODate(dayViewDate));
+  } else {
+    dayViewDate.setDate(dayViewDate.getDate() + 1);
+    if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
+    else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+  }
 });
 
 // Tagesansicht "lebt": jede Minute die Jetzt-Linie verschieben & vergangene Stunden ausblenden
@@ -2267,6 +2421,17 @@ function updateNoShowButton(startTime) {
 
 async function openBookingActionModal(booking) {
   bkActionBookingCache = booking;
+  if (booking.status === 'confirmed') {
+    const endTime = new Date(booking.end_time || (new Date(booking.start_time).getTime() + 30*60000));
+    if (endTime < new Date()) {
+      supabase.from('bookings').update({ status: 'completed' }).eq('id', booking.id).then(({ error }) => {
+        if (!error) {
+          booking.status = 'completed';
+          bkActionBookingCache.status = 'completed';
+        }
+      });
+    }
+  }
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
   // "Frank Becker · 1977-04-05" formatını ayır
@@ -2362,6 +2527,25 @@ async function openBookingActionModal(booking) {
     }
 
     rxCard.hidden = false;
+
+    const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
+    if (rzgWarnEl) {
+      if (rx.zuzahlung_befreit === false) {
+        rzgWarnEl.hidden = false;
+        rzgWarnEl.textContent = `Rezeptgebühr offen: ${rx.zuzahlung_eur != null ? rx.zuzahlung_eur.toFixed(2) + ' €' : 'Betrag unbekannt'}`;
+      } else {
+        rzgWarnEl.hidden = true;
+      }
+    }
+
+    const letzterWarnEl = document.getElementById('bkRxLetzterTermin');
+    if (letzterWarnEl) {
+      if (current === total) {
+        letzterWarnEl.hidden = false;
+      } else {
+        letzterWarnEl.hidden = true;
+      }
+    }
 
     // Sitzungsübersicht table
     if (sitzungCard && rx.id) {
@@ -3372,13 +3556,26 @@ async function handlePatientNichtErschienen() {
   const btn = document.getElementById('bkActionNoShowBtn');
   if (btn && btn.disabled) return;
 
+  const reason = await showInputModal({
+    title: 'Grund für Nicht-Erscheinen',
+    message: 'Optionaler Hinweis (z.B. "krank", "Urlaub", "vergessen")',
+    inputLabel: 'Absagegrund',
+    inputPlaceholder: 'Grund eingeben oder leer lassen…',
+    confirmText: 'Bestätigen',
+    cancelText: 'Abbrechen',
+    variant: 'danger'
+  });
+  if (reason === null) return;
+
   const _bkm3 = document.getElementById('bkActionModal'); if (_bkm3) { _bkm3.hidden = true; _bkm3.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
   try {
+    const updatePayload = { status: 'no_show', no_show: true, no_show_noted_at: new Date().toISOString() };
+    if (reason && reason.trim()) updatePayload.cancellation_reason = reason.trim();
     const { error: bkErr } = await supabase
       .from('bookings')
-      .update({ status: 'no_show', no_show: true, no_show_noted_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('id', bkActionBookingCache.id);
 
     if (bkErr) throw bkErr;
