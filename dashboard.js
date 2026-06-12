@@ -9447,7 +9447,7 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
     modal.id = 'vorlagenAnsichtModal';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;';
     modal.innerHTML = `
-      <div id="vorlagenAnsichtCard" style="background:var(--bg-card-solid,#1f2937);border-radius:12px;width:min(720px,95vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div id="vorlagenAnsichtCard" style="background:var(--bg-card-solid,#1f2937);border-radius:12px;width:min(720px,95vw);height:min(96vh,1100px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;gap:12px;">
           <div style="min-width:0;flex:1;">
             <div id="vorlagenAnsichtTitle" style="font-size:15px;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
@@ -9465,8 +9465,8 @@ function openVorlagenAnsicht(vorlagenId, vorlagenList) {
           </div>
         </div>
         <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
-          <div id="vorlagenPreviewArea" style="flex:1;overflow:auto;padding:16px;background:#f0f0f0;min-width:0;">
-            <iframe id="vorlagenAnsichtIframe" style="width:210mm;min-height:297mm;border:none;box-shadow:0 2px 16px rgba(0,0,0,0.2);display:block;margin:0 auto;background:#fff;"></iframe>
+          <div id="vorlagenPreviewArea" style="flex:1;overflow:auto;padding:24px 32px;background:#e5e7eb;min-width:0;">
+            <iframe id="vorlagenAnsichtIframe" style="width:210mm;height:297mm;border:none;box-shadow:0 4px 24px rgba(0,0,0,0.25);display:block;margin:0 auto;background:#fff;"></iframe>
           </div>
           <div id="vorlagenAnsichtEditPanel" style="width:0;overflow:hidden;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid transparent;">
             <div style="padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;width:290px;">
