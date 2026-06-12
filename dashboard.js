@@ -26,7 +26,7 @@ const T = {
     nav_overview: 'Dashboard', nav_ueberblick: 'Überblick', nav_calendar: 'Terminkalender', nav_kunden: 'Patienten',
     wiz_step_1: '1. Kontrolle', wiz_step_2: '2. Taxierung', wiz_step_3: '3. Export', wiz_step_4: '4. Archiv',
     nav_services: 'Leistungen', nav_hours: 'Verfügbarkeit',
-    nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Bewertungen', nav_settings: 'Einstellungen',
+    nav_team: 'Team', nav_b2b: 'Zuweiser', nav_b2c: 'Patientenpost', nav_rechnungen: 'Rechnungen', nav_feedback: 'Bewertungen', nav_vorlagen: 'Vorlagen', nav_settings: 'Einstellungen',
     overview_sub: 'Ihr heutiger Überblick',
     welcome_text: 'Willkommen',
     kpi_plan: 'Paket', kpi_status: 'Status', kpi_today_bookings: 'Heute', kpi_today_sub: 'Termine', kpi_support: 'Support',
@@ -100,7 +100,7 @@ const T = {
     nav_overview: 'Dashboard', nav_ueberblick: 'Overview Hub', nav_calendar: 'Calendar', nav_kunden: 'Patients',
     wiz_step_1: '1. Control', wiz_step_2: '2. Pricing', wiz_step_3: '3. Export', wiz_step_4: '4. Archive',
     nav_services: 'Services', nav_hours: 'Availability',
-    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Reviews', nav_settings: 'Settings',
+    nav_team: 'Team', nav_b2b: 'Referrers', nav_b2c: 'Email Marketing', nav_rechnungen: 'Invoices', nav_feedback: 'Reviews', nav_vorlagen: 'Templates', nav_settings: 'Settings',
     overview_sub: 'Your daily overview',
     welcome_text: 'Welcome',
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
@@ -172,7 +172,7 @@ const T = {
     nav_overview: 'Dashboard', nav_ueberblick: 'Genel Bakış', nav_calendar: 'Takvim', nav_kunden: 'Hastalar',
     wiz_step_1: '1. Kontrol', wiz_step_2: '2. Fiyatlandırma', wiz_step_3: '3. Dışa Aktarım', wiz_step_4: '4. Arşiv',
     nav_services: 'Hizmetler', nav_hours: 'Müsaitlik',
-    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Değerlendirmeler', nav_settings: 'Ayarlar',
+    nav_team: 'Ekip', nav_b2b: 'Yönlendirenler', nav_b2c: 'E-posta', nav_rechnungen: 'Faturalar', nav_feedback: 'Değerlendirmeler', nav_vorlagen: 'Şablonlar', nav_settings: 'Ayarlar',
     overview_sub: 'Günlük genel bakışınız',
     welcome_text: 'Hoşgeldin',
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
@@ -305,6 +305,7 @@ const SECTOR_PANELS = {
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'vorlagen', icon: ICON.clipboard, key: 'nav_vorlagen', roles: ['owner'], group: 'einstellungen' },
     { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   physiotherapy: [
@@ -329,6 +330,7 @@ const SECTOR_PANELS = {
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'vorlagen', icon: ICON.clipboard, key: 'nav_vorlagen', roles: ['owner'], group: 'einstellungen' },
     { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   praxis: [
@@ -350,6 +352,7 @@ const SECTOR_PANELS = {
     { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'vorlagen', icon: ICON.clipboard, key: 'nav_vorlagen', roles: ['owner'], group: 'einstellungen' },
     { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
   ]
 };
@@ -639,6 +642,7 @@ async function switchPanel(id) {
   if (id === 'team') loadTeam();
   if (id === 'b2b') { loadB2B(); checkB2bSetup(); }
   if (id === 'b2c') { loadB2C(); checkB2cSetup(); }
+  if (id === 'vorlagen') { loadVorlagenPanel(); }
   if (id === 'settings') { loadSettings(); loadVorlagen(); }
   if (id === 'doctors') loadDoctors();
   if (id === 'notizen') loadNotizen();
@@ -2269,6 +2273,82 @@ async function openBookingActionModal(booking) {
   document.getElementById('bkActionPatient').textContent = patientName;
 
   const ownerId = getOwnerId();
+
+  // --- Detay kartı doldur ---
+  const svc = booking.services?.title || booking.title || '';
+  const empName = booking.employee_name || booking.employee?.name || '';
+  const start = new Date(booking.start_time);
+  const end = new Date(booking.end_time || (start.getTime() + 30*60000));
+  const durationMin = Math.round((end - start) / 60000);
+  const dateStr = start.toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
+  const timeStr = start.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) + ' – ' + end.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+
+  const detailCard = document.getElementById('bkDetailCard');
+  if (detailCard) {
+    document.getElementById('bkDetailService').textContent = svc;
+    document.getElementById('bkDetailDateTime').textContent = `${dateStr}, ${timeStr}`;
+    document.getElementById('bkDetailTherapist').textContent = empName ? `Therapeut: ${empName}` : '';
+    document.getElementById('bkDetailDuration').textContent = `${durationMin} Min.`;
+  }
+
+  // --- Heilmittel / Rezept kalan seans ---
+  const rxCard = document.getElementById('bkRxInfoCard');
+  if (rxCard) {
+    rxCard.hidden = true;
+    const rxId = booking.rx_id || booking.prescription_id || null;
+    if (rxId) {
+      const { data: rx } = await supabase.from('heilmittel_rezepte')
+        .select('anzahl_behandlungen, behandlungsbeginn')
+        .eq('id', rxId)
+        .maybeSingle();
+      if (rx) {
+        const { count: doneCount } = await supabase.from('bookings')
+          .select('id', { count: 'exact', head: true })
+          .eq('rx_id', rxId)
+          .in('status', ['confirmed', 'completed']);
+        const total = rx.anzahl_behandlungen || 0;
+        const done = doneCount || 0;
+        const remaining = Math.max(0, total - done);
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        document.getElementById('bkRxRemainingFill').style.width = pct + '%';
+        document.getElementById('bkRxRemainingText').textContent = `${done} von ${total} Behandlungen erbracht — noch ${remaining} offen`;
+        rxCard.hidden = false;
+      }
+    }
+  }
+
+  // --- Son randevular (hasta geçmişi) ---
+  const historyList = document.getElementById('bkHistoryList');
+  if (historyList && patientName) {
+    historyList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Lade…</div>';
+    let q = supabase.from('bookings')
+      .select('id,start_time,status,services(title)')
+      .eq('owner_id', ownerId)
+      .eq('customer_name', patientName)
+      .order('start_time', { ascending: false })
+      .limit(8);
+    if (patientPhone) q = q.eq('customer_phone', patientPhone);
+    const { data: hist } = await q;
+    if (hist && hist.length > 0) {
+      const statusIcon = { confirmed: '🟢', completed: '✅', no_show: '🔴', cancelled: '⛔' };
+      historyList.innerHTML = hist.map(b => {
+        const d = new Date(b.start_time);
+        const dStr = d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' });
+        const tStr = d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+        const icon = statusIcon[b.status] || '⬜';
+        const isCurrent = b.id === booking.id;
+        return `<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 6px;border-radius:4px;${isCurrent ? 'background:rgba(177,137,27,0.15);' : ''}">
+          <span>${icon}</span>
+          <span style="color:var(--text-muted);width:40px;flex-shrink:0;">${dStr}</span>
+          <span style="color:var(--text-muted);width:34px;flex-shrink:0;">${tStr}</span>
+          <span style="color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.services?.title || '—'}</span>
+        </div>`;
+      }).join('');
+    } else {
+      historyList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Keine Vortermine.</div>';
+    }
+  }
+
   const sessionInfo = await calculateSessionInfo(patientName, patientPhone, booking.id, ownerId);
   if (sessionInfo) {
     document.getElementById('bkActionSession').textContent = `Seans ${sessionInfo.current} / ${sessionInfo.total}`;
@@ -7401,9 +7481,14 @@ async function loadEmpUrlaubSection(empId, container) {
 async function deleteEmpTimeOff(timeOffId, empId) {
   const { error } = await supabase.from('time_offs').delete().eq('id', timeOffId);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-  // Reload the open card
-  const card = document.querySelector(`.emp-urlaub-body[data-emp-id="${empId}"]`);
-  if (card && !card.hidden) loadEmpUrlaubSection(empId, card);
+  // Reload the detail tab if open
+  const tabUrlaub = document.getElementById('tab-urlaub');
+  if (tabUrlaub && tabUrlaub.classList.contains('active')) {
+    loadEmpUrlaubSection(empId, tabUrlaub);
+  } else {
+    const card = document.querySelector(`.emp-urlaub-body[data-emp-id="${empId}"]`);
+    if (card && !card.hidden) loadEmpUrlaubSection(empId, card);
+  }
   showToast('Gelöscht');
 }
 
@@ -7928,6 +8013,7 @@ function openEmpDetail(empId) {
       if (btn.dataset.tab === 'hours') loadEmpHours(empId);
       if (btn.dataset.tab === 'services') loadEmpServices(empId);
       if (btn.dataset.tab === 'certificates') loadEmpCertificates(empId);
+      if (btn.dataset.tab === 'urlaub') loadEmpUrlaubSection(empId, document.getElementById('tab-urlaub'));
     });
   });
   detail.querySelector('.tab-btn[data-tab="info"]')?.classList.add('active');
@@ -7953,6 +8039,33 @@ function openEmpDetail(empId) {
     .then(({ data }) => {
       document.getElementById('empGoogleStatus').textContent = data?.access_token ? t('status_connected') : t('status_disconnected');
     });
+
+  // Urlaub tab — save button
+  const empUrlaubSaveBtn = document.getElementById('empUrlaubSaveBtn');
+  if (empUrlaubSaveBtn) {
+    empUrlaubSaveBtn.onclick = async () => {
+      const tab = document.getElementById('tab-urlaub');
+      const fromVal = tab.querySelector('.emp-urlaub-from').value;
+      const toVal = tab.querySelector('.emp-urlaub-to').value;
+      const typeVal = tab.querySelector('.emp-urlaub-type').value;
+      if (!fromVal || !toVal) { showToast('Bitte Zeitraum auswählen', 'error'); return; }
+      if (fromVal > toVal) { showToast('Enddatum muss nach Startdatum liegen', 'error'); return; }
+      const workDays = countWorkDays(fromVal, toVal);
+      const { error } = await supabase.from('time_offs').insert({
+        employee_id: empId,
+        owner_id: getOwnerId(),
+        start_date: fromVal,
+        end_date: toVal,
+        type: typeVal,
+        note: `${workDays} Arbeitstage`
+      });
+      if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+      showToast(`Eingetragen: ${workDays} Arbeitstage`);
+      tab.querySelector('.emp-urlaub-from').value = '';
+      tab.querySelector('.emp-urlaub-to').value = '';
+      loadEmpUrlaubSection(empId, tab);
+    };
+  }
 }
 
 function initEmpCalTab(empId) {
@@ -8973,6 +9086,85 @@ document.getElementById('brandingSaveBtn')?.addEventListener('click', async () =
   updateBrandingLogoPreview(logoUrl);
   showToast('Branding gespeichert', 'success');
 });
+
+// ===== Vorlagen Panel (standalone sidebar page) =====
+
+async function loadVorlagenPanel() {
+  const grid = document.getElementById('vorlagenPanelGrid');
+  if (!grid) return;
+  grid.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Lade…</div>';
+
+  const newBtn = document.getElementById('vorlagenPanelNewBtn');
+  if (newBtn) newBtn.onclick = () => openVorlagenNew();
+
+  const ownerId = getOwnerId();
+  const { data: vorlagen, error } = await supabase
+    .from('document_vorlagen')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .order('created_at', { ascending: true });
+
+  if (error) { grid.innerHTML = '<div style="color:#f87171;">Fehler beim Laden.</div>'; return; }
+
+  if (!vorlagen || vorlagen.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
+        <div style="font-size:32px;margin-bottom:12px;">📄</div>
+        <div style="font-size:14px;margin-bottom:8px;">Noch keine Vorlagen.</div>
+        <div style="font-size:12px;">Erstellen Sie Ihre erste Vorlage über den Button oben.</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = vorlagen.map(v => {
+    const typeLabel = VORLAGE_TYPE_LABELS[v.vorlage_type] || v.vorlage_type;
+    const isDefault = v.is_default;
+    const previewHtml = buildVorlagenPreview(v);
+    return `
+      <div class="vorlage-card" data-vorlage-id="${v.id}">
+        <div class="vorlage-preview">${previewHtml}</div>
+        <div class="vorlage-card-footer">
+          <div class="vorlage-card-title">${escapeHtml(v.name)}</div>
+          <div class="vorlage-card-type">${escapeHtml(typeLabel)}${isDefault ? ' <span class="vorlage-default-badge">Standard</span>' : ''}</div>
+          <div class="vorlage-card-actions">
+            <button class="btn-ghost btn-sm" onclick="openVorlagenEdit('${v.id}')">Bearbeiten</button>
+            <button class="btn-ghost btn-sm" style="color:#f87171;" onclick="deleteVorlage('${v.id}')">Löschen</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function buildVorlagenPreview(v) {
+  const typeColors = {
+    quittung_zuzahlung: '#0a4a7a',
+    rechnung_privat: '#2a5c3a',
+    rechnung_selbstzahler: '#5c2a2a',
+    rechnung_bg: '#3a2a5c',
+    rechnung_eigenanteil: '#5c4a2a',
+    rechnung_sonder: '#2a4a5c',
+    rezeptvorderseite: '#2a5c4a',
+    rzg_quittung: '#5c3a2a',
+  };
+  const accentColor = typeColors[v.vorlage_type] || '#374151';
+  return `
+    <div style="position:absolute;inset:0;background:#fff;border-radius:3px;overflow:hidden;font-family:sans-serif;">
+      <div style="background:${accentColor};height:18px;width:100%;"></div>
+      <div style="padding:6px;">
+        <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:4px;width:70%;"></div>
+        <div style="height:3px;background:#e5e7eb;border-radius:2px;margin-bottom:3px;width:50%;"></div>
+        <div style="height:3px;background:#e5e7eb;border-radius:2px;margin-bottom:6px;width:60%;"></div>
+        <div style="height:1px;background:#e5e7eb;margin-bottom:4px;"></div>
+        <div style="height:2px;background:#f3f4f6;margin-bottom:2px;"></div>
+        <div style="height:2px;background:#f3f4f6;margin-bottom:2px;"></div>
+        <div style="height:2px;background:#f3f4f6;margin-bottom:2px;"></div>
+        <div style="height:2px;background:#f3f4f6;margin-bottom:6px;"></div>
+        <div style="display:flex;justify-content:flex-end;">
+          <div style="width:50%;height:3px;background:${accentColor};opacity:0.5;border-radius:1px;"></div>
+        </div>
+      </div>
+    </div>`;
+}
 
 // ===== Vorlage System (Madde 11) =====
 
