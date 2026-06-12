@@ -2369,7 +2369,20 @@ async function openBookingActionModal(booking) {
   }
 
   // --- Hasta profil kartı + aktif reçeteler ---
-  const leadId = booking.lead_id || null;
+  let leadId = booking.lead_id || null;
+  // Fallback: booking may have customer_phone but no lead_id (older bookings)
+  if (!leadId && booking.customer_phone) {
+    const { data: fl } = await supabase.from('leads').select('id').eq('owner_id', ownerId).eq('phone', booking.customer_phone).maybeSingle();
+    if (fl) leadId = fl.id;
+  }
+  if (!leadId && booking.customer_name) {
+    const nameParts = booking.customer_name.trim().split(/\s+/);
+    if (nameParts.length >= 2) {
+      const lastName = nameParts[nameParts.length - 1];
+      const { data: fl } = await supabase.from('leads').select('id').eq('owner_id', ownerId).eq('last_name', lastName).maybeSingle();
+      if (fl) leadId = fl.id;
+    }
+  }
   const patientCard = document.getElementById('bkPatientCard');
   const patientInfo = document.getElementById('bkPatientInfo');
   if (patientCard) patientCard.hidden = true;
@@ -9123,7 +9136,7 @@ async function loadVorlagenPanel() {
   if (newBtn) newBtn.onclick = () => openVorlagenNew();
 
   const ownerId = getOwnerId();
-  const { data: vorlagen, error } = await supabase
+  const { data: initialData, error } = await supabase
     .from('document_vorlagen')
     .select('*')
     .eq('owner_id', ownerId)
@@ -9131,14 +9144,18 @@ async function loadVorlagenPanel() {
 
   if (error) { grid.innerHTML = '<div style="color:#f87171;">Fehler beim Laden.</div>'; return; }
 
+  let vorlagen = initialData;
+
   if (!vorlagen || vorlagen.length === 0) {
-    grid.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
-        <div style="font-size:32px;margin-bottom:12px;">📄</div>
-        <div style="font-size:14px;margin-bottom:8px;">Noch keine Vorlagen.</div>
-        <div style="font-size:12px;">Erstellen Sie Ihre erste Vorlage über den Button oben.</div>
-      </div>`;
-    return;
+    // Auto-seed default templates for new accounts
+    await seedDefaultVorlagen();
+    const { data: seeded } = await supabase.from('document_vorlagen').select('*').eq('owner_id', ownerId).order('created_at', { ascending: true });
+    if (!seeded || seeded.length === 0) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:32px;margin-bottom:12px;">📄</div><div style="font-size:14px;margin-bottom:8px;">Noch keine Vorlagen.</div></div>`;
+      return;
+    }
+    // Re-run with seeded data
+    vorlagen = seeded;
   }
 
   grid.innerHTML = vorlagen.map(v => {
@@ -9510,6 +9527,7 @@ async function saveVorlage() {
   document.getElementById('vorlagenModal').hidden = true;
   showToast('Vorlage gespeichert', 'success');
   loadVorlagen();
+  if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
 }
 
 async function deleteVorlage(id) {
@@ -9519,6 +9537,19 @@ async function deleteVorlage(id) {
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
   showToast('Vorlage gelöscht', 'success');
   loadVorlagen();
+  if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
+}
+
+async function seedDefaultVorlagen() {
+  const ownerId = getOwnerId();
+  const defaults = [
+    { owner_id: ownerId, name: 'Zuzahlungsquittung', vorlage_type: 'quittung_zuzahlung', is_default: true, content_json: { hinweis: 'Bitte überweisen Sie den Betrag fristgerecht.', fusszeile: '' } },
+    { owner_id: ownerId, name: 'Privatrechnung', vorlage_type: 'rechnung_privat', is_default: true, content_json: { betreff: 'Rechnung für physiotherapeutische Leistungen', zahlungsziel_tage: '14', fusszeile: '' } },
+    { owner_id: ownerId, name: 'BG-Rechnung', vorlage_type: 'rechnung_bg', is_default: true, content_json: { betreff: 'Rechnung für Berufsgenossenschaft', zahlungsziel_tage: '30', fusszeile: '' } },
+    { owner_id: ownerId, name: 'Erstbefundbericht', vorlage_type: 'erstbefund', is_default: true, content_json: {} },
+    { owner_id: ownerId, name: 'Verordnungsbegleitschein', vorlage_type: 'verordnungsbegleitschein', is_default: true, content_json: {} },
+  ];
+  await supabase.from('document_vorlagen').insert(defaults);
 }
 
 document.getElementById('vorlagenNewBtn')?.addEventListener('click', openVorlagenNew);
