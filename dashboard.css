@@ -820,12 +820,8 @@ textarea {
   overflow: hidden;
 }
 
-.sidebar.collapsed #sidebarCollapseBtn {
-  right: -20px;
-}
-
 #sidebarCollapseBtn {
-  transition: transform 0.22s ease;
+  transition: left 0.22s ease;
 }
 
 .sidebar nav {

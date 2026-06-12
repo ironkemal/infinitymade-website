@@ -74,8 +74,10 @@
 
       <aside class="sidebar" id="sidebar">
         <nav id="sidebarNav"></nav>
-        <button id="sidebarCollapseBtn" title="Menü ein-/ausblenden" style="position:absolute;bottom:16px;right:-12px;width:24px;height:24px;border-radius:50%;background:var(--bg-card-solid);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;z-index:10;padding:0;line-height:1;">‹</button>
       </aside>
+
+      <!-- Sidebar collapse toggle — OUTSIDE sidebar so it stays visible when collapsed -->
+      <button id="sidebarCollapseBtn" title="Menü ein-/ausblenden" style="position:fixed;top:68px;left:0;width:20px;height:48px;border-radius:0 6px 6px 0;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-left:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px;z-index:300;padding:0;line-height:1;transition:left 0.22s ease;">‹</button>
 
       <main class="main-area" id="mainArea">
 
@@ -916,6 +918,7 @@
               <!-- DIN 5008 letter-style header: issuer top-left, meta top-right -->
               <div class="invoice-print-header">
                 <div class="invoice-print-praxis">
+                  <img id="invvLogoImg" hidden alt="Logo" style="max-height:50px;max-width:160px;display:block;margin-bottom:8px;" />
                   <div class="invoice-print-biz-name" id="invvBizName">—</div>
                   <div class="invoice-print-biz-meta" id="invvBizMeta"></div>
                 </div>
@@ -981,6 +984,7 @@
                   <div id="invvFooterTax">—</div>
                 </div>
               </div>
+              <div id="invvFooterText" style="margin-top:20px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:11px;color:#666;white-space:pre-line;"></div>
             </div>
 
             <div class="no-print" style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
@@ -2196,7 +2200,7 @@
                   </div>
                   <div class="form-group">
                     <label class="form-label">Typ *</label>
-                    <select class="form-select" id="vorlagenType">
+                    <select class="form-select" id="vorlagenType" onchange="renderVorlagenContentForm(this.value, {})">
                       <option value="quittung_zuzahlung">Quittung Zuzahlung</option>
                       <option value="rechnung_bg">Rechnung BG</option>
                       <option value="rechnung_privat">Rechnung Privat</option>
@@ -2214,11 +2218,8 @@
                     </label>
                     <div class="form-hint">Es kann pro Typ nur eine Standard-Vorlage geben.</div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Inhalt (JSON)</label>
-                    <textarea class="form-input" id="vorlagenContentJson" rows="6" placeholder='{"header":"","body":"","footer":""}'></textarea>
-                    <div class="form-hint">Freies JSON-Objekt mit den Inhaltsbausteinen dieser Vorlage.</div>
-                  </div>
+                  <div id="vorlagenContentForm" style="display:flex;flex-direction:column;gap:10px;"></div>
+                  <div class="form-hint" style="margin-top:4px;">Felder je nach Vorlagen-Typ. Leer lassen = Standardwert.</div>
                   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('vorlagenModal').hidden=true">Abbrechen</button>
                     <button type="button" class="btn-primary" id="vorlagenSaveBtn">Speichern</button>
@@ -3566,13 +3567,12 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="bkActionModal" hidden>
-    <div class="modal" style="max-width:460px;">
-      <div class="modal-header">
-        <span class="modal-title">Termin Aksiyon</span>
-        <button class="modal-close" data-modal="bkActionModal">✕</button>
-      </div>
-      <div class="modal-body">
+  <div id="bkActionModal" style="position:fixed;top:56px;right:0;bottom:0;width:380px;background:var(--bg-card-solid,#1f2937);border-left:1px solid var(--border,#374151);z-index:400;overflow-y:auto;display:none;flex-direction:column;">
+    <div class="modal-header" style="position:sticky;top:0;z-index:1;background:var(--bg-card-solid,#1f2937);">
+      <span class="modal-title">Termin Aksiyon</span>
+      <button class="modal-close" data-modal="bkActionModal">✕</button>
+    </div>
+    <div class="modal-body">
         <div class="bk-action-header">
           <div class="bk-action-patient" id="bkActionPatient">—</div>
           <div class="bk-action-session" id="bkActionSession">—</div>
@@ -3643,7 +3643,6 @@
           <div class="bk-action-hint" id="bkActionNoShowHint">Verfügbar ab 3 Min. nach Terminbeginn</div>
         </div>
       </div>
-    </div>
   </div>
 
   <!-- ===== MODAL: Fahrt Starten (Vehicle + Start-KM) ===== -->

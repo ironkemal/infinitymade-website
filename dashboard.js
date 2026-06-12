@@ -667,20 +667,28 @@ document.getElementById('hamburger').addEventListener('click', () => {
 document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
 
 // Sidebar collapse toggle (desktop)
+function updateSidebarCollapseBtn(collapsed) {
+  const btn = document.getElementById('sidebarCollapseBtn');
+  if (!btn) return;
+  const sidebarW = collapsed ? 0 : (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w')) || 260);
+  btn.textContent = collapsed ? '›' : '‹';
+  btn.style.left = sidebarW + 'px';
+}
+
 document.getElementById('sidebarCollapseBtn')?.addEventListener('click', () => {
   const sidebar = document.getElementById('sidebar');
-  const btn = document.getElementById('sidebarCollapseBtn');
   const collapsed = sidebar.classList.toggle('collapsed');
-  if (btn) btn.textContent = collapsed ? '›' : '‹';
+  updateSidebarCollapseBtn(collapsed);
   localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
 });
+
 // Restore collapse state on load
-if (localStorage.getItem('sidebar_collapsed') === '1') {
+(function() {
   const sidebar = document.getElementById('sidebar');
-  const btn = document.getElementById('sidebarCollapseBtn');
-  if (sidebar) sidebar.classList.add('collapsed');
-  if (btn) btn.textContent = '›';
-}
+  const collapsed = localStorage.getItem('sidebar_collapsed') === '1';
+  if (collapsed && sidebar) sidebar.classList.add('collapsed');
+  updateSidebarCollapseBtn(collapsed);
+})();
 document.getElementById('langSelect').addEventListener('change', async (e) => {
   currentLang = e.target.value;
   localStorage.setItem('infinity_lang', currentLang);
@@ -728,7 +736,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 function openModal(id) { const el = document.getElementById(id); if (el) el.hidden = false; }
-function closeModal(id) { const el = document.getElementById(id); if (el) el.hidden = true; if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } if (id === 'aiSuggestModal') { const wrap = document.getElementById('aiRetryFeedbackWrap'); if (wrap) { wrap.style.display = 'none'; const ta = document.getElementById('aiRetryFeedback'); if (ta) ta.value = ''; } } }
+function closeModal(id) { const el = document.getElementById(id); if (el) { el.hidden = true; if (id === 'bkActionModal') { el.style.display = 'none'; document.getElementById('mainArea')?.style.removeProperty('padding-right'); } } if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } if (id === 'aiSuggestModal') { const wrap = document.getElementById('aiRetryFeedbackWrap'); if (wrap) { wrap.style.display = 'none'; const ta = document.getElementById('aiRetryFeedback'); if (ta) ta.value = ''; } } }
 
 function showToast(msg, type = 'success') {
   const d = document.createElement('div');
@@ -2304,7 +2312,9 @@ async function openBookingActionModal(booking) {
     }
   }
 
-  openModal('bkActionModal');
+  const bkModal = document.getElementById('bkActionModal');
+  if (bkModal) { bkModal.hidden = false; bkModal.style.display = 'flex'; }
+  document.getElementById('mainArea')?.style.setProperty('padding-right', '396px');
 }
 
 // ===== Calendar Right Panel (madde 13) =====
@@ -2963,7 +2973,7 @@ async function saveFahrtEndHandler() {
   b.fahrt_ended_at = nowIso;
 
   closeModal('fahrtEndModal');
-  closeModal('bkActionModal');
+  const _bkm1 = document.getElementById('bkActionModal'); if (_bkm1) { _bkm1.hidden = true; _bkm1.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
   showToast('🏁 Fahrt abgeschlossen — im Fahrtenbuch eingetragen.');
   switchPanel('fahrtenbuch');
 }
@@ -2991,7 +3001,7 @@ async function handleTerminStarten() {
   }
 
   // Normal randevu: modal kapat, anamnese/notizen'e yönlendir
-  closeModal('bkActionModal');
+  const _bkm2 = document.getElementById('bkActionModal'); if (_bkm2) { _bkm2.hidden = true; _bkm2.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
   markPrescriptionSession(b.id, 'done');
@@ -3035,7 +3045,7 @@ async function handlePatientNichtErschienen() {
   const btn = document.getElementById('bkActionNoShowBtn');
   if (btn && btn.disabled) return;
 
-  closeModal('bkActionModal');
+  const _bkm3 = document.getElementById('bkActionModal'); if (_bkm3) { _bkm3.hidden = true; _bkm3.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
   try {
@@ -7217,6 +7227,25 @@ async function loadTeam() {
         <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">${ICON.link}</span>${escapeHtml(shortLink)}</a>
         <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}" style="display:inline-flex;align-items:center;justify-content:center;"><span class="svg-icon" style="width:12px;height:12px;display:inline-flex;">${ICON.clipboard}</span></button>
       </div>
+      <div class="emp-urlaub-toggle" data-emp-id="${m.id}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px;">
+        <span>🌴 Urlaub / Abwesenheit</span>
+        <span class="emp-urlaub-chevron" style="transition:transform 0.2s;">›</span>
+      </div>
+      <div class="emp-urlaub-body" data-emp-id="${m.id}" hidden style="padding:0 14px 14px;border-top:1px solid var(--border);">
+        <div class="emp-urlaub-kpi" style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+          <input type="date" class="form-input emp-urlaub-from" style="flex:1;font-size:12px;" />
+          <input type="date" class="form-input emp-urlaub-to" style="flex:1;font-size:12px;" />
+          <select class="form-select emp-urlaub-type" style="flex:1;font-size:12px;">
+            <option value="urlaub">Urlaub</option>
+            <option value="krank">Krank</option>
+            <option value="frei">Frei</option>
+            <option value="elternzeit">Elternzeit</option>
+          </select>
+        </div>
+        <button class="btn-primary emp-urlaub-save" data-emp-id="${m.id}" style="width:100%;font-size:12px;padding:6px;">Eintragen</button>
+        <div class="emp-urlaub-list" data-emp-id="${m.id}" style="margin-top:10px;"></div>
+      </div>
     </div>`;
   }).join('');
   list.querySelectorAll('.emp-card').forEach(card => {
@@ -7240,6 +7269,48 @@ async function loadTeam() {
     });
   });
 
+  // Urlaub toggle
+  list.querySelectorAll('.emp-urlaub-toggle').forEach(toggle => {
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const empId = toggle.dataset.empId;
+      const body = list.querySelector(`.emp-urlaub-body[data-emp-id="${empId}"]`);
+      const chevron = toggle.querySelector('.emp-urlaub-chevron');
+      const isOpen = !body.hidden;
+      body.hidden = isOpen;
+      chevron.style.transform = isOpen ? '' : 'rotate(90deg)';
+      if (!isOpen) loadEmpUrlaubSection(empId, body);
+    });
+  });
+
+  list.querySelectorAll('.emp-urlaub-save').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const empId = btn.dataset.empId;
+      const card = list.querySelector(`.emp-urlaub-body[data-emp-id="${empId}"]`);
+      const fromVal = card.querySelector('.emp-urlaub-from').value;
+      const toVal = card.querySelector('.emp-urlaub-to').value;
+      const typeVal = card.querySelector('.emp-urlaub-type').value;
+      if (!fromVal || !toVal) { showToast('Bitte Zeitraum auswählen', 'error'); return; }
+      if (fromVal > toVal) { showToast('Enddatum muss nach Startdatum liegen', 'error'); return; }
+
+      const workDays = countWorkDays(fromVal, toVal);
+      const { error } = await supabase.from('time_offs').insert({
+        employee_id: empId,
+        owner_id: getOwnerId(),
+        start_date: fromVal,
+        end_date: toVal,
+        type: typeVal,
+        note: `${workDays} Arbeitstage`
+      });
+      if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+      showToast(`Eingetragen: ${workDays} Arbeitstage`);
+      card.querySelector('.emp-urlaub-from').value = '';
+      card.querySelector('.emp-urlaub-to').value = '';
+      loadEmpUrlaubSection(empId, card);
+    });
+  });
+
   if (!isOwner) return;
 
   // Owner-only: invite code + registration link
@@ -7256,24 +7327,84 @@ async function loadTeam() {
     showToast(t('copied'));
   };
 
-  // Urlaub section (sadece owner)
-  const urlaubSection = document.getElementById('urlaubSection');
-  if (urlaubSection) {
-    urlaubSection.hidden = false;
-    // Dropdown'u team members ile doldur
-    const empSelect = document.getElementById('urlaubEmpSelect');
-    if (empSelect) {
-      empSelect.innerHTML = '<option value="">— Mitarbeiter wählen —</option>' +
-        data.map(m => `<option value="${m.id}">${escapeHtml(m.business_name || m.email?.split('@')[0] || '—')} (${m.role === 'owner' ? 'Inhaber' : 'Mitarbeiter'})</option>`).join('');
-      empSelect.addEventListener('change', () => loadUrlaubListe(empSelect.value));
-    }
-    // Wire eintragen button
-    const eintragenBtn = document.getElementById('urlaubEintragenBtn');
-    if (eintragenBtn) {
-      eintragenBtn.onclick = null;
-      eintragenBtn.addEventListener('click', saveUrlaub);
-    }
+}
+
+function countWorkDays(fromStr, toStr) {
+  // Çalışma günü = Pazartesi-Cuma; hafta sonlarını sayma
+  let count = 0;
+  const cur = new Date(fromStr + 'T12:00:00');
+  const end = new Date(toStr + 'T12:00:00');
+  while (cur <= end) {
+    const day = cur.getDay();
+    if (day !== 0 && day !== 6) count++;
+    cur.setDate(cur.getDate() + 1);
   }
+  return count;
+}
+
+async function loadEmpUrlaubSection(empId, container) {
+  const kpi = container.querySelector('.emp-urlaub-kpi');
+  const listEl = container.querySelector('.emp-urlaub-list');
+  if (!kpi || !listEl) return;
+
+  // Profile'dan yıllık tatil günlerini al (owner için profiles.urlaub_jahrestage)
+  const { data: empProfile } = await supabase.from('profiles').select('urlaub_jahrestage').eq('id', empId).maybeSingle();
+  const jahrestage = empProfile?.urlaub_jahrestage ?? 30;
+
+  // Bu yılki time_offs
+  const year = new Date().getFullYear();
+  const { data: offs } = await supabase.from('time_offs')
+    .select('id, start_date, end_date, type, note')
+    .eq('employee_id', empId)
+    .gte('start_date', `${year}-01-01`)
+    .lte('end_date', `${year}-12-31`)
+    .order('start_date', { ascending: false });
+
+  const urlaubDays = (offs || []).filter(o => o.type === 'urlaub').reduce((sum, o) => sum + countWorkDays(o.start_date, o.end_date), 0);
+  const remaining = Math.max(0, jahrestage - urlaubDays);
+
+  kpi.innerHTML = `
+    <div style="flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:6px 10px;text-align:center;">
+      <div style="font-size:18px;font-weight:700;color:#22c55e;">${remaining}</div>
+      <div style="font-size:10px;color:var(--text-muted);">Tage übrig</div>
+    </div>
+    <div style="flex:1;background:rgba(177,137,27,0.1);border:1px solid rgba(177,137,27,0.2);border-radius:6px;padding:6px 10px;text-align:center;">
+      <div style="font-size:18px;font-weight:700;color:var(--accent);">${urlaubDays}</div>
+      <div style="font-size:10px;color:var(--text-muted);">Verbraucht</div>
+    </div>
+    <div style="flex:1;background:var(--border);border-radius:6px;padding:6px 10px;text-align:center;opacity:0.7;">
+      <div style="font-size:18px;font-weight:700;color:var(--text-main);">${jahrestage}</div>
+      <div style="font-size:10px;color:var(--text-muted);">Jahresanspruch</div>
+    </div>
+  `;
+
+  if (!offs || offs.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Noch kein Eintrag.</div>';
+    return;
+  }
+
+  const typeLabels = { urlaub: 'Urlaub', krank: 'Krank', frei: 'Frei', elternzeit: 'Elternzeit' };
+  const fmt = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+
+  listEl.innerHTML = offs.map(o => {
+    const days = countWorkDays(o.start_date, o.end_date);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);gap:8px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;color:var(--text-main);">${fmt(o.start_date)} – ${fmt(o.end_date)}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${typeLabels[o.type] || o.type} · ${days} AT</div>
+      </div>
+      <button onclick="deleteEmpTimeOff('${o.id}','${empId}')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:16px;flex-shrink:0;">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function deleteEmpTimeOff(timeOffId, empId) {
+  const { error } = await supabase.from('time_offs').delete().eq('id', timeOffId);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  // Reload the open card
+  const card = document.querySelector(`.emp-urlaub-body[data-emp-id="${empId}"]`);
+  if (card && !card.hidden) loadEmpUrlaubSection(empId, card);
+  showToast('Gelöscht');
 }
 
 async function saveUrlaub() {
@@ -8898,7 +9029,7 @@ async function openVorlagenEdit(id) {
   document.getElementById('vorlagenName').value = data.name;
   document.getElementById('vorlagenType').value = data.vorlage_type;
   document.getElementById('vorlagenIsDefault').checked = data.is_default;
-  document.getElementById('vorlagenContentJson').value = JSON.stringify(data.content_json || {}, null, 2);
+  renderVorlagenContentForm(data.vorlage_type, data.content_json || {});
   document.getElementById('vorlagenModal').hidden = false;
 }
 
@@ -8908,8 +9039,67 @@ function openVorlagenNew() {
   document.getElementById('vorlagenName').value = '';
   document.getElementById('vorlagenType').value = 'quittung_zuzahlung';
   document.getElementById('vorlagenIsDefault').checked = false;
-  document.getElementById('vorlagenContentJson').value = '{}';
+  renderVorlagenContentForm('quittung_zuzahlung', {});
   document.getElementById('vorlagenModal').hidden = false;
+}
+
+function renderVorlagenContentForm(type, json) {
+  const container = document.getElementById('vorlagenContentForm');
+  if (!container) return;
+
+  const FIELDS = {
+    quittung_zuzahlung: [
+      { key: 'hinweis', label: 'Hinweis-Text auf Quittung', type: 'textarea', placeholder: 'z. B. Zuzahlung gemäß §32 Abs. 2 SGB V erhalten.' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: 'Praxisname · Adresse · Telefon' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' }
+    ],
+    rechnung_bg: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Rechnung für Physiotherapie' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: 'Bitte überweisen Sie ...' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '30' }
+    ],
+    rechnung_privat: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Privatrechnung Physiotherapie' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' }
+    ],
+    rechnung_eigenanteil: [
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' }
+    ],
+    rechnung_selbstzahler: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Selbstzahler-Rechnung' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' }
+    ],
+    rechnung_sonder: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: '' },
+      { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' }
+    ],
+    rezeptvorderseite: [
+      { key: 'praxis_zusatz', label: 'Praxis-Zusatz (z. B. Spezialisierung)', type: 'text', placeholder: 'Physiotherapie & Manuelle Therapie' },
+      { key: 'stempel_hinweis', label: 'Stempel-Hinweis', type: 'text', placeholder: 'Bitte Stempel beifügen' }
+    ],
+    rzg_quittung: [
+      { key: 'unterschrift_label', label: 'Unterschrift-Zeile', type: 'text', placeholder: 'Empfang bestätigt:' },
+      { key: 'hinweis', label: 'Rechtlicher Hinweis', type: 'textarea', placeholder: '' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' }
+    ]
+  };
+
+  const fields = FIELDS[type] || [{ key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: '' }];
+
+  container.innerHTML = fields.map(f => {
+    const val = json[f.key] || '';
+    if (f.type === 'textarea') {
+      return `<div class="form-group"><label class="form-label">${f.label}</label><textarea class="form-input vorlagen-field" data-key="${f.key}" rows="3" placeholder="${f.placeholder}">${escapeHtml(val)}</textarea></div>`;
+    }
+    return `<div class="form-group"><label class="form-label">${f.label}</label><input class="form-input vorlagen-field" data-key="${f.key}" type="${f.type}" placeholder="${f.placeholder}" value="${escapeHtml(val)}" /></div>`;
+  }).join('');
 }
 
 async function saveVorlage() {
@@ -8917,13 +9107,15 @@ async function saveVorlage() {
   const name = document.getElementById('vorlagenName').value.trim();
   const vorlage_type = document.getElementById('vorlagenType').value;
   const is_default = document.getElementById('vorlagenIsDefault').checked;
-  const rawJson = document.getElementById('vorlagenContentJson').value.trim();
-
   if (!name) { showToast('Name ist erforderlich', 'error'); return; }
 
-  let content_json = {};
-  try { content_json = rawJson ? JSON.parse(rawJson) : {}; }
-  catch { showToast('Ungültiges JSON im Inhalt-Feld', 'error'); return; }
+  // Collect content_json from structured form fields
+  const content_json = {};
+  document.querySelectorAll('#vorlagenContentForm .vorlagen-field').forEach(el => {
+    const key = el.dataset.key;
+    const val = el.value.trim();
+    if (key && val) content_json[key] = val;
+  });
 
   const payload = { name, vorlage_type, is_default, content_json };
 
@@ -10415,6 +10607,13 @@ async function openInvView(invoiceId) {
   const arzt = rx?.aerzte;
 
   // Issuer (top-left)
+  // Praxis logo (Madde 8)
+  const invvLogo = document.getElementById('invvLogoImg');
+  if (invvLogo) {
+    const logoUrl = currentProfile.praxis_logo_url || '';
+    if (logoUrl) { invvLogo.src = logoUrl; invvLogo.hidden = false; }
+    else invvLogo.hidden = true;
+  }
   document.getElementById('invvBizName').textContent = currentProfile.business_name || '—';
   const bizMeta = [];
   if (currentProfile.street) bizMeta.push(currentProfile.street);
@@ -10424,6 +10623,8 @@ async function openInvView(invoiceId) {
   if (currentProfile.email) bizMeta.push(currentProfile.email);
   if (currentProfile.ik_number) bizMeta.push('IK: ' + currentProfile.ik_number);
   document.getElementById('invvBizMeta').textContent = bizMeta.join('\n');
+  const footerEl = document.getElementById('invvFooterText');
+  if (footerEl) footerEl.textContent = currentProfile.invoice_footer_text || '';
 
   // Meta (top-right)
   document.getElementById('invvNumber').textContent = inv.invoice_number || '—';
