@@ -634,6 +634,7 @@ async function switchPanel(id) {
       initCalRightPanel();
     }
     showMyBookingLink();
+    renderCalEmpChips();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
     setCalendarView('week');
   }
