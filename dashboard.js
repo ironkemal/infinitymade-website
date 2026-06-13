@@ -1555,14 +1555,18 @@ function renderBookingSlotInner(b, childBookings = []) {
   document.addEventListener('mousemove', (e) => {
     const calWrap = document.getElementById('calMainWrap');
     if (!calWrap || !calWrap.contains(e.target)) { tip.style.display = 'none'; return; }
-    const grid = calWrap.querySelector('.cal-time-grid, .cal-grid, [data-cal-grid]');
-    if (!grid) { tip.style.display = 'none'; return; }
-    const rect = grid.getBoundingClientRect();
+    const grid = calWrap.querySelector('.day-view-grid, .week-view-grid');
+    if (!grid || grid.style.display === 'none') { tip.style.display = 'none'; return; }
+    const colsWrap = grid.querySelector('.dv-cols-wrap');
+    if (!colsWrap) { tip.style.display = 'none'; return; }
+    const timeCol = grid.querySelector('.dv-time-col');
+    const rect = (timeCol || colsWrap).getBoundingClientRect();
     const relY = e.clientY - rect.top;
     const totalH = rect.height;
     if (relY < 0 || relY > totalH) { tip.style.display = 'none'; return; }
-    const totalMinutes = 24 * 60;
-    const minuteOfDay = Math.round((relY / totalH) * totalMinutes / 15) * 15;
+    const startHour = 8;
+    const endHour = 20;
+    const minuteOfDay = startHour * 60 + Math.round((relY / totalH) * (endHour - startHour) * 60 / 15) * 15;
     const hh = String(Math.floor(minuteOfDay / 60)).padStart(2, '0');
     const mm = String(minuteOfDay % 60).padStart(2, '0');
     tip.textContent = `${hh}:${mm}`;
@@ -5587,14 +5591,19 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   if (!id) return;
-  const ok = await showConfirmModal({
-    title: 'Termin löschen?',
-    message: t('lead_confirm_delete'),
-    confirmText: 'Löschen',
+  const reason = await showInputModal({
+    title: 'Termin absagen',
+    message: 'Bitte Absagegrund angeben (optional)',
+    inputLabel: 'Absagegrund',
+    inputPlaceholder: 'z.B. Patient hat abgesagt, Therapeut krank…',
+    confirmText: 'Termin löschen',
     cancelText: 'Abbrechen',
     variant: 'danger'
   });
-  if (!ok) return;
+  if (reason === null) return;
+  if (reason && reason.trim()) {
+    await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', id);
+  }
 
   // 1. Pre-trigger the match API call before deletion so the backend can fetch the booking details
   let matchPromise = null;
