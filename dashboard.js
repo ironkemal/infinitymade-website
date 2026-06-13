@@ -5366,15 +5366,15 @@ function showAbsagegrundModal({ title = 'Termin absagen', confirmText = 'Bestät
     box.style.cssText = 'background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:420px;';
 
     const optionsHtml = ABSAGE_GRUENDE.map(g =>
-      `<option value="${g}">${g}</option>`
+      `<option value="${g}" style="background:#1f2937;color:#f9fafb;">${g}</option>`
     ).join('');
 
     box.innerHTML = `
       <h3 style="margin:0 0 8px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">${title}</h3>
       <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted,#9ca3af);">Absagegrund auswählen (optional)</p>
       <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);margin-bottom:6px;">Grund</label>
-      <select id="_absageSelect" style="width:100%;padding:9px 12px;background:var(--bg-input,#111827);border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-main,#f9fafb);font-size:13px;box-sizing:border-box;outline:none;cursor:pointer;">
-        <option value="">— Kein Grund angeben —</option>
+      <select id="_absageSelect" style="width:100%;padding:9px 12px;background:#1f2937;border:1px solid var(--border,#374151);border-radius:8px;color:#f9fafb;font-size:13px;box-sizing:border-box;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;">
+        <option value="" style="background:#1f2937;color:#9ca3af;">— Kein Grund angeben —</option>
         ${optionsHtml}
       </select>
       <div id="_absageCustomWrap" style="display:none;margin-top:10px;">
