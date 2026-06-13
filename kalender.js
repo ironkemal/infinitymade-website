@@ -11,7 +11,7 @@ let calendar = null;
 const T = {
   de: {
     nav_calendar: 'Kalender', nav_team: 'Mitarbeiter', nav_services: 'Dienstleistungen', nav_hours: 'Arbeitszeiten', nav_integrations: 'Integrationen', nav_dashboard: 'Zum Dashboard',
-    title_calendar: 'Kalender', sub_calendar: 'Klicken Sie in den Kalender, um einen Termin zu erstellen.', btn_add_leave: 'Abwesenheit (Urlaub) eintragen', public_link: 'Buchungsseite ↗',
+    title_calendar: 'Kalender', sub_calendar: 'Klicken Sie in den Kalender, um einen Termin zu erstellen.', btn_add_leave: 'Abwesenheit (Urlaub) eintragen',
     title_team: 'Team', lbl_invite_code: 'Unternehmens-Code', sub_invite_code: 'Mitarbeiter können sich mit diesem Code registrieren.', lbl_emp_list: 'Ihre Mitarbeiter',
     title_services: 'Dienstleistungen', lbl_add_service: 'Neue Dienstleistung', lbl_srv_title: 'Name der Dienstleistung', lbl_srv_dur: 'Dauer (Minuten)', lbl_srv_price: 'Preis', lbl_srv_emps: 'Welche Mitarbeiter bieten das an?', btn_srv_save: 'Speichern', lbl_srv_list: 'Gespeicherte Dienstleistungen',
     title_hours: 'Arbeitszeiten', btn_save_hours: 'Speichern', title_integrations: 'Integrationen', sub_google: 'Termine werden synchronisiert und Google Meet Links automatisch erstellt.',
@@ -21,7 +21,7 @@ const T = {
   },
   tr: {
     nav_calendar: 'Takvim', nav_team: 'Personel Yönetimi', nav_services: 'Hizmetler', nav_hours: 'Çalışma Saatlerim', nav_integrations: 'Entegrasyonlar', nav_dashboard: 'Ana Dashboard',
-    title_calendar: 'Takvim', sub_calendar: 'Randevu oluşturmak için takvim üzerinde bir saate tıklayın.', btn_add_leave: 'İzin (Tatil) Ekle', public_link: 'Müşteri Linkiniz ↗',
+    title_calendar: 'Takvim', sub_calendar: 'Randevu oluşturmak için takvim üzerinde bir saate tıklayın.', btn_add_leave: 'İzin (Tatil) Ekle',
     title_team: 'Ekip Yönetimi', lbl_invite_code: 'Şirket Davet Kodunuz', sub_invite_code: 'Çalışanlarınız kayıt olurken bu kodu kullanabilir.', lbl_emp_list: 'Personelleriniz',
     title_services: 'Hizmetler', lbl_add_service: 'Yeni Hizmet Ekle', lbl_srv_title: 'Hizmet Adı', lbl_srv_dur: 'Süre (Dakika)', lbl_srv_price: 'Fiyat', lbl_srv_emps: 'Hangi personeller verebilir?', btn_srv_save: 'Kaydet', lbl_srv_list: 'Kayıtlı Hizmetler',
     title_hours: 'Çalışma Saatlerim', btn_save_hours: 'Kaydet', title_integrations: 'Entegrasyonlar', sub_google: 'Randevular senkronize edilir ve otomatik Meet linki oluşturulur.',
@@ -31,7 +31,7 @@ const T = {
   },
   en: {
     nav_calendar: 'Calendar', nav_team: 'Team Management', nav_services: 'Services', nav_hours: 'Working Hours', nav_integrations: 'Integrations', nav_dashboard: 'Back to Dashboard',
-    title_calendar: 'Calendar', sub_calendar: 'Click on the calendar to create an appointment.', btn_add_leave: 'Add Leave (Time Off)', public_link: 'Booking Page ↗',
+    title_calendar: 'Calendar', sub_calendar: 'Click on the calendar to create an appointment.', btn_add_leave: 'Add Leave (Time Off)',
     title_team: 'Team', lbl_invite_code: 'Company Invite Code', sub_invite_code: 'Employees can use this code to join your company.', lbl_emp_list: 'Your Team Members',
     title_services: 'Services', lbl_add_service: 'Add New Service', lbl_srv_title: 'Service Name', lbl_srv_dur: 'Duration (Mins)', lbl_srv_price: 'Price', lbl_srv_emps: 'Which employees provide this?', btn_srv_save: 'Save', lbl_srv_list: 'Saved Services',
     title_hours: 'Working Hours', btn_save_hours: 'Save', title_integrations: 'Integrations', sub_google: 'Appointments are synced and Google Meet links are generated automatically.',
@@ -100,32 +100,6 @@ async function init() {
     const { error } = await supabase.from('profiles').update({ company_code: code }).eq('id', session.user.id);
     if (error) console.error("Kayıt hatası (Company Code):", error);
     profile.company_code = code;
-  }
-
-  // Booking URL uses company_code (owner) or owner's company_code (employee)
-  let bookingId = profile.company_code;
-  if (profile.role !== 'owner' && profile.owner_id) {
-    const { data: ownerProf } = await supabase.from('profiles').select('company_code').eq('id', profile.owner_id).single();
-    if (ownerProf && ownerProf.company_code) bookingId = ownerProf.company_code;
-  }
-  if (!bookingId) bookingId = profile.id;
-
-  // Populate Buchungsseite (Booking Preview)
-  const bookingUrl = window.location.origin + '/booking.html?u=' + bookingId;
-  const bookingInput = document.getElementById('booking-url-input');
-  if (bookingInput) bookingInput.value = bookingUrl;
-  const iframe = document.getElementById('booking-preview-iframe');
-  if (iframe) iframe.src = bookingUrl;
-  const btnOpen = document.getElementById('btn-open-link');
-  if (btnOpen) btnOpen.href = bookingUrl;
-  
-  const btnCopy = document.getElementById('btn-copy-link');
-  if (btnCopy) {
-    btnCopy.addEventListener('click', () => {
-      navigator.clipboard.writeText(bookingUrl);
-      btnCopy.textContent = 'Kopiert!';
-      setTimeout(() => btnCopy.textContent = 'Link kopieren', 2000);
-    });
   }
 
   // Populate User Profile in Sidebar

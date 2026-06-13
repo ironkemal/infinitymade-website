@@ -392,6 +392,8 @@ let ownerServices = [];
 let activePanel = 'overview';
 let calendarView = 'day';
 let dayViewDate = new Date();
+let monthViewYear = new Date().getFullYear();
+let monthViewMonth = new Date().getMonth();
 let moveBooking = null;
 let moveGhostEl = null;
 const EMP_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#ec4899'];
@@ -1811,6 +1813,7 @@ function renderCalEmpChips() {
       renderCalEmpChips();
       if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
       else if (calendarView === 'week') renderWeekView(toISODate(dayViewDate));
+      else if (calendarView === 'month') renderMonthView(monthViewYear, monthViewMonth);
     });
     container.appendChild(btn);
   });
@@ -2015,6 +2018,7 @@ function setCalendarView(view) {
   });
   if (view === 'day') renderDayView(toISODate(dayViewDate));
   else if (view === 'week') renderWeekView(toISODate(dayViewDate));
+  else if (view === 'month') renderMonthView(monthViewYear, monthViewMonth);
 }
 
 async function renderDayView(dateStr) {
@@ -2277,11 +2281,105 @@ async function renderWeekView(dateStr) {
   });
 }
 
+async function renderMonthView(year, month) {
+  const header = document.getElementById('monthGridHeader');
+  const grid = document.getElementById('monthGrid');
+  if (!header || !grid) return;
+
+  const DAY_HEADERS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  header.innerHTML = DAY_HEADERS.map(d => `<div>${d}</div>`).join('');
+
+  // First day of month
+  const firstDay = new Date(year, month, 1);
+  // Monday-first: 0=Mon..6=Sun
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // Convert to Mon=0
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+  const today = toISODate(new Date());
+
+  // Build cell dates
+  const cells = [];
+  for (let i = 0; i < startDow; i++) {
+    cells.push({ date: new Date(year, month - 1, prevMonthDays - startDow + i + 1), otherMonth: true });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ date: new Date(year, month, d), otherMonth: false });
+  }
+  while (cells.length % 7 !== 0) {
+    cells.push({ date: new Date(year, month + 1, cells.length - daysInMonth - startDow + 1), otherMonth: true });
+  }
+
+  // Fetch bookings for this month
+  const ownerId = getOwnerId();
+  const mStart = new Date(year, month, 1).toISOString();
+  const mEnd = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
+  const empIds = emps.map(e => e.id);
+
+  const { data: bookings } = await supabase.from('bookings')
+    .select('id,user_id,start_time,customer_name,services(title)')
+    .eq('owner_id', ownerId)
+    .gte('start_time', mStart)
+    .lte('start_time', mEnd)
+    .in('user_id', empIds)
+    .neq('status', 'cancelled');
+
+  // Update date label
+  const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  document.getElementById('dayViewDateLabel').textContent = `${MONTHS_DE[month]} ${year}`;
+
+  grid.innerHTML = '';
+  cells.forEach(({ date, otherMonth }) => {
+    const ds = toISODate(date);
+    const cell = document.createElement('div');
+    cell.className = 'month-cell' + (otherMonth ? ' month-cell--other-month' : '') + (ds === today ? ' month-cell--today' : '');
+
+    const dayLabel = document.createElement('div');
+    dayLabel.className = 'month-cell-day';
+    dayLabel.textContent = date.getDate();
+    cell.appendChild(dayLabel);
+
+    const evWrap = document.createElement('div');
+    evWrap.className = 'month-cell-events';
+
+    const dayBks = (bookings || []).filter(b => b.start_time && b.start_time.startsWith(ds));
+    dayBks.slice(0, 3).forEach(b => {
+      const empIdx = teamMembers.findIndex(e => e.id === b.user_id);
+      const color = EMP_COLORS[empIdx % EMP_COLORS.length] || 'var(--primary)';
+      const pill = document.createElement('div');
+      pill.className = 'month-event-pill';
+      pill.style.backgroundColor = color;
+      pill.textContent = b.services?.title || b.customer_name || 'Termin';
+      evWrap.appendChild(pill);
+    });
+    if (dayBks.length > 3) {
+      const more = document.createElement('div');
+      more.style.cssText = 'font-size:10px;color:var(--text-muted);';
+      more.textContent = `+${dayBks.length - 3}`;
+      evWrap.appendChild(more);
+    }
+
+    cell.appendChild(evWrap);
+    // Click: switch to day view for that date
+    cell.addEventListener('click', () => {
+      dayViewDate = date;
+      setCalendarView('day');
+    });
+    grid.appendChild(cell);
+  });
+}
+
 document.getElementById('dayViewPrev').addEventListener('click', () => {
   if (calendarView === 'week') {
     dayViewDate = new Date(dayViewDate);
     dayViewDate.setDate(dayViewDate.getDate() - 7);
     renderWeekView(toISODate(dayViewDate));
+  } else if (calendarView === 'month') {
+    monthViewMonth--;
+    if (monthViewMonth < 0) { monthViewMonth = 11; monthViewYear--; }
+    renderMonthView(monthViewYear, monthViewMonth);
   } else {
     dayViewDate.setDate(dayViewDate.getDate() - 1);
     if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
@@ -2293,6 +2391,10 @@ document.getElementById('dayViewNext').addEventListener('click', () => {
     dayViewDate = new Date(dayViewDate);
     dayViewDate.setDate(dayViewDate.getDate() + 7);
     renderWeekView(toISODate(dayViewDate));
+  } else if (calendarView === 'month') {
+    monthViewMonth++;
+    if (monthViewMonth > 11) { monthViewMonth = 0; monthViewYear++; }
+    renderMonthView(monthViewYear, monthViewMonth);
   } else {
     dayViewDate.setDate(dayViewDate.getDate() + 1);
     if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
