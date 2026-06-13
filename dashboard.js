@@ -11037,51 +11037,182 @@ function loadBeispielmodus() {
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  // Sketchfab embed — supports iframe natively, no blocking
-  const SKETCHFAB_MODEL = '85636205977d44878fc729fde5b77cd3'; // Human Bones and Muscles (wanoco4D, CC)
-  const src = `https://sketchfab.com/models/${SKETCHFAB_MODEL}/embed?autostart=1&ui_theme=dark&ui_infos=0&ui_controls=1`;
+  const lang = currentLang || 'de';
 
-  function showFallback() {
-    wrap.innerHTML = `
-      <div class="zygote-fallback">
-        <div class="zygote-fallback-icon">🫁</div>
-        <div class="zygote-fallback-title">3D-Anatomie — Sketchfab</div>
-        <div class="zygote-fallback-text">Der externe Inhalt konnte nicht geladen werden. Öffnen Sie das Modell im neuen Tab:</div>
-        <a class="btn btn-primary zygote-fallback-btn" href="https://sketchfab.com/models/${SKETCHFAB_MODEL}" target="_blank" rel="noopener">↗ 3D-Modell öffnen</a>
-      </div>`;
+  const REGIONS = {
+    head:        { de: 'Kopf',                en: 'Head',            tr: 'Baş',          desc: 'Schädel, Stirn, Schläfen, Hinterhaupt' },
+    neck:        { de: 'Hals / HWS',          en: 'Neck / Cervical', tr: 'Boyun',        desc: 'Halswirbelsäule C1–C7, Nackenmuskulatur' },
+    l_shoulder:  { de: 'Schulter (L)',         en: 'Shoulder (L)',    tr: 'Sol Omuz',     desc: 'Schultergelenk, Rotatorenmanschette, AC-Gelenk' },
+    r_shoulder:  { de: 'Schulter (R)',         en: 'Shoulder (R)',    tr: 'Sağ Omuz',     desc: 'Schultergelenk, Rotatorenmanschette, AC-Gelenk' },
+    chest:       { de: 'Brustkorb / BWS',     en: 'Chest / Thoracic',tr: 'Göğüs',        desc: 'BWS T1–T12, Rippen, Sternum, Pektoralmuskulatur' },
+    abdomen:     { de: 'Bauch / LWS',         en: 'Abdomen / Lumbar',tr: 'Karın / Bel',  desc: 'LWS L1–L5, Bauchmuskulatur, Beckenboden' },
+    l_upper_arm: { de: 'Oberarm (L)',          en: 'Upper Arm (L)',   tr: 'Sol Üst Kol',  desc: 'Bizeps, Trizeps, Humerus, Deltoideus' },
+    r_upper_arm: { de: 'Oberarm (R)',          en: 'Upper Arm (R)',   tr: 'Sağ Üst Kol',  desc: 'Bizeps, Trizeps, Humerus, Deltoideus' },
+    l_forearm:   { de: 'Unterarm (L)',         en: 'Forearm (L)',     tr: 'Sol Ön Kol',   desc: 'Radius, Ulna, Unterarmbeuger und -strecker' },
+    r_forearm:   { de: 'Unterarm (R)',         en: 'Forearm (R)',     tr: 'Sağ Ön Kol',   desc: 'Radius, Ulna, Unterarmbeuger und -strecker' },
+    l_hand:      { de: 'Hand (L)',             en: 'Hand (L)',        tr: 'Sol El',       desc: 'Handgelenk, Karpaltunnel, Finger, Daumen' },
+    r_hand:      { de: 'Hand (R)',             en: 'Hand (R)',        tr: 'Sağ El',       desc: 'Handgelenk, Karpaltunnel, Finger, Daumen' },
+    l_hip:       { de: 'Hüfte (L)',            en: 'Hip (L)',         tr: 'Sol Kalça',    desc: 'Hüftgelenk, Leistenregion, Iliosakralgelenk' },
+    r_hip:       { de: 'Hüfte (R)',            en: 'Hip (R)',         tr: 'Sağ Kalça',    desc: 'Hüftgelenk, Leistenregion, Iliosakralgelenk' },
+    upper_back:  { de: 'Oberer Rücken',        en: 'Upper Back',      tr: 'Üst Sırt',     desc: 'BWS, Trapezius, Rhomboiden, Schulterblatt' },
+    lower_back:  { de: 'Unterer Rücken',       en: 'Lower Back',      tr: 'Bel Sırtı',    desc: 'LWS, Erector Spinae, Quadratus Lumborum' },
+    l_glute:     { de: 'Gesäß (L)',            en: 'Glute (L)',       tr: 'Sol Kalça Kası',desc: 'Gluteus maximus/medius/minimus, Piriformis' },
+    r_glute:     { de: 'Gesäß (R)',            en: 'Glute (R)',       tr: 'Sağ Kalça Kası',desc: 'Gluteus maximus/medius/minimus, Piriformis' },
+    l_thigh:     { de: 'Oberschenkel (L)',     en: 'Thigh (L)',       tr: 'Sol Uyluk',    desc: 'Quadrizeps, Ischiokrurale Muskulatur, Femur' },
+    r_thigh:     { de: 'Oberschenkel (R)',     en: 'Thigh (R)',       tr: 'Sağ Uyluk',    desc: 'Quadrizeps, Ischiokrurale Muskulatur, Femur' },
+    l_knee:      { de: 'Knie (L)',             en: 'Knee (L)',        tr: 'Sol Diz',      desc: 'Kniegelenk, Meniskus, Kreuzband, Patella' },
+    r_knee:      { de: 'Knie (R)',             en: 'Knee (R)',        tr: 'Sağ Diz',      desc: 'Kniegelenk, Meniskus, Kreuzband, Patella' },
+    l_lower_leg: { de: 'Unterschenkel (L)',    en: 'Lower Leg (L)',   tr: 'Sol Alt Bacak',desc: 'Tibia, Fibula, Wadenmuskulatur, Achillessehne' },
+    r_lower_leg: { de: 'Unterschenkel (R)',    en: 'Lower Leg (R)',   tr: 'Sağ Alt Bacak',desc: 'Tibia, Fibula, Wadenmuskulatur, Achillessehne' },
+    l_foot:      { de: 'Fuß (L)',              en: 'Foot (L)',        tr: 'Sol Ayak',     desc: 'Sprunggelenk, Fußgewölbe, Zehen, Achillessehne' },
+    r_foot:      { de: 'Fuß (R)',              en: 'Foot (R)',        tr: 'Sağ Ayak',     desc: 'Sprunggelenk, Fußgewölbe, Zehen, Achillessehne' },
+  };
+
+  // viewBox "0 0 160 395" — screen-left = patient-right (anatomisch korrekt)
+  const FRONT_ZONES = [
+    { id: 'head',        shape: 'circle',  cx:80,  cy:26,  r:23 },
+    { id: 'neck',        shape: 'rect',    x:71,   y:48,   w:18, h:18, rx:4 },
+    { id: 'l_shoulder',  shape: 'ellipse', cx:46,  cy:66,  rx:22, ry:15 },
+    { id: 'r_shoulder',  shape: 'ellipse', cx:114, cy:66,  rx:22, ry:15 },
+    { id: 'chest',       shape: 'rect',    x:57,   y:58,   w:46, h:55, rx:4 },
+    { id: 'l_upper_arm', shape: 'rect',    x:28,   y:68,   w:20, h:58, rx:5 },
+    { id: 'r_upper_arm', shape: 'rect',    x:112,  y:68,   w:20, h:58, rx:5 },
+    { id: 'abdomen',     shape: 'rect',    x:57,   y:113,  w:46, h:52, rx:4 },
+    { id: 'l_forearm',   shape: 'rect',    x:24,   y:130,  w:18, h:52, rx:5 },
+    { id: 'r_forearm',   shape: 'rect',    x:118,  y:130,  w:18, h:52, rx:5 },
+    { id: 'l_hand',      shape: 'ellipse', cx:33,  cy:198, rx:15, ry:16 },
+    { id: 'r_hand',      shape: 'ellipse', cx:127, cy:198, rx:15, ry:16 },
+    { id: 'l_hip',       shape: 'rect',    x:57,   y:165,  w:23, h:38, rx:4 },
+    { id: 'r_hip',       shape: 'rect',    x:80,   y:165,  w:23, h:38, rx:4 },
+    { id: 'l_thigh',     shape: 'rect',    x:57,   y:205,  w:22, h:72, rx:5 },
+    { id: 'r_thigh',     shape: 'rect',    x:81,   y:205,  w:22, h:72, rx:5 },
+    { id: 'l_knee',      shape: 'ellipse', cx:68,  cy:282, rx:16, ry:12 },
+    { id: 'r_knee',      shape: 'ellipse', cx:92,  cy:282, rx:16, ry:12 },
+    { id: 'l_lower_leg', shape: 'rect',    x:57,   y:296,  w:20, h:68, rx:5 },
+    { id: 'r_lower_leg', shape: 'rect',    x:83,   y:296,  w:20, h:68, rx:5 },
+    { id: 'l_foot',      shape: 'ellipse', cx:67,  cy:373, rx:21, ry:12 },
+    { id: 'r_foot',      shape: 'ellipse', cx:93,  cy:373, rx:21, ry:12 },
+  ];
+
+  const BACK_ZONES = [
+    { id: 'head',        shape: 'circle',  cx:80,  cy:26,  r:23 },
+    { id: 'neck',        shape: 'rect',    x:71,   y:48,   w:18, h:18, rx:4 },
+    { id: 'l_shoulder',  shape: 'ellipse', cx:46,  cy:66,  rx:22, ry:15 },
+    { id: 'r_shoulder',  shape: 'ellipse', cx:114, cy:66,  rx:22, ry:15 },
+    { id: 'upper_back',  shape: 'rect',    x:57,   y:58,   w:46, h:55, rx:4 },
+    { id: 'l_upper_arm', shape: 'rect',    x:28,   y:68,   w:20, h:58, rx:5 },
+    { id: 'r_upper_arm', shape: 'rect',    x:112,  y:68,   w:20, h:58, rx:5 },
+    { id: 'lower_back',  shape: 'rect',    x:57,   y:113,  w:46, h:52, rx:4 },
+    { id: 'l_forearm',   shape: 'rect',    x:24,   y:130,  w:18, h:52, rx:5 },
+    { id: 'r_forearm',   shape: 'rect',    x:118,  y:130,  w:18, h:52, rx:5 },
+    { id: 'l_hand',      shape: 'ellipse', cx:33,  cy:198, rx:15, ry:16 },
+    { id: 'r_hand',      shape: 'ellipse', cx:127, cy:198, rx:15, ry:16 },
+    { id: 'l_glute',     shape: 'rect',    x:57,   y:165,  w:23, h:38, rx:4 },
+    { id: 'r_glute',     shape: 'rect',    x:80,   y:165,  w:23, h:38, rx:4 },
+    { id: 'l_thigh',     shape: 'rect',    x:57,   y:205,  w:22, h:72, rx:5 },
+    { id: 'r_thigh',     shape: 'rect',    x:81,   y:205,  w:22, h:72, rx:5 },
+    { id: 'l_knee',      shape: 'ellipse', cx:68,  cy:282, rx:16, ry:12 },
+    { id: 'r_knee',      shape: 'ellipse', cx:92,  cy:282, rx:16, ry:12 },
+    { id: 'l_lower_leg', shape: 'rect',    x:57,   y:296,  w:20, h:68, rx:5 },
+    { id: 'r_lower_leg', shape: 'rect',    x:83,   y:296,  w:20, h:68, rx:5 },
+    { id: 'l_foot',      shape: 'ellipse', cx:67,  cy:373, rx:21, ry:12 },
+    { id: 'r_foot',      shape: 'ellipse', cx:93,  cy:373, rx:21, ry:12 },
+  ];
+
+  const NS = 'http://www.w3.org/2000/svg';
+  let currentView = 'front';
+  let selectedId   = null;
+
+  function makeShape(zone) {
+    let el;
+    if (zone.shape === 'circle') {
+      el = document.createElementNS(NS, 'circle');
+      el.setAttribute('cx', zone.cx); el.setAttribute('cy', zone.cy); el.setAttribute('r', zone.r);
+    } else if (zone.shape === 'ellipse') {
+      el = document.createElementNS(NS, 'ellipse');
+      el.setAttribute('cx', zone.cx); el.setAttribute('cy', zone.cy);
+      el.setAttribute('rx', zone.rx); el.setAttribute('ry', zone.ry);
+    } else {
+      el = document.createElementNS(NS, 'rect');
+      el.setAttribute('x', zone.x); el.setAttribute('y', zone.y);
+      el.setAttribute('width', zone.w); el.setAttribute('height', zone.h);
+      if (zone.rx) el.setAttribute('rx', zone.rx);
+    }
+    return el;
   }
 
-  const frame = document.createElement('iframe');
-  frame.id = 'zygoteFrame';
-  frame.src = src;
-  frame.allow = 'autoplay; fullscreen; xr-spatial-tracking';
-  frame.setAttribute('allowfullscreen', '');
-  frame.setAttribute('mozallowfullscreen', '');
-  frame.setAttribute('webkitallowfullscreen', '');
+  function onZoneClick(id) {
+    selectedId = id;
+    const r = REGIONS[id];
+    const infoTitle = document.getElementById('bodyInfoTitle');
+    const infoText  = document.getElementById('bodyInfoText');
+    if (r && infoTitle && infoText) {
+      infoTitle.textContent = r[lang] || r.de;
+      infoText.textContent  = r.desc;
+    }
+    svgWrap.querySelectorAll('.body-zone').forEach(g =>
+      g.classList.toggle('body-zone--selected', g.dataset.zone === id)
+    );
+  }
 
-  let loaded = false;
-  const timer = setTimeout(() => { if (!loaded) showFallback(); }, 8000);
+  function buildSVG(zones) {
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 160 395');
+    svg.setAttribute('class', 'body-svg');
+    for (const zone of zones) {
+      const g = document.createElementNS(NS, 'g');
+      g.className.baseVal = 'body-zone' + (zone.id === selectedId ? ' body-zone--selected' : '');
+      g.dataset.zone = zone.id;
+      g.setAttribute('role', 'button');
+      g.setAttribute('tabindex', '0');
+      const r = REGIONS[zone.id];
+      if (r) g.setAttribute('aria-label', r[lang] || r.de);
+      g.appendChild(makeShape(zone));
+      g.addEventListener('click', () => onZoneClick(zone.id));
+      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onZoneClick(zone.id); } });
+      svg.appendChild(g);
+    }
+    return svg;
+  }
 
-  frame.addEventListener('load', () => {
-    loaded = true;
-    clearTimeout(timer);
-  });
+  // Toolbar
+  const toolbar = document.createElement('div');
+  toolbar.className = 'body-toolbar';
 
-  frame.addEventListener('error', () => { clearTimeout(timer); showFallback(); });
+  const frontBtn = document.createElement('button');
+  frontBtn.className = 'body-view-btn body-view-btn--active';
+  frontBtn.type = 'button';
+  frontBtn.textContent = 'Vorderseite';
 
-  wrap.appendChild(frame);
+  const backBtn = document.createElement('button');
+  backBtn.className = 'body-view-btn';
+  backBtn.type = 'button';
+  backBtn.textContent = 'Rückseite';
 
-  const fsBtn = document.createElement('button');
-  fsBtn.className = 'zygote-fs-btn';
-  fsBtn.id = 'zygoteFsBtn';
-  fsBtn.type = 'button';
-  fsBtn.title = 'Vollbild';
-  fsBtn.textContent = '⛶ Vollbild';
-  fsBtn.addEventListener('click', () => {
-    if (frame.requestFullscreen) frame.requestFullscreen();
-    else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
-  });
-  wrap.appendChild(fsBtn);
+  const hint = document.createElement('span');
+  hint.className = 'body-toolbar-hint';
+  hint.textContent = 'Körperbereich anklicken';
+
+  toolbar.appendChild(frontBtn);
+  toolbar.appendChild(backBtn);
+  toolbar.appendChild(hint);
+
+  const svgWrap = document.createElement('div');
+  svgWrap.className = 'body-svg-wrap';
+
+  function render() {
+    svgWrap.innerHTML = '';
+    svgWrap.appendChild(buildSVG(currentView === 'front' ? FRONT_ZONES : BACK_ZONES));
+    frontBtn.classList.toggle('body-view-btn--active', currentView === 'front');
+    backBtn.classList.toggle('body-view-btn--active',  currentView === 'back');
+  }
+
+  frontBtn.addEventListener('click', () => { currentView = 'front'; render(); });
+  backBtn.addEventListener('click',  () => { currentView = 'back';  render(); });
+
+  wrap.appendChild(toolbar);
+  wrap.appendChild(svgWrap);
+  render();
 }
 
 async function loadNotizen() {
