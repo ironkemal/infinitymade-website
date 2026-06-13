@@ -72,7 +72,7 @@ const T = {
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
     nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Demo-Modus', nav_anamnese: 'Anamnese',
     doctors_sub: 'Ärzte in der Nähe finden', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
-    beispielmodus_sub: 'Anatomie-Haritas für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
+    beispielmodus_sub: 'Anatomiekarten für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
     lbl_select_patient: 'Patient wählen', lbl_notes_empty: 'Keine Notizen vorhanden.',
@@ -2987,7 +2987,7 @@ async function openBookingActionModal(booking) {
   const bkModal = document.getElementById('bkActionModal');
   if (bkModal) { bkModal.hidden = false; bkModal.style.display = 'flex'; }
   document.getElementById('mainArea')?.style.setProperty('padding-right', '396px');
-  // Takvim paneli açıksa calMainWrap'ı da sola it
+  // Wenn Kalender-Panel offen, calMainWrap ebenfalls nach links verschieben
   const calWrap = document.getElementById('calMainWrap');
   if (calWrap && document.getElementById('panel-calendar')?.classList.contains('active')) {
     calWrap.style.paddingRight = '396px';
@@ -4131,7 +4131,7 @@ async function initBkCustomerAutocomplete() {
       service: document.getElementById('bkService')?.value,
       notes: document.getElementById('bkNotes')?.value,
     };
-    // Kullanıcının yazdığı metni ön dolgu olarak aktar
+    // Eingetippten Text als Vorausfüllung übernehmen
     const typed = (input.value || '').trim();
     const sfVorname = document.getElementById('sfVorname');
     const sfNachname = document.getElementById('sfNachname');
@@ -4349,7 +4349,7 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
     ownerServices = data;
   }
 
-  // Çalışana atanmış hizmetler için filtre — atama yoksa hepsi gösterilir
+  // Filter auf dem Mitarbeiter zugewiesene Leistungen — ohne Zuweisung alle anzeigen
   let allowedSet = null;
   if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
   if (employeeId) {
@@ -4648,7 +4648,7 @@ document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () 
     // 1) Klinik koordinatı
     const clinic = await ensureClinicLocation();
 
-    // 2) Hasta koordinatı — yoksa geocode + leads update
+    // 2) Patientenkoordinate — falls fehlend: geocode + leads update
     let leadLat = lead.lat != null ? Number(lead.lat) : null;
     let leadLng = lead.lng != null ? Number(lead.lng) : null;
     if (leadLat == null || leadLng == null) {
@@ -6166,7 +6166,7 @@ function computeRxDeadlineAlerts(rx) {
   if (!rx.ausstellungsdatum) return alerts;
   const issued = new Date(rx.ausstellungsdatum);
 
-  // Tamamlanmış / faturalandırılmış reçetelerde deadline gösterme
+  // Kein Deadline-Hinweis bei abgeschlossenen / abgerechneten Rezepten
   if (['completed','billed','cancelled'].includes(rx.status)) return alerts;
 
   const started = rx.behandlungsbeginn ? new Date(rx.behandlungsbeginn) : null;
@@ -7927,7 +7927,7 @@ document.getElementById('sdAddBtn').addEventListener('click', async () => {
   const endDate = new Date(end);
   if (endDate < startDate) { showToast('Bis darf nicht vor Von liegen', 'error'); return; }
 
-  // Kapatılan tarih aralığındaki aktif randevuları kontrol et
+  // Aktive Termine im geschlossenen Datumsbereich prüfen
   const rangeStart = von + 'T00:00:00';
   const rangeEnd = end + 'T23:59:59';
   const ownerId = getOwnerId();
@@ -11818,7 +11818,7 @@ async function renderOverviewWeekly(date) {
 
   // Personel listesi — switcher aktif business filter'ı bookings'a uygulanır
   const emps = (teamMembers.length ? teamMembers : [currentProfile]).filter(e => e.role !== 'owner' || teamMembers.length <= 1);
-  // Tüm team'i göster (owner dahil), filter ettiysek owner gözüksün
+  // Gesamtes Team anzeigen (inkl. Owner); bei Filterung Owner sichtbar lassen
   const allEmps = teamMembers.length ? teamMembers : [currentProfile];
 
   // Bookings çek — cross-business: owner'in tüm business'larındaki bookings
@@ -14007,7 +14007,7 @@ function wireBizSwitcherEvents() {
       return;
     }
     if (e.target.closest('#bizSwitcherAdd')) {
-      // TODO Faz 1.3: Settings > İşletmeler > Yeni ekle modal'ı
+      // TODO Phase 1.3: Settings > Standorte > Neuen Standort hinzufügen Modal
       alert('Neues Geschäft hinzufügen — in Kürze verfügbar (Settings → Geschäfte).');
     }
   });
@@ -17117,7 +17117,7 @@ document.getElementById('statMonateSelect')?.addEventListener('change', () => {
 });
 
 // =====================================================================
-// SCHNELLERFASSUNG — Hızlı Hasta Kaydı Mini-Modal
+// SCHNELLERFASSUNG — Schnelle Patientenaufnahme Mini-Modal
 // =====================================================================
 function initSchnellerfassung() {
   const modal = document.getElementById('schnellerfassungModal');
