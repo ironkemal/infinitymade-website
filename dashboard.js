@@ -3663,15 +3663,7 @@ async function handlePatientNichtErschienen() {
   const btn = document.getElementById('bkActionNoShowBtn');
   if (btn && btn.disabled) return;
 
-  const reason = await showInputModal({
-    title: 'Grund für Nicht-Erscheinen',
-    message: 'Optionaler Hinweis (z.B. "krank", "Urlaub", "vergessen")',
-    inputLabel: 'Absagegrund',
-    inputPlaceholder: 'Grund eingeben oder leer lassen…',
-    confirmText: 'Bestätigen',
-    cancelText: 'Abbrechen',
-    variant: 'danger'
-  });
+  const reason = await showAbsagegrundModal({ title: 'Grund für Nicht-Erscheinen', confirmText: 'Bestätigen' });
   if (reason === null) return;
 
   const _bkm3 = document.getElementById('bkActionModal'); if (_bkm3) { _bkm3.hidden = true; _bkm3.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
@@ -5339,6 +5331,86 @@ function showConfirmModal({ title = 'Bestätigen', message = '', confirmText = '
   });
 }
 
+const ABSAGE_GRUENDE = [
+  'Patient hat abgesagt',
+  'Patient krank',
+  'Patient vergessen',
+  'Urlaub (Patient)',
+  'Persönliche Gründe (Patient)',
+  'Therapeut krank',
+  'Therapeut verhindert',
+  'Urlaub (Therapeut)',
+  'Notfall',
+  'Terminkonflikt',
+  'Sonstiges…',
+];
+
+function showAbsagegrundModal({ title = 'Termin absagen', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'danger' } = {}) {
+  return new Promise(resolve => {
+    const existing = document.getElementById('_absageModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_absageModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:420px;';
+
+    const optionsHtml = ABSAGE_GRUENDE.map(g =>
+      `<option value="${g}">${g}</option>`
+    ).join('');
+
+    box.innerHTML = `
+      <h3 style="margin:0 0 8px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">${title}</h3>
+      <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted,#9ca3af);">Absagegrund auswählen (optional)</p>
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);margin-bottom:6px;">Grund</label>
+      <select id="_absageSelect" style="width:100%;padding:9px 12px;background:var(--bg-input,#111827);border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-main,#f9fafb);font-size:13px;box-sizing:border-box;outline:none;cursor:pointer;">
+        <option value="">— Kein Grund angeben —</option>
+        ${optionsHtml}
+      </select>
+      <div id="_absageCustomWrap" style="display:none;margin-top:10px;">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);margin-bottom:6px;">Eigener Grund</label>
+        <input id="_absageCustom" type="text" placeholder="Freitext…"
+          style="width:100%;padding:9px 12px;background:var(--bg-input,#111827);border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-main,#f9fafb);font-size:13px;box-sizing:border-box;outline:none;" />
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+        <button id="_absageCancel" style="padding:8px 16px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">${cancelText}</button>
+        <button id="_absageConfirm" style="padding:8px 16px;background:${variant === 'danger' ? '#dc2626' : 'var(--accent,#b1891b)'};border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">${confirmText}</button>
+      </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    const sel = document.getElementById('_absageSelect');
+    const customWrap = document.getElementById('_absageCustomWrap');
+    const customField = document.getElementById('_absageCustom');
+
+    sel.addEventListener('change', () => {
+      const isSonstiges = sel.value === 'Sonstiges…';
+      customWrap.style.display = isSonstiges ? 'block' : 'none';
+      if (isSonstiges) setTimeout(() => customField.focus(), 50);
+    });
+
+    const cleanup = (cancelled) => {
+      overlay.remove();
+      if (cancelled) { resolve(null); return; }
+      const selected = sel.value;
+      if (!selected) { resolve(''); return; }
+      if (selected === 'Sonstiges…') { resolve(customField.value.trim() || ''); return; }
+      resolve(selected);
+    };
+
+    document.getElementById('_absageCancel').addEventListener('click', () => cleanup(true));
+    document.getElementById('_absageConfirm').addEventListener('click', () => cleanup(false));
+    overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(true); });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { document.removeEventListener('keydown', esc); cleanup(true); }
+    });
+  });
+}
+
 function showInputModal({ title, message, inputLabel, inputPlaceholder, confirmText, cancelText, variant }) {
   return new Promise(resolve => {
     const existing = document.getElementById('_inputModal');
@@ -5694,15 +5766,7 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   if (!id) return;
-  const reason = await showInputModal({
-    title: 'Termin absagen',
-    message: 'Bitte Absagegrund angeben (optional)',
-    inputLabel: 'Absagegrund',
-    inputPlaceholder: 'z.B. Patient hat abgesagt, Therapeut krank…',
-    confirmText: 'Termin löschen',
-    cancelText: 'Abbrechen',
-    variant: 'danger'
-  });
+  const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin löschen' });
   if (reason === null) return;
   if (reason && reason.trim()) {
     await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', id);
@@ -5871,15 +5935,7 @@ document.getElementById('bkActionEditBtn').addEventListener('click', () => {
 document.getElementById('bkActionDeleteBtn').addEventListener('click', async () => {
   const b = bkActionBookingCache;
   if (!b) return;
-  const reason = await showInputModal({
-    title: 'Termin absagen',
-    message: 'Bitte Absagegrund angeben (optional)',
-    inputLabel: 'Absagegrund',
-    inputPlaceholder: 'z.B. Patient hat abgesagt, Therapeut krank…',
-    confirmText: 'Termin löschen',
-    cancelText: 'Abbrechen',
-    variant: 'danger'
-  });
+  const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin löschen' });
   if (reason === null) return;
   if (reason && reason.trim()) {
     await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', b.id);
