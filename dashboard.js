@@ -11039,7 +11039,7 @@ function loadBeispielmodus() {
 
   // Sketchfab embed — supports iframe natively, no blocking
   const SKETCHFAB_MODEL = '85636205977d44878fc729fde5b77cd3'; // Human Bones and Muscles (wanoco4D, CC)
-  const src = `https://sketchfab.com/models/${SKETCHFAB_MODEL}/embed?autostart=1&ui_theme=dark&ui_infos=0&ui_watermark=0&ui_controls=1`;
+  const src = `https://sketchfab.com/models/${SKETCHFAB_MODEL}/embed?autostart=1&ui_theme=dark&ui_infos=0&ui_controls=1`;
 
   function showFallback() {
     wrap.innerHTML = `
