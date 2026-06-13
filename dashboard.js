@@ -93,7 +93,42 @@ const T = {
     nav_mahnwesen: 'Mahnwesen',
     nav_statistik: 'Auswertungen',
     nav_warteliste: 'Warteliste',
-    cal_emp_all: 'Alle'
+    cal_emp_all: 'Alle',
+    nav_podologie_billing: 'Verordnungen',
+    podologie_billing_sub: 'Muster-13-Verordnungen verwalten & Behandlungen dokumentieren',
+    nav_fussstatus: 'Fußstatus',
+    fussstatus_sub: 'Wagner-Klassifikation & podologischer Befundstatus',
+    pod_new_vord: 'Neue Verordnung',
+    pod_active_vord: 'Aktive Verordnungen',
+    pod_tagesbehandlung: 'Tagesbehandlung erfassen',
+    pod_patient: 'Patient / Versicherter',
+    pod_ausstelldatum: 'Ausstellungsdatum',
+    pod_diagnosegruppe: 'Diagnosegruppe',
+    pod_einheiten: 'Behandlungseinheiten',
+    pod_frequenz: 'Therapiefrequenz',
+    pod_dringend: 'Dringend (14-Tage-Frist)',
+    pod_hausbesuch: 'Hausbesuch',
+    pod_save: 'Speichern',
+    pod_no_vord: 'Keine aktiven Verordnungen.',
+    pod_behandlungsdatum: 'Behandlungsdatum',
+    pod_hpnr: 'HPNR-Codes',
+    pod_lokalisation: 'Lokalisation (Zehe)',
+    pod_notizen: 'Notizen',
+    pod_save_behandlung: 'Behandlung speichern',
+    pod_warn_frist: 'Behandlungsfrist abgelaufen',
+    pod_warn_expired: 'Verordnung möglicherweise ungültig (>84 Tage)',
+    pod_kein_hpnr: 'Bitte mindestens einen HPNR-Code wählen.',
+    fuss_new: 'Neuer Fußstatus',
+    fuss_history: 'Verlauf (letzte 10)',
+    fuss_patient: 'Patient',
+    fuss_datum: 'Datum',
+    fuss_seite: 'Seite',
+    fuss_wagner: 'Wagner-Grad',
+    fuss_befunde: 'Befunde',
+    fuss_notizen: 'Notizen',
+    fuss_foto: 'Fotos',
+    fuss_save: 'Speichern',
+    fuss_no_history: 'Noch keine Einträge.'
   },
   en: {
     logout: 'Sign out',
@@ -165,7 +200,26 @@ const T = {
     nav_mahnwesen: 'Dunning',
     nav_statistik: 'Analytics',
     nav_warteliste: 'Waiting List',
-    cal_emp_all: 'All'
+    cal_emp_all: 'All',
+    nav_podologie_billing: 'Prescriptions',
+    podologie_billing_sub: 'Manage Muster-13 prescriptions & document treatments',
+    nav_fussstatus: 'Foot Status',
+    fussstatus_sub: 'Wagner classification & podological assessment',
+    pod_new_vord: 'New Prescription', pod_active_vord: 'Active Prescriptions',
+    pod_tagesbehandlung: 'Record Treatment', pod_patient: 'Patient',
+    pod_ausstelldatum: 'Issue Date', pod_diagnosegruppe: 'Diagnosis Group',
+    pod_einheiten: 'Treatment Units', pod_frequenz: 'Therapy Frequency',
+    pod_dringend: 'Urgent (14-day deadline)', pod_hausbesuch: 'Home Visit',
+    pod_save: 'Save', pod_no_vord: 'No active prescriptions.',
+    pod_behandlungsdatum: 'Treatment Date', pod_hpnr: 'HPNR Codes',
+    pod_lokalisation: 'Location (toe)', pod_notizen: 'Notes',
+    pod_save_behandlung: 'Save Treatment',
+    pod_warn_frist: 'Treatment deadline expired', pod_warn_expired: 'Prescription possibly invalid (>84 days)',
+    pod_kein_hpnr: 'Please select at least one HPNR code.',
+    fuss_new: 'New Foot Status', fuss_history: 'History (last 10)',
+    fuss_patient: 'Patient', fuss_datum: 'Date', fuss_seite: 'Side',
+    fuss_wagner: 'Wagner Grade', fuss_befunde: 'Findings', fuss_notizen: 'Notes',
+    fuss_foto: 'Photos', fuss_save: 'Save', fuss_no_history: 'No entries yet.'
   },
   tr: {
     logout: 'Çıkış',
@@ -237,7 +291,26 @@ const T = {
     nav_mahnwesen: 'Tahsilat',
     nav_statistik: 'Analizler',
     nav_warteliste: 'Bekleme Listesi',
-    cal_emp_all: 'Tümü'
+    cal_emp_all: 'Tümü',
+    nav_podologie_billing: 'Reçeteler',
+    podologie_billing_sub: 'Muster-13 reçetelerini yönet ve tedavileri kaydet',
+    nav_fussstatus: 'Ayak Durumu',
+    fussstatus_sub: 'Wagner sınıflandırması ve podolojik muayene durumu',
+    pod_new_vord: 'Yeni Reçete', pod_active_vord: 'Aktif Reçeteler',
+    pod_tagesbehandlung: 'Tedavi Kaydet', pod_patient: 'Hasta',
+    pod_ausstelldatum: 'Düzenleme Tarihi', pod_diagnosegruppe: 'Tanı Grubu',
+    pod_einheiten: 'Tedavi Birimi', pod_frequenz: 'Terapi Sıklığı',
+    pod_dringend: 'Acil (14 gün)', pod_hausbesuch: 'Ev Ziyareti',
+    pod_save: 'Kaydet', pod_no_vord: 'Aktif reçete yok.',
+    pod_behandlungsdatum: 'Tedavi Tarihi', pod_hpnr: 'HPNR Kodları',
+    pod_lokalisation: 'Lokalizasyon (parmak)', pod_notizen: 'Notlar',
+    pod_save_behandlung: 'Tedaviyi Kaydet',
+    pod_warn_frist: 'Tedavi başlangıç süresi doldu', pod_warn_expired: 'Reçete geçersiz olabilir (>84 gün)',
+    pod_kein_hpnr: 'Lütfen en az bir HPNR kodu seçin.',
+    fuss_new: 'Yeni Ayak Durumu', fuss_history: 'Geçmiş (son 10)',
+    fuss_patient: 'Hasta', fuss_datum: 'Tarih', fuss_seite: 'Taraf',
+    fuss_wagner: 'Wagner Derecesi', fuss_befunde: 'Bulgular', fuss_notizen: 'Notlar',
+    fuss_foto: 'Fotoğraflar', fuss_save: 'Kaydet', fuss_no_history: 'Henüz kayıt yok.'
   }
 };
 
@@ -332,6 +405,29 @@ const SECTOR_PANELS = {
     { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'], group: 'einstellungen' },
     { id: 'vorlagen', icon: ICON.clipboard, key: 'nav_vorlagen', roles: ['owner'], group: 'einstellungen' },
     { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
+  ],
+  podologie: [
+    { id: 'overview',          icon: ICON.overview,   key: 'nav_overview',          roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'ueberblick',        icon: ICON.overview,   key: 'nav_ueberblick',        roles: ['owner', 'employee'], group: 'uebersicht' },
+    { id: 'calendar',          icon: ICON.calendar,   key: 'nav_calendar',          roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'kunden',            icon: ICON.users,      key: 'nav_kunden',            roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'notizen',           icon: ICON.notes,      key: 'nav_notizen',           roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'warteliste',        icon: ICON.notes,      key: 'nav_warteliste',        roles: ['owner'],             group: 'patienten' },
+    { id: 'services',          icon: ICON.services,   key: 'nav_services',          roles: ['owner', 'employee'], group: 'team' },
+    { id: 'hours',             icon: ICON.clock,      key: 'nav_hours',             roles: ['owner', 'employee'], group: 'team' },
+    { id: 'team',              icon: ICON.user,       key: 'nav_team',              roles: ['owner', 'employee'], group: 'team' },
+    { id: 'rechnungen',        icon: ICON.invoice,    key: 'nav_rechnungen',        roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'podologie-billing', icon: ICON.bill_pro,   key: 'nav_podologie_billing', roles: ['owner'],             group: 'abrechnung' },
+    { id: 'fussstatus',        icon: ICON.clipboard,  key: 'nav_fussstatus',        roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'belegliste',        icon: ICON.clipboard,  key: 'nav_belegliste',        roles: ['owner'],             group: 'abrechnung' },
+    { id: 'mahnwesen',         icon: ICON.invoice,    key: 'nav_mahnwesen',         roles: ['owner'],             group: 'abrechnung' },
+    { id: 'statistik',         icon: ICON.overview,   key: 'nav_statistik',         roles: ['owner'],             group: 'abrechnung' },
+    { id: 'b2b',               icon: ICON.b2b,        key: 'nav_b2b',               roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'b2c',               icon: ICON.mail,       key: 'nav_b2c',               roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'beispielmodus',     icon: ICON.demo,       key: 'nav_beispielmodus',     roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'feedback',          icon: ICON.message,    key: 'nav_feedback',          roles: ['owner', 'employee'], group: 'einstellungen' },
+    { id: 'vorlagen',          icon: ICON.clipboard,  key: 'nav_vorlagen',          roles: ['owner'],             group: 'einstellungen' },
+    { id: 'settings',          icon: ICON.settings,   key: 'nav_settings',          roles: ['owner', 'employee'], group: 'einstellungen' }
   ],
   praxis: [
     { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
@@ -484,6 +580,8 @@ const SIDEBAR_TO_MODULE = {
   anamnese: 'anamnese',
   prescriptions: 'prescriptions',
   abrechnung: 'abrechnung',
+  'podologie-billing': 'abrechnung',
+  fussstatus: 'abrechnung',
   fahrtenbuch: 'fahrtenbuch',
   b2b: 'b2b',
   b2c: 'b2c',
@@ -520,7 +618,7 @@ async function renderSidebar() {
     const groupItems = items.filter(item => {
       if (item.group !== group.id) return false;
       if (!item.roles.includes(role)) return false;
-      if (item.id === 'abrechnung' && !has302Access()) return false;
+      if ((item.id === 'abrechnung' || item.id === 'podologie-billing') && !has302Access()) return false;
       const moduleKey = SIDEBAR_TO_MODULE[item.id];
       if (role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) return false;
       return true;
@@ -653,6 +751,8 @@ async function switchPanel(id) {
   if (id === 'beispielmodus') loadBeispielmodus();
   if (id === 'rechnungen') loadRechnungen();
   if (id === 'abrechnung') loadAbrechnung();
+  if (id === 'podologie-billing') loadPodologieBilling();
+  if (id === 'fussstatus') loadFussstatus();
   if (id === 'belegliste') loadBelegliste();
   if (id === 'mahnwesen') loadMahnwesen();
   if (id === 'warteliste') loadWarteliste();
@@ -16712,6 +16812,13 @@ console.log('[fahrtenbuch] window.__fb ready', Object.keys(window.__fb));
 window.switchPanel = switchPanel;
 window.setWizardStep = setWizardStep;
 window.renderTaxierungList = renderTaxierungList;
+window.openVorlagenEdit = openVorlagenEdit;
+window.deleteVorlage = deleteVorlage;
+window.deleteEmpTimeOff = deleteEmpTimeOff;
+window.deleteUrlaub = deleteUrlaub;
+window.editAerzte = editAerzte;
+window.deleteAerzte = deleteAerzte;
+window.renderVorlagenContentForm = renderVorlagenContentForm;
 window._abState = _abState;
 window.openRezeptModal = openRezeptModal;
 window.openRezeptConfirmModal = openRezeptConfirmModal;
@@ -18490,5 +18597,440 @@ window.openPatientDetail = async function(leadId) {
     showToast('Patient konnte nicht gefunden werden.', 'error');
   }
 };
+
+// ===== PODOLOGIE BILLING =====
+
+const HPNR_LABELS = {
+  '78010': 'Podologische Behandlung (klein)',
+  '78020': 'Podologische Behandlung (groß)',
+  '78030': 'Podologische Befundung',
+  '78040': 'Eingangsbefundung',
+  '78100': 'Nagelspange Erstbefundung groß',
+  '78110': 'Nagelspange Erstbefundung klein',
+  '78510': 'Kontrolle Sitz- und Passgenauigkeit',
+  '78520': 'Behandlungsabschluss / Entfernung Spange',
+  '78530': 'Therapiebericht UI2',
+  '78610': 'Nagelspangenbehandlung',
+  '78620': 'Aufschlag für besonderen Aufwand',
+  '79933': 'Hausbesuch inkl. Wegegeld',
+  '79934': 'Hausbesuch in soz. Einrichtung inkl. Wegegeld',
+};
+
+function podGetHpnrList(diagRoot) {
+  if (diagRoot === 'UI1') return ['78010','78020','78510'];
+  if (diagRoot === 'UI2') return ['78100','78110','78610','78620','78530','78510','78520'];
+  return ['78010','78020','78030','78040','79933','79934']; // DF/NF/QF
+}
+
+function podDiagRoot(diagCode) {
+  if (!diagCode) return '';
+  if (diagCode.startsWith('DF')) return 'DF';
+  return diagCode; // NF, QF, UI1, UI2
+}
+
+let _podState = { selectedVordId: null, verordnungen: [] };
+
+async function loadPodologieBilling() {
+  const el = document.getElementById('podBillingContent');
+  if (!el) return;
+  el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade…</span>';
+
+  const ownerId = getOwnerId();
+  const { data: vords, error } = await supabase
+    .from('verordnungen')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .eq('status', 'aktiv')
+    .order('created_at', { ascending: false });
+
+  if (error) { el.innerHTML = `<p style="color:var(--danger)">Fehler: ${escapeHtml(error.message)}</p>`; return; }
+  _podState.verordnungen = vords || [];
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  function vordAlerts(v) {
+    const alerts = [];
+    const issued = v.ausstellungsdatum ? new Date(v.ausstellungsdatum) : null;
+    if (issued && !v.behandlungsstart) {
+      const frist = v.dringend ? 14 : 28;
+      const deadline = new Date(issued); deadline.setDate(deadline.getDate() + frist);
+      if (today > deadline) alerts.push({ type: 'danger', msg: `Behandlungsfrist abgelaufen (${frist}-Tage-Regel)` });
+    }
+    return alerts;
+  }
+
+  const vordListHtml = _podState.verordnungen.length === 0
+    ? `<p style="color:var(--text-muted);padding:12px 0;">${t('pod_no_vord')}</p>`
+    : _podState.verordnungen.map(v => {
+        const alerts = vordAlerts(v);
+        const alertHtml = alerts.map(a =>
+          `<div style="color:${a.type==='danger'?'#ef4444':'#f59e0b'};font-size:12px;margin-top:4px;">⚠ ${escapeHtml(a.msg)}</div>`
+        ).join('');
+        const isSelected = _podState.selectedVordId === v.id;
+        return `<div class="pod-vord-row${isSelected?' pod-vord-selected':''}" data-vord-id="${v.id}" style="
+          padding:12px 14px;border:1px solid ${isSelected?'var(--primary)':'var(--border-subtle,var(--border))'};
+          border-radius:8px;cursor:pointer;background:${isSelected?'var(--bg-card)':'transparent'};
+          margin-bottom:8px;transition:border-color .15s;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <span style="font-weight:600;color:var(--text-main);">${escapeHtml(v.patient_name || '—')}</span>
+              <span style="margin-left:10px;font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${escapeHtml(v.diagnosegruppe || '—')}</span>
+            </div>
+            <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+            ${v.behandlungseinheiten ? `${v.behandlungseinheiten} Einheiten` : ''}
+            ${v.therapiefrequenz ? ' · ' + escapeHtml(v.therapiefrequenz) : ''}
+            ${v.dringend ? ' · <strong style="color:#ef4444;">Dringend</strong>' : ''}
+            ${v.hausbesuch ? ' · Hausbesuch' : ''}
+          </div>
+          ${alertHtml}
+        </div>`;
+      }).join('');
+
+  const selectedVord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
+  const diagRoot = selectedVord ? podDiagRoot(selectedVord.diagnosegruppe) : '';
+  const hpnrList = podGetHpnrList(diagRoot);
+  const isUI = diagRoot === 'UI1' || diagRoot === 'UI2';
+  const todayStr = today.toISOString().split('T')[0];
+
+  const behandlungFormHtml = selectedVord ? `
+    <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
+      <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${t('pod_tagesbehandlung')} — ${escapeHtml(selectedVord.patient_name || '—')}</h4>
+      <div style="display:grid;gap:12px;">
+        <div>
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_behandlungsdatum')}</label>
+          <input type="date" id="podBehDatum" value="${todayStr}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+        </div>
+        <div>
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('pod_hpnr')}</label>
+          <div id="podHpnrChecks" style="display:flex;flex-wrap:wrap;gap:8px;">
+            ${hpnrList.map(code => {
+              const autoChecked = (diagRoot !== 'UI1' && diagRoot !== 'UI2' && code === '78030') ? 'checked' : '';
+              return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                <input type="checkbox" class="pod-hpnr-cb" value="${code}" ${autoChecked}> ${code} – ${HPNR_LABELS[code]||code}
+              </label>`;
+            }).join('')}
+          </div>
+        </div>
+        <div id="podLokalisationWrap" style="display:${isUI?'block':'none'};">
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_lokalisation')} <span style="color:#ef4444;">*</span></label>
+          <input type="text" id="podLokalisation" placeholder="z. B. Zehe II rechts" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+        </div>
+        <div>
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_notizen')}</label>
+          <textarea id="podBehNotizen" rows="2" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;resize:vertical;"></textarea>
+        </div>
+        <div id="podBehError" style="color:#ef4444;font-size:13px;display:none;"></div>
+        <button id="podSaveBehBtn" class="btn-primary" style="width:fit-content;">${t('pod_save_behandlung')}</button>
+      </div>
+    </div>` : `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+
+      <!-- Links: Neue Verordnung + Liste -->
+      <div>
+        <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;margin-bottom:16px;">
+          <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${t('pod_new_vord')}</h4>
+          <div style="display:grid;gap:10px;">
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_patient')}</label>
+              <input type="text" id="podNewPatient" placeholder="Name Vorname" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+            </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_ausstelldatum')}</label>
+              <input type="date" id="podNewAusstelldatum" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+            </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_diagnosegruppe')}</label>
+              <select id="podNewDiag" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="">— Wählen —</option>
+                <option value="DF-a">DF-a – Diabetisches Fußsyndrom Typ a</option>
+                <option value="DF-b">DF-b – Diabetisches Fußsyndrom Typ b</option>
+                <option value="DF-c">DF-c – Diabetisches Fußsyndrom Typ c</option>
+                <option value="NF">NF – Neuropathisches Fußsyndrom</option>
+                <option value="QF">QF – Querschnittslähmung</option>
+                <option value="UI1">UI1 – Unguis incarnatus Stufe 1</option>
+                <option value="UI2">UI2 – Unguis incarnatus Stufe 2-3</option>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div>
+                <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_einheiten')}</label>
+                <input type="number" id="podNewEinheiten" min="1" max="60" placeholder="z.B. 6" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              </div>
+              <div>
+                <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_frequenz')}</label>
+                <input type="text" id="podNewFrequenz" placeholder="z.B. 1x wöchentlich" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              </div>
+            </div>
+            <div style="display:flex;gap:20px;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
+                <input type="checkbox" id="podNewDringend"> ${t('pod_dringend')}
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
+                <input type="checkbox" id="podNewHausbesuch"> ${t('pod_hausbesuch')}
+              </label>
+            </div>
+            <div id="podNewError" style="color:#ef4444;font-size:13px;display:none;"></div>
+            <button id="podSaveVordBtn" class="btn-primary" style="width:fit-content;">${t('pod_save')}</button>
+          </div>
+        </div>
+
+        <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
+          <h4 style="margin:0 0 12px;color:var(--text-main);font-size:15px;">${t('pod_active_vord')}</h4>
+          <div id="podVordList">${vordListHtml}</div>
+        </div>
+      </div>
+
+      <!-- Rechts: Tagesbehandlung -->
+      <div id="podBehPanel">
+        ${behandlungFormHtml}
+      </div>
+
+    </div>`;
+
+  // ---- Event Listeners ----
+
+  document.getElementById('podSaveVordBtn')?.addEventListener('click', async () => {
+    const patient = document.getElementById('podNewPatient').value.trim();
+    const datum   = document.getElementById('podNewAusstelldatum').value;
+    const diagVal = document.getElementById('podNewDiag').value;
+    const einh    = parseInt(document.getElementById('podNewEinheiten').value) || null;
+    const freq    = document.getElementById('podNewFrequenz').value.trim();
+    const dring   = document.getElementById('podNewDringend').checked;
+    const hausb   = document.getElementById('podNewHausbesuch').checked;
+    const errEl   = document.getElementById('podNewError');
+
+    if (!patient || !datum || !diagVal) {
+      errEl.textContent = 'Bitte Patient, Datum und Diagnosegruppe ausfüllen.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+
+    const diagRoot = podDiagRoot(diagVal);
+    const icd10 = diagRoot === 'UI1' || diagRoot === 'UI2' ? ['L60.0']
+      : diagRoot === 'DF' ? ['E11.74'] : diagRoot === 'NF' ? ['G60.0'] : diagRoot === 'QF' ? ['G82.1'] : [];
+
+    const { error } = await supabase.from('verordnungen').insert({
+      owner_id: getOwnerId(),
+      patient_name: patient,
+      ausstellungsdatum: datum,
+      diagnosegruppe: diagRoot,
+      leitsymptomatik: diagVal !== diagRoot ? diagVal : null,
+      icd10,
+      behandlungseinheiten: einh,
+      therapiefrequenz: freq || null,
+      dringend: dring,
+      hausbesuch: hausb,
+      status: 'aktiv',
+    });
+    if (error) {
+      errEl.textContent = error.message;
+      errEl.style.display = 'block';
+      return;
+    }
+    showToast('Verordnung gespeichert ✓');
+    loadPodologieBilling();
+  });
+
+  document.getElementById('podVordList')?.addEventListener('click', e => {
+    const row = e.target.closest('[data-vord-id]');
+    if (!row) return;
+    _podState.selectedVordId = row.dataset.vordId === _podState.selectedVordId ? null : row.dataset.vordId;
+    loadPodologieBilling();
+  });
+
+  document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {
+    const datum   = document.getElementById('podBehDatum').value;
+    const checks  = [...document.querySelectorAll('.pod-hpnr-cb:checked')].map(cb => cb.value);
+    const lokal   = (document.getElementById('podLokalisation')?.value || '').trim();
+    const notiz   = document.getElementById('podBehNotizen').value.trim();
+    const errEl   = document.getElementById('podBehError');
+
+    const vord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
+    const dRoot = vord ? podDiagRoot(vord.diagnosegruppe) : '';
+    const isUIx = dRoot === 'UI1' || dRoot === 'UI2';
+    const icd10 = vord?.icd10 || [];
+
+    // Validasyon
+    let err = '';
+    if (checks.length === 0) err = t('pod_kein_hpnr');
+    else if (isUIx && checks.includes('78030')) err = 'Befundung (78030) kann bei UI1/UI2 nicht verwendet werden.';
+    else if (isUIx && !icd10.includes('L60.0')) err = 'UI1/UI2 erfordert ICD-10 L60.0.';
+    else if (checks.includes('78040') && checks.includes('78030')) err = 'Eingangsbefundung (78040) und Befundung (78030) können nicht am gleichen Tag kombiniert werden.';
+    else if ((checks.includes('78610') || checks.includes('78620')) && dRoot !== 'UI2') err = 'Nagelspange (78610/78620) ist nur bei UI2 zulässig.';
+    else if (isUIx && !lokal) err = t('pod_lokalisation') + ' ist bei UI1/UI2 erforderlich.';
+
+    if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    const { error } = await supabase.from('podologie_behandlungen').insert({
+      owner_id: getOwnerId(),
+      verordnung_id: _podState.selectedVordId,
+      behandlungsdatum: datum,
+      hpnr_codes: checks,
+      diagnosegruppe: dRoot,
+      lokalisation: lokal || null,
+      notizen: notiz || null,
+    });
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+    showToast('Behandlung gespeichert ✓');
+    loadPodologieBilling();
+  });
+}
+
+// ===== FUẞSTATUS / WAGNER STAGING =====
+
+const WAGNER_LEVELS = [
+  { grad: 0, label: 'Risikofuß', desc: 'Keine offene Läsion', color: '#22c55e' },
+  { grad: 1, label: 'Grad 1', desc: 'Oberflächliche Ulzeration', color: '#84cc16' },
+  { grad: 2, label: 'Grad 2', desc: 'Tiefes Ulkus (Sehne/Knochen sichtbar)', color: '#eab308' },
+  { grad: 3, label: 'Grad 3', desc: 'Tiefeninfektion / Abszess', color: '#f97316' },
+  { grad: 4, label: 'Grad 4', desc: 'Begrenzte Gangrän', color: '#ef4444' },
+  { grad: 5, label: 'Grad 5', desc: 'Ausgedehnte Gangrän', color: '#7f1d1d' },
+];
+
+const FUSS_BEFUNDE = ['Hyperkeratose','Nagelveränderungen','Durchblutungsstörungen','Sensibilitätsstörungen','Ödem'];
+
+async function loadFussstatus() {
+  const el = document.getElementById('fussstatusContent');
+  if (!el) return;
+  el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade…</span>';
+
+  const ownerId = getOwnerId();
+  const { data: history } = await supabase
+    .from('fußstatus')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .order('aufnahmedatum', { ascending: false })
+    .limit(10);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const histHtml = (!history || history.length === 0)
+    ? `<p style="color:var(--text-muted);padding:12px 0;">${t('fuss_no_history')}</p>`
+    : history.map(h => {
+        const wl = WAGNER_LEVELS[h.wagner_grad] || WAGNER_LEVELS[0];
+        const befArr = h.befunde ? Object.entries(h.befunde).filter(([,v])=>v).map(([k])=>k) : [];
+        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="background:${wl.color};color:#fff;padding:3px 9px;border-radius:12px;font-size:12px;font-weight:600;flex-shrink:0;">W${h.wagner_grad}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;color:var(--text-main);">${escapeHtml(h.patient_name||'—')}
+              <span style="margin-left:8px;font-size:12px;color:var(--text-muted);">${h.seite||'—'}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);">${h.aufnahmedatum||'—'}${befArr.length?' · '+befArr.join(', '):''}</div>
+          </div>
+          <span style="font-size:12px;color:var(--text-muted);flex-shrink:0;">${wl.desc}</span>
+        </div>`;
+      }).join('');
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+
+      <!-- Formular -->
+      <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
+        <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${t('fuss_new')}</h4>
+        <div style="display:grid;gap:10px;">
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_patient')}</label>
+            <input type="text" id="fussPatient" placeholder="Name Vorname" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_datum')}</label>
+              <input type="date" id="fussDatum" value="${todayStr}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+            </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_seite')}</label>
+              <select id="fussSeite" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="links">Links</option>
+                <option value="rechts">Rechts</option>
+                <option value="beide">Beide</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:8px;">${t('fuss_wagner')}</label>
+            <div id="fussWagnerPicker" style="display:grid;gap:6px;">
+              ${WAGNER_LEVELS.map(wl => `
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);" title="${wl.desc}">
+                  <input type="radio" name="fussWagner" value="${wl.grad}" ${wl.grad===0?'checked':''} style="accent-color:${wl.color};">
+                  <span style="background:${wl.color};color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${wl.grad}</span>
+                  <span style="font-size:13px;color:var(--text-main);">${wl.label} — <span style="color:var(--text-muted);">${wl.desc}</span></span>
+                </label>`).join('')}
+            </div>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('fuss_befunde')}</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              ${FUSS_BEFUNDE.map(b => `
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                  <input type="checkbox" class="fuss-befund-cb" value="${b}"> ${b}
+                </label>`).join('')}
+            </div>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_notizen')}</label>
+            <textarea id="fussNotizen" rows="2" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;resize:vertical;"></textarea>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_foto')}</label>
+            <input type="file" id="fussFotos" accept="image/*" multiple style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;">
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Fotoğraf depolama yakında verfügbar.</div>
+          </div>
+          <div id="fussError" style="color:#ef4444;font-size:13px;display:none;"></div>
+          <button id="fussSaveBtn" class="btn-primary" style="width:fit-content;">${t('fuss_save')}</button>
+        </div>
+      </div>
+
+      <!-- Verlauf -->
+      <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
+        <h4 style="margin:0 0 12px;color:var(--text-main);font-size:15px;">${t('fuss_history')}</h4>
+        <div id="fussHistoryList">${histHtml}</div>
+      </div>
+
+    </div>`;
+
+  document.getElementById('fussSaveBtn')?.addEventListener('click', async () => {
+    const patient = document.getElementById('fussPatient').value.trim();
+    const datum   = document.getElementById('fussDatum').value;
+    const seite   = document.getElementById('fussSeite').value;
+    const wagner  = parseInt(document.querySelector('input[name="fussWagner"]:checked')?.value ?? '0');
+    const befunde = Object.fromEntries(
+      FUSS_BEFUNDE.map(b => [b, !!document.querySelector(`.fuss-befund-cb[value="${b}"]`)?.checked])
+    );
+    const notizen = document.getElementById('fussNotizen').value.trim();
+    const errEl   = document.getElementById('fussError');
+
+    const fotoFiles = document.getElementById('fussFotos')?.files;
+    if (fotoFiles && fotoFiles.length > 0) {
+      console.log('[fußstatus] Fotos ausgewählt:', fotoFiles.length, '— Speicherung noch nicht implementiert');
+    }
+
+    if (!patient || !datum) {
+      errEl.textContent = 'Bitte Patient und Datum ausfüllen.';
+      errEl.style.display = 'block';
+      return;
+    }
+    errEl.style.display = 'none';
+
+    const { error } = await supabase.from('fußstatus').insert({
+      owner_id: getOwnerId(),
+      patient_name: patient,
+      aufnahmedatum: datum,
+      seite,
+      wagner_grad: wagner,
+      befunde,
+      foto_urls: [],
+      notizen: notizen || null,
+    });
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+    showToast('Fußstatus gespeichert ✓');
+    loadFussstatus();
+  });
+}
 
 
