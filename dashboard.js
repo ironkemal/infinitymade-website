@@ -852,6 +852,7 @@ async function renderOverview() {
 
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
 
+  renderOvEmpChips();
   await loadTodayBookings();
   loadActivityFeed().catch(() => {});
   loadPhysioRezKpis().catch(() => { });
@@ -1143,6 +1144,13 @@ async function loadScheduleBookings(date) {
     if (b.id === currentId) return 1;
     return 0;
   });
+
+  // Apply employee filter from chips
+  if (typeof ovEmpFilter !== 'undefined' && ovEmpFilter !== 'all') {
+    allEmps = allEmps.filter(e => e.id === ovEmpFilter);
+    const navEl = document.getElementById('ovNav');
+    if (navEl) navEl.hidden = true;
+  }
 
   const isMobile = window.innerWidth < 768;
   const colsPerPage = isMobile ? 1 : ovColsPerPage;
@@ -11029,35 +11037,34 @@ function loadBeispielmodus() {
   if (!wrap) return;
   wrap.innerHTML = '';
 
+  // Sketchfab embed — supports iframe natively, no blocking
+  const SKETCHFAB_MODEL = '85636205977d44878fc729fde5b77cd3'; // Human Bones and Muscles (wanoco4D, CC)
+  const src = `https://sketchfab.com/models/${SKETCHFAB_MODEL}/embed?autostart=1&ui_theme=dark&ui_infos=0&ui_watermark=0&ui_controls=1`;
+
   function showFallback() {
     wrap.innerHTML = `
       <div class="zygote-fallback">
         <div class="zygote-fallback-icon">🫁</div>
-        <div class="zygote-fallback-title">3D-Anatomie — Zygote Body</div>
-        <div class="zygote-fallback-text">Der externe Inhalt kann nicht direkt eingebettet werden. Öffnen Sie die Anwendung im neuen Tab:</div>
-        <a class="btn btn-primary zygote-fallback-btn" href="https://www.zygotebody.com/" target="_blank" rel="noopener">↗ Zygote Body öffnen</a>
+        <div class="zygote-fallback-title">3D-Anatomie — Sketchfab</div>
+        <div class="zygote-fallback-text">Der externe Inhalt konnte nicht geladen werden. Öffnen Sie das Modell im neuen Tab:</div>
+        <a class="btn btn-primary zygote-fallback-btn" href="https://sketchfab.com/models/${SKETCHFAB_MODEL}" target="_blank" rel="noopener">↗ 3D-Modell öffnen</a>
       </div>`;
   }
 
   const frame = document.createElement('iframe');
   frame.id = 'zygoteFrame';
-  frame.src = 'https://www.zygotebody.com/';
-  frame.allow = 'fullscreen';
+  frame.src = src;
+  frame.allow = 'autoplay; fullscreen; xr-spatial-tracking';
   frame.setAttribute('allowfullscreen', '');
-  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+  frame.setAttribute('mozallowfullscreen', '');
+  frame.setAttribute('webkitallowfullscreen', '');
 
   let loaded = false;
-  const timer = setTimeout(() => { if (!loaded) showFallback(); }, 4000);
+  const timer = setTimeout(() => { if (!loaded) showFallback(); }, 8000);
 
   frame.addEventListener('load', () => {
     loaded = true;
     clearTimeout(timer);
-    try {
-      const doc = frame.contentDocument || frame.contentWindow?.document;
-      if (!doc || doc.URL === 'about:blank' || doc.body?.innerHTML === '') showFallback();
-    } catch (e) {
-      // cross-origin — frame loaded but we can't inspect; assume it worked
-    }
   });
 
   frame.addEventListener('error', () => { clearTimeout(timer); showFallback(); });
@@ -11438,19 +11445,52 @@ document.getElementById('aeSaveBtn').addEventListener('click', saveEmployee);
 
 // ===== Übersicht view modes (Enterprise: daily/weekly/monthly) =====
 let scheduleView = 'daily'; // 'daily' | 'weekly' | 'monthly'
+let ovEmpFilter = 'all';
 let monthlyEmpId = null;
 
 const SV_PREF_KEY = 'calendar_view';
 const SV_EMP_PREF_KEY = 'monthly_employee';
 
+function renderOvEmpChips() {
+  const container = document.getElementById('ovEmpChips');
+  if (!container) return;
+  container.innerHTML = '';
+  const chips = [{ id: 'all', name: 'Alle', color: 'var(--primary)' }];
+  teamMembers.forEach((emp, idx) => {
+    chips.push({
+      id: emp.id,
+      name: emp.business_name || emp.email?.split('@')[0] || '—',
+      color: EMP_COLORS[idx % EMP_COLORS.length]
+    });
+  });
+  chips.forEach(c => {
+    const btn = document.createElement('button');
+    const isActive = ovEmpFilter === c.id;
+    btn.className = `cal-emp-chip ${isActive ? 'active' : ''}`;
+    if (isActive && c.id !== 'all') {
+      btn.style.borderColor = c.color;
+      btn.style.backgroundColor = c.color + '20';
+    }
+    const dot = document.createElement('span');
+    dot.className = 'cal-emp-chip-dot';
+    dot.style.backgroundColor = c.color;
+    btn.appendChild(dot);
+    btn.appendChild(document.createTextNode(c.name));
+    btn.addEventListener('click', () => {
+      ovEmpFilter = c.id;
+      ovEmpPage = 0;
+      renderOvEmpChips();
+      refreshActiveScheduleView();
+    });
+    container.appendChild(btn);
+  });
+}
+
 async function bootScheduleViewToggle() {
   const toggle = document.getElementById('scheduleViewToggle');
   if (!toggle) return;
 
-  // Gate: yalnız Enterprise + multi-business gözüksün (1 biz'lik kullanıcıya gerek yok)
-  const showToggle = isEnterprise();
-  toggle.hidden = !showToggle;
-  if (!showToggle) { scheduleView = 'daily'; return; }
+  toggle.hidden = false;
 
   // Kayıtlı tercih
   try {
