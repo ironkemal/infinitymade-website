@@ -11032,7 +11032,7 @@ document.getElementById('docSearchBtn').addEventListener('click', async () => {
   }
 });
 
-function loadBeispielmodus() {
+function loadBeispielmodus_SVG() {
   const wrap = document.getElementById('zygoteWrap');
   if (!wrap) return;
   wrap.innerHTML = '';
@@ -11213,6 +11213,58 @@ function loadBeispielmodus() {
   wrap.appendChild(toolbar);
   wrap.appendChild(svgWrap);
   render();
+}
+
+function loadBeispielmodus() {
+  const wrap = document.getElementById('zygoteWrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  function showFallback() {
+    wrap.innerHTML = `
+      <div class="zygote-fallback">
+        <div class="zygote-fallback-icon">🫁</div>
+        <div class="zygote-fallback-title">3D-Anatomie — Zygote Body</div>
+        <div class="zygote-fallback-text">Der externe Inhalt kann nicht direkt eingebettet werden. Öffnen Sie die Anwendung im neuen Tab:</div>
+        <a class="btn btn-primary zygote-fallback-btn" href="https://www.zygotebody.com/" target="_blank" rel="noopener">↗ Zygote Body öffnen</a>
+      </div>`;
+  }
+
+  const frame = document.createElement('iframe');
+  frame.id = 'zygoteFrame';
+  frame.src = 'https://www.zygotebody.com/';
+  frame.allow = 'fullscreen';
+  frame.setAttribute('allowfullscreen', '');
+  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+
+  let loaded = false;
+  const timer = setTimeout(() => { if (!loaded) showFallback(); }, 6000);
+
+  frame.addEventListener('load', () => {
+    loaded = true;
+    clearTimeout(timer);
+    try {
+      const doc = frame.contentDocument || frame.contentWindow?.document;
+      if (!doc || doc.URL === 'about:blank' || doc.body?.innerHTML === '') showFallback();
+    } catch (e) {
+      // cross-origin — frame loaded OK
+    }
+  });
+
+  frame.addEventListener('error', () => { clearTimeout(timer); showFallback(); });
+
+  wrap.appendChild(frame);
+
+  const fsBtn = document.createElement('button');
+  fsBtn.className = 'zygote-fs-btn';
+  fsBtn.type = 'button';
+  fsBtn.title = 'Vollbild';
+  fsBtn.textContent = '⛶ Vollbild';
+  fsBtn.addEventListener('click', () => {
+    if (frame.requestFullscreen) frame.requestFullscreen();
+    else if (frame.webkitRequestFullscreen) frame.webkitRequestFullscreen();
+  });
+  wrap.appendChild(fsBtn);
 }
 
 async function loadNotizen() {
