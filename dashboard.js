@@ -5862,6 +5862,37 @@ function showWaitlistMatchModal(candidates) {
 document.getElementById('bkActionStartBtn').addEventListener('click', handleTerminStarten);
 document.getElementById('bkActionNoShowBtn').addEventListener('click', handlePatientNichtErschienen);
 
+document.getElementById('bkActionEditBtn').addEventListener('click', () => {
+  if (!bkActionBookingCache) return;
+  openBookingModal(bkActionBookingCache);
+});
+
+document.getElementById('bkActionDeleteBtn').addEventListener('click', async () => {
+  const b = bkActionBookingCache;
+  if (!b) return;
+  const reason = await showInputModal({
+    title: 'Termin absagen',
+    message: 'Bitte Absagegrund angeben (optional)',
+    inputLabel: 'Absagegrund',
+    inputPlaceholder: 'z.B. Patient hat abgesagt, Therapeut krank…',
+    confirmText: 'Termin löschen',
+    cancelText: 'Abbrechen',
+    variant: 'danger'
+  });
+  if (reason === null) return;
+  if (reason && reason.trim()) {
+    await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', b.id);
+  }
+  const { error } = await supabase.from('bookings').delete().eq('id', b.id);
+  if (error) { showToast('Fehler beim Löschen: ' + error.message, 'error'); return; }
+  const modal = document.getElementById('bkActionModal');
+  if (modal) { modal.style.display = 'none'; }
+  document.getElementById('mainArea')?.style.removeProperty('padding-right');
+  showToast('Termin gelöscht.', 'success');
+  if (typeof renderDayView === 'function') renderDayView();
+  else if (typeof refreshBookingViews === 'function') refreshBookingViews();
+});
+
 document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const empId = document.getElementById('leaveEmployee').value;
   const start = document.getElementById('leaveStart').value;
