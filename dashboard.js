@@ -14246,7 +14246,6 @@ async function init() {
         adminLink.href = 'https://admin.praxura.de/';
       }
     }
-    initRezeptScanner();
     initBeleglisteUI();
   } catch (e) {
     console.error('[dashboard init]', e);
@@ -14254,6 +14253,7 @@ async function init() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = '';
     startClock();
+    initRezeptScanner();
   }
 }
 
