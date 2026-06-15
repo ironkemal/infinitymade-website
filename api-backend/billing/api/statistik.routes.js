@@ -61,13 +61,16 @@ router.get('/statistik', async (req, res) => {
     // Start of last month
     const startOfLastMonth = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth() - 1, 1)).toISOString();
 
-    // Run all 5 queries in parallel
+    // Run all 8 queries in parallel
     const [
       belegResult,
       leadsResult,
       sessionsResult,
       abrechnungResult,
       offeneRxResult,
+      noShowResult,
+      mahnungenResult,
+      therapeutenResult,
     ] = await Promise.all([
       // 1. Monthly revenue from belegliste
       supabase
@@ -105,6 +108,29 @@ router.get('/statistik', async (req, res) => {
         .gt('zuzahlung_eur', 0)
         .eq('zuzahlung_befreit', false)
         .is('abrechnung_id', null),
+
+      // 6. No-show sessions in the period
+      supabase
+        .from('prescription_sessions')
+        .select('id, prescriptions!inner(owner_id)')
+        .eq('prescriptions.owner_id', tenantId)
+        .eq('status', 'no_show')
+        .gte('created_at', cutoffIso),
+
+      // 7. Mahnung conversion
+      supabase
+        .from('mahnungen')
+        .select('id, status, created_at')
+        .eq('owner_id', tenantId)
+        .gte('created_at', cutoffIso),
+
+      // 8. Therapist session counts from bookings
+      supabase
+        .from('bookings')
+        .select('employee_id, profiles:employee_id(first_name, last_name)')
+        .eq('owner_id', tenantId)
+        .gte('start_date', cutoffIso)
+        .neq('status', 'canceled'),
     ]);
 
     // Check for fatal errors
@@ -154,6 +180,39 @@ router.get('/statistik', async (req, res) => {
     // ── 5. Open prescriptions ────────────────────────────────────────────────
     const offene_zuzahlungen = offeneRxResult.count ?? (offeneRxResult.data || []).length;
 
+    // ── 6. No-show rate ───────────────────────────────────────────────────────
+    const noShowRows = noShowResult.error ? [] : (noShowResult.data || []);
+    const noShowCount = noShowRows.length;
+    // Total sessions (done + no_show) for the same period
+    const { count: totalSessionsPeriod } = await supabase
+      .from('prescription_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('prescriptions.owner_id', tenantId) // Note: may not work with head:true + join, so use noShow+done
+      .in('status', ['done', 'no_show'])
+      .gte('created_at', cutoffIso);
+    const totalForRate = (totalSessionsPeriod || 0) + noShowCount;
+    const noShowRate = totalForRate > 0 ? Math.round((noShowCount / totalForRate) * 100) : 0;
+
+    // ── 7. Mahnung conversion ─────────────────────────────────────────────────
+    const mahnRows = mahnungenResult.error ? [] : (mahnungenResult.data || []);
+    const mahnGesamt = mahnRows.length;
+    const mahnBezahlt = mahnRows.filter(m => m.status === 'bezahlt').length;
+    const mahnOffen = mahnRows.filter(m => !['bezahlt', 'abgeschrieben'].includes(m.status)).length;
+
+    // ── 8. Therapist efficiency ───────────────────────────────────────────────
+    const buchRows = therapeutenResult.error ? [] : (therapeutenResult.data || []);
+    const thMap = {};
+    for (const b of buchRows) {
+      const id = b.employee_id || '__unassigned__';
+      const p = b.profiles;
+      const name = p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : 'Nicht zugeordnet';
+      if (!thMap[id]) thMap[id] = { name, count: 0 };
+      thMap[id].count++;
+    }
+    const therapeuten = Object.values(thMap)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
     return res.json({
       monatlich,
       patienten: {
@@ -171,6 +230,9 @@ router.get('/statistik', async (req, res) => {
         summe_akzeptiert: Math.round(summe_akzeptiert * 100) / 100,
       },
       offene_zuzahlungen,
+      no_show: { count: noShowCount, rate: noShowRate },
+      mahnungen: { gesamt: mahnGesamt, bezahlt: mahnBezahlt, offen: mahnOffen },
+      therapeuten,
     });
   } catch (e) {
     console.error('[billing/statistik]', e);

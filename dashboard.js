@@ -17189,6 +17189,39 @@ async function loadStatistik() {
     setEl('statAbrSumme', fmtEur(d.abrechnung?.summe_akzeptiert));
     setEl('statOffeneZuz', d.offene_zuzahlungen ?? '—');
 
+    // No-show
+    if (d.no_show) {
+      setEl('statNoShowCount', d.no_show.count ?? '—');
+      const rateEl = document.getElementById('statNoShowRate');
+      if (rateEl) rateEl.textContent = `${d.no_show.rate ?? 0} % Ausfallquote`;
+    }
+
+    // Mahnungen
+    if (d.mahnungen) {
+      setEl('statMahnBezahlt', d.mahnungen.bezahlt ?? '—');
+      const offEl = document.getElementById('statMahnOffen');
+      if (offEl) offEl.textContent = `${d.mahnungen.offen ?? 0} offen`;
+    }
+
+    // Therapeuten
+    const thEl = document.getElementById('statTherapeutenList');
+    if (thEl && d.therapeuten?.length) {
+      const maxCount = d.therapeuten[0]?.count || 1;
+      thEl.innerHTML = d.therapeuten.map((t, i) => {
+        const pct = Math.round((t.count / maxCount) * 100);
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+        return `<div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:120px;font-size:13px;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${medal} ${escapeHtml(t.name)}</div>
+          <div style="flex:1;background:var(--border);border-radius:4px;height:10px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:var(--accent,#b1891b);border-radius:4px;"></div>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);width:50px;text-align:right;">${t.count} Termine</div>
+        </div>`;
+      }).join('');
+    } else if (thEl) {
+      thEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine Daten</div>';
+    }
+
     // Bar chart
     const chartEl = document.getElementById('statBarChart');
     const legendEl = document.getElementById('statBarLegend');
