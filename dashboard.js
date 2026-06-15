@@ -3008,16 +3008,20 @@ async function openBookingActionModal(booking) {
       const openBtn = document.getElementById('bkOpenPatientBtn');
       if (openBtn) { openBtn.style.display = ''; openBtn.onclick = () => openPatientDetailModal(lead); }
 
-      // Zuzahlungsbefreiung badge
+      // Zuzahlungsbefreiung badge + management
       const zbBadge = document.getElementById('bkZuzahlungBadge');
       if (zbBadge) {
         if (zuzahlBefreiung) {
           const bis = zuzahlBefreiung.befreit_bis ? new Date(zuzahlBefreiung.befreit_bis).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) : '';
-          zbBadge.textContent = bis ? `Zuzahlungsbefreit bis ${bis}` : 'Zuzahlungsbefreit';
+          zbBadge.innerHTML = `${bis ? `Zuzahlungsbefreit bis ${bis}` : 'Zuzahlungsbefreit'} <span style="cursor:pointer;color:var(--accent,#b1891b);font-size:11px;margin-left:6px;text-decoration:underline;" data-zb-edit="1">ändern</span>`;
           zbBadge.hidden = false;
         } else {
-          zbBadge.hidden = true;
+          zbBadge.innerHTML = `<span style="cursor:pointer;color:var(--text-muted);font-size:12px;text-decoration:underline;" data-zb-edit="1">+ Befreiungsnachweis eintragen</span>`;
+          zbBadge.hidden = false;
         }
+        zbBadge.querySelector('[data-zb-edit]')?.addEventListener('click', () => {
+          openZuzahlBefreiungModal(leadId, lead, zuzahlBefreiung);
+        });
       }
 
       // Insurance type badge
@@ -3826,6 +3830,105 @@ async function handleTerminStarten() {
 async function triggerNoShowBot(booking) {
   // TODO: WhatsApp no-show bot entegrasyonu
   console.log('[NoShowBot] Triggered for booking:', booking.id, booking.customer_name);
+}
+
+async function openZuzahlBefreiungModal(patientId, lead, existing) {
+  const year = new Date().getFullYear();
+  const patName = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : '';
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+  const befreitAb = existing?.befreit_ab || `${year}-01-01`;
+  const befreitBis = existing?.befreit_bis || `${year}-12-31`;
+  const nachweisArt = existing?.nachweis_art || 'bescheinigung';
+  const notiz = existing?.notiz || '';
+
+  overlay.innerHTML = `
+    <div style="background:var(--bg-card-solid,#1e2129);border:1px solid var(--border,#2d3348);border-radius:12px;padding:24px;max-width:400px;width:100%;color:var(--text-main,#e2e8f0);font-family:inherit;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Zuzahlungsbefreiung</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHtml(patName)} · ${year}</div>
+      <div style="display:grid;gap:12px;">
+        <label style="font-size:13px;">
+          <div style="margin-bottom:4px;color:var(--text-muted);">Befreit ab</div>
+          <input id="_zbAb" type="date" value="${escapeHtml(befreitAb)}" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
+        </label>
+        <label style="font-size:13px;">
+          <div style="margin-bottom:4px;color:var(--text-muted);">Befreit bis</div>
+          <input id="_zbBis" type="date" value="${escapeHtml(befreitBis)}" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
+        </label>
+        <label style="font-size:13px;">
+          <div style="margin-bottom:4px;color:var(--text-muted);">Nachweis-Art</div>
+          <select id="_zbNachweisArt" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
+            <option value="bescheinigung" ${nachweisArt==='bescheinigung'?'selected':''}>KK-Bescheinigung</option>
+            <option value="automatisch" ${nachweisArt==='automatisch'?'selected':''}>Automatisch (KK-Daten)</option>
+            <option value="manuell" ${nachweisArt==='manuell'?'selected':''}>Manuelle Eingabe</option>
+          </select>
+        </label>
+        <label style="font-size:13px;">
+          <div style="margin-bottom:4px;color:var(--text-muted);">Notiz (optional)</div>
+          <input id="_zbNotiz" type="text" value="${escapeHtml(notiz)}" placeholder="z. B. Antrag eingereicht am…" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
+        </label>
+      </div>
+      <div id="_zbErr" style="color:#f87171;font-size:12px;margin-top:8px;display:none;"></div>
+      <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+        ${existing ? `<button id="_zbDel" style="padding:8px 14px;border:1px solid #dc2626;border-radius:7px;background:transparent;color:#f87171;cursor:pointer;font-size:13px;margin-right:auto;">Löschen</button>` : ''}
+        <button id="_zbCancel" style="padding:8px 16px;border:1px solid var(--border,#2d3348);border-radius:7px;background:transparent;color:var(--text-main);cursor:pointer;font-size:13px;">Abbrechen</button>
+        <button id="_zbSave" style="padding:8px 16px;border:none;border-radius:7px;background:var(--accent,#b1891b);color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Speichern</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  const remove = () => overlay.remove();
+  overlay.querySelector('#_zbCancel').onclick = remove;
+  overlay.onclick = e => { if (e.target === overlay) remove(); };
+
+  const delBtn = overlay.querySelector('#_zbDel');
+  if (delBtn) {
+    delBtn.onclick = async () => {
+      delBtn.disabled = true;
+      const ownerId = getOwnerId();
+      await supabase.from('zuzahlung_befreiung')
+        .delete().eq('patient_id', patientId).eq('owner_id', ownerId).eq('jahr', year);
+      showToast('Befreiung gelöscht');
+      remove();
+    };
+  }
+
+  overlay.querySelector('#_zbSave').onclick = async () => {
+    const saveBtn = overlay.querySelector('#_zbSave');
+    const errEl = overlay.querySelector('#_zbErr');
+    const ab = overlay.querySelector('#_zbAb').value;
+    const bis = overlay.querySelector('#_zbBis').value;
+    if (!ab || !bis) { errEl.textContent = 'Bitte Datum ausfüllen.'; errEl.style.display = ''; return; }
+    if (bis < ab) { errEl.textContent = '"Befreit bis" muss nach "Befreit ab" liegen.'; errEl.style.display = ''; return; }
+    saveBtn.disabled = true;
+    saveBtn.textContent = '…';
+    const ownerId = getOwnerId();
+    const payload = {
+      owner_id: ownerId,
+      patient_id: patientId,
+      jahr: year,
+      befreit_ab: ab,
+      befreit_bis: bis,
+      nachweis_art: overlay.querySelector('#_zbNachweisArt').value,
+      notiz: overlay.querySelector('#_zbNotiz').value.trim() || null,
+    };
+    const { error } = await supabase.from('zuzahlung_befreiung').upsert(payload, {
+      onConflict: 'owner_id,patient_id,jahr',
+      ignoreDuplicates: false,
+    });
+    if (error) {
+      errEl.textContent = 'Fehler: ' + error.message;
+      errEl.style.display = '';
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Speichern';
+      return;
+    }
+    showToast('Zuzahlungsbefreiung gespeichert ✓');
+    remove();
+  };
 }
 
 async function handlePatientNichtErschienen() {
