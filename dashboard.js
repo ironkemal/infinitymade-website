@@ -17504,8 +17504,45 @@ function initSchnellerfassung() {
 
     saveBtn.disabled = true;
     saveBtn.textContent = 'Speichere…';
+
+    // Duplicate check: same name (case-insensitive) among existing patients
+    const ownerId = getOwnerId();
+    const nameLower = `${vorname} ${nachname}`.trim().toLowerCase();
+    const { data: existingLeads } = await supabase
+      .from('leads')
+      .select('id, first_name, last_name, metadata, geburtsdatum')
+      .eq('owner_id', ownerId)
+      .ilike('title', `${vorname} ${nachname}`.trim());
+
+    if (existingLeads?.length) {
+      // Check for exact name match (with optional birthdate match)
+      const exactMatch = existingLeads.find(l => {
+        const lName = `${l.first_name || ''} ${l.last_name || ''}`.trim().toLowerCase();
+        if (lName !== nameLower) return false;
+        if (geburt && (l.geburtsdatum || l.metadata?.geburtsdatum)) {
+          return (l.geburtsdatum || l.metadata?.geburtsdatum) === geburt;
+        }
+        return true; // name matches, no birthdate to compare
+      });
+
+      if (exactMatch) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '⚡ Speichern & in Termin eintragen';
+        const dobStr = geburt ? ` (geb. ${new Date(geburt).toLocaleDateString('de-DE')})` : '';
+        const proceed = await showConfirmModal({
+          title: 'Mögliches Duplikat gefunden',
+          message: `Ein Patient mit dem Namen "${vorname} ${nachname}"${dobStr} existiert bereits.\n\nTrotzdem einen neuen Datensatz anlegen?`,
+          confirmText: 'Neuen Patient anlegen',
+          cancelText: 'Abbrechen',
+          variant: 'warning',
+        });
+        if (!proceed) return;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Speichere…';
+      }
+    }
+
     try {
-      const ownerId = getOwnerId();
       const title = `${vorname} ${nachname}`.trim();
       const payload = {
         owner_id: ownerId,
