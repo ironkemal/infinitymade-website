@@ -596,6 +596,15 @@ router.post('/abrechnung/:id/upload-signed', async (req, res) => {
     if (signedBytes.length > 20 * 1024 * 1024) {
       return res.status(413).json({ error: 'Signiertes Payload zu groß (>20 MB)' });
     }
+    // PKCS#7 DER structure check:
+    // ContentInfo ::= SEQUENCE { contentType OID 1.2.840.113549.1.7.2, ... }
+    // DER: 30 xx ... 06 09 2a 86 48 86 f7 0d 01 07 02
+    const PKCS7_SIGNED_DATA_OID = Buffer.from([0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02]);
+    const searchWindow = signedBytes.slice(0, Math.min(signedBytes.length, 64));
+    const oidIndex = searchWindow.indexOf(PKCS7_SIGNED_DATA_OID);
+    if (signedBytes[0] !== 0x30 || oidIndex === -1) {
+      return res.status(400).json({ error: 'Ungültige PKCS#7-Struktur — Datei ist kein gültiges CMS SignedData. Bitte .p12-Zertifikat und PIN prüfen.' });
+    }
 
     const { data: ab, error } = await supabase
       .from('abrechnung')
