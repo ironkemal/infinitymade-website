@@ -2815,7 +2815,7 @@ async function openBookingActionModal(booking) {
       const sitzungCount = document.getElementById('bkSitzungCount');
       if (sitzungBody) sitzungBody.innerHTML = '<tr><td colspan="5" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Lade…</td></tr>';
       supabase.from('prescription_sessions')
-        .select('id,session_number,status,done_at,booking_id,bookings(id,start_time,end_time,employee_name,status)')
+        .select('id,session_number,status,done_at,notes,booking_id,bookings(id,start_time,end_time,employee_name,status)')
         .eq('prescription_id', rxId)
         .order('session_number', { ascending: true })
         .then(({ data: sessions }) => {
@@ -2834,12 +2834,14 @@ async function openBookingActionModal(booking) {
               : '—';
             const empI = (bk?.employee_name || '').split(/\s+/).map(w => w[0]||'').join('').toUpperCase().slice(0,3) || '—';
             const rowBg = isCurrent ? 'background:rgba(177,137,27,0.12);' : '';
+            const noteTip = s.notes ? ` title="${escapeHtml(s.notes)}"` : '';
             return `<tr style="border-bottom:1px solid var(--border,#374151);${rowBg}">
               <td style="padding:5px 8px;text-align:center;color:var(--text-muted);">${s.session_number}</td>
               <td style="padding:5px 6px;text-align:center;font-weight:700;color:${statusColor};">${statusIcon}</td>
               <td style="padding:5px 6px;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;max-width:90px;white-space:nowrap;">${escapeHtml(hmKurz)}</td>
               <td style="padding:5px 6px;text-align:center;color:var(--text-muted);font-size:11px;">${escapeHtml(empI)}</td>
               <td style="padding:5px 8px;text-align:right;color:var(--text-muted);white-space:nowrap;font-size:11px;">${escapeHtml(dateStr)}</td>
+              <td style="padding:5px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--text-muted);"${noteTip}>${s.notes ? escapeHtml(s.notes.slice(0,40)) + (s.notes.length > 40 ? '…' : '') : ''}</td>
             </tr>`;
           }).join('') || '<tr><td colspan="5" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Keine Sitzungsdaten.</td></tr>';
         });
@@ -3778,7 +3780,19 @@ async function handleTerminStarten() {
   const _bkm2 = document.getElementById('bkActionModal'); if (_bkm2) { _bkm2.hidden = true; _bkm2.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
-  markPrescriptionSession(b.id, 'done');
+  const sessionNote = await showInputModal({
+    title: 'Sitzungsnotiz (optional)',
+    message: 'Kurze Notiz zur heutigen Sitzung:',
+    inputLabel: 'Notiz',
+    inputPlaceholder: 'z. B. Fortschritt, Beobachtungen, nächste Schritte…',
+    confirmText: 'Sitzung abschließen',
+    cancelText: 'Ohne Notiz',
+  });
+  if (sessionNote === null) {
+    markPrescriptionSession(b.id, 'done', undefined);
+  } else {
+    markPrescriptionSession(b.id, 'done', sessionNote || undefined);
+  }
 
   const sessionText = document.getElementById('bkActionSession').textContent;
   const match = sessionText.match(/Seans\s+(\d+)\s*\/\s*(\d+)/);
@@ -5661,11 +5675,12 @@ function openMailOfferModal({ hasEmail, patientName }) {
   });
 }
 
-async function markPrescriptionSession(bookingId, status) {
+async function markPrescriptionSession(bookingId, status, notes) {
   if (!bookingId) return;
   try {
     const patch = { status };
     if (status === 'done') patch.done_at = new Date().toISOString();
+    if (notes !== undefined && notes !== null) patch.notes = notes;
     const { data: sess, error } = await supabase
       .from('prescription_sessions')
       .update(patch).eq('booking_id', bookingId)
