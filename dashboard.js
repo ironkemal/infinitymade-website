@@ -3832,6 +3832,21 @@ async function triggerNoShowBot(booking) {
   console.log('[NoShowBot] Triggered for booking:', booking.id, booking.customer_name);
 }
 
+function checkPlanActive() {
+  const ps = currentProfile?.plan_status;
+  if (ps === 'canceled' || ps === 'expired') {
+    showConfirmModal({
+      title: 'Konto nicht aktiv',
+      message: `Ihr Plan ist ${ps === 'canceled' ? 'gekündigt' : 'abgelaufen'}. Neue Buchungen, Patienten und Abrechnungen sind gesperrt.\n\nBitte erneuern Sie Ihr Abonnement unter Einstellungen › Abonnement.`,
+      confirmText: 'Zu den Einstellungen',
+      cancelText: 'Schließen',
+      variant: 'danger',
+    }).then(ok => { if (ok) switchPanel('panel-settings'); });
+    return false;
+  }
+  return true;
+}
+
 async function openZuzahlBefreiungModal(patientId, lead, existing) {
   const year = new Date().getFullYear();
   const patName = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : '';
@@ -4961,6 +4976,7 @@ document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () 
 });
 
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
+  if (!checkPlanActive()) return;
   const id = document.getElementById('bk-id').value;
   const empId = document.getElementById('bkEmployee').value;
   const srvId = document.getElementById('bkService').value;
@@ -16431,6 +16447,7 @@ async function runSignAbrechnung() {
 async function createAbrechnung(kostentraegerIk) {
   if (_abState.busy) return;
   if (kostentraegerIk === '__unknown__') return;
+  if (!checkPlanActive()) return;
 
   const checks = document.querySelectorAll(`.ab-rx-check[data-ik="${kostentraegerIk}"]:checked`);
   const prescriptionIds = [...checks].map(c => c.dataset.id);
@@ -17502,6 +17519,7 @@ function initSchnellerfassung() {
     const telefon = (document.getElementById('sfTelefon')?.value || '').trim() || null;
     const geschlecht = document.getElementById('sfGeschlecht')?.value || null;
 
+    if (!checkPlanActive()) return;
     saveBtn.disabled = true;
     saveBtn.textContent = 'Speichere…';
 

@@ -21,6 +21,7 @@ import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
 import crypto from 'crypto';
+import { encryptPHI, encryptionAvailable } from './lib/phi-encrypt.js';
 
 dotenv.config();
 
@@ -1001,12 +1002,10 @@ app.post('/api/booking/create', requireAuthAI, async (req, res) => {
         body: JSON.stringify({
           bookingId: booking.id,
           providerId: userId,
-          customerName,
-          customerEmail,
-          customerPhone,
           serviceTitle: service.title,
           time: start_time.toISOString(),
           meetingLink
+          // customerName/Email/Phone omitted — DSGVO: PII not sent to external webhook
         })
       }, 10000).catch(e => console.error('n8n webhook failed', e.message));
     }
@@ -1808,7 +1807,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
     const {
       storage_path,
       parsed,                  // possibly user-edited
-      proceed_anyway = false   // user clicked "Proceed despite warnings"
+      proceed_anyway = false,  // user clicked "Proceed despite warnings"
+      proceed_reason = null    // required explanation when proceed_anyway is true
     } = req.body || {};
 
     if (!parsed) return res.status(400).json({ error: 'parsed required' });
@@ -1998,13 +1998,22 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         confirmed_by: userId,
         confirmed_at: new Date().toISOString(),
         proceed_anyway: !!proceed_anyway,
-        total_bonuses_eur: validation.computed?.bonus_eur ?? null
+        total_bonuses_eur: validation.computed?.bonus_eur ?? null,
+        // DSGVO Art. 32 — encrypted PHI shadow columns (written when key is configured)
+        ...(encryptionAvailable() ? {
+          icd10_enc: encryptPHI(rezept.icd10 || null),
+          ocr_raw_enc: encryptPHI(parsed ? JSON.stringify(parsed) : null),
+          phi_encrypted: true
+        } : {})
       })
       .select('id')
       .single();
     if (rxErr) throw rxErr;
 
-    // --- Validation snapshot ---
+    // --- Validation snapshot (audit trail) ---
+    const overriddenRules = proceed_anyway
+      ? (validation.blockers || []).map(b => b.code)
+      : [];
     await supabase.from('prescription_validations').insert({
       prescription_id: rx.id,
       engine: validation.engine || 'standard',
@@ -2014,6 +2023,8 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       warnings_count: (validation.warnings || []).length,
       blockers_count: (validation.blockers || []).length,
       proceeded_anyway: !!proceed_anyway,
+      overridden_rules: overriddenRules.length ? overriddenRules : null,
+      proceed_reason: proceed_anyway ? (proceed_reason || 'Kein Grund angegeben') : null,
       validated_by: userId
     });
 

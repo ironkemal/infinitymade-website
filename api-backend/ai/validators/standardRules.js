@@ -77,13 +77,16 @@ export function validateStandard(rezept) {
       field: 'anzahl_einheiten'
     });
   } else if (anzahl > maxSessions) {
-    blockers.push({
+    // EU-MDR compliance: this is an informational billing-preparation hint, not a clinical block.
+    // The licensed therapist must confirm whether a doctor-authorised exception (BVB/LHB) applies.
+    warnings.push({
       code: 'OVER_HOECHSTMENGE',
-      msg: `Für Diagnosegruppe ${dg} ist die Höchstmenge ${maxSessions} Behandlungseinheiten je Verordnung. Angegeben: ${anzahl}.`,
+      msg: `Für Diagnosegruppe ${dg} liegt die Regelhöchstmenge bei ${maxSessions} Behandlungseinheiten je Verordnung (angegeben: ${anzahl}). Bitte prüfen Sie, ob ein ärztlich genehmigter Ausnahmefall (BVB/LHB) vorliegt. Die therapeutische Entscheidung obliegt dem behandelnden Therapeuten.`,
       field: 'anzahl_einheiten',
       max_allowed: maxSessions,
       requested: anzahl,
-      regulation: 'G-BA Heilmittel-Richtlinie § 7 / Heilmittelkatalog'
+      regulation: 'G-BA Heilmittel-Richtlinie § 7 / Heilmittelkatalog',
+      requires_confirmation: true
     });
   }
 
@@ -102,11 +105,14 @@ export function validateStandard(rezept) {
   if (ausstellung && rezept.behandlungsbeginn) {
     const begin = parseDate(rezept.behandlungsbeginn);
     if (begin && latestStart && begin > latestStart) {
-      blockers.push({
+      // EU-MDR compliance: validity-window enforcement is an administrative billing hint.
+      // The therapist (not the software) decides whether to accept a late-start prescription.
+      warnings.push({
         code: 'START_AFTER_DEADLINE',
-        msg: `Behandlungsbeginn (${rezept.behandlungsbeginn}) liegt nach der Verordnungsgültigkeit (${latestStart.toISOString().slice(0,10)}). ${rezept.is_dringend ? 'Bei "dringender Behandlungsbedarf" muss die Behandlung innerhalb von 14 Tagen beginnen.' : 'Verordnungen sind 28 Tage nach Ausstellung gültig.'}`,
+        msg: `Behandlungsbeginn (${rezept.behandlungsbeginn}) liegt nach der regulären Verordnungsgültigkeit (${latestStart.toISOString().slice(0,10)}). ${rezept.is_dringend ? 'Bei "dringender Behandlungsbedarf" soll die Behandlung innerhalb von 14 Tagen beginnen.' : 'Verordnungen sind 28 Tage nach Ausstellung gültig.'} Bitte prüfen Sie mit dem verordnenden Arzt, ob eine erneute Ausstellung erforderlich ist.`,
         field: 'behandlungsbeginn',
-        latest_allowed: latestStart.toISOString().slice(0,10)
+        latest_allowed: latestStart.toISOString().slice(0,10),
+        requires_confirmation: true
       });
     } else if (begin && ausstellung && daysBetween(ausstellung, begin) < 0) {
       blockers.push({

@@ -170,6 +170,7 @@ export async function run(payload) {
   return {
     parsed,
     ocr_confidence,
+    requires_manual_review: typeof ocr_confidence === 'number' && ocr_confidence < 0.7,
     insurance_type_hint,
     _meta: {
       model: result.model,
