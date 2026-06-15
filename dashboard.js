@@ -952,6 +952,51 @@ async function renderOverview() {
 
   document.getElementById('pastdue-fix-btn')?.addEventListener('click', openStripePortal);
 
+  // B: Certificate expiry warning
+  (async function renderCertExpiryBanner() {
+    if (currentProfile.role !== 'owner') return;
+    const ownerId = currentProfile.id;
+    const { data: cert } = await supabase
+      .from('terapeut_zertifikat')
+      .select('cert_valid_to')
+      .eq('owner_id', ownerId)
+      .maybeSingle();
+    if (!cert?.cert_valid_to) return;
+    const validTo = new Date(cert.cert_valid_to);
+    const daysLeft = Math.ceil((validTo - Date.now()) / 86400000);
+    if (daysLeft > 30) return;
+    const el = document.getElementById('cert-expiry-banner');
+    if (!el) return;
+    const formatted = validTo.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+    const color = daysLeft <= 0 ? '#dc2626' : '#b1891b';
+    el.innerHTML = `
+      <div style="margin:8px 0;padding:12px 14px;border-radius:8px;background:rgba(177,137,27,0.10);border:1px solid rgba(177,137,27,0.35);font-size:13px;line-height:1.5;color:var(--text-main);">
+        <strong style="color:${color};">⚠ ITSG-Zertifikat</strong> — läuft ${daysLeft <= 0 ? `<strong>abgelaufen (${formatted})</strong>` : `am <strong>${formatted}</strong> ab (${daysLeft} Tag${daysLeft === 1 ? '' : 'e'})`}.
+        Bitte frühzeitig über Ihre KV/ITSG erneuern.
+      </div>`;
+    el.hidden = false;
+  })();
+
+  // C: §302 profile completeness warning
+  (async function renderIkMissingBanner() {
+    if (currentProfile.role !== 'owner') return;
+    const ownerId = currentProfile.id;
+    const { data: cert } = await supabase
+      .from('terapeut_zertifikat')
+      .select('ik_nummer')
+      .eq('owner_id', ownerId)
+      .maybeSingle();
+    if (cert?.ik_nummer) return; // IK is set, no warning needed
+    const el = document.getElementById('ik-missing-banner');
+    if (!el) return;
+    el.innerHTML = `
+      <div style="margin:8px 0;padding:12px 14px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.28);font-size:13px;line-height:1.5;color:var(--text-main);">
+        <strong>IK-Nummer fehlt</strong> — §302 GKV-Abrechnung ist nicht möglich.
+        <a href="#" onclick="switchPanel('panel-settings');return false;" style="color:var(--accent,#b1891b);margin-left:6px;">Jetzt eintragen →</a>
+      </div>`;
+    el.hidden = false;
+  })();
+
   renderOvEmpChips();
   await loadTodayBookings();
   loadActivityFeed().catch(() => {});
@@ -2942,12 +2987,15 @@ async function openBookingActionModal(booking) {
       const telRow = (label, phone) => `
         <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
         <div style="color:var(--text-main);font-weight:500;">${phone ? `<a href="tel:${escapeHtml(phone)}" style="color:var(--accent,#b1891b);text-decoration:none;">${escapeHtml(phone)}</a>` : '—'}</div></div>`;
+      const mailRow = (label, email) => `
+        <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
+        <div style="color:var(--text-main);font-weight:500;">${email ? `<a href="mailto:${escapeHtml(email)}" style="color:var(--accent,#b1891b);text-decoration:none;">${escapeHtml(email)}</a>` : '—'}</div></div>`;
 
       patientInfo.innerHTML = [
         row('Geburtsdatum', dobStr),
         row('Geschlecht', sex),
         telRow('Telefon', lead.phone),
-        row('E-Mail', lead.email || '—'),
+        mailRow('E-Mail', lead.email || ''),
         row('Krankenkasse', krankenkasse),
         row('Versicherten-Nr.', vNr),
         row('Adresse', addr),
