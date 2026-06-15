@@ -2813,9 +2813,9 @@ async function openBookingActionModal(booking) {
       sitzungCard.hidden = false;
       const sitzungBody = document.getElementById('bkSitzungBody');
       const sitzungCount = document.getElementById('bkSitzungCount');
-      if (sitzungBody) sitzungBody.innerHTML = '<tr><td colspan="5" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Lade…</td></tr>';
+      if (sitzungBody) sitzungBody.innerHTML = '<tr><td colspan="7" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Lade…</td></tr>';
       supabase.from('prescription_sessions')
-        .select('id,session_number,status,done_at,notes,booking_id,bookings(id,start_time,end_time,employee_name,status)')
+        .select('id,prescription_id,session_number,status,done_at,notes,booking_id,bookings(id,start_time,end_time,employee_name,status)')
         .eq('prescription_id', rxId)
         .order('session_number', { ascending: true })
         .then(({ data: sessions }) => {
@@ -2835,6 +2835,9 @@ async function openBookingActionModal(booking) {
             const empI = (bk?.employee_name || '').split(/\s+/).map(w => w[0]||'').join('').toUpperCase().slice(0,3) || '—';
             const rowBg = isCurrent ? 'background:rgba(177,137,27,0.12);' : '';
             const noteTip = s.notes ? ` title="${escapeHtml(s.notes)}"` : '';
+            const undoBtn = s.status === 'done'
+              ? `<button class="sess-undo-btn" data-sid="${escapeHtml(s.id)}" data-prescription="${escapeHtml(s.prescription_id)}" style="font-size:10px;padding:2px 7px;border:1px solid var(--border,#2d3348);border-radius:5px;background:transparent;color:var(--text-muted);cursor:pointer;" title="Sitzung als 'nicht erledigt' markieren">↩</button>`
+              : '';
             return `<tr style="border-bottom:1px solid var(--border,#374151);${rowBg}">
               <td style="padding:5px 8px;text-align:center;color:var(--text-muted);">${s.session_number}</td>
               <td style="padding:5px 6px;text-align:center;font-weight:700;color:${statusColor};">${statusIcon}</td>
@@ -2842,8 +2845,35 @@ async function openBookingActionModal(booking) {
               <td style="padding:5px 6px;text-align:center;color:var(--text-muted);font-size:11px;">${escapeHtml(empI)}</td>
               <td style="padding:5px 8px;text-align:right;color:var(--text-muted);white-space:nowrap;font-size:11px;">${escapeHtml(dateStr)}</td>
               <td style="padding:5px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--text-muted);"${noteTip}>${s.notes ? escapeHtml(s.notes.slice(0,40)) + (s.notes.length > 40 ? '…' : '') : ''}</td>
+              <td style="padding:5px 4px;">${undoBtn}</td>
             </tr>`;
-          }).join('') || '<tr><td colspan="5" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Keine Sitzungsdaten.</td></tr>';
+          }).join('') || '<tr><td colspan="7" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Keine Sitzungsdaten.</td></tr>';
+          sitzungBody.querySelectorAll('.sess-undo-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const confirmed = await showConfirmModal({
+                title: 'Sitzung zurücksetzen?',
+                message: 'Die Sitzung wird auf "geplant" zurückgesetzt. Die gespeicherte Notiz bleibt erhalten.',
+                confirmText: 'Zurücksetzen',
+                cancelText: 'Abbrechen',
+                variant: 'warning',
+              });
+              if (!confirmed) return;
+              const { error } = await supabase
+                .from('prescription_sessions')
+                .update({ status: 'planned', done_at: null })
+                .eq('id', btn.dataset.sid);
+              if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+              await supabase.from('prescriptions')
+                .update({ status: 'in_therapy' })
+                .eq('id', btn.dataset.prescription)
+                .eq('status', 'completed');
+              showToast('Sitzung zurückgesetzt ✓');
+              btn.closest('tr').querySelector('td:nth-child(2)').textContent = '○';
+              btn.closest('tr').querySelector('td:nth-child(2)').style.color = 'var(--text-muted)';
+              btn.remove();
+            });
+          });
         });
     }
   }
