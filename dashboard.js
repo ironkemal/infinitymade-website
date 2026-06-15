@@ -9830,9 +9830,22 @@ document.getElementById('b2cAiInput').addEventListener('keydown', e => {
   recog.onerror = () => { active = false; btn.textContent = '🎤'; };
 })();
 
+const SECTOR_LABELS = {
+  physiotherapy: 'Physiotherapie',
+  logopaedie: 'Logopädie',
+  ergotherapie: 'Ergotherapie',
+  podologie: 'Podologie',
+  praxis: 'Allgemeine Praxis',
+};
+
 async function loadSettings() {
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   document.getElementById('setLang').value = currentLang;
+  const sectorEl = document.getElementById('setSectorLabel');
+  if (sectorEl) {
+    const sector = getSector();
+    sectorEl.textContent = SECTOR_LABELS[sector] || sector || '—';
+  }
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
   set('setStreet', currentProfile.street);
   set('setPlz', currentProfile.plz);

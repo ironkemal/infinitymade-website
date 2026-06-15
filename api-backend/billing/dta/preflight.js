@@ -279,6 +279,12 @@ export function preflight(input) {
           // Leistung darf nicht vor Ausstellung liegen
           if (ausstellung && sDate < ausstellung)
             E(errors, 'S:01004', `${sat}.datumLeistung`, 'Leistungsdatum liegt vor Ausstellungsdatum');
+          // Verordnung ist max. 12 Wochen (84 Tage) gültig
+          if (ausstellung) {
+            const diffDays = Math.floor((sDate - ausstellung) / (1000 * 60 * 60 * 24));
+            if (diffDays > 84)
+              E(errors, 'S:01012', `${sat}.datumLeistung`, `Leistungsdatum liegt ${diffDays} Tage nach Ausstellung — Verordnung ist nach 84 Tagen abgelaufen`);
+          }
           // Leistung darf nicht in der Zukunft liegen
           if (sDate > new Date())
             E(errors, 'S:01005', `${sat}.datumLeistung`, 'Leistungsdatum liegt in der Zukunft');

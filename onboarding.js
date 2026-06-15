@@ -386,6 +386,16 @@ function bindAccount() {
 
     try {
       if (mode === 'signup') {
+        // Check for duplicate email before proceeding
+        const checkRes = await fetch(`/api/onboarding/check-email?email=${encodeURIComponent(email)}`);
+        const checkData = await checkRes.json();
+        if (checkData.exists) {
+          showError('Diese E-Mail-Adresse ist bereits registriert. Bitte melden Sie sich stattdessen an.');
+          submit.disabled = false;
+          submit.textContent = orig;
+          return;
+        }
+
         // New flow: store in sessionStorage, create Supabase user after payment
         sessionStorage.setItem('onboarding_email', email);
         sessionStorage.setItem('onboarding_password', password);
