@@ -5722,6 +5722,35 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
       .filter(Boolean);
     if (!bookingIds.length) return;
 
+    // Fetch prescription cap
+    const { data: rx } = await supabase
+      .from('prescriptions')
+      .select('anzahl_einheiten, heilmittel')
+      .eq('id', prescriptionId)
+      .maybeSingle();
+
+    // Count existing sessions (all statuses)
+    const { count: existingCount } = await supabase
+      .from('prescription_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('prescription_id', prescriptionId);
+
+    const cap = rx?.anzahl_einheiten;
+    const used = existingCount || 0;
+    const adding = bookingIds.length;
+
+    if (cap && used + adding > cap) {
+      const hm = rx?.heilmittel ? ` (${rx.heilmittel})` : '';
+      const ok = await showConfirmModal({
+        title: 'Reçete Sınırı Aşılıyor',
+        message: `Diese Verordnung${hm} erlaubt ${cap} Einheit${cap === 1 ? '' : 'en'}. Bereits verplant: ${used}. Neue Termine: ${adding}. Gesamt wäre ${used + adding} — ${used + adding - cap} zu viel.\n\nTrotzdem fortfahren?`,
+        confirmText: 'Trotzdem eintragen',
+        cancelText: 'Abbrechen',
+        variant: 'warning',
+      });
+      if (!ok) return;
+    }
+
     // Continue numbering after any existing sessions for this Rx
     const { data: existing } = await supabase
       .from('prescription_sessions')
