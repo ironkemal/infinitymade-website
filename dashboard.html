@@ -1525,6 +1525,16 @@
               <div id="statOffeneZuz" style="font-size:30px;font-weight:700;color:#dc2626;">—</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">unbezahlte Rezepte</div>
             </div>
+            <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Nichterschienen</div>
+              <div id="statNoShowCount" style="font-size:30px;font-weight:700;color:var(--text-main);">—</div>
+              <div id="statNoShowRate" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+            </div>
+            <div class="card" style="background:var(--bg-card);border:1px solid var(--border);text-align:center;padding:20px;">
+              <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Mahnungen</div>
+              <div id="statMahnBezahlt" style="font-size:30px;font-weight:700;color:#15803d;">—</div>
+              <div id="statMahnOffen" style="font-size:11px;color:#dc2626;margin-top:4px;"></div>
+            </div>
           </div>
 
           <!-- Bar chart -->
@@ -1534,6 +1544,14 @@
               <div style="color:var(--text-muted);font-size:13px;">Lade…</div>
             </div>
             <div id="statBarLegend" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;justify-content:center;"></div>
+          </div>
+
+          <!-- Therapeuten-Auslastung -->
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border);margin-top:16px;">
+            <div style="font-weight:600;font-size:14px;margin-bottom:14px;color:var(--text-main);">Therapeuten-Auslastung</div>
+            <div id="statTherapeutenList" style="display:flex;flex-direction:column;gap:8px;">
+              <div style="color:var(--text-muted);font-size:13px;">Lade…</div>
+            </div>
           </div>
         </section>
 
