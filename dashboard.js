@@ -3932,6 +3932,8 @@ async function openZuzahlBefreiungModal(patientId, lead, existing) {
   const delBtn = overlay.querySelector('#_zbDel');
   if (delBtn) {
     delBtn.onclick = async () => {
+      const ok = await showConfirmModal({ title: 'Befreiung löschen', message: 'Zuzahlungsbefreiung für dieses Jahr wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+      if (!ok) return;
       delBtn.disabled = true;
       const ownerId = getOwnerId();
       await supabase.from('zuzahlung_befreiung')
@@ -4141,20 +4143,20 @@ async function loadGroupParticipants(parentId, maxCapacity) {
       const child = window.bkCurrentGroupParticipants.find(c => c.id === childId);
       if (!child) return;
       
-      if (confirm(`Möchten Sie ${child.customer_name} wirklich aus dieser Gruppe entfernen?`)) {
-        e.target.disabled = true;
-        e.target.textContent = '…';
-        const { error: delErr } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', childId);
-        if (delErr) {
-          showToast('Fehler: ' + delErr.message, 'error');
-          e.target.disabled = false;
-          e.target.textContent = 'Entfernen';
-        } else {
-          showToast('Teilnehmer entfernt.');
-          await loadGroupParticipants(parentId, maxCapacity);
-          if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
-          if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
-        }
+      const ok = await showConfirmModal({ title: 'Teilnehmer entfernen', message: `Möchten Sie ${child.customer_name} wirklich aus dieser Gruppe entfernen?`, confirmText: 'Entfernen', cancelText: 'Abbrechen', variant: 'danger' });
+      if (!ok) return;
+      e.target.disabled = true;
+      e.target.textContent = '…';
+      const { error: delErr } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', childId);
+      if (delErr) {
+        showToast('Fehler: ' + delErr.message, 'error');
+        e.target.disabled = false;
+        e.target.textContent = 'Entfernen';
+      } else {
+        showToast('Teilnehmer entfernt.');
+        await loadGroupParticipants(parentId, maxCapacity);
+        if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
+        if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
       }
     });
   });
@@ -7714,7 +7716,8 @@ function renderServices() {
   grid.querySelectorAll('[data-srv-del]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!confirm(t('alert_service_delete'))) return;
+      const ok = await showConfirmModal({ title: 'Dienstleistung löschen', message: t('alert_service_delete'), confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+      if (!ok) return;
       await supabase.from('services').delete().eq('id', btn.dataset.srvDel);
       await loadServices();
     });
@@ -8220,6 +8223,8 @@ function renderSpecialDaysList() {
 }
 
 window.deleteSpecialDay = async function (id) {
+  const ok = await showConfirmModal({ title: 'Sondertag löschen', message: 'Diesen Sondertag wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+  if (!ok) return;
   const { error } = await supabase.from('custom_days').delete().eq('id', id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   showToast('Gelöscht');
@@ -8595,6 +8600,8 @@ async function loadEmpUrlaubSection(empId, container) {
 }
 
 async function deleteEmpTimeOff(timeOffId, empId) {
+  const ok = await showConfirmModal({ title: 'Abwesenheit löschen', message: 'Diesen Abwesenheitszeitraum wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+  if (!ok) return;
   const { error } = await supabase.from('time_offs').delete().eq('id', timeOffId);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
   // Reload the detail tab if open
@@ -8667,7 +8674,8 @@ async function loadUrlaubListe(empId) {
 }
 
 async function deleteUrlaub(timeOffId, empId) {
-  if (!confirm('Urlaub-Eintrag löschen?')) return;
+  const ok = await showConfirmModal({ title: 'Urlaub löschen', message: 'Diesen Urlaub-Eintrag wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+  if (!ok) return;
   const { error } = await supabase.from('time_offs').delete().eq('id', timeOffId);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
   showToast('Gelöscht.');
@@ -13845,7 +13853,8 @@ async function addAerzte() {
 }
 
 async function deleteAerzte(id) {
-  if (!confirm('Arzt wirklich löschen?')) return;
+  const ok = await showConfirmModal({ title: 'Arzt löschen', message: 'Diesen Arzt wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+  if (!ok) return;
   const { error } = await supabase.from('aerzte').delete().eq('id', id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
   await loadAerzte();
@@ -14292,7 +14301,8 @@ function wireBusinessModal() {
 async function deleteBusiness(id) {
   const biz = myBusinesses.find(b => b.id === id);
   if (!biz) return;
-  if (!confirm(`"${biz.business_name}" wirklich löschen? Alle zugehörigen Daten (Termine, Dienstleistungen, Rechnungen) werden ebenfalls gelöscht.`)) return;
+  const ok = await showConfirmModal({ title: 'Standort löschen', message: `"${biz.business_name}" wirklich löschen?\n\nAlle zugehörigen Daten (Termine, Dienstleistungen, Rechnungen) werden ebenfalls gelöscht.`, confirmText: 'Endgültig löschen', cancelText: 'Abbrechen', variant: 'danger' });
+  if (!ok) return;
   const { error } = await supabase.from('businesses').delete().eq('id', id);
   if (error) { console.error('[biz-delete]', error); showToast(t('err_generic'), 'error'); return; }
   showToast('Gelöscht ✓');
@@ -18058,7 +18068,9 @@ function initWlModal() {
 
   deleteBtn?.addEventListener('click', async () => {
     const id = document.getElementById('wlEntryId').value;
-    if (!id || !confirm('Eintrag wirklich löschen?')) return;
+    if (!id) return;
+    const ok = await showConfirmModal({ title: 'Eintrag löschen', message: 'Diesen Wartelisten-Eintrag wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+    if (!ok) return;
     await supabase.from('warteliste').delete().eq('id', id);
     document.getElementById('wlModal').hidden = true;
     showToast('Eintrag gelöscht');
