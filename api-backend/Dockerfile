@@ -12,6 +12,7 @@ COPY instrument.js ./
 COPY _lib ./_lib
 COPY ai ./ai
 COPY billing ./billing
+COPY lib ./lib
 
 ENV NODE_ENV=production
 ENV PORT=3000
