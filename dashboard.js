@@ -7660,40 +7660,40 @@ const GKV_PRICES = {
   'X9922': 22.78, 'X9950': 22.78, 'X9951': 13.09,
 };
 
-// GKV-Vergütungskatalog §125 SGB V — sektöre göre standart hizmetler
+// GKV-Vergütungskatalog §125 SGB V — sektöre göre standart hizmetler (price_min/max = izin verilen aralık)
 const GKV_LEISTUNGSKATALOG = {
   physiotherapy: [
-    { code: 'X0501', kuerzel: 'KG',    title: 'Krankengymnastik Einzel',                  duration: 25, duration_label: '15–25', price: 29.63, locked: true },
-    { code: 'X1201', kuerzel: 'MT',    title: 'Manuelle Therapie',                        duration: 25, duration_label: '20–30', price: 35.59, locked: true },
-    { code: 'X0201', kuerzel: 'MLD45', title: 'Manuelle Lymphdrainage 45 min',            duration: 45, price: 53.94, locked: true },
-    { code: 'X0202', kuerzel: 'MLD60', title: 'Manuelle Lymphdrainage 60 min',            duration: 60, price: 71.94, locked: true },
-    { code: 'X0507', kuerzel: 'KGG',   title: 'KG-Gerät (bis 3 Pat., parallel)',          duration: 60, price: 55.81, locked: true },
-    { code: 'X0710', kuerzel: 'BOB',   title: 'KG-ZNS Bobath Erwachsene Einzel',         duration: 30, duration_label: '25–35', price: 47.06, locked: true },
-    { code: 'X0711', kuerzel: 'VOJ',   title: 'KG-ZNS Vojta Erwachsene Einzel',          duration: 30, duration_label: '25–35', price: 47.06, locked: true },
-    { code: 'X0712', kuerzel: 'PNF',   title: 'KG-ZNS PNF Einzel',                       duration: 30, duration_label: '25–35', price: 47.06, locked: true },
-    { code: 'X0702', kuerzel: 'Muko',  title: 'KG Atemtherapie (Mukoviszidose) Einzel',  duration: 60, price: 88.94, locked: true },
-    { code: 'X0102', kuerzel: 'MAS',   title: 'Massage Einzel',                           duration: 25, duration_label: '20–30', price: 33.75, locked: true },
-    { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price:  8.63, locked: true },
+    { code: 'X0501', kuerzel: 'KG',    title: 'Krankengymnastik Einzel',                  duration: 25, duration_label: '15–25', price: 29.63, price_min: 29.63, price_max: 29.63, locked: true },
+    { code: 'X1201', kuerzel: 'MT',    title: 'Manuelle Therapie',                        duration: 25, duration_label: '20–30', price: 35.59, price_min: 35.59, price_max: 35.59, locked: true },
+    { code: 'X0201', kuerzel: 'MLD45', title: 'Manuelle Lymphdrainage 45 min',            duration: 45, price: 53.94, price_min: 53.94, price_max: 53.94, locked: true },
+    { code: 'X0202', kuerzel: 'MLD60', title: 'Manuelle Lymphdrainage 60 min',            duration: 60, price: 71.94, price_min: 71.94, price_max: 71.94, locked: true },
+    { code: 'X0507', kuerzel: 'KGG',   title: 'KG-Gerät (bis 3 Pat., parallel)',          duration: 60, price: 55.81, price_min: 55.81, price_max: 55.81, locked: true },
+    { code: 'X0710', kuerzel: 'BOB',   title: 'KG-ZNS Bobath Erwachsene Einzel',         duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
+    { code: 'X0711', kuerzel: 'VOJ',   title: 'KG-ZNS Vojta Erwachsene Einzel',          duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
+    { code: 'X0712', kuerzel: 'PNF',   title: 'KG-ZNS PNF Einzel',                       duration: 30, duration_label: '25–35', price: 47.06, price_min: 47.06, price_max: 47.06, locked: true },
+    { code: 'X0702', kuerzel: 'Muko',  title: 'KG Atemtherapie (Mukoviszidose) Einzel',  duration: 60, price: 88.94, price_min: 88.94, price_max: 88.94, locked: true },
+    { code: 'X0102', kuerzel: 'MAS',   title: 'Massage Einzel',                           duration: 25, duration_label: '20–30', price: 33.75, price_min: 33.75, price_max: 33.75, locked: true },
+    { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
   ],
   podologie: [
-    { code: 'P01',  kuerzel: 'PKB',   title: 'Podologische Komplexbehandlung (beide Füße)', duration: 60, duration_label: '45–60', price: 38.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 35–40 €. Mindestbehandlungszeit lt. Vertrag.' },
-    { code: 'P02',  kuerzel: 'PEB',   title: 'Podologische Behandlung (ein Fuß)',           duration: 35, duration_label: '25–40', price: 24.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 22–26 €.' },
-    { code: 'P03',  kuerzel: 'NSP-E', title: 'Nagelspangenbehandlung Erstanlage',           duration: 45, duration_label: '30–60', price: 45.00, locked: false, hinweis: 'Preis je nach Spangentyp 30,00–75,00 €. Dauer variiert mit Technik.' },
-    { code: 'P04',  kuerzel: 'NSP-F', title: 'Nagelspangenbehandlung Folgetermin',          duration: 20, duration_label: '15–25', price: 18.00, locked: false },
-    { code: 'P-HB', kuerzel: 'HB',    title: 'Hausbesuchszuschlag (Pos. 18510)',             duration: null, price: 13.75, locked: true, hinweis: 'Pauschale pro Hausbesuch, unabhängig von der Behandlungszeit.' },
+    { code: 'P01',  kuerzel: 'PKB',   title: 'Podologische Komplexbehandlung (beide Füße)', duration: 60, duration_label: '45–60', price: 38.00, price_min: 35.00, price_max: 40.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 35–40 €. Mindestbehandlungszeit lt. Vertrag.' },
+    { code: 'P02',  kuerzel: 'PEB',   title: 'Podologische Behandlung (ein Fuß)',           duration: 35, duration_label: '25–40', price: 24.00, price_min: 22.00, price_max: 26.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 22–26 €.' },
+    { code: 'P03',  kuerzel: 'NSP-E', title: 'Nagelspangenbehandlung Erstanlage',           duration: 45, duration_label: '30–60', price: 45.00, price_min: 30.00, price_max: 75.00, locked: false, hinweis: 'Preis je nach Spangentyp 30,00–75,00 €. Dauer variiert mit Technik.' },
+    { code: 'P04',  kuerzel: 'NSP-F', title: 'Nagelspangenbehandlung Folgetermin',          duration: 20, duration_label: '15–25', price: 18.00, price_min: 15.00, price_max: 25.00, locked: false },
+    { code: 'P-HB', kuerzel: 'HB',    title: 'Hausbesuchszuschlag (Pos. 18510)',             duration: null, price: 13.75, price_min: 13.75, price_max: 13.75, locked: true, hinweis: 'Pauschale pro Hausbesuch, unabhängig von der Behandlungszeit.' },
   ],
   ergotherapie: [
-    { code: 'ET1', kuerzel: 'MF',  title: 'Motorisch-funktionelle Behandlung',          duration: 45, price: 55.00, locked: true },
-    { code: 'ET2', kuerzel: 'SP',  title: 'Sensomotorisch-perzeptive Behandlung',       duration: 60, price: 78.00, locked: true },
-    { code: 'ET3', kuerzel: 'HLT', title: 'Hirnleistungstraining / neuropsych. Üben',  duration: 60, price: 74.00, locked: true },
-    { code: 'ET4', kuerzel: 'PF',  title: 'Psychisch-funktionelle Behandlung',          duration: 75, price: 95.00, locked: true },
+    { code: 'ET1', kuerzel: 'MF',  title: 'Motorisch-funktionelle Behandlung',          duration: 45, price: 55.00, price_min: 55.00, price_max: 55.00, locked: true },
+    { code: 'ET2', kuerzel: 'SP',  title: 'Sensomotorisch-perzeptive Behandlung',       duration: 60, price: 78.00, price_min: 78.00, price_max: 78.00, locked: true },
+    { code: 'ET3', kuerzel: 'HLT', title: 'Hirnleistungstraining / neuropsych. Üben',  duration: 60, price: 74.00, price_min: 74.00, price_max: 74.00, locked: true },
+    { code: 'ET4', kuerzel: 'PF',  title: 'Psychisch-funktionelle Behandlung',          duration: 75, price: 95.00, price_min: 95.00, price_max: 95.00, locked: true },
   ],
   logopaedie: [
-    { code: '09560', kuerzel: 'ST30',  title: 'Sprachtherapie Einzel',  duration: 30, price: 54.00, locked: true },
-    { code: '09561', kuerzel: 'ST45',  title: 'Sprachtherapie Einzel',  duration: 45, price: 72.00, locked: true },
-    { code: '09562', kuerzel: 'ST60',  title: 'Sprachtherapie Einzel',  duration: 60, price: 92.00, locked: true },
-    { code: '09570', kuerzel: 'SLK',   title: 'Schlucktherapie',        duration: 45, price: 74.00, locked: true },
-    { code: '09580', kuerzel: 'STM',   title: 'Stimmtherapie',          duration: 30, price: 54.00, locked: true },
+    { code: '09560', kuerzel: 'ST30', title: 'Sprachtherapie Einzel', duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
+    { code: '09561', kuerzel: 'ST45', title: 'Sprachtherapie Einzel', duration: 45, price: 72.00, price_min: 72.00, price_max: 72.00, locked: true },
+    { code: '09562', kuerzel: 'ST60', title: 'Sprachtherapie Einzel', duration: 60, price: 92.00, price_min: 92.00, price_max: 92.00, locked: true },
+    { code: '09570', kuerzel: 'SLK',  title: 'Schlucktherapie',       duration: 45, price: 74.00, price_min: 74.00, price_max: 74.00, locked: true },
+    { code: '09580', kuerzel: 'STM',  title: 'Stimmtherapie',         duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
   ],
 };
 GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy;
@@ -7713,6 +7713,7 @@ function renderGkvCatalog() {
 
   const lockSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:-1px;opacity:0.6;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
   const infoSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  const checkSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>`;
 
   section.style.display = '';
   section.innerHTML = `
@@ -7721,35 +7722,204 @@ function renderGkvCatalog() {
         <span class="gkv-catalog-title">GKV-Standardleistungen</span>
         <span class="gkv-catalog-law">§125 SGB V &middot; Bundeseinheitliche Vergütung 2026</span>
       </div>
-      <span class="gkv-catalog-badge" title="Diese Leistungen und ihre Vergütungssätze sind durch Vergütungsverträge gemäß §125 SGB V bundeseinheitlich geregelt und können von der Praxis nicht eigenständig geändert werden.">ℹ Vergütungsvertrag</span>
+      <span class="gkv-catalog-badge" title="Vergütungssätze gemäß §125 SGB V. Klicken Sie Einrichten um eine Leistung in Ihrer Praxis zu aktivieren.">ℹ Vergütungsvertrag</span>
     </div>
     <div class="services-grid">
       ${catalog.map(s => {
+        const existing = servicesCache.find(x => x.gkv_position_nr === s.code);
+        const configured = !!existing;
+        const hasRange = s.price_min !== s.price_max;
+
         const durLabel = s.duration != null ? (s.duration_label || s.duration) + ' Min' : '—';
         const durChip = s.locked
           ? `<span class="srv-chip srv-chip-locked">${lockSvg}${escapeHtml(durLabel)}</span>`
           : `<span class="srv-chip srv-chip-flex">${escapeHtml(durLabel)}</span>`;
-        const priceChip = `<span class="srv-chip srv-chip-gkv">GKV ${formatEur(s.price)}</span>`;
-        const hinweis = s.hinweis
+
+        const displayPrice = configured ? parseFloat(existing.price || s.price) : s.price;
+        const priceChip = configured
+          ? `<span class="srv-chip srv-chip-gkv">${checkSvg}${formatEur(displayPrice)}</span>`
+          : `<span class="srv-chip srv-chip-gkv">GKV ${formatEur(s.price)}${hasRange ? ` (${formatEur(s.price_min)}–${formatEur(s.price_max)})` : ''}</span>`;
+
+        const empNames = configured
+          ? (existing.employee_services || []).map(es => {
+              const m = teamMembers.find(tm => tm.id === es.employee_id);
+              return m ? (m.business_name || m.email?.split('@')[0]) : null;
+            }).filter(Boolean).join(', ')
+          : null;
+
+        const empRow = configured
+          ? `<div class="service-meta service-emps" style="margin-top:0;padding-top:6px;border-top:1px dashed var(--border);">
+               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px;color:var(--text-muted);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+               ${escapeHtml(empNames || '— Alle Mitarbeiter')}
+             </div>`
+          : '';
+
+        const hinweis = s.hinweis && !configured
           ? `<div class="gkv-hinweis">${infoSvg}${escapeHtml(s.hinweis)}</div>`
           : '';
+
+        const actionBtn = configured
+          ? `<button class="btn-gkv-edit" data-gkv="${escapeHtml(s.code)}">Bearbeiten</button>`
+          : `<button class="btn-gkv-setup" data-gkv="${escapeHtml(s.code)}">+ Einrichten</button>`;
+
         return `
-          <div class="service-card gkv-catalog-card">
+          <div class="service-card gkv-catalog-card${configured ? ' gkv-configured' : ''}">
             <div class="service-card-head">
               <div class="service-title">${escapeHtml(s.title)}</div>
               <span class="gkv-pos-badge">${escapeHtml(s.code)}</span>
             </div>
             <div class="gkv-kuerzel">${escapeHtml(s.kuerzel)}</div>
             <div class="srv-chip-row">${durChip}${priceChip}</div>
+            ${empRow}
             ${hinweis}
+            <div class="gkv-card-action">${actionBtn}</div>
           </div>
         `;
       }).join('')}
     </div>
   `;
 
+  section.querySelectorAll('[data-gkv]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openGkvEditForm(btn.dataset.gkv);
+    });
+  });
+
   if (divider) divider.hidden = false;
 }
+
+function renderGkvEmpCheckboxes() {
+  const container = document.getElementById('gkvEmpCheckboxes');
+  if (!container) return;
+  container.innerHTML = teamMembers.map(m => {
+    const name = m.business_name || m.email?.split('@')[0];
+    return `<label class="emp-checkbox-item">
+      <input type="checkbox" name="gkv_emp" value="${m.id}" checked>
+      <span>${escapeHtml(name)}</span>
+    </label>`;
+  }).join('');
+}
+
+function openGkvEditForm(catalogCode) {
+  const allEntries = Object.values(GKV_LEISTUNGSKATALOG).flat();
+  const entry = allEntries.find(e => e.code === catalogCode);
+  if (!entry) return;
+
+  const existing = servicesCache.find(x => x.gkv_position_nr === catalogCode);
+  const form = document.getElementById('gkvServiceForm');
+  if (!form) return;
+
+  document.getElementById('addServiceForm').hidden = true;
+  document.getElementById('gkvFormCatalogCode').value = catalogCode;
+  document.getElementById('gkvFormServiceId').value = existing?.id || '';
+  document.getElementById('gkvFormTitle').textContent = existing ? 'GKV-Leistung bearbeiten' : 'GKV-Leistung einrichten';
+  document.getElementById('gkvFormName').textContent = entry.title;
+  document.getElementById('gkvFormCode').textContent = entry.code;
+  document.getElementById('gkvFormKuerzel').textContent = entry.kuerzel;
+  document.getElementById('gkvFormDur').textContent = entry.duration != null ? (entry.duration_label || entry.duration) + ' Min' : '—';
+
+  const priceInput = document.getElementById('gkvFormPrice');
+  const priceHint = document.getElementById('gkvPriceRange');
+  const hasRange = entry.price_min !== entry.price_max;
+
+  priceInput.min = entry.price_min;
+  priceInput.max = entry.price_max;
+  priceInput.readOnly = !hasRange;
+  priceInput.value = existing ? parseFloat(existing.price || entry.price).toFixed(2) : entry.price.toFixed(2);
+  priceHint.textContent = hasRange
+    ? `Zulässiger Bereich: ${formatEur(entry.price_min)} – ${formatEur(entry.price_max)}`
+    : 'Bundeseinheitlich festgelegt (§125 SGB V)';
+
+  renderGkvEmpCheckboxes();
+  const hasAssignment = existing?.employee_services?.length > 0;
+  document.getElementById('gkvEmpAll').checked = !hasAssignment;
+  toggleGkvEmpCheckboxes(!hasAssignment);
+  if (hasAssignment) {
+    const assignedIds = new Set((existing.employee_services || []).map(es => es.employee_id));
+    document.querySelectorAll('input[name="gkv_emp"]').forEach(cb => {
+      cb.checked = assignedIds.has(cb.value);
+    });
+  }
+
+  document.getElementById('gkvFormDelete').hidden = !existing;
+  form.hidden = false;
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleGkvEmpCheckboxes(disabled) {
+  document.querySelectorAll('input[name="gkv_emp"]').forEach(cb => {
+    cb.disabled = disabled;
+    cb.checked = disabled ? true : cb.checked;
+    cb.closest('.emp-checkbox-item').style.opacity = disabled ? '0.5' : '1';
+  });
+}
+
+document.getElementById('gkvEmpAll').addEventListener('change', e => {
+  toggleGkvEmpCheckboxes(e.target.checked);
+});
+
+document.getElementById('gkvFormCancel').addEventListener('click', () => {
+  document.getElementById('gkvServiceForm').hidden = true;
+});
+
+document.getElementById('gkvFormDelete').addEventListener('click', async () => {
+  const serviceId = document.getElementById('gkvFormServiceId').value;
+  if (!serviceId) return;
+  const ok = await showConfirmModal({ title: 'Leistung deaktivieren', message: 'Diese GKV-Leistung aus Ihrer Praxis entfernen?', confirmText: 'Entfernen', cancelText: 'Abbrechen', variant: 'danger' });
+  if (!ok) return;
+  await supabase.from('employee_services').delete().eq('service_id', serviceId);
+  await supabase.from('services').delete().eq('id', serviceId);
+  document.getElementById('gkvServiceForm').hidden = true;
+  showToast('Leistung deaktiviert');
+  await loadServices();
+});
+
+document.getElementById('gkvFormSave').addEventListener('click', async () => {
+  const catalogCode = document.getElementById('gkvFormCatalogCode').value;
+  const serviceId = document.getElementById('gkvFormServiceId').value;
+
+  const allEntries = Object.values(GKV_LEISTUNGSKATALOG).flat();
+  const entry = allEntries.find(e => e.code === catalogCode);
+  if (!entry) return;
+
+  const price = parseFloat(document.getElementById('gkvFormPrice').value);
+  if (isNaN(price) || price < entry.price_min || price > entry.price_max) {
+    showToast(`Preis muss zwischen ${formatEur(entry.price_min)} und ${formatEur(entry.price_max)} liegen.`, 'error');
+    return;
+  }
+
+  const empAll = document.getElementById('gkvEmpAll').checked;
+  const empIds = empAll ? [] : [...document.querySelectorAll('input[name="gkv_emp"]:checked')].map(cb => cb.value);
+
+  const payload = {
+    title: entry.title,
+    code: entry.kuerzel,
+    gkv_position_nr: catalogCode,
+    duration_minutes: entry.duration || null,
+    price: price.toString(),
+    price_config: null,
+    is_internal: false,
+  };
+
+  if (serviceId) {
+    const { error } = await supabase.from('services').update(payload).eq('id', serviceId);
+    if (error) { showToast(t('err_generic'), 'error'); return; }
+    await supabase.from('employee_services').delete().eq('service_id', serviceId);
+    if (empIds.length) await supabase.from('employee_services').insert(empIds.map(id => ({ employee_id: id, service_id: serviceId })));
+  } else {
+    const ownerId = getOwnerId();
+    const insertPayload = { owner_id: ownerId, user_id: currentSession.user.id, ...payload };
+    if (currentBusiness?.id) insertPayload.business_id = currentBusiness.id;
+    const { data: srv, error } = await supabase.from('services').insert(insertPayload).select().single();
+    if (error) { showToast(t('err_generic'), 'error'); return; }
+    if (empIds.length) await supabase.from('employee_services').insert(empIds.map(id => ({ employee_id: id, service_id: srv.id })));
+  }
+
+  showToast(t('saved'));
+  document.getElementById('gkvServiceForm').hidden = true;
+  await loadServices();
+});
 
 function renderServices() {
   const grid = document.getElementById('servicesGrid');

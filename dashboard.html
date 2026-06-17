@@ -381,6 +381,37 @@
           </div>
 
           <div id="gkvCatalogSection" style="display:none;"></div>
+
+          <!-- GKV Leistung einrichten / bearbeiten -->
+          <div class="add-service-form" id="gkvServiceForm" hidden>
+            <h3 id="gkvFormTitle">GKV-Leistung einrichten</h3>
+            <input type="hidden" id="gkvFormCatalogCode" />
+            <input type="hidden" id="gkvFormServiceId" />
+            <div class="gkv-form-info">
+              <span id="gkvFormName" class="gkv-form-info-name"></span>
+              <span id="gkvFormCode" class="gkv-pos-badge"></span>
+              <span id="gkvFormKuerzel" class="srv-code-badge"></span>
+              <span id="gkvFormDur" class="srv-chip" style="font-size:11px;padding:2px 8px;"></span>
+            </div>
+            <div class="form-group" id="gkvPriceGroup">
+              <label class="form-label">GKV-Vergütung (€) <span id="gkvPriceRange" style="font-size:11px;color:var(--text-muted);margin-left:6px;"></span></label>
+              <input class="form-input" id="gkvFormPrice" type="number" step="0.01" style="max-width:180px;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mitarbeiter-Zuweisung</label>
+              <label class="emp-checkbox-item" style="margin-bottom:8px;">
+                <input type="checkbox" id="gkvEmpAll" checked>
+                <span>Alle Mitarbeiter</span>
+              </label>
+              <div id="gkvEmpCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
+            </div>
+            <div class="form-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="btn btn-primary" id="gkvFormSave">Speichern</button>
+              <button class="btn btn-ghost" id="gkvFormCancel">Abbrechen</button>
+              <button class="btn btn-danger" id="gkvFormDelete" hidden style="margin-left:auto;">Deaktivieren</button>
+            </div>
+          </div>
+
           <div id="privatSrvDivider" hidden>
             <span>Eigene / Private Leistungen</span>
             <span></span>
