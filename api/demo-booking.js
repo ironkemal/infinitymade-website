@@ -181,15 +181,13 @@ async function sendConfirmationEmails(booking, meetLink, rescheduleToken) {
     <p style="margin-top:12px"><strong>Datum:</strong> ${dateStr} ${booking.booking_time} Uhr</p>
     ${meetLink ? `<p><a href="${meetLink}">Google Meet beitreten</a></p>` : ''}`);
 
-  const icsAttachment = {
-    filename: 'Analysegespräch-Praxura.ics',
-    content: buildICS(booking, meetLink),
-    contentType: 'text/calendar; method=REQUEST',
-  };
+  const icsContent = buildICS(booking, meetLink);
+  const icsMime = { contentType: 'text/calendar; method=REQUEST; charset=UTF-8', content: Buffer.from(icsContent, 'utf-8') };
+  const icsFile = { filename: 'Analysegespräch-Praxura.ics', ...icsMime, contentDisposition: 'attachment' };
 
   const t = createTransport();
   await Promise.all([
-    t.sendMail({ from: FROM, to: booking.email, subject: `Analysegespräch bestätigt: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml, attachments: [icsAttachment] }),
+    t.sendMail({ from: FROM, to: booking.email, subject: `Analysegespräch bestätigt: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml, alternatives: [icsMime], attachments: [icsFile] }),
     t.sendMail({ from: FROM, to: OWNER_EMAIL,   subject: `[Praxura] Neues Gespräch: ${booking.name} – ${dateStr}`, html: ownerHtml }),
   ]);
 }
@@ -217,15 +215,13 @@ async function sendRescheduleEmails(booking, meetLink) {
     <p style="margin-top:12px"><strong>Neuer Termin:</strong> ${dateStr} ${booking.booking_time} Uhr</p>
     ${meetLink ? `<p><a href="${meetLink}">Google Meet beitreten</a></p>` : ''}`);
 
-  const icsAttachment = {
-    filename: 'Analysegespräch-Praxura-aktualisiert.ics',
-    content: buildICS(booking, meetLink),
-    contentType: 'text/calendar; method=REQUEST',
-  };
+  const icsContent = buildICS(booking, meetLink);
+  const icsMime = { contentType: 'text/calendar; method=REQUEST; charset=UTF-8', content: Buffer.from(icsContent, 'utf-8') };
+  const icsFile = { filename: 'Analysegespräch-Praxura-aktualisiert.ics', ...icsMime, contentDisposition: 'attachment' };
 
   const t = createTransport();
   await Promise.all([
-    t.sendMail({ from: FROM, to: booking.email, subject: `Termin verschoben: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml, attachments: [icsAttachment] }),
+    t.sendMail({ from: FROM, to: booking.email, subject: `Termin verschoben: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml, alternatives: [icsMime], attachments: [icsFile] }),
     t.sendMail({ from: FROM, to: OWNER_EMAIL,   subject: `[Praxura] Termin verschoben: ${booking.name} – ${dateStr}`, html: ownerHtml }),
   ]);
 }
