@@ -2327,8 +2327,15 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Steuerhinweis (erscheint auf Rechnung)</label>
-                  <input class="form-input" id="setTaxExempt" type="text" placeholder="Gemäß §4 Nr. 14 UStG umsatzsteuerfrei" />
-                  <div class="form-hint">Für Physiotherapie: meist § 4 Nr. 14 UStG umsatzsteuerfrei.</div>
+                  <select class="form-input" id="setTaxExemptSelect" style="margin-bottom:6px;">
+                    <option value="§4nr14a">§ 4 Nr. 14a UStG — Umsatzsteuerfreie Heilbehandlung</option>
+                    <option value="§4nr14b">§ 4 Nr. 14b UStG — Krankenhausbehandlung</option>
+                    <option value="§19">§ 19 Abs. 1 UStG — Kleinunternehmerregelung</option>
+                    <option value="19pct">19 % Umsatzsteuer (keine Befreiung)</option>
+                    <option value="custom">Eigene Eingabe…</option>
+                  </select>
+                  <input class="form-input" id="setTaxExempt" type="text" placeholder="z. B. Gemäß § 4 Nr. 14a UStG umsatzsteuerfrei" style="display:none;" />
+                  <div class="form-hint" id="setTaxExemptHint"></div>
                 </div>
                 <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
               </div>

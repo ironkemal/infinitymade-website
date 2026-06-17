@@ -10087,6 +10087,69 @@ const SECTOR_LABELS = {
   praxis: 'Allgemeine Praxis',
 };
 
+const TAX_EXEMPT_OPTIONS = {
+  '§4nr14a': 'Gemäß § 4 Nr. 14a UStG sind diese Leistungen von der Umsatzsteuer befreit.',
+  '§4nr14b': 'Gemäß § 4 Nr. 14b UStG sind diese Leistungen von der Umsatzsteuer befreit.',
+  '§19':     'Kein Ausweis der Umsatzsteuer gemäß § 19 Abs. 1 UStG (Kleinunternehmer).',
+  '19pct':   '',
+};
+
+const TAX_EXEMPT_HINTS = {
+  '§4nr14a': 'Für Physio-, Logo-, Ergo- und Podologiepraxen — heilkundliche Leistungen.',
+  '§4nr14b': 'Für Kliniken und stationäre Einrichtungen.',
+  '§19':     'Gilt, wenn Jahresumsatz unter 22.000 € (Vorjahr) liegt.',
+  '19pct':   'Auf der Rechnung erscheint kein Steuerhinweis.',
+  'custom':  'Freitext — genau so auf der Rechnung gedruckt.',
+};
+
+function initTaxExemptDropdown(savedValue) {
+  const sel = document.getElementById('setTaxExemptSelect');
+  const inp = document.getElementById('setTaxExempt');
+  const hint = document.getElementById('setTaxExemptHint');
+  if (!sel || !inp || !hint) return;
+
+  const applyOption = (key) => {
+    hint.textContent = TAX_EXEMPT_HINTS[key] || '';
+    if (key === 'custom') {
+      inp.style.display = '';
+      inp.focus();
+    } else {
+      inp.style.display = 'none';
+      inp.value = TAX_EXEMPT_OPTIONS[key] ?? '';
+    }
+  };
+
+  // Determine which option matches the saved value
+  let matchedKey = 'custom';
+  if (!savedValue || savedValue === '') {
+    matchedKey = '§4nr14a'; // sensible default for Praxis
+  } else {
+    for (const [k, v] of Object.entries(TAX_EXEMPT_OPTIONS)) {
+      if (v === savedValue) { matchedKey = k; break; }
+    }
+  }
+  sel.value = matchedKey;
+  if (matchedKey === 'custom') {
+    inp.value = savedValue || '';
+    inp.style.display = '';
+  } else {
+    inp.value = TAX_EXEMPT_OPTIONS[matchedKey];
+    inp.style.display = 'none';
+  }
+  hint.textContent = TAX_EXEMPT_HINTS[matchedKey] || '';
+
+  sel.addEventListener('change', () => applyOption(sel.value));
+}
+
+function getTaxExemptValue() {
+  const sel = document.getElementById('setTaxExemptSelect');
+  const inp = document.getElementById('setTaxExempt');
+  if (!sel) return '';
+  if (sel.value === 'custom') return (inp?.value || '').trim();
+  if (sel.value === '19pct') return '';
+  return TAX_EXEMPT_OPTIONS[sel.value] || '';
+}
+
 async function loadSettings() {
   document.getElementById('setBiz').value = currentProfile.business_name || '';
   document.getElementById('setLang').value = currentLang;
@@ -10105,7 +10168,7 @@ async function loadSettings() {
   set('setBic', currentProfile.bic);
   set('setSteuernummer', currentProfile.steuernummer);
   set('setUstId', currentProfile.ust_id);
-  set('setTaxExempt', currentProfile.tax_exempt_note);
+  initTaxExemptDropdown(currentProfile.tax_exempt_note);
 
   const isEmployee = currentProfile.role !== 'owner';
   const accSection = document.getElementById('settingsAccountSection');
@@ -11079,7 +11142,7 @@ document.getElementById('billingSaveBtn')?.addEventListener('click', async () =>
     bic: v('setBic') || null,
     steuernummer: v('setSteuernummer') || null,
     ust_id: v('setUstId') || null,
-    tax_exempt_note: v('setTaxExempt') || null,
+    tax_exempt_note: getTaxExemptValue() || null,
     ik_number: v('setIkNumber') || null
   };
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
