@@ -992,7 +992,7 @@ async function renderOverview() {
     el.innerHTML = `
       <div style="margin:8px 0;padding:12px 14px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.28);font-size:13px;line-height:1.5;color:var(--text-main);">
         <strong>IK-Nummer fehlt</strong> — §302 GKV-Abrechnung ist nicht möglich.
-        <a href="#" onclick="switchPanel('panel-settings');return false;" style="color:var(--accent,#b1891b);margin-left:6px;">Jetzt eintragen →</a>
+        <a href="#" onclick="switchPanel('settings').then(()=>{const el=document.getElementById('settingsAbrechnungSection');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});return false;" style="color:var(--accent,#b1891b);margin-left:6px;">Jetzt eintragen →</a>
       </div>`;
     el.hidden = false;
   })();
