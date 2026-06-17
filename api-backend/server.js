@@ -2253,6 +2253,133 @@ if (process.env.DEBUG_SENTRY === '1') {
   });
 }
 
+// POST /api/admin/recover-checkout
+// Manual recovery for Stripe checkout sessions whose webhook never fired.
+// Body: { session_id: "cs_...", admin_secret: "..." }
+app.post('/api/admin/recover-checkout', async (req, res) => {
+  const ADMIN_RECOVERY_SECRET = process.env.ADMIN_RECOVERY_SECRET;
+  const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+  if (!ADMIN_RECOVERY_SECRET) return res.status(500).json({ error: 'Recovery endpoint is not configured' });
+  if (!STRIPE_SECRET_KEY) return res.status(500).json({ error: 'Stripe not configured on this server' });
+
+  const { session_id, admin_secret } = req.body || {};
+  if (!admin_secret || admin_secret !== ADMIN_RECOVERY_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+  if (!session_id || !String(session_id).startsWith('cs_')) return res.status(400).json({ error: 'Invalid session_id' });
+
+  try {
+    // 1. Fetch Stripe checkout session
+    const stripeRes = await fetch(`https://api.stripe.com/v1/checkout/sessions/${session_id}?expand[]=line_items`, {
+      headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` },
+    });
+    const session = await stripeRes.json();
+    if (!stripeRes.ok) return res.status(400).json({ error: 'Could not retrieve Stripe session', detail: session });
+    if (session.status !== 'complete' || session.payment_status === 'unpaid')
+      return res.status(400).json({ error: 'Session is not complete', payment_status: session.payment_status });
+
+    // 2. Extract pending_id
+    const pendingId = session.metadata?.pending_id;
+    if (!pendingId) return res.status(400).json({ error: 'Session has no pending_id in metadata' });
+
+    // 3. Check pending_signup exists
+    const { data: pRows } = await supabase.from('pending_signups').select('email,onboarding_data').eq('id', pendingId);
+    if (!pRows?.[0]) return res.status(200).json({ skipped: 'already processed', pending_id: pendingId });
+    const pending = pRows[0];
+
+    // 4. Check if auth user already exists
+    const { data: listData } = await supabase.auth.admin.listUsers();
+    const existingUser = listData?.users?.find(u => u.email === pending.email);
+    if (existingUser) {
+      await supabase.rpc('pending_signup_delete', { p_pending_id: pendingId });
+      return res.status(200).json({ skipped: 'user already exists', email: pending.email, user_id: existingUser.id });
+    }
+
+    // 5. Get temp password from Vault
+    const { data: pendingPassword, error: pwErr } = await supabase.rpc('pending_signup_consume', { p_pending_id: pendingId });
+    if (pwErr || !pendingPassword) return res.status(500).json({ error: 'Could not retrieve pending password from Vault' });
+
+    // 6. Create Supabase auth user
+    const { data: newUser, error: uErr } = await supabase.auth.admin.createUser({
+      email: pending.email, password: pendingPassword, email_confirm: false,
+    });
+    if (uErr) return res.status(500).json({ error: 'Failed to create auth user', detail: uErr.message });
+    const userId = newUser.user.id;
+
+    // Send confirmation email
+    await supabase.auth.admin.generateLink({
+      type: 'signup', email: pending.email,
+      options: { redirectTo: 'https://app.praxura.de/login.html?verified=1' },
+    });
+
+    const od = pending.onboarding_data || {};
+
+    // 7. Update profile
+    await supabase.from('profiles').update({
+      business_name: od.business_name || null, sector: od.sector || null,
+      city: od.city || null, language: od.language || null, zip: od.zip || null,
+      street: od.street || null, house_number: od.house_number || null,
+      owner_first_name: od.owner_first_name || null, owner_last_name: od.owner_last_name || null,
+      accepts_bookings: od.accepts_bookings !== false, booking_slug: od.booking_slug || null,
+      working_hours: od.working_hours || null, plan: od.plan || null,
+      billing_interval: od.billing_interval || null,
+      stripe_customer_id: session.customer, stripe_subscription_id: session.subscription,
+      plan_status: 'trial', is_active: true, onboarding_step: 'done', role: 'owner',
+      bank_name: od.bank_name || null, iban: od.iban || null, bic: od.bic || null,
+      steuernummer: od.steuernummer || null, ust_id: od.ust_id || null,
+      tax_exempt_note: od.tax_exempt_note || null, ik_number: od.ik_number || null,
+    }).eq('id', userId);
+
+    // 8. Create default business
+    const { data: bizData } = await supabase.from('businesses').insert({
+      owner_id: userId, business_name: od.business_name || 'Mein Geschäft',
+      sector: od.sector || null, street: od.street || null, house_number: od.house_number || null,
+      zip: od.zip || null, city: od.city || null, country: od.country || 'DE',
+      phone: od.phone || null, email: pending.email, booking_slug: od.booking_slug || null,
+      is_default: true, ik_number: od.ik_number || null,
+    }).select();
+    const businessId = bizData?.[0]?.id || null;
+
+    if (businessId) {
+      await supabase.from('user_preferences').insert({
+        user_id: userId, preference_key: 'selected_business', preference_value: businessId,
+      });
+
+      if (Array.isArray(od.services) && od.services.length) {
+        const { data: inserted } = await supabase.from('services').insert(
+          od.services.map(s => ({
+            user_id: userId, owner_id: userId, business_id: businessId,
+            title: s.name, duration_minutes: s.duration_minutes || 30,
+            price: s.price_eur || null, is_online_meeting: false, code: s.code || null,
+          }))
+        ).select();
+        if (inserted?.length) {
+          await supabase.from('employee_services').insert(inserted.map(s => ({ employee_id: userId, service_id: s.id })));
+          await supabase.from('business_services').insert(od.services.map((s, i) => ({
+            business_id: businessId, name: s.name, duration_minutes: s.duration_minutes || 30,
+            price_eur: s.price_eur || null, is_active: s.is_active !== false, display_order: i,
+          })));
+        }
+      }
+
+      if (Array.isArray(od.working_hours_rows) && od.working_hours_rows.length) {
+        await supabase.from('working_hours').insert(od.working_hours_rows.map(r => ({
+          user_id: userId, owner_id: userId, business_id: businessId,
+          day_of_week: r.day_of_week, start_time: r.start_time || '00:00:00',
+          end_time: r.end_time || '00:00:00', is_active: r.is_active,
+        })));
+      }
+    }
+
+    // 9. Cleanup pending signup
+    await supabase.rpc('pending_signup_delete', { p_pending_id: pendingId });
+
+    console.log('[recover-checkout] recovered', session_id, '→', userId, pending.email);
+    return res.status(200).json({ ok: true, userId, email: pending.email });
+  } catch (err) {
+    console.error('[recover-checkout] unexpected error:', err);
+    return res.status(500).json({ error: 'Unexpected error', message: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);
