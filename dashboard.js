@@ -4653,34 +4653,36 @@ function populateEmpSelects(selectedId = null) {
 async function populateSrvSelect(selectedId = null, employeeId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  let q = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
+  let q = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal,gkv_position_nr').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
   q = bizScope(q, 'services');
   const { data } = await q;
 
-  // Update global cache with full data including price_config
-  if (data) {
-    ownerServices = data;
-  }
+  if (data) ownerServices = data;
 
-  // Filter auf dem Mitarbeiter zugewiesene Leistungen — ohne Zuweisung alle anzeigen
   let allowedSet = null;
   if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
   if (employeeId) {
     const { data: assigned } = await supabase.from('employee_services').select('service_id').eq('employee_id', employeeId);
-    if (assigned && assigned.length) {
-      allowedSet = new Set(assigned.map(a => a.service_id));
-    }
+    if (assigned && assigned.length) allowedSet = new Set(assigned.map(a => a.service_id));
   }
 
-  // Customer-facing dropdown: exclude is_internal services (Blanko bonus etc.) unless it is the selected one
   let visible = (data || []).filter(s => !s.is_internal || s.id === selectedId);
-  if (allowedSet) {
-    visible = visible.filter(s => allowedSet.has(s.id) || s.id === selectedId);
-  }
+  if (allowedSet) visible = visible.filter(s => allowedSet.has(s.id) || s.id === selectedId);
 
-  el.innerHTML = '<option value="">— Dienstleistung wählen —</option>' + visible.map(s =>
-    `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)}</option>`
-  ).join('');
+  const gkvSrvs     = visible.filter(s => s.gkv_position_nr);
+  const privateSrvs = visible.filter(s => !s.gkv_position_nr);
+
+  const makeOption = s =>
+    `<option value="${s.id}" data-duration="${s.duration_minutes || 30}" data-code="${escapeHtml(s.code || '')}" ${s.id === selectedId ? 'selected' : ''}>${escapeHtml(s.title)}</option>`;
+
+  let html = '<option value="">— Dienstleistung wählen —</option>';
+  if (gkvSrvs.length) {
+    html += `<optgroup label="⚕ GKV-Leistungen (§125 SGB V)">${gkvSrvs.map(makeOption).join('')}</optgroup>`;
+  }
+  if (privateSrvs.length) {
+    html += `<optgroup label="✦ Private Leistungen">${privateSrvs.map(makeOption).join('')}</optgroup>`;
+  }
+  el.innerHTML = html;
   if (selectedId) updateBkDuration(selectedId);
 }
 
@@ -7678,7 +7680,9 @@ const GKV_LEISTUNGSKATALOG = {
   podologie: [
     { code: 'P01',  kuerzel: 'PKB',   title: 'Podologische Komplexbehandlung (beide Füße)', duration: 60, duration_label: '45–60', price: 38.00, price_min: 35.00, price_max: 40.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 35–40 €. Mindestbehandlungszeit lt. Vertrag.' },
     { code: 'P02',  kuerzel: 'PEB',   title: 'Podologische Behandlung (ein Fuß)',           duration: 35, duration_label: '25–40', price: 24.00, price_min: 22.00, price_max: 26.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 22–26 €.' },
-    { code: 'P03',  kuerzel: 'NSP-E', title: 'Nagelspangenbehandlung Erstanlage',           duration: 45, duration_label: '30–60', price: 45.00, price_min: 30.00, price_max: 75.00, locked: false, hinweis: 'Preis je nach Spangentyp 30,00–75,00 €. Dauer variiert mit Technik.' },
+    { code: 'P03a', kuerzel: 'NSP-K', title: 'Nagelspangenbehandlung Erstanlage (Kunststoff)', duration: 30, duration_label: '25–35', price: 32.00, price_min: 28.00, price_max: 38.00, locked: false },
+    { code: 'P03b', kuerzel: 'NSP-B', title: 'Nagelspangenbehandlung Erstanlage (B/S-Spange)', duration: 45, duration_label: '35–50', price: 50.00, price_min: 42.00, price_max: 58.00, locked: false },
+    { code: 'P03c', kuerzel: 'NSP-V', title: 'Nagelspangenbehandlung Erstanlage (VHO/3TO)',    duration: 55, duration_label: '45–60', price: 70.00, price_min: 62.00, price_max: 75.00, locked: false },
     { code: 'P04',  kuerzel: 'NSP-F', title: 'Nagelspangenbehandlung Folgetermin',          duration: 20, duration_label: '15–25', price: 18.00, price_min: 15.00, price_max: 25.00, locked: false },
     { code: 'P-HB', kuerzel: 'HB',    title: 'Hausbesuchszuschlag (Pos. 18510)',             duration: null, price: 13.75, price_min: 13.75, price_max: 13.75, locked: true, hinweis: 'Pauschale pro Hausbesuch, unabhängig von der Behandlungszeit.' },
   ],
@@ -7689,9 +7693,9 @@ const GKV_LEISTUNGSKATALOG = {
     { code: 'ET4', kuerzel: 'PF',  title: 'Psychisch-funktionelle Behandlung',          duration: 75, price: 95.00, price_min: 95.00, price_max: 95.00, locked: true },
   ],
   logopaedie: [
-    { code: '09560', kuerzel: 'ST30', title: 'Sprachtherapie Einzel', duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
-    { code: '09561', kuerzel: 'ST45', title: 'Sprachtherapie Einzel', duration: 45, price: 72.00, price_min: 72.00, price_max: 72.00, locked: true },
-    { code: '09562', kuerzel: 'ST60', title: 'Sprachtherapie Einzel', duration: 60, price: 92.00, price_min: 92.00, price_max: 92.00, locked: true },
+    { code: '09560', kuerzel: 'ST30', title: 'Sprachtherapie Einzel 30 Min', duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
+    { code: '09561', kuerzel: 'ST45', title: 'Sprachtherapie Einzel 45 Min', duration: 45, price: 72.00, price_min: 72.00, price_max: 72.00, locked: true },
+    { code: '09562', kuerzel: 'ST60', title: 'Sprachtherapie Einzel 60 Min', duration: 60, price: 92.00, price_min: 92.00, price_max: 92.00, locked: true },
     { code: '09570', kuerzel: 'SLK',  title: 'Schlucktherapie',       duration: 45, price: 74.00, price_min: 74.00, price_max: 74.00, locked: true },
     { code: '09580', kuerzel: 'STM',  title: 'Stimmtherapie',         duration: 30, price: 54.00, price_min: 54.00, price_max: 54.00, locked: true },
   ],
@@ -18312,12 +18316,25 @@ async function populateWlServices() {
   const sel = document.getElementById('wlService');
   if (!sel || sel.options.length > 1) return;
   const ownerId = getOwnerId();
-  const { data: srvs } = await supabase.from('services').select('id,title').eq('owner_id', ownerId).order('title');
-  (srvs || []).forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id; opt.textContent = s.title;
-    sel.appendChild(opt);
-  });
+  const { data: srvs } = await supabase.from('services').select('id,title,gkv_position_nr').eq('owner_id', ownerId).order('title');
+  const all = srvs || [];
+  const gkvSrvs     = all.filter(s => s.gkv_position_nr);
+  const privateSrvs = all.filter(s => !s.gkv_position_nr);
+
+  const addGroup = (label, items) => {
+    if (!items.length) return;
+    const grp = document.createElement('optgroup');
+    grp.label = label;
+    items.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.title;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  };
+
+  addGroup('⚕ GKV-Leistungen (§125 SGB V)', gkvSrvs);
+  addGroup('✦ Private Leistungen', privateSrvs);
 }
 
 async function initWlPatientAutocomplete() {
