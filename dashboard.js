@@ -758,6 +758,7 @@ async function switchPanel(id) {
   if (id === 'warteliste') loadWarteliste();
   if (id === 'statistik') loadStatistik();
   if (id === 'anamnese') loadAnamnese();
+  if (id === 'feedback') loadFeedbacks();
 }
 
 function openSidebar() {
@@ -7617,6 +7618,7 @@ async function loadServices() {
   q = bizScope(q, 'services');
   const { data } = await q;
   servicesCache = data || [];
+  renderGkvCatalog();
   renderServices();
   renderSrvEmpCheckboxes();
 }
@@ -7657,6 +7659,97 @@ const GKV_PRICES = {
   // Hausbesuch-Zuschläge
   'X9922': 22.78, 'X9950': 22.78, 'X9951': 13.09,
 };
+
+// GKV-Vergütungskatalog §125 SGB V — sektöre göre standart hizmetler
+const GKV_LEISTUNGSKATALOG = {
+  physiotherapy: [
+    { code: 'X0501', kuerzel: 'KG',    title: 'Krankengymnastik Einzel',                  duration: 25, duration_label: '15–25', price: 29.63, locked: true },
+    { code: 'X1201', kuerzel: 'MT',    title: 'Manuelle Therapie',                        duration: 25, duration_label: '20–30', price: 35.59, locked: true },
+    { code: 'X0201', kuerzel: 'MLD45', title: 'Manuelle Lymphdrainage 45 min',            duration: 45, price: 53.94, locked: true },
+    { code: 'X0202', kuerzel: 'MLD60', title: 'Manuelle Lymphdrainage 60 min',            duration: 60, price: 71.94, locked: true },
+    { code: 'X0507', kuerzel: 'KGG',   title: 'KG-Gerät (bis 3 Pat., parallel)',          duration: 60, price: 55.81, locked: true },
+    { code: 'X0710', kuerzel: 'BOB',   title: 'KG-ZNS Bobath Erwachsene Einzel',         duration: 30, duration_label: '25–35', price: 47.06, locked: true },
+    { code: 'X0711', kuerzel: 'VOJ',   title: 'KG-ZNS Vojta Erwachsene Einzel',          duration: 30, duration_label: '25–35', price: 47.06, locked: true },
+    { code: 'X0712', kuerzel: 'PNF',   title: 'KG-ZNS PNF Einzel',                       duration: 30, duration_label: '25–35', price: 47.06, locked: true },
+    { code: 'X0702', kuerzel: 'Muko',  title: 'KG Atemtherapie (Mukoviszidose) Einzel',  duration: 60, price: 88.94, locked: true },
+    { code: 'X0102', kuerzel: 'MAS',   title: 'Massage Einzel',                           duration: 25, duration_label: '20–30', price: 33.75, locked: true },
+    { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price:  8.63, locked: true },
+  ],
+  podologie: [
+    { code: 'P01',  kuerzel: 'PKB',   title: 'Podologische Komplexbehandlung (beide Füße)', duration: 60, duration_label: '45–60', price: 38.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 35–40 €. Mindestbehandlungszeit lt. Vertrag.' },
+    { code: 'P02',  kuerzel: 'PEB',   title: 'Podologische Behandlung (ein Fuß)',           duration: 35, duration_label: '25–40', price: 24.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 22–26 €.' },
+    { code: 'P03',  kuerzel: 'NSP-E', title: 'Nagelspangenbehandlung Erstanlage',           duration: 45, duration_label: '30–60', price: 45.00, locked: false, hinweis: 'Preis je nach Spangentyp 30,00–75,00 €. Dauer variiert mit Technik.' },
+    { code: 'P04',  kuerzel: 'NSP-F', title: 'Nagelspangenbehandlung Folgetermin',          duration: 20, duration_label: '15–25', price: 18.00, locked: false },
+    { code: 'P-HB', kuerzel: 'HB',    title: 'Hausbesuchszuschlag (Pos. 18510)',             duration: null, price: 13.75, locked: true, hinweis: 'Pauschale pro Hausbesuch, unabhängig von der Behandlungszeit.' },
+  ],
+  ergotherapie: [
+    { code: 'ET1', kuerzel: 'MF',  title: 'Motorisch-funktionelle Behandlung',          duration: 45, price: 55.00, locked: true },
+    { code: 'ET2', kuerzel: 'SP',  title: 'Sensomotorisch-perzeptive Behandlung',       duration: 60, price: 78.00, locked: true },
+    { code: 'ET3', kuerzel: 'HLT', title: 'Hirnleistungstraining / neuropsych. Üben',  duration: 60, price: 74.00, locked: true },
+    { code: 'ET4', kuerzel: 'PF',  title: 'Psychisch-funktionelle Behandlung',          duration: 75, price: 95.00, locked: true },
+  ],
+  logopaedie: [
+    { code: '09560', kuerzel: 'ST30',  title: 'Sprachtherapie Einzel',  duration: 30, price: 54.00, locked: true },
+    { code: '09561', kuerzel: 'ST45',  title: 'Sprachtherapie Einzel',  duration: 45, price: 72.00, locked: true },
+    { code: '09562', kuerzel: 'ST60',  title: 'Sprachtherapie Einzel',  duration: 60, price: 92.00, locked: true },
+    { code: '09570', kuerzel: 'SLK',   title: 'Schlucktherapie',        duration: 45, price: 74.00, locked: true },
+    { code: '09580', kuerzel: 'STM',   title: 'Stimmtherapie',          duration: 30, price: 54.00, locked: true },
+  ],
+};
+GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy;
+
+function renderGkvCatalog() {
+  const section = document.getElementById('gkvCatalogSection');
+  const divider = document.getElementById('privatSrvDivider');
+  if (!section) return;
+
+  const sector = getSector();
+  const catalog = GKV_LEISTUNGSKATALOG[sector];
+  if (!catalog || !catalog.length) {
+    section.style.display = 'none';
+    if (divider) divider.hidden = true;
+    return;
+  }
+
+  const lockSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:-1px;opacity:0.6;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+  const infoSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+  section.style.display = '';
+  section.innerHTML = `
+    <div class="gkv-catalog-header">
+      <div>
+        <span class="gkv-catalog-title">GKV-Standardleistungen</span>
+        <span class="gkv-catalog-law">§125 SGB V &middot; Bundeseinheitliche Vergütung 2026</span>
+      </div>
+      <span class="gkv-catalog-badge" title="Diese Leistungen und ihre Vergütungssätze sind durch Vergütungsverträge gemäß §125 SGB V bundeseinheitlich geregelt und können von der Praxis nicht eigenständig geändert werden.">ℹ Vergütungsvertrag</span>
+    </div>
+    <div class="services-grid">
+      ${catalog.map(s => {
+        const durLabel = s.duration != null ? (s.duration_label || s.duration) + ' Min' : '—';
+        const durChip = s.locked
+          ? `<span class="srv-chip srv-chip-locked">${lockSvg}${escapeHtml(durLabel)}</span>`
+          : `<span class="srv-chip srv-chip-flex">${escapeHtml(durLabel)}</span>`;
+        const priceChip = `<span class="srv-chip srv-chip-gkv">GKV ${formatEur(s.price)}</span>`;
+        const hinweis = s.hinweis
+          ? `<div class="gkv-hinweis">${infoSvg}${escapeHtml(s.hinweis)}</div>`
+          : '';
+        return `
+          <div class="service-card gkv-catalog-card">
+            <div class="service-card-head">
+              <div class="service-title">${escapeHtml(s.title)}</div>
+              <span class="gkv-pos-badge">${escapeHtml(s.code)}</span>
+            </div>
+            <div class="gkv-kuerzel">${escapeHtml(s.kuerzel)}</div>
+            <div class="srv-chip-row">${durChip}${priceChip}</div>
+            ${hinweis}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  if (divider) divider.hidden = false;
+}
 
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
