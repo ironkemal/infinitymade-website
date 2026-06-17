@@ -8691,10 +8691,6 @@ async function loadTeam() {
       <div class="emp-name">${name} ${m.id === currentSession.user.id ? t('me') : ''}</div>
       <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
       ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
-      <div class="emp-link-row">
-        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">${ICON.link}</span>${escapeHtml(shortLink)}</a>
-        <button class="btn-icon emp-copy-link" title="Link kopieren" data-link="${bookingLink}" style="display:inline-flex;align-items:center;justify-content:center;"><span class="svg-icon" style="width:12px;height:12px;display:inline-flex;">${ICON.clipboard}</span></button>
-      </div>
       <div class="emp-urlaub-toggle" data-emp-id="${m.id}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px;">
         <span>🌴 Urlaub / Abwesenheit</span>
         <span class="emp-urlaub-chevron" style="transition:transform 0.2s;">›</span>
