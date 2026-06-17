@@ -91,6 +91,59 @@ async function updateCalendarEvent(eventId, booking) {
   return d.conferenceData?.entryPoints?.find(e => e.entryPointType === 'video')?.uri || null;
 }
 
+// ─── ICS ─────────────────────────────────────────────────────────────────────
+
+function buildICS(booking, meetLink) {
+  // Compute Berlin UTC offset for the event date (DST-aware)
+  const berlinOffsetMin = (() => {
+    const d = new Date(`${booking.booking_date}T${booking.booking_time}:00`);
+    const parts = new Intl.DateTimeFormat('en', {
+      timeZone: 'Europe/Berlin', hour: 'numeric', hour12: false, timeZoneName: 'shortOffset',
+    }).formatToParts(d);
+    const tz = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT+1';
+    const m = tz.match(/GMT([+-])(\d+)(?::(\d+))?/);
+    if (!m) return 60;
+    return (m[1] === '+' ? 1 : -1) * (parseInt(m[2]) * 60 + parseInt(m[3] || '0'));
+  })();
+
+  const toUTC = (dateStr, timeStr) => {
+    const [y, mo, d] = dateStr.split('-').map(Number);
+    const [h, mi]    = timeStr.split(':').map(Number);
+    const utcMs      = Date.UTC(y, mo - 1, d, h, mi) - berlinOffsetMin * 60000;
+    return new Date(utcMs).toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+  };
+
+  const [h, m]    = booking.booking_time.split(':').map(Number);
+  const endMin    = h * 60 + m + 30;
+  const endTime   = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+  const startDt   = toUTC(booking.booking_date, booking.booking_time);
+  const endDt     = toUTC(booking.booking_date, endTime);
+  const now       = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+  const uid       = `praxura-${booking.id}@praxura.de`;
+  const desc      = ['Analysegespräch mit dem Praxura-Team · 30 Minuten · Video-Call',
+                     meetLink ? `Google Meet: ${meetLink}` : ''].filter(Boolean).join('\\n');
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Praxura//Analysegespräch//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${startDt}`,
+    `DTEND:${endDt}`,
+    'SUMMARY:Analysegespräch – Praxura',
+    `DESCRIPTION:${desc}`,
+    'ORGANIZER;CN=Praxura:mailto:kontakt@infinitymade.de',
+    `ATTENDEE;CN=${booking.name};RSVP=FALSE:mailto:${booking.email}`,
+    meetLink ? `URL:${meetLink}` : null,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].filter(Boolean).join('\r\n');
+}
+
 // ─── Email ───────────────────────────────────────────────────────────────────
 
 function fmtDE(dateStr) {
@@ -128,9 +181,15 @@ async function sendConfirmationEmails(booking, meetLink, rescheduleToken) {
     <p style="margin-top:12px"><strong>Datum:</strong> ${dateStr} ${booking.booking_time} Uhr</p>
     ${meetLink ? `<p><a href="${meetLink}">Google Meet beitreten</a></p>` : ''}`);
 
+  const icsAttachment = {
+    filename: 'Analysegespräch-Praxura.ics',
+    content: buildICS(booking, meetLink),
+    contentType: 'text/calendar; method=REQUEST',
+  };
+
   const t = createTransport();
   await Promise.all([
-    t.sendMail({ from: FROM, to: booking.email, subject: `Analysegespräch bestätigt: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml }),
+    t.sendMail({ from: FROM, to: booking.email, subject: `Analysegespräch bestätigt: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml, attachments: [icsAttachment] }),
     t.sendMail({ from: FROM, to: OWNER_EMAIL,   subject: `[Praxura] Neues Gespräch: ${booking.name} – ${dateStr}`, html: ownerHtml }),
   ]);
 }
@@ -158,9 +217,15 @@ async function sendRescheduleEmails(booking, meetLink) {
     <p style="margin-top:12px"><strong>Neuer Termin:</strong> ${dateStr} ${booking.booking_time} Uhr</p>
     ${meetLink ? `<p><a href="${meetLink}">Google Meet beitreten</a></p>` : ''}`);
 
+  const icsAttachment = {
+    filename: 'Analysegespräch-Praxura-aktualisiert.ics',
+    content: buildICS(booking, meetLink),
+    contentType: 'text/calendar; method=REQUEST',
+  };
+
   const t = createTransport();
   await Promise.all([
-    t.sendMail({ from: FROM, to: booking.email, subject: `Termin verschoben: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml }),
+    t.sendMail({ from: FROM, to: booking.email, subject: `Termin verschoben: ${dateStr} ${booking.booking_time} Uhr`, html: bookerHtml, attachments: [icsAttachment] }),
     t.sendMail({ from: FROM, to: OWNER_EMAIL,   subject: `[Praxura] Termin verschoben: ${booking.name} – ${dateStr}`, html: ownerHtml }),
   ]);
 }
