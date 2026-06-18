@@ -7620,9 +7620,42 @@ async function loadServices() {
   q = bizScope(q, 'services');
   const { data } = await q;
   servicesCache = data || [];
+
+  // Sektöre göre GKV kataloğu DB'de eksik hizmetleri oto-seed et
+  await autoSeedGkvServices();
+
   renderGkvCatalog();
   renderServices();
   renderSrvEmpCheckboxes();
+}
+
+async function autoSeedGkvServices() {
+  const sector = getSector();
+  const catalog = GKV_LEISTUNGSKATALOG[sector];
+  if (!catalog || !catalog.length) return;
+
+  const existingCodes = new Set(servicesCache.map(s => s.gkv_position_nr).filter(Boolean));
+  const missing = catalog.filter(entry => !existingCodes.has(entry.code));
+  if (!missing.length) return;
+
+  const ownerId = getOwnerId();
+  const inserts = missing.map(entry => ({
+    owner_id: ownerId,
+    user_id: currentSession.user.id,
+    title: entry.title,
+    code: entry.kuerzel,
+    gkv_position_nr: entry.code,
+    duration_minutes: entry.duration || null,
+    price: entry.price.toString(),
+    price_config: null,
+    is_internal: false,
+    ...(currentBusiness?.id ? { business_id: currentBusiness.id } : {}),
+  }));
+
+  const { data: inserted, error } = await supabase.from('services').insert(inserts).select('*,employee_services(employee_id)');
+  if (!error && inserted) {
+    servicesCache = [...servicesCache, ...inserted];
+  }
 }
 
 // §125 SGB V Bundesvertrag 2026 — bundeseinheitliche Vergütung (gilt in allen Bundesländern)
