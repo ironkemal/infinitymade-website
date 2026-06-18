@@ -1,0 +1,4 @@
+﻿Datum;Patient;Fahrtzweck;Abfahrtsort;Zielort;Therapeut;Kennzeichen;Art;Start-KM;End-KM;Strecke (km);Dauer (min);Notizen
+10.6.2026, 14:20:06;"Gerda Schuhmann";"Hausbesuch Gerda Schuhmann";"Industriestraße 33, 53721 Siegburg";"Hauptstraße 5, 53840 Troisdorf";"Maria Hoffmann";M-HF 1234;gewerblich;1000;1023;23;1;""
+10.6.2026, 10:36:00;"Michael Braun";"Hausbesuch Michael Braun";"Physiotherapie Hoffmann, Siegburg";"Arnulfstraße 150, 80634 München";"Thomas Müller";M-AK 5678;privat;42100;42116;16;104;"Hausbesuch Braun – Folgebehandlung, Bewegungsumfang deutlich verbessert"
+18.5.2026, 10:38:00;"Michael Braun";"Hausbesuch Michael Braun";"Physiotherapie Hoffmann, Siegburg";"Arnulfstraße 150, 80634 München";"Thomas Müller";M-HF 1234;gewerblich;18420;18435;15;97;"Hausbesuch Braun – Koxarthrose KG, 1. Besuch, Patient kooperativ"

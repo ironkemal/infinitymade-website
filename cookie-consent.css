@@ -1,0 +1,198 @@
+/* ==========================================================
+   cookie-consent.css — TTDSG/DSGVO banner for Praxura
+   Uses design-system tokens from assets/system.css
+   ========================================================== */
+
+#cc-banner {
+  /* Layout */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9000;
+
+  /* Skin — cream editorial palette */
+  background: var(--bg-card, #FFFEFB);
+  border-top: 1px solid var(--line, rgba(26, 22, 17, 0.08));
+  box-shadow:
+    0 -4px 30px -8px rgba(26, 22, 17, 0.12),
+    0 -1px 0 rgba(26, 22, 17, 0.04);
+
+  /* Entry animation — slides up from below */
+  transform: translateY(100%);
+  opacity: 0;
+  transition:
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   0.28s ease;
+  will-change: transform, opacity;
+}
+
+#cc-banner.cc-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+#cc-banner.cc-hiding {
+  transform: translateY(110%);
+  opacity: 0;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 1, 1),
+    opacity   0.2s ease;
+}
+
+/* ── Inner layout ─────────────────────────────────────────── */
+
+.cc-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 1.1rem 2rem;
+}
+
+/* ── Text block ───────────────────────────────────────────── */
+
+.cc-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-main-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink, #1A1611);
+  font-family: var(--sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+}
+
+.cc-sub-text {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-mute, #685E52);
+  font-family: var(--sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+}
+
+.cc-link {
+  color: var(--bronze, #6B5538);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.15s ease;
+}
+.cc-link:hover { opacity: 0.7; }
+
+/* ── Action buttons ───────────────────────────────────────── */
+
+.cc-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.cc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-family: var(--sans, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform  0.12s ease,
+    opacity    0.15s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cc-btn:focus-visible {
+  outline: 2px solid var(--bronze, #6B5538);
+  outline-offset: 2px;
+}
+
+.cc-btn:active {
+  transform: scale(0.97);
+}
+
+/*
+ * TTDSG requirement: reject must be equally prominent as accept.
+ * Both buttons use solid-fill styles — secondary uses the muted
+ * warm background, primary uses the bronze brand color.
+ */
+
+.cc-btn-secondary {
+  background: var(--bg-warm, #F1E9D6);
+  color: var(--ink-soft, #4A4036);
+  box-shadow: 0 1px 2px rgba(26, 22, 17, 0.06);
+}
+.cc-btn-secondary:hover {
+  background: var(--bg-deep, #E8DCC0);
+  box-shadow: 0 2px 6px rgba(26, 22, 17, 0.10);
+}
+
+.cc-btn-primary {
+  background: var(--bronze, #6B5538);
+  color: #FFFEFB;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 2px 6px rgba(107, 85, 56, 0.30);
+}
+.cc-btn-primary:hover {
+  background: var(--bronze-deep, #523F26);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 4px 12px rgba(107, 85, 56, 0.35);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .cc-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  .cc-actions {
+    width: 100%;
+  }
+
+  .cc-btn {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .cc-actions {
+    flex-direction: column;
+  }
+  .cc-btn {
+    width: 100%;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  #cc-banner,
+  #cc-banner.cc-hiding {
+    transition: opacity 0.15s ease;
+    transform: none !important;
+  }
+  #cc-banner.cc-visible {
+    opacity: 1;
+  }
+  #cc-banner.cc-hiding {
+    opacity: 0;
+  }
+}

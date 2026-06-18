@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="#fff"/>
+  <!-- Simplified infinity - readable at small sizes -->
+  <path d="M 30 50 C 30 40, 42 40, 50 50 C 58 60, 70 60, 70 50 C 70 40, 58 40, 50 50 C 42 60, 30 60, 30 50 Z"
+        fill="none" stroke="#7c3aed" stroke-width="8" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,69 @@
+HPNR,Leistungstyp,Heilmittelbereich,Leistungserbringer,Grundlage,Leistungsart,Leistung,gültig ab,gültig bis,Eigentümer
+68001,Heilmittel,Podologie,Krankenhaus,,Maßnahmen der podologischen Therapie,Hornhautabtragung,1900-01-01,9999-12-31,
+78001,Heilmittel,Podologie,Podologe,,Maßnahmen der podologischen Therapie,Hornhautabtragung,1900-01-01,9999-12-31,
+88001,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten,,Maßnahmen der podologischen Therapie,Hornhautabtragung,1900-01-01,9999-12-31,
+68002,Heilmittel,Podologie,Krankenhaus,,Maßnahmen der podologischen Therapie,Nagelbearbeitung,1900-01-01,9999-12-31,
+78002,Heilmittel,Podologie,Podologe,,Maßnahmen der podologischen Therapie,Nagelbearbeitung,1900-01-01,9999-12-31,
+88002,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten,,Maßnahmen der podologischen Therapie,Nagelbearbeitung,1900-01-01,9999-12-31,
+68003,Heilmittel,Podologie,Krankenhaus,,Maßnahmen der podologischen Therapie,Podologische Komplexbehandlung,1900-01-01,9999-12-31,
+78003,Heilmittel,Podologie,Podologe,,Maßnahmen der podologischen Therapie,Podologische Komplexbehandlung,1900-01-01,9999-12-31,
+88003,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten,,Maßnahmen der podologischen Therapie,Podologische Komplexbehandlung,1900-01-01,9999-12-31,
+68004,Heilmittel,Podologie,Krankenhaus,,Maßnahmen der podologischen Therapie,Hornhautabtragung an einem Fuß,1900-01-01,9999-12-31,
+78004,Heilmittel,Podologie,Podologe,,Maßnahmen der podologischen Therapie,Hornhautabtragung an einem Fuß,1900-01-01,9999-12-31,
+88004,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten,,Maßnahmen der podologischen Therapie,Hornhautabtragung an einem Fuß,1900-01-01,9999-12-31,
+68005,Heilmittel,Podologie,Krankenhaus,,Maßnahmen der podologischen Therapie,Nagelbearbeitung an einem Fuß,1900-01-01,9999-12-31,
+78005,Heilmittel,Podologie,Podologe,,Maßnahmen der podologischen Therapie,Nagelbearbeitung an einem Fuß,1900-01-01,9999-12-31,
+88005,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten,,Maßnahmen der podologischen Therapie,Nagelbearbeitung an einem Fuß,1900-01-01,9999-12-31,
+68006,Heilmittel,Podologie,Krankenhaus,,Maßnahmen der podologischen Therapie,Podologische Komplexbehandlung an einem Fuß,1900-01-01,9999-12-31,
+78006,Heilmittel,Podologie,Podologe,,Maßnahmen der podologischen Therapie,Podologische Komplexbehandlung an einem Fuß,1900-01-01,9999-12-31,
+88006,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten,,Maßnahmen der podologischen Therapie,Podologische Komplexbehandlung an einem Fuß,1900-01-01,9999-12-31,
+68010,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Behandlung (klein),1900-01-01,9999-12-31,GKV-SV
+78010,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Behandlung (klein),1900-01-01,9999-12-31,GKV-SV
+88010,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Behandlung (klein),1900-01-01,9999-12-31,GKV-SV
+68020,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Behandlung (groß),1900-01-01,9999-12-31,GKV-SV
+78020,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Behandlung (groß),1900-01-01,9999-12-31,GKV-SV
+88020,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Behandlung (groß),1900-01-01,9999-12-31,GKV-SV
+68030,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Befundung,1900-01-01,9999-12-31,GKV-SV
+78030,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Befundung,1900-01-01,9999-12-31,GKV-SV
+88030,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Podologische Befundung,1900-01-01,9999-12-31,GKV-SV
+68040,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Eingangsbefundung,1900-01-01,9999-12-31,GKV-SV
+78040,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Eingangsbefundung,1900-01-01,9999-12-31,GKV-SV
+88040,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Maßnahmen der podologischen Therapie,Eingangsbefundung,1900-01-01,9999-12-31,GKV-SV
+68100,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung Erstbefundung,Erstbefundung groß,1900-01-01,9999-12-31,GKV-SV
+78100,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung Erstbefundung,Erstbefundung groß,1900-01-01,9999-12-31,GKV-SV
+88100,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung Erstbefundung,Erstbefundung groß,1900-01-01,9999-12-31,GKV-SV
+68110,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung Erstbefundung,Erstbefundung klein,1900-01-01,9999-12-31,GKV-SV
+78110,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung Erstbefundung,Erstbefundung klein,1900-01-01,9999-12-31,GKV-SV
+88110,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung Erstbefundung,Erstbefundung klein,1900-01-01,9999-12-31,GKV-SV
+68210,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Anpassung einer einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+78210,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Anpassung einer einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+88210,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Anpassung einer einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+68220,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Fertigung einer einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+78220,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Fertigung einer einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+88220,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Fertigung einer einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+68230,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Nachregulierung der einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+78230,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Nachregulierung der einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+88230,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung nach Ross Fraser,"Nachregulierung der einteiligen unilateralen und bilateralen Nagelkorrekturspange, z. B. nach Ross Fraser",1900-01-01,9999-12-31,GKV-SV
+68300,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung mehrteilig bilateral,"Vorbereitung des Nagels, Anpassung und Aufsetzen einer mehrteiligen bilateralen Nagelkorrekturspange",1900-01-01,9999-12-31,GKV-SV
+78300,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung mehrteilig bilateral,"Vorbereitung des Nagels, Anpassung und Aufsetzen einer mehrteiligen bilateralen Nagelkorrekturspange",1900-01-01,9999-12-31,GKV-SV
+88300,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung mehrteilig bilateral,"Vorbereitung des Nagels, Anpassung und Aufsetzen einer mehrteiligen bilateralen Nagelkorrekturspange",1900-01-01,9999-12-31,GKV-SV
+68400,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung einteilige Kunststoff- oder MetallNagelkorrekturspange,"Vorbereitung des Nagels, Anpassung und Aufsetzen einer einteiligen Kunststoff- oder Metall-Nagelkorrekturspange",1900-01-01,9999-12-31,GKV-SV
+78400,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung einteilige Kunststoff- oder MetallNagelkorrekturspange,"Vorbereitung des Nagels, Anpassung und Aufsetzen einer einteiligen Kunststoff- oder Metall-Nagelkorrekturspange",1900-01-01,9999-12-31,GKV-SV
+88400,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung einteilige Kunststoff- oder MetallNagelkorrekturspange,"Vorbereitung des Nagels, Anpassung und Aufsetzen einer einteiligen Kunststoff- oder Metall-Nagelkorrekturspange",1900-01-01,9999-12-31,GKV-SV
+68510,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,indikationsspezifische Kontrolle auf Sitz- und Passgenauigkeit,1900-01-01,9999-12-31,GKV-SV
+78510,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,indikationsspezifische Kontrolle auf Sitz- und Passgenauigkeit,1900-01-01,9999-12-31,GKV-SV
+88510,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,indikationsspezifische Kontrolle auf Sitz- und Passgenauigkeit,1900-01-01,9999-12-31,GKV-SV
+68520,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,Behandlungsabschluss / Entfernung der Nagelkorrekturspange,1900-01-01,9999-12-31,GKV-SV
+78520,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,Behandlungsabschluss / Entfernung der Nagelkorrekturspange,1900-01-01,9999-12-31,GKV-SV
+88520,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,Behandlungsabschluss / Entfernung der Nagelkorrekturspange,1900-01-01,9999-12-31,GKV-SV
+68530,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,Therapiebericht UI 2,1900-01-01,9999-12-31,GKV-SV
+78530,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,Therapiebericht UI 2,1900-01-01,9999-12-31,GKV-SV
+88530,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung weitere Leistungen,Therapiebericht UI 2,1900-01-01,9999-12-31,GKV-SV
+68610,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung,Nagelspangenbehandlung,2025-07-01,9999-12-31,GKV-SV
+78610,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung,Nagelspangenbehandlung,2025-07-01,9999-12-31,GKV-SV
+88610,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung,Nagelspangenbehandlung,2025-07-01,9999-12-31,GKV-SV
+68620,Heilmittel,Podologie,Krankenhaus, 125 Abs. 1 SGB V,Nagelspangenbehandlung,Aufschlag für besonderen Aufwand ,2025-07-01,9999-12-31,GKV-SV
+78620,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Nagelspangenbehandlung,Aufschlag für besonderen Aufwand ,2025-07-01,9999-12-31,GKV-SV
+88620,Heilmittel,Podologie,Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten, 125 Abs. 1 SGB V,Nagelspangenbehandlung,Aufschlag für besonderen Aufwand ,2025-07-01,9999-12-31,GKV-SV
+79933,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Hausbesuch/Wegegeld,"Hausbesuch, ärztlich verordnet, inkl. Wegegeld",1900-01-01,9999-12-31,GKV-SV
+79934,Heilmittel,Podologie,Podologe, 125 Abs. 1 SGB V,Hausbesuch/Wegegeld,"Hausbesuch in soz. Einrichtung, inkl. Wegegeld",1900-01-01,9999-12-31,GKV-SV
