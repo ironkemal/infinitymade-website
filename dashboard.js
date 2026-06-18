@@ -4653,21 +4653,26 @@ function populateEmpSelects(selectedId = null) {
 async function populateSrvSelect(selectedId = null, employeeId = null) {
   const el = document.getElementById('bkService');
   if (!el) return;
-  let q = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,is_internal,gkv_position_nr').or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
-  q = bizScope(q, 'services');
-  const { data } = await q;
 
-  if (data) ownerServices = data;
-
-  let allowedSet = null;
-  if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
-  if (employeeId) {
-    const { data: assigned } = await supabase.from('employee_services').select('service_id').eq('employee_id', employeeId);
-    if (assigned && assigned.length) allowedSet = new Set(assigned.map(a => a.service_id));
+  // servicesCache'i kullan; GKV seed henüz yapılmadıysa loadServices() tetikle
+  const sector = getSector();
+  const catalog = GKV_LEISTUNGSKATALOG[sector] || [];
+  const hasGkv = servicesCache.some(s => s.gkv_position_nr);
+  if (!servicesCache.length || (catalog.length && !hasGkv)) {
+    await loadServices();
   }
+  ownerServices = servicesCache;
 
-  let visible = (data || []).filter(s => !s.is_internal || s.id === selectedId);
-  if (allowedSet) visible = visible.filter(s => allowedSet.has(s.id) || s.id === selectedId);
+  if (!employeeId) employeeId = document.getElementById('bkEmployee')?.value || null;
+
+  // Çalışan filtresi: employee_services zaten servicesCache içinde mevcut
+  let visible = servicesCache.filter(s => !s.is_internal || s.id === selectedId);
+  if (employeeId) {
+    visible = visible.filter(s => {
+      const assigned = s.employee_services || [];
+      return assigned.length === 0 || assigned.some(es => es.employee_id === employeeId) || s.id === selectedId;
+    });
+  }
 
   const gkvSrvs     = visible.filter(s => s.gkv_position_nr);
   const privateSrvs = visible.filter(s => !s.gkv_position_nr);
@@ -18343,12 +18348,19 @@ async function openNewWlEntry() {
 
 async function populateWlServices() {
   const sel = document.getElementById('wlService');
-  if (!sel || sel.options.length > 1) return;
-  const ownerId = getOwnerId();
-  const { data: srvs } = await supabase.from('services').select('id,title,gkv_position_nr').eq('owner_id', ownerId).order('title');
-  const all = srvs || [];
-  const gkvSrvs     = all.filter(s => s.gkv_position_nr);
-  const privateSrvs = all.filter(s => !s.gkv_position_nr);
+  if (!sel) return;
+
+  const sector = getSector();
+  const catalog = GKV_LEISTUNGSKATALOG[sector] || [];
+  const hasGkv = servicesCache.some(s => s.gkv_position_nr);
+  if (!servicesCache.length || (catalog.length && !hasGkv)) {
+    await loadServices();
+  }
+
+  const gkvSrvs     = servicesCache.filter(s => s.gkv_position_nr);
+  const privateSrvs = servicesCache.filter(s => !s.gkv_position_nr);
+
+  sel.innerHTML = '<option value="">— Alle —</option>';
 
   const addGroup = (label, items) => {
     if (!items.length) return;
