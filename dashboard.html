@@ -664,6 +664,10 @@
             </div>
           </div>
 
+          <!-- Split layout: sol = team, sağ = anwesenheit -->
+          <div style="display:flex;gap:20px;align-items:flex-start;">
+          <div style="flex:1;min-width:0;"><!-- SOL: mevcut team içeriği -->
+
           <div class="card invite-card"
             style="margin-bottom:16px;flex-direction:column;align-items:flex-start;gap:12px;">
             <div style="display:flex;align-items:center;gap:12px;width:100%;">
@@ -866,6 +870,42 @@
               </div>
             </div>
           </div>
+          </div><!-- /SOL -->
+
+          <!-- SAĞ: Anwesenheit (owner: rapor, employee: check-in linki) -->
+          <div style="width:420px;flex-shrink:0;" id="anwSidePanel">
+
+            <!-- Owner rapor -->
+            <div id="anwOwnerView" style="display:none;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+                <h3 style="margin:0;font-size:15px;font-weight:700;">📋 Anwesenheit</h3>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                  <input type="date" id="anwDateFrom" style="padding:6px 8px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:12px;" />
+                  <input type="date" id="anwDateTo" style="padding:6px 8px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:12px;" />
+                  <button class="btn-primary" id="anwLoadBtn" style="padding:6px 12px;font-size:12px;">Laden</button>
+                </div>
+              </div>
+              <div id="anwKpiRow" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
+              <div id="anwTableWrap" style="font-size:0.82rem;">
+                <div style="color:var(--text-muted);font-size:0.82rem;padding:16px 0;text-align:center;">
+                  Zeitraum wählen und auf „Laden" klicken.
+                </div>
+              </div>
+            </div>
+
+            <!-- Employee check-in linki -->
+            <div id="anwEmployeeView" style="display:none;">
+              <div class="card" style="text-align:center;padding:28px 20px;">
+                <div style="font-size:2rem;margin-bottom:10px;">📍</div>
+                <h3 style="margin-bottom:6px;font-size:15px;">Zeiterfassung</h3>
+                <p style="color:var(--text-muted);margin-bottom:16px;font-size:0.85rem;">Arbeitszeiten per GPS erfassen</p>
+                <a href="/attendance.html" class="btn-primary" style="display:inline-block;text-decoration:none;font-size:0.88rem;">Zur Zeiterfassung →</a>
+              </div>
+            </div>
+
+          </div><!-- /SAĞ -->
+          </div><!-- /split wrapper -->
+
         </section>
 
         <!-- ===== PANEL 7: B2B ===== -->
@@ -2182,43 +2222,6 @@
           <div id="vorlagenPanelGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;padding-bottom:32px;">
             <!-- kart JS ile doldurulacak -->
           </div>
-        </section>
-
-        <!-- ===== PANEL: ANWESENHEIT ===== -->
-        <section class="panel" id="panel-anwesenheit">
-          <div class="panel-header">
-            <div>
-              <h2>Anwesenheit</h2>
-              <p class="panel-sub">Arbeitszeiterfassung des Teams</p>
-            </div>
-            <div class="panel-actions" id="anwOwnerActions" style="display:none;">
-              <select id="anwBizFilter" class="form-select" style="min-width:160px;"></select>
-              <input type="date" id="anwDateFrom" class="form-select" />
-              <input type="date" id="anwDateTo" class="form-select" />
-              <button class="btn-primary" id="anwLoadBtn">Laden</button>
-            </div>
-          </div>
-
-          <!-- Employee: direkt check-in/out linki -->
-          <div id="anwEmployeeView" style="display:none;">
-            <div class="card" style="text-align:center;padding:32px 24px;">
-              <div style="font-size:2.5rem;margin-bottom:12px;">📍</div>
-              <h3 style="margin-bottom:8px;">Zeiterfassung</h3>
-              <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.9rem;">Erfassen Sie Ihre Arbeitszeiten per GPS-Check-in</p>
-              <a href="/attendance.html" class="btn-primary" style="display:inline-block;text-decoration:none;">Zur Zeiterfassung →</a>
-            </div>
-          </div>
-
-          <!-- Owner: ekip raporu -->
-          <div id="anwOwnerView" style="display:none;">
-            <div id="anwKpiRow" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
-            <div id="anwTableWrap">
-              <div style="color:var(--text-muted);font-size:0.88rem;padding:20px 0;text-align:center;">
-                Zeitraum wählen und auf „Laden" klicken.
-              </div>
-            </div>
-          </div>
-
         </section>
 
         <!-- ===== PANEL 8: EINSTELLUNGEN ===== -->

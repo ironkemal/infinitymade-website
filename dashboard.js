@@ -466,8 +466,6 @@ const NAV_GROUPS = [
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>' },
   { id: 'team',          labelDe: 'Team',           labelEn: 'Team',          labelTr: 'Ekip',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-  { id: 'anwesenheit',   labelDe: 'Anwesenheit',    labelEn: 'Attendance',    labelTr: 'Devam',
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>' },
   { id: 'einstellungen', labelDe: 'Einstellungen',  labelEn: 'Settings',      labelTr: 'Ayarlar',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' },
 ];
@@ -761,7 +759,6 @@ async function switchPanel(id) {
   if (id === 'statistik') loadStatistik();
   if (id === 'anamnese') loadAnamnese();
   if (id === 'feedback') loadFeedbacks();
-  if (id === 'anwesenheit') loadAnwesenheitPanel();
 }
 
 function openSidebar() {
@@ -8832,6 +8829,9 @@ async function loadTeam() {
     showToast(t('copied'));
   };
 
+  // Anwesenheit yan panelini yükle + koordinat yoksa geocode et
+  loadAnwesenheitSidePanel();
+  ensureBusinessCoords();
 }
 
 function countWorkDays(fromStr, toStr) {
@@ -19626,12 +19626,19 @@ async function loadFussstatus() {
   el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade…</span>';
 
   const ownerId = getOwnerId();
-  const { data: history } = await supabase
-    .from('fußstatus')
-    .select('*')
-    .eq('owner_id', ownerId)
-    .order('aufnahmedatum', { ascending: false })
-    .limit(10);
+  const [{ data: history }, { data: patienten }] = await Promise.all([
+    supabase
+      .from('fußstatus')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .order('aufnahmedatum', { ascending: false })
+      .limit(10),
+    supabase
+      .from('leads')
+      .select('id, first_name, last_name')
+      .eq('owner_id', ownerId)
+      .order('last_name', { ascending: true }),
+  ]);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -19661,7 +19668,14 @@ async function loadFussstatus() {
         <div style="display:grid;gap:10px;">
           <div>
             <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_patient')}</label>
-            <input type="text" id="fussPatient" placeholder="Name Vorname" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+            <select id="fussPatient" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+              <option value="">— Patient auswählen —</option>
+              ${(patienten || []).map(p => {
+                const name = [p.last_name, p.first_name].filter(Boolean).join(', ');
+                return `<option value="${escapeHtml(p.id)}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+              }).join('')}
+            </select>
+            ${(!patienten || patienten.length === 0) ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Noch keine Patienten angelegt.</div>` : ''}
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <div>
@@ -19720,7 +19734,9 @@ async function loadFussstatus() {
     </div>`;
 
   document.getElementById('fussSaveBtn')?.addEventListener('click', async () => {
-    const patient = document.getElementById('fussPatient').value.trim();
+    const patientSelect = document.getElementById('fussPatient');
+    const patientId   = patientSelect?.value || null;
+    const patientName = patientSelect?.selectedOptions[0]?.dataset.name || '';
     const datum   = document.getElementById('fussDatum').value;
     const seite   = document.getElementById('fussSeite').value;
     const wagner  = parseInt(document.querySelector('input[name="fussWagner"]:checked')?.value ?? '0');
@@ -19735,7 +19751,7 @@ async function loadFussstatus() {
       console.log('[fußstatus] Fotos ausgewählt:', fotoFiles.length, '— Speicherung noch nicht implementiert');
     }
 
-    if (!patient || !datum) {
+    if (!patientId || !datum) {
       errEl.textContent = 'Bitte Patient und Datum ausfüllen.';
       errEl.style.display = 'block';
       return;
@@ -19744,7 +19760,8 @@ async function loadFussstatus() {
 
     const { error } = await supabase.from('fußstatus').insert({
       owner_id: getOwnerId(),
-      patient_name: patient,
+      patient_id: patientId,
+      patient_name: patientName,
       aufnahmedatum: datum,
       seite,
       wagner_grad: wagner,
@@ -19761,34 +19778,19 @@ async function loadFussstatus() {
 // ============================================================================
 // ANWESENHEIT (Devam Takibi) — Owner rapor paneli
 // ============================================================================
-async function loadAnwesenheitPanel() {
+async function loadAnwesenheitSidePanel() {
   const isOwner = currentProfile?.role === 'owner';
   const empView  = document.getElementById('anwEmployeeView');
   const ownerView = document.getElementById('anwOwnerView');
-  const ownerActions = document.getElementById('anwOwnerActions');
 
   if (!isOwner) {
     if (empView) empView.style.display = 'block';
     if (ownerView) ownerView.style.display = 'none';
-    if (ownerActions) ownerActions.style.display = 'none';
     return;
   }
 
   if (empView) empView.style.display = 'none';
   if (ownerView) ownerView.style.display = 'block';
-  if (ownerActions) ownerActions.style.display = 'flex';
-
-  // İşyerleri yükle
-  const bizFilter = document.getElementById('anwBizFilter');
-  if (bizFilter && !bizFilter.dataset.loaded) {
-    bizFilter.dataset.loaded = '1';
-    const { data: bizList } = await supabase
-      .from('businesses')
-      .select('id, business_name')
-      .eq('owner_id', currentProfile.id);
-    bizFilter.innerHTML = '<option value="">Alle Standorte</option>' +
-      (bizList || []).map(b => `<option value="${b.id}">${b.business_name}</option>`).join('');
-  }
 
   // Varsayılan tarih aralığı: bu haftanın başı → bugün
   const dateFrom = document.getElementById('anwDateFrom');
@@ -19810,6 +19812,38 @@ async function loadAnwesenheitPanel() {
   fetchAnwesenheitReport();
 }
 
+// Nominatim ile işyeri adresini koordinata çevir, businesses tablosuna kaydet
+async function ensureBusinessCoords() {
+  if (!currentBusiness?.id) return;
+  if (currentBusiness.clinic_lat && currentBusiness.clinic_lng) return;
+
+  const { street, house_number, zip, city, country } = currentBusiness;
+  if (!street || !city) return;
+
+  const address = [house_number, street, zip, city, country || 'DE'].filter(Boolean).join(' ');
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
+      { headers: { 'User-Agent': 'Praxura/1.0 (info@infinitymade.de)' } }
+    );
+    const data = await res.json();
+    if (!data.length) return;
+
+    const { lat, lon } = data[0];
+    await supabase
+      .from('businesses')
+      .update({ clinic_lat: parseFloat(lat), clinic_lng: parseFloat(lon) })
+      .eq('id', currentBusiness.id);
+
+    // Local state güncelle
+    currentBusiness.clinic_lat = parseFloat(lat);
+    currentBusiness.clinic_lng = parseFloat(lon);
+    console.log('[geocode] koordinat kaydedildi:', lat, lon, 'for', currentBusiness.business_name);
+  } catch (err) {
+    console.warn('[geocode] Nominatim hatası:', err);
+  }
+}
+
 async function fetchAnwesenheitReport() {
   const tableWrap = document.getElementById('anwTableWrap');
   const kpiRow    = document.getElementById('anwKpiRow');
@@ -19817,7 +19851,7 @@ async function fetchAnwesenheitReport() {
 
   const dateFrom = document.getElementById('anwDateFrom')?.value;
   const dateTo   = document.getElementById('anwDateTo')?.value;
-  const bizId    = document.getElementById('anwBizFilter')?.value;
+  const bizId    = currentBusiness?.id || null;
 
   if (!dateFrom || !dateTo) {
     tableWrap.innerHTML = '<div style="color:var(--text-muted);font-size:0.88rem;padding:12px 0;">Bitte Zeitraum wählen.</div>';
