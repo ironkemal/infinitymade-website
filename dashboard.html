@@ -2234,9 +2234,9 @@
 
           <div class="settings-sections">
 
-            <!-- ── GRUPPE 1: PRAXIS ── -->
+            <!-- ── GRUPPE 1: ALLGEMEIN ── -->
             <div class="settings-group">
-              <div class="settings-group-label">Praxis</div>
+              <div class="settings-group-label">Allgemein</div>
 
               <div class="settings-section">
                 <div class="settings-section-title">Ansicht</div>
@@ -2322,9 +2322,9 @@
               </div>
             </div><!-- /gruppe praxis -->
 
-            <!-- ── GRUPPE 2: ABRECHNUNG & DOKUMENTE ── -->
+            <!-- ── GRUPPE 2: FINANZEN ── -->
             <div class="settings-group">
-              <div class="settings-group-label">Abrechnung &amp; Dokumente</div>
+              <div class="settings-group-label">Finanzen</div>
 
               <div class="settings-section" id="settingsBillingSection">
                 <div class="settings-section-title">Rechnungsdaten</div>
@@ -2370,18 +2370,23 @@
               </div>
 
               <div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
-                <div class="settings-section-title">Abrechnungs-Vorbereitung (Krankenkasse)</div>
+                <div class="settings-section-title">Abrechnung (Krankenkasse)</div>
                 <div class="settings-section-body">
                   <div class="form-group">
                     <label class="form-label">Institutionskennzeichen (IK)</label>
                     <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
-                    <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung (Menüpunkt „§302-Abrechnung vorbereiten" in der Seitenleiste).</div>
+                    <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung.</div>
                   </div>
                   <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
                   <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
                   <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
                 </div>
               </div>
+            </div><!-- /gruppe finanzen -->
+
+            <!-- ── GRUPPE 3: ABRECHNUNG & DOKUMENTE ── -->
+            <div class="settings-group">
+              <div class="settings-group-label">Abrechnung &amp; Dokumente</div>
 
               <div class="settings-section" id="aerzteSection">
                 <div class="settings-section-title">Ärzte</div>
@@ -2424,7 +2429,7 @@
               <div class="settings-section" id="settingsVorlagenSection">
                 <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
                   <span>Dokument-Vorlagen</span>
-                  <button class="btn-ghost btn-sm" id="vorlagenNewBtn" type="button" style="font-size:12px;">＋ Neue Vorlage</button>
+                  <button class="btn-ghost btn-sm" id="vorlagenNewBtn" type="button" style="font-size:12px;">+ Neue Vorlage</button>
                 </div>
                 <div class="settings-section-body">
                   <p class="form-hint" style="margin-bottom:12px;">Erstellen Sie individuelle Vorlagen für Quittungen, Rechnungen und §302-Dokumente. Die als Standard markierte Vorlage wird automatisch verwendet.</p>
@@ -2446,7 +2451,7 @@
                   </button>
                 </div>
               </div>
-            </div><!-- /gruppe abrechnung -->
+            </div><!-- /gruppe dokumente -->
 
             <!-- ── GRUPPE 3: KONTO & ABONNEMENT ── -->
             <div class="settings-group">

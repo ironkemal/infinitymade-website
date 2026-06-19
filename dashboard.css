@@ -4166,35 +4166,48 @@ textarea {
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 16px;
   max-width: 560px;
 }
 
 .settings-group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
 .settings-group-label {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--text-muted);
-  padding: 0 4px 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  letter-spacing: 0.8px;
+  color: var(--primary);
+  padding: 11px 20px;
+  background: rgba(34, 197, 94, 0.06);
+  border-bottom: 1px solid var(--border);
 }
 
-.settings-group-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+/* sections inside a group: no individual card styling */
+.settings-group .settings-section {
+  background: none;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
+/* thin divider between adjacent sections within a group */
+.settings-group .settings-section + .settings-section {
+  border-top: 1px solid var(--border);
+}
+
+/* standalone section (outside a group) keeps card look */
+.settings-sections > .settings-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
 
 .settings-section {
   background: var(--bg-card);
