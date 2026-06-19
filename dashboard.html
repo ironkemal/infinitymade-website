@@ -664,9 +664,9 @@
             </div>
           </div>
 
-          <!-- Split layout: sol = team, sağ = anwesenheit -->
-          <div style="display:flex;gap:20px;align-items:flex-start;">
-          <div style="flex:1;min-width:0;"><!-- SOL: mevcut team içeriği -->
+          <!-- Split layout: üst = team, alt = anwesenheit -->
+          <div style="display:flex;flex-direction:column;gap:24px;">
+          <div><!-- ÜST: mevcut team içeriği -->
 
           <div class="card invite-card"
             style="margin-bottom:16px;flex-direction:column;align-items:flex-start;gap:12px;">
@@ -870,24 +870,24 @@
               </div>
             </div>
           </div>
-          </div><!-- /SOL -->
+          </div><!-- /ÜST -->
 
-          <!-- SAĞ: Anwesenheit (owner: rapor, employee: check-in linki) -->
-          <div style="width:420px;flex-shrink:0;" id="anwSidePanel">
+          <!-- ALT: Anwesenheit (owner: rapor, employee: check-in linki) -->
+          <div id="anwSidePanel" style="border-top:1px solid var(--border-color);padding-top:20px;">
 
             <!-- Owner rapor -->
             <div id="anwOwnerView" style="display:none;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                 <h3 style="margin:0;font-size:15px;font-weight:700;">📋 Anwesenheit</h3>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-                  <input type="date" id="anwDateFrom" style="padding:6px 8px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:12px;" />
-                  <input type="date" id="anwDateTo" style="padding:6px 8px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:12px;" />
-                  <button class="btn-primary" id="anwLoadBtn" style="padding:6px 12px;font-size:12px;">Laden</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <input type="date" id="anwDateFrom" style="padding:7px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:13px;" />
+                  <input type="date" id="anwDateTo" style="padding:7px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-card-solid);color:var(--text-main);font-size:13px;" />
+                  <button class="btn-primary" id="anwLoadBtn" style="padding:7px 14px;font-size:13px;">Laden</button>
                 </div>
               </div>
-              <div id="anwKpiRow" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
-              <div id="anwTableWrap" style="font-size:0.82rem;">
-                <div style="color:var(--text-muted);font-size:0.82rem;padding:16px 0;text-align:center;">
+              <div id="anwKpiRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>
+              <div id="anwTableWrap">
+                <div style="color:var(--text-muted);font-size:0.88rem;padding:20px 0;text-align:center;">
                   Zeitraum wählen und auf „Laden" klicken.
                 </div>
               </div>
@@ -903,7 +903,7 @@
               </div>
             </div>
 
-          </div><!-- /SAĞ -->
+          </div><!-- /ALT -->
           </div><!-- /split wrapper -->
 
         </section>
