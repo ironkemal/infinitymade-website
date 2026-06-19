@@ -344,9 +344,11 @@ document.getElementById('form-service').addEventListener('submit', async (e) => 
   const title = document.getElementById('srv-title').value;
   const dur = parseInt(document.getElementById('srv-duration').value);
   const price = document.getElementById('srv-price').value;
-  
+  const reqCert = document.getElementById('srv-req-cert')?.value || null;
+
   const { data: srv, error } = await supabase.from('services').insert({
-    owner_id: session.user.id, title, duration_minutes: dur, price
+    owner_id: session.user.id, title, duration_minutes: dur, price,
+    required_certificate: reqCert || null
   }).select().single();
   if (error) return alert(error.message);
 

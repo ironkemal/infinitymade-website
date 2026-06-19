@@ -734,7 +734,7 @@ async function switchPanel(id) {
     showMyBookingLink();
     renderCalEmpChips();
     document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
-    setCalendarView('week');
+    setCalendarView('day');
   }
   if (id === 'fahrtenbuch') loadFahrtenbuchPanel();
   if (id === 'kunden') { loadLeads(); initPatTableView(); }
@@ -853,6 +853,37 @@ function showToast(msg, type = 'success') {
   d.textContent = msg;
   document.getElementById('toastContainer').appendChild(d);
   setTimeout(() => d.remove(), 3500);
+}
+
+function showQualWarningToast(certCode, empId) {
+  const d = document.createElement('div');
+  d.className = 'toast warning';
+  d.style.flexDirection = 'column';
+  d.style.alignItems = 'flex-start';
+  d.style.gap = '8px';
+  d.style.maxWidth = '320px';
+
+  const msg = document.createElement('span');
+  msg.textContent = `⚠️ ${certCode}-Zertifizierung fehlt — GKV-Abrechnungsrisiko`;
+  d.appendChild(msg);
+
+  const btn = document.createElement('button');
+  btn.textContent = 'Jetzt korrigieren →';
+  btn.style.cssText = 'background:#e6a817;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;align-self:flex-end;';
+  btn.onclick = () => {
+    d.remove();
+    switchPanel('team').then(() => {
+      openEmpDetail(empId);
+      setTimeout(() => {
+        const certTab = document.querySelector('#teamDetailView .tab-btn[data-tab="certificates"]');
+        if (certTab) certTab.click();
+      }, 120);
+    });
+  };
+  d.appendChild(btn);
+
+  document.getElementById('toastContainer').appendChild(d);
+  setTimeout(() => d.remove(), 9000);
 }
 
 // Rohe Postgres-Fehler in verständliche Meldungen übersetzen (Termin speichern)
@@ -5030,6 +5061,26 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!empId) { showToast('Bitte einen Mitarbeiter auswählen.', 'error'); return; }
   if (!srvId) { showToast('Bitte eine Dienstleistung auswählen.', 'error'); return; }
   if (!startV) { showToast('Bitte Datum und Uhrzeit auswählen.', 'error'); return; }
+
+  // Qualifikation gating: sertifika kontrolü (sadece yeni termin)
+  if (!id) {
+    const qSrv = servicesCache.find(s => s.id === srvId);
+    if (qSrv?.required_certificate) {
+      const { data: qCerts } = await supabase.from('therapist_certificates')
+        .select('certificate').eq('profile_id', empId);
+      const hasQCert = (qCerts || []).some(c => c.certificate === qSrv.required_certificate);
+      if (!hasQCert) {
+        const empObj = teamMembers.find(t => t.id === empId);
+        const empName = empObj?.full_name || empObj?.email || 'Dieser Therapeut';
+        const proceed = confirm(
+          `⚠️ Qualifikationswarnung\n\n${empName} hat keine ${qSrv.required_certificate}-Zertifizierung.\n\n` +
+          `„${qSrv.title}" erfordert diese Qualifikation — die Leistung kann bei der GKV-Abrechnung abgelehnt werden.\n\n` +
+          `Trotzdem buchen?`
+        );
+        if (!proceed) return;
+      }
+    }
+  }
 
   // Robust customer resolution: if hidden fields are empty but the search
   // input shows a name, try to match a lead and use it.
@@ -9683,7 +9734,7 @@ async function loadEmpHours(empId) {
 async function loadEmpServices(empId) {
   const grid = document.getElementById('empServicesGrid');
   if (!grid) return;
-  let allQ = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,color')
+  let allQ = supabase.from('services').select('id,title,duration_minutes,price,price_config,code,color,required_certificate')
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`)
     .order('title');
   allQ = bizScope(allQ, 'services');
@@ -9728,6 +9779,14 @@ async function loadEmpServices(empId) {
       if (row) row.classList.toggle('is-selected', chk.checked);
       if (chk.checked) {
         await supabase.from('employee_services').insert({ employee_id: empId, service_id: chk.dataset.srv });
+        const srv = (all || []).find(s => s.id === chk.dataset.srv);
+        if (srv?.required_certificate) {
+          const { data: certs } = await supabase.from('therapist_certificates').select('certificate').eq('profile_id', empId);
+          const hasCert = (certs || []).some(c => c.certificate === srv.required_certificate);
+          if (!hasCert) {
+            showQualWarningToast(srv.required_certificate, empId);
+          }
+        }
       } else {
         await supabase.from('employee_services').delete().eq('employee_id', empId).eq('service_id', chk.dataset.srv);
       }
