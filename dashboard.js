@@ -6550,11 +6550,22 @@ async function openPatientDetailModal(lead) {
   const isPhysio = isPraxisSector(getSector());
   const rezTab = document.getElementById('pdTabRezepte');
   if (rezTab) rezTab.style.display = isPhysio ? '' : 'none';
+  const messTab = document.getElementById('pdTabMessreihen');
+  if (messTab) messTab.style.display = isPhysio ? '' : 'none';
+
+  const messPanel = document.getElementById('pdPanelMessreihen');
+  if (messPanel) {
+    document.getElementById('messChartArea').innerHTML = '';
+    document.getElementById('messLoading').hidden = true;
+  }
 
   loadPatientDetailNotes(leadId);
   loadPatientDetailAnamnese(leadId);
   loadPatientDetailUeberweisung(leadId);
-  if (isPhysio) loadPatientDetailRezepte(leadId);
+  if (isPhysio) {
+    loadPatientDetailRezepte(leadId);
+    loadMessreihen(leadId);
+  }
   loadPatientDetailRechnungen(leadId);
   loadPatientDetailTermine(leadId);
   loadPatientDetailMails(leadId);
@@ -6619,11 +6630,12 @@ async function loadPatientDetailRezepte(leadId) {
     supabase
       .from('prescriptions')
       .select(`
-        id, rezept_typ, status, icd10, diagnosegruppe, heilmittel,
+        id, rezept_typ, is_blanko, status, icd10, diagnosegruppe, heilmittel,
         heilmittel_position, anzahl_einheiten, frequenz, ausstellungsdatum, gueltig_bis,
         behandlungsbeginn, deadline_reminders,
         is_dringend, hausbesuch, dmrz_exported_at, created_at,
         abrechnung_status, kostentraeger_ik, zuzahlung_befreit,
+        heilmittel_typ_blanko, vorrangig_einheiten, ergaenzend_einheiten,
         prescription_sessions ( id, session_number, status, done_at )
       `)
       .eq('patient_id', leadId)
@@ -6666,8 +6678,66 @@ async function loadPatientDetailRezepte(leadId) {
       : '';
 
     const sessions = (rx.prescription_sessions || []).sort((a, b) => a.session_number - b.session_number);
-    const total = rx.anzahl_einheiten || sessions.length || 0;
     const done = sessions.filter(s => s.status === 'done').length;
+
+    // Blanko Ampel-System (§125a SGB V)
+    const isBlanko = rx.rezept_typ === 'blanko' || rx.is_blanko;
+    const BLANKO_ROT = {
+      weichteil_arthrose_knorpel: { vorrangig: 19, ergaenzend: 7 },
+      fraktur:                    { vorrangig: 27, ergaenzend: 9 },
+      default:                    { vorrangig: 19, ergaenzend: 7 },
+    };
+    let blankoBudgetHtml = '';
+    if (isBlanko) {
+      const thresh = BLANKO_ROT[rx.heilmittel_typ_blanko] || BLANKO_ROT.default;
+      const vorr = rx.vorrangig_einheiten || 0;
+      const erg  = rx.ergaenzend_einheiten || 0;
+      const vorrRot = vorr >= thresh.vorrangig;
+      const ergRot  = erg  >= thresh.ergaenzend;
+      const inRot   = vorrRot || ergRot;
+      const ampelDot = inRot ? '🔴' : '🟢';
+      const ampelLabel = inRot
+        ? `<span class="ampel-badge ampel-rot">ROTE ZONE · −9 % Vergütung</span>`
+        : `<span class="ampel-badge ampel-gruen">GRÜNE ZONE</span>`;
+
+      // Gültig bis countdown
+      let blankoGueltigHtml = '';
+      if (rx.gueltig_bis) {
+        const today0 = new Date(); today0.setHours(0,0,0,0);
+        const gbDate = new Date(rx.gueltig_bis);
+        const daysLeft = Math.round((gbDate - today0) / 86400000);
+        const dColor = daysLeft < 0 ? '#ef4444' : daysLeft <= 14 ? '#f59e0b' : 'var(--text-muted)';
+        blankoGueltigHtml = `<span style="font-size:12px;color:${dColor};">Gültig bis: ${gbDate.toLocaleDateString('de-DE')} (${daysLeft < 0 ? 'abgelaufen' : 'noch ' + daysLeft + ' Tage'})</span>`;
+      }
+
+      const makeBar = (used, rotAt, label) => {
+        const isRed = used >= rotAt;
+        const barPct = Math.min(100, rotAt > 0 ? Math.round((used / rotAt) * 100) : 0);
+        const barColor = isRed ? '#ef4444' : '#22c55e';
+        return `<div class="blanko-bar-row">
+          <span class="blanko-bar-label">${label}</span>
+          <div class="blanko-bar-track">
+            <div class="blanko-bar-fill" style="width:${barPct}%;background:${barColor};"></div>
+            <div class="blanko-bar-threshold" style="left:${Math.min(100, Math.round(((rotAt-1)/rotAt)*100))}%;"></div>
+          </div>
+          <span class="blanko-bar-stat" style="color:${isRed ? '#ef4444' : 'var(--text-main)'};">${used}<span style="color:var(--text-muted);">/${rotAt}</span>${isRed ? ' ⚠' : ''}</span>
+        </div>`;
+      };
+
+      blankoBudgetHtml = `<div class="blanko-budget-card">
+        <div class="blanko-budget-header">
+          ${ampelDot} <strong>Blankoverordnung</strong> ${ampelLabel}
+          ${blankoGueltigHtml}
+        </div>
+        ${makeBar(vorr, thresh.vorrangig, 'Vorrangig')}
+        ${erg > 0 || rx.ergaenzend_einheiten !== null ? makeBar(erg, thresh.ergaenzend, 'Ergänzend') : ''}
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+          ${done} Sitzung${done !== 1 ? 'en' : ''} dokumentiert · Grenze ${rx.heilmittel_typ_blanko ? '(' + rx.heilmittel_typ_blanko.replace(/_/g,' ') + ')' : '(Standard)'}
+        </div>
+      </div>`;
+    }
+
+    const total = rx.anzahl_einheiten || sessions.length || 0;
     const pct = total ? Math.round((done / total) * 100) : 0;
     let validColor = '';
     if (rx.gueltig_bis) {
@@ -6763,12 +6833,12 @@ async function loadPatientDetailRezepte(leadId) {
       <div style="font-size:13px;color:#555;margin-bottom:8px;">
         Ausgestellt: ${issued} · Gültig bis: ${valid} · Frequenz: ${escapeHtml(rx.frequenz || '—')}
       </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      ${isBlanko ? blankoBudgetHtml : `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
         <div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;">
           <div style="width:${pct}%;height:100%;background:#22c55e;"></div>
         </div>
         <span style="font-size:13px;color:#444;white-space:nowrap;">${done}/${total} Sitzungen</span>
-      </div>
+      </div>`}
       ${sessionPills ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${sessionPills}</div>` : ''}
     </div>`;
   }).join('');
@@ -6946,6 +7016,202 @@ function wireBefreiungCard(leadId) {
     });
   });
 }
+
+// ─── MESSREIHEN (VAS / ROM) ───────────────────────────────────────────────────
+
+const MESS_COLORS = { VAS: '#ef4444', ROM: '#3b82f6', kraft: '#22c55e', custom: '#e6a817' };
+const MESS_UNITS  = { VAS: '/ 10', ROM: '°', kraft: 'kg', custom: '' };
+const MESS_MAX    = { VAS: 10, ROM: 180, kraft: 100, custom: 100 };
+
+async function loadMessreihen(leadId) {
+  const area    = document.getElementById('messChartArea');
+  const loading = document.getElementById('messLoading');
+  const saveBtn = document.getElementById('messSaveBtn');
+  const typSel  = document.getElementById('messTyp');
+  if (!area) return;
+
+  // Einheit-Hinweis bei Typ-Wechsel
+  if (typSel) typSel.onchange = () => {
+    const u = document.getElementById('messEinheitLabel');
+    if (u) u.textContent = MESS_UNITS[typSel.value] || '';
+  };
+
+  // Datum vorbelegen (immer aktuell)
+  const datumInp = document.getElementById('messDatum');
+  if (datumInp) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    datumInp.value = now.toISOString().slice(0, 16);
+  }
+
+  if (saveBtn) saveBtn.onclick = () => saveMessung(leadId);
+
+  await refreshMessreihen(leadId);
+}
+
+async function refreshMessreihen(leadId) {
+  const area    = document.getElementById('messChartArea');
+  const loading = document.getElementById('messLoading');
+  if (!area) return;
+  if (loading) loading.hidden = false;
+  area.innerHTML = '';
+
+  const { data, error } = await supabase
+    .from('messreihen')
+    .select('id, typ, koerperteil, wert, einheit, gemessen_am, notiz')
+    .eq('lead_id', leadId)
+    .order('gemessen_am', { ascending: true });
+
+  if (loading) loading.hidden = true;
+  if (error) { area.innerHTML = `<p class="pd-empty">Fehler: ${escapeHtml(error.message)}</p>`; return; }
+  if (!data || !data.length) {
+    area.innerHTML = '<p class="pd-empty" style="padding:20px;">Noch keine Messungen erfasst.</p>';
+    return;
+  }
+
+  // Grupple: typ + koerperteil
+  const groups = new Map();
+  for (const m of data) {
+    const key = `${m.typ}||${m.koerperteil || ''}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  }
+
+  for (const [key, points] of groups) {
+    const [typ, koerperteil] = key.split('||');
+    const label = `${typ}${koerperteil ? ' · ' + koerperteil : ''}`;
+    const color = MESS_COLORS[typ] || '#888';
+    const maxY  = MESS_MAX[typ] || 100;
+    const lowerBetter = typ === 'VAS';
+
+    const chartSvg = renderMessreihenChart(points, maxY, color, lowerBetter);
+    const lastVal = points[points.length - 1];
+    const firstVal = points[0];
+    const trend = lowerBetter
+      ? (lastVal.wert < firstVal.wert ? '↓ besser' : lastVal.wert > firstVal.wert ? '↑ schlechter' : '→ stabil')
+      : (lastVal.wert > firstVal.wert ? '↑ besser' : lastVal.wert < firstVal.wert ? '↓ schlechter' : '→ stabil');
+
+    const block = document.createElement('div');
+    block.className = 'mess-group-block';
+    block.innerHTML = `
+      <div class="mess-group-header">
+        <span class="mess-group-dot" style="background:${color};"></span>
+        <strong>${escapeHtml(label)}</strong>
+        <span class="mess-trend" style="color:${color};">${trend}</span>
+        <span class="mess-count">${points.length} Messung${points.length !== 1 ? 'en' : ''}</span>
+      </div>
+      ${chartSvg}
+      <div class="mess-table">
+        ${points.map(p => `
+          <div class="mess-row">
+            <span class="mess-date">${new Date(p.gemessen_am).toLocaleDateString('de-DE')}</span>
+            <span class="mess-val" style="color:${color};font-weight:700;">${p.wert}</span>
+            <span class="mess-unit">${p.einheit || MESS_UNITS[typ] || ''}</span>
+            ${p.notiz ? `<span class="mess-note">${escapeHtml(p.notiz)}</span>` : '<span></span>'}
+            <button class="mess-del-btn" data-id="${p.id}" title="Löschen">✕</button>
+          </div>`).join('')}
+      </div>`;
+    area.appendChild(block);
+  }
+
+  area.querySelectorAll('.mess-del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Messung löschen?')) return;
+      await supabase.from('messreihen').delete().eq('id', btn.dataset.id);
+      refreshMessreihen(leadId);
+    });
+  });
+}
+
+function renderMessreihenChart(points, maxY, color, lowerBetter) {
+  const W = 520, H = 110, PAD = { top: 12, right: 16, bottom: 28, left: 32 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+
+  const dates = points.map(p => new Date(p.gemessen_am).getTime());
+  const minT = Math.min(...dates), maxT = Math.max(...dates);
+  const vals  = points.map(p => p.wert);
+  const minV  = 0, maxV = maxY;
+
+  const xOf = t => PAD.left + (maxT === minT ? innerW / 2 : (t - minT) / (maxT - minT) * innerW);
+  const yOf = v => PAD.top + innerH - ((v - minV) / (maxV - minV) * innerH);
+
+  // Y-axis grid lines (0, 25%, 50%, 75%, 100%)
+  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(frac => {
+    const v = Math.round(minV + frac * (maxV - minV));
+    const y = yOf(v);
+    return `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="${PAD.left - 4}" y="${y + 4}" text-anchor="end" font-size="9" fill="var(--text-muted)">${v}</text>`;
+  }).join('');
+
+  // X-axis date labels (max 5)
+  const step = Math.max(1, Math.floor(points.length / 5));
+  const xLabels = points.filter((_, i) => i % step === 0 || i === points.length - 1).map(p => {
+    const x = xOf(new Date(p.gemessen_am).getTime());
+    const label = new Date(p.gemessen_am).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    return `<text x="${x}" y="${H - 4}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${label}</text>`;
+  }).join('');
+
+  // Polyline
+  const polyPoints = points.map(p => `${xOf(new Date(p.gemessen_am).getTime())},${yOf(p.wert)}`).join(' ');
+
+  // Data points + tooltips
+  const circles = points.map(p => {
+    const cx = xOf(new Date(p.gemessen_am).getTime());
+    const cy = yOf(p.wert);
+    return `<circle cx="${cx}" cy="${cy}" r="4" fill="${color}" stroke="var(--bg-card-solid)" stroke-width="1.5">
+      <title>${new Date(p.gemessen_am).toLocaleDateString('de-DE')}: ${p.wert}</title>
+    </circle>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="mess-chart" preserveAspectRatio="xMidYMid meet">
+    ${gridLines}
+    ${xLabels}
+    <polyline points="${polyPoints}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+    ${circles}
+  </svg>`;
+}
+
+async function saveMessung(leadId) {
+  const typ       = document.getElementById('messTyp')?.value;
+  const koerper   = document.getElementById('messKoerper')?.value || null;
+  const wertRaw   = document.getElementById('messWert')?.value;
+  const datumVal  = document.getElementById('messDatum')?.value;
+  const notiz     = document.getElementById('messNotiz')?.value?.trim() || null;
+
+  if (!typ || !wertRaw || !datumVal) {
+    showToast('Bitte Typ, Wert und Datum angeben.', 'error');
+    return;
+  }
+  const wert = parseFloat(wertRaw);
+  if (isNaN(wert) || wert < 0) { showToast('Ungültiger Wert.', 'error'); return; }
+
+  const einheit = MESS_UNITS[typ]?.replace('/ ', '') || 'Punkte';
+  const btn = document.getElementById('messSaveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  const { error } = await supabase.from('messreihen').insert({
+    owner_id:    getOwnerId(),
+    lead_id:     leadId,
+    typ,
+    koerperteil: koerper,
+    wert,
+    einheit,
+    gemessen_am: new Date(datumVal).toISOString(),
+    notiz,
+    erfasst_von: currentSession?.user?.id || null,
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+
+  document.getElementById('messWert').value = '';
+  document.getElementById('messNotiz').value = '';
+  showToast('Messung gespeichert ✓');
+  refreshMessreihen(leadId);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function openBefreiungModal(leadId) {
   const modal = document.getElementById('befreiungModal');
@@ -7286,6 +7552,9 @@ document.querySelectorAll('.pd-tab').forEach(tab => {
     tab.classList.add('active');
     const panel = document.getElementById('pdPanel' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1));
     if (panel) panel.classList.add('active');
+    if (tab.dataset.tab === 'messreihen' && pdCurrentLeadId) {
+      refreshMessreihen(pdCurrentLeadId);
+    }
   });
 });
 
