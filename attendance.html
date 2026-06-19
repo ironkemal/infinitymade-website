@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>(function(){try{if(localStorage.getItem('im-theme')==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+  <title>Anwesenheit – Praxura</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#F8F3E8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="stylesheet" href="dashboard.css?v=20260619" />
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <style>
+    .att-page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      gap: 20px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .att-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color, #e5e7eb);
+    }
+    .att-header-logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main, #1a1a1a);
+    }
+    .att-header-logo em { font-style: normal; opacity: 0.55; }
+    .att-header-back {
+      margin-left: auto;
+      font-size: 0.85rem;
+      color: var(--accent, #b1891b);
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px 8px;
+    }
+
+    .att-status-card {
+      width: 100%;
+      background: var(--bg-card-solid, #fff);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 1px solid var(--border-color, #e5e7eb);
+    }
+    .att-date {
+      font-size: 0.85rem;
+      color: var(--text-muted, #6b7280);
+      margin-bottom: 6px;
+    }
+    .att-greeting {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main, #1a1a1a);
+      margin-bottom: 20px;
+    }
+
+    /* Status badge */
+    .att-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .att-badge.not-in    { background: #f3f4f6; color: #6b7280; }
+    .att-badge.present   { background: #d1fae5; color: #065f46; }
+    .att-badge.late      { background: #fef3c7; color: #92400e; }
+    .att-badge.done      { background: #dbeafe; color: #1e40af; }
+    .att-badge.incomplete{ background: #fee2e2; color: #991b1b; }
+    [data-theme="dark"] .att-badge.not-in    { background: #374151; color: #9ca3af; }
+    [data-theme="dark"] .att-badge.present   { background: #064e3b; color: #6ee7b7; }
+    [data-theme="dark"] .att-badge.late      { background: #78350f; color: #fcd34d; }
+    [data-theme="dark"] .att-badge.done      { background: #1e3a5f; color: #93c5fd; }
+    [data-theme="dark"] .att-badge.incomplete{ background: #7f1d1d; color: #fca5a5; }
+
+    .att-times {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 8px;
+    }
+    .att-time-block { text-align: center; }
+    .att-time-label { font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+    .att-time-value { font-size: 1.35rem; font-weight: 700; color: var(--text-main, #1a1a1a); }
+    .att-duration {
+      font-size: 0.82rem;
+      color: var(--text-muted, #6b7280);
+      margin-top: 4px;
+    }
+
+    /* Big action buttons */
+    .att-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 18px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 700;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .att-btn:active { transform: scale(0.97); }
+    .att-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .att-btn-in  { background: #10b981; color: #fff; }
+    .att-btn-out { background: #3b82f6; color: #fff; }
+    .att-btn-loading { opacity: 0.7; pointer-events: none; }
+
+    .att-gps-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted, #6b7280);
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .att-gps-hint.error { color: #ef4444; }
+
+    /* History */
+    .att-history-card {
+      width: 100%;
+      background: var(--bg-card-solid, #fff);
+      border-radius: 16px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      overflow: hidden;
+    }
+    .att-history-header {
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted, #6b7280);
+      border-bottom: 1px solid var(--border-color, #e5e7eb);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .att-history-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color, #e5e7eb);
+    }
+    .att-history-row:last-child { border-bottom: none; }
+    .att-history-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-present   { background: #10b981; }
+    .dot-late      { background: #f59e0b; }
+    .dot-incomplete{ background: #ef4444; }
+    .dot-absent    { background: #d1d5db; }
+    .att-history-date {
+      font-size: 0.82rem;
+      color: var(--text-muted, #6b7280);
+      min-width: 80px;
+    }
+    .att-history-times {
+      flex: 1;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main, #1a1a1a);
+    }
+    .att-history-dur {
+      font-size: 0.78rem;
+      color: var(--text-muted, #6b7280);
+    }
+
+    .att-msg {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      text-align: center;
+      display: none;
+    }
+    .att-msg.success { background: #d1fae5; color: #065f46; display: block; }
+    .att-msg.error   { background: #fee2e2; color: #991b1b; display: block; }
+    [data-theme="dark"] .att-msg.success { background: #064e3b; color: #6ee7b7; }
+    [data-theme="dark"] .att-msg.error   { background: #7f1d1d; color: #fca5a5; }
+
+    .att-spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .att-select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color, #e5e7eb);
+      background: var(--bg-card-solid, #fff);
+      color: var(--text-main, #1a1a1a);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading-screen"><div class="spinner"></div></div>
+
+  <div id="app" style="display:none;">
+    <div class="att-page">
+
+      <div class="att-header">
+        <span class="att-header-logo">Prax<em>ura</em></span>
+        <a href="/dashboard.html" class="att-header-back">← Dashboard</a>
+      </div>
+
+      <!-- İşyeri seçimi (birden fazla lokasyon varsa) -->
+      <select id="bizSelect" class="att-select" style="display:none;"></select>
+
+      <!-- Durum kartı -->
+      <div class="att-status-card">
+        <div class="att-date" id="attDate">—</div>
+        <div class="att-greeting" id="attGreeting">Guten Morgen</div>
+
+        <div id="attBadge" class="att-badge not-in">
+          <span id="attBadgeIcon">○</span>
+          <span id="attBadgeText">Noch nicht eingecheckt</span>
+        </div>
+
+        <div class="att-times" id="attTimes" style="display:none;">
+          <div class="att-time-block">
+            <div class="att-time-label">Ankunft</div>
+            <div class="att-time-value" id="attCheckIn">—</div>
+          </div>
+          <div class="att-time-block">
+            <div class="att-time-label">Abgang</div>
+            <div class="att-time-value" id="attCheckOut">—</div>
+          </div>
+        </div>
+        <div class="att-duration" id="attDuration"></div>
+      </div>
+
+      <!-- Mesaj -->
+      <div id="attMsg" class="att-msg"></div>
+
+      <!-- GPS ipucu -->
+      <div id="gpsHint" class="att-gps-hint">
+        <span>📍</span>
+        <span id="gpsHintText">GPS wird für Check-in benötigt</span>
+      </div>
+
+      <!-- Check-in butonu -->
+      <button id="btnCheckIn" class="att-btn att-btn-in" disabled>
+        <div class="att-spinner" id="spinIn"></div>
+        <span id="btnCheckInLabel">↓ Einchecken</span>
+      </button>
+
+      <!-- Check-out butonu -->
+      <button id="btnCheckOut" class="att-btn att-btn-out" style="display:none;" disabled>
+        <div class="att-spinner" id="spinOut"></div>
+        <span id="btnCheckOutLabel">↑ Auschecken</span>
+      </button>
+
+      <!-- Son 7 günlük geçmiş -->
+      <div class="att-history-card" id="historyCard" style="display:none;">
+        <div class="att-history-header">Letzte 7 Tage</div>
+        <div id="historyList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="/attendance.js?v=20260619"></script>
+</body>
+</html>

@@ -2380,6 +2380,282 @@ app.post('/api/admin/recover-checkout', async (req, res) => {
   }
 });
 
+// ============================================================================
+// ATTENDANCE (Anwesenheit / Devam Takibi)
+// ============================================================================
+
+// Haversine: iki GPS koordinatı arasındaki mesafeyi metre cinsinden hesaplar.
+function haversineMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const CHECKIN_RADIUS_M = 150; // metre — GPS hatası için toleranslı
+
+// Rate limiter — check-in/out: günde birkaç kez yapılır, sıkı tutmaya gerek yok
+const attendanceLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen.' },
+});
+
+// POST /api/attendance/check-in
+// Body: { business_id, lat, lng }
+app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { business_id, lat, lng } = req.body;
+
+    if (!business_id || lat == null || lng == null) {
+      return res.status(400).json({ error: 'business_id, lat, lng zorunlu' });
+    }
+
+    // Çalışanın owner_id'sini bul
+    const { data: profile, error: profErr } = await supabase
+      .from('profiles')
+      .select('owner_id, role')
+      .eq('id', userId)
+      .single();
+    if (profErr || !profile) return res.status(404).json({ error: 'Profil bulunamadı' });
+
+    const ownerId = profile.role === 'owner' ? userId : profile.owner_id;
+    if (!ownerId) return res.status(400).json({ error: 'Owner bulunamadı' });
+
+    // İşyeri koordinatlarını çek
+    const { data: biz, error: bizErr } = await supabase
+      .from('businesses')
+      .select('clinic_lat, clinic_lng, business_name')
+      .eq('id', business_id)
+      .eq('owner_id', ownerId)
+      .single();
+    if (bizErr || !biz) return res.status(404).json({ error: 'İşyeri bulunamadı' });
+
+    // GPS koordinatı saklanmaz — sadece mesafeyi hesapla ve boole olarak kaydet
+    let checkInValid = false;
+    if (biz.clinic_lat && biz.clinic_lng) {
+      const distanceM = haversineMeters(lat, lng, Number(biz.clinic_lat), Number(biz.clinic_lng));
+      checkInValid = distanceM <= CHECKIN_RADIUS_M;
+    }
+
+    // Berlin'de bugünün tarihi
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
+    const nowTs = new Date().toISOString();
+
+    // Daha önce bugün check-in var mı?
+    const { data: existing } = await supabase
+      .from('attendance')
+      .select('id, check_in_at')
+      .eq('employee_id', userId)
+      .eq('date', today)
+      .maybeSingle();
+
+    if (existing) {
+      return res.status(409).json({ error: 'Bugün zaten check-in yapıldı', check_in_at: existing.check_in_at });
+    }
+
+    // Check-in zamanına göre durum: 09:00 Berlin saatinden sonraysa "late"
+    const hour = new Date(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: BUSINESS_TZ,
+        hour: 'numeric',
+        hour12: false,
+      }).formatToParts(new Date()).reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {})
+    );
+    // Basit saat kontrolü
+    const berlinHour = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, hour: 'numeric', hour12: false }).format(new Date()),
+      10
+    );
+    const berlinMin = parseInt(
+      new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, minute: 'numeric' }).format(new Date()),
+      10
+    );
+    const isLate = berlinHour > 9 || (berlinHour === 9 && berlinMin > 0);
+    const status = isLate ? 'late' : 'present';
+
+    const { data: record, error: insertErr } = await supabase
+      .from('attendance')
+      .insert({
+        employee_id: userId,
+        owner_id: ownerId,
+        business_id,
+        date: today,
+        check_in_at: nowTs,
+        check_in_valid: checkInValid,
+        status,
+      })
+      .select('id, check_in_at, check_in_valid, status')
+      .single();
+
+    if (insertErr) {
+      console.error('[attendance/check-in]', insertErr);
+      return res.status(500).json({ error: 'Check-in kaydedilemedi' });
+    }
+
+    return res.json({
+      ok: true,
+      check_in_at: record.check_in_at,
+      check_in_valid: record.check_in_valid,
+      status: record.status,
+      gps_checked: !!(biz.clinic_lat && biz.clinic_lng),
+    });
+  } catch (err) {
+    console.error('[attendance/check-in] unexpected:', err);
+    return res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// POST /api/attendance/check-out
+// Body: {} — sadece user token yeterli
+app.post('/api/attendance/check-out', attendanceLimiter, requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
+
+    const { data: record, error: findErr } = await supabase
+      .from('attendance')
+      .select('id, check_in_at, check_out_at')
+      .eq('employee_id', userId)
+      .eq('date', today)
+      .maybeSingle();
+
+    if (findErr) return res.status(500).json({ error: 'Kayıt sorgulanamadı' });
+    if (!record) return res.status(404).json({ error: 'Bugün check-in bulunamadı' });
+    if (record.check_out_at) return res.status(409).json({ error: 'Zaten check-out yapıldı', check_out_at: record.check_out_at });
+
+    const nowTs = new Date().toISOString();
+
+    const { error: updateErr } = await supabase
+      .from('attendance')
+      .update({ check_out_at: nowTs })
+      .eq('id', record.id);
+
+    if (updateErr) return res.status(500).json({ error: 'Check-out kaydedilemedi' });
+
+    return res.json({ ok: true, check_out_at: nowTs });
+  } catch (err) {
+    console.error('[attendance/check-out] unexpected:', err);
+    return res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// GET /api/attendance/today — çalışanın bugünkü durumu
+app.get('/api/attendance/today', requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
+
+    const { data, error } = await supabase
+      .from('attendance')
+      .select('id, check_in_at, check_out_at, check_in_valid, status')
+      .eq('employee_id', userId)
+      .eq('date', today)
+      .maybeSingle();
+
+    if (error) return res.status(500).json({ error: 'Sorgu hatası' });
+    return res.json({ today, record: data || null });
+  } catch (err) {
+    return res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// GET /api/attendance/report?business_id=&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
+// Owner: kendi ekibinin devam raporu
+app.get('/api/attendance/report', requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { business_id, date_from, date_to } = req.query;
+
+    if (!date_from || !date_to) {
+      return res.status(400).json({ error: 'date_from ve date_to zorunlu (YYYY-MM-DD)' });
+    }
+
+    let query = supabase
+      .from('attendance')
+      .select(`
+        id, date, check_in_at, check_out_at, check_in_valid, status, note,
+        profiles!employee_id (id, owner_first_name, owner_last_name, email, avatar_url)
+      `)
+      .eq('owner_id', userId)
+      .gte('date', date_from)
+      .lte('date', date_to)
+      .order('date', { ascending: false })
+      .order('check_in_at', { ascending: true });
+
+    if (business_id) query = query.eq('business_id', business_id);
+
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error: 'Rapor sorgulanamadı' });
+
+    return res.json({ records: data || [] });
+  } catch (err) {
+    console.error('[attendance/report]', err);
+    return res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// PATCH /api/attendance/:id/note — owner manuel not ekler
+app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { note, status } = req.body;
+
+    const updateFields = {};
+    if (note !== undefined) updateFields.note = String(note).slice(0, 500);
+    if (status && ['present', 'late', 'incomplete', 'absent'].includes(status)) {
+      updateFields.status = status;
+    }
+    if (!Object.keys(updateFields).length) return res.status(400).json({ error: 'Güncellenecek alan yok' });
+
+    const { error } = await supabase
+      .from('attendance')
+      .update(updateFields)
+      .eq('id', id)
+      .eq('owner_id', userId);
+
+    if (error) return res.status(500).json({ error: 'Güncelleme başarısız' });
+    return res.json({ ok: true });
+  } catch (err) {
+    return res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// ---- Gece 23:55 auto-close (node-cron alternatifi — setInterval ile basit yaklaşım) ----
+// Her dakika çalışır; 23:55 Berlin saatinde check-out yapılmamış kayıtları "incomplete" kapatır.
+(function scheduleAttendanceAutoClose() {
+  setInterval(async () => {
+    try {
+      const now = new Date();
+      const berlinH = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, hour: 'numeric', hour12: false }).format(now), 10);
+      const berlinM = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, minute: 'numeric' }).format(now), 10);
+      if (berlinH !== 23 || berlinM !== 55) return;
+
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(now);
+      const { error } = await supabase
+        .from('attendance')
+        .update({ status: 'incomplete' })
+        .eq('date', today)
+        .not('check_in_at', 'is', null)
+        .is('check_out_at', null)
+        .eq('status', 'present');
+
+      if (error) console.error('[attendance auto-close]', error);
+      else console.log(`[attendance auto-close] ${today} incomplete records closed`);
+    } catch (err) {
+      console.error('[attendance auto-close] unexpected:', err);
+    }
+  }, 60_000); // Her dakika kontrol et
+})();
+
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);

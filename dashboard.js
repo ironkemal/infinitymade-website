@@ -466,6 +466,8 @@ const NAV_GROUPS = [
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>' },
   { id: 'team',          labelDe: 'Team',           labelEn: 'Team',          labelTr: 'Ekip',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id: 'anwesenheit',   labelDe: 'Anwesenheit',    labelEn: 'Attendance',    labelTr: 'Devam',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>' },
   { id: 'einstellungen', labelDe: 'Einstellungen',  labelEn: 'Settings',      labelTr: 'Ayarlar',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' },
 ];
@@ -759,6 +761,7 @@ async function switchPanel(id) {
   if (id === 'statistik') loadStatistik();
   if (id === 'anamnese') loadAnamnese();
   if (id === 'feedback') loadFeedbacks();
+  if (id === 'anwesenheit') loadAnwesenheitPanel();
 }
 
 function openSidebar() {
@@ -19753,6 +19756,166 @@ async function loadFussstatus() {
     showToast('Fußstatus gespeichert ✓');
     loadFussstatus();
   });
+}
+
+// ============================================================================
+// ANWESENHEIT (Devam Takibi) — Owner rapor paneli
+// ============================================================================
+async function loadAnwesenheitPanel() {
+  const isOwner = currentProfile?.role === 'owner';
+  const empView  = document.getElementById('anwEmployeeView');
+  const ownerView = document.getElementById('anwOwnerView');
+  const ownerActions = document.getElementById('anwOwnerActions');
+
+  if (!isOwner) {
+    if (empView) empView.style.display = 'block';
+    if (ownerView) ownerView.style.display = 'none';
+    if (ownerActions) ownerActions.style.display = 'none';
+    return;
+  }
+
+  if (empView) empView.style.display = 'none';
+  if (ownerView) ownerView.style.display = 'block';
+  if (ownerActions) ownerActions.style.display = 'flex';
+
+  // İşyerleri yükle
+  const bizFilter = document.getElementById('anwBizFilter');
+  if (bizFilter && !bizFilter.dataset.loaded) {
+    bizFilter.dataset.loaded = '1';
+    const { data: bizList } = await supabase
+      .from('businesses')
+      .select('id, business_name')
+      .eq('owner_id', currentProfile.id);
+    bizFilter.innerHTML = '<option value="">Alle Standorte</option>' +
+      (bizList || []).map(b => `<option value="${b.id}">${b.business_name}</option>`).join('');
+  }
+
+  // Varsayılan tarih aralığı: bu haftanın başı → bugün
+  const dateFrom = document.getElementById('anwDateFrom');
+  const dateTo   = document.getElementById('anwDateTo');
+  if (dateFrom && !dateFrom.value) {
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+    dateFrom.value = monday.toISOString().slice(0, 10);
+    dateTo.value   = now.toISOString().slice(0, 10);
+  }
+
+  const loadBtn = document.getElementById('anwLoadBtn');
+  if (loadBtn && !loadBtn.dataset.bound) {
+    loadBtn.dataset.bound = '1';
+    loadBtn.addEventListener('click', () => fetchAnwesenheitReport());
+  }
+
+  fetchAnwesenheitReport();
+}
+
+async function fetchAnwesenheitReport() {
+  const tableWrap = document.getElementById('anwTableWrap');
+  const kpiRow    = document.getElementById('anwKpiRow');
+  if (!tableWrap) return;
+
+  const dateFrom = document.getElementById('anwDateFrom')?.value;
+  const dateTo   = document.getElementById('anwDateTo')?.value;
+  const bizId    = document.getElementById('anwBizFilter')?.value;
+
+  if (!dateFrom || !dateTo) {
+    tableWrap.innerHTML = '<div style="color:var(--text-muted);font-size:0.88rem;padding:12px 0;">Bitte Zeitraum wählen.</div>';
+    return;
+  }
+
+  tableWrap.innerHTML = '<div style="color:var(--text-muted);font-size:0.88rem;padding:12px 0;">Wird geladen …</div>';
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+    if (bizId) params.append('business_id', bizId);
+
+    const res = await fetch(`${API}/attendance/report?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Bericht konnte nicht geladen werden');
+    const { records } = await res.json();
+
+    if (!records.length) {
+      tableWrap.innerHTML = '<div style="color:var(--text-muted);font-size:0.88rem;padding:20px 0;text-align:center;">Keine Einträge im gewählten Zeitraum.</div>';
+      if (kpiRow) kpiRow.innerHTML = '';
+      return;
+    }
+
+    // KPI hesapla
+    const present   = records.filter(r => r.status === 'present' || r.status === 'late').length;
+    const late      = records.filter(r => r.status === 'late').length;
+    const incomplete= records.filter(r => r.status === 'incomplete').length;
+    const absent    = records.filter(r => r.status === 'absent').length;
+
+    if (kpiRow) {
+      kpiRow.innerHTML = [
+        { label: 'Anwesend', value: present,    color: '#10b981' },
+        { label: 'Verspätet', value: late,       color: '#f59e0b' },
+        { label: 'Unvollständig', value: incomplete, color: '#ef4444' },
+        { label: 'Abwesend', value: absent,      color: '#9ca3af' },
+      ].map(k => `
+        <div class="card" style="flex:1;min-width:90px;padding:14px 16px;text-align:center;">
+          <div style="font-size:1.6rem;font-weight:800;color:${k.color};">${k.value}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${k.label}</div>
+        </div>
+      `).join('');
+    }
+
+    // Tablo
+    const statusLabel = { present: '✓ Anwesend', late: '⏰ Verspätet', incomplete: '⚠ Unvollst.', absent: '✗ Abwesend' };
+    const statusColor = { present: '#10b981', late: '#f59e0b', incomplete: '#ef4444', absent: '#9ca3af' };
+
+    tableWrap.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.87rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border-color);">
+              <th style="text-align:left;padding:10px 12px;color:var(--text-muted);font-weight:600;">Mitarbeiter</th>
+              <th style="text-align:left;padding:10px 8px;color:var(--text-muted);font-weight:600;">Datum</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">Ankunft</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">Abgang</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">Dauer</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">Status</th>
+              <th style="text-align:center;padding:10px 8px;color:var(--text-muted);font-weight:600;">GPS</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${records.map(r => {
+              const emp = r.profiles;
+              const name = emp ? `${emp.owner_first_name || ''} ${emp.owner_last_name || ''}`.trim() || emp.email : '—';
+              const checkIn  = r.check_in_at  ? new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' }).format(new Date(r.check_in_at)) : '—';
+              const checkOut = r.check_out_at ? new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' }).format(new Date(r.check_out_at)) : '—';
+              const dur = (r.check_in_at && r.check_out_at)
+                ? (() => { const d = new Date(r.check_out_at) - new Date(r.check_in_at); return `${Math.floor(d/3600000)}h ${Math.floor((d%3600000)/60000)}m`; })()
+                : '—';
+              const dateStr = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(r.date + 'T12:00:00Z'));
+              const st = r.status;
+              const gpsIcon = r.check_in_valid ? '✓' : (r.check_in_at ? '⚠' : '—');
+              const gpsColor = r.check_in_valid ? '#10b981' : '#f59e0b';
+              return `
+                <tr style="border-bottom:1px solid var(--border-color);">
+                  <td style="padding:10px 12px;font-weight:600;">${name}</td>
+                  <td style="padding:10px 8px;color:var(--text-muted);">${dateStr}</td>
+                  <td style="padding:10px 8px;text-align:center;">${checkIn}</td>
+                  <td style="padding:10px 8px;text-align:center;">${checkOut}</td>
+                  <td style="padding:10px 8px;text-align:center;color:var(--text-muted);">${dur}</td>
+                  <td style="padding:10px 8px;text-align:center;">
+                    <span style="color:${statusColor[st]||'#9ca3af'};font-size:0.8rem;font-weight:600;">${statusLabel[st]||st}</span>
+                  </td>
+                  <td style="padding:10px 8px;text-align:center;color:${gpsColor};font-size:0.85rem;">${gpsIcon}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (err) {
+    tableWrap.innerHTML = `<div style="color:#ef4444;font-size:0.88rem;padding:12px 0;">${err.message}</div>`;
+  }
 }
 
 

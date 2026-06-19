@@ -2184,6 +2184,43 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: ANWESENHEIT ===== -->
+        <section class="panel" id="panel-anwesenheit">
+          <div class="panel-header">
+            <div>
+              <h2>Anwesenheit</h2>
+              <p class="panel-sub">Arbeitszeiterfassung des Teams</p>
+            </div>
+            <div class="panel-actions" id="anwOwnerActions" style="display:none;">
+              <select id="anwBizFilter" class="form-select" style="min-width:160px;"></select>
+              <input type="date" id="anwDateFrom" class="form-select" />
+              <input type="date" id="anwDateTo" class="form-select" />
+              <button class="btn-primary" id="anwLoadBtn">Laden</button>
+            </div>
+          </div>
+
+          <!-- Employee: direkt check-in/out linki -->
+          <div id="anwEmployeeView" style="display:none;">
+            <div class="card" style="text-align:center;padding:32px 24px;">
+              <div style="font-size:2.5rem;margin-bottom:12px;">📍</div>
+              <h3 style="margin-bottom:8px;">Zeiterfassung</h3>
+              <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.9rem;">Erfassen Sie Ihre Arbeitszeiten per GPS-Check-in</p>
+              <a href="/attendance.html" class="btn-primary" style="display:inline-block;text-decoration:none;">Zur Zeiterfassung →</a>
+            </div>
+          </div>
+
+          <!-- Owner: ekip raporu -->
+          <div id="anwOwnerView" style="display:none;">
+            <div id="anwKpiRow" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;"></div>
+            <div id="anwTableWrap">
+              <div style="color:var(--text-muted);font-size:0.88rem;padding:20px 0;text-align:center;">
+                Zeitraum wählen und auf „Laden" klicken.
+              </div>
+            </div>
+          </div>
+
+        </section>
+
         <!-- ===== PANEL 8: EINSTELLUNGEN ===== -->
         <section class="panel" id="panel-settings">
           <div class="panel-header">
