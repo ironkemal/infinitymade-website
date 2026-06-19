@@ -4166,9 +4166,35 @@ textarea {
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 28px;
   max-width: 560px;
 }
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+  padding: 0 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 
 .settings-section {
   background: var(--bg-card);
@@ -4549,6 +4575,11 @@ textarea {
 
 .toast.info {
   border-left: 3px solid var(--info);
+}
+
+.toast.warning {
+  border-left: 3px solid #e6a817;
+  background: color-mix(in srgb, #e6a817 8%, var(--bg-card-solid));
 }
 
 /* ============================

@@ -2232,355 +2232,371 @@
             </div>
           </div>
 
-          <div class="settings-sections">
-            <!-- Kompakt Modus -->
-            <div class="settings-section">
-              <div class="settings-section-title">Ansicht</div>
-              <div class="settings-section-body">
-                <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
-                  <div>
-                    <div style="font-weight:500;font-size:14px;">Kompakter Modus</div>
-                    <div class="form-hint">Reduziert Zeilenhöhe auf 32 px — ideal für Schreibtischarbeit.</div>
-                  </div>
-                  <input type="checkbox" id="compactModeToggle" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
-                </label>
-              </div>
-            </div>
+          <div class=”settings-sections”>
 
-            <div class="settings-section">
-              <div class="settings-section-title" data-i18n="set_profile">Profil</div>
-              <div class="settings-section-body">
-                <div class="form-group">
-                  <label class="form-label" data-i18n="set_biz">Unternehmensname</label>
-                  <input class="form-input" id="setBiz" type="text" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Fachbereich</label>
-                  <div id="setSectorLabel" style="font-size:14px;font-weight:500;color:var(--text-main);padding:8px 12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;">—</div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Straße + Nr.</label>
-                    <input class="form-input" id="setStreet" type="text" placeholder="z. B. Hauptstr. 12" />
-                  </div>
-                  <div class="form-group" style="max-width:140px;">
-                    <label class="form-label">PLZ</label>
-                    <input class="form-input" id="setPlz" type="text" inputmode="numeric" maxlength="5" placeholder="53721" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Stadt</label>
-                    <input class="form-input" id="setCity" type="text" placeholder="Siegburg" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Telefon</label>
-                    <input class="form-input" id="setPhone" type="tel" placeholder="+49 …" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label" data-i18n="set_lang">Sprache</label>
-                    <select class="form-select" id="setLang">
-                      <option value="de">Deutsch</option>
-                      <option value="en">English</option>
-                      <option value="tr">Türkçe</option>
-                    </select>
-                  </div>
-                </div>
-                <button class="btn-primary" id="profileSaveBtn" data-i18n="set_save">Speichern</button>
-              </div>
-            </div>
+            <!-- ── GRUPPE 1: PRAXIS ── -->
+            <div class=”settings-group”>
+              <div class=”settings-group-label”>Praxis</div>
 
-            <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
-            <div class="settings-section" id="settingsBusinessesSection" hidden>
-              <div class="settings-section-title">Geschäfte</div>
-              <div class="settings-section-body">
-                <p class="form-hint" style="margin-bottom:12px;">
-                  Verwalten Sie Ihre Standorte. Jedes Geschäft hat eigene Dienstleistungen, Arbeitszeiten und Personal.
-                </p>
-                <div id="businessesList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-                <button class="btn-primary" id="addBusinessBtn" type="button">＋ Neues Geschäft hinzufügen</button>
-              </div>
-            </div>
-
-            <!-- Datenfreigabe zwischen Standorten (Multi-Business) -->
-            <div class="settings-section" id="settingsDataSharingSection" hidden>
-              <div class="settings-section-title">Datenfreigabe zwischen Standorten</div>
-              <div class="settings-section-body">
-                <p class="form-hint" style="margin-bottom:14px;">
-                  Legen Sie fest, welche Daten über alle Ihre Standorte hinweg <strong>gemeinsam</strong> genutzt werden.
-                  Eingeschaltet = alle Standorte greifen auf dieselben Daten zu. Ausgeschaltet = jeder Standort hat
-                  seine eigenen, getrennten Daten. <em>Termine/Kalender sind aus Sicherheitsgründen immer
-                  standortübergreifend sichtbar (zur Vermeidung von Mitarbeiter-Doppelbuchungen).</em>
-                </p>
-                <div id="dataSharingList" style="display:flex;flex-direction:column;gap:0;"></div>
-                <button class="btn-primary" id="dataSharingSaveBtn" type="button" style="margin-top:14px;">Speichern</button>
-              </div>
-            </div>
-
-            <!-- Business edit/create modal -->
-            <div class="modal-overlay" id="businessModal" hidden>
-              <div class="modal">
-                <div class="modal-header">
-                  <span class="modal-title" id="businessModalTitle">Neues Geschäft</span>
-                  <button class="modal-close" data-close="businessModal" type="button">✕</button>
+              <div class=”settings-section”>
+                <div class=”settings-section-title”>Ansicht</div>
+                <div class=”settings-section-body”>
+                  <label style=”display:flex;align-items:center;justify-content:space-between;cursor:pointer;”>
+                    <div>
+                      <div style=”font-weight:500;font-size:14px;”>Kompakter Modus</div>
+                      <div class=”form-hint”>Reduziert Zeilenhöhe auf 32 px — ideal für Schreibtischarbeit.</div>
+                    </div>
+                    <input type=”checkbox” id=”compactModeToggle” style=”width:18px;height:18px;accent-color:var(--primary);cursor:pointer;” />
+                  </label>
                 </div>
-                <div class="modal-body">
-                  <form id="businessForm">
-                    <input type="hidden" id="bizFormId" />
-                    <div class="form-group">
-                      <label class="form-label">Geschäftsname *</label>
-                      <input class="form-input" id="bizFormName" type="text" required maxlength="120" />
+              </div>
+
+              <div class=”settings-section”>
+                <div class=”settings-section-title” data-i18n=”set_profile”>Profil</div>
+                <div class=”settings-section-body”>
+                  <div class=”form-group”>
+                    <label class=”form-label” data-i18n=”set_biz”>Unternehmensname</label>
+                    <input class=”form-input” id=”setBiz” type=”text” />
+                  </div>
+                  <div class=”form-group”>
+                    <label class=”form-label”>Fachbereich</label>
+                    <div id=”setSectorLabel” style=”font-size:14px;font-weight:500;color:var(--text-main);padding:8px 12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;”>—</div>
+                  </div>
+                  <div class=”form-row”>
+                    <div class=”form-group”>
+                      <label class=”form-label”>Straße + Nr.</label>
+                      <input class=”form-input” id=”setStreet” type=”text” placeholder=”z. B. Hauptstr. 12” />
                     </div>
-                    <div class="form-row">
-                      <div class="form-group">
-                        <label class="form-label">Straße</label>
-                        <input class="form-input" id="bizFormStreet" type="text" />
-                      </div>
-                      <div class="form-group" style="max-width:120px;">
-                        <label class="form-label">Hausnr.</label>
-                        <input class="form-input" id="bizFormHouseNumber" type="text" />
-                      </div>
+                    <div class=”form-group” style=”max-width:140px;”>
+                      <label class=”form-label”>PLZ</label>
+                      <input class=”form-input” id=”setPlz” type=”text” inputmode=”numeric” maxlength=”5” placeholder=”53721” />
                     </div>
-                    <div class="form-row">
-                      <div class="form-group" style="max-width:140px;">
-                        <label class="form-label">PLZ</label>
-                        <input class="form-input" id="bizFormZip" type="text" />
-                      </div>
-                      <div class="form-group">
-                        <label class="form-label">Stadt</label>
-                        <input class="form-input" id="bizFormCity" type="text" />
-                      </div>
+                    <div class=”form-group”>
+                      <label class=”form-label”>Stadt</label>
+                      <input class=”form-input” id=”setCity” type=”text” placeholder=”Siegburg” />
                     </div>
-                    <div class="form-group">
-                      <label class="form-label">Telefon</label>
-                      <input class="form-input" id="bizFormPhone" type="tel" />
+                  </div>
+                  <div class=”form-row”>
+                    <div class=”form-group”>
+                      <label class=”form-label”>Telefon</label>
+                      <input class=”form-input” id=”setPhone” type=”tel” placeholder=”+49 …” />
                     </div>
-                    <div class="form-group">
-                      <label class="form-label">Buchungs-Slug</label>
-                      <input class="form-input" id="bizFormSlug" type="text" pattern="[a-z0-9-]+" placeholder="z.B. praxis-hamburg" />
-                      <div class="form-hint">Eigener Link für diesen Standort: <code id="bizSlugPreview">…</code></div>
-                    </div>
-                    <div class="form-group" id="bizCopyServicesWrap" hidden>
-                      <label class="form-label">Dienstleistungen kopieren von</label>
-                      <select class="form-select" id="bizCopyServicesFrom">
-                        <option value="">— Nicht kopieren —</option>
+                    <div class=”form-group”>
+                      <label class=”form-label” data-i18n=”set_lang”>Sprache</label>
+                      <select class=”form-select” id=”setLang”>
+                        <option value=”de”>Deutsch</option>
+                        <option value=”en”>English</option>
+                        <option value=”tr”>Türkçe</option>
                       </select>
-                      <div class="form-hint">Übernimmt die Liste der Dienstleistungen aus einem bestehenden Geschäft.</div>
-                    </div>
-                    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-                      <button type="button" class="btn-secondary" data-close="businessModal">Abbrechen</button>
-                      <button type="submit" class="btn-primary" id="bizFormSubmit">Speichern</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-section" id="settingsBillingSection">
-              <div class="settings-section-title">Rechnungsdaten</div>
-              <div class="settings-section-body">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Bank</label>
-                    <input class="form-input" id="setBankName" type="text" placeholder="z. B. Sparkasse Köln-Bonn" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">IBAN</label>
-                    <input class="form-input" id="setIban" type="text" placeholder="DE…" />
-                  </div>
-                  <div class="form-group" style="max-width:160px;">
-                    <label class="form-label">BIC</label>
-                    <input class="form-input" id="setBic" type="text" placeholder="COLSDE…" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="form-label">Steuernummer</label>
-                    <input class="form-input" id="setSteuernummer" type="text" placeholder="z. B. 220/5070/0815" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">USt-IdNr (optional)</label>
-                    <input class="form-input" id="setUstId" type="text" placeholder="DE…" />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Steuerhinweis (erscheint auf Rechnung)</label>
-                  <select class="form-input" id="setTaxExemptSelect" style="margin-bottom:6px;">
-                    <option value="§4nr14a">§ 4 Nr. 14a UStG — Umsatzsteuerfreie Heilbehandlung</option>
-                    <option value="§4nr14b">§ 4 Nr. 14b UStG — Krankenhausbehandlung</option>
-                    <option value="§19">§ 19 Abs. 1 UStG — Kleinunternehmerregelung</option>
-                    <option value="19pct">19 % Umsatzsteuer (keine Befreiung)</option>
-                    <option value="custom">Eigene Eingabe…</option>
-                  </select>
-                  <input class="form-input" id="setTaxExempt" type="text" placeholder="z. B. Gemäß § 4 Nr. 14a UStG umsatzsteuerfrei" style="display:none;" />
-                  <div class="form-hint" id="setTaxExemptHint"></div>
-                </div>
-                <button class="btn-primary" id="billingSaveBtn">Rechnungsdaten speichern</button>
-              </div>
-            </div>
-
-            <!-- Praxis-Branding (Madde 8) -->
-            <div class="settings-section" id="settingsBrandingSection">
-              <div class="settings-section-title">Praxis-Branding</div>
-              <div class="settings-section-body">
-                <div class="form-group">
-                  <label class="form-label">Logo-URL</label>
-                  <input class="form-input" id="setBrandingLogo" type="url" placeholder="https://…/logo.png" />
-                  <div class="form-hint">Wird auf Rechnungen und Quittungen angezeigt. Empfohlen: PNG mit transparentem Hintergrund, min. 200 × 80 px.</div>
-                </div>
-                <div id="brandingLogoPreview" style="display:none;margin-bottom:12px;">
-                  <img id="brandingLogoImg" alt="Logo" style="max-height:60px;max-width:200px;border-radius:4px;border:1px solid var(--border);padding:4px;background:#fff;" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Fußzeile auf Rechnungen</label>
-                  <textarea class="form-input" id="setBrandingFooter" rows="3" placeholder="z. B. Ihre Physiotherapiepraxis · Praxisinhaber: Max Mustermann · Steuernummer: 220/5070/0815&#10;Bankverbindung: IBAN DE89 3704 0044 0532 0130 00 · BIC: COBADEFFXXX"></textarea>
-                  <div class="form-hint">Erscheint im unteren Bereich auf Rechnungen, Quittungen und §302-Dokumenten.</div>
-                </div>
-                <button class="btn-primary" id="brandingSaveBtn">Branding speichern</button>
-              </div>
-            </div>
-
-            <!-- Dokument-Vorlagen (Madde 11) -->
-            <div class="settings-section" id="settingsVorlagenSection">
-              <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-                <span>Dokument-Vorlagen</span>
-                <button class="btn-ghost btn-sm" id="vorlagenNewBtn" type="button" style="font-size:12px;">＋ Neue Vorlage</button>
-              </div>
-              <div class="settings-section-body">
-                <p class="form-hint" style="margin-bottom:12px;">Erstellen Sie individuelle Vorlagen für Quittungen, Rechnungen und §302-Dokumente. Die als Standard markierte Vorlage wird automatisch verwendet.</p>
-                <div id="vorlagenList" style="display:flex;flex-direction:column;gap:6px;">
-                  <div style="color:var(--text-muted);font-size:13px;">Wird geladen…</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- vorlagenModal moved to body level -->
-
-            <div class="settings-section" id="settingsAccountSection">
-              <div class="settings-section-title" data-i18n="set_account">Konto</div>
-              <div class="settings-section-body">
-                <div style="font-size:14px;color:var(--text-muted);margin-bottom:12px;" id="accEmail"></div>
-                <div class="settings-info-row">
-                  <span class="settings-info-label" data-i18n="kpi_plan">Paket</span>
-                  <span class="settings-info-value" id="setPlanValue">—</span>
-                </div>
-                <div class="settings-info-row">
-                  <span class="settings-info-label" data-i18n="kpi_status">Status</span>
-                  <span class="settings-info-value" id="setStatusValue">—</span>
-                </div>
-                <div class="plan-badge" id="accPlanBadge" style="margin-top:12px;">—</div>
-                <div id="subscriptionStatusBanner" hidden></div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-                  <button class="btn-ghost" id="subPortalBtn" data-i18n="sub_portal">Abonnement verwalten</button>
-                  <button class="btn-primary" id="subUpgradeBtn" data-i18n="sub_upgrade">Upgrade</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-section">
-              <div class="settings-section-title" data-i18n="features_title">Paketinhalt</div>
-              <div class="settings-section-body">
-                <ul id="settingsFeatureList" class="feature-list"></ul>
-              </div>
-            </div>
-
-            <div class="settings-section">
-              <div class="settings-section-title" data-i18n="set_password">Passwort</div>
-              <div class="settings-section-body">
-                <div class="form-group">
-                  <label class="form-label" data-i18n="set_new_pw">Neues Passwort</label>
-                  <input class="form-input" id="setPw" type="password" minlength="6" />
-                </div>
-                <button class="btn-primary" id="pwChangeBtn" data-i18n="set_change">Passwort ändern</button>
-              </div>
-            </div>
-
-            <div class="settings-section">
-              <div class="settings-section-title" data-i18n="set_integrations">Integrationen</div>
-              <div class="settings-section-body">
-                <div class="integration-row">
-                  <span class="integration-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                  <div class="integration-info">
-                    <div class="integration-name">Google Calendar</div>
-                    <div class="integration-status" id="googleCalStatus" data-i18n="status_disconnected">Nicht verbunden
                     </div>
                   </div>
-                  <button class="btn-ghost" id="googleCalBtn" data-i18n="btn_connect">Verbinden</button>
+                  <button class=”btn-primary” id=”profileSaveBtn” data-i18n=”set_save”>Speichern</button>
                 </div>
-                <div class="integration-row">
-                  <span class="integration-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
-                  <div class="integration-info">
-                    <div class="integration-name">WhatsApp</div>
-                    <div class="integration-status" id="waStatus">Twilio Sandbox</div>
+              </div>
+
+              <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
+              <div class=”settings-section” id=”settingsBusinessesSection” hidden>
+                <div class=”settings-section-title”>Geschäfte</div>
+                <div class=”settings-section-body”>
+                  <p class=”form-hint” style=”margin-bottom:12px;”>
+                    Verwalten Sie Ihre Standorte. Jedes Geschäft hat eigene Dienstleistungen, Arbeitszeiten und Personal.
+                  </p>
+                  <div id=”businessesList” style=”display:flex;flex-direction:column;gap:8px;margin-bottom:12px;”></div>
+                  <button class=”btn-primary” id=”addBusinessBtn” type=”button”>＋ Neues Geschäft hinzufügen</button>
+                </div>
+              </div>
+
+              <!-- Datenfreigabe zwischen Standorten (Multi-Business) -->
+              <div class=”settings-section” id=”settingsDataSharingSection” hidden>
+                <div class=”settings-section-title”>Datenfreigabe zwischen Standorten</div>
+                <div class=”settings-section-body”>
+                  <p class=”form-hint” style=”margin-bottom:14px;”>
+                    Legen Sie fest, welche Daten über alle Ihre Standorte hinweg <strong>gemeinsam</strong> genutzt werden.
+                    Eingeschaltet = alle Standorte greifen auf dieselben Daten zu. Ausgeschaltet = jeder Standort hat
+                    seine eigenen, getrennten Daten. <em>Termine/Kalender sind aus Sicherheitsgründen immer
+                    standortübergreifend sichtbar (zur Vermeidung von Mitarbeiter-Doppelbuchungen).</em>
+                  </p>
+                  <div id=”dataSharingList” style=”display:flex;flex-direction:column;gap:0;”></div>
+                  <button class=”btn-primary” id=”dataSharingSaveBtn” type=”button” style=”margin-top:14px;”>Speichern</button>
+                </div>
+              </div>
+            </div><!-- /gruppe praxis -->
+
+            <!-- ── GRUPPE 2: ABRECHNUNG & DOKUMENTE ── -->
+            <div class=”settings-group”>
+              <div class=”settings-group-label”>Abrechnung &amp; Dokumente</div>
+
+              <div class=”settings-section” id=”settingsBillingSection”>
+                <div class=”settings-section-title”>Rechnungsdaten</div>
+                <div class=”settings-section-body”>
+                  <div class=”form-row”>
+                    <div class=”form-group”>
+                      <label class=”form-label”>Bank</label>
+                      <input class=”form-input” id=”setBankName” type=”text” placeholder=”z. B. Sparkasse Köln-Bonn” />
+                    </div>
+                    <div class=”form-group”>
+                      <label class=”form-label”>IBAN</label>
+                      <input class=”form-input” id=”setIban” type=”text” placeholder=”DE…” />
+                    </div>
+                    <div class=”form-group” style=”max-width:160px;”>
+                      <label class=”form-label”>BIC</label>
+                      <input class=”form-input” id=”setBic” type=”text” placeholder=”COLSDE…” />
+                    </div>
+                  </div>
+                  <div class=”form-row”>
+                    <div class=”form-group”>
+                      <label class=”form-label”>Steuernummer</label>
+                      <input class=”form-input” id=”setSteuernummer” type=”text” placeholder=”z. B. 220/5070/0815” />
+                    </div>
+                    <div class=”form-group”>
+                      <label class=”form-label”>USt-IdNr (optional)</label>
+                      <input class=”form-input” id=”setUstId” type=”text” placeholder=”DE…” />
+                    </div>
+                  </div>
+                  <div class=”form-group”>
+                    <label class=”form-label”>Steuerhinweis (erscheint auf Rechnung)</label>
+                    <select class=”form-input” id=”setTaxExemptSelect” style=”margin-bottom:6px;”>
+                      <option value=”§4nr14a”>§ 4 Nr. 14a UStG — Umsatzsteuerfreie Heilbehandlung</option>
+                      <option value=”§4nr14b”>§ 4 Nr. 14b UStG — Krankenhausbehandlung</option>
+                      <option value=”§19”>§ 19 Abs. 1 UStG — Kleinunternehmerregelung</option>
+                      <option value=”19pct”>19 % Umsatzsteuer (keine Befreiung)</option>
+                      <option value=”custom”>Eigene Eingabe…</option>
+                    </select>
+                    <input class=”form-input” id=”setTaxExempt” type=”text” placeholder=”z. B. Gemäß § 4 Nr. 14a UStG umsatzsteuerfrei” style=”display:none;” />
+                    <div class=”form-hint” id=”setTaxExemptHint”></div>
+                  </div>
+                  <button class=”btn-primary” id=”billingSaveBtn”>Rechnungsdaten speichern</button>
+                </div>
+              </div>
+
+              <div class=”settings-section” id=”settingsAbrechnungSection” style=”display:none;”>
+                <div class=”settings-section-title”>Abrechnungs-Vorbereitung (Krankenkasse)</div>
+                <div class=”settings-section-body”>
+                  <div class=”form-group”>
+                    <label class=”form-label”>Institutionskennzeichen (IK)</label>
+                    <input class=”form-input” id=”setIkNumber” type=”text” inputmode=”numeric” maxlength=”9” placeholder=”9-stellig, z. B. 460123456” />
+                    <div class=”form-hint”>Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung (Menüpunkt „§302-Abrechnung vorbereiten” in der Seitenleiste).</div>
+                  </div>
+                  <button class=”btn-primary” id=”ikSaveBtn”>IK speichern</button>
+                  <div id=”certStatus” style=”margin-top:12px;font-size:13px;color:var(--text-muted);”>Noch kein ITSG-Zertifikat hinterlegt.</div>
+                  <div class=”form-hint” style=”margin-top:8px;”>Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
+                </div>
+              </div>
+
+              <div class=”settings-section” id=”aerzteSection”>
+                <div class=”settings-section-title”>Ärzte</div>
+                <div class=”settings-section-body”>
+                  <div id=”aerzteList” style=”margin-bottom:12px;”></div>
+                  <div class=”form-row”>
+                    <div class=”form-group”>
+                      <input class=”form-input” id=”aeName” type=”text” placeholder=”Arztname” />
+                    </div>
+                    <div class=”form-group”>
+                      <input class=”form-input” id=”aeNummer” type=”text” placeholder=”Telefon / Fax” />
+                    </div>
+                  </div>
+                  <button class=”btn-primary” id=”aeAddBtn”>Hinzufügen</button>
+                </div>
+              </div>
+
+              <!-- Praxis-Branding -->
+              <div class=”settings-section” id=”settingsBrandingSection”>
+                <div class=”settings-section-title”>Praxis-Branding</div>
+                <div class=”settings-section-body”>
+                  <div class=”form-group”>
+                    <label class=”form-label”>Logo-URL</label>
+                    <input class=”form-input” id=”setBrandingLogo” type=”url” placeholder=”https://…/logo.png” />
+                    <div class=”form-hint”>Wird auf Rechnungen und Quittungen angezeigt. Empfohlen: PNG mit transparentem Hintergrund, min. 200 × 80 px.</div>
+                  </div>
+                  <div id=”brandingLogoPreview” style=”display:none;margin-bottom:12px;”>
+                    <img id=”brandingLogoImg” alt=”Logo” style=”max-height:60px;max-width:200px;border-radius:4px;border:1px solid var(--border);padding:4px;background:#fff;” />
+                  </div>
+                  <div class=”form-group”>
+                    <label class=”form-label”>Fußzeile auf Rechnungen</label>
+                    <textarea class=”form-input” id=”setBrandingFooter” rows=”3” placeholder=”z. B. Ihre Physiotherapiepraxis · Praxisinhaber: Max Mustermann · Steuernummer: 220/5070/0815&#10;Bankverbindung: IBAN DE89 3704 0044 0532 0130 00 · BIC: COBADEFFXXX”></textarea>
+                    <div class=”form-hint”>Erscheint im unteren Bereich auf Rechnungen, Quittungen und §302-Dokumenten.</div>
+                  </div>
+                  <button class=”btn-primary” id=”brandingSaveBtn”>Branding speichern</button>
+                </div>
+              </div>
+
+              <!-- Dokument-Vorlagen -->
+              <div class=”settings-section” id=”settingsVorlagenSection”>
+                <div class=”settings-section-title” style=”display:flex;align-items:center;justify-content:space-between;”>
+                  <span>Dokument-Vorlagen</span>
+                  <button class=”btn-ghost btn-sm” id=”vorlagenNewBtn” type=”button” style=”font-size:12px;”>＋ Neue Vorlage</button>
+                </div>
+                <div class=”settings-section-body”>
+                  <p class=”form-hint” style=”margin-bottom:12px;”>Erstellen Sie individuelle Vorlagen für Quittungen, Rechnungen und §302-Dokumente. Die als Standard markierte Vorlage wird automatisch verwendet.</p>
+                  <div id=”vorlagenList” style=”display:flex;flex-direction:column;gap:6px;”>
+                    <div style=”color:var(--text-muted);font-size:13px;”>Wird geladen…</div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- DSGVO Self-Service (Art. 15 + Art. 17) -->
-            <div class="settings-section" id="settingsDsgvoSection">
-              <div class="settings-section-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Datenschutz (DSGVO)</div>
-              <div class="settings-section-body">
-                <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;">
-                  Sie haben jederzeit das Recht auf Auskunft über und Löschung Ihrer Daten.
-                </p>
-
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                  <button class="btn-ghost" id="dsgvoExportBtn" type="button">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Meine Daten exportieren (JSON)
-                  </button>
-                  <button class="btn-ghost" id="dsgvoDeleteBtn" type="button" style="border-color:#fca5a5;color:#dc2626;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Konto &amp; Daten löschen
+              <div class=”settings-section”>
+                <div class=”settings-section-title”>Druck</div>
+                <div class=”settings-section-body”>
+                  <p style=”font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;”>
+                    Passen Sie die Position des Adressfensters für DIN-lang-Umschläge an.
+                  </p>
+                  <button class=”btn-ghost” id=”openDruckModalBtn” type=”button”>
+                    <svg width=”16” height=”16” viewBox=”0 0 24 24” fill=”none” stroke=”currentColor” stroke-width=”1.7” stroke-linecap=”round” stroke-linejoin=”round” style=”vertical-align:-3px;display:inline-block;flex-shrink:0;”><polyline points=”6 9 6 2 18 2 18 9”/><path d=”M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2”/><rect x=”6” y=”14” width=”12” height=”8”/></svg>
+                    Druckeinstellungen öffnen
                   </button>
                 </div>
-
-                <p style="font-size:11px;color:var(--text-muted);margin:12px 0 0;line-height:1.5;">
-                  Hinweis Löschung: Abrechnungsdaten (Rechnungen, §302-Abrechnungen) bleiben aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) <strong>anonymisiert</strong> 10 Jahre gespeichert.
-                </p>
               </div>
-            </div>
+            </div><!-- /gruppe abrechnung -->
 
-            <div class="settings-section" id="settingsAbrechnungSection" style="display:none;">
-              <div class="settings-section-title">Abrechnungs-Vorbereitung (Krankenkasse)</div>
-              <div class="settings-section-body">
+            <!-- ── GRUPPE 3: KONTO & ABONNEMENT ── -->
+            <div class=”settings-group”>
+              <div class=”settings-group-label”>Konto &amp; Abonnement</div>
 
-                <div class="form-group">
-                  <label class="form-label">Institutionskennzeichen (IK)</label>
-                  <input class="form-input" id="setIkNumber" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig, z. B. 460123456" />
-                  <div class="form-hint">Wird von der ARGE-IK vergeben. Pflicht für §302 SGB V Sammelabrechnung (Menüpunkt „§302-Abrechnung vorbereiten“ in der Seitenleiste).</div>
-                </div>
-                <button class="btn-primary" id="ikSaveBtn">IK speichern</button>
-                <div id="certStatus" style="margin-top:12px;font-size:13px;color:var(--text-muted);">Noch kein ITSG-Zertifikat hinterlegt.</div>
-                <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
-              </div>
-            </div>
-
-            <div class="settings-section" id="aerzteSection">
-              <div class="settings-section-title">Ärzte</div>
-              <div class="settings-section-body">
-                <div id="aerzteList" style="margin-bottom:12px;"></div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <input class="form-input" id="aeName" type="text" placeholder="Arztname" />
+              <div class=”settings-section” id=”settingsAccountSection”>
+                <div class=”settings-section-title” data-i18n=”set_account”>Konto</div>
+                <div class=”settings-section-body”>
+                  <div style=”font-size:14px;color:var(--text-muted);margin-bottom:12px;” id=”accEmail”></div>
+                  <div class=”settings-info-row”>
+                    <span class=”settings-info-label” data-i18n=”kpi_plan”>Paket</span>
+                    <span class=”settings-info-value” id=”setPlanValue”>—</span>
                   </div>
-                  <div class="form-group">
-                    <input class="form-input" id="aeNummer" type="text" placeholder="Telefon / Fax" />
+                  <div class=”settings-info-row”>
+                    <span class=”settings-info-label” data-i18n=”kpi_status”>Status</span>
+                    <span class=”settings-info-value” id=”setStatusValue”>—</span>
+                  </div>
+                  <div class=”plan-badge” id=”accPlanBadge” style=”margin-top:12px;”>—</div>
+                  <div id=”subscriptionStatusBanner” hidden></div>
+                  <div style=”display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;”>
+                    <button class=”btn-ghost” id=”subPortalBtn” data-i18n=”sub_portal”>Abonnement verwalten</button>
+                    <button class=”btn-primary” id=”subUpgradeBtn” data-i18n=”sub_upgrade”>Upgrade</button>
                   </div>
                 </div>
-                <button class="btn-primary" id="aeAddBtn">Hinzufügen</button>
               </div>
-            </div>
 
-            <div class="settings-section">
-              <div class="settings-section-title">Druck</div>
-              <div class="settings-section-body">
-                <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">
-                  Passen Sie die Position des Adressfensters für DIN-lang-Umschläge an.
-                </p>
-                <button class="btn-ghost" id="openDruckModalBtn" type="button">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                  Druckeinstellungen öffnen
-                </button>
+              <div class=”settings-section”>
+                <div class=”settings-section-title” data-i18n=”features_title”>Paketinhalt</div>
+                <div class=”settings-section-body”>
+                  <ul id=”settingsFeatureList” class=”feature-list”></ul>
+                </div>
+              </div>
+
+              <div class=”settings-section”>
+                <div class=”settings-section-title” data-i18n=”set_password”>Passwort</div>
+                <div class=”settings-section-body”>
+                  <div class=”form-group”>
+                    <label class=”form-label” data-i18n=”set_new_pw”>Neues Passwort</label>
+                    <input class=”form-input” id=”setPw” type=”password” minlength=”6” />
+                  </div>
+                  <button class=”btn-primary” id=”pwChangeBtn” data-i18n=”set_change”>Passwort ändern</button>
+                </div>
+              </div>
+            </div><!-- /gruppe konto -->
+
+            <!-- ── GRUPPE 4: INTEGRATIONEN & DATENSCHUTZ ── -->
+            <div class=”settings-group”>
+              <div class=”settings-group-label”>Integrationen &amp; Datenschutz</div>
+
+              <div class=”settings-section”>
+                <div class=”settings-section-title” data-i18n=”set_integrations”>Integrationen</div>
+                <div class=”settings-section-body”>
+                  <div class=”integration-row”>
+                    <span class=”integration-icon”><svg width=”16” height=”16” viewBox=”0 0 24 24” fill=”none” stroke=”currentColor” stroke-width=”1.7” stroke-linecap=”round” stroke-linejoin=”round” style=”vertical-align:-3px;display:inline-block;flex-shrink:0;”><rect x=”3” y=”4” width=”18” height=”18” rx=”2”/><line x1=”16” y1=”2” x2=”16” y2=”6”/><line x1=”8” y1=”2” x2=”8” y2=”6”/><line x1=”3” y1=”10” x2=”21” y2=”10”/></svg></span>
+                    <div class=”integration-info”>
+                      <div class=”integration-name”>Google Calendar</div>
+                      <div class=”integration-status” id=”googleCalStatus” data-i18n=”status_disconnected”>Nicht verbunden
+                      </div>
+                    </div>
+                    <button class=”btn-ghost” id=”googleCalBtn” data-i18n=”btn_connect”>Verbinden</button>
+                  </div>
+                  <div class=”integration-row”>
+                    <span class=”integration-icon”><svg width=”16” height=”16” viewBox=”0 0 24 24” fill=”none” stroke=”currentColor” stroke-width=”1.7” stroke-linecap=”round” stroke-linejoin=”round” style=”vertical-align:-3px;display:inline-block;flex-shrink:0;”><path d=”M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z”/></svg></span>
+                    <div class=”integration-info”>
+                      <div class=”integration-name”>WhatsApp</div>
+                      <div class=”integration-status” id=”waStatus”>Twilio Sandbox</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DSGVO Self-Service (Art. 15 + Art. 17) -->
+              <div class=”settings-section” id=”settingsDsgvoSection”>
+                <div class=”settings-section-title”><svg width=”16” height=”16” viewBox=”0 0 24 24” fill=”none” stroke=”currentColor” stroke-width=”1.7” stroke-linecap=”round” stroke-linejoin=”round” style=”vertical-align:-3px;display:inline-block;flex-shrink:0;”><rect x=”3” y=”11” width=”18” height=”11” rx=”2”/><path d=”M7 11V7a5 5 0 0 1 10 0v4”/></svg> Datenschutz (DSGVO)</div>
+                <div class=”settings-section-body”>
+                  <p style=”font-size:13px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;”>
+                    Sie haben jederzeit das Recht auf Auskunft über und Löschung Ihrer Daten.
+                  </p>
+                  <div style=”display:flex;flex-direction:column;gap:10px;”>
+                    <button class=”btn-ghost” id=”dsgvoExportBtn” type=”button”>
+                      <svg width=”16” height=”16” viewBox=”0 0 24 24” fill=”none” stroke=”currentColor” stroke-width=”1.7” stroke-linecap=”round” stroke-linejoin=”round” style=”vertical-align:-3px;display:inline-block;flex-shrink:0;”><path d=”M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4”/><polyline points=”7 10 12 15 17 10”/><line x1=”12” y1=”15” x2=”12” y2=”3”/></svg> Meine Daten exportieren (JSON)
+                    </button>
+                    <button class=”btn-ghost” id=”dsgvoDeleteBtn” type=”button” style=”border-color:#fca5a5;color:#dc2626;”>
+                      <svg width=”16” height=”16” viewBox=”0 0 24 24” fill=”none” stroke=”currentColor” stroke-width=”1.7” stroke-linecap=”round” stroke-linejoin=”round” style=”vertical-align:-3px;display:inline-block;flex-shrink:0;”><polyline points=”3 6 5 6 21 6”/><path d=”M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2”/></svg> Konto &amp; Daten löschen
+                    </button>
+                  </div>
+                  <p style=”font-size:11px;color:var(--text-muted);margin:12px 0 0;line-height:1.5;”>
+                    Hinweis Löschung: Abrechnungsdaten (Rechnungen, §302-Abrechnungen) bleiben aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) <strong>anonymisiert</strong> 10 Jahre gespeichert.
+                  </p>
+                </div>
+              </div>
+            </div><!-- /gruppe integrationen -->
+
+          </div><!-- /settings-sections -->
+
+          <!-- Business edit/create modal -->
+          <div class=”modal-overlay” id=”businessModal” hidden>
+            <div class=”modal”>
+              <div class=”modal-header”>
+                <span class=”modal-title” id=”businessModalTitle”>Neues Geschäft</span>
+                <button class=”modal-close” data-close=”businessModal” type=”button”>✕</button>
+              </div>
+              <div class=”modal-body”>
+                <form id=”businessForm”>
+                  <input type=”hidden” id=”bizFormId” />
+                  <div class=”form-group”>
+                    <label class=”form-label”>Geschäftsname *</label>
+                    <input class=”form-input” id=”bizFormName” type=”text” required maxlength=”120” />
+                  </div>
+                  <div class=”form-row”>
+                    <div class=”form-group”>
+                      <label class=”form-label”>Straße</label>
+                      <input class=”form-input” id=”bizFormStreet” type=”text” />
+                    </div>
+                    <div class=”form-group” style=”max-width:120px;”>
+                      <label class=”form-label”>Hausnr.</label>
+                      <input class=”form-input” id=”bizFormHouseNumber” type=”text” />
+                    </div>
+                  </div>
+                  <div class=”form-row”>
+                    <div class=”form-group” style=”max-width:140px;”>
+                      <label class=”form-label”>PLZ</label>
+                      <input class=”form-input” id=”bizFormZip” type=”text” />
+                    </div>
+                    <div class=”form-group”>
+                      <label class=”form-label”>Stadt</label>
+                      <input class=”form-input” id=”bizFormCity” type=”text” />
+                    </div>
+                  </div>
+                  <div class=”form-group”>
+                    <label class=”form-label”>Telefon</label>
+                    <input class=”form-input” id=”bizFormPhone” type=”tel” />
+                  </div>
+                  <div class=”form-group”>
+                    <label class=”form-label”>Buchungs-Slug</label>
+                    <input class=”form-input” id=”bizFormSlug” type=”text” pattern=”[a-z0-9-]+” placeholder=”z.B. praxis-hamburg” />
+                    <div class=”form-hint”>Eigener Link für diesen Standort: <code id=”bizSlugPreview”>…</code></div>
+                  </div>
+                  <div class=”form-group” id=”bizCopyServicesWrap” hidden>
+                    <label class=”form-label”>Dienstleistungen kopieren von</label>
+                    <select class=”form-select” id=”bizCopyServicesFrom”>
+                      <option value=””>— Nicht kopieren —</option>
+                    </select>
+                    <div class=”form-hint”>Übernimmt die Liste der Dienstleistungen aus einem bestehenden Geschäft.</div>
+                  </div>
+                  <div style=”display:flex;gap:8px;justify-content:flex-end;margin-top:16px;”>
+                    <button type=”button” class=”btn-secondary” data-close=”businessModal”>Abbrechen</button>
+                    <button type=”submit” class=”btn-primary” id=”bizFormSubmit”>Speichern</button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
