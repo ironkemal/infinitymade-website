@@ -6,7 +6,7 @@ const API = 'https://n8n.infinitymade.de/api';
 
 const params = new URLSearchParams(location.search);
 const identifier = (params.get('u') || params.get('c') || '').trim();
-const serviceFilter = (params.get('s') || '').trim().toLowerCase();
+const serviceFilter = (params.get('s') || 'erst').trim().toLowerCase();
 
 const state = {
   ownerId: null, companyName: null,
