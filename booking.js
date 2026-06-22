@@ -6,6 +6,7 @@ const API = 'https://n8n.infinitymade.de/api';
 
 const params = new URLSearchParams(location.search);
 const identifier = (params.get('u') || params.get('c') || '').trim();
+const serviceFilter = (params.get('s') || '').trim().toLowerCase();
 
 const state = {
   ownerId: null, companyName: null,
@@ -201,7 +202,16 @@ async function loadServices(empId) {
     return;
   }
 
-  document.getElementById('srvList').innerHTML = data.map(d => {
+  const filtered = serviceFilter
+    ? data.filter(d => d.services?.title?.toLowerCase().includes(serviceFilter))
+    : data;
+
+  if (!filtered.length) {
+    document.getElementById('srvList').innerHTML = '<div class="slots-empty">Keine Dienstleistungen verfügbar.</div>';
+    return;
+  }
+
+  document.getElementById('srvList').innerHTML = filtered.map(d => {
     const s = d.services;
     const dur = s.duration_minutes || 30;
     const price = s.price || '';
