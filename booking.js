@@ -157,6 +157,17 @@ async function init() {
     return;
   }
 
+  // Tek kişi varsa (sadece owner) direkt hizmet adımına geç
+  if (visibleEmps.length === 1) {
+    const e = visibleEmps[0];
+    state.employeeId = e.id;
+    state.employeeName = e.business_name || [e.owner_first_name, e.owner_last_name].filter(Boolean).join(' ') || 'Mitarbeiter';
+    document.getElementById('backToEmp').style.display = 'none';
+    updateSidebar();
+    await loadServices(e.id);
+    return;
+  }
+
   document.getElementById('empList').innerHTML = visibleEmps.map(e => {
     const name = e.business_name || [e.owner_first_name, e.owner_last_name].filter(Boolean).join(' ') || 'Mitarbeiter';
     const initial = (name[0] || '?').toUpperCase();

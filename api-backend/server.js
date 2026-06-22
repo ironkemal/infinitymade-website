@@ -729,7 +729,7 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/booking/create', requireAuthAI, async (req, res) => {
+app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
   const { userId, serviceId, date, time, customerName, customerEmail, customerPhone, businessId, leadId } = req.body;
   
   try {
