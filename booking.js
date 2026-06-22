@@ -254,18 +254,16 @@ async function loadServices(empId) {
       btn.classList.add('active');
       durRow.hidden = false;
 
-      // Auto-select first duration
-      const firstRadio = durRow.querySelector('input[type="radio"]');
-      if (firstRadio) firstRadio.checked = true;
-
       state.serviceId = srvId;
       state.serviceTitle = btn.dataset.title;
       state.bufferMinutes = parseInt(btn.dataset.buf) || 0;
-      state.durationMinutes = parseInt(firstRadio?.value) || parseInt(btn.dataset.dur) || 30;
+      state.durationMinutes = parseInt(btn.dataset.dur) || 30;
       state.selectedDate = null;
       state.selectedTime = null;
 
       updateSidebar();
+      mountBookingCalendar();
+      goStep('datetime');
     });
   });
 
