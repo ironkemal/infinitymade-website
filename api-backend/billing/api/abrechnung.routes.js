@@ -727,7 +727,8 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
     const rejectedRxIds = [...new Set(inserts.map(e => e.prescription_id).filter(Boolean))];
     if (rejectedRxIds.length) {
       await supabase.from('prescriptions').update({
-        abrechnung_status: 'rejected',
+        abrechnung_status: 'bereit',
+        status: 'aktiv',
       }).in('id', rejectedRxIds);
     }
 

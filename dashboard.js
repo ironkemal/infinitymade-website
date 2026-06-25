@@ -15596,11 +15596,11 @@ async function init() {
       rxcArztName.addEventListener('input', () => {
         const val = rxcArztName.value.trim();
         const matched = aerzteCache.find(a => a.arzt_name === val);
-        if (matched && matched.arzt_nummer) {
+        if (matched) {
           const lanr = document.getElementById('rxcLanr');
           const bsnr = document.getElementById('rxcBsnr');
-          if (lanr && !lanr.value.trim()) lanr.value = matched.arzt_nummer;
-          if (bsnr && !bsnr.value.trim()) bsnr.value = matched.arzt_nummer;
+          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || matched.arzt_nummer || '';
+          if (bsnr && !bsnr.value.trim()) bsnr.value = matched.bsnr || '';
         }
       });
     }
@@ -20152,9 +20152,12 @@ async function loadPodologieBilling() {
           border-radius:8px;cursor:pointer;background:${isSelected?'var(--bg-card)':'transparent'};
           margin-bottom:8px;transition:border-color .15s;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-            <div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
               <span style="font-weight:600;color:var(--text-main);">${escapeHtml(v.patient_name || '—')}</span>
-              <span style="margin-left:10px;font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${escapeHtml(v.diagnosegruppe || '—')}</span>
+              <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${escapeHtml(v.diagnosegruppe || '—')}</span>
+              ${v.status === 'abrechenbar' ? '<span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abrechenbar</span>' : ''}
+              ${v.status === 'abgerechnet' ? '<span style="font-size:11px;background:#2563eb;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abgerechnet</span>' : ''}
+              ${v.status === 'archiviert' ? '<span style="font-size:11px;background:#6b7280;color:#fff;padding:2px 7px;border-radius:12px;">Archiviert</span>' : ''}
             </div>
             <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
           </div>
@@ -20186,7 +20189,10 @@ async function loadPodologieBilling() {
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('pod_hpnr')}</label>
           <div id="podHpnrChecks" style="display:flex;flex-wrap:wrap;gap:8px;">
             ${hpnrList.map(code => {
-              const autoChecked = (diagRoot !== 'UI1' && diagRoot !== 'UI2' && code === '78030') ? 'checked' : '';
+              const isHausbesuch = selectedVord?.hausbesuch === true;
+              const autoChecked =
+                (diagRoot !== 'UI1' && diagRoot !== 'UI2' && code === '78030') ? 'checked' :
+                (isHausbesuch && code === '79933') ? 'checked' : '';
               return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
                 <input type="checkbox" class="pod-hpnr-cb" value="${code}" ${autoChecked}> ${code} – ${HPNR_LABELS[code]||code}
               </label>`;
@@ -20233,6 +20239,18 @@ async function loadPodologieBilling() {
                 <option value="QF">QF – Querschnittslähmung</option>
                 <option value="UI1">UI1 – Unguis incarnatus Stufe 1</option>
                 <option value="UI2">UI2 – Unguis incarnatus Stufe 2-3</option>
+              </select>
+            </div>
+            <div id="podWagnerWrap" style="display:none;">
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Wagner-Klassifikation</label>
+              <select id="podNewWagner" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="">— nicht angegeben —</option>
+                <option value="0">Grad 0 – Risikofuß (keine offene Läsion)</option>
+                <option value="1">Grad 1 – Oberflächliche Ulzeration</option>
+                <option value="2">Grad 2 – Tiefes Ulkus (Sehne/Knochen)</option>
+                <option value="3">Grad 3 – Tiefeninfektion / Abszess</option>
+                <option value="4">Grad 4 – Begrenzte Gangrän</option>
+                <option value="5">Grad 5 – Ausgedehnte Gangrän</option>
               </select>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -20330,6 +20348,9 @@ async function loadPodologieBilling() {
     beginDate.setDate(beginDate.getDate() + (dring ? 14 : 28));
     const beginn_spaetestens = beginDate.toISOString().split('T')[0];
 
+    const wagnerRaw = document.getElementById('podNewWagner')?.value;
+    const wagnerGrad = (wagnerRaw !== '' && wagnerRaw != null) ? parseInt(wagnerRaw) : null;
+
     const { error } = await supabase.from('verordnungen').insert({
       owner_id: getOwnerId(),
       patient_name: patient,
@@ -20345,6 +20366,7 @@ async function loadPodologieBilling() {
       rezeptart,
       beginn_spaetestens,
       heilmittel_items: heilmittelItems,
+      wagner_grad: wagnerGrad,
     });
     if (error) {
       errEl.textContent = error.message;
@@ -20424,6 +20446,9 @@ async function loadPodologieBilling() {
     if (icd10El && defaults.length > 0) {
       icd10El.value = defaults[0];
     }
+    // Wagner only for DF
+    const wagnerWrap = document.getElementById('podWagnerWrap');
+    if (wagnerWrap) wagnerWrap.style.display = diagRootVal === 'DF' ? 'block' : 'none';
     podUpdateHeilmittelOptions();
     podValidateIcd10();
   });
@@ -20483,6 +20508,26 @@ async function loadPodologieBilling() {
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
 
+    // 78040 Lebenszeit-Check: Einmalig je Patient (patientenübergreifend, alle Verordnungen)
+    if (checks.includes('78040') && vord?.patient_name) {
+      const { data: allVords } = await supabase
+        .from('verordnungen').select('id').eq('owner_id', getOwnerId()).eq('patient_name', vord.patient_name);
+      if (allVords?.length) {
+        const { data: prev78040 } = await supabase
+          .from('podologie_behandlungen').select('id, behandlungsdatum')
+          .eq('owner_id', getOwnerId())
+          .contains('hpnr_codes', ['78040'])
+          .in('verordnung_id', allVords.map(v => v.id))
+          .limit(1);
+        if (prev78040?.length) {
+          const prevDate = new Date(prev78040[0].behandlungsdatum).toLocaleDateString('de-DE');
+          errEl.textContent = `Eingangsbefundung (78040) wurde für ${vord.patient_name} bereits am ${prevDate} abgerechnet – Lebenszeit-Leistung, nicht wiederholbar.`;
+          errEl.style.display = 'block';
+          return;
+        }
+      }
+    }
+
     // beginn_spaetestens check: warn if first treatment is after deadline
     if (vord && !vord.behandlungsstart && datum) {
       let deadline = null;
@@ -20512,7 +20557,25 @@ async function loadPodologieBilling() {
       notizen: notiz || null,
     });
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
-    showToast('Behandlung gespeichert ✓');
+
+    // Status machine: wenn alle Einheiten verbraucht → abrechenbar
+    if (vord?.behandlungseinheiten) {
+      const { count } = await supabase
+        .from('podologie_behandlungen')
+        .select('*', { count: 'exact', head: true })
+        .eq('verordnung_id', _podState.selectedVordId);
+      if (count != null && count >= vord.behandlungseinheiten) {
+        await supabase.from('verordnungen')
+          .update({ status: 'abrechenbar' })
+          .eq('id', _podState.selectedVordId);
+        showToast('Alle Einheiten aufgebraucht — Verordnung bereit zur Abrechnung ✓', 'info');
+      } else {
+        showToast('Behandlung gespeichert ✓');
+      }
+    } else {
+      showToast('Behandlung gespeichert ✓');
+    }
+
     loadPodologieBilling();
   });
 }
