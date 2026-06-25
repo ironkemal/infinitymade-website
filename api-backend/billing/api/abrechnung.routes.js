@@ -8,12 +8,13 @@
 //   - Uploads both to Storage bucket "abrechnungen"
 //   - Inserts abrechnung row, links prescriptions
 //
-// Faz A2: DTA is plain (no PKCS#7). Signing is Sprint 9-10.
+// Faz A2: DTA oluşturulur, browser-side PKCS#7 imzalama dashboard signModal ile yapılır (sprint-6-complete).
 
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
 import { findPosition, resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
+import { findPodologiePosition, getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettel } from '../pdf/begleitzettel.template.js';
 import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
@@ -89,7 +90,7 @@ function findPriceForDate(tariffs, positionNr, dateStr) {
 }
 
 // Map a DB prescription row → buildDtaFile prescription shape.
-function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW') {
+function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW', sector = 'physiotherapy') {
   if (!rx.kostentraeger_ik) {
     const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
     err.status = 422;
@@ -98,7 +99,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
   }
 
   const np = nameParts(lead);
-  const abrechnungscode = '22'; // Physiotherapie (Faz A2 default)
+  const abrechnungscode = sector === 'podologie' ? '71' : '22';
 
   // Resolve Positionsnummer (template like 'X0501' or stored numeric).
   const stored = rx.heilmittel_position;
@@ -130,7 +131,9 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
       einzelbetrag = Number(dbTarif.preis_eur);
       zuzahlungProPos = dbTarif.zuzahlung_pflicht ? einzelbetrag * 0.10 : 0;
     } else {
-      const staticPos = findPosition(stored, abrechnungscode);
+      const staticPos = sector === 'podologie'
+        ? findPodologiePosition(stored, dateStr)
+        : findPosition(stored, abrechnungscode);
       einzelbetrag = staticPos?.preis ?? 0;
       zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
     }
@@ -159,7 +162,9 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
       einzelbetrag = Number(dbTarif.preis_eur);
       zuzahlungProPos = dbTarif.zuzahlung_pflicht ? einzelbetrag * 0.10 : 0;
     } else {
-      const staticPos = findPosition(stored, abrechnungscode);
+      const staticPos = sector === 'podologie'
+        ? findPodologiePosition(stored, dateStr)
+        : findPosition(stored, abrechnungscode);
       einzelbetrag = staticPos?.preis ?? 0;
       zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
     }
@@ -226,7 +231,7 @@ router.post('/abrechnung/create', async (req, res) => {
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number')
+      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, sector')
       .eq('id', u.user.id)
       .single();
     if (pErr || !profile) return res.status(403).json({ error: 'Profile not found' });
@@ -234,6 +239,12 @@ router.post('/abrechnung/create', async (req, res) => {
     const tenantId = profile.role === 'employee' && profile.owner_id
       ? profile.owner_id
       : profile.id;
+
+    let tenantSector = profile.sector || 'physiotherapy';
+    if (profile.role === 'employee' && profile.owner_id) {
+      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
+      tenantSector = op?.sector || tenantSector;
+    }
 
     // ---- input ----
     const { ownerId, kostentraegerIk, prescriptionIds } = req.body || {};
@@ -368,7 +379,7 @@ router.post('/abrechnung/create', async (req, res) => {
       .eq('bundesland', bundesland);
 
     // ---- map prescriptions ----
-    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland));
+    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland, tenantSector));
 
     // ---- build DTA (preflight runs first; rejects file if DMRZ would reject) ----
     let dta;
@@ -451,7 +462,9 @@ router.post('/abrechnung/create', async (req, res) => {
     const belege = rxRows.map(r => {
       const np = nameParts(r.leads);
       const brutto = (() => {
-        const pos = findPosition(r.heilmittel_position, '22');
+        const pos = tenantSector === 'podologie'
+          ? findPodologiePosition(r.heilmittel_position, r.ausstellungsdatum || new Date().toISOString().slice(0, 10))
+          : findPosition(r.heilmittel_position, '22');
         return ((pos?.preis ?? 0) * (r.anzahl_einheiten || 1)).toFixed(2);
       })();
       return {
@@ -798,6 +811,36 @@ router.get('/positions', async (req, res) => {
   }
 });
 
+// Podologie position list for UI pickers.
+// Query param: ?diagnosegruppe=DF|NF|QF|UI1|UI2&date=YYYY-MM-DD (both optional)
+router.get('/positions/podologie', async (req, res) => {
+  try {
+    const hdr   = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { diagnosegruppe, date } = req.query;
+    const dateStr = date || new Date().toISOString().slice(0, 10);
+
+    let list;
+    if (diagnosegruppe) {
+      list = getPodologiePositionenFuerDiagnosegruppe(diagnosegruppe, dateStr);
+    } else {
+      const { PODOLOGIE_POSITIONS_2025, PODOLOGIE_POSITIONS_2026 } = await import('../codes/podologie_positions.js');
+      const all = [...PODOLOGIE_POSITIONS_2025, ...PODOLOGIE_POSITIONS_2026];
+      list = all.filter(p => p.gueltig_ab <= dateStr && p.gueltig_bis >= dateStr && !p.deprecated);
+    }
+
+    res.set('Cache-Control', 'private, max-age=3600');
+    return res.json({ ok: true, date: dateStr, positions: list });
+  } catch (e) {
+    console.error('[billing/positions/podologie]', e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // Override heilmittel_position on a single 'bereit' prescription before billing.
 router.patch('/prescription/:id/position', async (req, res) => {
   try {
@@ -872,10 +915,16 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     if (uErr || !user) return res.status(401).send('Ungültiges Token');
 
     const { data: profile } = await supabase
-      .from('profiles').select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text')
+      .from('profiles').select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector')
       .eq('id', user.id).single();
     if (!profile) return res.status(403).send('Profil nicht gefunden');
     const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
+
+    let tenantSector = profile.sector || 'physiotherapy';
+    if (profile.role === 'employee' && profile.owner_id) {
+      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
+      tenantSector = op?.sector || tenantSector;
+    }
 
     // ---- Fetch owner's default Zuzahlung vorlage for custom hinweis/fusszeile ----
     const { data: vorlage } = await supabase
@@ -907,7 +956,9 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
 
     // ---- Map Sessions & Calculate Totals ----
     const storedPos = rx.heilmittel_position || '';
-    const pos = findPosition(storedPos, '22'); // default Physio code
+    const pos = tenantSector === 'podologie'
+      ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
+      : findPosition(storedPos, '22');
     const priceUnit = pos?.preis ?? 0;
     const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
 
@@ -943,7 +994,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
         plz_ort: [profile.zip, profile.city].filter(Boolean).join(' '),
         telefon: profile.phone || '',
         ik: profile.ik_number || rx.doctor_bsnr || '',
-        steuernummer: '',
+        steuernummer: profile.steuernummer || '',
         email: user.email || ''
       },
       patient: {
@@ -1002,10 +1053,16 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text')
+      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector')
       .eq('id', user.id).single();
     if (!profile) return res.status(403).send('Profil nicht gefunden');
     const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
+
+    let tenantSector = profile.sector || 'physiotherapy';
+    if (profile.role === 'employee' && profile.owner_id) {
+      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
+      tenantSector = op?.sector || tenantSector;
+    }
 
     // ---- Owner's default vorlage for this type ----
     const { data: vorlage } = await supabase
@@ -1034,7 +1091,9 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
 
     // ---- Shared data ----
     const storedPos = rx.heilmittel_position || '';
-    const pos = findPosition(storedPos, '22');
+    const pos = tenantSector === 'podologie'
+      ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
+      : findPosition(storedPos, '22');
     const priceUnit = pos?.preis ?? 0;
     const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
     const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
@@ -1045,7 +1104,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       plz_ort: [profile.zip, profile.city].filter(Boolean).join(' '),
       telefon: profile.phone || '',
       ik: profile.ik_number || '',
-      steuernummer: '',
+      steuernummer: profile.steuernummer || '',
       email: user.email || ''
     };
     const patientData = {
@@ -1424,7 +1483,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
 
     const { data: profile, error: pErr } = await supabase
       .from('profiles')
-      .select('id, role, owner_id, business_name')
+      .select('id, role, owner_id, business_name, sector')
       .eq('id', u.user.id)
       .single();
     if (pErr || !profile) return res.status(403).json({ error: 'Profile not found' });
@@ -1432,6 +1491,12 @@ router.post('/abrechnung/preflight', async (req, res) => {
     const tenantId = profile.role === 'employee' && profile.owner_id
       ? profile.owner_id
       : profile.id;
+
+    let tenantSector = profile.sector || 'physiotherapy';
+    if (profile.role === 'employee' && profile.owner_id) {
+      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
+      tenantSector = op?.sector || tenantSector;
+    }
 
     const { prescriptionIds } = req.body || {};
     if (!Array.isArray(prescriptionIds) || !prescriptionIds.length) {
@@ -1520,7 +1585,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
       .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
       .eq('bundesland', bundesland);
 
-    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland));
+    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland, tenantSector));
     const { preflight: runPreflight } = await import('../dta/preflight.js');
 
     const results = runPreflight({
