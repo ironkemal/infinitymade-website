@@ -8,7 +8,23 @@ let teamMembers = [];
 let calendar = null;
 let workingHours = [];
 let pendingMoveBooking = null;
-let ctxMenuBookingId = null;
+let activePanelBookingId = null;
+
+function showKalToast(msg, type = 'success') {
+  let container = document.getElementById('kal-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'kal-toast-container';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+    document.body.appendChild(container);
+  }
+  const colors = { success: '#22c55e', error: '#ef4444', info: '#60a5fa', warning: '#fbbf24' };
+  const d = document.createElement('div');
+  d.style.cssText = `background:#1a1d24;border:1px solid ${colors[type]||colors.success};color:#f8fafc;padding:12px 18px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,0.5);max-width:320px;`;
+  d.textContent = msg;
+  container.appendChild(d);
+  setTimeout(() => d.remove(), 3000);
+}
 
 // ================= TRANSLATIONS =================
 const T = {
@@ -258,7 +274,7 @@ async function initCalendar() {
               document.getElementById('pending-move-banner').style.display = 'none';
               calendar.refetchEvents();
             })
-            .catch(err => alert(err.message));
+            .catch(err => showKalToast(err.message, 'error'));
         }
         calendar.unselect();
         return;
@@ -335,96 +351,109 @@ async function initCalendar() {
         successCallback(events);
       } catch(e) { failureCallback(e); }
     },
-    eventDidMount: function(info) {
-      if (info.event.id && !info.event.id.startsWith('leave_')) {
-        const btn = document.createElement('button');
-        btn.textContent = '⋮';
-        btn.className = 'fc-event-menu-btn';
-        btn.title = 'Aktionen';
-        btn.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          ctxMenuBookingId = info.event.id;
-          const menu = document.getElementById('ctx-menu');
-          const rect = btn.getBoundingClientRect();
-          const x = Math.min(rect.left, window.innerWidth - 220);
-          const y = Math.min(rect.bottom + 4, window.innerHeight - 180);
-          menu.style.left = x + 'px';
-          menu.style.top = y + 'px';
-          menu.style.display = 'block';
-        });
-        info.el.style.position = 'relative';
-        info.el.appendChild(btn);
-      }
-    },
+    eventDidMount: function(info) { },
     eventDrop: async function(info) {
       if (info.event.id.startsWith('leave_')) { info.revert(); return; }
       try {
         await patchBooking(info.event.id, { start_time: info.event.startStr, end_time: info.event.endStr });
-      } catch(err) { alert(err.message); info.revert(); }
+      } catch(err) { showKalToast(err.message, 'error'); info.revert(); }
     },
     eventResize: async function(info) {
       try {
         await patchBooking(info.event.id, { start_time: info.event.startStr, end_time: info.event.endStr });
-      } catch(err) { alert(err.message); info.revert(); }
+      } catch(err) { showKalToast(err.message, 'error'); info.revert(); }
     },
     eventClick: function(info) {
-      const p = info.event.extendedProps;
-      if (p.customer_name) {
-        let txt = `Kunde: ${p.customer_name}\nTel: ${p.customer_phone || '-'}\nDienst: ${p.services?.title || 'Manuell'}`;
-        alert(txt);
+      if (!info.event.id.startsWith('leave_')) {
+        openBookingPanel(info.event);
       }
     }
   });
   calendar.render();
-  setupContextMenu();
+  setupBookingPanel();
 }
 
-function setupContextMenu() {
-  const menu = document.getElementById('ctx-menu');
+function openBookingPanel(event) {
+  activePanelBookingId = event.id;
+  const p = event.extendedProps;
 
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#ctx-menu')) menu.style.display = 'none';
-  });
+  document.getElementById('bp-patient').textContent = p.customer_name || '—';
+  document.getElementById('bp-phone').textContent = p.customer_phone || '—';
+  document.getElementById('bp-service').textContent = p.services?.title || 'Manuell';
 
-  document.getElementById('ctx-appeared').addEventListener('click', async () => {
-    if (!ctxMenuBookingId) return;
-    menu.style.display = 'none';
+  const emp = teamMembers.find(t => t.id === p.user_id);
+  document.getElementById('bp-employee').textContent = emp ? (emp.business_name || emp.email?.split('@')[0]) : '—';
+
+  const start = event.start ? new Date(event.start) : new Date(p.start_time);
+  const end   = event.end   ? new Date(event.end)   : new Date(p.end_time);
+  const datePart = start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+  const t1 = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  const t2 = end.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('bp-time').textContent = `${datePart}, ${t1} – ${t2}`;
+
+  const statusMap = { confirmed: '🟡 Bestätigt', completed: '🟢 Erschienen', cancelled: '🔴 Storniert', no_show: '👻 Nicht erschienen' };
+  document.getElementById('bp-status').textContent = statusMap[p.status] || p.status || '—';
+
+  const notesBlock = document.getElementById('bp-notes-block');
+  if (p.notes) {
+    document.getElementById('bp-notes').textContent = p.notes;
+    notesBlock.style.display = 'block';
+  } else {
+    notesBlock.style.display = 'none';
+  }
+
+  document.getElementById('booking-panel').classList.add('open');
+  document.getElementById('booking-panel-overlay').classList.add('show');
+}
+
+function closeBookingPanel() {
+  document.getElementById('booking-panel').classList.remove('open');
+  document.getElementById('booking-panel-overlay').classList.remove('show');
+  activePanelBookingId = null;
+}
+
+function setupBookingPanel() {
+  document.getElementById('bp-close').addEventListener('click', closeBookingPanel);
+  document.getElementById('booking-panel-overlay').addEventListener('click', closeBookingPanel);
+
+  document.getElementById('bp-appeared').addEventListener('click', async () => {
+    if (!activePanelBookingId) return;
     try {
-      await patchBooking(ctxMenuBookingId, { status: 'completed' });
+      await patchBooking(activePanelBookingId, { status: 'completed' });
+      document.getElementById('bp-status').textContent = '🟢 Erschienen';
       calendar.refetchEvents();
-    } catch(err) { alert(err.message); }
+    } catch(err) { showKalToast(err.message, 'error'); }
   });
 
-  document.getElementById('ctx-noshow').addEventListener('click', async () => {
-    if (!ctxMenuBookingId) return;
-    menu.style.display = 'none';
+  document.getElementById('bp-noshow').addEventListener('click', async () => {
+    if (!activePanelBookingId) return;
     try {
-      await patchBooking(ctxMenuBookingId, { status: 'no_show' });
+      await patchBooking(activePanelBookingId, { status: 'no_show' });
+      document.getElementById('bp-status').textContent = '👻 Nicht erschienen';
       calendar.refetchEvents();
-    } catch(err) { alert(err.message); }
+    } catch(err) { showKalToast(err.message, 'error'); }
   });
 
-  document.getElementById('ctx-cancel-booking').addEventListener('click', async () => {
-    if (!ctxMenuBookingId) return;
-    if (!confirm('Termin wirklich stornieren?')) return;
-    menu.style.display = 'none';
-    try {
-      await patchBooking(ctxMenuBookingId, { status: 'cancelled' });
-      calendar.refetchEvents();
-    } catch(err) { alert(err.message); }
-  });
-
-  document.getElementById('ctx-unlock').addEventListener('click', () => {
-    if (!ctxMenuBookingId) return;
-    menu.style.display = 'none';
-    const event = calendar.getEventById(ctxMenuBookingId);
+  document.getElementById('bp-unlock').addEventListener('click', () => {
+    if (!activePanelBookingId) return;
+    const event = calendar.getEventById(activePanelBookingId);
     pendingMoveBooking = {
-      id: ctxMenuBookingId,
+      id: activePanelBookingId,
       title: event ? (event.extendedProps.customer_name || event.title) : 'Termin'
     };
     document.getElementById('pending-move-title').textContent = pendingMoveBooking.title;
     document.getElementById('pending-move-banner').style.display = 'flex';
+    closeBookingPanel();
+  });
+
+  document.getElementById('bp-cancel-booking').addEventListener('click', async () => {
+    if (!activePanelBookingId) return;
+    if (!confirm('Termin wirklich stornieren?')) return;
+    try {
+      await patchBooking(activePanelBookingId, { status: 'cancelled' });
+      document.getElementById('bp-status').textContent = '🔴 Storniert';
+      calendar.refetchEvents();
+    } catch(err) { showKalToast(err.message, 'error'); }
   });
 
   document.getElementById('pending-move-cancel').addEventListener('click', () => {
@@ -459,7 +488,7 @@ document.getElementById('manual-form').addEventListener('submit', async (e) => {
     document.getElementById('manual-form').reset();
     calendar.refetchEvents();
   } catch(err) {
-    alert(err.message);
+    showKalToast(err.message, 'error');
   }
   btn.disabled = false;
 });
@@ -497,7 +526,7 @@ document.getElementById('form-service').addEventListener('submit', async (e) => 
     owner_id: session.user.id, title, duration_minutes: dur, price,
     required_certificate: reqCert || null
   }).select().single();
-  if (error) return alert(error.message);
+  if (error) return showKalToast(error.message, 'error');
 
   const selectedEmpIds = Array.from(document.querySelectorAll('input[name="srv_employees"]:checked')).map(el => el.value);
   if (selectedEmpIds.length > 0) {
@@ -532,7 +561,7 @@ document.getElementById('leave-form').addEventListener('submit', async (e) => {
     reason
   });
 
-  if (error) alert(error.message);
+  if (error) showKalToast(error.message, 'error');
   else {
     document.getElementById('leave-modal').classList.remove('show');
     document.getElementById('leave-form').reset();
@@ -573,7 +602,7 @@ document.getElementById('btn-save-hours').addEventListener('click', async () => 
     });
   }
   await supabase.from('working_hours').upsert(payload, { onConflict: 'user_id, day_of_week' });
-  alert(T[lang].alert_hours_saved);
+  showKalToast(T[lang].alert_hours_saved);
 });
 
 // ================= INTEGRATIONS =================

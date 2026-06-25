@@ -118,6 +118,10 @@ const T = {
     pod_warn_frist: 'Behandlungsfrist abgelaufen',
     pod_warn_expired: 'Verordnung möglicherweise ungültig (>84 Tage)',
     pod_kein_hpnr: 'Bitte mindestens einen HPNR-Code wählen.',
+    pod_rezeptart: 'Rezeptart',
+    pod_beginn_hint: 'Beginn spätestens',
+    pod_heilmittel_items: 'Verordnete Leistungen',
+    pod_icd10_label: 'ICD-10 Code',
     fuss_new: 'Neuer Fußstatus',
     fuss_history: 'Verlauf (letzte 10)',
     fuss_patient: 'Patient',
@@ -216,6 +220,10 @@ const T = {
     pod_save_behandlung: 'Save Treatment',
     pod_warn_frist: 'Treatment deadline expired', pod_warn_expired: 'Prescription possibly invalid (>84 days)',
     pod_kein_hpnr: 'Please select at least one HPNR code.',
+    pod_rezeptart: 'Prescription Type',
+    pod_beginn_hint: 'Must Start By',
+    pod_heilmittel_items: 'Prescribed Services',
+    pod_icd10_label: 'ICD-10 Code',
     fuss_new: 'New Foot Status', fuss_history: 'History (last 10)',
     fuss_patient: 'Patient', fuss_datum: 'Date', fuss_seite: 'Side',
     fuss_wagner: 'Wagner Grade', fuss_befunde: 'Findings', fuss_notizen: 'Notes',
@@ -307,6 +315,10 @@ const T = {
     pod_save_behandlung: 'Tedaviyi Kaydet',
     pod_warn_frist: 'Tedavi başlangıç süresi doldu', pod_warn_expired: 'Reçete geçersiz olabilir (>84 gün)',
     pod_kein_hpnr: 'Lütfen en az bir HPNR kodu seçin.',
+    pod_rezeptart: 'Reçete Türü',
+    pod_beginn_hint: 'En Geç Başlama',
+    pod_heilmittel_items: 'Reçete Edilen Hizmetler',
+    pod_icd10_label: 'ICD-10 Kodu',
     fuss_new: 'Yeni Ayak Durumu', fuss_history: 'Geçmiş (son 10)',
     fuss_patient: 'Hasta', fuss_datum: 'Tarih', fuss_seite: 'Taraf',
     fuss_wagner: 'Wagner Derecesi', fuss_befunde: 'Bulgular', fuss_notizen: 'Notlar',
@@ -7387,7 +7399,8 @@ function wireBefreiungCard(leadId) {
   });
   root.querySelectorAll('.bef-remove').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Befreiung für dieses Jahr entfernen?')) return;
+      const ok7402 = await showConfirmModal({ title: 'Befreiung entfernen', message: 'Befreiung für dieses Jahr entfernen?', confirmText: 'Entfernen', cancelText: 'Abbrechen', variant: 'danger' });
+      if (!ok7402) return;
       const { error } = await supabase.from('zuzahlung_befreiung').delete().eq('id', btn.dataset.id);
       if (error) return showToast('Fehler: ' + error.message, 'error');
       showToast('Befreiung entfernt.');
@@ -7505,7 +7518,8 @@ async function refreshMessreihen(leadId) {
 
   area.querySelectorAll('.mess-del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Messung löschen?')) return;
+      const ok = await showConfirmModal({ title: 'Messung löschen', message: 'Messung löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+      if (!ok) return;
       await supabase.from('messreihen').delete().eq('id', btn.dataset.id);
       refreshMessreihen(leadId);
     });
@@ -10119,7 +10133,8 @@ function openEmpDetail(empId) {
 
   document.getElementById('empAvatarRemoveBtn').onclick = async () => {
     if (!m.avatar_url) { showToast('Kein Bild vorhanden'); return; }
-    if (!confirm('Profilbild entfernen?')) return;
+    const okAvatar = await showConfirmModal({ title: 'Profilbild entfernen', message: 'Profilbild entfernen?', confirmText: 'Entfernen', cancelText: 'Abbrechen', variant: 'danger' });
+    if (!okAvatar) return;
     try {
       const { error: dbErr } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', empId);
       if (dbErr) throw dbErr;
@@ -10165,7 +10180,8 @@ function openEmpDetail(empId) {
   const isOwn = m.id === currentSession.user.id;
   document.getElementById('empRemoveBtn').hidden = isOwn || currentProfile.role !== 'owner';
   document.getElementById('empRemoveBtn').onclick = async () => {
-    if (!confirm(t('btn_remove') + '?')) return;
+    const okRemove = await showConfirmModal({ title: t('btn_remove'), message: t('btn_remove') + '?', confirmText: t('btn_remove'), cancelText: 'Abbrechen', variant: 'danger' });
+    if (!okRemove) return;
     await supabase.from('profiles').update({ owner_id: null, role: 'owner' }).eq('id', m.id);
     await loadTeam();
     document.getElementById('teamListView').hidden = false;
@@ -10583,7 +10599,8 @@ function renderB2B() {
   });
   tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Lead wirklich löschen?')) return;
+      const okLead = await showConfirmModal({ title: 'Lead löschen', message: 'Lead wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
+      if (!okLead) return;
       const { error } = await supabase.from('b2b_contacts').delete().eq('id', btn.dataset.b2bId);
       if (error) { showToast('Fehler beim Löschen.', 'error'); return; }
       b2bCache = b2bCache.filter(x => x.id !== btn.dataset.b2bId);
@@ -12253,7 +12270,8 @@ document.getElementById('dsgvoDeleteBtn')?.addEventListener('click', async () =>
       btn.textContent = '🗑️ Konto & Daten löschen';
       return;
     }
-    alert('Ihr Konto wurde gelöscht. Sie werden jetzt abgemeldet.');
+    showToast('Ihr Konto wurde gelöscht. Sie werden jetzt abgemeldet.');
+    await new Promise(r => setTimeout(r, 1500));
     await supabase.auth.signOut();
     window.location.href = '/';
   } catch (err) {
@@ -15461,7 +15479,7 @@ function wireBizSwitcherEvents() {
     }
     if (e.target.closest('#bizSwitcherAdd')) {
       // TODO Phase 1.3: Settings > Standorte > Neuen Standort hinzufügen Modal
-      alert('Neues Geschäft hinzufügen — in Kürze verfügbar (Settings → Geschäfte).');
+      showToast('Neues Geschäft hinzufügen — in Kürze verfügbar (Settings → Geschäfte).', 'info');
     }
   });
 }
@@ -17234,9 +17252,8 @@ function renderAbrechnungHistory(rows) {
   body.querySelectorAll('.ab-revert-rejected').forEach(btn => {
     btn.addEventListener('click', async () => {
       const abId = btn.dataset.id;
-      if (!confirm("Die Rezepte dieser Abrechnung werden zur Korrektur freigegeben und erscheinen wieder unter 'Bereit'. Fortfahren?")) {
-        return;
-      }
+      const okRevert = await showConfirmModal({ title: 'Abrechnung zurücksetzen', message: "Die Rezepte dieser Abrechnung werden zur Korrektur freigegeben und erscheinen wieder unter 'Bereit'. Fortfahren?", confirmText: 'Fortfahren', cancelText: 'Abbrechen' });
+      if (!okRevert) return;
       try {
         const ownerId = getOwnerId();
         if (!ownerId) {
@@ -19653,11 +19670,11 @@ function showPlanWall(lastPlan) {
       const data = await res.json();
       if (data.url) location.href = data.url;
       else {
-        alert('Fehler: ' + (data.error || 'Unbekannt'));
+        showToast('Fehler: ' + (data.error || 'Unbekannt'), 'error');
         if (btn) { btn.disabled = false; btn.textContent = 'Jetzt aktivieren'; }
       }
     } catch (e) {
-      alert('Netzwerkfehler');
+      showToast('Netzwerkfehler', 'error');
       if (btn) { btn.disabled = false; btn.textContent = 'Jetzt aktivieren'; }
     }
   };
@@ -20075,6 +20092,14 @@ function podDiagRoot(diagCode) {
   return diagCode; // NF, QF, UI1, UI2
 }
 
+const PODOLOGIE_ICD_MAP = {
+  'DF': ['E10.74','E11.74','E12.74','E13.74','E14.74'],
+  'NF': ['G60.0','G60.8','G62.9','G63.2'],
+  'QF': ['G82.1','G82.2','G82.3','G82.4','G82.5'],
+  'UI1': ['L60.0'],
+  'UI2': ['L60.0'],
+};
+
 let _podState = { selectedVordId: null, verordnungen: [] };
 
 async function loadPodologieBilling() {
@@ -20097,11 +20122,19 @@ async function loadPodologieBilling() {
 
   function vordAlerts(v) {
     const alerts = [];
-    const issued = v.ausstellungsdatum ? new Date(v.ausstellungsdatum) : null;
-    if (issued && !v.behandlungsstart) {
-      const frist = v.dringend ? 14 : 28;
-      const deadline = new Date(issued); deadline.setDate(deadline.getDate() + frist);
-      if (today > deadline) alerts.push({ type: 'danger', msg: `Behandlungsfrist abgelaufen (${frist}-Tage-Regel)` });
+    if (!v.behandlungsstart) {
+      let deadline = null;
+      if (v.beginn_spaetestens) {
+        deadline = new Date(v.beginn_spaetestens);
+      } else if (v.ausstellungsdatum) {
+        const issued = new Date(v.ausstellungsdatum);
+        const frist = v.dringend ? 14 : 28;
+        deadline = new Date(issued); deadline.setDate(deadline.getDate() + frist);
+      }
+      if (deadline && today > deadline) {
+        const frist = v.dringend ? 14 : 28;
+        alerts.push({ type: 'danger', msg: `Behandlungsfrist abgelaufen (${frist}-Tage-Regel)` });
+      }
     }
     return alerts;
   }
@@ -20212,6 +20245,26 @@ async function loadPodologieBilling() {
                 <input type="text" id="podNewFrequenz" placeholder="z.B. 1x wöchentlich" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
               </div>
             </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_rezeptart')}</label>
+              <select id="podNewRezeptart" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="kassen">Kassen-Rezept (GKV)</option>
+                <option value="privat">Privat-Rezept</option>
+                <option value="bg">BG-Rezept</option>
+                <option value="selbstzahler">Selbstzahler</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_icd10_label')}</label>
+              <input type="text" id="podNewIcd10" placeholder="z. B. E11.74" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              <div id="podIcd10Warning" style="color:#f59e0b;font-size:12px;margin-top:4px;display:none;"></div>
+            </div>
+            <div id="podBeginHintEl" style="font-size:13px;color:var(--text-muted);padding:6px 10px;background:var(--bg-card-solid,#1f2937);border-radius:6px;border:1px solid var(--border);display:none;"></div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('pod_heilmittel_items')}</label>
+              <div id="podHeilmittelItems" style="display:flex;flex-direction:column;gap:6px;"></div>
+              <button type="button" id="podAddHeilmittelBtn" style="margin-top:8px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">+ Hinzufügen</button>
+            </div>
             <div style="display:flex;gap:20px;">
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
                 <input type="checkbox" id="podNewDringend"> ${t('pod_dringend')}
@@ -20241,14 +20294,16 @@ async function loadPodologieBilling() {
   // ---- Event Listeners ----
 
   document.getElementById('podSaveVordBtn')?.addEventListener('click', async () => {
-    const patient = document.getElementById('podNewPatient').value.trim();
-    const datum   = document.getElementById('podNewAusstelldatum').value;
-    const diagVal = document.getElementById('podNewDiag').value;
-    const einh    = parseInt(document.getElementById('podNewEinheiten').value) || null;
-    const freq    = document.getElementById('podNewFrequenz').value.trim();
-    const dring   = document.getElementById('podNewDringend').checked;
-    const hausb   = document.getElementById('podNewHausbesuch').checked;
-    const errEl   = document.getElementById('podNewError');
+    const patient    = document.getElementById('podNewPatient').value.trim();
+    const datum      = document.getElementById('podNewAusstelldatum').value;
+    const diagVal    = document.getElementById('podNewDiag').value;
+    const einh       = parseInt(document.getElementById('podNewEinheiten').value) || null;
+    const freq       = document.getElementById('podNewFrequenz').value.trim();
+    const dring      = document.getElementById('podNewDringend').checked;
+    const hausb      = document.getElementById('podNewHausbesuch').checked;
+    const rezeptart  = document.getElementById('podNewRezeptart')?.value || 'kassen';
+    const icd10Raw   = document.getElementById('podNewIcd10')?.value || '';
+    const errEl      = document.getElementById('podNewError');
 
     if (!patient || !datum || !diagVal) {
       errEl.textContent = 'Bitte Patient, Datum und Diagnosegruppe ausfüllen.';
@@ -20258,8 +20313,22 @@ async function loadPodologieBilling() {
     errEl.style.display = 'none';
 
     const diagRoot = podDiagRoot(diagVal);
-    const icd10 = diagRoot === 'UI1' || diagRoot === 'UI2' ? ['L60.0']
-      : diagRoot === 'DF' ? ['E11.74'] : diagRoot === 'NF' ? ['G60.0'] : diagRoot === 'QF' ? ['G82.1'] : [];
+
+    // ICD-10: read from form input (user may have edited it)
+    const icd10 = icd10Raw.split(',').map(s => s.trim()).filter(Boolean);
+
+    // Heilmittel items from dynamic rows
+    const heilmittelItems = [];
+    document.querySelectorAll('#podHeilmittelItems .pod-hm-row').forEach(row => {
+      const code = row.querySelector('.pod-hm-code')?.value;
+      const anzahl = parseInt(row.querySelector('.pod-hm-anzahl')?.value) || 1;
+      if (code) heilmittelItems.push({ code, bezeichnung: HPNR_LABELS[code] || code, anzahl });
+    });
+
+    // Compute beginn_spaetestens
+    const beginDate = new Date(datum);
+    beginDate.setDate(beginDate.getDate() + (dring ? 14 : 28));
+    const beginn_spaetestens = beginDate.toISOString().split('T')[0];
 
     const { error } = await supabase.from('verordnungen').insert({
       owner_id: getOwnerId(),
@@ -20273,6 +20342,9 @@ async function loadPodologieBilling() {
       dringend: dring,
       hausbesuch: hausb,
       status: 'aktiv',
+      rezeptart,
+      beginn_spaetestens,
+      heilmittel_items: heilmittelItems,
     });
     if (error) {
       errEl.textContent = error.message;
@@ -20281,6 +20353,103 @@ async function loadPodologieBilling() {
     }
     showToast('Verordnung gespeichert ✓');
     loadPodologieBilling();
+  });
+
+  // ---- New field helpers ----
+
+  function computeBeginHint() {
+    const datum = document.getElementById('podNewAusstelldatum')?.value;
+    const dring = document.getElementById('podNewDringend')?.checked;
+    const el = document.getElementById('podBeginHintEl');
+    if (!el) return;
+    if (!datum) { el.style.display = 'none'; return; }
+    const d = new Date(datum);
+    d.setDate(d.getDate() + (dring ? 14 : 28));
+    el.textContent = `📅 Beginn spätestens: ${d.toLocaleDateString('de-DE')}`;
+    el.style.display = 'block';
+  }
+
+  function podRenderHeilmittelRow(diagRootVal) {
+    const list = podGetHpnrList(diagRootVal);
+    const options = list.map(code => `<option value="${code}">${code} – ${HPNR_LABELS[code]||code}</option>`).join('');
+    const row = document.createElement('div');
+    row.className = 'pod-hm-row';
+    row.style.cssText = 'display:flex;gap:6px;align-items:center;';
+    row.innerHTML = `
+      <select class="pod-hm-code" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;appearance:none;">
+        <option value="">— HPNR —</option>
+        ${options}
+      </select>
+      <input type="number" class="pod-hm-anzahl" min="1" max="99" value="1" style="width:64px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;">
+      <button type="button" class="pod-hm-remove" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--danger,#ef4444);font-size:14px;cursor:pointer;line-height:1;">×</button>`;
+    return row;
+  }
+
+  function podUpdateHeilmittelOptions() {
+    const diagVal = document.getElementById('podNewDiag')?.value || '';
+    const diagRootVal = podDiagRoot(diagVal);
+    const list = podGetHpnrList(diagRootVal);
+    document.querySelectorAll('#podHeilmittelItems .pod-hm-code').forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">— HPNR —</option>` +
+        list.map(code => `<option value="${code}"${code===cur?' selected':''}>${code} – ${HPNR_LABELS[code]||code}</option>`).join('');
+    });
+  }
+
+  function podValidateIcd10() {
+    const diagVal = document.getElementById('podNewDiag')?.value || '';
+    const diagRootVal = podDiagRoot(diagVal);
+    const raw = document.getElementById('podNewIcd10')?.value || '';
+    const warnEl = document.getElementById('podIcd10Warning');
+    if (!warnEl) return;
+    if (!raw.trim() || !diagRootVal) { warnEl.style.display = 'none'; return; }
+    const validPool = PODOLOGIE_ICD_MAP[diagRootVal] || [];
+    const entered = raw.split(',').map(s => s.trim()).filter(Boolean);
+    const invalid = entered.filter(code => !validPool.includes(code));
+    if (invalid.length > 0) {
+      warnEl.textContent = `Hinweis: ${invalid.join(', ')} nicht im Standardpool für ${diagRootVal} (${validPool.join(', ')}).`;
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+
+  // Wire up: Diagnosegruppe change
+  document.getElementById('podNewDiag')?.addEventListener('change', () => {
+    const diagVal = document.getElementById('podNewDiag').value;
+    const diagRootVal = podDiagRoot(diagVal);
+    // Auto-populate ICD-10 with first default from map
+    const defaults = PODOLOGIE_ICD_MAP[diagRootVal] || [];
+    const icd10El = document.getElementById('podNewIcd10');
+    if (icd10El && defaults.length > 0) {
+      icd10El.value = defaults[0];
+    }
+    podUpdateHeilmittelOptions();
+    podValidateIcd10();
+  });
+
+  // Wire up: Ausstelldatum change
+  document.getElementById('podNewAusstelldatum')?.addEventListener('change', computeBeginHint);
+
+  // Wire up: Dringend change
+  document.getElementById('podNewDringend')?.addEventListener('change', computeBeginHint);
+
+  // Wire up: ICD-10 input event
+  document.getElementById('podNewIcd10')?.addEventListener('input', podValidateIcd10);
+
+  // Wire up: Add heilmittel row button
+  document.getElementById('podAddHeilmittelBtn')?.addEventListener('click', () => {
+    const diagVal = document.getElementById('podNewDiag')?.value || '';
+    const diagRootVal = podDiagRoot(diagVal);
+    const container = document.getElementById('podHeilmittelItems');
+    if (container) container.appendChild(podRenderHeilmittelRow(diagRootVal));
+  });
+
+  // Wire up: Remove heilmittel row (event delegation)
+  document.getElementById('podHeilmittelItems')?.addEventListener('click', e => {
+    if (e.target.classList.contains('pod-hm-remove')) {
+      e.target.closest('.pod-hm-row')?.remove();
+    }
   });
 
   document.getElementById('podVordList')?.addEventListener('click', e => {
@@ -20313,6 +20482,25 @@ async function loadPodologieBilling() {
 
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
+
+    // beginn_spaetestens check: warn if first treatment is after deadline
+    if (vord && !vord.behandlungsstart && datum) {
+      let deadline = null;
+      if (vord.beginn_spaetestens) {
+        deadline = vord.beginn_spaetestens;
+      } else if (vord.ausstellungsdatum) {
+        const issued = new Date(vord.ausstellungsdatum);
+        const frist = vord.dringend ? 14 : 28;
+        issued.setDate(issued.getDate() + frist);
+        deadline = issued.toISOString().split('T')[0];
+      }
+      if (deadline && datum > deadline) {
+        const datumFormatted = new Date(datum).toLocaleDateString('de-DE');
+        const deadlineFormatted = new Date(deadline).toLocaleDateString('de-DE');
+        const proceed = confirm(`⚠️ Das gewählte Datum (${datumFormatted}) liegt nach dem Beginn spätestens (${deadlineFormatted}). Trotzdem fortfahren?`);
+        if (!proceed) return;
+      }
+    }
 
     const { error } = await supabase.from('podologie_behandlungen').insert({
       owner_id: getOwnerId(),
