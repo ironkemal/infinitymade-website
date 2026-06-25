@@ -2109,10 +2109,12 @@ async function initCalendar() {
     let sessionData;
     try { sessionData = JSON.parse(raw); } catch { return; }
 
-    // Store pending session for post-save linking
     window._pendingRxSession = { sessionId: sessionData.sessionId, prescriptionId: sessionData.prescriptionId };
 
-    // Pre-fill booking modal
+    // Initialize modal properly (populates employee + service selects, opens modal)
+    await prefillBookingModal(null);
+
+    // Override patient
     const custIdEl = document.getElementById('bkCustomerId');
     const custEl2 = document.getElementById('bkCustomer');
     const custSearchEl = document.getElementById('bkCustomerSearch');
@@ -2120,13 +2122,19 @@ async function initCalendar() {
     if (custEl2) custEl2.value = sessionData.patientName || '';
     if (custSearchEl) custSearchEl.value = sessionData.patientName || '';
 
-    // Show Rezeptart group and hide new prescription entry (it's a continuation)
+    // Pre-select service
+    if (sessionData.serviceId) {
+      const srvSel = document.getElementById('bkService');
+      if (srvSel) srvSel.value = sessionData.serviceId;
+    }
+
+    // Hide Rezeptart (continuation, not new prescription)
     const rxGroup = document.getElementById('bkRezeptartGroup');
     if (rxGroup) rxGroup.hidden = true;
     const heilBlock = document.getElementById('bkHeilmittelBlock');
     if (heilBlock) heilBlock.hidden = true;
 
-    // Show info about which session is being scheduled
+    // Show session banner
     const banner = document.getElementById('bkSpecialBanner');
     if (banner) {
       banner.textContent = `📋 Sitzung #${sessionData.sessionNum}: ${sessionData.heilmittelName || '—'}`;
@@ -2134,17 +2142,10 @@ async function initCalendar() {
       banner.hidden = false;
     }
 
-    // Pre-select service if available
-    if (sessionData.serviceId) {
-      const srvSel = document.getElementById('bkService');
-      if (srvSel) srvSel.value = sessionData.serviceId;
-    }
-
     document.getElementById('bk-id').value = '';
     document.getElementById('bkDeleteBtn').hidden = true;
     document.getElementById('bkWlMatchBtn').hidden = true;
     document.getElementById('bookingModalTitle').textContent = 'Folgetermin erstellen';
-    openModal('bookingModal');
   });
 
   if (!selectedEmployeeId) {
@@ -2356,6 +2357,57 @@ async function renderDayView(dateStr) {
         slot.addEventListener('drop', async e => {
           e.preventDefault();
           slot.style.background = '';
+
+          // RX unvergebene session drop
+          const rxRaw = e.dataTransfer.getData('application/rx-session');
+          if (rxRaw) {
+            let sessionData;
+            try { sessionData = JSON.parse(rxRaw); } catch { return; }
+            window._pendingRxSession = { sessionId: sessionData.sessionId, prescriptionId: sessionData.prescriptionId };
+
+            // Initialize modal properly with time + employee
+            await prefillBookingModal(slot.dataset.time || null);
+
+            // Override patient
+            const custIdEl = document.getElementById('bkCustomerId');
+            const custEl2 = document.getElementById('bkCustomer');
+            const custSearchEl = document.getElementById('bkCustomerSearch');
+            if (custIdEl) custIdEl.value = sessionData.leadId || '';
+            if (custEl2) custEl2.value = sessionData.patientName || '';
+            if (custSearchEl) custSearchEl.value = sessionData.patientName || '';
+
+            // Pre-select employee from slot
+            const empSel = document.getElementById('bkEmployee');
+            if (empSel && slot.dataset.empId) empSel.value = slot.dataset.empId;
+
+            // Pre-select service
+            if (sessionData.serviceId) {
+              const srvSel = document.getElementById('bkService');
+              if (srvSel) srvSel.value = sessionData.serviceId;
+            }
+
+            // Hide Rezeptart + heilmittel (continuation, not new prescription)
+            const rxGroup = document.getElementById('bkRezeptartGroup');
+            if (rxGroup) rxGroup.hidden = true;
+            const heilBlock = document.getElementById('bkHeilmittelBlock');
+            if (heilBlock) heilBlock.hidden = true;
+
+            // Show session banner
+            const banner = document.getElementById('bkSpecialBanner');
+            if (banner) {
+              banner.textContent = `📋 Sitzung #${sessionData.sessionNum}: ${sessionData.heilmittelName || '—'}`;
+              banner.style.cssText = 'display:block;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.1);border:1px solid var(--primary);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--primary);margin-bottom:8px;';
+              banner.hidden = false;
+            }
+
+            document.getElementById('bk-id').value = '';
+            document.getElementById('bkDeleteBtn').hidden = true;
+            document.getElementById('bkWlMatchBtn').hidden = true;
+            document.getElementById('bookingModalTitle').textContent = 'Folgetermin erstellen';
+            return;
+          }
+
+          // Legacy session move drop
           const sessionId = e.dataTransfer.getData('sessionId');
           if (sessionId) {
             await handleSessionDrop(sessionId, slot.dataset.time, slot.dataset.empId);
