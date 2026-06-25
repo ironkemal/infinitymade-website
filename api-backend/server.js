@@ -1694,6 +1694,42 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
   }
 });
 
+// 6b. Update Booking — status, reschedule (From Admin Panel)
+app.patch('/api/booking/:id', requireAuthAI, async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const { status, start_time, end_time } = req.body;
+    const ownerId = req.auth.tenantId;
+
+    const updates = {};
+    if (status !== undefined) updates.status = status;
+    if (start_time !== undefined) updates.start_time = start_time;
+    if (end_time !== undefined) updates.end_time = end_time;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Keine Felder zum Aktualisieren angegeben.' });
+    }
+
+    const { data, error } = await supabase
+      .from('bookings')
+      .update(updates)
+      .eq('id', bookingId)
+      .eq('owner_id', ownerId)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23P01') return res.status(409).json({ error: 'Zeitkonflikt — dieser Slot ist bereits belegt.' });
+      throw error;
+    }
+    if (!data) return res.status(404).json({ error: 'Buchung nicht gefunden oder keine Berechtigung.' });
+
+    res.json({ success: true, booking: data });
+  } catch (err) {
+    res.status(500).json({ error: 'Interner Serverfehler' });
+  }
+});
+
 // --- Phase 2: AI-driven Rezept-Workflow ---
 
 function stripDataUriPrefix(b64) {

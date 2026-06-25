@@ -6,6 +6,9 @@ let session = null;
 let profile = null;
 let teamMembers = [];
 let calendar = null;
+let workingHours = [];
+let pendingMoveBooking = null;
+let ctxMenuBookingId = null;
 
 // ================= TRANSLATIONS =================
 const T = {
@@ -70,6 +73,40 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
     applyLang();
   });
 });
+
+function authFetch(url, options = {}) {
+  return fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      ...(options.headers || {})
+    }
+  });
+}
+
+async function patchBooking(bookingId, updates) {
+  const res = await authFetch(`https://n8n.infinitymade.de/api/booking/${bookingId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Netzwerkfehler' }));
+    throw new Error(err.error || 'Fehler beim Aktualisieren');
+  }
+  return res.json();
+}
+
+function isWithinWorkingHours(startISO) {
+  const d = new Date(startISO);
+  const dayOfWeek = d.getDay();
+  const wh = workingHours.find(h => h.day_of_week === dayOfWeek && h.is_active);
+  if (!wh) return false;
+  const startMins = d.getHours() * 60 + d.getMinutes();
+  const [shH, shM] = (wh.start_time || '09:00').split(':').map(Number);
+  const [ehH, ehM] = (wh.end_time || '17:00').split(':').map(Number);
+  return startMins >= shH * 60 + shM && startMins < ehH * 60 + ehM;
+}
 
 // ================= INIT =================
 document.querySelectorAll('.nav-item[data-target]').forEach(el => {
@@ -208,15 +245,38 @@ async function initCalendar() {
     slotMaxTime: '23:00:00',
     contentHeight: 'auto',
     expandRows: true,
+    editable: true,
     selectable: true, // Enables click-to-book
     select: function(info) {
-      // User clicked and dragged on the calendar
+      if (pendingMoveBooking) {
+        const newStart = info.startStr;
+        const newEnd = info.endStr || new Date(new Date(info.startStr).getTime() + 60 * 60000).toISOString();
+        if (confirm(`"${pendingMoveBooking.title}" hierher verschieben?`)) {
+          patchBooking(pendingMoveBooking.id, { start_time: newStart, end_time: newEnd })
+            .then(() => {
+              pendingMoveBooking = null;
+              document.getElementById('pending-move-banner').style.display = 'none';
+              calendar.refetchEvents();
+            })
+            .catch(err => alert(err.message));
+        }
+        calendar.unselect();
+        return;
+      }
       manualSelectedDate = info.startStr.split('T')[0];
       const startTime = info.startStr.includes('T') ? info.startStr.split('T')[1].substring(0,5) : '09:00';
       const endTime = info.endStr.includes('T') ? info.endStr.split('T')[1].substring(0,5) : '10:00';
-      
       document.getElementById('manual-start').value = startTime;
       document.getElementById('manual-end').value = endTime;
+      const warning = document.getElementById('manual-hours-warning');
+      if (!isWithinWorkingHours(info.startStr)) {
+        const wh = workingHours.find(h => h.day_of_week === new Date(info.start).getDay() && h.is_active);
+        const range = wh ? `${(wh.start_time||'').substring(0,5)}–${(wh.end_time||'').substring(0,5)}` : 'kein Arbeitstag';
+        document.getElementById('manual-hours-warning-text').textContent = `⚠️ Außerhalb der Arbeitszeiten (${range}). Termin wird trotzdem gespeichert.`;
+        warning.style.display = 'block';
+      } else {
+        warning.style.display = 'none';
+      }
       document.getElementById('manual-modal').classList.add('show');
       calendar.unselect();
     },
@@ -254,7 +314,8 @@ async function initCalendar() {
             title: `${b.services?.title || 'Termin'} - ${b.customer_name} (${b.profiles?.business_name || 'Mitarbeiter'})`,
             start: b.start_time,
             end: b.end_time,
-            backgroundColor: colors[staffIdx % colors.length],
+            backgroundColor: b.status === 'completed' ? '#16a34a' : b.status === 'cancelled' ? '#6b7280' : colors[staffIdx % colors.length],
+            opacity: b.status === 'cancelled' ? 0.6 : 1,
             extendedProps: { ...b }
           });
         });
@@ -274,6 +335,32 @@ async function initCalendar() {
         successCallback(events);
       } catch(e) { failureCallback(e); }
     },
+    eventDidMount: function(info) {
+      if (info.event.id && !info.event.id.startsWith('leave_')) {
+        info.el.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          ctxMenuBookingId = info.event.id;
+          const menu = document.getElementById('ctx-menu');
+          const x = Math.min(e.clientX, window.innerWidth - 220);
+          const y = Math.min(e.clientY, window.innerHeight - 180);
+          menu.style.left = x + 'px';
+          menu.style.top = y + 'px';
+          menu.style.display = 'block';
+        });
+      }
+    },
+    eventDrop: async function(info) {
+      if (info.event.id.startsWith('leave_')) { info.revert(); return; }
+      try {
+        await patchBooking(info.event.id, { start_time: info.event.startStr, end_time: info.event.endStr });
+      } catch(err) { alert(err.message); info.revert(); }
+    },
+    eventResize: async function(info) {
+      try {
+        await patchBooking(info.event.id, { start_time: info.event.startStr, end_time: info.event.endStr });
+      } catch(err) { alert(err.message); info.revert(); }
+    },
     eventClick: function(info) {
       const p = info.event.extendedProps;
       if (p.customer_name) {
@@ -283,6 +370,60 @@ async function initCalendar() {
     }
   });
   calendar.render();
+  setupContextMenu();
+}
+
+function setupContextMenu() {
+  const menu = document.getElementById('ctx-menu');
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#ctx-menu')) menu.style.display = 'none';
+  });
+
+  document.getElementById('ctx-appeared').addEventListener('click', async () => {
+    if (!ctxMenuBookingId) return;
+    menu.style.display = 'none';
+    try {
+      await patchBooking(ctxMenuBookingId, { status: 'completed' });
+      calendar.refetchEvents();
+    } catch(err) { alert(err.message); }
+  });
+
+  document.getElementById('ctx-noshow').addEventListener('click', async () => {
+    if (!ctxMenuBookingId) return;
+    menu.style.display = 'none';
+    try {
+      await patchBooking(ctxMenuBookingId, { status: 'no_show' });
+      calendar.refetchEvents();
+    } catch(err) { alert(err.message); }
+  });
+
+  document.getElementById('ctx-cancel-booking').addEventListener('click', async () => {
+    if (!ctxMenuBookingId) return;
+    if (!confirm('Termin wirklich stornieren?')) return;
+    menu.style.display = 'none';
+    try {
+      await patchBooking(ctxMenuBookingId, { status: 'cancelled' });
+      calendar.refetchEvents();
+    } catch(err) { alert(err.message); }
+  });
+
+  document.getElementById('ctx-unlock').addEventListener('click', () => {
+    if (!ctxMenuBookingId) return;
+    menu.style.display = 'none';
+    const event = calendar.getEventById(ctxMenuBookingId);
+    pendingMoveBooking = {
+      id: ctxMenuBookingId,
+      title: event ? (event.extendedProps.customer_name || event.title) : 'Termin'
+    };
+    document.getElementById('pending-move-title').textContent = pendingMoveBooking.title;
+    document.getElementById('pending-move-banner').style.display = 'flex';
+  });
+
+  document.getElementById('pending-move-cancel').addEventListener('click', () => {
+    pendingMoveBooking = null;
+    document.getElementById('pending-move-banner').style.display = 'none';
+  });
 }
 
 // Manual Booking Save
@@ -302,9 +443,8 @@ document.getElementById('manual-form').addEventListener('submit', async (e) => {
   const ownerId = profile.role === 'owner' ? session.user.id : profile.owner_id;
 
   try {
-    const res = await fetch('https://n8n.infinitymade.de/api/booking/manual-create', {
+    const res = await authFetch('https://n8n.infinitymade.de/api/booking/manual-create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ownerId, employeeId: empId, start_time, end_time, customerName: custName, customerPhone: custPhone })
     });
     if(!res.ok) throw new Error('Fehler beim Speichern');
@@ -397,6 +537,7 @@ document.getElementById('leave-form').addEventListener('submit', async (e) => {
 const DAYS = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
 async function loadHours() {
   const { data: hours } = await supabase.from('working_hours').select('*').eq('user_id', session.user.id);
+  workingHours = hours || [];
   let html = '';
   for(let i=0; i<7; i++) {
     const h = hours?.find(x => x.day_of_week === i) || { start_time: '09:00', end_time: '17:00', is_active: (i > 0 && i < 6) };

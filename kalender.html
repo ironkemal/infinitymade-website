@@ -53,6 +53,9 @@
     .fc .fc-button-primary { background-color: var(--primary); border-color: var(--primary); color: #000; font-family: 'Outfit'; font-weight: 600; text-transform: capitalize;}
     .fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled).fc-button-active { background-color: #16a34a; border-color: #16a34a; color:#000; }
     .fc-event { border-radius: 6px; border: none; padding: 2px 4px; font-size: 12px; cursor: pointer;}
+    .ctx-item { display:block; width:100%; text-align:left; background:none; border:none; color:#f8fafc; padding:10px 14px; border-radius:6px; cursor:pointer; font-family:'Outfit',sans-serif; font-size:14px; transition:background 0.15s; }
+    .ctx-item:hover { background:rgba(255,255,255,0.08); }
+    .ctx-divider { height:1px; background:rgba(255,255,255,0.08); margin:4px 0; }
     .fc-event-title { font-weight: 600; }
     .fc-timegrid-slot { height: 40px; }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 50; display: none; justify-content: center; align-items: center; }
@@ -143,6 +146,12 @@
   </div>
 
   <div class="main">
+    <!-- PENDING MOVE BANNER -->
+    <div id="pending-move-banner" style="display:none; background:#92400e; color:#fff; padding:10px 20px; border-radius:8px; margin-bottom:12px; align-items:center; justify-content:space-between; gap:10px;">
+      <span>📌 <strong id="pending-move-title"></strong> — Klicken Sie auf ein freies Zeitfenster zum Verschieben</span>
+      <button id="pending-move-cancel" style="background:rgba(255,255,255,0.2); border:none; color:#fff; padding:5px 14px; border-radius:6px; cursor:pointer; font-family:'Outfit',sans-serif; white-space:nowrap;">Abbrechen</button>
+    </div>
+
     <!-- CALENDAR VIEW -->
     <div id="view-calendar" class="view-section active">
       <div class="header">
@@ -275,6 +284,9 @@
           <label id="lbl-manual-emp">Mitarbeiter</label>
           <select id="manual-employee" class="input-control" required></select>
         </div>
+        <div id="manual-hours-warning" style="display:none; background:rgba(234,179,8,0.12); border:1px solid rgba(234,179,8,0.35); border-radius:8px; padding:10px 14px; margin-bottom:12px; color:#fbbf24; font-size:13px;">
+          <span id="manual-hours-warning-text">Ausgewählte Zeit liegt außerhalb der Arbeitszeiten. Termin wird trotzdem gespeichert.</span>
+        </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
           <div class="input-group"><label id="lbl-manual-start">Von</label><input type="time" id="manual-start" class="input-control" required></div>
           <div class="input-group"><label id="lbl-manual-end">Bis</label><input type="time" id="manual-end" class="input-control" required></div>
@@ -295,6 +307,16 @@
     </div>
   </div>
 
-  <script type="module" src="kalender.js?v=20260613a"></script>
+  <!-- CONTEXT MENU -->
+  <div id="ctx-menu" style="display:none; position:fixed; z-index:9999; background:#1a1d24; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:4px; min-width:210px; box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+    <button class="ctx-item" id="ctx-appeared">✅ Patient erschienen</button>
+    <button class="ctx-item" id="ctx-noshow">👻 Nicht erschienen (No-Show)</button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item" id="ctx-cancel-booking" style="color:#f87171;">❌ Termin stornieren</button>
+    <div class="ctx-divider"></div>
+    <button class="ctx-item" id="ctx-unlock" style="color:#60a5fa;">🔓 Entsperren (Verschieben)</button>
+  </div>
+
+  <script type="module" src="kalender.js?v=20260625a"></script>
 </body>
 </html>
