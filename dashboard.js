@@ -14656,29 +14656,33 @@ async function bootBusinessSwitcher() {
   if (!wrap) return;
 
   try {
+    // Scope query to the correct owner — defense-in-depth on top of RLS
+    const scopeOwnerId = currentProfile.role === 'owner'
+      ? currentSession.user.id
+      : currentProfile.owner_id;
     const { data: list } = await supabase
       .from('businesses')
       .select('*')
+      .eq('owner_id', scopeOwnerId)
       .order('is_default', { ascending: false })
       .order('business_name', { ascending: true });
     let allBiz = list || [];
 
-    // Employees only see businesses they're assigned to — prevents wrong-business RBAC lockout
-    // Filter applies for ANY number of businesses (not just >1) so a single-business tenant
-    // doesn't land the employee on a business they have no assignment for.
+    // Employees only see businesses they're explicitly assigned to.
+    // On error or no assignments → fall back to the default business only (never show all).
     if (currentProfile.role !== 'owner' && allBiz.length > 0) {
       const { data: assigned, error: asnErr } = await supabase
         .from('employee_business_assignments')
         .select('business_id')
         .eq('employee_id', currentSession.user.id);
       if (asnErr) {
-        console.warn('[bizSwitcher] employee_business_assignments query failed', asnErr);
-        // On error: keep allBiz as-is so the employee can still access the dashboard
+        console.warn('[bizSwitcher] employee_business_assignments query failed — restricting to default', asnErr);
+        allBiz = allBiz.filter(b => b.is_default).slice(0, 1);
       } else {
         const assignedIds = new Set((assigned || []).map(a => a.business_id));
         const filtered = allBiz.filter(b => assignedIds.has(b.id));
-        // Only apply filter if it leaves at least one business; otherwise fall back to all visible
-        allBiz = filtered.length > 0 ? filtered : allBiz;
+        // If no assignment found, show default business only (safe fallback, never all)
+        allBiz = filtered.length > 0 ? filtered : allBiz.filter(b => b.is_default).slice(0, 1);
       }
     }
 
@@ -14982,9 +14986,10 @@ function wireBusinessModal() {
 
     showToast(t('saved'));
     modal.hidden = true;
-    // Refresh
+    // Refresh — always filter by owner for defense-in-depth on top of RLS
     const { data: list } = await supabase
       .from('businesses').select('*')
+      .eq('owner_id', currentSession.user.id)
       .order('is_default', { ascending: false })
       .order('business_name', { ascending: true });
     myBusinesses = list || [];
