@@ -2072,6 +2072,10 @@ async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, s
   document.getElementById('bkCustomerId').value = '';
   document.getElementById('bkPhone').value = '';
   document.getElementById('bkNotes').value = '';
+  if (typeof window._resetRezeptartUI === 'function') window._resetRezeptartUI();
+  const banner = document.getElementById('bkSpecialBanner');
+  if (banner) { banner.hidden = true; banner.textContent = ''; }
+  window._pendingRxSession = null;
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
   populateEmpSelects(empId);
@@ -2085,6 +2089,63 @@ async function initCalendar() {
   const ownerId = getOwnerId();
   const calEl = document.getElementById('calendarEl');
   calEl.innerHTML = '';
+
+  // Drag-drop: RX unvergebene sessions onto calendar
+  calEl.addEventListener('dragover', (e) => {
+    if (e.dataTransfer.types.includes('application/rx-session')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      calEl.style.outline = '2px dashed var(--primary)';
+    }
+  });
+  calEl.addEventListener('dragleave', (e) => {
+    if (!calEl.contains(e.relatedTarget)) calEl.style.outline = '';
+  });
+  calEl.addEventListener('drop', async (e) => {
+    calEl.style.outline = '';
+    const raw = e.dataTransfer.getData('application/rx-session');
+    if (!raw) return;
+    e.preventDefault();
+    let sessionData;
+    try { sessionData = JSON.parse(raw); } catch { return; }
+
+    // Store pending session for post-save linking
+    window._pendingRxSession = { sessionId: sessionData.sessionId, prescriptionId: sessionData.prescriptionId };
+
+    // Pre-fill booking modal
+    const custIdEl = document.getElementById('bkCustomerId');
+    const custEl2 = document.getElementById('bkCustomer');
+    const custSearchEl = document.getElementById('bkCustomerSearch');
+    if (custIdEl) custIdEl.value = sessionData.leadId || '';
+    if (custEl2) custEl2.value = sessionData.patientName || '';
+    if (custSearchEl) custSearchEl.value = sessionData.patientName || '';
+
+    // Show Rezeptart group and hide new prescription entry (it's a continuation)
+    const rxGroup = document.getElementById('bkRezeptartGroup');
+    if (rxGroup) rxGroup.hidden = true;
+    const heilBlock = document.getElementById('bkHeilmittelBlock');
+    if (heilBlock) heilBlock.hidden = true;
+
+    // Show info about which session is being scheduled
+    const banner = document.getElementById('bkSpecialBanner');
+    if (banner) {
+      banner.textContent = `📋 Sitzung #${sessionData.sessionNum}: ${sessionData.heilmittelName || '—'}`;
+      banner.style.cssText = 'display:block;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.1);border:1px solid var(--primary);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--primary);margin-bottom:8px;';
+      banner.hidden = false;
+    }
+
+    // Pre-select service if available
+    if (sessionData.serviceId) {
+      const srvSel = document.getElementById('bkService');
+      if (srvSel) srvSel.value = sessionData.serviceId;
+    }
+
+    document.getElementById('bk-id').value = '';
+    document.getElementById('bkDeleteBtn').hidden = true;
+    document.getElementById('bkWlMatchBtn').hidden = true;
+    document.getElementById('bookingModalTitle').textContent = 'Folgetermin erstellen';
+    openModal('bookingModal');
+  });
 
   if (!selectedEmployeeId) {
     selectedEmployeeId = currentProfile.role === 'owner'
@@ -2625,6 +2686,8 @@ async function prefillBookingModal(startStr) {
   refreshBkGroupPanel();
   
   if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
+  if (typeof window._resetRezeptartUI === 'function') window._resetRezeptartUI();
+  window._pendingRxSession = null;
   populateEmpSelects();
   await populateSrvSelect();
   openModal('bookingModal');
@@ -2952,6 +3015,9 @@ async function openBookingActionModal(booking) {
   const isOwn = booking.user_id === currentSession.user.id;
   document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
   document.getElementById('bkActionNoShowHint').hidden = !isOwn;
+
+  // Load prescription sessions panel (Unvergebene Heilmittel)
+  loadRxSessionsPanel(booking).catch(e => console.error('[loadRxSessionsPanel]', e));
 
   // Fahrtenbuch: Hausbesuch state machine UI
   await renderBkActionFahrtState(booking, isOwn);
@@ -4365,12 +4431,22 @@ async function openBookingModal(b) {
   document.getElementById('bkMoveBtn').hidden = false;
   document.getElementById('bkStart').value = b.start_time ? b.start_time.substring(0, 16) : '';
   document.getElementById('bkCustomer').value = b.customer_name || '';
+  document.getElementById('bkCustomerId').value = b.lead_id || '';
   document.getElementById('bkPhone').value = b.customer_phone || '';
   document.getElementById('bkNotes').value = b.notes || '';
   document.getElementById('bkHausbesuch').checked = b.hausbesuch || false;
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
+  // Rezeptart + Zahlungsart
+  const rezEl2 = document.getElementById('bkRezeptart');
+  if (rezEl2) rezEl2.value = b.rezeptart || '';
+  const pmEl2 = document.getElementById('bkPaymentMethod');
+  if (pmEl2) pmEl2.value = b.payment_method || '';
+  const selbstBlock2 = document.getElementById('bkSelbstzahlerBlock');
+  if (selbstBlock2) selbstBlock2.hidden = b.rezeptart !== 'selbstzahler';
+  const heilBlock2 = document.getElementById('bkHeilmittelBlock');
+  if (heilBlock2) heilBlock2.hidden = !(b.rezeptart === 'kassen' || b.rezeptart === 'privat');
   document.getElementById('bkDocAssignHint').hidden = true;
   if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
   if (b.customer_phone) {
@@ -5046,6 +5122,101 @@ document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () 
   }
 });
 
+// ===== REZEPTART UI HANDLERS =====
+(function() {
+  const rezEl = document.getElementById('bkRezeptart');
+  const heilBlock = document.getElementById('bkHeilmittelBlock');
+  const selbstBlock = document.getElementById('bkSelbstzahlerBlock');
+  const itemsContainer = document.getElementById('bkHeilmittelItems');
+  const totalEl = document.getElementById('bkHeilmittelTotal');
+
+  function updateHeilmittelTotal() {
+    if (!itemsContainer || !totalEl) return;
+    const rows = itemsContainer.querySelectorAll('.hm-row');
+    let total = 0;
+    rows.forEach(row => {
+      const n = parseInt(row.querySelector('.hm-anzahl')?.value || '0');
+      if (!isNaN(n)) total += n;
+    });
+    totalEl.textContent = total;
+  }
+
+  function addHeilmittelRow(kuerzel = '', name = '', anzahl = 1) {
+    if (!itemsContainer) return;
+    const row = document.createElement('div');
+    row.className = 'hm-row';
+    row.style.cssText = 'display:grid;grid-template-columns:70px 1fr 60px 28px;gap:6px;align-items:center;';
+    row.innerHTML = `
+      <input class="form-input hm-kuerzel" type="text" placeholder="Kürzel" value="${kuerzel}" style="padding:5px 8px;font-size:12px;" />
+      <input class="form-input hm-name" type="text" placeholder="Leistung (z.B. Podologische Behandlung)" value="${name}" style="padding:5px 8px;font-size:12px;" />
+      <input class="form-input hm-anzahl" type="number" min="1" max="99" value="${anzahl}" style="padding:5px 8px;font-size:12px;text-align:center;" />
+      <button type="button" class="hm-del btn-ghost" style="padding:4px;font-size:14px;color:var(--danger,#ef4444);border-radius:6px;min-width:28px;justify-content:center;">✕</button>
+    `;
+    row.querySelector('.hm-del').addEventListener('click', () => { row.remove(); updateHeilmittelTotal(); });
+    row.querySelector('.hm-anzahl').addEventListener('input', updateHeilmittelTotal);
+    itemsContainer.appendChild(row);
+    updateHeilmittelTotal();
+  }
+
+  function resetHeilmittelBlock() {
+    if (!itemsContainer) return;
+    itemsContainer.innerHTML = '';
+    addHeilmittelRow('', '', 1);
+  }
+
+  if (rezEl) {
+    rezEl.addEventListener('change', () => {
+      const v = rezEl.value;
+      if (heilBlock) heilBlock.hidden = !(v === 'kassen' || v === 'privat');
+      if (selbstBlock) selbstBlock.hidden = v !== 'selbstzahler';
+      if ((v === 'kassen' || v === 'privat') && itemsContainer && itemsContainer.children.length === 0) {
+        resetHeilmittelBlock();
+      }
+    });
+  }
+
+  const addBtn = document.getElementById('bkHeilmittelAddBtn');
+  if (addBtn) addBtn.addEventListener('click', () => addHeilmittelRow());
+
+  // Payment method buttons
+  const btnNakit = document.getElementById('bkPayNakit');
+  const btnKarte = document.getElementById('bkPayKarte');
+  const pmInput = document.getElementById('bkPaymentMethod');
+  function setPayMethod(method) {
+    if (pmInput) pmInput.value = method;
+    if (btnNakit) btnNakit.style.borderColor = method === 'nakit' ? 'var(--primary)' : 'var(--border)';
+    if (btnKarte) btnKarte.style.borderColor = method === 'karte' ? 'var(--primary)' : 'var(--border)';
+    if (btnNakit) btnNakit.style.background = method === 'nakit' ? 'hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.12)' : '';
+    if (btnKarte) btnKarte.style.background = method === 'karte' ? 'hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.12)' : '';
+  }
+  if (btnNakit) btnNakit.addEventListener('click', () => setPayMethod('nakit'));
+  if (btnKarte) btnKarte.addEventListener('click', () => setPayMethod('karte'));
+
+  // Expose helper globally for save handler
+  window._collectHeilmittelItems = function() {
+    if (!itemsContainer) return [];
+    const items = [];
+    itemsContainer.querySelectorAll('.hm-row').forEach(row => {
+      const kuerzel = row.querySelector('.hm-kuerzel')?.value?.trim() || '';
+      const name = row.querySelector('.hm-name')?.value?.trim() || '';
+      const anzahl = parseInt(row.querySelector('.hm-anzahl')?.value || '0');
+      if (name && anzahl > 0) items.push({ kuerzel, name, anzahl });
+    });
+    return items;
+  };
+
+  // Reset Rezeptart when modal opens (hook into modal open)
+  window._resetRezeptartUI = function() {
+    if (rezEl) rezEl.value = '';
+    if (heilBlock) heilBlock.hidden = true;
+    if (selbstBlock) selbstBlock.hidden = true;
+    if (itemsContainer) itemsContainer.innerHTML = '';
+    if (pmInput) pmInput.value = '';
+    setPayMethod('');
+  };
+
+})();
+
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!checkPlanActive()) return;
   const id = document.getElementById('bk-id').value;
@@ -5313,6 +5484,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     return;
   }
 
+  const rezeptart = document.getElementById('bkRezeptart')?.value || '';
+  const paymentMethod = document.getElementById('bkPaymentMethod')?.value || '';
+
   const payload = {
     owner_id: getOwnerId(), user_id: empId,
     service_id: srvId,
@@ -5322,16 +5496,179 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     notes: notes || null,
     hausbesuch: document.getElementById('bkHausbesuch').checked || false,
     status: 'confirmed',
-    lead_id: custId || null
+    lead_id: custId || null,
+    rezeptart: rezeptart || null,
+    payment_method: paymentMethod || null
   };
-  const { error } = id
-    ? await supabase.from('bookings').update(payload).eq('id', id)
-    : await supabase.from('bookings').insert(payload);
-  if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
+
+  // For update: keep existing insert logic; for insert: need to get the new booking id
+  let savedBookingId = id;
+  if (id) {
+    const { error } = await supabase.from('bookings').update(payload).eq('id', id);
+    if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
+  } else {
+    const { data: newBooking, error } = await supabase.from('bookings').insert(payload).select('id').single();
+    if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
+    savedBookingId = newBooking?.id;
+
+    // If Kassen/Privat: create prescription + sessions
+    if ((rezeptart === 'kassen' || rezeptart === 'privat') && savedBookingId) {
+      const heilmittelItems = (typeof window._collectHeilmittelItems === 'function') ? window._collectHeilmittelItems() : [];
+      if (heilmittelItems.length > 0) {
+        const totalEinheiten = heilmittelItems.reduce((sum, item) => sum + item.anzahl, 0);
+        const heilmittelText = heilmittelItems.map(i => `${i.anzahl}x ${i.name}`).join(', ');
+        const { data: newRx, error: rxErr } = await supabase.from('prescriptions').insert({
+          owner_id: getOwnerId(),
+          patient_id: custId || null,
+          rezept_typ: rezeptart,
+          heilmittel: heilmittelText,
+          heilmittel_items: heilmittelItems,
+          anzahl_einheiten: totalEinheiten,
+          status: 'in_therapy',
+        }).select('id').single();
+        if (!rxErr && newRx) {
+          const sessions = [];
+          let sessionNum = 0;
+          let isFirst = true;
+          for (let itemIdx = 0; itemIdx < heilmittelItems.length; itemIdx++) {
+            const item = heilmittelItems[itemIdx];
+            for (let i = 0; i < item.anzahl; i++) {
+              sessionNum++;
+              sessions.push({
+                prescription_id: newRx.id,
+                booking_id: isFirst ? savedBookingId : null,
+                session_number: sessionNum,
+                heilmittel_index: itemIdx,
+                status: 'planned'
+              });
+              isFirst = false;
+            }
+          }
+          const { error: sessErr } = await supabase.from('prescription_sessions').insert(sessions);
+          if (sessErr) console.error('[prescription_sessions save]', sessErr);
+        }
+      }
+    }
+
+    // If pending drag-drop session: link it
+    if (window._pendingRxSession?.sessionId && savedBookingId) {
+      await supabase.from('prescription_sessions')
+        .update({ booking_id: savedBookingId, status: 'planned' })
+        .eq('id', window._pendingRxSession.sessionId);
+      window._pendingRxSession = null;
+    }
+  }
+
   closeModal('bookingModal');
   await refreshBookingViews();
   showToast(t('saved'));
 });
+
+async function loadRxSessionsPanel(booking) {
+  const panel = document.getElementById('bkRxSessionsPanel');
+  if (!panel) return;
+  panel.hidden = true;
+
+  if (!booking?.id) return;
+
+  // Find prescription session linked to this booking
+  const { data: linkedSession } = await supabase
+    .from('prescription_sessions')
+    .select('prescription_id')
+    .eq('booking_id', booking.id)
+    .maybeSingle();
+
+  if (!linkedSession?.prescription_id) return;
+
+  // Fetch prescription + all its sessions
+  const [{ data: rx }, { data: allSessions }] = await Promise.all([
+    supabase.from('prescriptions')
+      .select('id,heilmittel,heilmittel_items,anzahl_einheiten,status,rezept_typ')
+      .eq('id', linkedSession.prescription_id)
+      .maybeSingle(),
+    supabase.from('prescription_sessions')
+      .select('id,session_number,heilmittel_index,status,booking_id,bookings(start_time)')
+      .eq('prescription_id', linkedSession.prescription_id)
+      .order('session_number')
+  ]);
+
+  if (!rx || !allSessions) return;
+
+  const heilmittelItems = rx.heilmittel_items || [];
+  const getHmName = (idx) => heilmittelItems[idx]?.name || heilmittelItems[idx]?.kuerzel || rx.heilmittel || '—';
+  const getHmKuerzel = (idx) => heilmittelItems[idx]?.kuerzel || (heilmittelItems[idx]?.name?.substring(0,3).toUpperCase()) || String(idx + 1);
+
+  const unvergebene = allSessions.filter(s => !s.booking_id);
+  const vergebene = allSessions.filter(s => s.booking_id);
+
+  const badge = document.getElementById('bkRxSessionsBadge');
+  if (badge) badge.textContent = `${unvergebene.length} offen / ${allSessions.length} ges.`;
+
+  const unvList = document.getElementById('bkRxUnvergebeneList');
+  if (unvList) {
+    if (unvergebene.length === 0) {
+      unvList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Alle vergeben ✓</span>';
+    } else {
+      unvList.innerHTML = unvergebene.map(s => `
+        <div class="rx-unv-item"
+          draggable="true"
+          data-session-id="${s.id}"
+          data-prescription-id="${rx.id}"
+          data-session-num="${s.session_number}"
+          data-heilmittel-idx="${s.heilmittel_index ?? 0}"
+          data-patient-name="${escapeHtml(booking.customer_name || '')}"
+          data-lead-id="${booking.lead_id || ''}"
+          data-service-id="${booking.service_id || ''}"
+          style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;cursor:grab;font-size:12px;user-select:none;"
+          title="Auf den Kalender ziehen, um einen neuen Termin zu erstellen">
+          <span style="color:var(--text-muted);font-size:11px;min-width:16px;">#${s.session_number}</span>
+          <span style="font-weight:700;color:var(--primary);min-width:28px;">${escapeHtml(getHmKuerzel(s.heilmittel_index ?? 0))}</span>
+          <span style="color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${escapeHtml(getHmName(s.heilmittel_index ?? 0))}</span>
+          <span style="font-size:16px;opacity:0.4;flex-shrink:0;">⠿</span>
+        </div>
+      `).join('');
+      unvList.querySelectorAll('.rx-unv-item').forEach(el => {
+        el.addEventListener('dragstart', (e) => {
+          e.dataTransfer.effectAllowed = 'copy';
+          const hmIdx = parseInt(el.dataset.heilmittelIdx ?? 0);
+          e.dataTransfer.setData('application/rx-session', JSON.stringify({
+            sessionId: el.dataset.sessionId,
+            prescriptionId: el.dataset.prescriptionId,
+            sessionNum: el.dataset.sessionNum,
+            heilmittelIdx: hmIdx,
+            patientName: el.dataset.patientName,
+            leadId: el.dataset.leadId,
+            serviceId: el.dataset.serviceId,
+            heilmittelName: getHmName(hmIdx),
+          }));
+          el.style.opacity = '0.4';
+        });
+        el.addEventListener('dragend', () => { el.style.opacity = '1'; });
+      });
+    }
+  }
+
+  const termList = document.getElementById('bkRxTermineList');
+  if (termList) {
+    if (vergebene.length === 0) {
+      termList.innerHTML = '<span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine</span>';
+    } else {
+      termList.innerHTML = vergebene.map(s => {
+        const dt = s.bookings?.start_time
+          ? new Date(s.bookings.start_time).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' })
+          : '—';
+        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;font-size:12px;">
+          <span style="color:var(--text-muted);font-size:11px;min-width:16px;">#${s.session_number}</span>
+          <span style="font-weight:700;color:#22c55e;min-width:28px;">${escapeHtml(getHmKuerzel(s.heilmittel_index ?? 0))}</span>
+          <span style="color:var(--text-main);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(getHmName(s.heilmittel_index ?? 0))}</span>
+          <span style="color:var(--text-muted);flex-shrink:0;">${dt}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  panel.hidden = false;
+}
 
 function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount, appointments, patientEmail }) {
   const existing = document.getElementById('_seriterminConfirmOverlay');
