@@ -337,17 +337,24 @@ async function initCalendar() {
     },
     eventDidMount: function(info) {
       if (info.event.id && !info.event.id.startsWith('leave_')) {
-        info.el.addEventListener('contextmenu', function(e) {
+        const btn = document.createElement('button');
+        btn.textContent = '⋮';
+        btn.className = 'fc-event-menu-btn';
+        btn.title = 'Aktionen';
+        btn.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
           ctxMenuBookingId = info.event.id;
           const menu = document.getElementById('ctx-menu');
-          const x = Math.min(e.clientX, window.innerWidth - 220);
-          const y = Math.min(e.clientY, window.innerHeight - 180);
+          const rect = btn.getBoundingClientRect();
+          const x = Math.min(rect.left, window.innerWidth - 220);
+          const y = Math.min(rect.bottom + 4, window.innerHeight - 180);
           menu.style.left = x + 'px';
           menu.style.top = y + 'px';
           menu.style.display = 'block';
         });
+        info.el.style.position = 'relative';
+        info.el.appendChild(btn);
       }
     },
     eventDrop: async function(info) {

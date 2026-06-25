@@ -52,7 +52,9 @@
     .fc-col-header-cell { background: rgba(0,0,0,0.2); padding: 10px 0; }
     .fc .fc-button-primary { background-color: var(--primary); border-color: var(--primary); color: #000; font-family: 'Outfit'; font-weight: 600; text-transform: capitalize;}
     .fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled).fc-button-active { background-color: #16a34a; border-color: #16a34a; color:#000; }
-    .fc-event { border-radius: 6px; border: none; padding: 2px 4px; font-size: 12px; cursor: pointer;}
+    .fc-event { border-radius: 6px; border: none; padding: 2px 4px; font-size: 12px; cursor: pointer; overflow: visible !important; }
+    .fc-event-menu-btn { position:absolute; top:2px; right:3px; background:rgba(0,0,0,0.35); border:none; color:#fff; border-radius:4px; width:18px; height:18px; font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.15s; padding:0; z-index:5; }
+    .fc-event:hover .fc-event-menu-btn { opacity:1; }
     .ctx-item { display:block; width:100%; text-align:left; background:none; border:none; color:#f8fafc; padding:10px 14px; border-radius:6px; cursor:pointer; font-family:'Outfit',sans-serif; font-size:14px; transition:background 0.15s; }
     .ctx-item:hover { background:rgba(255,255,255,0.08); }
     .ctx-divider { height:1px; background:rgba(255,255,255,0.08); margin:4px 0; }
@@ -317,6 +319,6 @@
     <button class="ctx-item" id="ctx-unlock" style="color:#60a5fa;">🔓 Entsperren (Verschieben)</button>
   </div>
 
-  <script type="module" src="kalender.js?v=20260625a"></script>
+  <script type="module" src="kalender.js?v=20260625b"></script>
 </body>
 </html>
