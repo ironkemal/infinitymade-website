@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vorregistrierung — Praxura</title>
+  <meta name="description" content="Wir verbessern Praxura gerade. Neue Anmeldungen öffnen nächsten Monat — melden Sie sich jetzt vor." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://praxura.de/vorregistrierung.html" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="assets/system.css?v=20260524" />
+  <link rel="stylesheet" href="/cookie-consent.css?v=20260610" />
+
+  <script src="https://js-de.sentry-cdn.com/1247311e4965725138bca7ddb32101ce.min.js" crossorigin="anonymous" async></script>
+  <script src="/sentry-init.js?v=20260523c" defer></script>
+
+  <style>
+    /* ── Page shell ── */
+    .vr-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .vr-main {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 7rem 1.5rem 6rem;
+    }
+    .vr-wrap {
+      width: 100%;
+      max-width: 780px;
+    }
+
+    /* ── Status badge ── */
+    .vr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.4rem 0.9rem;
+      background: rgba(177,137,27,0.1);
+      border: 1px solid rgba(177,137,27,0.28);
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      margin-bottom: 2rem;
+    }
+    .vr-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--bronze);
+      border-radius: 999px;
+      animation: vr-pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes vr-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.75); }
+    }
+
+    /* ── Hero text ── */
+    .vr-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      margin-bottom: 1.4rem;
+    }
+    .vr-title em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--bronze);
+    }
+    .vr-lede {
+      font-size: 1.07rem;
+      line-height: 1.68;
+      color: var(--ink-soft);
+      max-width: 54ch;
+      margin-bottom: 2.4rem;
+    }
+
+    /* ── Info pills row ── */
+    .vr-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 3.5rem;
+    }
+    .vr-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.05rem;
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+    }
+    .vr-pill-icon {
+      color: var(--bronze);
+      font-size: 0.95rem;
+    }
+
+    /* ── Divider ── */
+    .vr-divider {
+      width: 48px;
+      height: 1px;
+      background: var(--line);
+      margin-bottom: 2.8rem;
+    }
+
+    /* ── Form card ── */
+    .vr-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 2.8rem 2.6rem;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.7) inset,
+        0 32px 64px -32px rgba(26,22,17,0.12),
+        0 4px 14px -4px rgba(26,22,17,0.05);
+    }
+    .vr-card-head {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.5rem;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+    .vr-card-sub {
+      font-size: 0.87rem;
+      color: var(--ink-mute);
+      margin-bottom: 2rem;
+    }
+
+    /* ── Form elements (reuse kx- pattern) ── */
+    .vr-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .vr-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.38rem;
+      margin-bottom: 1rem;
+    }
+    .vr-field.vr-full { grid-column: 1 / -1; }
+    .vr-label {
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-quiet);
+    }
+    .vr-label span { color: var(--bronze); margin-left: 2px; }
+    .vr-input,
+    .vr-select,
+    .vr-textarea {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      color: var(--ink);
+      width: 100%;
+      transition: border-color 180ms, box-shadow 180ms;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .vr-input::placeholder,
+    .vr-textarea::placeholder { color: var(--ink-quiet); }
+    .vr-input:focus,
+    .vr-select:focus,
+    .vr-textarea:focus {
+      border-color: var(--bronze);
+      box-shadow: 0 0 0 3px rgba(107,85,56,0.1);
+    }
+    .vr-select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B5538' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+    .vr-textarea {
+      min-height: 110px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .vr-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.6rem;
+      background: var(--bronze);
+      color: var(--bg);
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
+      transition: background 220ms, transform 200ms, box-shadow 220ms;
+      box-shadow: 0 2px 8px rgba(107,85,56,0.25);
+    }
+    .vr-submit:hover:not(:disabled) {
+      background: var(--bronze-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(107,85,56,0.3);
+    }
+    .vr-submit:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+    .vr-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .vr-submit-icon {
+      width: 1.6rem;
+      height: 1.6rem;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .vr-notice {
+      margin-top: 1.2rem;
+      padding: 0.9rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      display: none;
+      line-height: 1.55;
+    }
+    .vr-notice.is-success {
+      display: block;
+      background: rgba(78,92,69,0.1);
+      border: 1px solid rgba(78,92,69,0.25);
+      color: var(--sage);
+    }
+    .vr-notice.is-error {
+      display: block;
+      background: rgba(156,58,58,0.07);
+      border: 1px solid rgba(156,58,58,0.2);
+      color: var(--rose);
+    }
+
+    .vr-privacy {
+      margin-top: 1rem;
+      font-size: 0.74rem;
+      color: var(--ink-quiet);
+      text-align: center;
+      line-height: 1.55;
+    }
+    .vr-privacy a { color: var(--ink-quiet); text-decoration: underline; }
+    .vr-privacy a:hover { color: var(--bronze); }
+
+    /* ── Bottom note ── */
+    .vr-footnote {
+      margin-top: 2.5rem;
+      font-size: 0.82rem;
+      color: var(--ink-quiet);
+      line-height: 1.6;
+    }
+    .vr-footnote a {
+      color: var(--bronze);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(177,137,27,0.3);
+    }
+    .vr-footnote a:hover { border-color: var(--bronze); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .vr-main { padding: 6rem 1.1rem 4rem; }
+      .vr-card { padding: 2rem 1.4rem; }
+      .vr-form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="vr-page">
+
+<!-- ────────────── Nav ────────────── -->
+<nav class="nav" id="nav" aria-label="Hauptnavigation">
+  <a href="/" class="nav-brand">Prax<em>ura</em></a>
+  <a href="/#funktionen" class="nav-link">Funktionen</a>
+  <a href="/#zielgruppe" class="nav-link">Zielgruppe</a>
+  <a href="/#preise" class="nav-link">Preise</a>
+  <a href="/praxis.html" class="nav-link">Details</a>
+  <a href="/blog/" class="nav-link">Insights</a>
+  <a href="/kontakt.html" class="nav-link">Kontakt</a>
+  <a href="https://app.praxura.de" class="nav-login">Login</a>
+  <a href="/vorregistrierung.html" class="nav-cta" style="pointer-events:none;opacity:0.55;">
+    Kostenlos starten
+    <span class="nav-cta-circle" aria-hidden="true">↗</span>
+  </a>
+  <button class="nav-hamburger" id="navHamburger" aria-label="Menü öffnen" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="nav-mobile-menu" id="navMobileMenu" role="dialog" aria-modal="true" aria-label="Navigation">
+  <button class="nav-mobile-close" id="navMobileClose" aria-label="Menü schließen">✕</button>
+  <a href="/#funktionen">Funktionen</a>
+  <a href="/#zielgruppe">Zielgruppe</a>
+  <a href="/#preise">Preise</a>
+  <a href="/praxis.html">Details</a>
+  <a href="/blog/">Insights</a>
+  <a href="/kontakt.html">Kontakt</a>
+  <a href="https://app.praxura.de">Login</a>
+</div>
+
+<!-- ────────────── Main ────────────── -->
+<main class="vr-main">
+  <div class="vr-wrap">
+
+    <div class="vr-badge">
+      <span class="vr-badge-dot"></span>
+      Anmeldung vorübergehend pausiert
+    </div>
+
+    <h1 class="vr-title">
+      Wir sind gleich<br>für Sie <em>da.</em>
+    </h1>
+
+    <p class="vr-lede">
+      Um Ihnen eine noch bessere Erfahrung bieten zu können, haben wir neue Anmeldungen
+      vorübergehend geschlossen. Wir arbeiten gerade an wichtigen Verbesserungen — und
+      öffnen nächsten Monat wieder für neue Praxen.
+    </p>
+
+    <div class="vr-pills">
+      <span class="vr-pill">
+        <span class="vr-pill-icon">⚙</span>
+        Systemoptimierung läuft
+      </span>
+      <span class="vr-pill">
+        <span class="vr-pill-icon">📅</span>
+        Neueröffnung: Juli 2026
+      </span>
+      <span class="vr-pill">
+        <span class="vr-pill-icon">✓</span>
+        Bestehende Konten unberührt
+      </span>
+    </div>
+
+    <div class="vr-divider"></div>
+
+    <!-- ── Vorregistrierungs-Formular ── -->
+    <div class="vr-card">
+      <h2 class="vr-card-head">Jetzt vormerken lassen</h2>
+      <p class="vr-card-sub">
+        Schreiben Sie uns kurz — wir melden uns persönlich, sobald die Anmeldung wieder offen ist.
+      </p>
+
+      <form id="vrForm" novalidate>
+        <input type="hidden" name="subject" value="Vorregistrierung — Praxura" />
+
+        <div class="vr-form-row">
+          <div class="vr-field">
+            <label class="vr-label" for="vrName">Name<span>*</span></label>
+            <input class="vr-input" type="text" id="vrName" name="name"
+              placeholder="Ihr vollständiger Name" required autocomplete="name" />
+          </div>
+          <div class="vr-field">
+            <label class="vr-label" for="vrEmail">E-Mail<span>*</span></label>
+            <input class="vr-input" type="email" id="vrEmail" name="email"
+              placeholder="praxis@beispiel.de" required autocomplete="email" />
+          </div>
+          <div class="vr-field">
+            <label class="vr-label" for="vrPraxis">Praxisname</label>
+            <input class="vr-input" type="text" id="vrPraxis" name="praxisname"
+              placeholder="Name Ihrer Praxis (optional)" autocomplete="organization" />
+          </div>
+          <div class="vr-field">
+            <label class="vr-label" for="vrFach">Fachbereich</label>
+            <select class="vr-select" id="vrFach" name="fachbereich">
+              <option value="">Bitte auswählen …</option>
+              <option value="Physiotherapie">Physiotherapie</option>
+              <option value="Ergotherapie">Ergotherapie</option>
+              <option value="Logopädie">Logopädie</option>
+              <option value="Podologie">Podologie</option>
+              <option value="Interdisziplinär">Interdisziplinäre Praxis</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div class="vr-field vr-full">
+            <label class="vr-label" for="vrMsg">Nachricht</label>
+            <textarea class="vr-textarea" id="vrMsg" name="message"
+              placeholder="Haben Sie Fragen oder etwas Besonderes mitzuteilen? (optional)"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="vr-submit" id="vrSubmit">
+          Vormerken lassen
+          <span class="vr-submit-icon" aria-hidden="true">→</span>
+        </button>
+
+        <div class="vr-notice" id="vrNotice" role="alert" aria-live="polite"></div>
+
+        <p class="vr-privacy">
+          Mit dem Absenden stimmen Sie unserer
+          <a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> zu.
+          Keine Werbung, kein Newsletter — nur eine persönliche Benachrichtigung.
+        </p>
+      </form>
+    </div>
+
+    <p class="vr-footnote">
+      Sie haben bereits ein Konto?
+      <a href="https://app.praxura.de">Direkt einloggen ↗</a>
+      &nbsp;&middot;&nbsp;
+      Fragen?
+      <a href="mailto:kontakt@praxura.de">kontakt@praxura.de</a>
+    </p>
+
+  </div>
+</main>
+
+<!-- ────────────── Footer ────────────── -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-col footer-brand-col">
+      <a href="/" class="footer-brand">Prax<em>ura</em></a>
+      <p class="footer-tagline">All-in-One Praxissoftware für Heilmittelerbringer in Deutschland.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Produkt</h4>
+      <ul>
+        <li><a href="/#funktionen">Funktionen</a></li>
+        <li><a href="/#preise">Preise</a></li>
+        <li><a href="/praxis.html">Alle Details</a></li>
+        <li><a href="/blog/">Insights</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Kontakt</h4>
+      <ul>
+        <li><a href="/kontakt.html">Uns schreiben</a></li>
+        <li><a href="/demo-booking.html">Termin buchen</a></li>
+        <li><a href="mailto:kontakt@praxura.de">kontakt@praxura.de</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Rechtliches</h4>
+      <ul>
+        <li><a href="/impressum.html">Impressum</a></li>
+        <li><a href="/datenschutz.html">Datenschutz</a></li>
+        <li><a href="/agb.html">AGB</a></li>
+        <li><a href="/dpa.html">AVV / DPA</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 InfinityMade · Made in NRW</span>
+    <span>Siegburg · Köln · Bonn</span>
+  </div>
+</footer>
+
+<script src="assets/system.js?v=20260524"></script>
+<script src="/cookie-consent.js?v=20260610"></script>
+
+<!-- Nav hamburger -->
+<script>
+(function() {
+  var btn = document.getElementById('navHamburger');
+  var menu = document.getElementById('navMobileMenu');
+  var close = document.getElementById('navMobileClose');
+  if (!btn || !menu) return;
+  function openMenu() { menu.classList.add('is-open'); btn.setAttribute('aria-expanded','true'); document.body.style.overflow='hidden'; }
+  function closeMenu() { menu.classList.remove('is-open'); btn.setAttribute('aria-expanded','false'); document.body.style.overflow=''; }
+  btn.addEventListener('click', openMenu);
+  close.addEventListener('click', closeMenu);
+  menu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMenu); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeMenu(); });
+})();
+</script>
+
+<!-- Vorregistrierung form -->
+<script>
+(function() {
+  var form    = document.getElementById('vrForm');
+  var btn     = document.getElementById('vrSubmit');
+  var notice  = document.getElementById('vrNotice');
+
+  function showNotice(type, msg) {
+    notice.className = 'vr-notice is-' + type;
+    notice.textContent = msg;
+  }
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    notice.className = 'vr-notice';
+
+    var name  = document.getElementById('vrName').value.trim();
+    var email = document.getElementById('vrEmail').value.trim();
+    if (!name || !email) {
+      showNotice('error', 'Bitte füllen Sie Name und E-Mail aus.');
+      return;
+    }
+
+    var fach   = document.getElementById('vrFach').value;
+    var praxis = document.getElementById('vrPraxis').value.trim();
+    var msg    = document.getElementById('vrMsg').value.trim();
+
+    var body = 'Vorregistrierung\n\nName: ' + name + '\nE-Mail: ' + email
+      + (praxis ? '\nPraxis: ' + praxis : '')
+      + (fach   ? '\nFachbereich: ' + fach : '')
+      + (msg    ? '\n\nNachricht:\n' + msg : '');
+
+    btn.disabled = true;
+    btn.innerHTML = 'Wird gesendet&hellip;';
+
+    try {
+      var res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          subject: 'Vorregistrierung — ' + (fach || 'Praxura'),
+          message: body
+        })
+      });
+
+      if (res.ok) {
+        form.reset();
+        showNotice('success', 'Vielen Dank! Wir melden uns, sobald die Anmeldung wieder geöffnet ist.');
+      } else {
+        var data = await res.json().catch(function(){ return {}; });
+        showNotice('error', data.error || 'Etwas ist schiefgelaufen. Bitte schreiben Sie uns direkt an kontakt@praxura.de.');
+      }
+    } catch(err) {
+      showNotice('error', 'Verbindungsproblem. Bitte versuchen Sie es später erneut.');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = 'Vormerken lassen <span class="vr-submit-icon" aria-hidden="true">&#8594;</span>';
+  });
+})();
+</script>
+
+</body>
+</html>
