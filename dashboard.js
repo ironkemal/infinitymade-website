@@ -2348,7 +2348,7 @@ async function renderDayView(dateStr) {
         // Drag & Drop for prescription sessions (madde 13)
         slot.addEventListener('dragover', e => {
           e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
+          e.dataTransfer.dropEffect = e.dataTransfer.types.includes('application/rx-session') ? 'copy' : 'move';
           slot.style.background = 'rgba(177,137,27,0.2)';
         });
         slot.addEventListener('dragleave', () => {
