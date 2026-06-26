@@ -1610,7 +1610,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
 //   Reads from verordnungen + podologie_behandlungen (NOT prescriptions).
 //   Existing /abrechnung/create (Physio) is untouched.
 
-function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
+function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'NW') {
   if (!vord.kostentraeger_ik) {
     const e = new Error('Verordnung hat keine Krankenkasse (kostentraeger_ik fehlt).');
     e.status = 422; throw e;
@@ -1679,7 +1679,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
     },
     tarif: {
       abrechnungscode,
-      tarifkennzeichen: buildTarifkennzeichen(getBundeslandFromPlz('40')), // fallback NW
+      tarifkennzeichen: buildTarifkennzeichen(bundesland),
     },
     sessions,
   };
@@ -1767,8 +1767,9 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     }
 
     // ---- map to DTA shape ----
+    const bundesland = getBundeslandFromPlz(profile.zip || profile.plz || '');
     const prescriptions = (vords || []).map(v =>
-      mapVerordnungToDtaShape(v, v.leads, v.aerzte, behByVord[v.id] || [])
+      mapVerordnungToDtaShape(v, v.leads, v.aerzte, behByVord[v.id] || [], bundesland)
     );
 
     // ---- numbering ----
