@@ -129,7 +129,7 @@ def run_clinical_qa():
             current_step = "navigate_and_login"
             try:
                 print("Navigating to login page...")
-                page.goto("https://app.infinitymade.de/login.html", timeout=30000)
+                page.goto("https://app.praxura.de/login.html", timeout=30000)
                 page.wait_for_selector("#email", timeout=15000)
                 
                 page.fill("#email", "fizyo6@gmail.com")

@@ -114,7 +114,7 @@ def run_qa_crawler():
         
         # 3. Logs in
         current_panel = "login"
-        login_url = "https://app.infinitymade.de/login.html"
+        login_url = "https://app.praxura.de/login.html"
         print(f"Navigating to login page: {login_url}")
         try:
             page.goto(login_url, timeout=30000)

@@ -6113,7 +6113,7 @@ function showConfirmModal({ title = 'Bestätigen', message = '', confirmText = '
   });
 }
 
-function showInputModal({ title = 'Eingabe', message = '', placeholder = '', defaultValue = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'primary' } = {}) {
+function showInputModal({ title = 'Eingabe', message = '', placeholder = '', defaultValue = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'primary', inputLabel, inputPlaceholder } = {}) {
   return new Promise(resolve => {
     const titleEl  = document.getElementById('inputModalTitle');
     const textEl   = document.getElementById('inputModalText');
@@ -6125,7 +6125,7 @@ function showInputModal({ title = 'Eingabe', message = '', placeholder = '', def
     titleEl.textContent   = title;
     textEl.textContent    = message;
     field.value           = defaultValue;
-    field.placeholder     = placeholder;
+    field.placeholder     = inputPlaceholder || placeholder;
     okBtn.textContent     = confirmText;
     cancelBtn.textContent = cancelText;
     okBtn.className       = variant === 'danger' ? 'btn-danger' : 'btn-primary';
@@ -6221,44 +6221,6 @@ function showAbsagegrundModal({ title = 'Termin absagen', confirmText = 'Bestät
     document.addEventListener('keydown', function esc(e) {
       if (e.key === 'Escape') { document.removeEventListener('keydown', esc); cleanup(true); }
     });
-  });
-}
-
-function showInputModal({ title, message, inputLabel, inputPlaceholder, confirmText, cancelText, variant }) {
-  return new Promise(resolve => {
-    const existing = document.getElementById('_inputModal');
-    if (existing) existing.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = '_inputModal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-
-    const box = document.createElement('div');
-    box.style.cssText = 'background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:420px;';
-
-    box.innerHTML = `
-      <h3 style="margin:0 0 8px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">${title}</h3>
-      <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted,#9ca3af);">${message}</p>
-      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);margin-bottom:6px;">${inputLabel || ''}</label>
-      <input id="_inputModalField" type="text" placeholder="${inputPlaceholder || ''}"
-        style="width:100%;padding:9px 12px;background:var(--bg-input,#111827);border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-main,#f9fafb);font-size:13px;box-sizing:border-box;outline:none;" />
-      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
-        <button id="_inputModalCancel" style="padding:8px 16px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">${cancelText || 'Abbrechen'}</button>
-        <button id="_inputModalConfirm" style="padding:8px 16px;background:${variant === 'danger' ? '#dc2626' : 'var(--accent,#b1891b)'};border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">${confirmText || 'OK'}</button>
-      </div>
-    `;
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    const field = document.getElementById('_inputModalField');
-    field.focus();
-
-    const cleanup = (val) => { overlay.remove(); resolve(val); };
-
-    document.getElementById('_inputModalCancel').addEventListener('click', () => cleanup(null));
-    document.getElementById('_inputModalConfirm').addEventListener('click', () => cleanup(field.value));
-    field.addEventListener('keydown', e => { if (e.key === 'Enter') cleanup(field.value); if (e.key === 'Escape') cleanup(null); });
   });
 }
 

@@ -134,7 +134,7 @@ def run_qa_crawler():
         # ----------------------------------------------------
         current_scenario = "Login"
         current_step = "Go to Login Page"
-        login_url = "https://app.infinitymade.de/login.html"
+        login_url = "https://app.praxura.de/login.html"
         
         try:
             print(f"Navigating to login URL: {login_url}")
