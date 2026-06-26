@@ -20370,6 +20370,32 @@ async function loadPodologieBilling() {
           <h4 style="margin:0 0 12px;color:var(--text-main);font-size:15px;">${t('pod_active_vord')}</h4>
           <div id="podVordList">${vordListHtml}</div>
         </div>
+
+        ${(() => {
+          const abrechenbar = _podState.verordnungen.filter(v => v.status === 'abrechenbar' && v.kostentraeger_ik);
+          if (!abrechenbar.length) return '';
+          // Group by KK
+          const byKk = {};
+          for (const v of abrechenbar) {
+            if (!byKk[v.kostentraeger_ik]) byKk[v.kostentraeger_ik] = [];
+            byKk[v.kostentraeger_ik].push(v);
+          }
+          return `<div class="card" style="background:var(--bg-card);border:1px solid #16a34a;border-radius:10px;padding:18px;margin-top:12px;">
+            <h4 style="margin:0 0 12px;color:#16a34a;font-size:15px;">§302 Abrechnung bereit</h4>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${Object.entries(byKk).map(([ik, vords]) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-card-solid,#1f2937);border-radius:8px;border:1px solid var(--border);">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(ik)}</div>
+                    <div style="font-size:12px;color:var(--text-muted);">${vords.length} Verordnung${vords.length>1?'en':''} · ${vords.map(v=>escapeHtml(v.patient_name||'—')).join(', ')}</div>
+                  </div>
+                  <button class="pod-abr-btn btn-primary" data-kk-ik="${escapeHtml(ik)}" data-vord-ids="${escapeHtml(JSON.stringify(vords.map(v=>v.id)))}"
+                    style="font-size:13px;padding:6px 14px;white-space:nowrap;">§302 erstellen</button>
+                </div>`).join('')}
+            </div>
+            <div id="podAbrError" style="color:#ef4444;font-size:13px;margin-top:8px;display:none;"></div>
+          </div>`;
+        })()}
       </div>
 
       <!-- Rechts: Tagesbehandlung -->
@@ -20621,6 +20647,43 @@ async function loadPodologieBilling() {
     if (!row) return;
     _podState.selectedVordId = row.dataset.vordId === _podState.selectedVordId ? null : row.dataset.vordId;
     loadPodologieBilling();
+  });
+
+  // Wire up: §302 Abrechnung erstellen buttons (event delegation on whole billing panel)
+  document.getElementById('podBillingContent')?.addEventListener('click', async e => {
+    const btn = e.target.closest('.pod-abr-btn');
+    if (!btn) return;
+    const kkIk     = btn.dataset.kkIk;
+    const vordIds  = JSON.parse(btn.dataset.vordIds || '[]');
+    const errEl    = document.getElementById('podAbrError');
+    if (!kkIk || !vordIds.length) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Wird erstellt…';
+    if (errEl) errEl.style.display = 'none';
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('https://n8n.infinitymade.de/api/billing/abrechnung/create-podologie', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ kostentraegerIk: kkIk, verordnungIds: vordIds }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        if (errEl) { errEl.textContent = json.error || 'Fehler beim Erstellen.'; errEl.style.display = 'block'; }
+        btn.disabled = false; btn.textContent = '§302 erstellen';
+        return;
+      }
+      showToast(`§302 DTA erstellt: ${json.rechnungsnummer} · ${json.sessionCount} Positionen ✓`);
+      loadPodologieBilling();
+    } catch (err) {
+      if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+      btn.disabled = false; btn.textContent = '§302 erstellen';
+    }
   });
 
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {

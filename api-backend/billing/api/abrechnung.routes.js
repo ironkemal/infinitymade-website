@@ -1603,4 +1603,259 @@ router.post('/abrechnung/preflight', async (req, res) => {
   }
 });
 
+// ─── Podologie §302 Pipeline ─────────────────────────────────────────────────
+//
+// POST /abrechnung/create-podologie
+//   body: { kostentraegerIk, verordnungIds[] }
+//   Reads from verordnungen + podologie_behandlungen (NOT prescriptions).
+//   Existing /abrechnung/create (Physio) is untouched.
+
+function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
+  if (!vord.kostentraeger_ik) {
+    const e = new Error('Verordnung hat keine Krankenkasse (kostentraeger_ik fehlt).');
+    e.status = 422; throw e;
+  }
+
+  const np = nameParts(lead);
+  const abrechnungscode = '71'; // ZL-Podologe prefix
+
+  // Flatten: each behandlung × each hpnr_code = one session entry
+  const sessions = [];
+  for (const beh of behandlungen) {
+    const datum = beh.behandlungsdatum || new Date().toISOString().slice(0, 10);
+    for (const hpnr of (beh.hpnr_codes || [])) {
+      const pos = findPodologiePosition(hpnr, datum);
+      const einzelbetrag   = pos?.preis     ?? 0;
+      const zuzahlungRaw   = pos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+      sessions.push({
+        positionsnummer:  `${abrechnungscode}${hpnr}`.slice(0, 9),
+        datumLeistung:    datum,
+        anzahl:           1,
+        einzelbetrag,
+        zuzahlungProPos:  vord.zuzahlung_befreit ? 0 : zuzahlungRaw,
+        therapistId:      null,
+        requiredCert:     null,
+        hasCert:          true,
+      });
+    }
+  }
+
+  if (sessions.length === 0) {
+    const e = new Error(`Verordnung ${vord.id.slice(0,8)}: keine Behandlungen vorhanden.`);
+    e.status = 422; throw e;
+  }
+
+  // icd10 can be array or string in verordnungen
+  const icd10 = Array.isArray(vord.icd10) ? vord.icd10.join(',') : (vord.icd10 || '');
+
+  return {
+    patient: {
+      kvnr:               vord.versichertennummer || lead?.versichertennummer || '',
+      versichertenstatus: '1',
+      nachname:           np.nachname || vord.patient_name?.split(' ').at(-1) || '',
+      vorname:            np.vorname  || vord.patient_name?.split(' ')[0] || '',
+      geburtsdatum:       lead?.geburtsdatum || '',
+      belegnummer:        vord.id.slice(0, 10),
+    },
+    doctor: {
+      lanr: arzt?.lanr || arzt?.arzt_nummer || '999999999',
+      bsnr: arzt?.bsnr || '999999999',
+    },
+    verordnung: {
+      ausstellungsdatum:     vord.ausstellungsdatum,
+      icd10,
+      diagnosegruppe:        (vord.diagnosegruppe || '').replace(/-[abc]$/i, '') || '9999',
+      verordnungsart:        '01',
+      hausbesuch:            !!vord.hausbesuch,
+      leitsymptomatik:       vord.leitsymptomatik || vord.diagnosegruppe || '',
+      dringend:              !!vord.dringend,
+      heilmittelBereich:     '5', // Podologie
+      therapiefrequenz:      vord.therapiefrequenz || '',
+      zuzahlungskennzeichen: vord.zuzahlung_befreit ? '1' : '0',
+      kostentraegerIk:       vord.kostentraeger_ik,
+      krankenkasseIk:        vord.kostentraeger_ik,
+      berichtAngefordert:    false,
+      berichtStatus:         null,
+    },
+    tarif: {
+      abrechnungscode,
+      tarifkennzeichen: buildTarifkennzeichen(getBundeslandFromPlz('40')), // fallback NW
+    },
+    sessions,
+  };
+}
+
+router.post('/abrechnung/create-podologie', async (req, res) => {
+  try {
+    // ---- auth ----
+    const hdr   = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'Missing bearer token' });
+    const { data: u, error: uErr } = await supabase.auth.getUser(token);
+    if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number')
+      .eq('id', u.user.id).single();
+    if (!profile) return res.status(403).json({ error: 'Profile not found' });
+
+    const tenantId = profile.role === 'employee' && profile.owner_id
+      ? profile.owner_id : profile.id;
+
+    // ---- input ----
+    const { kostentraegerIk, verordnungIds } = req.body || {};
+    if (!kostentraegerIk || !Array.isArray(verordnungIds) || !verordnungIds.length) {
+      return res.status(400).json({ error: 'kostentraegerIk and verordnungIds required' });
+    }
+
+    // ---- cert / IK ----
+    let { data: cert } = await supabase
+      .from('terapeut_zertifikat')
+      .select('ik_nummer, cert_subject, cert_valid_to')
+      .eq('owner_id', tenantId).maybeSingle();
+    if (!cert?.ik_nummer) {
+      const { data: tp } = await supabase.from('profiles').select('ik_number').eq('id', tenantId).maybeSingle();
+      if (tp?.ik_nummer) cert = { ik_nummer: tp.ik_nummer };
+    }
+    if (!cert?.ik_nummer) return res.status(400).json({ error: 'Kein IK-Nummer hinterlegt.' });
+
+    // ---- KK routing ----
+    const { data: kk } = await supabase
+      .from('kostentraeger').select('ik, name, das_ik').eq('ik', kostentraegerIk).maybeSingle();
+    const dasIk  = kk?.das_ik || kostentraegerIk;
+    const dasName = kk?.name  || 'Krankenkasse';
+
+    // ---- fetch verordnungen with patient + arzt join ----
+    const { data: vords, error: vErr } = await supabase
+      .from('verordnungen')
+      .select(`
+        *,
+        leads:lead_id (id, first_name, last_name, geburtsdatum, versichertennummer),
+        aerzte:arzt_id (id, arzt_name, lanr, bsnr, arzt_nummer)
+      `)
+      .eq('owner_id', tenantId)
+      .in('id', verordnungIds);
+    if (vErr) return res.status(500).json({ error: vErr.message });
+
+    // ---- validate each verordnung ----
+    for (const v of (vords || [])) {
+      if (v.kostentraeger_ik !== kostentraegerIk) {
+        return res.status(400).json({ error: `Verordnung ${v.id.slice(0,8)}: andere Krankenkasse.` });
+      }
+      if (!v.arzt_id) {
+        return res.status(422).json({ error: `Verordnung ${v.id.slice(0,8)} (${v.patient_name}): Arzt fehlt — bitte Verordnung ergänzen.` });
+      }
+      if (!v.versichertennummer && !v.leads?.versichertennummer) {
+        return res.status(422).json({ error: `Verordnung ${v.id.slice(0,8)} (${v.patient_name}): Versichertennummer fehlt.` });
+      }
+    }
+
+    // ---- fetch behandlungen ----
+    const { data: allBeh } = await supabase
+      .from('podologie_behandlungen')
+      .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
+      .eq('owner_id', tenantId)
+      .in('verordnung_id', verordnungIds)
+      .order('behandlungsdatum', { ascending: true });
+
+    // Group by verordnung_id
+    const behByVord = {};
+    for (const b of (allBeh || [])) {
+      if (!behByVord[b.verordnung_id]) behByVord[b.verordnung_id] = [];
+      behByVord[b.verordnung_id].push(b);
+    }
+
+    // ---- map to DTA shape ----
+    const prescriptions = (vords || []).map(v =>
+      mapVerordnungToDtaShape(v, v.leads, v.aerzte, behByVord[v.id] || [])
+    );
+
+    // ---- numbering ----
+    const now = new Date();
+    const { year, week } = isoWeek(now);
+    const { count: weekCount } = await supabase
+      .from('abrechnung').select('id', { count: 'exact', head: true })
+      .eq('owner_id', tenantId).gte('created_at', `${year}-01-01`);
+    const datennummer = (weekCount || 0) + 1;
+    const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
+
+    // ---- build DTA ----
+    let dta;
+    try {
+      dta = buildDtaFile({
+        absender:   { ik: cert.ik_nummer, name: profile.business_name || 'Praxis' },
+        empfaenger: { ik: dasIk, name: dasName },
+        rechnung: { sammelRechnungsnummer, einzelRechnungsnummer: '0', datum: now, datennummer, rechnungsart: '1' },
+        prescriptions,
+        kind: 'test',
+        vkz: '01',
+        rechnungssteller: { name: profile.business_name || 'Praxis', telefon: profile.phone || '' },
+      });
+    } catch (e) {
+      if (e.preflight) return res.status(422).json({ error: 'Preflight-Fehler.', preflight: e.preflight });
+      throw e;
+    }
+
+    // ---- totals ----
+    let totalBrutto = 0, totalZu = 0;
+    for (const p of prescriptions) {
+      const brutto = p.sessions.reduce((a, s) => a + Number(s.einzelbetrag) * Number(s.anzahl || 1), 0);
+      totalBrutto += brutto;
+      if (p.verordnung.zuzahlungskennzeichen === '0') {
+        totalZu += Math.min(brutto, p.sessions.reduce((a, s) => a + Number(s.zuzahlungProPos) * Number(s.anzahl || 1), 0) + 10);
+      }
+    }
+    totalBrutto = +totalBrutto.toFixed(2);
+    totalZu     = +totalZu.toFixed(2);
+
+    // ---- insert abrechnung row ----
+    const { data: ab, error: abErr } = await supabase
+      .from('abrechnung').insert({
+        owner_id:           tenantId,
+        kostentraeger_ik:   kostentraegerIk,
+        dateiname:          dta.filename,
+        rechnungsnummer:    sammelRechnungsnummer,
+        total_eur:          totalBrutto,
+        zuzahlung_total:    totalZu,
+        status:             'erstellt',
+        dta_file_size:      dta.byteLength,
+        dta_segment_count:  dta.segmentCount,
+        prescription_count: prescriptions.length,
+      }).select('id').single();
+    if (abErr) return res.status(500).json({ error: 'abrechnung insert: ' + abErr.message });
+
+    // ---- upload DTA ----
+    const datePath = `${year}/${String(now.getMonth()+1).padStart(2,'0')}`;
+    const dtaPath  = `${tenantId}/${datePath}/${ab.id}/${dta.filename}.dta`;
+    const dtaBuffer = Buffer.from(dta.content, 'latin1');
+    const upDta = await supabase.storage.from('abrechnungen').upload(dtaPath, dtaBuffer, {
+      contentType: 'application/octet-stream', upsert: true,
+    });
+    if (upDta.error) {
+      await supabase.from('abrechnung').delete().eq('id', ab.id);
+      return res.status(500).json({ error: 'Storage upload: ' + upDta.error.message });
+    }
+
+    // ---- mark verordnungen as abgerechnet ----
+    await supabase.from('verordnungen')
+      .update({ status: 'abgerechnet' })
+      .in('id', verordnungIds);
+
+    return res.json({
+      ok: true,
+      abrechnungId: ab.id,
+      rechnungsnummer: sammelRechnungsnummer,
+      dtaFilename: dta.filename,
+      totalBrutto,
+      totalZuzahlung: totalZu,
+      verordnungCount: verordnungIds.length,
+      sessionCount: prescriptions.reduce((a, p) => a + p.sessions.length, 0),
+    });
+  } catch (e) {
+    console.error('[abrechnung/create-podologie]', e);
+    return res.status(e.status || 500).json({ error: e.message });
+  }
+});
+
 export default router;
