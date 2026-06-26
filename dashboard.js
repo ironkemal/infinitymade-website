@@ -5307,11 +5307,12 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       if (!hasQCert) {
         const empObj = teamMembers.find(t => t.id === empId);
         const empName = empObj?.full_name || empObj?.email || 'Dieser Therapeut';
-        const proceed = confirm(
-          `⚠️ Qualifikationswarnung\n\n${empName} hat keine ${qSrv.required_certificate}-Zertifizierung.\n\n` +
-          `„${qSrv.title}" erfordert diese Qualifikation — die Leistung kann bei der GKV-Abrechnung abgelehnt werden.\n\n` +
-          `Trotzdem buchen?`
-        );
+        const proceed = await showConfirmModal({
+          title: '⚠️ Qualifikationswarnung',
+          message: `${empName} hat keine ${qSrv.required_certificate}-Zertifizierung.\n\n„${qSrv.title}" erfordert diese Qualifikation — die Leistung kann bei der GKV-Abrechnung abgelehnt werden.\n\nTrotzdem buchen?`,
+          confirmText: 'Trotzdem buchen',
+          cancelText: 'Abbrechen'
+        });
         if (!proceed) return;
       }
     }
@@ -6109,6 +6110,37 @@ function showConfirmModal({ title = 'Bestätigen', message = '', confirmText = '
     cancelBtn.onclick = () => cleanup(false);
     closeBtn.onclick = () => cleanup(false);
     openModal('confirmModal');
+  });
+}
+
+function showInputModal({ title = 'Eingabe', message = '', placeholder = '', defaultValue = '', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'primary' } = {}) {
+  return new Promise(resolve => {
+    const titleEl  = document.getElementById('inputModalTitle');
+    const textEl   = document.getElementById('inputModalText');
+    const field    = document.getElementById('inputModalField');
+    const okBtn    = document.getElementById('inputModalOk');
+    const cancelBtn = document.getElementById('inputModalCancel');
+    const closeBtn = document.querySelector('#inputModal .modal-close');
+
+    titleEl.textContent   = title;
+    textEl.textContent    = message;
+    field.value           = defaultValue;
+    field.placeholder     = placeholder;
+    okBtn.textContent     = confirmText;
+    cancelBtn.textContent = cancelText;
+    okBtn.className       = variant === 'danger' ? 'btn-danger' : 'btn-primary';
+
+    const cleanup = (val) => {
+      okBtn.onclick = null; cancelBtn.onclick = null; closeBtn.onclick = null; field.onkeydown = null;
+      closeModal('inputModal');
+      resolve(val);
+    };
+    field.onkeydown = (e) => { if (e.key === 'Enter') cleanup(field.value); if (e.key === 'Escape') cleanup(null); };
+    okBtn.onclick     = () => cleanup(field.value);
+    cancelBtn.onclick = () => cleanup(null);
+    closeBtn.onclick  = () => cleanup(null);
+    openModal('inputModal');
+    setTimeout(() => field.focus(), 50);
   });
 }
 
@@ -12237,14 +12269,23 @@ document.getElementById('dsgvoExportBtn')?.addEventListener('click', async () =>
 
 // DSGVO Art. 17 — Delete (mit doppelter Bestätigung)
 document.getElementById('dsgvoDeleteBtn')?.addEventListener('click', async () => {
-  const confirm1 = window.confirm(
-    'Sind Sie sicher? Alle Ihre Daten werden gelöscht.\n\n' +
-    'Abrechnungsdaten bleiben aus gesetzlicher Pflicht 10 Jahre anonymisiert gespeichert.\n\n' +
-    'Diese Aktion ist NICHT rückgängig zu machen.'
-  );
+  const confirm1 = await showConfirmModal({
+    title: 'Konto löschen',
+    message: 'Sind Sie sicher? Alle Ihre Daten werden gelöscht.\n\nAbrechnungsdaten bleiben aus gesetzlicher Pflicht 10 Jahre anonymisiert gespeichert.\n\nDiese Aktion ist NICHT rückgängig zu machen.',
+    confirmText: 'Weiter',
+    cancelText: 'Abbrechen',
+    variant: 'danger'
+  });
   if (!confirm1) return;
 
-  const typed = window.prompt('Tippen Sie LÖSCHEN (Großbuchstaben) um zu bestätigen:');
+  const typed = await showInputModal({
+    title: 'Löschen bestätigen',
+    message: 'Tippen Sie LÖSCHEN (Großbuchstaben) um zu bestätigen:',
+    placeholder: 'LÖSCHEN',
+    confirmText: 'Endgültig löschen',
+    cancelText: 'Abbrechen',
+    variant: 'danger'
+  });
   if (typed !== 'LÖSCHEN') {
     showToast('Abgebrochen — Bestätigung stimmte nicht überein.', 'error');
     return;
@@ -14963,18 +15004,17 @@ async function deleteAerzte(id) {
   showToast('Gelöscht.');
 }
 
-function editAerzte(id) {
+async function editAerzte(id) {
   const a = aerzteCache.find(x => x.id === id);
   if (!a) return;
-  const name = prompt('Neuer Name:', a.arzt_name);
+  const name = await showInputModal({ title: 'Arzt bearbeiten', message: 'Name:', defaultValue: a.arzt_name, placeholder: 'Arzt Name', confirmText: 'Weiter', cancelText: 'Abbrechen' });
   if (name === null) return;
-  const nummer = prompt('Neue Telefon/Fax:', a.arzt_nummer || '');
+  const nummer = await showInputModal({ title: 'Arzt bearbeiten', message: 'Telefon / Fax:', defaultValue: a.arzt_nummer || '', placeholder: 'Telefon oder Fax', confirmText: 'Speichern', cancelText: 'Abbrechen' });
   if (nummer === null) return;
-  supabase.from('aerzte').update({ arzt_name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id).then(({ error }) => {
-    if (error) { showToast(t('err_generic'), 'error'); return; }
-    loadAerzte();
-    showToast('Aktualisiert.');
-  });
+  const { error } = await supabase.from('aerzte').update({ arzt_name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id);
+  if (error) { showToast(t('err_generic'), 'error'); return; }
+  loadAerzte();
+  showToast('Aktualisiert.');
 }
 
 window.editAerzte = editAerzte;
@@ -20542,7 +20582,12 @@ async function loadPodologieBilling() {
       if (deadline && datum > deadline) {
         const datumFormatted = new Date(datum).toLocaleDateString('de-DE');
         const deadlineFormatted = new Date(deadline).toLocaleDateString('de-DE');
-        const proceed = confirm(`⚠️ Das gewählte Datum (${datumFormatted}) liegt nach dem Beginn spätestens (${deadlineFormatted}). Trotzdem fortfahren?`);
+        const proceed = await showConfirmModal({
+          title: '⚠️ Datum nach Beginn spätestens',
+          message: `Das gewählte Datum (${datumFormatted}) liegt nach dem Beginn spätestens (${deadlineFormatted}). Trotzdem fortfahren?`,
+          confirmText: 'Trotzdem fortfahren',
+          cancelText: 'Abbrechen'
+        });
         if (!proceed) return;
       }
     }

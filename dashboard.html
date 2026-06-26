@@ -4328,6 +4328,24 @@
     </div>
   </div>
 
+  <!-- ===== GENERIC INPUT MODAL ===== -->
+  <div class="modal-overlay" id="inputModal" hidden>
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <span class="modal-title" id="inputModalTitle">Eingabe</span>
+        <button class="modal-close" data-modal="inputModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="inputModalText" style="margin:0 0 14px;color:#444;line-height:1.5;white-space:pre-wrap;"></p>
+        <input type="text" id="inputModalField" class="form-input" style="width:100%;" placeholder="">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="inputModalCancel">Abbrechen</button>
+        <button class="btn-primary" id="inputModalOk">Bestätigen</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== MAIL OFFER MODAL (Phase 3) ===== -->
   <div class="modal-overlay" id="mailOfferModal" hidden>
     <div class="modal" style="max-width:460px;">
