@@ -20141,18 +20141,26 @@ const PODOLOGIE_ICD_MAP = {
 };
 
 let _podState = { selectedVordId: null, verordnungen: [] };
+let _podKkCache = [];
 
 async function loadPodologieBilling() {
   const el = document.getElementById('podBillingContent');
   if (!el) return;
   el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade…</span>';
 
+  // Load kostentraeger for billing KK selection (IK numbers required)
+  if (_podKkCache.length === 0) {
+    const { data: kkData } = await supabase
+      .from('kostentraeger').select('ik, name').eq('active', true).order('name');
+    _podKkCache = kkData || [];
+  }
+
   const ownerId = getOwnerId();
   const { data: vords, error } = await supabase
     .from('verordnungen')
     .select('*')
     .eq('owner_id', ownerId)
-    .eq('status', 'aktiv')
+    .in('status', ['aktiv', 'abrechenbar'])
     .order('created_at', { ascending: false });
 
   if (error) { el.innerHTML = `<p style="color:var(--danger)">Fehler: ${escapeHtml(error.message)}</p>`; return; }
@@ -20262,7 +20270,26 @@ async function loadPodologieBilling() {
           <div style="display:grid;gap:10px;">
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_patient')}</label>
-              <input type="text" id="podNewPatient" placeholder="Name Vorname" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              <input type="text" id="podNewPatient" list="podPatientList" placeholder="Name suchen oder eingeben…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              <datalist id="podPatientList"></datalist>
+              <input type="hidden" id="podNewLeadId">
+            </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Versichertennummer</label>
+              <input type="text" id="podNewVsnr" placeholder="z. B. A123456789" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+            </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Verordnender Arzt</label>
+              <input type="text" id="podNewArztName" list="podArztList" placeholder="Arztname suchen…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              <datalist id="podArztList"></datalist>
+              <input type="hidden" id="podNewArztId">
+              <div id="podArztHint" style="font-size:12px;color:var(--text-muted);margin-top:3px;display:none;"></div>
+            </div>
+            <div>
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Krankenkasse</label>
+              <select id="podNewKk" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="">— Krankenkasse wählen —</option>
+              </select>
             </div>
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_ausstelldatum')}</label>
@@ -20323,12 +20350,15 @@ async function loadPodologieBilling() {
               <div id="podHeilmittelItems" style="display:flex;flex-direction:column;gap:6px;"></div>
               <button type="button" id="podAddHeilmittelBtn" style="margin-top:8px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">+ Hinzufügen</button>
             </div>
-            <div style="display:flex;gap:20px;">
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
                 <input type="checkbox" id="podNewDringend"> ${t('pod_dringend')}
               </label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
                 <input type="checkbox" id="podNewHausbesuch"> ${t('pod_hausbesuch')}
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
+                <input type="checkbox" id="podNewZuzahlBefreit"> Zuzahlung befreit
               </label>
             </div>
             <div id="podNewError" style="color:#ef4444;font-size:13px;display:none;"></div>
@@ -20390,6 +20420,11 @@ async function loadPodologieBilling() {
 
     const wagnerRaw = document.getElementById('podNewWagner')?.value;
     const wagnerGrad = (wagnerRaw !== '' && wagnerRaw != null) ? parseInt(wagnerRaw) : null;
+    const leadId     = document.getElementById('podNewLeadId')?.value || null;
+    const vsnr       = document.getElementById('podNewVsnr')?.value.trim() || null;
+    const arztId     = document.getElementById('podNewArztId')?.value || null;
+    const kkIk       = document.getElementById('podNewKk')?.value || null;
+    const zuzahlBef  = document.getElementById('podNewZuzahlBefreit')?.checked || false;
 
     const { error } = await supabase.from('verordnungen').insert({
       owner_id: getOwnerId(),
@@ -20407,6 +20442,11 @@ async function loadPodologieBilling() {
       beginn_spaetestens,
       heilmittel_items: heilmittelItems,
       wagner_grad: wagnerGrad,
+      lead_id: leadId,
+      versichertennummer: vsnr,
+      arzt_id: arztId,
+      kostentraeger_ik: kkIk,
+      zuzahlung_befreit: zuzahlBef,
     });
     if (error) {
       errEl.textContent = error.message;
@@ -20491,6 +20531,65 @@ async function loadPodologieBilling() {
     if (wagnerWrap) wagnerWrap.style.display = diagRootVal === 'DF' ? 'block' : 'none';
     podUpdateHeilmittelOptions();
     podValidateIcd10();
+  });
+
+  // Wire up: Patient datalist
+  const podPatientList = document.getElementById('podPatientList');
+  if (podPatientList && leadsCache.length) {
+    podPatientList.innerHTML = leadsCache.map(l =>
+      `<option value="${escapeHtml((l.last_name||'') + ', ' + (l.first_name||''))}">`
+    ).join('');
+  }
+  document.getElementById('podNewPatient')?.addEventListener('input', () => {
+    const val = document.getElementById('podNewPatient').value.trim();
+    const lead = leadsCache.find(l =>
+      `${l.last_name||''}, ${l.first_name||''}` === val ||
+      `${l.first_name||''} ${l.last_name||''}` === val
+    );
+    const leadIdEl  = document.getElementById('podNewLeadId');
+    const vsnrEl    = document.getElementById('podNewVsnr');
+    const podKkSel  = document.getElementById('podNewKk');
+    if (lead) {
+      if (leadIdEl) leadIdEl.value = lead.id;
+      if (vsnrEl && !vsnrEl.value.trim()) vsnrEl.value = lead.versichertennummer || '';
+      if (podKkSel && !podKkSel.value && lead.krankenkasse) {
+        const matchedKk = _podKkCache.find(k => k.name === lead.krankenkasse);
+        if (matchedKk) podKkSel.value = matchedKk.ik;
+      }
+    } else {
+      if (leadIdEl) leadIdEl.value = '';
+    }
+  });
+
+  // Wire up: KK select populate
+  const podKkSel = document.getElementById('podNewKk');
+  if (podKkSel && _podKkCache.length) {
+    podKkSel.innerHTML = '<option value="">— Krankenkasse wählen —</option>' +
+      _podKkCache.map(k => `<option value="${escapeHtml(k.ik)}">${escapeHtml(k.name)}</option>`).join('');
+  }
+
+  // Wire up: Arzt datalist + hint
+  const podArztList = document.getElementById('podArztList');
+  if (podArztList && aerzteCache.length) {
+    podArztList.innerHTML = aerzteCache.map(a =>
+      `<option value="${escapeHtml(a.arzt_name)}">`
+    ).join('');
+  }
+  document.getElementById('podNewArztName')?.addEventListener('input', () => {
+    const val = document.getElementById('podNewArztName').value.trim();
+    const matched = aerzteCache.find(a => a.arzt_name === val);
+    const arztIdEl = document.getElementById('podNewArztId');
+    const hintEl   = document.getElementById('podArztHint');
+    if (matched) {
+      if (arztIdEl) arztIdEl.value = matched.id;
+      if (hintEl) {
+        hintEl.textContent = `LANR: ${matched.lanr || matched.arzt_nummer || '—'}  |  BSNR: ${matched.bsnr || '—'}`;
+        hintEl.style.display = 'block';
+      }
+    } else {
+      if (arztIdEl) arztIdEl.value = '';
+      if (hintEl) hintEl.style.display = 'none';
+    }
   });
 
   // Wire up: Ausstelldatum change
