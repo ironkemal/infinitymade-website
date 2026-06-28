@@ -22,6 +22,7 @@ import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.j
 import { logAccess, accessLogger } from './_lib/access-log.js';
 import crypto from 'crypto';
 import { encryptPHI, encryptionAvailable } from './lib/phi-encrypt.js';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -99,6 +100,28 @@ const verifyCodeLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Zu viele Versuche. Bitte warten Sie 10 Minuten.' },
+});
+
+const bookingRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen. Bitte warten Sie.' },
+});
+const bookingRequestApprovalLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 30,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen.' },
+});
+const patientLookupLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anfragen. Bitte warten Sie 10 Minuten.' },
 });
 
 // Request logger — path only. Request bodies are deliberately NOT logged: they
@@ -2691,6 +2714,329 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
     }
   }, 60_000); // Her dakika kontrol et
 })();
+
+// ============================================================================
+// BOOKING REQUEST ENDPOINTS — Termin-Anfragen
+// ============================================================================
+
+// GET /api/patients/lookup — public, aggressive rate limit
+app.get('/api/patients/lookup', patientLookupLimiter, async (req, res) => {
+  const { owner_id, nachname, geburtsdatum } = req.query;
+  if (!owner_id || !nachname || !geburtsdatum) return res.status(400).json({ error: 'owner_id, nachname, geburtsdatum required' });
+  try {
+    const { data, error } = await supabase
+      .from('patients')
+      .select('id, vorname, nachname')
+      .eq('owner_id', owner_id)
+      .ilike('nachname', nachname.trim())
+      .eq('geburtsdatum', geburtsdatum)
+      .maybeSingle();
+    if (error) throw error;
+    return res.json({ patient: data || null });
+  } catch (e) {
+    console.error('[patients/lookup]', e.message);
+    return res.status(500).json({ error: 'Lookup failed' });
+  }
+});
+
+// GET /api/services/public — public
+app.get('/api/services/public', async (req, res) => {
+  const { owner_id } = req.query;
+  if (!owner_id) return res.status(400).json({ error: 'owner_id required' });
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select('id, title, duration_minutes, price, price_config')
+      .eq('owner_id', owner_id)
+      .order('title');
+    if (error) throw error;
+    return res.json({ services: data || [] });
+  } catch (e) {
+    console.error('[services/public]', e.message);
+    return res.status(500).json({ error: 'Failed to load services' });
+  }
+});
+
+// GET /api/krankenkassen — public dropdown for booking form
+app.get('/api/krankenkassen', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('krankenkassen').select('id, name, ik_nummer').order('name');
+    if (error) throw error;
+    return res.json({ krankenkassen: data || [] });
+  } catch (e) {
+    console.error('[krankenkassen]', e.message);
+    return res.status(500).json({ error: 'Failed to load Krankenkassen' });
+  }
+});
+
+// POST /api/booking-request/create — public (service_role handles auth)
+app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) => {
+  try {
+    const {
+      owner_id, patient_id, patient,
+      payment_type, service_id, employee_id,
+      preferred_date, preferred_time, session_count,
+      krankenkasse, arzt_name, verordnung_datum, icd10_diagnose,
+      behandlungsart, verordnung_sitzungen, frequenz, verordnung_typ, doppelbehandlung,
+      pkv_versicherung, arzt_ueberweisung, arzt_ueberweisung_name,
+      bg_aktenzeichen, bg_name, unfalldatum, durchgangsarzt,
+      notizen, dsgvo_consent
+    } = req.body || {};
+
+    if (!owner_id || !payment_type || !dsgvo_consent) {
+      return res.status(400).json({ error: 'owner_id, payment_type und DSGVO-Zustimmung erforderlich' });
+    }
+    if (!['gkv', 'pkv', 'selbstzahler', 'bg'].includes(payment_type)) {
+      return res.status(400).json({ error: 'Ungültiger Zahlungstyp' });
+    }
+
+    const { data: ownerProfile, error: ownerErr } = await supabase
+      .from('profiles').select('id, email, business_name').eq('id', owner_id).maybeSingle();
+    if (ownerErr || !ownerProfile) return res.status(400).json({ error: 'Ungültige Praxis' });
+
+    let resolvedPatientId = patient_id || null;
+
+    if (!resolvedPatientId && patient) {
+      const { vorname, nachname, geburtsdatum, email: patEmail, telefon } = patient;
+      if (!vorname || !nachname || !geburtsdatum) return res.status(400).json({ error: 'Patientendaten unvollständig' });
+      const { data: newPat, error: patErr } = await supabase
+        .from('patients')
+        .insert({ owner_id, vorname: vorname.trim(), nachname: nachname.trim(), geburtsdatum, email: patEmail || null, telefon: telefon || null })
+        .select('id').single();
+      if (patErr) {
+        if (patErr.code === '23505') {
+          const { data: existing } = await supabase.from('patients')
+            .select('id').eq('owner_id', owner_id).ilike('nachname', nachname.trim()).eq('geburtsdatum', geburtsdatum).maybeSingle();
+          resolvedPatientId = existing?.id || null;
+        } else throw patErr;
+      } else {
+        resolvedPatientId = newPat.id;
+      }
+    }
+
+    const { data: request, error: reqErr } = await supabase
+      .from('booking_requests')
+      .insert({
+        owner_id, patient_id: resolvedPatientId, employee_id: employee_id || null,
+        service_id: service_id || null, payment_type,
+        preferred_date: preferred_date || null, preferred_time: preferred_time || null,
+        session_count: session_count || 1,
+        krankenkasse: krankenkasse || null, arzt_name: arzt_name || null,
+        verordnung_datum: verordnung_datum || null, icd10_diagnose: icd10_diagnose || null,
+        behandlungsart: behandlungsart || null, verordnung_sitzungen: verordnung_sitzungen || null,
+        frequenz: frequenz || null, verordnung_typ: verordnung_typ || null,
+        doppelbehandlung: doppelbehandlung || false,
+        pkv_versicherung: pkv_versicherung || null,
+        arzt_ueberweisung: arzt_ueberweisung || false,
+        arzt_ueberweisung_name: arzt_ueberweisung_name || null,
+        bg_aktenzeichen: bg_aktenzeichen || null, bg_name: bg_name || null,
+        unfalldatum: unfalldatum || null, durchgangsarzt: durchgangsarzt || null,
+        notizen: notizen ? notizen.substring(0, 500) : null,
+        dsgvo_consent: true, consent_at: new Date().toISOString(),
+      })
+      .select('id').single();
+    if (reqErr) throw reqErr;
+
+    const { data: autoConfig } = await supabase.from('profiles')
+      .select('booking_auto_approve, booking_auto_approve_types').eq('id', owner_id).maybeSingle();
+    const autoTypes = autoConfig?.booking_auto_approve_types || [];
+
+    if (autoConfig?.booking_auto_approve && autoTypes.includes(payment_type)) {
+      await supabase.from('booking_requests').update({ status: 'approved', auto_approved: true }).eq('id', request.id);
+      if (resolvedPatientId && process.env.SMTP_HOST) {
+        const { data: pat } = await supabase.from('patients').select('email, vorname').eq('id', resolvedPatientId).maybeSingle();
+        if (pat?.email) {
+          const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+            .update(`${request.id}:${resolvedPatientId}`).digest('hex').substring(0, 32);
+          const t = createSMTPTransport();
+          t.sendMail({
+            from: `"${ownerProfile.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+            replyTo: ownerProfile.email || undefined,
+            to: pat.email,
+            subject: `Terminanfrage eingegangen – ${ownerProfile.business_name || 'Praxura'}`,
+            html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Ihre Anfrage wurde vorgemerkt</h2><p>Hallo ${pat.vorname},</p><p>Ihre Terminanfrage wurde automatisch vorgemerkt${preferred_date ? ` für den <strong>${new Date(preferred_date).toLocaleDateString('de-DE')}</strong>` : ''}${preferred_time ? ` um <strong>${preferred_time} Uhr</strong>` : ''}.</p><p>Wir freuen uns auf Ihren Besuch.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request.id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+          }).catch(e => console.error('[booking-request] auto-approve email', e.message));
+        }
+      }
+      return res.json({ id: request.id, status: 'auto_approved' });
+    }
+
+    if (process.env.SMTP_HOST && ownerProfile.email) {
+      let pName = 'Unbekannter Patient';
+      if (resolvedPatientId) {
+        const { data: pat } = await supabase.from('patients').select('vorname, nachname').eq('id', resolvedPatientId).maybeSingle();
+        if (pat) pName = `${pat.vorname} ${pat.nachname}`;
+      } else if (patient) {
+        pName = `${patient.vorname} ${patient.nachname}`;
+      }
+      const t = createSMTPTransport();
+      t.sendMail({
+        from: '"Praxura" <noreply@praxura.de>',
+        to: ownerProfile.email,
+        subject: `Neue Terminanfrage von ${pName}`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Neue Terminanfrage</h2><p><strong>Patient:</strong> ${pName}</p><p><strong>Kassentyp:</strong> ${payment_type.toUpperCase()}</p>${preferred_date ? `<p><strong>Wunschtermin:</strong> ${new Date(preferred_date).toLocaleDateString('de-DE')}${preferred_time ? ' um ' + preferred_time + ' Uhr' : ''}</p>` : ''}${notizen ? `<p><strong>Notiz:</strong> ${notizen}</p>` : ''}<p><a href="https://app.praxura.de/dashboard.html#anfragen" style="background:#b1891b;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;margin-top:12px">Zur Praxura → Termin-Anfragen</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+      }).catch(e => console.error('[booking-request] notify email', e.message));
+    }
+
+    return res.json({ id: request.id, status: 'pending' });
+  } catch (e) {
+    console.error('[booking-request/create]', e.message);
+    return res.status(500).json({ error: 'Anfrage konnte nicht gespeichert werden' });
+  }
+});
+
+// GET /api/booking-request/list — auth required
+app.get('/api/booking-request/list', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
+  const userId = req.auth.userId;
+  const { owner_id, status } = req.query;
+  if (!owner_id) return res.status(400).json({ error: 'owner_id required' });
+  try {
+    const { data: profile } = await supabase.from('profiles').select('id, owner_id').eq('id', userId).maybeSingle();
+    if (profile?.id !== owner_id && profile?.owner_id !== owner_id) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    let query = supabase.from('booking_requests')
+      .select('*, patients(vorname, nachname, geburtsdatum, email, telefon), services(title, duration_minutes)')
+      .eq('owner_id', owner_id)
+      .order('created_at', { ascending: false });
+    if (status && status !== 'all') query = query.eq('status', status);
+    const { data, error } = await query;
+    if (error) throw error;
+    return res.json({ requests: data || [] });
+  } catch (e) {
+    console.error('[booking-request/list]', e.message);
+    return res.status(500).json({ error: 'Failed to load requests' });
+  }
+});
+
+// POST /api/booking-request/approve — auth required (owner)
+app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
+  const userId = req.auth.userId;
+  const { request_id, owner_id, employee_id: overrideEmployee } = req.body || {};
+  if (!request_id || !owner_id) return res.status(400).json({ error: 'request_id und owner_id required' });
+  try {
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+    if (profile?.id !== owner_id) return res.status(403).json({ error: 'Nur der Praxisinhaber kann Anfragen bestätigen' });
+
+    const { data: bookReq, error: reqErr } = await supabase.from('booking_requests')
+      .select('*, patients(vorname, nachname, email)')
+      .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
+    if (reqErr || !bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+    if (bookReq.status !== 'pending') return res.status(409).json({ error: 'Anfrage wurde bereits bearbeitet' });
+
+    const empId = overrideEmployee || bookReq.employee_id;
+    if (!empId) return res.status(400).json({ error: 'Bitte wählen Sie einen Therapeuten für diesen Termin' });
+
+    let duration = 30;
+    if (bookReq.service_id) {
+      const { data: svc } = await supabase.from('services').select('duration_minutes').eq('id', bookReq.service_id).maybeSingle();
+      if (svc?.duration_minutes) duration = svc.duration_minutes;
+    }
+
+    const startTime = bookReq.preferred_date && bookReq.preferred_time
+      ? berlinLocalToUTC(bookReq.preferred_date, bookReq.preferred_time).toISOString()
+      : new Date().toISOString();
+    const endUTC = new Date(new Date(startTime).getTime() + duration * 60000).toISOString();
+    const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
+
+    const { data: booking, error: bookErr } = await supabase.from('bookings').insert({
+      owner_id, employee_id: empId, service_id: bookReq.service_id || null,
+      customer_name: patName, start_time: startTime, end_time: endUTC, status: 'confirmed',
+    }).select('id').single();
+    if (bookErr) throw bookErr;
+
+    await supabase.from('booking_requests').update({ status: 'approved', booking_id: booking.id }).eq('id', request_id);
+
+    if (bookReq.patients?.email && process.env.SMTP_HOST) {
+      const [{ data: ownerP }, { data: empP }] = await Promise.all([
+        supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle(),
+        supabase.from('profiles').select('full_name').eq('id', empId).maybeSingle(),
+      ]);
+      const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+        .update(`${request_id}:${bookReq.patient_id}`).digest('hex').substring(0, 32);
+      const t = createSMTPTransport();
+      t.sendMail({
+        from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+        replyTo: ownerP?.email || undefined,
+        to: bookReq.patients.email,
+        subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${bookReq.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(bookReq.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${bookReq.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${bookReq.preferred_time} Uhr</p>` : ''}${empP?.full_name ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${empP.full_name}</p>` : ''}</div><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+      }).catch(e => console.error('[booking-request/approve] email', e.message));
+    }
+
+    return res.json({ booking_id: booking.id });
+  } catch (e) {
+    console.error('[booking-request/approve]', e.message);
+    return res.status(500).json({ error: 'Bestätigung fehlgeschlagen' });
+  }
+});
+
+// POST /api/booking-request/decline — auth required (owner)
+app.post('/api/booking-request/decline', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
+  const userId = req.auth.userId;
+  const { request_id, owner_id, reason } = req.body || {};
+  if (!request_id || !owner_id) return res.status(400).json({ error: 'request_id und owner_id required' });
+  try {
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+    if (profile?.id !== owner_id) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    const { data: bookReq } = await supabase.from('booking_requests')
+      .select('*, patients(vorname, email)')
+      .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
+    if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+
+    await supabase.from('booking_requests').update({ status: 'declined' }).eq('id', request_id);
+
+    if (bookReq.patients?.email && process.env.SMTP_HOST) {
+      const { data: ownerP } = await supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle();
+      const t = createSMTPTransport();
+      t.sendMail({
+        from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+        replyTo: ownerP?.email || undefined,
+        to: bookReq.patients.email,
+        subject: 'Terminanfrage – Leider nicht möglich',
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2>Terminanfrage leider nicht möglich</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Leider können wir Ihren Wunschtermin nicht bestätigen.</p>${reason ? `<p><strong>Grund:</strong> ${reason}</p>` : ''}<p>Bitte rufen Sie uns an oder stellen Sie eine neue Anfrage.</p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+      }).catch(e => console.error('[booking-request/decline] email', e.message));
+    }
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[booking-request/decline]', e.message);
+    return res.status(500).json({ error: 'Ablehnung fehlgeschlagen' });
+  }
+});
+
+// POST /api/booking-request/cancel — public (patient link with HMAC token)
+app.post('/api/booking-request/cancel', bookingRequestLimiter, async (req, res) => {
+  const { request_id, token } = req.body || {};
+  if (!request_id || !token) return res.status(400).json({ error: 'request_id und token required' });
+  try {
+    const { data: bookReq } = await supabase.from('booking_requests')
+      .select('id, patient_id, status').eq('id', request_id).maybeSingle();
+    if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+    if (['cancelled', 'declined'].includes(bookReq.status)) return res.status(409).json({ error: 'Anfrage bereits storniert' });
+
+    const expectedToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+      .update(`${request_id}:${bookReq.patient_id}`).digest('hex').substring(0, 32);
+    if (token !== expectedToken) return res.status(403).json({ error: 'Ungültiger Token' });
+
+    await supabase.from('booking_requests').update({ status: 'cancelled' }).eq('id', request_id);
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[booking-request/cancel]', e.message);
+    return res.status(500).json({ error: 'Stornierung fehlgeschlagen' });
+  }
+});
+
+// ============================================================================
+// BOOKING REQUEST — SMTP helper
+// ============================================================================
+function createSMTPTransport() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: Number(process.env.SMTP_PORT) === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+}
 
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {

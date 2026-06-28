@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Terminanfrage — Praxura</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#FFFEFB" />
+  <link rel="stylesheet" href="fonts/system-fonts.css" />
+  <link rel="stylesheet" href="booking-request.css?v=20260628" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Header + progress -->
+  <header class="br-header">
+    <div class="br-header-inner">
+      <a href="/" class="br-brand">Prax<em>ura</em></a>
+      <div class="br-progress" id="progressBar" hidden>
+        <div class="br-progress-track">
+          <div class="br-progress-fill" id="progressFill"></div>
+        </div>
+        <div class="br-progress-labels" id="progressLabels"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="br-main">
+    <div class="br-container">
+
+      <!-- ═══════════════════════════════════════════════
+           Error: missing ?business= param
+      ══════════════════════════════════════════════════ -->
+      <div id="errorScreen">
+        <span class="br-result-icon">⚠️</span>
+        <h2 class="br-result-title">Ungültiger Link</h2>
+        <p class="br-result-body">Bitte wenden Sie sich an die Praxis, um einen gültigen Buchungslink zu erhalten.</p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════
+           Cancel confirmation screen
+      ══════════════════════════════════════════════════ -->
+      <div id="cancelScreen">
+        <span class="br-result-icon">📋</span>
+        <h2 class="br-result-title">Terminanfrage stornieren</h2>
+        <p class="br-result-body">Möchten Sie Ihre Terminanfrage wirklich stornieren?</p>
+        <button class="btn-primary" id="confirmCancelBtn">Ja, stornieren</button>
+        <p class="br-lookup-state" id="cancelStatus" style="margin-top:1rem;"></p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════
+           Success screen
+      ══════════════════════════════════════════════════ -->
+      <div id="successScreen">
+        <span class="br-result-icon">✅</span>
+        <h2 class="br-result-title">Ihre Anfrage wurde erfolgreich gesendet!</h2>
+        <p class="br-result-body">Die Praxis wird sich baldmöglichst mit Ihnen in Verbindung setzen.</p>
+        <div id="successEmailNote" class="br-result-email-note" hidden>
+          <span>📧</span>
+          <span>Sie erhalten eine Bestätigung an <strong id="successEmailAddr"></strong></span>
+        </div>
+        <br />
+        <button class="btn-secondary" onclick="location.reload()">Neue Anfrage stellen</button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════
+           STEP 0 — Neuer / Bestehender Patient
+      ══════════════════════════════════════════════════ -->
+      <section class="br-step" id="step-0">
+        <div class="br-step-header">
+          <span class="br-step-tag">Schritt 1 von 7</span>
+          <h2>Willkommen</h2>
+          <p>Sind Sie bereits Patient in dieser Praxis?</p>
+        </div>
+
+        <div class="br-patient-toggle">
+          <button type="button" id="toggleNew" class="active">Neuer Patient</button>
+          <button type="button" id="toggleExisting">Bereits Patient</button>
+        </div>
+
+        <!-- Existing patient lookup -->
+        <div id="existingPatientForm" hidden>
+          <div class="br-form" style="max-width:420px;">
+            <div class="br-field">
+              <label for="lookupNachname">Nachname <span class="req">*</span></label>
+              <input type="text" id="lookupNachname" placeholder="Ihr Nachname" autocomplete="family-name" />
+              <span class="br-field-error" id="lookupNachnameError"></span>
+            </div>
+            <div class="br-field">
+              <label for="lookupGeburt">Geburtsdatum <span class="req">*</span></label>
+              <input type="date" id="lookupGeburt" />
+              <span class="br-field-error" id="lookupGeburtError"></span>
+            </div>
+            <p class="br-lookup-state" id="lookupStatus"></p>
+          </div>
+
+          <!-- Found patient -->
+          <div id="foundPatientCard" class="br-found-card" hidden>
+            <span class="found-icon">👋</span>
+            <div>
+              <div class="found-name" id="foundPatientName"></div>
+              <div class="found-sub">Willkommen zurück!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- New patient message -->
+        <div id="newPatientMessage">
+          <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.25rem;">
+            Kein Konto? Kein Problem — wir nehmen Ihre Daten im letzten Schritt auf.
+          </p>
+        </div>
+
+        <div class="br-nav">
+          <button class="btn-primary" id="step0Next">Weiter →</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════
+           STEP 1 — Zahlungsart
+      ══════════════════════════════════════════════════ -->
+      <section class="br-step" id="step-1">
+        <div class="br-step-header">
+          <span class="br-step-tag">Schritt 2 von 7</span>
+          <h2>Wie bezahlen Sie?</h2>
+          <p>Wählen Sie Ihre Zahlungsart aus.</p>
+        </div>
+
+        <div class="br-card-grid">
+          <button class="br-select-card" data-value="gkv" id="pay-gkv">
+            <span class="card-icon">🏥</span>
+            <span class="card-title">GKV — Kassenpatient</span>
+            <span class="card-desc">Ich habe eine gesetzliche Krankenversicherung und eine ärztliche Verordnung</span>
+          </button>
+          <button class="br-select-card" data-value="pkv" id="pay-pkv">
+            <span class="card-icon">💼</span>
+            <span class="card-title">PKV — Privatpatient</span>
+            <span class="card-desc">Ich bin privat versichert</span>
+          </button>
+          <button class="br-select-card" data-value="selbstzahler" id="pay-selbst">
+            <span class="card-icon">💳</span>
+            <span class="card-title">Selbstzahler</span>
+            <span class="card-desc">Ich zahle die Behandlung selbst</span>
+          </button>
+          <button class="br-select-card" data-value="bg" id="pay-bg">
+            <span class="card-icon">🔧</span>
+            <span class="card-title">BG — Berufsgenossenschaft</span>
+            <span class="card-desc">Meine Behandlung ist ein Arbeits- oder Wegeunfall</span>
+          </button>
+        </div>
+        <span class="br-field-error" id="paymentTypeError" style="display:none; margin-bottom:0.5rem;"></span>
+
+        <div class="br-nav">
+          <button class="btn-ghost" id="step1Back">← Zurück</button>
+          <button class="btn-primary" id="step1Next">Weiter →</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════
+           STEP 2 — Leistung + Sitzungen
+      ══════════════════════════════════════════════════ -->
+      <section class="br-step" id="step-2">
+        <div class="br-step-header">
+          <span class="br-step-tag">Schritt 3 von 7</span>
+          <h2>Welche Leistung benötigen Sie?</h2>
+          <p>Wählen Sie die gewünschte Behandlung aus.</p>
+        </div>
+
+        <div id="servicesLoading" class="br-slots-loading">
+          <div class="spinner dark"></div> Leistungen werden geladen…
+        </div>
+
+        <div id="servicesGrid" class="br-card-grid cols-1" style="display:none;"></div>
+        <span class="br-field-error" id="serviceError" style="display:none; margin-bottom:0.5rem;"></span>
+
+        <!-- Session count — shown after service selection -->
+        <div id="sessionPicker" class="br-session-picker" hidden>
+          <label id="sessionPickerLabel">Wie viele Sitzungen möchten Sie buchen?</label>
+          <div class="session-counter">
+            <button type="button" id="sessionMinus">−</button>
+            <input type="number" id="sessionCount" value="1" min="1" max="99" />
+            <button type="button" id="sessionPlus">+</button>
+          </div>
+          <p class="br-field-hint" id="sessionHint"></p>
+        </div>
+
+        <div class="br-nav">
+          <button class="btn-ghost" id="step2Back">← Zurück</button>
+          <button class="btn-primary" id="step2Next">Weiter →</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════
+           STEP 3 — Therapeut + Datum + Uhrzeit
+      ══════════════════════════════════════════════════ -->
+      <section class="br-step" id="step-3">
+        <div class="br-step-header">
+          <span class="br-step-tag">Schritt 4 von 7</span>
+          <h2>Wann möchten Sie kommen?</h2>
+          <p>Wählen Sie Ihren Wunschtherapeuten, ein Datum und eine Uhrzeit.</p>
+        </div>
+
+        <div class="br-scheduler">
+          <!-- Team column -->
+          <div class="br-scheduler-col">
+            <h3>Therapeut</h3>
+            <div id="teamList" class="br-team-list">
+              <div class="br-slots-loading"><div class="spinner dark"></div></div>
+            </div>
+          </div>
+
+          <!-- Calendar column -->
+          <div class="br-scheduler-col">
+            <h3>Datum</h3>
+            <div class="br-calendar" id="calendar">
+              <div class="br-cal-header">
+                <button class="br-cal-nav" id="calPrev">&#8249;</button>
+                <span id="calMonthYear"></span>
+                <button class="br-cal-nav" id="calNext">&#8250;</button>
+              </div>
+              <div class="br-cal-weekdays">
+                <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+              </div>
+              <div class="br-cal-grid" id="calGrid"></div>
+            </div>
+          </div>
+
+          <!-- Slots column -->
+          <div class="br-scheduler-col">
+            <h3>Uhrzeit</h3>
+            <div id="slotsList" class="br-slots">
+              <p class="br-slots-empty">Bitte zuerst einen Tag auswählen.</p>
+            </div>
+          </div>
+        </div>
+
+        <span class="br-field-error" id="schedulerError" style="display:none; margin: 0.5rem 0;"></span>
+
+        <div class="br-nav">
+          <button class="btn-ghost" id="step3Back">← Zurück</button>
+          <button class="btn-primary" id="step3Next">Weiter →</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════
+           STEP 4 — Zusatzinfos
+      ══════════════════════════════════════════════════ -->
+      <section class="br-step" id="step-4">
+        <div class="br-step-header">
+          <span class="br-step-tag">Schritt 5 von 7</span>
+          <h2>Zusätzliche Informationen</h2>
+          <p id="step4Desc">Bitte füllen Sie die folgenden Felder aus.</p>
+        </div>
+
+        <!-- GKV fields -->
+        <div id="fields-gkv" hidden>
+          <div class="br-form">
+            <div class="br-field">
+              <label for="gkvKrankenkasse">Krankenkasse <span class="req">*</span></label>
+              <select id="gkvKrankenkasse">
+                <option value="">Bitte wählen…</option>
+              </select>
+              <span class="br-field-error" id="gkvKrankenkasseError"></span>
+            </div>
+            <div class="br-form-row">
+              <div class="br-field">
+                <label for="gkvArzt">Name des verordnenden Arztes <span class="req">*</span></label>
+                <input type="text" id="gkvArzt" placeholder="z.B. Dr. Müller" />
+                <span class="br-field-error" id="gkvArztError"></span>
+              </div>
+              <div class="br-field">
+                <label for="gkvVerordDatum">Verordnungsdatum <span class="req">*</span></label>
+                <input type="date" id="gkvVerordDatum" />
+                <span class="br-field-error" id="gkvVerordDatumError"></span>
+              </div>
+            </div>
+            <div class="br-field">
+              <label for="gkvIcd10">Diagnose ICD-10 <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+              <input type="text" id="gkvIcd10" placeholder="z.B. M54.5 – Lumbago" />
+            </div>
+            <div class="br-form-row">
+              <div class="br-field">
+                <label for="gkvHeilmittel">Heilmittel / Behandlungsart <span class="req">*</span></label>
+                <select id="gkvHeilmittel">
+                  <option value="">Bitte wählen…</option>
+                  <optgroup label="Physiotherapie">
+                    <option value="KG">KG</option>
+                    <option value="KGG">KGG</option>
+                    <option value="KMT">KMT</option>
+                    <option value="MT">MT</option>
+                    <option value="Manuelle Lymphdrainage">Manuelle Lymphdrainage</option>
+                    <option value="Schlingentisch">Schlingentisch</option>
+                    <option value="Thermotherapie">Thermotherapie</option>
+                  </optgroup>
+                  <optgroup label="Ergotherapie">
+                    <option value="Motorisch-funktionell">Motorisch-funktionell</option>
+                    <option value="Sensomotorisch-perzeptiv">Sensomotorisch-perzeptiv</option>
+                    <option value="Neuropsychologisch">Neuropsychologisch</option>
+                    <option value="Psychosozial">Psychosozial</option>
+                  </optgroup>
+                  <optgroup label="Logopädie">
+                    <option value="Schlucktherapie">Schlucktherapie</option>
+                    <option value="Stimmtherapie">Stimmtherapie</option>
+                    <option value="Sprachtherapie">Sprachtherapie</option>
+                    <option value="Redeflussstörung">Redeflussstörung</option>
+                  </optgroup>
+                  <optgroup label="Podologie">
+                    <option value="Hornhautabtragung">Hornhautabtragung</option>
+                    <option value="Nagelpflege">Nagelpflege</option>
+                    <option value="Nagelkorrekturspange">Nagelkorrekturspange</option>
+                    <option value="Druckentlastung">Druckentlastung</option>
+                  </optgroup>
+                  <optgroup label="Sonstiges">
+                    <option value="Sonstiges">Sonstiges (Freitext)</option>
+                  </optgroup>
+                </select>
+                <span class="br-field-error" id="gkvHeilmittelError"></span>
+              </div>
+              <div class="br-field">
+                <label for="gkvAnzahl">Anzahl laut Verordnung <span class="req">*</span></label>
+                <input type="number" id="gkvAnzahl" min="1" max="99" placeholder="z.B. 6" />
+                <span class="br-field-error" id="gkvAnzahlError"></span>
+              </div>
+            </div>
+            <div class="br-form-row">
+              <div class="br-field">
+                <label for="gkvFrequenz">Frequenz <span class="req">*</span></label>
+                <select id="gkvFrequenz">
+                  <option value="">Bitte wählen…</option>
+                  <option value="1x/Woche">1x/Woche</option>
+                  <option value="2x/Woche">2x/Woche</option>
+                  <option value="3x/Woche">3x/Woche</option>
+                  <option value="Täglich">Täglich</option>
+                  <option value="Sonstiges">Sonstiges</option>
+                </select>
+                <span class="br-field-error" id="gkvFrequenzError"></span>
+              </div>
+              <div class="br-field">
+                <label>Art der Verordnung <span class="req">*</span></label>
+                <div class="br-radio-group">
+                  <label><input type="radio" name="verordnungTyp" value="Erstverordnung" /> Erstverordnung</label>
+                  <label><input type="radio" name="verordnungTyp" value="Folgeverordnung" /> Folgeverordnung</label>
+                </div>
+                <span class="br-field-error" id="gkvVerordnungTypError"></span>
+              </div>
+            </div>
+            <div class="br-field">
+              <label class="br-checkbox-wrap">
+                <input type="checkbox" id="gkvDoppelbehandlung" />
+                <span>Doppelbehandlung laut Verordnung</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- PKV fields -->
+        <div id="fields-pkv" hidden>
+          <div class="br-form">
+            <div class="br-field">
+              <label for="pkvVersicherung">Name Ihrer Privatversicherung <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+              <input type="text" id="pkvVersicherung" placeholder="z.B. Allianz PKV" />
+            </div>
+            <div class="br-field">
+              <label>Haben Sie eine ärztliche Überweisung? <span class="req">*</span></label>
+              <div class="br-radio-group">
+                <label><input type="radio" name="pkvUeberweisung" value="ja" id="pkvUeberweisungJa" /> Ja</label>
+                <label><input type="radio" name="pkvUeberweisung" value="nein" id="pkvUeberweisungNein" /> Nein</label>
+              </div>
+              <span class="br-field-error" id="pkvUeberweisungError"></span>
+            </div>
+            <div class="br-field" id="pkvArztWrap" hidden>
+              <label for="pkvArzt">Name des Arztes <span class="req">*</span></label>
+              <input type="text" id="pkvArzt" placeholder="z.B. Dr. Müller" />
+              <span class="br-field-error" id="pkvArztError"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selbstzahler — nothing here (shown as message) -->
+        <div id="fields-selbstzahler" hidden>
+          <div class="br-info-box">
+            <span class="info-icon">ℹ️</span>
+            <span>Als Selbstzahler sind keine weiteren Angaben erforderlich. Bitte fahren Sie fort.</span>
+          </div>
+        </div>
+
+        <!-- BG fields -->
+        <div id="fields-bg" hidden>
+          <div class="br-form">
+            <div class="br-form-row">
+              <div class="br-field">
+                <label for="bgAktenzeichen">Aktenzeichen <span class="req">*</span></label>
+                <input type="text" id="bgAktenzeichen" placeholder="z.B. 12345/2026" />
+                <span class="br-field-error" id="bgAktenzeichenError"></span>
+              </div>
+              <div class="br-field">
+                <label for="bgName">Name der Berufsgenossenschaft <span class="req">*</span></label>
+                <input type="text" id="bgName" placeholder="z.B. BG BAU" />
+                <span class="br-field-error" id="bgNameError"></span>
+              </div>
+            </div>
+            <div class="br-form-row">
+              <div class="br-field">
+                <label for="bgUnfalldatum">Unfalldatum <span class="req">*</span></label>
+                <input type="date" id="bgUnfalldatum" />
+                <span class="br-field-error" id="bgUnfalldatumError"></span>
+              </div>
+              <div class="br-field">
+                <label for="bgDurchgangsarzt">Name des Durchgangsarztes <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <input type="text" id="bgDurchgangsarzt" placeholder="z.B. Dr. Schmidt" />
+              </div>
+            </div>
+            <div class="br-field">
+              <label for="bgDiagnose">Diagnose <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+              <input type="text" id="bgDiagnose" placeholder="z.B. Fraktur Handgelenk" />
+            </div>
+            <div class="br-form-row">
+              <div class="br-field">
+                <label for="bgBehandlungsart">Behandlungsart <span class="req">*</span></label>
+                <select id="bgBehandlungsart">
+                  <option value="">Bitte wählen…</option>
+                  <optgroup label="Physiotherapie">
+                    <option value="KG">KG</option>
+                    <option value="KGG">KGG</option>
+                    <option value="KMT">KMT</option>
+                    <option value="MT">MT</option>
+                    <option value="Manuelle Lymphdrainage">Manuelle Lymphdrainage</option>
+                    <option value="Schlingentisch">Schlingentisch</option>
+                    <option value="Thermotherapie">Thermotherapie</option>
+                  </optgroup>
+                  <optgroup label="Ergotherapie">
+                    <option value="Motorisch-funktionell">Motorisch-funktionell</option>
+                    <option value="Sensomotorisch-perzeptiv">Sensomotorisch-perzeptiv</option>
+                    <option value="Neuropsychologisch">Neuropsychologisch</option>
+                    <option value="Psychosozial">Psychosozial</option>
+                  </optgroup>
+                  <optgroup label="Logopädie">
+                    <option value="Schlucktherapie">Schlucktherapie</option>
+                    <option value="Stimmtherapie">Stimmtherapie</option>
+                    <option value="Sprachtherapie">Sprachtherapie</option>
+                    <option value="Redeflussstörung">Redeflussstörung</option>
+                  </optgroup>
+                  <optgroup label="Podologie">
+                    <option value="Hornhautabtragung">Hornhautabtragung</option>
+                    <option value="Nagelpflege">Nagelpflege</option>
+                    <option value="Nagelkorrekturspange">Nagelkorrekturspange</option>
+                    <option value="Druckentlastung">Druckentlastung</option>
+                  </optgroup>
+                  <optgroup label="Sonstiges">
+                    <option value="Sonstiges">Sonstiges</option>
+                  </optgroup>
+                </select>
+                <span class="br-field-error" id="bgBehandlungsartError"></span>
+              </div>
+              <div class="br-field">
+                <label for="bgAnzahl">Anzahl laut BG-Bescheid <span class="req">*</span></label>
+                <input type="number" id="bgAnzahl" min="1" max="99" placeholder="z.B. 10" />
+                <span class="br-field-error" id="bgAnzahlError"></span>
+              </div>
+            </div>
+            <div class="br-field">
+              <label for="bgFrequenz">Frequenz <span class="req">*</span></label>
+              <select id="bgFrequenz">
+                <option value="">Bitte wählen…</option>
+                <option value="1x/Woche">1x/Woche</option>
+                <option value="2x/Woche">2x/Woche</option>
+                <option value="3x/Woche">3x/Woche</option>
+                <option value="Täglich">Täglich</option>
+                <option value="Sonstiges">Sonstiges</option>
+              </select>
+              <span class="br-field-error" id="bgFrequenzError"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="br-nav">
+          <button class="btn-ghost" id="step4Back">← Zurück</button>
+          <button class="btn-primary" id="step4Next">Weiter →</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════
+           STEP 5 — Patientendaten (new patients only)
+      ══════════════════════════════════════════════════ -->
+      <section class="br-step" id="step-5">
+        <div class="br-step-header">
+          <span class="br-step-tag">Schritt 6 von 7</span>
+          <h2>Ihre Daten</h2>
+          <p>Damit die Praxis Sie kontaktieren kann, benötigen wir Ihre persönlichen Daten.</p>
+        </div>
+
+        <div class="br-form" style="max-width:520px;">
+          <div class="br-form-row">
+            <div class="br-field">
+              <label for="patVorname">Vorname <span class="req">*</span></label>
+              <input type="text" id="patVorname" placeholder="Max" autocomplete="given-name" />
+              <span class="br-field-error" id="patVornameError"></span>
+            </div>
+            <div class="br-field">
+              <label for="patNachname">Nachname <span class="req">*</span></label>
+              <input type="text" id="patNachname" placeholder="Mustermann" autocomplete="family-name" />
+              <span class="br-field-error" id="patNachnameError"></span>
+            </div>
+          </div>
+          <div class="br-field">
+            <label for="patGeburt">Geburtsdatum <span class="req">*</span></label>
+            <input type="date" id="patGeburt" autocomplete="bday" />
+            <span class="br-field-error" id="patGeburtError"></span>
+          </div>
+          <div class="br-field">
+            <label for="patEmail">E-Mail <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <input type="email" id="patEmail" placeholder="max@beispiel.de" autocomplete="email" />
+            <span class="br-field-error" id="patEmailError"></span>
+            <div class="br-info-box" style="margin-top:0.5rem;">
+              <span class="info-icon">📧</span>
+              <span>Mit Ihrer E-Mail erhalten Sie eine Terminbestätigung und Erinnerungen.</span>
+            </div>
+          </div>
+          <div class="br-field">
+            <label for="patTelefon">Telefon <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <input type="tel" id="patTelefon" placeholder="+49 151 12345678" autocomplete="tel" />
+          </div>
+        </div>
+
+        <div class="br-nav">
+          <button class="btn-ghost" id="step5Back">← Zurück</button>
+          <button class="btn-primary" id="step5Next">Weiter →</button>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════
+           STEP 6 — Notiz + DSGVO + Zusammenfassung + Senden
+      ══════════════════════════════════════════════════ -->
+      <section class="br-step" id="step-6">
+        <div class="br-step-header">
+          <span class="br-step-tag">Schritt 7 von 7</span>
+          <h2>Zusammenfassung & Absenden</h2>
+          <p>Bitte prüfen Sie Ihre Angaben und senden Sie die Anfrage ab.</p>
+        </div>
+
+        <!-- Summary -->
+        <div class="br-summary-card" id="summaryCard">
+          <h3>Ihre Anfrage</h3>
+          <div id="summaryRows"></div>
+        </div>
+
+        <!-- Extra note -->
+        <div class="br-field" style="margin-bottom:1.25rem;">
+          <label for="notizen">Zusätzliche Hinweise für die Praxis <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <textarea id="notizen" maxlength="500" placeholder="z.B. Rollstuhlzugang benötigt, Allergien, besondere Wünsche…"></textarea>
+          <div class="br-char-count"><span id="notizenCount">0</span>/500</div>
+        </div>
+
+        <!-- DSGVO -->
+        <div class="br-dsgvo">
+          <h3>Datenschutz</h3>
+          <label class="br-checkbox-wrap">
+            <input type="checkbox" id="dsgvo1" />
+            <span>
+              Ich stimme der Verarbeitung meiner personenbezogenen Daten gemäß der
+              <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a> zu.
+              <span class="req"> *</span>
+            </span>
+          </label>
+          <label class="br-checkbox-wrap">
+            <input type="checkbox" id="dsgvo2" />
+            <span>
+              Ich bin damit einverstanden, dass meine Gesundheitsdaten (soweit angegeben) zum Zweck
+              der Terminvermittlung gemäß Art. 9 Abs. 2 lit. h DSGVO verarbeitet werden.
+              <span class="req"> *</span>
+            </span>
+          </label>
+          <span class="br-field-error" id="dsgvoError" style="display:none;"></span>
+        </div>
+
+        <div class="br-nav">
+          <button class="btn-ghost" id="step6Back">← Zurück</button>
+          <button class="btn-primary" id="submitBtn">
+            <span id="submitLabel">Anfrage senden</span>
+            <div class="spinner" id="submitSpinner" style="display:none;"></div>
+          </button>
+        </div>
+        <span class="br-field-error" id="submitError" style="display:none; margin-top:0.75rem;"></span>
+      </section>
+
+    </div><!-- /.br-container -->
+  </main>
+
+  <footer class="br-footer">
+    <a href="/datenschutz.html" target="_blank">Datenschutzerklärung</a> ·
+    <a href="/impressum.html" target="_blank">Impressum</a>
+  </footer>
+
+</div><!-- /#app -->
+
+<script type="module" src="booking-request.js?v=20260628"></script>
+</body>
+</html>

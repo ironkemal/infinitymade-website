@@ -2607,6 +2607,61 @@
           </div>
         </section>
 
+        <!-- TERMIN-ANFRAGEN PANEL -->
+        <div id="panel-anfragen" class="panel">
+          <div class="panel-header">
+            <div>
+              <h2 data-i18n="nav_anfragen">Termin-Anfragen</h2>
+              <p data-i18n="anfragen_sub">Eingehende Patientenanfragen</p>
+            </div>
+            <div class="auto-accept-card" style="display:flex;align-items:center;gap:16px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:12px 16px">
+              <div>
+                <div style="font-weight:600;color:var(--text-main);font-size:14px" data-i18n="anfragen_auto_accept">Automatisch akzeptieren</div>
+                <div style="font-size:12px;color:var(--text-sub)" data-i18n="anfragen_auto_accept_sub">Anfragen werden sofort bestätigt</div>
+              </div>
+              <label class="toggle-switch" style="flex-shrink:0">
+                <input type="checkbox" id="autoAcceptToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div id="autoAcceptTypes" class="hidden" style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+            <p style="color:var(--text-main);font-size:14px;font-weight:600;margin-bottom:12px" data-i18n="anfragen_auto_types">Automatisch akzeptieren für:</p>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <label style="display:flex;align-items:center;gap:10px;color:var(--text-main);font-size:14px;cursor:pointer">
+                <input type="checkbox" value="selbstzahler" style="accent-color:var(--primary)"> Selbstzahler
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;color:var(--text-main);font-size:14px;cursor:pointer">
+                <input type="checkbox" value="pkv" style="accent-color:var(--primary)"> Privatpatienten (PKV)
+              </label>
+            </div>
+            <div style="background:var(--warning-bg,rgba(234,179,8,0.1));border:1px solid var(--warning-border,rgba(234,179,8,0.3));border-radius:8px;padding:12px;margin-top:12px;color:var(--text-main);font-size:13px" data-i18n="anfragen_gkv_warning">
+              ⚠️ GKV- und BG-Patienten müssen manuell bestätigt werden (Verordnungsprüfung erforderlich).
+            </div>
+          </div>
+
+          <!-- Booking link section -->
+          <div style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px">
+            <div style="font-size:14px;font-weight:600;color:var(--text-main);margin-bottom:4px" data-i18n="anfragen_link_title">Buchungslink</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-bottom:10px" data-i18n="anfragen_link_sub">Teilen Sie diesen Link mit Ihren Patienten</div>
+            <div style="display:flex;gap:8px">
+              <input id="bookingRequestLinkInput" type="text" readonly class="input-field" style="flex:1;font-size:13px;cursor:text" value="">
+              <button id="copyBookingLinkBtn" class="btn-secondary" style="white-space:nowrap;padding:8px 14px;font-size:13px" data-i18n="anfragen_copy_link">Link kopieren</button>
+            </div>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="anfragen-tabs" style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;padding:4px">
+            <button class="tab-btn active" data-status="pending" style="flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--text-sub);font-size:13px;cursor:pointer;font-weight:500" data-i18n="anfragen_open">Offen</button>
+            <button class="tab-btn" data-status="approved" style="flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--text-sub);font-size:13px;cursor:pointer;font-weight:500" data-i18n="anfragen_approved">Bestätigt</button>
+            <button class="tab-btn" data-status="declined" style="flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--text-sub);font-size:13px;cursor:pointer;font-weight:500" data-i18n="anfragen_declined">Abgelehnt</button>
+          </div>
+
+          <!-- List -->
+          <div id="anfragenList" class="anfragen-list"></div>
+        </div>
+
       </main>
     </div>
   </div>

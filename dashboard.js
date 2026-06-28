@@ -132,7 +132,25 @@ const T = {
     fuss_notizen: 'Notizen',
     fuss_foto: 'Fotos',
     fuss_save: 'Speichern',
-    fuss_no_history: 'Noch keine Einträge.'
+    fuss_no_history: 'Noch keine Einträge.',
+    nav_anfragen: 'Termin-Anfragen',
+    anfragen_sub: 'Eingehende Patientenanfragen',
+    anfragen_open: 'Offen', anfragen_approved: 'Bestätigt', anfragen_declined: 'Abgelehnt',
+    anfragen_annehmen: 'Annehmen', anfragen_ablehnen: 'Ablehnen',
+    anfragen_empty: 'Keine Anfragen.',
+    anfragen_auto_accept: 'Automatisch akzeptieren',
+    anfragen_auto_accept_sub: 'Anfragen werden sofort bestätigt',
+    anfragen_auto_types: 'Automatisch akzeptieren für:',
+    anfragen_gkv_warning: 'GKV- und BG-Patienten müssen manuell bestätigt werden (Verordnungsprüfung erforderlich).',
+    anfragen_decline_reason: 'Ablehnungsgrund (optional)',
+    anfragen_confirm_approve: 'Termin bestätigen',
+    anfragen_select_employee: 'Therapeuten wählen',
+    anfragen_detail_title: 'Anfrage-Details',
+    anfragen_patient: 'Patient', anfragen_service: 'Leistung',
+    anfragen_date: 'Wunschtermin', anfragen_payment: 'Kassentyp',
+    anfragen_sessions: 'Sitzungen', anfragen_notizen: 'Notizen',
+    anfragen_link_title: 'Buchungslink', anfragen_link_sub: 'Teilen Sie diesen Link mit Ihren Patienten',
+    anfragen_copy_link: 'Link kopieren',
   },
   en: {
     logout: 'Sign out',
@@ -227,7 +245,25 @@ const T = {
     fuss_new: 'New Foot Status', fuss_history: 'History (last 10)',
     fuss_patient: 'Patient', fuss_datum: 'Date', fuss_seite: 'Side',
     fuss_wagner: 'Wagner Grade', fuss_befunde: 'Findings', fuss_notizen: 'Notes',
-    fuss_foto: 'Photos', fuss_save: 'Save', fuss_no_history: 'No entries yet.'
+    fuss_foto: 'Photos', fuss_save: 'Save', fuss_no_history: 'No entries yet.',
+    nav_anfragen: 'Appointment Requests',
+    anfragen_sub: 'Incoming patient requests',
+    anfragen_open: 'Open', anfragen_approved: 'Confirmed', anfragen_declined: 'Declined',
+    anfragen_annehmen: 'Approve', anfragen_ablehnen: 'Decline',
+    anfragen_empty: 'No requests.',
+    anfragen_auto_accept: 'Auto-accept',
+    anfragen_auto_accept_sub: 'Requests are confirmed immediately',
+    anfragen_auto_types: 'Auto-accept for:',
+    anfragen_gkv_warning: 'GKV and BG patients must be confirmed manually (prescription verification required).',
+    anfragen_decline_reason: 'Decline reason (optional)',
+    anfragen_confirm_approve: 'Confirm appointment',
+    anfragen_select_employee: 'Select therapist',
+    anfragen_detail_title: 'Request details',
+    anfragen_patient: 'Patient', anfragen_service: 'Service',
+    anfragen_date: 'Preferred date', anfragen_payment: 'Payment type',
+    anfragen_sessions: 'Sessions', anfragen_notizen: 'Notes',
+    anfragen_link_title: 'Booking link', anfragen_link_sub: 'Share this link with your patients',
+    anfragen_copy_link: 'Copy link',
   },
   tr: {
     logout: 'Çıkış',
@@ -322,7 +358,25 @@ const T = {
     fuss_new: 'Yeni Ayak Durumu', fuss_history: 'Geçmiş (son 10)',
     fuss_patient: 'Hasta', fuss_datum: 'Tarih', fuss_seite: 'Taraf',
     fuss_wagner: 'Wagner Derecesi', fuss_befunde: 'Bulgular', fuss_notizen: 'Notlar',
-    fuss_foto: 'Fotoğraflar', fuss_save: 'Kaydet', fuss_no_history: 'Henüz kayıt yok.'
+    fuss_foto: 'Fotoğraflar', fuss_save: 'Kaydet', fuss_no_history: 'Henüz kayıt yok.',
+    nav_anfragen: 'Randevu Talepleri',
+    anfragen_sub: 'Gelen hasta talepleri',
+    anfragen_open: 'Açık', anfragen_approved: 'Onaylandı', anfragen_declined: 'Reddedildi',
+    anfragen_annehmen: 'Onayla', anfragen_ablehnen: 'Reddet',
+    anfragen_empty: 'Talep yok.',
+    anfragen_auto_accept: 'Otomatik onayla',
+    anfragen_auto_accept_sub: 'Talepler anında onaylanır',
+    anfragen_auto_types: 'Şunlar için otomatik onayla:',
+    anfragen_gkv_warning: 'GKV ve BG hastaları manuel onay gerektirir (reçete kontrolü şart).',
+    anfragen_decline_reason: 'Red gerekçesi (isteğe bağlı)',
+    anfragen_confirm_approve: 'Randevuyu onayla',
+    anfragen_select_employee: 'Terapist seç',
+    anfragen_detail_title: 'Talep detayları',
+    anfragen_patient: 'Hasta', anfragen_service: 'Hizmet',
+    anfragen_date: 'Tercih edilen tarih', anfragen_payment: 'Sigorta tipi',
+    anfragen_sessions: 'Seans', anfragen_notizen: 'Notlar',
+    anfragen_link_title: 'Rezervasyon linki', anfragen_link_sub: 'Bu linki hastalarınızla paylaşın',
+    anfragen_copy_link: 'Linki kopyala',
   }
 };
 
@@ -375,6 +429,7 @@ const ICON = {
   whatsapp:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
   clipboard:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
   link:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  bell:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
 };
 
 const SECTOR_PANELS = {
@@ -382,6 +437,7 @@ const SECTOR_PANELS = {
     { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'anfragen', icon: ICON.bell, key: 'nav_anfragen', roles: ['owner'], group: 'termine' },
     { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
     { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
@@ -397,6 +453,7 @@ const SECTOR_PANELS = {
     { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'anfragen', icon: ICON.bell, key: 'nav_anfragen', roles: ['owner'], group: 'termine' },
     { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'fahrtenbuch', icon: ICON.car, key: 'nav_fahrtenbuch', roles: ['owner', 'employee'], group: 'patienten' },
@@ -422,6 +479,7 @@ const SECTOR_PANELS = {
     { id: 'overview',          icon: ICON.overview,   key: 'nav_overview',          roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'ueberblick',        icon: ICON.overview,   key: 'nav_ueberblick',        roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'calendar',          icon: ICON.calendar,   key: 'nav_calendar',          roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'anfragen',          icon: ICON.bell,       key: 'nav_anfragen',          roles: ['owner'],             group: 'termine' },
     { id: 'kunden',            icon: ICON.users,      key: 'nav_kunden',            roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'notizen',           icon: ICON.notes,      key: 'nav_notizen',           roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'warteliste',        icon: ICON.notes,      key: 'nav_warteliste',        roles: ['owner'],             group: 'patienten' },
@@ -445,6 +503,7 @@ const SECTOR_PANELS = {
     { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
     { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
+    { id: 'anfragen', icon: ICON.bell, key: 'nav_anfragen', roles: ['owner'], group: 'termine' },
     { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
@@ -672,7 +731,8 @@ async function renderSidebar() {
       btn.className = 'sidebar-item' + (item.id === activePanel ? ' active' : '');
       btn.dataset.panel = item.id;
       btn.setAttribute('type', 'button');
-      btn.innerHTML = '<span class="icon">' + item.icon + '</span><span>' + t(item.key) + '</span>';
+      const badgeHtml = item.id === 'anfragen' ? '<span id="anfragenNavBadge" class="nav-badge" style="display:none"></span>' : '';
+      btn.innerHTML = '<span class="icon">' + item.icon + '</span><span>' + t(item.key) + '</span>' + badgeHtml;
       btn.addEventListener('click', () => switchPanel(item.id));
       itemsEl.appendChild(btn);
     });
@@ -768,6 +828,7 @@ async function switchPanel(id) {
   if (id === 'belegliste') loadBelegliste();
   if (id === 'mahnwesen') loadMahnwesen();
   if (id === 'warteliste') loadWarteliste();
+  if (id === 'anfragen') initAnfragenPanel();
   if (id === 'statistik') loadStatistik();
   if (id === 'anamnese') loadAnamnese();
   if (id === 'feedback') loadFeedbacks();
@@ -21095,3 +21156,287 @@ async function fetchAnwesenheitReport() {
 }
 
 
+// ============================================================================
+// TERMIN-ANFRAGEN PANEL
+// ============================================================================
+let anfragenCurrentStatus = 'pending';
+let anfragenCurrentRequests = [];
+
+async function loadAnfragen(status) {
+  anfragenCurrentStatus = status || anfragenCurrentStatus;
+  const list = document.getElementById('anfragenList');
+  if (!list) return;
+  list.innerHTML = '<div class="loading-spinner" style="margin:32px auto"></div>';
+
+  const ownerId = currentBusiness?.id || currentProfile?.id;
+  if (!ownerId) return;
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const r = await fetch(`${API}/booking-request/list?owner_id=${ownerId}&status=${anfragenCurrentStatus}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const json = await r.json();
+    anfragenCurrentRequests = json.requests || [];
+    renderAnfragenList(anfragenCurrentRequests);
+  } catch (e) {
+    list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>';
+    console.error('[anfragen]', e);
+  }
+}
+
+function renderAnfragenList(requests) {
+  const list = document.getElementById('anfragenList');
+  if (!list) return;
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
+
+  if (!requests.length) {
+    list.innerHTML = `<p style="color:var(--text-sub);padding:24px;text-align:center">${tl.anfragen_empty}</p>`;
+    return;
+  }
+
+  const paymentBadge = { gkv: 'GKV', pkv: 'PKV', selbstzahler: 'SZ', bg: 'BG' };
+  const paymentColor = { gkv: '#2563eb', pkv: '#7c3aed', selbstzahler: '#059669', bg: '#d97706' };
+
+  list.innerHTML = requests.map(req => {
+    const pat = req.patients;
+    const patName = pat ? `${pat.vorname} ${pat.nachname}` : '—';
+    const patDob = pat?.geburtsdatum ? new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : '';
+    const svcName = req.services?.title || '—';
+    const badge = paymentBadge[req.payment_type] || req.payment_type?.toUpperCase();
+    const badgeColor = paymentColor[req.payment_type] || '#6b7280';
+    const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
+    const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
+    const createdAt = new Date(req.created_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' });
+
+    const actions = req.status === 'pending' ? `
+      <div class="anfragen-card-actions">
+        <button class="btn-sm btn-success" onclick="approveAnfrage('${req.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
+        <button class="btn-sm btn-danger" onclick="declineAnfrage('${req.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
+      </div>` : '';
+
+    return `<div class="anfragen-card" onclick="showAnfrageDetail('${req.id}')">
+      <div class="anfragen-card-top">
+        <div class="anfragen-card-patient">
+          <strong>${patName}</strong>
+          ${patDob ? `<span class="text-sub">${patDob}</span>` : ''}
+        </div>
+        <span class="anfragen-badge" style="background:${badgeColor}20;color:${badgeColor};border:1px solid ${badgeColor}40">${badge}</span>
+      </div>
+      <div class="anfragen-card-info">
+        <span>${svcName} · ${req.session_count} Sitzung(en)</span>
+        <span>${prefDate}${prefTime ? ' · ' + prefTime : ''}</span>
+      </div>
+      <div class="anfragen-card-footer">
+        <span class="text-sub" style="font-size:12px">${createdAt}</span>
+        ${actions}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update badge count
+  updateAnfragenBadge(requests.filter(r => r.status === 'pending').length);
+}
+
+function updateAnfragenBadge(count) {
+  const badge = document.getElementById('anfragenNavBadge');
+  if (!badge) return;
+  badge.textContent = count > 0 ? count : '';
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+function showAnfrageDetail(requestId) {
+  const req = anfragenCurrentRequests.find(r => r.id === requestId);
+  if (!req) return;
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
+  const pat = req.patients;
+  const patName = pat ? `${pat.vorname} ${pat.nachname}` : '—';
+  const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
+  const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
+  const paymentLabel = { gkv: 'GKV – Kassenpatient', pkv: 'PKV – Privatpatient', selbstzahler: 'Selbstzahler', bg: 'BG – Berufsgenossenschaft' };
+
+  const extraFields = [];
+  if (req.payment_type === 'gkv') {
+    if (req.krankenkasse) extraFields.push(['Krankenkasse', req.krankenkasse]);
+    if (req.arzt_name) extraFields.push(['Arzt', req.arzt_name]);
+    if (req.verordnung_datum) extraFields.push(['Verordnungsdatum', new Date(req.verordnung_datum).toLocaleDateString('de-DE')]);
+    if (req.behandlungsart) extraFields.push(['Behandlungsart', req.behandlungsart]);
+    if (req.verordnung_sitzungen) extraFields.push(['Verordnete Sitzungen', req.verordnung_sitzungen]);
+    if (req.frequenz) extraFields.push(['Frequenz', req.frequenz]);
+    if (req.verordnung_typ) extraFields.push(['Verordnungsart', req.verordnung_typ === 'erst' ? 'Erstverordnung' : 'Folgeverordnung']);
+    if (req.doppelbehandlung) extraFields.push(['Doppelbehandlung', 'Ja']);
+    if (req.icd10_diagnose) extraFields.push(['ICD-10', req.icd10_diagnose]);
+  } else if (req.payment_type === 'pkv') {
+    if (req.pkv_versicherung) extraFields.push(['Versicherung', req.pkv_versicherung]);
+    if (req.arzt_ueberweisung) extraFields.push(['Ärztliche Überweisung', req.arzt_ueberweisung_name || 'Ja']);
+  } else if (req.payment_type === 'bg') {
+    if (req.bg_aktenzeichen) extraFields.push(['Aktenzeichen', req.bg_aktenzeichen]);
+    if (req.bg_name) extraFields.push(['Berufsgenossenschaft', req.bg_name]);
+    if (req.unfalldatum) extraFields.push(['Unfalldatum', new Date(req.unfalldatum).toLocaleDateString('de-DE')]);
+    if (req.durchgangsarzt) extraFields.push(['Durchgangsarzt', req.durchgangsarzt]);
+    if (req.behandlungsart) extraFields.push(['Behandlungsart', req.behandlungsart]);
+  }
+
+  const extraHTML = extraFields.map(([k,v]) => `<div class="detail-row"><span class="detail-label">${k}</span><span>${v}</span></div>`).join('');
+  const isPending = req.status === 'pending';
+
+  showInputModal(tl.anfragen_detail_title, `
+    <div class="anfragen-detail">
+      <div class="detail-row"><span class="detail-label">${tl.anfragen_patient}</span><span>${patName}${pat?.geburtsdatum ? ' · ' + new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : ''}</span></div>
+      <div class="detail-row"><span class="detail-label">${tl.anfragen_payment}</span><span>${paymentLabel[req.payment_type] || req.payment_type}</span></div>
+      <div class="detail-row"><span class="detail-label">${tl.anfragen_service}</span><span>${req.services?.title || '—'} · ${req.session_count} Sitzung(en)</span></div>
+      <div class="detail-row"><span class="detail-label">${tl.anfragen_date}</span><span>${prefDate}${prefTime ? ' um ' + prefTime : ''}</span></div>
+      ${extraHTML}
+      ${req.notizen ? `<div class="detail-row"><span class="detail-label">${tl.anfragen_notizen}</span><span>${req.notizen}</span></div>` : ''}
+      ${pat?.email ? `<div class="detail-row"><span class="detail-label">E-Mail</span><span>${pat.email}</span></div>` : ''}
+      ${pat?.telefon ? `<div class="detail-row"><span class="detail-label">Telefon</span><span>${pat.telefon}</span></div>` : ''}
+    </div>
+    ${isPending ? `
+      <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="approveAnfrage('${req.id}');closeModal()" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
+        <button class="btn-danger" onclick="declineAnfrage('${req.id}');closeModal()" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
+      </div>` : ''}
+  `, null);
+}
+
+async function approveAnfrage(requestId) {
+  const ownerId = currentBusiness?.id || currentProfile?.id;
+  const req = anfragenCurrentRequests.find(r => r.id === requestId);
+
+  // If no employee_id, ask for one first
+  if (!req?.employee_id) {
+    const { data: teamData } = await supabase.from('profiles')
+      .select('id, full_name').eq('owner_id', ownerId).eq('role', 'employee');
+    const allPeople = [{ id: currentProfile.id, full_name: currentProfile.full_name + ' (Sie)' }, ...(teamData || [])];
+    const lang = document.getElementById('langSelect')?.value || 'de';
+    const tl = T[lang] || T.de;
+
+    const empOptions = allPeople.map(p => `<option value="${p.id}">${p.full_name}</option>`).join('');
+    showInputModal(tl.anfragen_select_employee, `
+      <select id="approveEmpSelect" class="input-field" style="width:100%">
+        <option value="">— Therapeuten wählen —</option>
+        ${empOptions}
+      </select>
+    `, async () => {
+      const empId = document.getElementById('approveEmpSelect')?.value;
+      if (!empId) return showToast('Bitte einen Therapeuten wählen', 'error');
+      await doApproveAnfrage(requestId, ownerId, empId);
+    });
+    return;
+  }
+
+  await doApproveAnfrage(requestId, ownerId, null);
+}
+
+async function doApproveAnfrage(requestId, ownerId, employeeId) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const body = { request_id: requestId, owner_id: ownerId };
+    if (employeeId) body.employee_id = employeeId;
+    const r = await fetch(`${API}/booking-request/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    const json = await r.json();
+    if (!r.ok) throw new Error(json.error || 'Fehler');
+    showToast('Termin bestätigt ✓', 'success');
+    loadAnfragen('pending');
+  } catch (e) {
+    showToast(e.message || 'Fehler beim Bestätigen', 'error');
+  }
+}
+
+async function declineAnfrage(requestId) {
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
+  showInputModal(tl.anfragen_ablehnen, `
+    <textarea id="declineReasonInput" class="input-field" style="width:100%;height:80px;resize:vertical" placeholder="${tl.anfragen_decline_reason}"></textarea>
+  `, async () => {
+    const reason = document.getElementById('declineReasonInput')?.value?.trim() || '';
+    const ownerId = currentBusiness?.id || currentProfile?.id;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const r = await fetch(`${API}/booking-request/decline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ request_id: requestId, owner_id: ownerId, reason })
+      });
+      const json = await r.json();
+      if (!r.ok) throw new Error(json.error || 'Fehler');
+      showToast('Anfrage abgelehnt', 'info');
+      loadAnfragen(anfragenCurrentStatus);
+    } catch (e) {
+      showToast(e.message || 'Fehler beim Ablehnen', 'error');
+    }
+  });
+}
+
+function initAnfragenPanel() {
+  // Tab buttons
+  document.querySelectorAll('#panel-anfragen .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#panel-anfragen .tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadAnfragen(btn.dataset.status);
+    });
+  });
+
+  // Auto-accept toggle
+  const toggle = document.getElementById('autoAcceptToggle');
+  const typesDiv = document.getElementById('autoAcceptTypes');
+  if (toggle && typesDiv) {
+    // Load current setting
+    const ownerId = currentBusiness?.id || currentProfile?.id;
+    supabase.from('profiles').select('booking_auto_approve, booking_auto_approve_types').eq('id', ownerId).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          toggle.checked = data.booking_auto_approve || false;
+          typesDiv.classList.toggle('hidden', !data.booking_auto_approve);
+          const types = data.booking_auto_approve_types || [];
+          document.querySelectorAll('#autoAcceptTypes input[type="checkbox"]').forEach(cb => {
+            cb.checked = types.includes(cb.value);
+          });
+        }
+      });
+
+    toggle.addEventListener('change', async () => {
+      const isOn = toggle.checked;
+      typesDiv.classList.toggle('hidden', !isOn);
+      const types = isOn ? Array.from(document.querySelectorAll('#autoAcceptTypes input[type="checkbox"]:checked')).map(cb => cb.value) : [];
+      await supabase.from('profiles').update({ booking_auto_approve: isOn, booking_auto_approve_types: types }).eq('id', ownerId);
+      showToast(isOn ? 'Auto-Accept aktiviert' : 'Auto-Accept deaktiviert', 'info');
+    });
+
+    document.querySelectorAll('#autoAcceptTypes input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', async () => {
+        if (!toggle.checked) return;
+        const types = Array.from(document.querySelectorAll('#autoAcceptTypes input[type="checkbox"]:checked')).map(c => c.value);
+        await supabase.from('profiles').update({ booking_auto_approve_types: types }).eq('id', ownerId);
+      });
+    });
+  }
+
+  // Booking link
+  const ownerId = currentBusiness?.id || currentProfile?.id;
+  if (ownerId) {
+    const linkInput = document.getElementById('bookingRequestLinkInput');
+    const link = `https://app.praxura.de/booking-request.html?business=${ownerId}`;
+    if (linkInput) linkInput.value = link;
+    document.getElementById('copyBookingLinkBtn')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(link).then(() => showToast('Link kopiert!', 'success'));
+    });
+  }
+
+  loadAnfragen('pending');
+}
+
+// Make approve/decline/detail globally available for onclick handlers
+window.approveAnfrage = approveAnfrage;
+window.declineAnfrage = declineAnfrage;
+window.showAnfrageDetail = showAnfrageDetail;
