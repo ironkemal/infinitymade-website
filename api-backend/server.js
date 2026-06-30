@@ -3006,6 +3006,15 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         const remainingDates = generateRecurringDates(bookReq.preferred_date, recurrence, sessionsTotal).slice(1);
         for (const dateStr of remainingDates) {
           try {
+            // Don't just rely on the DB overlap constraint — a "free" slot per the
+            // exclusion constraint can still be a holiday, a day off, or outside
+            // working hours. Check real availability the same way patients do.
+            const avail = await getAvailableSlots(empId, dateStr, duration, null, 0, 30, bookReq.service_id || null);
+            const slotTimes = (avail.slots || []).map(s => (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5));
+            if (avail.reason || !slotTimes.includes(bookReq.preferred_time.substring(0, 5))) {
+              extraConflicts++;
+              continue;
+            }
             const st = berlinLocalToUTC(dateStr, bookReq.preferred_time).toISOString();
             const et = new Date(new Date(st).getTime() + duration * 60000).toISOString();
             const { error: extraErr } = await supabase.from('bookings').insert({
