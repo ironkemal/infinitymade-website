@@ -414,6 +414,7 @@ async function loadServices() {
     if (!services.length) {
       grid.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Keine Leistungen verfügbar.</p>';
       grid.style.display = 'block';
+      show(grid);
       hide(loading);
       return;
     }
@@ -448,6 +449,7 @@ async function loadServices() {
     });
 
     grid.style.display = 'grid';
+    show(grid);
     hide(loading);
   } catch (err) {
     loading.textContent = 'Leistungen konnten nicht geladen werden.';
