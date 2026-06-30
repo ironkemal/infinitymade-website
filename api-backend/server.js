@@ -2760,7 +2760,7 @@ app.get('/api/services/public', async (req, res) => {
 // GET /api/krankenkassen — public dropdown for booking form
 app.get('/api/krankenkassen', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('krankenkassen').select('id, name, ik_nummer').order('name');
+    const { data, error } = await supabase.from('krankenkassen').select('id, name, ik_number').order('name');
     if (error) throw error;
     return res.json({ krankenkassen: data || [] });
   } catch (e) {
