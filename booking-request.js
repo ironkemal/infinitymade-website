@@ -461,20 +461,26 @@ async function loadServices() {
 
 function showSessionPicker() {
   const picker = document.getElementById('sessionPicker');
-  show(picker);
+  const counter = picker.querySelector('.session-counter');
   const label = document.getElementById('sessionPickerLabel');
   const hint = document.getElementById('sessionHint');
   const input = document.getElementById('sessionCount');
 
   if (state.payment_type === 'gkv' || state.payment_type === 'bg') {
-    input.max = 99;
-    hint.textContent = 'Entspricht der Anzahl auf Ihrer Verordnung.';
+    // Session count comes from the Verordnung in the next step — no need to ask twice.
+    hide(counter);
+    label.textContent = 'Anzahl der Sitzungen';
+    hint.textContent = 'Sie geben die Anzahl im nächsten Schritt anhand Ihrer Verordnung an.';
   } else {
+    show(counter);
     input.max = 20;
     if (parseInt(input.value, 10) > 20) input.value = 1;
+    label.textContent = 'Wie viele Sitzungen möchten Sie buchen?';
     hint.textContent = 'Maximale Buchung: 20 Sitzungen.';
+    state.session_count = parseInt(input.value, 10) || 1;
   }
-  state.session_count = parseInt(input.value, 10) || 1;
+  show(picker);
+  picker.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function validateStep2() {
@@ -957,7 +963,7 @@ function buildSummary() {
     { label: 'Patient', value: state.isNewPatient ? (state.patient.vorname ? `${state.patient.vorname} ${state.patient.nachname}` : 'Neuer Patient') : 'Bestehender Patient' },
     { label: 'Zahlungsart', value: payLabels[state.payment_type] || state.payment_type },
     { label: 'Leistung', value: state.service ? state.service.name : '–' },
-    { label: 'Sitzungen', value: state.session_count },
+    { label: 'Sitzungen', value: (state.payment_type === 'gkv' || state.payment_type === 'bg') ? (state.verordnung_sitzungen || state.bg_anzahl || '–') : state.session_count },
     { label: 'Wunschtermin', value: state.preferred_date ? `${formatDateDE(state.preferred_date)} um ${(state.preferred_time || '').substring(0, 5)} Uhr` : '–' },
     { label: 'Therapeut', value: state.employee_id ? (teamMembers.find(m => (m.id || m.user_id) === state.employee_id) || {}).full_name || 'Gewählt' : 'Kein Präferenz' },
   ];
@@ -1007,7 +1013,9 @@ async function handleSubmit() {
     employee_id: state.employee_id,
     preferred_date: state.preferred_date,
     preferred_time: state.preferred_time,
-    session_count: state.session_count,
+    session_count: (state.payment_type === 'gkv' || state.payment_type === 'bg')
+      ? (state.verordnung_sitzungen || state.bg_anzahl || 1)
+      : state.session_count,
     // GKV
     krankenkasse: state.krankenkasse,
     arzt_name: state.arzt_name,
