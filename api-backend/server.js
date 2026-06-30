@@ -2746,7 +2746,7 @@ app.get('/api/services/public', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('services')
-      .select('id, title, duration_minutes, price, price_config')
+      .select('id, name:title, description, duration:duration_minutes, price, price_config')
       .eq('owner_id', owner_id)
       .order('title');
     if (error) throw error;
