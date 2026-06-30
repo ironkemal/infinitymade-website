@@ -21344,7 +21344,18 @@ async function doApproveAnfrage(requestId, ownerId, employeeId) {
     });
     const json = await r.json();
     if (!r.ok) throw new Error(json.error || 'Fehler');
-    showToast('Termin bestätigt ✓', 'success');
+
+    if (json.sessions_total > 1) {
+      if (json.needs_manual_scheduling) {
+        showToast(`1. Termin bestätigt ✓ — ${json.sessions_total - 1} weitere Termine bitte manuell als Serie planen (Frequenz erfordert mehrere Wochentage).`, 'info');
+      } else if (json.sessions_conflicts > 0) {
+        showToast(`${json.sessions_created} von ${json.sessions_total} Terminen angelegt — ${json.sessions_conflicts} Termin(e) waren belegt und müssen manuell geplant werden.`, 'info');
+      } else {
+        showToast(`Alle ${json.sessions_total} Termine der Serie wurden angelegt ✓`, 'success');
+      }
+    } else {
+      showToast('Termin bestätigt ✓', 'success');
+    }
     loadAnfragen('pending');
   } catch (e) {
     showToast(e.message || 'Fehler beim Bestätigen', 'error');

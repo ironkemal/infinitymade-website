@@ -253,6 +253,27 @@ function berlinLocalToUTC(dateStr, timeStr) {
   return new Date(naiveMs - offsetMin * 60000);
 }
 
+function addDays(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().substring(0, 10);
+}
+
+// Deterministic recurring-date generator (no AI — same logic as /api/booking/batch-create).
+// Only call this for unambiguous frequencies (daily / weekly-same-weekday); for anything
+// requiring multiple distinct weekdays per week we don't have enough info to guess correctly.
+function generateRecurringDates(startDate, recurrence, count) {
+  const dates = [];
+  if (recurrence === 'daily') {
+    for (let i = 0; i < count; i++) dates.push(addDays(startDate, i));
+  } else {
+    const wd = berlinDayOfWeek(startDate);
+    for (let i = 0; i < count; i++) dates.push(addDays(startDate, i * 7));
+    void wd; // weekday is implicitly preserved by +7 day steps
+  }
+  return dates;
+}
+
 // --- ROUTES ---
 
 // Health check
@@ -2971,6 +2992,36 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
 
     await supabase.from('booking_requests').update({ status: 'approved', booking_id: booking.id }).eq('id', request_id);
 
+    // Auto-schedule remaining sessions for unambiguous frequencies (deterministic, no AI).
+    // "2x/Woche" etc. need a second/third weekday we were never told, so we don't guess —
+    // the owner books those manually via the existing series tool.
+    let extraCreated = 0;
+    let extraConflicts = 0;
+    let needsManualScheduling = false;
+    const sessionsTotal = bookReq.verordnung_sitzungen || 1;
+    if (sessionsTotal > 1 && bookReq.preferred_date && bookReq.preferred_time) {
+      const freq = bookReq.frequenz;
+      if (freq === 'Täglich' || freq === '1x/Woche') {
+        const recurrence = freq === 'Täglich' ? 'daily' : 'weekly';
+        const remainingDates = generateRecurringDates(bookReq.preferred_date, recurrence, sessionsTotal).slice(1);
+        for (const dateStr of remainingDates) {
+          try {
+            const st = berlinLocalToUTC(dateStr, bookReq.preferred_time).toISOString();
+            const et = new Date(new Date(st).getTime() + duration * 60000).toISOString();
+            const { error: extraErr } = await supabase.from('bookings').insert({
+              owner_id, employee_id: empId, service_id: bookReq.service_id || null,
+              customer_name: patName, start_time: st, end_time: et, status: 'confirmed',
+            });
+            if (extraErr) extraConflicts++; else extraCreated++;
+          } catch {
+            extraConflicts++;
+          }
+        }
+      } else {
+        needsManualScheduling = true;
+      }
+    }
+
     if (bookReq.patients?.email && process.env.SMTP_HOST) {
       const [{ data: ownerP }, { data: empP }] = await Promise.all([
         supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle(),
@@ -2988,7 +3039,13 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
       }).catch(e => console.error('[booking-request/approve] email', e.message));
     }
 
-    return res.json({ booking_id: booking.id });
+    return res.json({
+      booking_id: booking.id,
+      sessions_total: sessionsTotal,
+      sessions_created: 1 + extraCreated,
+      sessions_conflicts: extraConflicts,
+      needs_manual_scheduling: needsManualScheduling,
+    });
   } catch (e) {
     console.error('[booking-request/approve]', e.message);
     return res.status(500).json({ error: 'Bestätigung fehlgeschlagen' });
