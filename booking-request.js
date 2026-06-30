@@ -495,7 +495,7 @@ async function loadTeam() {
   list.innerHTML = '<div class="br-slots-loading"><div class="spinner dark"></div></div>';
 
   try {
-    const data = await apiFetch(`/team?owner_id=${encodeURIComponent(state.owner_id)}`);
+    const data = await apiFetch(`/team/public?owner_id=${encodeURIComponent(state.owner_id)}`);
     teamMembers = Array.isArray(data) ? data : (data.team || data.members || []);
   } catch {
     teamMembers = [];

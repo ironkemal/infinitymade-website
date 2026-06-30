@@ -2757,6 +2757,30 @@ app.get('/api/services/public', async (req, res) => {
   }
 });
 
+// GET /api/team/public — public, for booking-request wizard (no auth, owner_id-scoped)
+app.get('/api/team/public', async (req, res) => {
+  const { owner_id } = req.query;
+  if (!owner_id) return res.status(400).json({ error: 'owner_id required' });
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, owner_first_name, owner_last_name, business_name, role, avatar_url, is_active')
+      .or(`id.eq.${owner_id},owner_id.eq.${owner_id}`);
+    if (error) throw error;
+    const team = (data || [])
+      .filter(p => p.is_active !== false)
+      .map(p => ({
+        id: p.id,
+        name: [p.owner_first_name, p.owner_last_name].filter(Boolean).join(' ') || p.business_name || 'Therapeut',
+        avatar_url: p.avatar_url,
+      }));
+    return res.json({ team });
+  } catch (e) {
+    console.error('[team/public]', e.message);
+    return res.status(500).json({ error: 'Failed to load team' });
+  }
+});
+
 // GET /api/krankenkassen — public dropdown for booking form
 app.get('/api/krankenkassen', async (req, res) => {
   try {
