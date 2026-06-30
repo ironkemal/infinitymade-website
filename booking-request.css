@@ -687,6 +687,14 @@ html, body {
 
 .br-slot:hover { border-color: var(--accent); color: var(--accent); }
 .br-slot.selected { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.br-slot.past {
+  background: var(--bg-warm);
+  color: var(--disabled);
+  border-color: var(--border);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+.br-slot.past:hover { border-color: var(--border); color: var(--disabled); }
 
 .br-slots-empty {
   font-size: 0.82rem;

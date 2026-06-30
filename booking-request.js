@@ -81,6 +81,9 @@ let cachedSlots = {}; // key: "employeeId|date" → array of time strings
 // ─── Utility helpers ────────────────────────────────────────────────────────
 
 function q(selector) {
+  // show()/hide() are called with bare element IDs (no "#"), which
+  // querySelector treats as a tag-name selector and never matches.
+  if (/^[a-zA-Z][\w-]*$/.test(selector)) return document.getElementById(selector);
   return document.querySelector(selector);
 }
 
@@ -668,13 +671,13 @@ async function fetchAndRenderSlots(date) {
       slots = [...new Set(allFlat.map(s => (typeof s === 'string' ? s : s.time || s.start)))].sort();
     }
 
-    renderSlots(slots);
+    renderSlots(slots, date);
   } catch (err) {
     slotsList.innerHTML = '<p class="br-slots-empty">Termine konnten nicht geladen werden. Bitte erneut versuchen.</p>';
   }
 }
 
-function renderSlots(slots) {
+function renderSlots(slots, date) {
   const slotsList = document.getElementById('slotsList');
   slotsList.innerHTML = '';
 
@@ -683,19 +686,32 @@ function renderSlots(slots) {
     return;
   }
 
+  const now = new Date();
+  const isToday = date === todayStr();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
   slots.forEach(s => {
     const time = typeof s === 'string' ? s : (s.time || s.start || '');
     const display = time.substring(0, 5); // "HH:MM"
+    const [hh, mm] = display.split(':').map(Number);
+    const isPast = isToday && (hh * 60 + mm) <= nowMinutes;
+
     const btn = document.createElement('button');
     btn.className = 'br-slot';
     btn.textContent = display;
-    if (state.preferred_time === time) btn.classList.add('selected');
-    btn.addEventListener('click', () => {
-      slotsList.querySelectorAll('.br-slot').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      state.preferred_time = time;
-      clearFieldError('schedulerError');
-    });
+    if (isPast) {
+      btn.classList.add('past');
+      btn.disabled = true;
+      btn.title = 'Dieser Termin liegt in der Vergangenheit.';
+    } else {
+      if (state.preferred_time === time) btn.classList.add('selected');
+      btn.addEventListener('click', () => {
+        slotsList.querySelectorAll('.br-slot').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.preferred_time = time;
+        clearFieldError('schedulerError');
+      });
+    }
     slotsList.appendChild(btn);
   });
 }
