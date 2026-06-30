@@ -21168,7 +21168,7 @@ async function loadAnfragen(status) {
   if (!list) return;
   list.innerHTML = '<div class="loading-spinner" style="margin:32px auto"></div>';
 
-  const ownerId = currentBusiness?.id || currentProfile?.id;
+  const ownerId = currentProfile?.id;
   if (!ownerId) return;
 
   try {
@@ -21303,7 +21303,7 @@ function showAnfrageDetail(requestId) {
 }
 
 async function approveAnfrage(requestId) {
-  const ownerId = currentBusiness?.id || currentProfile?.id;
+  const ownerId = currentProfile?.id;
   const req = anfragenCurrentRequests.find(r => r.id === requestId);
 
   // If no employee_id, ask for one first
@@ -21358,7 +21358,7 @@ async function declineAnfrage(requestId) {
     <textarea id="declineReasonInput" class="input-field" style="width:100%;height:80px;resize:vertical" placeholder="${tl.anfragen_decline_reason}"></textarea>
   `, async () => {
     const reason = document.getElementById('declineReasonInput')?.value?.trim() || '';
-    const ownerId = currentBusiness?.id || currentProfile?.id;
+    const ownerId = currentProfile?.id;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -21392,7 +21392,7 @@ function initAnfragenPanel() {
   const typesDiv = document.getElementById('autoAcceptTypes');
   if (toggle && typesDiv) {
     // Load current setting
-    const ownerId = currentBusiness?.id || currentProfile?.id;
+    const ownerId = currentProfile?.id;
     supabase.from('profiles').select('booking_auto_approve, booking_auto_approve_types').eq('id', ownerId).maybeSingle()
       .then(({ data }) => {
         if (data) {
@@ -21423,7 +21423,7 @@ function initAnfragenPanel() {
   }
 
   // Booking link
-  const ownerId = currentBusiness?.id || currentProfile?.id;
+  const ownerId = currentProfile?.id;
   if (ownerId) {
     const linkInput = document.getElementById('bookingRequestLinkInput');
     const link = `https://app.praxura.de/booking-request.html?business=${ownerId}`;
