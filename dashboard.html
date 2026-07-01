@@ -3040,7 +3040,7 @@
         <div class="form-row">
           <div class="form-group" style="position:relative;">
             <label class="form-label">ICD-10</label>
-            <input class="form-input" id="rzIcd" type="text" autocomplete="off" placeholder="z. B. M54.5" />
+            <input class="form-input" id="rzIcd" type="text" list="icdDatalist" autocomplete="off" placeholder="z. B. M54.5" />
           </div>
           <div class="form-group">
             <label class="form-label">Diagnosegruppe</label>
@@ -3200,6 +3200,7 @@
               <input class="form-input" id="rxcKasse" type="text" list="kkDatalist" autocomplete="off" placeholder="Krankenkasse wählen oder tippen…" />
               <datalist id="kkDatalist"></datalist>
               <datalist id="aerzteDatalist"></datalist>
+              <datalist id="icdDatalist"></datalist>
               <!-- KBV Heilmittel-Richtlinien Diagnosegruppen (global, shared by rezeptModal + rezeptConfirmModal) -->
               <datalist id="dgDatalist">
                 <option value="WS1"><option value="WS2"><option value="WS3"><option value="WS4"><option value="WS5"><option value="WS6">
@@ -3277,7 +3278,7 @@
             <div class="form-row">
               <div class="form-group" style="position:relative;">
                 <label class="form-label">ICD-10</label>
-                <input class="form-input" id="rxcIcd" type="text" autocomplete="off" />
+                <input class="form-input" id="rxcIcd" type="text" list="icdDatalist" autocomplete="off" />
               </div>
               <div class="form-group">
                 <label class="form-label">Diagnosegruppe</label>

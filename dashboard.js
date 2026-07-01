@@ -15134,6 +15134,32 @@ async function editAerzte(id) {
 window.editAerzte = editAerzte;
 window.deleteAerzte = deleteAerzte;
 
+function setupIcdInput(inputId) {
+  const input = document.getElementById(inputId);
+  const dl    = document.getElementById('icdDatalist');
+  if (!input || !dl) return;
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 2) { dl.innerHTML = ''; return; }
+    timer = setTimeout(async () => {
+      try {
+        const { data } = await supabase
+          .from('icd10_titles')
+          .select('code, titel')
+          .or(`code.ilike.%${q}%,titel.ilike.%${q}%`)
+          .limit(12);
+        if (data?.length) {
+          dl.innerHTML = data
+            .map(r => `<option value="${r.code} – ${r.titel}"></option>`)
+            .join('');
+        }
+      } catch (_) { /* silent */ }
+    }, 250);
+  });
+}
+
 function openRezeptModal(phone, leadId) {
   // Reset all fields synchronously then open — async prefill happens after
   const g = id => document.getElementById(id);
@@ -15849,8 +15875,8 @@ async function init() {
         rzHmPosInput.value = m ? m.x : '';
       });
     }
-    icd10Autocomplete(document.getElementById('rxcIcd'), supabase);
-    icd10Autocomplete(document.getElementById('rzIcd'), supabase);
+    setupIcdInput('rxcIcd');
+    setupIcdInput('rzIcd');
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
     if (adminLink && currentSession?.user?.id) {
