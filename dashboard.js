@@ -15134,29 +15134,66 @@ async function editAerzte(id) {
 window.editAerzte = editAerzte;
 window.deleteAerzte = deleteAerzte;
 
+// ICD-10 chapter ranges per Fachbereich
+const ICD_SECTORS = {
+  physiotherapy: [
+    { gte: 'M', lt: 'N' },   // M00–M99 Muskel-Skelett (primary)
+    { gte: 'G', lt: 'H' },   // G00–G99 Nervensystem
+    { gte: 'S', lt: 'U' },   // S00–T98 Verletzungen & Trauma
+  ],
+  podologie: [
+    { gte: 'E10', lt: 'E15' }, // Diabetes mellitus
+    { gte: 'I70', lt: 'I80' }, // Periphere Arterien (pAVK)
+    { gte: 'L00', lt: 'M00' }, // Hautkrankheiten (Nagel, Hornhaut, Mykosen)
+    { gte: 'B35', lt: 'B37' }, // Dermatomykosen (Onychomykose)
+    { gte: 'M20', lt: 'M22' }, // Fußdeformitäten
+    { gte: 'M79', lt: 'M80' }, // Weichteilerkrankungen Fuß
+    { gte: 'Q65', lt: 'Q67' }, // Angeborene Fußdeformitäten
+  ],
+  logopaedie: [
+    { gte: 'F00', lt: 'G00' }, // Psychische Störungen / Demenz
+    { gte: 'G00', lt: 'H00' }, // Neurologisch (Aphasie, Dysarthrie)
+    { gte: 'R47', lt: 'R50' }, // Sprach-/Stimmstörungen
+    { gte: 'J00', lt: 'K00' }, // Atemwege (Dysphagie-Kontext)
+    { gte: 'Q35', lt: 'Q38' }, // Lippen-Kiefer-Gaumenspalte
+  ],
+  ergotherapie: [
+    { gte: 'F00', lt: 'G00' }, // Psychische Störungen
+    { gte: 'G00', lt: 'H00' }, // Nervensystem
+    { gte: 'M00', lt: 'N00' }, // Muskel-Skelett
+    { gte: 'S00', lt: 'U00' }, // Verletzungen
+  ],
+};
+
+function _getIcdChapters() {
+  const s = (typeof getSector === 'function' ? getSector() : '') || 'physiotherapy';
+  return ICD_SECTORS[s] || ICD_SECTORS.physiotherapy;
+}
+
 function _fillIcdDatalist(rows) {
   const dl = document.getElementById('icdDatalist');
   if (!dl || !rows?.length) return;
   dl.innerHTML = rows.map(r => `<option value="${r.code} – ${r.titel}"></option>`).join('');
 }
 
-// On modal open: pre-load most common physio chapters (M + G + S) so the
-// datalist has something useful immediately before the user starts typing.
+// On modal open: load sector-relevant ICD codes so datalist is ready to browse.
 let _icdPreloaded = false;
 async function populateIcdDatalist() {
   if (_icdPreloaded) return;
   _icdPreloaded = true;
-  const [r1, r2, r3] = await Promise.all([
-    supabase.from('icd10_titles').select('code,titel').gte('code','M').lt('code','N').limit(500),
-    supabase.from('icd10_titles').select('code,titel').gte('code','G').lt('code','H').limit(300),
-    supabase.from('icd10_titles').select('code,titel').gte('code','S').lt('code','T').limit(200),
-  ]);
-  const combined = [...(r1.data||[]), ...(r2.data||[]), ...(r3.data||[])];
-  combined.sort((a,b) => a.code.localeCompare(b.code));
+  const chapters = _getIcdChapters();
+  const results = await Promise.all(
+    chapters.map(c =>
+      supabase.from('icd10_titles').select('code,titel')
+        .gte('code', c.gte).lt('code', c.lt).limit(300)
+    )
+  );
+  const combined = results.flatMap(r => r.data || []);
+  combined.sort((a, b) => a.code.localeCompare(b.code));
   _fillIcdDatalist(combined);
 }
 
-// On keystroke: dynamically update datalist with search results.
+// On keystroke: search within sector chapters, fallback to all if no results.
 function initIcdSearch(inputId) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -15166,14 +15203,17 @@ function initIcdSearch(inputId) {
     const q = input.value.trim();
     if (q.length < 2) return;
     t = setTimeout(async () => {
+      const chapters = _getIcdChapters();
+      // Build OR filter for sector chapters
+      const chapterFilter = chapters.map(c => `code.gte.${c.gte},code.lt.${c.lt}`).join(',');
       const [byCode, byTitle] = await Promise.all([
         supabase.from('icd10_titles').select('code,titel').ilike('code', `%${q}%`).limit(10),
         supabase.from('icd10_titles').select('code,titel').ilike('titel', `%${q}%`).limit(15),
       ]);
       const seen = new Set();
-      const rows = [...(byCode.data||[]), ...(byTitle.data||[])]
+      const all = [...(byCode.data||[]), ...(byTitle.data||[])]
         .filter(r => seen.has(r.code) ? false : seen.add(r.code));
-      _fillIcdDatalist(rows);
+      if (all.length) _fillIcdDatalist(all);
     }, 280);
   });
 }
