@@ -15134,21 +15134,48 @@ async function editAerzte(id) {
 window.editAerzte = editAerzte;
 window.deleteAerzte = deleteAerzte;
 
-let _icdLoaded = false;
-async function populateIcdDatalist() {
-  if (_icdLoaded) return;
+function _fillIcdDatalist(rows) {
   const dl = document.getElementById('icdDatalist');
-  if (!dl) return;
-  const { data, error } = await supabase
-    .from('icd10_titles')
-    .select('code,titel')
-    .order('code')
-    .limit(1000);
-  if (error) { console.warn('[ICD] load error', error.message); return; }
-  if (data?.length) {
-    dl.innerHTML = data.map(r => `<option value="${r.code} – ${r.titel}"></option>`).join('');
-    _icdLoaded = true;
-  }
+  if (!dl || !rows?.length) return;
+  dl.innerHTML = rows.map(r => `<option value="${r.code} – ${r.titel}"></option>`).join('');
+}
+
+// On modal open: pre-load most common physio chapters (M + G + S) so the
+// datalist has something useful immediately before the user starts typing.
+let _icdPreloaded = false;
+async function populateIcdDatalist() {
+  if (_icdPreloaded) return;
+  _icdPreloaded = true;
+  const [r1, r2, r3] = await Promise.all([
+    supabase.from('icd10_titles').select('code,titel').gte('code','M').lt('code','N').limit(500),
+    supabase.from('icd10_titles').select('code,titel').gte('code','G').lt('code','H').limit(300),
+    supabase.from('icd10_titles').select('code,titel').gte('code','S').lt('code','T').limit(200),
+  ]);
+  const combined = [...(r1.data||[]), ...(r2.data||[]), ...(r3.data||[])];
+  combined.sort((a,b) => a.code.localeCompare(b.code));
+  _fillIcdDatalist(combined);
+}
+
+// On keystroke: dynamically update datalist with search results.
+function initIcdSearch(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  let t;
+  input.addEventListener('input', () => {
+    clearTimeout(t);
+    const q = input.value.trim();
+    if (q.length < 2) return;
+    t = setTimeout(async () => {
+      const [byCode, byTitle] = await Promise.all([
+        supabase.from('icd10_titles').select('code,titel').ilike('code', `%${q}%`).limit(10),
+        supabase.from('icd10_titles').select('code,titel').ilike('titel', `%${q}%`).limit(15),
+      ]);
+      const seen = new Set();
+      const rows = [...(byCode.data||[]), ...(byTitle.data||[])]
+        .filter(r => seen.has(r.code) ? false : seen.add(r.code));
+      _fillIcdDatalist(rows);
+    }, 280);
+  });
 }
 
 function openRezeptModal(phone, leadId) {
@@ -15867,6 +15894,8 @@ async function init() {
         rzHmPosInput.value = m ? m.x : '';
       });
     }
+    initIcdSearch('rzIcd');
+    initIcdSearch('rxcIcd');
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
     if (adminLink && currentSession?.user?.id) {
