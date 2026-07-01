@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260613" />
+  <link rel="stylesheet" href="dashboard.css?v=20260702" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -3044,7 +3044,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Diagnosegruppe</label>
-            <input class="form-input" id="rzDg" type="text" placeholder="z. B. WS2" />
+            <input class="form-input" id="rzDg" type="text" list="dgDatalist" autocomplete="off" placeholder="z. B. WS2" />
           </div>
         </div>
         <div class="form-row">
@@ -3200,6 +3200,24 @@
               <input class="form-input" id="rxcKasse" type="text" list="kkDatalist" autocomplete="off" placeholder="Krankenkasse wählen oder tippen…" />
               <datalist id="kkDatalist"></datalist>
               <datalist id="aerzteDatalist"></datalist>
+              <!-- KBV Heilmittel-Richtlinien Diagnosegruppen (global, shared by rezeptModal + rezeptConfirmModal) -->
+              <datalist id="dgDatalist">
+                <option value="WS1"><option value="WS2"><option value="WS3"><option value="WS4"><option value="WS5"><option value="WS6">
+                <option value="EX1"><option value="EX2"><option value="EX3a"><option value="EX3b">
+                <option value="AT1"><option value="AT2">
+                <option value="EN1"><option value="EN2"><option value="EN3"><option value="EN4">
+                <option value="LY1"><option value="LY2"><option value="LY3">
+                <option value="ST1"><option value="ST2"><option value="ST3"><option value="ST4"><option value="ST5"><option value="ST6"><option value="ST7"><option value="ST8"><option value="ST9">
+                <option value="RE1"><option value="RE2"><option value="RE3"><option value="RE4">
+                <option value="SC1"><option value="SC2">
+                <option value="SP1"><option value="SP2"><option value="SP3"><option value="SP4">
+                <option value="SN1"><option value="SN2">
+                <option value="SD1"><option value="SD2">
+                <option value="PS1"><option value="PS2"><option value="PS3">
+                <option value="NE1"><option value="NE2"><option value="NE3">
+                <option value="B3"><option value="B4"><option value="B5">
+                <option value="EB1"><option value="EB2"><option value="EB3">
+              </datalist>
               <input type="hidden" id="rxcKasseIk" />
             </div>
             <div class="form-row">
@@ -3263,7 +3281,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Diagnosegruppe</label>
-                <input class="form-input" id="rxcDg" type="text" />
+                <input class="form-input" id="rxcDg" type="text" list="dgDatalist" autocomplete="off" placeholder="z. B. WS2" />
               </div>
             </div>
             <div class="form-row">

@@ -15160,6 +15160,9 @@ function openRezeptModal(phone, leadId) {
 
   openModal('rezeptModal');
 
+  // Populate heilmittel datalist for this modal (normally only filled when OCR modal opens)
+  loadPhysioPositions().then(positions => populateHmDatalist(positions)).catch(() => {});
+
   // Async prefill — modal is already open, data arrives in background
   if (leadId) {
     supabase.from('leads').select('arzt_id,hausbesuch').eq('id', leadId).maybeSingle()
