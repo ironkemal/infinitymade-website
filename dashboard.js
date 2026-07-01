@@ -15144,9 +15144,11 @@ const ICD_SECTORS = {
   podologie: [
     { gte: 'E10', lt: 'E15' }, // Diabetes mellitus
     { gte: 'I70', lt: 'I80' }, // Periphere Arterien (pAVK)
-    { gte: 'L00', lt: 'M00' }, // Hautkrankheiten (Nagel, Hornhaut, Mykosen)
-    { gte: 'B35', lt: 'B37' }, // Dermatomykosen (Onychomykose)
-    { gte: 'M20', lt: 'M22' }, // Fußdeformitäten
+    { gte: 'B35', lt: 'B37' }, // Dermatomykosen / Onychomykose
+    { gte: 'L60', lt: 'L76' }, // Nagelkrankheiten & Hautanhangsgebilde
+    { gte: 'L84', lt: 'L86' }, // Kallus / Hornhautverdickung
+    { gte: 'L97', lt: 'L98' }, // Ulcus cruris
+    { gte: 'M20', lt: 'M22' }, // Fußdeformitäten (Hallux, Hammerzehe)
     { gte: 'M79', lt: 'M80' }, // Weichteilerkrankungen Fuß
     { gte: 'Q65', lt: 'Q67' }, // Angeborene Fußdeformitäten
   ],
