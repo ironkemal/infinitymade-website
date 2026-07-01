@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="theme-color" content="#FFFEFB" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
-  <link rel="stylesheet" href="booking-request.css?v=20260630" />
+  <link rel="stylesheet" href="booking-request.css?v=20260701" />
 </head>
 <body>
 
@@ -278,9 +278,10 @@
                 <span class="br-field-error" id="gkvVerordDatumError"></span>
               </div>
             </div>
-            <div class="br-field">
+            <div class="br-field" style="position:relative;">
               <label for="gkvIcd10">Diagnose ICD-10 <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
               <input type="text" id="gkvIcd10" placeholder="z.B. M54.5 – Lumbago" />
+              <div id="icd10-dropdown-gkv" class="icd10-dropdown"></div>
             </div>
             <div class="br-form-row">
               <div class="br-field">
@@ -598,5 +599,14 @@
 </div><!-- /#app -->
 
 <script type="module" src="booking-request.js?v=20260630d"></script>
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
+  import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260701';
+  const _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  document.addEventListener('DOMContentLoaded', () => {
+    icd10Autocomplete(document.getElementById('gkvIcd10'), _sb);
+  });
+</script>
 </body>
 </html>

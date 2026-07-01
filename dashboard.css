@@ -7298,3 +7298,33 @@ body.compact-mode .patient-row {
   font-size: 10px; font-weight: 700; min-width: 18px; height: 18px;
   border-radius: 9px; padding: 0 5px; margin-left: 6px; line-height: 1;
 }
+
+
+/* ── ICD-10 Autocomplete Dropdown ─────────────────────────────────────────── */
+.icd10-dropdown {
+  position: absolute;
+  z-index: 1000;
+  background: var(--bg-card-solid, #1e293b);
+  border: 1px solid var(--border, #334155);
+  border-radius: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  width: 100%;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+}
+.icd10-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text-main, #f1f5f9);
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+}
+.icd10-dropdown-item .icd-code {
+  color: var(--accent, #b1891b);
+  font-weight: 600;
+  min-width: 60px;
+}
+.icd10-dropdown-item:hover,
+.icd10-dropdown-item.active { background: var(--bg-hover, #334155); }
+.icd10-dropdown:empty { display: none; }

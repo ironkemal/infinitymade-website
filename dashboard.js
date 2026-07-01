@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
+import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260701';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -15667,6 +15668,7 @@ async function init() {
         }
       });
     }
+    icd10Autocomplete(document.getElementById('rxcIcd'), supabase);
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
     if (adminLink && currentSession?.user?.id) {
