@@ -2814,11 +2814,60 @@ async function prefillBookingModal(startStr) {
   if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
   if (typeof window._resetRezeptartUI === 'function') window._resetRezeptartUI();
   window._pendingRxSession = null;
+
+  // Verordnung seçimini reset et
+  const _bkRxIdEl = document.getElementById('bkSelectedRxId');
+  if (_bkRxIdEl) _bkRxIdEl.value = '';
+  const _bkSessIdEl = document.getElementById('bkSelectedSessionId');
+  if (_bkSessIdEl) _bkSessIdEl.value = '';
+  const _bkIsSelbstEl = document.getElementById('bkIsSelbstzahler');
+  if (_bkIsSelbstEl) _bkIsSelbstEl.value = '';
+  const _bkVeroSection = document.getElementById('bkVerordnungSection');
+  if (_bkVeroSection) _bkVeroSection.hidden = true;
+  const _bkPickerBlock = document.getElementById('bkSessionPickerBlock');
+  if (_bkPickerBlock) _bkPickerBlock.hidden = true;
+
   populateEmpSelects();
   await populateSrvSelect();
   openModal('bookingModal');
   await initBkCustomerAutocomplete();
   await initBkGroupPatientAutocomplete().catch(() => {});
+
+  // Selbstzahler + Deselect listeners (idempotent — her prefill'de yeniden attach)
+  const _selbstBtn = document.getElementById('bkSelbstzahlerBtn');
+  if (_selbstBtn) {
+    const newBtn = _selbstBtn.cloneNode(true);
+    _selbstBtn.parentNode.replaceChild(newBtn, _selbstBtn);
+    newBtn.addEventListener('click', () => {
+      document.querySelectorAll('.bk-vero-card').forEach(c => { c.style.borderColor='var(--border)'; c.style.background='transparent'; });
+      newBtn.style.borderColor = 'var(--accent,#b1891b)';
+      newBtn.style.color = 'var(--text-main)';
+      const rxEl = document.getElementById('bkSelectedRxId');
+      if (rxEl) rxEl.value = '';
+      const sessEl = document.getElementById('bkSelectedSessionId');
+      if (sessEl) sessEl.value = '';
+      const isSelbstEl2 = document.getElementById('bkIsSelbstzahler');
+      if (isSelbstEl2) isSelbstEl2.value = '1';
+      window._pendingRxSession = null;
+      const pb = document.getElementById('bkSessionPickerBlock');
+      if (pb) pb.hidden = true;
+    });
+  }
+  const _veroDeselect = document.getElementById('bkVeroDeselect');
+  if (_veroDeselect) {
+    const newDeselect = _veroDeselect.cloneNode(true);
+    _veroDeselect.parentNode.replaceChild(newDeselect, _veroDeselect);
+    newDeselect.addEventListener('click', () => {
+      document.querySelectorAll('.bk-vero-card').forEach(c => { c.style.borderColor='var(--border)'; c.style.background='transparent'; });
+      const rxEl2 = document.getElementById('bkSelectedRxId');
+      if (rxEl2) rxEl2.value = '';
+      const sessEl2 = document.getElementById('bkSelectedSessionId');
+      if (sessEl2) sessEl2.value = '';
+      window._pendingRxSession = null;
+      const pb2 = document.getElementById('bkSessionPickerBlock');
+      if (pb2) pb2.hidden = true;
+    });
+  }
 }
 
 function computeSeriesPreview() {
@@ -3203,7 +3252,7 @@ async function openBookingActionModal(booking) {
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
       supabase.from('prescriptions')
-        .select('id,heilmittel,heilmittel_position,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend')
+        .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,prescription_sessions(id,session_number,status,booking_id)')
         .eq('patient_id', leadId)
         .not('status', 'in', '("completed","billed","cancelled")')
         .order('created_at', { ascending: false })
@@ -3352,20 +3401,39 @@ async function openBookingActionModal(booking) {
     // Aktive Verordnungen
     const rezWrap = document.getElementById('bkRezepteWrap');
     const rezList = document.getElementById('bkRezepteList');
-    if (rezWrap && rezList && aktiveRxs && aktiveRxs.length > 0) {
-      rezList.innerHTML = aktiveRxs.map(rx => {
-        const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
-        return `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <span style="color:var(--text-main);font-weight:500;">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</span>
-            <span style="color:var(--text-muted);margin-left:4px;">${issued}</span>
+    const veroSection = document.getElementById('bkVerordnungSection');
+    const veroCards  = document.getElementById('bkVeroCards');
+
+    // bkRezepteWrap (eski read-only bölge) gizle — artık bkVeroCards kullanıyoruz
+    if (rezWrap) rezWrap.hidden = true;
+
+    if (veroSection && veroCards && aktiveRxs && aktiveRxs.length > 0) {
+      veroCards.innerHTML = '';
+      aktiveRxs.forEach(rx => {
+        const sessions = rx.prescription_sessions || [];
+        const done = sessions.filter(s => s.status === 'done' || s.status === 'completed').length;
+        const planned = sessions.filter(s => s.booking_id && s.status !== 'done' && s.status !== 'completed').length;
+        const total = rx.anzahl_einheiten || sessions.length || 0;
+        const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.dataset.rxId = rx.id;
+        card.className = 'bk-vero-card';
+        card.style.cssText = 'width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid var(--border);background:transparent;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</div>
+            <span style="font-size:11px;font-weight:700;color:var(--accent,#b1891b);background:rgba(177,137,27,0.12);padding:1px 7px;border-radius:10px;">${done}/${total}</span>
           </div>
-          <span style="color:var(--text-muted);">${rx.anzahl_einheiten || '?'}×</span>
-        </div>`;
-      }).join('');
-      rezWrap.hidden = false;
-    } else if (rezWrap) {
-      rezWrap.hidden = true;
+          <div style="font-size:11px;color:var(--text-muted);">${rx.icd10 ? rx.icd10 + (rx.diagnosegruppe ? ' · ' + rx.diagnosegruppe : '') : rx.diagnosegruppe || ''} · ${issued}</div>`;
+        card.addEventListener('click', () => selectVerordnung(rx, sessions));
+        veroCards.appendChild(card);
+      });
+      veroSection.hidden = false;
+    } else if (veroSection) {
+      // Verordnung yok → sadece selbstzahler
+      if (veroCards) veroCards.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0 8px;">Keine aktive Verordnung vorhanden.</div>';
+      veroSection.hidden = false;
     }
   }
 
@@ -3419,6 +3487,93 @@ function closeCalRightPanel() {
   document.getElementById('mainArea')?.style.removeProperty('padding-right');
   const calWrap = document.getElementById('calMainWrap');
   if (calWrap) calWrap.style.paddingRight = '';
+}
+
+function selectVerordnung(rx, sessions) {
+  // Kartları reset et
+  document.querySelectorAll('.bk-vero-card').forEach(c => {
+    c.style.borderColor = 'var(--border)';
+    c.style.background = 'transparent';
+  });
+  // Seçili kartı highlight et
+  const activeCard = document.querySelector(`.bk-vero-card[data-rx-id="${rx.id}"]`);
+  if (activeCard) {
+    activeCard.style.borderColor = 'var(--accent,#b1891b)';
+    activeCard.style.background = 'rgba(177,137,27,0.08)';
+  }
+
+  // Selbstzahler'ı reset et
+  const selbstBtn = document.getElementById('bkSelbstzahlerBtn');
+  if (selbstBtn) { selbstBtn.style.borderColor = 'var(--border)'; selbstBtn.style.color = 'var(--text-muted)'; }
+  const isSelbstEl = document.getElementById('bkIsSelbstzahler');
+  if (isSelbstEl) isSelbstEl.value = '';
+
+  // Hidden inputs
+  const rxIdEl = document.getElementById('bkSelectedRxId');
+  if (rxIdEl) rxIdEl.value = rx.id;
+
+  // Seans picker göster
+  const pickerBlock = document.getElementById('bkSessionPickerBlock');
+  const dotsEl      = document.getElementById('bkSessionDots');
+  const titleEl     = document.getElementById('bkSessionPickerTitle');
+  const infoEl      = document.getElementById('bkSessionPickerInfo');
+  if (!pickerBlock || !dotsEl) return;
+
+  const total = rx.anzahl_einheiten || sessions.length || 0;
+  if (titleEl) titleEl.textContent = `${rx.heilmittel || '—'}${rx.icd10 ? ' · ' + rx.icd10 : ''} · ${total} Einh.`;
+
+  // Pending sessions (booking_id yok veya status pending/planned)
+  const pendingSessions = sessions
+    .filter(s => !s.booking_id || s.status === 'planned')
+    .sort((a,b) => a.session_number - b.session_number);
+  const nextSession = pendingSessions[0] || null;
+
+  // Noktaları çiz
+  dotsEl.innerHTML = sessions.map(s => {
+    const isDone = s.status === 'done' || s.status === 'completed';
+    const isPlanned = s.booking_id && !isDone;
+    const isPending = !s.booking_id;
+    let color = isDone ? '#4ade80' : isPlanned ? 'var(--accent,#b1891b)' : 'var(--border)';
+    let title = isDone ? `Sitzung ${s.session_number}: Erledigt` : isPlanned ? `Sitzung ${s.session_number}: Geplant` : `Sitzung ${s.session_number}: Offen`;
+    return `<button type="button" class="bk-sess-dot" data-sess-id="${s.id}" data-sess-num="${s.session_number}" data-pending="${isPending || isPlanned ? '1' : '0'}"
+      title="${title}"
+      style="width:28px;height:28px;border-radius:50%;border:2px solid ${color};background:${isDone ? color : 'transparent'};cursor:${isPending ? 'pointer' : 'default'};font-size:11px;font-weight:600;color:${isDone ? '#0f172a' : color};display:flex;align-items:center;justify-content:center;">
+      ${s.session_number}
+    </button>`;
+  }).join('');
+
+  // Nokta tıklama — sadece pending/planned seanslar seçilebilir
+  dotsEl.querySelectorAll('.bk-sess-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      if (dot.dataset.pending !== '1') return;
+      dotsEl.querySelectorAll('.bk-sess-dot').forEach(d => d.style.outline = 'none');
+      dot.style.outline = '2px solid var(--accent,#b1891b)';
+      dot.style.outlineOffset = '2px';
+      const sessId = dot.dataset.sessId;
+      const sessIdEl = document.getElementById('bkSelectedSessionId');
+      if (sessIdEl) sessIdEl.value = sessId;
+      window._pendingRxSession = { sessionId: sessId };
+      if (infoEl) infoEl.textContent = `Sitzung ${dot.dataset.sessNum} von ${total} ausgewählt`;
+    });
+  });
+
+  // Default: sıradaki pending session seç
+  if (nextSession) {
+    const sessIdEl = document.getElementById('bkSelectedSessionId');
+    if (sessIdEl) sessIdEl.value = nextSession.id;
+    window._pendingRxSession = { sessionId: nextSession.id };
+    if (infoEl) infoEl.textContent = `Nächste: Sitzung ${nextSession.session_number} von ${total}`;
+    // Ilgili nokta outline
+    const defaultDot = dotsEl.querySelector(`.bk-sess-dot[data-sess-id="${nextSession.id}"]`);
+    if (defaultDot) { defaultDot.style.outline = '2px solid var(--accent,#b1891b)'; defaultDot.style.outlineOffset = '2px'; }
+  } else {
+    if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
+    const sessIdEl = document.getElementById('bkSelectedSessionId');
+    if (sessIdEl) sessIdEl.value = '';
+    window._pendingRxSession = null;
+  }
+
+  pickerBlock.hidden = false;
 }
 
 async function loadCalRpRezeptInfo(leadId) {
@@ -4564,15 +4719,20 @@ async function openBookingModal(b) {
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
-  // Rezeptart + Zahlungsart
-  const rezEl2 = document.getElementById('bkRezeptart');
-  if (rezEl2) rezEl2.value = b.rezeptart || '';
   const pmEl2 = document.getElementById('bkPaymentMethod');
   if (pmEl2) pmEl2.value = b.payment_method || '';
-  const selbstBlock2 = document.getElementById('bkSelbstzahlerBlock');
-  if (selbstBlock2) selbstBlock2.hidden = b.rezeptart !== 'selbstzahler';
-  const heilBlock2 = document.getElementById('bkHeilmittelBlock');
-  if (heilBlock2) heilBlock2.hidden = !(b.rezeptart === 'kassen' || b.rezeptart === 'privat');
+  // Verordnung seçimini reset et
+  const _omRxId = document.getElementById('bkSelectedRxId');
+  if (_omRxId) _omRxId.value = '';
+  const _omSessId = document.getElementById('bkSelectedSessionId');
+  if (_omSessId) _omSessId.value = '';
+  const _omIsSelbst = document.getElementById('bkIsSelbstzahler');
+  if (_omIsSelbst) _omIsSelbst.value = '';
+  const _omVeroSection = document.getElementById('bkVerordnungSection');
+  if (_omVeroSection) _omVeroSection.hidden = true;
+  const _omPickerBlock = document.getElementById('bkSessionPickerBlock');
+  if (_omPickerBlock) _omPickerBlock.hidden = true;
+  window._pendingRxSession = null;
   document.getElementById('bkDocAssignHint').hidden = true;
   if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
   if (b.customer_phone) {
@@ -5248,13 +5408,10 @@ document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () 
   }
 });
 
-// ===== REZEPTART UI HANDLERS =====
+// ===== REZEPTART UI HANDLERS (payment method only — Heilmittel/Rezeptart blocks removed) =====
 (function() {
-  const rezEl = document.getElementById('bkRezeptart');
-  const heilBlock = document.getElementById('bkHeilmittelBlock');
-  const selbstBlock = document.getElementById('bkSelbstzahlerBlock');
-  const itemsContainer = document.getElementById('bkHeilmittelItems');
-  const totalEl = document.getElementById('bkHeilmittelTotal');
+  const itemsContainer = null; // removed
+  const totalEl = null;
 
   function updateHeilmittelTotal() {
     if (!itemsContainer || !totalEl) return;
@@ -5611,7 +5768,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     return;
   }
 
-  const rezeptart = document.getElementById('bkRezeptart')?.value || '';
+  const rezeptart = document.getElementById('bkIsSelbstzahler')?.value === '1' ? 'selbstzahler' : (document.getElementById('bkSelectedRxId')?.value ? 'kassen' : '');
   const paymentMethod = document.getElementById('bkPaymentMethod')?.value || '';
 
   const payload = {
@@ -5638,46 +5795,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
     savedBookingId = newBooking?.id;
 
-    // If Kassen/Privat: create prescription + sessions
-    if ((rezeptart === 'kassen' || rezeptart === 'privat') && savedBookingId) {
-      const heilmittelItems = (typeof window._collectHeilmittelItems === 'function') ? window._collectHeilmittelItems() : [];
-      if (heilmittelItems.length > 0) {
-        const totalEinheiten = heilmittelItems.reduce((sum, item) => sum + item.anzahl, 0);
-        const heilmittelText = heilmittelItems.map(i => `${i.anzahl}x ${i.name}`).join(', ');
-        const { data: newRx, error: rxErr } = await supabase.from('prescriptions').insert({
-          owner_id: getOwnerId(),
-          patient_id: custId || null,
-          rezept_typ: rezeptart,
-          heilmittel: heilmittelText,
-          heilmittel_items: heilmittelItems,
-          anzahl_einheiten: totalEinheiten,
-          status: 'in_therapy',
-        }).select('id').single();
-        if (!rxErr && newRx) {
-          const sessions = [];
-          let sessionNum = 0;
-          let isFirst = true;
-          for (let itemIdx = 0; itemIdx < heilmittelItems.length; itemIdx++) {
-            const item = heilmittelItems[itemIdx];
-            for (let i = 0; i < item.anzahl; i++) {
-              sessionNum++;
-              sessions.push({
-                prescription_id: newRx.id,
-                booking_id: isFirst ? savedBookingId : null,
-                session_number: sessionNum,
-                heilmittel_index: itemIdx,
-                status: 'planned'
-              });
-              isFirst = false;
-            }
-          }
-          const { error: sessErr } = await supabase.from('prescription_sessions').insert(sessions);
-          if (sessErr) console.error('[prescription_sessions save]', sessErr);
-        }
-      }
-    }
-
-    // If pending drag-drop session: link it
+    // If pending drag-drop or Verordnung-picker session: link it
     if (window._pendingRxSession?.sessionId && savedBookingId) {
       await supabase.from('prescription_sessions')
         .update({ booking_id: savedBookingId, status: 'planned' })

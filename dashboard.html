@@ -2747,43 +2747,38 @@
           <div id="bkWaHint" class="bk-wa-hint" hidden></div>
         </div>
 
-        <!-- ===== REZEPTART + HEILMITTEL ===== -->
-        <div class="form-group" id="bkRezeptartGroup">
-          <label class="form-label">Rezeptart</label>
-          <select class="form-select" id="bkRezeptart">
-            <option value="">— Keine Verordnung —</option>
-            <option value="kassen">Kassen-Rezept (GKV)</option>
-            <option value="privat">Privat-Rezept (PKV)</option>
-            <option value="selbstzahler">Selbstzahler</option>
-          </select>
-        </div>
+        <!-- ===== VERORDNUNG SEÇIMI ===== -->
+        <div id="bkVerordnungSection" hidden>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Verordnung</div>
 
-        <!-- Heilmittel-Einheiten (nur bei Kassen/Privat) -->
-        <div id="bkHeilmittelBlock" hidden style="margin-bottom:16px;padding:12px;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.06);border:1px solid var(--border);border-radius:12px;">
-          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Verordnete Heilmittel</div>
-          <div id="bkHeilmittelItems" style="display:flex;flex-direction:column;gap:8px;">
-            <!-- Dynamisch befüllt -->
-          </div>
-          <button type="button" id="bkHeilmittelAddBtn" class="btn-ghost" style="margin-top:10px;font-size:12px;padding:4px 10px;">
-            + Weiteres Heilmittel
+          <!-- Aktive Verordnunglar listesi (JS tarafından doldurulur) -->
+          <div id="bkVeroCards" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+
+          <!-- Selbstzahler seçeneği -->
+          <button type="button" id="bkSelbstzahlerBtn"
+            style="width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">💶</span>
+            <div>
+              <div style="font-weight:600;color:var(--text-main);">Selbstzahler</div>
+              <div style="font-size:11px;">Ohne Verordnung / Privat</div>
+            </div>
           </button>
-          <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);">
-            Gesamt: <strong id="bkHeilmittelTotal">0</strong> Einheit(en)
-          </div>
+
+          <!-- Hidden inputs -->
+          <input type="hidden" id="bkSelectedRxId" value="" />
+          <input type="hidden" id="bkSelectedSessionId" value="" />
+          <input type="hidden" id="bkIsSelbstzahler" value="" />
         </div>
 
-        <!-- Selbstzahler: Zahlungsart -->
-        <div id="bkSelbstzahlerBlock" hidden style="margin-bottom:16px;padding:12px;background:hsla(140,60%,50%,0.07);border:1px solid var(--border);border-radius:12px;">
-          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Zahlungsart</div>
-          <div style="display:flex;gap:8px;">
-            <button type="button" id="bkPayNakit" class="btn-ghost" style="flex:1;justify-content:center;gap:6px;font-size:13px;border:2px solid var(--border);border-radius:10px;padding:10px;">
-              💵 Bargeld
-            </button>
-            <button type="button" id="bkPayKarte" class="btn-ghost" style="flex:1;justify-content:center;gap:6px;font-size:13px;border:2px solid var(--border);border-radius:10px;padding:10px;">
-              💳 Kartenzahlung
-            </button>
+        <!-- Seans seçici (seçili Verordnung gösterimi) -->
+        <div id="bkSessionPickerBlock" hidden style="margin-top:8px;padding:10px 12px;background:rgba(177,137,27,0.06);border:1px solid rgba(177,137,27,0.25);border-radius:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div id="bkSessionPickerTitle" style="font-size:12px;font-weight:600;color:var(--accent,#b1891b);"></div>
+            <button type="button" id="bkVeroDeselect" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;">✕ Abwählen</button>
           </div>
-          <input type="hidden" id="bkPaymentMethod" value="" />
+          <!-- Seans nokta gösterimi -->
+          <div id="bkSessionDots" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+          <div id="bkSessionPickerInfo" style="font-size:11px;color:var(--text-muted);"></div>
         </div>
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
