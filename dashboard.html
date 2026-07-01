@@ -3006,45 +3006,97 @@
   <div class="modal-overlay" id="rezeptModal" hidden>
     <div class="modal modal-lg">
       <div class="modal-header">
-        <span class="modal-title">Rezept hinzufügen</span>
+        <span class="modal-title">Neue Verordnung</span>
         <button class="modal-close" data-modal="rezeptModal">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="rzPatientId" />
-        <div class="form-group">
-          <label class="form-label">Arztname</label>
-          <input class="form-input" id="rzArztName" type="text" placeholder="Name der Praxis / Arzt" />
+
+        <!-- Arzt -->
+        <h4 style="margin:0 0 10px 0;color:var(--text-main);">Arzt</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Arztname</label>
+            <input class="form-input" id="rzArztName" type="text" list="aerzteDatalist" placeholder="Name der Praxis / Arzt" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ausstellungsdatum</label>
+            <input class="form-input" id="rzAusstDate" type="date" />
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Arzt-Nummer</label>
-            <input class="form-input" id="rzArztNummer" type="text" placeholder="Telefon / Fax" />
+            <label class="form-label">LANR (9-stellig)</label>
+            <input class="form-input" id="rzLanr" type="text" maxlength="9" placeholder="123456789" />
           </div>
           <div class="form-group">
-            <label class="form-label">Rezeptdatum</label>
-            <input class="form-input" id="rzDatum" type="date" />
+            <label class="form-label">BSNR (9-stellig)</label>
+            <input class="form-input" id="rzBsnr" type="text" maxlength="9" placeholder="123456789" />
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Diagnose / ICD-Code</label>
-          <input class="form-input" id="rzDiagnose" type="text" placeholder="z. B. Lumbalgie, M54.5" />
+
+        <!-- Verordnung -->
+        <h4 style="margin:16px 0 10px 0;color:var(--text-main);">Verordnung</h4>
+        <div class="form-row">
+          <div class="form-group" style="position:relative;">
+            <label class="form-label">ICD-10</label>
+            <input class="form-input" id="rzIcd" type="text" autocomplete="off" placeholder="z. B. M54.5" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Diagnosegruppe</label>
+            <input class="form-input" id="rzDg" type="text" placeholder="z. B. WS2" />
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Anzahl Sitzungen</label>
-            <input class="form-input" id="rzSitzungen" type="number" min="1" placeholder="6" />
-          </div>
-          <div class="form-group" style="align-self:end;">
-            <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-              <input type="checkbox" id="rzHausbesuch" /> Hausbesuch
-            </label>
+            <label class="form-label">Leitsymptomatik (a/b/c/d)</label>
+            <input class="form-input" id="rzLeitsymptomatik" type="text" placeholder="z. B. 1010" />
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="align-self:end;">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
-              <input type="checkbox" id="rzBerichtAngefordert" /> Bericht angefordert
-            </label>
+          <div class="form-group">
+            <label class="form-label">Heilmittel</label>
+            <input class="form-input" id="rzHm" type="text" list="hmDatalist" autocomplete="off" placeholder="KG, MT, MLD oder Position…" />
+            <input type="hidden" id="rzHmPosition" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Anzahl Einheiten</label>
+            <input class="form-input" id="rzAnzahl" type="number" min="1" placeholder="6" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Frequenz</label>
+            <input class="form-input" id="rzFreq" type="text" placeholder="z. B. 2x pro Woche" />
+          </div>
+        </div>
+
+        <!-- Optionen -->
+        <h4 style="margin:16px 0 10px 0;color:var(--text-main);">Optionen</h4>
+        <div class="form-row" style="flex-wrap:wrap;gap:10px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+            <input type="checkbox" id="rzDringend" /> Dringend / 14-Tage-Frist
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+            <input type="checkbox" id="rzHausbesuch" /> Hausbesuch
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+            <input type="checkbox" id="rzBlanko" /> Blankoverordnung
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+            <input type="checkbox" id="rzLhbBvb" /> LHB / BVB
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+            <input type="checkbox" id="rzZuzahlungBefreit" /> Zuzahlungsbefreit
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+            <input type="checkbox" id="rzBerichtAngefordert" /> Bericht angefordert
+          </label>
+        </div>
+        <div class="form-row" style="margin-top:12px;">
+          <div class="form-group">
+            <label class="form-label">Zuzahlung (€)</label>
+            <input class="form-input" id="rzZuzahlung" type="number" min="0" step="0.01" placeholder="0.00" />
           </div>
           <div class="form-group">
             <label class="form-label">Bericht-Status</label>
@@ -3054,10 +3106,6 @@
               <option value="erledigt">Erledigt</option>
             </select>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Befund</label>
-          <textarea class="form-textarea" id="rzBefund" rows="3" placeholder="Befundbeschreibung…"></textarea>
         </div>
       </div>
       <div class="modal-footer">

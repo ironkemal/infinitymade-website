@@ -15135,39 +15135,39 @@ window.editAerzte = editAerzte;
 window.deleteAerzte = deleteAerzte;
 
 async function openRezeptModal(phone, leadId) {
+  // Reset all fields
   document.getElementById('rzPatientId').value = leadId || '';
   document.getElementById('rzArztName').value = '';
-  document.getElementById('rzArztNummer').value = '';
-  document.getElementById('rzDatum').value = '';
-  document.getElementById('rzDiagnose').value = '';
-  document.getElementById('rzSitzungen').value = '10';
+  document.getElementById('rzAusstDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('rzLanr').value = '';
+  document.getElementById('rzBsnr').value = '';
+  document.getElementById('rzIcd').value = '';
+  document.getElementById('rzDg').value = '';
+  document.getElementById('rzLeitsymptomatik').value = '';
+  document.getElementById('rzHm').value = '';
+  document.getElementById('rzHmPosition').value = '';
+  document.getElementById('rzAnzahl').value = '';
+  document.getElementById('rzFreq').value = '';
+  document.getElementById('rzDringend').checked = false;
   document.getElementById('rzHausbesuch').checked = false;
+  document.getElementById('rzBlanko').checked = false;
+  document.getElementById('rzLhbBvb').checked = false;
+  document.getElementById('rzZuzahlungBefreit').checked = false;
   document.getElementById('rzBerichtAngefordert').checked = false;
+  document.getElementById('rzZuzahlung').value = '';
   document.getElementById('rzBerichtStatus').value = 'offen';
-  document.getElementById('rzBefund').value = '';
+
   if (leadId) {
     const { data } = await supabase.from('leads').select('title,arzt_id,hausbesuch').eq('id', leadId).single();
     if (data?.arzt_id) {
-      const { data: arzt } = await supabase.from('aerzte').select('arzt_name,arzt_nummer').eq('id', data.arzt_id).single();
+      const { data: arzt } = await supabase.from('aerzte').select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', data.arzt_id).single();
       if (arzt) {
         document.getElementById('rzArztName').value = arzt.arzt_name || '';
-        document.getElementById('rzArztNummer').value = arzt.arzt_nummer || '';
+        document.getElementById('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
+        document.getElementById('rzBsnr').value = arzt.bsnr || '';
       }
     }
     if (data?.hausbesuch) document.getElementById('rzHausbesuch').checked = true;
-
-    // Fetch and populate leitsymptomatik
-    const { data: rx } = await supabase
-      .from('prescriptions')
-      .select('leitsymptomatik')
-      .eq('patient_id', leadId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const leitsymptomatikEl = document.getElementById('rxcLeitsymptomatik');
-    if (leitsymptomatikEl) {
-      leitsymptomatikEl.value = rx?.leitsymptomatik || '';
-    }
   }
   openModal('rezeptModal');
 }
@@ -15176,30 +15176,87 @@ async function saveRezept() {
   const ownerId = getOwnerId();
   const patientId = document.getElementById('rzPatientId').value;
   if (!patientId) { showToast('Kein Patient ausgewählt.', 'error'); return; }
-  const payload = {
-    ownerId,
-    patientId,
-    arztName: document.getElementById('rzArztName').value.trim(),
-    arztNummer: document.getElementById('rzArztNummer').value.trim(),
-    rezeptDatum: document.getElementById('rzDatum').value,
-    diagnose: document.getElementById('rzDiagnose').value.trim(),
-    sitzungen: parseInt(document.getElementById('rzSitzungen').value) || 10,
-    hausbesuch: document.getElementById('rzHausbesuch').checked,
-    berichtAngefordert: document.getElementById('rzBerichtAngefordert').checked,
-    berichtStatus: document.getElementById('rzBerichtStatus').value,
-    befund: document.getElementById('rzBefund').value.trim()
-  };
+
+  const btn = document.getElementById('rzSaveBtn');
+  btn.disabled = true;
+
   try {
-    const res = await fetch('https://n8n.infinitymade.de/api/rezept/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('Speichern fehlgeschlagen');
+    // 1. Resolve arzt_id from name
+    const arztName = document.getElementById('rzArztName').value.trim();
+    let arztId = null;
+    if (arztName) {
+      const { data: arzt } = await supabase.from('aerzte')
+        .select('id').eq('arzt_name', arztName).eq('owner_id', ownerId).maybeSingle();
+      arztId = arzt?.id || null;
+    }
+
+    // 2. Parse ICD value — strip the " – Titel" part to get just the code
+    const icdRaw = document.getElementById('rzIcd').value.trim();
+    const icd10 = icdRaw.includes(' – ') ? icdRaw.split(' – ')[0].trim() : icdRaw;
+
+    const anzahl = parseInt(document.getElementById('rzAnzahl').value) || null;
+    const ausstDate = document.getElementById('rzAusstDate').value || null;
+    const isDringend = document.getElementById('rzDringend').checked;
+
+    // 3. Compute gueltig_bis (14 days for dringend, 84 days for normal)
+    let gueltigBis = null;
+    if (ausstDate) {
+      const d = new Date(ausstDate);
+      d.setDate(d.getDate() + (isDringend ? 14 : 84));
+      gueltigBis = d.toISOString().split('T')[0];
+    }
+
+    // 4. Insert prescription
+    const { data: rx, error: rxErr } = await supabase.from('prescriptions').insert({
+      owner_id: ownerId,
+      patient_id: patientId,
+      arzt_id: arztId,
+      status: 'active',
+      ausstellungsdatum: ausstDate,
+      icd10,
+      diagnosegruppe: document.getElementById('rzDg').value.trim() || null,
+      leitsymptomatik: document.getElementById('rzLeitsymptomatik').value.trim() || null,
+      heilmittel: document.getElementById('rzHm').value.trim() || null,
+      heilmittel_position: document.getElementById('rzHmPosition').value.trim() || null,
+      anzahl_einheiten: anzahl,
+      frequenz: document.getElementById('rzFreq').value.trim() || null,
+      is_dringend: isDringend,
+      hausbesuch: document.getElementById('rzHausbesuch').checked,
+      is_blanko: document.getElementById('rzBlanko').checked,
+      is_lhb_bvb: document.getElementById('rzLhbBvb').checked,
+      zuzahlung_befreit: document.getElementById('rzZuzahlungBefreit').checked,
+      zuzahlung_eur: parseFloat(document.getElementById('rzZuzahlung').value) || null,
+      bericht_angefordert: document.getElementById('rzBerichtAngefordert').checked,
+      bericht_status: document.getElementById('rzBerichtStatus').value,
+      doctor_lanr: document.getElementById('rzLanr').value.trim() || null,
+      doctor_bsnr: document.getElementById('rzBsnr').value.trim() || null,
+      gueltig_bis: gueltigBis
+    }).select('id').single();
+
+    if (rxErr) throw rxErr;
+
+    // 5. Create prescription_sessions
+    if (anzahl && anzahl > 0) {
+      const sessions = Array.from({ length: anzahl }, (_, i) => ({
+        prescription_id: rx.id,
+        session_number: i + 1,
+        status: 'planned'
+      }));
+      await supabase.from('prescription_sessions').insert(sessions);
+    }
+
     closeModal('rezeptModal');
-    showToast('Rezept gespeichert.');
+    showToast('Verordnung gespeichert ✓', 'success');
+
+    // Refresh verordnung list if booking modal is open
+    if (typeof loadBkVerordnungen === 'function' && patientId) {
+      loadBkVerordnungen(patientId);
+    }
   } catch (e) {
-    showToast('Fehler: ' + e.message, 'error');
+    console.error('[saveRezept]', e);
+    showToast('Fehler: ' + (e.message || 'Unbekannt'), 'error');
+  } finally {
+    btn.disabled = false;
   }
 }
 
@@ -15758,7 +15815,32 @@ async function init() {
         }
       });
     }
+    // Wire rzArztName autocomplete → rzLanr / rzBsnr
+    const rzArztName = document.getElementById('rzArztName');
+    if (rzArztName) {
+      rzArztName.addEventListener('input', () => {
+        const val = rzArztName.value.trim();
+        const matched = aerzteCache.find(a => a.arzt_name === val);
+        if (matched) {
+          const lanr = document.getElementById('rzLanr');
+          const bsnr = document.getElementById('rzBsnr');
+          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || matched.arzt_nummer || '';
+          if (bsnr && !bsnr.value.trim()) bsnr.value = matched.bsnr || '';
+        }
+      });
+    }
+    // Wire rzHm → rzHmPosition (reuse same physio positions cache)
+    const rzHmInput = document.getElementById('rzHm');
+    const rzHmPosInput = document.getElementById('rzHmPosition');
+    if (rzHmInput && rzHmPosInput) {
+      rzHmInput.addEventListener('input', async () => {
+        const positions = await loadPhysioPositions().catch(() => []);
+        const m = aiMatchHeilmittel(rzHmInput.value, positions);
+        rzHmPosInput.value = m ? m.x : '';
+      });
+    }
     icd10Autocomplete(document.getElementById('rxcIcd'), supabase);
+    icd10Autocomplete(document.getElementById('rzIcd'), supabase);
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
     if (adminLink && currentSession?.user?.id) {
