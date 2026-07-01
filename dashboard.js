@@ -15134,30 +15134,21 @@ async function editAerzte(id) {
 window.editAerzte = editAerzte;
 window.deleteAerzte = deleteAerzte;
 
-function setupIcdInput(inputId) {
-  const input = document.getElementById(inputId);
-  const dl    = document.getElementById('icdDatalist');
-  if (!input || !dl) return;
-  let timer;
-  input.addEventListener('input', () => {
-    clearTimeout(timer);
-    const q = input.value.trim();
-    if (q.length < 2) { dl.innerHTML = ''; return; }
-    timer = setTimeout(async () => {
-      try {
-        const { data } = await supabase
-          .from('icd10_titles')
-          .select('code, titel')
-          .or(`code.ilike.%${q}%,titel.ilike.%${q}%`)
-          .limit(12);
-        if (data?.length) {
-          dl.innerHTML = data
-            .map(r => `<option value="${r.code} – ${r.titel}"></option>`)
-            .join('');
-        }
-      } catch (_) { /* silent */ }
-    }, 250);
-  });
+let _icdLoaded = false;
+async function populateIcdDatalist() {
+  if (_icdLoaded) return;
+  const dl = document.getElementById('icdDatalist');
+  if (!dl) return;
+  const { data, error } = await supabase
+    .from('icd10_titles')
+    .select('code,titel')
+    .order('code')
+    .limit(1000);
+  if (error) { console.warn('[ICD] load error', error.message); return; }
+  if (data?.length) {
+    dl.innerHTML = data.map(r => `<option value="${r.code} – ${r.titel}"></option>`).join('');
+    _icdLoaded = true;
+  }
 }
 
 function openRezeptModal(phone, leadId) {
@@ -15186,8 +15177,9 @@ function openRezeptModal(phone, leadId) {
 
   openModal('rezeptModal');
 
-  // Populate heilmittel datalist for this modal (normally only filled when OCR modal opens)
+  // Populate datalists — same pattern as heilmittel
   loadPhysioPositions().then(positions => populateHmDatalist(positions)).catch(() => {});
+  populateIcdDatalist().catch(() => {});
 
   // Async prefill — modal is already open, data arrives in background
   if (leadId) {
@@ -15875,8 +15867,6 @@ async function init() {
         rzHmPosInput.value = m ? m.x : '';
       });
     }
-    setupIcdInput('rxcIcd');
-    setupIcdInput('rzIcd');
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
     if (adminLink && currentSession?.user?.id) {
@@ -16260,6 +16250,7 @@ async function openRezeptConfirmModal(payload) {
   if (!aerzteCache || aerzteCache.length === 0) {
     await loadAerzte();
   }
+  populateIcdDatalist().catch(() => {});
   const p = payload.parsed || {};
   const pat = p.patient || {};
   const arzt = p.arzt || {};
