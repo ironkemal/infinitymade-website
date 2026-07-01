@@ -4911,7 +4911,16 @@ async function initBkCustomerAutocomplete() {
         veroCards.appendChild(card);
       });
     } else {
-      veroCards.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0 8px;">Keine aktive Verordnung vorhanden.</div>';
+      veroCards.innerHTML = `
+        <div style="font-size:12px;color:var(--text-muted);padding:4px 0 6px;">Keine aktive Verordnung vorhanden.</div>
+        <button type="button" id="bkAddVerordnungBtn"
+          style="width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px dashed var(--accent,#b1891b);background:rgba(177,137,27,0.05);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--accent,#b1891b);font-size:13px;font-weight:600;">
+          <span style="font-size:18px;">＋</span> Neue Verordnung anlegen
+        </button>`;
+      document.getElementById('bkAddVerordnungBtn')?.addEventListener('click', () => {
+        closeModal('bookingModal');
+        if (typeof openRezeptModal === 'function') openRezeptModal(null, leadId);
+      });
     }
     veroSection.hidden = false;
   }
