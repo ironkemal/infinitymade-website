@@ -4862,7 +4862,58 @@ async function initBkCustomerAutocomplete() {
     if (phoneInput) phoneInput.value = lead.phone || '';
     list.hidden = true;
     activeIndex = -1;
-    refreshBkHausbesuchPanel(); // Fahrtenbuch: lead seçilince adres + cache durumu güncellenir
+    refreshBkHausbesuchPanel();
+    loadBkVerordnungen(lead.id);
+  }
+
+  async function loadBkVerordnungen(leadId) {
+    const veroSection = document.getElementById('bkVerordnungSection');
+    const veroCards   = document.getElementById('bkVeroCards');
+    if (!veroSection || !veroCards) return;
+
+    // Reset
+    document.getElementById('bkSelectedRxId').value = '';
+    document.getElementById('bkSelectedSessionId').value = '';
+    document.getElementById('bkIsSelbstzahler').value = '';
+    window._pendingRxSession = null;
+    const pickerBlock = document.getElementById('bkSessionPickerBlock');
+    if (pickerBlock) pickerBlock.hidden = true;
+
+    const { data: rxs } = await supabase
+      .from('prescriptions')
+      .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,prescription_sessions(id,session_number,status,booking_id)')
+      .eq('patient_id', leadId)
+      .not('status', 'in', '("completed","billed","cancelled")')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    veroCards.innerHTML = '';
+    if (rxs && rxs.length > 0) {
+      rxs.forEach(rx => {
+        const sessions = rx.prescription_sessions || [];
+        const done  = sessions.filter(s => s.status === 'done' || s.status === 'completed').length;
+        const total = rx.anzahl_einheiten || sessions.length || 0;
+        const issued = rx.ausstellungsdatum
+          ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'})
+          : '—';
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.dataset.rxId = rx.id;
+        card.className = 'bk-vero-card';
+        card.style.cssText = 'width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid var(--border);background:transparent;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</div>
+            <span style="font-size:11px;font-weight:700;color:var(--accent,#b1891b);background:rgba(177,137,27,0.12);padding:1px 7px;border-radius:10px;">${done}/${total}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);">${rx.icd10 ? rx.icd10 + (rx.diagnosegruppe ? ' · ' + rx.diagnosegruppe : '') : rx.diagnosegruppe || ''} · ${issued}</div>`;
+        card.addEventListener('click', () => selectVerordnung(rx, sessions));
+        veroCards.appendChild(card);
+      });
+    } else {
+      veroCards.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0 8px;">Keine aktive Verordnung vorhanden.</div>';
+    }
+    veroSection.hidden = false;
   }
 
   if (!input.dataset.bkAutoBound) {
