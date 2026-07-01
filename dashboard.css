@@ -7301,16 +7301,17 @@ body.compact-mode .patient-row {
 
 
 /* ── ICD-10 Autocomplete Dropdown ─────────────────────────────────────────── */
+/* Attached to <body> at fixed position so it escapes overflow:hidden modals.
+   Position/size are set via JS (getBoundingClientRect). z-index > modal-overlay (1000). */
 .icd10-dropdown {
-  position: absolute;
-  z-index: 1000;
+  position: fixed;
+  z-index: 1200;
   background: var(--bg-card-solid, #1e293b);
   border: 1px solid var(--border, #334155);
   border-radius: 8px;
   max-height: 280px;
   overflow-y: auto;
-  width: 100%;
-  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
 }
 .icd10-dropdown-item {
   padding: 8px 12px;
@@ -7327,4 +7328,3 @@ body.compact-mode .patient-row {
 }
 .icd10-dropdown-item:hover,
 .icd10-dropdown-item.active { background: var(--bg-hover, #334155); }
-.icd10-dropdown:empty { display: none; }

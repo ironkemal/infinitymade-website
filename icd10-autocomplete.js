@@ -24,16 +24,16 @@ export function icd10Autocomplete(inputEl, sbClient) {
   dropdown.setAttribute('role', 'listbox');
   dropdown.setAttribute('aria-label', 'ICD-10 Vorschläge');
 
-  // Position the dropdown relative to the input's nearest positioned ancestor.
-  // We insert it right after the input so it sits in the normal flow wrapper.
-  const wrapper = inputEl.parentElement;
-  if (wrapper) {
-    // Make sure the parent is positioned so `position:absolute` on dropdown works
-    const wrapperPos = getComputedStyle(wrapper).position;
-    if (wrapperPos === 'static') wrapper.style.position = 'relative';
-    wrapper.appendChild(dropdown);
-  } else {
-    document.body.appendChild(dropdown);
+  // Attach to body to escape overflow:hidden / overflow-y:auto on modal containers.
+  // Position is updated each time the dropdown is shown.
+  document.body.appendChild(dropdown);
+
+  function positionDropdown() {
+    const rect = inputEl.getBoundingClientRect();
+    dropdown.style.position = 'fixed';
+    dropdown.style.top  = (rect.bottom + 2) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
@@ -47,7 +47,11 @@ export function icd10Autocomplete(inputEl, sbClient) {
     dropdown.innerHTML = '';
     activeIndex = -1;
     currentItems = [];
+    dropdown.style.display = 'none';
   }
+
+  // Hide immediately on init
+  dropdown.style.display = 'none';
 
   function setActive(index) {
     const items = dropdown.querySelectorAll('.icd10-dropdown-item');
@@ -68,7 +72,10 @@ export function icd10Autocomplete(inputEl, sbClient) {
     activeIndex = -1;
     currentItems = items;
 
-    if (!items.length) return; // :empty hides via CSS
+    if (!items.length) { dropdown.style.display = 'none'; return; }
+
+    positionDropdown();
+    dropdown.style.display = 'block';
 
     items.forEach((item, i) => {
       const el = document.createElement('div');
