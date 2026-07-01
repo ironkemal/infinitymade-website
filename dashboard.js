@@ -15134,42 +15134,49 @@ async function editAerzte(id) {
 window.editAerzte = editAerzte;
 window.deleteAerzte = deleteAerzte;
 
-async function openRezeptModal(phone, leadId) {
-  // Reset all fields
-  document.getElementById('rzPatientId').value = leadId || '';
-  document.getElementById('rzArztName').value = '';
-  document.getElementById('rzAusstDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('rzLanr').value = '';
-  document.getElementById('rzBsnr').value = '';
-  document.getElementById('rzIcd').value = '';
-  document.getElementById('rzDg').value = '';
-  document.getElementById('rzLeitsymptomatik').value = '';
-  document.getElementById('rzHm').value = '';
-  document.getElementById('rzHmPosition').value = '';
-  document.getElementById('rzAnzahl').value = '';
-  document.getElementById('rzFreq').value = '';
-  document.getElementById('rzDringend').checked = false;
-  document.getElementById('rzHausbesuch').checked = false;
-  document.getElementById('rzBlanko').checked = false;
-  document.getElementById('rzLhbBvb').checked = false;
-  document.getElementById('rzZuzahlungBefreit').checked = false;
-  document.getElementById('rzBerichtAngefordert').checked = false;
-  document.getElementById('rzZuzahlung').value = '';
-  document.getElementById('rzBerichtStatus').value = 'offen';
+function openRezeptModal(phone, leadId) {
+  // Reset all fields synchronously then open — async prefill happens after
+  const g = id => document.getElementById(id);
+  g('rzPatientId').value = leadId || '';
+  g('rzArztName').value = '';
+  g('rzAusstDate').value = new Date().toISOString().split('T')[0];
+  g('rzLanr').value = '';
+  g('rzBsnr').value = '';
+  g('rzIcd').value = '';
+  g('rzDg').value = '';
+  g('rzLeitsymptomatik').value = '';
+  g('rzHm').value = '';
+  g('rzHmPosition').value = '';
+  g('rzAnzahl').value = '';
+  g('rzFreq').value = '';
+  g('rzDringend').checked = false;
+  g('rzHausbesuch').checked = false;
+  g('rzBlanko').checked = false;
+  g('rzLhbBvb').checked = false;
+  g('rzZuzahlungBefreit').checked = false;
+  g('rzBerichtAngefordert').checked = false;
+  g('rzZuzahlung').value = '';
+  g('rzBerichtStatus').value = 'offen';
 
-  if (leadId) {
-    const { data } = await supabase.from('leads').select('title,arzt_id,hausbesuch').eq('id', leadId).single();
-    if (data?.arzt_id) {
-      const { data: arzt } = await supabase.from('aerzte').select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', data.arzt_id).single();
-      if (arzt) {
-        document.getElementById('rzArztName').value = arzt.arzt_name || '';
-        document.getElementById('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
-        document.getElementById('rzBsnr').value = arzt.bsnr || '';
-      }
-    }
-    if (data?.hausbesuch) document.getElementById('rzHausbesuch').checked = true;
-  }
   openModal('rezeptModal');
+
+  // Async prefill — modal is already open, data arrives in background
+  if (leadId) {
+    supabase.from('leads').select('arzt_id,hausbesuch').eq('id', leadId).maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        if (data.hausbesuch) g('rzHausbesuch').checked = true;
+        if (data.arzt_id) {
+          supabase.from('aerzte').select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', data.arzt_id).maybeSingle()
+            .then(({ data: arzt }) => {
+              if (!arzt) return;
+              g('rzArztName').value = arzt.arzt_name || '';
+              g('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
+              g('rzBsnr').value = arzt.bsnr || '';
+            });
+        }
+      });
+  }
 }
 
 async function saveRezept() {
