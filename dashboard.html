@@ -1291,6 +1291,36 @@
           </div>
         </section>
 
+        <!-- ===== PANEL: VERORDNUNGEN (Physio / Praxis) ===== -->
+        <section class="panel" id="panel-verordnungen">
+          <div class="panel-header">
+            <div>
+              <h2>Verordnungen</h2>
+              <p class="panel-sub">Muster-13-Verordnungen verwalten</p>
+            </div>
+            <button class="btn-primary" id="vordNeueBtn" style="flex-shrink:0;">+ Neue Verordnung</button>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Datum</th>
+                    <th>ICD-10</th>
+                    <th>Heilmittel</th>
+                    <th>Einheiten</th>
+                    <th>Gültig bis</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="vordTbody"></tbody>
+              </table>
+            </div>
+            <div id="vordListEmpty" class="table-empty" hidden>Keine Verordnungen vorhanden.</div>
+          </div>
+        </section>
+
         <!-- ===== PANEL: KASSENABRECHNUNG (§ 302 SGB V) ===== -->
         <section class="panel" id="panel-abrechnung">
           <div class="panel-header">

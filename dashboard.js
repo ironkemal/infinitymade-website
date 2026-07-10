@@ -92,6 +92,7 @@ const T = {
     ab_zuzahlung_befreit: 'befreit', ab_hint_select: 'Wählen Sie alle Rezepte einer Krankenkasse, die in einer Sammelrechnung gebündelt werden sollen.',
     nav_belegliste: 'Kassenbuch',
     nav_mahnwesen: 'Mahnwesen',
+    nav_verordnungen: 'Verordnungen',
     nav_statistik: 'Auswertungen',
     nav_warteliste: 'Warteliste',
     cal_emp_all: 'Alle',
@@ -221,6 +222,7 @@ const T = {
     ab_zuzahlung_befreit: 'exempt', ab_hint_select: 'Select all prescriptions for one insurer to bundle into a single batch invoice.',
     nav_belegliste: 'Cash Ledger',
     nav_mahnwesen: 'Dunning',
+    nav_verordnungen: 'Prescriptions',
     nav_statistik: 'Analytics',
     nav_warteliste: 'Waiting List',
     cal_emp_all: 'All',
@@ -334,6 +336,7 @@ const T = {
     ab_zuzahlung_befreit: 'muaf', ab_hint_select: 'Tek bir Krankenkasse için tüm reçeteleri seçerek tek bir toplu faturada birleştirin.',
     nav_belegliste: 'Kasa Defteri',
     nav_mahnwesen: 'Tahsilat',
+    nav_verordnungen: 'Reçeteler',
     nav_statistik: 'Analizler',
     nav_warteliste: 'Bekleme Listesi',
     cal_emp_all: 'Tümü',
@@ -463,6 +466,7 @@ const SECTOR_PANELS = {
     { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
     { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'], group: 'rezepte' },
     { id: 'anamnese', icon: ICON.notes, key: 'nav_anamnese', roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'verordnungen', icon: ICON.clipboard, key: 'nav_verordnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'], group: 'abrechnung' },
     { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'], group: 'abrechnung' },
@@ -511,6 +515,7 @@ const SECTOR_PANELS = {
     { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
     { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
     { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'], group: 'rezepte' },
+    { id: 'verordnungen', icon: ICON.clipboard, key: 'nav_verordnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'], group: 'abrechnung' },
     { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'], group: 'abrechnung' },
@@ -651,6 +656,7 @@ const SIDEBAR_TO_MODULE = {
   notes: 'notes',
   anamnese: 'anamnese',
   prescriptions: 'prescriptions',
+  verordnungen: 'prescriptions',
   abrechnung: 'abrechnung',
   'podologie-billing': 'abrechnung',
   fussstatus: 'abrechnung',
@@ -690,7 +696,7 @@ async function renderSidebar() {
     const groupItems = items.filter(item => {
       if (item.group !== group.id) return false;
       if (!item.roles.includes(role)) return false;
-      if ((item.id === 'abrechnung' || item.id === 'podologie-billing') && !has302Access()) return false;
+      if (item.id === 'abrechnung' && !has302Access()) return false;
       const moduleKey = SIDEBAR_TO_MODULE[item.id];
       if (role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) return false;
       return true;
@@ -822,6 +828,7 @@ async function switchPanel(id) {
   if (id === 'doctors') loadDoctors();
   if (id === 'notizen') loadNotizen();
   if (id === 'beispielmodus') loadBeispielmodus();
+  if (id === 'verordnungen') loadVerordnungen();
   if (id === 'rechnungen') loadRechnungen();
   if (id === 'abrechnung') loadAbrechnung();
   if (id === 'podologie-billing') loadPodologieBilling();
@@ -15269,6 +15276,55 @@ function openRezeptModal(phone, leadId) {
   }
 }
 
+async function loadVerordnungen() {
+  const ownerId = getOwnerId();
+  const tbody = document.getElementById('vordTbody');
+  const empty = document.getElementById('vordListEmpty');
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">Lädt…</td></tr>';
+
+  const btn = document.getElementById('vordNeueBtn');
+  if (btn) btn.onclick = () => openRezeptModal(null, null);
+
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .select('id, patient_id, ausstellungsdatum, icd10, heilmittel, anzahl_einheiten, status, gueltig_bis, leads(name)')
+    .eq('owner_id', ownerId)
+    .order('ausstellungsdatum', { ascending: false })
+    .limit(200);
+
+  if (error) { console.error('[loadVerordnungen]', error); tbody.innerHTML = ''; return; }
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '';
+    if (empty) empty.hidden = false;
+    return;
+  }
+  if (empty) empty.hidden = true;
+
+  const STATUS_LABEL = { active: 'Aktiv', completed: 'Abgeschlossen', cancelled: 'Storniert', billed: 'Abgerechnet' };
+  const STATUS_COLOR = { active: '#22c55e', completed: '#64748b', cancelled: '#ef4444', billed: '#3b82f6' };
+
+  tbody.innerHTML = data.map(rx => {
+    const patName = escapeHtml(rx.leads?.name || '—');
+    const date = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
+    const gueltig = rx.gueltig_bis ? new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : '—';
+    const st = rx.status || 'active';
+    const stLabel = STATUS_LABEL[st] || st;
+    const stColor = STATUS_COLOR[st] || '#94a3b8';
+    return `<tr>
+      <td>${patName}</td>
+      <td style="white-space:nowrap">${date}</td>
+      <td><code style="font-size:12px">${escapeHtml(rx.icd10 || '—')}</code></td>
+      <td>${escapeHtml(rx.heilmittel || '—')}</td>
+      <td style="text-align:center">${rx.anzahl_einheiten ?? '—'}</td>
+      <td style="white-space:nowrap">${gueltig}</td>
+      <td><span style="font-size:11px;font-weight:600;color:${stColor}">${escapeHtml(stLabel)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
 async function saveRezept() {
   const ownerId = getOwnerId();
   const patientId = document.getElementById('rzPatientId').value;
@@ -15345,10 +15401,10 @@ async function saveRezept() {
     closeModal('rezeptModal');
     showToast('Verordnung gespeichert ✓', 'success');
 
-    // Refresh verordnung list if booking modal is open
     if (typeof loadBkVerordnungen === 'function' && patientId) {
       loadBkVerordnungen(patientId);
     }
+    if (activePanel === 'verordnungen') loadVerordnungen();
   } catch (e) {
     console.error('[saveRezept]', e);
     showToast('Fehler: ' + (e.message || 'Unbekannt'), 'error');
