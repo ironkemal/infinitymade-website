@@ -96,7 +96,7 @@ const T = {
     nav_statistik: 'Auswertungen',
     nav_warteliste: 'Warteliste',
     cal_emp_all: 'Alle',
-    nav_podologie_billing: 'Verordnungen',
+    nav_podologie_billing: 'Podologie-Abrechnung',
     podologie_billing_sub: 'Muster-13-Verordnungen verwalten & Behandlungen dokumentieren',
     nav_fussstatus: 'Fußstatus',
     fussstatus_sub: 'Wagner-Klassifikation & podologischer Befundstatus',
@@ -226,7 +226,7 @@ const T = {
     nav_statistik: 'Analytics',
     nav_warteliste: 'Waiting List',
     cal_emp_all: 'All',
-    nav_podologie_billing: 'Prescriptions',
+    nav_podologie_billing: 'Podology Billing',
     podologie_billing_sub: 'Manage Muster-13 prescriptions & document treatments',
     nav_fussstatus: 'Foot Status',
     fussstatus_sub: 'Wagner classification & podological assessment',
@@ -340,7 +340,7 @@ const T = {
     nav_statistik: 'Analizler',
     nav_warteliste: 'Bekleme Listesi',
     cal_emp_all: 'Tümü',
-    nav_podologie_billing: 'Reçeteler',
+    nav_podologie_billing: 'Podoloji Faturalama',
     podologie_billing_sub: 'Muster-13 reçetelerini yönet ve tedavileri kaydet',
     nav_fussstatus: 'Ayak Durumu',
     fussstatus_sub: 'Wagner sınıflandırması ve podolojik muayene durumu',
@@ -492,6 +492,7 @@ const SECTOR_PANELS = {
     { id: 'hours',             icon: ICON.clock,      key: 'nav_hours',             roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',              icon: ICON.user,       key: 'nav_team',              roles: ['owner', 'employee'], group: 'team' },
     { id: 'verordnungen',      icon: ICON.clipboard,  key: 'nav_verordnungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'podologie-billing', icon: ICON.bill_pro,   key: 'nav_podologie_billing', roles: ['owner'],             group: 'abrechnung' },
     { id: 'rechnungen',        icon: ICON.invoice,    key: 'nav_rechnungen',        roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'fussstatus',        icon: ICON.clipboard,  key: 'nav_fussstatus',        roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'belegliste',        icon: ICON.clipboard,  key: 'nav_belegliste',        roles: ['owner'],             group: 'abrechnung' },
@@ -15303,14 +15304,14 @@ async function loadVerordnungen() {
   }
   if (empty) empty.hidden = true;
 
-  const STATUS_LABEL = { active: 'Aktiv', completed: 'Abgeschlossen', cancelled: 'Storniert', billed: 'Abgerechnet' };
-  const STATUS_COLOR = { active: '#22c55e', completed: '#64748b', cancelled: '#ef4444', billed: '#3b82f6' };
+  const STATUS_LABEL = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie', completed: 'Abgeschlossen', billed: 'Abgerechnet', cancelled: 'Storniert' };
+  const STATUS_COLOR = { parsed: '#f59e0b', confirmed: '#22c55e', in_therapy: '#38bdf8', completed: '#64748b', billed: '#3b82f6', cancelled: '#ef4444' };
 
   tbody.innerHTML = data.map(rx => {
     const patName = escapeHtml(rx.leads?.name || '—');
     const date = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
     const gueltig = rx.gueltig_bis ? new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : '—';
-    const st = rx.status || 'active';
+    const st = rx.status || 'parsed';
     const stLabel = STATUS_LABEL[st] || st;
     const stColor = STATUS_COLOR[st] || '#94a3b8';
     return `<tr>
@@ -15364,7 +15365,7 @@ async function saveRezept() {
       owner_id: ownerId,
       patient_id: patientId,
       arzt_id: arztId,
-      status: 'active',
+      status: 'confirmed',
       ausstellungsdatum: ausstDate,
       icd10,
       diagnosegruppe: document.getElementById('rzDg').value.trim() || null,
