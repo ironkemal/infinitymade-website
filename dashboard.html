@@ -3097,7 +3097,9 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Frequenz</label>
-            <input class="form-input" id="rzFreq" type="text" placeholder="z. B. 2x pro Woche" />
+            <select class="form-select" id="rzFreq">
+              <option value="">Bitte wählen…</option>
+            </select>
           </div>
         </div>
 
@@ -3330,7 +3332,9 @@
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Frequenz</label>
-                <input class="form-input" id="rxcFreq" type="text" placeholder="z. B. 2x pro Woche" />
+                <select class="form-select" id="rxcFreq">
+                  <option value="">Bitte wählen…</option>
+                </select>
               </div>
               <div class="form-group" style="align-self:end;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
@@ -4271,7 +4275,8 @@
             </div>
           </div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;">
-            Unvergebene Einheiten auf den Kalender ziehen → Termin erstellen
+            Unvergebene Einheiten auf den Kalender ziehen → Termin erstellen.<br>
+            Mehrere per Checkbox anhaken und ziehen → gemeinsamer Kombi-Termin.
           </div>
         </div>
       </div>
@@ -4856,7 +4861,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260713b"></script>
+  <script type="module" src="dashboard.js?v=20260713c"></script>
 </body>
 
 </html>

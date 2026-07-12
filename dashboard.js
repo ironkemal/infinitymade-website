@@ -2190,44 +2190,7 @@ async function initCalendar() {
     e.preventDefault();
     let sessionData;
     try { sessionData = JSON.parse(raw); } catch { return; }
-
-    window._pendingRxSession = { sessionId: sessionData.sessionId, prescriptionId: sessionData.prescriptionId };
-
-    // Initialize modal properly (populates employee + service selects, opens modal)
-    await prefillBookingModal(null);
-
-    // Override patient
-    const custIdEl = document.getElementById('bkCustomerId');
-    const custEl2 = document.getElementById('bkCustomer');
-    const custSearchEl = document.getElementById('bkCustomerSearch');
-    if (custIdEl) custIdEl.value = sessionData.leadId || '';
-    if (custEl2) custEl2.value = sessionData.patientName || '';
-    if (custSearchEl) custSearchEl.value = sessionData.patientName || '';
-
-    // Pre-select service
-    if (sessionData.serviceId) {
-      const srvSel = document.getElementById('bkService');
-      if (srvSel) srvSel.value = sessionData.serviceId;
-    }
-
-    // Hide Rezeptart (continuation, not new prescription)
-    const rxGroup = document.getElementById('bkRezeptartGroup');
-    if (rxGroup) rxGroup.hidden = true;
-    const heilBlock = document.getElementById('bkHeilmittelBlock');
-    if (heilBlock) heilBlock.hidden = true;
-
-    // Show session banner
-    const banner = document.getElementById('bkSpecialBanner');
-    if (banner) {
-      banner.textContent = `📋 Sitzung #${sessionData.sessionNum}: ${sessionData.heilmittelName || '—'}`;
-      banner.style.cssText = 'display:block;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.1);border:1px solid var(--primary);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--primary);margin-bottom:8px;';
-      banner.hidden = false;
-    }
-
-    document.getElementById('bk-id').value = '';
-    document.getElementById('bkDeleteBtn').hidden = true;
-    document.getElementById('bkWlMatchBtn').hidden = true;
-    document.getElementById('bookingModalTitle').textContent = 'Folgetermin erstellen';
+    await handleRxSessionDropToModal(sessionData, null, null);
   });
 
   if (!selectedEmployeeId) {
@@ -2445,47 +2408,7 @@ async function renderDayView(dateStr) {
           if (rxRaw) {
             let sessionData;
             try { sessionData = JSON.parse(rxRaw); } catch { return; }
-            window._pendingRxSession = { sessionId: sessionData.sessionId, prescriptionId: sessionData.prescriptionId };
-
-            // Initialize modal properly with time + employee
-            await prefillBookingModal(slot.dataset.time || null);
-
-            // Override patient
-            const custIdEl = document.getElementById('bkCustomerId');
-            const custEl2 = document.getElementById('bkCustomer');
-            const custSearchEl = document.getElementById('bkCustomerSearch');
-            if (custIdEl) custIdEl.value = sessionData.leadId || '';
-            if (custEl2) custEl2.value = sessionData.patientName || '';
-            if (custSearchEl) custSearchEl.value = sessionData.patientName || '';
-
-            // Pre-select employee from slot
-            const empSel = document.getElementById('bkEmployee');
-            if (empSel && slot.dataset.empId) empSel.value = slot.dataset.empId;
-
-            // Pre-select service
-            if (sessionData.serviceId) {
-              const srvSel = document.getElementById('bkService');
-              if (srvSel) srvSel.value = sessionData.serviceId;
-            }
-
-            // Hide Rezeptart + heilmittel (continuation, not new prescription)
-            const rxGroup = document.getElementById('bkRezeptartGroup');
-            if (rxGroup) rxGroup.hidden = true;
-            const heilBlock = document.getElementById('bkHeilmittelBlock');
-            if (heilBlock) heilBlock.hidden = true;
-
-            // Show session banner
-            const banner = document.getElementById('bkSpecialBanner');
-            if (banner) {
-              banner.textContent = `📋 Sitzung #${sessionData.sessionNum}: ${sessionData.heilmittelName || '—'}`;
-              banner.style.cssText = 'display:block;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.1);border:1px solid var(--primary);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--primary);margin-bottom:8px;';
-              banner.hidden = false;
-            }
-
-            document.getElementById('bk-id').value = '';
-            document.getElementById('bkDeleteBtn').hidden = true;
-            document.getElementById('bkWlMatchBtn').hidden = true;
-            document.getElementById('bookingModalTitle').textContent = 'Folgetermin erstellen';
+            await handleRxSessionDropToModal(sessionData, slot.dataset.time || null, slot.dataset.empId || null);
             return;
           }
 
@@ -2789,6 +2712,96 @@ setInterval(() => {
     renderDayView(toISODate(dayViewDate));
   }
 }, 60000);
+
+// Unvergebene Verordnungs-Sitzung(en) per Drag&Drop auf den Kalender → Buchungsmodal vorbereiten.
+// Unterstützt Mehrfachauswahl (Kombi-Termin, z.B. Befund + Behandlung): sessions[] im Payload.
+async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
+  const sessions = (Array.isArray(sessionData.sessions) && sessionData.sessions.length)
+    ? sessionData.sessions
+    : [{
+        sessionId: sessionData.sessionId,
+        sessionNum: sessionData.sessionNum,
+        heilmittelIdx: sessionData.heilmittelIdx,
+        heilmittelName: sessionData.heilmittelName,
+      }];
+
+  // Modal initialisieren (setzt window._pendingRxSession zurück → danach neu setzen!)
+  await prefillBookingModal(timeStr);
+
+  window._pendingRxSession = {
+    sessionIds: sessions.map(s => s.sessionId),
+    sessionId: sessions[0].sessionId,
+    prescriptionId: sessionData.prescriptionId,
+  };
+
+  // Patient übernehmen
+  const custIdEl = document.getElementById('bkCustomerId');
+  const custEl2 = document.getElementById('bkCustomer');
+  const custSearchEl = document.getElementById('bkCustomerSearch');
+  if (custIdEl) custIdEl.value = sessionData.leadId || '';
+  if (custEl2) custEl2.value = sessionData.patientName || '';
+  if (custSearchEl) custSearchEl.value = sessionData.patientName || '';
+
+  // Mitarbeiter aus Slot übernehmen
+  if (empId) {
+    const empSel = document.getElementById('bkEmployee');
+    if (empSel) empSel.value = empId;
+  }
+
+  // Dienstleistung automatisch anhand des Heilmittels wählen (Fallback: serviceId der Quellbuchung)
+  const matchedSrvIds = [];
+  for (const s of sessions) {
+    matchedSrvIds.push(s.heilmittelName ? await findMatchingServiceId(s.heilmittelName) : null);
+  }
+  const primarySrvId = matchedSrvIds[0] || sessionData.serviceId || '';
+  const srvSel = document.getElementById('bkService');
+  if (primarySrvId && srvSel) {
+    if (!srvSel.querySelector(`option[value="${primarySrvId}"]`)) {
+      await populateSrvSelect(primarySrvId);
+    }
+    srvSel.value = primarySrvId;
+    await updateBkDuration(primarySrvId);
+  }
+
+  // Kombi-Termin: Dauer = Summe der Dauern aller gematchten Dienstleistungen
+  if (sessions.length > 1) {
+    const sumMin = matchedSrvIds.reduce((acc, mid) => {
+      const srv = (ownerServices || []).find(x => x.id === mid);
+      return acc + (parseInt(srv?.duration_minutes) || 30);
+    }, 0);
+    const durOptions = document.getElementById('bkDurationOptions');
+    const durGroup = document.getElementById('bkDurationGroup');
+    if (durOptions) {
+      durOptions.innerHTML = `<label class="bk-dur-option">
+        <input type="radio" name="bkDuration" value="${sumMin}" checked>
+        <span>${sumMin} Min (kombiniert)</span>
+      </label>`;
+      if (durGroup) durGroup.hidden = false;
+      window._selectedBkDuration = sumMin;
+    }
+  }
+
+  // Rezeptart + Heilmittel ausblenden (Folgetermin, keine neue Verordnung)
+  const rxGroup = document.getElementById('bkRezeptartGroup');
+  if (rxGroup) rxGroup.hidden = true;
+  const heilBlock = document.getElementById('bkHeilmittelBlock');
+  if (heilBlock) heilBlock.hidden = true;
+
+  // Session-Banner
+  const banner = document.getElementById('bkSpecialBanner');
+  if (banner) {
+    banner.textContent = '📋 ' + sessions.map(s => `Sitzung #${s.sessionNum}: ${s.heilmittelName || '—'}`).join('  +  ');
+    banner.style.cssText = 'display:block;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.1);border:1px solid var(--primary);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--primary);margin-bottom:8px;';
+    banner.hidden = false;
+  }
+
+  document.getElementById('bk-id').value = '';
+  document.getElementById('bkDeleteBtn').hidden = true;
+  document.getElementById('bkWlMatchBtn').hidden = true;
+  document.getElementById('bookingModalTitle').textContent = sessions.length > 1
+    ? `Folgetermin erstellen (${sessions.length} Heilmittel)`
+    : 'Folgetermin erstellen';
+}
 
 async function prefillBookingModal(startStr) {
   document.getElementById('bk-id').value = '';
@@ -5775,11 +5788,15 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     if (error) { console.error('[booking save]', error); showToast(bookingErrMsg(error), 'error'); return; }
     savedBookingId = newBooking?.id;
 
-    // If pending drag-drop or Verordnung-picker session: link it
-    if (window._pendingRxSession?.sessionId && savedBookingId) {
-      await supabase.from('prescription_sessions')
+    // If pending drag-drop or Verordnung-picker session(s): link them
+    const _pend = window._pendingRxSession;
+    const _pendIds = (_pend?.sessionIds?.length ? _pend.sessionIds : (_pend?.sessionId ? [_pend.sessionId] : []))
+      .filter(Boolean);
+    if (_pendIds.length && savedBookingId) {
+      const { error: linkErr } = await supabase.from('prescription_sessions')
         .update({ booking_id: savedBookingId, status: 'planned' })
-        .eq('id', window._pendingRxSession.sessionId);
+        .in('id', _pendIds);
+      if (linkErr) console.error('[rx session link]', linkErr);
       window._pendingRxSession = null;
     }
   }
@@ -5845,7 +5862,8 @@ async function loadRxSessionsPanel(booking) {
           data-lead-id="${booking.lead_id || ''}"
           data-service-id="${booking.service_id || ''}"
           style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;cursor:grab;font-size:12px;user-select:none;"
-          title="Auf den Kalender ziehen, um einen neuen Termin zu erstellen">
+          title="Auf den Kalender ziehen, um einen neuen Termin zu erstellen. Mehrere per Checkbox auswählen → gemeinsamer Termin.">
+          <input type="checkbox" class="rx-unv-cb" style="flex-shrink:0;cursor:pointer;accent-color:var(--primary);margin:0;" title="Für Kombi-Termin auswählen">
           <span style="color:var(--text-muted);font-size:11px;min-width:16px;">#${s.session_number}</span>
           <span style="font-weight:700;color:var(--primary);min-width:28px;">${escapeHtml(getHmKuerzel(s.heilmittel_index ?? 0))}</span>
           <span style="color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${escapeHtml(getHmName(s.heilmittel_index ?? 0))}</span>
@@ -5853,22 +5871,45 @@ async function loadRxSessionsPanel(booking) {
         </div>
       `).join('');
       unvList.querySelectorAll('.rx-unv-item').forEach(el => {
+        const cb = el.querySelector('.rx-unv-cb');
+        // Checkbox-Klick darf keinen Drag starten
+        if (cb) cb.addEventListener('mousedown', ev => ev.stopPropagation());
         el.addEventListener('dragstart', (e) => {
           e.dataTransfer.effectAllowed = 'copy';
-          const hmIdx = parseInt(el.dataset.heilmittelIdx ?? 0);
+          const buildSess = (item) => {
+            const idx = parseInt(item.dataset.heilmittelIdx ?? 0);
+            return {
+              sessionId: item.dataset.sessionId,
+              sessionNum: item.dataset.sessionNum,
+              heilmittelIdx: idx,
+              heilmittelName: getHmName(idx),
+            };
+          };
+          // Gezogene Karte angehakt → alle angehakten als Gruppe mitnehmen
+          let group = [el];
+          if (cb?.checked) {
+            const checkedEls = Array.from(unvList.querySelectorAll('.rx-unv-item'))
+              .filter(x => x.querySelector('.rx-unv-cb')?.checked);
+            if (checkedEls.length > 1) group = checkedEls;
+          }
+          const sessions = group.map(buildSess);
           e.dataTransfer.setData('application/rx-session', JSON.stringify({
-            sessionId: el.dataset.sessionId,
             prescriptionId: el.dataset.prescriptionId,
-            sessionNum: el.dataset.sessionNum,
-            heilmittelIdx: hmIdx,
             patientName: el.dataset.patientName,
             leadId: el.dataset.leadId,
             serviceId: el.dataset.serviceId,
-            heilmittelName: getHmName(hmIdx),
+            sessions,
+            // Legacy-Einzelfelder (Abwärtskompatibilität)
+            sessionId: sessions[0].sessionId,
+            sessionNum: sessions[0].sessionNum,
+            heilmittelIdx: sessions[0].heilmittelIdx,
+            heilmittelName: sessions[0].heilmittelName,
           }));
-          el.style.opacity = '0.4';
+          group.forEach(g => { g.style.opacity = '0.4'; });
         });
-        el.addEventListener('dragend', () => { el.style.opacity = '1'; });
+        el.addEventListener('dragend', () => {
+          unvList.querySelectorAll('.rx-unv-item').forEach(g => { g.style.opacity = '1'; });
+        });
       });
     }
   }
@@ -16024,9 +16065,49 @@ async function init() {
 // booking modal pre-filled with patient + service + series settings,
 // then auto-triggers the existing AI suggest flow.
 
+// Gerçek hayatta kullanılan Heilmittel-Frequenzen (HeilM-RL Frequenzspannen dahil).
+// Tek kaynak: dashboard'daki tüm Frequenz dropdown'ları buradan beslenir.
+const FREQUENZ_OPTIONS = [
+  { label: 'Wöchentlich', items: ['1x pro Woche', '2x pro Woche', '3x pro Woche', '4x pro Woche', '5x pro Woche'] },
+  { label: 'Frequenzspanne', items: ['1–2x pro Woche', '1–3x pro Woche', '2–3x pro Woche', '3–4x pro Woche', '4–5x pro Woche'] },
+  { label: 'Intensiv', items: ['Täglich', '2x täglich'] },
+  { label: 'Größere Abstände', items: ['1x alle 2 Wochen', '1x alle 3 Wochen', '1x alle 4 Wochen', '1x alle 6 Wochen', '1x alle 8 Wochen'] },
+];
+
+function frequenzOptionsHtml() {
+  return '<option value="">Bitte wählen…</option>' + FREQUENZ_OPTIONS.map(g =>
+    `<optgroup label="${g.label}">` +
+    g.items.map(v => `<option value="${v}">${v}</option>`).join('') +
+    '</optgroup>'
+  ).join('');
+}
+
+function populateFrequenzSelects() {
+  ['rzFreq', 'rxcFreq'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel && sel.tagName === 'SELECT') sel.innerHTML = frequenzOptionsHtml();
+  });
+}
+
+// Select'e serbest-metin değer yaz (eski kayıtlar / OCR çıktısı listede olmayabilir):
+// normalize edip eşleşen option'ı seç, yoksa değeri geçici option olarak ekle.
+function setFreqValue(id, value) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const v = (value || '').trim();
+  if (!v) { sel.value = ''; return; }
+  const norm = s => s.toLowerCase().replace(/×/g, 'x').replace(/-/g, '–').replace(/\s+/g, ' ');
+  const match = Array.from(sel.options).find(o => o.value && norm(o.value) === norm(v));
+  if (match) { sel.value = match.value; return; }
+  sel.add(new Option(v, v));
+  sel.value = v;
+}
+
 function parseFrequenzWoche(freq) {
   // "2x pro Woche" / "2 x / Woche" / "2x wöchentlich" → 2
   if (!freq) return null;
+  // "1x alle 2 Wochen", "monatlich", "täglich" → haftalık sayı değil, seri planlama manuel
+  if (/alle\s*\d+\s*Wochen|pro\s*Monat|monatlich|t[äa]gl/i.test(freq)) return null;
   const rangeMatch = freq.match(/(\d+)\s*[-–]\s*(\d+)\s*x?/i);
   if (rangeMatch && rangeMatch[2]) {
     return parseInt(rangeMatch[2], 10);
@@ -16423,7 +16504,7 @@ async function openRezeptConfirmModal(payload) {
   // Heilmittel — handled by setupRezeptConfirmDropdowns
   // (we still pass the raw OCR text below)
   setVal('rxcAnzahl', rez.anzahl_einheiten);
-  setVal('rxcFreq', rez.frequenz);
+  setFreqValue('rxcFreq', rez.frequenz);
   setChk('rxcDringend', rez.is_dringend);
   setChk('rxcHausbesuch', rez.hausbesuch);
   setChk('rxcBlanko', rez.is_blanko);
@@ -19359,6 +19440,7 @@ if (document.readyState === 'loading') {
     initWlModal();
     initDruckeinstellungen();
     initKioskMode();
+    populateFrequenzSelects();
   });
 } else {
   initSchnellerfassung();
@@ -19366,6 +19448,7 @@ if (document.readyState === 'loading') {
   initWlModal();
   initDruckeinstellungen();
   initKioskMode();
+  populateFrequenzSelects();
 }
 
 // =====================================================================
@@ -20679,7 +20762,7 @@ async function loadPodologieBilling() {
               </div>
               <div>
                 <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_frequenz')}</label>
-                <input type="text" id="podNewFrequenz" placeholder="z.B. 1x wöchentlich" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+                <select id="podNewFrequenz" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">${frequenzOptionsHtml()}</select>
               </div>
             </div>
             <div>
