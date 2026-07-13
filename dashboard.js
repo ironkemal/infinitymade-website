@@ -4420,9 +4420,112 @@ async function handlePatientNichtErschienen() {
     if (activePanel === 'calendar' && calendarView === 'day') {
       await renderDayView(toISODate(dayViewDate));
     }
+
+    // Ausfallgebühr aktiv? — Rechnung anbieten
+    await offerAusfallrechnung(bkActionBookingCache, 'no_show');
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+// ============================================================
+// Ausfallgebühr — private no-show / late-cancel fee invoice
+// ============================================================
+
+function ausfallBizForBooking(booking) {
+  const list = myBusinesses || [];
+  const biz = list.find(b => b.id === booking.business_id)
+    || list.find(b => b.is_default)
+    || list[0];
+  return (biz && biz.ausfall_enabled) ? biz : null;
+}
+
+function ausfallSuggestedAmount(biz, booking) {
+  if (biz.ausfall_mode === 'percent' && biz.ausfall_percent > 0) {
+    const srv = (ownerServices || []).find(s => s.id === booking.service_id);
+    const price = srv ? parseFloat(String(srv.price || '').replace(',', '.')) : NaN;
+    if (price > 0) return +(price * biz.ausfall_percent / 100).toFixed(2);
+    return null; // percent mode but no service price — manual entry
+  }
+  return biz.ausfall_amount_eur > 0 ? Number(biz.ausfall_amount_eur) : null;
+}
+
+// Shows the offer modal if the business has Ausfallgebühr enabled.
+// Resolves when the user has decided (created or dismissed) — callers that
+// delete the booking afterwards must await this.
+function offerAusfallrechnung(booking, reason) {
+  return new Promise(resolve => {
+    if (!booking) return resolve(false);
+    const biz = ausfallBizForBooking(booking);
+    if (!biz) return resolve(false);
+
+    const suggested = ausfallSuggestedAmount(biz, booking);
+    const reasonLabel = reason === 'late_cancel' ? 'Kurzfristige Absage' : 'Patient nicht erschienen';
+
+    const existing = document.getElementById('_ausfallModal');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = '_ausfallModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    overlay.innerHTML = `
+      <div style="background:var(--bg-card-solid,#1e293b);color:var(--text-main,#e2e8f0);border-radius:12px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.4);">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Ausfallrechnung erstellen?</div>
+        <div style="font-size:13px;color:var(--text-muted,#94a3b8);margin-bottom:14px;">
+          ${reasonLabel} — ${escapeHtml(booking.customer_name || '')}${booking.start_time ? ', ' + new Date(booking.start_time).toLocaleDateString('de-DE') : ''}
+        </div>
+        <label style="font-size:12px;color:var(--text-muted,#94a3b8);display:block;margin-bottom:4px;">Betrag (€)</label>
+        <input id="_afAmount" type="number" min="0.01" step="0.01" value="${suggested != null ? suggested.toFixed(2) : ''}"
+          style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#334155);background:transparent;color:inherit;font-size:14px;margin-bottom:6px;" />
+        <div id="_afErr" style="color:#f87171;font-size:12px;display:none;margin-bottom:6px;"></div>
+        <div style="font-size:11px;color:var(--text-muted,#94a3b8);margin-bottom:16px;">Private Rechnung an den Patienten (Schadensersatz, umsatzsteuerfrei). Setzt eine unterschriebene Ausfallvereinbarung voraus.</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="_afSkip" class="btn-secondary">Nicht berechnen</button>
+          <button id="_afCreate" class="btn-primary">Rechnung erstellen</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const done = (created) => { overlay.remove(); resolve(created); };
+    overlay.onclick = e => { if (e.target === overlay) done(false); };
+    overlay.querySelector('#_afSkip').onclick = () => done(false);
+    overlay.querySelector('#_afCreate').onclick = async () => {
+      const btn = overlay.querySelector('#_afCreate');
+      const errEl = overlay.querySelector('#_afErr');
+      const amount = parseFloat(overlay.querySelector('#_afAmount').value.replace(',', '.'));
+      if (!(amount > 0)) { errEl.textContent = 'Bitte gültigen Betrag eingeben.'; errEl.style.display = ''; return; }
+      btn.disabled = true;
+      btn.textContent = 'Erstelle…';
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`${API}/billing/ausfall/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+          body: JSON.stringify({ bookingId: booking.id, amountEur: amount, reason }),
+        });
+        if (!res.ok) {
+          let msg = await res.text();
+          try { msg = JSON.parse(msg).error || msg; } catch (_) {}
+          throw new Error(msg);
+        }
+        const html = await res.text();
+        const w = window.open('', '_blank');
+        if (w) {
+          w.document.write(html);
+          w.document.close();
+          w.onload = () => w.print();
+        } else {
+          showToast('Popup-Blocker aktiv — Rechnung unter Mahnwesen → Ausfallrechnungen abrufbar.', 'error');
+        }
+        showToast('Ausfallrechnung erstellt ✓');
+        done(true);
+      } catch (e) {
+        errEl.textContent = 'Fehler: ' + e.message;
+        errEl.style.display = '';
+        btn.disabled = false;
+        btn.textContent = 'Rechnung erstellen';
+      }
+    };
+  });
 }
 
 // ============================================================
@@ -6946,6 +7049,17 @@ document.getElementById('bkActionDeleteBtn').addEventListener('click', async () 
   if (reason && reason.trim()) {
     await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', b.id);
   }
+
+  // Kurzfristige Absage innerhalb der Absagefrist → Ausfallrechnung anbieten
+  // (vor dem Löschen — die Rechnung referenziert den Termin, FK ist ON DELETE SET NULL)
+  const afBiz = ausfallBizForBooking(b);
+  if (afBiz && b.start_time) {
+    const hoursUntil = (new Date(b.start_time) - Date.now()) / 3600000;
+    if (hoursUntil > 0 && hoursUntil < (afBiz.ausfall_cutoff_hours ?? 24)) {
+      await offerAusfallrechnung(b, 'late_cancel');
+    }
+  }
+
   const { error } = await supabase.from('bookings').delete().eq('id', b.id);
   if (error) { showToast('Fehler beim Löschen: ' + error.message, 'error'); return; }
   const modal = document.getElementById('bkActionModal');
@@ -8212,16 +8326,17 @@ async function openLeadModal(lead) {
     if (arztRow) arztRow.style.display = 'grid';
     hausbesuchRow.style.display = 'grid';
 
-    if (krankenkassenCache.length === 0) {
-      const { data } = await supabase.from('krankenkassen').select('*').order('name');
-      krankenkassenCache = data || [];
+    const kkList = await loadKkList();
+    const leadKkDl = document.getElementById('leadKkDatalist');
+    if (leadKkDl) {
+      leadKkDl.innerHTML = kkList.map(k => `<option value="${escapeHtml(k.name)}"></option>`).join('');
     }
-    const kkSelect = document.getElementById('lead-krankenkasse');
-    kkSelect.innerHTML = '<option value="">-- Wählen --</option>' +
-      krankenkassenCache.map(k => `<option value="${k.name}">${k.name}</option>`).join('');
-
-    kkSelect.value = (lead?.krankenkasse || md.krankenkasse) || '';
+    const kkInput = document.getElementById('lead-krankenkasse');
+    if (kkInput) {
+      kkInput.value = (lead?.krankenkasse || md.krankenkasse) || '';
+    }
     document.getElementById('lead-krankenkassennummer').value = (lead?.versichertennummer || md.krankenkassennummer) || '';
+    document.getElementById('lead-versichertenstatus').value = (lead?.versichertenstatus || md.versichertenstatus) || '';
 
     if (!aerzteCache || aerzteCache.length === 0) {
       await loadAerzte();
@@ -8361,10 +8476,32 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     }
   }
 
+  let versichertennummer = null;
+  let versichertenstatus = null;
+  if (isPraxisSector(sector)) {
+    versichertennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
+    if (versichertennummer) {
+      if (!/^[A-Z]\d{9}$/.test(versichertennummer)) {
+        const normalized = versichertennummer.toUpperCase().replace(/\s/g, '');
+        if (!/^[A-Z]\d{9}$/.test(normalized)) {
+          showToast('Versichertennummer-Format ungewöhnlich (erwartet: 1 Buchstabe + 9 Ziffern)', 'error');
+        }
+        versichertennummer = normalized || null;
+      }
+    }
+    versichertenstatus = document.getElementById('lead-versichertenstatus').value.trim() || null;
+    if (versichertenstatus) {
+      if (!/^[1359]\d{4}$/.test(versichertenstatus)) {
+        showToast('Versichertenstatus-Format ungewöhnlich (erwartet: 5 Ziffern beginnend mit 1, 3, 5 oder 9)', 'error');
+      }
+    }
+  }
+
   const metadata = { geburtsdatum };
   if (isPraxisSector(sector)) {
     metadata.krankenkasse = document.getElementById('lead-krankenkasse').value || null;
-    metadata.krankenkassennummer = document.getElementById('lead-krankenkassennummer').value.trim() || null;
+    metadata.krankenkassennummer = versichertennummer;
+    metadata.versichertenstatus = versichertenstatus;
     metadata.hausbesuch = hausbesuch;
     // metadata.adresse'yi artık kullanmıyoruz (strukturlu kolonlar var). Eski kayıtları
     // upsert sırasında silmek istemiyoruz → kolonlarda doluysa metadata.adresse'i drop edelim.
@@ -8385,7 +8522,8 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     notes: document.getElementById('lead-notes').value.trim() || null,
     metadata: Object.keys(metadata).length ? metadata : null,
     krankenkasse: document.getElementById('lead-krankenkasse').value || null,
-    versichertennummer: document.getElementById('lead-krankenkassennummer').value.trim() || null,
+    versichertennummer: versichertennummer,
+    versichertenstatus: versichertenstatus,
     arzt_id: document.getElementById('lead-arzt')?.value || null,
     insurance_type: document.querySelector('input[name="lead_insurance_type"]:checked')?.value || null
   };
@@ -11401,6 +11539,8 @@ async function loadSettings() {
   set('setBic', currentProfile.bic);
   set('setSteuernummer', currentProfile.steuernummer);
   set('setUstId', currentProfile.ust_id);
+  set('set-kim-adresse', currentProfile.kim_adresse);
+  set('set-telematik-id', currentProfile.telematik_id);
   initTaxExemptDropdown(currentProfile.tax_exempt_note);
 
   const isEmployee = currentProfile.role !== 'owner';
@@ -11481,6 +11621,10 @@ async function loadSettings() {
     } else {
       abrSection.style.display = 'none';
     }
+  }
+  const tiSection = document.getElementById('settingsTiSection');
+  if (tiSection) {
+    tiSection.style.display = isPraxisSector(sec) ? '' : 'none';
   }
 
   // Praxis-Branding (Madde 8)
@@ -12354,7 +12498,9 @@ document.getElementById('profileSaveBtn').addEventListener('click', async () => 
     street: v('setStreet') || null,
     plz: v('setPlz') || null,
     city: v('setCity') || null,
-    phone: v('setPhone') || null
+    phone: v('setPhone') || null,
+    kim_adresse: v('set-kim-adresse') || null,
+    telematik_id: v('set-telematik-id') || null
   };
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast(t('err_generic'), 'error'); return; }
@@ -12376,12 +12522,26 @@ document.getElementById('billingSaveBtn')?.addEventListener('click', async () =>
     steuernummer: v('setSteuernummer') || null,
     ust_id: v('setUstId') || null,
     tax_exempt_note: getTaxExemptValue() || null,
-    ik_number: v('setIkNumber') || null
+    ik_number: v('setIkNumber') || null,
+    kim_adresse: v('set-kim-adresse') || null,
+    telematik_id: v('set-telematik-id') || null
   };
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
   Object.assign(currentProfile, patch);
   showToast('Rechnungsdaten gespeichert ✓');
+});
+
+document.getElementById('tiSaveBtn')?.addEventListener('click', async () => {
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  const patch = {
+    kim_adresse: v('set-kim-adresse') || null,
+    telematik_id: v('set-telematik-id') || null
+  };
+  const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  Object.assign(currentProfile, patch);
+  showToast('TI-Daten gespeichert ✓');
 });
 
 document.getElementById('pwChangeBtn').addEventListener('click', async () => {
@@ -15401,6 +15561,27 @@ async function saveRezept() {
       gueltigBis = d.toISOString().split('T')[0];
     }
 
+    const rzLanr = document.getElementById('rzLanr').value.trim() || null;
+    const rzBsnr = document.getElementById('rzBsnr').value.trim() || null;
+
+    const warnings = [];
+    if (!ausstDate) {
+      warnings.push("Ausstellungsdatum fehlt");
+    }
+    if (rzLanr && !/^\d{9}$/.test(rzLanr)) {
+      warnings.push("LANR muss 9 Ziffern haben");
+    }
+    if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) {
+      warnings.push("BSNR muss 9 Ziffern haben");
+    }
+    if (!rzLanr || !rzBsnr) {
+      warnings.push("LANR/BSNR fehlt (Pflicht auf Muster 13)");
+    }
+
+    if (warnings.length > 0) {
+      showToast('⚠ ' + warnings.join(' · '), 'error');
+    }
+
     // 4. Insert prescription
     const { data: rx, error: rxErr } = await supabase.from('prescriptions').insert({
       owner_id: ownerId,
@@ -15423,8 +15604,8 @@ async function saveRezept() {
       zuzahlung_eur: parseFloat(document.getElementById('rzZuzahlung').value) || null,
       bericht_angefordert: document.getElementById('rzBerichtAngefordert').checked,
       bericht_status: document.getElementById('rzBerichtStatus').value,
-      doctor_lanr: document.getElementById('rzLanr').value.trim() || null,
-      doctor_bsnr: document.getElementById('rzBsnr').value.trim() || null,
+      doctor_lanr: rzLanr,
+      doctor_bsnr: rzBsnr,
       gueltig_bis: gueltigBis
     }).select('id').single();
 
@@ -15701,6 +15882,32 @@ function openBusinessModal(biz) {
   document.getElementById('bizFormCity').value = biz?.city || '';
   document.getElementById('bizFormPhone').value = biz?.phone || '';
   document.getElementById('bizFormSlug').value = biz?.booking_slug || '';
+
+  // Ausfallgebühr settings
+  const afEnabled = document.getElementById('bizFormAusfallEnabled');
+  const afFields  = document.getElementById('bizAusfallFields');
+  const afMode    = document.getElementById('bizFormAusfallMode');
+  const afAmount  = document.getElementById('bizFormAusfallAmount');
+  const afLabel   = document.getElementById('bizAusfallAmountLabel');
+  if (afEnabled) {
+    afEnabled.checked = !!biz?.ausfall_enabled;
+    afMode.value = biz?.ausfall_mode || 'fixed';
+    afAmount.value = (biz?.ausfall_mode === 'percent'
+      ? (biz?.ausfall_percent ?? '')
+      : (biz?.ausfall_amount_eur ?? ''));
+    document.getElementById('bizFormAusfallCutoff').value = biz?.ausfall_cutoff_hours ?? 24;
+    document.getElementById('bizFormAusfallHinweis').value = biz?.ausfall_hinweis || '';
+    const syncAf = () => {
+      afFields.hidden = !afEnabled.checked;
+      afLabel.textContent = afMode.value === 'percent' ? 'Prozent (%)' : 'Betrag (€)';
+    };
+    syncAf();
+    if (!afEnabled.dataset.wired) {
+      afEnabled.dataset.wired = '1';
+      afEnabled.addEventListener('change', syncAf);
+      afMode.addEventListener('change', syncAf);
+    }
+  }
   updateBizSlugPreview();
 
   const slugInp = document.getElementById('bizFormSlug');
@@ -15750,6 +15957,23 @@ function wireBusinessModal() {
       booking_slug:  v('bizFormSlug') || null,
     };
     if (!payload.business_name) { showToast('Name erforderlich', 'error'); return; }
+
+    // Ausfallgebühr settings
+    const afEnabledEl = document.getElementById('bizFormAusfallEnabled');
+    if (afEnabledEl) {
+      const afMode = document.getElementById('bizFormAusfallMode').value === 'percent' ? 'percent' : 'fixed';
+      const afVal = parseFloat(document.getElementById('bizFormAusfallAmount').value.replace(',', '.'));
+      payload.ausfall_enabled = afEnabledEl.checked;
+      payload.ausfall_mode = afMode;
+      payload.ausfall_amount_eur = (afMode === 'fixed' && afVal > 0) ? afVal : null;
+      payload.ausfall_percent = (afMode === 'percent' && afVal > 0) ? afVal : null;
+      payload.ausfall_cutoff_hours = parseInt(document.getElementById('bizFormAusfallCutoff').value, 10) || 24;
+      payload.ausfall_hinweis = v('bizFormAusfallHinweis') || null;
+      if (afEnabledEl.checked && !(afVal > 0)) {
+        showToast('Bitte einen Betrag bzw. Prozentsatz für die Ausfallgebühr angeben.', 'error');
+        return;
+      }
+    }
 
     let newBiz = null;
     if (id) {
@@ -16593,13 +16817,24 @@ async function submitConfirm() {
       }
     }
 
+    let versichertennummer = document.getElementById('rxcVersNr').value.trim() || null;
+    if (versichertennummer) {
+      if (!/^[A-Z]\d{9}$/.test(versichertennummer)) {
+        const normalized = versichertennummer.toUpperCase().replace(/\s/g, '');
+        if (!/^[A-Z]\d{9}$/.test(normalized)) {
+          showToast('Versichertennummer-Format ungewöhnlich (erwartet: 1 Buchstabe + 9 Ziffern)', 'error');
+        }
+        versichertennummer = normalized || null;
+      }
+    }
+
     const parsedEdited = {
       patient: {
         first_name: fn || null,
         last_name: ln || null,
         name: [fn, ln].filter(Boolean).join(' ') || null,
         geburtsdatum: document.getElementById('rxcDob').value || null,
-        versichertennummer: document.getElementById('rxcVersNr').value.trim() || null,
+        versichertennummer: versichertennummer,
         krankenkasse: document.getElementById('rxcKasse').value.trim() || null,
         kostentraeger_ik: document.getElementById('rxcKasseIk').value.trim() || null,
         email: document.getElementById('rxcEmail').value.trim() || null,
@@ -18983,6 +19218,101 @@ async function loadMahnwesen() {
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="6" style="color:#dc2626;padding:16px;">${escapeHtml(e.message)}</td></tr>`;
   }
+
+  loadAusfallrechnungen();
+}
+
+async function loadAusfallrechnungen() {
+  const tbody = document.getElementById('ausfallBody');
+  const empty = document.getElementById('ausfallEmpty');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text-muted);">Lade…</td></tr>';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API}/billing/ausfall/list`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+
+    tbody.innerHTML = '';
+    empty.hidden = rows.length > 0;
+    if (!rows.length) return;
+
+    const fmtEur = n => Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    const fmtD = d => d ? new Date(d).toLocaleDateString('de-DE') : '—';
+    const STATUS_BADGE = {
+      offen: '<span class="badge badge-gray">Offen</span>',
+      bezahlt: '<span class="badge badge-green">Bezahlt</span>',
+      storniert: '<span class="badge badge-red">Storniert</span>',
+      abgeschrieben: '<span class="badge badge-red">Abgeschrieben</span>',
+    };
+    const REASON_LABEL = { no_show: 'No-Show', late_cancel: 'Kurzfr. Absage' };
+
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td style="font-variant-numeric:tabular-nums;">${escapeHtml(r.nummer)}</td>
+        <td>${escapeHtml(r.patient_name)}</td>
+        <td>${fmtD(r.leistung_datum)}${r.service_name ? `<div style="font-size:11px;color:var(--text-muted);">${escapeHtml(r.service_name)}</div>` : ''}</td>
+        <td>${REASON_LABEL[r.reason] || r.reason}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums;">${fmtEur(r.amount_eur)}</td>
+        <td>${STATUS_BADGE[r.status] || escapeHtml(r.status)}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-ghost btn-sm af-print" data-af="${r.id}" title="Rechnung drucken">🖨</button>
+          ${r.status === 'offen' ? `
+            <button class="btn-ghost btn-sm af-paid" data-af="${r.id}" style="color:#15803d;font-weight:600;">Bezahlt</button>
+            <button class="btn-ghost btn-sm af-storno" data-af="${r.id}" style="color:#b91c1c;">Stornieren</button>
+          ` : ''}
+        </td>
+      </tr>`).join('');
+
+    tbody.querySelectorAll('.af-print').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          const res2 = await fetch(`${API}/billing/ausfall/${btn.dataset.af}/print`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!res2.ok) throw new Error(await res2.text());
+          const html = await res2.text();
+          const w = window.open('', '_blank');
+          if (w) { w.document.write(html); w.document.close(); w.onload = () => w.print(); }
+          else showToast('Popup-Blocker aktiv — bitte Popups erlauben.', 'error');
+        } catch (e) { showToast('Fehler: ' + e.message, 'error'); }
+      });
+    });
+
+    const setAfStatus = async (id, status) => {
+      const res3 = await fetch(`${API}/billing/ausfall/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status })
+      });
+      if (!res3.ok) {
+        let msg = await res3.text();
+        try { msg = JSON.parse(msg).error || msg; } catch (_) {}
+        throw new Error(msg);
+      }
+      showToast(status === 'bezahlt' ? 'Als bezahlt gebucht ✓ (Beleg erstellt)' : 'Storniert ✓');
+      loadAusfallrechnungen();
+    };
+
+    tbody.querySelectorAll('.af-paid').forEach(btn => {
+      btn.addEventListener('click', () => setAfStatus(btn.dataset.af, 'bezahlt').catch(e => showToast(e.message, 'error')));
+    });
+    tbody.querySelectorAll('.af-storno').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const ok = await showConfirmModal({ title: 'Ausfallrechnung stornieren', message: 'Diese Ausfallrechnung wirklich stornieren?', confirmText: 'Stornieren', cancelText: 'Abbrechen', variant: 'danger' });
+        if (!ok) return;
+        setAfStatus(btn.dataset.af, 'storniert').catch(e => showToast(e.message, 'error'));
+      });
+    });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#dc2626;padding:16px;">${escapeHtml(e.message)}</td></tr>`;
+  }
 }
 
 async function loadStatistik() {
@@ -21146,9 +21476,14 @@ async function loadPodologieBilling() {
     errEl.style.display = 'none';
 
     // 78040 Lebenszeit-Check: Einmalig je Patient (patientenübergreifend, alle Verordnungen)
-    if (checks.includes('78040') && vord?.patient_name) {
-      const { data: allVords } = await supabase
-        .from('verordnungen').select('id').eq('owner_id', getOwnerId()).eq('patient_name', vord.patient_name);
+    if (checks.includes('78040') && (vord?.lead_id || vord?.patient_name)) {
+      let query = supabase.from('verordnungen').select('id').eq('owner_id', getOwnerId());
+      if (vord.lead_id) {
+        query = query.eq('lead_id', vord.lead_id);
+      } else {
+        query = query.eq('patient_name', vord.patient_name);
+      }
+      const { data: allVords } = await query;
       if (allVords?.length) {
         const { data: prev78040 } = await supabase
           .from('podologie_behandlungen').select('id, behandlungsdatum')

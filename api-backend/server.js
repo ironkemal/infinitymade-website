@@ -12,6 +12,7 @@ import { google } from 'googleapis';
 import aiRouter from './ai/router.js';
 import billingAbrechnungRouter from './billing/api/abrechnung.routes.js';
 import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
+import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import { defaultPositionForHeilmittel, resolvePositionsnummer } from './billing/codes/physio_positions.js';
@@ -291,6 +292,9 @@ app.use('/api/billing', billingAbrechnungRouter);
 
 // Mahnwesen (dunning) routes.
 app.use('/api/billing', billingMahnwesenRouter);
+
+// Ausfallgebühr (no-show fee) routes.
+app.use('/api/billing', billingAusfallRouter);
 
 // Statistik / analytics routes.
 app.use('/api/billing', billingStatistikRouter);
@@ -2734,6 +2738,26 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
       console.error('[attendance auto-close] unexpected:', err);
     }
   }, 60_000); // Her dakika kontrol et
+})();
+
+// ---- Gece 03:00 hesap temizliği ----
+// delete_expired_accounts(): deletion_scheduled_at süresi dolmuş canceled/expired hesapları
+// anonimleştirir + tenant verisini siler (RPC idempotent — PM2 cluster'da çift tetiklenme zararsız).
+(function scheduleAccountCleanup() {
+  setInterval(async () => {
+    try {
+      const now = new Date();
+      const berlinH = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, hour: 'numeric', hour12: false }).format(now), 10);
+      const berlinM = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: BUSINESS_TZ, minute: 'numeric' }).format(now), 10);
+      if (berlinH !== 3 || berlinM !== 0) return;
+
+      const { error } = await supabase.rpc('delete_expired_accounts');
+      if (error) console.error('[account cleanup]', error);
+      else console.log('[account cleanup] delete_expired_accounts executed');
+    } catch (err) {
+      console.error('[account cleanup] unexpected:', err);
+    }
+  }, 60_000);
 })();
 
 // ============================================================================

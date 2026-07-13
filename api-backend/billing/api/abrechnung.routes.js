@@ -90,6 +90,24 @@ function findPriceForDate(tariffs, positionNr, dateStr) {
 }
 
 // Map a DB prescription row → buildDtaFile prescription shape.
+// DTA ZHE-Feld 17 Therapiefrequenz ist n1 (einstellig, Behandlungen pro Woche).
+// UI liefert Freitext wie "2x pro Woche", "1–3x pro Woche", "1x alle 4 Wochen".
+function frequenzToDigit(freq) {
+  const f = (freq || '').trim();
+  if (!f) return '';
+  if (/^\d$/.test(f)) return f;
+  if (/2\s*x\s*t[äa]gl/i.test(f)) return '9';
+  if (/t[äa]gl/i.test(f)) return '7';
+  // "1x alle N Wochen" / "monatlich" → weniger als 1x pro Woche → 1
+  if (/alle\s*\d+\s*Wochen|pro\s*Monat|monatlich/i.test(f)) return '1';
+  // Frequenzspanne "1–3x" → obere Grenze
+  const range = f.match(/(\d+)\s*[-–]\s*(\d+)\s*x?/);
+  if (range) return String(Math.min(9, parseInt(range[2], 10)));
+  const single = f.match(/(\d+)\s*x/i) || f.match(/^(\d+)/);
+  if (single) return String(Math.min(9, parseInt(single[1], 10)));
+  return '1';
+}
+
 function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW', sector = 'physiotherapy') {
   if (!rx.kostentraeger_ik) {
     const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
@@ -184,7 +202,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
   return {
     patient: {
       kvnr:               lead?.versichertennummer || '',
-      versichertenstatus: '1',
+      versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '1',
       nachname:           np.nachname,
       vorname:            np.vorname,
       geburtsdatum:       lead?.geburtsdatum || '',
@@ -203,7 +221,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
       leitsymptomatik:          rx.leitsymptomatik || '',
       dringend:                 !!rx.is_dringend,
       heilmittelBereich:        '1',
-      therapiefrequenz:         rx.frequenz || '',
+      therapiefrequenz:         frequenzToDigit(rx.frequenz),
       zuzahlungskennzeichen:    rx.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:          rx.kostentraeger_ik,
       krankenkasseIk:           rx.kostentraeger_ik,
@@ -329,7 +347,7 @@ router.post('/abrechnung/create', async (req, res) => {
         abrechnung_status,
         bericht_angefordert,
         bericht_status,
-        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse),
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
           id, session_number, status, done_at,
@@ -1549,7 +1567,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         abrechnung_status,
         bericht_angefordert,
         bericht_status,
-        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse),
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
           id, session_number, status, done_at,
@@ -1651,7 +1669,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
   return {
     patient: {
       kvnr:               vord.versichertennummer || lead?.versichertennummer || '',
-      versichertenstatus: '1',
+      versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '1',
       nachname:           np.nachname || vord.patient_name?.split(' ').at(-1) || '',
       vorname:            np.vorname  || vord.patient_name?.split(' ')[0] || '',
       geburtsdatum:       lead?.geburtsdatum || '',
@@ -1670,7 +1688,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
       leitsymptomatik:       vord.leitsymptomatik || vord.diagnosegruppe || '',
       dringend:              !!vord.dringend,
       heilmittelBereich:     '5', // Podologie
-      therapiefrequenz:      vord.therapiefrequenz || '',
+      therapiefrequenz:      frequenzToDigit(vord.therapiefrequenz),
       zuzahlungskennzeichen: vord.zuzahlung_befreit ? '1' : '0',
       kostentraegerIk:       vord.kostentraeger_ik,
       krankenkasseIk:        vord.kostentraeger_ik,
@@ -1731,7 +1749,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .from('verordnungen')
       .select(`
         *,
-        leads:lead_id (id, first_name, last_name, geburtsdatum, versichertennummer),
+        leads:lead_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus),
         aerzte:arzt_id (id, arzt_name, lanr, bsnr, arzt_nummer)
       `)
       .eq('owner_id', tenantId)

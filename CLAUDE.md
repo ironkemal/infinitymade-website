@@ -25,7 +25,7 @@ Database:       Supabase PostgreSQL (project: njvuclullotbksskpwgk)
 AI/Bot:         n8n workflow + Claude/Gemini
 WhatsApp:       RAFA KALDIRILDI 2026-05-20 (Twilio/Meta tabloları DROP'lu)
 Calendar API:   Custom Node.js Express backend (VPS'te PM2)
-Payments:       Stripe (test mode şu an)
+Payments:       Stripe (LIVE mode — 2026-06-11'den itibaren gerçek ödeme alınıyor)
 ```
 
 **ÖNEMLİ:** Bu proje **vanilla HTML/JS**. Next.js DEĞİL. `app/` klasörü yok, `page.tsx` yok. `dashboard.html` + `dashboard.js` gibi düz dosyalar.
@@ -152,6 +152,10 @@ stripe_price_id, billing_interval, current_period_end
 
 ## 📐 Kurallar
 
+### ⛔ G8 — On-Prem uyumluluk kuralı (2026-07-06'dan itibaren, bkz. ONPREM_MIGRATION_PLAYBOOK.md)
+- Yeni özellikler buluta YENİ zincir ekleyemez: **yeni Vercel serverless fonksiyonu yok** (Express'e/api-backend'e yaz), Supabase cloud-only özelliği yok, yeni üçüncü-parti CDN script'i yok, yeni n8n workflow'u yok
+- Sebep: SaaS→on-premise geçişi planlanıyor; her yeni bulut bağımlılığı geçiş maliyetini büyütür
+
 ### Genel
 - API anahtarlarını ASLA hardcode etme — env var
 - `console.log` yerine proper error response
@@ -193,6 +197,7 @@ stripe_price_id, billing_interval, current_period_end
 
 ## 📚 İlgili Dosyalar
 
+- `ONPREM_MIGRATION_PLAYBOOK.md` — ★ ON-PREMISE GEÇİŞ PLAYBOOK'U (2026-07-06): kullanıcı "bu dosyayı uygula" dediğinde SaaS→self-hosted geçişin tam uygulama rehberi; kilitli kararlar + fazlar + kabul kriterleri. Arka plan: `ON_PREMISE_ANALYSE.md`
 - `INFINITYMADE_DASHBOARD.md` — dashboard tasarım dokümantasyonu
 - `PRAXISAI_UPGRADE_CHEATSHEET.md` — n8n workflow upgrade notları
 - `STRIPE_SETUP.md` — Stripe kurulum rehberi

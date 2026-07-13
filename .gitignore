@@ -20,3 +20,4 @@ AUDIT_SECURITY.md
 AUDIT_*.md
 .vercel
 .env*
+api-backend/.env.poc

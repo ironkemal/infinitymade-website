@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 
 <head>
@@ -1525,6 +1525,33 @@
               </div>
             </div>
           </div>
+
+          <!-- Ausfallrechnungen -->
+          <div class="card" style="margin-top:20px;background:var(--bg-card);border:1px solid var(--border);">
+            <div style="padding:14px 16px 0;">
+              <h3 style="margin:0;font-size:15px;">Ausfallrechnungen</h3>
+              <p style="margin:4px 0 10px;font-size:12px;color:var(--text-muted);">Ausfallhonorare bei No-Show / kurzfristiger Absage (aktivierbar pro Standort unter Geschäfte)</p>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Nr.</th>
+                    <th>Patient</th>
+                    <th>Termin</th>
+                    <th>Grund</th>
+                    <th style="text-align:right;">Betrag</th>
+                    <th>Status</th>
+                    <th>Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody id="ausfallBody"></tbody>
+              </table>
+              <div id="ausfallEmpty" class="table-empty" style="padding:20px;text-align:center;color:var(--text-muted);" hidden>
+                Keine Ausfallrechnungen vorhanden.
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- ===== PANEL: PODOLOGIE BILLING (Verordnungen §125 SGB V) ===== -->
@@ -2412,6 +2439,23 @@
                   <div class="form-hint" style="margin-top:8px;">Das ITSG/Dakota-Zertifikat (.p12) wird beim Erstellen einer Abrechnung im Browser eingelesen und signiert die DTA-Datei lokal — der private Schlüssel verlässt Ihren Rechner nicht.</div>
                 </div>
               </div>
+
+              <div class="settings-section" id="settingsTiSection" style="display:none;">
+                <div class="settings-section-title">Telematikinfrastruktur (TI)</div>
+                <div class="settings-section-body">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">KIM-Adresse</label>
+                      <input class="form-input" id="set-kim-adresse" type="text" placeholder="praxis@kim.example.de" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Telematik-ID</label>
+                      <input class="form-input" id="set-telematik-id" type="text" placeholder="1-2arv..." />
+                    </div>
+                  </div>
+                  <button class="btn-primary" id="tiSaveBtn">TI-Daten speichern</button>
+                </div>
+              </div>
             </div><!-- /gruppe finanzen -->
 
             <!-- ── GRUPPE 3: ABRECHNUNG & DOKUMENTE ── -->
@@ -2620,6 +2664,39 @@
                     <input class="form-input" id="bizFormSlug" type="text" pattern="[a-z0-9-]+" placeholder="z.B. praxis-hamburg" />
                     <div class="form-hint">Eigener Link für diesen Standort: <code id="bizSlugPreview">…</code></div>
                   </div>
+                  <fieldset style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:0 0 14px;">
+                    <legend style="font-size:13px;font-weight:600;padding:0 6px;">Ausfallgebühr</legend>
+                    <div class="form-group" style="margin-bottom:10px;">
+                      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="bizFormAusfallEnabled" />
+                        Ausfallgebühr bei No-Show / kurzfristiger Absage aktivieren
+                      </label>
+                    </div>
+                    <div id="bizAusfallFields" hidden>
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label class="form-label">Berechnung</label>
+                          <select class="form-select" id="bizFormAusfallMode">
+                            <option value="fixed">Fester Betrag (€)</option>
+                            <option value="percent">% des Behandlungspreises</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="max-width:140px;">
+                          <label class="form-label" id="bizAusfallAmountLabel">Betrag (€)</label>
+                          <input class="form-input" id="bizFormAusfallAmount" type="number" min="0" step="0.01" placeholder="z.B. 35,00" />
+                        </div>
+                        <div class="form-group" style="max-width:140px;">
+                          <label class="form-label">Absagefrist (Std.)</label>
+                          <input class="form-input" id="bizFormAusfallCutoff" type="number" min="0" step="1" value="24" />
+                        </div>
+                      </div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label class="form-label">Hinweistext auf der Rechnung (optional)</label>
+                        <textarea class="form-input" id="bizFormAusfallHinweis" rows="2" placeholder="z.B. Verweis auf Ihre Ausfallvereinbarung vom Behandlungsbeginn"></textarea>
+                      </div>
+                      <div class="form-hint" style="font-size:11px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
+                    </div>
+                  </fieldset>
                   <div class="form-group" id="bizCopyServicesWrap" hidden>
                     <label class="form-label">Dienstleistungen kopieren von</label>
                     <select class="form-select" id="bizCopyServicesFrom">
@@ -3769,16 +3846,19 @@
               </div>
             </div>
           </div>
-          <div class="form-row" id="lead-physio-row" style="display:none;">
+          <div class="form-row" id="lead-physio-row" style="display:none; grid-template-columns: 1fr 1fr 1fr;">
             <div class="form-group">
               <label class="form-label">Krankenkasse</label>
-              <select class="form-select" id="lead-krankenkasse">
-                <option value="">-- Wählen --</option>
-              </select>
+              <input class="form-input" id="lead-krankenkasse" type="text" list="leadKkDatalist" autocomplete="off" placeholder="Krankenkasse wählen oder tippen." />
+              <datalist id="leadKkDatalist"></datalist>
             </div>
             <div class="form-group">
               <label class="form-label">Krankenkassennummer</label>
               <input class="form-input" id="lead-krankenkassennummer" type="text" placeholder="z.B. 123456789" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Versichertenstatus</label>
+              <input class="form-input" id="lead-versichertenstatus" type="text" placeholder="10000" maxlength="5" />
             </div>
           </div>
           <div class="form-row" id="lead-arzt-row" style="display:none;">
@@ -4861,7 +4941,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260713c"></script>
+  <script type="module" src="dashboard.js?v=20260713"></script>
 </body>
 
 </html>
