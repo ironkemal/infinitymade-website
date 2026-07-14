@@ -63,6 +63,24 @@
     .drawer .mini-table th, .drawer .mini-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
     .drawer .mini-table th { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
     .drawer .err { font-size: 12px; padding: 6px 8px; background: #fef2f2; border-left: 3px solid #dc2626; margin-bottom: 6px; border-radius: 0 4px 4px 0; }
+
+    /* Sichtbarkeit (module visibility matrix) */
+    .vis-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .vis-tab { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .vis-tab.active { background: var(--accent, #b1891b); color: #fff; border-color: var(--accent, #b1891b); }
+    .vis-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .vis-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .dot-green { background: #16a34a; } .dot-red { background: #dc2626; } .dot-amber { background: #d97706; } .dot-gray { background: #9ca3af; }
+    .vis-switch { position: relative; display: inline-block; width: 36px; height: 20px; vertical-align: middle; }
+    .vis-switch input { opacity: 0; width: 0; height: 0; }
+    .vis-slider { position: absolute; inset: 0; background: #9ca3af55; border: 1px solid var(--border); border-radius: 20px; transition: .15s; cursor: pointer; }
+    .vis-slider:before { content: ""; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .15s; }
+    .vis-switch input:checked + .vis-slider { background: #16a34a; border-color: #16a34a; }
+    .vis-switch input:checked + .vis-slider:before { transform: translateX(16px); }
+    .vis-health { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+    .vis-health.bad { color: #dc2626; font-weight: 700; }
+    .vis-orphan-banner { background: #fef2f2; border: 1px solid #dc2626; border-left: 4px solid #dc2626; color: #991b1b; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+    .vis-group-row td { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); font-weight: 700; background: var(--bg-subtle, rgba(0,0,0,.03)); }
   </style>
 </head>
 <body>
@@ -79,6 +97,7 @@
           <a class="nav-item" data-panel="customers"><span>👥</span> Kunden</a>
           <a class="nav-item" data-panel="dbhealth"><span>🗄️</span> Datenbank</a>
           <a class="nav-item" data-panel="feedbacks"><span>💬</span> Feedback</a>
+          <a class="nav-item" data-panel="visibility"><span>🔐</span> Sichtbarkeit</a>
           <a class="nav-item" href="https://app.infinitymade.de/dashboard.html"><span>🔙</span> Dashboard</a>
         </nav>
       </aside>
@@ -135,6 +154,19 @@
           </div>
         </section>
 
+        <section class="panel" id="panel-visibility">
+          <div class="panel-header"><div><h2>Modul-Sichtbarkeit</h2><p class="panel-sub">Welche Module sehen Inhaber und Mitarbeiter pro Sektor — Schalter steuern die Sidebar live, der Status daneben zeigt, was Clients tatsächlich gerendert haben.</p></div></div>
+          <div id="visOrphans"></div>
+          <div class="vis-tabs" id="visSectorTabs"></div>
+          <div class="vis-legend">
+            <span><span class="vis-dot dot-green"></span> aktiv & vom Client bestätigt</span>
+            <span><span class="vis-dot dot-red"></span> Problem: an, aber nicht sichtbar / Panel fehlt</span>
+            <span><span class="vis-dot dot-amber"></span> durch Plan/RBAC verborgen (kein Fehler)</span>
+            <span><span class="vis-dot dot-gray"></span> noch kein Client-Bericht</span>
+          </div>
+          <div class="admin-table-wrap" id="visMatrix"></div>
+        </section>
+
       </main>
     </div>
   </div>
@@ -148,6 +180,6 @@
   </aside>
 
   <div id="toastContainer"></div>
-  <script type="module" src="admin.js?v=20260523a"></script>
+  <script type="module" src="admin.js?v=20260714"></script>
 </body>
 </html>

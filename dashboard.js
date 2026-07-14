@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260702';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -436,100 +437,26 @@ const ICON = {
   bell:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
 };
 
-const SECTOR_PANELS = {
-  default: [
-    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
-    { id: 'anfragen', icon: ICON.bell, key: 'nav_anfragen', roles: ['owner'], group: 'termine' },
-    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'vorlagen', icon: ICON.clipboard, key: 'nav_vorlagen', roles: ['owner'], group: 'einstellungen' },
-    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
-  ],
-  physiotherapy: [
-    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
-    { id: 'anfragen', icon: ICON.bell, key: 'nav_anfragen', roles: ['owner'], group: 'termine' },
-    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'fahrtenbuch', icon: ICON.car, key: 'nav_fahrtenbuch', roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'], group: 'rezepte' },
-    { id: 'anamnese', icon: ICON.notes, key: 'nav_anamnese', roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'verordnungen', icon: ICON.clipboard, key: 'nav_verordnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'], group: 'abrechnung' },
-    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'], group: 'abrechnung' },
-    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'], group: 'abrechnung' },
-    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'], group: 'patienten' },
-    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'], group: 'abrechnung' },
-    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'feedback', icon: ICON.message, key: 'nav_feedback', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'vorlagen', icon: ICON.clipboard, key: 'nav_vorlagen', roles: ['owner'], group: 'einstellungen' },
-    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
-  ],
-  podologie: [
-    { id: 'overview',          icon: ICON.overview,   key: 'nav_overview',          roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'ueberblick',        icon: ICON.overview,   key: 'nav_ueberblick',        roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'calendar',          icon: ICON.calendar,   key: 'nav_calendar',          roles: ['owner', 'employee'], group: 'termine' },
-    { id: 'anfragen',          icon: ICON.bell,       key: 'nav_anfragen',          roles: ['owner'],             group: 'termine' },
-    { id: 'kunden',            icon: ICON.users,      key: 'nav_kunden',            roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'notizen',           icon: ICON.notes,      key: 'nav_notizen',           roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'warteliste',        icon: ICON.notes,      key: 'nav_warteliste',        roles: ['owner'],             group: 'patienten' },
-    { id: 'services',          icon: ICON.services,   key: 'nav_services',          roles: ['owner', 'employee'], group: 'team' },
-    { id: 'hours',             icon: ICON.clock,      key: 'nav_hours',             roles: ['owner', 'employee'], group: 'team' },
-    { id: 'team',              icon: ICON.user,       key: 'nav_team',              roles: ['owner', 'employee'], group: 'team' },
-    { id: 'verordnungen',      icon: ICON.clipboard,  key: 'nav_verordnungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'podologie-billing', icon: ICON.bill_pro,   key: 'nav_podologie_billing', roles: ['owner'],             group: 'abrechnung' },
-    { id: 'rechnungen',        icon: ICON.invoice,    key: 'nav_rechnungen',        roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'fussstatus',        icon: ICON.clipboard,  key: 'nav_fussstatus',        roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'belegliste',        icon: ICON.clipboard,  key: 'nav_belegliste',        roles: ['owner'],             group: 'abrechnung' },
-    { id: 'mahnwesen',         icon: ICON.invoice,    key: 'nav_mahnwesen',         roles: ['owner'],             group: 'abrechnung' },
-    { id: 'statistik',         icon: ICON.overview,   key: 'nav_statistik',         roles: ['owner'],             group: 'abrechnung' },
-    { id: 'b2b',               icon: ICON.b2b,        key: 'nav_b2b',               roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'b2c',               icon: ICON.mail,       key: 'nav_b2c',               roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'beispielmodus',     icon: ICON.demo,       key: 'nav_beispielmodus',     roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'feedback',          icon: ICON.message,    key: 'nav_feedback',          roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'vorlagen',          icon: ICON.clipboard,  key: 'nav_vorlagen',          roles: ['owner'],             group: 'einstellungen' },
-    { id: 'settings',          icon: ICON.settings,   key: 'nav_settings',          roles: ['owner', 'employee'], group: 'einstellungen' }
-  ],
-  praxis: [
-    { id: 'overview', icon: ICON.overview, key: 'nav_overview', roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'ueberblick', icon: ICON.overview, key: 'nav_ueberblick', roles: ['owner', 'employee'], group: 'uebersicht' },
-    { id: 'calendar', icon: ICON.calendar, key: 'nav_calendar', roles: ['owner', 'employee'], group: 'termine' },
-    { id: 'anfragen', icon: ICON.bell, key: 'nav_anfragen', roles: ['owner'], group: 'termine' },
-    { id: 'kunden', icon: ICON.users, key: 'nav_kunden', roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'notizen', icon: ICON.notes, key: 'nav_notizen', roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'services', icon: ICON.services, key: 'nav_services', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'hours', icon: ICON.clock, key: 'nav_hours', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'team', icon: ICON.user, key: 'nav_team', roles: ['owner', 'employee'], group: 'team' },
-    { id: 'doctors', icon: ICON.doctors, key: 'nav_doctors', roles: ['owner', 'employee'], group: 'rezepte' },
-    { id: 'verordnungen', icon: ICON.clipboard, key: 'nav_verordnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'rechnungen', icon: ICON.invoice, key: 'nav_rechnungen', roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'abrechnung', icon: ICON.bill_pro, key: 'nav_abrechnung', roles: ['owner'], group: 'abrechnung' },
-    { id: 'belegliste', icon: ICON.clipboard, key: 'nav_belegliste', roles: ['owner'], group: 'abrechnung' },
-    { id: 'mahnwesen', icon: ICON.invoice, key: 'nav_mahnwesen', roles: ['owner'], group: 'abrechnung' },
-    { id: 'warteliste', icon: ICON.notes, key: 'nav_warteliste', roles: ['owner'], group: 'patienten' },
-    { id: 'statistik', icon: ICON.overview, key: 'nav_statistik', roles: ['owner'], group: 'abrechnung' },
-    { id: 'b2b', icon: ICON.b2b, key: 'nav_b2b', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'b2c', icon: ICON.mail, key: 'nav_b2c', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'beispielmodus', icon: ICON.demo, key: 'nav_beispielmodus', roles: ['owner', 'employee'], group: 'einstellungen' },
-    { id: 'vorlagen', icon: ICON.clipboard, key: 'nav_vorlagen', roles: ['owner'], group: 'einstellungen' },
-    { id: 'settings', icon: ICON.settings, key: 'nav_settings', roles: ['owner', 'employee'], group: 'einstellungen' }
-  ]
+// SECTOR_PANELS artik nav-registry.js'ten turetilir (tek dogruluk kaynagi).
+// Ikonlar UI detayi oldugu icin burada eslenir; yapi (id/roles/group) registry'de.
+const PANEL_ICONS = {
+  overview: ICON.overview, ueberblick: ICON.overview, calendar: ICON.calendar,
+  anfragen: ICON.bell, kunden: ICON.users, notizen: ICON.notes,
+  fahrtenbuch: ICON.car, anamnese: ICON.notes, warteliste: ICON.notes,
+  services: ICON.services, hours: ICON.clock, team: ICON.user,
+  doctors: ICON.doctors, verordnungen: ICON.clipboard, rechnungen: ICON.invoice,
+  abrechnung: ICON.bill_pro, 'podologie-billing': ICON.bill_pro,
+  fussstatus: ICON.clipboard, belegliste: ICON.clipboard, mahnwesen: ICON.invoice,
+  statistik: ICON.overview, b2b: ICON.b2b, b2c: ICON.mail,
+  beispielmodus: ICON.demo, feedback: ICON.message, vorlagen: ICON.clipboard,
+  settings: ICON.settings,
 };
+const SECTOR_PANELS = Object.fromEntries(
+  Object.entries(NAV_REGISTRY).map(([sector, items]) => [
+    sector,
+    items.map(it => ({ ...it, icon: PANEL_ICONS[it.id] || ICON.clipboard }))
+  ])
+);
 
 const NAV_GROUPS = [
   { id: 'uebersicht',    labelDe: 'Übersicht',     labelEn: 'Overview',      labelTr: 'Genel Bakış',
@@ -646,6 +573,58 @@ function hasModuleAccess(module) {
   return modulePermissions[module] === true;
 }
 
+// ===== Global görünürlük matrisi (admin panel toggle'ları) =====
+// module_visibility tablosu: sektör × rol × modül → enabled.
+// DB satırı yoksa nav-registry'deki roles default'una düşülür (fail-open).
+let visibilityMatrix = null; // { 'moduleId:role': enabled }
+let visibilityMatrixSector = null;
+
+async function loadVisibilityMatrix() {
+  try {
+    const sector = resolveSector(getSector());
+    if (visibilityMatrix && visibilityMatrixSector === sector) return;
+    const { data, error } = await supabase.from('module_visibility')
+      .select('module_id,role,enabled').eq('sector', sector);
+    if (error) { console.warn('[visibility]', error); visibilityMatrix = null; return; }
+    const map = {};
+    (data || []).forEach(r => { map[r.module_id + ':' + r.role] = r.enabled; });
+    visibilityMatrix = map;
+    visibilityMatrixSector = sector;
+  } catch (e) {
+    console.warn('[visibility]', e);
+    visibilityMatrix = null;
+  }
+}
+
+// Gerçek-görünürlük raporu: bu client'ta hangi modüller fiilen render edildi,
+// panel DOM'u mevcut mu. Admin panel bu rapora bakarak toggle ↔ gerçek durum
+// tutarlılığını gösterir (Verordnungen-kayboldu vakasının erken alarmı).
+async function reportSidebarVisibility(decisions, role) {
+  try {
+    const sector = resolveSector(getSector());
+    const marker = 'vis_report_' + sector + ':' + role;
+    const today = new Date().toISOString().slice(0, 10);
+    if (sessionStorage.getItem(marker) === today) return;
+    const nowIso = new Date().toISOString();
+    const rows = decisions.map(({ item, visible, reason }) => ({
+      sector,
+      role,
+      module_id: item.id,
+      rendered: visible,
+      dom_ok: !!document.getElementById('panel-' + item.id),
+      hidden_reason: visible ? null : reason,
+      reported_at: nowIso,
+      reported_by: currentSession?.user?.id || null,
+    }));
+    const { error } = await supabase.from('visibility_reports')
+      .upsert(rows, { onConflict: 'sector,role,module_id' });
+    if (error) console.warn('[visibility report]', error);
+    else sessionStorage.setItem(marker, today);
+  } catch (e) {
+    console.warn('[visibility report]', e);
+  }
+}
+
 // Sidebar item id'sini RBAC module key'ine eşle
 const SIDEBAR_TO_MODULE = {
   overview: 'dashboard',
@@ -686,22 +665,31 @@ async function renderSidebar() {
   }
 
   await loadModulePermissions();
+  await loadVisibilityMatrix();
   const items = getSidebarItems();
   console.log('[renderSidebar] items count=', items.length, items.map(i => i.id));
+
+  // Her modül için görünürlük kararı + sebep — hem filtre hem sağlık raporu bunu kullanır.
+  // Öncelik: admin toggle (module_visibility) > registry roles default; plan ve RBAC ek VE-kapılarıdır.
+  const decisions = items.map(item => {
+    let visible = true, reason = null;
+    const toggled = visibilityMatrix ? visibilityMatrix[item.id + ':' + role] : undefined;
+    if (toggled === false) { visible = false; reason = 'toggle'; }
+    else if (toggled === undefined && !item.roles.includes(role)) { visible = false; reason = 'role'; }
+    if (visible && item.id === 'abrechnung' && !has302Access()) { visible = false; reason = 'plan'; }
+    const moduleKey = SIDEBAR_TO_MODULE[item.id];
+    if (visible && role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) { visible = false; reason = 'rbac'; }
+    return { item, visible, reason };
+  });
 
   const openGroups = JSON.parse(localStorage.getItem('sidebar_open_groups') || '["uebersicht","termine"]');
   const activeItem = items.find(i => i.id === activePanel);
   const activeGroupId = activeItem?.group || null;
 
   NAV_GROUPS.forEach(group => {
-    const groupItems = items.filter(item => {
-      if (item.group !== group.id) return false;
-      if (!item.roles.includes(role)) return false;
-      if (item.id === 'abrechnung' && !has302Access()) return false;
-      const moduleKey = SIDEBAR_TO_MODULE[item.id];
-      if (role === 'employee' && moduleKey && !hasModuleAccess(moduleKey)) return false;
-      return true;
-    });
+    const groupItems = decisions
+      .filter(d => d.visible && d.item.group === group.id)
+      .map(d => d.item);
     if (groupItems.length === 0) return;
 
     const hasActive = groupItems.some(i => i.id === activePanel);
@@ -747,6 +735,9 @@ async function renderSidebar() {
     groupEl.appendChild(itemsEl);
     nav.appendChild(groupEl);
   });
+
+  // Fire-and-forget: gerçek görünürlük telemetrisi (günde 1x per sector+role)
+  reportSidebarVisibility(decisions, role);
 }
 
 function buildBookingUrl(profile) {
