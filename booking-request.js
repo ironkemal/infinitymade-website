@@ -240,9 +240,9 @@ function showStep(logicalStep) {
   updateProgressBar(logicalStep);
 }
 
-function nextStep() {
+async function nextStep() {
   clearAllErrors();
-  if (!validateCurrentStep()) return;
+  if (!(await validateCurrentStep())) return;
   currentStepIndex = Math.min(currentStepIndex + 1, stepSequence.length - 1);
   const logical = currentLogicalStep();
   showStep(logical);
@@ -274,15 +274,20 @@ function initStep0() {
     hide(existingForm);
     show(newMsg);
     hide('foundPatientCard');
+    hide('lookupVornameWrap');
     clearFieldError('lookupStatus');
   });
 
   btnExisting.addEventListener('click', () => {
     state.isNewPatient = false;
+    state.patient_id = null;
     btnExisting.classList.add('active');
     btnNew.classList.remove('active');
     show(existingForm);
     hide(newMsg);
+    const status = document.getElementById('lookupStatus');
+    status.textContent = '';
+    status.className = 'br-lookup-state';
   });
 
   document.getElementById('step0Next').addEventListener('click', nextStep);
@@ -291,11 +296,14 @@ function initStep0() {
 async function lookupExistingPatient() {
   const nachname = document.getElementById('lookupNachname').value.trim();
   const geburt = document.getElementById('lookupGeburt').value;
+  const vornameWrap = document.getElementById('lookupVornameWrap');
+  const vorname = document.getElementById('lookupVorname').value.trim();
   const status = document.getElementById('lookupStatus');
   const foundCard = document.getElementById('foundPatientCard');
 
   clearFieldError('lookupNachnameError');
   clearFieldError('lookupGeburtError');
+  clearFieldError('lookupVornameError');
   hide(foundCard);
 
   if (!nachname) {
@@ -306,28 +314,41 @@ async function lookupExistingPatient() {
     fieldError('lookupGeburt', 'lookupGeburtError', 'Bitte Geburtsdatum eingeben.');
     return false;
   }
+  if (!vornameWrap.hidden && !vorname) {
+    fieldError('lookupVorname', 'lookupVornameError', 'Bitte Vorname eingeben.');
+    return false;
+  }
 
   status.textContent = 'Suche läuft…';
   status.className = 'br-lookup-state loading';
 
   try {
     const params = new URLSearchParams({ owner_id: state.owner_id, nachname, geburtsdatum: geburt });
+    if (!vornameWrap.hidden && vorname) params.set('vorname', vorname);
     const data = await apiFetch(`/patients/lookup?${params}`);
-    if (data && data.id) {
-      state.patient_id = data.id;
+    const pat = data && data.patient;
+    if (pat && pat.id) {
+      state.patient_id = pat.id;
+      state.patient_display = pat.display_name || '';
+      state.isNewPatient = false;
       status.textContent = '';
       status.className = 'br-lookup-state';
-      document.getElementById('foundPatientName').textContent =
-        `${data.vorname || ''} ${data.nachname || ''}`.trim();
+      document.getElementById('foundPatientName').textContent = pat.display_name || '';
       show(foundCard);
       return true;
-    } else {
-      state.patient_id = null;
-      status.textContent = 'Patient nicht gefunden. Bitte als neuer Patient anmelden.';
-      status.className = 'br-lookup-state not-found';
-      state.isNewPatient = true;
-      return true; // allow proceeding as new patient
     }
+    if (data && data.multiple) {
+      state.patient_id = null;
+      show(vornameWrap);
+      status.textContent = 'Mehrere Patienten gefunden. Bitte geben Sie zusätzlich Ihren Vornamen ein.';
+      status.className = 'br-lookup-state not-found';
+      return false;
+    }
+    state.patient_id = null;
+    status.textContent = 'Patient nicht gefunden. Sie werden als neuer Patient angemeldet.';
+    status.className = 'br-lookup-state not-found';
+    state.isNewPatient = true;
+    return true; // allow proceeding as new patient
   } catch (err) {
     state.patient_id = null;
     status.textContent = 'Suche fehlgeschlagen. Bitte erneut versuchen.';
@@ -336,20 +357,11 @@ async function lookupExistingPatient() {
   }
 }
 
-function validateStep0() {
+async function validateStep0() {
   if (!state.isNewPatient) {
-    // If existing patient mode, lookup must have been attempted
-    // We let them proceed even if not found (they become a new patient)
-    const nachname = document.getElementById('lookupNachname').value.trim();
-    const geburt = document.getElementById('lookupGeburt').value;
-    if (!nachname) {
-      fieldError('lookupNachname', 'lookupNachnameError', 'Bitte Nachname eingeben.');
-      return false;
-    }
-    if (!geburt) {
-      fieldError('lookupGeburt', 'lookupGeburtError', 'Bitte Geburtsdatum eingeben.');
-      return false;
-    }
+    // Existing patient mode: run the lookup now; a confirmed match sets
+    // state.patient_id, an unmatched search falls back to new-patient mode.
+    return lookupExistingPatient();
   }
   return true;
 }
@@ -960,7 +972,7 @@ function buildSummary() {
   const payLabels = { gkv: 'GKV (Kassenpatient)', pkv: 'PKV (Privatpatient)', selbstzahler: 'Selbstzahler', bg: 'BG (Berufsgenossenschaft)' };
 
   const data = [
-    { label: 'Patient', value: state.isNewPatient ? (state.patient.vorname ? `${state.patient.vorname} ${state.patient.nachname}` : 'Neuer Patient') : 'Bestehender Patient' },
+    { label: 'Patient', value: state.isNewPatient ? (state.patient.vorname ? `${state.patient.vorname} ${state.patient.nachname}` : 'Neuer Patient') : (state.patient_display || 'Bestehender Patient') },
     { label: 'Zahlungsart', value: payLabels[state.payment_type] || state.payment_type },
     { label: 'Leistung', value: state.service ? state.service.name : '–' },
     { label: 'Sitzungen', value: (state.payment_type === 'gkv' || state.payment_type === 'bg') ? (state.verordnung_sitzungen || state.bg_anzahl || '–') : state.session_count },

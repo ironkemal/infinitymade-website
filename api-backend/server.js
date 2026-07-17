@@ -2766,18 +2766,28 @@ app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
 
 // GET /api/patients/lookup — public, aggressive rate limit
 app.get('/api/patients/lookup', patientLookupLimiter, async (req, res) => {
-  const { owner_id, nachname, geburtsdatum } = req.query;
+  const { owner_id, nachname, geburtsdatum, vorname } = req.query;
   if (!owner_id || !nachname || !geburtsdatum) return res.status(400).json({ error: 'owner_id, nachname, geburtsdatum required' });
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('patients')
       .select('id, vorname, nachname')
       .eq('owner_id', owner_id)
       .ilike('nachname', nachname.trim())
       .eq('geburtsdatum', geburtsdatum)
-      .maybeSingle();
+      .limit(5);
+    if (vorname) query = query.ilike('vorname', vorname.trim());
+    const { data, error } = await query;
     if (error) throw error;
-    return res.json({ patient: data || null });
+    const rows = data || [];
+    if (rows.length === 1) {
+      const p = rows[0];
+      // Public endpoint: nur Initial des Vornamens preisgeben
+      const display_name = `${p.vorname ? p.vorname.charAt(0).toUpperCase() + '.' : ''} ${p.nachname || ''}`.trim();
+      return res.json({ patient: { id: p.id, display_name } });
+    }
+    if (rows.length > 1) return res.json({ patient: null, multiple: true });
+    return res.json({ patient: null });
   } catch (e) {
     console.error('[patients/lookup]', e.message);
     return res.status(500).json({ error: 'Lookup failed' });
@@ -2875,8 +2885,8 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
       if (patErr) {
         if (patErr.code === '23505') {
           const { data: existing } = await supabase.from('patients')
-            .select('id').eq('owner_id', owner_id).ilike('nachname', nachname.trim()).eq('geburtsdatum', geburtsdatum).maybeSingle();
-          resolvedPatientId = existing?.id || null;
+            .select('id').eq('owner_id', owner_id).ilike('nachname', nachname.trim()).eq('geburtsdatum', geburtsdatum).limit(1);
+          resolvedPatientId = existing?.[0]?.id || null;
         } else throw patErr;
       } else {
         resolvedPatientId = newPat.id;

@@ -95,6 +95,11 @@
               <input type="date" id="lookupGeburt" />
               <span class="br-field-error" id="lookupGeburtError"></span>
             </div>
+            <div class="br-field" id="lookupVornameWrap" hidden>
+              <label for="lookupVorname">Vorname <span class="req">*</span></label>
+              <input type="text" id="lookupVorname" placeholder="Ihr Vorname" autocomplete="given-name" />
+              <span class="br-field-error" id="lookupVornameError"></span>
+            </div>
             <p class="br-lookup-state" id="lookupStatus"></p>
           </div>
 
@@ -640,7 +645,7 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20260630d"></script>
+<script type="module" src="booking-request.js?v=20260717"></script>
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
