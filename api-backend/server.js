@@ -1125,7 +1125,7 @@ app.get('/api/team', requireAuthAI, async (req, res) => {
 });
 
 app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
-  const { userId, serviceId, startDate, time, recurrence, weekdays, count, customerName, customerPhone, notes, duration } = req.body;
+  const { userId, serviceId, startDate, time, recurrence, intervalDays, weekdays, count, customerName, customerPhone, notes, duration } = req.body;
   const ownerId = req.auth.tenantId; // never trust body — always from JWT
 
   if (!userId || !ownerId || !startDate || !time || !count || count < 1 || count > 52) {
@@ -1179,7 +1179,9 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
     const wdSet = new Set((weekdays || []).map(Number));
     const startWd = berlinDayOfWeek(startDate);
     if (!wdSet.has(startWd)) wdSet.add(startWd);
-    const step = recurrence === 'biweekly' ? 14 : 7;
+    // intervalDays: "1x alle 3/4/6/8 Wochen" gibi frekanslar için esnek hafta adımı
+    const customStep = parseInt(intervalDays, 10);
+    const step = (customStep >= 7 && customStep <= 84) ? customStep : (recurrence === 'biweekly' ? 14 : 7);
 
     const first = new Date(startDate + 'T12:00:00Z');
     let current = addDays(startDate, -first.getUTCDay());
@@ -1230,14 +1232,147 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
   res.json({ created, conflicts, count: created.length });
 });
 
+// ---- Feedback-NLU für den KI-Serien-Retry ----------------------------------
+// Wandelt Freitext ("Der 13. passt nicht, gibt es den 15.?", "am 18. lieber
+// nachmittags", "sabahtan akşama çek") in deterministische Constraints um.
+// Nötig, weil die KI nur aus den vorenumerierten Kandidaten wählen darf —
+// ohne Constraint-Anwendung auf die Slot-Suche kann sie keine Tage verschieben.
+const FB_NEG_RE = /(passt nicht|geht nicht|nicht gut|klappt nicht|leider nicht|\bnicht\b|\bkein(e|en)?\b|uymuyor|olmaz|olmasın|istemiyorum|iptal)/;
+const FB_REQ_RE = /(gibt es|lieber|stattdessen|besser|verschieb|bitte auf|auf den|wäre gut|geht der|olur mu|olabilir|alalım|\bçek\b|kaydır)/;
+const FB_TOD_DEFS = [
+  { key: 'morning',   re: /(vormittag|morgens|\bfrüher?\b|sabah)/, win: { start: 0,       end: 12 * 60 }, inv: { start: 12 * 60, end: 24 * 60 }, label: 'Vormittag' },
+  { key: 'afternoon', re: /(nachmittag|mittags|öğle)/,             win: { start: 12 * 60, end: 24 * 60 }, inv: { start: 0,       end: 12 * 60 }, label: 'Nachmittag' },
+  { key: 'evening',   re: /(abends?\b|später\b|\bspät\b|akşam)/,   win: { start: 16 * 60, end: 24 * 60 }, inv: { start: 0,       end: 16 * 60 }, label: 'Abend' }
+];
+const FB_WEEKDAYS = { sonntag: 0, montag: 1, dienstag: 2, mittwoch: 3, donnerstag: 4, freitag: 5, samstag: 6, pazar: 0, pazartesi: 1, 'salı': 2, sali: 2, 'çarşamba': 3, carsamba: 3, 'perşembe': 4, persembe: 4, cuma: 5, cumartesi: 6 };
+const fbFmtDM = iso => iso.substring(8, 10) + '.' + iso.substring(5, 7) + '.';
+
+function parseSeriesFeedback(text, targetDates, empList, anchor, today) {
+  const out = { excludeDates: [], moveDateTo: {}, dateWindows: {}, globalWindow: null, preferEmployeeId: null, applied: [] };
+  if (!text || !text.trim()) return out;
+  const lower = text.toLowerCase();
+
+  // Mitarbeiterwunsch per Name ("Therapeutin wechseln auf Sara")
+  for (const emp of empList) {
+    const first = (emp.name || '').toLowerCase().split(/\s+/)[0];
+    if (first && first.length >= 3 && lower.includes(first)) {
+      out.preferEmployeeId = emp.id;
+      out.applied.push('nur bei ' + emp.name);
+      break;
+    }
+  }
+
+  const pad = n => String(n).padStart(2, '0');
+  function resolveDay(day, month) {
+    if (month) {
+      const y = parseInt(anchor.substring(0, 4), 10);
+      let iso = `${y}-${pad(month)}-${pad(day)}`;
+      if (iso < today) iso = `${y + 1}-${pad(month)}-${pad(day)}`;
+      return iso;
+    }
+    const hit = targetDates.find(d => parseInt(d.substring(8, 10), 10) === day);
+    if (hit) return hit;
+    let y = parseInt(anchor.substring(0, 4), 10);
+    let m = parseInt(anchor.substring(5, 7), 10);
+    let iso = `${y}-${pad(m)}-${pad(day)}`;
+    if (iso < today) { m += 1; if (m > 12) { m = 1; y += 1; } iso = `${y}-${pad(m)}-${pad(day)}`; }
+    return iso;
+  }
+
+  const segs = lower.split(/[\n,;!?]+|\boder\b|\bund\b|\bveya\b|\bve\b/);
+  let pendingExclude = null;
+
+  for (const seg of segs) {
+    if (!seg.trim()) continue;
+    const neg = FB_NEG_RE.test(seg);
+    const req = FB_REQ_RE.test(seg);
+
+    // Tageszeit — bei "X statt Y" gewinnt X, sonst das zuletzt genannte Wort
+    const todHits = FB_TOD_DEFS.filter(t => t.re.test(seg));
+    let tod = null;
+    if (todHits.length) {
+      if (/statt|yerine/.test(seg)) tod = todHits[0];
+      else tod = todHits.reduce((a, b) => (seg.search(a.re) > seg.search(b.re) ? a : b));
+    }
+
+    // explizite Uhrzeit ("um 16 Uhr", "16:30") → Fenster um die Wunschzeit
+    let explicitWin = null;
+    const tm = seg.match(/\b(\d{1,2}):(\d{2})\b/) || seg.match(/\b(\d{1,2})\s*uhr\b/);
+    if (tm) {
+      const t = parseInt(tm[1], 10) * 60 + (tm[2] ? parseInt(tm[2], 10) : 0);
+      if (t >= 6 * 60 && t < 24 * 60) explicitWin = { start: Math.max(0, t - 30), end: Math.min(24 * 60, t + 150), label: 'ca. ' + tm[1] + (tm[2] ? ':' + tm[2] : '') + ' Uhr' };
+    }
+
+    // Datumsangaben: "13.", "13.07", "13.07.2026", "den 15", "ayın 13"
+    const days = [];
+    const reDate = /\b(\d{1,2})\.(?:(\d{1,2})\.?)?(?:\d{2,4})?/g;
+    let m0;
+    while ((m0 = reDate.exec(seg)) !== null) {
+      const day = parseInt(m0[1], 10);
+      const month = m0[2] ? parseInt(m0[2], 10) : null;
+      if (day >= 1 && day <= 31 && (!month || (month >= 1 && month <= 12))) days.push(resolveDay(day, month));
+    }
+    if (!days.length) {
+      const m1 = seg.match(/\b(?:den|der|am|zum|ayın)\s+(\d{1,2})\b(?!\s*uhr)(?!:)/);
+      if (m1) days.push(resolveDay(parseInt(m1[1], 10), null));
+    }
+
+    // Wochentag-Nennungen ("montags passt nicht")
+    if (!days.length && neg) {
+      const wdHit = Object.keys(FB_WEEKDAYS).find(w => seg.includes(w));
+      if (wdHit) {
+        targetDates.forEach(d => {
+          if (berlinDayOfWeek(d) === FB_WEEKDAYS[wdHit] && !out.excludeDates.includes(d)) {
+            out.excludeDates.push(d);
+            pendingExclude = d;
+          }
+        });
+        out.applied.push(wdHit.charAt(0).toUpperCase() + wdHit.slice(1) + ' ausgeschlossen');
+        continue;
+      }
+    }
+
+    if (days.length) {
+      const win = explicitWin || (tod ? (neg && !req ? tod.inv : tod.win) : null);
+      if (win) {
+        for (const d of days) {
+          out.dateWindows[d] = { start: win.start, end: win.end };
+          out.applied.push(fbFmtDM(d) + ' → ' + (explicitWin ? explicitWin.label : (neg && !req ? 'nicht ' + tod.label : tod.label)));
+        }
+      } else if (neg && req && days.length >= 2) {
+        // "13. passt nicht, lieber der 15." in einem Segment
+        const from = days[0];
+        const to = days[days.length - 1];
+        if (!out.excludeDates.includes(from)) out.excludeDates.push(from);
+        out.moveDateTo[from] = to;
+        out.applied.push(fbFmtDM(from) + ' → ' + fbFmtDM(to));
+      } else if (neg) {
+        for (const d of days) { if (!out.excludeDates.includes(d)) out.excludeDates.push(d); }
+        pendingExclude = days[days.length - 1];
+        out.applied.push(days.map(fbFmtDM).join(', ') + ' ausgeschlossen');
+      } else if (pendingExclude) {
+        out.moveDateTo[pendingExclude] = days[days.length - 1];
+        out.applied.push(fbFmtDM(pendingExclude) + ' → ' + fbFmtDM(days[days.length - 1]));
+        pendingExclude = null;
+      }
+    } else if (tod || explicitWin) {
+      const win = explicitWin || (neg && !req ? tod.inv : tod.win);
+      out.globalWindow = { start: win.start, end: win.end };
+      out.applied.push('alle Termine → ' + (explicitWin ? explicitWin.label : (neg && !req ? 'nicht ' + tod.label : tod.label)));
+    }
+  }
+  return out;
+}
+
 // 5b. AI Series Scheduler — enumerate candidate slots, send to n8n+OpenAI for ranking
 app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
   try {
     const {
       serviceId, customerId, employeeId,
-      count = 8, recurrence = 'weekly',
+      count = 8, recurrence = 'weekly', intervalDays,
       startDate, weekdays,
-      preferredTime, preferences = {}
+      preferredTime, preferences = {},
+      userFeedback, previousSelected
     } = req.body;
     const ownerId = req.auth.tenantId; // never trust body — always from JWT
     if (!ownerId || !serviceId || !count) {
@@ -1368,7 +1503,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     if (recurrence === 'daily') {
       for (let i = 0; i < count; i++) targetDates.push(addDaysISO(anchor, i));
     } else {
-      const weekStep = recurrence === 'biweekly' ? 14 : 7;
+      const customWeekStep = parseInt(intervalDays, 10);
+      const weekStep = (customWeekStep >= 7 && customWeekStep <= 84) ? customWeekStep : (recurrence === 'biweekly' ? 14 : 7);
       // For each selected weekday, compute the first occurrence on/after the anchor
       const sortedWds = [...wdSet].sort((a, b) => ((a - anchorWd + 7) % 7) - ((b - anchorWd + 7) % 7));
       const firstByWd = new Map();
@@ -1396,6 +1532,18 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     const horizonCap = horizon;
     const cappedDates = targetDates.filter(d => d <= horizonCap);
 
+    // 5b) Freitext-Feedback (Retry) → deterministische Constraints
+    const fb = parseSeriesFeedback(userFeedback, cappedDates, empList, anchor, today);
+    if (fb.preferEmployeeId) {
+      const onlyEmp = empList.filter(e => e.id === fb.preferEmployeeId);
+      if (onlyEmp.length) { empList = onlyEmp; allowedIds = empList.map(e => e.id); }
+    }
+    const excludedSet = new Set(fb.excludeDates.filter(d => cappedDates.includes(d)));
+    // Vorherige Auswahl stabil halten: unveränderte Tage behalten ihren Slot
+    const prevSet = new Set((Array.isArray(previousSelected) ? previousSelected : [])
+      .map(s => s && s.date && s.time && s.employeeId ? `${s.date}|${s.time}|${s.employeeId}` : null).filter(Boolean));
+    const feedbackWindow = dateStr => fb.dateWindows[dateStr] || fb.globalWindow || null;
+
     // 6) Enumerate slots for each target date (multiple slots per date for AI to choose)
     const candidates = [];
     const candidatesByDate = new Map();
@@ -1406,6 +1554,9 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       const cd = customDayByDate.get(dateStr);
       const isClosedDay = cd && (cd.type === 'closed' || cd.type === 'holiday') && !cd.start_time && !cd.end_time;
       if (isClosedDay) { candidatesByDate.set(dateStr, []); continue; }
+      // Vom Nutzer per Feedback ausgeschlossene Tage → leer lassen, damit die
+      // Ersatztag-Suche unten greift (ggf. mit gewünschtem Zieltag)
+      if (excludedSet.has(dateStr)) { candidatesByDate.set(dateStr, []); continue; }
 
       const dateSlots = [];
       for (const emp of empList) {
@@ -1420,6 +1571,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
         }
         if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
         else if (tod === 'afternoon') startMins = Math.max(startMins, 12 * 60);
+        const fw = feedbackWindow(dateStr);
+        if (fw) { startMins = Math.max(startMins, fw.start); endMins = Math.min(endMins, fw.end); }
 
         const busy = [];
         (breaksByEmpDay.get(`${emp.id}|${dayOfWeek}`) || []).forEach(b => {
@@ -1446,6 +1599,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
           let score = 0;
           if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
           if (targetMin !== null) score += Math.abs(m - targetMin) / 5;
+          // Bereits vorgeschlagene Slots stark bevorzugen → unveränderte Tage bleiben stabil
+          if (prevSet.has(`${dateStr}|${minsToTimeLocal(m)}|${emp.id}`)) score -= 500;
 
           dateSlots.push({
             date: dateStr,
@@ -1484,6 +1639,8 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
         }
         if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
         else if (tod === 'afternoon') startMins = Math.max(startMins, 12 * 60);
+        const fw = feedbackWindow(dateStr);
+        if (fw) { startMins = Math.max(startMins, fw.start); endMins = Math.min(endMins, fw.end); }
         const busy = [];
         (breaksByEmpDay.get(`${emp.id}|${dayOfWeek}`) || []).forEach(b => {
           busy.push({ start: timeToMinsLocal(b.start_time), end: timeToMinsLocal(b.end_time) });
@@ -1505,6 +1662,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
           let score = 0;
           if (employeeId && emp.id !== employeeId) score += preferences.sameEmployee === 'preferred' ? 100 : 30;
           if (targetMin !== null) score += Math.abs(m - targetMin) / 5;
+          if (prevSet.has(`${dateStr}|${minsToTimeLocal(m)}|${emp.id}`)) score -= 500;
           slots.push({ date: dateStr, time: minsToTimeLocal(m), employeeId: emp.id, score });
         }
       }

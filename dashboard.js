@@ -2888,7 +2888,8 @@ function computeSeriesPreview() {
   const rec = document.getElementById('bkSeriesRecurrence').value;
   if (!startV || count < 1) return [];
   const dateStr = startV.substring(0, 10);
-  const step = rec === 'daily' ? 1 : (rec === 'biweekly' ? 14 : 7);
+  const recInfo = frequenzToSeries(rec);
+  const step = recInfo.recurrence === 'daily' ? 1 : recInfo.intervalDays;
   const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
   const wdSet = new Set(checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()]);
   const result = [];
@@ -4718,7 +4719,7 @@ async function initBkGroupPatientAutocomplete() {
       return;
     }
     
-    const filtered = (window.bkAllLeads || []).filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
+    const filtered = (window.bkAllLeads || []).filter(l => patientMatchesQuery(l, q));
     
     let html = '';
     if (filtered.length === 0) {
@@ -4923,7 +4924,7 @@ async function initBkCustomerAutocomplete() {
     const q = (filter || '').trim().toLowerCase();
     const filtered = !q
       ? (window.bkAllLeads || [])
-      : (window.bkAllLeads || []).filter(l => displayNameWithBirth(l).toLowerCase().includes(q));
+      : (window.bkAllLeads || []).filter(l => patientMatchesQuery(l, q));
     let html = '<li class="cust-new-item" data-action="new">+ Neuer Kunde…</li>';
     if (filtered.length === 0) {
       html += '<li class="empty-item">Keine Treffer</li>';
@@ -5706,7 +5707,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     const dateStr = startV.substring(0, 10);
     const timeStr = startV.substring(11, 16);
     const count = parseInt(document.getElementById('bkSeriesCount').value) || 8;
-    const rec = document.getElementById('bkSeriesRecurrence').value;
+    const recInfo = frequenzToSeries(document.getElementById('bkSeriesRecurrence').value);
     const checked = Array.from(document.querySelectorAll('#bkSeriesWeekdays input:checked')).map(cb => parseInt(cb.value));
     const durMin = dur;
     const payload = {
@@ -5715,7 +5716,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       serviceId: srvId,
       startDate: dateStr,
       time: timeStr,
-      recurrence: rec,
+      recurrence: recInfo.recurrence,
+      intervalDays: recInfo.intervalDays,
       weekdays: checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()],
       count: count,
       customerName: cust,
@@ -6191,7 +6193,7 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
   const srvId = document.getElementById('bkService').value;
   const custId = document.getElementById('bkCustomerId').value.trim();
   const count = parseInt(document.getElementById('bkSeriesCount').value) || 8;
-  const recurrence = document.getElementById('bkSeriesRecurrence').value;
+  const recInfo = frequenzToSeries(document.getElementById('bkSeriesRecurrence').value);
   const startV = document.getElementById('bkStart').value;
   const preferredTime = startV ? startV.substring(11, 16) : null;
   const startDate = startV ? startV.substring(0, 10) : null;
@@ -6214,7 +6216,8 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
     customerId: custId,
     employeeId: empId,
     count,
-    recurrence,
+    recurrence: recInfo.recurrence,
+    intervalDays: recInfo.intervalDays,
     startDate,
     weekdays,
     preferredTime,
@@ -7015,7 +7018,7 @@ function showWaitlistMatchModal(candidates) {
   };
   if (countEl) countEl.oninput = updateBkSeriesPreview;
   if (recEl) recEl.onchange = () => {
-    wdWrap.hidden = recEl.value === 'daily';
+    wdWrap.hidden = frequenzToSeries(recEl.value).recurrence === 'daily';
     updateBkSeriesPreview();
   };
   if (startEl) startEl.onchange = updateBkSeriesPreview;
@@ -7101,6 +7104,32 @@ function displayNameWithBirth(lead) {
   const bd = leadBirthDate(lead);
   return bd ? `${name} · ${bd}` : name;
 }
+// Zentrale Patientensuche: Name, Geburtsdatum (ISO + dt. Format) und Telefonnummer
+function patientMatchesQuery(lead, q) {
+  const query = (q || '').trim().toLowerCase();
+  if (!query) return true;
+  if (displayNameWithBirth(lead).toLowerCase().includes(query)) return true;
+  if ((lead.title || '').toLowerCase().includes(query)) return true;
+  const bd = leadBirthDate(lead);
+  if (bd) {
+    const m = String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) {
+      const de = `${m[3]}.${m[2]}.${m[1]}`;           // 12.03.1985
+      const deShort = `${+m[3]}.${+m[2]}.${m[1]}`;    // 12.3.1985
+      if (de.includes(query) || deShort.includes(query)) return true;
+    }
+  }
+  const qDigits = query.replace(/\D/g, '');
+  if (qDigits.length >= 3) {
+    const pDigits = String(lead.phone || '').replace(/\D/g, '');
+    const pNorm = String(lead.phone_normalized || '').replace(/\D/g, '');
+    if (pDigits.includes(qDigits) || pNorm.includes(qDigits)) return true;
+    // 0170… ↔ +49170…: führende 0 gegen Ländervorwahl tauschen
+    const qAlt = qDigits.startsWith('0') ? '49' + qDigits.slice(1) : null;
+    if (qAlt && (pDigits.includes(qAlt) || pNorm.includes(qAlt))) return true;
+  }
+  return false;
+}
 
 async function loadLeads() {
   const ownerId = getOwnerId();
@@ -7142,7 +7171,7 @@ function renderLeads() {
   if (leadFilter !== 'all') rows = rows.filter(r => r.status === leadFilter);
   if (leadSearchVal) {
     const q = leadSearchVal.toLowerCase();
-    rows = rows.filter(r => displayNameWithBirth(r).toLowerCase().includes(q) || (r.city || '').toLowerCase().includes(q) || (r.phone || '').toLowerCase().includes(q));
+    rows = rows.filter(r => patientMatchesQuery(r, q) || (r.city || '').toLowerCase().includes(q));
   }
   if (rows.length === 0) { tbody.innerHTML = ''; emptyEl.hidden = false; return; }
   emptyEl.hidden = true;
@@ -13094,7 +13123,7 @@ async function loadNotizen() {
   const empty = document.getElementById('notesEmpty');
   const ownerId = getOwnerId();
 
-  const { data: leads } = await supabase.from('leads').select('id,title,first_name,last_name,metadata').eq('owner_id', ownerId).order('title');
+  const { data: leads } = await supabase.from('leads').select('id,title,first_name,last_name,metadata,phone,geburtsdatum').eq('owner_id', ownerId).order('title');
   const allLeads = leads || [];
 
   input.value = '';
@@ -13118,7 +13147,7 @@ async function loadNotizen() {
     activeIndex = -1;
     const q = (filter || '').trim().toLowerCase();
     const filtered = q
-      ? allLeads.filter(l => displayNameWithBirth(l).toLowerCase().includes(q))
+      ? allLeads.filter(l => patientMatchesQuery(l, q))
       : allLeads.slice();
     if (filtered.length === 0) {
       list.innerHTML = '<li class="empty-item">Keine Patienten</li>';
@@ -16302,6 +16331,29 @@ function populateFrequenzSelects() {
     const sel = document.getElementById(id);
     if (sel && sel.tagName === 'SELECT') sel.innerHTML = frequenzOptionsHtml();
   });
+  // Serientermin "Wiederholung" da aynı listeden beslenir (boş seçenek yok, default haftalık)
+  const bkSel = document.getElementById('bkSeriesRecurrence');
+  if (bkSel && bkSel.tagName === 'SELECT') {
+    bkSel.innerHTML = FREQUENZ_OPTIONS.map(g =>
+      `<optgroup label="${g.label}">` +
+      g.items.map(v => `<option value="${v}">${v}</option>`).join('') +
+      '</optgroup>'
+    ).join('');
+    bkSel.value = '1x pro Woche';
+  }
+}
+
+// Frequenz etiketi → seri planlama parametreleri (batch-create / ai-suggest-series).
+// intervalDays: iki "hafta turu" arasındaki gün adımı; recurrence eski API ile uyumluluk için.
+function frequenzToSeries(freq) {
+  const f = (freq || '').toLowerCase();
+  if (/t[äa]gl/.test(f)) return { recurrence: 'daily', intervalDays: 1 };
+  const m = f.match(/alle\s*(\d+)\s*wochen/);
+  if (m) {
+    const w = parseInt(m[1], 10) || 1;
+    return { recurrence: w === 2 ? 'biweekly' : 'weekly', intervalDays: w * 7 };
+  }
+  return { recurrence: 'weekly', intervalDays: 7 };
 }
 
 // Select'e serbest-metin değer yaz (eski kayıtlar / OCR çıktısı listede olmayabilir):
@@ -16526,7 +16578,10 @@ async function openBookingFromRxPreset(preset) {
       document.getElementById('bkSeriesCount').value = preset.anzahl;
       const perWeek = parseFrequenzWoche(preset.frequenz);
       const recSel = document.getElementById('bkSeriesRecurrence');
-      if (recSel) recSel.value = 'weekly';
+      if (recSel) {
+        setFreqValue('bkSeriesRecurrence', preset.frequenz || '1x pro Woche');
+        recSel.dispatchEvent(new Event('change'));
+      }
       // Hint via toast — user picks specific weekdays in AI prefs
       if (perWeek) showToast(`Serie: ${preset.anzahl} × · ${perWeek}× pro Woche — bitte Wochentage wählen.`, 'info');
     }
@@ -19926,14 +19981,11 @@ async function initWlPatientAutocomplete() {
 
   const ownerId = getOwnerId();
   const { data: leads } = await supabase.from('leads')
-    .select('id,title,first_name,last_name').eq('owner_id', ownerId).order('title');
+    .select('id,title,first_name,last_name,phone,geburtsdatum,metadata').eq('owner_id', ownerId).order('title');
   const allLeads = leads || [];
 
   function renderWlList(q) {
-    const filtered = q ? allLeads.filter(l => {
-      const n = `${l.first_name||''} ${l.last_name||''} ${l.title||''}`.toLowerCase();
-      return n.includes(q.toLowerCase());
-    }) : allLeads.slice(0, 20);
+    const filtered = q ? allLeads.filter(l => patientMatchesQuery(l, q)) : allLeads.slice(0, 20);
     list.innerHTML = filtered.map(l => {
       const name = `${l.first_name||''} ${l.last_name||''}`.trim() || l.title;
       return `<li data-id="${l.id}">${name}</li>`;
