@@ -1238,7 +1238,7 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
 // Nötig, weil die KI nur aus den vorenumerierten Kandidaten wählen darf —
 // ohne Constraint-Anwendung auf die Slot-Suche kann sie keine Tage verschieben.
 const FB_NEG_RE = /(passt nicht|geht nicht|nicht gut|klappt nicht|leider nicht|\bnicht\b|\bkein(e|en)?\b|uymuyor|olmaz|olmasın|istemiyorum|iptal)/;
-const FB_REQ_RE = /(gibt es|lieber|stattdessen|besser|verschieb|bitte auf|auf den|wäre gut|geht der|olur mu|olabilir|alalım|\bçek\b|kaydır)/;
+const FB_REQ_RE = /(gibt es|lieber|stattdessen|besser|verschieb|bitte auf|auf den|wäre gut|geht der|olur mu|olabilir|alalım|çek\b|kaydır)/;
 const FB_TOD_DEFS = [
   { key: 'morning',   re: /(vormittag|morgens|\bfrüher?\b|sabah)/, win: { start: 0,       end: 12 * 60 }, inv: { start: 12 * 60, end: 24 * 60 }, label: 'Vormittag' },
   { key: 'afternoon', re: /(nachmittag|mittags|öğle)/,             win: { start: 12 * 60, end: 24 * 60 }, inv: { start: 0,       end: 12 * 60 }, label: 'Nachmittag' },
@@ -1319,7 +1319,8 @@ function parseSeriesFeedback(text, targetDates, empList, anchor, today) {
 
     // Wochentag-Nennungen ("montags passt nicht")
     if (!days.length && neg) {
-      const wdHit = Object.keys(FB_WEEKDAYS).find(w => seg.includes(w));
+      // Längste Keys zuerst, sonst matcht "cumartesi" fälschlich "cuma"
+      const wdHit = Object.keys(FB_WEEKDAYS).sort((a, b) => b.length - a.length).find(w => seg.includes(w));
       if (wdHit) {
         targetDates.forEach(d => {
           if (berlinDayOfWeek(d) === FB_WEEKDAYS[wdHit] && !out.excludeDates.includes(d)) {
@@ -1681,6 +1682,9 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
         for (const altDate of altDates) {
           if (altDate < today || altDate > horizonCap) continue;
           if (excludedSet.has(altDate) || altDate === d) continue;
+          // Nicht auf einen anderen Zieltag ausweichen — sonst frisst die
+          // 1-Slot-pro-Tag-Dedupe später einen Termin aus der Serie
+          if (cappedDates.includes(altDate)) continue;
           const altSlots = enumerateDay(altDate);
           if (altSlots.length === 0) continue;
           const best = altSlots[0];
