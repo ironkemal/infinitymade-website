@@ -6290,12 +6290,21 @@ function renderAiSuggestions(json) {
   document.getElementById('aiRetryFeedbackWrap').style.display = 'block';
 }
 
-document.getElementById('aiSuggestRetry').addEventListener('click', async () => {
+async function aiRetryRequest(requireFeedback) {
   if (!window._aiCtx?.payload) return;
-  closeModal('aiSuggestModal');
   const retryFeedback = document.getElementById('aiRetryFeedback').value.trim();
-  const retryPayload = { ...window._aiCtx.payload, userFeedback: retryFeedback || undefined };
-  showAiLoading('KI sucht andere Vorschläge…');
+  if (requireFeedback && !retryFeedback) {
+    showToast('Bitte zuerst beschreiben, was geändert werden soll.', 'error');
+    document.getElementById('aiRetryFeedback').focus();
+    return;
+  }
+  closeModal('aiSuggestModal');
+  const retryPayload = {
+    ...window._aiCtx.payload,
+    userFeedback: retryFeedback || undefined,
+    previousSelected: window._aiCtx.lastResult?.selected || undefined
+  };
+  showAiLoading(retryFeedback ? 'KI passt die Vorschläge an…' : 'KI sucht andere Vorschläge…');
   const retryToken = (await supabase.auth.getSession()).data.session?.access_token;
   try {
     const res = await fetch(AI_SUGGEST_URL, {
@@ -6317,6 +6326,12 @@ document.getElementById('aiSuggestRetry').addEventListener('click', async () => 
     hideAiLoading();
     showToast('Netzwerkfehler.', 'error');
   }
+}
+
+document.getElementById('aiSuggestRetry').addEventListener('click', () => aiRetryRequest(false));
+document.getElementById('aiFeedbackApply').addEventListener('click', () => aiRetryRequest(true));
+document.getElementById('aiRetryFeedback').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); aiRetryRequest(true); }
 });
 
 document.getElementById('aiSuggestConfirm').addEventListener('click', async () => {
@@ -7085,7 +7100,6 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
 
 let leadsCache = [];
 let leadsMeta = {};
-let krankenkassenCache = [];
 
 function displayName(lead) {
   const fn = lead.first_name || '';
@@ -16987,11 +17001,11 @@ let _kkListCache = null;
 async function loadKkList() {
   if (_kkListCache) return _kkListCache;
   const { data, error } = await supabase
-    .from('kostentraeger')
-    .select('ik, name')
+    .from('krankenkassen')
+    .select('name, ik_number, type')
     .order('name');
   if (error) { console.warn('[kkList]', error); return []; }
-  _kkListCache = data || [];
+  _kkListCache = (data || []).map(k => ({ ik: k.ik_number || null, name: k.name, type: k.type }));
   return _kkListCache;
 }
 
@@ -17086,9 +17100,11 @@ function aiMatchHeilmittel(text, positions) {
 function populateKkDatalist(kkList) {
   const dl = document.getElementById('kkDatalist');
   if (!dl) return;
-  dl.innerHTML = kkList.map(k =>
-    `<option data-ik="${k.ik}" value="${escapeHtml(k.name)}">IK ${k.ik}</option>`
-  ).join('');
+  dl.innerHTML = kkList.map(k => {
+    const dataIk = k.ik ? ` data-ik="${k.ik}"` : '';
+    const label = k.ik ? `IK ${k.ik}` : '';
+    return `<option${dataIk} value="${escapeHtml(k.name)}">${label}</option>`;
+  }).join('');
 }
 
 function populateHmDatalist(positions) {
@@ -20958,9 +20974,8 @@ async function loadPodologieBilling() {
 
   // Load kostentraeger for billing KK selection (IK numbers required)
   if (_podKkCache.length === 0) {
-    const { data: kkData } = await supabase
-      .from('kostentraeger').select('ik, name').eq('active', true).order('name');
-    _podKkCache = kkData || [];
+    const all = await loadKkList();
+    _podKkCache = all.filter(k => k.ik);
   }
 
   const ownerId = getOwnerId();

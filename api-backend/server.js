@@ -1673,9 +1673,14 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       if ((candidatesByDate.get(d) || []).length === 0) {
         emptyDates.push(d);
         // Try to shift this target to a nearby day so the patient still gets a slot.
-        for (const offset of SHIFT_DAYS) {
-          const altDate = addDaysISO(d, offset);
+        // Ein per Feedback gewünschter Ersatztag ("gibt es den 15.?") hat Vorrang
+        // vor der ±3-Tage-Suche; ausgeschlossene Tage sind keine Ausweichziele.
+        const altDates = [];
+        if (fb.moveDateTo[d]) altDates.push(fb.moveDateTo[d]);
+        for (const offset of SHIFT_DAYS) altDates.push(addDaysISO(d, offset));
+        for (const altDate of altDates) {
           if (altDate < today || altDate > horizonCap) continue;
+          if (excludedSet.has(altDate) || altDate === d) continue;
           const altSlots = enumerateDay(altDate);
           if (altSlots.length === 0) continue;
           const best = altSlots[0];
@@ -1686,7 +1691,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
             bucket: bucketIdx,
             score: best.score + 50,
             shiftedFromDate: d,
-            dateShiftDays: offset
+            dateShiftDays: Math.round((new Date(altDate + 'T12:00:00Z') - new Date(d + 'T12:00:00Z')) / 86400000)
           };
           const existing = candidatesByDate.get(d) || [];
           existing.push(shifted);
@@ -1720,6 +1725,9 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
         preferredEmployee: employeeId || null
       },
       genderFilterApplied,
+      userFeedback: (userFeedback || '').trim() || null,
+      feedbackApplied: fb.applied,
+      previousSelected: Array.isArray(previousSelected) ? previousSelected : [],
       service: { title: svc.title, duration: dur },
       employees: empList,
       customer: { name: customerName, id: customer?.id || null },
@@ -1796,6 +1804,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     const unmetTargets = cappedDates.filter(d => !selected.some(s => s.date === d || s.shiftedFromDate === d));
     if (unmetTargets.length) reportLines.push(`✗ Für ${unmetTargets.length} Wunschtag(e) konnte trotz Suche im Umkreis kein Slot gefunden werden.`);
     let report = aiResult.report || reportLines.join(' ');
+    if (fb.applied.length) report = `Änderungen übernommen: ${fb.applied.join(' · ')}. ` + report;
     if (genderFilterApplied) {
       report += ` (Gefiltert auf ${genderFilterApplied === 'female' ? 'weibliche' : 'männliche'} Behandler.)`;
     }
