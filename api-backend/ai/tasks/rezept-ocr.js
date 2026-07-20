@@ -23,6 +23,8 @@ WICHTIG:
 - ICD-10 Code muss dem Schema [A-Z][0-9]{2}(\\.[0-9]{1,2})? entsprechen (z. B. "M54.5", "M75.10").
 - Diagnosegruppe: zwei Buchstaben oder Buchstabe+Ziffer (z. B. "WS2", "EX", "ZN1", "SO4").
 - "heilmittel_feld_text" = exakt der Originaltext aus dem Heilmittel-Feld (mehrzeilig OK).
+- "unterschrift_vorhanden": Prüfe IMMER das Unterschriftsfeld (unterer Bereich, meist bei "Datum, Unterschrift und Stempel des Arztes"). true = eine handschriftliche Arzt-Unterschrift (Schriftzug/Kürzel, oft mit Stempel) ist sichtbar. false = das Feld ist eindeutig leer. null = Feld abgeschnitten, verdeckt oder Bildqualität zu schlecht, um sicher zu urteilen. Ein Stempel ALLEIN ohne Schriftzug zählt NICHT als Unterschrift.
+- "signature_confidence" = "high" wenn klar erkennbar, "medium" wenn wahrscheinlich, "low" wenn unsicher; null wenn "unterschrift_vorhanden" null ist.
 - "ocr_confidence" zwischen 0 und 1: deine Selbsteinschätzung der Bildqualität / Lesbarkeit.
 
 Schema:
@@ -61,11 +63,6 @@ Schema:
   },
   "ocr_confidence": number
 }`;
-
-// Instruction: "unterschrift_vorhanden" = true wenn eine handgeschriebene Arzt-Unterschrift im Formular sichtbar ist.
-// Typisch im unteren Bereich des Formulars, meist über/neben "Datum, Unterschrift und Stempel des Arztes".
-// false = das Feld ist leer/fehlt. null = Bildqualität zu schlecht um sicher zu urteilen.
-// "signature_confidence" = "high" wenn klar erkennbar, "medium" wenn wahrscheinlich, "low" wenn unsicher.
 
 function mockResponse() {
   return JSON.stringify({

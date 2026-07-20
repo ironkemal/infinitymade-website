@@ -16798,14 +16798,41 @@ async function openRezeptConfirmModal(payload) {
 
   renderValidationBanner(payload.validation);
 
-  // Signature warning: show when AI detected missing doctor signature
-  const sigWarn = document.getElementById('rxSignatureWarning');
-  if (sigWarn) sigWarn.style.display = rez.unterschrift_vorhanden === false ? 'flex' : 'none';
+  renderSignatureStatus(rez.unterschrift_vorhanden, rez.signature_confidence);
 
   // Sprint 8+: populate KK + Heilmittel datalists and run AI fuzzy match on OCR text.
   setupRezeptConfirmDropdowns(pat.krankenkasse, rez.heilmittel);
 
   document.getElementById('rezeptConfirmModal').hidden = false;
+}
+
+// Unterschrift-Status im Rezept-Confirm-Modal — 3 Zustände:
+// true = grüner Haken, false = große Warnung (nicht blockierend), null = unbekannt
+function renderSignatureStatus(vorhanden, confidence) {
+  const el = document.getElementById('rxSignatureWarning');
+  if (!el) return;
+  const confLabel = confidence === 'high' ? 'hohe Sicherheit'
+    : confidence === 'medium' ? 'mittlere Sicherheit'
+    : confidence === 'low' ? 'geringe Sicherheit' : null;
+  if (vorhanden === true) {
+    el.innerHTML = `<div style="background:#eaf8ee;border:1px solid #2a8c4a;border-radius:8px;padding:10px 14px;color:#1f6b38;display:flex;align-items:center;gap:8px;">
+      <span class="svg-icon" style="width:16px;height:16px;display:inline-flex;flex-shrink:0;color:#1f6b38;">${ICON.checkCircle}</span>
+      <span style="font-size:13px;"><strong>Arzt-Unterschrift erkannt</strong>${confLabel ? ` <span style="opacity:0.75;">(${confLabel})</span>` : ''}</span>
+    </div>`;
+  } else if (vorhanden === false) {
+    el.innerHTML = `<div style="background:rgba(239,68,68,0.12);border:2px solid #ef4444;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
+      <span class="svg-icon" style="width:26px;height:26px;display:inline-flex;flex-shrink:0;color:#ef4444;">${ICON.warning}</span>
+      <div>
+        <div style="font-weight:800;color:#f87171;font-size:16px;">Arzt-Unterschrift nicht erkannt</div>
+        <div style="color:#fca5a5;font-size:13px;margin-top:4px;line-height:1.5;">Ohne gültige Unterschrift ist die Verordnung <strong>nicht abrechenbar</strong> — eine nachträgliche Korrektur ist oft nicht möglich. Bitte prüfen Sie das Original.<br>Wenn die Unterschrift auf dem Original vorhanden ist (KI-Fehlerkennung), können Sie normal fortfahren.</div>
+      </div>
+    </div>`;
+  } else {
+    el.innerHTML = `<div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px 14px;color:#a06200;display:flex;align-items:center;gap:8px;">
+      <span class="svg-icon" style="width:16px;height:16px;display:inline-flex;flex-shrink:0;color:#a06200;">${ICON.warning}</span>
+      <span style="font-size:13px;"><strong>Unterschrift nicht prüfbar</strong> — Feld abgeschnitten oder Bildqualität zu gering. Bitte am Original kontrollieren: ohne Unterschrift ist die Verordnung nicht abrechenbar.</span>
+    </div>`;
+  }
 }
 
 function renderValidationBanner(v) {
@@ -16927,7 +16954,11 @@ async function submitConfirm() {
         is_blanko: document.getElementById('rxcBlanko').checked,
         is_lhb_bvb: document.getElementById('rxcLhbBvb').checked,
         bericht_angefordert: document.getElementById('rxcBerichtAngefordert').checked,
-        bericht_status: document.getElementById('rxcBerichtStatus').value
+        bericht_status: document.getElementById('rxcBerichtStatus').value,
+        // Unterschrift-Erkennung aus dem OCR durchreichen — sonst landet in
+        // prescriptions immer null und der Status geht verloren
+        unterschrift_vorhanden: rxLastUpload.parsed?.rezept?.unterschrift_vorhanden ?? null,
+        signature_confidence: rxLastUpload.parsed?.rezept?.signature_confidence || null
       }
     };
 
