@@ -6092,12 +6092,14 @@ function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount,
   });
 }
 
-function printSeriterminConfirmation({ patientName, appointments }) {
+function printSeriterminConfirmation({ patientName, appointments, serviceTitle }) {
+  const hasEmp = (appointments || []).some(a => a.employee_name);
   const apptRows = (appointments || []).map(a => {
     const dt = a.start_time ? new Date(a.start_time).toLocaleString('de-DE', {
       weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
     }) : '';
-    return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee;">${dt} Uhr</td></tr>`;
+    const empCell = hasEmp ? `<td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(a.employee_name || '—')}</td>` : '';
+    return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee;">${dt} Uhr</td>${empCell}</tr>`;
   }).join('');
 
   const logoUrl = currentProfile?.praxis_logo_url || '';
@@ -6124,9 +6126,10 @@ function printSeriterminConfirmation({ patientName, appointments }) {
   ${logoHtml}${headerName}
   <h1>Terminbestätigung</h1>
   <p>Patient: <strong>${escapeHtml(patientName || '—')}</strong></p>
+  ${serviceTitle ? `<p>Behandlung: <strong>${escapeHtml(serviceTitle)}</strong></p>` : ''}
   <p>Ausgestellt am: ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
   <table>
-    <thead><tr><th>Termin</th></tr></thead>
+    <thead><tr><th>Termin</th>${hasEmp ? '<th>Therapeut</th>' : ''}</tr></thead>
     <tbody>${apptRows}</tbody>
   </table>
   <div class="footer">${footerHtml}</div>
@@ -6545,6 +6548,7 @@ function openMailOfferModal({ hasEmail, patientName }) {
     const emailInput = document.getElementById('mailOfferEmail');
     const yesBtn = document.getElementById('mailOfferYesBtn');
     const noBtn = document.getElementById('mailOfferNoBtn');
+    const printBtn = document.getElementById('mailOfferPrintBtn');
     const footer = document.getElementById('mailOfferFooter');
     const content = document.getElementById('mailOfferContent');
     const progressWrap = document.getElementById('mailOfferProgressWrap');
@@ -6558,12 +6562,13 @@ function openMailOfferModal({ hasEmail, patientName }) {
 
     textEl.textContent = hasEmail
       ? `Möchten Sie ${patientName || 'dem Patienten'} die erstellten Termine per E-Mail bestätigen?`
-      : `Wir haben keine E-Mail-Adresse für ${patientName || 'den Patienten'}. Bitte fragen Sie nach und tragen Sie sie unten ein — oder überspringen.`;
+      : `Wir haben keine E-Mail-Adresse für ${patientName || 'den Patienten'}. Bitte fragen Sie nach und tragen Sie sie unten ein — oder drucken Sie die Terminbestätigung direkt aus.`;
     emailWrap.hidden = hasEmail;
     emailInput.value = '';
 
     const cleanupNo = () => {
       yesBtn.onclick = null; noBtn.onclick = null; closeBtn.onclick = null;
+      if (printBtn) printBtn.onclick = null;
       closeModal('mailOfferModal');
     };
 
@@ -6588,6 +6593,8 @@ function openMailOfferModal({ hasEmail, patientName }) {
     };
     noBtn.onclick = () => { cleanupNo(); resolve({ ok: false }); };
     closeBtn.onclick = () => { cleanupNo(); resolve({ ok: false }); };
+    // Ohne E-Mail direkt drucken — gleicher Inhalt wie die Bestätigungs-Mail
+    if (printBtn) printBtn.onclick = () => { cleanupNo(); resolve({ ok: false, print: true }); };
 
     openModal('mailOfferModal');
   });
@@ -6725,7 +6732,19 @@ async function maybeOfferAppointmentConfirmEmail({ slots, service, custId, custN
 
   const offer = await openMailOfferModal({ hasEmail: !!email, patientName: custName });
   if (!offer.ok) {
-    showToast('OK — weiter zur Rechnung.');
+    if (offer.print) {
+      // Direkt drucken ohne E-Mail — gleiche Termine wie im Mail-Entwurf
+      printSeriterminConfirmation({
+        patientName: custName,
+        serviceTitle: service?.title || '',
+        appointments: (slots || []).map(sl => ({
+          start_time: `${sl.date}T${sl.time}:00`,
+          employee_name: empMap[sl.employeeId] || ''
+        }))
+      });
+    } else {
+      showToast('OK — weiter zur Rechnung.');
+    }
     proceedToRechnungForPhysio({ patientId: custId, patientName: custName });
     return;
   }
