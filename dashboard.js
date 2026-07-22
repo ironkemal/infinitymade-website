@@ -2161,6 +2161,7 @@ async function initCalendar() {
   console.log('[DASHBOARD] initCalendar START');
   const ownerId = getOwnerId();
   const calEl = document.getElementById('calendarEl');
+  if (!calEl) { console.warn('[initCalendar] #calendarEl not in DOM — skipping legacy FullCalendar init'); return; }
   calEl.innerHTML = '';
 
   // Drag-drop: RX unvergebene sessions onto calendar
@@ -16451,8 +16452,8 @@ async function init() {
     try { await renderGapsForDate(scheduleDate); console.log('[init] gapsForDate ok'); } catch (e) { console.error('[init] renderGapsForDate error', e); }
     setupScheduleNav();
     await bootScheduleViewToggle();
-    await initCalendar();
-    console.log('[init] calendar ok');
+    try { await initCalendar(); console.log('[init] calendar ok'); }
+    catch (e) { console.error('[init] initCalendar error (non-fatal, init continues)', e); }
 
     // Realtime subscription for bookings — refreshes calendar when a booking is created from booking.html
     const ownerId = getOwnerId();
