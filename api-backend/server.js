@@ -2227,6 +2227,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         icd10: rezept.icd10 || null,
         diagnosegruppe: rezept.diagnosegruppe || null,
         leitsymptomatik: rezept.leitsymptomatik || null,
+        pat_leitsymptomatik: rezept.pat_leitsymptomatik || null,
         heilmittel: rezept.heilmittel || null,
         heilmittel_feld_text: rezept.heilmittel_feld_text || null,
         heilmittel_position: heilmittelPosition,

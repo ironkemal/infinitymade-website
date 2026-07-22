@@ -49,5 +49,90 @@ test('escapes potential XSS', () => {
 });
 test('berlin time shown for termin', () => assert.ok(/09:30/.test(html)));
 
+test('Geburtsdatum wird gerendert wenn vorhanden', () => {
+  const gbd = '1990-05-15';
+  const res = renderAusfallrechnung({
+    rechnung: {}, termin: {}, amount_eur: 10,
+    patient: { vorname: 'Hans', nachname: 'Müller', geburtsdatum: gbd }
+  });
+  const expectedGbd = new Date(gbd).toLocaleDateString('de-DE');
+  assert.ok(res.includes(`geb. ${expectedGbd}`));
+});
+
+test('Geburtsdatum wird weggelassen wenn nicht vorhanden', () => {
+  const res = renderAusfallrechnung({
+    rechnung: {}, termin: {}, amount_eur: 10,
+    patient: { vorname: 'Hans', nachname: 'Müller', geburtsdatum: null }
+  });
+  assert.ok(!res.includes('geb.'));
+});
+
+test('vorlage.zahlungsziel_tage ändert das Fälligkeitsdatum', () => {
+  const datum = new Date('2026-07-13T12:00:00');
+  const res = renderAusfallrechnung({
+    rechnung: { datum },
+    termin: {},
+    amount_eur: 10,
+    vorlage: { zahlungsziel_tage: 5 }
+  });
+  const expectedFaelligkeit = new Date(datum.getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE');
+  assert.ok(res.includes(expectedFaelligkeit));
+});
+
+test('vorlage.hinweis erscheint wenn business.ausfall_hinweis fehlt', () => {
+  const res = renderAusfallrechnung({
+    rechnung: {}, termin: {}, amount_eur: 10,
+    hinweisText: null,
+    vorlage: { hinweis: 'Hinweistext aus der Vorlage' }
+  });
+  assert.ok(res.includes('Hinweistext aus der Vorlage'));
+});
+
+test('business.ausfall_hinweis hat Vorrang vor vorlage.hinweis', () => {
+  const res = renderAusfallrechnung({
+    rechnung: {}, termin: {}, amount_eur: 10,
+    hinweisText: 'Hinweistext aus Business',
+    vorlage: { hinweis: 'Hinweistext aus der Vorlage' }
+  });
+  assert.ok(res.includes('Hinweistext aus Business'));
+  assert.ok(!res.includes('Hinweistext aus der Vorlage'));
+});
+
+test('vorlage.betreff ueberschreibt die Rechnungs-Ueberschrift', () => {
+  const res = renderAusfallrechnung({
+    rechnung: {}, termin: {}, amount_eur: 10,
+    vorlage: { betreff: 'Eigene Ueberschrift' }
+  });
+  assert.ok(res.includes('Eigene Ueberschrift'));
+  assert.ok(!res.includes('<h1>Ausfallrechnung</h1>'));
+});
+
+test('vorlage.fusszeile ueberschreibt den Footer', () => {
+  const res = renderAusfallrechnung({
+    rechnung: {}, termin: {}, amount_eur: 10,
+    invoiceFooterText: 'Standard Footer',
+    vorlage: { fusszeile: 'Eigene Fusszeile' }
+  });
+  assert.ok(res.includes('Eigene Fusszeile'));
+  assert.ok(!res.includes('Standard Footer'));
+});
+
+test('plz-Fallback (praxisProfile ohne zip aber mit plz)', () => {
+  const praxisProfile1 = { zip: '40213', city: 'Düsseldorf' };
+  const praxisProfile2 = { plz: '40213', city: 'Düsseldorf' };
+  
+  const plz_ort1 = [praxisProfile1.zip || praxisProfile1.plz, praxisProfile1.city].filter(Boolean).join(' ').trim();
+  const plz_ort2 = [praxisProfile2.zip || praxisProfile2.plz, praxisProfile2.city].filter(Boolean).join(' ').trim();
+  
+  assert.equal(plz_ort1, '40213 Düsseldorf');
+  assert.equal(plz_ort2, '40213 Düsseldorf');
+
+  const htmlPlz = renderAusfallrechnung({
+    praxis: { name: 'Test Praxis', plz_ort: plz_ort2 },
+    rechnung: {}, termin: {}, amount_eur: 10
+  });
+  assert.ok(htmlPlz.includes('40213 Düsseldorf'));
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

@@ -30,7 +30,7 @@ async function resolveAuth(req, res) {
 
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
-    .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text')
+    .select('id, role, owner_id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text')
     .eq('id', u.user.id)
     .single();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
@@ -47,7 +47,7 @@ async function loadPraxisProfile(profile, tenantId) {
   if (profile.role === 'employee' && profile.owner_id) {
     const { data: ownerProf } = await supabase
       .from('profiles')
-      .select('id, business_name, phone, city, zip, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text')
+      .select('id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text')
       .eq('id', tenantId)
       .single();
     if (ownerProf) return ownerProf;
@@ -55,9 +55,9 @@ async function loadPraxisProfile(profile, tenantId) {
   return profile;
 }
 
-function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient }) {
+function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient, vorlage }) {
   const strasse = [praxisProfile.street, praxisProfile.house_number].filter(Boolean).join(' ');
-  const plz_ort = [praxisProfile.zip, praxisProfile.city].filter(Boolean).join(' ').trim();
+  const plz_ort = [praxisProfile.zip || praxisProfile.plz, praxisProfile.city].filter(Boolean).join(' ').trim();
 
   const bankverbindung = [
     praxisProfile.bank_name,
@@ -66,6 +66,10 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient })
   ].filter(Boolean).join(' · ');
 
   const createdAt = row.created_at ? new Date(row.created_at) : new Date();
+
+  const targetZahlungsziel = (vorlage?.zahlungsziel_tage && Number(vorlage.zahlungsziel_tage) > 0)
+    ? Number(vorlage.zahlungsziel_tage)
+    : ZAHLUNGSZIEL_TAGE;
 
   return renderAusfallrechnung({
     praxis: {
@@ -80,7 +84,7 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient })
     rechnung: {
       nummer: `AF-${String(row.rechnung_nr).padStart(4, '0')}`,
       datum: createdAt,
-      faelligkeit: new Date(createdAt.getTime() + ZAHLUNGSZIEL_TAGE * 24 * 60 * 60 * 1000),
+      faelligkeit: new Date(createdAt.getTime() + targetZahlungsziel * 24 * 60 * 60 * 1000),
     },
     termin: {
       datum: row.leistung_datum,
@@ -92,18 +96,30 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient })
     hinweisText: business?.ausfall_hinweis || null,
     logoUrl: praxisProfile.praxis_logo_url || '',
     invoiceFooterText: praxisProfile.invoice_footer_text || '',
+    vorlage: vorlage || {},
   });
 }
 
 function patientFromBooking(booking) {
   const lead = booking.leads || null;
   if (lead) {
+    let geburtsdatum = lead.geburtsdatum || null;
+    if (!geburtsdatum && lead.metadata) {
+      if (typeof lead.metadata === 'object') {
+        geburtsdatum = lead.metadata.geburtsdatum || null;
+      } else if (typeof lead.metadata === 'string') {
+        try {
+          geburtsdatum = JSON.parse(lead.metadata).geburtsdatum || null;
+        } catch (_) {}
+      }
+    }
     return {
       vorname: lead.first_name || '',
       nachname: lead.last_name || '',
       strasse: lead.street || '',
       plz: lead.plz || '',
       ort: lead.city || '',
+      geburtsdatum,
     };
   }
   // Fallback: booking without linked patient record
@@ -112,6 +128,7 @@ function patientFromBooking(booking) {
     vorname: parts.slice(0, -1).join(' '),
     nachname: parts.slice(-1).join(''),
     strasse: '', plz: '', ort: '',
+    geburtsdatum: null,
   };
 }
 
@@ -134,13 +151,23 @@ router.post('/ausfall/create', async (req, res) => {
       return res.status(400).json({ error: "reason must be 'no_show' or 'late_cancel'" });
     }
 
+    // Fetch owner's default 'rechnung_ausfall' template
+    const { data: vorlage } = await supabase
+      .from('document_vorlagen')
+      .select('content_json')
+      .eq('owner_id', tenantId)
+      .eq('vorlage_type', 'rechnung_ausfall')
+      .eq('is_default', true)
+      .maybeSingle();
+    const vorlageJson = vorlage?.content_json || {};
+
     // 1. Fetch booking + patient + service
     const { data: booking, error: bkErr } = await supabase
       .from('bookings')
       .select(`
         id, owner_id, user_id, business_id, lead_id, customer_name, start_time, status,
         services:service_id (title),
-        leads:lead_id (id, first_name, last_name, street, plz, city)
+        leads:lead_id (id, first_name, last_name, street, plz, city, geburtsdatum, metadata)
       `)
       .eq('id', bookingId)
       .single();
@@ -207,6 +234,7 @@ router.post('/ausfall/create', async (req, res) => {
       row,
       business,
       patient: patientFromBooking(booking),
+      vorlage: vorlageJson,
     });
 
     res.set('Content-Type', 'text/html; charset=utf-8');
@@ -273,7 +301,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
       .from('ausfallrechnungen')
       .select(`
         *,
-        leads:patient_id (first_name, last_name, street, plz, city),
+        leads:patient_id (first_name, last_name, street, plz, city, geburtsdatum, metadata),
         bookings:booking_id (customer_name),
         businesses:business_id (id, business_name, phone, ausfall_hinweis)
       `)
@@ -282,7 +310,32 @@ router.get('/ausfall/:id/print', async (req, res) => {
     if (error || !row) return res.status(404).send('Ausfallrechnung nicht gefunden');
     if (row.owner_id !== tenantId) return res.status(403).send('Kein Zugriff');
 
+    // Fetch owner's default 'rechnung_ausfall' template
+    const { data: vorlage } = await supabase
+      .from('document_vorlagen')
+      .select('content_json')
+      .eq('owner_id', tenantId)
+      .eq('vorlage_type', 'rechnung_ausfall')
+      .eq('is_default', true)
+      .maybeSingle();
+    const vorlageJson = vorlage?.content_json || {};
+
     const praxisProfile = await loadPraxisProfile(profile, tenantId);
+    
+    let geburtsdatum = null;
+    if (row.leads) {
+      geburtsdatum = row.leads.geburtsdatum || null;
+      if (!geburtsdatum && row.leads.metadata) {
+        if (typeof row.leads.metadata === 'object') {
+          geburtsdatum = row.leads.metadata.geburtsdatum || null;
+        } else if (typeof row.leads.metadata === 'string') {
+          try {
+            geburtsdatum = JSON.parse(row.leads.metadata).geburtsdatum || null;
+          } catch (_) {}
+        }
+      }
+    }
+
     const patient = row.leads
       ? {
           vorname: row.leads.first_name || '',
@@ -290,6 +343,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
           strasse: row.leads.street || '',
           plz: row.leads.plz || '',
           ort: row.leads.city || '',
+          geburtsdatum,
         }
       : patientFromBooking({ customer_name: row.bookings?.customer_name || '' });
 
@@ -299,6 +353,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
       row,
       business: row.businesses || null,
       patient,
+      vorlage: vorlageJson,
     });
 
     res.set('Content-Type', 'text/html; charset=utf-8');

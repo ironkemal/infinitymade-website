@@ -48,15 +48,29 @@ export function renderAusfallrechnung(opts) {
     praxis = {}, patient = {}, rechnung = {}, termin = {},
     amount_eur = 0, bankverbindung = '',
     hinweisText = null, invoiceFooterText = '', logoUrl = '',
+    vorlage = {},
   } = opts;
 
   const reasonLabel = REASON_LABELS[termin.reason] || REASON_LABELS.no_show;
 
+  const days = (vorlage?.zahlungsziel_tage && Number(vorlage.zahlungsziel_tage) > 0)
+    ? Number(vorlage.zahlungsziel_tage)
+    : 14;
+
+  const rechnungDatum = rechnung.datum ? new Date(rechnung.datum) : new Date();
+  const faelligkeit = (vorlage?.zahlungsziel_tage && Number(vorlage.zahlungsziel_tage) > 0)
+    ? new Date(rechnungDatum.getTime() + days * 24 * 60 * 60 * 1000)
+    : (rechnung.faelligkeit ? new Date(rechnung.faelligkeit) : new Date(rechnungDatum.getTime() + days * 24 * 60 * 60 * 1000));
+
+  const footerText = vorlage?.fusszeile || invoiceFooterText;
+
   const hinweisContent = hinweisText
     ? escapeHtml(hinweisText)
-    : 'Der reservierte Termin wurde nicht wahrgenommen bzw. nicht fristgerecht abgesagt. ' +
-      'Gemäß der mit Ihnen getroffenen Ausfallvereinbarung stellen wir Ihnen hierfür ein Ausfallhonorar in Rechnung. ' +
-      'Es handelt sich um Schadensersatz — eine Erstattung durch die Krankenkasse ist nicht möglich.';
+    : (vorlage?.hinweis
+        ? escapeHtml(vorlage.hinweis)
+        : 'Der reservierte Termin wurde nicht wahrgenommen bzw. nicht fristgerecht abgesagt. ' +
+          'Gemäß der mit Ihnen getroffenen Ausfallvereinbarung stellen wir Ihnen hierfür ein Ausfallhonorar in Rechnung. ' +
+          'Es handelt sich um Schadensersatz — eine Erstattung durch die Krankenkasse ist nicht möglich.');
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -103,7 +117,7 @@ export function renderAusfallrechnung(opts) {
       Tel.: ${escapeHtml(praxis.telefon || '')}
     </div>
     <div style="text-align:right">
-      <h1>Ausfallrechnung</h1>
+      <h1>${vorlage?.betreff ? escapeHtml(vorlage.betreff) : 'Ausfallrechnung'}</h1>
       <div style="font-size:9pt;color:#666;">Ausfallhonorar gemäß Ausfallvereinbarung</div>
     </div>
   </header>
@@ -112,6 +126,7 @@ export function renderAusfallrechnung(opts) {
     <div class="box">
       <div class="label">Rechnungsempfänger</div>
       <strong>${escapeHtml(patient.vorname || '')} ${escapeHtml(patient.nachname || '')}</strong><br>
+      ${patient.geburtsdatum ? `geb. ${fmtDate(patient.geburtsdatum)}<br>` : ''}
       ${escapeHtml(patient.strasse || '')}<br>
       ${escapeHtml(patient.plz || '')} ${escapeHtml(patient.ort || '')}
     </div>
@@ -119,7 +134,7 @@ export function renderAusfallrechnung(opts) {
       <dl class="invoice-meta">
         <dt>Rechnungsnummer</dt><dd>${escapeHtml(rechnung.nummer || '')}</dd>
         <dt>Rechnungsdatum</dt><dd>${fmtDate(rechnung.datum)}</dd>
-        <dt>Fällig am</dt><dd>${fmtDate(rechnung.faelligkeit)}</dd>
+        <dt>Fällig am</dt><dd>${fmtDate(faelligkeit)}</dd>
         <dt>Termin am</dt><dd>${fmtDate(termin.datum)}${termin.datum ? ', ' + fmtTime(termin.datum) + ' Uhr' : ''}</dd>
       </dl>
     </div>
@@ -158,8 +173,8 @@ export function renderAusfallrechnung(opts) {
   </p>
 
   <footer>
-    ${invoiceFooterText
-      ? `<div style="grid-column:1/-1;font-size:8pt;color:#555;">${escapeHtml(invoiceFooterText).replace(/\n/g, '<br>')}</div>`
+    ${footerText
+      ? `<div style="grid-column:1/-1;font-size:8pt;color:#555;">${escapeHtml(footerText).replace(/\n/g, '<br>')}</div>`
       : `<div>
       <strong>${escapeHtml(praxis.name || '')}</strong><br>
       Steuer-Nr.: ${escapeHtml(praxis.steuernummer || '')}<br>
@@ -172,7 +187,7 @@ export function renderAusfallrechnung(opts) {
     <div>
       <strong>Zahlungsweise</strong><br>
       Bitte überweisen Sie den Betrag bis zum
-      <strong>${fmtDate(rechnung.faelligkeit)}</strong> unter Angabe der
+      <strong>${fmtDate(faelligkeit)}</strong> unter Angabe der
       Rechnungsnummer <strong>${escapeHtml(rechnung.nummer || '')}</strong>.
     </div>`}
   </footer>
