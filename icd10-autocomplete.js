@@ -3,8 +3,8 @@
  * ES module. Attaches a dropdown to any text input backed by Supabase icd10_titles.
  *
  * Usage:
- *   import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260701';
- *   icd10Autocomplete(document.getElementById('myInput'), supabaseClient);
+ *   import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260720';
+ *   icd10Autocomplete(document.getElementById('myInput'), supabaseClient, { chapters: [...], multi: true, codeOnly: true });
  */
 
 'use strict';
@@ -14,9 +14,11 @@
  *
  * @param {HTMLInputElement} inputEl  - The text input to enhance.
  * @param {object}           sbClient - An initialised @supabase/supabase-js client.
+ * @param {object}           [opts]   - Optional configuration parameters.
  */
-export function icd10Autocomplete(inputEl, sbClient) {
+export function icd10Autocomplete(inputEl, sbClient, opts = {}) {
   if (!inputEl || !sbClient) return;
+  const { chapters = null, multi = false, codeOnly = false } = opts;
 
   // ── Create dropdown container ─────────────────────────────────────────────
   const dropdown = document.createElement('div');
@@ -60,7 +62,14 @@ export function icd10Autocomplete(inputEl, sbClient) {
   }
 
   function selectItem(item) {
-    inputEl.value = `${item.code} – ${item.titel}`;
+    const textToInsert = codeOnly ? item.code : `${item.code} – ${item.titel}`;
+    if (multi) {
+      const parts = inputEl.value.split(',');
+      parts[parts.length - 1] = ' ' + textToInsert;
+      inputEl.value = parts.join(',').replace(/^ /, '');
+    } else {
+      inputEl.value = textToInsert;
+    }
     closeDropdown();
     // Dispatch a native input event so existing listeners (e.g. form validation) react
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
@@ -98,18 +107,61 @@ export function icd10Autocomplete(inputEl, sbClient) {
   }
 
   async function search(query) {
-    const q = query.trim();
+    let q = query;
+    if (multi) {
+      const seg = query.split(',').pop();
+      q = seg;
+    }
+    q = q.trim();
     if (q.length < 2) { closeDropdown(); return; }
 
     try {
-      const { data, error } = await sbClient
-        .from('icd10_titles')
-        .select('code, titel')
-        .or(`code.ilike.%${q}%,titel.ilike.%${q}%`)
-        .limit(10);
+      let data = [];
+      if (chapters) {
+        const chapterOr = chapters.map(c => `and(code.gte.${c.gte},code.lt.${c.lt})`).join(',');
+        const [byCode, byTitle] = await Promise.all([
+          sbClient.from('icd10_titles').select('code, titel').or(chapterOr).ilike('code', `%${q}%`).limit(8),
+          sbClient.from('icd10_titles').select('code, titel').or(chapterOr).ilike('titel', `%${q}%`).limit(8),
+        ]);
+        if (byCode.error) {
+          console.warn('[icd10-autocomplete] Supabase error (byCode):', byCode.error.message);
+        }
+        if (byTitle.error) {
+          console.warn('[icd10-autocomplete] Supabase error (byTitle):', byTitle.error.message);
+        }
 
-      if (error) { console.warn('[icd10-autocomplete] Supabase error:', error.message); return; }
-      renderItems(data || []);
+        const seen = new Set();
+        const merged = [...(byCode.data || []), ...(byTitle.data || [])]
+          .filter(r => seen.has(r.code) ? false : seen.add(r.code));
+
+        if (merged.length > 0) {
+          data = merged;
+        } else {
+          // Fallback to the previous global .or(code.ilike/titel.ilike)-Query
+          const res = await sbClient
+            .from('icd10_titles')
+            .select('code, titel')
+            .or(`code.ilike.%${q}%,titel.ilike.%${q}%`)
+            .limit(10);
+          if (res.error) {
+            console.warn('[icd10-autocomplete] Supabase error (fallback):', res.error.message);
+          } else {
+            data = res.data || [];
+          }
+        }
+      } else {
+        const res = await sbClient
+          .from('icd10_titles')
+          .select('code, titel')
+          .or(`code.ilike.%${q}%,titel.ilike.%${q}%`)
+          .limit(10);
+        if (res.error) {
+          console.warn('[icd10-autocomplete] Supabase error:', res.error.message);
+          return;
+        }
+        data = res.data || [];
+      }
+      renderItems(data);
     } catch (err) {
       console.warn('[icd10-autocomplete] fetch error:', err);
     }
