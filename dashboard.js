@@ -7473,10 +7473,13 @@ async function openPatientDetailModal(lead) {
 
   const leadId = lead.id;
   const isPhysio = isPraxisSector(getSector());
+  const isPodo = getSector() === 'podologie';
   const rezTab = document.getElementById('pdTabRezepte');
   if (rezTab) rezTab.style.display = isPhysio ? '' : 'none';
   const messTab = document.getElementById('pdTabMessreihen');
   if (messTab) messTab.style.display = isPhysio ? '' : 'none';
+  const fbTab = document.getElementById('pdTabFussbefund');
+  if (fbTab) fbTab.style.display = isPodo ? '' : 'none';
 
   const messPanel = document.getElementById('pdPanelMessreihen');
   if (messPanel) {
@@ -7490,6 +7493,9 @@ async function openPatientDetailModal(lead) {
   if (isPhysio) {
     loadPatientDetailRezepte(leadId);
     loadMessreihen(leadId);
+  }
+  if (isPodo) {
+    loadFussbefund(leadId);
   }
   loadPatientDetailRechnungen(leadId);
   loadPatientDetailTermine(leadId);
@@ -8138,6 +8144,414 @@ async function saveMessung(leadId) {
   refreshMessreihen(leadId);
 }
 
+// ─── FUSSBEFUND (PODOLOGIE) ──────────────────────────────────────────────────
+let currentFussbefundId = null;
+let currentMarkierungen = [];
+let selectedMarkerType = 'x';
+let selectedMarkerColor = '#ef4444';
+let fbListenersInitialized = false;
+
+function renderMarkers() {
+  document.querySelectorAll('.fb-diagram-container').forEach(container => {
+    const layer = container.querySelector('.fb-marker-layer');
+    if (!layer) return;
+    layer.innerHTML = '';
+    const view = container.dataset.view;
+    const foot = container.dataset.foot;
+
+    currentMarkierungen.forEach((m, idx) => {
+      if (m.view !== view || m.foot !== foot) return;
+      const markerDiv = document.createElement('div');
+      markerDiv.className = 'fb-marker-item';
+      markerDiv.dataset.index = idx;
+      markerDiv.style.position = 'absolute';
+      markerDiv.style.left = (m.x * 100) + '%';
+      markerDiv.style.top = (m.y * 100) + '%';
+      markerDiv.style.transform = 'translate(-50%, -50%)';
+      markerDiv.style.color = m.color || '#ef4444';
+      markerDiv.style.fontWeight = 'bold';
+      markerDiv.style.fontSize = '14px';
+      markerDiv.style.lineHeight = '1';
+      markerDiv.style.userSelect = 'none';
+      markerDiv.style.cursor = 'pointer';
+      markerDiv.title = m.label ? `${m.label} (Klicken zum Löschen)` : 'Klicken zum Löschen';
+
+      let symbol = '✕';
+      if (m.type === 'circle') symbol = '◯';
+      if (m.type === 'dot') symbol = '●';
+
+      const escLabel = m.label ? escapeHtml(m.label) : '';
+      markerDiv.innerHTML = `<span style="text-shadow: 0 0 2px #fff, 0 0 2px #fff;">${symbol}</span>${escLabel ? `<span style="font-size:10px;background:rgba(0,0,0,0.75);color:#fff;padding:1px 4px;border-radius:3px;margin-left:2px;white-space:nowrap;vertical-align:middle;font-weight:normal;">${escLabel}</span>` : ''}`;
+      layer.appendChild(markerDiv);
+    });
+  });
+}
+
+function initFussbefundListeners() {
+  if (fbListenersInitialized) return;
+  fbListenersInitialized = true;
+
+  const panel = document.getElementById('pdPanelFussbefund');
+  if (panel) {
+    panel.addEventListener('click', (e) => {
+      const toeBtn = e.target.closest('.toe-btn');
+      if (toeBtn) {
+        e.preventDefault();
+        toeBtn.classList.toggle('active');
+        return;
+      }
+
+      const toolBtn = e.target.closest('.fb-tool-btn');
+      if (toolBtn) {
+        e.preventDefault();
+        panel.querySelectorAll('.fb-tool-btn').forEach(b => b.classList.remove('active'));
+        toolBtn.classList.add('active');
+        selectedMarkerType = toolBtn.dataset.type || 'x';
+        return;
+      }
+
+      const colorBtn = e.target.closest('.fb-color-btn');
+      if (colorBtn) {
+        e.preventDefault();
+        panel.querySelectorAll('.fb-color-btn').forEach(b => b.classList.remove('active'));
+        colorBtn.classList.add('active');
+        selectedMarkerColor = colorBtn.dataset.color || '#ef4444';
+        return;
+      }
+    });
+  }
+
+  document.querySelectorAll('.fb-diagram-container').forEach(container => {
+    const layer = container.querySelector('.fb-marker-layer');
+    if (!layer) return;
+    const view = container.dataset.view;
+    const foot = container.dataset.foot;
+
+    layer.addEventListener('click', (e) => {
+      const item = e.target.closest('.fb-marker-item');
+      if (item) {
+        e.stopPropagation();
+        const idx = parseInt(item.dataset.index);
+        if (!isNaN(idx) && idx >= 0 && idx < currentMarkierungen.length) {
+          currentMarkierungen.splice(idx, 1);
+          renderMarkers();
+        }
+        return;
+      }
+
+      const rect = layer.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * 10000) / 10000;
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * 10000) / 10000;
+      const label = document.getElementById('fbMarkerLabel')?.value?.trim() || '';
+
+      currentMarkierungen.push({
+        view,
+        foot,
+        x,
+        y,
+        type: selectedMarkerType,
+        color: selectedMarkerColor,
+        label
+      });
+      renderMarkers();
+    });
+  });
+}
+
+async function loadFussbefund(leadId) {
+  initFussbefundListeners();
+
+  const datumInp = document.getElementById('fbDatum');
+  if (datumInp) {
+    datumInp.value = new Date().toISOString().slice(0, 10);
+  }
+
+  const neuBtn = document.getElementById('fbNeuBtn');
+  if (neuBtn) neuBtn.onclick = () => renderFussbefund(null);
+
+  const saveBtn = document.getElementById('fbSaveBtn');
+  if (saveBtn) saveBtn.onclick = () => saveFussbefund(leadId);
+
+  renderFussbefund(null);
+  await refreshFussbefundVerlauf(leadId);
+}
+
+async function refreshFussbefundVerlauf(leadId) {
+  const verlaufEl = document.getElementById('fbVerlauf');
+  const loading = document.getElementById('fbLoading');
+  if (!verlaufEl) return;
+
+  if (loading) loading.hidden = false;
+  const { data, error } = await supabase
+    .from('pat_fussbefund')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('erstellt_am', { ascending: false });
+  if (loading) loading.hidden = true;
+
+  if (error) {
+    verlaufEl.innerHTML = `<span style="font-size:12px;color:var(--text-muted);">Fehler: ${escapeHtml(error.message)}</span>`;
+    return;
+  }
+
+  if (!data || !data.length) {
+    verlaufEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Noch keine Fußbefunde erfasst.</span>';
+    return;
+  }
+
+  verlaufEl.innerHTML = data.map(row => {
+    const dt = new Date(row.erstellt_am).toLocaleDateString('de-DE');
+    const isActive = row.id === currentFussbefundId;
+    return `<div class="fb-chip ${isActive ? 'active' : ''}" data-id="${row.id}">
+      <span>${dt}</span>
+      <button type="button" class="fb-chip-del" data-id="${row.id}" title="Löschen">✕</button>
+    </div>`;
+  }).join('');
+
+  verlaufEl.querySelectorAll('.fb-chip').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      if (e.target.classList.contains('fb-chip-del')) return;
+      const id = chip.dataset.id;
+      const targetRow = data.find(r => r.id === id);
+      if (targetRow) renderFussbefund(targetRow);
+    });
+  });
+
+  verlaufEl.querySelectorAll('.fb-chip-del').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const ok = await showConfirmModal({
+        title: 'Fußbefund löschen',
+        message: 'Möchten Sie diesen Fußbefund wirklich löschen?',
+        confirmText: 'Löschen',
+        cancelText: 'Abbrechen',
+        variant: 'danger'
+      });
+      if (!ok) return;
+
+      const { error: delErr } = await supabase.from('pat_fussbefund').delete().eq('id', id);
+      if (delErr) {
+        showToast('Fehler beim Löschen: ' + delErr.message, 'error');
+        return;
+      }
+      showToast('Befund gelöscht ✓');
+      if (currentFussbefundId === id) {
+        renderFussbefund(null);
+      }
+      refreshFussbefundVerlauf(leadId);
+    });
+  });
+}
+
+function renderFussbefund(rowOrNull) {
+  const getCb = id => document.getElementById(id);
+  const setCb = (id, val) => { const el = getCb(id); if (el) el.checked = !!val; };
+
+  if (!rowOrNull) {
+    currentFussbefundId = null;
+    const datumInp = document.getElementById('fbDatum');
+    if (datumInp) datumInp.value = new Date().toISOString().slice(0, 10);
+
+    ['senkfuss','spreizfuss','knickfuss_innen','knickfuss_aussen','hohlfuss','plattfuss','andere','fussschwellungen'].forEach(k => {
+      setCb(`fb_def_${k}_l`, false);
+      setCb(`fb_def_${k}_r`, false);
+    });
+    setCb('fb_ein_konfektion', false);
+    setCb('fb_ein_nach_mass', false);
+    setCb('fb_kramp_ober_l', false);
+    setCb('fb_kramp_ober_r', false);
+    setCb('fb_kramp_unter_l', false);
+    setCb('fb_kramp_unter_r', false);
+    ['diabetes','allergien','infektionskrankheiten','gerinnungshemmer'].forEach(k => {
+      setCb(`fb_risk_${k}`, false);
+    });
+    ['hornhaut','hallux_valgus','warzen','hautpilz'].forEach(k => {
+      setCb(`fb_haut_${k}`, false);
+    });
+    const freitextEl = document.getElementById('fbHautFreitext');
+    if (freitextEl) freitextEl.value = '';
+
+    document.querySelectorAll('.toe-btn').forEach(b => b.classList.remove('active'));
+
+    const notizEl = document.getElementById('fbNotiz');
+    if (notizEl) notizEl.value = '';
+
+    currentMarkierungen = [];
+    renderMarkers();
+  } else {
+    currentFussbefundId = rowOrNull.id;
+    const datumInp = document.getElementById('fbDatum');
+    if (datumInp && rowOrNull.erstellt_am) {
+      datumInp.value = new Date(rowOrNull.erstellt_am).toISOString().slice(0, 10);
+    }
+
+    const b = rowOrNull.befund || {};
+    const def = b.deformitaeten || {};
+    ['senkfuss','spreizfuss','knickfuss_innen','knickfuss_aussen','hohlfuss','plattfuss','andere','fussschwellungen'].forEach(k => {
+      setCb(`fb_def_${k}_l`, def[k]?.l);
+      setCb(`fb_def_${k}_r`, def[k]?.r);
+    });
+    const ein = b.einlagen || {};
+    setCb('fb_ein_konfektion', ein.konfektion);
+    setCb('fb_ein_nach_mass', ein.nach_mass);
+    const kr = b.krampfadern || {};
+    setCb('fb_kramp_ober_l', kr.oberschenkel?.l);
+    setCb('fb_kramp_ober_r', kr.oberschenkel?.r);
+    setCb('fb_kramp_unter_l', kr.unterschenkel?.l);
+    setCb('fb_kramp_unter_r', kr.unterschenkel?.r);
+    const risk = b.risiken || {};
+    ['diabetes','allergien','infektionskrankheiten','gerinnungshemmer'].forEach(k => {
+      setCb(`fb_risk_${k}`, risk[k]);
+    });
+    const haut = b.haut || {};
+    ['hornhaut','hallux_valgus','warzen','hautpilz'].forEach(k => {
+      setCb(`fb_haut_${k}`, haut[k]);
+    });
+    const freitextEl = document.getElementById('fbHautFreitext');
+    if (freitextEl) freitextEl.value = haut.freitext || '';
+
+    const zn = b.zehen_naegel || {};
+    ['huehneraugen_auf','huehneraugen_zw','hammerzehen','nagelpilz','eingewachsen','zustand_naegel'].forEach(key => {
+      const listL = Array.isArray(zn[key]?.l) ? zn[key].l : [];
+      const listR = Array.isArray(zn[key]?.r) ? zn[key].r : [];
+      document.querySelectorAll(`.toe-btn[data-key="${key}"][data-foot="l"]`).forEach(btn => {
+        btn.classList.toggle('active', listL.includes(parseInt(btn.dataset.toe)));
+      });
+      document.querySelectorAll(`.toe-btn[data-key="${key}"][data-foot="r"]`).forEach(btn => {
+        btn.classList.toggle('active', listR.includes(parseInt(btn.dataset.toe)));
+      });
+    });
+
+    const notizEl = document.getElementById('fbNotiz');
+    if (notizEl) notizEl.value = rowOrNull.notiz || b.bemerkungen || '';
+
+    currentMarkierungen = Array.isArray(rowOrNull.markierungen) ? rowOrNull.markierungen : [];
+    renderMarkers();
+  }
+
+  document.querySelectorAll('.fb-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.id === currentFussbefundId);
+  });
+}
+
+function collectFussbefund() {
+  const getCb = id => document.getElementById(id)?.checked || false;
+  const datum = document.getElementById('fbDatum')?.value || new Date().toISOString().slice(0, 10);
+
+  const collectToe = key => ({
+    l: Array.from(document.querySelectorAll(`.toe-btn[data-key="${key}"][data-foot="l"].active`)).map(b => parseInt(b.dataset.toe)),
+    r: Array.from(document.querySelectorAll(`.toe-btn[data-key="${key}"][data-foot="r"].active`)).map(b => parseInt(b.dataset.toe))
+  });
+
+  const befund = {
+    deformitaeten: {
+      senkfuss:         { l: getCb('fb_def_senkfuss_l'), r: getCb('fb_def_senkfuss_r') },
+      spreizfuss:       { l: getCb('fb_def_spreizfuss_l'), r: getCb('fb_def_spreizfuss_r') },
+      knickfuss_innen:  { l: getCb('fb_def_knickfuss_innen_l'), r: getCb('fb_def_knickfuss_innen_r') },
+      knickfuss_aussen: { l: getCb('fb_def_knickfuss_aussen_l'), r: getCb('fb_def_knickfuss_aussen_r') },
+      hohlfuss:         { l: getCb('fb_def_hohlfuss_l'), r: getCb('fb_def_hohlfuss_r') },
+      plattfuss:        { l: getCb('fb_def_plattfuss_l'), r: getCb('fb_def_plattfuss_r') },
+      andere:           { l: getCb('fb_def_andere_l'), r: getCb('fb_def_andere_r') },
+      fussschwellungen: { l: getCb('fb_def_fussschwellungen_l'), r: getCb('fb_def_fussschwellungen_r') }
+    },
+    einlagen: {
+      konfektion: getCb('fb_ein_konfektion'),
+      nach_mass:  getCb('fb_ein_nach_mass')
+    },
+    krampfadern: {
+      oberschenkel:  { l: getCb('fb_kramp_ober_l'), r: getCb('fb_kramp_ober_r') },
+      unterschenkel: { l: getCb('fb_kramp_unter_l'), r: getCb('fb_kramp_unter_r') }
+    },
+    risiken: {
+      diabetes:              getCb('fb_risk_diabetes'),
+      allergien:             getCb('fb_risk_allergien'),
+      infektionskrankheiten: getCb('fb_risk_infektionskrankheiten'),
+      gerinnungshemmer:      getCb('fb_risk_gerinnungshemmer')
+    },
+    haut: {
+      hornhaut:      getCb('fb_haut_hornhaut'),
+      hallux_valgus: getCb('fb_haut_hallux_valgus'),
+      warzen:        getCb('fb_haut_warzen'),
+      hautpilz:      getCb('fb_haut_hautpilz'),
+      freitext:      document.getElementById('fbHautFreitext')?.value || ''
+    },
+    zehen_naegel: {
+      huehneraugen_auf: collectToe('huehneraugen_auf'),
+      huehneraugen_zw:  collectToe('huehneraugen_zw'),
+      hammerzehen:      collectToe('hammerzehen'),
+      nagelpilz:        collectToe('nagelpilz'),
+      eingewachsen:     collectToe('eingewachsen'),
+      zustand_naegel:   collectToe('zustand_naegel')
+    }
+  };
+
+  const notiz = document.getElementById('fbNotiz')?.value?.trim() || '';
+
+  return {
+    erstellt_am: new Date(datum).toISOString(),
+    befund,
+    markierungen: currentMarkierungen,
+    notiz
+  };
+}
+
+async function saveFussbefund(leadId) {
+  const datumVal = document.getElementById('fbDatum')?.value;
+  if (!datumVal) {
+    showToast('Bitte Befunddatum angeben.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('fbSaveBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Speichert…'; }
+
+  const payload = collectFussbefund();
+
+  let error = null;
+  if (currentFussbefundId) {
+    const res = await supabase
+      .from('pat_fussbefund')
+      .update({
+        erstellt_am: payload.erstellt_am,
+        befund: payload.befund,
+        markierungen: payload.markierungen,
+        notiz: payload.notiz
+      })
+      .eq('id', currentFussbefundId);
+    error = res.error;
+  } else {
+    const res = await supabase
+      .from('pat_fussbefund')
+      .insert({
+        owner_id: getOwnerId(),
+        lead_id: leadId,
+        erstellt_am: payload.erstellt_am,
+        befund: payload.befund,
+        markierungen: payload.markierungen,
+        notiz: payload.notiz,
+        erfasst_von: currentSession?.user?.id || null
+      })
+      .select('id')
+      .single();
+    error = res.error;
+    if (res.data) currentFussbefundId = res.data.id;
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
+
+  if (error) {
+    showToast('Fehler beim Speichern: ' + error.message, 'error');
+    return;
+  }
+
+  showToast('Befund gespeichert ✓');
+  await refreshFussbefundVerlauf(leadId);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 function openBefreiungModal(leadId) {
@@ -8481,6 +8895,9 @@ document.querySelectorAll('.pd-tab').forEach(tab => {
     if (panel) panel.classList.add('active');
     if (tab.dataset.tab === 'messreihen' && pdCurrentLeadId) {
       refreshMessreihen(pdCurrentLeadId);
+    }
+    if (tab.dataset.tab === 'fussbefund' && pdCurrentLeadId) {
+      refreshFussbefundVerlauf(pdCurrentLeadId);
     }
   });
 });

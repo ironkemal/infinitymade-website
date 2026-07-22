@@ -3521,6 +3521,7 @@
           <button class="pd-tab" data-tab="ueberweisung">Überweisung</button>
           <button class="pd-tab" data-tab="rezepte" id="pdTabRezepte" style="display:none;">Rezepte</button>
           <button class="pd-tab" data-tab="messreihen" id="pdTabMessreihen" style="display:none;">Messreihen</button>
+          <button class="pd-tab" data-tab="fussbefund" id="pdTabFussbefund" style="display:none;">Fußbefund</button>
           <button class="pd-tab" data-tab="rechnungen">Rechnungen</button>
           <button class="pd-tab" data-tab="termine">Termine</button>
           <button class="pd-tab" data-tab="mail">Mail</button>
@@ -3588,6 +3589,476 @@
             </div>
             <div id="messChartArea" style="padding:0 20px 20px;"></div>
             <div class="pd-loading" id="messLoading"><div class="spinner-sm"></div></div>
+          </div>
+          <div class="pd-panel" id="pdPanelFussbefund">
+            <style>
+              .toe-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 22px;
+                height: 22px;
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 600;
+                cursor: pointer;
+                background: var(--bg-card-solid);
+                color: var(--text-main);
+                user-select: none;
+                transition: background 0.15s, color 0.15s;
+              }
+              .toe-btn:hover {
+                border-color: var(--primary);
+              }
+              .toe-btn.active {
+                background: var(--primary);
+                color: #ffffff;
+                border-color: var(--primary);
+              }
+              .fb-tool-btn.active {
+                background: var(--primary) !important;
+                color: #ffffff !important;
+                border-color: var(--primary) !important;
+              }
+              .fb-color-btn.active {
+                box-shadow: 0 0 0 2px var(--primary);
+              }
+              .fb-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 10px;
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                background: var(--bg-card-solid);
+                color: var(--text-main);
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.15s;
+              }
+              .fb-chip:hover {
+                border-color: var(--primary);
+              }
+              .fb-chip.active {
+                background: var(--primary);
+                color: #ffffff;
+                border-color: var(--primary);
+              }
+              .fb-chip-del {
+                background: transparent;
+                border: none;
+                color: currentColor;
+                cursor: pointer;
+                padding: 0 2px;
+                font-size: 11px;
+                opacity: 0.7;
+              }
+              .fb-chip-del:hover {
+                opacity: 1;
+              }
+            </style>
+            <div style="padding:16px 20px;">
+              <!-- Header Controls: Datum, Neuer Befund, Speichern -->
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                  <label style="font-weight:600;font-size:13px;color:var(--text-main);display:flex;align-items:center;gap:6px;">
+                    Befunddatum:
+                    <input type="date" id="fbDatum" class="input-control" style="width:auto;padding:4px 8px;font-size:13px;">
+                  </label>
+                  <button class="btn btn-secondary" id="fbNeuBtn" style="font-size:13px;padding:5px 12px;">+ Neuer Befund</button>
+                </div>
+                <button class="btn btn-primary" id="fbSaveBtn" style="font-size:13px;padding:5px 16px;">Speichern</button>
+              </div>
+
+              <!-- Verlauf (Datum-Chips) -->
+              <div id="fbVerlauf" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;min-height:28px;align-items:center;"></div>
+
+              <!-- Formular -->
+              <div id="fbForm">
+                <!-- Diagramme Card -->
+                <div class="fb-card" style="border:1px solid var(--border);background:var(--bg-card-solid);border-radius:8px;padding:14px;margin-bottom:16px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                    <strong style="font-size:14px;color:var(--text-main);">Fußdiagramme & Markierungen</strong>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                      <!-- Marker Typ -->
+                      <div style="display:flex;align-items:center;gap:4px;font-size:12px;">
+                        <span style="color:var(--text-muted);margin-right:2px;">Typ:</span>
+                        <button type="button" class="fb-tool-btn active" data-type="x" style="padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card-solid);color:var(--text-main);cursor:pointer;font-weight:bold;">✕</button>
+                        <button type="button" class="fb-tool-btn" data-type="circle" style="padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card-solid);color:var(--text-main);cursor:pointer;font-weight:bold;">◯</button>
+                        <button type="button" class="fb-tool-btn" data-type="dot" style="padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card-solid);color:var(--text-main);cursor:pointer;font-weight:bold;">●</button>
+                      </div>
+                      <!-- Marker Farbe -->
+                      <div style="display:flex;align-items:center;gap:4px;font-size:12px;">
+                        <span style="color:var(--text-muted);margin-right:2px;">Farbe:</span>
+                        <button type="button" class="fb-color-btn active" data-color="#ef4444" style="width:20px;height:20px;border-radius:50%;background:#ef4444;border:2px solid var(--border);cursor:pointer;" title="Rot"></button>
+                        <button type="button" class="fb-color-btn" data-color="#3b82f6" style="width:20px;height:20px;border-radius:50%;background:#3b82f6;border:2px solid var(--border);cursor:pointer;" title="Blau"></button>
+                        <button type="button" class="fb-color-btn" data-color="#1e293b" style="width:20px;height:20px;border-radius:50%;background:#1e293b;border:2px solid var(--border);cursor:pointer;" title="Schwarz"></button>
+                        <button type="button" class="fb-color-btn" data-color="#10b981" style="width:20px;height:20px;border-radius:50%;background:#10b981;border:2px solid var(--border);cursor:pointer;" title="Grün"></button>
+                      </div>
+                      <!-- Optionales Label -->
+                      <input type="text" id="fbMarkerLabel" class="input-control" placeholder="Label (optional)" style="width:140px;padding:3px 8px;font-size:12px;">
+                    </div>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">
+                    Tipp: Auf Fußdiagramm klicken um Marker zu setzen. Klick auf bestehenden Marker löscht ihn.
+                  </div>
+
+                  <!-- 3 Diagram Views Grid -->
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:16px;">
+                    <!-- View 1: Plantar -->
+                    <div style="border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg-card-solid);text-align:center;">
+                      <div style="font-weight:600;font-size:12px;margin-bottom:8px;color:var(--text-main);">Plantar (Fußsohlen)</div>
+                      <div style="display:flex;gap:10px;justify-content:center;">
+                        <div style="text-align:center;">
+                          <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Links</div>
+                          <div class="fb-diagram-container" data-view="plantar" data-foot="l" style="position:relative;width:110px;height:175px;border:1px dashed var(--border);border-radius:4px;background:var(--bg-card-solid);overflow:hidden;margin:0 auto;">
+                            <svg viewBox="0 0 140 220" style="width:100%;height:100%;display:block;pointer-events:none;">
+                              <path d="M 60,200 C 35,200 30,170 32,130 C 34,100 25,75 25,60 C 25,45 40,40 70,40 C 100,40 115,45 115,60 C 115,75 106,100 108,130 C 110,170 105,200 80,200 Z" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+                              <ellipse cx="26" cy="48" rx="6" ry="8" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="42" cy="38" rx="7" ry="10" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="60" cy="32" rx="7.5" ry="11" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="79" cy="29" rx="8" ry="12" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="102" cy="32" rx="12" ry="16" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                            </svg>
+                            <div class="fb-marker-layer" style="position:absolute;inset:0;cursor:crosshair;"></div>
+                          </div>
+                        </div>
+                        <div style="text-align:center;">
+                          <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Rechts</div>
+                          <div class="fb-diagram-container" data-view="plantar" data-foot="r" style="position:relative;width:110px;height:175px;border:1px dashed var(--border);border-radius:4px;background:var(--bg-card-solid);overflow:hidden;margin:0 auto;">
+                            <svg viewBox="0 0 140 220" style="width:100%;height:100%;display:block;pointer-events:none;transform:scale(-1,1);transform-origin:70px 110px;">
+                              <path d="M 60,200 C 35,200 30,170 32,130 C 34,100 25,75 25,60 C 25,45 40,40 70,40 C 100,40 115,45 115,60 C 115,75 106,100 108,130 C 110,170 105,200 80,200 Z" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+                              <ellipse cx="26" cy="48" rx="6" ry="8" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="42" cy="38" rx="7" ry="10" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="60" cy="32" rx="7.5" ry="11" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="79" cy="29" rx="8" ry="12" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="102" cy="32" rx="12" ry="16" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                            </svg>
+                            <div class="fb-marker-layer" style="position:absolute;inset:0;cursor:crosshair;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- View 2: Dorsal -->
+                    <div style="border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg-card-solid);text-align:center;">
+                      <div style="font-weight:600;font-size:12px;margin-bottom:8px;color:var(--text-main);">Dorsal (Fußrücken)</div>
+                      <div style="display:flex;gap:10px;justify-content:center;">
+                        <div style="text-align:center;">
+                          <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Links</div>
+                          <div class="fb-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;width:110px;height:175px;border:1px dashed var(--border);border-radius:4px;background:var(--bg-card-solid);overflow:hidden;margin:0 auto;">
+                            <svg viewBox="0 0 140 220" style="width:100%;height:100%;display:block;pointer-events:none;">
+                              <path d="M 60,200 C 35,200 30,170 32,130 C 34,100 25,75 25,60 C 25,45 40,40 70,40 C 100,40 115,45 115,60 C 115,75 106,100 108,130 C 110,170 105,200 80,200 Z" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+                              <ellipse cx="26" cy="48" rx="6" ry="8" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="42" cy="38" rx="7" ry="10" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="60" cy="32" rx="7.5" ry="11" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="79" cy="29" rx="8" ry="12" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="102" cy="32" rx="12" ry="16" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <path d="M 23,45 Q 26,42 29,45" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 38,35 Q 42,32 46,35" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 56,29 Q 60,26 64,29" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 74,26 Q 79,23 84,26" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 95,28 Q 102,23 109,28" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                            </svg>
+                            <div class="fb-marker-layer" style="position:absolute;inset:0;cursor:crosshair;"></div>
+                          </div>
+                        </div>
+                        <div style="text-align:center;">
+                          <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Rechts</div>
+                          <div class="fb-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;width:110px;height:175px;border:1px dashed var(--border);border-radius:4px;background:var(--bg-card-solid);overflow:hidden;margin:0 auto;">
+                            <svg viewBox="0 0 140 220" style="width:100%;height:100%;display:block;pointer-events:none;transform:scale(-1,1);transform-origin:70px 110px;">
+                              <path d="M 60,200 C 35,200 30,170 32,130 C 34,100 25,75 25,60 C 25,45 40,40 70,40 C 100,40 115,45 115,60 C 115,75 106,100 108,130 C 110,170 105,200 80,200 Z" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+                              <ellipse cx="26" cy="48" rx="6" ry="8" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="42" cy="38" rx="7" ry="10" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="60" cy="32" rx="7.5" ry="11" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="79" cy="29" rx="8" ry="12" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <ellipse cx="102" cy="32" rx="12" ry="16" fill="none" stroke="var(--text-muted)" stroke-width="1.5"/>
+                              <path d="M 23,45 Q 26,42 29,45" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 38,35 Q 42,32 46,35" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 56,29 Q 60,26 64,29" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 74,26 Q 79,23 84,26" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                              <path d="M 95,28 Q 102,23 109,28" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+                            </svg>
+                            <div class="fb-marker-layer" style="position:absolute;inset:0;cursor:crosshair;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- View 3: Lateral -->
+                    <div style="border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg-card-solid);text-align:center;">
+                      <div style="font-weight:600;font-size:12px;margin-bottom:8px;color:var(--text-main);">Lateral / Medial (Seitenansicht)</div>
+                      <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+                        <div style="text-align:center;">
+                          <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Links</div>
+                          <div class="fb-diagram-container" data-view="lateral" data-foot="l" style="position:relative;width:180px;height:95px;border:1px dashed var(--border);border-radius:4px;background:var(--bg-card-solid);overflow:hidden;margin:0 auto;">
+                            <svg viewBox="0 0 200 120" style="width:100%;height:100%;display:block;pointer-events:none;">
+                              <path d="M 50,15 L 75,15 L 75,45 C 95,60 135,70 170,85 C 185,90 190,98 180,102 C 165,105 145,105 130,105 C 95,95 65,105 30,105 C 20,105 15,95 18,80 L 30,50 L 50,15 Z" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+                            </svg>
+                            <div class="fb-marker-layer" style="position:absolute;inset:0;cursor:crosshair;"></div>
+                          </div>
+                        </div>
+                        <div style="text-align:center;">
+                          <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">Rechts</div>
+                          <div class="fb-diagram-container" data-view="lateral" data-foot="r" style="position:relative;width:180px;height:95px;border:1px dashed var(--border);border-radius:4px;background:var(--bg-card-solid);overflow:hidden;margin:0 auto;">
+                            <svg viewBox="0 0 200 120" style="width:100%;height:100%;display:block;pointer-events:none;transform:scale(-1,1);transform-origin:100px 60px;">
+                              <path d="M 50,15 L 75,15 L 75,45 C 95,60 135,70 170,85 C 185,90 190,98 180,102 C 165,105 145,105 130,105 C 95,95 65,105 30,105 C 20,105 15,95 18,80 L 30,50 L 50,15 Z" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+                            </svg>
+                            <div class="fb-marker-layer" style="position:absolute;inset:0;cursor:crosshair;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Form Sections Grid -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;">
+                  <!-- Column 1 -->
+                  <div style="display:flex;flex-direction:column;gap:16px;">
+                    <!-- Deformitäten Card -->
+                    <div style="border:1px solid var(--border);background:var(--bg-card-solid);border-radius:8px;padding:14px;">
+                      <strong style="font-size:13px;color:var(--text-main);display:block;margin-bottom:10px;">Deformitäten</strong>
+                      <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px 12px;align-items:center;font-size:12px;">
+                        <span style="font-weight:600;color:var(--text-muted);">Befund</span>
+                        <span style="font-weight:600;color:var(--text-muted);text-align:center;">Li</span>
+                        <span style="font-weight:600;color:var(--text-muted);text-align:center;">Re</span>
+
+                        <span>Senkfuß</span>
+                        <label><input type="checkbox" id="fb_def_senkfuss_l"></label>
+                        <label><input type="checkbox" id="fb_def_senkfuss_r"></label>
+
+                        <span>Spreizfuß</span>
+                        <label><input type="checkbox" id="fb_def_spreizfuss_l"></label>
+                        <label><input type="checkbox" id="fb_def_spreizfuss_r"></label>
+
+                        <span>Knickfuß nach innen</span>
+                        <label><input type="checkbox" id="fb_def_knickfuss_innen_l"></label>
+                        <label><input type="checkbox" id="fb_def_knickfuss_innen_r"></label>
+
+                        <span>Knickfuß nach außen</span>
+                        <label><input type="checkbox" id="fb_def_knickfuss_aussen_l"></label>
+                        <label><input type="checkbox" id="fb_def_knickfuss_aussen_r"></label>
+
+                        <span>Hohlfuß</span>
+                        <label><input type="checkbox" id="fb_def_hohlfuss_l"></label>
+                        <label><input type="checkbox" id="fb_def_hohlfuss_r"></label>
+
+                        <span>Plattfuß</span>
+                        <label><input type="checkbox" id="fb_def_plattfuss_l"></label>
+                        <label><input type="checkbox" id="fb_def_plattfuss_r"></label>
+
+                        <span>Andere Fußdeformitäten</span>
+                        <label><input type="checkbox" id="fb_def_andere_l"></label>
+                        <label><input type="checkbox" id="fb_def_andere_r"></label>
+
+                        <span>Fußschwellungen</span>
+                        <label><input type="checkbox" id="fb_def_fussschwellungen_l"></label>
+                        <label><input type="checkbox" id="fb_def_fussschwellungen_r"></label>
+                      </div>
+                    </div>
+
+                    <!-- Einlagen, Krampfadern & Risiken Card -->
+                    <div style="border:1px solid var(--border);background:var(--bg-card-solid);border-radius:8px;padding:14px;">
+                      <strong style="font-size:13px;color:var(--text-main);display:block;margin-bottom:10px;">Einlagen & Risiken</strong>
+                      
+                      <div style="font-size:12px;margin-bottom:12px;">
+                        <span style="font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Einlagen:</span>
+                        <div style="display:flex;gap:16px;">
+                          <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_ein_konfektion"> Konfektion</label>
+                          <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_ein_nach_mass"> Nach Maß</label>
+                        </div>
+                      </div>
+
+                      <div style="font-size:12px;margin-bottom:12px;">
+                        <span style="font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Krampfadern:</span>
+                        <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;align-items:center;">
+                          <span>Oberschenkel</span>
+                          <label style="display:flex;align-items:center;gap:2px;"><input type="checkbox" id="fb_kramp_ober_l"> Li</label>
+                          <label style="display:flex;align-items:center;gap:2px;"><input type="checkbox" id="fb_kramp_ober_r"> Re</label>
+
+                          <span>Unterschenkel</span>
+                          <label style="display:flex;align-items:center;gap:2px;"><input type="checkbox" id="fb_kramp_unter_l"> Li</label>
+                          <label style="display:flex;align-items:center;gap:2px;"><input type="checkbox" id="fb_kramp_unter_r"> Re</label>
+                        </div>
+                      </div>
+
+                      <div style="font-size:12px;">
+                        <span style="font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Risiken:</span>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                          <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_risk_diabetes"> Diabetes</label>
+                          <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_risk_allergien"> Allergien</label>
+                          <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_risk_infektionskrankheiten"> Infektionskrankheiten</label>
+                          <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_risk_gerinnungshemmer"> Gerinnungshemmer</label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Haut-Befund Card -->
+                    <div style="border:1px solid var(--border);background:var(--bg-card-solid);border-radius:8px;padding:14px;">
+                      <strong style="font-size:13px;color:var(--text-main);display:block;margin-bottom:10px;">Haut-Befund</strong>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:10px;">
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_haut_hornhaut"> Hornhaut</label>
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_haut_hallux_valgus"> Hallux Valgus</label>
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_haut_warzen"> Warzen</label>
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="fb_haut_hautpilz"> Hautpilz</label>
+                      </div>
+                      <input type="text" id="fbHautFreitext" class="input-control" placeholder="Haut-Freitext (optional)..." style="width:100%;font-size:12px;">
+                    </div>
+                  </div>
+
+                  <!-- Column 2 -->
+                  <div style="display:flex;flex-direction:column;gap:16px;">
+                    <!-- Zehen & Nägel Card -->
+                    <div style="border:1px solid var(--border);background:var(--bg-card-solid);border-radius:8px;padding:14px;">
+                      <strong style="font-size:13px;color:var(--text-main);display:block;margin-bottom:10px;">Zehen & Nägel (Zehen 1–5, 1 = Großzehe)</strong>
+                      
+                      <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
+                        <div class="fb-toe-row" data-key="huehneraugen_auf">
+                          <div style="font-weight:600;margin-bottom:2px;">Hühneraugen auf Zehen</div>
+                          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <span style="color:var(--text-muted);font-size:11px;">Li:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="l" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="l" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="l" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="l" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="l" data-toe="5">5</button>
+                            </div>
+                            <span style="color:var(--text-muted);font-size:11px;margin-left:4px;">Re:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="r" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="r" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="r" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="r" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_auf" data-foot="r" data-toe="5">5</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="fb-toe-row" data-key="huehneraugen_zw">
+                          <div style="font-weight:600;margin-bottom:2px;">Hühneraugen zw. Zehen</div>
+                          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <span style="color:var(--text-muted);font-size:11px;">Li:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="l" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="l" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="l" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="l" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="l" data-toe="5">5</button>
+                            </div>
+                            <span style="color:var(--text-muted);font-size:11px;margin-left:4px;">Re:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="r" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="r" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="r" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="r" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="huehneraugen_zw" data-foot="r" data-toe="5">5</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="fb-toe-row" data-key="hammerzehen">
+                          <div style="font-weight:600;margin-bottom:2px;">Hammerzehen</div>
+                          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <span style="color:var(--text-muted);font-size:11px;">Li:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="l" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="l" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="l" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="l" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="l" data-toe="5">5</button>
+                            </div>
+                            <span style="color:var(--text-muted);font-size:11px;margin-left:4px;">Re:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="r" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="r" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="r" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="r" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="hammerzehen" data-foot="r" data-toe="5">5</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="fb-toe-row" data-key="nagelpilz">
+                          <div style="font-weight:600;margin-bottom:2px;">Nagelpilz</div>
+                          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <span style="color:var(--text-muted);font-size:11px;">Li:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="l" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="l" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="l" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="l" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="l" data-toe="5">5</button>
+                            </div>
+                            <span style="color:var(--text-muted);font-size:11px;margin-left:4px;">Re:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="r" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="r" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="r" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="r" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="nagelpilz" data-foot="r" data-toe="5">5</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="fb-toe-row" data-key="eingewachsen">
+                          <div style="font-weight:600;margin-bottom:2px;">Eingewachsene Nägel</div>
+                          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <span style="color:var(--text-muted);font-size:11px;">Li:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="l" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="l" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="l" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="l" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="l" data-toe="5">5</button>
+                            </div>
+                            <span style="color:var(--text-muted);font-size:11px;margin-left:4px;">Re:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="r" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="r" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="r" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="r" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="eingewachsen" data-foot="r" data-toe="5">5</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="fb-toe-row" data-key="zustand_naegel">
+                          <div style="font-weight:600;margin-bottom:2px;">Zustand der Nägel</div>
+                          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                            <span style="color:var(--text-muted);font-size:11px;">Li:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="l" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="l" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="l" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="l" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="l" data-toe="5">5</button>
+                            </div>
+                            <span style="color:var(--text-muted);font-size:11px;margin-left:4px;">Re:</span>
+                            <div style="display:flex;gap:2px;">
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="r" data-toe="1">1</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="r" data-toe="2">2</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="r" data-toe="3">3</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="r" data-toe="4">4</button>
+                              <button type="button" class="toe-btn" data-key="zustand_naegel" data-foot="r" data-toe="5">5</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Bemerkungen / Notizen Card -->
+                    <div style="border:1px solid var(--border);background:var(--bg-card-solid);border-radius:8px;padding:14px;">
+                      <strong style="font-size:13px;color:var(--text-main);display:block;margin-bottom:10px;">Zusätzliche Notizen</strong>
+                      <textarea id="fbNotiz" class="input-control" rows="4" placeholder="Zusätzliche Notizen / Bemerkungen zum Befund..." style="width:100%;font-size:12px;resize:vertical;"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pd-loading" id="fbLoading" hidden><div class="spinner-sm"></div></div>
           </div>
           <div class="pd-panel" id="pdPanelRechnungen">
             <div class="pd-loading" id="pdRechLoading">
