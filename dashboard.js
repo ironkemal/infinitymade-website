@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260702';
+import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260720';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -3204,6 +3204,11 @@ async function openBookingActionModal(booking) {
   document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
   document.getElementById('bkActionNoShowHint').hidden = !isOwn;
 
+  const ausfallBtn = document.getElementById('bkActionAusfallBtn');
+  if (ausfallBtn) {
+    ausfallBtn.hidden = !ausfallBizForBooking(booking);
+  }
+
   // Load prescription sessions panel (Unvergebene Heilmittel)
   loadRxSessionsPanel(booking).catch(e => console.error('[loadRxSessionsPanel]', e));
 
@@ -4417,6 +4422,161 @@ async function handlePatientNichtErschienen() {
     await offerAusfallrechnung(bkActionBookingCache, 'no_show');
   } catch (err) {
     showToast(err.message, 'error');
+  }
+}
+
+async function handleDirectAusfallrechnung() {
+  const booking = bkActionBookingCache;
+  if (!booking) return;
+
+  // Patientendaten: via supabase leads-Select (id = booking.lead_id, Felder street, plz, city, first_name, last_name) prüfen.
+  let patientAddressIncomplete = false;
+  let lead = null;
+
+  if (booking.lead_id) {
+    try {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('id, street, plz, city, first_name, last_name')
+        .eq('id', booking.lead_id)
+        .maybeSingle();
+
+      if (!error && data) {
+        lead = data;
+        if (!lead.street || !lead.plz || !lead.city) {
+          patientAddressIncomplete = true;
+        }
+      } else {
+        patientAddressIncomplete = true;
+      }
+    } catch (e) {
+      console.error(e);
+      patientAddressIncomplete = true;
+    }
+  } else {
+    // lead_id komplett fehlt: nur Hinweis-Toast und fortfahren
+    showToast("Kein Patient verknüpft — Adresse fehlt auf der Rechnung", "warning");
+  }
+
+  const proceedToOwnerCheck = async () => {
+    // Praxisdaten: einmalig supabase profiles-Select auf die Owner-ID (getOwnerId()) mit Feldern iban, steuernummer, street, zip, plz, city.
+    // Wenn iban ODER steuernummer fehlt → nicht blockieren, aber Warn-Toast
+    try {
+      const ownerId = getOwnerId();
+      if (ownerId) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('iban, steuernummer, street, zip, plz, city')
+          .eq('id', ownerId)
+          .maybeSingle();
+
+        if (!error && profile) {
+          if (!profile.iban || !profile.steuernummer) {
+            showToast("Hinweis: IBAN/Steuernummer im Profil unvollständig — bitte in den Abrechnungs-Einstellungen ergänzen.", "warning");
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Danach das BESTEHENDE offerAusfallrechnung(booking, 'no_show') aufrufen
+    await offerAusfallrechnung(booking, 'no_show');
+  };
+
+  // Close the bkActionModal first
+  const _bkm = document.getElementById('bkActionModal');
+  if (_bkm) {
+    _bkm.hidden = true;
+    _bkm.style.display = 'none';
+  }
+  document.getElementById('mainArea')?.style.removeProperty('padding-right');
+  if (bkActionTimer) {
+    clearInterval(bkActionTimer);
+    bkActionTimer = null;
+  }
+
+  if (patientAddressIncomplete) {
+    const existing = document.getElementById('_patientAddressModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_patientAddressModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    const prefillStreet = lead ? (lead.street || '') : '';
+    const prefillPlz = lead ? (lead.plz || '') : '';
+    const prefillCity = lead ? (lead.city || '') : '';
+
+    overlay.innerHTML = `
+      <div style="background:var(--bg-card-solid,#1e293b);color:var(--text-main,#e2e8f0);border-radius:12px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.4);">
+        <div style="font-size:15px;font-weight:700;margin-bottom:10px;color:var(--text-main,#e2e8f0);">Rechnungsadresse des Patienten unvollständig</div>
+        
+        <label style="font-size:12px;color:var(--text-muted,#94a3b8);display:block;margin-bottom:4px;">Straße & Hausnummer</label>
+        <input id="_paStreet" type="text" value="${escapeHtml(prefillStreet)}"
+          style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#334155);background:transparent;color:inherit;font-size:14px;margin-bottom:10px;" />
+          
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <div style="flex:1;">
+            <label style="font-size:12px;color:var(--text-muted,#94a3b8);display:block;margin-bottom:4px;">PLZ</label>
+            <input id="_paPlz" type="text" value="${escapeHtml(prefillPlz)}"
+              style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#334155);background:transparent;color:inherit;font-size:14px;" />
+          </div>
+          <div style="flex:2;">
+            <label style="font-size:12px;color:var(--text-muted,#94a3b8);display:block;margin-bottom:4px;">Ort</label>
+            <input id="_paCity" type="text" value="${escapeHtml(prefillCity)}"
+              style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#334155);background:transparent;color:inherit;font-size:14px;" />
+          </div>
+        </div>
+        
+        <div id="_paErr" style="color:#f87171;font-size:12px;display:none;margin-bottom:10px;"></div>
+        
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="_paCancel" class="btn-secondary">Abbrechen</button>
+          <button id="_paProceedAnyway" class="btn-secondary">Trotzdem fortfahren</button>
+          <button id="_paSaveProceed" class="btn-primary">Speichern & fortfahren</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    overlay.querySelector('#_paCancel').onclick = () => overlay.remove();
+    overlay.querySelector('#_paProceedAnyway').onclick = () => {
+      overlay.remove();
+      proceedToOwnerCheck();
+    };
+    overlay.querySelector('#_paSaveProceed').onclick = async () => {
+      const btn = overlay.querySelector('#_paSaveProceed');
+      const errEl = overlay.querySelector('#_paErr');
+      const streetVal = overlay.querySelector('#_paStreet').value.trim();
+      const plzVal = overlay.querySelector('#_paPlz').value.trim();
+      const cityVal = overlay.querySelector('#_paCity').value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Speichert…';
+      try {
+        if (booking.lead_id) {
+          const { error } = await supabase
+            .from('leads')
+            .update({
+              street: streetVal,
+              plz: plzVal,
+              city: cityVal
+            })
+            .eq('id', booking.lead_id);
+          if (error) throw error;
+        }
+        overlay.remove();
+        proceedToOwnerCheck();
+      } catch (e) {
+        errEl.textContent = 'Fehler beim Speichern: ' + e.message;
+        errEl.style.display = '';
+        btn.disabled = false;
+        btn.textContent = 'Speichern & fortfahren';
+      }
+    };
+  } else {
+    proceedToOwnerCheck();
   }
 }
 
@@ -7063,6 +7223,7 @@ function showWaitlistMatchModal(candidates) {
 
 document.getElementById('bkActionStartBtn').addEventListener('click', handleTerminStarten);
 document.getElementById('bkActionNoShowBtn').addEventListener('click', handlePatientNichtErschienen);
+document.getElementById('bkActionAusfallBtn').addEventListener('click', handleDirectAusfallrechnung);
 
 document.getElementById('bkActionEditBtn').addEventListener('click', () => {
   if (!bkActionBookingCache) return;
@@ -12222,6 +12383,12 @@ function renderVorlagenContentForm(type, json) {
       { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: 'Praxisname · Adresse · Telefon' },
       { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' }
     ],
+    rechnung_ausfall: [
+      { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Ausfallrechnung' },
+      { key: 'hinweis', label: 'Hinweis (ersetzt Standard-Disclaimer)', type: 'textarea', placeholder: 'Gemäß unserer Ausfallvereinbarung ...' },
+      { key: 'fusszeile', label: 'Fußzeile', type: 'textarea', placeholder: '' },
+      { key: 'zahlungsziel_tage', label: 'Zahlungsziel (Tage)', type: 'number', placeholder: '14' }
+    ],
     rechnung_bg: [
       { key: 'betreff', label: 'Betreff', type: 'text', placeholder: 'Rechnung für Physiotherapie' },
       { key: 'hinweis', label: 'Hinweis', type: 'textarea', placeholder: 'Bitte überweisen Sie ...' },
@@ -15434,6 +15601,35 @@ function _getIcdChapters() {
   return ICD_SECTORS[s] || ICD_SECTORS.physiotherapy;
 }
 
+function lsCollect(prefix) {
+  const g = id => document.getElementById(id);
+  const a = g(prefix+'LsA')?.checked ? '1':'0', b = g(prefix+'LsB')?.checked ? '1':'0',
+        c = g(prefix+'LsC')?.checked ? '1':'0', d = g(prefix+'LsD')?.checked ? '1':'0';
+  const code = a+b+c+d;
+  return {
+    code: code === '0000' ? null : code,
+    patText: (g(prefix+'LsD')?.checked ? (g(prefix+'LsDText')?.value.trim() || null) : null)
+  };
+}
+function lsApply(prefix, value, patText) {
+  const g = id => document.getElementById(id);
+  const v = (value || '').toString().toLowerCase();
+  let flags = [false,false,false,false];
+  if (/^[01]{4}$/.test(v)) flags = v.split('').map(x => x === '1');
+  else if (/[abcd]/.test(v)) flags = ['a','b','c','d'].map(l => v.includes(l));
+  ['A','B','C','D'].forEach((L,i) => { const el = g(prefix+'Ls'+L); if (el) el.checked = flags[i]; });
+  const txt = g(prefix+'LsDText');
+  if (txt) { txt.value = patText || ''; txt.style.display = flags[3] ? '' : 'none'; }
+}
+function lsWireToggle(prefix) {
+  const d = document.getElementById(prefix+'LsD');
+  const txt = document.getElementById(prefix+'LsDText');
+  if (d && txt && !d.dataset.lsWired) {
+    d.dataset.lsWired = '1';
+    d.addEventListener('change', () => { txt.style.display = d.checked ? '' : 'none'; if (!d.checked) txt.value=''; });
+  }
+}
+
 function _fillIcdDatalist(rows) {
   const dl = document.getElementById('icdDatalist');
   if (!dl || !rows?.length) return;
@@ -15468,15 +15664,25 @@ function initIcdSearch(inputId) {
     if (q.length < 2) return;
     t = setTimeout(async () => {
       const chapters = _getIcdChapters();
-      // Build OR filter for sector chapters
-      const chapterFilter = chapters.map(c => `code.gte.${c.gte},code.lt.${c.lt}`).join(',');
+      const chapterOr = chapters.map(c => `and(code.gte.${c.gte},code.lt.${c.lt})`).join(',');
       const [byCode, byTitle] = await Promise.all([
-        supabase.from('icd10_titles').select('code,titel').ilike('code', `%${q}%`).limit(10),
-        supabase.from('icd10_titles').select('code,titel').ilike('titel', `%${q}%`).limit(15),
+        supabase.from('icd10_titles').select('code,titel').or(chapterOr).ilike('code', `%${q}%`).limit(10),
+        supabase.from('icd10_titles').select('code,titel').or(chapterOr).ilike('titel', `%${q}%`).limit(15),
       ]);
       const seen = new Set();
-      const all = [...(byCode.data||[]), ...(byTitle.data||[])]
+      let all = [...(byCode.data||[]), ...(byTitle.data||[])]
         .filter(r => seen.has(r.code) ? false : seen.add(r.code));
+
+      if (all.length === 0) {
+        const [fallbackCode, fallbackTitle] = await Promise.all([
+          supabase.from('icd10_titles').select('code,titel').ilike('code', `%${q}%`).limit(10),
+          supabase.from('icd10_titles').select('code,titel').ilike('titel', `%${q}%`).limit(15),
+        ]);
+        const fallbackSeen = new Set();
+        all = [...(fallbackCode.data||[]), ...(fallbackTitle.data||[])]
+          .filter(r => fallbackSeen.has(r.code) ? false : fallbackSeen.add(r.code));
+      }
+
       if (all.length) _fillIcdDatalist(all);
     }, 280);
   });
@@ -15492,7 +15698,7 @@ function openRezeptModal(phone, leadId) {
   g('rzBsnr').value = '';
   g('rzIcd').value = '';
   g('rzDg').value = '';
-  g('rzLeitsymptomatik').value = '';
+  lsApply('rz', null, null);
   g('rzHm').value = '';
   g('rzHmPosition').value = '';
   g('rzAnzahl').value = '';
@@ -15636,6 +15842,7 @@ async function saveRezept() {
     }
 
     // 4. Insert prescription
+    const rzLs = lsCollect('rz');
     const { data: rx, error: rxErr } = await supabase.from('prescriptions').insert({
       owner_id: ownerId,
       patient_id: patientId,
@@ -15644,7 +15851,8 @@ async function saveRezept() {
       ausstellungsdatum: ausstDate,
       icd10,
       diagnosegruppe: document.getElementById('rzDg').value.trim() || null,
-      leitsymptomatik: document.getElementById('rzLeitsymptomatik').value.trim() || null,
+      leitsymptomatik: rzLs.code,
+      pat_leitsymptomatik: rzLs.patText,
       heilmittel: document.getElementById('rzHm').value.trim() || null,
       heilmittel_position: document.getElementById('rzHmPosition').value.trim() || null,
       anzahl_einheiten: anzahl,
@@ -16311,6 +16519,8 @@ async function init() {
         rzHmPosInput.value = m ? m.x : '';
       });
     }
+    lsWireToggle('rz');
+    lsWireToggle('rxc');
     initIcdSearch('rzIcd');
     initIcdSearch('rxcIcd');
     await loadAerzte();
@@ -16663,6 +16873,7 @@ function initRezeptScanner() {
   document.getElementById('rxScanFileBtn')?.addEventListener('click', () =>
     document.getElementById('rxScanFileInput').click());
   document.getElementById('rxScanFileInput')?.addEventListener('change', onFileChosen);
+  document.getElementById('rxScanCameraInput')?.addEventListener('change', onFileChosen);
   document.getElementById('rxScanShotBtn')?.addEventListener('click', captureWebcamShot);
   document.getElementById('rxScanCancelCamBtn')?.addEventListener('click', stopWebcam);
   document.getElementById('rxConfirmBtn')?.addEventListener('click', submitConfirm);
@@ -16687,18 +16898,55 @@ function closeRezeptScanModal() {
   document.getElementById('rezeptScanModal').hidden = true;
 }
 
+function showRxScanError(msg) {
+  const el = document.getElementById('rxScanError');
+  el.textContent = msg;
+  el.style.display = '';
+}
+
+// Native Kamera-App über <input capture> — braucht kein getUserMedia und keine
+// Browser-Kameraberechtigung. Einziger Weg auf HTTP (on-prem LAN ohne TLS),
+// wo getUserMedia mangels Secure Context gar nicht existiert.
+function openNativeCameraInput() {
+  document.getElementById('rxScanCameraInput')?.click();
+}
+
 async function startWebcamCapture() {
+  document.getElementById('rxScanError').style.display = 'none';
+
+  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+    openNativeCameraInput();
+    return;
+  }
+
   try {
-    rxStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1440 } }
-    });
+    try {
+      rxStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1440 } }
+      });
+    } catch (e) {
+      // Rückkamera-Constraint kann auf Desktops/Webcams scheitern → ohne Constraints erneut
+      if (e.name === 'OverconstrainedError' || e.name === 'NotFoundError') {
+        rxStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      } else {
+        throw e;
+      }
+    }
     const video = document.getElementById('rxScanVideo');
     video.srcObject = rxStream;
     document.getElementById('rxScanChooser').style.display = 'none';
     document.getElementById('rxScanCamera').style.display = '';
   } catch (e) {
-    document.getElementById('rxScanError').textContent = 'Kamera nicht verfügbar: ' + e.message;
-    document.getElementById('rxScanError').style.display = '';
+    if (e.name === 'NotAllowedError' || e.name === 'SecurityError') {
+      showRxScanError('Kamera-Zugriff wurde blockiert. Bitte im Browser erlauben (Schloss-Symbol neben der Adresse → Kamera → Zulassen) und erneut versuchen — oder „Bild hochladen" nutzen.');
+    } else if (e.name === 'NotFoundError') {
+      showRxScanError('Keine Kamera gefunden — es öffnet sich die Foto-Auswahl.');
+      openNativeCameraInput();
+    } else if (e.name === 'NotReadableError') {
+      showRxScanError('Die Kamera wird gerade von einer anderen App verwendet. Bitte diese App schließen und erneut versuchen.');
+    } else {
+      showRxScanError('Kamera nicht verfügbar: ' + e.message + ' — alternativ „Bild hochladen" nutzen.');
+    }
   }
 }
 function stopWebcam() {
@@ -16803,7 +17051,7 @@ async function openRezeptConfirmModal(payload) {
   setVal('rxcBsnr', arzt.bsnr);
   setVal('rxcIcd', rez.icd10);
   setVal('rxcDg', rez.diagnosegruppe);
-  setVal('rxcLeitsymptomatik', rez.leitsymptomatik);
+  lsApply('rxc', rez.leitsymptomatik, rez.pat_leitsymptomatik || null);
   // Heilmittel — handled by setupRezeptConfirmDropdowns
   // (we still pass the raw OCR text below)
   setVal('rxcAnzahl', rez.anzahl_einheiten);
@@ -16934,6 +17182,7 @@ async function submitConfirm() {
       }
     }
 
+    const rxcLs = lsCollect('rxc');
     const parsedEdited = {
       patient: {
         first_name: fn || null,
@@ -16962,7 +17211,8 @@ async function submitConfirm() {
         icd10: document.getElementById('rxcIcd').value.trim() || null,
         diagnosegruppe: document.getElementById('rxcDg').value.trim() || null,
         heilmittel: document.getElementById('rxcHm').value.trim() || null,
-        leitsymptomatik: document.getElementById('rxcLeitsymptomatik')?.value.trim() || null,
+        leitsymptomatik: rxcLs.code,
+        pat_leitsymptomatik: rxcLs.patText,
         heilmittel_position: document.getElementById('rxcHmPosition').value.trim() || null,
         heilmittel_feld_text: rxLastUpload.parsed?.rezept?.heilmittel_feld_text || null,
         anzahl_einheiten: parseInt(document.getElementById('rxcAnzahl').value, 10) || null,
@@ -17179,8 +17429,11 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
   const kkMatch = aiMatchKK(ocrKkText, kkList);
   if (kkMatch) {
     kkInput.value = kkMatch.name;
-    kkIkInput.value = kkMatch.ik;
-    if (kkStatus) kkStatus.textContent = ` ✓ erkannt (${Math.round(kkMatch.score * 100)}%) · IK ${kkMatch.ik}`;
+    kkIkInput.value = kkMatch.ik || '';
+    if (kkStatus) {
+      const ikText = kkMatch.ik ? ` · IK ${kkMatch.ik}` : ' · ohne IK';
+      kkStatus.textContent = ` ✓ erkannt (${Math.round(kkMatch.score * 100)}%)${ikText}`;
+    }
   } else if (ocrKkText) {
     kkInput.value = ocrKkText;
     if (kkStatus) { kkStatus.textContent = ' ⚠ nicht erkannt — bitte auswählen'; kkStatus.style.color = '#b45309'; }
@@ -17192,11 +17445,17 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
   kkInput.oninput = () => {
     const m = aiMatchKK(kkInput.value, kkList);
     if (m && _norm(m.name) === _norm(kkInput.value)) {
-      kkIkInput.value = m.ik;
-      if (kkStatus) { kkStatus.style.color = '#15803d'; kkStatus.textContent = ` ✓ IK ${m.ik}`; }
+      kkIkInput.value = m.ik || '';
+      if (kkStatus) {
+        kkStatus.style.color = '#15803d';
+        kkStatus.textContent = m.ik ? ` ✓ IK ${m.ik}` : ' ✓ ohne IK';
+      }
     } else {
       kkIkInput.value = '';
-      if (kkStatus) { kkStatus.style.color = '#b45309'; kkStatus.textContent = ' ⚠ keine IK zugeordnet'; }
+      if (kkStatus) {
+        kkStatus.style.color = '#b45309';
+        kkStatus.textContent = ' ⚠ keine IK zugeordnet';
+      }
     }
   };
 
@@ -21431,6 +21690,12 @@ async function loadPodologieBilling() {
     podUpdateHeilmittelOptions();
     podValidateIcd10();
   });
+
+  const podIcdInput = document.getElementById('podNewIcd10');
+  if (podIcdInput && !podIcdInput.dataset.icdWired) {
+    podIcdInput.dataset.icdWired = '1';
+    icd10Autocomplete(podIcdInput, supabase, { chapters: ICD_SECTORS.podologie, multi: true, codeOnly: true });
+  }
 
   // Wire up: Patient datalist
   const podPatientList = document.getElementById('podPatientList');

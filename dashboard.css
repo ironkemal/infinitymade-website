@@ -315,11 +315,16 @@ textarea {
 .biz-switcher {
   position: relative;
   margin-left: 4px;
+  /* Dar ekranda topbar-right'ın altına girmesin: flex içinde küçülebilsin */
+  min-width: 0;
+  flex: 0 1 auto;
 }
 .biz-switcher-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+  min-width: 0;
   padding: 6px 10px;
   font-size: 13px;
   font-weight: 600;
@@ -4792,6 +4797,20 @@ textarea {
     transform: translateX(0);
   }
 
+  /* Desktop-Collapse gilt mobil nicht: sonst öffnet der Hamburger eine 0px-Sidebar,
+     wenn auf dem Desktop zuvor eingeklappt wurde (localStorage sidebar_collapsed) */
+  .sidebar.collapsed {
+    width: var(--sidebar-w);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Desktop-Einklapp-Knopf (fixed, left:260px) schwebt mobil mitten im Content */
+  #sidebarCollapseBtn {
+    display: none !important;
+  }
+
   .sidebar-overlay {
     position: fixed;
     inset: 0;
@@ -4871,9 +4890,15 @@ textarea {
     display: none;
   }
 
-  /* Telefonda switcher chip sadece ikon (🏢 ▾) kalsın — isim gizlensin */
-  #bizSwitcherCurrentName {
-    display: none;
+  /* Telefonda switcher chip flex ile küçülür (ellipsis) — sabit genişlik yerine
+     kalan alana uyar, topbar'ı taşırmaz */
+  .biz-switcher-current {
+    max-width: 100%;
+  }
+
+  .biz-switcher-btn {
+    padding: 5px 8px;
+    font-size: 12px;
   }
 
   /* Mobilde grid/flex kartlar küçülebilsin → geniş içerik/tablolar paneli yatay taşırmasın */
@@ -4914,12 +4939,31 @@ textarea {
   .logout-btn {
     padding: 5px 10px;
     font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .brand {
+    white-space: nowrap;
   }
 
   #rezeptScanBtn {
     padding: 6px 10px !important;
     font-size: 12px !important;
     margin-right: 0 !important;
+    white-space: nowrap;
+  }
+
+  /* Telefonda Scan-Button nur als Kamera-Icon — Text passt nicht neben Uhr/Sprache/Abmelden */
+  .rezept-scan-label {
+    display: none;
+  }
+
+  .topbar-right {
+    flex-shrink: 0;
+  }
+
+  .topbar-admin-link {
+    white-space: nowrap;
   }
 }
 
@@ -4975,15 +5019,22 @@ textarea {
     font-size: 11px;
   }
 
+  /* Icon-only ist schon ab 768px aktiv (.rezept-scan-label versteckt) —
+     hier nur noch kompakteres Padding */
   #rezeptScanBtn {
-    font-size: 0 !important;
-    padding: 6px 10px !important;
-    line-height: 1;
+    padding: 6px 9px !important;
   }
 
-  #rezeptScanBtn::before {
-    content: "📄";
-    font-size: 16px;
+  .topbar {
+    padding: 0 8px;
+  }
+
+  .topbar-right {
+    gap: 4px;
+  }
+
+  .topbar-left {
+    gap: 6px;
   }
 }
 
