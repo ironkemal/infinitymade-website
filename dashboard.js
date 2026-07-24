@@ -23308,79 +23308,49 @@ async function loadFussstatus() {
             <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">Klick setzt Marker, Klick auf Marker löscht ihn.</span>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;align-items:start;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:20px;align-items:start;">
 
-            <!-- Plantar (Sohle) — Links/Rechts -->
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
-              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Plantar (Sohle) — Links/Rechts</div>
-              <div style="display:flex;gap:12px;justify-content:center;">
-                <!-- Links -->
-                <div style="text-align:center;flex:1;">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <img src="/assets/img/foot/plantar-left.png" alt="Plantar links" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-
-                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                  </div>
+            <!-- Plantar (Sohle) -->
+            <div style="background:#f7f7f5;border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:13px;color:#3a3a3a;margin-bottom:10px;text-align:center;">Plantar (Sohle)</div>
+              <div style="display:flex;gap:6px;justify-content:center;align-items:flex-start;">
+                <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;flex:1;max-width:165px;">
+                  <img src="/assets/img/foot/plantar-right.png" alt="Plantar" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                 </div>
-                <!-- Rechts -->
-                <div style="text-align:center;flex:1;">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <img src="/assets/img/foot/plantar-right.png" alt="Plantar rechts" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-
-                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                  </div>
+                <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;flex:1;max-width:165px;">
+                  <img src="/assets/img/foot/plantar-left.png" alt="Plantar" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Dorsal (Rücken) — Links/Rechts -->
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
-              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Dorsal (Rücken) — Links/Rechts</div>
-              <div style="display:flex;gap:12px;justify-content:center;">
-                <!-- Links -->
-                <div style="text-align:center;flex:1;">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <img src="/assets/img/foot/dorsal-left.png" alt="Dorsal links" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-
-                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                  </div>
+            <!-- Dorsal (Rücken) -->
+            <div style="background:#f7f7f5;border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:13px;color:#3a3a3a;margin-bottom:10px;text-align:center;">Dorsal (Rücken)</div>
+              <div style="display:flex;gap:6px;justify-content:center;align-items:flex-start;">
+                <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;flex:1;max-width:165px;">
+                  <img src="/assets/img/foot/dorsal-left.png" alt="Dorsal" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                 </div>
-                <!-- Rechts -->
-                <div style="text-align:center;flex:1;">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <img src="/assets/img/foot/dorsal-right.png" alt="Dorsal rechts" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-
-                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                  </div>
+                <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;flex:1;max-width:165px;">
+                  <img src="/assets/img/foot/dorsal-right.png" alt="Dorsal" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                 </div>
               </div>
             </div>
 
             <!-- Lateral (Seitenansicht) -->
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
-              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Lateral</div>
-              <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
-                <!-- Links -->
-                <div style="text-align:center;width:100%;">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:300px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <img src="/assets/img/foot/lateral-left.png" alt="Lateral links" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-
-                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                  </div>
+            <div style="background:#f7f7f5;border-radius:10px;padding:12px 14px;">
+              <div style="font-weight:700;font-size:13px;color:#3a3a3a;margin-bottom:10px;text-align:center;">Lateral</div>
+              <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
+                <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;flex:1;max-width:210px;">
+                  <img src="/assets/img/foot/lateral-left.png" alt="Lateral" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                 </div>
-                <!-- Rechts -->
-                <div style="text-align:center;width:100%;">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:300px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <img src="/assets/img/foot/lateral-right.png" alt="Lateral rechts" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-
-                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                  </div>
+                <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;flex:1;max-width:210px;">
+                  <img src="/assets/img/foot/lateral-right.png" alt="Lateral" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                 </div>
               </div>
             </div>
