@@ -22562,6 +22562,31 @@ let fbpMarkierungen = [];
 let fbpSelectedMarkerType = 'x';
 let fbpSelectedMarkerColor = '#ef4444';
 let fbpPatientsMap = {};
+let fbpPatientsList = [];
+
+function fbpRenderPatientDropdown(query) {
+  const dropdown = document.getElementById('fbpPatientDropdown');
+  if (!dropdown) return;
+
+  const matches = (fbpPatientsList || []).filter(p => patientMatchesQuery(p, query));
+  if (!matches.length) {
+    dropdown.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--text-muted);font-style:italic;">Keine Patienten gefunden</div>';
+    dropdown.style.display = 'block';
+    return;
+  }
+
+  dropdown.innerHTML = matches.slice(0, 50).map(p => {
+    const nameBirth = displayNameWithBirth(p);
+    const phone = p.phone || p.metadata?.phone || p.phone_normalized || '';
+    const phoneStr = phone ? ` · Tel: ${escapeHtml(phone)}` : '';
+    return `
+      <div class="fbp-patient-item" data-id="${escapeHtml(p.id)}" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);color:var(--text-main);" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
+        <strong>${escapeHtml(nameBirth)}</strong><span style="font-size:11px;color:var(--text-muted);">${phoneStr}</span>
+      </div>
+    `;
+  }).join('');
+  dropdown.style.display = 'block';
+}
 
 function fbpFormatDate(str) {
   if (!str) return '—';
@@ -22589,12 +22614,13 @@ function fbpAutofillStammdaten(patientId) {
     return;
   }
 
-  const name = [p.last_name, p.first_name].filter(Boolean).join(', ') || '—';
-  const geb = p.geburtsdatum ? fbpFormatDate(p.geburtsdatum) : '—';
-  const kk = p.krankenkasse || '—';
-  const phone = p.phone || '—';
-  const plz = p.plz || '—';
-  const vnr = p.versichertennummer || '—';
+  const name = displayName(p) || [p.last_name, p.first_name].filter(Boolean).join(', ') || '—';
+  const bd = leadBirthDate(p);
+  const geb = bd ? fbpFormatDate(bd) : '—';
+  const kk = p.krankenkasse || p.metadata?.krankenkasse || '—';
+  const phone = p.phone || p.metadata?.phone || p.phone_normalized || '—';
+  const plz = p.plz || p.metadata?.plz || '—';
+  const vnr = p.versichertennummer || p.metadata?.versichertennummer || '—';
 
   box.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;background:var(--bg-card);padding:10px;border-radius:8px;border:1px solid var(--border);">
@@ -22647,8 +22673,13 @@ function fbpResetCard() {
   currentFbpId = null;
   fbpMarkierungen = [];
 
-  const patSelect = document.getElementById('fbpPatient');
-  if (patSelect) patSelect.value = '';
+  const patHidden = document.getElementById('fbpPatient');
+  if (patHidden) patHidden.value = '';
+  const patSearch = document.getElementById('fbpPatientSearch');
+  if (patSearch) patSearch.value = '';
+  const dropdown = document.getElementById('fbpPatientDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+
   fbpAutofillStammdaten('');
 
   const datumInp = document.getElementById('fbpDatum');
@@ -22820,7 +22851,7 @@ async function fbpRefreshTable() {
 
   const { data, error } = await supabase
     .from('pat_fussbefund')
-    .select('id, erstellt_am, befund, markierungen, notiz, lead_id, leads:lead_id(first_name, last_name, geburtsdatum)')
+    .select('id, erstellt_am, befund, markierungen, notiz, lead_id, leads:lead_id(first_name, last_name, geburtsdatum, metadata)')
     .eq('owner_id', getOwnerId())
     .order('erstellt_am', { ascending: false })
     .limit(30);
@@ -22850,16 +22881,17 @@ async function fbpRefreshTable() {
         <tbody>
           ${data.map(row => {
             const p = row.leads || {};
-            const pName = [p.last_name, p.first_name].filter(Boolean).join(', ') || 'Unbekannt';
-            const pGeb = fbpFormatDate(p.geburtsdatum);
+            const pName = displayName(p) || [p.last_name, p.first_name].filter(Boolean).join(', ') || 'Unbekannt';
+            const bd = leadBirthDate(p);
+            const pGeb = bd ? fbpFormatDate(bd) : '—';
             const bDatum = fbpFormatDate(row.erstellt_am);
             const kurzBefund = fbpFormatKurzBefund(row);
 
             return `
               <tr>
                 <td><strong>${escapeHtml(pName)}</strong></td>
-                <td>${pGeb}</td>
-                <td>${bDatum}</td>
+                <td>${escapeHtml(pGeb)}</td>
+                <td>${escapeHtml(bDatum)}</td>
                 <td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(kurzBefund)}">${escapeHtml(kurzBefund)}</td>
                 <td style="text-align:right;white-space:nowrap;">
                   <button type="button" class="btn-sm fbp-btn-open" data-id="${row.id}" title="Öffnen" style="padding:3px 7px;">↗</button>
@@ -22910,11 +22942,25 @@ async function fbpRefreshTable() {
 function fbpLoadRecord(row) {
   currentFbpId = row.id;
 
-  const patSelect = document.getElementById('fbpPatient');
-  if (patSelect) {
-    patSelect.value = row.lead_id || '';
-    fbpAutofillStammdaten(row.lead_id);
+  const patHidden = document.getElementById('fbpPatient');
+  if (patHidden) patHidden.value = row.lead_id || '';
+
+  const patSearch = document.getElementById('fbpPatientSearch');
+  if (patSearch) {
+    const p = fbpPatientsMap[row.lead_id];
+    if (p) {
+      patSearch.value = displayNameWithBirth(p);
+    } else if (row.leads) {
+      patSearch.value = displayNameWithBirth(row.leads);
+    } else {
+      patSearch.value = '';
+    }
   }
+
+  const dropdown = document.getElementById('fbpPatientDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+
+  fbpAutofillStammdaten(row.lead_id);
 
   const datumInp = document.getElementById('fbpDatum');
   if (datumInp && row.erstellt_am) {
@@ -22974,7 +23020,7 @@ async function loadFussstatus() {
   const ownerId = getOwnerId();
   const { data: patienten, error: patErr } = await supabase
     .from('leads')
-    .select('id, first_name, last_name, geburtsdatum, krankenkasse, phone, plz, versichertennummer')
+    .select('id, first_name, last_name, geburtsdatum, metadata, krankenkasse, phone, phone_normalized, plz, versichertennummer')
     .eq('owner_id', ownerId)
     .order('last_name', { ascending: true });
 
@@ -22983,7 +23029,8 @@ async function loadFussstatus() {
   }
 
   fbpPatientsMap = {};
-  (patienten || []).forEach(p => {
+  fbpPatientsList = patienten || [];
+  fbpPatientsList.forEach(p => {
     fbpPatientsMap[p.id] = p;
   });
 
@@ -23015,18 +23062,54 @@ async function loadFussstatus() {
   `).join('');
 
   el.innerHTML = `
+    <!-- Defs SVG -->
+    <svg width="0" height="0" style="position:absolute"><defs>
+      <linearGradient id="fbpSole" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf3ec"/><stop offset="1" stop-color="#f4dccb"/></linearGradient>
+      <linearGradient id="fbpTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf1e8"/><stop offset="1" stop-color="#efcfb8"/></linearGradient>
+      
+      <g id="fbpDorsal">
+        <path class="fbp-skin2" d="M90 372 C64 372 50 352 48 322 C46 296 50 268 54 244 C57 224 55 206 60 186 C64 168 72 150 88 140 C92 138 96 138 100 140 C116 150 122 168 126 186 C131 206 129 224 132 244 C136 268 140 296 138 322 C136 352 116 372 90 372 Z"/>
+        <path class="fbp-skin2" d="M70 150 C60 150 54 132 56 116 C58 102 66 96 74 98 C82 100 86 112 86 128 C86 140 80 150 70 150 Z"/>
+        <path class="fbp-skin2" d="M92 140 C84 140 80 122 81 106 C82 94 89 90 96 92 C103 94 106 106 105 122 C104 134 100 140 92 140 Z"/>
+        <path class="fbp-skin2" d="M112 144 C104 144 101 128 102 114 C103 103 109 99 115 101 C121 103 123 114 122 128 C121 139 118 144 112 144 Z"/>
+        <path class="fbp-skin2" d="M128 152 C121 152 118 138 119 126 C120 116 125 113 130 115 C135 117 137 126 136 138 C135 148 132 152 128 152 Z"/>
+        <path class="fbp-skin2" d="M142 162 C136 162 133 150 134 140 C135 131 139 128 143 130 C148 132 149 140 148 150 C147 158 145 162 142 162 Z"/>
+        <ellipse class="fbp-nail" cx="70" cy="112" rx="7" ry="8.5"/>
+        <ellipse class="fbp-nail" cx="92" cy="104" rx="6" ry="7.5"/>
+        <ellipse class="fbp-nail" cx="112" cy="112" rx="5.3" ry="6.7"/>
+        <ellipse class="fbp-nail" cx="128" cy="122" rx="4.6" ry="5.8"/>
+        <ellipse class="fbp-nail" cx="142" cy="137" rx="4" ry="5"/>
+        <path class="fbp-cline" d="M78 168 C82 210 84 260 86 320"/>
+        <path class="fbp-cline" d="M100 165 C102 210 102 260 100 320"/>
+        <path class="fbp-cline" d="M120 170 C118 215 116 262 114 320"/>
+      </g>
+
+      <g id="fbpSoleFoot">
+        <path class="fbp-skin" d="M92 372 C70 372 56 352 54 326 C52 306 58 292 62 276 C66 262 60 250 58 236 C56 220 62 206 74 196 C84 188 96 188 106 194 C120 202 126 218 128 236 C130 254 126 270 128 288 C130 306 130 320 126 336 C121 358 112 372 92 372 Z"/>
+        <ellipse class="fbp-skin" cx="70" cy="150" rx="13" ry="17" transform="rotate(-8 70 150)"/>
+        <ellipse class="fbp-skin" cx="92" cy="140" rx="9" ry="13"/>
+        <ellipse class="fbp-skin" cx="110" cy="146" rx="8" ry="12"/>
+        <ellipse class="fbp-skin" cx="125" cy="156" rx="6.6" ry="10"/>
+        <ellipse class="fbp-skin" cx="137" cy="168" rx="5.6" ry="8.5"/>
+        <ellipse class="fbp-cline" cx="92" cy="330" rx="30" ry="34"/>
+        <path class="fbp-cline" d="M64 196 C82 186 104 188 120 200"/>
+      </g>
+
+      <g id="fbpLateralFoot">
+        <path class="fbp-skin2" d="M300 46 C312 60 312 84 300 96 C292 104 286 112 280 122 C274 132 262 136 250 134 C236 132 232 120 232 108 C216 112 150 116 96 116 C70 116 42 114 22 110 C10 108 6 98 12 90 C18 82 30 80 44 80 C40 72 44 64 54 62 C70 58 96 62 112 70 C150 74 210 70 244 58 C262 52 268 42 274 34 C280 26 292 30 300 46 Z"/>
+        <path class="fbp-cline" d="M96 116 C96 100 100 86 112 78"/>
+        <path class="fbp-cline" d="M150 114 C150 98 152 86 160 78"/>
+        <ellipse class="fbp-nail" cx="24" cy="96" rx="6" ry="8"/>
+      </g>
+    </defs></svg>
+
     <!-- Steuerzeile -->
     <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:220px;">
+      <div style="position:relative;flex:1;min-width:240px;">
         <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:600;">Patient</label>
-        <select id="fbpPatient" class="input-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:14px;">
-          <option value="">— Patient auswählen —</option>
-          ${(patienten || []).map(p => {
-            const name = [p.last_name, p.first_name].filter(Boolean).join(', ');
-            const geb = p.geburtsdatum ? ` (${fbpFormatDate(p.geburtsdatum)})` : '';
-            return `<option value="${escapeHtml(p.id)}">${escapeHtml(name)}${escapeHtml(geb)}</option>`;
-          }).join('')}
-        </select>
+        <input type="text" id="fbpPatientSearch" placeholder="Patient suchen (Name, Geb.-Datum oder Telefon)…" autocomplete="off" class="input-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:14px;">
+        <input type="hidden" id="fbpPatient" value="">
+        <div id="fbpPatientDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:100;margin-top:2px;"></div>
       </div>
 
       <div style="width:160px;">
@@ -23189,21 +23272,16 @@ async function loadFussstatus() {
 
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;align-items:start;">
 
-            <!-- Plantar (Fußsohle) -->
+            <!-- Plantar (Sohle) — Links/Rechts -->
             <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
-              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Plantar (Fußsohle)</div>
+              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Plantar (Sohle) — Links/Rechts</div>
               <div style="display:flex;gap:12px;justify-content:center;">
                 <!-- Links -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
-                      <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
-                      <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
-                      <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
-                      <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
-                      <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
+                  <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <use href="#fbpSoleFoot"/>
                     </svg>
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
@@ -23211,16 +23289,9 @@ async function loadFussstatus() {
                 <!-- Rechts -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <g transform="translate(150,0) scale(-1,1)">
-                        <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
-                        <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
-                        <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
-                        <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
-                        <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
-                        <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
-                      </g>
+                  <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <use href="#fbpSoleFoot" transform="translate(180,0) scale(-1,1)"/>
                     </svg>
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
@@ -23228,21 +23299,16 @@ async function loadFussstatus() {
               </div>
             </div>
 
-            <!-- Dorsal (Fußrücken) -->
+            <!-- Dorsal (Rücken) — Links/Rechts -->
             <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
-              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Dorsal (Fußrücken)</div>
+              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Dorsal (Rücken) — Links/Rechts</div>
               <div style="display:flex;gap:12px;justify-content:center;">
                 <!-- Links -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
-                      <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
-                      <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
-                      <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
-                      <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
-                      <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
+                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <use href="#fbpDorsal"/>
                     </svg>
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
@@ -23250,16 +23316,9 @@ async function loadFussstatus() {
                 <!-- Rechts -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <g transform="translate(150,0) scale(-1,1)">
-                        <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
-                        <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
-                        <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
-                        <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
-                        <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
-                        <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
-                      </g>
+                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <use href="#fbpDorsal" transform="translate(180,0) scale(-1,1)"/>
                     </svg>
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
@@ -23269,14 +23328,14 @@ async function loadFussstatus() {
 
             <!-- Lateral (Seitenansicht) -->
             <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
-              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Lateral (Seitenansicht)</div>
+              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Lateral</div>
               <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
                 <!-- Links -->
                 <div style="text-align:center;width:100%;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:220px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 300 150" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
-                      <path class="fbp-outline" d="M262 54 C 272 70, 270 96, 256 108 C 232 126, 176 130, 110 128 C 74 127, 40 124, 20 120 C 8 117, 8 104, 20 100 C 46 96, 84 96, 120 96 C 170 96, 214 92, 240 78 C 250 72, 257 63, 262 54 Z"/>
+                  <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:300px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 320 170" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
+                      <use href="#fbpLateralFoot"/>
                     </svg>
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
@@ -23284,11 +23343,9 @@ async function loadFussstatus() {
                 <!-- Rechts -->
                 <div style="text-align:center;width:100%;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:220px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 300 150" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
-                      <g transform="translate(300,0) scale(-1,1)">
-                        <path class="fbp-outline" d="M262 54 C 272 70, 270 96, 256 108 C 232 126, 176 130, 110 128 C 74 127, 40 124, 20 120 C 8 117, 8 104, 20 100 C 46 96, 84 96, 120 96 C 170 96, 214 92, 240 78 C 250 72, 257 63, 262 54 Z"/>
-                      </g>
+                  <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:300px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 320 170" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
+                      <use href="#fbpLateralFoot" transform="translate(320,0) scale(-1,1)"/>
                     </svg>
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
@@ -23322,10 +23379,42 @@ async function loadFussstatus() {
   `;
 
   // Attach Listeners
-  const patSelect = document.getElementById('fbpPatient');
-  if (patSelect) {
-    patSelect.addEventListener('change', (e) => {
-      fbpAutofillStammdaten(e.target.value);
+  const searchInput = document.getElementById('fbpPatientSearch');
+  const dropdown = document.getElementById('fbpPatientDropdown');
+  const hiddenInput = document.getElementById('fbpPatient');
+
+  if (searchInput && dropdown) {
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value;
+      if (!q.trim()) {
+        if (hiddenInput) hiddenInput.value = '';
+        fbpAutofillStammdaten('');
+      }
+      fbpRenderPatientDropdown(q);
+    });
+
+    searchInput.addEventListener('focus', () => {
+      fbpRenderPatientDropdown(searchInput.value);
+    });
+
+    dropdown.addEventListener('click', (e) => {
+      const item = e.target.closest('.fbp-patient-item');
+      if (item) {
+        const id = item.dataset.id;
+        const p = fbpPatientsMap[id];
+        if (p) {
+          if (hiddenInput) hiddenInput.value = id;
+          searchInput.value = displayNameWithBirth(p);
+          dropdown.style.display = 'none';
+          fbpAutofillStammdaten(id);
+        }
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
     });
   }
 

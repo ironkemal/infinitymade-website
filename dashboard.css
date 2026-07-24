@@ -7508,3 +7508,9 @@ body.compact-mode .patient-row {
   box-shadow: 0 0 0 2px var(--primary-dim, rgba(59, 130, 246, 0.2));
 }
 
+.fbp-skin{fill:url(#fbpSole);stroke:#94a3b8;stroke-width:2;}
+.fbp-skin2{fill:url(#fbpTop);stroke:#94a3b8;stroke-width:2;}
+.fbp-nail{fill:#e8eef5;stroke:#94a3b8;stroke-width:1.1;}
+.fbp-cline{fill:none;stroke:#b8c2cf;stroke-width:1.3;opacity:.7;}
+
+
