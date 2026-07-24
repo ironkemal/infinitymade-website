@@ -3125,10 +3125,10 @@
 
         <!-- Patient auswählen (Kopf — füllt das Formular automatisch) -->
         <div class="m13-picker">
-          <label class="m13-picker-lbl">Patient auswählen</label>
-          <select class="form-select" id="rzPatientSelect">
-            <option value="">— Patient wählen (füllt Adresse, Kasse, Vers.-Nr. automatisch) —</option>
-          </select>
+          <label class="m13-picker-lbl" for="rzPatientSearch">Patient auswählen</label>
+          <input class="form-input" id="rzPatientSearch" list="rzPatientDatalist" autocomplete="off"
+                 placeholder="Name, Geburtsdatum oder Telefon eingeben…">
+          <datalist id="rzPatientDatalist"></datalist>
           <span class="m13-picker-hint" id="rzPatientHint"></span>
         </div>
 
@@ -5617,7 +5617,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260724d"></script>
+  <script type="module" src="dashboard.js?v=20260724e"></script>
 </body>
 
 </html>

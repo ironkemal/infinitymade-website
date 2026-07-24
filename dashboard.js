@@ -16108,6 +16108,7 @@ function initIcdSearch(inputId) {
 
 let rzPatientCache = [];
 let rzKkList = [];
+let rzLabelToId = new Map();
 
 function wireM13Toggles() {
   const root = document.getElementById('rezeptModal');
@@ -16134,9 +16135,16 @@ function wireM13Toggles() {
     });
   });
 
-  // Patient seçildiğinde otomatik doldur
-  const sel = document.getElementById('rzPatientSelect');
-  if (sel) sel.addEventListener('change', () => fillRzPatientFromLead(sel.value));
+  // Patient arama alanı: yazılan etiket → lead id → otomatik doldur
+  const search = document.getElementById('rzPatientSearch');
+  if (search) {
+    const resolve = () => {
+      const id = rzLabelToId.get((search.value || '').trim());
+      if (id) fillRzPatientFromLead(id);
+    };
+    search.addEventListener('change', resolve);
+    search.addEventListener('input', resolve);
+  }
 }
 
 function setM13Therapy(key) {
@@ -16250,6 +16258,7 @@ async function openRezeptModal(phone, leadId) {
   setM13Therapy(SECTOR_THERAPY[getSector()] || '');
   setM13Hausbesuch(false);
   const hint = g('rzPatientHint'); if (hint) hint.textContent = '';
+  const search = g('rzPatientSearch'); if (search) search.value = '';
 
   wireM13Toggles();
   openModal('rezeptModal');
@@ -16259,8 +16268,9 @@ async function openRezeptModal(phone, leadId) {
   populateIcdDatalist().catch(() => {});
   try { rzKkList = await loadKkList() || []; populateKkDatalist(rzKkList); } catch { rzKkList = []; }
 
-  // Patientenliste für den Kopf-Selector (minimale, bewährte Spalten wie in loadAnamnese)
-  const sel = g('rzPatientSelect');
+  // Patientenliste für den Kopf-Selector (typbare Suche via datalist)
+  const dl = g('rzPatientDatalist');
+  rzLabelToId = new Map();
   try {
     const ownerId = getOwnerId();
     const { data, error } = await supabase.from('leads')
@@ -16269,18 +16279,30 @@ async function openRezeptModal(phone, leadId) {
       .order('last_name', { ascending: true });
     if (error) throw error;
     rzPatientCache = data || [];
-    if (sel) {
+    if (dl) {
+      dl.innerHTML = rzPatientCache.map(l => {
+        const label = rzPatientLabel(l);
+        rzLabelToId.set(label, l.id);
+        return `<option value="${escapeHtml(label)}"></option>`;
+      }).join('');
+    }
+    if (hint) {
       if (!rzPatientCache.length) {
-        sel.innerHTML = '<option value="">Keine Patienten gefunden — bitte zuerst Patienten anlegen</option>';
+        hint.textContent = '⚠ Keine Patienten gefunden — bitte zuerst Patienten anlegen';
+        hint.style.color = '#b45309';
       } else {
-        sel.innerHTML = '<option value="">— Patient wählen (füllt Adresse, Kasse, Vers.-Nr. automatisch) —</option>' +
-          rzPatientCache.map(l => `<option value="${l.id}">${escapeHtml(rzPatientLabel(l))}</option>`).join('');
+        hint.textContent = `${rzPatientCache.length} Patienten — tippen zum Suchen`;
+        hint.style.color = '';
       }
-      if (leadId) sel.value = leadId;
+    }
+    // Bei vorausgewähltem Patienten (aus Patientenkarte) Suchfeld setzen
+    if (leadId && search) {
+      const pre = rzPatientCache.find(l => l.id === leadId);
+      if (pre) search.value = rzPatientLabel(pre);
     }
   } catch (e) {
     console.error('[openRezeptModal] patients', e);
-    if (sel) sel.innerHTML = '<option value="">Fehler beim Laden der Patienten</option>';
+    if (hint) { hint.textContent = 'Fehler beim Laden der Patienten'; hint.style.color = '#b45309'; }
   }
 
   // Bei vorausgewähltem Patienten (aus Patientenkarte) direkt befüllen
