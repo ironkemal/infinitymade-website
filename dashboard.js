@@ -16704,9 +16704,14 @@ function renderBusinessesSection() {
   const listEl = document.getElementById('businessesList');
   if (!section || !listEl) return;
 
-  const showSection = isEnterprise() && currentProfile?.role === 'owner';
+  // Owner sieht seinen Standort immer (zum Bearbeiten von Adresse, Ausfallgebühr etc.).
+  // "Neues Geschäft hinzufügen" bleibt Enterprise-exklusiv (Multi-Standort).
+  const showSection = currentProfile?.role === 'owner';
   section.hidden = !showSection;
   if (!showSection) return;
+
+  const addBtn = document.getElementById('addBusinessBtn');
+  if (addBtn) addBtn.hidden = !isEnterprise();
 
   if (myBusinesses.length === 0) {
     listEl.innerHTML = '<div class="form-hint">Noch kein Geschäft. Fügen Sie eines hinzu.</div>';
