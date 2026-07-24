@@ -16157,6 +16157,31 @@ function setM13Hausbesuch(isJa) {
   document.getElementById('rzHausbesuch').checked = !!isJa;
 }
 
+// Sektör → Muster-13 Therapiebereich eşlemesi (manuel + OCR ortak)
+const M13_SECTOR_THERAPY = { physiotherapy:'physio', podologie:'podo', logopaedie:'stimme', ergotherapie:'ergo' };
+
+// OCR-Confirm-Modal: Therapiebereich-Kästchen (data-rxc-th) — tekli seçim
+function setRxcTherapy(key) {
+  const root = document.getElementById('rezeptConfirmModal');
+  if (!root) return;
+  root.querySelectorAll('.m13-chk[data-rxc-th]').forEach(o =>
+    o.classList.toggle('on', !!key && o.dataset.rxcTh === key));
+  const h = document.getElementById('rxcTherapiebereich'); if (h) h.value = key || '';
+}
+function wireRxcTherapy() {
+  const root = document.getElementById('rezeptConfirmModal');
+  if (!root || root.dataset.rxcThWired) return;
+  root.dataset.rxcThWired = '1';
+  root.querySelectorAll('.m13-chk[data-rxc-th]').forEach(box => {
+    box.addEventListener('click', () => {
+      const wasOn = box.classList.contains('on');
+      root.querySelectorAll('.m13-chk[data-rxc-th]').forEach(o => o.classList.remove('on'));
+      if (!wasOn) box.classList.add('on');
+      const h = document.getElementById('rxcTherapiebereich'); if (h) h.value = wasOn ? '' : (box.dataset.rxcTh || '');
+    });
+  });
+}
+
 async function fillRzPatientFromLead(leadId) {
   const g = id => document.getElementById(id);
   g('rzPatientId').value = leadId || '';
@@ -17673,6 +17698,16 @@ async function openRezeptConfirmModal(payload) {
   setChk('rxcLhbBvb', rez.is_lhb_bvb);
   setChk('rxcBerichtAngefordert', rez.bericht_angefordert);
   setVal('rxcBerichtStatus', rez.bericht_status || 'offen');
+  // Neue Muster-13-Felder (OCR → Formular)
+  setVal('rxcStatus', pat.versichertenstatus);
+  setVal('rxcDiagnoseText', rez.diagnose_text);
+  setVal('rxcHmErg', rez.ergaenzendes_heilmittel);
+  setVal('rxcAnzahlErg', rez.anzahl_ergaenzend);
+  setVal('rxcTherapieziele', rez.therapieziele);
+  setChk('rxcZuzahlungBefreit', rez.zuzahlung_befreit);
+  // Therapiebereich: OCR-Wert oder nach Praxis-Sektor vorbelegen
+  wireRxcTherapy();
+  setRxcTherapy(rez.therapiebereich || M13_SECTOR_THERAPY[getSector()] || '');
 
   renderValidationBanner(payload.validation);
 
@@ -17820,8 +17855,13 @@ async function submitConfirm() {
       },
       rezept: {
         icd10: document.getElementById('rxcIcd').value.trim() || null,
+        diagnose_text: document.getElementById('rxcDiagnoseText').value.trim() || null,
         diagnosegruppe: document.getElementById('rxcDg').value.trim() || null,
+        therapiebereich: document.getElementById('rxcTherapiebereich').value.trim() || null,
         heilmittel: document.getElementById('rxcHm').value.trim() || null,
+        ergaenzendes_heilmittel: document.getElementById('rxcHmErg').value.trim() || null,
+        anzahl_ergaenzend: parseInt(document.getElementById('rxcAnzahlErg').value, 10) || null,
+        therapieziele: document.getElementById('rxcTherapieziele').value.trim() || null,
         leitsymptomatik: rxcLs.code,
         pat_leitsymptomatik: rxcLs.patText,
         heilmittel_position: document.getElementById('rxcHmPosition').value.trim() || null,
@@ -17833,6 +17873,7 @@ async function submitConfirm() {
         hausbesuch: document.getElementById('rxcHausbesuch').checked,
         is_blanko: document.getElementById('rxcBlanko').checked,
         is_lhb_bvb: document.getElementById('rxcLhbBvb').checked,
+        zuzahlung_befreit: document.getElementById('rxcZuzahlungBefreit').checked,
         bericht_angefordert: document.getElementById('rxcBerichtAngefordert').checked,
         bericht_status: document.getElementById('rxcBerichtStatus').value,
         // Unterschrift-Erkennung aus dem OCR durchreichen — sonst landet in
