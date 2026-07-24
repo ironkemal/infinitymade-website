@@ -2946,21 +2946,11 @@ async function calculateSessionInfo(patientName, patientPhone, currentBookingId,
 }
 
 function updateNoShowButton(startTime) {
+  // No-Show-Button ist immer verfügbar (kein Timer/Countdown mehr).
   const btn = document.getElementById('bkActionNoShowBtn');
   const hint = document.getElementById('bkActionNoShowHint');
-  if (!btn || !hint) return;
-  const start = new Date(startTime);
-  const now = new Date();
-  const diffMin = (now - start) / 60000;
-  if (diffMin >= 3) {
-    btn.disabled = false;
-    hint.hidden = true;
-  } else {
-    btn.disabled = true;
-    hint.hidden = false;
-    const remaining = Math.ceil(3 - diffMin);
-    hint.textContent = `Verfügbar in ${remaining} Min.`;
-  }
+  if (btn) btn.disabled = false;
+  if (hint) hint.hidden = true;
 }
 
 async function openBookingActionModal(booking) {
@@ -3218,7 +3208,6 @@ async function openBookingActionModal(booking) {
 
   if (isOwn) {
     updateNoShowButton(booking.start_time);
-    bkActionTimer = setInterval(() => updateNoShowButton(booking.start_time), 30000);
   }
 
   // --- Hasta profil kartı + aktif reçeteler ---
@@ -5812,7 +5801,15 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   const startDate = new Date(startV);
   const now = new Date();
-  if (startDate < now) { showToast('Termine in der Vergangenheit können nicht gebucht werden.', 'error'); return; }
+  if (startDate < now) {
+    const proceedPast = await showConfirmModal({
+      title: 'Termin in der Vergangenheit',
+      message: 'Dieser Termin liegt in der Vergangenheit. Möchten Sie ihn trotzdem eintragen?',
+      confirmText: 'Trotzdem eintragen',
+      cancelText: 'Abbrechen'
+    });
+    if (!proceedPast) return;
+  }
 
   // Working hours check: kapalı gün veya mesai dışı saat → engelle
   {
@@ -23279,20 +23276,18 @@ async function loadFussstatus() {
                 <!-- Links -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <use href="#fbpSoleFoot"/>
-                    </svg>
+                  <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <img src="/assets/img/foot/plantar-left.png" alt="Plantar links" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
                 </div>
                 <!-- Rechts -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <use href="#fbpSoleFoot" transform="translate(180,0) scale(-1,1)"/>
-                    </svg>
+                  <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <img src="/assets/img/foot/plantar-right.png" alt="Plantar rechts" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
                 </div>
@@ -23306,20 +23301,18 @@ async function loadFussstatus() {
                 <!-- Links -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <use href="#fbpDorsal"/>
-                    </svg>
+                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <img src="/assets/img/foot/dorsal-left.png" alt="Dorsal links" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
                 </div>
                 <!-- Rechts -->
                 <div style="text-align:center;flex:1;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 180 380" class="fbp-foot" style="width:100%;height:auto;display:block;">
-                      <use href="#fbpDorsal" transform="translate(180,0) scale(-1,1)"/>
-                    </svg>
+                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:140px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <img src="/assets/img/foot/dorsal-right.png" alt="Dorsal rechts" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
                 </div>
@@ -23333,20 +23326,18 @@ async function loadFussstatus() {
                 <!-- Links -->
                 <div style="text-align:center;width:100%;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
-                  <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:300px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 320 170" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
-                      <use href="#fbpLateralFoot"/>
-                    </svg>
+                  <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:300px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <img src="/assets/img/foot/lateral-left.png" alt="Lateral links" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
                 </div>
                 <!-- Rechts -->
                 <div style="text-align:center;width:100%;">
                   <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
-                  <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:300px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
-                    <svg viewBox="0 0 320 170" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
-                      <use href="#fbpLateralFoot" transform="translate(320,0) scale(-1,1)"/>
-                    </svg>
+                  <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:300px;background:#f7f7f5;border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <img src="/assets/img/foot/lateral-right.png" alt="Lateral rechts" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
+
                     <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
                   </div>
                 </div>
