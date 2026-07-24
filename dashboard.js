@@ -16106,7 +16106,89 @@ function initIcdSearch(inputId) {
   });
 }
 
-function openRezeptModal(phone, leadId) {
+let rzPatientCache = [];
+let rzKkList = [];
+
+function wireM13Toggles() {
+  const root = document.getElementById('rezeptModal');
+  if (!root || root.dataset.m13Wired) return;
+  root.dataset.m13Wired = '1';
+
+  // Therapiebereich — tekli seçim (radyo gibi)
+  root.querySelectorAll('.m13-chk[data-th]').forEach(box => {
+    box.addEventListener('click', () => {
+      const wasOn = box.classList.contains('on');
+      root.querySelectorAll('.m13-chk[data-th]').forEach(o => o.classList.remove('on'));
+      if (!wasOn) box.classList.add('on');
+      document.getElementById('rzTherapieBereich').value = wasOn ? '' : (box.dataset.th || '');
+    });
+  });
+
+  // Hausbesuch ja / nein
+  root.querySelectorAll('.m13-chk[data-hb]').forEach(box => {
+    box.addEventListener('click', () => {
+      const val = box.dataset.hb;
+      root.querySelectorAll('.m13-chk[data-hb]').forEach(o => o.classList.remove('on'));
+      box.classList.add('on');
+      document.getElementById('rzHausbesuch').checked = (val === 'ja');
+    });
+  });
+
+  // Patient seçildiğinde otomatik doldur
+  const sel = document.getElementById('rzPatientSelect');
+  if (sel) sel.addEventListener('change', () => fillRzPatientFromLead(sel.value));
+}
+
+function setM13Therapy(key) {
+  const root = document.getElementById('rezeptModal');
+  root.querySelectorAll('.m13-chk[data-th]').forEach(o =>
+    o.classList.toggle('on', !!key && o.dataset.th === key));
+  document.getElementById('rzTherapieBereich').value = key || '';
+}
+function setM13Hausbesuch(isJa) {
+  const root = document.getElementById('rezeptModal');
+  root.querySelectorAll('.m13-chk[data-hb]').forEach(o =>
+    o.classList.toggle('on', o.dataset.hb === (isJa ? 'ja' : 'nein')));
+  document.getElementById('rzHausbesuch').checked = !!isJa;
+}
+
+function fillRzPatientFromLead(leadId) {
+  const g = id => document.getElementById(id);
+  g('rzPatientId').value = leadId || '';
+  const hint = g('rzPatientHint');
+  if (!leadId) { if (hint) hint.textContent = ''; return; }
+
+  const lead = rzPatientCache.find(l => l.id === leadId);
+  if (!lead) { if (hint) hint.textContent = ''; return; }
+  const md = lead.metadata || {};
+
+  g('rzPatName').value = lead.last_name || '';
+  g('rzPatVorname').value = lead.first_name || '';
+  // Geburtsdatum → dt. Format TT.MM.JJJJ
+  const bd = lead.geburtsdatum || md.geburtsdatum || '';
+  const m = String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  g('rzPatGeb').value = m ? `${m[3]}.${m[2]}.${m[1]}` : (bd || '');
+  g('rzPatStrasse').value = lead.street || '';
+  g('rzPatOrt').value = [lead.plz, lead.city].filter(Boolean).join(' ');
+  g('rzPatVersNr').value = lead.versichertennummer || md.krankenkassennummer || '';
+  g('rzPatStatus').value = lead.versichertenstatus || '';
+  const kasse = lead.krankenkasse || md.krankenkasse || '';
+  g('rzPatKasse').value = kasse;
+  // IK aus Kassenliste ableiten
+  const kk = rzKkList.find(k => (k.name || '').toLowerCase() === kasse.toLowerCase());
+  g('rzPatKasseIk').value = kk?.ik || '';
+
+  if (hint) {
+    const missing = [];
+    if (!g('rzPatGeb').value) missing.push('Geb.-Datum');
+    if (!g('rzPatVersNr').value) missing.push('Vers.-Nr.');
+    if (!kasse) missing.push('Kasse');
+    hint.textContent = missing.length ? `⚠ fehlt beim Patienten: ${missing.join(', ')} — bitte manuell ergänzen` : '✓ Patientendaten übernommen';
+    hint.style.color = missing.length ? '#b45309' : '#15803d';
+  }
+}
+
+async function openRezeptModal(phone, leadId) {
   // Reset all fields synchronously then open — async prefill happens after
   const g = id => document.getElementById(id);
   g('rzPatientId').value = leadId || '';
@@ -16129,29 +16211,53 @@ function openRezeptModal(phone, leadId) {
   g('rzBerichtAngefordert').checked = false;
   g('rzZuzahlung').value = '';
   g('rzBerichtStatus').value = 'offen';
+  // Neue Muster-13-Felder
+  ['rzPatKasse','rzKkNum','rzPatName','rzPatVorname','rzPatGeb','rzPatStrasse','rzPatOrt',
+   'rzPatKasseIk','rzPatVersNr','rzPatStatus','rzDiagnoseText','rzHmErg','rzAnzahlErg',
+   'rzHinweise','rzIkLE'].forEach(k => { const el = g(k); if (el) el.value = ''; });
+  g('rzUnterschrift').checked = false;
+  setM13Therapy('');
+  setM13Hausbesuch(false);
+  const hint = g('rzPatientHint'); if (hint) hint.textContent = '';
 
+  wireM13Toggles();
   openModal('rezeptModal');
 
-  // Populate datalists — same pattern as heilmittel
+  // Datalists
   loadPhysioPositions().then(positions => populateHmDatalist(positions)).catch(() => {});
   populateIcdDatalist().catch(() => {});
+  try { rzKkList = await loadKkList() || []; populateKkDatalist(rzKkList); } catch { rzKkList = []; }
 
-  // Async prefill — modal is already open, data arrives in background
+  // Patientenliste für den Kopf-Selector
+  try {
+    const ownerId = getOwnerId();
+    const { data } = await supabase.from('leads')
+      .select('id,first_name,last_name,title,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,versichertenstatus,insurance_type,metadata,arzt_id,hausbesuch')
+      .eq('owner_id', ownerId)
+      .order('last_name', { ascending: true });
+    rzPatientCache = data || [];
+    const sel = g('rzPatientSelect');
+    if (sel) {
+      sel.innerHTML = '<option value="">— Patient wählen (füllt Adresse, Kasse, Vers.-Nr. automatisch) —</option>' +
+        rzPatientCache.map(l => `<option value="${l.id}">${escapeHtml(displayNameWithBirth(l))}</option>`).join('');
+      if (leadId) sel.value = leadId;
+    }
+    if (leadId) fillRzPatientFromLead(leadId);
+  } catch (e) { console.error('[openRezeptModal] patients', e); }
+
+  // Arzt-Prefill vom Patienten
   if (leadId) {
-    supabase.from('leads').select('arzt_id,hausbesuch').eq('id', leadId).maybeSingle()
-      .then(({ data }) => {
-        if (!data) return;
-        if (data.hausbesuch) g('rzHausbesuch').checked = true;
-        if (data.arzt_id) {
-          supabase.from('aerzte').select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', data.arzt_id).maybeSingle()
-            .then(({ data: arzt }) => {
-              if (!arzt) return;
-              g('rzArztName').value = arzt.arzt_name || '';
-              g('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
-              g('rzBsnr').value = arzt.bsnr || '';
-            });
-        }
-      });
+    const lead = rzPatientCache.find(l => l.id === leadId);
+    if (lead?.hausbesuch) setM13Hausbesuch(true);
+    if (lead?.arzt_id) {
+      supabase.from('aerzte').select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle()
+        .then(({ data: arzt }) => {
+          if (!arzt) return;
+          g('rzArztName').value = arzt.arzt_name || '';
+          g('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
+          g('rzBsnr').value = arzt.bsnr || '';
+        });
+    }
   }
 }
 
@@ -16240,23 +16346,32 @@ async function saveRezept() {
 
     const rzLanr = document.getElementById('rzLanr').value.trim() || null;
     const rzBsnr = document.getElementById('rzBsnr').value.trim() || null;
+    const val = id => (document.getElementById(id)?.value || '').trim();
 
-    const warnings = [];
-    if (!ausstDate) {
-      warnings.push("Ausstellungsdatum fehlt");
-    }
-    if (rzLanr && !/^\d{9}$/.test(rzLanr)) {
-      warnings.push("LANR muss 9 Ziffern haben");
-    }
-    if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) {
-      warnings.push("BSNR muss 9 Ziffern haben");
-    }
-    if (!rzLanr || !rzBsnr) {
-      warnings.push("LANR/BSNR fehlt (Pflicht auf Muster 13)");
-    }
+    // --- Pflichtfeld-Prüfung: warnt, lässt aber „trotzdem speichern" zu ---
+    const missing = [];
+    if (!ausstDate) missing.push('Ausstellungsdatum');
+    if (!icd10) missing.push('ICD-10-Code');
+    if (!val('rzDg')) missing.push('Diagnosegruppe');
+    if (!val('rzHm')) missing.push('Heilmittel');
+    if (!anzahl) missing.push('Behandlungseinheiten');
+    if (!rzLanr) missing.push('Arzt-Nr. (LANR)');
+    if (!rzBsnr) missing.push('Betriebsstätten-Nr. (BSNR)');
+    if (!document.getElementById('rzUnterschrift').checked) missing.push('Unterschrift des Arztes');
 
-    if (warnings.length > 0) {
-      showToast('⚠ ' + warnings.join(' · '), 'error');
+    // Format-Fehler (nur wenn ausgefüllt)
+    const formatErrors = [];
+    if (rzLanr && !/^\d{9}$/.test(rzLanr)) formatErrors.push('LANR muss 9 Ziffern haben');
+    if (rzBsnr && !/^\d{9}$/.test(rzBsnr)) formatErrors.push('BSNR muss 9 Ziffern haben');
+
+    let overridden = false;
+    if (missing.length || formatErrors.length) {
+      const lines = [];
+      if (missing.length) lines.push('Folgende Felder sind noch leer:\n  • ' + missing.join('\n  • '));
+      if (formatErrors.length) lines.push('Hinweise:\n  • ' + formatErrors.join('\n  • '));
+      const ok = window.confirm(lines.join('\n\n') + '\n\nTrotzdem speichern?');
+      if (!ok) { btn.disabled = false; return; }
+      overridden = true;
     }
 
     // 4. Insert prescription
@@ -16285,7 +16400,16 @@ async function saveRezept() {
       bericht_status: document.getElementById('rzBerichtStatus').value,
       doctor_lanr: rzLanr,
       doctor_bsnr: rzBsnr,
-      gueltig_bis: gueltigBis
+      gueltig_bis: gueltigBis,
+      // Neue Muster-13-Felder
+      diagnose_freitext: val('rzDiagnoseText') || null,
+      ergaenzendes_heilmittel: val('rzHmErg') || null,
+      ergaenzend_einheiten: parseInt(val('rzAnzahlErg')) || null,
+      therapie_bereich: val('rzTherapieBereich') || null,
+      hinweise: val('rzHinweise') || null,
+      unterschrift_vorhanden: document.getElementById('rzUnterschrift').checked,
+      kostentraeger_ik: val('rzPatKasseIk') || null,
+      proceed_anyway: overridden
     }).select('id').single();
 
     if (rxErr) throw rxErr;
@@ -16299,6 +16423,30 @@ async function saveRezept() {
       }));
       await supabase.from('prescription_sessions').insert(sessions);
     }
+
+    // 6. Fehlende Patientenstammdaten zurückschreiben (nur leere Felder, nie überschreiben)
+    try {
+      const lead = rzPatientCache.find(l => l.id === patientId) || {};
+      const patch = {};
+      if (!lead.versichertennummer && val('rzPatVersNr')) patch.versichertennummer = val('rzPatVersNr');
+      if (!lead.krankenkasse && val('rzPatKasse')) patch.krankenkasse = val('rzPatKasse');
+      if (!lead.versichertenstatus && val('rzPatStatus')) patch.versichertenstatus = val('rzPatStatus');
+      if (!lead.street && val('rzPatStrasse')) patch.street = val('rzPatStrasse');
+      if (!lead.plz && !lead.city && val('rzPatOrt')) {
+        const mo = val('rzPatOrt').match(/^\s*(\d{4,5})\s+(.+)$/);
+        if (mo) { patch.plz = mo[1]; patch.city = mo[2].trim(); } else { patch.city = val('rzPatOrt'); }
+      }
+      if (!lead.geburtsdatum) {
+        const mg = val('rzPatGeb').match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+        if (mg) {
+          const yy = mg[3].length === 2 ? (parseInt(mg[3]) > 30 ? '19'+mg[3] : '20'+mg[3]) : mg[3];
+          patch.geburtsdatum = `${yy}-${mg[2].padStart(2,'0')}-${mg[1].padStart(2,'0')}`;
+        }
+      }
+      if (Object.keys(patch).length) {
+        await supabase.from('leads').update(patch).eq('id', patientId).eq('owner_id', ownerId);
+      }
+    } catch (wbErr) { console.warn('[saveRezept] Patient-Rückschreiben übersprungen', wbErr); }
 
     closeModal('rezeptModal');
     showToast('Verordnung gespeichert ✓', 'success');
