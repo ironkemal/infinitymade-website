@@ -16235,7 +16235,9 @@ async function openRezeptModal(phone, leadId) {
    'rzPatKasseIk','rzPatVersNr','rzPatStatus','rzDiagnoseText','rzHmErg','rzAnzahlErg',
    'rzHinweise','rzIkLE'].forEach(k => { const el = g(k); if (el) el.value = ''; });
   g('rzUnterschrift').checked = false;
-  setM13Therapy('');
+  // Therapiebereich nach Praxis-Sektor vorbelegen (spart Klicks)
+  const SECTOR_THERAPY = { physiotherapy:'physio', podologie:'podo', logopaedie:'stimme', ergotherapie:'ergo' };
+  setM13Therapy(SECTOR_THERAPY[getSector()] || '');
   setM13Hausbesuch(false);
   const hint = g('rzPatientHint'); if (hint) hint.textContent = '';
 

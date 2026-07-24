@@ -3159,15 +3159,17 @@
                   <div class="m13-insrow">
                     <div class="m13-cell" style="flex:1;">
                       <div class="m13-cap">Name, Vorname des Versicherten</div>
-                      <input class="m13-v" id="rzPatName" placeholder="">
-                      <div style="display:flex;gap:8px;align-items:flex-end;">
-                        <input class="m13-v" id="rzPatVorname" placeholder="" style="flex:1;">
+                      <div style="display:flex;gap:10px;align-items:flex-end;">
+                        <input class="m13-v" id="rzPatName" placeholder="Nachname" style="flex:1;min-width:0;">
                         <div style="text-align:right;white-space:nowrap;">
                           <span class="m13-cap">geb. am</span>
-                          <input class="m13-v m13-center" id="rzPatGeb" placeholder="" style="width:96px;">
+                          <input class="m13-v m13-sm m13-center" id="rzPatGeb" placeholder="TT.MM.JJJJ" style="width:120px;">
                         </div>
                       </div>
+                      <input class="m13-v" id="rzPatVorname" placeholder="Vorname">
+                      <div class="m13-cap" style="margin-top:5px;">Straße, Hausnr.</div>
                       <input class="m13-v m13-sm" id="rzPatStrasse" placeholder="">
+                      <div class="m13-cap" style="margin-top:3px;">PLZ, Ort</div>
                       <input class="m13-v m13-sm" id="rzPatOrt" placeholder="">
                     </div>
                   </div>
@@ -3345,7 +3347,7 @@
       font-family:"Courier New",ui-monospace,monospace; font-size:18px; font-weight:700;
       color:#0f1f38; letter-spacing:.3px;
     }
-    .m13-sheet .m13-v.m13-sm{ font-size:16px; }
+    .m13-sheet .m13-v.m13-sm{ font-size:15px; }
     .m13-sheet .m13-v.m13-center{ text-align:center; }
     .m13-sheet .m13-v.m13-kknum{ width:58px; border-left:1px solid #9aa8bd; padding-left:6px; }
     .m13-sheet .m13-v:focus{ background:#eef4ff; border-radius:3px; }
@@ -3357,7 +3359,7 @@
     .m13-lbl{ font-size:14px; font-weight:700; color:#182740; }
     .m13-lbl small{ font-weight:500; color:#4a5568; font-size:11px; display:block; }
 
-    .m13-top{ display:grid; grid-template-columns:1.35fr 1fr; gap:16px; align-items:start; }
+    .m13-top{ display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:start; }
     .m13-insbox{ border:1.6px solid #3a4a63; position:relative; }
     .m13-side{ position:absolute; left:0; top:0; bottom:0; width:28px; border-right:1px solid #9aa8bd;
       display:flex; flex-direction:column; font-size:8px; font-weight:600; color:#4a5568; }
@@ -5614,7 +5616,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260724b"></script>
+  <script type="module" src="dashboard.js?v=20260724c"></script>
 </body>
 
 </html>
