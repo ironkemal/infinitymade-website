@@ -16616,6 +16616,96 @@ async function bootBusinessSwitcher() {
   wireBizSwitcherEvents();
   renderBusinessesSection();
   renderDataSharingSection();
+  renderAusfallSettings();
+}
+
+// ===== Settings > Ausfallgebühr (No-Show-Gebühr, pro Owner) =====
+// Ausfallgebühr wird in businesses.ausfall_* gespeichert. Diese Sektion
+// verwaltet EINE Gebühr für alle Standorte des Owners (schreibt in alle
+// businesses-Zeilen), damit die No-Show-/Absage-Rechnung überall greift.
+function renderAusfallSettings() {
+  const section = document.getElementById('settingsAusfallSection');
+  if (!section) return;
+
+  const show = currentProfile?.role === 'owner';
+  section.hidden = !show;
+  if (!show) return;
+
+  // Werte aus dem Standard-Standort (oder erstem) lesen
+  const src = (myBusinesses || []).find(b => b.is_default) || (myBusinesses || [])[0] || {};
+
+  const enabled = document.getElementById('setAusfallEnabled');
+  const fields  = document.getElementById('setAusfallFields');
+  const mode    = document.getElementById('setAusfallMode');
+  const amount  = document.getElementById('setAusfallAmount');
+  const label   = document.getElementById('setAusfallAmountLabel');
+  const cutoff  = document.getElementById('setAusfallCutoff');
+  const hinweis = document.getElementById('setAusfallHinweis');
+  if (!enabled || !fields) return;
+
+  enabled.checked = !!src.ausfall_enabled;
+  mode.value = src.ausfall_mode || 'fixed';
+  amount.value = (src.ausfall_mode === 'percent'
+    ? (src.ausfall_percent ?? '')
+    : (src.ausfall_amount_eur ?? ''));
+  cutoff.value = src.ausfall_cutoff_hours ?? 24;
+  hinweis.value = src.ausfall_hinweis || '';
+
+  const sync = () => {
+    fields.hidden = !enabled.checked;
+    label.textContent = mode.value === 'percent' ? 'Prozent (%)' : 'Betrag (€)';
+  };
+  sync();
+
+  if (!section.dataset.wired) {
+    section.dataset.wired = '1';
+    enabled.addEventListener('change', sync);
+    mode.addEventListener('change', sync);
+    document.getElementById('setAusfallSaveBtn')?.addEventListener('click', saveAusfallSettings);
+  }
+}
+
+async function saveAusfallSettings() {
+  const btn = document.getElementById('setAusfallSaveBtn');
+  const enabled = document.getElementById('setAusfallEnabled').checked;
+  const mode = document.getElementById('setAusfallMode').value === 'percent' ? 'percent' : 'fixed';
+  const val = parseFloat((document.getElementById('setAusfallAmount').value || '').replace(',', '.'));
+  const cutoff = parseInt(document.getElementById('setAusfallCutoff').value, 10) || 24;
+  const hinweis = (document.getElementById('setAusfallHinweis').value || '').trim() || null;
+
+  if (enabled && !(val > 0)) {
+    showToast('Bitte einen Betrag bzw. Prozentsatz angeben.', 'error');
+    return;
+  }
+
+  const patch = {
+    ausfall_enabled: enabled,
+    ausfall_mode: mode,
+    ausfall_amount_eur: (mode === 'fixed' && val > 0) ? val : null,
+    ausfall_percent: (mode === 'percent' && val > 0) ? val : null,
+    ausfall_cutoff_hours: cutoff,
+    ausfall_hinweis: hinweis,
+  };
+
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    // Auf alle Standorte des Owners anwenden
+    const { error } = await supabase
+      .from('businesses')
+      .update(patch)
+      .eq('owner_id', currentSession.user.id);
+    if (error) throw error;
+
+    // Lokalen Cache aktualisieren, damit die No-Show-Prüfung sofort greift
+    (myBusinesses || []).forEach(b => Object.assign(b, patch));
+
+    showToast('Ausfallgebühr gespeichert ✓');
+  } catch (e) {
+    console.error('[saveAusfallSettings]', e);
+    showToast('Fehler: ' + (e.message || 'Speichern fehlgeschlagen'), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
+  }
 }
 
 // ===== Settings > Datenfreigabe zwischen Standorten =====
@@ -16704,14 +16794,9 @@ function renderBusinessesSection() {
   const listEl = document.getElementById('businessesList');
   if (!section || !listEl) return;
 
-  // Owner sieht seinen Standort immer (zum Bearbeiten von Adresse, Ausfallgebühr etc.).
-  // "Neues Geschäft hinzufügen" bleibt Enterprise-exklusiv (Multi-Standort).
-  const showSection = currentProfile?.role === 'owner';
+  const showSection = isEnterprise() && currentProfile?.role === 'owner';
   section.hidden = !showSection;
   if (!showSection) return;
-
-  const addBtn = document.getElementById('addBusinessBtn');
-  if (addBtn) addBtn.hidden = !isEnterprise();
 
   if (myBusinesses.length === 0) {
     listEl.innerHTML = '<div class="form-hint">Noch kein Geschäft. Fügen Sie eines hinzu.</div>';
@@ -16784,32 +16869,6 @@ function openBusinessModal(biz) {
   document.getElementById('bizFormCity').value = biz?.city || '';
   document.getElementById('bizFormPhone').value = biz?.phone || '';
   document.getElementById('bizFormSlug').value = biz?.booking_slug || '';
-
-  // Ausfallgebühr settings
-  const afEnabled = document.getElementById('bizFormAusfallEnabled');
-  const afFields  = document.getElementById('bizAusfallFields');
-  const afMode    = document.getElementById('bizFormAusfallMode');
-  const afAmount  = document.getElementById('bizFormAusfallAmount');
-  const afLabel   = document.getElementById('bizAusfallAmountLabel');
-  if (afEnabled) {
-    afEnabled.checked = !!biz?.ausfall_enabled;
-    afMode.value = biz?.ausfall_mode || 'fixed';
-    afAmount.value = (biz?.ausfall_mode === 'percent'
-      ? (biz?.ausfall_percent ?? '')
-      : (biz?.ausfall_amount_eur ?? ''));
-    document.getElementById('bizFormAusfallCutoff').value = biz?.ausfall_cutoff_hours ?? 24;
-    document.getElementById('bizFormAusfallHinweis').value = biz?.ausfall_hinweis || '';
-    const syncAf = () => {
-      afFields.hidden = !afEnabled.checked;
-      afLabel.textContent = afMode.value === 'percent' ? 'Prozent (%)' : 'Betrag (€)';
-    };
-    syncAf();
-    if (!afEnabled.dataset.wired) {
-      afEnabled.dataset.wired = '1';
-      afEnabled.addEventListener('change', syncAf);
-      afMode.addEventListener('change', syncAf);
-    }
-  }
   updateBizSlugPreview();
 
   const slugInp = document.getElementById('bizFormSlug');
@@ -16859,23 +16918,6 @@ function wireBusinessModal() {
       booking_slug:  v('bizFormSlug') || null,
     };
     if (!payload.business_name) { showToast('Name erforderlich', 'error'); return; }
-
-    // Ausfallgebühr settings
-    const afEnabledEl = document.getElementById('bizFormAusfallEnabled');
-    if (afEnabledEl) {
-      const afMode = document.getElementById('bizFormAusfallMode').value === 'percent' ? 'percent' : 'fixed';
-      const afVal = parseFloat(document.getElementById('bizFormAusfallAmount').value.replace(',', '.'));
-      payload.ausfall_enabled = afEnabledEl.checked;
-      payload.ausfall_mode = afMode;
-      payload.ausfall_amount_eur = (afMode === 'fixed' && afVal > 0) ? afVal : null;
-      payload.ausfall_percent = (afMode === 'percent' && afVal > 0) ? afVal : null;
-      payload.ausfall_cutoff_hours = parseInt(document.getElementById('bizFormAusfallCutoff').value, 10) || 24;
-      payload.ausfall_hinweis = v('bizFormAusfallHinweis') || null;
-      if (afEnabledEl.checked && !(afVal > 0)) {
-        showToast('Bitte einen Betrag bzw. Prozentsatz für die Ausfallgebühr angeben.', 'error');
-        return;
-      }
-    }
 
     let newBiz = null;
     if (id) {

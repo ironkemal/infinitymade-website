@@ -2351,6 +2351,47 @@
                 </div>
               </div>
 
+              <!-- Ausfallgebühr (No-Show / kurzfristige Absage) — für alle Owner -->
+              <div class="settings-section" id="settingsAusfallSection" hidden>
+                <div class="settings-section-title">Ausfallgebühr</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Bei No-Show oder kurzfristiger Absage kann automatisch eine private Ausfallrechnung angeboten werden.
+                  </p>
+                  <div class="form-group" style="margin-bottom:12px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
+                      <input type="checkbox" id="setAusfallEnabled" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
+                      Ausfallgebühr aktivieren
+                    </label>
+                  </div>
+                  <div id="setAusfallFields" hidden>
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label class="form-label">Berechnung</label>
+                        <select class="form-select" id="setAusfallMode">
+                          <option value="fixed">Fester Betrag (€)</option>
+                          <option value="percent">% des Behandlungspreises</option>
+                        </select>
+                      </div>
+                      <div class="form-group" style="max-width:160px;">
+                        <label class="form-label" id="setAusfallAmountLabel">Betrag (€)</label>
+                        <input class="form-input" id="setAusfallAmount" type="number" min="0" step="0.01" placeholder="z. B. 35,00" />
+                      </div>
+                      <div class="form-group" style="max-width:160px;">
+                        <label class="form-label">Absagefrist (Std.)</label>
+                        <input class="form-input" id="setAusfallCutoff" type="number" min="0" step="1" value="24" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Hinweistext auf der Rechnung (optional)</label>
+                      <textarea class="form-input" id="setAusfallHinweis" rows="2" placeholder="z. B. Verweis auf Ihre Ausfallvereinbarung vom Behandlungsbeginn"></textarea>
+                    </div>
+                    <div class="form-hint" style="font-size:12px;margin-bottom:12px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
+                  </div>
+                  <button class="btn-primary" id="setAusfallSaveBtn" type="button">Speichern</button>
+                </div>
+              </div>
+
               <!-- Geschäfte (Multi-Business, nur Enterprise/Paket 3) -->
               <div class="settings-section" id="settingsBusinessesSection" hidden>
                 <div class="settings-section-title">Geschäfte</div>
@@ -2664,39 +2705,6 @@
                     <input class="form-input" id="bizFormSlug" type="text" pattern="[a-z0-9-]+" placeholder="z.B. praxis-hamburg" />
                     <div class="form-hint">Eigener Link für diesen Standort: <code id="bizSlugPreview">…</code></div>
                   </div>
-                  <fieldset style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:0 0 14px;">
-                    <legend style="font-size:13px;font-weight:600;padding:0 6px;">Ausfallgebühr</legend>
-                    <div class="form-group" style="margin-bottom:10px;">
-                      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                        <input type="checkbox" id="bizFormAusfallEnabled" />
-                        Ausfallgebühr bei No-Show / kurzfristiger Absage aktivieren
-                      </label>
-                    </div>
-                    <div id="bizAusfallFields" hidden>
-                      <div class="form-row">
-                        <div class="form-group">
-                          <label class="form-label">Berechnung</label>
-                          <select class="form-select" id="bizFormAusfallMode">
-                            <option value="fixed">Fester Betrag (€)</option>
-                            <option value="percent">% des Behandlungspreises</option>
-                          </select>
-                        </div>
-                        <div class="form-group" style="max-width:140px;">
-                          <label class="form-label" id="bizAusfallAmountLabel">Betrag (€)</label>
-                          <input class="form-input" id="bizFormAusfallAmount" type="number" min="0" step="0.01" placeholder="z.B. 35,00" />
-                        </div>
-                        <div class="form-group" style="max-width:140px;">
-                          <label class="form-label">Absagefrist (Std.)</label>
-                          <input class="form-input" id="bizFormAusfallCutoff" type="number" min="0" step="1" value="24" />
-                        </div>
-                      </div>
-                      <div class="form-group" style="margin-bottom:4px;">
-                        <label class="form-label">Hinweistext auf der Rechnung (optional)</label>
-                        <textarea class="form-input" id="bizFormAusfallHinweis" rows="2" placeholder="z.B. Verweis auf Ihre Ausfallvereinbarung vom Behandlungsbeginn"></textarea>
-                      </div>
-                      <div class="form-hint" style="font-size:11px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
-                    </div>
-                  </fieldset>
                   <div class="form-group" id="bizCopyServicesWrap" hidden>
                     <label class="form-label">Dienstleistungen kopieren von</label>
                     <select class="form-select" id="bizCopyServicesFrom">
@@ -5667,7 +5675,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260724h"></script>
+  <script type="module" src="dashboard.js?v=20260724i"></script>
 </body>
 
 </html>
