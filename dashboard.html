@@ -3337,7 +3337,7 @@
 
     .m13{ }
     .m13-sheet{
-      background:#ffffff; color:#111; border:1px solid #d7dbe3;
+      background:#dbe6f2; color:#111; border:1px solid #b3c4da;
       border-radius:6px; padding:20px 22px 22px;
       box-shadow:0 4px 18px rgba(0,0,0,.14);
       font-family:"Segoe UI",Arial,sans-serif;
@@ -3354,7 +3354,7 @@
     .m13-sheet .m13-v.m13-uline{ border-bottom:1.3px solid #3a4a63; }
     .m13-sheet input[type=date].m13-v{ font-family:"Courier New",monospace; font-size:13px; letter-spacing:0; padding-left:0; padding-right:0; }
     .m13-sheet input[type=date].m13-v::-webkit-calendar-picker-indicator{ margin-left:2px; padding:0; }
-    .m13-sheet .m13-v::placeholder{ color:#b6bdc9; font-weight:400; }
+    .m13-sheet .m13-v::placeholder{ color:#7f93ad; font-weight:400; }
 
     .m13-cap{ font-size:11px; line-height:1.25; font-weight:600; color:#4a5568; letter-spacing:.1px; display:block; }
     .m13-lbl{ font-size:14px; font-weight:700; color:#182740; }
@@ -3408,7 +3408,7 @@
       font-family:"Courier New",monospace; font-size:15px; font-weight:700; color:#0f1f38; background:transparent; outline:none; padding:3px; }
     .m13-ta:focus{ background:#eef4ff; }
 
-    .m13-vart{ margin-top:18px; border:1.4px solid #c7cedb; border-radius:6px; padding:10px 14px 12px; background:#f7f9fc; }
+    .m13-vart{ margin-top:18px; border:1.4px solid #a9bdd6; border-radius:6px; padding:10px 14px 12px; background:rgba(255,255,255,.45); }
     .m13-vart-row{ display:flex; flex-wrap:wrap; align-items:center; gap:16px 22px; }
 
     .m13-bottom{ display:grid; grid-template-columns:1fr auto; gap:16px; margin-top:20px; align-items:end;
@@ -3473,178 +3473,228 @@
       <div class="modal-body">
         <div id="rxValidationBanner" style="margin-bottom:14px;"></div>
         <div id="rxSignatureWarning" style="margin-bottom:14px;"></div>
-        <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start;">
+        <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:18px;align-items:start;">
           <div>
             <img id="rxConfirmImg" alt="Rezept" style="width:100%;border-radius:8px;border:1px solid #ddd;" />
             <p style="font-size:12px;color:#888;margin-top:6px;" id="rxOcrConfidence"></p>
           </div>
           <div>
-            <h4 style="margin:0 0 8px 0;">Patient</h4>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Vorname</label>
-                <input class="form-input" id="rxcFirstName" type="text" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Nachname</label>
-                <input class="form-input" id="rxcLastName" type="text" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Geburtsdatum</label>
-                <input class="form-input" id="rxcDob" type="date" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Versicherten-Nr.</label>
-                <input class="form-input" id="rxcVersNr" type="text" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Krankenkasse <span id="rxcKasseStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></label>
-              <input class="form-input" id="rxcKasse" type="text" list="kkDatalist" autocomplete="off" placeholder="Krankenkasse wählen oder tippen…" />
-              <datalist id="kkDatalist"></datalist>
-              <datalist id="aerzteDatalist"></datalist>
-              <datalist id="icdDatalist"></datalist>
-              <!-- KBV Heilmittel-Richtlinien Diagnosegruppen (global, shared by rezeptModal + rezeptConfirmModal) -->
-              <datalist id="dgDatalist">
-                <option value="WS1"><option value="WS2"><option value="WS3"><option value="WS4"><option value="WS5"><option value="WS6">
-                <option value="EX1"><option value="EX2"><option value="EX3a"><option value="EX3b">
-                <option value="AT1"><option value="AT2">
-                <option value="EN1"><option value="EN2"><option value="EN3"><option value="EN4">
-                <option value="LY1"><option value="LY2"><option value="LY3">
-                <option value="ST1"><option value="ST2"><option value="ST3"><option value="ST4"><option value="ST5"><option value="ST6"><option value="ST7"><option value="ST8"><option value="ST9">
-                <option value="RE1"><option value="RE2"><option value="RE3"><option value="RE4">
-                <option value="SC1"><option value="SC2">
-                <option value="SP1"><option value="SP2"><option value="SP3"><option value="SP4">
-                <option value="SN1"><option value="SN2">
-                <option value="SD1"><option value="SD2">
-                <option value="PS1"><option value="PS2"><option value="PS3">
-                <option value="NE1"><option value="NE2"><option value="NE3">
-                <option value="B3"><option value="B4"><option value="B5">
-                <option value="EB1"><option value="EB2"><option value="EB3">
-              </datalist>
-              <input type="hidden" id="rxcKasseIk" />
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">E-Mail <span style="color:#888;font-weight:400;">(Patient fragen)</span></label>
-                <input class="form-input" id="rxcEmail" type="email" placeholder="patient@example.com" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Telefon</label>
-                <input class="form-input" id="rxcPhone" type="tel" placeholder="+49…" />
-              </div>
-            </div>
-            <div class="form-row" style="grid-template-columns: 2fr 1fr 1.5fr;">
-              <div class="form-group">
-                <label class="form-label">Strasse + Hausnr. <span id="rxcStreetReq" class="req" hidden>*</span></label>
-                <input class="form-input" id="rxcStreet" type="text" placeholder="z.B. Hauptstraße 12" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">PLZ <span id="rxcPlzReq" class="req" hidden>*</span></label>
-                <input class="form-input" id="rxcPlz" type="text" maxlength="5" placeholder="53721" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Stadt <span id="rxcCityReq" class="req" hidden>*</span></label>
-                <input class="form-input" id="rxcCity" type="text" placeholder="Siegburg" />
-              </div>
-            </div>
+            <!-- ================= DAS PAPIER (CONFIRM) ================= -->
+            <div class="m13">
+              <div class="m13-sheet">
 
-            <h4 style="margin:14px 0 8px 0;">Arzt</h4>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Name</label>
-                <input class="form-input" id="rxcArztName" type="text" list="aerzteDatalist" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Ausstellungsdatum</label>
-                <input class="form-input" id="rxcAusstDate" type="date" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">LANR</label>
-                <input class="form-input" id="rxcLanr" type="text" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">BSNR</label>
-                <input class="form-input" id="rxcBsnr" type="text" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Leitsymptomatik</label>
-                <div id="rxcLsGroup" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
-                  <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;"><input type="checkbox" id="rxcLsA" /> a</label>
-                  <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;"><input type="checkbox" id="rxcLsB" /> b</label>
-                  <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;"><input type="checkbox" id="rxcLsC" /> c</label>
-                  <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;"><input type="checkbox" id="rxcLsD" /> d – patientenindividuelle Leitsymptomatik</label>
+                <!-- ÜST -->
+                <div class="m13-top">
+                  <!-- SOL: Versicherten-Box -->
+                  <div class="m13-insbox">
+                    <div class="m13-side">
+                      <div>Zuzah&shy;lungs&shy;frei</div>
+                      <div>Gebühr&shy;pflichtig</div>
+                      <div>Unfall / Unfall&shy;folgen</div>
+                      <div>BVG</div>
+                    </div>
+                    <div class="m13-insinner">
+                      <div class="m13-insrow">
+                        <div class="m13-cell" style="flex:1;">
+                          <div class="m13-cap">Krankenkasse bzw. Kostenträger <span id="rxcKasseStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></div>
+                          <div style="display:flex;align-items:flex-start;">
+                            <input class="m13-v" id="rxcKasse" list="kkDatalist" autocomplete="off" placeholder="Krankenkasse wählen…">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="m13-insrow">
+                        <div class="m13-cell" style="flex:1;">
+                          <div class="m13-cap">Name, Vorname des Versicherten</div>
+                          <div style="display:flex;gap:10px;align-items:flex-end;">
+                            <input class="m13-v" id="rxcLastName" placeholder="Nachname" style="flex:1;min-width:0;">
+                            <div style="text-align:right;white-space:nowrap;">
+                              <span class="m13-cap">geb. am</span>
+                              <input class="m13-v m13-sm m13-center" id="rxcDob" type="date" style="width:120px;">
+                            </div>
+                          </div>
+                          <input class="m13-v" id="rxcFirstName" placeholder="Vorname">
+                          <div class="m13-cap" style="margin-top:5px;">Straße, Hausnr. <span id="rxcStreetReq" class="req" hidden style="color:#c00;">*</span></div>
+                          <input class="m13-v m13-sm" id="rxcStreet" placeholder="z.B. Hauptstraße 12">
+                          <div class="m13-cap" style="margin-top:3px;">PLZ, Ort <span id="rxcPlzReq" class="req" hidden style="color:#c00;">*</span><span id="rxcCityReq" class="req" hidden style="color:#c00;">*</span></div>
+                          <div style="display:flex;gap:6px;">
+                            <input class="m13-v m13-sm" id="rxcPlz" style="width:65px;" maxlength="5" placeholder="PLZ">
+                            <input class="m13-v m13-sm" id="rxcCity" style="flex:1;" placeholder="Ort">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="m13-insrow">
+                        <div class="m13-cell" style="flex:1.3;">
+                          <div class="m13-cap">Kostenträgerkennung</div>
+                          <input class="m13-v m13-sm" id="rxcKasseIk" placeholder="">
+                        </div>
+                        <div class="m13-cell" style="flex:1.2;">
+                          <div class="m13-cap">Versicherten-Nr.</div>
+                          <input class="m13-v m13-sm" id="rxcVersNr" placeholder="">
+                        </div>
+                        <div class="m13-cell" style="flex:1;">
+                          <div class="m13-cap">Status</div>
+                          <input class="m13-v m13-sm" id="rxcStatus" placeholder="">
+                        </div>
+                      </div>
+                      <div class="m13-insrow">
+                        <div class="m13-cell" style="flex:1.3;">
+                          <div class="m13-cap">Betriebsstätten-Nr.</div>
+                          <input class="m13-v m13-sm" id="rxcBsnr" maxlength="9" placeholder="">
+                        </div>
+                        <div class="m13-cell" style="flex:1.2;">
+                          <div class="m13-cap">Arzt-Nr. (LANR)</div>
+                          <input class="m13-v m13-sm" id="rxcLanr" maxlength="9" placeholder="">
+                        </div>
+                        <div class="m13-cell" style="flex:1;">
+                          <div class="m13-cap">Datum</div>
+                          <input class="m13-v m13-sm" id="rxcAusstDate" type="date">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SAĞ: Title + Therapiebereich + Arzt -->
+                  <div class="m13-headright">
+                    <div class="m13-titleline"><b>Heilmittel&shy;verordnung&nbsp;13</b><span class="m13-mnum">13</span></div>
+                    <div class="m13-therapies" id="rxcTherapieGroup">
+                      <label class="m13-th"><span class="m13-chk" data-rxc-th="physio"></span> Physiotherapie</label>
+                      <label class="m13-th"><span class="m13-chk" data-rxc-th="podo"></span> Podologische Therapie</label>
+                      <label class="m13-th"><span class="m13-chk" data-rxc-th="stimme"></span> Stimm-, Sprech-, Sprach- und Schlucktherapie</label>
+                      <label class="m13-th"><span class="m13-chk" data-rxc-th="ergo"></span> Ergotherapie</label>
+                      <label class="m13-th"><span class="m13-chk" data-rxc-th="ernaehrung"></span> Ernährungstherapie</label>
+                    </div>
+                    <input type="hidden" id="rxcTherapiebereich" />
+                    <div class="m13-arzt-lbl m13-cap" style="margin-top:14px;">Ausstellende Praxis / Arzt</div>
+                    <input class="m13-v m13-sm m13-uline" id="rxcArztName" list="aerzteDatalist" placeholder="">
+                  </div>
                 </div>
-                <input class="form-input" id="rxcLsDText" type="text" placeholder="Patientenindividuelle Leitsymptomatik…" style="display:none;margin-top:8px;" />
-              </div>
-            </div>
 
-            <h4 style="margin:14px 0 8px 0;">Verordnung</h4>
-            <div class="form-row">
-              <div class="form-group" style="position:relative;">
-                <label class="form-label">ICD-10</label>
-                <input class="form-input" id="rxcIcd" type="text" list="icdDatalist" autocomplete="off" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Diagnosegruppe</label>
-                <input class="form-input" id="rxcDg" type="text" list="dgDatalist" autocomplete="off" placeholder="z. B. WS2" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Heilmittel <span id="rxcHmStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></label>
-                <input class="form-input" id="rxcHm" type="text" list="hmDatalist" autocomplete="off" placeholder="KG, MT, MLD oder Position…" />
+                <!-- DIAGNOSE -->
+                <div class="m13-sec">
+                  <div class="m13-lbl">Behandlungsrelevante Diagnose(n) <small>ICD-10-Code &amp; Freitext</small></div>
+                  <div class="m13-diagrow" style="display:flex;gap:6px;align-items:center;">
+                    <input class="m13-v m13-uline" id="rxcIcd" list="icdDatalist" autocomplete="off" placeholder="1. ICD" style="width:90px;flex-shrink:0;">
+                    <input class="m13-v m13-uline" id="rxcIcd2" list="icdDatalist" autocomplete="off" placeholder="2. ICD" style="width:90px;flex-shrink:0;">
+                    <input class="m13-v m13-uline" id="rxcDiagnoseText" placeholder="Diagnose-Freitext" style="flex:1;min-width:0;">
+                  </div>
+                  <div class="m13-dgrow">
+                    <div class="m13-dgfield">
+                      <span class="m13-cap">Diagnose&shy;gruppe</span>
+                      <input class="m13-v m13-uline m13-center" id="rxcDg" list="dgDatalist" autocomplete="off" placeholder="" style="width:84px;">
+                    </div>
+                    <div class="m13-dgfield"><span class="m13-cap">Leitsymptomatik<br>gemäß Heilmittelkatalog</span></div>
+                    <div class="m13-lsboxes" id="rxcLsGroup">
+                      <label class="m13-th"><input type="checkbox" id="rxcLsA" class="m13-cbx"><span class="m13-chk"></span> a</label>
+                      <label class="m13-th"><input type="checkbox" id="rxcLsB" class="m13-cbx"><span class="m13-chk"></span> b</label>
+                      <label class="m13-th"><input type="checkbox" id="rxcLsC" class="m13-cbx"><span class="m13-chk"></span> c</label>
+                    </div>
+                    <div class="m13-dgfield" style="text-align:right;"><span class="m13-cap">patientenindividuelle<br>Leitsymptomatik</span></div>
+                    <label class="m13-th"><input type="checkbox" id="rxcLsD" class="m13-cbx"><span class="m13-chk"></span></label>
+                  </div>
+                  <div style="margin-top:12px;">
+                    <div class="m13-cap">Leitsymptomatik (patientenindividuelle Leitsymptomatik als Freitext angeben)</div>
+                    <input class="m13-v m13-uline" id="rxcLsDText" placeholder="" style="display:none;">
+                  </div>
+                </div>
+
+                <!-- HEILMITTEL -->
+                <div class="m13-hmhead">
+                  <div class="m13-lbl">Heilmittel nach Maßgabe des Kataloges <span id="rxcHmStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></div>
+                  <div class="m13-beh">Behandlungs&shy;einheiten</div>
+                </div>
+                <div class="m13-hmtable">
+                  <div class="m13-hmline">
+                    <div>
+                      <div class="m13-cap">Heilmittel</div>
+                      <input class="m13-v" id="rxcHm" list="hmDatalist" autocomplete="off" placeholder="KG, MT, MLD oder Position…">
+                      <input type="hidden" id="rxcHmPosition" />
+                    </div>
+                    <div><input class="m13-v m13-center" id="rxcAnzahl" type="number" min="1" placeholder=""></div>
+                  </div>
+                  <div class="m13-hmline">
+                    <div>
+                      <div class="m13-cap">Ergänzendes Heilmittel</div>
+                      <input class="m13-v" id="rxcHmErg" placeholder="z. B. Wärmetherapie, Ultraschall…">
+                    </div>
+                    <div><input class="m13-v m13-center" id="rxcAnzahlErg" type="number" min="1" placeholder=""></div>
+                  </div>
+                </div>
+
+                <!-- OPTIONEN -->
+                <div class="m13-opts">
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="m13-optline">
+                      <label class="m13-th"><input type="checkbox" id="rxcBerichtAngefordert" class="m13-cbx"><span class="m13-chk"></span> Therapiebericht</label>
+                      <select class="form-select m13-inline-sel" id="rxcBerichtStatus" title="Bericht-Status">
+                        <option value="offen">offen</option>
+                        <option value="in_arbeit">in Arbeit</option>
+                        <option value="erledigt">erledigt</option>
+                      </select>
+                    </div>
+                    <label class="m13-th"><input type="checkbox" id="rxcDringend" class="m13-cbx"><span class="m13-chk"></span> Dringlicher Behandlungsbedarf innerhalb von 14 Tagen</label>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="m13-optline">
+                      <label class="m13-th"><input type="checkbox" id="rxcHausbesuch" class="m13-cbx"><span class="m13-chk"></span> Hausbesuch</label>
+                    </div>
+                    <div class="m13-freq">
+                      <span class="m13-cap" style="white-space:nowrap;">Therapie&shy;frequenz</span>
+                      <select class="form-select" id="rxcFreq" style="flex:1;"><option value="">Bitte wählen…</option></select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- VERORDNUNGSART & ZUZAHLUNG -->
+                <div class="m13-vart">
+                  <div class="m13-cap" style="margin-bottom:8px;">Verordnungsart &amp; Zuzahlung</div>
+                  <div class="m13-vart-row">
+                    <label class="m13-th"><input type="checkbox" id="rxcBlanko" class="m13-cbx"><span class="m13-chk"></span> Blankoverordnung</label>
+                    <label class="m13-th"><input type="checkbox" id="rxcLhbBvb" class="m13-cbx"><span class="m13-chk"></span> LHB / BVB</label>
+                    <label class="m13-th"><input type="checkbox" id="rxcZuzahlungBefreit" class="m13-cbx"><span class="m13-chk"></span> Zuzahlungsbefreit</label>
+                  </div>
+                </div>
+
+                <!-- THERAPIEZIELE -->
+                <div style="margin-top:14px;">
+                  <div class="m13-cap">ggf. Therapieziele / weitere med. Befunde und Hinweise</div>
+                  <textarea class="m13-ta" id="rxcTherapieziele" rows="2" style="width:100%;box-sizing:border-box;" placeholder=""></textarea>
+                </div>
+
+                <!-- PATIENT ZUSATZFELDER (E-Mail / Telefon) -->
+                <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--border, #ccc);display:flex;gap:12px;">
+                  <div style="flex:1;">
+                    <span class="m13-cap">E-Mail (Patient) <small style="color:var(--text-muted, #888);">(optional)</small></span>
+                    <input class="m13-v m13-sm" id="rxcEmail" type="email" placeholder="patient@example.com">
+                  </div>
+                  <div style="flex:1;">
+                    <span class="m13-cap">Telefon <small style="color:var(--text-muted, #888);">(optional)</small></span>
+                    <input class="m13-v m13-sm" id="rxcPhone" type="tel" placeholder="+49…">
+                  </div>
+                </div>
+
+                <!-- DATALISTS FOR MODAL -->
+                <datalist id="kkDatalist"></datalist>
+                <datalist id="aerzteDatalist"></datalist>
+                <datalist id="icdDatalist"></datalist>
+                <datalist id="dgDatalist">
+                  <option value="WS1"><option value="WS2"><option value="WS3"><option value="WS4"><option value="WS5"><option value="WS6">
+                  <option value="EX1"><option value="EX2"><option value="EX3a"><option value="EX3b">
+                  <option value="AT1"><option value="AT2">
+                  <option value="EN1"><option value="EN2"><option value="EN3"><option value="EN4">
+                  <option value="LY1"><option value="LY2"><option value="LY3">
+                  <option value="ST1"><option value="ST2"><option value="ST3"><option value="ST4"><option value="ST5"><option value="ST6"><option value="ST7"><option value="ST8"><option value="ST9">
+                  <option value="RE1"><option value="RE2"><option value="RE3"><option value="RE4">
+                  <option value="SC1"><option value="SC2">
+                  <option value="SP1"><option value="SP2"><option value="SP3"><option value="SP4">
+                  <option value="SN1"><option value="SN2">
+                  <option value="SD1"><option value="SD2">
+                  <option value="PS1"><option value="PS2"><option value="PS3">
+                  <option value="NE1"><option value="NE2"><option value="NE3">
+                  <option value="B3"><option value="B4"><option value="B5">
+                  <option value="EB1"><option value="EB2"><option value="EB3">
+                </datalist>
                 <datalist id="hmDatalist"></datalist>
-                <input type="hidden" id="rxcHmPosition" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Anzahl</label>
-                <input class="form-input" id="rxcAnzahl" type="number" min="1" />
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Frequenz</label>
-                <select class="form-select" id="rxcFreq">
-                  <option value="">Bitte wählen…</option>
-                </select>
-              </div>
-              <div class="form-group" style="align-self:end;">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
-                  <input type="checkbox" id="rxcDringend" /> Dringend
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-top:6px;">
-                  <input type="checkbox" id="rxcHausbesuch" /> Hausbesuch
-                </label>
-              </div>
-            </div>
-            <div class="form-row">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
-                <input type="checkbox" id="rxcBlanko" /> Blankoverordnung
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
-                <input type="checkbox" id="rxcLhbBvb" /> LHB / BVB
-              </label>
-            </div>
-            <div class="form-row" style="margin-top:10px;">
-              <div class="form-group" style="align-self:end;">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
-                  <input type="checkbox" id="rxcBerichtAngefordert" /> Bericht angefordert
-                </label>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Bericht-Status</label>
-                <select class="form-select" id="rxcBerichtStatus">
-                  <option value="offen">Offen</option>
-                  <option value="in_arbeit">In Arbeit</option>
-                  <option value="erledigt">Erledigt</option>
-                </select>
+
               </div>
             </div>
           </div>
@@ -5617,7 +5667,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260724e"></script>
+  <script type="module" src="dashboard.js?v=20260724f"></script>
 </body>
 
 </html>
