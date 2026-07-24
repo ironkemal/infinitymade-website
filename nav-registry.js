@@ -73,7 +73,7 @@ export const NAV_REGISTRY = {
     { id: 'verordnungen',      key: 'nav_verordnungen',      label: 'Verordnungen',         roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'podologie-billing', key: 'nav_podologie_billing', label: 'Podologie-Abrechnung', roles: ['owner'],             group: 'abrechnung' },
     { id: 'rechnungen',        key: 'nav_rechnungen',        label: 'Rechnungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
-    { id: 'fussstatus',        key: 'nav_fussstatus',        label: 'Fußstatus',            roles: ['owner', 'employee'], group: 'abrechnung' },
+    { id: 'fussstatus',        key: 'nav_fussstatus',        label: 'Fußbefund',            roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'belegliste',        key: 'nav_belegliste',        label: 'Kassenbuch',           roles: ['owner'],             group: 'abrechnung' },
     { id: 'mahnwesen',         key: 'nav_mahnwesen',         label: 'Mahnwesen',            roles: ['owner'],             group: 'abrechnung' },
     { id: 'statistik',         key: 'nav_statistik',         label: 'Auswertungen',         roles: ['owner'],             group: 'abrechnung' },

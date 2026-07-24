@@ -99,8 +99,8 @@ const T = {
     cal_emp_all: 'Alle',
     nav_podologie_billing: 'Podologie-Abrechnung',
     podologie_billing_sub: 'Muster-13-Verordnungen verwalten & Behandlungen dokumentieren',
-    nav_fussstatus: 'Fußstatus',
-    fussstatus_sub: 'Wagner-Klassifikation & podologischer Befundstatus',
+    nav_fussstatus: 'Fußbefund',
+    fussstatus_sub: 'Digitale Fußanalyse-Karte — Befund pro Termin',
     pod_new_vord: 'Neue Verordnung',
     pod_active_vord: 'Aktive Verordnungen',
     pod_tagesbehandlung: 'Tagesbehandlung erfassen',
@@ -229,8 +229,8 @@ const T = {
     cal_emp_all: 'All',
     nav_podologie_billing: 'Podology Billing',
     podologie_billing_sub: 'Manage Muster-13 prescriptions & document treatments',
-    nav_fussstatus: 'Foot Status',
-    fussstatus_sub: 'Wagner classification & podological assessment',
+    nav_fussstatus: 'Foot Findings',
+    fussstatus_sub: 'Digital foot analysis card — assessment per appointment',
     pod_new_vord: 'New Prescription', pod_active_vord: 'Active Prescriptions',
     pod_tagesbehandlung: 'Record Treatment', pod_patient: 'Patient',
     pod_ausstelldatum: 'Issue Date', pod_diagnosegruppe: 'Diagnosis Group',
@@ -343,8 +343,8 @@ const T = {
     cal_emp_all: 'Tümü',
     nav_podologie_billing: 'Podoloji Faturalama',
     podologie_billing_sub: 'Muster-13 reçetelerini yönet ve tedavileri kaydet',
-    nav_fussstatus: 'Ayak Durumu',
-    fussstatus_sub: 'Wagner sınıflandırması ve podolojik muayene durumu',
+    nav_fussstatus: 'Ayak Muayenesi',
+    fussstatus_sub: 'Dijital ayak analiz kartı — Randevu başına bulgu',
     pod_new_vord: 'Yeni Reçete', pod_active_vord: 'Aktif Reçeteler',
     pod_tagesbehandlung: 'Tedavi Kaydet', pod_patient: 'Hasta',
     pod_ausstelldatum: 'Düzenleme Tarihi', pod_diagnosegruppe: 'Tanı Grubu',
@@ -22557,159 +22557,862 @@ const WAGNER_LEVELS = [
 
 const FUSS_BEFUNDE = ['Hyperkeratose','Nagelveränderungen','Durchblutungsstörungen','Sensibilitätsstörungen','Ödem'];
 
+let currentFbpId = null;
+let fbpMarkierungen = [];
+let fbpSelectedMarkerType = 'x';
+let fbpSelectedMarkerColor = '#ef4444';
+let fbpPatientsMap = {};
+
+function fbpFormatDate(str) {
+  if (!str) return '—';
+  try {
+    const d = new Date(str);
+    if (isNaN(d.getTime())) return str;
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch (e) {
+    return str;
+  }
+}
+
+function fbpAutofillStammdaten(patientId) {
+  const box = document.getElementById('fbpStammdatenBox');
+  if (!box) return;
+
+  if (!patientId) {
+    box.innerHTML = '<div style="color:var(--text-muted);font-style:italic;padding:12px;background:var(--bg-card);border-radius:8px;border:1px dashed var(--border);text-align:center;">Bitte Patient auswählen</div>';
+    return;
+  }
+
+  const p = fbpPatientsMap[patientId];
+  if (!p) {
+    box.innerHTML = '<div style="color:var(--text-muted);font-style:italic;padding:12px;">Patientendaten werden geladen…</div>';
+    return;
+  }
+
+  const name = [p.last_name, p.first_name].filter(Boolean).join(', ') || '—';
+  const geb = p.geburtsdatum ? fbpFormatDate(p.geburtsdatum) : '—';
+  const kk = p.krankenkasse || '—';
+  const phone = p.phone || '—';
+  const plz = p.plz || '—';
+  const vnr = p.versichertennummer || '—';
+
+  box.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;background:var(--bg-card);padding:10px;border-radius:8px;border:1px solid var(--border);">
+      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Name, Vorname</span><strong>${escapeHtml(name)}</strong></div>
+      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Geburtsdatum</span><strong>${escapeHtml(geb)}</strong></div>
+      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Krankenkasse</span><strong>${escapeHtml(kk)}</strong></div>
+      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Telefon</span><strong>${escapeHtml(phone)}</strong></div>
+      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">PLZ</span><strong>${escapeHtml(plz)}</strong></div>
+      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Versichertennr.</span><strong>${escapeHtml(vnr)}</strong></div>
+    </div>
+  `;
+}
+
+function fbpRenderMarkers() {
+  document.querySelectorAll('.fbp-diagram-container').forEach(container => {
+    const layer = container.querySelector('.fbp-marker-layer');
+    if (!layer) return;
+    layer.innerHTML = '';
+    const view = container.dataset.view;
+    const foot = container.dataset.foot;
+
+    fbpMarkierungen.forEach((m, idx) => {
+      if (m.view !== view || m.foot !== foot) return;
+      const markerDiv = document.createElement('div');
+      markerDiv.className = 'fbp-marker-item';
+      markerDiv.dataset.index = idx;
+      markerDiv.style.position = 'absolute';
+      markerDiv.style.left = (m.x * 100) + '%';
+      markerDiv.style.top = (m.y * 100) + '%';
+      markerDiv.style.transform = 'translate(-50%, -50%)';
+      markerDiv.style.color = m.color || '#ef4444';
+      markerDiv.style.fontWeight = 'bold';
+      markerDiv.style.fontSize = '16px';
+      markerDiv.style.lineHeight = '1';
+      markerDiv.style.userSelect = 'none';
+      markerDiv.style.cursor = 'pointer';
+      markerDiv.title = 'Klicken zum Löschen';
+
+      let symbol = '✕';
+      if (m.type === 'circle') symbol = '◯';
+      if (m.type === 'dot') symbol = '●';
+
+      markerDiv.innerHTML = `<span style="text-shadow: 0 0 2px var(--bg-card-solid,#fff), 0 0 4px var(--bg-card-solid,#fff);">${symbol}</span>`;
+      layer.appendChild(markerDiv);
+    });
+  });
+}
+
+function fbpResetCard() {
+  currentFbpId = null;
+  fbpMarkierungen = [];
+
+  const patSelect = document.getElementById('fbpPatient');
+  if (patSelect) patSelect.value = '';
+  fbpAutofillStammdaten('');
+
+  const datumInp = document.getElementById('fbpDatum');
+  if (datumInp) datumInp.value = new Date().toISOString().slice(0, 10);
+
+  const setCb = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+  ['senkfuss','spreizfuss','knickfuss_innen','knickfuss_aussen','hohlfuss','plattfuss','andere','fussschwellungen'].forEach(k => {
+    setCb(`fbp_def_${k}_l`, false);
+    setCb(`fbp_def_${k}_r`, false);
+  });
+  setCb('fbp_ein_konfektion', false);
+  setCb('fbp_ein_nach_mass', false);
+  setCb('fbp_kramp_ober_l', false);
+  setCb('fbp_kramp_ober_r', false);
+  setCb('fbp_kramp_unter_l', false);
+  setCb('fbp_kramp_unter_r', false);
+  ['diabetes','allergien','infektionskrankheiten','gerinnungshemmer'].forEach(k => {
+    setCb(`fbp_risk_${k}`, false);
+  });
+  ['hornhaut','hallux_valgus','warzen','hautpilz'].forEach(k => {
+    setCb(`fbp_haut_${k}`, false);
+  });
+  const freitextEl = document.getElementById('fbpHautFreitext');
+  if (freitextEl) freitextEl.value = '';
+
+  document.querySelectorAll('.fbp-toe-btn').forEach(b => b.classList.remove('active'));
+
+  const notizEl = document.getElementById('fbpNotiz');
+  if (notizEl) notizEl.value = '';
+
+  fbpRenderMarkers();
+}
+
+function fbpCollectBefund() {
+  const getCb = id => document.getElementById(id)?.checked || false;
+  const collectToe = key => ({
+    l: Array.from(document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="l"].active`)).map(b => parseInt(b.dataset.toe)),
+    r: Array.from(document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="r"].active`)).map(b => parseInt(b.dataset.toe))
+  });
+
+  return {
+    deformitaeten: {
+      senkfuss:         { l: getCb('fbp_def_senkfuss_l'), r: getCb('fbp_def_senkfuss_r') },
+      spreizfuss:       { l: getCb('fbp_def_spreizfuss_l'), r: getCb('fbp_def_spreizfuss_r') },
+      knickfuss_innen:  { l: getCb('fbp_def_knickfuss_innen_l'), r: getCb('fbp_def_knickfuss_innen_r') },
+      knickfuss_aussen: { l: getCb('fbp_def_knickfuss_aussen_l'), r: getCb('fbp_def_knickfuss_aussen_r') },
+      hohlfuss:         { l: getCb('fbp_def_hohlfuss_l'), r: getCb('fbp_def_hohlfuss_r') },
+      plattfuss:        { l: getCb('fbp_def_plattfuss_l'), r: getCb('fbp_def_plattfuss_r') },
+      andere:           { l: getCb('fbp_def_andere_l'), r: getCb('fbp_def_andere_r') },
+      fussschwellungen: { l: getCb('fbp_def_fussschwellungen_l'), r: getCb('fbp_def_fussschwellungen_r') }
+    },
+    einlagen: {
+      konfektion: getCb('fbp_ein_konfektion'),
+      nach_mass:  getCb('fbp_ein_nach_mass')
+    },
+    krampfadern: {
+      oberschenkel:  { l: getCb('fbp_kramp_ober_l'), r: getCb('fbp_kramp_ober_r') },
+      unterschenkel: { l: getCb('fbp_kramp_unter_l'), r: getCb('fbp_kramp_unter_r') }
+    },
+    risiken: {
+      diabetes:              getCb('fbp_risk_diabetes'),
+      allergien:             getCb('fbp_risk_allergien'),
+      infektionskrankheiten: getCb('fbp_risk_infektionskrankheiten'),
+      gerinnungshemmer:      getCb('fbp_risk_gerinnungshemmer')
+    },
+    haut: {
+      hornhaut:      getCb('fbp_haut_hornhaut'),
+      hallux_valgus: getCb('fbp_haut_hallux_valgus'),
+      warzen:        getCb('fbp_haut_warzen'),
+      hautpilz:      getCb('fbp_haut_hautpilz'),
+      freitext:      document.getElementById('fbpHautFreitext')?.value || ''
+    },
+    zehen_naegel: {
+      huehneraugen_auf: collectToe('huehneraugen_auf'),
+      huehneraugen_zw:  collectToe('huehneraugen_zw'),
+      hammerzehen:      collectToe('hammerzehen'),
+      nagelpilz:        collectToe('nagelpilz'),
+      eingewachsen:     collectToe('eingewachsen'),
+      zustand_naegel:   collectToe('zustand_naegel')
+    }
+  };
+}
+
+async function fbpSave() {
+  const patientId = document.getElementById('fbpPatient')?.value;
+  const datumVal = document.getElementById('fbpDatum')?.value;
+
+  if (!patientId || !datumVal) {
+    showToast('Bitte Patient und Befund-Datum wählen.', 'error');
+    return;
+  }
+
+  const saveBtn = document.getElementById('fbpSaveBtn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Speichert…'; }
+
+  const payload = {
+    owner_id: getOwnerId(),
+    lead_id: patientId,
+    erstellt_am: new Date(datumVal).toISOString(),
+    befund: fbpCollectBefund(),
+    markierungen: fbpMarkierungen,
+    notiz: document.getElementById('fbpNotiz')?.value?.trim() || '',
+    erfasst_von: (typeof currentSession !== 'undefined' && currentSession?.user?.id) ? currentSession.user.id : null
+  };
+
+  let error = null;
+  if (currentFbpId) {
+    const res = await supabase.from('pat_fussbefund').update({
+      erstellt_am: payload.erstellt_am,
+      befund: payload.befund,
+      markierungen: payload.markierungen,
+      notiz: payload.notiz
+    }).eq('id', currentFbpId);
+    error = res.error;
+  } else {
+    const res = await supabase.from('pat_fussbefund').insert([payload]).select('id').single();
+    error = res.error;
+    if (res.data) currentFbpId = res.data.id;
+  }
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Speichern'; }
+
+  if (error) {
+    showToast('Fehler beim Speichern: ' + error.message, 'error');
+    return;
+  }
+
+  showToast('Befund gespeichert ✓');
+  await fbpRefreshTable();
+}
+
+function fbpFormatKurzBefund(row) {
+  const parts = [];
+  const mCount = Array.isArray(row.markierungen) ? row.markierungen.length : 0;
+  if (mCount > 0) parts.push(`${mCount} Marker`);
+
+  const b = row.befund || {};
+  const risk = b.risiken || {};
+  if (risk.diabetes) parts.push('Diabetes');
+  if (risk.allergien) parts.push('Allergie');
+  if (risk.gerinnungshemmer) parts.push('Gerinnungshemmer');
+
+  const def = b.deformitaeten || {};
+  const defLabels = {
+    senkfuss: 'Senkfuß', spreizfuss: 'Spreizfuß', knickfuss_innen: 'Knickfuß i.',
+    knickfuss_aussen: 'Knickfuß a.', hohlfuss: 'Hohlfuß', plattfuss: 'Plattfuß',
+    andere: 'Deformität', fussschwellungen: 'Schwellung'
+  };
+  Object.keys(defLabels).forEach(k => {
+    if (def[k]?.l || def[k]?.r) {
+      parts.push(defLabels[k]);
+    }
+  });
+
+  const haut = b.haut || {};
+  if (haut.hornhaut) parts.push('Hornhaut');
+  if (haut.hallux_valgus) parts.push('Hallux Valgus');
+  if (haut.warzen) parts.push('Warzen');
+  if (haut.hautpilz) parts.push('Hautpilz');
+
+  return parts.length ? parts.join(' · ') : 'Keine Besonderheiten';
+}
+
+async function fbpRefreshTable() {
+  const container = document.getElementById('fbpTableContainer');
+  if (!container) return;
+
+  container.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade Befunde…</span>';
+
+  const { data, error } = await supabase
+    .from('pat_fussbefund')
+    .select('id, erstellt_am, befund, markierungen, notiz, lead_id, leads:lead_id(first_name, last_name, geburtsdatum)')
+    .eq('owner_id', getOwnerId())
+    .order('erstellt_am', { ascending: false })
+    .limit(30);
+
+  if (error) {
+    container.innerHTML = `<span style="font-size:12px;color:#ef4444;">Fehler beim Laden: ${escapeHtml(error.message)}</span>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:12px 0;text-align:center;">Noch keine gespeicherten Befunde vorhanden.</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table class="data-table" style="width:100%;font-size:12px;">
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Geb.</th>
+            <th>Datum</th>
+            <th>Kurz-Befund</th>
+            <th style="text-align:right;">Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(row => {
+            const p = row.leads || {};
+            const pName = [p.last_name, p.first_name].filter(Boolean).join(', ') || 'Unbekannt';
+            const pGeb = fbpFormatDate(p.geburtsdatum);
+            const bDatum = fbpFormatDate(row.erstellt_am);
+            const kurzBefund = fbpFormatKurzBefund(row);
+
+            return `
+              <tr>
+                <td><strong>${escapeHtml(pName)}</strong></td>
+                <td>${pGeb}</td>
+                <td>${bDatum}</td>
+                <td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(kurzBefund)}">${escapeHtml(kurzBefund)}</td>
+                <td style="text-align:right;white-space:nowrap;">
+                  <button type="button" class="btn-sm fbp-btn-open" data-id="${row.id}" title="Öffnen" style="padding:3px 7px;">↗</button>
+                  <button type="button" class="btn-sm btn-danger fbp-btn-del" data-id="${row.id}" title="Löschen" style="padding:3px 7px;">✕</button>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  container.querySelectorAll('.fbp-btn-open').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const row = data.find(r => r.id === id);
+      if (row) fbpLoadRecord(row);
+    });
+  });
+
+  container.querySelectorAll('.fbp-btn-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const ok = await showConfirmModal({
+        title: 'Fußbefund löschen',
+        message: 'Möchten Sie diesen Fußbefund wirklich löschen?',
+        confirmText: 'Löschen',
+        cancelText: 'Abbrechen',
+        variant: 'danger'
+      });
+      if (!ok) return;
+
+      const { error: delErr } = await supabase.from('pat_fussbefund').delete().eq('id', id);
+      if (delErr) {
+        showToast('Fehler beim Löschen: ' + delErr.message, 'error');
+        return;
+      }
+      showToast('Befund gelöscht ✓');
+      if (currentFbpId === id) {
+        fbpResetCard();
+      }
+      fbpRefreshTable();
+    });
+  });
+}
+
+function fbpLoadRecord(row) {
+  currentFbpId = row.id;
+
+  const patSelect = document.getElementById('fbpPatient');
+  if (patSelect) {
+    patSelect.value = row.lead_id || '';
+    fbpAutofillStammdaten(row.lead_id);
+  }
+
+  const datumInp = document.getElementById('fbpDatum');
+  if (datumInp && row.erstellt_am) {
+    datumInp.value = new Date(row.erstellt_am).toISOString().slice(0, 10);
+  }
+
+  const setCb = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+  const b = row.befund || {};
+  const def = b.deformitaeten || {};
+  ['senkfuss','spreizfuss','knickfuss_innen','knickfuss_aussen','hohlfuss','plattfuss','andere','fussschwellungen'].forEach(k => {
+    setCb(`fbp_def_${k}_l`, def[k]?.l);
+    setCb(`fbp_def_${k}_r`, def[k]?.r);
+  });
+  const ein = b.einlagen || {};
+  setCb('fbp_ein_konfektion', ein.konfektion);
+  setCb('fbp_ein_nach_mass', ein.nach_mass);
+  const kr = b.krampfadern || {};
+  setCb('fbp_kramp_ober_l', kr.oberschenkel?.l);
+  setCb('fbp_kramp_ober_r', kr.oberschenkel?.r);
+  setCb('fbp_kramp_unter_l', kr.unterschenkel?.l);
+  setCb('fbp_kramp_unter_r', kr.unterschenkel?.r);
+  const risk = b.risiken || {};
+  ['diabetes','allergien','infektionskrankheiten','gerinnungshemmer'].forEach(k => {
+    setCb(`fbp_risk_${k}`, risk[k]);
+  });
+  const haut = b.haut || {};
+  ['hornhaut','hallux_valgus','warzen','hautpilz'].forEach(k => {
+    setCb(`fbp_haut_${k}`, haut[k]);
+  });
+  const freitextEl = document.getElementById('fbpHautFreitext');
+  if (freitextEl) freitextEl.value = haut.freitext || '';
+
+  const zn = b.zehen_naegel || {};
+  ['huehneraugen_auf','huehneraugen_zw','hammerzehen','nagelpilz','eingewachsen','zustand_naegel'].forEach(key => {
+    const listL = Array.isArray(zn[key]?.l) ? zn[key].l : [];
+    const listR = Array.isArray(zn[key]?.r) ? zn[key].r : [];
+    document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="l"]`).forEach(btn => {
+      btn.classList.toggle('active', listL.includes(parseInt(btn.dataset.toe)));
+    });
+    document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="r"]`).forEach(btn => {
+      btn.classList.toggle('active', listR.includes(parseInt(btn.dataset.toe)));
+    });
+  });
+
+  const notizEl = document.getElementById('fbpNotiz');
+  if (notizEl) notizEl.value = row.notiz || b.bemerkungen || '';
+
+  fbpMarkierungen = Array.isArray(row.markierungen) ? JSON.parse(JSON.stringify(row.markierungen)) : [];
+  fbpRenderMarkers();
+}
+
 async function loadFussstatus() {
   const el = document.getElementById('fussstatusContent');
   if (!el) return;
-  el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade…</span>';
+  el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade Fußbefund-Karte…</span>';
 
   const ownerId = getOwnerId();
-  const [{ data: history }, { data: patienten }] = await Promise.all([
-    supabase
-      .from('fußstatus')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .order('aufnahmedatum', { ascending: false })
-      .limit(10),
-    supabase
-      .from('leads')
-      .select('id, first_name, last_name')
-      .eq('owner_id', ownerId)
-      .order('last_name', { ascending: true }),
-  ]);
+  const { data: patienten, error: patErr } = await supabase
+    .from('leads')
+    .select('id, first_name, last_name, geburtsdatum, krankenkasse, phone, plz, versichertennummer')
+    .eq('owner_id', ownerId)
+    .order('last_name', { ascending: true });
+
+  if (patErr) {
+    console.error('Fehler beim Laden der Patienten:', patErr);
+  }
+
+  fbpPatientsMap = {};
+  (patienten || []).forEach(p => {
+    fbpPatientsMap[p.id] = p;
+  });
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const histHtml = (!history || history.length === 0)
-    ? `<p style="color:var(--text-muted);padding:12px 0;">${t('fuss_no_history')}</p>`
-    : history.map(h => {
-        const wl = WAGNER_LEVELS[h.wagner_grad] || WAGNER_LEVELS[0];
-        const befArr = h.befunde ? Object.entries(h.befunde).filter(([,v])=>v).map(([k])=>k) : [];
-        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
-          <span style="background:${wl.color};color:#fff;padding:3px 9px;border-radius:12px;font-size:12px;font-weight:600;flex-shrink:0;">W${h.wagner_grad}</span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:14px;color:var(--text-main);">${escapeHtml(h.patient_name||'—')}
-              <span style="margin-left:8px;font-size:12px;color:var(--text-muted);">${h.seite||'—'}</span>
-            </div>
-            <div style="font-size:12px;color:var(--text-muted);">${h.aufnahmedatum||'—'}${befArr.length?' · '+befArr.join(', '):''}</div>
-          </div>
-          <span style="font-size:12px;color:var(--text-muted);flex-shrink:0;">${wl.desc}</span>
-        </div>`;
-      }).join('');
+  const toeKeys = [
+    { key: 'huehneraugen_auf', label: 'Hühneraugen auf Zehen' },
+    { key: 'huehneraugen_zw',  label: 'Hühneraugen zw. Zehen' },
+    { key: 'hammerzehen',      label: 'Hammerzehen' },
+    { key: 'nagelpilz',        label: 'Nagelpilz' },
+    { key: 'eingewachsen',     label: 'Eingewachsene Nägel' },
+    { key: 'zustand_naegel',   label: 'Zustand der Nägel' }
+  ];
+
+  const toeRowsHtml = toeKeys.map(item => `
+    <tr>
+      <td>${escapeHtml(item.label)}</td>
+      <td style="text-align:center;">
+        <div class="fbp-toe-group" style="justify-content:center;">
+          ${[1,2,3,4,5].map(num => `<button type="button" class="fbp-toe-btn" data-key="${item.key}" data-foot="l" data-toe="${num}">${num}</button>`).join('')}
+        </div>
+      </td>
+      <td style="text-align:center;">
+        <div class="fbp-toe-group" style="justify-content:center;">
+          ${[1,2,3,4,5].map(num => `<button type="button" class="fbp-toe-btn" data-key="${item.key}" data-foot="r" data-toe="${num}">${num}</button>`).join('')}
+        </div>
+      </td>
+    </tr>
+  `).join('');
 
   el.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+    <!-- Steuerzeile -->
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:220px;">
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:600;">Patient</label>
+        <select id="fbpPatient" class="input-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:14px;">
+          <option value="">— Patient auswählen —</option>
+          ${(patienten || []).map(p => {
+            const name = [p.last_name, p.first_name].filter(Boolean).join(', ');
+            const geb = p.geburtsdatum ? ` (${fbpFormatDate(p.geburtsdatum)})` : '';
+            return `<option value="${escapeHtml(p.id)}">${escapeHtml(name)}${escapeHtml(geb)}</option>`;
+          }).join('')}
+        </select>
+      </div>
 
-      <!-- Formular -->
-      <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
-        <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${t('fuss_new')}</h4>
-        <div style="display:grid;gap:10px;">
-          <div>
-            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_patient')}</label>
-            <select id="fussPatient" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
-              <option value="">— Patient auswählen —</option>
-              ${(patienten || []).map(p => {
-                const name = [p.last_name, p.first_name].filter(Boolean).join(', ');
-                return `<option value="${escapeHtml(p.id)}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
-              }).join('')}
-            </select>
-            ${(!patienten || patienten.length === 0) ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Noch keine Patienten angelegt.</div>` : ''}
+      <div style="width:160px;">
+        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:600;">Befund-Datum</label>
+        <input type="date" id="fbpDatum" value="${todayStr}" class="input-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:14px;">
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:auto;">
+        <button type="button" id="fbpNewBtn" class="btn" style="height:38px;padding:0 14px;">+ Neuer Befund</button>
+        <button type="button" id="fbpSaveBtn" class="btn-primary" style="height:38px;padding:0 18px;">Speichern</button>
+      </div>
+    </div>
+
+    <!-- Hauptbereich (Zwei Spalten) -->
+    <div class="fbp-card-container">
+      
+      <!-- Linke Spalte = Die Karte -->
+      <div class="fbp-paper-card">
+        
+        <!-- 1. Stammdaten-Kopf -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Patienten-Stammdaten (aus Akte)
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div>
-              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_datum')}</label>
-              <input type="date" id="fussDatum" value="${todayStr}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+          <div id="fbpStammdatenBox">
+            <div style="color:var(--text-muted);font-style:italic;padding:12px;background:var(--bg-card);border-radius:8px;border:1px dashed var(--border);text-align:center;">Bitte Patient auswählen</div>
+          </div>
+        </div>
+
+        <!-- 2. Fußdeformitäten -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Fußdeformitäten</div>
+          <table class="fbp-grid-table">
+            <thead>
+              <tr>
+                <th>Befund</th>
+                <th style="width:65px;text-align:center;">Links</th>
+                <th style="width:65px;text-align:center;">Rechts</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Senkfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_senkfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_senkfuss_r"></td></tr>
+              <tr><td>Spreizfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_spreizfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_spreizfuss_r"></td></tr>
+              <tr><td>Knickfuß nach innen</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_innen_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_innen_r"></td></tr>
+              <tr><td>Knickfuß nach außen</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_aussen_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_aussen_r"></td></tr>
+              <tr><td>Hohlfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_hohlfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_hohlfuss_r"></td></tr>
+              <tr><td>Plattfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_plattfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_plattfuss_r"></td></tr>
+              <tr><td>Andere Fußdeformitäten</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_andere_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_andere_r"></td></tr>
+              <tr><td>Fußschwellungen</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_fussschwellungen_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_fussschwellungen_r"></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 3. Einlagen -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Einlagen</div>
+          <div style="display:flex;gap:24px;font-size:13px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_ein_konfektion"> Konfektion
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_ein_nach_mass"> Nach Maß
+            </label>
+          </div>
+        </div>
+
+        <!-- 4. Krampfadern -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Krampfadern</div>
+          <table class="fbp-grid-table">
+            <thead>
+              <tr>
+                <th>Bereich</th>
+                <th style="width:65px;text-align:center;">Links</th>
+                <th style="width:65px;text-align:center;">Rechts</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Oberschenkel</td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_ober_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_ober_r"></td></tr>
+              <tr><td>Unterschenkel</td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_unter_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_unter_r"></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 5. Risiken -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Risiken</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_risk_diabetes"> Diabetes
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_risk_allergien"> Allergien
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_risk_infektionskrankheiten"> Infektionskrankheiten
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_risk_gerinnungshemmer"> Gerinnungshemmer
+            </label>
+          </div>
+        </div>
+
+        <!-- 6. Haut-Befund -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Haut-Befund</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;margin-bottom:12px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_haut_hornhaut"> Hornhaut
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_haut_hallux_valgus"> Hallux Valgus
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_haut_warzen"> Warzen
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="fbp_haut_hautpilz"> Hautpilz
+            </label>
+          </div>
+          <input type="text" id="fbpHautFreitext" class="input-control" placeholder="Freitext / Ergänzungen zum Hautbefund…" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:13px;">
+        </div>
+
+        <!-- 7. Zehen & Nägel -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Zehen &amp; Nägel</div>
+          <table class="fbp-grid-table">
+            <thead>
+              <tr>
+                <th>Befund</th>
+                <th style="width:150px;text-align:center;">Links (Zehe 1–5)</th>
+                <th style="width:150px;text-align:center;">Rechts (Zehe 1–5)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${toeRowsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 8. Fußdiagramme -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Fußdiagramme (Interaktive Befund-Markierung)</div>
+
+          <!-- Toolbar -->
+          <div class="fbp-toolbar" id="fbpToolBar">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Werkzeug:</span>
+            <button type="button" class="fbp-tool-btn active" data-type="x">✕ Cross</button>
+            <button type="button" class="fbp-tool-btn" data-type="circle">◯ Kreis</button>
+            <button type="button" class="fbp-tool-btn" data-type="dot">● Punkt</button>
+
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;margin-left:12px;">Farbe:</span>
+            <button type="button" class="fbp-color-btn active" data-color="#ef4444" style="color:#ef4444;font-weight:bold;">● Rot</button>
+            <button type="button" class="fbp-color-btn" data-color="#3b82f6" style="color:#3b82f6;font-weight:bold;">● Blau</button>
+            <button type="button" class="fbp-color-btn" data-color="var(--text-main)" style="color:var(--text-main);font-weight:bold;">● Schwarz</button>
+
+            <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">Klick setzt Marker, Klick auf Marker löscht ihn.</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;align-items:start;">
+
+            <!-- Plantar (Fußsohle) -->
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
+              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Plantar (Fußsohle)</div>
+              <div style="display:flex;gap:12px;justify-content:center;">
+                <!-- Links -->
+                <div style="text-align:center;flex:1;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
+                  <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
+                      <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
+                      <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
+                      <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
+                      <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
+                      <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
+                    </svg>
+                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
+                  </div>
+                </div>
+                <!-- Rechts -->
+                <div style="text-align:center;flex:1;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
+                  <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <g transform="translate(150,0) scale(-1,1)">
+                        <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
+                        <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
+                        <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
+                        <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
+                        <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
+                        <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
+                      </g>
+                    </svg>
+                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_seite')}</label>
-              <select id="fussSeite" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
-                <option value="links">Links</option>
-                <option value="rechts">Rechts</option>
-                <option value="beide">Beide</option>
-              </select>
+
+            <!-- Dorsal (Fußrücken) -->
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
+              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Dorsal (Fußrücken)</div>
+              <div style="display:flex;gap:12px;justify-content:center;">
+                <!-- Links -->
+                <div style="text-align:center;flex:1;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
+                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
+                      <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
+                      <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
+                      <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
+                      <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
+                      <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
+                    </svg>
+                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
+                  </div>
+                </div>
+                <!-- Rechts -->
+                <div style="text-align:center;flex:1;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
+                  <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:130px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 150 320" class="fbp-foot" style="width:100%;height:auto;display:block;">
+                      <g transform="translate(150,0) scale(-1,1)">
+                        <path class="fbp-outline" d="M75 104 C 54 100, 45 118, 44 142 C 43 166, 45 194, 52 224 C 57 252, 63 282, 75 296 C 87 282, 93 252, 98 224 C 105 194, 107 166, 106 142 C 105 118, 96 100, 75 104 Z"/>
+                        <ellipse class="fbp-outline" cx="50" cy="80" rx="13" ry="17"/>
+                        <ellipse class="fbp-outline" cx="70" cy="68" rx="9" ry="14"/>
+                        <ellipse class="fbp-outline" cx="85" cy="70" rx="8" ry="12.5"/>
+                        <ellipse class="fbp-outline" cx="98" cy="77" rx="7" ry="11"/>
+                        <ellipse class="fbp-outline" cx="108" cy="88" rx="6" ry="9.5"/>
+                      </g>
+                    </svg>
+                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:8px;">${t('fuss_wagner')}</label>
-            <div id="fussWagnerPicker" style="display:grid;gap:6px;">
-              ${WAGNER_LEVELS.map(wl => `
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);" title="${wl.desc}">
-                  <input type="radio" name="fussWagner" value="${wl.grad}" ${wl.grad===0?'checked':''} style="accent-color:${wl.color};">
-                  <span style="background:${wl.color};color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${wl.grad}</span>
-                  <span style="font-size:13px;color:var(--text-main);">${wl.label} — <span style="color:var(--text-muted);">${wl.desc}</span></span>
-                </label>`).join('')}
+
+            <!-- Lateral (Seitenansicht) -->
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;">
+              <div style="font-weight:700;font-size:13px;color:var(--text-main);margin-bottom:8px;text-align:center;">Lateral (Seitenansicht)</div>
+              <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+                <!-- Links -->
+                <div style="text-align:center;width:100%;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Links</div>
+                  <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;display:inline-block;width:100%;max-width:220px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 300 150" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
+                      <path class="fbp-outline" d="M262 54 C 272 70, 270 96, 256 108 C 232 126, 176 130, 110 128 C 74 127, 40 124, 20 120 C 8 117, 8 104, 20 100 C 46 96, 84 96, 120 96 C 170 96, 214 92, 240 78 C 250 72, 257 63, 262 54 Z"/>
+                    </svg>
+                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
+                  </div>
+                </div>
+                <!-- Rechts -->
+                <div style="text-align:center;width:100%;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Rechts</div>
+                  <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;display:inline-block;width:100%;max-width:220px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;padding:8px;">
+                    <svg viewBox="0 0 300 150" class="fbp-foot-lat" style="width:100%;height:auto;display:block;">
+                      <g transform="translate(300,0) scale(-1,1)">
+                        <path class="fbp-outline" d="M262 54 C 272 70, 270 96, 256 108 C 232 126, 176 130, 110 128 C 74 127, 40 124, 20 120 C 8 117, 8 104, 20 100 C 46 96, 84 96, 120 96 C 170 96, 214 92, 240 78 C 250 72, 257 63, 262 54 Z"/>
+                      </g>
+                    </svg>
+                    <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
+                  </div>
+                </div>
+              </div>
             </div>
+
           </div>
-          <div>
-            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('fuss_befunde')}</label>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              ${FUSS_BEFUNDE.map(b => `
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
-                  <input type="checkbox" class="fuss-befund-cb" value="${b}"> ${b}
-                </label>`).join('')}
-            </div>
-          </div>
-          <div>
-            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_notizen')}</label>
-            <textarea id="fussNotizen" rows="2" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;resize:vertical;"></textarea>
-          </div>
-          <div>
-            <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('fuss_foto')}</label>
-            <input type="file" id="fussFotos" accept="image/*" multiple style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;">
-            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Fotoğraf depolama yakında verfügbar.</div>
-          </div>
-          <div id="fussError" style="color:#ef4444;font-size:13px;display:none;"></div>
-          <button id="fussSaveBtn" class="btn-primary" style="width:fit-content;">${t('fuss_save')}</button>
+        </div>
+
+        <!-- 9. Bemerkungen -->
+        <div class="fbp-section">
+          <div class="fbp-section-title">Bemerkungen</div>
+          <textarea id="fbpNotiz" rows="3" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:13px;resize:vertical;" placeholder="Therapieempfehlungen, Folgetermin-Notizen..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Rechte Spalte = Gespeicherte Befunde -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));position:sticky;top:20px;">
+        <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;display:flex;align-items:center;justify-content:space-between;">
+          <span>Gespeicherte Befunde</span>
+          <span style="font-size:12px;font-weight:normal;color:var(--text-muted);">Max. 30</span>
+        </h4>
+        <div id="fbpTableContainer">
+          <span style="color:var(--text-muted);font-size:13px;">Lade Befunde…</span>
         </div>
       </div>
 
-      <!-- Verlauf -->
-      <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
-        <h4 style="margin:0 0 12px;color:var(--text-main);font-size:15px;">${t('fuss_history')}</h4>
-        <div id="fussHistoryList">${histHtml}</div>
-      </div>
+    </div>
+  `;
 
-    </div>`;
-
-  document.getElementById('fussSaveBtn')?.addEventListener('click', async () => {
-    const patientSelect = document.getElementById('fussPatient');
-    const patientId   = patientSelect?.value || null;
-    const patientName = patientSelect?.selectedOptions[0]?.dataset.name || '';
-    const datum   = document.getElementById('fussDatum').value;
-    const seite   = document.getElementById('fussSeite').value;
-    const wagner  = parseInt(document.querySelector('input[name="fussWagner"]:checked')?.value ?? '0');
-    const befunde = Object.fromEntries(
-      FUSS_BEFUNDE.map(b => [b, !!document.querySelector(`.fuss-befund-cb[value="${b}"]`)?.checked])
-    );
-    const notizen = document.getElementById('fussNotizen').value.trim();
-    const errEl   = document.getElementById('fussError');
-
-    const fotoFiles = document.getElementById('fussFotos')?.files;
-    if (fotoFiles && fotoFiles.length > 0) {
-      console.log('[fußstatus] Fotos ausgewählt:', fotoFiles.length, '— Speicherung noch nicht implementiert');
-    }
-
-    if (!patientId || !datum) {
-      errEl.textContent = 'Bitte Patient und Datum ausfüllen.';
-      errEl.style.display = 'block';
-      return;
-    }
-    errEl.style.display = 'none';
-
-    const { error } = await supabase.from('fußstatus').insert({
-      owner_id: getOwnerId(),
-      patient_id: patientId,
-      patient_name: patientName,
-      aufnahmedatum: datum,
-      seite,
-      wagner_grad: wagner,
-      befunde,
-      foto_urls: [],
-      notizen: notizen || null,
+  // Attach Listeners
+  const patSelect = document.getElementById('fbpPatient');
+  if (patSelect) {
+    patSelect.addEventListener('change', (e) => {
+      fbpAutofillStammdaten(e.target.value);
     });
-    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
-    showToast('Fußstatus gespeichert ✓');
-    loadFussstatus();
+  }
+
+  const newBtn = document.getElementById('fbpNewBtn');
+  if (newBtn) {
+    newBtn.addEventListener('click', () => {
+      fbpResetCard();
+    });
+  }
+
+  const saveBtn = document.getElementById('fbpSaveBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      fbpSave();
+    });
+  }
+
+  // Toe buttons click delegated
+  el.querySelectorAll('.fbp-toe-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      btn.classList.toggle('active');
+    });
   });
+
+  // Tool / Color buttons
+  const toolBar = document.getElementById('fbpToolBar');
+  if (toolBar) {
+    toolBar.addEventListener('click', (e) => {
+      const toolBtn = e.target.closest('.fbp-tool-btn');
+      if (toolBtn) {
+        e.preventDefault();
+        toolBar.querySelectorAll('.fbp-tool-btn').forEach(b => b.classList.remove('active'));
+        toolBtn.classList.add('active');
+        fbpSelectedMarkerType = toolBtn.dataset.type || 'x';
+        return;
+      }
+      const colorBtn = e.target.closest('.fbp-color-btn');
+      if (colorBtn) {
+        e.preventDefault();
+        toolBar.querySelectorAll('.fbp-color-btn').forEach(b => b.classList.remove('active'));
+        colorBtn.classList.add('active');
+        fbpSelectedMarkerColor = colorBtn.dataset.color || '#ef4444';
+        return;
+      }
+    });
+  }
+
+  // Diagram Marker Layers
+  el.querySelectorAll('.fbp-diagram-container').forEach(container => {
+    const layer = container.querySelector('.fbp-marker-layer');
+    if (!layer) return;
+    const view = container.dataset.view;
+    const foot = container.dataset.foot;
+
+    layer.addEventListener('click', (e) => {
+      const item = e.target.closest('.fbp-marker-item');
+      if (item) {
+        e.stopPropagation();
+        const idx = parseInt(item.dataset.index);
+        if (!isNaN(idx) && idx >= 0 && idx < fbpMarkierungen.length) {
+          fbpMarkierungen.splice(idx, 1);
+          fbpRenderMarkers();
+        }
+        return;
+      }
+
+      const rect = layer.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * 10000) / 10000;
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * 10000) / 10000;
+
+      fbpMarkierungen.push({
+        view,
+        foot,
+        x,
+        y,
+        type: fbpSelectedMarkerType,
+        color: fbpSelectedMarkerColor,
+        label: ''
+      });
+      fbpRenderMarkers();
+    });
+  });
+
+  fbpResetCard();
+  await fbpRefreshTable();
 }
 
 // ============================================================================
