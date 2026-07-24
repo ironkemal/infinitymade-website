@@ -3264,7 +3264,14 @@
             <!-- OPTİONEN -->
             <div class="m13-opts">
               <div style="display:flex;flex-direction:column;gap:12px;">
-                <label class="m13-th"><input type="checkbox" id="rzBerichtAngefordert" class="m13-cbx"><span class="m13-chk"></span> Therapiebericht</label>
+                <div class="m13-optline">
+                  <label class="m13-th"><input type="checkbox" id="rzBerichtAngefordert" class="m13-cbx"><span class="m13-chk"></span> Therapiebericht</label>
+                  <select class="form-select m13-inline-sel" id="rzBerichtStatus" title="Bericht-Status">
+                    <option value="offen">offen</option>
+                    <option value="in_arbeit">in Arbeit</option>
+                    <option value="erledigt">erledigt</option>
+                  </select>
+                </div>
                 <label class="m13-th"><input type="checkbox" id="rzDringend" class="m13-cbx"><span class="m13-chk"></span> Dringlicher Behandlungsbedarf innerhalb von 14 Tagen</label>
               </div>
               <div style="display:flex;flex-direction:column;gap:12px;">
@@ -3277,6 +3284,20 @@
                 <div class="m13-freq">
                   <span class="m13-cap" style="white-space:nowrap;">Therapie&shy;frequenz</span>
                   <select class="form-select" id="rzFreq" style="flex:1;"><option value="">Bitte wählen…</option></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- VERORDNUNGSART / ZUZAHLUNG (kağıt dışı ama gerekli, forma gömülü) -->
+            <div class="m13-vart">
+              <div class="m13-cap" style="margin-bottom:8px;">Verordnungsart &amp; Zuzahlung</div>
+              <div class="m13-vart-row">
+                <label class="m13-th"><input type="checkbox" id="rzBlanko" class="m13-cbx"><span class="m13-chk"></span> Blankoverordnung</label>
+                <label class="m13-th"><input type="checkbox" id="rzLhbBvb" class="m13-cbx"><span class="m13-chk"></span> LHB / BVB</label>
+                <label class="m13-th"><input type="checkbox" id="rzZuzahlungBefreit" class="m13-cbx"><span class="m13-chk"></span> Zuzahlungsbefreit</label>
+                <div class="m13-freq">
+                  <span class="m13-cap" style="white-space:nowrap;">Zuzahlung&nbsp;(€)</span>
+                  <input class="m13-v m13-uline m13-center" id="rzZuzahlung" type="number" min="0" step="0.01" style="width:90px;" placeholder="0.00">
                 </div>
               </div>
             </div>
@@ -3297,29 +3318,6 @@
           </div>
         </div>
 
-        <!-- Kağıtta olmayan, abrechnung için gerekli ek alanlar -->
-        <details class="m13-extra">
-          <summary>Zusätzliche Abrechnungsangaben (nicht auf dem Formular)</summary>
-          <div class="form-row" style="flex-wrap:wrap;gap:10px;margin-top:10px;">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;"><input type="checkbox" id="rzBlanko" /> Blankoverordnung</label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;"><input type="checkbox" id="rzLhbBvb" /> LHB / BVB</label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;"><input type="checkbox" id="rzZuzahlungBefreit" /> Zuzahlungsbefreit</label>
-          </div>
-          <div class="form-row" style="margin-top:12px;">
-            <div class="form-group">
-              <label class="form-label">Zuzahlung (€)</label>
-              <input class="form-input" id="rzZuzahlung" type="number" min="0" step="0.01" placeholder="0.00" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Bericht-Status</label>
-              <select class="form-select" id="rzBerichtStatus">
-                <option value="offen">Offen</option>
-                <option value="in_arbeit">In Arbeit</option>
-                <option value="erledigt">Erledigt</option>
-              </select>
-            </div>
-          </div>
-        </details>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="rezeptModal">Abbrechen</button>
@@ -3331,86 +3329,88 @@
   <style>
     /* ===== Muster 13 kağıt formu (rezeptModal) ===== */
     .m13-picker{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 16px; }
-    .m13-picker-lbl{ font-weight:600; font-size:14px; color:var(--text-main); }
-    .m13-picker select{ min-width:340px; flex:1; }
-    .m13-picker-hint{ font-size:12px; color:var(--text-muted); }
+    .m13-picker-lbl{ font-weight:700; font-size:15px; color:var(--text-main); }
+    .m13-picker select{ min-width:340px; flex:1; font-size:15px; }
+    .m13-picker-hint{ font-size:13px; font-weight:600; color:var(--text-muted); }
 
     .m13{ }
     .m13-sheet{
       background:#ffffff; color:#111; border:1px solid #d7dbe3;
-      border-radius:6px; padding:18px 20px 20px;
+      border-radius:6px; padding:20px 22px 22px;
       box-shadow:0 4px 18px rgba(0,0,0,.14);
       font-family:"Segoe UI",Arial,sans-serif;
     }
     .m13-sheet .m13-v{
-      border:none; background:transparent; outline:none; width:100%; padding:1px 2px;
-      font-family:"Courier New",ui-monospace,monospace; font-size:15px; font-weight:700;
-      color:#12233f; letter-spacing:.3px;
+      border:none; background:transparent; outline:none; width:100%; padding:2px 2px;
+      font-family:"Courier New",ui-monospace,monospace; font-size:18px; font-weight:700;
+      color:#0f1f38; letter-spacing:.3px;
     }
-    .m13-sheet .m13-v.m13-sm{ font-size:13px; }
+    .m13-sheet .m13-v.m13-sm{ font-size:16px; }
     .m13-sheet .m13-v.m13-center{ text-align:center; }
-    .m13-sheet .m13-v.m13-kknum{ width:54px; border-left:1px solid #9aa8bd; padding-left:6px; }
+    .m13-sheet .m13-v.m13-kknum{ width:58px; border-left:1px solid #9aa8bd; padding-left:6px; }
     .m13-sheet .m13-v:focus{ background:#eef4ff; border-radius:3px; }
-    .m13-sheet .m13-v.m13-uline{ border-bottom:1.1px solid #3a4a63; }
+    .m13-sheet .m13-v.m13-uline{ border-bottom:1.3px solid #3a4a63; }
     .m13-sheet input[type=date].m13-v{ font-family:"Courier New",monospace; }
+    .m13-sheet .m13-v::placeholder{ color:#b6bdc9; font-weight:400; }
 
-    .m13-cap{ font-size:9px; line-height:1.15; color:#5b6472; letter-spacing:.1px; display:block; }
-    .m13-lbl{ font-size:12px; font-weight:600; color:#20304d; }
-    .m13-lbl small{ font-weight:400; color:#5b6472; font-size:9.5px; display:block; }
+    .m13-cap{ font-size:11px; line-height:1.25; font-weight:600; color:#4a5568; letter-spacing:.1px; display:block; }
+    .m13-lbl{ font-size:14px; font-weight:700; color:#182740; }
+    .m13-lbl small{ font-weight:500; color:#4a5568; font-size:11px; display:block; }
 
-    .m13-top{ display:grid; grid-template-columns:1.35fr 1fr; gap:14px; align-items:start; }
-    .m13-insbox{ border:1.4px solid #3a4a63; position:relative; }
-    .m13-side{ position:absolute; left:0; top:0; bottom:0; width:26px; border-right:1px solid #9aa8bd;
-      display:flex; flex-direction:column; font-size:6.5px; color:#5b6472; }
+    .m13-top{ display:grid; grid-template-columns:1.35fr 1fr; gap:16px; align-items:start; }
+    .m13-insbox{ border:1.6px solid #3a4a63; position:relative; }
+    .m13-side{ position:absolute; left:0; top:0; bottom:0; width:28px; border-right:1px solid #9aa8bd;
+      display:flex; flex-direction:column; font-size:8px; font-weight:600; color:#4a5568; }
     .m13-side > div{ flex:1; border-bottom:1px solid #9aa8bd; display:flex; align-items:center; justify-content:center; text-align:center; padding:1px; line-height:1.05; }
     .m13-side > div:last-child{ border-bottom:none; }
-    .m13-insinner{ margin-left:26px; }
+    .m13-insinner{ margin-left:28px; }
     .m13-insrow{ display:flex; }
     .m13-insrow + .m13-insrow{ border-top:1px solid #9aa8bd; }
-    .m13-cell{ padding:2px 6px 3px; min-width:0; }
+    .m13-cell{ padding:3px 7px 4px; min-width:0; }
     .m13-cell + .m13-cell{ border-left:1px solid #9aa8bd; }
 
     .m13-titleline{ display:flex; justify-content:space-between; align-items:flex-start; }
-    .m13-titleline b{ font-size:16px; letter-spacing:.2px; color:#111; }
-    .m13-mnum{ font-size:13px; font-weight:700; color:#111; }
-    .m13-therapies{ margin-top:8px; display:flex; flex-direction:column; gap:5px; }
+    .m13-titleline b{ font-size:19px; font-weight:800; letter-spacing:.2px; color:#111; }
+    .m13-mnum{ font-size:15px; font-weight:800; color:#111; }
+    .m13-therapies{ margin-top:10px; display:flex; flex-direction:column; gap:7px; }
 
-    .m13-th{ display:inline-flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer; color:#111; position:relative; }
-    .m13-chk{ width:15px; height:15px; border:1.3px solid #3a4a63; flex:0 0 auto; background:#fff;
+    .m13-th{ display:inline-flex; align-items:flex-start; gap:9px; font-size:14px; font-weight:600; cursor:pointer; color:#111; position:relative; }
+    .m13-chk{ width:18px; height:18px; border:1.6px solid #3a4a63; flex:0 0 auto; background:#fff;
       display:inline-flex; align-items:center; justify-content:center; margin-top:1px;
-      font-family:"Courier New",monospace; font-weight:700; font-size:13px; color:#12233f; user-select:none; }
+      font-family:"Courier New",monospace; font-weight:800; font-size:16px; color:#0f1f38; user-select:none; }
     /* native checkbox gizli, .m13-chk X gösterir */
     .m13-cbx{ position:absolute; opacity:0; width:0; height:0; pointer-events:none; }
     .m13-cbx:checked + .m13-chk::after{ content:"X"; }
     .m13-chk.on::after{ content:"X"; }
 
-    .m13-sec{ margin-top:12px; }
-    .m13-diagrow{ display:grid; grid-template-columns:150px 1fr; gap:10px; align-items:end; margin-top:3px; }
-    .m13-dgrow{ display:grid; grid-template-columns:auto 130px auto 1fr auto; gap:10px 14px; align-items:end; margin-top:14px; }
+    .m13-sec{ margin-top:14px; }
+    .m13-diagrow{ display:grid; grid-template-columns:160px 1fr; gap:12px; align-items:end; margin-top:4px; }
+    .m13-dgrow{ display:grid; grid-template-columns:auto 140px auto 1fr auto; gap:10px 16px; align-items:end; margin-top:16px; }
     .m13-dgfield{ display:flex; flex-direction:column; }
-    .m13-lsboxes{ display:flex; align-items:center; gap:14px; }
+    .m13-lsboxes{ display:flex; align-items:center; gap:16px; }
 
-    .m13-hmhead{ display:flex; justify-content:space-between; align-items:baseline; margin-top:20px; }
-    .m13-beh{ font-size:10px; color:#5b6472; text-align:right; }
-    .m13-hmtable{ margin-top:4px; border-top:1.2px solid #3a4a63; }
-    .m13-hmline{ display:grid; grid-template-columns:1fr 90px; border-bottom:1px solid #9aa8bd; }
-    .m13-hmline > div{ padding:6px; }
+    .m13-hmhead{ display:flex; justify-content:space-between; align-items:baseline; margin-top:22px; }
+    .m13-beh{ font-size:12px; font-weight:600; color:#4a5568; text-align:right; }
+    .m13-hmtable{ margin-top:5px; border-top:1.4px solid #3a4a63; }
+    .m13-hmline{ display:grid; grid-template-columns:1fr 96px; border-bottom:1px solid #9aa8bd; }
+    .m13-hmline > div{ padding:7px; }
     .m13-hmline > div:first-child{ border-right:1px solid #9aa8bd; }
 
-    .m13-opts{ margin-top:16px; display:grid; grid-template-columns:1.2fr 1fr; gap:14px 20px; align-items:start; }
-    .m13-optline{ display:flex; align-items:center; gap:12px; font-size:12.5px; color:#111; }
+    .m13-opts{ margin-top:18px; display:grid; grid-template-columns:1.2fr 1fr; gap:16px 22px; align-items:start; }
+    .m13-optline{ display:flex; align-items:center; gap:12px; font-size:14px; font-weight:600; color:#111; }
     .m13-freq{ display:flex; align-items:center; gap:8px; }
-    .m13-freq select{ font-size:13px; }
-    .m13-ta{ width:100%; min-height:44px; border:none; border-bottom:1px solid #9aa8bd; resize:vertical;
-      font-family:"Courier New",monospace; font-size:13px; color:#12233f; background:transparent; outline:none; padding:2px; }
+    .m13-freq select, .m13-inline-sel{ font-size:14px; padding:4px 8px; }
+    .m13-inline-sel{ max-width:130px; }
+    .m13-ta{ width:100%; min-height:48px; border:none; border-bottom:1px solid #9aa8bd; resize:vertical;
+      font-family:"Courier New",monospace; font-size:15px; font-weight:700; color:#0f1f38; background:transparent; outline:none; padding:3px; }
     .m13-ta:focus{ background:#eef4ff; }
 
-    .m13-bottom{ display:grid; grid-template-columns:1fr auto; gap:16px; margin-top:18px; align-items:end;
-      border-top:1px dashed #9aa8bd; padding-top:12px; }
-    .m13-sig{ font-size:13px; }
+    .m13-vart{ margin-top:18px; border:1.4px solid #c7cedb; border-radius:6px; padding:10px 14px 12px; background:#f7f9fc; }
+    .m13-vart-row{ display:flex; flex-wrap:wrap; align-items:center; gap:16px 22px; }
 
-    .m13-extra{ margin-top:16px; border:1px solid var(--border-soft,#2a3140); border-radius:8px; padding:10px 14px; }
-    .m13-extra summary{ cursor:pointer; font-size:13px; font-weight:600; color:var(--text-main); }
+    .m13-bottom{ display:grid; grid-template-columns:1fr auto; gap:16px; margin-top:20px; align-items:end;
+      border-top:1px dashed #9aa8bd; padding-top:14px; }
+    .m13-sig{ font-size:15px; font-weight:700; }
 
     @media (max-width:680px){
       .m13-top{ grid-template-columns:1fr; }
@@ -5614,7 +5614,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260724"></script>
+  <script type="module" src="dashboard.js?v=20260724b"></script>
 </body>
 
 </html>

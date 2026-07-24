@@ -16152,13 +16152,18 @@ function setM13Hausbesuch(isJa) {
   document.getElementById('rzHausbesuch').checked = !!isJa;
 }
 
-function fillRzPatientFromLead(leadId) {
+async function fillRzPatientFromLead(leadId) {
   const g = id => document.getElementById(id);
   g('rzPatientId').value = leadId || '';
   const hint = g('rzPatientHint');
   if (!leadId) { if (hint) hint.textContent = ''; return; }
 
-  const lead = rzPatientCache.find(l => l.id === leadId);
+  // Vollen Patientendatensatz laden (robust — unabhängig vom Dropdown-Cache)
+  let lead = null;
+  try {
+    const { data } = await supabase.from('leads').select('*').eq('id', leadId).maybeSingle();
+    lead = data;
+  } catch (e) { console.error('[fillRzPatientFromLead]', e); }
   if (!lead) { if (hint) hint.textContent = ''; return; }
   const md = lead.metadata || {};
 
@@ -16175,8 +16180,22 @@ function fillRzPatientFromLead(leadId) {
   const kasse = lead.krankenkasse || md.krankenkasse || '';
   g('rzPatKasse').value = kasse;
   // IK aus Kassenliste ableiten
-  const kk = rzKkList.find(k => (k.name || '').toLowerCase() === kasse.toLowerCase());
+  const kk = (rzKkList || []).find(k => (k.name || '').toLowerCase() === kasse.toLowerCase());
   g('rzPatKasseIk').value = kk?.ik || '';
+
+  // Hausbesuch + Arzt vom Patienten übernehmen (nur wenn Felder noch leer)
+  if (lead.hausbesuch) setM13Hausbesuch(true);
+  if (lead.arzt_id && !g('rzArztName').value) {
+    try {
+      const { data: arzt } = await supabase.from('aerzte')
+        .select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle();
+      if (arzt) {
+        g('rzArztName').value = arzt.arzt_name || '';
+        if (!g('rzLanr').value) g('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
+        if (!g('rzBsnr').value) g('rzBsnr').value = arzt.bsnr || '';
+      }
+    } catch { /* ignore */ }
+  }
 
   if (hint) {
     const missing = [];
@@ -16228,37 +16247,32 @@ async function openRezeptModal(phone, leadId) {
   populateIcdDatalist().catch(() => {});
   try { rzKkList = await loadKkList() || []; populateKkDatalist(rzKkList); } catch { rzKkList = []; }
 
-  // Patientenliste für den Kopf-Selector
+  // Patientenliste für den Kopf-Selector (minimale, bewährte Spalten wie in loadAnamnese)
+  const sel = g('rzPatientSelect');
   try {
     const ownerId = getOwnerId();
-    const { data } = await supabase.from('leads')
-      .select('id,first_name,last_name,title,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,versichertenstatus,insurance_type,metadata,arzt_id,hausbesuch')
+    const { data, error } = await supabase.from('leads')
+      .select('id,first_name,last_name,title,geburtsdatum,metadata')
       .eq('owner_id', ownerId)
       .order('last_name', { ascending: true });
+    if (error) throw error;
     rzPatientCache = data || [];
-    const sel = g('rzPatientSelect');
     if (sel) {
-      sel.innerHTML = '<option value="">— Patient wählen (füllt Adresse, Kasse, Vers.-Nr. automatisch) —</option>' +
-        rzPatientCache.map(l => `<option value="${l.id}">${escapeHtml(displayNameWithBirth(l))}</option>`).join('');
+      if (!rzPatientCache.length) {
+        sel.innerHTML = '<option value="">Keine Patienten gefunden — bitte zuerst Patienten anlegen</option>';
+      } else {
+        sel.innerHTML = '<option value="">— Patient wählen (füllt Adresse, Kasse, Vers.-Nr. automatisch) —</option>' +
+          rzPatientCache.map(l => `<option value="${l.id}">${escapeHtml(displayNameWithBirth(l))}</option>`).join('');
+      }
       if (leadId) sel.value = leadId;
     }
-    if (leadId) fillRzPatientFromLead(leadId);
-  } catch (e) { console.error('[openRezeptModal] patients', e); }
-
-  // Arzt-Prefill vom Patienten
-  if (leadId) {
-    const lead = rzPatientCache.find(l => l.id === leadId);
-    if (lead?.hausbesuch) setM13Hausbesuch(true);
-    if (lead?.arzt_id) {
-      supabase.from('aerzte').select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle()
-        .then(({ data: arzt }) => {
-          if (!arzt) return;
-          g('rzArztName').value = arzt.arzt_name || '';
-          g('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
-          g('rzBsnr').value = arzt.bsnr || '';
-        });
-    }
+  } catch (e) {
+    console.error('[openRezeptModal] patients', e);
+    if (sel) sel.innerHTML = '<option value="">Fehler beim Laden der Patienten</option>';
   }
+
+  // Bei vorausgewähltem Patienten (aus Patientenkarte) direkt befüllen
+  if (leadId) await fillRzPatientFromLead(leadId);
 }
 
 async function loadVerordnungen() {
