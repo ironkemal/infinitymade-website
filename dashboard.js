@@ -16207,6 +16207,16 @@ async function fillRzPatientFromLead(leadId) {
   }
 }
 
+function rzPatientLabel(l) {
+  const md = l.metadata || {};
+  const name = [l.last_name, l.first_name].filter(Boolean).join(', ') || l.title || '—';
+  const bdRaw = l.geburtsdatum || md.geburtsdatum || '';
+  const m = String(bdRaw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const bd = m ? `${m[3]}.${m[2]}.${m[1]}` : (bdRaw || '');
+  const tel = l.phone || md.phone || '';
+  return [name, bd, tel].filter(Boolean).join(' · ');
+}
+
 async function openRezeptModal(phone, leadId) {
   // Reset all fields synchronously then open — async prefill happens after
   const g = id => document.getElementById(id);
@@ -16254,7 +16264,7 @@ async function openRezeptModal(phone, leadId) {
   try {
     const ownerId = getOwnerId();
     const { data, error } = await supabase.from('leads')
-      .select('id,first_name,last_name,title,geburtsdatum,metadata')
+      .select('id,first_name,last_name,title,geburtsdatum,phone,metadata')
       .eq('owner_id', ownerId)
       .order('last_name', { ascending: true });
     if (error) throw error;
@@ -16264,7 +16274,7 @@ async function openRezeptModal(phone, leadId) {
         sel.innerHTML = '<option value="">Keine Patienten gefunden — bitte zuerst Patienten anlegen</option>';
       } else {
         sel.innerHTML = '<option value="">— Patient wählen (füllt Adresse, Kasse, Vers.-Nr. automatisch) —</option>' +
-          rzPatientCache.map(l => `<option value="${l.id}">${escapeHtml(displayNameWithBirth(l))}</option>`).join('');
+          rzPatientCache.map(l => `<option value="${l.id}">${escapeHtml(rzPatientLabel(l))}</option>`).join('');
       }
       if (leadId) sel.value = leadId;
     }
