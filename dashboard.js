@@ -6435,39 +6435,196 @@ document.getElementById('aiPrefSubmit').addEventListener('click', async () => {
   }
 });
 
-function renderAiSuggestions(json) {
-  const reportEl = document.getElementById('aiSuggestReport');
-  reportEl.textContent = json.report || 'Hier sind die KI-Vorschläge:';
+// ---- Manueller Termin-Editor über den KI-Vorschlägen ------------------------
+// Einzelne Termine per Dropdown/Pfeiltasten ändern, ohne die komplette KI-Suche
+// neu zu starten. Der Retry-Weg rechnet alle Zieltage neu und verschiebt dabei
+// auch unveränderte Termine — deshalb ist er nur noch für Sammeländerungen da.
 
+const aiFmtWd = iso => new Date(iso + 'T12:00:00Z').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+const aiAddDaysISO = (iso, n) => {
+  const d = new Date(iso + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().substring(0, 10);
+};
+
+// Freie Zeiten eines Mitarbeiters an einem Tag — abzüglich der Slots, die
+// bereits ein anderer Termin DIESER Serie belegt (die stehen noch nicht in der DB).
+function aiFreeTimesFor(date, employeeId, exceptIndex) {
+  const map = window._aiCtx?.lastResult?.freeSlots || {};
+  const times = (map[date] && map[date][employeeId]) || [];
+  const taken = new Set((window._aiEdit?.slots || [])
+    .filter((s, i) => i !== exceptIndex && s.date === date && s.employeeId === employeeId)
+    .map(s => s.time));
+  return times.filter(t => !taken.has(t));
+}
+
+function aiSlotIsValid(slot, index) {
+  return aiFreeTimesFor(slot.date, slot.employeeId, index).includes(slot.time);
+}
+
+// Nächster Tag (in Richtung dir), an dem der Mitarbeiter überhaupt freie Zeiten hat.
+function aiNextDayWithSlots(fromDate, dir, employeeId, index) {
+  const map = window._aiCtx?.lastResult?.freeSlots || {};
+  let d = fromDate;
+  for (let i = 0; i < 60; i++) {
+    d = aiAddDaysISO(d, dir);
+    if (!map[d]) continue;
+    if (aiFreeTimesFor(d, employeeId, index).length) return d;
+  }
+  return null;
+}
+
+function renderAiSuggestions(json) {
+  document.getElementById('aiSuggestReport').textContent = json.report || 'Hier sind die KI-Vorschläge:';
+  window._aiEdit = {
+    slots: (json.selected || []).map(s => ({ ...s })),
+    requested: json.requestedCount || (json.selected || []).length
+  };
+  renderAiSlotRows();
+  openModal('aiSuggestModal');
+  document.getElementById('aiRetryFeedbackWrap').style.display = 'block';
+}
+
+function renderAiSlotRows() {
+  const st = window._aiEdit;
+  if (!st) return;
+  const json = window._aiCtx?.lastResult || {};
   const empMap = {};
   (json.employees || []).forEach(e => { empMap[e.id] = e.name; });
+  const empIds = (json.employees || []).map(e => e.id);
+
+  // Chronologisch halten, damit die Nummerierung nach einer Änderung stimmt
+  st.slots.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
   const listEl = document.getElementById('aiSuggestList');
-  const fmtWd = iso => new Date(iso + 'T12:00:00Z').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-  listEl.innerHTML = json.selected.map((s, i) => {
-    const wd = fmtWd(s.date);
-    const empName = empMap[s.employeeId] || 'Mitarbeiter';
+  listEl.innerHTML = st.slots.map((s, i) => {
+    const valid = aiSlotIsValid(s, i);
+    const freeTimes = aiFreeTimesFor(s.date, s.employeeId, i);
     const isDifferent = s.employeeId !== window._aiCtx.baseEmpId;
-    const shiftBadges = [];
-    if (s.dateShiftDays != null && s.shiftedFromDate) {
+
+    const badges = [];
+    if (!valid) {
+      badges.push('<span class="ai-slot-shift-badge" style="background:var(--danger-dim,#7f1d1d);color:#fecaca;" title="Zu dieser Zeit ist der Mitarbeiter nicht verfügbar">⚠ belegt</span>');
+    } else if (s.dateShiftDays != null && s.shiftedFromDate) {
       const sign = s.dateShiftDays > 0 ? '+' : '';
-      shiftBadges.push(`<span class="ai-slot-shift-badge" title="Wunschtag war ${fmtWd(s.shiftedFromDate)} — auf diesen Tag verschoben (Wunschtag voll belegt)"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.warning}</span>Tag verschoben (${sign}${s.dateShiftDays}d)</span>`);
+      badges.push(`<span class="ai-slot-shift-badge" title="Wunschtag war ${aiFmtWd(s.shiftedFromDate)} — auf diesen Tag verschoben (Wunschtag voll belegt)"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;">${ICON.warning}</span>Tag verschoben (${sign}${s.dateShiftDays}d)</span>`);
     } else if (s.timeShiftMin != null) {
       const sign = s.timeShiftMin > 0 ? '+' : '';
-      shiftBadges.push(`<span class="ai-slot-shift-badge" title="Wunschzeit war belegt — um ${s.timeShiftMin} Min verschoben">⏱ Zeit verschoben (${sign}${s.timeShiftMin} Min)</span>`);
+      badges.push(`<span class="ai-slot-shift-badge" title="Wunschzeit war belegt — um ${s.timeShiftMin} Min verschoben">⏱ Zeit verschoben (${sign}${s.timeShiftMin} Min)</span>`);
     }
-    return `<div class="ai-slot-row">
+    if (s.editedByUser) badges.push('<span class="ai-slot-shift-badge" title="Von Ihnen manuell geändert">✎ manuell</span>');
+
+    // Die aktuelle Zeit muss wählbar bleiben, auch wenn sie (noch) ungültig ist
+    const timeOpts = (freeTimes.includes(s.time) ? freeTimes : [s.time, ...freeTimes].sort())
+      .map(t => `<option value="${t}"${t === s.time ? ' selected' : ''}>${t}</option>`).join('');
+    const empOpts = empIds.map(id =>
+      `<option value="${id}"${id === s.employeeId ? ' selected' : ''}>${escapeHtml(empMap[id] || 'Mitarbeiter')}</option>`).join('');
+
+    const ctrl = 'background:var(--bg-input,var(--bg-card-solid));border:1px solid var(--border-color);border-radius:6px;color:var(--text-main);font-size:12px;padding:4px 6px;';
+    return `<div class="ai-slot-row" data-idx="${i}"${valid ? '' : ' style="border-color:var(--danger,#dc2626);"'}>
       <div class="ai-slot-num">${i + 1}</div>
       <div class="ai-slot-main">
-        <div class="ai-slot-date"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;opacity:0.75;">${ICON.calendar}</span>${wd} · ${escapeHtml(s.time)} Uhr ${shiftBadges.join(' ')}</div>
-        <div class="ai-slot-emp${isDifferent ? ' is-switch' : ''}">
-          <span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;opacity:0.75;">${ICON.user}</span>${escapeHtml(empName)}${isDifferent ? '<span class="ai-slot-switch-badge">Wechsel</span>' : ''}
+        <div class="ai-slot-date"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;opacity:0.75;">${ICON.calendar}</span>${aiFmtWd(s.date)} ${badges.join(' ')}</div>
+        <div class="ai-slot-emp${isDifferent ? ' is-switch' : ''}" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;">
+          <button type="button" class="btn-ghost ai-slot-daynudge" data-idx="${i}" data-dir="-1" title="Einen freien Tag früher" style="${ctrl}padding:3px 8px;">‹</button>
+          <button type="button" class="btn-ghost ai-slot-daynudge" data-idx="${i}" data-dir="1" title="Einen freien Tag später" style="${ctrl}padding:3px 8px;">›</button>
+          <select class="ai-slot-time" data-idx="${i}" title="Uhrzeit" style="${ctrl}">${timeOpts}</select>
+          <select class="ai-slot-emp-sel" data-idx="${i}" title="Mitarbeiter" style="${ctrl}max-width:170px;">${empOpts}</select>
+          <button type="button" class="btn-ghost ai-slot-del" data-idx="${i}" title="Termin entfernen" style="${ctrl}padding:3px 8px;color:var(--danger,#dc2626);">✕</button>
         </div>
       </div>
     </div>`;
   }).join('');
-  openModal('aiSuggestModal');
-  document.getElementById('aiRetryFeedbackWrap').style.display = 'block';
+
+  const invalid = st.slots.filter((s, i) => !aiSlotIsValid(s, i)).length;
+  const summary = document.getElementById('aiSlotSummary');
+  if (summary) {
+    const parts = [`${st.slots.length} von ${st.requested} Terminen`];
+    if (invalid) parts.push(`${invalid} mit Konflikt`);
+    summary.textContent = parts.join(' · ');
+    summary.style.color = invalid ? 'var(--danger,#dc2626)' : 'var(--text-muted)';
+  }
+  const confirmBtn = document.getElementById('aiSuggestConfirm');
+  if (confirmBtn) {
+    confirmBtn.disabled = st.slots.length === 0 || invalid > 0;
+    confirmBtn.title = invalid ? 'Bitte zuerst die markierten Konflikte auflösen.' : '';
+    confirmBtn.style.opacity = confirmBtn.disabled ? '0.55' : '';
+  }
+}
+
+// Änderung an einem Slot übernehmen: manuelle Bearbeitung löscht die
+// KI-Verschiebungs-Badges, die sich auf den alten Vorschlag bezogen.
+function aiEditSlot(index, patch) {
+  const st = window._aiEdit;
+  if (!st || !st.slots[index]) return;
+  const s = st.slots[index];
+  Object.assign(s, patch, { editedByUser: true });
+  delete s.shiftedFromDate;
+  delete s.dateShiftDays;
+  delete s.timeShiftMin;
+  renderAiSlotRows();
+}
+
+(function bindAiSlotEditor() {
+  const listEl = document.getElementById('aiSuggestList');
+  if (!listEl) return;
+
+  listEl.addEventListener('click', e => {
+    const nudge = e.target.closest('.ai-slot-daynudge');
+    if (nudge) {
+      const i = parseInt(nudge.dataset.idx, 10);
+      const s = window._aiEdit?.slots[i];
+      if (!s) return;
+      const next = aiNextDayWithSlots(s.date, parseInt(nudge.dataset.dir, 10), s.employeeId, i);
+      if (!next) { showToast('Kein freier Tag in diese Richtung gefunden.', 'error'); return; }
+      const times = aiFreeTimesFor(next, s.employeeId, i);
+      // Zeit möglichst beibehalten, sonst die nächstgelegene freie Zeit nehmen
+      const keep = times.includes(s.time) ? s.time : nearestTimeIn(times, s.time);
+      aiEditSlot(i, { date: next, time: keep });
+      return;
+    }
+    const del = e.target.closest('.ai-slot-del');
+    if (del) {
+      const i = parseInt(del.dataset.idx, 10);
+      window._aiEdit?.slots.splice(i, 1);
+      renderAiSlotRows();
+    }
+  });
+
+  listEl.addEventListener('change', e => {
+    const t = e.target.closest('.ai-slot-time');
+    if (t) { aiEditSlot(parseInt(t.dataset.idx, 10), { time: t.value }); return; }
+    const em = e.target.closest('.ai-slot-emp-sel');
+    if (em) {
+      const i = parseInt(em.dataset.idx, 10);
+      const s = window._aiEdit?.slots[i];
+      if (!s) return;
+      const times = aiFreeTimesFor(s.date, em.value, i);
+      if (!times.length) { showToast('Dieser Mitarbeiter hat an dem Tag keine freien Zeiten.', 'error'); renderAiSlotRows(); return; }
+      aiEditSlot(i, { employeeId: em.value, time: times.includes(s.time) ? s.time : nearestTimeIn(times, s.time) });
+    }
+  });
+
+  document.getElementById('aiSlotAdd')?.addEventListener('click', () => {
+    const st = window._aiEdit;
+    if (!st) return;
+    const last = st.slots[st.slots.length - 1];
+    const empId = last?.employeeId || window._aiCtx?.baseEmpId;
+    if (!empId) { showToast('Kein Mitarbeiter verfügbar.', 'error'); return; }
+    const start = last?.date || new Date().toLocaleDateString('sv-SE');
+    const next = aiNextDayWithSlots(start, 1, empId, -1);
+    if (!next) { showToast('Kein weiterer freier Tag im Suchzeitraum.', 'error'); return; }
+    const times = aiFreeTimesFor(next, empId, -1);
+    st.slots.push({ date: next, time: last ? nearestTimeIn(times, last.time) : times[0], employeeId: empId, editedByUser: true });
+    renderAiSlotRows();
+  });
+})();
+
+function nearestTimeIn(times, wanted) {
+  if (!times.length) return wanted;
+  const toMin = t => parseInt(t.slice(0, 2), 10) * 60 + parseInt(t.slice(3, 5), 10);
+  const w = toMin(wanted);
+  return times.reduce((a, b) => Math.abs(toMin(b) - w) < Math.abs(toMin(a) - w) ? b : a);
 }
 
 async function aiRetryRequest(requireFeedback) {
@@ -6482,7 +6639,10 @@ async function aiRetryRequest(requireFeedback) {
   const retryPayload = {
     ...window._aiCtx.payload,
     userFeedback: retryFeedback || undefined,
-    previousSelected: window._aiCtx.lastResult?.selected || undefined
+    // Den bearbeiteten Stand mitgeben, damit manuell gesetzte Termine bei einer
+    // Sammeländerung bevorzugt erhalten bleiben (Server scored sie stark hoch).
+    previousSelected: (window._aiEdit?.slots || window._aiCtx.lastResult?.selected || [])
+      .map(({ date, time, employeeId }) => ({ date, time, employeeId }))
   };
   showAiLoading(retryFeedback ? 'KI passt die Vorschläge an…' : 'KI sucht andere Vorschläge…');
   const retryToken = (await supabase.auth.getSession()).data.session?.access_token;
@@ -6516,7 +6676,11 @@ document.getElementById('aiRetryFeedback').addEventListener('keydown', e => {
 
 document.getElementById('aiSuggestConfirm').addEventListener('click', async () => {
   if (!window._aiCtx?.lastResult) return;
-  const { selected, service } = window._aiCtx.lastResult;
+  const { service } = window._aiCtx.lastResult;
+  // Nicht mehr die KI-Rohauswahl buchen, sondern den ggf. manuell bearbeiteten Stand
+  const selected = (window._aiEdit?.slots || window._aiCtx.lastResult.selected || [])
+    .map(({ date, time, employeeId }) => ({ date, time, employeeId }));
+  if (!selected.length) { showToast('Keine Termine in der Liste.', 'error'); return; }
   const cust = document.getElementById('bkCustomer').value.trim();
   const custIdAtConfirm = document.getElementById('bkCustomerId').value.trim() || null;
   const phone = document.getElementById('bkPhone').value.trim();
@@ -9669,6 +9833,9 @@ document.getElementById('gkvFormSave').addEventListener('click', async () => {
 
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
+  // Ohne Guard riss ein fehlendes Grid die ganze loadServices()-Kette mit —
+  // inklusive der Aufrufer, die nur die Daten und gar kein Rendering brauchen.
+  if (!grid) return;
   const addCard = `<div class="service-card add-service-card" id="addServiceCard">
       <div class="add-service-icon">+</div>
       <div class="add-service-label">Neue Dienstleistung</div>
@@ -16045,12 +16212,19 @@ function lsCollect(prefix) {
     patText: (g(prefix+'LsD')?.checked ? (g(prefix+'LsDText')?.value.trim() || null) : null)
   };
 }
-function lsApply(prefix, value, patText) {
+// value: "0110" | "ac" | { a:true, b:false, ... } — das OCR liefert die vier
+// Kästchen inzwischen einzeln (leitsymptomatik_boxes); das ist die genauere
+// Quelle, weil der zusammengefasste String oft leer blieb.
+function lsApply(prefix, value, patText, boxes) {
   const g = id => document.getElementById(id);
   const v = (value || '').toString().toLowerCase();
   let flags = [false,false,false,false];
-  if (/^[01]{4}$/.test(v)) flags = v.split('').map(x => x === '1');
+  const boxesUsable = boxes && typeof boxes === 'object'
+    && ['a','b','c','d'].some(l => typeof boxes[l] === 'boolean');
+  if (boxesUsable) flags = ['a','b','c','d'].map(l => boxes[l] === true);
+  else if (/^[01]{4}$/.test(v)) flags = v.split('').map(x => x === '1');
   else if (/[abcd]/.test(v)) flags = ['a','b','c','d'].map(l => v.includes(l));
+  if (patText) flags[3] = true;
   ['A','B','C','D'].forEach((L,i) => { const el = g(prefix+'Ls'+L); if (el) el.checked = flags[i]; });
   const txt = g(prefix+'LsDText');
   if (txt) { txt.value = patText || ''; txt.style.display = flags[3] ? '' : 'none'; }
@@ -17346,11 +17520,22 @@ function normalizeHmPositionCode(code) {
 
 // Wortweise Suche statt substring: `includes('us')` traf früher auch "Hausbesuch",
 // `includes('kg')` jede Leistung mit "kg" irgendwo im Titel.
+// \b ist bei Umlauten unzuverlässig → eigene Grenzen über Nicht-Buchstaben.
 function hmHasToken(text, token) {
   if (!text || !token) return false;
   const esc = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // \b greift bei Umlauten nicht zuverlässig → eigene Grenzen über Nicht-Buchstaben
   return new RegExp(`(^|[^a-zäöüß])${esc}([^a-zäöüß]|$)`, 'i').test(text);
+}
+
+// Wie hmHasToken, aber nur am Wortanfang verankert — deutsche Komposita
+// ("Lymphdrainage", "Wärmetherapie", "Bindegewebsmassage") sind ein Token.
+// Nur für Stämme ab 4 Zeichen; Kürzel wie "us"/"kg" müssen ganze Wörter bleiben,
+// sonst matcht "us" wieder "Hausbesuch".
+function hmHasStem(text, stem) {
+  if (!text || !stem) return false;
+  if (stem.length < 4) return hmHasToken(text, stem);
+  const esc = stem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|[^a-zäöüß])${esc}`, 'i').test(text);
 }
 
 // Klinische Synonymgruppen. `keys` = was auf dem Rezept stehen kann,
@@ -17409,10 +17594,10 @@ function scoreServiceForHeilmittel(heilmittelText, positionCode, services) {
 
   // 4) Synonymgruppen — beide Seiten wortweise
   for (const grp of HM_ALIAS_GROUPS) {
-    if (!grp.keys.some(k => hmHasToken(hm, k))) continue;
+    if (!grp.keys.some(k => hmHasStem(hm, k))) continue;
     const hit = list.find(s => {
       const t = (s.title || '').toLowerCase();
-      return grp.title.some(k => hmHasToken(t, k));
+      return grp.title.some(k => hmHasStem(t, k));
     });
     if (hit) return { service: hit, score: 0.7, reason: 'Zuordnung über „' + grp.keys[0].toUpperCase() + '“' };
   }
@@ -17741,12 +17926,21 @@ async function openRezeptConfirmModal(payload) {
   setVal('rxcLanr', arzt.lanr);
   setVal('rxcBsnr', arzt.bsnr);
   setVal('rxcIcd', rez.icd10);
+  setVal('rxcIcd2', rez.icd10_2);
   setVal('rxcDg', rez.diagnosegruppe);
-  lsApply('rxc', rez.leitsymptomatik, rez.pat_leitsymptomatik || null);
+  lsApply('rxc', rez.leitsymptomatik, rez.pat_leitsymptomatik || null, rez.leitsymptomatik_boxes);
   // Heilmittel — handled by setupRezeptConfirmDropdowns
   // (we still pass the raw OCR text below)
   setVal('rxcAnzahl', rez.anzahl_einheiten);
+  // Frequenz/Diagnosegruppe stehen dank Backend-Zuordnung bereits als Katalogwert
+  // in rez; die Badge sagt, ob wortgleich übernommen oder interpretiert wurde.
+  const norm = payload.normalized || {};
   setFreqValue('rxcFreq', rez.frequenz);
+  renderMatchBadge('rxcFreqStatus', norm.frequenz, rez.frequenz_raw || rez.frequenz);
+  renderMatchBadge('rxcDgStatus', norm.diagnosegruppe, rez.diagnosegruppe_raw || rez.diagnosegruppe);
+  // Nach manueller Korrektur ist die KI-Aussage hinfällig
+  wireManualOverrideBadge('rxcFreq', 'rxcFreqStatus');
+  wireManualOverrideBadge('rxcDg', 'rxcDgStatus');
   setChk('rxcDringend', rez.is_dringend);
   setChk('rxcHausbesuch', rez.hausbesuch);
   setChk('rxcBlanko', rez.is_blanko);
@@ -17769,9 +17963,62 @@ async function openRezeptConfirmModal(payload) {
   renderSignatureStatus(rez.unterschrift_vorhanden, rez.signature_confidence);
 
   // Sprint 8+: populate KK + Heilmittel datalists and run AI fuzzy match on OCR text.
-  setupRezeptConfirmDropdowns(pat.krankenkasse, rez.heilmittel);
+  // Bewusst nicht awaited (Modal soll sofort aufgehen) — deshalb Rejection
+  // explizit abfangen, sonst verschwindet sie unbemerkt.
+  setupRezeptConfirmDropdowns(pat.krankenkasse, rez.heilmittel, norm.heilmittel)
+    .catch(e => console.error('[rezept-confirm] Dropdown-Setup fehlgeschlagen', e));
 
   document.getElementById('rezeptConfirmModal').hidden = false;
+}
+
+// Badge für ein Feld, dessen OCR-Freitext auf einen Katalogwert gemappt wurde.
+// exact = wortgleich übernommen (grün, kein Handlungsbedarf)
+// fuzzy = sinngemäß zugeordnet (orange ⚠ — der Nutzer muss gegenlesen)
+// none  = kein Katalogwert gefunden (orange ⚠ — manuell wählen)
+// n fehlt (Backend-Zuordnung ausgefallen) → keine Aussage, Badge leer lassen.
+function renderMatchBadge(elId, n, rawText, okText) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.title = '';
+  if (!n) { el.textContent = ''; return; }
+  const raw = (rawText || '').toString().trim();
+  if (n.match === 'exact' && n.value) {
+    el.style.color = '#15803d';
+    el.textContent = okText ? ` ✓ ${okText}` : ' ✓ übernommen';
+    el.title = raw ? `Auf dem Rezept: „${raw}“` : '';
+  } else if (n.value) {
+    el.style.color = '#b45309';
+    el.textContent = ` ⚠ zugeordnet – bitte prüfen`;
+    el.title = [
+      raw ? `Auf dem Rezept steht: „${raw}“` : null,
+      `Zugeordnet: „${n.label || n.value}“`,
+      n.note || null,
+    ].filter(Boolean).join('\n');
+  } else if (raw) {
+    el.style.color = '#b45309';
+    el.textContent = ' ⚠ nicht zugeordnet – bitte wählen';
+    el.title = `Auf dem Rezept steht: „${raw}“ — dazu gibt es keinen passenden Katalogwert.`;
+  } else {
+    el.style.color = '#b45309';
+    el.textContent = ' ⚠ nicht erkannt';
+  }
+}
+
+// Sobald der Nutzer das Feld selbst anfasst, ist die KI-Zuordnung Geschichte —
+// Badge auf "manuell" umstellen, statt eine veraltete Aussage stehen zu lassen.
+function wireManualOverrideBadge(inputId, badgeId) {
+  const input = document.getElementById(inputId);
+  const badge = document.getElementById(badgeId);
+  if (!input || !badge || input.dataset.badgeWired) return;
+  input.dataset.badgeWired = '1';
+  const onEdit = () => {
+    badge.title = '';
+    if (!input.value) { badge.style.color = '#b45309'; badge.textContent = ' ⚠ leer'; return; }
+    badge.style.color = '#15803d';
+    badge.textContent = ' ✓ manuell';
+  };
+  input.addEventListener('change', onEdit);
+  input.addEventListener('input', onEdit);
 }
 
 // Unterschrift-Status im Rezept-Confirm-Modal — 3 Zustände:
@@ -17910,6 +18157,7 @@ async function submitConfirm() {
       },
       rezept: {
         icd10: document.getElementById('rxcIcd').value.trim() || null,
+        icd10_2: document.getElementById('rxcIcd2')?.value.trim() || null,
         diagnose_text: document.getElementById('rxcDiagnoseText').value.trim() || null,
         diagnosegruppe: document.getElementById('rxcDg').value.trim() || null,
         therapiebereich: document.getElementById('rxcTherapiebereich').value.trim() || null,
@@ -18125,11 +18373,37 @@ function populateHmDatalist(positions) {
   ).join('');
 }
 
-async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
+async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText, hmNormalized) {
   // Auswahl aus einem vorherigen Rezept darf nicht ins nächste durchschlagen
   const srvSelReset = document.getElementById('rxcService');
   if (srvSelReset) { srvSelReset.dataset.userPicked = ''; srvSelReset.value = ''; }
 
+  // Leistungs-Select ZUERST und unabhängig füllen. Es hängt inhaltlich nicht an
+  // Krankenkassen-/Heilmittel-Katalog; stand es weiter unten, riss jeder Fehler
+  // dort (z. B. abgelehnter loadKkList-Promise — der Aufrufer awaitet nicht, die
+  // Rejection blieb still) die Zuordnung stumm mit runter.
+  try {
+    await populateRxcServiceSelect();
+  } catch (e) {
+    console.error('[rxcService] Befüllen fehlgeschlagen', e);
+  }
+
+  try {
+    await setupRezeptKkHmDropdowns(ocrKkText, ocrHmText, hmNormalized);
+  } catch (e) {
+    console.error('[rezept-confirm] KK/Heilmittel-Setup fehlgeschlagen', e);
+  }
+
+  // Zuordnung erst danach — sie liest rxcHm / rxcHmPosition, die oben gesetzt werden
+  syncRxcServiceMatch();
+  const srvSel = document.getElementById('rxcService');
+  if (srvSel) {
+    // Manuelle Auswahl gewinnt und wird nicht mehr überschrieben
+    srvSel.onchange = () => { srvSel.dataset.userPicked = srvSel.value ? '1' : ''; renderRxcServiceStatus(null, true); };
+  }
+}
+
+async function setupRezeptKkHmDropdowns(ocrKkText, ocrHmText, hmNormalized) {
   const [kkList, positions] = await Promise.all([loadKkList(), loadPhysioPositions()]);
   populateKkDatalist(kkList);
   populateHmDatalist(positions);
@@ -18145,7 +18419,14 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
     kkIkInput.value = kkMatch.ik || '';
     if (kkStatus) {
       const ikText = kkMatch.ik ? ` · IK ${kkMatch.ik}` : ' · ohne IK';
-      kkStatus.textContent = ` ✓ erkannt (${Math.round(kkMatch.score * 100)}%)${ikText}`;
+      // Nur wortgleiche Treffer gelten als sicher — alles darunter ist eine
+      // Näherung und muss vom Nutzer gegengelesen werden.
+      const sure = kkMatch.score >= 0.95;
+      kkStatus.style.color = sure ? '#15803d' : '#b45309';
+      kkStatus.textContent = sure
+        ? ` ✓ erkannt${ikText}`
+        : ` ⚠ zugeordnet – bitte prüfen${ikText}`;
+      kkStatus.title = sure ? '' : `Auf dem Rezept steht: „${ocrKkText}“\nZugeordnet: „${kkMatch.name}“`;
     }
   } else if (ocrKkText) {
     kkInput.value = ocrKkText;
@@ -18156,6 +18437,7 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
 
   // Re-resolve IK whenever user changes the input
   kkInput.oninput = () => {
+    if (kkStatus) kkStatus.title = '';
     const m = aiMatchKK(kkInput.value, kkList);
     if (m && _norm(m.name) === _norm(kkInput.value)) {
       kkIkInput.value = m.ik || '';
@@ -18177,19 +18459,44 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
   const hmPosInput = document.getElementById('rxcHmPosition');
   const hmStatus = document.getElementById('rxcHmStatus');
 
-  const hmMatch = aiMatchHeilmittel(ocrHmText, positions);
-  if (hmMatch) {
+  // Vorrang hat die Katalog-Zuordnung des Backends (kennt beliebige Arzt-
+  // Schreibweisen). Erst wenn die ausfällt, greift der lokale Fuzzy-Match.
+  const hmFromAi = hmNormalized && hmNormalized.value
+    && positions.find(p => p.x === hmNormalized.value);
+  if (hmFromAi) {
     // Keep short-form text the OCR gave (KG) — user familiarity; store position separately.
-    hmInput.value = ocrHmText || hmMatch.label;
-    hmPosInput.value = hmMatch.x;
-    if (hmStatus) hmStatus.textContent = ` ✓ ${hmMatch.x} (${Math.round(hmMatch.score * 100)}%)`;
-  } else if (ocrHmText) {
+    hmInput.value = ocrHmText || hmFromAi.label;
+    hmPosInput.value = hmFromAi.x;
+    renderMatchBadge('rxcHmStatus',
+      { ...hmNormalized, label: `${hmFromAi.x} · ${hmFromAi.label}` },
+      ocrHmText,
+      hmFromAi.x);
+  } else if (hmNormalized && !hmNormalized.value && ocrHmText) {
     hmInput.value = ocrHmText;
-    if (hmStatus) { hmStatus.style.color = '#b45309'; hmStatus.textContent = ' ⚠ nicht erkannt — Position wählen'; }
+    renderMatchBadge('rxcHmStatus', hmNormalized, ocrHmText);
+  } else {
+    const hmMatch = aiMatchHeilmittel(ocrHmText, positions);
+    if (hmMatch) {
+      hmInput.value = ocrHmText || hmMatch.label;
+      hmPosInput.value = hmMatch.x;
+      if (hmStatus) {
+        // Lokaler Match ohne Rückversicherung durch die KI → nie als „sicher" verkaufen
+        const sure = hmMatch.score >= 0.95;
+        hmStatus.style.color = sure ? '#15803d' : '#b45309';
+        hmStatus.textContent = sure
+          ? ` ✓ ${hmMatch.x}`
+          : ` ⚠ ${hmMatch.x} zugeordnet – bitte prüfen`;
+        hmStatus.title = `Auf dem Rezept steht: „${ocrHmText || ''}“\nZugeordnet: „${hmMatch.x} · ${hmMatch.label}“`;
+      }
+    } else if (ocrHmText) {
+      hmInput.value = ocrHmText;
+      if (hmStatus) { hmStatus.style.color = '#b45309'; hmStatus.textContent = ' ⚠ nicht erkannt — Position wählen'; }
+    }
   }
 
   hmInput.oninput = () => {
     const m = aiMatchHeilmittel(hmInput.value, positions);
+    if (hmStatus) hmStatus.title = '';
     if (m) {
       hmPosInput.value = m.x;
       if (hmStatus) { hmStatus.style.color = '#15803d'; hmStatus.textContent = ` ✓ ${m.x}`; }
@@ -18199,23 +18506,67 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
     }
     syncRxcServiceMatch();
   };
-
-  // Leistungs-Zuordnung (Praxura-intern) initial füllen
-  populateRxcServiceSelect();
-  syncRxcServiceMatch();
-  const srvSel = document.getElementById('rxcService');
-  if (srvSel) {
-    // Manuelle Auswahl gewinnt und wird nicht mehr überschrieben
-    srvSel.onchange = () => { srvSel.dataset.userPicked = srvSel.value ? '1' : ''; renderRxcServiceStatus(null, true); };
-  }
 }
 
 // --- Rezept-Bestätigung: Heilmittel → eigene Dienstleistung ------------------
 
-function populateRxcServiceSelect() {
+async function populateRxcServiceSelect() {
   const sel = document.getElementById('rxcService');
   if (!sel) return;
-  const list = (ownerServices || []).filter(s => !s.is_internal);
+
+  // ownerServices wird sonst erst beim Öffnen des Kalender-/Dienstleistungs-Panels
+  // gefüllt. Wer direkt ein Rezept scannt, sah hier eine leere Liste.
+  // loadServices() seedet zusätzlich den GKV-Katalog → erst danach gibt es
+  // gkv_position_nr, worauf die Zuordnung überhaupt matcht.
+  try {
+    const sector = typeof getSector === 'function' ? getSector() : null;
+    const catalog = (sector && GKV_LEISTUNGSKATALOG[sector]) || [];
+    const hasGkv = servicesCache.some(s => s.gkv_position_nr);
+    if (!servicesCache.length || (catalog.length && !hasGkv)) await loadServices();
+  } catch (e) {
+    // loadServices() rendert auch die Dienstleistungs-Kacheln; wirft einer dieser
+    // Renderer (Panel nicht im DOM), sind die Daten trotzdem schon geladen.
+    console.warn('[rxcService] loadServices fehlgeschlagen, nutze Cache/Direktabfrage', e);
+  }
+  if (servicesCache.length) ownerServices = servicesCache;
+
+  // Letzter Ausweg: unabhängig von Panel-State direkt abfragen, damit die
+  // Zuordnung nie an einem ungeladenen Panel scheitert.
+  if (!(ownerServices || []).length) {
+    const oid = getOwnerId();
+    const baseQuery = () => supabase.from('services')
+      .select('*,employee_services(employee_id)')
+      .or(`owner_id.eq.${oid},user_id.eq.${oid}`);
+    try {
+      const { data, error } = await bizScope(baseQuery(), 'services');
+      if (error) throw error;
+      ownerServices = data || [];
+
+      // Vor der Multi-Business-Migration angelegte Leistungen haben business_id = NULL
+      // und fallen durch den bizScope-Filter. Ohne diesen Fallback wirkt der Katalog
+      // leer, obwohl Dienstleistungen existieren.
+      if (!ownerServices.length) {
+        const { data: unscoped, error: e2 } = await baseQuery();
+        if (e2) throw e2;
+        ownerServices = unscoped || [];
+        if (ownerServices.length) {
+          console.warn('[rxcService] Leistungen nur ohne business_id-Filter gefunden — business_id ist bei diesen Zeilen NULL');
+        }
+      }
+      if (ownerServices.length) servicesCache = ownerServices;
+    } catch (e) {
+      console.warn('[rxcService] Direktabfrage fehlgeschlagen', e);
+    }
+  }
+
+  const list = (ownerServices || [])
+    .filter(s => !s.is_internal)
+    .sort((a, b) => (a.title || '').localeCompare(b.title || '', 'de'));
+
+  if (!list.length) {
+    sel.innerHTML = '<option value="">— keine Dienstleistungen angelegt —</option>';
+    return;
+  }
   sel.innerHTML = '<option value="">— keine Zuordnung —</option>' + list.map(s => {
     const code = s.gkv_position_nr || s.code;
     const dur = s.duration_minutes ? ` · ${s.duration_minutes} Min` : '';
@@ -18241,12 +18592,20 @@ function renderRxcServiceStatus(match, manual) {
     hint.style.display = 'none';
   } else {
     status.style.color = '#b45309';
-    status.textContent = ' ⚠ keine passende Leistung gefunden';
     hint.style.display = 'block';
     const hm = (document.getElementById('rxcHm')?.value || '').trim();
-    hint.textContent = `Für „${hm || 'das Heilmittel'}“ gibt es keine passende Dienstleistung in Ihrem Katalog. `
-      + 'Bitte oben eine Leistung wählen — oder unter Kalender › Dienstleistungen eine neue anlegen. '
-      + 'Ohne Zuordnung können keine Termine geplant werden.';
+    const hasAny = (ownerServices || []).some(s => !s.is_internal);
+    if (!hasAny) {
+      status.textContent = ' ⚠ keine Dienstleistungen angelegt';
+      hint.textContent = 'Sie haben noch keine Dienstleistungen angelegt. '
+        + 'Bitte unter Kalender › Dienstleistungen mindestens eine Leistung anlegen — '
+        + 'ohne Zuordnung können keine Termine geplant werden.';
+    } else {
+      status.textContent = ' ⚠ keine passende Leistung gefunden';
+      hint.textContent = `Für „${hm || 'das Heilmittel'}“ gibt es keine passende Dienstleistung in Ihrem Katalog. `
+        + 'Bitte oben eine Leistung wählen — oder unter Kalender › Dienstleistungen eine neue anlegen. '
+        + 'Ohne Zuordnung können keine Termine geplant werden.';
+    }
   }
 }
 

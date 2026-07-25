@@ -15,9 +15,10 @@ import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
-import { defaultPositionForHeilmittel, resolvePositionsnummer } from './billing/codes/physio_positions.js';
+import { defaultPositionForHeilmittel, resolvePositionsnummer, PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
 import { run as rezeptOcrRun } from './ai/tasks/rezept-ocr.js';
+import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
 import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
@@ -1365,20 +1366,28 @@ function parseSeriesFeedback(text, targetDates, empList, anchor, today) {
   return out;
 }
 
+// Obergrenzen der Serienplanung. MAX_HORIZON_DAYS begrenzt, wie weit voraus wir
+// Buchungen laden (Query-Kosten); MAX_SERIES_COUNT die Serienlänge selbst.
+const MAX_HORIZON_DAYS = 300;   // ~43 Wochen
+const MAX_SERIES_COUNT = 60;
+
 // 5b. AI Series Scheduler — enumerate candidate slots, send to n8n+OpenAI for ranking
 app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
   try {
     const {
       serviceId, customerId, employeeId,
-      count = 8, recurrence = 'weekly', intervalDays,
+      count: countRaw = 8, recurrence = 'weekly', intervalDays,
       startDate, weekdays,
       preferredTime, preferences = {},
       userFeedback, previousSelected
     } = req.body;
     const ownerId = req.auth.tenantId; // never trust body — always from JWT
-    if (!ownerId || !serviceId || !count) {
+    if (!ownerId || !serviceId || !countRaw) {
       return res.status(400).json({ error: 'ownerId, serviceId, count required' });
     }
+    // Serienlänge deckeln, damit ein überhöhter count nicht Horizont und
+    // Slot-Enumeration aufbläht
+    const count = Math.max(1, Math.min(parseInt(countRaw, 10) || 8, MAX_SERIES_COUNT));
 
     // 1) Resolve service + duration
     const { data: svc } = await supabase.from('services')
@@ -1444,10 +1453,25 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       });
     }
 
-    // 4) Fetch working_hours, breaks, time_offs, custom_days, bookings for next 14 weeks
+    // 4) Fetch working_hours, breaks, time_offs, custom_days, bookings over the search horizon.
+    // Der Horizont muss aus der Anfrage folgen: bei 18 Terminen à 1x/Woche brauchen wir
+    // 18 Wochen. Ein fester 14-Wochen-Horizont hat längere Serien stumm abgeschnitten
+    // (18 angefordert → nur 13 geliefert).
     const today = new Date().toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
+    const horizonDays = (() => {
+      const n = Math.max(1, Math.min(parseInt(count, 10) || 8, MAX_SERIES_COUNT));
+      if (recurrence === 'daily') return Math.min(n * 2 + 14, MAX_HORIZON_DAYS);
+      const wdCount = (weekdays && weekdays.length) ? weekdays.length : 1;
+      const customWeekStepReq = parseInt(intervalDays, 10);
+      const stepDays = (customWeekStepReq >= 7 && customWeekStepReq <= 84)
+        ? customWeekStepReq
+        : (recurrence === 'biweekly' ? 14 : 7);
+      // Runden je Wochentag-Bündel + 30 % Puffer für Ausweichtage/Feiertage
+      const rounds = Math.ceil(n / wdCount);
+      return Math.min(Math.ceil(rounds * stepDays * 1.3) + 14, MAX_HORIZON_DAYS);
+    })();
     const horizonDate = new Date();
-    horizonDate.setDate(horizonDate.getDate() + 14 * 7);
+    horizonDate.setDate(horizonDate.getDate() + horizonDays);
     const horizon = horizonDate.toLocaleDateString('sv-SE', { timeZone: BUSINESS_TZ });
     const horizonStartIso = berlinLocalToUTC(today, '00:00').toISOString();
     const horizonEndIso = berlinLocalToUTC(horizon, '23:59').toISOString();
@@ -1545,7 +1569,10 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       .map(s => s && s.date && s.time && s.employeeId ? `${s.date}|${s.time}|${s.employeeId}` : null).filter(Boolean));
     const feedbackWindow = dateStr => fb.dateWindows[dateStr] || fb.globalWindow || null;
 
-    // 6) Enumerate slots for each target date (multiple slots per date for AI to choose)
+    // 6) Enumerate slots for each target date (multiple slots per date for AI to choose).
+    // Bei langen Serien weniger Alternativen pro Tag, damit der n8n-Payload nicht
+    // explodiert — sonst frisst eine 40-Termine-Serie das Kandidatenbudget auf.
+    const slotsPerDateForAi = cappedDates.length > 20 ? 3 : 6;
     const candidates = [];
     const candidatesByDate = new Map();
 
@@ -1613,8 +1640,10 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
         }
       }
       dateSlots.sort((a, b) => a.score - b.score);
+      // Für den deterministischen Fallback halten wir 6 Alternativen vor,
+      // an die KI gehen je nach Serienlänge nur die besten davon.
       candidatesByDate.set(dateStr, dateSlots.slice(0, 6));
-      dateSlots.slice(0, 6).forEach(s => candidates.push(s));
+      dateSlots.slice(0, slotsPerDateForAi).forEach(s => candidates.push(s));
     }
 
     // Identify target dates with NO available slots and look for nearby
@@ -1623,7 +1652,10 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     const emptyDates = [];
     const SHIFT_DAYS = [1, -1, 2, -2, 3, -3];
 
-    function enumerateDay(dateStr) {
+    // ignorePrefs=true liefert ALLE freien Slots des Tages (ohne Tageszeit-/
+    // Feedback-Fenster). Das braucht der manuelle Termin-Editor im Frontend:
+    // dort darf der Nutzer auch außerhalb seiner ursprünglichen Wunschzeit schieben.
+    function enumerateDay(dateStr, { ignorePrefs = false } = {}) {
       const dayOfWeek = berlinDayOfWeek(dateStr);
       const cd = customDayByDate.get(dateStr);
       const isClosedDay = cd && (cd.type === 'closed' || cd.type === 'holiday') && !cd.start_time && !cd.end_time;
@@ -1638,9 +1670,10 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
           startMins = timeToMinsLocal(cd.start_time);
           endMins = timeToMinsLocal(cd.end_time);
         }
-        if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
+        if (ignorePrefs) { /* keine Tageszeit-/Feedback-Einschränkung */ }
+        else if (tod === 'morning') endMins = Math.min(endMins, 12 * 60);
         else if (tod === 'afternoon') startMins = Math.max(startMins, 12 * 60);
-        const fw = feedbackWindow(dateStr);
+        const fw = ignorePrefs ? null : feedbackWindow(dateStr);
         if (fw) { startMins = Math.max(startMins, fw.start); endMins = Math.min(endMins, fw.end); }
         const busy = [];
         (breaksByEmpDay.get(`${emp.id}|${dayOfWeek}`) || []).forEach(b => {
@@ -1706,8 +1739,10 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       }
     });
 
-    // Cap total candidates sent to AI
-    const shortList = candidates.slice(0, 120);
+    // Cap total candidates sent to AI. Muss mit der Serienlänge wachsen: bei fixem
+    // 120er-Limit fielen ab dem 21. Zieltag alle Kandidaten aus dem Payload.
+    const candidateCap = Math.max(120, cappedDates.length * slotsPerDateForAi + 20);
+    const shortList = candidates.slice(0, candidateCap);
 
     if (shortList.length === 0) {
       return res.json({ candidates: [], selected: [], report: 'Im Suchzeitraum von 14 Wochen wurden keine freien Slots gefunden.' });
@@ -1807,10 +1842,42 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     if (timeShifts.length) reportLines.push(`⏱ ${timeShifts.length} Termin(e) zeitlich angepasst (Wunschzeit belegt).`);
     const unmetTargets = cappedDates.filter(d => !selected.some(s => s.date === d || s.shiftedFromDate === d));
     if (unmetTargets.length) reportLines.push(`✗ Für ${unmetTargets.length} Wunschtag(e) konnte trotz Suche im Umkreis kein Slot gefunden werden.`);
+    // Stilles Abschneiden am Suchhorizont sichtbar machen — früher fehlten
+    // einfach Termine, ohne dass der Nutzer den Grund erfuhr.
+    if (selected.length < count) {
+      reportLines.push(`ℹ ${count} Termine angefragt, ${selected.length} planbar (Suchzeitraum ${Math.round(horizonDays / 7)} Wochen).`);
+    }
     let report = aiResult.report || reportLines.join(' ');
     if (fb.applied.length) report = `Änderungen übernommen: ${fb.applied.join(' · ')}. ` + report;
     if (genderFilterApplied) {
       report += ` (Gefiltert auf ${genderFilterApplied === 'female' ? 'weibliche' : 'männliche'} Behandler.)`;
+    }
+
+    // 8) Freie-Slot-Karte für den manuellen Editor im Frontend.
+    // Der Nutzer soll einzelne Termine verschieben können, ohne dass dafür die
+    // komplette KI-Suche neu läuft (die berechnet alle Zieltage neu und wirft
+    // damit auch unveränderte Termine durcheinander). Alle Daten liegen hier
+    // ohnehin schon im Speicher — die Karte kostet uns keine weitere Query.
+    const freeSlots = {};
+    if (selected.length || cappedDates.length) {
+      const allDates = [...cappedDates, ...selected.map(s => s.date)].sort();
+      const winStart = addDaysISO(allDates[0], -7);
+      const winEnd = addDaysISO(allDates[allDates.length - 1], 14);
+      let cursor = winStart < today ? today : winStart;
+      let guard = 0;
+      while (cursor <= winEnd && cursor <= horizon && guard++ < MAX_HORIZON_DAYS) {
+        const daySlots = enumerateDay(cursor, { ignorePrefs: true });
+        if (daySlots.length) {
+          const byEmp = {};
+          for (const s of daySlots) {
+            if (!byEmp[s.employeeId]) byEmp[s.employeeId] = [];
+            byEmp[s.employeeId].push(s.time);
+          }
+          Object.values(byEmp).forEach(arr => arr.sort());
+          freeSlots[cursor] = byEmp;
+        }
+        cursor = addDaysISO(cursor, 1);
+      }
     }
 
     res.json({
@@ -1819,7 +1886,10 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
       report,
       candidatesTotal: candidates.length,
       service: { id: svc.id, title: svc.title, duration: dur },
-      employees: empList
+      employees: empList,
+      freeSlots,
+      slotStepMinutes: step,
+      requestedCount: count
     });
   } catch (err) {
     console.error('[ai-suggest-series] error', err);
@@ -2019,6 +2089,82 @@ app.post('/api/rezept/upload', requireAuthAI, async (req, res) => {
     }
     const parsed = ocrResult.parsed || {};
 
+    // Leitsymptomatik: das Modell liest die vier Kästchen einzeln
+    // ("leitsymptomatik_boxes"). Das ist die verlässlichere Quelle als der
+    // zusammengefasste Buchstaben-String, der oft leer blieb, obwohl Kästchen
+    // angekreuzt waren. String daraus ableiten, wenn er fehlt oder ärmer ist.
+    if (parsed.rezept) {
+      const boxes = parsed.rezept.leitsymptomatik_boxes;
+      if (boxes && typeof boxes === 'object') {
+        const letters = ['a', 'b', 'c', 'd'].filter(l => boxes[l] === true).join('');
+        const current = (parsed.rezept.leitsymptomatik || '').toLowerCase();
+        if (letters && letters.length >= current.length) {
+          parsed.rezept.leitsymptomatik = letters;
+        }
+      }
+      // Freitext zur patientenindividuellen Leitsymptomatik impliziert Kästchen "d"
+      if (parsed.rezept.pat_leitsymptomatik && !(parsed.rezept.leitsymptomatik || '').includes('d')) {
+        parsed.rezept.leitsymptomatik = (parsed.rezept.leitsymptomatik || '') + 'd';
+      }
+    }
+
+    // Katalog-Zuordnung: OCR-Freitext ("2x wtl.", "KG am Gerät") auf die Werte
+    // abbilden, die unsere Auswahlfelder / die Abrechnung tatsächlich kennen.
+    // Fehlschlag ist nicht fatal — die Maske fällt dann auf den Rohtext zurück.
+    let normalized = null;
+    if (parsed.rezept) {
+      const normT0 = Date.now();
+      let normMeta = {}, normStatus = 'ok', normError = null;
+      try {
+        const normResult = await rezeptNormalizeRun({
+          rezept: parsed.rezept,
+          heilmittel_positionen: PHYSIO_POSITIONS.map(p => ({ x: p.x, label: p.label, kat: p.kat })),
+        });
+        normalized = normResult.normalized;
+        normMeta = normResult._meta || {};
+      } catch (e) {
+        normStatus = 'error';
+        normError = e.message || String(e);
+        console.warn('[rezept/upload] Katalog-Zuordnung fehlgeschlagen', normError);
+      } finally {
+        if (!normMeta.skipped) {
+          aiLogCall({
+            tenantId,
+            userId: req.auth?.userId,
+            task: 'rezept-normalize',
+            model: normMeta.model,
+            deployment: normMeta.deployment,
+            usage: normMeta.usage || {},
+            latencyMs: normMeta.latency_ms ?? (Date.now() - normT0),
+            status: normStatus,
+            error: normError,
+            dryRun: !!normMeta.dry_run,
+            requestHash: aiHashRequest({ task: 'rezept-normalize', rezept: parsed.rezept }),
+          });
+        }
+      }
+
+      // Katalogwerte in parsed übernehmen, Rohtext für die Anzeige behalten.
+      if (normalized) {
+        const apply = (field, target) => {
+          const n = normalized[field];
+          if (n && n.value) {
+            parsed.rezept[target + '_raw'] = parsed.rezept[target] ?? null;
+            parsed.rezept[target] = n.value;
+          }
+        };
+        apply('frequenz', 'frequenz');
+        apply('diagnosegruppe', 'diagnosegruppe');
+        if (normalized.heilmittel?.value) {
+          parsed.rezept.heilmittel_raw = parsed.rezept.heilmittel ?? null;
+          parsed.rezept.heilmittel_position = normalized.heilmittel.value;
+        }
+        if (normalized.ergaenzendes_heilmittel?.value) {
+          parsed.rezept.ergaenzendes_heilmittel_position = normalized.ergaenzendes_heilmittel.value;
+        }
+      }
+    }
+
     // Map OCR output → validator input shape
     const rezeptForValidator = {
       icd10: parsed.rezept?.icd10,
@@ -2043,6 +2189,7 @@ app.post('/api/rezept/upload', requireAuthAI, async (req, res) => {
       success: true,
       storage_path: storagePath,
       parsed,
+      normalized,
       validation,
       ocr_confidence: ocrResult.ocr_confidence,
       dry_run: !!ocrResult._meta?.dry_run
@@ -2225,10 +2372,16 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         status: 'confirmed',
         rezept_typ: rezeptTyp,
         icd10: rezept.icd10 || null,
+        icd10_2: rezept.icd10_2 || null,
+        diagnose_freitext: rezept.diagnose_text || null,
         diagnosegruppe: rezept.diagnosegruppe || null,
         leitsymptomatik: rezept.leitsymptomatik || null,
         pat_leitsymptomatik: rezept.pat_leitsymptomatik || null,
+        hinweise: rezept.therapieziele || null,
+        therapie_bereich: rezept.therapiebereich || null,
         heilmittel: rezept.heilmittel || null,
+        ergaenzendes_heilmittel: rezept.ergaenzendes_heilmittel || null,
+        ergaenzend_einheiten: rezept.anzahl_ergaenzend ?? null,
         heilmittel_feld_text: rezept.heilmittel_feld_text || null,
         heilmittel_position: heilmittelPosition,
         anzahl_einheiten: rezept.anzahl_einheiten ?? null,
@@ -2239,6 +2392,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         hausbesuch: !!rezept.hausbesuch,
         is_blanko: !!rezept.is_blanko,
         is_lhb_bvb: !!rezept.is_lhb_bvb,
+        zuzahlung_befreit: !!rezept.zuzahlung_befreit,
         bericht_angefordert: !!rezept.bericht_angefordert,
         bericht_status: rezept.bericht_status || 'offen',
         unterschrift_vorhanden: rezept.unterschrift_vorhanden ?? null,

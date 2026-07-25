@@ -23,6 +23,16 @@ WICHTIG:
 - ICD-10 Code muss dem Schema [A-Z][0-9]{2}(\\.[0-9]{1,2})? entsprechen (z. B. "M54.5", "M75.10").
 - Diagnosegruppe: zwei Buchstaben oder Buchstabe+Ziffer (z. B. "WS2", "EX", "ZN1", "SO4").
 - "heilmittel_feld_text" = exakt der Originaltext aus dem Heilmittel-Feld (mehrzeilig OK).
+- "diagnose_text" = der ausgeschriebene Diagnose-Freitext neben/unter dem ICD-10-Code (z. B. "Lumbago", "Z. n. OP"), sonst null.
+- "icd10_2" = ein ZWEITER ICD-10-Code, falls das Formular zwei Diagnosen enthält, sonst null (gleiches Schema wie icd10).
+- LEITSYMPTOMATIK — WICHTIG, wird oft übersehen. Rechts neben dem Feld "Diagnosegruppe" steht die Überschrift "Leitsymptomatik gemäß Heilmittelkatalog" mit DREI kleinen quadratischen Ankreuzfeldern, beschriftet a, b, c. Rechts daneben steht "patientenindividuelle Leitsymptomatik" mit EINEM weiteren Ankreuzfeld (entspricht "d"). Prüfe JEDES dieser vier Kästchen EINZELN und gib das Ergebnis in "leitsymptomatik_boxes" als Objekt mit vier Booleans zurück. Ein Kästchen gilt als angekreuzt bei Kreuz, Haken, Ausmalung oder jedem anderen handschriftlichen Eintrag darin. Ein leeres Kästchen = false. Kannst du den Bereich gar nicht sehen (abgeschnitten/unscharf), setze alle vier auf null.
+- "leitsymptomatik" = dieselbe Information nochmal als zusammenhängender Kleinbuchstaben-String der angekreuzten Kästchen, z. B. "a", "ac", "abc", "ad". Wenn KEINES angekreuzt ist, null.
+- "pat_leitsymptomatik" = der Freitext der "patientenindividuellen Leitsymptomatik" (Zeile unterhalb, Feld "d"), sonst null. Wenn hier Text steht, ist Kästchen "d" faktisch gesetzt.
+- FREQUENZ — ebenfalls oft übersehen. Das Feld "Therapiefrequenz" steht meist im unteren Formularbereich neben "Hausbesuch" bzw. rechts von der Heilmittel-Tabelle. Übernimm den Text WÖRTLICH so, wie der Arzt ihn geschrieben hat, ohne ihn umzuformulieren — z. B. "2x", "3 x wöchentlich", "1-2 / Woche", "2-3x pro Woche", "täglich", "1x alle 14 Tage". Steht keine eigene Frequenz-Angabe im Feld, suche sie im Heilmittel-Feldtext (z. B. "KG 6x, 2x wtl.") und übernimm auch dort den Originalwortlaut. Nur wenn nirgends eine Frequenz steht: null.
+- "therapieziele" = Freitext aus dem Feld "ggf. Therapieziele / weitere med. Befunde und Hinweise", sonst null.
+- "ergaenzendes_heilmittel" / "anzahl_ergaenzend" = zweite Heilmittel-Zeile ("Ergänzendes Heilmittel") samt Behandlungseinheiten, sonst null.
+- "zuzahlung_befreit" = true wenn "Zuzahlungsfrei" angekreuzt ist (oben in der Versicherten-Box), sonst false.
+- "therapiebereich" = angekreuzter Therapiebereich oben rechts: "physio", "podo", "stimme", "ergo" oder "ernaehrung"; null wenn nicht erkennbar.
 - "unterschrift_vorhanden": Prüfe IMMER das Unterschriftsfeld (unterer Bereich, meist bei "Datum, Unterschrift und Stempel des Arztes"). true = eine handschriftliche Arzt-Unterschrift (Schriftzug/Kürzel, oft mit Stempel) ist sichtbar. false = das Feld ist eindeutig leer. null = Feld abgeschnitten, verdeckt oder Bildqualität zu schlecht, um sicher zu urteilen. Ein Stempel ALLEIN ohne Schriftzug zählt NICHT als Unterschrift.
 - "signature_confidence" = "high" wenn klar erkennbar, "medium" wenn wahrscheinlich, "low" wenn unsicher; null wenn "unterschrift_vorhanden" null ist.
 - "ocr_confidence" zwischen 0 und 1: deine Selbsteinschätzung der Bildqualität / Lesbarkeit.
@@ -47,11 +57,23 @@ Schema:
   },
   "rezept": {
     "icd10": string|null,
+    "icd10_2": string|null,                // zweiter ICD-10-Code, falls vorhanden
+    "diagnose_text": string|null,          // ausgeschriebener Diagnose-Freitext
     "diagnosegruppe": string|null,
+    "leitsymptomatik": string|null,        // angekreuzte Buchstaben, z. B. "a", "ac", "abc"
+    "leitsymptomatik_boxes": {             // jedes Kästchen einzeln geprüft; null = Bereich nicht lesbar
+      "a": boolean|null, "b": boolean|null, "c": boolean|null, "d": boolean|null
+    },
+    "pat_leitsymptomatik": string|null,    // Freitext patientenindividuelle Leitsymptomatik (Feld "d")
     "heilmittel": string|null,             // Hauptheilmittel, z. B. "KG", "MT", "MLD"
     "heilmittel_feld_text": string|null,
     "anzahl_einheiten": integer|null,
+    "ergaenzendes_heilmittel": string|null,
+    "anzahl_ergaenzend": integer|null,
     "frequenz": string|null,               // z. B. "2x pro Woche"
+    "therapieziele": string|null,          // Freitext Therapieziele / weitere Hinweise
+    "therapiebereich": "physio"|"podo"|"stimme"|"ergo"|"ernaehrung"|null,
+    "zuzahlung_befreit": boolean,
     "behandlungsbeginn": "YYYY-MM-DD"|null,
     "is_dringend": boolean,
     "hausbesuch": boolean,
@@ -84,11 +106,21 @@ function mockResponse() {
     },
     rezept: {
       icd10: 'M54.5',
+      icd10_2: null,
+      diagnose_text: 'Lumbago mit Ischialgie',
       diagnosegruppe: 'WS2',
+      leitsymptomatik: 'ab',
+      leitsymptomatik_boxes: { a: true, b: true, c: false, d: false },
+      pat_leitsymptomatik: null,
       heilmittel: 'KG',
       heilmittel_feld_text: 'Krankengymnastik (KG), 6 Einheiten, 2x pro Woche',
       anzahl_einheiten: 6,
+      ergaenzendes_heilmittel: null,
+      anzahl_ergaenzend: null,
       frequenz: '2x pro Woche',
+      therapieziele: 'Schmerzreduktion, Verbesserung der Beweglichkeit',
+      therapiebereich: 'physio',
+      zuzahlung_befreit: false,
       behandlungsbeginn: null,
       is_dringend: false,
       hausbesuch: false,
