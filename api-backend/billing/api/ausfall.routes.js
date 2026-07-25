@@ -30,7 +30,7 @@ async function resolveAuth(req, res) {
 
   const { data: profile, error: pErr } = await supabase
     .from('profiles')
-    .select('id, role, owner_id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text')
+    .select('id, role, owner_id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis')
     .eq('id', u.user.id)
     .single();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
@@ -47,7 +47,7 @@ async function loadPraxisProfile(profile, tenantId) {
   if (profile.role === 'employee' && profile.owner_id) {
     const { data: ownerProf } = await supabase
       .from('profiles')
-      .select('id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text')
+      .select('id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis')
       .eq('id', tenantId)
       .single();
     if (ownerProf) return ownerProf;
@@ -93,7 +93,7 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient, v
     },
     amount_eur: Number(row.amount_eur),
     bankverbindung,
-    hinweisText: business?.ausfall_hinweis || null,
+    hinweisText: praxisProfile?.ausfall_hinweis || business?.ausfall_hinweis || null,
     logoUrl: praxisProfile.praxis_logo_url || '',
     invoiceFooterText: praxisProfile.invoice_footer_text || '',
     vorlage: vorlage || {},

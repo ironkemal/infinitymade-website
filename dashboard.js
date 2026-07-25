@@ -513,6 +513,26 @@ let bkActionBookingCache = null;
 let bkActionTimer = null;
 let pdCurrentLeadId = null;
 
+// Ausfallgebühr-Einstellung des Owners (aus profiles.ausfall_*). Owner-Level,
+// nicht pro Standort — gilt für alle Termine. Von loadAusfallConfig() befüllt.
+let ausfallConfig = {
+  ausfall_enabled: false, ausfall_mode: 'fixed', ausfall_amount_eur: null,
+  ausfall_percent: null, ausfall_cutoff_hours: 24, ausfall_hinweis: null,
+};
+
+async function loadAusfallConfig() {
+  try {
+    const ownerId = getOwnerId();
+    if (!ownerId) return;
+    const { data } = await supabase.from('profiles')
+      .select('ausfall_enabled, ausfall_mode, ausfall_amount_eur, ausfall_percent, ausfall_cutoff_hours, ausfall_hinweis')
+      .eq('id', ownerId).maybeSingle();
+    if (data) ausfallConfig = { ...ausfallConfig, ...data };
+  } catch (e) {
+    console.warn('[loadAusfallConfig]', e);
+  }
+}
+
 
 function t(key) { return (T[currentLang] || T.de)[key] || key; }
 function escapeHtml(str) {
@@ -4574,22 +4594,21 @@ async function handleDirectAusfallrechnung() {
 // Ausfallgebühr — private no-show / late-cancel fee invoice
 // ============================================================
 
-function ausfallBizForBooking(booking) {
-  const list = myBusinesses || [];
-  const biz = list.find(b => b.id === booking.business_id)
-    || list.find(b => b.is_default)
-    || list[0];
-  return (biz && biz.ausfall_enabled) ? biz : null;
+// Ausfallgebühr ist eine Owner-Einstellung (ausfallConfig). Gibt die Config
+// zurück, wenn aktiv — sonst null. booking-Parameter bleibt für Signatur-
+// Kompatibilität der Aufrufer erhalten, wird aber nicht mehr benötigt.
+function ausfallBizForBooking(_booking) {
+  return ausfallConfig?.ausfall_enabled ? ausfallConfig : null;
 }
 
-function ausfallSuggestedAmount(biz, booking) {
-  if (biz.ausfall_mode === 'percent' && biz.ausfall_percent > 0) {
+function ausfallSuggestedAmount(cfg, booking) {
+  if (cfg.ausfall_mode === 'percent' && cfg.ausfall_percent > 0) {
     const srv = (ownerServices || []).find(s => s.id === booking.service_id);
     const price = srv ? parseFloat(String(srv.price || '').replace(',', '.')) : NaN;
-    if (price > 0) return +(price * biz.ausfall_percent / 100).toFixed(2);
+    if (price > 0) return +(price * cfg.ausfall_percent / 100).toFixed(2);
     return null; // percent mode but no service price — manual entry
   }
-  return biz.ausfall_amount_eur > 0 ? Number(biz.ausfall_amount_eur) : null;
+  return cfg.ausfall_amount_eur > 0 ? Number(cfg.ausfall_amount_eur) : null;
 }
 
 // Shows the offer modal if the business has Ausfallgebühr enabled.
@@ -16616,13 +16635,11 @@ async function bootBusinessSwitcher() {
   wireBizSwitcherEvents();
   renderBusinessesSection();
   renderDataSharingSection();
-  renderAusfallSettings();
 }
 
-// ===== Settings > Ausfallgebühr (No-Show-Gebühr, pro Owner) =====
-// Ausfallgebühr wird in businesses.ausfall_* gespeichert. Diese Sektion
-// verwaltet EINE Gebühr für alle Standorte des Owners (schreibt in alle
-// businesses-Zeilen), damit die No-Show-/Absage-Rechnung überall greift.
+// ===== Settings > Ausfallgebühr (No-Show-Gebühr, Owner-Einstellung) =====
+// Gespeichert in profiles.ausfall_* (Owner-Level, nicht pro Standort), damit
+// auch Einzelpraxen ohne businesses-Zeile die Gebühr konfigurieren können.
 function renderAusfallSettings() {
   const section = document.getElementById('settingsAusfallSection');
   if (!section) return;
@@ -16631,8 +16648,8 @@ function renderAusfallSettings() {
   section.hidden = !show;
   if (!show) return;
 
-  // Werte aus dem Standard-Standort (oder erstem) lesen
-  const src = (myBusinesses || []).find(b => b.is_default) || (myBusinesses || [])[0] || {};
+  // Werte aus der Owner-Config lesen
+  const src = ausfallConfig || {};
 
   const enabled = document.getElementById('setAusfallEnabled');
   const fields  = document.getElementById('setAusfallFields');
@@ -16689,15 +16706,16 @@ async function saveAusfallSettings() {
 
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
   try {
-    // Auf alle Standorte des Owners anwenden
+    // Owner-Einstellung in profiles speichern
     const { error } = await supabase
-      .from('businesses')
+      .from('profiles')
       .update(patch)
-      .eq('owner_id', currentSession.user.id);
+      .eq('id', currentSession.user.id);
     if (error) throw error;
 
     // Lokalen Cache aktualisieren, damit die No-Show-Prüfung sofort greift
-    (myBusinesses || []).forEach(b => Object.assign(b, patch));
+    ausfallConfig = { ...ausfallConfig, ...patch };
+    if (currentProfile) Object.assign(currentProfile, patch);
 
     showToast('Ausfallgebühr gespeichert ✓');
   } catch (e) {
@@ -17124,6 +17142,11 @@ async function init() {
     console.log('[init] dataSharing ok');
     await bootBusinessSwitcher();
     console.log('[init] bizSwitcher ok');
+    // Ausfallgebühr-Config (Owner-Level) laden + Einstellungsbereich rendern.
+    // Unabhängig vom bizSwitcher, da Einzelpraxen keine businesses-Zeile haben.
+    await loadAusfallConfig();
+    renderAusfallSettings();
+    console.log('[init] ausfallConfig ok');
     await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();
@@ -17311,113 +17334,95 @@ function parseFrequenzWoche(freq) {
   return n ? parseInt(n[1], 10) : null;
 }
 
-function matchServiceForHeilmittel(heilmittelText, positionCode) {
-  if (!Array.isArray(ownerServices)) return null;
+// Heilmittel-Position (X-Code) oder 5-stelliger Abrechnungscode → einheitliches X-Format.
+// "20507" → "X0507", "X0507" → "X0507".
+function normalizeHmPositionCode(code) {
+  if (!code) return '';
+  const c = String(code).trim().toUpperCase();
+  if (/^X\d{4}$/.test(c)) return c;
+  if (/^\d{5}$/.test(c)) return 'X' + c.slice(1);
+  return c;
+}
 
-  const hm = (heilmittelText || '').trim().toUpperCase();
-  const pc = (positionCode || '').trim().toUpperCase();
+// Wortweise Suche statt substring: `includes('us')` traf früher auch "Hausbesuch",
+// `includes('kg')` jede Leistung mit "kg" irgendwo im Titel.
+function hmHasToken(text, token) {
+  if (!text || !token) return false;
+  const esc = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // \b greift bei Umlauten nicht zuverlässig → eigene Grenzen über Nicht-Buchstaben
+  return new RegExp(`(^|[^a-zäöüß])${esc}([^a-zäöüß]|$)`, 'i').test(text);
+}
 
-  // Helper to normalize position code or service code (e.g., 20507 -> X0507)
-  const normalizePositionCode = (code) => {
-    if (!code) return '';
-    let c = String(code).trim().toUpperCase();
-    if (c.length === 5 && /^\d/.test(c)) {
-      c = 'X' + c.slice(1);
-    }
-    return c;
-  };
+// Klinische Synonymgruppen. `keys` = was auf dem Rezept stehen kann,
+// `title` = woran wir den eigenen Leistungstitel erkennen.
+// Kurzformen (KG, MT, MLD…) sind bewusst nur als eigenständiges Wort gültig.
+const HM_ALIAS_GROUPS = [
+  { keys: ['kgg', 'gerät', 'geraet', 'gerätegestützt', 'kraft', 'kräftigung'], title: ['gerät', 'geraet', 'kgg', 'kraft', 'kräftigung', 'training'] },
+  { keys: ['mld', 'lymphdrainage', 'lymph'],                                   title: ['lymph', 'mld'] },
+  { keys: ['mt', 'manuelle therapie', 'manualtherapie'],                        title: ['manuelle', 'manualtherapie', 'mt'] },
+  { keys: ['kmt', 'bgm', 'massage', 'bindegewebsmassage'],                      title: ['massage', 'kmt', 'bgm', 'bindegewebe'] },
+  { keys: ['elektrotherapie', 'elektro', 'et'],                                 title: ['elektro'] },
+  { keys: ['ultraschall', 'us'],                                                title: ['ultraschall'] },
+  { keys: ['wärmetherapie', 'fango', 'heißluft', 'warm'],                       title: ['wärme', 'waerme', 'fango', 'heißluft', 'heissluft'] },
+  { keys: ['kältetherapie', 'kryo', 'kalt'],                                    title: ['kälte', 'kaelte', 'kryo'] },
+  { keys: ['kg-zns', 'kg zns', 'bobath', 'pnf', 'vojta'],                       title: ['zns', 'bobath', 'pnf', 'vojta', 'neuro'] },
+  { keys: ['kg-muko', 'atemtherapie', 'muko'],                                  title: ['atem', 'muko'] },
+  // Bewusst zuletzt: allgemeinstes Bündel, damit KGG/KG-ZNS vorher greifen
+  { keys: ['kg', 'krankengymnastik', 'physiotherapie', 'physio'],               title: ['krankengymnastik', 'physiotherapie', 'physio', 'kg'] },
+];
 
-  // 1. Match by position template or code (e.g. "X0507" or "20507") against the service code (s.code)
-  const normPC = normalizePositionCode(pc);
+// Ordnet den Heilmittel-Text/-Code des Rezepts einer eigenen Dienstleistung zu.
+// Gibt { service, score, reason } zurück oder null, wenn nichts sicher genug passt.
+// Reihenfolge: Positionsnummer (hart) → Kürzel-Code → Titel → Synonymgruppe.
+function scoreServiceForHeilmittel(heilmittelText, positionCode, services) {
+  const list = Array.isArray(services) ? services : (Array.isArray(ownerServices) ? ownerServices : []);
+  if (!list.length) return null;
+
+  const hmRaw = (heilmittelText || '').trim();
+  const hm = hmRaw.toLowerCase();
+  const normPC = normalizeHmPositionCode(positionCode);
+
+  // 1) Positionsnummer — der einzige wirklich eindeutige Schlüssel
   if (normPC) {
-    const hit = ownerServices.find(s => {
-      const normSC = normalizePositionCode(s.code);
-      return normSC && normSC === normPC;
+    const hit = list.find(s => {
+      const a = normalizeHmPositionCode(s.gkv_position_nr);
+      const b = normalizeHmPositionCode(s.code);
+      return (a && a === normPC) || (b && b === normPC);
     });
-    if (hit) return hit;
+    if (hit) return { service: hit, score: 1, reason: 'Positionsnummer ' + normPC };
   }
 
-  if (hm) {
-    // 2. Match by exact remedy name (hm) against service code
-    let hit = ownerServices.find(s => (s.code || '').trim().toUpperCase() === hm);
-    if (hit) return hit;
+  if (!hm) return null;
 
-    // 3. Match by bidirectional title substring (title.includes(hm) || hm.includes(title))
-    hit = ownerServices.find(s => {
-      const title = (s.title || '').trim().toUpperCase();
-      if (!title) return false;
-      return title.includes(hm) || hm.includes(title);
+  // 2) Kürzel des Rezepts == hinterlegter Leistungs-Code ("KG" == "KG")
+  const hitCode = list.find(s => (s.code || '').trim().toLowerCase() === hm);
+  if (hitCode) return { service: hitCode, score: 0.95, reason: 'Code ' + (hitCode.code || '').toUpperCase() };
+
+  // 3) Titel — identisch, oder Rezepttext als ganzes Wort im Titel
+  const hitTitleExact = list.find(s => (s.title || '').trim().toLowerCase() === hm);
+  if (hitTitleExact) return { service: hitTitleExact, score: 0.9, reason: 'Titel identisch' };
+
+  if (hmRaw.length >= 4) {
+    const hitTitleWord = list.find(s => hmHasToken((s.title || '').toLowerCase(), hm));
+    if (hitTitleWord) return { service: hitTitleWord, score: 0.75, reason: 'Titel enthält „' + hmRaw + '“' };
+  }
+
+  // 4) Synonymgruppen — beide Seiten wortweise
+  for (const grp of HM_ALIAS_GROUPS) {
+    if (!grp.keys.some(k => hmHasToken(hm, k))) continue;
+    const hit = list.find(s => {
+      const t = (s.title || '').toLowerCase();
+      return grp.title.some(k => hmHasToken(t, k));
     });
-    if (hit) return hit;
-
-    // 4. Match by advanced synonym / clinical alias groups
-    const hmLower = hm.toLowerCase();
-
-    // 4.1. KG am Gerät / Kräftigungstraining
-    if (hmLower.includes('gerä') || hmLower.includes('geraet') || hmLower.includes('kgg') || hmLower.includes('kraft') || hmLower.includes('kräft')) {
-      const aliasHit = ownerServices.find(s => {
-        const t = (s.title || '').toLowerCase();
-        return t.includes('gerä') || t.includes('geraet') || t.includes('kraft') || t.includes('kräft') || t.includes('training');
-      });
-      if (aliasHit) return aliasHit;
-    }
-
-    // 4.2. Manuelle Therapie
-    if (hmLower.includes('manuelle') || hmLower.includes('mt')) {
-      const aliasHit = ownerServices.find(s => {
-        const t = (s.title || '').toLowerCase();
-        return t.includes('manuelle') || t.includes('mt');
-      });
-      if (aliasHit) return aliasHit;
-    }
-
-    // 4.3. Lymphdrainage
-    if (hmLower.includes('lymph') || hmLower.includes('mld')) {
-      const aliasHit = ownerServices.find(s => {
-        const t = (s.title || '').toLowerCase();
-        return t.includes('lymph') || t.includes('mld');
-      });
-      if (aliasHit) return aliasHit;
-    }
-
-    // 4.4. Massage / KMT / Bindegewebe
-    if (hmLower.includes('massage') || hmLower.includes('kmt') || hmLower.includes('klassische massage') || hmLower.includes('bindegewebe') || hmLower.includes('bgm')) {
-      const aliasHit = ownerServices.find(s => {
-        const t = (s.title || '').toLowerCase();
-        return t.includes('massage') || t.includes('kmt') || t.includes('bindegewebe');
-      });
-      if (aliasHit) return aliasHit;
-    }
-
-    // 4.5. Elektrotherapie
-    if (hmLower.includes('elektro')) {
-      const aliasHit = ownerServices.find(s => {
-        const t = (s.title || '').toLowerCase();
-        return t.includes('elektro');
-      });
-      if (aliasHit) return aliasHit;
-    }
-
-    // 4.6. Ultraschall
-    if (hmLower.includes('ultraschall') || hmLower.includes('us')) {
-      const aliasHit = ownerServices.find(s => {
-        const t = (s.title || '').toLowerCase();
-        return t.includes('ultraschall') || t.includes('us');
-      });
-      if (aliasHit) return aliasHit;
-    }
-
-    // 4.7. General Krankengymnastik / Physiotherapie (KG / PT)
-    if (hmLower.includes('krankengymnastik') || hmLower.includes('kg') || hmLower.includes('physio') || hmLower.includes('pt')) {
-      const aliasHit = ownerServices.find(s => {
-        const t = (s.title || '').toLowerCase();
-        return t.includes('krankengymnastik') || t.includes('physio') || t.includes('pt') || t.includes('kg');
-      });
-      if (aliasHit) return aliasHit;
-    }
+    if (hit) return { service: hit, score: 0.7, reason: 'Zuordnung über „' + grp.keys[0].toUpperCase() + '“' };
   }
 
   return null;
+}
+
+// Rückwärtskompatible Hülle — liefert wie bisher nur das Service-Objekt.
+function matchServiceForHeilmittel(heilmittelText, positionCode) {
+  return scoreServiceForHeilmittel(heilmittelText, positionCode)?.service || null;
 }
 
 async function openBookingFromRxPreset(preset) {
@@ -17450,8 +17455,10 @@ async function openBookingFromRxPreset(preset) {
     }
     if (preset.hausbesuch) document.getElementById('bkHausbesuch').checked = true;
 
-    // Service mapping
-    const srv = matchServiceForHeilmittel(preset.heilmittel, preset.heilmittel_position);
+    // Service mapping — im Bestätigungs-Modal getroffene Zuordnung hat Vorrang,
+    // erst wenn die fehlt (Altdaten / anderer Einstieg) wird neu gematcht.
+    const srv = (preset.service_id && (ownerServices || []).find(s => s.id === preset.service_id))
+      || matchServiceForHeilmittel(preset.heilmittel, preset.heilmittel_position);
     if (srv) {
       // Automatically query Supabase's employee_services table for that service
       const { data: assignments } = await supabase
@@ -17491,7 +17498,8 @@ async function openBookingFromRxPreset(preset) {
         srvSel.dispatchEvent(new Event('change'));
       }
     } else if (preset.heilmittel) {
-      showToast(`Keine Dienstleistung für "${preset.heilmittel}" gefunden — bitte manuell auswählen.`, 'info');
+      showToast(`Keine Dienstleistung für „${preset.heilmittel}" gefunden — bitte oben manuell auswählen oder unter Dienstleistungen anlegen.`, 'error');
+      document.getElementById('bkService')?.focus();
     }
 
     // Series
@@ -17970,6 +17978,8 @@ async function submitConfirm() {
       frequenz: parsedEdited.rezept.frequenz,
       heilmittel: parsedEdited.rezept.heilmittel,
       heilmittel_position: parsedEdited.rezept.heilmittel_position,
+      // Im Bestätigungs-Modal zugeordnete Leistung — das Buchungsmodal rät nicht neu
+      service_id: document.getElementById('rxcService')?.value || null,
       hausbesuch: parsedEdited.rezept.hausbesuch,
       is_dringend: parsedEdited.rezept.is_dringend,
       is_blanko: parsedEdited.rezept.is_blanko,
@@ -18116,6 +18126,10 @@ function populateHmDatalist(positions) {
 }
 
 async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
+  // Auswahl aus einem vorherigen Rezept darf nicht ins nächste durchschlagen
+  const srvSelReset = document.getElementById('rxcService');
+  if (srvSelReset) { srvSelReset.dataset.userPicked = ''; srvSelReset.value = ''; }
+
   const [kkList, positions] = await Promise.all([loadKkList(), loadPhysioPositions()]);
   populateKkDatalist(kkList);
   populateHmDatalist(positions);
@@ -18183,7 +18197,69 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText) {
       hmPosInput.value = '';
       if (hmStatus) { hmStatus.style.color = '#b45309'; hmStatus.textContent = ' ⚠ keine Position zugeordnet'; }
     }
+    syncRxcServiceMatch();
   };
+
+  // Leistungs-Zuordnung (Praxura-intern) initial füllen
+  populateRxcServiceSelect();
+  syncRxcServiceMatch();
+  const srvSel = document.getElementById('rxcService');
+  if (srvSel) {
+    // Manuelle Auswahl gewinnt und wird nicht mehr überschrieben
+    srvSel.onchange = () => { srvSel.dataset.userPicked = srvSel.value ? '1' : ''; renderRxcServiceStatus(null, true); };
+  }
+}
+
+// --- Rezept-Bestätigung: Heilmittel → eigene Dienstleistung ------------------
+
+function populateRxcServiceSelect() {
+  const sel = document.getElementById('rxcService');
+  if (!sel) return;
+  const list = (ownerServices || []).filter(s => !s.is_internal);
+  sel.innerHTML = '<option value="">— keine Zuordnung —</option>' + list.map(s => {
+    const code = s.gkv_position_nr || s.code;
+    const dur = s.duration_minutes ? ` · ${s.duration_minutes} Min` : '';
+    return `<option value="${s.id}">${escapeHtml(s.title || 'Ohne Titel')}${code ? ' (' + escapeHtml(code) + ')' : ''}${dur}</option>`;
+  }).join('');
+}
+
+// Status-Zeile + Hinweis unter dem Select rendern.
+function renderRxcServiceStatus(match, manual) {
+  const status = document.getElementById('rxcSrvStatus');
+  const hint = document.getElementById('rxcSrvHint');
+  if (!status || !hint) return;
+  if (manual) {
+    const sel = document.getElementById('rxcService');
+    status.style.color = sel && sel.value ? '#15803d' : '#b45309';
+    status.textContent = sel && sel.value ? ' ✓ manuell gewählt' : ' ⚠ keine Leistung gewählt';
+    hint.style.display = 'none';
+    return;
+  }
+  if (match) {
+    status.style.color = '#15803d';
+    status.textContent = ` ✓ automatisch zugeordnet (${match.reason})`;
+    hint.style.display = 'none';
+  } else {
+    status.style.color = '#b45309';
+    status.textContent = ' ⚠ keine passende Leistung gefunden';
+    hint.style.display = 'block';
+    const hm = (document.getElementById('rxcHm')?.value || '').trim();
+    hint.textContent = `Für „${hm || 'das Heilmittel'}“ gibt es keine passende Dienstleistung in Ihrem Katalog. `
+      + 'Bitte oben eine Leistung wählen — oder unter Kalender › Dienstleistungen eine neue anlegen. '
+      + 'Ohne Zuordnung können keine Termine geplant werden.';
+  }
+}
+
+// Heilmittel/Position → Leistung neu zuordnen. Respektiert manuelle Auswahl.
+function syncRxcServiceMatch() {
+  const sel = document.getElementById('rxcService');
+  if (!sel) return;
+  if (sel.dataset.userPicked === '1') { renderRxcServiceStatus(null, true); return; }
+  const hm = document.getElementById('rxcHm')?.value || '';
+  const pos = document.getElementById('rxcHmPosition')?.value || '';
+  const match = scoreServiceForHeilmittel(hm, pos);
+  sel.value = match ? match.service.id : '';
+  renderRxcServiceStatus(match, false);
 }
 
 // Lazy-load PHYSIO_POSITIONS from backend on first Abrechnung page open.
