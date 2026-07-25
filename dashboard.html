@@ -3364,9 +3364,43 @@
     .m13-sheet .m13-v.m13-kknum{ width:58px; border-left:1px solid #9aa8bd; padding-left:6px; }
     .m13-sheet .m13-v:focus{ background:#eef4ff; border-radius:3px; }
     .m13-sheet .m13-v.m13-uline{ border-bottom:1.3px solid #3a4a63; }
-    .m13-sheet input[type=date].m13-v{ font-family:"Courier New",monospace; font-size:13px; letter-spacing:0; padding-left:0; padding-right:0; }
-    .m13-sheet input[type=date].m13-v::-webkit-calendar-picker-indicator{ margin-left:2px; padding:0; }
+    /* Der Bogen ist hellblaues "Papier" — Browser-Widgets müssen deshalb im
+       Light-Schema rendern. Ohne das zeichnet Chrome im dunklen Dashboard-Theme
+       Kalender-Icon und Datumstext fast weiß: auf #dbe6f2 unlesbar. */
+    .m13-sheet{ color-scheme: light; }
+    .m13-sheet input[type=date].m13-v{
+      font-family:"Courier New",monospace; font-size:13px; letter-spacing:0;
+      padding-left:0; padding-right:0;
+      /* Jahr wurde vom Picker-Icon überdeckt — Feld braucht Platz für TT.MM.JJJJ + Icon */
+      min-width:126px; box-sizing:border-box;
+    }
+    .m13-sheet input[type=date].m13-v.m13-sm{ font-size:13px; }
+    .m13-sheet input[type=date].m13-v::-webkit-calendar-picker-indicator{
+      margin-left:4px; padding:0; flex-shrink:0; opacity:.65; cursor:pointer;
+    }
+    .m13-sheet input[type=date].m13-v::-webkit-calendar-picker-indicator:hover{ opacity:1; }
     .m13-sheet .m13-v::placeholder{ color:#7f93ad; font-weight:400; }
+
+    /* Globale Formular-Widgets erben im Dark Theme helle Schrift auf fast
+       transparentem Grund (--bg-input ist rgba(...,0.05)). Im hellen Bogen
+       verschwindet die Schrift damit komplett. Innerhalb des Bogens deshalb
+       explizit auf helles Papier + dunkle Schrift zwingen. */
+    .m13-sheet .form-select,
+    .m13-sheet .form-input,
+    .m13-sheet .form-textarea,
+    .m13-sheet select,
+    .m13-sheet textarea:not(.m13-ta){
+      background:#f7fafd; color:#0f1f38; border:1px solid #9aa8bd;
+    }
+    /* .m13-ta ist bewusst randlos ("Papier"-Zeile) — nur Farbe absichern */
+    .m13-sheet .m13-ta{ color:#0f1f38; }
+    .m13-sheet .form-select option,
+    .m13-sheet select option{ background:#ffffff; color:#0f1f38; }
+    .m13-sheet .form-select:focus,
+    .m13-sheet .form-input:focus,
+    .m13-sheet .form-textarea:focus,
+    .m13-sheet select:focus,
+    .m13-sheet textarea:not(.m13-ta):focus{ border-color:#3a4a63; background:#ffffff; }
 
     .m13-cap{ font-size:11px; line-height:1.25; font-weight:600; color:#4a5568; letter-spacing:.1px; display:block; }
     .m13-lbl{ font-size:14px; font-weight:700; color:#182740; }
