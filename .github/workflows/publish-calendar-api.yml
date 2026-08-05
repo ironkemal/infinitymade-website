@@ -13,7 +13,33 @@ env:
   IMAGE_NAME: ${{ github.repository }}/calendar-api
 
 jobs:
+  # Gate: Watchtower zieht ein neues Image innerhalb von ~60 s in die Produktion.
+  # Zwischen Build und Live gibt es sonst keine Kontrolle — deshalb laufen die Tests
+  # VOR dem Publish. Schlägt ein Test fehl, wird kein Image veröffentlicht.
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'          # muss zu Dockerfile (node:22-alpine) passen
+
+      - name: Install dependencies
+        working-directory: ./api-backend
+        run: npm ci --no-audit --no-fund
+
+      - name: Run tests
+        working-directory: ./api-backend
+        run: npm test
+
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read

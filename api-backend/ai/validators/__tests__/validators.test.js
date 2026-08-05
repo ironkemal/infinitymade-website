@@ -48,18 +48,32 @@ test('standard: valid WS prescription with 6 sessions passes', () => {
   assert.equal(r.computed.verordnung_typ, 'standard');
 });
 
-test('standard: 10 sessions on WS triggers OVER_HOECHSTMENGE blocker', () => {
+// ── MDR-Hinweis (WARNUNG, kein Blocker) ─────────────────────────────────────
+// Höchstmengen- und Gültigkeitsprüfung sind bewusst `warnings`, NICHT `blockers`:
+// die Software trifft keine klinische Entscheidung, sie bereitet die Abrechnung vor.
+// Über einen ärztlich genehmigten Ausnahmefall (BVB/LHB) bzw. eine verspätet
+// begonnene Verordnung entscheidet die behandelnde Fachkraft — siehe Kommentare in
+// standardRules.js und den offenen Punkt "MDR-Schwelle" in
+// compliance/LEGAL_DECISIONS.md. Diese Tests dürfen NICHT auf `blockers` umgestellt
+// werden, ohne dass diese Rechtsfrage vorher entschieden ist.
+test('standard: 10 sessions on WS yields OVER_HOECHSTMENGE warning (not a blocker)', () => {
   const r = validateStandard({
     icd10: 'M54.5',
     diagnosegruppe: 'WS2',
     anzahl_einheiten: 10,
     ausstellungsdatum: '2026-05-10'
   });
-  assert.equal(r.ok, false);
-  assert.ok(r.blockers.find(b => b.code === 'OVER_HOECHSTMENGE'));
+  assert.ok(r.warnings.find(w => w.code === 'OVER_HOECHSTMENGE'), JSON.stringify(r.warnings));
+  assert.equal(r.blockers.find(b => b.code === 'OVER_HOECHSTMENGE'), undefined);
+  // Nur ein Hinweis → die Verordnung bleibt abrechenbar.
+  assert.equal(r.ok, true);
+  const w = r.warnings.find(w => w.code === 'OVER_HOECHSTMENGE');
+  assert.equal(w.requires_confirmation, true);
+  assert.equal(w.max_allowed, 6);
+  assert.equal(w.requested, 10);
 });
 
-test('standard: dringend prescription with begin > 14 days blocked', () => {
+test('standard: dringend prescription with begin > 14 days yields START_AFTER_DEADLINE warning', () => {
   const r = validateStandard({
     diagnosegruppe: 'EX',
     anzahl_einheiten: 6,
@@ -67,7 +81,10 @@ test('standard: dringend prescription with begin > 14 days blocked', () => {
     behandlungsbeginn: '2026-05-20',  // 19 days later
     is_dringend: true
   });
-  assert.ok(r.blockers.find(b => b.code === 'START_AFTER_DEADLINE'));
+  assert.ok(r.warnings.find(w => w.code === 'START_AFTER_DEADLINE'), JSON.stringify(r.warnings));
+  assert.equal(r.blockers.find(b => b.code === 'START_AFTER_DEADLINE'), undefined);
+  // 14-Tage-Frist bei "dringendem Behandlungsbedarf" → spätester Start 15.05.2026.
+  assert.equal(r.warnings.find(w => w.code === 'START_AFTER_DEADLINE').latest_allowed, '2026-05-15');
 });
 
 test('standard: non-dringend with begin in 25 days is OK (28 days limit)', () => {

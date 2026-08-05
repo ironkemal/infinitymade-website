@@ -8,6 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "start:cluster": "pm2-runtime start server.js -i 2 --node-args=\"--import ./instrument.js\"",
+    "test": "node --test",
     "katalog:sync": "node sync_heilmittel_katalog.js",
     "katalog:check": "node sync_heilmittel_katalog.js --check"
   },
