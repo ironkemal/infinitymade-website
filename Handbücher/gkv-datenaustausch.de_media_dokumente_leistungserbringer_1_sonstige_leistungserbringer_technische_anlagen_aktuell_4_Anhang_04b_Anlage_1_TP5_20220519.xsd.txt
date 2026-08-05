@@ -1,0 +1,232 @@
+5/18/26, 12:21 PM  gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhan…
+
+This XML file does not appear to have any style information associated with it. The document tree is shown
+below.
+
+      <!-- Schemaentwurf für eAkte - Schnittstelle zur Metadatenuebernahme
+      History
+      20210202 DR Aktualisierung Eingangskanal, Ordnungsbegriffe, Versionsnummer, Länge Bezeichner
+
+       -->
+      <xs:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns="http://www.w3.org/1999/xhtml"
+      xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
+
+         <xs:complexType name="t_eAkte_Dokumentdatensatz">
+            <xs:all maxOccurs="1" minOccurs="1">
+               <xs:element name="eAkte_Dokument" type="t_eAkte_Dokument"/>
+            </xs:all>
+            <!-- Versionierung V1 -->
+            <xs:attribute name="Versionsnummer" type="xs:positiveInteger" use="required"/>
+            <!-- Freitext -->
+            <xs:attribute fixed="AOK Systems GmbH" name="Beschreibung" type="xs:string" use="required"/>
+
+         </xs:complexType>
+         <!-- Typedefinition fuer ein einzelnes Dokument -->
+         <xs:complexType name="t_eAkte_Dokument">
+
+            <xs:sequence>
+               <xs:element maxOccurs="1" minOccurs="1" name="Dokumentklasse" type="t_Dokumentklasse"/>
+               <xs:element maxOccurs="1" minOccurs="1" name="Eingangskanal" type="t_Eingangskanal"/>
+               <xs:element maxOccurs="1" minOccurs="1" name="Erstellungszeitpunkt" type="xs:dateTime"/>
+               <xs:element maxOccurs="1" minOccurs="1" name="Zugriffschutz" type="t_Zugriffsschutz"/>
+               <xs:element maxOccurs="1" minOccurs="1" name="KassenInstitutionskennzeichen"
+               type="t_KassenInstitutionskennzeichen"/>
+               <xs:element maxOccurs="1" minOccurs="0" name="Reserve" type="t_Reservefelder"/>
+               <xs:element maxOccurs="1" minOccurs="1" name="Ordnungsbegriffe" type="t_Ordnungsbegriffe"/>
+               <xs:element maxOccurs="1" minOccurs="1" name="VariableNutzdaten" type="t_VariableNutzdaten"/>
+
+            </xs:sequence>
+            <xs:attribute name="Dokumentidentifikator" type="t_Dokumentidentifikator" use="required"/>
+            <xs:attribute name="Vorgangsidentifikator" type="t_Vorgangsidentifikator" use="required"/>
+            <xs:attribute name="Vorgangsumfang" type="t_Vorgangsumfang" use="required"/>
+         </xs:complexType>
+         <!-- Typdefinition fuer Identifikatoren,
+
+                      koennen noch um Muster, Feldlaengen etc. erweitert werden -->
+         <xs:simpleType name="t_Dokumentidentifikator">
+
+            <xs:restriction base="xs:string">
+               <xs:maxLength value="40"> </xs:maxLength>
+
+            </xs:restriction>
+         </xs:simpleType>
+         <xs:simpleType name="t_Vorgangsidentifikator">
+
+            <xs:restriction base="xs:string"/>
+         </xs:simpleType>
+         <xs:simpleType name="t_Vorgangsumfang">
+
+            <xs:restriction base="xs:positiveInteger">
+               <xs:minInclusive value="1"/>
+               <xs:totalDigits value="3"/>
+
+            </xs:restriction>
+         </xs:simpleType>
+         <!-- Typdefinition fuer Dokumentklasse,
+
+                      kann noch um Liste zulässiger Werte, Muster, Feldlaengen etc. erweitert werden -->
+         <xs:simpleType name="t_Dokumentklasse">
+
+            <xs:restriction base="xs:string">
+               <xs:maxLength value="255"/>
+
+            </xs:restriction>
+         </xs:simpleType>
+         <!-- Typdefinition fuer Eingangskanal,
+
+                      kann noch um Liste zulässiger Werte, Muster, Feldlaengen etc. erweitert werden -->
+         <xs:simpleType name="t_Eingangskanal">
+
+            <xs:restriction base="xs:positiveInteger">
+               <xs:totalDigits value="2"/>
+
+https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhang_04b_… 1/4
+5/18/26, 12:21 PM  gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhan…
+
+      <xs:minInclusive value="1"/>
+      <xs:pattern value="1"> </xs:pattern>
+      <xs:pattern value="2"> </xs:pattern>
+      <xs:pattern value="3"> </xs:pattern>
+      <xs:pattern value="4"> </xs:pattern>
+      <xs:pattern value="5"> </xs:pattern>
+      <xs:pattern value="6"> </xs:pattern>
+      <xs:pattern value="91"> </xs:pattern>
+      <xs:pattern value="92"> </xs:pattern>
+      <xs:pattern value="93"> </xs:pattern>
+      <xs:pattern value="94"> </xs:pattern>
+      <xs:pattern value="95"> </xs:pattern>
+   </xs:restriction>
+</xs:simpleType>
+<xs:simpleType name="t_Zugriffsschutz">
+   <xs:restriction base="xs:nonNegativeInteger">
+      <xs:totalDigits value="1"/>
+      <xs:minInclusive value="0"/>
+      <xs:pattern value="0"> </xs:pattern>
+      <xs:pattern value="1"> </xs:pattern>
+   </xs:restriction>
+</xs:simpleType>
+<xs:simpleType name="t_KassenInstitutionskennzeichen">
+   <xs:restriction base="xs:nonNegativeInteger">
+      <xs:totalDigits value="9"/>
+      <xs:minInclusive value="100000000"/>
+      <xs:maxInclusive value="199999999"/>
+   </xs:restriction>
+</xs:simpleType>
+<xs:complexType name="t_Reservefelder">
+   <xs:sequence maxOccurs="3" minOccurs="0">
+      <xs:element name="Reservefeld" type="t_Reservefeld"/>
+   </xs:sequence>
+</xs:complexType>
+<xs:complexType name="t_Reservefeld">
+   <xs:simpleContent>
+      <xs:extension base="xs:string">
+
+         <!-- Reservefeld hat ein frei belegbares Attribut Bezeichner -->
+         <xs:attribute name="Bezeichner" type="t_Bezeichner" use="required"/>
+      </xs:extension>
+   </xs:simpleContent>
+</xs:complexType>
+<xs:simpleType name="t_Bezeichner">
+   <xs:restriction base="xs:string">
+      <xs:maxLength value="50"/>
+   </xs:restriction>
+</xs:simpleType>
+<xs:complexType name="t_Ordnungsbegriffe">
+   <xs:sequence>
+      <xs:element maxOccurs="unbounded" minOccurs="1" name="Ordnungsbegriff"
+      type="t_Ordnungsbegriff"/>
+   </xs:sequence>
+</xs:complexType>
+<xs:complexType name="t_Ordnungsbegriff">
+   <xs:simpleContent>
+      <xs:extension base="xs:string">
+         <xs:attribute name="Ordnungsbegriffstyp" type="t_Ordnungsbegiffstyp" use="required"/>
+      </xs:extension>
+   </xs:simpleContent>
+</xs:complexType>
+<xs:simpleType name="t_Ordnungsbegiffstyp">
+   <xs:restriction base="xs:string">
+      <xs:pattern value="FKAG"> </xs:pattern>
+      <xs:pattern value="PKKV"> </xs:pattern>
+      <xs:pattern value="PKKVDE"> </xs:pattern>
+
+https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhang_04b_… 2/4
+5/18/26, 12:21 PM  gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhan…
+
+      <xs:pattern value="LEIK"> </xs:pattern>
+      <xs:pattern value="PKRV"> </xs:pattern>
+      <xs:pattern value="00"> </xs:pattern>
+      <xs:pattern value="GPALT"> </xs:pattern>
+      <xs:pattern value="AANR"> </xs:pattern>
+      <xs:pattern value="FKBW"> </xs:pattern>
+      <xs:pattern value="FKPU"> </xs:pattern>
+      <xs:pattern value="FKRT"> </xs:pattern>
+      <xs:pattern value="FKVOLL"> </xs:pattern>
+      <xs:pattern value="FKWL"> </xs:pattern>
+      <xs:pattern value="FKZS"> </xs:pattern>
+      <xs:pattern value="GPEXT"> </xs:pattern>
+      <xs:pattern value="HSBN"> </xs:pattern>
+      <xs:pattern value="LEBSNR"> </xs:pattern>
+      <xs:pattern value="LELANR"> </xs:pattern>
+      <xs:pattern value="LEZANR"> </xs:pattern>
+      <xs:pattern value="STBN"> </xs:pattern>
+   </xs:restriction>
+</xs:simpleType>
+<xs:complexType name="t_VariableNutzdaten">
+   <xs:sequence maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="VariablesNutzdatum" type="t_VariablesNutzdatum" maxOccurs="1" minOccurs="0"/>
+      <xs:element name="VariableStruktur" type="t_VariablesStruktur" maxOccurs="1" minOccurs="0"/>
+   </xs:sequence>
+</xs:complexType>
+<!-- Datentypdefinition für optionale Nutzdaten -->
+<xs:simpleType name="t_NutzdatentypString">
+   <xs:restriction base="xs:string"/>
+</xs:simpleType>
+<xs:simpleType name="t_NutzdatentypInteger">
+   <xs:restriction base="xs:integer"/>
+</xs:simpleType>
+<xs:simpleType name="t_NutzdatentypDate">
+   <xs:restriction base="xs:date"/>
+</xs:simpleType>
+<xs:simpleType name="t_NutzdatentypTime">
+   <xs:restriction base="xs:time"> </xs:restriction>
+</xs:simpleType>
+<xs:simpleType name="t_NutzdatentypDateTime">
+   <xs:restriction base="xs:dateTime"> </xs:restriction>
+</xs:simpleType>
+<xs:simpleType name="t_NutzdatentypFloat">
+   <xs:restriction base="xs:float"/>
+</xs:simpleType>
+<!-- Ein Nutzdatum darf nur einen zulässigen Nutzdatentyp einnehmen -->
+<xs:complexType name="t_VariablesNutzdatum">
+   <xs:choice maxOccurs="1" minOccurs="1">
+      <xs:element maxOccurs="1" minOccurs="0" name="NutzdatumString" type="t_NutzdatentypString"/>
+      <xs:element maxOccurs="1" minOccurs="0" name="NutzdatumInteger" type="t_NutzdatentypInteger"/>
+      <xs:element maxOccurs="1" minOccurs="0" name="NutzdatumDate" type="t_NutzdatentypDate"/>
+      <xs:element maxOccurs="1" minOccurs="0" name="NutzdatumFloat" type="t_NutzdatentypFloat"/>
+      <xs:element maxOccurs="1" minOccurs="0" name="NutzdatumTime" type="t_NutzdatentypTime">
+      </xs:element>
+      <xs:element maxOccurs="1" minOccurs="0" name="NutzdatumDateTime" type="t_NutzdatentypDateTime">
+      </xs:element>
+   </xs:choice>
+   <!-- Eindeutiger Bezeichner des Nutzdatums -->
+   <xs:attribute name="Bezeichner" type="t_Bezeichner" use="required"/>
+</xs:complexType>
+<xs:complexType name="t_VariablesStruktur">
+   <xs:sequence maxOccurs="unbounded" minOccurs="1">
+      <xs:element name="VariablesNutzdatum" type="t_VariablesNutzdatum" maxOccurs="1" minOccurs="0"/>
+      <xs:element name="VariableStruktur" type="t_VariablesStruktur" maxOccurs="1" minOccurs="0"/>
+   </xs:sequence>
+   <!-- Eindeutiger Bezeichner der VariablenStruktur -->
+
+https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhang_04b_… 3/4
+5/18/26, 12:21 PM  gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhan…
+
+      <xs:attribute name="Bezeichner" type="t_Bezeichner" use="required"/>
+   </xs:complexType>
+   <xs:element name="eAkte_Dokumentdatensatz" type="t_eAkte_Dokumentdatensatz"/>
+</xs:schema>
+
+https://www.gkv-datenaustausch.de/media/dokumente/leistungserbringer_1/sonstige_leistungserbringer/technische_anlagen_aktuell_4/Anhang_04b_… 4/4
+

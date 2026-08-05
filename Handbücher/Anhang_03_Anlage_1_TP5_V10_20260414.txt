@@ -1,0 +1,1548 @@
+                                                     Anhang 3
+                                                         zur
+
+                                                     Anlage 1
+
+                                      Kapitel 10 "Kostenträgerdatei"
+
+                                                       zu den
+Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V über
+Form und Inhalt des Abrechnungsverfahrens mit "Sonstigen Leistungserbringern"
+
+             sowie mit Hebammen und Entbindungspflegern (§ 301a SGB V)
+
+Stand des Anhang 3:  14.04.2026
+Version:             10
+Anzuwenden ab:       01.02.2027
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 2 von 34
+rens nach § 302 SGB V
+
+Änderungshistorie
+
+Version Status         Datum       Redaktion Abschnitt       Erläuterung
+                       14.04.2026  GKV-SV 8.14               Einfügen neuer Schlüsselwerte für Haus-
+10  Abgestimmt         14.04.2026                            haltshilfe
+                                                             Inkrafttreten Version 09 auf 01.06.2026
+09  Abgestimmt         18.02.2026  GKV-SV  gesamtes Do-      vorgezogen und "Einfügen neuer Schlüssel-
+                                           kument            werte für Haushaltshilfe" in Abschnitt 8.14
+                       18.02.2026                            auf Version 10 verschoben
+09  Abgestimmt         23.05.2023  GKV-SV  5.2, 7.2 (DFU,    Erweiterungen für vollelektronisches Ab-
+                       23.05.2023  GKV-SV  VKG), 8.2, 8.3,   rechnungsverfahren
+09  Abgestimmt         16.06.2020          8.5, 8.11, 8.16
+                       08.04.2020          6                 „SB“ als zusätzliche Endung für Kostenträ-
+                       01.11.2019                            gerdateien eingefügt
+08  Abgestimmt         05.04.2019  GKV-SV 7.2                Segment VKG, Feld "Abrechnungscode":
+                       20.09.2017                            Typ als "AN" definiert
+08  Abgestimmt         01.09.2017  GKV-SV 8.14               Abrechnungscodes "A0" bis "A8" und "B1"
+                       01.09.2017                            ergänzt
+07  Abgestimmt         01.09.2017  GKV-SV  8.14              Gruppenschlüssel "90" eingefügt
+                       01.09.2017  GKV-SV  8.14              Abrechnungscodes "91", "92", "93" und
+07  Abgestimmt         12.09.2012                            "94" ergänzt
+                       12.09.2012                            Abrechnungscode "76" ergänzt
+06  Abgestimmt         12.09.2012  GKV-SV  8.14              Text bei Schlüssel "99" präzisiert
+                       12.09.2012  GKV-SV  8.14              Nicht-IP-Basierte Schlüsselwerte entfernt;
+05  Abgestimmt         12.09.2012  GKV-SV  8.5               Schlüsselwert "023" ergänzt.
+                                                             Segment VKG: Fußnote 4 präzisiert
+04  Abgestimmt                                               Schlüsselwert "016" ergänzt
+                                                             Abrechnungscodes "63", "69", "73" und
+03  Abgestimmt                     GKV-SV  7.2               "74" ergänzt
+                                   GKV-SV  8.5               Schlüssel Tarifkennzeichen 3.-5. Stelle
+03  Abgestimmt                     GKV-SV  8.14              analog TA 3 aktualisiert
+                                                             Layout vereinheitlicht, mehrere kleine re-
+03  Abgestimmt                                               daktionelle Anpassungen durchgeführt
+                                                             Segment KTO: Anpassungen für SEPA vor-
+03  Abgestimmt                     GKV-SV 8.15               genommen
+                                                             Segment VKG: Feld "Tarifkennzeichen" er-
+02  Abgestimmt                     GKV-SV  gesamtes Do-      gänzt
+                                   GKV-SV  kument            Abrechnungscode für SAPV ergänzt
+02  Abgestimmt                             7.2               Schlüssel Tarifkennzeichen eingefügt
+
+02  Abgestimmt                     GKV-SV 7.2
+
+02  Abgestimmt                     GKV-SV  8.14
+                                   GKV-SV  8.15
+02  Abgestimmt
+
+Anhang 3 zur Anlage 1              anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 3 von 34
+rens nach § 302 SGB V
+
+Inhaltsverzeichnis "Kostenträger"
+
+1. VERWENDUNGSZWECK................................................................................................. 4
+
+2. VERÖFFENTLICHUNG ................................................................................................... 4
+
+3. ALLGEMEINE SYSTEMATIK DER KOSTENTRÄGERDATEI ................................................... 5
+
+4. LOGISCHES DATENMODELL.......................................................................................... 7
+
+5. VERKNÜPFUNGSREGELN............................................................................................... 8
+
+5.1   VERKNÜPFUNG ZUM KOSTENTRÄGER ..................................................................................8
+
+5.2   VERKNÜPFUNG ZU DATENANNAHMESTELLEN ........................................................................8
+
+5.2.1 Verknüpfung zur Datenannahmestelle mit und ohne Berechtigung zur
+
+      Entschlüsselung .......................................................................................................8
+
+5.2.2 Zuordnung zum regional zuständigen Kommunikationspartner...............................9
+
+5.3   VERKNÜPFUNG ZU PAPIERANNAHMESTELLEN.........................................................................9
+
+6. DATEINAME ...............................................................................................................10
+
+7. DATEISTRUKTUR ........................................................................................................12
+
+7.1   SERVICESEGMENTE ....................................................................................................... 13
+
+7.2   NUTZSEGMENTE .......................................................................................................... 15
+
+8. SCHLÜSSELVERZEICHNIS .............................................................................................21
+
+8.1   ART DER ANSCHRIFT....................................................................................................21
+
+8.2   ART DER DATENLIEFERUNG............................................................................................21
+
+8.3   ART DER VERKNÜPFUNG ZWISCHEN INSTITUTIONSKENNZEICHEN ..............................................21
+
+8.4   BUNDESLAND .............................................................................................................23
+
+8.5   DFÜ-PROTOKOLL ....................................................................................................... 23
+
+8.6   KOMPRIMIERUNGSART ..................................................................................................23
+
+8.7   KV-BEZIRK ...............................................................................................................25
+
+8.8   LEISTUNGSERBRINGERGRUPPE .........................................................................................27
+
+8.9   ÜBERMITTLUNGSMEDIUM ............................................................................................... 27
+
+8.10  ÜBERMITTLUNGSMEDIUM-PARAMETER .............................................................................. 27
+
+8.11 ÜBERMITTLUNGSZEICHENSATZ ........................................................................................28
+
+8.12 ÜBERTRAGUNGSTAGE ...................................................................................................28
+
+8.13 VERARBEITUNGSKENNZEICHEN ........................................................................................29
+
+8.14 SCHLÜSSEL ABRECHNUNGSCODE .....................................................................................29
+
+8.15 SCHLÜSSEL TARIFKENNZEICHEN ......................................................................................32
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+   Anhang 3 zur Technische Anlage 1
+                                                                                                    Stand: 14.04.2026
+
+   zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 4 von 34
+   rens nach § 302 SGB V
+
+1. Verwendungszweck
+
+Beim maschinellen Datenaustausch zwischen Krankenkassen und Leistungserbrin-
+
+gern werden die Kommunikationspartner auf beiden Seiten durch ihr Institutions-
+
+kennzeichen (IK) identifiziert. In § 293 SGB V sowie in den ergänzenden Rahmenver-
+
+einbarungen ist festgelegt, dass dieses im Schriftverkehr und für Abrechnungszwecke
+
+zu verwenden ist.
+
+Da der Leistungserbringer im Hinblick auf seine Abrechnung als primäre Information
+
+über den Versicherten nur dessen Krankenversichertenkarte zur Verfügung hat, stel-
+
+len die Krankenkassen den Leistungserbringern ein Verzeichnis zur Verfügung, das -
+
+ausgehend vom IK der Krankenversichertenkarte - folgende Funktionen erfüllt:
+
+  Zuordnung des Kostenträgers,
+
+  Anschrift(en) und Routing-Informationen für die datenannehmenden Stelle(n),
+
+   wobei hier ggf. nach Leistungserbringergruppe und Medium der Datenüber-
+
+   mittlung differenziert werden kann,
+
+  Bereitstellung von Schlüsseln für die kryptografische Verschlüsselung (Public
+
+   Key und Zertifikat des Public Key, wenn die Institution eine zur Entschlüsselung
+
+   berechtigte Stelle ist).
+
+2. Veröffentlichung
+
+Die Kostenträgerdateien werden von den Spitzenverbänden der Krankenkassen er-
+stellt und können über www.gkv-datenaustausch.de abgerufen werden.
+Die Aktualisierung der Kostenträgerdatei erfolgt jeweils zum 1. eines jeden Kalender-
+vierteljahres. Die aktualisierte Fassung wird spätestens 4 Wochen vor Beginn des je-
+weiligen Kalendervierteljahres bereitgestellt.
+
+Anhang 3 zur Anlage 1        anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 5 von 34
+rens nach § 302 SGB V
+
+3. Allgemeine Systematik der Kostenträgerdatei
+
+Die Kostenträgerdatei ist wie jede andere Datei im Projekt Datenaustausch in
+EDIFACT-Struktur aufgebaut, wobei Servicesegmente entsprechend dem internatio-
+nalen Standard, Nutzsegmente dagegen in EDIFACT-Syntax vom Projekt selbst defi-
+niert und damit Teil des projektspezifischen Branchensubsets sind. Die folgende Dar-
+stellung der allgemeinen Systematik berücksichtigt nur die Nutzsegmente.
+
+Jede Nachricht wird durch ein Identifikationssegment als Schlüsselsegment erschlos-
+sen und bildet Funktionen bzw. Eigenschaften von Einrichtungen ab, die für den Da-
+tenaustausch relevant sind. Die Funktionen werden in weiteren Segmenten darge-
+stellt, von denen jedes mit jeder neuen Ausprägung seiner Merkmale wiederholt wird.
+
+Jede Nachricht kann über ein oder mehrere Verknüpfungssegment(e) auf eine oder
+mehrere andere Nachrichten verweisen.
+
+Folgende Segmente finden in der Kostenträgerdatei Verwendung:
+
+⇒ IDK Identifikationssegment, tritt als Schlüsselsegement je Nachricht einmal
+       und obligatorisch auf;
+
+⇒ VDT Verwaltungsdatensegment, obligatorisch dem IDK zugeordnet, kann
+       optional auch jedem anderen Segment zugeordnet werden, dessen Gültigkeits-
+       zeitraum vom IDK abweicht;
+
+⇒ FKT Funktionssegment, einmal und obligatorisch, zur Kennzeichnung der
+       Funktion einer Nachricht
+
+⇒ KTO Kontosegment, optional, entsprechend einer Bankverbindung aus der
+       bei der Sammel- und Verteilungsstelle Institutionskennzeichen (SVI) gespeicher-
+       ten Datei. Zu jedem IK ist bei der SVI nur eine Kontoverbindung möglich;
+
+⇒ VKG Verknüpfungssegment, optional und wiederholbar; die Verknüpfung er-
+       folgt vom IK der Versichertenkarte zum IK des Kostenträgers und von dort zu
+       seinen Daten annehmenden Stellen;
+
+⇒ NAM Namenssegment, einmal und obligatorisch;
+⇒ ANS Anschriftensegment, einmal obligatorisch und (optional) bis zu 2 mal
+
+       wiederholbar; es kann eine Haus-, Postfach- und eine Großkundenanschrift ge-
+       speichert werden (daher maximal 3 ANS-Segmente je Nachricht).
+⇒ ASP Ansprechpartner, optional und wiederholbar;
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027                GKV-Spitzenverband
+   Anhang 3 zur Technische Anlage 1
+                                                                                                    Stand: 14.04.2026
+
+   zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 6 von 34
+   rens nach § 302 SGB V
+
+⇒ UEM Übermittlungssegment, optional und wiederholbar, zur Darstellung der
+       Medien, die über die durch das IK bezeichnete Einrichtung übermittelt werden
+       können;
+
+⇒ DFU Datenfernübertragungssegment. Wenn in einem Übermittlungssegment
+       die Datenfernübertragung als Medium genannt wurde, ist das DFU-Segment ein-
+       mal obligatorisch und (optional) wiederholbar. Es dient zur Darstellung der DFÜ-
+       Arten, die über die durch das IK bezeichnete Einrichtung abgewickelt werden
+       können.
+
+Die Basis der Kostenträgerdatei bildet die Summe der IK, die auf den Versicherten-
+
+karten Verwendung finden. Für diese IK werden Nachrichten bereitgestellt, die von
+
+den Anwendungsprogrammen der Leistungserbringer (LE) bei der Vorbereitung einer
+
+Datensendung genutzt werden können, um folgende Informationen zu erschließen:
+
+  den Kostenträger,
+
+  den Empfänger von Daten, ggf. unterschiedlich für verschiedene Medien; dabei
+
+   sind zwei Fälle zu unterscheiden:
+
+     Empfänger, die nur befugt sind, kryptografisch verschlüsselte Daten zu
+
+      verteilen bzw. weiterzuleiten,
+
+     Empfänger, die zur Entschlüsselung der Daten befugt sind;
+
+  die Bankverbindung des Kostenträgers, die für einen Zahlungsfluss vom LE zum
+
+   Kostenträger zu nutzen ist (optional).
+
+Bei einer Datenübermittlung von der Krankenkasse zum LE sollen die Anwendungs-
+programme des LE zur Überprüfung der übermittelten Daten auf die Kostenträgerda-
+tei zugreifen können, um auf allen Ebenen1, in denen IK in Service- und Nutzsegmen-
+ten geliefert werden, die Zulässigkeit der übermittelten IK zu prüfen.
+
+1 Für den Fallbezug muss das IK der Versichertenkarte an den LE übermittelt werden, weitere Ebenen
+    betreffen den Kostenträger, sofern vom IK der Versichertenkarte abweichend, sowie den Datenemp-
+    fänger mit und ohne Befugnis zur Entschlüsselung.
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 7 von 34
+rens nach § 302 SGB V
+
+4. Logisches Datenmodell
+
+Die Art der Beziehungen zwischen den Objekten (Segmenten) ist vom IDK aus zu se-
+hen.
+
+                                                  IDK
+                       1:CN
+
+                       VKG
+
+     1:1                    1:C                        1:1       1:CN  1:CN
+
+     FKT                    KTO       NAM                        ASP   UEM
+
+                                                       1:N                  1:CN
+
+                                      ANS                              DFU
+
+VDT-Segmente sind im logischen Datenmodell nicht aufgeführt.
+
+Je nach Art der Institution ergeben sich typische Strukturen, für die im folgenden Bei-
+spiele dargestellt werden. (Optionale Segmente sind schattiert dargestellt.)
+
+IK der Versichertenkarte, nicht identisch mit dem Haupt-IK des Kostenträgers
+
+IDK  FKT               KTO       VKG  NAM                   ANS
+
+Kostenträger, der nicht selbst Daten annimmt
+
+IDK  FKT               KTO  VKG       NAM                   ANS  ASP
+
+Datenannahmestelle ohne Entschlüsselungsbefugnis
+
+IDK  FKT                    VKG NAM ANS                          ASP   UEM   DFU
+
+Datenannahmestelle mit Entschlüsselungsbefugnis (Kassen-DAV)
+
+IDK  FKT                              NAM ANS                    ASP   UEM   DFU
+
+Anhang 3 zur Anlage 1       anzuwenden ab 01.02.2027                   GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 8 von 34
+rens nach § 302 SGB V
+
+5. Verknüpfungsregeln
+
+Die Erschließung von Informationen, die einem anderen IK als dem der Versicherten-
+karte zugeordnet sind, erfolgt über das Verknüpfungssegment VKG, das den Ver-
+knüpfungszweck bzw. die Art der Verknüpfung in Form eines Qualifiers und das Ver-
+knüpfungsziel in Form eines IK darstellt.
+
+5.1 Verknüpfung zum Kostenträger
+
+Bilden mehrere IK der Versichertenkarte auf einen Kostenträger ab, so wird das IDK
+der Versichertenkarte zum IDK des Kostenträgers verknüpft. Dies gilt z.B. für den
+Ersatzkassenbereich, in dem für jeden Kostenträger 23 IK’s bereitgestellt werden,
+aber auch für fusionierte Kostenträger anderer Kassenarten. Dem IDK der Versicher-
+tenkarte wird dann nur ein VKG zugeordnet mit der Verknüpfungsart 01 = Verweis
+vom IK der Versichertenkarte zum Kostenträger.
+
+5.2 Verknüpfung zu Datenannahmestellen
+
+Darüber hinaus erfolgt ein Verweis vom Kostenträger mit Verknüpfungsart 02 oder
+03 auf eine Datenannahmestelle. Dieser Verweis ist nur gültig in Verbindung mit dem
+Schlüssel 07 oder dem Schlüssel 30 bei "Art der Datenlieferung".
+
+5.2.1 Verknüpfung zur Datenannahmestelle mit und ohne Berechtigung zur Ent-
+schlüsselung
+
+Die Entschlüsselung der Daten wird nur in kasseneigenen Datenannahme- und -ver-
+teilstellen vorgenommen. Die Daten sind daher mit dem Public Key der kasseneigenen
+DAV zu verschlüsseln. Wird ein Netzbetreiber eingeschaltet, so hat dieser nicht das
+Privileg, die Daten zu entschlüsseln.
+
+In jedem Fall muss also definiert werden, ob der Datenempfänger zur Entschlüsselung
+berechtigt ist oder nicht. Ist er hierzu berechtigt, ist die Nachricht mit seinem Public
+Key zu verschlüsseln. Trifft dies jedoch, wie beim Netzbetreiber, nicht zu, muss zu-
+sätzlich der nachfolgende Empfänger bekannt sein, der zur Entschlüsselung berech-
+tigt ist und dessen Public Key zur Verschlüsselung zu verwenden ist.
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+  Anhang 3 zur Technische Anlage 1
+                                                                                                   Stand: 14.04.2026
+
+  zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 9 von 34
+  rens nach § 302 SGB V
+
+Die Unterscheidung erfolgt über den Schlüssel "Art der Verknüpfung". Erfolgt eine
+Verknüpfung auf eine Datenannahmestelle mit Entschlüsselungsbefugnis, muss in der
+Nachricht dieser Institution geprüft werden, ob eine Verknüpfung zu einer Datenan-
+nahmestelle ohne Entschlüsselungsbefugnis vorhanden ist.
+
+5.2.2 Zuordnung zum regional zuständigen Kommunikationspartner
+Es ist vorgesehen, dass jeder Leistungserbringer je Kassensystem nur einen Kommu-
+nikationspartner haben soll: Wer mit dem AOK-System Daten austauscht, kommuni-
+ziert mit allen zugelassenen Medien mit der für ihn regional zuständigen DAV des
+AOK-Systems. Das gleiche Prinzip gilt auch, wenn Netzbetreiber eingesetzt werden;
+in diesem Fall wird bei Datenfernübertragung mit einem zentralen oder regionalen
+Knotenpunkt kommuniziert.
+
+Dies verlangt, dass der Zugang des LE zu den Kommunikationsdaten der Kostenträger
+neben dem IK über einen zweiten Schlüssel organisiert wird, nämlich einem Regio-
+nalschlüssel, dem der LE seinen eigenen Standort zuordnet. Dafür kann das zweistel-
+lige Länderkennzeichen2 stehen, eine weitere Differenzierung ist möglich.
+
+Die regionale Zuordnung ist in den Anwendungsprogrammen so einzurichten, dass
+der Anwender, also in der Regel der Leistungserbringer, aus dem Gesamtpotential der
+Kommunikationspartner, das für eine Kassenart besteht, den Partner auswählt, der
+ihm räumlich am nächsten liegt oder sonst wie die günstigsten Kommunikationsbe-
+ziehungen bietet. Die Auswahl kann in der Regel durch das Regionalkennzeichen im
+Verknüpfungssegment erfolgen, das den Standort des Kommunikationspartners für
+die Kassenart bezeichnet.
+
+5.3 Verknüpfung zu Papierannahmestellen
+Des weiteren sind Verknüpfungen auf Papierannahmestellen, Verknüpfungsart 09 an-
+zugeben: entweder mindestens zwei Verknüpfungen mit den Gruppenschlüsseln 28
+und 29 bei "Art der Datenlieferung" oder mehrere Verknüpfungen mit den Einzel-
+schlüsseln 21, 24, 26, 27.
+
+2 Schlüssel der Regionalsystematik des Statistischen Bundesamtes, der zweistellig die Länder, dreistel-
+    lig die Regierungsbezirke kennzeichnet.
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 10 von 34
+rens nach § 302 SGB V
+
+Der Verweis auf die Papierannahmestellen erfolgt in der Kostenträgerdatei, ausge-
+nommen, die Papierannahmestellen werden auf anderem Wege durch den Kostenträ-
+ger dem Leistungserbringer bekannt gegeben.
+
+6. Dateiname
+
+Die Festlegung der Namenskonvention für die Kostenträgerdateien der Kassenarten
+gelten sowohl für den physischen Dateinamen, als auch für den logischen Dateina-
+men.
+
+Im Rahmen der DOS-Konventionen stehen 8+3 alphanumerische Stellen zur Verfü-
+gung. Da auch heute noch DOS-Systeme zum Einsatz kommen, müssen diese Ein-
+schränkungen berücksichtigt werden. Durch eine geeignete Kodierung sollen alle we-
+sentlichen Angaben aus dem Dateinamen hervorgehen.
+
+Stellen    Inhalt      Bedeutung
+
+Dateiname
+
+1 - 2 AA               Kassenart
+                       AO = AOK
+     3 - 4 NA          EK = Ersatzkassen
+                       BK = Betriebskrankenkassen
+     5 - 6 AN          IK = Innungskrankenkassen
+                       BN = Knappschaft-Bahn-See
+Anhang 3 zur Anlage 1  LK = Landwirtschaftliche Krankenkassen
+                       GK = Gesetzliche Krankenversicherung
+                       SB = Sonstige Kostenträger mit Bitmarck als Dienstleister
+                       Verfahren
+                       01 = Datenaustausch Teilprojekt Ärzte
+                       02 = Datenaustausch Teilprojekt Zahnärzte
+                       03 = Datenaustausch Teilprojekt Apotheken
+                       4A = Datenaustausch Teilprojekt Krankenhäuser
+                       4B = Datenaustausch Teilprojekt Reha-Einrichtungen
+                       05 = Datenaustausch Teilprojekt Sonstige Leistungserbringer
+                       06 = Datenaustausch Teilprojekt Leistungserbringer Pflege
+                       Gültigkeit ab
+                       01 bis 12 = gültig ab Monat
+                       Q1 bis Q4 = gültig ab 1. bis 4. Quartal
+
+                       anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 11 von 34
+rens nach § 302 SGB V
+
+7 - 8 NN               Jahreszahl (zweistellig)
+
+Erweite-               Einsatzgebiet
+                       K = Kostenträgerdatei Datenaustausch
+rung                   Format
+                       D = Datenbankformat
+1         A            E = EDIFACT-Format
+                       X = Excel-Format
+2         A            Version
+                       1 bis 9 = Nachtrag
+3         N            0 = Standardangabe
+                       Falls innerhalb eines Quartals die Notwendigkeit besteht, eine
+                       Versionsanpassung der Datei vorzunehmen, gibt es hier die
+                       Möglichkeit, fortlaufend zu nummerieren
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 12 von 34
+rens nach § 302 SGB V
+
+7. Dateistruktur
+
+Die Datei beginnt mit einem "Festlegungssegment (UNA)" (optional) und einem "Kopf-
+segment Datei (UNB)" und endet mit einem "Endesegment Datei (UNZ)".
+
+Jede Nachricht - das sind alle Daten zu einem Institutionskennzeichen - wird mit ei-
+nem "Kopfsegment Nachrichtentyp (UNH)" eingeleitet und mit einem "Endesegment
+Nachrichtentyp (UNT)" beendet.
+
+Bei der Datenübermittlung auf Datenträgern wird jedes Segment als Einzelsatz dar-
+gestellt (bei Disketten: Satzende = Carriage Return / Line Feed).
+
+Bei der Darstellung der Dateistruktur wird folgende Symbolik benutzt :
+
+                       Symbol         Bedeutung
+                           +          gefolgt von, plus
+                         (...)        optional
+                         {...}        Wiederholung
+
+Darstellung der Segmentfolge in der Datei
+
+(UNA +)                Festlegungssegment
+  UNB
+       {+ UNH          Kopfsegment Datei
+
+        + UNT}         Kopfsegment Nachrichtentyp KOTR (Kostenträger)
++ UNZ
+                       + IDK    + VDT
+Anhang 3 zur Anlage 1
+                       + FKT
+
+                       (+ KTO   (+ VDT))
+
+                       ({+ VKG  (+ VDT)})
+
+                       + NAM (+ VDT)
+
+                              {+ ANS       (+ VDT)} (bis zu 2x wiederholbar)
+
+                       ({+ ASP  (+ VDT)})
+
+                       ({+ UEM  (+ VDT)
+
+                       ({+ DFU             (+VDT)})})
+
+                       Endesegment Nachrichtentyp KOTR
+
+                       Endesegment Datei
+
+                       anzuwenden ab 01.02.2027          GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 13 von 34
+rens nach § 302 SGB V
+
+7.1 Servicesegmente
+Festlegungssegment
+
+Seg-  Feldbezeichnung              Feld Feld Anz.            Bemerkungen
+ment
+                                   -Art - Stell
+                                            Typ .
+
+UNA Festlegungssegment             M C 3 'UNA'
+         TZ innerh. Datenelemente
+                                   M C 1 ':' (Trennkennzeichen innerhalb zu-
+
+                                                   sammengesetzter Datenelemente)
+
+      TZ Datenelemente             M C 1 '+' (Trennkennzeichen Datenele-
+
+                                                   mente)
+
+      Dezimalzeichen               M C 1 ','
+      Aufhebungszeichen
+      Reserviert                   M C 1 '?’ (für Steuerzeichen)
+      Segmentendezeichen
+                                   M C 1 leer
+
+                                   M C 1 '''
+
+Kopfsegment Datei
+
+Seg-  Feldbezeichnung              Feld Feld Anz.            Bemerkungen
+ment
+                                   -Art - Stell
+                                            Typ .
+
+UNB   Kennung                      M C 3 'UNB'
+      Syntax
+                                                   'UNOC:3'
+       Syntax-Kennung
+       Syntax-Version              MC 4
+      Absender der Datei
+      Empfänger der Datei          MC 1
+
+                                   M C 9 IK des Absenders
+
+                                   M C 9 IK des Empfängers, wenn bekannt,
+
+                                                   '999999999' bei Datei für eine Mail-
+
+                                                   box
+
+      Datum-Uhrzeit                                JJMMTT:HHMM
+       Datum
+       Uhrzeit                     MN 6
+
+      Dateinummer                  MN 4
+      Freifeld
+      Dateiname                    M C 5 fortlaufende Nummer
+
+                                   K C 1 leer
+
+                                   M C 11 Siehe hierzu Kapitel 6
+
+Anhang 3 zur Anlage 1              anzuwenden ab 01.02.2027     GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 14 von 34
+rens nach § 302 SGB V
+
+Kopfsegment Nachrichtentyp
+
+Seg-  Feldbezeichnung            Feld Feld Anz.           Bemerkungen
+ment
+                                 -     - Stell
+
+                                 Art Typ .
+
+UNH Kennung                      M C 3 'UNH'
+         Nachrichtenreferenz
+                                 M C 5 laufende Nummer (innerhalb UNB /
+
+                                                    UNZ)
+
+      Nachrichtenkennung                            Beispiel: 'KOTR:02:001:KV'
+       Typ
+       Version                   M C 4 'KOTR'
+       Freigabenummer
+       Verwaltende Organisation  M C 2 '02'
+
+                                 M C 3 '001'
+
+                                 M C 2 'KV'
+
+Endesegment Nachrichtentyp
+
+Seg-  Feldbezeichnung            Feld  Feld  Anz.         Bemerkungen
+ment                               -     -   Stell
+                                 Art
+                                       Typ     .
+
+UNT Kennung                      M C 3 'UNT'
+
+      Anzahl Segmente im Nach- M N 6 Summe der Segmente von UNH bis
+
+      richtentyp                                    UNT (einschl. UNH und UNT)
+
+      Nachrichtenreferenz        M C 5 wie in UNH
+
+Endesegment Datei
+
+Seg-  Feldbezeichnung            Feld Feld Anz.           Bemerkungen
+ment
+                                 -     - Stell
+
+                                 Art Typ .
+
+UNZ   Kennung                    M C 3 'UNZ'
+      Anzahl Nachrichtentypen
+      Datei                      M N 6 Anzahl der UNH’s in der Datei
+      Dateinummer
+                                 M C 5 wie in UNB
+
+Anhang 3 zur Anlage 1          anzuwenden ab 01.02.2027   GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 15 von 34
+rens nach § 302 SGB V
+
+7.2 Nutzsegmente
+
+Alle Segment-Kennungen werden als Muss-Felder deklariert, da bei Auftreten des je-
+weiligen Segmentes die Benennung des Segmentes obligatorisch ist. Ob ein Segment
+insgesamt optional oder obligatorisch ist, kann der Aufstellung in Kapitel 2 entnom-
+men werden. Der besseren Übersicht wegen wurde diese Information zusätzlich jeder
+der nachfolgenden Segment-Beschreibungen vorangestellt.
+
+IDK-Segment: einmal obligatorisch    Art Typ Länge Faktor Inhalt/Erläuterung
+  Seg- Inhalt
+ ment                                MC 3                      IDK
+  IDK Segment Identifikation         MN 9
+           Institutionskennzeichen   MN 2                      Schlüssel Art der In-
+           Art der Institution                                 stitution = 99
+                                     M C ...30                 (Dummy) 3
+           Kurzbezeichnung           KN 5
+           VKNR                                                Angabe ist nicht er-
+                                                               forderlich, auch,
+                                                               wenn es sich bei der
+                                                               Institution um eine
+                                                               Krankenkasse handelt
+
+VDT-Segment: einmal obligatorisch zum IDK, optional bei anderen Segmenten
+
+VDT Segment Verwaltungsdaten         MC 3                      VDT
+
+Gültigkeitsdatum ab                  MN 8                      JJJJMMTT
+
+Gültigkeitsdatum bis                 KN 8                      JJJJMMTT
+
+FKT-Segment: einmal obligatorisch    MC 3                      ‘FKT’
+  FKT Segment Funktion               MC 2                      Schlüssel Verarbei-
+           Verarbeitungskennzeichen                            tungskennzeichen
+
+3 gilt nur für TP5, da alle Informationen zum IK aus dem VKG-Segment abzuleiten sind.
+
+Anhang 3 zur Anlage 1                anzuwenden ab 01.02.2027       GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 16 von 34
+rens nach § 302 SGB V
+
+KTO-Segment: einmal optional                  Art Typ Länge Faktor Inhalt/Erläuterung
+  Seg- Inhalt
+ ment                                         MC 3       KTO
+  KTO Segment Kontoverbindung                 K N 10     siehe Anmerkung
+           Kontonummer                        KN 8       siehe Anmerkung
+           Bankleitzahl                       M C ...30
+           Bezeichnung der Bank               K C ...30  wenn anders als in
+           Kontoinhaber                                  IDK
+                                              K C ...34  siehe Anmerkung
+           IBAN - International Bank Account
+           Number                             K C ...11  siehe Anmerkung
+           BIC - Business Identifier Code
+
+Anmerkung:
+Bei Verwendung des KTO-Segments muss mindestens eine Bankverbindung angegeben wer-
+den: Entweder eine nationale Bankverbindung, bestehend aus Kontonummer und Bankleitzahl,
+oder eine internationale Bankverbindung nach dem SEPA-Standard, bestehend aus IBAN und
+BIC.
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027          GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 17 von 34
+rens nach § 302 SGB V
+
+VKG -Segment: optional, wiederholbar (siehe hierzu auch die Verknüpfungsregeln)
+
+VKG Segment Verknüpfung       MC      3 wdh. VKG
+
+Art der Verknüpfung           MN      2             Schlüssel Art der Ver-
+
+                                                    knüpfung
+
+IK des Verknüpfungspartners   MN      9             Institutionskennzeichen
+
+Leistungserbringergruppe      KN      1             Schlüssel LE-Gruppe
+
+IK der Abrechnungsstelle      KN      9             IK der Abrechnungsstelle,
+                                                    für welche dieser Verweis
+                                                    gültig ist. Fehlt dieser
+
+                                                    Eintrag, ist der Verweis
+
+                                                    für alle Stellen gültig.
+
+Art der Datenlieferung        KN      2             Schlüssel Art der Daten-
+                                                    lieferung
+
+Art des Übermittlungsmediums  KN      1             Schlüssel Übermittlungs-
+
+                                                    medium
+
+Standort des Leistungserbringers K N  2             Schlüssel Bundesland
+
+nach Bundesland
+
+Standort des Leistungserbringers K N  2             Schlüssel KV-Bezirk
+
+nach KV-Bezirk                                      Schlüssel Abrechnungs-
+                                                    code
+Abrechnungscode 4             K AN 2
+
+(Leistungserbringerart)
+
+Tarifkennzeichen              KN      5             Schlüssel Tarifkennzei-
+
+                                                    chen
+
+4 Der Abrechnungscode ist zwingend für das Teilprojekt 5 anzugeben. Der Sammelschlüssel schließt
+    die Verwendung von Gruppen- und Einzelschlüsseln sowie den Sonderschlüssel 99 aus. Wird ein
+    Gruppenschlüssel aufgeführt, können zu einem IK nicht die zugehörigen Einzelschlüssel zusätzlich
+    angegeben werden (z.B. bei Gruppenschlüssel 20 nicht der Einzelschlüssel 22).
+    Folgende Konstellationen sind möglich:
+    Einzelschlüssel z. B. 47: Krankenkasse wickelt Krankentransportleistungen über mehrere Stellen ab,
+    sie kann differenzieren und die "Untergruppe" bzw. den Einzelschlüssel "47 Leistungserbringer von
+    Flugrettungs- und Transportleistungen" in das VKG-Segment (Verknüpfungssegment) schreiben
+    und z. B. den Einzelschlüssel "44 Johanniter Unfallhilfe" in ein weiteres.
+    Gruppenschlüssel z. B. 40: Krankenkasse wickelt alle Krankentransportleistungen über eine Stelle
+    ab, in der Kostenträgerdatei wird der Gruppenschlüssel "40" gesetzt, Schlüssel "47" wäre unter die-
+    sem subsummiert.
+    Sammelschlüssel 00: gilt für alle Leistungen für TP 5;
+    Sonderschlüssel 99: gilt für nicht aufgeführte Gruppen- und Einzelschlüssel
+
+Anhang 3 zur Anlage 1     anzuwenden ab 01.02.2027          GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 18 von 34
+rens nach § 302 SGB V
+
+Unterverfahren         K AN 3                    Schlüssel Unterverfahren
+                                                 Bedingtes Mussfeld:
+                                                 Wenn „Art der Datenliefe-
+                                                 rung“ = 30 und Leis-
+                                                 tungsbereich HKP oder
+                                                 Haushaltshilfe, dann
+                                                 zwingend zu füllen, sonst
+                                                 leer.
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 19 von 34
+rens nach § 302 SGB V
+
+NAM-Segment: einmal obligatorisch              Art Typ Länge Faktor Inhalt/Erläuterung
+  Seg- Inhalt
+ ment                                          MC 3             NAM
+ NAM Segment Name                              MN 2             01 bis 03
+           Laufende Nr.                        M C ...30
+           Name-1                              K C ...30
+           Name-2                              K C ...30
+           Name-3                              K C ...30
+           Name-4
+
+ANS-Segment: einmal obligatorisch, optional wiederholbar
+
+ANS Segment Anschrift                          MC 3       wdh.  ANS
+                                                                Schl. Art der An-
+Art der Anschrift                              MN 1             schrift
+
+Postleitzahl                                   MN 5             Straße und Hausnr.
+Ort                                            M C ...25        oder Postfach
+Straße, Hausnr. / Postfach                     K C ...30
+
+ASP-Segment: optional, wiederholbar            M C 3 wdh. ASP
+  ASP Segment Ansprechpartner
+           Laufende Nummer                     MN 2             Laufende Numerie-
+
+           Telefon                                              rung innerhalb einer
+
+           Fax                                                  Nachricht
+
+           Name                                K C ...15        Form: Vorwahl/Teil-
+           Arbeitsgebiet des Ansprechpartners
+                                                                nehmernummer
+
+                                               K C ...15        Form: Vorwahl/Teil-
+
+                                                                nehmernummer
+
+                                               K C ...30
+
+                                               K C ...70        Klartext, z. B.
+
+                                                                Datenaustausch
+
+Anhang 3 zur Anlage 1       anzuwenden ab 01.02.2027            GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 20 von 34
+rens nach § 302 SGB V
+
+UEM-Segment: optional, wiederholbar      Art Typ Läng        Fak-  Inhalt/Erläuterung
+ Seg- Inhalt                                              e   tor
+ ment                                                        wdh.  UEM
+ UEM Segment Übermittlungsmedium         MC 3                      Schlüssel Übermitt-
+           Art des Übermittlungsmediums  MN 1                      lungsmedium
+                                                                   Schlüssel Übermitt-
+           Parameter                     MN 2                      lungsmedium-Para-
+                                                                   meter
+           Zeichensatz                   MC 2                      Schlüssel Übermitt-
+                                                                   lungszeichensatz
+           Art der Komprimierung          KC 2                     Schl. Komprimie-
+                                                                   rungsart
+
+DFU-Segment: optional, wiederholbar. Obligatorisch, wenn bei UEM DFÜ angegeben wurde
+
+DFU Segment DFÜ                          M C 3 wdh. DFU
+
+Laufende Nummer                          MN 2                      Numerierung inner-
+
+                                                                   halb UEM
+
+Übertragungsprotokoll                    MN 3                      Schlüssel DFÜ-
+
+                                                                   Protokoll
+
+Benutzerkennung                          KC 8                      wenn abweichend
+
+                                                                   vom IK
+
+Übertragung von                          KN 4                      Zeitfenster von
+
+                                                                   (HHMM)
+
+Übertragung bis                          KN 4                      Zeitfenster bis
+
+                                                                   (HHMM)
+
+Übertragungstage                         KN 1                      Schlüssel Übertra-
+
+                                                                   gungstage
+
+Kommunikationskanal                      M C ...24                 DFÜ-Adresse / -Ken-
+
+                                                 0                 nung / Telefonnum-
+
+                                                                   mer / E-Mail-Ad-
+
+                                                                   resse/ KIM-Mail-
+
+                                                                   Adresse / Kennzei-
+
+                                                                   chen „VZD“ bei Ver-
+
+                                                                   wendung des Ver-
+
+                                                                   zeichnisdienstes der
+
+                                                                   TI
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027                        GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 21 von 34
+rens nach § 302 SGB V
+
+8. Schlüsselverzeichnis
+
+8.1 Art der Anschrift
+
+1                      Hausanschrift
+
+2                      Postfachanschrift
+
+3                      Großkundenanschrift
+
+8.2 Art der Datenlieferung
+
+07                     Rechnungs- und Abrechnungsdaten SLGA und SLLA digi-
+       21              talisiert
+       24              Rechnung (Papier)
+       26              maschinenlesbarer Beleg
+       27              Verordnung (Papier)
+                       Kostenvoranschlag (Papier)
+28                     Gruppenschlüssel (Einzelschlüssel 21, 26, 27)
+                       papiergebundene Unterlagen einer digitalen Abrechnung
+29                     (Verordnung, ggf. Kostenvoranschlag, ggf. Rechnung)
+                       Gruppenschlüssel (Einzelschlüssel 24, 26, 27)
+30                     maschinenlesbarer Beleg einschließlich der dazugehöri-
+                       gen Abrechnungsunterlagen
+                       Vollelektronische Abrechnung einschließlich elektroni-
+                       schem Leistungsnachweis
+
+8.3 Art der Verknüpfung zwischen Institutionskennzeichen
+
+01                     Verweis vom IK der Versichertenkarte zum Kostenträger
+
+02                     Verweis auf eine Datenannahmestelle (ohne Entschlüsselungsbe-
+                       fugnis)
+
+                       Schlüssel ist nur gültig in Verbindung mit dem Schlüssel 07 oder
+                       30 "Art der Datenlieferung"
+
+03                     Verweis auf eine Datenannahmestelle (mit Entschlüsselungsbefug-
+                       nis)
+
+                       Schlüssel ist nur gültig in Verbindung mit dem Schlüssel 07 oder
+                       30 "Art der Datenlieferung"
+
+Anhang 3 zur Anlage 1           anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 22 von 34
+rens nach § 302 SGB V
+
+09                     Verweis auf eine Papierannahmestelle
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027              GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 23 von 34
+rens nach § 302 SGB V
+
+8.4 Bundesland         Schleswig-Holstein
+                       Hamburg
+                 01    Niedersachsen
+                 02    Bremen
+                 03    Nordrhein-Westfalen
+                 04    Hessen
+                 05    Rheinland-Pfalz
+                 06    Baden-Württemberg
+                 07    Bayern
+                 08    Saarland
+                 09    Berlin
+                 10    Brandenburg
+                 11    Mecklenburg-Vorpommern
+                 12    Sachsen
+                 13    Sachsen-Anhalt
+                 14    Thüringen
+                 15    Alle Bundesländer (bei Datenlieferungen)
+                 16
+                 99
+
+8.5 DFÜ-Protokoll
+
+Schlüssel
+
+016                    FTAM  TCP/IP                              Internet
+
+(023                   FTP   TCP/IP                              Internet)
+
+070                                                              E-Mail/Internet
+
+080                    SMTP  TCP/IP                              KIM-Mail inner-
+
+                                                                 halb der TI
+
+Die in Klammern gefassten Ausprägungen entsprechen nicht den in den Techni-
+
+schen Anlagen zur § 301-Vereinbarung beschriebenen Standardwerten, so dass ihre
+
+Verwendung im Datenaustausch nur nach bilateraler Absprache möglich ist.
+
+8.6 Komprimierungsart
+                               Schlüssel ist noch zu erstellen
+
+Anhang 3 zur Anlage 1        anzuwenden ab 01.02.2027            GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 24 von 34
+rens nach § 302 SGB V
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 25 von 34
+rens nach § 302 SGB V
+
+8.7 KV-Bezirk
+
+KV-LDST                 KV-   Klartext
+    01                 ABRST
+    02                        Schleswig-Holstein
+    03                   06   Hamburg
+    17                   07   Bremen
+                         08   Niedersachsen
+    20                   09   Bezirksstelle Aurich
+    38                   10   Bezirksstelle Braunschweig
+                         11   Bezirksstelle Göttingen
+    46                   12   Bezirksstelle Hannover
+                         13   Bezirksstelle Hildesheim
+    47                   14   Bezirksstelle Lüneburg
+    48                   15   Bezirksstelle Oldenburg
+                         16   Bezirksstelle Osnabrück
+                              Bezirksstelle Stade
+                         18   Bezirksstelle Verden
+                         19   Bezirksstelle Wilhelmshaven
+                              Westfalen-Lippe
+                         21   Verwaltungsstelle Dortmund
+                         24   Verwaltungsstelle M ünster
+                         25   Nordrhein
+                         27   Bezirksstelle Aachen
+                         28   Bezirksstelle Düesseldorf
+                         31   Bezirksstelle Duisburg
+                         37   Bezirksstelle Köln
+                              Bezirksstelle Linker Niederrhein
+                         39   Bezirksstelle Ruhr
+                         40   Bezirksstelle Bergisch-Land
+                         41   Hessen
+                         42   Bezirksstelle Darmstadt
+                         43   Bezirksstelle Frankfurt
+                         44   Bezirksstelle Giessen
+                         45   Bezirksstelle Kassel
+                              Bezirksstelle Limburg
+                              Bezirksstelle Marburg
+                              Bezirksstelle Wiesbaden
+                              Koblenz
+                              Rheinhessen
+
+Anhang 3 zur Anlage 1         anzuwenden ab 01.02.2027          GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 26 von 34
+rens nach § 302 SGB V
+
+              49                  Pfalz                                GKV-Spitzenverband
+              50                  Trier
+              55                  Nordbaden
+                                  Abrechnungsstelle Karlsruhe
+                              52  Abrechnungsstelle Mannheim
+                              53  Abrechnungsstelle Pfortzheim
+                              54  Abrechnungsstelle Baden-Baden
+                              56  Südbaden
+              60                  Abrechnungsstelle Freiburg
+                              57  Abrechnungsstelle Konstanz
+                              58  Abrechnungsstelle Offenburg
+                              59  Nordwürttemberg
+              61                  Südwürttemberg
+              62                  Bayerns
+              71                  Bezirksstelle München Stadt u. Land
+                              63  Bezirksstelle Oberbayern
+                              64  Bezirksstelle Oberfranken
+                              65  Bezirksstelle Mittelfranken
+                              66  Bezirksstelle Unterfranken
+                              67  Bezirksstelle Oberpfalz
+                              68  Bezirksstelle Niederbayern
+                              69  Bezirksstelle Schwaben
+                              70  Berlin
+              72                  Saarland
+              73                  Mecklenburg-Vorpommern
+              78                  Brandenburg
+              83                  Abrechnungsstelle Potsdam
+                              79  Abrechnungsstelle Cottbus
+                              80  Abrechnungsstelle Frankfurt/oder
+                              81  Sachsen-Anhalt
+              88                  Abrechnungsstelle Magdeburg
+                              85  Abrechnungsstelle Halle
+                              86  Abrechnungsstelle Dessau
+                              87  Thüringen
+              93                  Abrechnungsstelle Erfurt
+                              89  Abrechnungsstelle Gera
+                              90  Abrechnungsstelle Suhl
+                              91  Sachsen
+              98                  Bezirksstelle Chemnitz
+                              94
+                                           anzuwenden ab 01.02.2027
+Anhang 3 zur Anlage 1
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 27 von 34
+rens nach § 302 SGB V
+
+                           95 Bezirksstelle Dresden
+                           96 Bezirksstelle Leipzig
+
+8.8 Leistungserbringergruppe
+
+5                      Sonstige Leistungserbringer
+
+8.9 Übermittlungsmedium
+
+1                      DFÜ
+
+2                      Magnetband
+
+3                      Magnetbandkassette
+
+4                      Diskette
+
+5                      Maschinenlesbarer Beleg
+
+6                      Nicht maschinenlesbarer Beleg
+
+7                      CD-ROM
+
+9                      Alle Datenträger (Schlüssel 2 bis 4 und 7)
+
+8.10 Übermittlungsmedium-Parameter
+
+00                     kein Parameter (DFÜ-Parameter sind im Segment DFU
+                       hinterlegt)
+
+(01                    Magnetband 1600 bpi)
+
+02                     Magnetband 6250 bpi
+
+03                     Magnetbandkassette 3480
+
+04                     Magnetbandkassette 3490 - 18 Spur
+
+05                     Magnetbandkassette 3490 - 36 Spur
+
+(06                    Magnetbandkassette DAT)
+
+(07                    Magnetbandkassette 8 mm)
+
+08                     Diskette 3,5" - 720 KB - DOS-Format
+
+09                     Diskette 3,5" - 1,44 MB - DOS-Format
+
+10                     Diskette 3,5" - 2,88 MB - DOS-Format
+
+Anhang 3 zur Anlage 1               anzuwenden ab 01.02.2027       GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 28 von 34
+rens nach § 302 SGB V
+
+(11                    Diskette 5,25" - 360 kB - DOS-Format)
+
+(12                    Diskette 5,25" - 1,2 MB - DOS-Format)
+
+(13                    Diskette 3,5" - 1,44 MB - UNIX-TAR-Format)
+
+14                     CD-ROM, 12 cm, 650 MB
+
+Die in Klammern gefassten Ausprägungen entsprechen nicht den in den Tech-
+
+nischen Anlagen zur § 301-Vereinbarung beschriebenen Standardwerten, so
+
+dass ihre Verwendung im Datenaustausch nur nach bilateraler Absprache mög-
+
+lich ist.
+
+8.11 Übermittlungszeichensatz
+
+I7                     ASCII 7-Bit
+
+I8                     ASCII 8-Bit
+
+U8                     UTF-8
+
+8.12 Übertragungstage
+
+           1           Übertragung an allen Tagen
+
+           2           Übertragung nur an Werktagen
+
+                       (Montag bis Samstag außer Feiertag)
+
+           3           Übertragung nur an Arbeitstagen
+
+                       (Montag bis Freitag außer Feiertag)
+
+Anhang 3 zur Anlage 1               anzuwenden ab 01.02.2027       GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 29 von 34
+rens nach § 302 SGB V
+
+8.13 Verarbeitungskennzeichen
+
+        01                    Neuanmeldung
+
+        02                    Änderung
+
+        03                    Stornierung
+
+        04                    Unverändert
+
+8.14 Schlüssel Abrechnungscode
+
+00                            Sammelschlüssel für alle Leistungsarten
+
+99                            Sonderschlüssel, gilt für alle in der Kostenträgerdatei nicht
+
+                              aufgeführten Gruppen- und Einzelschlüssel
+
+    10                        Gruppenschlüssel Hilfsmittellieferant (Schlüssel 11-19)
+
+            11 Apotheke (mit gesonderter Zulassung nach § 126 SGB V)
+
+            12 Augenoptiker
+
+            13 Augenarzt
+
+            14 Hörgeräteakustiker
+
+            15 Orthopädiemechaniker, Bandagist, Sanitätshaus
+
+            16 Orthopädieschuhmacher
+
+            17 Orthopäde
+
+            18 Sanitätshaus (Bei neuen Verträgen bzw. Vertragsanpassungen
+
+                              ist eine Umschlüsselung mit dem Abrechnungscode 15 vorzu-
+
+                              nehmen. Der Abrechnungscode 18 wird für Sanitätshäuser zum
+
+                              31.12.2005 aufgehoben.)
+
+            19 Sonstiger Hilfsmittellieferant
+
+             20               Gruppenschlüssel Heilmittelerbringer (Schlüssel 21-29)
+                          21  Masseur / Medizinischer Badebetrieb
+                          22  Krankengymnast/Physiotherapeut
+                          23  Logopäde/Atem-, Sprech- und Stimmlehrer / stattl. Anerkann-
+                              ter Sprachtherapeut
+                          24  Sprachheilpädagoge / Dipl. Pädagoge
+                          25  Sonstiger Sprachtherapeut
+
+Anhang 3 zur Anlage 1                   anzuwenden ab 01.02.2027         GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 30 von 34
+rens nach § 302 SGB V
+
+                       26 Ergotherapeut
+                       27 Krankenhaus
+                       28 Kurbetrieb
+                       29 Sonstige therapeutische Heilperson
+
+30                     Gruppenschlüssel Häusliche Krankenpflege (Schlüssel 31-34)
+
+                       31 freigemeinnützige Anbieter (Sozialstatio)n
+
+                       32 privatgewerbliche Anbieter
+
+                       33 öffentliche Anbieter
+
+                       34 sonstige Pflegedienste
+
+40                     Gruppenschlüssel Krankentransportleistungen (Schlüssel 41-
+
+                       49)
+
+                       41 Öffentlicher Träger (z.B. Feuerwehr)
+
+                       42 Deutsches Rotes Kreuz (DRK)
+
+                       43 Arbeiter-Samariter-Bund (ASB)
+
+                       44 Johanniter-Unfall-Hilfe (JUH)
+
+                       45 Malteser-Hilfsdienst (MHD)
+
+                       46 Sonstiger Leistungserbringer von bodengebundenen Trans-
+
+                       portleistungen (Taxi / Mietwagen)
+
+                       47 Leistungserbringer von Flugrettungs- und Transportleistungen
+
+                       49 Sonstiger Leistungserbringer von Krankentransportleistungen (
+
+                       z.B. Bergwacht, Wasserwacht, usw.))
+
+                       50 Hebamme / Entbindungspfleger
+                       55 Sonstiger Leistungserbringer von nichtärztlichen Dialysesach-
+
+                               leistungen
+                       56 Kuratorium für Heimdialyse (KfH)
+                       57 Patienten-Heimversorgung (PHV)
+                       60 Betriebshilfe
+                       61 Leistungserbringer von Rehabilitationssport
+                       62 Leistungserbringer von Funktionstraining
+                       63 Leistungserbringer für ergänzende Rehabilitationsmaßnahmen
+                       65 Sonstige Leistungserbringer
+
+Anhang 3 zur Anlage 1       anzuwenden ab 01.02.2027                  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 31 von 34
+rens nach § 302 SGB V
+
+                       66 Leistungserbringer von Präventions- und Gesundheitsförde-
+                               rungsmaßnahmen im Rahmen von ambulanten Vorsorgeleis-
+                               tungen
+
+                       67 Ambulantes Rehazentrum
+                       68 Sozialpädiatrische Zentren/Frühförderstellen
+                       69 Soziotherapeutische Leistungserbringer
+                       71 Podologen
+                       73 Leistungserbringer von Ernährungstherapie für seltene ange-
+
+                               borene Stoffwechselerkrankungen
+                       74 Leistungserbringer von Ernährungstherapie für Mukoviszidose
+                       72 Med. Fußpfleger (gemäß § 10 Abs. 4 bis 6 PodG)
+                       75 Spezialisierte ambulante Palliativversorgung (SAPV)
+                       76 Leistungserbringer nach § 132g SGB V
+                       B1 Leistungserbringer von Modellvorhaben nach § 64d SGB V
+
+A0                     Gruppenschlüssel außerklinische Intensivpflege (AKI)
+
+                       ambulante AKI:
+
+                       A1 freigemeinnütziger Anbieter
+
+                       A2 privatgewerbliche Anbieter
+
+                       A3 öffentlicher Anbieter
+
+                       A4 sonstiger Anbieter
+
+                       stationäre AKI
+
+                       A5 freigemeinnütziger Anbieter
+
+                       A6 privatgewerbliche Anbieter
+
+                       A7 öffentlicher Anbieter
+
+                       A8 sonstiger Anbieter
+
+90                     Gruppenschlüssel Kurzzeitpflege (Schlüssel 91-94)
+
+                       91 Kurzzeitpflege, privat gewerblicher Anbieter
+
+                       92 Kurzzeitpflege, frei gemeinnütziger Anbieter (gemeinnützige
+
+                       private Anbieter)
+
+                       93 Kurzzeitpflege, öffentlicher Anbieter
+
+                       94 Kurzzeitpflege, sonstige Pflegeeinrichtung
+
+C0                     Gruppenschlüssel Haushaltshilfe
+
+                       C1 freigemeinnützige Anbieter (Sozialstation)
+
+                       C2 privatgewerbliche Anbieter
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027                         GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 32 von 34
+rens nach § 302 SGB V
+
+                        C3 öffentliche Anbieter
+                        C4 Sonstige Pflegedienste
+
+8.15 Schlüssel Tarifkennzeichen
+
+   1. und 2. Stelle    Tarifbereich
+   00                  Bundeseinheitlicher Tarif (gültig für Ost und West)
+   01                  Baden-Württemberg
+   02                  Bayern
+   03                  Berlin Ost
+   04                  Bremen
+   05                  Hamburg
+   06                  Hessen
+   07                  Niedersachsen
+   08                  Nordrhein-Westfalen
+   09                  Rheinland-Pfalz
+   10                  Saarland
+   11                  Schleswig-Holstein
+   12                  Brandenburg
+   13                  Sachsen
+   14                  Sachsen-Anhalt
+   15                  Mecklenburg-Vorpommern
+   16                  Thüringen
+   17                  Stuttgart und Karlsruhe
+   18                  Freiburg und Tübingen
+   19                  Berlin West
+   20                  Nordrhein
+   21                  Westfalen-Lippe
+   22                  Lippe
+   23                  Berlin (gesamt)
+   24                  Bundeseinheitlicher Tarif (West)
+   25                  Bundeseinheitlicher Tarif (Ost)
+   26 bis 49           noch zu vergeben
+   50                  Bundesvertrag
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027  GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 33 von 34
+rens nach § 302 SGB V
+
+51                     Baden-Württemberg
+52                     Bayern
+53                     Berlin Ost
+54                     Bremen
+55                     Hamburg
+56                     Hessen
+57                     Niedersachsen
+58                     Nordrhein-Westfalen
+59                     Rheinland-Pfalz
+60                     Saarland
+61                     Schleswig-Holstein
+62                     Brandenburg
+63                     Sachsen
+64                     Sachsen-Anhalt
+65                     Mecklenburg-Vorpommern
+66                     Thüringen
+67                     Stuttgart und Karlsruhe
+68                     Freiburg und Tübingen
+69                     Berlin West
+70                     Nordrhein
+71                     Westfalen-Lippe
+72                     Lippe
+73                     Berlin (gesamt)
+74                     Bundeseinheitlicher Tarif (West)
+75                     Bundeseinheitlicher Tarif (Ost)
+76 bis 89              noch zu vergeben
+90                     sonstiger länderübergreifender Tarif
+91-99                  Vertrag auf Kassenebene
+
+3. bis 5. Stelle       Sondertarife
+000 - 090              ohne Besonderheiten
+A00 - A90
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027              GKV-Spitzenverband
+Anhang 3 zur Technische Anlage 1
+                                                                                                 Stand: 14.04.2026
+
+zu den Richtlinien über Form und Inhalt des Abrechnungsverfah- Seite 34 von 34
+rens nach § 302 SGB V
+
+091 - 098              nicht besetzt
+A91 - A98              (wird von den Verbänden der Krankenkassen auf Bundesebene
+U00 - ZZZ              belegt)
+
+099                    Leistung ohne preisliche Regelung und daher Abrechnung nach
+
+                       genehmigten Kostenvoranschlag
+
+100 - 999              Sondertarifvereinbarungen zwischen einem oder mehreren Leis-
+A99 - TZZ              tungserbringern und einem oder mehreren Kostenträgern
+
+                       (Das Kennzeichen für Sondertarife wird von den Vertragspart-
+                       nern festgelegt.)
+
+Alle übrigen           Sondertarifvereinbarungen zwischen einem oder mehreren Leis-
+Zahlen-/Buch-          tungserbringern und einem oder mehreren Kostenträgern (Das
+stabenkombi-           Kennzeichen für Sondertarife wird von den Vertragspartnern
+nationen, die          festgelegt.)
+nicht in die o. g.
+reservierten Be-
+reiche Fallen
+
+8.16 Unterverfahren
+
+     HKP               Häusliche Krankenpflege
+     HHH               Haushaltshilfe
+
+Anhang 3 zur Anlage 1  anzuwenden ab 01.02.2027       GKV-Spitzenverband
+

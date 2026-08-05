@@ -1,0 +1,241 @@
+                                                      Anhang 4c
+Verfahrensdokumentation zur Digitalisierung und elektronischen Aufbewahrung von Belegen/Ab-
+
+                                 rechnungsbelegen sowie deren Vernichtung
+
+                                                           zur
+
+                                                       Anlage 1
+
+                                                         zu den
+Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V über Form und Inhalt
+des Abrechnungsverfahrens mit "Sonstigen Leistungserbringern" sowie mit Hebammen und Ent-
+
+                                        bindungspflegern (§ 301a SGB V)
+
+Stand des Anhang 4:              24.09.2025
+
+                     öffentlich
+Verfahrensdokumentation zur Digitalisierung und elektronischen Aufbewahrung von
+Belegen/Abrechnungsbelegen sowie deren Vernichtung
+
+Inhalt
+
+1. Allgemeines/Vorbemerkungen zur Verfahrensdokumentation...................................................... 2
+2. Anwendungsbereich und rechtliche Rahmenbedingungen ............................................................ 3
+
+   2.1. Anwendungsbereich .............................................................................................................. 3
+   2.2. Rechtliche Rahmenbedingungen ........................................................................................... 3
+3. Organisatorisches ............................................................................................................................ 3
+4. Prozessschritte ................................................................................................................................ 3
+   4.1. Dokumentenvorbereitung ..................................................................................................... 4
+   4.2. Scannen.................................................................................................................................. 4
+   4.3. Nachverarbeitung .................................................................................................................. 5
+   4.4. Integritätssicherung ............................................................................................................... 5
+   4.5. Übermittlung der Images ....................................................................................................... 5
+5. Kurzzeitarchiv und ggf. Vernichtung der Papierbelege ................................................................... 6
+6. Löschung der digitalen Archivbestände .......................................................................................... 6
+7. Ermöglichung des Kontrollrechts der Kranken- und Pflegekassen ................................................. 6
+
+1. Allgemeines/Vorbemerkungen zur Verfahrensdokumentation
+
+Die Verfahrensdokumentation beschreibt die Verfahren und Maßnahmen, die für die Digitali-
+sierung und anschließende Aufbewahrung der originären Papierbelege im Unternehmen/beim
+Leistungserbringer gelten. Sofern Dokumente bereits in digitaler Form vorliegen, gilt diese Ver-
+fahrensdokumentation ebenfalls, es erübrigen sich die Verfahrensschritte und Maßnahmen die
+Papierbelege betreffen.
+Die Verfahrensdokumentation umfasst alle Belege, die der gesetzes- und vertragskonformen
+Abrechnung von Leistungen nach §§ 301a, 302 SGB V und § 105 SGB XI durch Leistungser-
+bringer dienen. Die Belege behalten so auch in digitaler Form ihre Beweiskraft.
+Des Weiteren umfasst diese Verfahrensbeschreibung auch die Aktenvernichtung.
+Bestandteil dieser Verfahrensdokumentation ist das „Formular Verfahrensbeschreibung
+Imageverfahren“ (Anlage). In dieses Formular sind über die allgemeinen Angaben in dieser
+Verfahrensbeschreibung hinaus die konkreten Angaben zum Unternehmen, zu verantwortli-
+chen Personen und verfahrenstechnischen Angaben einzutragen.
+
+                                                              öffentlich
+2. Anwendungsbereich und rechtliche Rahmenbedingungen
+
+2.1. Anwendungsbereich
+
+Die vorliegende Verfahrensdokumentation beschreibt nur die Verfahren und Maßnahmen, die
+für die Digitalisierung und anschließende elektronische Aufbewahrung inkl. Vernichtung der
+originären abrechenbaren Papierbelege nach dem Versorgungsvertrag beim Abrechnungs-
+dienstleister oder direkt beim Leistungserbringer gelten. Alle anderen nicht abrechnungsrele-
+vanten Belege nach den Versorgungsverträgen sind nicht Teil dieser Verfahrensdokumenta-
+tion.
+
+2.2. Rechtliche Rahmenbedingungen
+
+Diese Verfahrensdokumentation bildet die Grundlage für die Digitalisierung und elektronische
+Aufbewahrung von Belegen/Abrechnungsbelegen sowie deren Vernichtung in Anlehnung an
+die wesentlichen Grundsätze der Technischen Richtlinie "BSI Technische Richtlinie 03138 Er-
+setzendes Scannen" (TR-RESISCAN) des Bundesamtes für Sicherheit in der Informations-
+technik und des „Leitfadens Elektronische Kommunikation und Digitalisierung in der Sozialver-
+sicherung“ des Bundesamts für Soziale Sicherung und der ADV-Arbeitsgemeinschaft des Lan-
+des Nordrhein-Westfalen.
+
+Die Verfahrensdokumentation ermöglicht somit die Durchführung der papierlosen Abrech-
+nung, das sogenannte Imageverfahren, auf Basis der Anhänge 4 a und 4 b zur technischen
+Anlage 1 der Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V
+über Form und Inhalt des Abrechnungsverfahrens mit „Sonstigen Leistungserbringern“ sowie
+mit Hebammen und Entbindungspflegern (§ 301 a SGB V). Sie kann auch genutzt werden für
+Abrechnungen im Rahmen der Einvernehmlichen Festlegung über Form und Inhalt der Ab-
+rechnungsunterlagen sowie Einzelheiten des Datenaustausches gemäß § 105 Abs. 2 SGB XI.
+
+Zur Klarstellung erfolgt der Hinweis, dass die Beteiligten (Abrechnungsdienstleister, Leistungs-
+erbringer sowie Kranken- und Pflegekassen) zur Beachtung der datenschutzrechtlichen Best-
+immungen verpflichtet sind. Nach der Digitalisierung und Integritätssicherung der Belege ent-
+sprechend Ziffer 4.1. bis 4.4. dieser Verfahrensdokumentation erhält das entstandene digitale
+Image den Beweiswert eines Originals. Die ursprünglichen Papierdokumente sind ab diesem
+Zeitpunkt keine rechnungsbegründenden Unterlagen mehr und damit nicht für den Abrech-
+nungsprozess relevant und werden nicht mehr in dem Verantwortungsbereich der Kranken-
+und Pflegekasse zugeordnet. Die Kranken- und Pflegekasse wird nach der Übermittlung der
+Images gemäß Ziffer 4.5. dieser Verfahrensbeschreibung mit Eingang/Annahme der Daten
+Verantwortlicher im Sinne des Art. 4 Nr. 7 EU-DSGVO. Sofern nach Ziffer 7 anlassbezogen
+Papierdokumente von der Kranken- und Pflegekasse angefordert werden, handelt es sich
+nicht um eine Auftragsverarbeitung nach Art. 28 EU-DSGVO.
+
+3. Organisatorisches
+
+Die Umsetzung des Imageverfahrens ist im Unternehmen über Zuständigkeiten und Verant-
+wortlichkeiten, insbesondere Rollen- und Berechtigungskonzepte, zu organisieren. Konkrete
+Angaben werden im „Formular Imageverfahren“ ausgeführt.
+
+4. Prozessschritte
+
+Die Digitalisierung und Sicherung der Belege umfasst folgende Prozessschritte:
+
+                                                               öffentlich
+     • Dokumentenvorbereitung
+     • Scannen der Dokumente
+     • Nachverarbeitung der Images
+     • Integritätssicherung
+Die einzelnen Prozessschritte sind in der Abbildung dargestellt.
+
+Konkrete und die Ziffern 4.1. bis 4.4. ergänzende Angaben zu diesen Schritten sind im „For-
+mular Verfahrensbeschreibung Imageverfahren“ einzutragen.
+Nach der Digitalisierung und Sicherung werden die Images der Kranken- und Pflegekasse
+nach Ziffer 4.5. übermittelt.
+
+4.1. Dokumentenvorbereitung
+
+Der Scanprozess beginnt grundsätzlich mit dem Eingang des papiergebundenen Dokumentes
+im Unternehmen zu Abrechnungszwecken bzw. beim Abrechnungsdienstleister.
+Um eine vollständige Erfassung der Belege des Posteingangs/ des zu verarbeitenden Beleg-
+volumens eines Leistungserbringer-IK im Scanprozess zu gewährleisten, werden die Papier-
+dokumente sorgfältig vorbereitet und sortiert. Dies umfasst auch folgende Maßnahmen:
+
+     • grundsätzliche Überprüfung, ob die Belege für die Erfassung/Abrechnung vorgesehen
+          sind
+
+     • Lösen von Klammern, Entfernung von Knicken und nicht relevanten Klebezetteln
+     • Notiz-/Klebezettel (Post-IT) auf einem gesonderten Blatt fixieren, wenn diese relevante
+
+          Inhalte überdecken
+
+4.2. Scannen
+
+Nach der Belegvorbereitung werden die Belege gescannt.
+Alle Dokumente werden beidseitig farbig im JPG-Format mit mind. je 200 DPI gescannt.
+Folgende weitere Aspekte sind zu beachten:
+
+     • leere Seiten werden immer mit gescannt und nicht gelöscht
+     • eine Sichtprüfung der Scanprodukte findet über die jeweilige Software oder der jewei-
+
+          ligen Geräte während des Scannens statt
+     • Kopien und Faxe werden nicht gesondert behandelt
+
+                                                               öffentlich
+Beim Scannen muss auf die Auswahl geeigneter Bildkompressionsverfahren entsprechend
+der TR-RESISCAN geachtet werden.
+
+4.3. Nachverarbeitung
+
+Die Image-Dateien werden nicht nachbearbeitet. Jedes Image wird in ein PDF eingebunden.
+Das fertige PDF wird in mindestens PDF-Version 1.7 (oder einer anderen TR-RESISCAN kon-
+formen Version) im Format PDF/A 1 abgespeichert.
+
+Sofern die Dokumente mit mehr als 300 DPI eingescannt wurden, werden diese auf max. 300
+DPI heruntergerechnet.
+
+Bereits digital vorliegende Dokumente müssen diesen Anforderungen ebenfalls entsprechen.
+
+Im Anschluss werden die PDF-Dateien an die Signatursoftware übergeben.
+
+4.4. Integritätssicherung
+
+Nach dem erfolgreichen Scannen bzw. wenn die Dokumente bereits digital vorliegen, werden
+die Dokumente mit einem sicheren Integritätsschutz versehen.
+
+Die erfolgt grundsätzlich unmittelbar nach dem Scan mittels einer qualifizierten elektronischen
+Signatur oder eines qualifizierten elektronischen Siegels per Stapelsignatur/Stapelsiegel je
+Dokumentstapel.
+
+Die digitale Signatur/Siegelung kann sowohl als Datei zum PDF/A mitgeliefert als auch ins
+PDF/A eingebunden werden. Es erfolgt keine optische Darstellung.
+
+Erfolgt der Signierungs-/Siegelungsprozess nicht unmittelbar nach dem Scan und damit zeit-
+lich nachgelagert, ist vorab über eine 100 %-ige Sichtprüfung und ein Abgleich mit den Origi-
+nalbelegen erforderlich.
+
+Es muss über die Software protokolliert werden, welcher Mitarbeiter zu welchem Zeitpunkt die
+Signatur/das Siegel aufgebracht hat.
+
+Nach dem Aufbringen der qualifizierten elektronischen Signatur/des qualifizierten elektroni-
+schen Siegels wird der digitalisierte Scanstapel/Scanergebnis vollständig an das Abrech-
+nungssystem übergeben.
+
+Ausführungen zur Signatur- oder Siegelungsserver, zur Signaturkarte oder Siegel und zur Sig-
+natur- oder Siegelungssoftware sind im „Formular Verfahrensbeschreibung Imageverfahren"
+einzutragen.
+
+4.5. Übermittlung der Images
+
+Nach der Digitalisierung und Sicherung der Belege werden die Images der Kranken- und Pfle-
+gekasse oder dessen Dienstleister im Rahmen der Rechnungslegung übermittelt. Die Über-
+mittlung erfolgt elektronisch über die definierte Schnittstelle zur Kranken- und Pflegekasse ge-
+mäß Anhang 4 a und 4 b zur Technischen Anlage 1 der Richtlinien der Spitzenverbände der
+Krankenkassen nach § 302 Abs. 2 SGB V über Form und Inhalt des Abrechnungsverfahrens
+mit „Sonstigen Leistungserbringern“ sowie mit Hebammen und Entbindungspflegern (§ 301 a
+SGB V). Für Abrechnungen nach § 105 SGB XI kann diese Schnittstelle analog genutzt wer-
+den.
+
+                                                               öffentlich
+Zu übersenden ist neben den Einzelimages noch zusätzlich ein Sammelimage als zusätzliches
+PDF-Sammeldokument. Die Einzeldokumente müssen mit einer Qualifizierten Elektronischen
+Signatur oder einem Qualifizierten Elektronischen Siegel versehen sein, das Sammeldoku-
+ment nicht.
+Auf die Übermittlung des Sammelimages kann nach bilateraler Absprache verzichtet werden,
+sofern diese für den Prozess bei der Krankenkasse oder dessen Dienstleister nicht benötigt
+wird.
+
+5. Kurzzeitarchiv und ggf. Vernichtung der Papierbelege
+
+Die papierhaften Unterlagen, werden nach erfolgreicher Übertragung der digitalen Images an
+die die entspr. Kranken- bzw. Pflegekasse mindestens 30 Tage unter Einhaltung der gesetzli-
+chen und vertraglichen Regelungen kurzzeitarchiviert. Die Lagerung des Archivguts (Papier-
+unterlagen) erfolgt insbesondere unter Beachtung der datenschutzrechtlichen Bestimmungen
+mandanten- bzw. kostenträgergetrennt und in zugriffssicheren Archivräumen.
+Nach Ablauf der Fristen für die Kurzzeitarchivierung werden die Papierbelege datenschutzge-
+recht gemäß DIN 66399, Schutzklasse 3 und Sicherheitsstufe P-4 vernichtet.
+
+6. Löschung der digitalen Archivbestände
+
+Die Archivierung und Löschung der Imageverfahren-Daten erfolgt gemäß der gesetzlichen
+Aufbewahrungs- und Vernichtungsfrist für Abrechnungsdaten.
+
+7. Ermöglichung des Kontrollrechts der Kranken- und Pflegekassen
+
+Sofern und soweit die Kranken- und Pflegekasse z. B. aufgrund von Auffälligkeiten von Ihrem
+Recht zur Kontrolle der Verfahrensabläufe Gebrauch macht und z. B. ein Audit oder Stichpro-
+benprüfungen durchführt, werden ihr diese Kontrollen ermöglicht und unterstützt. Prüfungen
+sind maximal 30 Tage vorher per E-Mail an die im „Formular Verfahrensbeschreibung Image-
+verfahren“ als „Gesamtverantwortlich Imageverfahren“ benannte Person anzukündigen. Even-
+tuell entstehende Aufwände trägt jeder Beteiligte (Abrechnungsdienstleister, Leistungserbrin-
+ger sowie Kranken- und Pflegekassen) selbst.
+
+Anlage: „Formular Verfahrensbeschreibung Imageverfahren"
+
+                                                              öffentlich
+

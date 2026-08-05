@@ -1,0 +1,38 @@
+Änderungshistorie
+
+Diese Darstellung beschreibt die Änderungen zur jeweiligen Vorgängerversion und alle noch offenen Änderungen aus älteren Versionen.
+
+  Punkt     Art der                                            Kurzbeschreibung der Änderung                              gültig ab
+   1.16   Änderung
+                                                        Anlage 4 – Verfahrenskennungen
+   1.17         N    Verfahrenskennung „DJH“ – DMP Adipositas – Kinder und Jugendliche (Hinweg)
+   1.23         N    Verfahrenskennung „DJR“ – DMP Adipositas – Kinder und Jugendliche (Rückweg)
+   1.59         N    Verfahrenskennung „DWH“ – DMP Adipositas – Erwachsene (Hinweg)
+   1.60         N    Verfahrenskennung „DWR“ – DMP Adipositas – Erwachsene (Rückweg)
+                N    Verfahrenskennung „MDQ“ – Datenlieferungen entsprechend technischer Spezifikation zum Da-
+    4.5         N    tenaustausch Qualitätsprüfungen
+    5.3         N    Verfahrenskennung „PQV“ – Das Präqualifizierungsverzeichnis enthält alle Zertifikate, die aus den
+   5.3.1        N    PQ-Stellen an den GKV-SV geliefert wurden
+    5.5              Verfahrenskennung „AOP“ – Übermittlung von Daten zum Ambulanten Operieren (AOP)
+                Ä    Verfahrenskennung „MAA“ – Meldungen von Leistungsbezug nach dem SGB III § 173 Abs. 5
+Anhang 1             SGB III
+                Ä    Verfahrenskennung „MAS“ – Rückmeldungen von Leistungsbezug nach dem SGB III § 173 Abs. 5
+                Ä    SGB III
+                Ä
+                                                 Anlage 16 – Security Schnittstelle (SECON)
+                Ä    Verkürzung der maximalen Gültigkeitsdauer für Teilnehmer-Zertifikate von drei Jahren auf ein
+                     Jahr, als erster Schritt in Richtung Kryptoagilität und zukünftiger Ausrichtung auf Post-Quanten-
+                     Kryptographie ab 2030
+                     Entfernung der Nennung der Datenstelle der Rentenversicherung (DSRV) als Certification Autho-
+                     rity (CA), da hier kein öffentliches Trustcenter betrieben wurde bzw. betrieben wird
+                     Aktualisierung des Firmennamens der Policy Certification Authority (PCA), wegen Umfirmierung
+                     Aktualisierung der Darstellung einer Certification Request (Zertifikatsanforderung) als papierloses
+                     (digitalisiertes) Verfahren, einschließlich Anpassung der Begrifflichkeit von Beglaubigung zu Iden-
+                     tifizierung und Authentifizierung;
+                     Aktualisierung der Gültigkeit von Eigenerklärungen für Meldestellen (Datensendende Stellen, die
+                     Meldungen für weitere Betriebsnummern / Institutionskennzeichen abgeben)
+                     Aktualisierung der Gültigkeit von Eigenerklärungen für Meldestellen sowie redaktionelle Anpas-
+                     sungen zur Klarstellung
+
+Ä = Änderung N = neu aufgenommen L = gelöscht
+

@@ -1,0 +1,95 @@
+              01.09.2024
+
+Empfehlungen
+
+                                           des GKV-Spitzenverbandes
+               der Verbände der Pflege- und Krankenkassen auf Bundesebene und
+
+                            der Verbände der Pflegedienste auf Bundesebene
+
+Angabe der Beschäftigtennummer in den Abrechnungsunterlagen im Rahmen der
+Umsetzung des § 105 Abs. 1 Satz 1 Nr. 2 SGB XI und § 302 Abs. 1 Satz 2 SGB V
+
+Sachverhalt
+Nach § 105 Abs. 1 Satz 1 Nr. 2 SGB XI bzw. § 302 Abs. 1 Satz 2 SGB V ist die Beschäftigten-
+nummer in der Abrechnung pflegerischer Leistungen bzw. Leistungen der häuslichen Kranken-
+pflege, Leistungen der spezialisierten ambulanten Palliativversorgung (SAPV) und Leistungen der
+außerklinischen Intensivpflege anzugeben (siehe auch § 293 Abs. 8 Satz 13 SGB V). Das bedeu-
+tet, dass grundsätzlich in jeder Abrechnung, die an die Pflegekasse bzw. Krankenkasse übermit-
+telt wird, die Beschäftigtennummern anzugeben sind. Die Beschäftigtennummer nach § 293
+Abs. 8 Satz 2 SGB V wird vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) ver-
+geben.
+
+Angabe in den Abrechnungsdatensätzen
+In den elektronischen Datensätzen zur Abrechnung der jeweiligen Leistungen sind hierfür bereits
+Datenfelder „Beschäftigtennummer“ erstmals in der Anlage 1 (Technische Anlage) der Einver-
+nehmlichen Festlegung nach § 105 Abs. 2 SGB XI bzw. der Anlage 1 Version 17 zu den Richtli-
+nien über Form und Inhalt des Abrechnungsverfahrens nach § 302 SGB V vorgesehen. Die geän-
+derten Anlagen 1 sind zum 01.01.2023 in Kraft getreten. Die Ergänzung der Angabe der Beschäf-
+tigtennummer im Rahmen der Abrechnung von Leistungen der SAPV aufgrund des Gesetzes zur
+Beschleunigung der Digitalisierung des Gesundheitswesens (DigiG) wird derzeit vorbereitet.
+
+In der Anlage 3 (Schlüsselverzeichnisse) der Einvernehmlichen Festlegung wurde unter 2.17 und
+in der Anlage 3 zu den Richtlinien über Form und Inhalt des Abrechnungsverfahrens nach § 302
+SGB V unter 8.1.19 Schlüssel für „Ersatz-Beschäftigtennummern“ vorgesehen. Eine Ersatz-Be-
+schäftigtennummer ist für Fälle vorgesehen, in denen die Beschäftigtennummer nach § 293
+Abs. 8 Satz 2 SGB V aus sonstigem Grund fehlt (999999997). Die geänderten Anlagen 3 sind
+ebenfalls zum 01.01.2023 in Kraft getreten.
+
+Neben dem elektronischen Datenaustausch ist weiterhin auch noch die Abrechnung auf Abrech-
+nungsformularen in Papierform möglich.
+
+Elektronischer Leistungsnachweis
+In den Vorgaben für einen elektronischen Leistungsnachweis der Einvernehmlichen Festlegung
+nach § 105 Abs. 2 SGB XI bzw. den Rahmenempfehlungen nach § 132a Abs. 1 SGB V ist eben-
+falls die Angabe der Beschäftigtennummer vorgesehen. Gemäß der Vereinbarung nach § 105
+Abs. 2 Satz 2 SGB XI bzw. den Rahmenempfehlungen nach § 132a Abs. 1 SGB V verwenden die
+Pflegedienste spätestens ab 01.12.2026 den elektronischen Leistungsnachweis im Rahmen der
+vollelektronischen Abrechnung über die Telematikinfrastruktur (TI). Bis dahin können weiterhin die
+papiergebundenen Leistungsnachweise, deren Inhalt durch die Vereinbarungspartner der Landes-
+rahmenverträge nach § 75 SGB XI bzw. der Verträge nach § 132a Abs. 4 SGB V festgelegt wer-
+den, verwendet werden.
+
+              Seite 1 von 2
+Papiergebundene Leistungsnachweise
+Bei papiergebundenen Leistungsnachweisen ist ein entsprechendes Feld zur Angabe der Be-
+schäftigtennummer vorzusehen. Die Beschäftigtennummern der Pflegekräfte, die ihr Handzeichen
+im Leistungsnachweis abgegeben haben, kann auch in einer tabellarischen Form erfolgen, aus
+der ersichtlich ist, welchem Handzeichen welche Beschäftigtennummer zugeordnet ist. Dies ist
+auch in Form einer Anlage möglich.
+
+Solange in den papiergebundenen Leistungsnachweisen noch keine Anpassungen (siehe oben)
+vorgenommen worden sind, oder lediglich die Ersatz-Beschäftigtennummer angegeben wird,
+übermitteln die Träger von Pflegediensten und SAPV-Teams entsprechend den bisherigen ver-
+traglichen Regelungen weiterhin den Pflegekassen oder Krankenkassen bzw. deren Landesver-
+bänden ergänzend die bisherigen „Handzeichenlisten“ bzw. „Handzeichennachweise“, auf denen
+dem Handzeichen der Klarname und die Qualifikation der jeweiligen Pflegekraft zugeordnet wird.
+Näheres zum Leistungsnachweis in der SAPV ist im Rahmenvertrag nach § 132d Abs. 1 SGB V
+sowie im Zulassungsvertrag nach § 132d Abs. 1 Satz 6 SGB V geregelt.
+
+Verwendung der vom BfArM vergebenen Beschäftigtennummern
+Das BfArM soll den Kranken- und Pflegekassen die pseudonymisierten Daten des Beschäftigten-
+verzeichnisses über den GKV-Spitzenverband übermitteln. Dies wird voraussichtlich ab
+01.05.2025 erfolgen. Die vom BfArM vergebene Beschäftigtennummer ist daher für alle Leistun-
+gen, die ab diesem Zeitpunkt erbracht werden, in den Abrechnungsunterlagen anzugeben. Bis da-
+hin kann grundsätzlich die o. g. Ersatz-Beschäftigtennummer verwendet werden.
+
+Erprobungsphase
+Ab 01.05.2025 findet eine viermonatige Erprobungsphase (bis 31.08.2025) zum Einsatz der Be-
+schäftigtennummer im Rahmen der Abrechnungsverfahren nach § 105 SGB XI und § 302 SGB V
+statt. Die Partner dieser Empfehlungen sehen die Notwendigkeit, dass zwischen den Kranken-
+und Pflegekassen, dem BfArM und den Leistungserbringern Abstimmungen zur Kommunikation
+über fehlerhafte Daten und deren Bereinigung während der Erprobungsphase erfolgen. Das Glei-
+che gilt für die Aufbereitung der Ergebnisse der Erprobungsphase.
+
+Die aktuellen Anlagen 1 und 3 der Einvernehmlichen Festlegung nach § 105 Abs. 2 SGB XI sind
+abrufbar unter:
+https://www.gkv-datenaustausch.de/leistungserbringer/pflege/pflege.jsp
+
+Die aktuellen Anlagen 1 und 3 zu den Richtlinien über Form und Inhalt des Abrechnungsverfah-
+rens nach § 302 SGB V sind abrufbar unter:
+https://www.gkv-datenaustausch.de/leistungserbringer/sonstige_leistungserbringer/sonstige_leis-
+tungserbringer.jsp
+
+                                                                                                                                                                                                                   Seite 2 von 2
+

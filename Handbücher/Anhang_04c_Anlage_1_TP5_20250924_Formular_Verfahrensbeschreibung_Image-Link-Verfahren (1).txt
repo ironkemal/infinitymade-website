@@ -1,0 +1,138 @@
+Formular Verfahrensbeschreibung Imageverfahren
+(Anlage zur Verfahrensbeschreibung)
+
+Angaben zum Unternehmen
+
+Unternehmen              Standort  Funktionseinheit                       Telefon
+
+Allgemeine Angaben:
+
+ Angaben zu verantwortlichen Personen
+ Nennen Sie hier die Identifikationsdaten je Bereichsverantwortlichkeit:
+ Titel/Vor- und Nachname/E-Mail/Telefon
+ Gesamtverantwortlich gesellschaftsrechtlich
+ Gesamtverantwortlich Imageverfahren
+ Gesamtverantwortlich IT
+ Produktion/Abrechnungserstellung
+ Qualitätsmanagement
+ Datenschutz
+
+Verfahrenstechnische Angaben:
+
+ Belegaufbereitung
+ Ansprechpartner – Leitung
+ Nennen Sie hier die Rolle des Ansprechpartners.
+
+ Rollen- und Berechtigungskonzept
+ Beschreiben Sie hier die Rollen, ggf.
+ Berechtigungsgruppen und die Berechtigungen.
+Scannen/Digitalisierung und Integritätssicherung nach der eIDAS-VO
+
+Ansprechpartner – Leitung
+Nennen Sie hier die Rolle des
+Ansprechpartners.
+
+Rollen- und Berechtigungskonzept
+Beschreiben Sie hier die Rollen, ggf.
+Berechtigungsgruppen und die Berechtigungen.
+
+Prozess (Sichtprüfung/QS-Sicherung/                -- Bitte wählen --
+Nachscannen/Siegel-/Signaturverfahren)
+
+Beschreiben Sie die betroffenen Prozesse und
+skizzieren Sie den Prozessablauf und bestätigen
+Sie zusätzlich die Einhaltung des Siegel-/
+Signaturverfahrens mit Einzelsignatur und/oder
+Stapelsignatur.
+
+Scangüte                                           Duplex-Einzug
+Bestätigen Sie die Konfiguration der Scan-Geräte.                          Bit Farbtiefe
+
+                                                                       DPI
+
+                                                   Flachbettscan
+
+                                                                       Bit Farbtiefe
+
+Dateiformat des Scanprodukts                                                      DPI
+                                                        Dateiformat entspricht dem Standard
+Bitte geben Sie für die erzeugte PDF-Datei das     Abweichendes Dateiformat:
+Format und die Version an, sofern es nicht dem
+Standard entspricht: PDF-Version 1.7 (oder
+andere) im Format PDF/A 1a oder PDF/A 1b.
+
+Scanumfang                                         Hiermit bestätige ich die einheitliche
+                                                   Behandlung der Dokumente.
+Bestätigen Sie, dass alle rechnungsbegründenden
+Unterlagen sowie zur Abrechnung vorliegenden       Hiermit bestätige ich die Einhaltung
+Dokumente, bezüglich der Prozesse Scannen,         der eIDAS-Verordnung.
+Siegeln/Signieren, Dateierzeugung/Lieferung,
+einheitlich behandelt werden.
+
+eIDAS-Verordnung
+
+Bitte bestätigen Sie, dass eine sichere und
+nahtlose elektronische Interaktionen gemäß der
+eIDAS-Verordnung durchgeführt wird.
+Siegel-/Signaturserver                                                  Produkt:
+                                                                        Anbieter:
+Bitte benennen Sie die Produkte, die für
+die Integritätssicherung eingesetzt werden.
+
+Siegel-/Signatursoftware                                                Produkt:
+                                                                        Anbieter:
+Bitte benennen Sie das Produkt und den Anbieter
+der Siegel-/Signatursoftware.
+
+Siegel-/Signaturkarte (Verwahrung)
+
+Bitte beschreiben Sie die getroffenen                                   Produkt:
+Sicherheitsmaßnahmen für den Zugriff auf Siegel-/                       Anbieter:
+Signaturkarte und nennen Sie die Bezeichnung
+des Produkts und den Anbieter der Karte.
+
+Kartenleser und Pin-Pad                                                      Kartenleser und Pin-Pad zertifiziert
+                                                                        Produkt:
+Bitte bestätigen  Sie,  dass ein  ezienrgtiefiszeietrzttews irdP. rodu  Anbieter:
+Kartenlesegerät   und   Pin-Pad
+
+                                             Anbiet
+
+Gültigkeit der Siegel-/Signaturkarte
+
+Bitte machen Sie Angaben zu dem Siegel-/
+Signaturkartenmanagement-Prozess.
+
+Vertrauensdiensteanbieter (VDA)
+Bitte benennen Sie den Vertrauensdiensteanbieter.
+
+Aufbewahrung der elektronischen Belege
+
+Speicherumfang und Dauer                                                Vorgaben des BGB, HGB werden
+                                                                        eingehalten
+Für die Aufbewahrung der elektronischen Belege
+werden die folgenden rechtlichen und                                    Datenschutz (z. B. EU-DSGVO,
+organisatorischen Rahmenbedingungen                                     BDSG) wird eingehalten
+berücksichtigt.
+
+Aufbewahrung der Papierbelege
+
+Ansprechpartner – Leitung
+
+Nennen Sie hier die Rolle des Ansprechpartners.
+Prozess (Identifikation, Ein- und Auslagerung)
+
+Beschreiben Sie die betroffenen Prozesse und
+
+skizzieren Sie den Prozessablauf. Führen Sie
+den Standort mit auf.
+
+Rollen- und Berechtigungssystem (Zutritts- und
+Zugriffsrechte)
+
+Beschreiben Sie hier die Rollen,
+Berechtigungsgruppen und die Berechtigungen.
+
+                                                                        ___________________________
+                                                                                Unterschrift/Signatur
+

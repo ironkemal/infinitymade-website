@@ -1,0 +1,611 @@
+                                                                                                          Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                                                             zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+                                         Anlage 2
+                                        Vergütung
+
+                                            zum
+                        Vertrag nach § 125 Absatz 1 SGB V
+
+                                            über
+                          die Versorgung mit Leistungen
+
+                                      der Podologie
+                                und deren Vergütung
+
+                                     vom 30.11.2020
+               einschließlich der Änderungsvereinbarungen
+in den jeweiligen Fassungen vom 13.06.2022, 19.06.2023, 20.10.2023,
+
+                      vom 17.06.2024 und vom 16.06.2025
+
+LEGS: 7100501  Seite 1 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                                                            Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                                                               zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+Inhaltsverzeichnis
+
+      §1 Allgemeines ..................................................................................................................... 3
+      § 2 Preisvereinbarung ab dem 01.07.2025 ............................................................................ 3
+      § 3 Preisvereinbarung ab dem 01.07.2026 ............................................................................ 6
+      § 4 Inkrafttreten und Laufzeit............................................................................................ 10
+
+LEGS: 7100501  Seite 2 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                             Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+§1 Allgemeines
+
+(1) Die Verwendung des Schlüssels richtet sich nach dem Status des Leistungserbringers:
+                             Leistungserbringer von Heilmitteln
+                             gemäß den Abrechnungs-Richtlinien § 302 SGB V
+
+            7100501 Podologen
+            7200501 Med. Fußpfleger (gemäß § 10 Abs. 4 bis 6 PodG)
+            2700541 Krankenhaus
+            2800541 Kurbetrieb
+(2) Die abzurechnende Heilmittelpositionsnummer richtet sich nach dem Status des Leistungser-
+     bringers. Im Heilmittelbereich Podologie gibt es folgende Status:
+
+                 • zugelassene Leistungserbringer gemäß § 124 Abs. 1 i. V. m. Abs. 2 SGB V (ZL)
+                 • Leistungserbringer gemäß § 124 Absatz 5 SGB V (Krankenhaus=> KH)
+                 • Leistungserbringer gemäß § 124 Absatz 5 SGB V (Kurbetrieb=> KB)
+
+§ 2 Preisvereinbarung ab dem 01.07.2025
+
+(1) Diese Preisvereinbarung gilt für die Behandlung von Anspruchsberechtigten der Gesetzlichen
+      Krankenversicherung.
+
+(2) Für Behandlungen, die ab dem 01.07.2025 stattfinden, sind pro Behandlung folgende Preise ab-
+      zurechnen:
+
+a) für Leistungen in den Diagnosegruppen DF/ NF oder QF
+
+HPNR                                                     Vergütung  davon
+
+ZL: 78010 Podologische Behandlung (klein)                35,16 €    Zuzahlung
+
+                                                                    (nachrichtlich)
+
+                                                                              3,52 €
+
+KH: 68010
+
+KB: 88010
+
+ZL: 78020 Podologische Behandlung (groß)                 50,55 €                                5,06 €
+
+KH: 68020
+
+KB: 88020
+
+ZL: 78030 Podologische Befundung                         3,47 €                                 0,35 €
+
+KH: 68030
+
+KB: 88030
+
+ZL: 78040 Eingangsbefundung                              22,48 €                                2,25 €
+
+KH: 68040
+
+KB: 88040
+
+Die Vergütung der Position 78010 nach § 1 Abs. 2 setzt sich aus 20,49 € für die therapeutische
+
+Leistung und 9,26 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sachkos-
+
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zu-
+
+sammen.
+
+Die Vergütung der Position 78020 nach § 1 Abs. 2 setzt sich aus 35,87 € für die therapeutische
+Leistung und 9,26 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sachkos-
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+
+LEGS: 7100501                                            Seite 3 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                                                    Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                                                       zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zu-
+sammen.
+
+Die Vergütung der Position 78030 nach § 1 Abs. 2 setzt sich aus 3,47 € für die therapeutische Leis-
+tung zusammen.
+
+Die Vergütung der Position 78040 nach § 1 Abs. 2 setzt sich aus 22,48 € für die therapeutische
+Leistung zusammen.
+
+b) für Leistungen in den Diagnosegruppen UI1 oder UI2 (Verordnungsdatum bis zum 30.09.2025)
+
+HPNR                                                               Vergütung      davon
+                                                                              Zuzahlung
+ZL: 78210      Anpassung einer einteiligen unilateralen und bila-  99,04 €
+KH: 68210      teralen Nagelkorrekturspange, z.B. nach Ross                   (nachrichtlich)
+KB: 88210      Fraser
+                                                                                        9,90 €
+
+ZL: 78220 Fertigung einer einteiligen unilateralen und bila-       54,24 €                                                                       -
+
+KH: 68220 teralen Nagelkorrekturspange, z. B. nach Ross
+
+KB: 88220 Fraser
+
+ZL: 78230      Nachregulierung der einteiligen unilateralen und    49,64 €                      4,96 €
+KH: 68230      bilateralen Nagelkorrekturspange, z. B. nach Ross
+KB: 88230      Fraser
+
+ZL: 78300      Vorbereitung des Nagels, Anpassung und Aufset-      97,64 €                      9,76 €
+KH: 68300      zen einer mehrteiligen bilateralen Nagelkorrek-
+KB: 88300      turspange
+
+ZL: 78400      Vorbereitung des Nagels, Anpassung und Aufset-      53,89 €                      5,39 €
+KH: 68400      zen einer einteiligen Kunststoff- oder Metall-
+KB: 88400      Nagelkorrekturspange
+
+Die Vergütung der Position 78210 nach § 1 Abs. 2 setzt sich aus 67,45 € für die therapeutische
+Leistung und 18,52 € für die Vor-, Nachbereitung und Dokumentation und 10,82 € für die Sach-
+kosten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für
+die podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten
+und 2,25 € für die Nagelspange und anderes notwendiges Material zusammen.
+
+Die Vergütung der Position 78220 nach § 1 Abs. 2 setzt sich aus 50,58 € für die therapeutische
+Leistung und 3,66 € für die Nagelspange und anderes notwendiges Material zusammen.
+Die Vergütung der Position 78230 nach § 1 Abs. 2 setzt sich aus 33,72 € für die therapeutische
+Leistung und 9,26 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sach-
+kosten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für
+die podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten
+und 1,25 € für die Nagelspange und anderes notwendiges Material zusammen.
+Die Vergütung der Position 78300 nach § 1 Abs. 2 setzt sich aus 67,45 € für die therapeutische
+
+Leistung und 9,26 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sach-
+kosten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für
+die podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten
+und 15,52 € für die Nagelspange und anderes notwendiges Material zusammen.
+Die Vergütung der Position 78400 nach § 1 Abs. 2 setzt sich aus 33,72 € für die therapeutische
+Leistung und 9,26 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sach-
+kosten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für
+
+LEGS: 7100501                                                      Seite 4 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                                                    Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                                                      zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+die podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten
+und 5,50 € für die Nagelspange und anderes notwendiges Material zusammen.
+
+c) für Leistungen in den Diagnosegruppen UI1 oder UI2 (Verordnungsdatum ab dem 01.10.2025)
+
+HPNR                                                      Vergütung      davon
+
+                                                                         Zuzahlung
+
+                                                                         (nachrichtlich)
+
+ZL: 78610 Nagelspangenbehandlung                                55,90 €                         5,59 €
+
+KH: 68610
+
+KB: 88610
+
+ZL: 78620 Aufschlag für besonderen Aufwand                      16,86 €                         1,69 €
+
+KH: 68620
+
+KB: 88620
+
+Die Vergütung der Position 78610 nach § 1 Abs. 2 setzt sich aus 33,72 € für die therapeutische
+
+Leistung und 9,26 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sach-
+
+kosten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für
+
+die podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten
+
+und 7,50 € für die Nagelspange und anderes notwendiges Material zusammen. Die Positionen
+
+78610, 68610 und 88610 dürfen zweimal je Tag abgegeben werden.
+
+Die Vergütung der Position 78620 nach § 1 Abs. 2 setzt sich aus 16,86 € für die therapeutische
+
+Leistung zusammen.
+
+d) für weitere Leistungen in den Diagnosegruppen UI1 oder UI2 (unabhängig vom Verordnungsda-
+tum)
+
+HPNR                                                      Vergütung          davon
+ZL: 78100 Erstbefundung groß                                   56,00 €   Zuzahlung
+
+                                                                         (nachrichtlich)
+
+                                                                                   5,60 €
+
+KH: 68100
+
+KB: 88100
+
+ZL: 78110 Erstbefundung klein                                   27,90 €                         2,79 €
+
+KH: 68110
+
+KB: 88110
+
+ZL: 78510 indikationsspezifische Kontrolle auf Sitz- und        17,21 €                         1,72 €
+
+KH: 68510 Passgenauigkeit
+
+KB: 88510
+
+ZL: 78520 Behandlungsabschluss / Entfernung der Nagel-          25,91 €                         2,59 €
+
+KH: 68520 korrekturspange
+
+KB: 88520
+
+ZL: 78530 Therapiebericht UI 2                                  16,86 €
+
+KH: 68530
+
+KB: 88530
+
+Die Vergütung der Position 78100 nach § 1 Abs. 2 setzt sich aus 50,58 € für die therapeutische
+
+Leistung und 5,41 € für die Sachkosten im Zusammenhang mit der Aufbereitung des Raumes und
+
+der Instrumente sowie die für die podologische Therapie üblicherweise erforderlichen Hygiene-
+
+maßnahmen des Therapeuten zusammen.
+
+LEGS: 7100501                                                   Seite 5 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                   zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+Die Vergütung der Position 78110 nach § 1 Abs. 2 setzt sich aus 22,48 € für die therapeutische
+Leistung und 5,41 € für die Sachkosten im Zusammenhang mit der Aufbereitung des Raumes und
+der Instrumente sowie die für die podologische Therapie üblicherweise erforderlichen Hygiene-
+maßnahmen des Therapeuten zusammen.
+
+Die Vergütung der Position 78510 nach § 1 Abs. 2 setzt sich aus 5,62 € für die therapeutische Leis-
+tung und 6,17 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sachkosten im
+Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die podolo-
+gische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zusammen.
+
+Die Vergütung der Position 78520 nach § 1 Abs. 2 setzt sich aus 11,24 € für die therapeutische
+Leistung und 9,26 € für die Vor-, Nachbereitung und Dokumentation und 5,41 € für die Sachkos-
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zu-
+sammen.
+
+Die Vergütung der Position 78530 nach § 1 Abs. 2 setzt sich aus 16,86 € für die therapeutische
+Leistung zusammen.
+
+e) Hausbesuche
+
+HPNR                                                               Vergütung         davon
+                                                                        23,61 €  Zuzahlung
+ZL: 79933          Hausbesuch, ärztlich verordnet, inkl. Wegegeld
+KH: 69933          Hausbesuch in soz. Einrichtung, inkl. Wegegeld                (nachrichtlich)
+KB: 89933
+ZL: 79934                                                                                  2,36 €
+KH: 69934
+KB: 89934                                                          13,60 €                      1,36 €
+
+§ 3 Preisvereinbarung ab dem 01.07.2026
+
+(1) Diese Preisvereinbarung gilt für die Behandlung von Anspruchsberechtigten der gesetzlichen
+      Krankenversicherung.
+
+(2) Für Behandlungen, die ab dem 01.07.2026 stattfinden, sind pro Behandlung folgende Preise ab-
+      zurechnen:
+
+a) für Leistungen in den Diagnosegruppen DF/ NF oder QF
+
+HPNR                                                               Vergütung         davon
+                                                                        36,10 €  Zuzahlung
+        ZL: 78010  Podologische Behandlung (klein)
+        KH: 68010                                                                (nachrichtlich)
+        KB: 88010
+                                                                                           3,61 €
+LEGS: 7100501
+LEGS: 7200501                                                      Seite 6 von 13
+LEGS: 2700541
+LEGS: 2800541
+                                                            Anlage 2: Vergütung i. d. F. vom 01.07.2025
+               zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+ZL: 78020      Podologische Behandlung (groß)                      51,92 €                      5,19 €
+KH: 68020      Podologische Befundung                               3,57 €                      0,36 €
+KB: 88020      Eingangsbefundung                                                                2,31 €
+ZL: 78030                                                          23,11 €
+KH: 68030
+KB: 88030
+ZL: 78040
+KH: 68040
+KB: 88040
+
+Die Vergütung der Position 78010 nach § 2 Abs. 2 setzt sich aus 21,06 € für die therapeutische
+
+Leistung und 9,52 € für die Vor-, Nachbereitung und Dokumentation und 5,52 € für die Sachkos-
+
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zu-
+
+sammen.
+
+Die Vergütung der Position 78020 nach § 2 Abs. 2 setzt sich aus 36,88 € für die therapeutische
+Leistung und 9,52 € für die Vor-, Nachbereitung und Dokumentation und 5,52 € für die Sachkos-
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zu-
+sammen.
+
+Die Vergütung der Position 78030 nach § 2 Abs. 2 setzt sich aus 3,57 € für die therapeutische Leis-
+tung zusammen.
+
+Die Vergütung der Position 78040 nach § 2 Abs. 2 setzt sich aus 23,11 € für die therapeutische
+Leistung zusammen.
+
+b) für Leistungen in den Diagnosegruppen UI1 oder UI2 (Verordnungsdatum bis zum 30.09.2025)
+
+HPNR                                                               Vergütung      davon
+                                                                              Zuzahlung
+ZL: 78210      Anpassung einer einteiligen unilateralen und bila-  101,65 €
+KH: 68210      teralen Nagelkorrekturspange, z.B. nach Ross         55,66 €   (nachrichtlich)
+KB: 88210      Fraser                                               50,95 €
+ZL: 78220      Fertigung einer einteiligen unilateralen und bila-   99,90 €           10,17 €
+KH: 68220      teralen Nagelkorrekturspange, z. B. nach Ross
+KB: 88220      Fraser                                                                           -
+ZL: 78230      Nachregulierung der einteiligen unilateralen und
+KH: 68230      bilateralen Nagelkorrekturspange, z. B. nach Ross                        5,10 €
+KB: 88230      Fraser
+ZL: 78300      Vorbereitung des Nagels, Anpassung und Aufset-                           9,99 €
+KH: 68300      zen einer mehrteiligen bilateralen Nagelkorrek-
+KB: 88300      turspange
+
+LEGS: 7100501                                                      Seite 7 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                            Anlage 2: Vergütung i. d. F. vom 01.07.2025
+               zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+ZL: 78400 Vorbereitung des Nagels, Anpassung und Aufset-  55,20 €                               5,52 €
+
+KH: 68400 zen einer einteiligen Kunststoff- oder Metall-
+
+KB: 88400 Nagelkorrekturspange
+
+Die Vergütung der Position 78210 nach § 2 Abs. 2 setzt sich aus 69,34 € für die therapeutische
+
+Leistung und 19,03 € für die Vor-, Nachbereitung und Dokumentation und 11,03 € für die Sach-
+
+kosten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für
+
+die podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten
+
+und 2,25 € für die Nagelspange und anderes notwendiges Material zusammen.
+
+Die Vergütung der Position 78220 nach § 2 Abs. 2 setzt sich aus 52,00 € für die therapeutische
+Leistung und 3,66 € für die Nagelspange und anderes notwendiges Material zusammen.
+
+Die Vergütung der Position 78230 nach § 2 Abs. 2 setzt sich aus 34,67 € für die therapeutische
+Leistung und 9,52 € für die Vor-, Nachbereitung und Dokumentation und 5,51 € für die Sachkos-
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten und
+1,25 € für die Nagelspange und anderes notwendiges Material zusammen.
+
+Die Vergütung der Position 78300 nach § 2 Abs. 2 setzt sich aus 69,34 € für die therapeutische
+Leistung und 9,52 € für die Vor-, Nachbereitung und Dokumentation und 5,51 € für die Sachkos-
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten und
+15,52 € für die Nagelspange und anderes notwendiges Material zusammen.
+
+Die Vergütung der Position 78400 nach § 2 Abs. 2 setzt sich aus 34,67 € für die therapeutische
+Leistung und 9,52 € für die Vor-, Nachbereitung und Dokumentation und 5,51 € für die Sachkos-
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten und
+5,50 € für die Nagelspange und anderes notwendiges Material zusammen.
+
+c) für Leistungen in den Diagnosegruppen UI1 oder UI2 (Verordnungsdatum ab dem 01.10.2025)
+
+HPNR                                                      Vergütung        davon
+
+                                                                           Zuzahlung
+
+                                                                           (nachrichtlich)
+
+ZL: 78610 Nagelspangenbehandlung                          57,20 €                               5,72 €
+
+KH: 68610
+
+KB: 88610
+
+ZL: 78620 Aufschlag für besonderen Aufwand                17,33 €                               1,73 €
+
+KH: 68620
+
+KB: 88620
+
+Die Vergütung der Position 78610 nach § 2 Abs. 2 setzt sich aus 34,67 € für die therapeutische
+
+Leistung und 9,52 € für die Vor-, Nachbereitung und Dokumentation und 5,52 € für die Sachkosten
+
+im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die podo-
+
+logische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten und 7,50 €
+
+LEGS: 7100501                                                              Seite 8 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                                                     Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                                                        zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+für die Nagelspange und anderes notwendiges Material zusammen. Die Positionen 78610, 68610
+und 88610 dürfen zweimal je Tag abgegeben werden.
+
+Die Vergütung der Position 78620 nach § 2 Abs. 2 setzt sich aus 17,33 € für die therapeutische
+ Leistung zusammen.
+
+d) für weitere Leistungen in den Diagnosegruppen UI1 oder UI2 (unabhängig vom Verordnungsda-
+tum)
+
+HPNR                                                      Vergütung  davon
+
+                                                                     Zuzahlung
+
+                                                                     (nachrichtlich)
+
+ZL: 78100 Erstbefundung groß                              57,52 €                               5,75 €
+
+KH: 68100
+
+KB: 88100
+
+78100
+
+ZL: 78110 Erstbefundung klein                             28,63 €                               2,86 €
+
+KH: 68110
+
+KB: 88110
+
+ZL: 78510 indikationsspezifische Kontrolle auf Sitz- und  17,64 €                               1,76 €
+
+KH: 68510 Passgenauigkeit
+
+KB: 88510
+
+ZL: 78520 Behandlungsabschluss / Entfernung der Nagel-    26,59 €                               2,66 €
+
+KH: 68520 korrekturspange
+
+KB: 88520
+
+ZL: 78530 Therapiebericht UI 2                            17,33 €
+
+KH: 68530
+
+KB: 88530
+
+Die Vergütung der Position 78100 nach § 2 Abs. 2 setzt sich aus 52,00 € für die therapeutische
+
+Leistung und 5,52 € für die Sachkosten im Zusammenhang mit der Aufbereitung des Raumes und
+
+der Instrumente sowie die für die podologische Therapie üblicherweise erforderlichen Hygiene-
+
+maßnahmen des Therapeuten zusammen.
+
+Die Vergütung der Position 78110 nach § 2 Abs. 2 setzt sich aus 23,11 € für die therapeutische
+Leistung und 5,52 € für die Sachkosten im Zusammenhang mit der Aufbereitung des Raumes und
+der Instrumente sowie die für die podologische Therapie üblicherweise erforderlichen Hygiene-
+maßnahmen des Therapeuten zusammen.
+
+Die Vergütung der Position 78510 nach § 2 Abs. 2 setzt sich aus 5,78 € für die therapeutische Leis-
+tung und 6,34 € für die Vor-, Nachbereitung und Dokumentation und 5,52 € für die Sachkosten im
+Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die podolo-
+gische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zusammen.
+
+Die Vergütung der Position 78520 nach § 2 Abs. 2 setzt sich aus 11,55 € für die therapeutische
+Leistung und 9,52 € für die Vor-, Nachbereitung und Dokumentation und 5,52 € für die Sachkos-
+ten im Zusammenhang mit der Aufbereitung des Raumes und der Instrumente sowie die für die
+
+LEGS: 7100501                                             Seite 9 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                                                    Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                                                       zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+podologische Therapie üblicherweise erforderlichen Hygienemaßnahmen des Therapeuten zu-
+sammen.
+
+Die Vergütung der Position 78530 nach § 2 Abs. 2 setzt sich aus 17,33 € für die therapeutische
+Leistung zusammen.
+
+e) Hausbesuche
+
+HPNR                                                            Vergütung         davon
+                                                                     25,54 €  Zuzahlung
+ZL: 79933       Hausbesuch, ärztlich verordnet, inkl. Wegegeld
+KH: 69933       Hausbesuch in soz. Einrichtung, inkl. Wegegeld                (nachrichtlich)
+KB: 89933
+ZL: 79934                                                                               2,55 €
+KH: 69934
+KB: 89934                                                       16,66 €                         1,67 €
+
+§ 4 Inkrafttreten und Laufzeit
+
+(1) Die Vergütungsvereinbarung tritt ab dem 01.07.2025 in Kraft.
+(2) Die Laufzeit der Vergütungsvereinbarung ist nicht befristet und kann mit einer Frist von 3 Mona-
+
+      ten zum 30.06.2027 erstmals gekündigt werden. Diese Anlage kann durch den GKV-Spitzenver-
+      band einerseits oder andererseits durch alle leistungserbringerseitigen Vertragspartner gemein-
+      sam gekündigt werden.
+(3) Die Kündigung der Vergütungsvereinbarung berührt nicht die weitere Wirksamkeit des Vertrages
+      nach § 125 SGB V.
+(4) Nach Kündigung dieser Anlage gelten die vereinbarten Preise fort, bis eine neue Anlage in Kraft
+      tritt.
+
+Berlin, den 16.06.2025
+
+____________________________________________
+GKV-Spitzenverband
+
+LEGS: 7100501                                                   Seite 10 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                             Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                                zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+Roßleben-Wiehe, den 16.06.2025
+
+____________________________________________
+Verband Deutscher Podologen (VDP) e. V.
+
+LEGS: 7100501                                 Seite 11 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                     Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                        zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+Kassel, den 16.06.2025
+
+____________________________________________
+Deutscher Verband für Podologie (ZFD) e. V.
+
+LEGS: 7100501                                 Seite 12 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+                                                                    Anlage 2: Vergütung i. d. F. vom 01.07.2025
+                       zum Vertag nach § 125 Absatz 1 SGB V für Podologie i. d. F. vom 30.11.2020
+
+Kahla, den 16.06.2025
+
+____________________________________________
+Bundesverband für Podologie e. V.
+
+LEGS: 7100501                                 Seite 13 von 13
+LEGS: 7200501
+LEGS: 2700541
+LEGS: 2800541
+

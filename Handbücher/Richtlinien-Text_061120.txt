@@ -1,0 +1,315 @@
+                                  Arbeitsgemeinschaft
+            der Spitzenverbände der gesetzlichen Krankenkassen
+
+                   AOK-Bundesverband, Bonn-Bad Godesberg
+                              BKK Bundesverband, Essen
+
+                      IKK-Bundesverband, Bergisch Gladbach
+                             See-Krankenkasse, Hamburg
+
+     Bundesverband der landwirtschaftlichen Krankenkassen, Kassel
+                                 Knappschaft, Bochum
+
+          Verband der Angestellten-Krankenkassen e.V., Siegburg
+             AEV - Arbeiter-Ersatzkassen-Verband e.V., Siegburg
+
+                                 Richtlinien der
+                Spitzenverbände der Krankenkassen
+      nach § 302 Abs. 2 SGB V über Form und Inhalt des
+
+                       Abrechnungsverfahrens mit
+                   „Sonstigen Leistungserbringern“
+
+                        sowie mit Hebammen und
+                Entbindungspflegern (§ 301 a SGB V)
+
+vom 9. Mai 1996, in der geänderten Fassung vom 20. November 2006
+
+        Federführend für die Spitzenverbände der Krankenkassen:
+Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V
+über Form und Inhalt des Abrechnungsverfahrens mit „Sonstigen Leistungs-
+erbringern“ sowie mit Hebammen und Entbindungspflegern (§ 301 a SGB V)
+
+in der geänderten Fassung vom 9. Mai 1996
+(veröffentlicht im Bundesanzeiger Nr. 112 vom 20. Juni 1996)
+
+- Geändert durch Beschluss vom 27. August 1996 (veröffentlicht im Bundesanzeiger
+       Nr. 182 vom 26. September 1996)
+
+- Geändert durch Beschluss vom 4. November 1996 (veröffentlicht im Bundesanzei-
+       ger Nr. 218 vom 21. November 1996)
+
+- Geändert durch Beschluss vom 18. August 1997 (veröffentlicht im Bundesanzeiger
+       Nr. 184 vom 1. Oktober 1997)
+
+- Geändert durch Beschluss vom 11. Oktober 2000
+- Geändert durch Beschluss vom 13. März 2003
+- Geändert durch Beschluss vom 15. Dezember 2003
+- Geändert durch Beschluss vom 20. November 2006
+
+                                                       Präambel
+
+Nach § 302 Abs. 1 in Verbindung mit § 303 Abs. 3 SGB V sind die Leistungserbringer im
+Bereich der Heil- und Hilfsmittel und die weiteren Leistungserbringer (sowie die beauftrag-
+ten Abrechnungszentren) verpflichtet, den Krankenkassen im Wege elektronischer Daten-
+übertragung oder auf maschinell verwertbaren Datenträgern die von ihnen erbrachten Lei-
+stungen nach Art, Menge und Preis in der Abrechnung zu bezeichnen und den Tag der
+Leistungserbringung sowie die Arztnummer des verordnenden Arztes und die Angaben
+nach § 291 Abs. 2 Nr. 1 bis 10 SGB V anzugeben. Die Richtlinien sind in den Leistungs-
+und Lieferverträgen zu beachten.
+
+Nach § 301 a SGB V in Verbindung mit § 134 SGB V sind die Hebammen und Entbin-
+dungspfleger verpflichtet, den Krankenkassen die für die Abrechnung vorgeschriebenen
+Angaben im Wege elektronischer Datenübertragung oder maschinell verwertbar auf Da-
+tenträgern nach diesen Richtlinien zu übermitteln.
+
+Ziel dieser Richtlinien ist es, das Abrechnungsverfahren bundesweit zu standardisieren
+und die Abrechnung auf maschinell verwertbaren Datenträgern zu organisieren. Sie be-
+stimmen das Nähere über Form und Inhalt des Abrechnungsverfahrens der „Sonstigen
+Leistungserbringer“ sowie der Hebammen und Entbindungspfleger.
+
+Stand: 20.11.2006  Seite 2 von 7
+                                                           §1
+                                          Definition der Beteiligten
+
+Beteiligte im Sinne dieser Richtlinien sind:
+
+1. „Sonstige Leistungserbringer“
+     1.1 Leistungserbringer von Heilmitteln (§ 124 SGB V),
+     1.2 Leistungserbringer von Hilfsmitteln sowie nichtärztlichen Dialysesachleistungen
+           (§ 126 SGB V),
+     1.3 Leistungserbringer von häuslicher Krankenpflege und Haushaltshilfe
+           (§ 132 SGB V, § 132 a SGB V),
+     1.4 Leistungserbringer von Krankentransportleistungen (§ 133 SGB V),
+     1.5 Betriebshilfe (§ 9 KVLG 1989),
+     1.6 Direktlieferanten von Arznei- und Verbandmitteln (einschließlich von Sprechstun-
+           denbedarf),
+
+           Die Abrechnung der Direktlieferanten von Arznei- und Verbandmitteln und von
+           Sprechstundenbedarf erfolgt entsprechend dem Verfahren gemäß der Vereinba-
+           rung über die Übermittlung von Daten im Rahmen der Arzneimittelabrechnung
+           gemäß § 300 SGB V zwischen den Spitzenverbänden der Krankenkassen und
+           dem Deutschen Apothekerverband e.V.. Die Vereinbarung nach § 300 SGB V
+           kann von den in Satz 1 genannten Direktlieferanten auch für die Abrechnung von
+           Hilfsmitteln unter Angabe der Hilfsmittelpositionsnummer gemäß § 139 SGB V
+           angewendet werden.
+
+     1.7 Leistungserbringer von Soziotherapie (§ 132 b SGB V),
+     1.8 Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten
+
+           (§ 23 Abs. 2 SGB V).
+     1.9 Weitere „Sonstige Leistungserbringer“ (z.B. Kontaktlinsen abgebende Augenärzte)
+
+           rechnen analog dieser Richtlinien ab. Das Nähere ist entsprechend zu vereinbaren
+
+2. Hebammen und Entbindungspfleger (§ 301 a SGB V).
+
+                                                           §2
+                                       Bestandteile der Abrechnung
+
+(1) Die Abrechnung hat folgende Bestandteile:
+
+     a) Abrechnungsdaten
+     b) Urbelege nach § 3 der Richtlinien in Verbindung mit Anlage 5 (z. B. Verord-
+
+           nungsblatt/-blätter, Berechtigungs- bzw. Reparaturschein(e) jeweils im Original),
+           (Leistungen, für deren Abgabe/Abrechnung einer der vorgenannten Urbelege
+           nicht vorgeschrieben ist, müssen mit den jeweils vereinbarten Urbelegen abge-
+           rechnet werden.)
+
+Stand: 20.11.2006  Seite 3 von 7
+     c) ggf. Images soweit gemäß § 4 Abs. 4 vereinbart,
+     d) ggf. Leistungszusage(n) der Krankenkassen (z. B. Kostenvoranschlag) im Original,
+     e) Gesamtaufstellung (Gesamtrechnung, ggf. zusätzlich Sammelrechnung),
+     f) Begleitzettel für Urbelege gemäß Anlage 4 bei maschineller Abrechnung.
+
+(2) Für Anspruchsberechtigte nach dem Asylbewerberleistungsgesetz (AsylBLG), dem
+     Bundesvertriebenengesetz (BVFG), dem Bundesentschädigungsgesetz (BEG), dem
+     Bundesversorgungsgesetz (BVG), dem Bundessozialhilfegesetz (BSHG), dem Häftlings-
+     hilfegesetz (HHG), dem Opferentschädigungsgesetz (OEG), dem Infektionsschutzge-
+     setz (IfSG), dem Soldatenversorgungsgesetz (SVG) sowie für Personen, die nach zwi-
+     schenstaatlichem Krankenversicherungsrecht im Auftrag ausländischer gesetzlicher
+     Krankenversicherungsträger betreut werden, ist eine zusätzliche Einzelrechnung in
+     Papierform auf Anforderung der Krankenkasse zu erstellen. Die Verordnung(en)
+     ist/sind der monatlichen Abrechnung stets gesondert beizufügen.
+
+                                                     §3
+                                        Inhalte der Urbelege
+
+Die Daten/Angaben, welche die ärztlichen Verordnungsblätter sowie Berechtigungs-/Re-
+paraturscheine enthalten müssen, werden in der Anlage 5 zu diesen Richtlinien näher de-
+finiert.
+
+                                                       §4
+                        Kennzeichnung und Sortierung der Urbelege
+
+(1) Kennzeichnung:
+     Auf jedem Urbeleg (z. B. Verordnungsblatt1, Berechtigungs- oder Reparaturschein
+     bzw. Kostenvoranschlag) ist die entsprechende Rechnungsnummer auf der Vorder-
+     seite oben rechts aufzutragen, es sei denn, der Urbeleg sieht ein entsprechendes Feld
+     vor. Zusätzlich ist jeder Urbeleg mit einer eindeutigen Nummer (Belegnummer) des
+     Abrechnungsfalls zu versehen, die innerhalb einer Gesamtrechnung die Identifizie-
+     rung des Urbelegs sicherstellt. Die Belegnummer innerhalb einer Gesamtrechnung
+     muss der eindeutigen Nummerierung im Datensatz entsprechen. Gleiches gilt für die
+     Kennzeichnung von Images gemäß Anhang 4 zur Anlage 1.
+
+(2) Sortierung:
+     Die Urbelege/Images sind in der Reihenfolge der innerhalb einer Rechnung (Gesamt-
+     rechnung) verwendeten Belegnummern anzuliefern. Das heißt, die Sortierung der Ur-
+     belege/Images ist identisch mit der Sortierung der Datensätze innerhalb einer Datei.
+     Für die Übermittlung der Urbelege ist ein Begleitzettel gemäß Anlage 4 auszufüllen
+     und mitzuschicken.
+
+1 Im Vordruckmuster 16 kann die "Rechnungsnummer/Belegnummer" auch im Feld  Seite 4 von 7
+    "Apotheken-Nummer/IK" aufgedruckt werden.
+
+Stand: 20.11.2006
+(3) Abrechnungsstellen mit Inkassovollmacht rechnen unter einer Sammelrechnungs-
+     nummer je Kostenträger und je Leistungsbereich (z.B. Heilmittel, Hilfsmittel, nicht-
+     ärztliche Dialysesachleistung, Krankentransport, Hebammen, ambulanten Rehabilita-
+     tion, ergänzende Leistungen zur Rehabilitation, Betriebshilfen, etc.) ab. Die Urbelege
+     sind je Leistungserbringer unter der entsprechenden Einzelrechnungsnummer zu ei-
+     nem Block zusammenzufassen (Gesamtrechnung). Absätze 1 und 2 gelten entspre-
+     chend.
+
+(4) Die Übermittlung von Images bedarf der vorherigen Vereinbarung mit den Kranken-
+     kassen. Das organisatorische und technische Verfahren der Imageübermittlung wird
+     im Anhang 4 zur Anlage 1 geregelt.
+
+                               §5
+                   Abrechnungsdaten
+
+(1) Die Daten sind der Technischen Anlage (Anlage 1) in Verbindung mit den Schlüssel-
+     verzeichnissen der Anlage 3 und den Inhalten der Verordnung (Anlage 5) zu entneh-
+     men und entsprechend der Technischen Anlage zu übermitteln.
+
+(2) Die vertraglich vereinbarten Leistungen werden entsprechend den nachfolgenden
+     Bundeseinheitlichen Positionsnummernverzeichnissen sowie dem Hilfsmittelverzeich-
+     nis (§ 139 SGB V) verschlüsselt. Die Abrechnungspositionsnummern sind im Rahmen
+     des Abrechnungsverfahrens abhängig von der Art der abgegebenen Leistung nach
+
+• dem Bundeseinheitlichen Heilmittelpositionsnummernverzeichnis,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis für nichtärztliche Di-
+
+     alysesachleistungen,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis für Krankentrans-
+
+     portleistungen,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis für Leistungen der
+
+     häuslichen Krankenpflege und Haushaltshilfe,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis gemäß der Hebam-
+
+     menhilfe-Vergütungsvereinbarung,
+• dem Positionsnummernverzeichnis für Betriebshilfe,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis für Präventions- und
+
+     Gesundheitsförderungsmaßnahmen im Rahmen von ambulanten Vorsorge-
+     kuren,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis für Leistungen der
+     medizinischen ambulanten Rehabilitation sowie für ergänzende Leistungen
+     zur Rehabilitation,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis für sonstige Leistun-
+     gen,
+• dem Bundeseinheitlichen Positionsnummernverzeichnis für soziotherapeuti-
+     sche Leistungen
+
+anzugeben.
+
+(3) Den Daten für die Abrechnung ist das am Leistungsabgabetag gültige Institutions-
+     kennzeichen (IK) des Leistungserbringers hinzuzufügen. Für jede Praxisniederlassung
+     bzw. Filiale ist ein eigenes IK anzugeben.
+
+Stand: 20.11.2006                    Seite 5 von 7
+                                                       §6
+                                           Gesamtaufstellung
+                                 (Gesamtrechnung, Sammelrechnung)
+
+(1) Die Gesamtaufstellung (Gesamtrechnung, Sammelrechnung) muss pro Kostenträger
+     und je Leistungsbereich (z.B. Heilmittel, Hilfsmittel, nichtärztliche Dialysesachleistung,
+     Krankentransport, Hebammen, ambulanten Rehabilitation, ergänzende Leistungen
+     zur Rehabilitation, Betriebshilfen, etc.) nach den vorgegebenen Aufteilungen erstellt
+     werden.
+
+(2) Die Inhalte für die Gesamtrechnung (Abrechnung je Leistungserbringer je Instituti-
+     onskennzeichen der Krankenkasse von der Krankenversichertenkarte bzw. von der
+     ärztlichen Verordnung) nach § 2 Absatz 1 Buchstabe e) sind der Technischen Anlage
+     (SLGA) in Verbindung mit den Schlüsselverzeichnissen der Anlage 3 zu entnehmen
+     und entsprechend der Technischen Anlage zu übermitteln.
+
+(3) Die Inhalte für die Sammelrechnung (obligat für Abrechnungsstelle mit Inkassovoll-
+     macht: Zusammenfassung der Gesamtrechnungen je Kostenträger) nach § 2 Abs. 1
+     Buchstabe e) sind der Technischen Anlage (SLGA) in Verbindung mit den Schlüssel-
+     verzeichnissen der Anlage 3 zu entnehmen und entsprechend der Technischen An-
+     lage zu übermitteln.
+
+                                                           §7
+                                        Abrechnungsverfahren
+
+(1) Soweit die Leistung/en gemäß der vertragsärztlichen Verordnung bzw. des Berechti-
+     gungs- und Reparaturscheins vollständig erbracht wurde/n, ist/sind sie - soweit in
+     Verträgen nichts anderes geregelt ist - einmal monatlich je Leistungserbringer-Insti-
+     tutionskennzeichen mit der Krankenkasse abzurechnen; dies gilt auch für Abrech-
+     nungszentren. Wird mehr als ein Abrechnungsfall eines Leistungserbringers für einen
+     Leistungsbereich mit demselben Rechnungsdatum abgerechnet, sind die Abrech-
+     nungsfälle in einer Rechnung zusammenzufassen.
+
+(2) Die Bezahlung der Rechnungen erfolgt - soweit in Verträgen nichts anderes geregelt
+     ist - innerhalb von 4 Wochen nach Eingang der vollständigen Abrechnungsunterlagen.
+     Die Frist für die Bezahlung der Rechnungen auf Basis der maschinell verwertbaren Da-
+     ten (gemäß der Technischen Anlage 1 in Verbindung mit den Schlüsselverzeichnissen
+     der Anlage 3) beginnt mit Eingang aller Abrechnungsunterlagen (vgl. § 2) bei der
+     Krankenkasse oder einer von ihr benannten Stelle.
+
+(3) Die Bezahlung der Rechnungen über Hebammenleistungen, die während des Gültig-
+     keitszeitraumes der Hebammenhilfe-Vergütungsvereinbarung erbracht werden, er-
+     folgt entsprechend dem Vertrag nach § 134a SGB V über die Versorgung mit He-
+     bammenhilfe.
+
+(4) Die Weiterleitung der Daten, Belege bzw. Images kann unter Beachtung der Vorschrif-
+     ten des § 80 SGB X auch an eine von den Krankenkassen mit der Datenverarbeitung
+     beauftragte Stelle erfolgen.
+
+Stand: 20.11.2006  Seite 6 von 7
+(5) Werden die von den Leistungserbringern den Krankenkassen zu übermittelnden Daten
+    nicht im Wege elektronischer Datenübertragung oder maschinell verwertbar auf Da-
+    tenträgern übermittelt, haben die Krankenkassen die Daten nach zu erfassen. Der Leis-
+    tungserbringer hat bei der Abrechnung die Vorgaben des § 2 Abs. 1 der Richtlinien
+    zwingend zu berücksichtigen und die Papierabrechnung mit den Inhalten gemäß der
+    §§ 5 und 6 zu übermitteln. Erfolgt die nicht maschinell verwertbare Datenübermitt-
+    lung aus Gründen, die der Abrechner zu vertreten hat, haben die Krankenkassen die
+    mit der Nacherfassung verbundenen Kosten den betroffenen Abrechnern durch eine
+    pauschale Rechnungskürzung in Höhe von bis zu 5 % des Rechnungsbetrages in
+    Rechnung zu stellen.
+
+                                                       §8
+          Technische und organisatorische Form der Datenübermittlung
+
+Die technische und organisatorische Form der Datenübermittlung sowie die notwendigen
+Berechtigungs- und Kontrollverfahren werden in den Anlagen zu diesen Richtlinien gere-
+gelt. Die Anlagen sind in der jeweils gültigen Fassung Bestandteile dieser Richtlinien und
+werden unabhängig von diesen fortgeschrieben:
+
+• Anlage 1 (Technische Anlage),
+• Anlage 2 (zur Zeit nicht besetzt),
+• Anlage 3 (Schlüsselverzeichnisse),
+• Anlage 4 (Begleitzettel für Urbelege),
+• Anlage 5 (Inhalte der Urbelege).
+
+                                                           §9
+                                           Inkrafttreten/Teilnahme
+
+(1) Die Richtlinien treten am 1. Juni 1996 in Kraft. Gleichzeitig treten die seit dem
+     1. Januar 1996 gültigen Richtlinien (veröffentlicht im Bundesanzeiger Nr. 199 am
+     21. Oktober 1995, Seite 11 167-11 168) außer Kraft.
+
+(2) Die Datenübermittlung auf maschinell verwertbaren Datenträgern erfolgt seit
+     1. Januar 1997. Der Teilnahme geht im Einzelfall eine zweigleisige Erprobung mit ei-
+     ner konventionellen und einer maschinellen Datenübermittlung im Sinne dieser Richt-
+     linien voraus.
+
+(3) Die Regelungen nach § 1 Nr. 1.6 für Direktlieferanten von Arznei- und Verbandmitteln
+     sind ab dem 1. Januar 1997 anzuwenden.
+
+Stand: 20.11.2006  Seite 7 von 7
+

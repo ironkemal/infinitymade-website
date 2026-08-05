@@ -1,0 +1,353 @@
+Fragen-Antworten-Katalog Podologie
+
+Stand: 24.05.2023        Der Fragen-Antworten-Katalog wird fortlaufend aktualisiert.
+
+Nr.            Inhalt                 Frage                                               Antwort
+                                                                                          Nein, es reicht, wenn die Neuropathie in der Di-
+1              Diagnosestellung Podo  Muss bei einer NF-Verordnung in der Diagnose zwin-  agnose oder per ICD-10 Code angegeben ist.
+
+                                      gend stehen: „neuropathisches Fußsyndrom mit Neu-
+
+                                      ropathie“?
+
+2              Bestätigung der Leistung Auf der Rückseite der Verordnung muss der Leis-   JA! Auf der Rückseite der Verordnung muss vom
+
+                                      tungserbringer die erbrachte Leistung für den Versi- Versicherten bestätigt werden, ob er die kleine
+
+                                      cherten verständlich darstellen:                    oder große Behandlung erhalten hat. Es ist nicht
+
+                                      Muss der Leistungserbringer hier angeben, ob die    ausreichend, dass der Leistungserbringer nur im
+
+                                      große oder kleine Behandlung abgegeben wurde oder Rahmen der Abrechnung unterscheidet, welche
+
+                                      reicht die alleinige Angabe der Komplexleistung Po- Leistung er abgegeben hat.
+
+                                      dologie?
+
+3              Maßnahme               Welche Eintragungen sind auf der Rückseite der Ver- Als Maßnahme sind die Bezeichnungen „Behand-
+
+                                      ordnung unter „Maßnahmen (erhaltene Heilmittel, ggf. lung groß“ oder „Behandlung klein“ und bei
+
+                                      auch Hausbesuche)“ einzutragen?                     durchgeführtem Hausbesuch mit „Hausbesuch“
+
+                                                                                          zu ergänzen.
+
+4              Abkürzungen Maßnahmen Welche Abkürzungen sind unter „Maßnahmen“ er-        Abkürzungen sind erlaubt, soweit sie die be-
+
+                                      laubt?                                              schriebene Maßnahme erkennen lassen, bspw.
+
+Seite 1 von 8
+5              Befund                 Muss die Befundung unter Maßnahmen mit eingetra-   „pod. Beh. gr.“, „pod. Beh. kl.“, „HB gr./ HB kl.“
+                                      gen werden?                                        für Hausbesuch.
+6              Befundpauschale        Kann die Position 78030 zu jeder Behandlung abge-  Nein, die Befundposition ist nicht auf der VO an-
+                                      rechnet werden?                                    zugeben.
+7              Behandlungsbeginn                                                         Ja, die Befundposition 78030 ist zu jeder der
+                                      Ab wann wird der Behandlungsbeginn „innerhalb von  Abrechnungspositionen „Behandlung groß“ oder
+                                      28 Tagen“ gezählt?                                 „Behandlung klein“ abrechenbar.
+                                                                                         Eine Abrechnung ist bei Nagelspangenbehand-
+                                                                                         lungen (Diagnosegruppen UI1 und UI2) nicht
+                                                                                         möglich.
+                                                                                         Die Frist zum Behandlungsbeginn beginnt am
+                                                                                         Tag nach der Ausstellung der Verordnung. Der
+                                                                                         Tag der Ausstellung ist Tag „0“, der Folgetag ist
+                                                                                         Tag „1“.
+
+                                                                                         Beispiel:
+
+                                                                                         Wird eine Verordnung am 31.03. ausgestellt,
+
+                                                                                         kann diese bis einschließlich am 28.04. begon-
+
+                                                                                         nen werden.
+
+8              Behandlungsbeginn      Ab wann wird der Behandlungsbeginn „innerhalb von Die Frist zum Behandlungsbeginn beginnt am
+
+               Dringlicher Behandlungs- 14 Tagen“ gezählt?                               Tag nach der Ausstellung der Verordnung. Der
+
+               bedarf                                                                    Tag der Ausstellung ist Tag „0“, der Folgetag ist
+
+                                                                                         Tag „1“.
+
+9              Bestätigung des Leis-  Muss der Therapeut in der Spalte „Leistungserbringer“ Eine Unterschrift ist nicht erforderlich, es sind
+
+               tungserbringers        auf der Rückseite der Verordnung eigenhändig unter- die Initialen mit mind. zwei Buchstaben, bspw.
+
+                                      schreiben?                                         die Anfangsbuchstaben des Vor- und Zunamen,
+
+                                                                                         des behandelnden Therapeuten einzutragen. Die
+
+                                                                                         Eintragung kann auch durch Empfangs-/Verwal-
+
+                                                                                         tungspersonal oder per Stempel erfolgen.
+
+Seite 2 von 8
+10             Bestätigung des Leis-   Wer bestätigt, wenn die Behandlung von einem Podo- Der den Schüler ausbildende Leistungserbringer
+
+               tungserbringers         logieschüler im Rahmen seines Praktikums durchge- ist für die fachgerechte Leistungserbringung
+
+                                       führt wurde?                                      verantwortlich, insofern ist auf der VO sein Initial
+
+                                                                                         einzutragen.
+
+11             Frequenzabweichung bei Muss eine Frequenzabweichung bzw. Behandlungsun- Frequenzabweichungen bis 2 Werktage sind
+
+               Krankheit oder Urlaub   terbrechung wegen Krankheit oder Urlaub mit dem   ohne Information des Arztes möglich.
+
+                                       verordnenden Arzt abgesprochen werden?
+
+                                                                                         Über Frequenzabweichungen aus therapeuti-
+
+                                                                                         schen Gründe über 2 Tage ist mit dem Arzt Ein-
+
+                                                                                         vernehmen herzustellen, dies ist auf der VO zu
+
+                                                                                         dokumentieren.
+
+                                                                                         Wird die Behandlung kürzer als 12 Wochen un-
+                                                                                         terbrochen (z.B. wegen Krankheit oder Urlaub),
+                                                                                         bleibt die Verordnung gültig. Unterbrechungen
+                                                                                         brauchen nicht auf der VO dokumentiert werden.
+                                                                                         (vgl. § 16 Abs. 4 Satz 5 Heilmittel-Richtlinie)
+
+12             entfallen
+
+13             entfallen
+
+14             entfallen
+
+15             Empfangsbestätigung     Die Felder zur Eintragung der Maßnahme und der Be- Für einen Behandlungstag können auch zwei
+
+               durch den Versicherten  stätigung durch den Versicherten sind auf dem neuen Zeilen genutzt werden. Geht die Unterschrift des
+
+                                       Muster schmaler. Was ist bei Platzmangel zu tun?  Versicherten über das vorgesehene Feld hinaus,
+
+                                                                                         stellt dies auch weiterhin kein Problem dar.
+
+                                                                                         Wichtig ist, dass alle erbrachten Maßnahmen
+
+                                                                                         vom Versicherten einzeln bestätigt werden.
+
+Seite 3 von 8
+16             Stempel und Unterschrift Wer darf auf der Verordnung im Stempel/Unterschrif- Die Unterschrift hat grundsätzlich durch den zu-
+
+               des Leistungserbringers tenfeld des Leistungserbringers auf der Rückseite un- gelassenen Leistungserbringer zu erfolgen. So-
+
+                                       terschreiben? Kann die Unterschrift im Auftrag erfol- fern eine Vertretungsregelung vorhanden ist,
+
+                                       gen?                                                     kann auch die Vertretung unterschreiben.
+
+17             Frist zur Beanstandung  Podo, Zeit für Beanstandungen:                           Die Regelungen ergänzen sich, widersprechen
+
+                                                                                                einander aber nicht.
+
+                                       § 18 Abs. 12
+
+                                       Widerspricht der zug. LE oder (…) nicht innerhalb von    Bei bestimmten fehlerhaften/unvollständigen
+                                       9 Monaten (…) so gilt diese als anerkannt                Verordnungen kann der LE korrigieren/nachtra-
+                                                                                                gen (lassen) hierfür gilt die Frist nach Anlage 3
+                                       Anlage 3 Ziffer 4                                        ab Zugang der Korrekturunterlagen.
+
+                                       Reicht der Leistungserbringer die Korrektur/Ergän-       Gleichwohl kann er Rechnungsabsetzungen auch
+                                       zung nicht (fristgerecht innerhalb vom 3 Monaten) ein,   aus anderen Gründen widersprechen, hierfür gilt
+                                       bleibt die Absetzung bestehen, die Verordnung kann       die Frist nach § 18 des Vertrags.
+
+                                       kein weiteres Mal zur Abrechnung eingereicht werden.
+
+                                       Wie gestaltet sich die Frist?
+
+18             Entfallen
+
+19             Leitsymptomatik         Die Software der Ärzte fügt automatisch eine Be-         Entscheidend ist, dass eine Leitsymptomatik auf
+                                       schreibung der ausgewählten Leitsymptomatik a/b/c        der VO angegeben ist. Dabei können ein/meh-
+                                       in das Freitextfeld für die patientenindividuelle Leit-  rere Ankreuzfelder angekreuzt werden oder eine
+                                       symptomatik ein. Muss dies korrigiert werden, da das     Leitsymptomatik nur schriftlich angegeben sein
+                                       Freitextfeld der Leitsymptomatik nur für die Beschrei-   oder Ankreuzfelder und schriftliche Angaben
+                                       bung einer patientenindividuellen Leitsymptomatik        kombiniert werden. Fehlen oder widersprechen
+                                       vorgesehen ist?                                          sich die Ankreuzfelder und die Textangabe, ist
+
+Seite 4 von 8
+                                                                                             eine Änderung nach Rücksprache mit dem Arzt
+                                                                                             möglich.
+
+20             Leitsymptomatik        Was gilt, wenn mehrere Felder angekreuzt wurden,       Ist das Feld [x] patientenindividuelle Leitsympto-
+                                      z.B. a) und b), aber als Heilmittel podologische Kom-  matik angekreuzt, muss eine schriftliche Leit-
+                                      plexbehandlung angegeben wird?                         symptomatik angegeben sein.
+                                                                                             Die Leitsymptomatik bezeichnet die Art der
+                                                                                             Schädigung. Mehrfachankreuzungen sind un-
+                                                                                             schädlich, sofern eine angegebene Leitsympto-
+                                                                                             matik zum verordneten Heilmittel passt.
+
+                                                                                             Beispiel:
+                                                                                             Wurde a) und b) angekreuzt und als Heilmittel
+                                                                                             podologische Komplexbehandlung angegeben,
+                                                                                             sind die Angaben gültig, da die Schädigungsbil-
+                                                                                             der eine podologische Komplexbehandlung indi-
+                                                                                             zieren.
+
+21             entfallen
+
+22             entfallen
+
+23             entfallen
+
+24             Therapiezeit           Wer misst die Therapiezeit?                            Die Therapiezeit wird bei einer verordneten po-
+
+                                                                                             dologischen Komplexbehandlung vom Leis-
+
+                                                                                             tungserbringer ermittelt.
+
+25             Therapiezeit bei Nagel- Kann ich bei einer Nagel- oder Hornhautbearbeitung Nein – die Differenzierung der Therapiezeit gilt
+
+               oder Hornhautbearbei-  über 20 Minuten Therapiezeit auch Behandlung groß nur für die podologische Komplexbehandlung
+
+               tung                   abrechnen?                                             als podologische Behandlung groß/klein. Die
+
+                                                                                             Nagelbearbeitung oder Hornhautabtragung sind
+
+                                                                                             immer mit 78010 zzgl. 78030 abzurechnen.
+
+Seite 5 von 8
+26             Behandlungsabbruch  Nach § 7 Abs. 5 müssen Verordnungen bis zum Ende Legt der Patient eine neue VO vor Beendigung
+
+                                   durchgeführt werden. Ist kein Behandlungsabbruch    der laufenden Behandlungsserie vor, kann ein
+
+                                   mehr möglich, wenn der Patient vorzeitig eine neue  Behandlungsabbruch mit Begründung erfolgen
+
+                                   Verordnung vorlegt, z.B. wenn der Termin beim 20 km und mit der neuen VO begonnen werden.
+
+                                   entfernten Diabetologen nicht mit dem Ende der Be-
+
+                                   handlungsserie zusammenfällt?
+
+27             Diagnosegruppe      Was ist zu tun, wenn der Arzt einem Patienten, der  Ja, eine ärztliche Verordnung ist gültig, wenn
+
+                                   seit Jahren mit einer VO DFc verordnet bekommt, jetzt diese vollständig und formal richtig ausgestellt
+
+                                   aber plötzlich NFc schreibt und das nicht ändern will? wurde. Es wird ein neuer Verordnungsfall ausge-
+
+                                   Kann man die VO trotzdem annehmen und abrechnen? löst, dabei sind vorhergehende Verordnungen
+
+                                                                                       aus anderen Diagnosegruppen unschädlich.
+
+28             Angabe „Neuropathie“ auf Wenn das Diabetische Fußsyndrom im Klartext ange- Nein, sofern ein auf der Verordnung angegebe-
+
+               der Verordnung      geben ist, muss das noch mit Polyneuropathie/Neuro- ner ICD-10-Code die erforderliche Indikation
+
+                                   pathie ergänzt werden?                              gemäß Heilmittel-Richtlinie nicht hinreichend
+
+                                                                                       abbildet oder inhaltlich falsch ist, ist die Verord-
+
+                                                                                       nung nur dann gültig, wenn eine gemäß Heilmit-
+
+                                                                                       tel-Richtlinie einschlägige therapierelevante Di-
+
+                                                                                       agnose im Freitext angegeben ist.
+
+29             entfallen
+
+30             Blankoverordnungen  Wird auf einer Verordnung als Heilmittel „Blankover- Die Annahme von Blankoverordnungen ist der-
+
+                                   ordnung“ angegeben und als Leitsymptomatik ist c)   zeit nicht möglich, da bisher keine Verträge
+
+                                   angekreuzt. Können diese Verordnungen direkt ange- nach § 125a SGB V über die Blankoversorgung
+
+                                   nommen werden oder müssen diese auf Podologische geschlossen wurden. Diese Verordnungen kön-
+
+                                   Komplexbehandlung geändert werden?                  nen nach Anlage 3 (z.B. fehlende Angabe eines
+
+                                                                                       Heilmittels) des Vertrags korrigiert werden.
+
+31             Ende einer Nagelspangen- Kann eine Nagelspangenbehandlung beendet werden, Wird im Verlauf der Therapie das angestrebte
+
+               behandlung          auch wenn die verordnete Behandlungsmenge noch      Therapieziel vor der vollständigen Inanspruch-
+
+                                   nicht ausgeschöpft ist?                             nahme der verordneten Behandlungsmenge je
+
+Seite 6 von 8
+                                                                                               Verordnung erreicht, ist die Therapie nach § 7
+
+                                                                                               Abs. 2 des Vertrags zu beenden. Die Behandlung
+
+                                                                                               ist dann regulär beendet, dies stellt keinen The-
+
+                                                                                               rapieabbruch dar.
+
+32             Ende einer Nagelspangen- Ist es möglich, eine Nagelspangenbehandlung nach       Ja, die Therapie kann auch bereits nach der Erst-
+
+               behandlung              der Erstbefundung zu beenden?                           befundung beendet werden, z. B. wenn sich im
+
+                                                                                               Rahmen der Erstbefundung ergibt, dass sich der
+
+                                                                                               Zehennagel nicht für eine Nagelspangenbehand-
+
+                                                                                               lung eignet. Der Leistungserbringer hat dies auf
+
+                                                                                               der Verordnungsrückseite im Feld „Begründung“
+
+                                                                                               zu dokumentieren.
+
+33             Parallele Behandlungen  Können für Patienten, die bereits eine VO für DF, NF Ja
+
+                                       oder QF haben, auch eine VO für Nagelspangenbe-
+
+                                       handlungen ausgestellt bzw. abgerechnet werden?
+
+34             Therapiefrequenz Nagel- Verliert eine Verordnung auch dann ihre Gültigkeit,     Nein
+
+               spangenbehandlung       wenn zwischen zwei Spangenanlagen zwar mehr als
+
+                                       12 Wochen liegen, in der Zwischenzeit (z. B. nach 6
+
+                                       Wochen) aber eine Kontrolle stattfand? Ist die Gültig-
+
+                                       keit an die Durchführung einer Behandlungseinheit
+
+                                       gebunden?
+
+35             Lokalisation Nagelspan- Ab dem 01.07.2023 ist die Lokalisation des behandel- Für die mit Rechnungsdatum bis zum
+
+               genbehandlung           ten Zehs einmalig auf der Rückseite jeder VO im Feld 31.12.2023 zur Abrechnung eingereichten Ver-
+
+                                       Begründung zu dokumentieren (z. B. „U 1 links“ oder ordnungen ist es unschädlich, wenn die Lokali-
+
+                                       „U 3 rechts“) . Ab wann wird diese Regelung für die     sation an einer anderen Stelle aufgetragen
+
+                                       Abrechnung umgesetzt?                                   wurde. Teil- oder gar Vollabsetzungen sind in
+
+                                                                                               diesen Fällen ausgeschlossen.
+
+36             Behandlungsfrequenz (Di- Kann der Arzt in medizinisch angezeigten Fällen von Ja
+
+               agnosegruppen DF, NF    der 4 – 6 wöchigen Frequenz nach unten oder oben
+
+               und QF)                 abweichen?
+
+Seite 7 von 8
+37             Beschreibung der Maß-  Wie sind die Leistungen auf der Rückseite der Verord- Die Leistungen der Nagelspangenbehandlung
+
+               nahmen bei Nagelspan- nung zu beschreiben?  müssen auf der Rückseite nicht ausgeschrieben
+
+               genbehandlung                               werden, sie müssen aber so beschrieben wer-
+
+                                                           den, dass die abgegebene Leistung eindeutig zu
+
+                                                           erkennen ist z. B:
+
+                                                            „Erstbefundung klein“
+
+                                                            „Erstbefundung „groß“
+
+                                                            „Anpassung einteilig“
+
+                                                            „Anpassung mehrteilig“
+
+                                                            „Anpassung Ross-Fraser“
+
+                                                            „Nachregulierung Ross-Fraser“
+
+                                                            „Kontrolle“
+
+                                                            „Abschluss“
+
+Seite 8 von 8
+

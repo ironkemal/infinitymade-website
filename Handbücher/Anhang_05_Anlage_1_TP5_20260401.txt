@@ -1,0 +1,1248 @@
+                                                      Anhang 5
+                   Schnittstellenbeschreibung Digitales Rettungsprotokoll
+
+                                                           zur
+
+                                                       Anlage 1
+
+                                                        zu den
+Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V über
+Form und Inhalt des Abrechnungsverfahrens mit "Sonstigen Leistungserbringern"
+
+              sowie mit Hebammen und Entbindungspflegern (§ 301a SGB V)
+
+Stand des Anhang 5:  01.04.2026
+Version:             1.0
+Anzuwenden ab:       01.04.2026
+
+Hinweis: Die Nutzung der Schnittstelle ist optional und bedarf in jedem Falle einer
+Vereinbarung zwischen Lieferant und Kostenträger.
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+0 INHALT
+
+1 Änderungshistorie ........................................................................................................................... 2
+2 Allgemeines ..................................................................................................................................... 3
+
+   2.1 Datenübermittlung.................................................................................................................. 3
+      2.1.1 Physikalischer Dateiname................................................................................................ 3
+      2.1.2 Logischer Dateiname ....................................................................................................... 3
+
+3 Aufbau und Struktur der Daten....................................................................................................... 4
+   3.1 Allgemeines ............................................................................................................................. 4
+   3.2 Struktur der Datei.................................................................................................................... 4
+   3.3 Dateiaufbau ............................................................................................................................. 5
+   3.4 Servicesegmente ..................................................................................................................... 5
+      3.4.1 Segment UNA - Trennzeichenvorgabe ............................................................................ 5
+      3.4.2 Segment UNB - Kopfsegment der Nutzdatendatei ......................................................... 6
+      3.4.3 Segment UNZ - Ende-Segment der Nutzdatendatei........................................................ 6
+      3.4.4 Segment UNH - Kopfsegment der Nachricht................................................................... 6
+      3.4.5 Segment UNT - Ende-Segment der Nachricht ................................................................. 7
+   3.5 Nachrichtentyp RETP ............................................................................................................... 7
+      3.5.1 Segmentzusammenstellung ............................................................................................ 7
+      3.5.2 Nutzdatensegmente ........................................................................................................ 7
+
+4 Schlüsselverzeichnis ...................................................................................................................... 16
+   4.1 Fahrzeugtyp ........................................................................................................................... 16
+   4.2 Einsatzart ............................................................................................................................... 16
+   4.3 Geschlecht ............................................................................................................................. 16
+   4.4 Art der Erkrankung ................................................................................................................ 16
+   4.5 Schwere der Verletzung ........................................................................................................ 19
+   4.6 Art des Zugangs ..................................................................................................................... 19
+   4.7 NACA-Score ........................................................................................................................... 19
+
+Seite 1 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+1 ÄNDERUNGSHISTORIE
+
+Versionsverlauf
+
+Version Datum               Kurzbeschreibung
+                            Initiale Veröffentlichung
+1.0             01.04.2026
+
+Seite 2 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+2 ALLGEMEINES
+
+Dieses Dokument dient zur Festlegung des Datenaustausches für die Abrechnung nach §302 SGB V auf
+Basis Digitaler Rettungsprotokolle zwischen Leistungserbringer und Krankenkasse.
+
+2.1 DATENÜBERMITTLUNG
+
+Die Datenübermittlung erfolgt in Anlehnung an die Richtlinien für den Datenaustausch im
+Gesundheits- und Sozialwesen und die Gemeinsamen Grundsätze Technik für die elektronische
+Datenübermittlung gemäß § 95 SGB IV.
+Die Digitalen Rettungsprotokolle werden als EDIFACT-Nachrichten übermittelt.
+Der Datenaustausch erfolgt gemäß dem Krankenkassenkommunikationssystem (KKS-Verfahren) mit
+der Übermittlung der Nutzdaten in einer verschlüsselten Nutzdatendatei (gemäß SECON) und einer
+dazugehörigen Auftragsdatei.
+
+2.1.1 Physikalischer Dateiname
+Der physikalische Dateiname wird in der Auftragsdatei angegeben. Der physikalische Dateiname ist
+wie folgt aufgebaut:
+
+1. Stelle:       "E" - Echtdaten
+                 "T" - Testdaten
+2. - 4. Stelle:  "RPR" - Rettungsprotokoll
+5. - 8. Stelle:  Laufende Nummer (Transfernummer)
+
+2.1.2 Logischer Dateiname
+
+Stellen Bezeichnung              Stellenanzahl  Inhalt
+
+1-3             Dateiart         3              „RPR“ - Rettungsprotokolldatei
+                                 2
+4-5             Erstellungsjahr                 Jahr in dem die Datei erstellt wurde
+                                                numerisch i.d.F. 00 bis 99
+6-7             Erstellungsmonat 2
+                                                Monat der Erstellung
+8-11 Lfd. Nummer                 4              numerisch i.d.F. 01 bis 12
+
+                                                Aufsteigende Nummer für jede übermittelte Datei je
+                                                Empfänger (Empfänger-IK lt. UNB-Segment) und
+                                                Monat
+                                                numerisch i.d.F. 0001 bis 9999
+
+Seite 3 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+3 AUFBAU UND STRUKTUR DER DATEN
+
+3.1 ALLGEMEINES
+
+(1) Zur Minimierung des Austauschvolumens wird eine Strukturierung verwendet, die es erlaubt, dass
+nur tatsächlich benötigte Inhalte übermittelt werden. Die Datensätze (Segmente) und Datenfelder
+(Datenelemente) sind in ihrer Länge variabel. Ihr Inhalt muss im Gegensatz zu Datensätzen fester
+Länge nicht mit Leerzeichen oder Nullen gefüllt sein.
+
+(2) Eine Nutzdatendatei besteht aus Nachrichten. Nachrichten bestehen aus Segmenten. Segmente
+bestehen aus Datenelementen und/oder Datenelementgruppen. Datenelementgruppen bestehen aus
+Datenelementen.
+
+(3) Die Nachricht ist eine Zusammenfassung aller Segmente, die zur Darstellung eines
+Geschäftsvorfalles erforderlich sind. Innerhalb einer Nachricht stehen die Segmente in einer fest
+definierten Reihenfolge.
+
+(4) Das Segment ist die Zusammenfassung von logisch zusammenhängenden Datenelementen
+und/oder Datenelementgruppen. Es ist vergleichbar mit einem Datensatz. Innerhalb eines Segments
+stehen die Datenelemente und/oder Datenelementgruppen in einer fest definierten Reihenfolge.
+
+(5) Die Datenelementgruppe ist eine Zusammenfassung von Datenelementen mit Informationen, die
+in einem sachlichen oder logischen Zusammenhang stehen (z. B. Datum und Uhrzeit, Version und
+Versionsnummer). Innerhalb einer Datengruppe stehen die Datenelemente in einer fest definierten
+Reihenfolge.
+
+(6) Das Datenelement ist die kleinste Einheit, die eine Information darstellt. Es ist vergleichbar mit
+einem Datenfeld.
+
+(7) Datenelemente, Datenelementgruppen und Segmente werden durch vereinbarte Steuerzeichen
+begrenzt, so dass innerhalb eines Feldes nur signifikante Daten zu übermitteln sind und am
+Segmentende nicht gefüllte Felder weggelassen werden können.
+
+(8) Erläuterung der Datenbeschreibung:
+
+- Anzahl Stellen:
+     wenn Zahl z. B. 5 angegeben, dann tatsächliche Anzahl Stelle; wenn Zahl z. B. ..35 angegeben,
+     dann höchstmögliche Stellenbelegung
+
+- Feld-Typ:
+     M = Muss-Feld
+     K = Kann-Feld
+
+- Feld-Art:
+     AN= alphanumerischer Inhalt
+     N = numerischer Inhalt
+
+3.2 STRUKTUR DER DATEI
+
+(1) Bei den Datenstrukturen ist zwischen Service-Segmenten, die Funktionen von Vor- und
+Nachlaufsätzen erfüllen, und den Nachrichtentypen, die logische Datensätze darstellen, zu
+unterscheiden.
+
+Seite 4 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+(2) Jedes Segment beginnt mit einem Datenelement zur Segmentkennung und endet mit dem
+vereinbarten Segmentendekennzeichen. Das Segmentendekennzeichen ist unmittelbar nach dem
+letzten mit Inhalt belegten Datenelement anzugeben. Segmente, die als Kann-Segmente
+gekennzeichnet sind, können, sofern kein Inhalt vorhanden ist, weggelassen werden.
+
+(3) Datenelemente oder Datenelementgruppen werden mit dem vereinbarten Trennkennzeichen für
+Datenelemente voneinander getrennt. Anstelle von Kann-Datenelementen, für die kein Inhalt
+vorhanden ist, ist das Trennkennzeichen anzugeben. Steht das/die Kann-Datenelement(e) am Ende
+eines Segments und ist kein Inhalt vorhanden, ist anstelle des/der Kann-Datenelemente(s) das
+Segmentendekennzeichen anzugeben.
+
+(4) Innerhalb einer Datenelementgruppe sind die Datenelemente durch das vereinbarte
+Trennkennzeichen voneinander zu trennen.
+
+3.3 DATEIAUFBAU
+
+Seg-            Seg-    Seg-        Wieder-        Erläuterung
+                        menttyp     holungs-
+ment-bez. ment-                     faktor         Festlegungssegment – Ist zwingend anzugeben, sofern von den
+                           Service  1 je Datei     Standardvorgaben abgewichen wird
+                art                                Kopf-Segment einer Nutzdatendatei. Es dient zur Eröffnung,
+                                    1 je Datei     Identifizierung und Beschreibung der Datei. Eine Nutzdatendatei
+UNA                  K                             besteht aus der Folge UNB bis UNZ. Sie beinhaltet die Nachrichten …,
+                                                   die mehrfach wiederholbar sind.
+UNB                  M  Service
+
+                                                   Je Kassenart ist eine Nutzdatendatei (UNB bis UNZ) zu übermitteln.
+                                                   Auf einem Datenträger können mehrere Nutzdatendateien
+                                                   übermittelt werden.
+
+UNH                  M  Service 1 je               Kopf-Segment einer Nachricht. Es dient dazu, eine Nachricht zu
+
+                                    Nachricht eröffnen, zu identifizieren und zu beschreiben. Eine Nachricht
+
+                                                   besteht aus einer definierten Folge von Segmenten, die einmal oder
+
+                                                   mehrfach vorkommen können oder nur bei bestimmten
+
+                                                   Geschäftsvorfällen erforderlich sind.
+
+                     M Nutzdaten                   Segmente entsprechend Nachrichtentypbeschreibung
+
+UNT                  M  Service 1 je               Ende-Segment einer Nachricht. Beendet eine Nachricht und
+
+                                    Nachricht ermöglicht die Prüfung auf Vollständigkeit.
+
+UNZ                  M  Service 1 je Datei Ende-Segment einer Datei. Beendet eine Datei und ermöglicht die
+
+                                                   Prüfung auf Vollständigkeit.
+
+3.4 SERVICESEGMENTE
+
+3.4.1 Segment UNA - Trennzeichenvorgabe
+
+Seg.  Datenelement-                 Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ UNA  Bezeichnung                   Stell.  Typ    Art
+                                                          UNA – Kennung Festlegungssegment
+      Segmentkennung                   3      AN     M    :
+                                       1      AN     M
+      Trennkennzeichen
+      innerhalb
+      zusammengesetzter
+      Datenelemente
+
+Seite 5 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+      Trennkennzeichen            1       AN M +
+      Datenelemente
+      Dezimalzeichen              1       AN M ,
+      Aufhebungszeichen
+      Leerzeichen                 1       AN M ?
+      Segmentende
+                                  1       AN M Leerzeichen
+
+                                  1       AN M ‘ (Apostroph)
+
+3.4.2 Segment UNB - Kopfsegment der Nutzdatendatei
+
+Seg.  Datenelement-               Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ UNB  Bezeichnung                 Stell.  Typ    Art
+                                                        UNB – Kennung Segment
+      Segmentkennung                 3      AN     M    zusammengesetztes Datenelement
+                                                        UNOY - Vereinbarte EDIFACT-Syntax;
+      Syntax                         4      AN     M    hier: UNOY
+        - Syntax                                        3 - vereinbarte Version der Syntax;
+                                     1       1     M    hier: Version 3
+                                                        Die Kodierung hat in UTF-8 zu erfolgen
+                - Syntax-Version             N     M    IK des Absenders
+                                             N     M    IK des Empfängers
+      Absender Datei              9                     zusammengesetztes Datenelement
+                                             N     M    Erstelldatum der Datei im Format JJJJMMTT
+      Empfänger Datei             9          N     M    Uhrzeit der Erstellung der Datei im Format HHMM
+                                            AN     M    Logischer Dateiname
+      Erstellungszeit                        N     M    einzutragen ist die fortlaufende Nummer der Lieferungen
+                                                        zwischen Absender und Empfänger
+                - Datum           8
+
+                - Uhrzeit         4
+
+      Dateiname                   11
+
+      Datenaustauschrefere ..9
+      nz
+
+3.4.3 Segment UNZ - Ende-Segment der Nutzdatendatei
+
+Seg.  Datenelement-               Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ UNZ  Bezeichnung                 Stell.  Typ    Art
+      Segmentkennung                                    UNZ – Kennung Segment UNZ
+      Anzahl Nachrichten             3      AN     M    Anzahl der UNH-Segmente in der Datei
+      Datenaustauschrefere          ..6      N     M    einzutragen ist die fortlaufende Nummer der Lieferungen
+      nz                            ..9      N     M    zwischen Absender und Empfänger
+
+3.4.4 Segment UNH - Kopfsegment der Nachricht
+
+Seg   Datenelement-               Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ UNH  Bezeichnung                 Stell.  Typ    Art
+                                                        UNH – Kennung Nachrichtentypkopfsegment
+      Segmentkennung                 3      AN     M    fortlaufende Nummer der UNH-Segmente zwischen UNB
+                                    ..5      N     M    und UNZ
+      Nachrichtenreferenzn                              Datenelementgruppe
+      ummer                         ..8     AN     M    RETP – Nachrichtentyp Rettungsprotokoll
+                                     4      AN     M    Versionsnummer des Nachrichtentyps
+      Nachrichtenkennung            ..3      N     M    Bsp.: RETP:2
+      - Nachrichtentyp
+      - Version
+
+Seite 6 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+3.4.5 Segment UNT - Ende-Segment der Nachricht
+
+Seg    Datenelement-           Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ UNT   Bezeichnung             Stell.  Typ    Art
+       Segmentkennung                                UNT – Kennung Nachrichtentyp-Ende-Segment
+       Anzahl Segmente            3      AN     M    Anzahl der Segmente in dieser Nachricht
+                                 ..6      N     M    inklusive UNH- und UNT-Segment
+                                                     Nachrichtenreferenznummer des dazugehörigen UNH-
+       Nachrichtenreferenzn ..5           N     M    Segments
+       ummer
+
+3.5 NACHRICHTENTYP RETP
+
+3.5.1 Segmentzusammenstellung
+
+Segment- Segment- Wiederholu Inhalt / Erläuterung
+
+bez.            art     ngsfaktor
+
+ EIN                 M  1 je RETP Einsatz
+ VRS
+ NFG                 M  1 je RETP Versicherter
+ ERK
+ DIA                 K  1 je RETP Notfallgeschehen
+ VRL
+ STR                 K  n je RETP Erkrankung
+ UAR
+VMU                  K  n je RETP Erstdiagnose
+UME
+ MAI                 K  1 je RETP Verletzung
+ MAT
+MZU                  K  1 je RETP Spezielle Traumen
+MWM
+ MLT                 K  1 je RETP Unfallart
+MMO
+MMT                  K  1 je RETP Verletzungsmuster
+ REA
+ ERG                 K  1 je RETP Unfallmechanismus
+ BES
+ SCR                 K  1 je RETP Maßnahmen Airway/Stabilisierung
+ VKN
+                     K  1 je RETP Maßnahmen Atmung
+
+                     K  n je RETP Maßnahmen Zugänge
+
+                     K  1 je RETP weitere Maßnahmen
+
+                     K  1 je RETP Maßnahmen – Lagerung/Transport
+
+                     K  1 je RETP Maßnahmen Monitoring
+
+                     K  1 je RETP Maßnahmen Medizintechnik
+
+                     K  1 je RETP Reanimation/Tod/Todesfeststellung
+
+                     K  1 je RETP Ergebnis
+
+                     K  1 je RETP Einsatzbesonderheiten
+
+                     K  1 je RETP NACA-Score
+
+                     M  1 je RETP Verknüpfungsinformationen
+
+3.5.2 Nutzdatensegmente
+
+3.5.2.1 Segment EIN - Einsatz
+
+Seg    Datenelement-           Anz.    Feld-  Feld-  Inhalt / Erläuterung
+  EIN  Bezeichnung             Stell.  Typ    Art
+       Segmentkennung                                EIN – Kennung Segment Einsatz
+       LER-IK                     3      AN     M    IK des Leistungserbringers
+                                  9       N     M    Einsatzart gemäß SV 4.2
+                                          N     M    Fahrzeugtyp gemäß SV 4.1
+       Einsatzart              2          N     M
+
+       Einsatzfahrzeug         2
+
+Seite 7 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+      Einsatzzeit von     8         N          zusammengesetztes Datenelement
+           - Datum                      M Datum des Einsatzes (Beginn) im Format JJJJMMTT
+           - Uhrzeit      4         N   M Uhrzeit des Einsatzes (Beginn) im Format HHMM
+
+      Einsatzzeit bis     8         N          zusammengesetztes Datenelement
+           - Datum                      M Datum des Einsatzes (Ende) im Format JJJJMMTT
+           - Uhrzeit      4         N   M Uhrzeit des Einsatzes (Ende) im Format HHMM
+
+      Kilometer           ..6       N   M angefangene Kilometer gesamt
+      Einsatzort
+      Einsatzort/Straße   ..60 AN       K Ortsname des Einsatzes
+
+      PLZ Einsatzort      ..60 AN       M Straße und Hausnummer oder der Notfallort (z. B. B252;
+                                               A45, Kilometer 7)
+      Länderkennzeichen   ..7 AN
+      Einsatzort                        K PLZ ist zwingend anzugeben, sofern die Angabe dem
+                          ..3 AN               Leistungserbringer bekannt ist. Bei Inlandsanschrift ist die
+      Zielort                                  gültige, 5-stellige Postleitzahl ohne weitere Zusätze
+      Zielort/Straße      ..60 AN              anzugeben.
+      Zielort/PLZ         ..60 AN
+                          ..7 AN        M Länderkennzeichen gemäß Anlage 3 Schlüssel 8.5 (Version
+      Länderkennzeichen                        12) zu den Richtlinien der Spitzenverbände der
+      Zielort             ..3 AN               Krankenkassen nach § 302 Abs. 2 SGB V.
+
+                                        M Zielort des Einsatzes
+
+                                        M Straße und Hausnummer sind anzugeben.
+
+                                        K PLZ ist zwingend anzugeben, sofern die Angabe dem
+                                               Leistungserbringer bekannt ist. Bei Inlandsanschrift ist die
+                                               gültige, 5-stellige Postleitzahl ohne weitere Zusätze
+                                               anzugeben.
+
+                                        M Länderkennzeichen gemäß Anlage 3 Schlüssel 8.5 (Version
+                                               12) zu den Richtlinien der Spitzenverbände der
+                                               Krankenkassen nach § 302 Abs. 2 SGB V.
+
+3.5.2.2 Segment VRS - Versicherter
+
+Seg   Datenelement-       Anz. Feld-    Feld-  Inhalt / Erläuterung
+ VRS  Bezeichnung         Stell. Typ    Art
+      Segmentkennung                           VRS – Kennung Segment Versicherter
+      KTR                 2 AN            M    Name des Kostenträgers
+      KTR-IK                               K   IK des Kostenträgers
+                          ..60 AN         M    Das IK, sofern bekannt, zwingend anzugeben
+                                               Nachname des Versicherten
+                          9         N     M    Vorname des Versicherten
+                                          M    Geburtsdatum des Versicherten Format JJJJMMTT, Werte 00
+      Name                ..47 AN         M    für TT und MM sind zulässig
+      Vorname                                  Geschlecht des Versicherten gemäß SV 4.3
+      Geburtsdatum        ..30 AN          K   Einheitliche Krankenversichertennummer
+                                           K   Krankenversichertennummer ist sofern bekannt,
+                          8         N      K   gemäß eGK bzw. ärztlicher Verordnung anzugeben.
+
+      Geschlecht          1         N
+      EKVNR
+      Versichertennummer  10 AN
+
+                          ..12 AN
+
+3.5.2.3 Segment NFG - Notfallgeschehen
+
+Seg Datenelement-         Anz. Feld-    Feld-  Inhalt / Erläuterung
+          Bezeichnung     Stell. Typ    Art
+                                               NFG – Kennung Segment Notfallgeschehen
+NFG Segmentkennung        3         AN    M    Beschreibung des Notfallgeschehens (Zeilenumbrüche nicht
+                                          M    zulässig)
+      Beschreibung        ..1000 AN
+
+Seite 8 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+3.5.2.4 Segment ERK - Erkrankung
+
+Seg Datenelement-             Anz.    Feld-  Feld-  Inhalt / Erläuterung
+          Bezeichnung         Stell.  Typ    Art
+                                                    ERK – Kennung Segment Erkrankung
+ERK Segmentkennung            3         AN     M    Art der Erkrankung gemäß SV 4.4.
+                                         N     M
+         Art der Erkrankung   ..4
+
+3.5.2.5 Segment DIA - Erstdiagnosen
+
+Seg Datenelement-             Anz. Feld-     Feld-  Inhalt / Erläuterung
+          Bezeichnung         Stell. Typ     Art
+                                                    DIA – Kennung Segment Erstdiagnosen
+DIA Segmentkennung            3       AN       M    Schlüssel der Erstdiagnose nach ICD-10-GM
+                                                K   pro Diagnose muss ein Segment übermittelt werden
+         Diagnoseschlüssel ICD ..12 AN              Diagnoseschlüssel gemäß MIND
+                                                K
+         Diagnoseschlüssel    4       N             Diagnosetext
+         MIND                                   K
+                              ..70 AN
+         Diagnosetext
+
+3.5.2.6  Segment VRL - Verletzung
+  Seg
+         Datenelement-        Anz.    Feld-  Feld-  Inhalt / Erläuterung
+   VRL   Bezeichnung          Stell.  Typ    Art
+                                                    VRL – Kennung Segment Verletzung
+         Segmentkennung          3      AN     M    Anzugeben ist jeweils die Schwere der Verletzung gemäß SV
+                                         N      K   4.5 im jeweiligen Bereich. Liegt keine Verletzung vor, ist für
+         Schädel-Hirn         1          N      K   den jeweiligen Bereich nichts anzugeben.
+                                         N      K
+         Gesicht              1          N      K
+                                         N      K
+         HWS                  1          N      K
+                                         N      K
+         Thorax               1          N      K
+                                         N      K
+         Abdomen              1          N      K
+
+         BWS/LWS              1
+
+         Becken               1
+
+         Obere Extremitäten   1
+
+         Untere Extremitäten  1
+
+         Weichteile           1
+
+3.5.2.7  Segment STR - Spezielle Traumen
+  Seg
+         Datenelement-        Anz.    Feld-  Feld-  Inhalt / Erläuterung
+   STR   Bezeichnung          Stell.  Typ    Art
+                                                    STR – Kennung Segment Spezielle Traumen
+         Segmentkennung          3      AN     M    1 – ja; 0 od. nicht angegeben – nein
+                                                K
+         Verbrennung/Verbrüh 1        N             1 – ja; 0 od. nicht angegeben – nein
+                                                K   1 – ja; 0 od. nicht angegeben – nein
+         ung                                    K   1 – ja; 0 od. nicht angegeben – nein
+                                                K   1 – ja; 0 od. nicht angegeben – nein
+         Elektrounfall        1       N         K   1 – ja; 0 od. nicht angegeben – nein
+                                                K
+         Tauchunfall          1       N
+
+         Inhalationstrauma    1       N
+         Verätzung
+                              1       N
+
+         Sonstige             1       N
+
+Seite 9 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+3.5.2.8 Segment UAR - Unfallart
+
+Seg Datenelement-            Anz.    Feld-  Feld-  Inhalt / Erläuterung
+          Bezeichnung        Stell.  Typ    Art
+                                                   UAR – Kennung Segment Unfallart
+UAR Segmentkennung               3     AN     M    1 – ja; 0 od. nicht angegeben – nein
+                                        N      K   1 – ja; 0 od. nicht angegeben – nein
+      nicht bekannt              1      N      K   1 – ja; 0 od. nicht angegeben – nein
+                                        N      K   1 – ja; 0 od. nicht angegeben – nein
+      PKW/LKW Insasse            1      N      K   1 – ja; 0 od. nicht angegeben – nein
+                                        N      K   1 – ja; 0 od. nicht angegeben – nein
+      Motorradfahrer             1      N      K
+                                                   1 – ja; 0 od. nicht angegeben – nein
+      Fahrradfahrer              1      N      K   1 – ja; 0 od. nicht angegeben – nein
+                                        N      K   1 – ja; 0 od. nicht angegeben – nein
+      Fußgänger angefahren 1            N      K   1 – ja; 0 od. nicht angegeben – nein
+                                        N      K   1 – ja; 0 od. nicht angegeben – nein
+      anderes                    1      N      K   1 – ja; 0 od. nicht angegeben – nein
+                                        N      K   1 – ja; 0 od. nicht angegeben – nein
+      Verkehrsmittel                    N      K   1 – ja; 0 od. nicht angegeben – nein
+                                        N      K   1 – ja; 0 od. nicht angegeben – nein
+      Maschinenunfall            1      N      K
+
+      Sturz > 3m Höhe            1
+
+      Sturz < 3m Höhe            1
+
+      Schlag                     1
+
+      Schuss                     1
+
+      Stich                      1
+
+      Gewaltverbrechen           1
+
+      Verschüttung               1
+
+      andere Unfallart           1
+
+3.5.2.9 Segment VMU - Verletzungsmuster
+
+Seg   Datenelement-          Anz.    Feld-  Feld-  Inhalt / Erläuterung
+VMU   Bezeichnung            Stell.  Typ    Art
+      Segmentkennung                               VMU – Kennung Segment Verletzungsmuster
+      Einzelverletzung          3      AN     M    1 – ja; 0 od. nicht angegeben – nein
+      Mehrfachverletzung        1       N      K   1 – ja; 0 od. nicht angegeben – nein
+                                1       N      K   1 – ja; 0 od. nicht angegeben – nein
+                                               K
+      Polytrauma                 1   N
+
+3.5.2.10 Segment UME - Unfallmechanismus
+
+Seg   Datenelement-          Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ UME  Bezeichnung            Stell.  Typ    Art
+      Segmentkennung                               UME – Kennung Segment Unfallmechanismus
+      stumpf                    3      AN     M    1 – ja; 0 od. nicht angegeben – nein
+      penetrierend              1       N      K   1 – ja; 0 od. nicht angegeben – nein
+                                1       N      K   1 – ja; 0 od. nicht angegeben – nein
+
+      nicht bekannt              1   N      K
+
+3.5.2.11 Segment MAI - Maßnahmen Airway/Stabilisierung
+
+Seg.  Datenelement-          Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ MAI  Bezeichnung            Stell.  Typ    Art    MAI – Kennung Segment Maßnahmen Airway/Stabilisierung
+                                                   1 – ja; 0 od. nicht angegeben – nein
+      Segmentkennung            3      AN     M    1 – ja; 0 od. nicht angegeben – nein
+      Atemweg                   1       N     M    1 – ja; 0 od. nicht angegeben – nein
+      freimachen/freihalten
+                                1       N      K
+      Cervicalstütze/HWS
+      Stabilisierung            1       N      K
+
+      Absaugung
+
+      Sauerstoffgabe             1   N      K 1 – ja; 0 od. nicht angegeben – nein
+
+Seite 10 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+      Sauerstoffmenge         2       N      K O2 in l/min
+                                             K 1 – ja; 0 od. nicht angegeben – nein
+      Maskenbeatmung          1       N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      Maskenbeatmung          1       N      K 1 – ja; 0 od. nicht angegeben – nein
+      unmöglich                              K 1 – ja; 0 od. nicht angegeben – nein
+                                             K 1 – ja; 0 od. nicht angegeben – nein
+      SGA-Larynxmaske         1       N      K Innendurchmesser in mm oder SGA-Größe
+                                             K 1 – ja; 0 od. nicht angegeben – nein
+      SGA-Larynxtubus         1       N
+                                             K 1 – ja; 0 od. nicht angegeben – nein
+      SGA-sonstige            1       N      K 1 – ja; 0 od. nicht angegeben – nein
+                                             K 1 – ja; 0 od. nicht angegeben – nein
+      Tubus-Größe             2,1 N
+                                             K
+      Atemwegszugang          1       N
+      erschwert
+
+      Intubation              1       N
+
+      Intubation erschwert    1       N
+
+      Koniotomie/chir.        1       N
+      Atemweg
+
+      Sonstige                ..60 AN
+
+3.5.2.12 Segment MAT - Maßnahmen Atmung
+
+Seg.  Datenelement-           Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ MAT  Bezeichnung             Stell.  Typ    Art
+      Segmentkennung                                MAT – Kennung Segment Maßnahmen Atmung
+      Thoraxdrainage             3      AN     M    1 – ja; 0 od. nicht angegeben – nein
+      Thoraxdrainage -           1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      rechts                     1       N      K
+      Thoraxdrainage - links                        1 – ja; 0 od. nicht angegeben – nein
+      CPAP/NIV                   1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Demand Ventil              1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      kontrollierte              1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Beatmung (PCV, CMV)        1       N      K
+      Fi O2                                         Prozentualer Anteil von Sauerstoff in der Luft bei der
+                                2,1      N      K   Beatmung
+                                                    Druckwert (cmH2O), welcher am Ende der Ausatmung
+      CPAP/PEEP               2          N      K   weiterhin in der Lunge gehalten wird
+                                                    Verhältnis zwischen Inspirationszeit (I, Zeit zur Einatmung)
+      I:E                                N      K   und der Expirationszeit (E, Zeit zur Ausatmung). (Bsp. 1,0:1,5
+                                         N     M    heißt: Die Ausatmungszeit ist 1,5-mal so lang, wie die
+                 -I           1,1              M    Einatmungszeit.)
+                                         N          Atemfrequenz in Atemzügen pro Minute (/min)
+                 -E           1,1        N      K   Atemzugvolumen in Millilitern
+                                         N      K   Druckwert (cmH2O), welcher bei einer assistierten
+      AF                      2                 K   Beatmung zur Unterstützung der Einatmung des Patienten
+                                        AN          angegeben wird
+      AZV                     4                 K
+
+      PS                      3
+
+      Sonstige                ..60
+
+3.5.2.13 Segment MZU - Maßnahmen Zugänge
+
+Seg.  Datenelement-           Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ MZU  Bezeichnung             Stell.  Typ    Art
+      Segmentkennung                                MZU – Kennung Segment Maßnahmen Zugänge
+      Art                        3      AN     M    gemäß SV 4.6
+                                 1       N     M
+
+Seite 11 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+      Ort                     ..30 AN        K
+      Größe                                  K
+      Anzahl                  ..30 AN        K
+      Zugang vorhanden                       K 1 – ja; 0 od. nicht angegeben – nein
+                              2       N
+
+                              1       N
+
+3.5.2.14 Segment MWM - weitere Maßnahmen
+
+Seg. Datenelement-            Anz. Feld- Feld-      Inhalt / Erläuterung
+          Bezeichnung         Stell. Typ Art
+                                                    MWM – Kennung Segment weitere Maßnahmen
+MWM Segmentkennung            3       AN M          1 – ja; 0 od. nicht angegeben – nein
+          Kühlung                                   1 – ja; 0 od. nicht angegeben – nein
+          Wärmeerhalt         1       N      K      1 – ja; 0 od. nicht angegeben – nein
+          Entbindung                                1 – ja; 0 od. nicht angegeben – nein
+          Krisenintervention  1       N      K      1 – ja; 0 od. nicht angegeben – nein
+          Kardioversion
+          Sonstige            1       N      K
+
+                              1       N      K
+
+                              1       N      K
+
+                              ..60 AN K
+
+3.5.2.15 Segment MLT - Maßnahmen Lagerung/Transport
+
+Seg.  Datenelement-           Anz.    Feld-  Feld-  Inhalt / Erläuterung
+ MLT  Bezeichnung             Stell.  Typ    Art
+      Segmentkennung                                MLT – Kennung Segment Maßnahmen – Lagerung/Transport
+      Oberkörperhochlage         3      AN     M    1 – ja; 0 od. nicht angegeben – nein
+      Flachlagerung              1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Schocklagerung             1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Stabile Seitenlage         1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Spineboard                 1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      sitzender Transport        1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Vakuummatratze             1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Schaufeltrage              1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Vakuumschiene              1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Reposition                 1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Verband                    1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Beckenschlinge             1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Sonstige                   1       N      K
+                                ..60    AN      K
+
+3.5.2.16 Segment MMO - Maßnahmen Monitoring
+
+Seg.  Datenelement-           Anz.    Feld-  Feld-  Inhalt / Erläuterung
+MMO   Bezeichnung             Stell.  Typ    Art
+      Segmentkennung                                MMO – Kennung Segment Maßnahmen Monitoring
+      EKG                        3      AN     M    1 – ja; 0 od. nicht angegeben – nein
+      12-Kanal-EKG               1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      NIBP                       1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      BZ                         1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      invasive RR Messung        1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      SpO2                       1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      Kapnometrie/Kapnogr        1       N      K   1 – ja; 0 od. nicht angegeben – nein
+      afie                       1       N      K
+      Temperatur                                    1 – ja; 0 od. nicht angegeben – nein
+                                 1       N      K
+
+Seite 12 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+      Sonstige               ..60 AN K
+
+3.5.2.17 Segment MMT - Maßnahmen Medizintechnik
+
+Seg. Datenelement-           Anz. Feld- Feld- Inhalt / Erläuterung
+          Bezeichnung        Stell. Typ Art
+
+MMT Segmentkennung           3            AN M MMT – Kennung Segment Maßnahmen Medizintechnik
+         Ultraschall
+                             1            N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      Funk EKG               1            N      K 1 – ja; 0 od. nicht angegeben – nein
+      Übermittlung
+      Notfallpacer           1            N      K 1 – ja; 0 od. nicht angegeben – nein
+      Spritzenpumpe
+                             1            N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      FO-Intubationshilfe    1            N      K 1 – ja; 0 od. nicht angegeben – nein
+      Transportinkubator
+                             1            N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      Mechanische            1            N      K 1 – ja; 0 od. nicht angegeben – nein
+      Thoraxkompression                          K
+                             ..60 AN
+      Sonstige
+
+3.5.2.18 Segment REA - Reanimation/Tod/Todesfeststellung
+
+Seg   Datenelement-          Anz.         Feld-  Feld-  Inhalt / Erläuterung
+ REA  Bezeichnung            Stell.       Typ    Art
+                                                        REA – Kennung Segment Reanimation/Tod/Todesfeststellung
+      Segmentkennung         3              AN     M    zusammengesetztes Datenelement
+                                                        Datum im Format JJJJMMTT
+      Beginn (Uhrzeit)                       N      K   Uhrzeit im Format HHMM
+                                       8     N      K   1 – ja; 0 od. nicht angegeben – nein
+                                       4     N      K   1 – ja; 0 od. nicht angegeben – nein
+                                             N      K   1 – ja; 0 od. nicht angegeben – nein
+      Ersthelfer             1               N      K   1 – ja; 0 od. nicht angegeben – nein
+                                             N      K   1 – ja; 0 od. nicht angegeben – nein
+      Vorab Telefon-Rea      1               N      K   1 – ja; 0 od. nicht angegeben – nein
+                                             N      K   1 – ja; 0 od. nicht angegeben – nein
+      Rettungsdienst         1               N      K   1 – ja; 0 od. nicht angegeben – nein
+                                             N      K   1 – ja; 0 od. nicht angegeben – nein
+      Reanimation            1               N      K
+                                                        1 – ja; 0 od. nicht angegeben – nein
+      ROSC im Verlauf        1               N      K
+                                                        Anzahl
+      niemals ROSC           1              AN      K   max. Energie in Joule
+                                                        1 – ja; 0 od. nicht angegeben – nein
+      erfolglose Rea         1               N      K   1 – ja; 0 od. nicht angegeben – nein
+                                             N      K
+      Besonderheiten         1               N      K   1 – ja; 0 od. nicht angegeben – nein
+                                             N      K
+      nicht                  1                          1 – ja; 0 od. nicht angegeben – nein
+                                             N      K
+      gewünscht/Patientenv
+                                             N      K
+      erfügung
+
+      aussichtslose          1
+
+      Grunderkrankung
+
+      Ursache-               ..30
+
+      Besonderheiten
+
+      Defibrillation - Anzahl ..2
+
+      Defibrillation - Energie ..3
+
+      KH-Aufnahme            1
+
+      KH-Aufnahme mit        1
+
+      ROSC
+
+      KH-Aufnahme mit        1
+
+      laufender Reanimation
+
+      Todesfeststellung      1
+
+Seite 13 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+      Zeitpunkt -                                    zusammengesetztes Datenelement
+      Todesfeststellung
+                            8       N         K Datum im Format JJJJMMTT
+           - Datum
+           - Uhrzeit        4       N         K Uhrzeit im Format HHMM
+
+      Zeitpunkt nicht       1       N         K 1 – ja; 0 od. nicht angegeben – nein
+      feststellbar
+
+3.5.2.19 Segment ERG - Ergebnis
+
+Seg   Datenelement-         Anz.    Feld-     Feld-  Inhalt / Erläuterung
+ ERG  Bezeichnung           Stell.  Typ       Art    ERG – Kennung Segment Ergebnis
+                                                     1 – ja; 0 od. nicht angegeben – nein
+      Segmentkennung        3         AN        M    1 – ja; 0 od. nicht angegeben – nein
+                                       N         K   1 – ja; 0 od. nicht angegeben – nein
+      ambulante Versorgung 1                         1 – ja; 0 od. nicht angegeben – nein
+      vor Ort                          N         K
+                                       N         K   1 – ja; 0 od. nicht angegeben – nein
+      Transport ohne NA     1                        1 – ja; 0 od. nicht angegeben – nein
+                                       N         K
+      Transport mit NA      1                        1 – ja; 0 od. nicht angegeben – nein
+                                       N         K   1 – ja; 0 od. nicht angegeben – nein
+      (NEF)                                          1 – ja; 0 od. nicht angegeben – nein
+                                       N         K
+      Transport mit NA      1
+                                       N         K
+      (RTW)
+                                       N         K
+      Übergabe an anderes 1            N         K
+      RM
+
+      Fehleinsatz - kein    1
+
+      Patient
+
+      Patient nicht         1
+
+      Transportfähig
+
+      Tod an Einsatzstelle  1
+
+      sonstiges             1
+
+3.5.2.20 Segment BES - Einsatzbesonderheiten
+
+Seg   Datenelement-         Anz.    Feld-     Feld-  Inhalt / Erläuterung
+ BES  Bezeichnung           Stell.  Typ       Art
+      Segmentkennung                                 BES – Kennung Segment Einsatzbesonderheiten
+      nächstes KH nicht        3      AN        M    1 – ja; 0 od. nicht angegeben – nein
+      aufnahmeb.               1       N         K
+      Palliation                                     1 – ja; 0 od. nicht angegeben – nein
+      vorsorgl.                1    N         K      1 – ja; 0 od. nicht angegeben – nein
+      Bereitstellung           1
+      Schwerlasttransport           N         K      1 – ja; 0 od. nicht angegeben – nein
+      aufwendige Rettung       1                     1 – ja; 0 od. nicht angegeben – nein
+                               1    N         K      1 – ja; 0 od. nicht angegeben – nein
+                                                     1 – ja; 0 od. nicht angegeben – nein
+                                    N         K      1 – ja; 0 od. nicht angegeben – nein
+
+      mehrere Patienten     1       N         K
+      kein NA erreichbar
+                            1       N         K
+
+      Infektionstransport   1       N         K
+
+      Pat. lehnt Transport ab 1     N         K 1 – ja; 0 od. nicht angegeben – nein
+
+      Pat. nicht            1       N         K 1 – ja; 0 od. nicht angegeben – nein
+      transportfähig
+
+      Erhöhter              1       N         K 1 – ja; 0 od. nicht angegeben – nein
+      Hygieneaufwand
+
+      Zwangsunterbringung 1         N         K 1 – ja; 0 od. nicht angegeben – nein
+
+Seite 14 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+      LNA/ORGL im Einsatz  1         N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      MANV                 1         N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      erschw. Pat.-zugang  1         N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      verz. Pat.-übergabe  1         N      K 1 – ja; 0 od. nicht angegeben – nein
+
+      Sonstiges            1         N      K 1 – ja; 0 od. nicht angegeben – nein
+
+3.5.2.21 Segment SCR - NACA - Score
+
+Seg   Datenelement-        Anz.      Feld-  Feld-  Inhalt / Erläuterung
+ SCR  Bezeichnung          Stell.    Typ    Art
+                                                   SCR – Kennung Segment NACA-Score
+      Segmentkennung          3        AN     M    NACA-Score gemäß SV 4.7
+                              1         N      K
+      NACA-Score                                   NACA-Score gemäß SV 4.7
+      Erstbefund                               K
+
+      NACA-Score Übergabe 1          N
+
+3.5.2.22 Segment VKN - Verknüpfungsinformationen
+Die Informationen im VKN-Segment dienen der Zuordnung des Rettungsprotokolls zum dazugehörigen
+Datensatz der Abrechnungsdaten gemäß Richtlinien der Spitzenverbände der Krankenkassen nach §
+302 Abs. 2 SGB V. Die Verknüpfungsinformationen sind identisch mit den gelieferten Informationen
+der Abrechnungsdaten (siehe Technische Anlage 1, Teilprojekt 5 – Sonstige Leistungserbringer (TA1
+TP5).
+
+Seg   Datenelement-        Anz.      Feld-  Feld-  Inhalt / Erläuterung
+ VKN  Bezeichnung          Stell.    Typ    Art
+                                                   VKN – Kennung Segment Verknüpfungsinformationen
+      Segmentkennung       3           AN     M    Datenelementgruppe bestehend aus Sammel-
+                                              M    Rechnungsnummer und Einzelrechnungsnummer. Inhalt
+      Rechnungsnummer                  AN     M    entsprechend den Vorgaben zum Segment ‚REC‘ gemäß
+                                       AN          Technische Anlage 1 zu den Richtlinien der Spitzenverbände
+      Sammelrechnungsnu ..14            N     M    der Krankenkassen nach § 302 Abs. 2 SGB V (Version 12)
+      mmer                             AN
+                                        N     M    Rechnungsdatum JJJJMMTT
+      Einzelrechnungsnumm ..6                      (aus dem REC-Segment)
+      er                                      M    Eindeutige Nummer innerhalb der Gesamtrechnung
+                                                   (aus dem INV-Segment)
+      Rechnungsdatum       8                  M    Identifikationsnummer
+                                                   (aus dem KTL-Segment)
+      Belegnummer          ..10
+
+      Identifikationsnummer ..3
+
+Seite 15 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+4 SCHLÜSSELVERZEICHNIS
+
+4.1 FAHRZEUGTYP
+
+In Anlehnung an Bundeseinheitliches Positionsnummernverzeichnis für Krankentransportleistungen.
+
+Schlüssel        Bezeichnung
+       0         Sonstiges Transportmittel
+       1         Notarztwagen
+       2         Notarzteinsatzfahrzeug
+       3         Rettungswagen
+       4         Krankentransportwagen
+       8         Primärtransport - Luft
+       9         Sekundärtransport - Luft
+      10         Intensivtransportwagen
+
+4.2 EINSATZART
+
+Schlüssel        Bezeichnung
+       1         Krankentransport
+       2         Notfalltransport
+       3         Verlegung
+       4         Fehlfahrt
+       5         paralleler Notarztalarm
+       6         Versorgung ohne Transport
+       7         Bereitstellung
+       8         Inkubator-transport
+       9         sonstiger Notfall
+      10         Verkehrsunfall
+      11         Arbeitsunfall
+      12         sonstiger Unfall
+      13         sonstiges
+
+4.3 GESCHLECHT
+
+Schlüssel        Bezeichnung
+       0         unbekannt/unbestimmt
+       1         männlich
+       2         weiblich
+       3         divers
+
+4.4 ART DER ERKRANKUNG
+
+Schlüssel        Bezeichnung
+                 ZNS
+     100         sonstiges
+     101         akutes zentral-neurologisches Defizit
+     102         TIA/Schlaganfall
+
+Seite 16 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+103              ICB
+
+104              SAB
+
+105              Krampfanfall
+
+106              Status Epilepticus
+
+107              Fieberkrampf
+
+                 Herz-Kreislauf
+
+200              Herz-Kreislauf - sonstiges
+
+201              ACS
+
+202              STEMI
+
+203              STEMI-VW
+
+204              STEMI-HW
+
+205              kardiogener Schock
+
+206              Rhythmusstörungen
+
+207              Rhythmusstörungen Tachykardie
+
+208              Rhythmusstörungen Bradykardie
+
+209              PM/ICD Fehlfunktion
+
+210              Lungenembolie
+
+211              Lungenödem
+
+212              hypertensiver Notfall
+
+213              Aortenaneurysma
+
+214              Hypotonie
+
+215              Synkope
+
+216              Thrombose/Embolie
+
+217              Herz-Kreislauf-Stillstand
+
+218              Schock unklare Genese
+
+219              orthostatische Fehlregulation
+
+220              unklarer Thoraxschmerz
+
+                 Atmung
+
+300              sonstige
+
+301              Asthma
+
+302              Status asthm.
+
+303              exazerbierte COPD
+
+304              Aspiration
+
+305              Pneumonie/Bronchitis
+
+306              Hyperventilationstetanie
+
+307              LTB (L/T/Bronchitis)
+
+308              Epiglottitis
+
+309              Spontanpneumothorax
+
+310              Hämoptysis
+
+311              unkl. Dyspnoe
+
+                 Stoffwechsel
+
+400              sonstiges
+
+401              Exsikkose
+
+402              Hypoglykämie
+
+403              Hyperglykämie
+
+404              Urämie/ANV
+
+405              bek. dialysepflichtig
+
+Seite 17 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+                 Abdomen
+
+500              sonstiges
+
+501              akutes Abdomen
+
+502              Kolik allgmein
+
+503              obere gastr. Blutung
+
+504              untere gastr. Blutung
+
+505              Gallenkolik
+
+506              Nierenkolik
+
+                 Psychiatrie
+
+600              Sonstige
+
+601              psych. Ausnahmezustand
+
+602              psychosoz. Krise
+
+603              Depression
+
+604              Manie
+
+605              Intoxikation – Alkohol
+
+606              Intoxikation – Drogen
+
+607              Intoxikation – Medikamente
+
+608              Intoxikation – Sonstiges
+
+609              Entzug/Delir
+
+610              Suizidalität
+
+                 Gyn./Geburtshilfe
+
+700              sonstiges
+
+701              Schwangerschaft > 35 SSW
+
+702              Geburt
+
+703              Extrauterine Gravidität
+
+704              Eklampsie
+
+705              vaginale Blutung
+
+                 Infektion
+
+800              Sonstige
+
+801              unkl. Fieber
+
+802              Meningitis/Enzephalitis
+
+803              MRSA – offen
+
+804              MRSA - gedeckt
+
+805              Influenza
+
+806              Hepatitis
+
+807              HIV
+
+808              TBC
+
+809              hochkontag. Erreger (SARS)
+
+810              Gastroenteritis
+
+                 Sonstiges
+
+900              unklar
+
+901              Anaphylaxie Grad ½
+
+902              Anaphylaxie Grad ¾
+
+903              sept. Schock
+
+904              Hitzeerschöpfung/Hitzeschlag
+
+905              Unterkühlung/Erfrierung
+
+906              Ertrinken
+
+Seite 18 von 19
+SCHNITTSTELLENBESCHREIBUNG DIGITALES RETTUNGSPROTOKOLL
+
+907              SIDS
+
+908              akzident. Intoxikation
+
+909              akute Lumbago
+
+910              palliative Situation
+
+911              med. Behandlungskomplikation
+
+912              Epistaxis
+
+913              urologische Erkrankung
+
+4.5 SCHWERE DER VERLETZUNG
+
+Schlüssel        Bezeichnung
+       1         leicht
+       2         mittel
+       3         schwer
+       4         tödlich
+
+4.6 ART DES ZUGANGS
+
+Schlüssel        Bezeichnung
+       1         peripher-ven. Zugang
+       2         zentral-ven. Zugang
+       3         intraossäre Kanüle/Port
+       4         art. Kanüle
+       5         transnasale Applikation
+       9         Sonstige
+
+4.7 NACA-SCORE
+
+Schlüssel        Bezeichnung
+       0         NACA Score 0 – keine Erkrankung oder Verletzung
+       1         NACA Score I - Geringfügige Verletzung bzw. Funktionsstörung
+       2         NACA Score II - Leichte bis mäßig schwere Funktionsstörung
+       3         NACA Score III - Mäßige bis schwere, aber nicht lebensbedrohliche Störung
+       4         NACA Score IV - Schwere Störung, drohende Lebensgefahr
+       5         NACA Score V - Akute Lebensgefahr
+       6         NACA Score VI - Atem- und/oder Kreislaufstillstand
+       7         NACA Score VII - Tödliche Verletzung oder Erkrankung
+
+Seite 19 von 19
+

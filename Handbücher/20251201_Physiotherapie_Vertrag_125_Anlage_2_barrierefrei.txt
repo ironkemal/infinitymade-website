@@ -1,0 +1,488 @@
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+Anlage 2 Vergütungsvereinbarung
+
+zum Vertrag nach § 125 Absatz 1 SGB V über die Versorgung mit
+Leistungen der Physiotherapie und deren Vergütung
+
+                                               Seite 1 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+A. Vergütungsliste nach § 125 Absatz 1 SGB V
+
+ Schlüssel ”Leistungserbringergruppe”:
+ Leistungserbringer gemäß § 124 Absatz 1 Nr. 1 SGB V:
+ 21 00 501 = Masseur/Medizinischer Badebetrieb
+ 22 00 501 = Krankengymnast/Physiotherapeut
+
+ Leistungserbringer gemäß § 124 Absatz 5 SGB V:
+ 27 00 511 = Krankenhaus
+ 28 00 511 = Kurbetrieb
+ 29 00 511 = Sonstige therapeutische Heilperson
+
+ Bitte im maschinellen Datenaustausch angeben!!!
+
+Heilmittelpositionsnummern:
+abhängig vom Status des Leistungserbringers ist das X an der ersten Stelle der
+Heilmittelpositionsnummer wie folgt zu ersetzen:
+
+1 - Masseur, Masseur und med. Bademeister
+2 - Krankengymnast/ Physiotherapeut
+6 - Krankenhaus
+8 - Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten*
+* Sofern eine ambulante Vorsorgeleistung gemäß § 23 Absatz 2 SGB V in einem anerkannten Kurort
+erbracht wird, ist in der ersten Stelle der Positionsnummer immer die Ziﬀer „8“ zu verwenden.
+
+Für Behandlungen, die ab dem 01.01.2026 durchgeführt werden, sind folgende Preise
+abzurechnen:
+
+Pos.-Nr.                         Leistungsbeschreibung     Preis                   Zuzahlung
+ X0102                                                    in Euro                    in Euro
+ X0106    Unterwasserdruckstrahlmassage
+ X0107    (Regelbehandlungszeit 15 bis 20 Minuten)         33,75                       3,38
+ X0108
+ X0201    Klassische Massagetherapie (KMT)                21,63                    2,16
+          (Regelbehandlungszeit 15 bis 20 Minuten)
+                                                          25,98                    2,60
+          Bindegewebsmassage (BGM)
+          (Regelbehandlungszeit 20 bis 30 Minuten)        21,63                    2,16
+
+          Segment-, Periost-, Colonmassage                53,94                    5,39
+          (Regelbehandlungszeit 15 bis 20 Minuten)
+
+          Manuelle Lymphdrainage MLD - 45 Minuten
+          (Großbehandlung)
+          (Regelbehandlungszeit 45 Minuten)
+
+                                                                                   Seite 2 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+Pos.-Nr.                         Leistungsbeschreibung        Preis   Zuzahlung
+ X0202                                                       in Euro    in Euro
+ X0204    Manuelle Lymphdrainage MLD - 60 Minuten
+ X0205    (Ganzbehandlung)                                   71,94    7,19
+ X0301    (Regelbehandlungszeit 60 Minuten)
+ X0305                                                       22,92    2,29
+ X0306    Kompressionsbandagierung einer Extremität
+ X0401                                                       35,97    3,60
+ X0402    Manuelle Lymphdrainage MLD - 30 Minuten
+ X0405    (Teilbehandlung)                                   13,68    1,37
+ X0501    (Regelbehandlungszeit 30 Minuten)
+ X0521                                                       32,88    3,29
+ X0507    Übungsbehandlung: Einzelbehandlung
+          (Regelbehandlungszeit 10 bis 20 Minuten)           20,43    2,04
+ X0601
+          Übungsbehandlung im Bewegungsbad:                  8,43     0,84
+          Einzelbehandlung
+          (Regelbehandlungszeit 20 bis 30 Minuten)           24,00    2,40
+
+          Chirogymnastik (Funktionelle                       16,28    1,63
+          Wirbelsäulengymnastik): Einzelbehandlung
+          (Regelbehandlungszeit 15 bis 20 Minuten)           29,63    2,96
+
+          Übungsbehandlung: Gruppenbehandlung (2 - 5         29,63    2,96
+          Patienten)
+          (Regelbehandlungszeit 10 bis 20 Minuten)           55,81    5,58
+
+          Übungsbehandlung im Bewegungsbad:                  13,26    1,33
+          Gruppenbehandlung mit 2 - 3 Patienten
+          (Regelbehandlungszeit 20 bis 30 Minuten)
+
+          Übungsbehandlung im Bewegungsbad:
+          Gruppenbehandlung mit 4 - 5 Patienten
+          (Regelbehandlungszeit 20 bis 30 Minuten)
+
+          Allgemeine Krankengymnastik (KG) (auch auf
+          neurophysiologischer Grundlage): Einzelbehandlung
+          (Regelbehandlungszeit 15 bis 25 Minuten)
+
+          Allgemeine Krankengymnastik (KG) (auch auf
+          neurophysiologischer Grundlage): Einzelbehandlung
+          als telemedizinische Leistung
+          (Regelbehandlungszeit 15 bis 25 Minuten)
+
+          Gerätegestützte Krankengymnastik (KG-Gerät):
+          Parallele Einzelbehandlung bis zu 3 Patienten
+          (Regelbehandlungszeit 60 Minuten)
+
+          Allgemeine Krankengymnastik (KG) (auch auf
+          neurophysiologischer Grundlage):
+          Gruppenbehandlung
+          (2 - 5 Patienten)
+          (Regelbehandlungszeit 20 bis 30 Minuten)
+
+                                                                      Seite 3 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+Pos.-Nr.                         Leistungsbeschreibung         Preis   Zuzahlung
+ X0621                                                        in Euro    in Euro
+ X0702    Allgemeine Krankengymnastik (KG) (auch auf           13,26       1,33
+ X0722    neurophysiologischer Grundlage):                     88,94       8,89
+ X0708    Gruppenbehandlung
+ X0728    (2 - 5 Patienten) als telemedizinische Leistung      88,94       8,89
+ X0709    (Regelbehandlungszeit 20 bis 30 Minuten)
+ X0710                                                         58,83          -
+          Krankengymnastik zur Behandlung schwerer             58,83          -
+          Erkrankungen der Atmungsorgane (insbesondere bei     58,83          -
+          Mukoviszidose oder bei Lungenerkrankungen, die der   47,06       4,71
+          Mukoviszidose vergleichbare pulmonale Schädigungen
+          aufweisen) - KG-Muko: Einzelbehandlung
+          (Regelbehandlungszeit 60 Minuten)
+
+          Krankengymnastik zur Behandlung schwerer
+          Erkrankungen der Atmungsorgane (insbesondere bei
+          Mukoviszidose oder bei Lungenerkrankungen, die der
+          Mukoviszidose vergleichbare pulmonale Schädigungen
+          aufweisen) - KG-Muko: Einzelbehandlung als
+          telemedizinische Leistung
+          (Regelbehandlungszeit 60 Minuten)
+
+          Krankengymnastik zur Behandlung von zentralen
+          Bewegungsstörungen bis zur Vollendung des 18.
+          Lebensjahres nach Bobath als Einzelbehandlung (KG-
+          ZNS-Kinder nach Bobath)
+          (Regelbehandlungszeit 30 bis 45 Minuten)
+
+          Krankengymnastik zur Behandlung von zentralen
+          Bewegungsstörungen bis zur Vollendung des 18.
+          Lebensjahres nach Bobath als Einzelbehandlung (KG-
+          ZNS-Kinder nach Bobath) als telemedizinische
+          Leistung
+          (Regelbehandlungszeit 30 bis 45 Minuten)
+
+          Krankengymnastik zur Behandlung von zentralen
+          Bewegungsstörungen bis zur Vollendung des 18.
+          Lebensjahres nach Vojta als Einzelbehandlung (KG-
+          ZNS-Kinder nach Vojta)
+          (Regelbehandlungszeit 30 bis 45 Minuten)
+
+          Krankengymnastik zur Behandlung von zentralen
+          Bewegungsstörungen nach Vollendung des 18.
+          Lebensjahres nach Bobath als Einzelbehandlung (KG-
+          ZNS nach Bobath)
+          (Regelbehandlungszeit 25 bis 35 Minuten)
+
+                                                                       Seite 4 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+Pos.-Nr.                         Leistungsbeschreibung           Preis   Zuzahlung
+ X0720                                                          in Euro    in Euro
+          Krankengymnastik zur Behandlung von zentralen          47,06       4,71
+ X0711    Bewegungsstörungen nach Vollendung des 18.
+          Lebensjahres nach Bobath als Einzelbehandlung (KG-     47,06       4,71
+ X0712    ZNS nach Bobath) als telemedizinische Leistung
+          (Regelbehandlungszeit 25 bis 35 Minuten)               47,06       4,71
+ X0805
+ X0902    Krankengymnastik zur Behandlung von zentralen          16,57          -
+ X1004    Bewegungsstörungen nach Vollendung des 18.             33,87       3,39
+ X1005    Lebensjahres nach Vojta als Einzelbehandlung (KG-ZNS   24,16       2,42
+ X1104    nach Vojta)                                            15,97       1,60
+ X1201    (Regelbehandlungszeit 25 bis 35 Minuten)                8,63       0,86
+ X1221                                                           35,59       3,56
+ X1302    Krankengymnastik zur Behandlung von zentralen          35,59       3,56
+ X1303    Bewegungsstörungen nach Vollendung des 18.              8,43       0,84
+          Lebensjahres nach PNF als Einzelbehandlung (KG-ZNS     18,70       1,87
+          PNF)
+          (Regelbehandlungszeit 25 bis 35 Minuten)
+
+          Krankengymnastik in der Gruppe bei cerebral
+          bedingten Schädigungen für Kinder bis zur Vollendung
+          des 14. Lebensjahres (2 - 4 Kinder)
+          (Regelbehandlungszeit 20 bis 30 Minuten)
+
+          Krankengymnastik im Bewegungsbad:
+          Einzelbehandlung
+          (Regelbehandlungszeit 20 bis 30 Minuten)
+
+          Krankengymnastik im Bewegungsbad:
+          Gruppenbehandlung mit 2 - 3 Patienten
+          (Regelbehandlungszeit 20 bis 30 Minuten)
+
+          Krankengymnastik im Bewegungsbad:
+          Gruppenbehandlung mit 4 - 5 Patienten
+          (Regelbehandlungszeit 20 bis 30 Minuten)
+
+          Traktionsbehandlung mit Gerät: Einzelbehandlung
+          (Regelbehandlungszeit 10 bis 20 Minuten)
+
+          Manuelle Therapie: Einzelbehandlung
+          (Regelbehandlungszeit 15 bis 25 Minuten)
+
+          Manuelle Therapie: Einzelbehandlung als
+          telemedizinische Leistung
+          (Regelbehandlungszeit 15 bis 25 Minuten)
+
+          Elektrotherapie: Einzelbehandlung
+          (Regelbehandlungszeit 10 bis 20 Minuten)
+
+          Elektrostimulation bei Paresen: Einzelbehandlung
+          (Regelbehandlungszeit je Muskelnerveinheit 5 bis 10
+          Minuten)
+
+                                                                         Seite 5 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+Pos.-Nr.                         Leistungsbeschreibung         Preis   Zuzahlung
+ X1310                                                        in Euro    in Euro
+ X1312    Hydroelektrisches Teilbad (Zwei-/Vierzellenbad):
+ X1501    Einzelbehandlung                                    14,48    1,45
+ X1517    (Regelbehandlungszeit 10 bis 20 Minuten)
+ X1530    Hydroelektrisches Vollbad (z. B. Stangerbad):       27,61    2,76
+ X1531    Einzelbehandlung
+ X1532    (Regelbehandlungszeit 10 bis 20 Minuten)            16,16    1,62
+ X1533    Warmpackung (einzelner oder mehrerer Körperteile):  7,43     0,74
+ X1534    Einzelbehandlung                                    13,47    1,35
+ X1714    (Regelbehandlungszeit 20 bis 30 Minuten)            14,66    1,47
+ X1732                                                        55,39    5,54
+ X1733    Wärmetherapie mittels Heißluft: Einzelbehandlung    42,84    4,28
+ X1801    (Regelbehandlungszeit 10 bis 20 Minuten)            11,95    1,20
+                                                              27,72    2,77
+          Heiße Rolle: Einzelbehandlung                       26,30    2,63
+          (Regelbehandlungszeit 10 bis 15 Minuten)
+                                                              26,30    2,63
+          Ultraschall-Wärmetherapie: Einzelbehandlung         12,34    1,23
+          (Regelbehandlungszeit 10 bis 20 Minuten)
+
+          Bäder (Voll- oder Teilbäder) mit Peloiden: Vollbad
+          (Regelbehandlungszeit 15 bis 45 Minuten)
+
+          Bäder (Voll- oder Teilbäder) mit Peloiden: Teilbad
+          (Regelbehandlungszeit 15 bis 45 Minuten)
+
+          Kältetherapie bei einem oder mehreren
+          Körperteil(en): Einzelbehandlung
+          (Regelbehandlungszeit 5 bis 10 Minuten)
+
+          Kohlensäurebad: Einzelbehandlung
+          (Regelbehandlungszeit 10 bis 20 Minuten)
+
+          Kohlensäuregasbad (CO2-Trockenbad) als Voll-,
+          Dreiviertel- oder Halbbad: Einzelbehandlung
+          (Regelbehandlungszeit 10 bis 20 Minuten)
+
+          Kohlensäuregasbad (CO2-Trockenbad) als Teilbad:
+          Einzelbehandlung
+          (Regelbehandlungszeit 45 bis 60 Minuten)
+
+          Inhalationstherapie: Einzelbehandlung
+          (Regelbehandlungszeit 5 bis 30 Minuten)
+
+                                                                       Seite 6 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+Pos.-Nr.                         Leistungsbeschreibung               Preis   Zuzahlung
+ X2001                                                              in Euro    in Euro
+ X9701    Standardisierte Kombination von Maßnahmen der              70,45       7,05
+ X9950    Physiotherapie (Standardisierte
+          Heilmittelkombination gem. §§ 12 Absatz 5 und 25            1,40          -
+ X9951    HeilM-RL): D1 Einzelbehandlung                             22,78       2,28
+          (Regelbehandlungszeit 60 Minuten)
+          Voraussetzung: Die Leistung X2001 kann bei nicht näher     13,09       1,31
+          speziﬁzierten Verordnungen abgegeben werden, wenn
+          der zugelassene Leistungserbringer über die fachlichen,
+          sächlichen und räumlichen Anforderungen zur Abgabe
+          sämtlicher der in der verordneten standarisierten
+          Heilmittelkombination erst genannten obligatorischen
+          Maßnahmen (KG, KG-Gerät, MT, KMT, Wärme-
+          /Kältetherapie, Elektrotherapie) verfügt. Erfolgt eine
+          Speziﬁzierung kann die Leistung X2001 abgegeben
+          werden, wenn der zugelassene Leistungserbringer über
+          die fachlichen sächlichen und räumlichen Anforderungen
+          zur Abgabe der speziﬁzierten Heilmittel verfügt.
+
+          Übermittlungsgebühr für Mitteilung/Bericht an die
+          Ärztin oder den Arzt
+
+          Hausbesuch inklusive Wegegeld (Einsatzpauschale)
+          Die Positionen X9950 und X9951 sind für eine Behandlung
+          nicht zusammen abrechenbar und können je Versicherte
+          oder je Versicherten in der Regel nur einmal täglich in
+          Ansatz gebracht werden.
+          Hinweis: zum 01.01.2026 wurde die Positionsnummer
+          X9933 in X9950 umbenannt
+
+          Hausbesuch in einer sozialen
+          Einrichtung/Gemeinschaft inklusive Wegegeld
+          (Einsatzpauschale)
+          Die Position X9951 ist auch beim Besuch nur einer
+          einzelnen Person abzurechnen. Der Begriﬀ „soziale
+          Einrichtung“ in der Beschreibung zu Position X9951
+          bezeichnet Einrichtungen, die zur Pﬂege und Betreuung
+          älterer, pﬂegebedürftiger Personen oder von Personen
+          mit Behinderung dienen. Dies sind insbesondere Alten-,
+          Pﬂege- und Behinderteneinrichtungen. Weiter sind dies
+          Wohnformen, die auf die medizinische, soziale und
+          therapeutische Betreuung schwerkranker und/oder
+          älterer und/oder pﬂegebedürftiger Personen ausgelegt
+          sind, dazu gehören u.a. auch Hospize und Unterkünfte für
+          Ordensschwestern. Ausgenommen hiervon sind Personen
+          in Einrichtungen des betreuten Wohnens.
+          Hinweis: zum 01.01.2026 wurde die Positionsnummer
+          X9934 in X9951 umbenannt
+
+                                                                             Seite 7 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+Pos.-Nr.                         Leistungsbeschreibung               Preis        Zuzahlung
+ X9922                                                              in Euro         in Euro
+          Hausbesuch in Kurzzeit-, Verhinderungs- und
+ X1906    Tagespﬂege                                                22,78           2,28
+          Für Patienten, die sich in Kurzzeit- oder
+          Verhinderungspﬂege i.S. des § 42 Absatz 1-3 SGB XI        67,69                   -
+          beﬁnden oder im Rahmen der Tagespﬂege i.S. des § 41
+          Absatz 1 SGB XI oder in einer Einrichtung des betreuten
+          Wohnens behandelt werden, ist die Position X9922
+          abzurechnen.
+          Physiotherapeutischer Bericht auf schriftliche
+          Anforderung der zuständigen gesetzlichen
+          Krankenkasse oder der behandelnden Ärztin oder des
+          behandelnden Arztes sowie des Medizinischen
+          Dienstes der Krankenkassen
+          Ein Kreuz auf der Verordnung ist hier nicht ausreichend.
+          Die schriftliche Anforderung ist der Abrechnung
+          beizufügen.
+
+Vergütung von Leistungen außerhalb der Heilmittelerbringung, die ab dem 01.01.2026
+durchgeführt werden:
+
+Pos.-Nr.                         Leistungsbeschreibung               Preis        Zuzahlung
+ 21901                                                              in Euro         in Euro
+ 21904    Geburtsvorbereitung in der Gruppe
+          Bis zu 10 Schwangere je Gruppe und maximal 14              11,40               -
+          Einheiten, für jede Schwangere je Einheit (60 Minuten)
+          Rückbildungsgymnastik in der Gruppe                       11,40                   -
+          Bis zu 10 Teilnehmerinnen je Gruppe und max. 10
+          Einheiten, für jede Teilnehmerin je Einheit (60 Minuten)
+
+B. Abrechnung der Leistungen und Laufzeit der Vereinbarung
+
+(1) Der Umfang der vergüteten Leistung besteht aus
+
+a) der Durchführung der Maßnahmen mit der oder dem Versicherten (Pos.-Nr. X0102 – X2001)
+     (= Therapiezeit) und
+
+b) der Vor- und Nachbereitung (inkl. Dokumentation).
+
+Die in der Vergütungsliste angegebenen Vergütungssätze gelten je behandelte Versicherte oder je
+
+behandelten Versicherten. An die Versicherten dürfen ausschließlich die auf der Verordnung
+
+verordneten Leistungen abgegeben werden. Die Durchführung einer Therapie darf nur wie in der
+
+Leistungsbeschreibung (Anlage 1) oder in der HeilM-RL beschriebenen Form erfolgen (vgl. Vertrag
+
+§ 8 Absatz 7). Nicht in Anspruch genommene Leistungen dürfen nicht und vorzeitig beendete
+
+Verordnungen dürfen nur in dem tatsächlich erbrachten Umfang abgerechnet werden.
+
+                                                                                    Seite 8 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+(2) Mit den in der Vergütungsliste angegebenen Vergütungssätzen für die Positionen X0102 – X2001
+     sind die in Anlage 1 (Leistungsbeschreibung) Teil 1 Ziﬀer 2., 3. und 4. vereinbarten Leistungen des
+     Leistungserbringers abgegolten (Endpreis).
+
+(3) Für die Übermittlungsgebühr für Mitteilung/Bericht an die Ärztin oder den Arzt (X9701), für den
+     Bericht auf schriftliche Anforderung (X1906), sowie für die Geburtsvorbereitung in der Gruppe
+     (21901) und die Rückbildungsgymnastik in der Gruppe (21904) werden keine Zuzahlungen erhoben.
+
+(4) Die Aufwendungen für verordnete Hausbesuche werden in Form von Pauschalen vergütet. Für
+     Hausbesuche im häuslichen Umfeld der oder des Versicherten kann die Gebührenposition X9950
+     und für Hausbesuche bei Patienten, die sich in Kurzzeit- oder Verhinderungspﬂege oder der
+     Tagespﬂege beﬁnden, kann die Gebührenposition X9922 abgerechnet werden. Bei Hausbesuch in
+     einer sozialen Einrichtung/Gemeinschaft ist die Gebührenposition X9951 abrechnungsfähig.
+
+(5) Die Positionen X9922, X9950 und X9951 sind für eine Behandlung nicht zusammen abrechenbar
+     und können je Versicherte oder je Versicherten in der Regel nur einmal täglich in Ansatz gebracht
+     werden. Sofern der Praxissitz des zugelassenen Leistungserbringers und der Ort der
+     Leistungserbringung identisch sind (z.B. innerhalb einer sozialen Einrichtung/einer Einrichtung des
+     Betreuten Wohnens), ist ein Hausbesuch nicht abrechnungsfähig. Die Durchführung des
+     Hausbesuchs (HB) ist auf dem Verordnungsblatt unter Angabe des Datums der Ausführung,
+     zusammen mit der durchgeführten Leistung zu bestätigen.
+
+(6) Die Vergütungssätze ab dem 01.01.2026 gelten für Behandlungen, die ab dem 01.01.2026
+     durchgeführt werden. Diese Leistungen umfassen auch die im Einzelfall ggf. anfallende
+     Umsatzsteuer.
+
+(7) Diese Vergütungsvereinbarung tritt am 01.01.2026 in Kraft. Ihre Laufzeit ist nicht befristet und sie
+     kann mit einer Frist von 3 Monaten, frühestens jedoch zum 31.12.2026 schriftlich gekündigt
+     werden. Diese Anlage kann durch den GKV-Spitzenverband einerseits oder andererseits durch alle
+     leistungserbringerseitigen Vertragspartner gemeinsam gekündigt werden.
+
+(8) Die Kündigung der Vergütungsvereinbarung berührt nicht die weitere Wirksamkeit des Vertrages
+     nach § 125 SGB V.
+
+(9) Nach Kündigung dieser Anlage gelten die vereinbarten Preise fort, bis eine neue Anlage in Kraft
+     tritt.
+
+                                               Seite 9 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+Anlage 2: Vergütungsvereinbarung
+zum Vertrag nach § 125 Absatz 1 SGB V für Physiotherapie
+Lesefassung gültig ab 01.01.2026
+
+(10)Vergütungsanpassungen für die unter Teil A genannten Positionen X0102 – X2001 gelten nicht für
+     die Positionen 21901 (Geburtsvorbereitung in der Gruppe) sowie 21904 (Rückbildungsgymnastik in
+     der Gruppe). Für diese Positionen sind die entsprechenden Regelungen zum Vertrag über die
+     Versorgung mit Hebammenhilfe nach § 134a SGB V in der jeweils gültigen Fassung
+     (Hebammenhilfevertrag) ausschlaggebend (siehe insbesondere Vertragsanlage1.1 Abschnitt 2 Nr. 4
+     des zum 01.11.2025 in Kraft getretenen Hebammenhilfevertrages). Zur Abrechnung dieser
+     Leistungen müssen die Angaben gemäß Anhang 1 zur Anlage 2 dieses Vertrages vollständig
+     beigefügt werden. Die Vertragsparteien vereinbaren folgenden Mechanismus zur Anpassung der
+     Vergütung:
+
+     a) Die Vergütung dieser Leistungen entspricht der auf 60 Minuten umgerechneten Vergütung der
+          entsprechenden Positionen im jeweils gültigen Hebammenhilfevertrag nach § 134a SGB V
+          (derzeit „4010X Geburtsvorbereitung in der Gruppe“ und „4030X Rückbildung in der Gruppe“).
+          Maßgeblich ist die dort festgelegte Vergütungsstruktur für eine sogenannte Live-Einheit.
+
+     b) Zukünftige Anpassungen der Vergütung erfolgen auf gemeinsames Verlangen der
+          maßgeblichen Leistungserbringerverbände der Physiotherapie. Die Vergütungsanpassung
+          entspricht dem jeweils aktuellen Hebammenhilfevertrag nach § 134a SGB V und erfolgt in
+          derselben prozentualen Höhe, in der die beiden vorgenannten Positionen angepasst werden.
+          Eine wirksame Erklärung ist gegenüber dem GKV-Spitzenverband schriftlich darzulegen und
+          muss diesem mindestens 21 Kalendertage vor dem begehrten Zeitpunkt der
+          Vergütungsanpassung zugehen. Die Anpassung erfolgt mit Wirkung zum Ablauf des 21. auf den
+          Zugang der wirksamen Erklärung folgenden Kalendertages, jedoch nicht vor dem Inkrafttreten
+          der Vergütungsanpassung der entsprechenden Positionen im Hebammenhilfevertrag. Nach-
+          oder Diﬀerenzberechnungen für bereits erbrachte Leistungen sind ausgeschlossen.
+
+                                               Seite 10 von 10
+
+LEGS: 2100501/2200501/2700511/2800511/2900511
+

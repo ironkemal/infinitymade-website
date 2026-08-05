@@ -1,0 +1,2099 @@
+                                        Anlage 3
+                              Schlüsselverzeichnisse
+
+                                                       zu den
+Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V über Form
+
+  und Inhalt des Abrechnungsverfahrens mit „Sonstigen Leistungserbringern“ sowie mit
+                       Hebammen und Entbindungspflegern (§ 301 a SGB V)
+
+Stand der Richtlinien:  20.11.2006
+Stand der Anlage 3:     19.09.2025
+Version:                21
+Anzuwenden ab:          01.10.2025
+     Richtlinien über                    Anlage 3             Abschnitt        Seite:
+  Form und Inhalt des                                              8              2
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+Historie
+
+Version   Status       Datum       Redaktion       Abschnitt  Erläuterung
+21        Abgestimmt   19.09.2025  GKV-SV          8.1.12     Redaktionelle Ergänzung bei Wert "05"
+21        Abgestimmt   01.08.2025  GKV-SV          8.2.6      Überarbeitung des Schlüssels (Größe und Auf-
+                                                              bau) anlässlich des neuen Positionsnummern-
+21        Abgestimmt   17.02.2025  GKV-SV          8.1.7      verzeichnisses zum 01.11.2025
+                                   GKV-SV          8.1.19     Schlüsselwert "10" ergänzt; Erklärung aktuali-
+21        Abgestimmt   17.02.2025                             siert
+                                                              Schlüsselwert "999999999" gelöscht;
+21        Abgestimmt   17.02.2025  GKV-SV          8.2.1      Schlüsselwert "999999998" redaktionell ange-
+                       16.04.2024  GKV-SV          8.1.2.1    passt
+20        Abgestimmt                                          Schlüsselwerte "999999990","999999995" und
+                       06.11.2023  GKV-SV          8.6        "999999996" ergänzt
+20        Abgestimmt   11.08.2023  GKV-SV          Deckblatt  Schlüsselaufbau aktualisiert
+                       20.04.2023  GKV-SV          8.1.5.1    Schlüsselbezeichnung, -beschreibung und -in-
+20        Abgestimmt                                          halt redaktionell angepasst sowie Hinweis er-
+                       20.04.2023  GKV-SV          8.1.11     gänzt
+19        Abgestimmt   20.04.2023  GKV-SV          8.1.14     Abschnitt eingefügt
+                                                              TA-Versionsnummer auf 20 erhöht analog TA 1
+19        Abgestimmt   20.04.2023  GKV-SV          8.2.14     Schlüssel um Werte für "Modellvorhaben nach
+                       30.03.2023  GKV-SV          8.1.5.1    § 64d SGB V" ergänzt
+19        Abgestimmt                                          Schlüsselwert "9" ergänzt
+                       30.03.2023  GKV-SV          8.1.11     Schlüssel um Wert für "Modellvorhaben nach §
+19        Abgestimmt   30.03.2023  GKV-SV          8.1.14     64d SGB V" ergänzt
+                                                              Schlüssel eingefügt
+19        Abgestimmt   30.03.2023  GKV-SV          8.1.17     Schlüssel um Werte für "Außerklinische Inten-
+                                                              sivpflege" ergänzt
+19        Abgestimmt   30.03.2023  GKV-SV          8.2.13     Schlüsselwert "8" ergänzt
+                       27.10.2022  GKV-SV          Deckblatt  Schlüssel um Werte für "Außerklinische Inten-
+19        Abgestimmt   13.04.2022  GKV-SV          8.1.19     sivpflege" ergänzt
+                                                              Schlüssel um Werte für "Außerklinische Inten-
+19        Abgestimmt   31.03.2021  GKV-SV          8.1.8      sivpflege" ergänzt
+                                                              Schlüssel eingefügt
+19        Abgestimmt   31.03.2021  GKV-SV          8.1.5.1    TA-Versionsnummer auf 18 erhöht analog TA 1
+                       31.03.2021  GKV-SV          8.1.14     Schlüssel "Ersatz-Beschäftigtennummer" einge-
+18        Abgestimmt   08.09.2020  GKV-SV          Deckblatt  fügt
+                                                              Hinweis eingefügt "Schlüssel 8.1.8 entfällt ab
+17        Abgestimmt   12.08.2020  GKV-SV          Deckblatt  TA 3 Version 16"
+                                                              Schlüssel "67": Erläuterung aktualisiert
+16        Abgestimmt   10.06.2020  GKV-SV          8.1.10     Erläuterung bei L/67 angepasst
+                                                              Fußnote zur Gültigkeit der TA Version 13 im
+15        Abgestimmt   10.06.2020  GKV-SV          8.1.11     Bereich Heilmittel aktualisiert
+                       10.06.2020  GKV-SV          8.1.12     Fußnote zur Gültigkeit der TA Version 13 im
+15        Abgestimmt   10.06.2020  GKV-SV          8.1.17     Bereich Heilmittel eingefügt
+                                                              Redaktionelle Anpassung bei Schlüsselwert
+14        Abgestimmt   11.10.2019  GKV-SV          8.1.5.1    "06"
+                       11.10.2019  GKV-SV          8.1.14     Schlüsselwert "3" deaktiviert
+14        Abgestimmt   11.10.2019  GKV-SV          8.1.17     Schlüssel komplett überarbeitet
+                       11.10.2019  GKV-SV          8.2.12     Schlüsselwert "B1" deaktiviert, Text zu Schlüs-
+14        Abgestimmt   09.04.2019  GKV-SV          8.1.5.1    sel "B2" aktualisiert
+                       09.04.2019  GKV-SV          8.1.14     Schlüsselwerte "91" bis "94" ergänzt
+14        Abgestimmt                                          Schlüsselwerte "91" bis "94" ergänzt
+                                                              Schlüsselwert "Q1" ergänzt
+14        Abgestimmt                                          Schlüssel eingefügt
+                                                              Schlüsselwert "76" ergänzt
+14        Abgestimmt                                          Schlüsselwert "76" ergänzt
+
+14        Abgestimmt
+
+14        Abgestimmt
+
+14        Abgestimmt
+
+14        Abgestimmt
+
+13        Abgestimmt
+
+13        Abgestimmt
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                         3
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.         Allgemeines ................................................................................................................. 5
+8.1        Kleine Schlüsselsysteme ............................................................................................. 6
+           Schlüssel Versichertenstatus KVK (wird nicht mehr verwendet ab 01.10.2014) ........... 6
+  8.1.1    Schlüssel Unfall/Sonstiges........................................................................................... 9
+  8.1.2    Schlüssel BVG/SER..................................................................................................... 9
+  8.1.2.1  Schlüssel Zuzahlung.................................................................................................. 10
+  8.1.3    Schlüssel Rechnungsart ............................................................................................ 11
+  8.1.4    Schlüssel Leistungserbringergruppe .......................................................................... 12
+  8.1.5    Schlüssel Abrechnungscode ...................................................................................... 13
+  8.1.5.1  Schlüssel Tarifkennzeichen ....................................................................................... 17
+  8.1.5.2  Schlüssel Summenstatus........................................................................................... 20
+  8.1.6    Schlüssel Verarbeitungskennzeichen ........................................................................ 21
+  8.1.7    Schlüssel Kennzeichen Mehrwertsteuer (Schlüssel 8.1.8 entfällt ab TA 3 Version 16)
+  8.1.8    .................................................................................................................................. 22
+           Schlüssel Prüfvermerk ............................................................................................... 23
+  8.1.9    Schlüssel Kennzeichen für Hilfsmittel ........................................................................ 24
+  8.1.10   Schlüssel Kennzeichen Verordnungsbesonderheiten ................................................ 27
+  8.1.11   Schlüssel Kennzeichen Verordnungsart bei Heilmitteln ............................................. 28
+  8.1.12   Schlüssel Kennzeichen Zuzahlungsart....................................................................... 29
+  8.1.13   Schlüssel Kennzeichen Leistungserbringer-Sammelgruppenschlüssel ...................... 30
+  8.1.14   Schlüssel Spezifikation Anwendungsort..................................................................... 33
+  8.1.15   Schlüssel Geburtsdatum ............................................................................................ 34
+  8.1.16   Schlüssel Art der Genehmigung ................................................................................ 35
+  8.1.17   Schlüssel Beleginformation........................................................................................ 37
+  8.1.18   Schlüssel Ersatz-Beschäftigtennummer..................................................................... 38
+  8.1.19   Abrechnungspositionsnummern................................................................................. 39
+8.2        Abrechnungspositionsnummer für Heilmittel .............................................................. 40
+  8.2.1    Abrechnungspositionsnummer für Hilfsmittel ............................................................. 41
+  8.2.2    Abrechnungspositionsnummer für nichtärztliche Dialysesachleistungen .................... 43
+  8.2.3    Abrechnungspositionsnummer für Leistungen der häuslichen Krankenpflege und
+  8.2.4    Haushaltshilfe ............................................................................................................ 44
+           Abrechnungspositionsnummer für Krankentransportleistungen ................................. 45
+  8.2.5    Abrechnungspositionsnummer für Hebammenhilfeleistungen .................................... 46
+  8.2.6    Abrechnungspositionsnummer für Betriebshilfe ......................................................... 47
+  8.2.7    Abrechnungspositionsnummer für Präventions- und
+  8.2.8    Gesundheitsförderungsmaßnahmen im Rahmen von ambulanten Vorsorgeleistungen
+           .................................................................................................................................. 48
+  8.2.9    Abrechnungspositionsnummer für Leistungen der medizinischen ambulanten
+           Rehabilitation sowie für ergänzende Leistungen zur Rehabilitation............................ 49
+  8.2.10   Abrechnungspositionsnummer für sonstige Leistungen ............................................. 50
+  8.2.11   Abrechnungspositionsnummer für die Spezialisierte Ambulante Palliativversorgung
+           (SAPV)....................................................................................................................... 51
+  8.2.12   Abrechnungspositionsnummer für Kurzzeitpflege ...................................................... 52
+  8.2.13   Abrechnungspositionsnummer für Außerklinische Intensivpflege............................... 53
+  8.2.14   Abrechnungspositionsnummer für Modellvorhaben nach § 64d SGB V ..................... 54
+8.3        Positionsnummer für Produktbesonderheiten von Hilfsmitteln.................................... 55
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                         4
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.4       Abrechnungspositionsnummernverzeichnisse ........................................................... 56
+
+8.5       Länderkennzeichen.................................................................................................... 57
+
+8.6       Schlüssel Mengeneinheiten ....................................................................................... 58
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                         5
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8. Allgemeines
+
+(1) Zur Sicherstellung der ordnungsgemäßen Abrechnung und Weiterverarbeitung der übermittel-
+     ten Daten sind Informationsstrukturdaten (Schlüsselverzeichnisse) zu führen. Die Informati-
+     onsstrukturdatenbestände sind unterteilt in „Kleine“ und „Große“ Schlüsselverzeichnisse, de-
+     ren Aufbau auf den nachfolgenden Seiten beschrieben ist. Die Schlüsselinhalte (Werte) sind
+     den entsprechenden Verzeichnissen zu entnehmen.
+
+(2) Als Informationsstrukturdaten werden alle Verzeichnisse definiert, die für die Erstellung, Prü-
+     fung, Verarbeitung und Übermittlung des Datenaustausches benötigt werden.
+
+(3) Die für den Aufbau und die Pflege zuständige Stelle hat die Schlüsselverzeichnisse rechtzeitig
+     und vollständig zur Verfügung zu stellen. Einzelheiten sind in den folgenden Abschnitten gere-
+     gelt.
+
+(4) Die unter Punkt 8.2 aufgeführten Abrechnungspositionsnummern müssen im Rahmen der Ab-
+     rechnung verwendet werden. Die Vergütungsregelungen werden bis zum Beginn des Daten-
+     übermittlungsverfahrens von den Vertragspartnern mit den entsprechenden Abrechnungsposi-
+     tionsnummern versehen.
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+        Richtlinien über                     Anlage 3      Abschnitt               Seite:
+     Form und Inhalt des                                        8                     6
+   Abrechnungsverfahrens
+      nach § 302 SGB V
+
+                           Inhaltsübersicht
+
+8.1 Kleine Schlüsselsysteme
+
+8.1.1 Schlüssel Versichertenstatus KVK (wird nicht mehr verwendet ab 01.10.2014)
+
+Schlüsselbezeichnung:        Versichertenstatus
+Schlüsselbeschreibung:       Kennzeichnung der Mitglieder, die an der
+                             Erhebung zum Risikostrukturausgleich teilnehmen
+Schlüsselgröße:              5 Stellen
+
+Schlüsselinhalt/ -aufbau:
+
+1. Stelle:
+
+1 = Mitglieder
+3 = Familienversicherter
+5 = Rentner
+
+2. Stelle: Stichprobenzuordnung
+
+0         Versicherter nimmt nicht an der Stichprobe teil
+
+1 - 8 Versicherter nimmt an der Stichprobe teil
+
+1 = weiblich, ohne EU-/BU-Rentenbezug
+
+2 = männlich, ohne EU-/BU-Rentenbezug
+
+3 = weiblich, mit EU-/BU-Rentenbezug
+
+4 = männlich, mit EU-/BU-Rentenbezug
+
+5 = wie 1, nur vor 1900 geboren
+
+6 = wie 2, nur vor 1900 geboren
+
+7 = wie 1, nur nach 1999 geboren
+
+8 = wie 2, nur nach 1999 geboren
+
+3. - 4. Stelle: Geburtsjahr
+
+00          in Verbindung mit der Stelle 2 = 0: Versicherter nimmt nicht an der Stichprobe teil
+00 – 99     in Verbindung mit Stelle 2 > 0: Geburtsjahr JJ
+
+5. Stelle: Ost-West-Status bzw. besondere Kennungen
+
+1 = West
+4 = Sozialhilfeempfänger, § 264 SGB V
+6 = BVG inkl. OEG, IfSG, SVG, ZHG, HHG, PrVG sowie BEG
+7 = Sozialversicherungsabkommen, nach Aufwand, deutsch-niederl. Grenzgänger
+8 = Sozialversicherungsabkommen, pauschal
+9 = Ost
+
+(Fortsetzung siehe nachfolgende Seite)
+
+Anlage 3                   Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                         7
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                         8
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+5. Stelle: Ost-West-Status bzw. besondere Kennungen (Fortsetzung)
+
+M = eingeschriebene Versicherte in Disease-Management-Programme für Diabetes mellitus Typ 2
+     - Rechtskreis West
+
+X = eingeschriebene Versicherte in Disease-Management-Programme für Diabetes mellitus Typ 2
+     - Rechtskreis Ost
+
+A = eingeschriebene Versicherte in Disease-Management-Programme für Brustkrebs
+     - Rechtskreis West
+
+C = eingeschriebene Versicherte in Disease-Management-Programme für Brustkrebs
+     - Rechtskreis Ost
+
+K = eingeschriebene Versicherte in Disease-Management-Programme für Koronare Herzkrankheit
+     - Rechtskreis West
+
+L = eingeschriebene Versicherte in Disease-Management-Programme für Koronare Herzkrankheit
+     - Rechtskreis Ost
+
+E = eingeschriebene Versicherte in Disease-Management-Programme für Diabetes mellitus Typ 1
+     - Rechtskreis West
+
+N = eingeschriebene Versicherte in Disease-Management-Programme für Diabetes mellitus Typ 1
+     - Rechtskreis Ost
+
+D = eingeschriebene Versicherte in Disease-Management-Programme für Asthma bronchiale
+     - Rechtskreis West
+
+F = eingeschriebene Versicherte in Disease-Management-Programme für Asthma bronchiale
+     - Rechtskreis Ost
+
+S = eingeschriebene Versicherte in Disease-Management-Programme für COPD
+     - Rechtskreis West
+
+P = eingeschriebene Versicherte in Disease-Management-Programme für COPD
+     - Rechtskreis Ost
+
+Hinweis: Wenn auf der Krankenversichertenkarte nur die 1. und die letzte Stelle gefüllt sind, dann
+sind die Stellen 2 - 4 mit Nullen aufzufüllen. (z.B. wenn 11 übermittelt wird, heißt es richtig 10001).
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                         9
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.2 Schlüssel Unfall/Sonstiges
+
+Schlüsselbezeichnung:      Unfall/Sonstiges
+
+Schlüsselbeschreibung:     Kennzeichnung, ob Unfall bzw.
+                           sonstige Anlässe für evtl. Ersatzansprüche
+
+Schlüsselgröße:            1 Stelle
+
+Schlüsselinhalt:           1 = Arbeitsunfall / Wegeunfall / Berufskrankheit
+                           2 = sonstige Unfallfolgen
+                           3 = Sonstiges (BVFG, BEG, HHG, OEG, IfSG, SVG)
+
+8.1.2.1 Schlüssel BVG/SER
+
+Schlüsselbezeichnung:      BVG/SER
+
+Schlüsselbeschreibung:     Kennzeichnung, ob es sich um einen BVG- bzw. SER-Fall
+                           für evtl. Ersatzansprüche handelt
+
+Schlüsselgröße:            1 Stelle
+
+Schlüsselinhalt:           6 = BVG/SER
+
+Hinweis:                   Ab 01.07.2024 werden sukzessive die Verordnungsmuster der
+                           KBV von "BVG" auf "SER" umgestellt. Da die Umstellung über
+                           einen längeren Zeitraum hinweg erfolgt, kann der Schlüsselwert
+                           "6" sowohl "BVG" als auch "SER" bedeuten.
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        10
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.3 Schlüssel Zuzahlung
+
+Schlüsselbezeichnung:  Zuzahlung
+
+Schlüsselbeschreibung: Zuzahlungskennzeichen
+
+Schlüsselgröße:        1 Stelle
+
+Schlüsselinhalt:       0 = keine gesetzliche Zuzahlung
+                       1 = Zuzahlungsbefreit
+                       2 = keine Zuzahlung trotz schriftlicher Zahlungsaufforderung
+                       3 = Zuzahlungspflichtig
+                       4 = Übergang zuzahlungspflichtig zu zuzahlungsfrei *
+                       5 = Übergang zuzahlungsfrei zu zuzahlungspflichtig **
+
+* nach Ausstellung der Verordnung / während der Inanspruchnahme
+(z.B. Versicherter wird wegen Erreichens der Belastungsgrenze befreit)
+
+** nach Ausstellung der Verordnung / während der Inanspruchnahme
+(z.B. Versicherter wird wegen Jahreswechsel wieder zuzahlungspflichtig)
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        11
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.4 Schlüssel Rechnungsart
+
+Schlüsselbezeichnung:  Rechnungsart
+
+Schlüsselbeschreibung: Kennzeichnung der Art der Abrechnung
+
+Schlüsselgröße:        1 Stelle
+
+Schlüsselinhalt:
+
+                       0 = Derzeit nicht belegt
+
+                       1 = Abrechnung von Leistungserbringer und
+                                Zahlung an IK Leistungserbringer
+
+                       2 = Abrechnung über Abrechnungsstelle
+                                (ohne Inkassovollmacht) und Zahlung an
+                                IK Leistungserbringer
+
+                       3 = Abrechnung über Abrechnungsstelle
+                                (mit Inkassovollmacht) und
+                                Zahlung an IK Abrechnungsstelle
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        12
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.5 Schlüssel Leistungserbringergruppe
+
+Schlüsselbezeichnung:   Leistungserbringergruppe
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsgrundlage
+                        (Vergütungsregelung, KVA)
+
+Schlüsselgröße:         7 Stellen
+
+Schlüsselinhalt:        s. Abrechnungscode
+                        s. Tarifkennzeichen
+
+Schlüsselaufbau:        1. und 2. Stelle            = Abrechnungscode
+                        3. bis 7. Stelle            = Tarifkennzeichen
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        13
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.5.1 Schlüssel Abrechnungscode
+
+Schlüsselbezeichnung:  Abrechnungscode
+
+Schlüsselbeschreibung: Verschlüsselung des Leistungserbringers
+
+Schlüsselgröße:        2 Stellen
+
+Schlüsselinhalt:       Leistungserbringer von Hilfsmitteln
+
+                       11 = Apotheke (mit gesonderter Zulassung nach § 126 SGB V)
+                       12 = Augenoptiker
+                       13 = Augenarzt
+                       14 = Hörgeräteakustiker
+                       15 = Orthopädiemechaniker, Bandagist, Sanitätshaus
+                       16 = Orthopädieschuhmacher
+                       17 = Orthopäde
+                       18 = Sanitätshaus (Bei neuen Verträgen bzw. Vertragsanpassungen
+
+                              ist eine Umschlüsselung mit dem Abrechnungscode 15 vorzu-
+                              nehmen. Der Abrechnungscode 18 wird für Sanitätshäuser zum
+                              31.12.2005 aufgehoben.)
+                       19 = sonstiger Hilfsmittellieferant
+
+                       Leistungserbringer von Heilmitteln
+
+                       21 = Masseur/Medizinischer Badebetrieb
+                       22 = Krankengymnast/Physiotherapeut
+                       23 = Logopäde, Atem-, Sprech- und Stimmlehrer, staatl.
+
+                              anerkannter Sprachtherapeut
+                       24 = Sprachheilpädagoge, Dipl. Pädagoge
+                       25 = Sonstiger Sprachtherapeut
+                       26 = Ergotherapeut
+                       27 = Krankenhaus
+                       28 = Kurbetrieb
+                       29 = Sonstige therapeutische Heilperson
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        14
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.5.1 Schlüssel Abrechnungscode (Fortsetzung)
+
+                                    Leistungserbringer von häuslicher
+                                    Krankenpflege und Haushaltshilfe
+
+                                    31 = freigemeinnützige Anbieter (Sozialstation)
+                                    32 = privatgewerbliche Anbieter
+                                    33 = öffentliche Anbieter
+                                    34 = Sonstige Pflegedienste
+
+                                    Leistungserbringer von Krankentransport-
+                                    leistungen
+
+                                    41 = Öffentlicher Anbieter von qualifizierten Krankentransport-
+                                            Leistungen (z.B. Feuerwehr)
+
+                                    42 = Deutsches Rotes Kreuz (DRK)
+                                    43 = Arbeiter-Samariter-Bund (ASB)
+                                    44 = Johanniter-Unfall-Hilfe (JUH)
+                                    45 = Malteser-Hilfsdienst (MHD)
+                                    46 = Sonstiger Leistungserbringer von nichtqualifizierten
+
+                                           Krankentransportleistungen (z.b. Taxi/Mietwagen)
+                                    47 = Leistungserbringer von Flugrettungs- und
+
+                                           Transportleistungen
+                                    48 = Sonstiger nichtöffentlicher Anbieter von qualifizierten Kranken-
+
+                                           Transport- bzw. Rettungsdienstleistungen
+                                    49 = Sonstiger Anbieter von Kranken-
+
+                                           transportleistungen (z.B. Bergwacht, Wasserwacht etc.)
+
+                                    Hebammen
+
+                                    50 = Hebamme/Entbindungspfleger
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        15
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.5.1 Schlüssel Abrechnungscode (Fortsetzung)
+
+                       nichtärztliche Dialysesachleistungen
+
+                       55 = Sonstiger Leistungserbringer von nichtärztlichen
+                             Dialysesachleistungen
+
+                       56 = Kuratorium für Heimdialyse (KfH)
+                       57 = Patienten-Heimversorgung (PHV)
+
+                       Betriebshilfe
+                       60 = Betriebshilfe
+
+                       Sonstiger Leistungserbringer
+
+                       61 = Leistungserbringer von Rehabilitationssport
+                       62 = Leistungserbringer von Funktionstraining
+                       63 = Leistungserbringer für ergänzende Rehabilitationsmaßnahmen
+                       64 = - nicht besetzt -
+                       65 = Sonstiger Leistungserbringer
+                       66 = Leistungserbringer von Präventions- und Gesundheits-
+
+                             förderungsmaßnahmen im Rahmen von ambulanten
+                             Vorsorgeleistungen
+                       67 = Mobile Rehabilitationseinrichtung
+                       68 = Sozialpädiatrische Zentren/Frühförderstellen
+                       69 = Soziotherapeutischer Leistungserbringer
+                       75 = Spezialisierte ambulante Palliativversorgung (SAPV)
+                       76 = Leistungserbringer nach § 132g SGB V
+
+                       Weitere Heilmittelerbringer
+
+                       71 = Podologen
+                       72 = Med. Fußpfleger (gemäß § 10 Abs. 4 bis 6 PodG)
+                       73 = Leistungserbringer von Ernährungstherapie für seltene
+
+                             angeborene Stoffwechselerkrankungen
+                       74 = Leistungserbringer von Ernährungstherapie für Mukoviszidose
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        16
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.5.1 Schlüssel Abrechnungscode (Fortsetzung)
+
+                                      Leistungserbringer der außerklinischen Intensivpflege
+
+                                      ambulante AKI:
+                                      A1 = freigemeinnütziger Anbieter
+                                      A2 = privatgewerbliche Anbieter
+                                      A3 = öffentlicher Anbieter
+                                      A4 = sonstiger Anbieter
+
+                                      stationäre AKI:
+                                      A5 = freigemeinnütziger Anbieter
+                                      A6 = privatgewerbliche Anbieter
+                                      A7 = öffentlicher Anbieter
+                                      A8 = sonstiger Anbieter
+
+                                      Leistungserbringer Kurzzeitpflege
+
+                                      91 = privat gewerblicher Anbieter
+                                      92 = frei gemeinnütziger Anbieter (gemeinnützige private Anbieter)
+                                      93 = öffentlicher Anbieter
+                                      94 = sonstige Pflegeeinrichtung
+
+                                      Leistungserbringer von Modellvorhaben nach § 64d SGB V
+                                      B1 = Leistungserbringer von Modellvorhaben nach § 64d SGB V
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3                   Abschnitt        Seite:
+  Form und Inhalt des                                                     8             17
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.5.2 Schlüssel Tarifkennzeichen
+
+Schlüsselbezeichnung:   Tarifkennzeichen
+
+Schlüsselbeschreibung:  Verschlüsselung des für den Leistungserbringer
+                        gültigen Tarifbereiches
+
+Schlüsselgröße:         5 Stellen
+
+Schlüsselinhalt:        1. und 2. Stelle            Tarifbereich
+
+                        00                =         Bundeseinheitlicher Tarif
+
+                        (gültig für Ost und West)
+
+                        01                =         Baden-Württemberg
+
+                        02                =         Bayern
+
+                        03                =         Berlin Ost
+
+                        04                =         Bremen
+
+                        05                =         Hamburg
+
+                        06                =         Hessen
+
+                        07                =         Niedersachsen
+
+                        08                =         Nordrhein-Westfalen
+
+                        09                =         Rheinland-Pfalz
+
+                        10                =         Saarland
+
+                        11                =         Schleswig-Holstein
+
+                        12                =         Brandenburg
+
+                        13                =         Sachsen
+
+                        14                =         Sachsen-Anhalt
+
+                        15                =         Mecklenburg-Vorpommern
+
+                        16                =         Thüringen
+
+                        17                =         Stuttgart und Karlsruhe
+
+                        18                =         Freiburg und Tübingen
+
+                        19                =         Berlin West
+
+                        20                =         Nordrhein
+
+                        21                =         Westfalen-Lippe
+
+                        22                =         Lippe
+
+                        23                =         Berlin (gesamt)
+
+                        24                =         Bundeseinheitlicher Tarif (West)
+
+                        25                =         Bundeseinheitlicher Tarif (Ost)
+
+                        26 bis 49 =                 noch zu vergeben
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025       GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        18
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+                       50                =         Bundesvertrag
+                                                   Baden-Württemberg
+                       51                =         Bayern
+                                                   Berlin Ost
+                       52                =         Bremen
+                                                   Hamburg
+                       53                =         Hessen
+                                                   Niedersachsen
+                       54                =         Nordrhein-Westfalen
+                                                   Rheinland-Pfalz
+                       55                =         Saarland
+                                                   Schleswig-Holstein
+                       56                =         Brandenburg
+                                                   Sachsen
+                       57                =         Sachsen-Anhalt
+                                                   Mecklenburg-Vorpommern
+                       58                =         Thüringen
+                                                   Stuttgart und Karlsruhe
+                       59                =         Freiburg und Tübingen
+                                                   Berlin West
+                       60                =         Nordrhein
+                                                   Westfalen-Lippe
+                       61                =         Lippe
+                                                   Berlin (gesamt)
+                       62                =         Bundeseinheitlicher Tarif (West)
+                                                   Bundeseinheitlicher Tarif (Ost)
+                       63                =         noch zu vergeben
+                                                   sonstiger länderübergreifender Tarif
+                       64                =         Vertrag auf Kassenebene
+
+                       65                =
+
+                       66                =
+
+                       67                =
+
+                       68                =
+
+                       69                =
+
+                       70                =
+
+                       71                =
+
+                       72                =
+
+                       73                =
+
+                       74                =
+
+                       75                =
+
+                       76 bis 89 =
+
+                       90                =
+
+                       91-99             =
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                         Anlage 3  Abschnitt                Seite:
+  Form und Inhalt des                                        8                     19
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                            Inhaltsübersicht
+
+          3. bis 5. Stelle   Sondertarife
+
+          000 - 090         ohne Besonderheiten
+          A00 - A90
+
+          091 - 098         nicht besetzt
+          A91 - A98         (wird von den Verbänden der Krankenkassen auf Bundes-
+                            ebene belegt)
+
+          099               Leistung ohne preisliche Regelung und daher Abrechnung
+
+                            nach genehmigten Kostenvoranschlag
+
+          U00 - ZZZ         nicht besetzt
+
+          Alle übrigen Sondertarifvereinbarungen zwischen einem oder mehreren
+
+          Zahlen-/Buch- Leistungserbringern und einem oder mehreren Kostenträ-
+
+          stabenkombi- gern
+
+          nationen, die
+
+          nicht in die o. (Das Kennzeichen für Sondertarife wird von den Vertrags-
+
+          g. reservierten partnern festgelegt.)
+
+          Bereiche fallen
+
+Anlage 3                 Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3      Abschnitt               Seite:
+  Form und Inhalt des                                       8                    20
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.6 Schlüssel Summenstatus
+
+Schlüsselbezeichnung:  Summenstatus
+
+Schlüsselbeschreibung: Kennzeichnung der Endsumme je Status
+
+Schlüsselgröße:        2 Stellen
+
+Schlüsselinhalt:       1. und 2. Stelle
+                       00 = Gesamtsumme aller Status
+                       11 = Mitglieder
+                       31 = Angehörige
+                       51 = Rentner
+                       99 = nicht zuzuordnende Status
+
+Anmerkung:
+
+Die Kennzeichnung des Summenstatus erfolgt für alle Versicherten, deren Status mit „1“ (Mitglie-
+der) beginnt, mit dem Schlüsselwert „11“, für alle Versicherten, deren Status mit „3“ (Angehörige)
+beginnt, mit dem Schlüsselwert „31“ und für alle Versicherten, deren Status mit „5“ (Rentner) be-
+ginnt, mit dem Schlüsselwert „51“. Eine Unterscheidung nach Rechtskreisen entfällt.
+
+Die zweite bis fünfte Ziffer im Feld Versichertenstatus wird bei der Kennzeichnung der Sum-
+menstatus nicht berücksichtigt.
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3        Abschnitt             Seite:
+  Form und Inhalt des                                         8                  21
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.7 Schlüssel Verarbeitungskennzeichen
+
+Schlüsselbezeichnung:  Kennzeichen für die Weiterverarbeitung der
+                       Nachricht
+
+Schlüsselbeschreibung: Kennzeichen für die Verarbeitung
+
+Schlüsselgröße:        2 Stellen
+
+Schlüsselinhalt:       01 = Abrechnung ohne Besonderheiten
+                       02 = Nachforderung
+                       03 = Zuzahlungsforderung
+                       04 = Korrekturrechnung
+                       10 = Wiederaufnahme
+
+                       Die Anwendbarkeit der Schlüsselwerte (außer "01") erge-
+                       ben sich aus der Tabelle in Anlage 1, Abschnitt 7.1.
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        22
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.8 Schlüssel Kennzeichen Mehrwertsteuer (Schlüssel 8.1.8 entfällt ab TA 3 Version 16)
+
+Schlüsselbezeichnung:   Kennzeichen Mehrwertsteuer
+
+Schlüsselbeschreibung:  Kennzeichen für die dem Abrechnungsbetrag
+                        zuzurechnende Mehrwertsteuer
+
+Schlüsselgröße:         1 Stelle
+
+Schlüsselinhalt:        1 = voller Mehrwertsteuersatz, dem Einzelbetrag zuzu-
+                                 rechnen
+
+                        2 = ermäßigter Mehrwertsteuersatz, dem Einzelbetrag
+                                 zuzurechnen
+
+                        ggf. noch zu erweitern
+
+Anmerkung:
+
+Der Schlüssel „Kennzeichen Mehrwertsteuer“ ist nur zu übermitteln, wenn dem vertraglich verein-
+bartem Einzelpreis die Mehrwertsteuer hinzuzurechnen ist. In allen anderen Fällen ist das Kenn-
+zeichen nicht zu übermitteln.
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        23
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.9 Schlüssel Prüfvermerk
+
+Schlüsselbezeichnung:   Prüfvermerk
+
+Schlüsselbeschreibung:  Schlüssel für die Antwort an den Leistungs-
+                        erbringer bei Begleichung einer Rechnung
+
+Schlüsselgröße:         2 Stellen
+
+Schlüsselinhalt:        01 = Rechnungsbetrag wird bezahlt
+                        02 = Rechnung wird zurückgewiesen
+                        03 = Rechnungsbetrag wurde berichtigt
+                        04 = Rechnungsbetrag wurde gekürzt
+                        05 = Rechnung wird zur Zeit geprüft
+
+                        ggf. noch zu erweitern
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        24
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.10 Schlüssel Kennzeichen für Hilfsmittel
+
+Schlüsselbezeichnung:  Kennzeichen Hilfsmittel
+
+Schlüsselbeschreibung: Kennzeichen für die Abrechnung von Hilfsmitteln
+
+Schlüsselgröße:        2 Stellen
+
+Schlüsselinhalt:       00 = Neulieferung
+                                (Kauf/Erstlieferung: erstmalige Versorgung [Leistungs-
+                                abgabe] mit einem neuen Hilfsmittel, z. B. erstmalige
+                                Versorgung mit einem Hörgerät)
+
+                       01 = Reparatur
+                                (Instandsetzung des vorhandenen Hilfsmittels/Aus-
+                                tausch von Einzelteilen usw.; evtl auch Pauschalbetrag
+                                für einmalige Reparatur)
+
+                       02 = Wiedereinsatz
+                                (Lieferung eines im Wiedereinsatz befindlichen Hilfs-
+                                mittels, ggf. inkl. erforderliche Instandsetzung; für In-
+                                standsetzungen während der Nutzung gilt Kennzei-
+                                chen 01)
+
+                       03 = Miete
+                       04 = Nachlieferung
+
+                                (Erneute Versorgung mit dem gleichen Hilfsmittel,
+                                Nachlieferung eines Produkts mit identischer Hilfsmit-
+                                telpositionsnummer)
+                       05 = Zurichtung
+                                (Anpassung von Hilfsmitteln an die spezifischen Anfor-
+                                derungen der Anwender; für Instandsetzungen gilt
+                                Kennzeichen 01)
+                       06 = Abgabe eines von der Verordnung abweichenden,
+                                höherwertigen Hilfsmittels
+                                (z. B. Abgabe von Gleitsichtgläsern bei verordneten Bi-
+                                fokalgläsern)
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        25
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.10 Schlüssel Kennzeichen für Hilfsmittel (Fortsetzung)
+
+                                        07 = Arbeitszeit
+                                        08 = Vergütungspauschale
+
+                                                  (Fall- und Versorgungspauschale)
+                                        09 = Folgevergütungspauschale
+
+                                                  (Erneute Abrechnung desselben Hilfsmittels für einen
+                                                  weiteren Gewährleistungs-/Versorgungszeitraum)
+                                        10 = Folgeversorgung
+                                                  (Erneute Versorgung mit einem anderen Hilfsmittel der
+                                                  gleichen Produktart)
+                                        11 = Ersatzbeschaffung
+                                                  (Erneute Versorgung mit dem gleichen Hilfsmittel in-
+                                                  nerhalb eines bestimmten Zeitraums, z.B. bei Verlust
+                                                  eines Hörgeräts)
+                                        12 = Zubehör
+                                                  (Zurüstung des Hilfsmittels an die spezifischen Anfor-
+                                                  derungen des Anwenders)
+                                        13 = Reparaturpauschale
+                                                  (Pauschale Abgeltung der Reparaturkosten während
+                                                  eines vereinbarten Zeitraums)
+                                        14 = Wartung
+                                                  (Wartung bzw. Pflege/Überprüfung des vorhandenen
+                                                  Hilfsmittels; evtl. auch Pauschalbetrag für einmalige
+                                                  Wartung)
+                                        15 = Wartungspauschale
+                                                  (Pauschale Abgeltung der Wartungskosten während
+                                                  eines vereinbarten Zeitraums)
+                                        16 = Auslieferung
+                                                  (gesonderte [ggf. pauschale] Vergütung der Ausliefe-
+                                                  rung)
+                                        17 = Aussonderung
+                                                  (gesonderte [ggf. pauschale] Vergütung der Aussonde-
+                                                  rung)
+                                        18 = Rückholung
+                                                  (gesonderte [ggf. pauschale] Vergütung der Rückho-
+                                                  lung)
+                                        19 = Abbruch
+                                                  (gesonderte [ggf. pauschale] Vergütung des Abbruchs)
+                                        20 = Erprobung
+                                                  (gesonderte [ggf. pauschale] Vergütung der Erpro-
+                                                  bung)
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        26
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3      Abschnitt               Seite:
+  Form und Inhalt des                                        8                    27
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.11 Schlüssel Kennzeichen Verordnungsbesonderheiten
+
+Schlüsselbezeichnung:   Kennzeichen Verordnungsbesonderheiten
+
+Schlüsselbeschreibung:  Kennzeichnung spezifischer Verordnungen
+Schlüsselgröße:         1 Stelle
+
+Schlüsselinhalte:       1 = Verordnung von einem Zahnarzt/Kieferorthopäden
+
+                        2 = Verordnung im Zusammenhang mit der Schwan-
+                                 gerschaft oder der Entbindung
+
+                        3 = zur Zeit nicht belegt
+                        4 = Verordnung im Rahmen des Entlassmanagements
+                        7 = Verordnung im Rahmen der Terminservicestellen
+                        8 = Empfehlung nach § 40 Abs. 6 SGB XI (nur Hilfsmit-
+
+                                 tel)
+                        9 = Verordnung im Rahmen eines Modellvorhabens
+
+                                 nach § 64d SGB V
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3            Abschnitt         Seite:
+  Form und Inhalt des                                             8              28
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.12 Schlüssel Kennzeichen Verordnungsart bei Heilmitteln
+
+Schlüsselbezeichnung:  Kennzeichen Verordnungsart bei Heilmittel
+
+Schlüsselbeschreibung: Kennzeichnung der Art der Heilmittelverordnung
+
+Schlüsselgröße:        2 Stellen
+
+Schlüsselinhalte:      01 = nicht belegt
+
+                       02 = nicht belegt
+                       03 = Verordnung nach § 7 Abs. 1 bis 5 HeilM-RL bzw. § 6
+
+                                Abs. 1 bis 4 HeilM-RL Zahnärzte (orientierender Be-
+                                handlungsmenge gemäß Heilmittelkatalog)
+                       04 = Verordnung nach § 7 Abs. 6 HeilM-RL bzw. § 6 Abs. 5
+                                HeilM-RL Zahnärzte (besonderer Verordnungsbedarf
+                                oder langfristiger Heilmittelbedarf bis zu 12 Wochen)
+                       05 = Verordnung nach § 13a HeilM-RL Ärzte bzw. § 12 HeilM-
+                                RL Zahnärzte (Blankoverordnung)
+                       10 = nicht belegt
+                       11 = nicht belegt
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        29
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.13 Schlüssel Kennzeichen Zuzahlungsart
+
+Schlüsselbezeichnung:   Kennzeichen Zuzahlungsart
+
+Schlüsselbeschreibung:  Kennzeichnung welche Art der gesetzlichen Zuzahlung
+                        abgerechnet wurde
+
+Schlüsselgröße:         2 Stellen
+
+Schlüsselinhalte:       01 = Prozentuale Zuzahlung gemäß § 61 Satz 1 SGB V
+
+                        02 = Zuzahlungsgrenzbertrag
+                                 (minimale bzw. maximale Zuzahlung bzw. Kosten der
+                                 Leistung)
+
+                                 Sollte die prozentuale Zuzahlung nicht greifen, ist der
+                                 gesetzliche maximale Zuzahlungsbetrag oder der Min-
+                                 destzuzahlungsbetrag, allerdigs nicht mehr als die
+                                 Kosten der Leistung anzugeben.
+
+                        03 = Prozentuale Zuzahlung für den Verbrauchszeit-
+                                 raum gem. § 33 Abs. 2 Satz 4, letzter Halbsatz SGB
+                                 V, falls das Hilfsmittel zum Verbrauch bestimmt ist
+
+                        04 = Maximaler Zuzahlungsbetrag für den Verbrauchs-
+                                 zeitraum gem. § 33 Abs. 2, Satz 4, letzter Halbsatz
+                                 SGB V, falls das Hilfsmittel zum Verbrauch be-
+                                 stimmt ist
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        30
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.14 Schlüssel Kennzeichen Leistungserbringer-Sammelgruppenschlüssel
+
+Schlüsselbezeichnung:  Kennzeichen Leistungserbringer-Sammelgruppenschlüssel
+
+Schlüsselbeschreibung: Kennzeichnung der Leistungsbereiche
+
+Schlüsselgröße:        1 Stelle
+
+Schlüsselinhalte:      A = Leistungserbringer von Hilfsmitteln
+                                11 = Apotheke
+Anlage 3                        12 = Augenoptiker
+                                13 = Augenarzt
+                                14 = Hörgeräteakustiker
+                                15 = Orthopädiemechaniker, Bandagist, Sanitätshaus
+                                16 = Orthopädieschuhmacher
+                                17 = Orthopäde
+                                18 = Sanitätshaus
+                                19 = sonstiger Hilfsmittellieferant
+
+                       B = Leistungserbringer von Heilmitteln
+                                21 = Masseur/Medizinischer Badebetrieb
+                                22 = Krankengymnast/Physiotherapeut
+                                23 = Logopäde, Atem-, Sprech- und Stimm-
+                                       lehrer,staatl. anerkannter Sprachtherapeut
+                                24 = Sprachheilpädagoge, Dipl. Pädagoge
+                                25 = Sonstiger Sprachtherapeut
+                                26 = Ergotherapeut
+                                27 = Krankenhaus
+                                28 = Kurbetrieb
+                                29 = Sonstige therapeutische Heilperson
+                                71 = Podologen
+                                72 = Med. Fußpfleger (gemäß § 10 Abs. 4 bis 6 PodG)
+                                73 = Leistungserbringer von Ernährungstherapie für
+                                       seltene angeborene Stoffwechselerkrankungen
+                                74 = Leistungserbringer von Ernährungstherapie für
+                                       Mukoviszidose
+
+                       C = Leistungserbringer von häuslicher Krankenpflege
+
+                       Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        31
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+                                31 = freigemeinnützige Anbieter (Sozialstation)
+                                32 = privatgewerbliche Anbieter
+                                33 = öffentliche Anbieter
+                                34 = Sonstige Pflegedienste
+                       D Leistungserbringer von Haushaltshilfe
+                                31 = freigemeinnützige Anbieter (Sozialstation)
+                                32 = privatgewerbliche Anbieter
+                                33 = öffentliche Anbieter
+                                34 = Sonstige Pflegedienste
+                       E = Leistungserbringer von Krankentransportleistun-
+                                gen
+                                41 = Öffentlicher Träger (z.B. Feuerwehr)
+                                42 = Deutsches Rotes Kreuz (DRK)
+                                43 = Arbeiter-Samariter-Bund (ASB)
+                                44 = Johanniter-Unfall-Hilfe (JUH)
+                                45 = Malteser-Hilfsdienst (MHD)
+                                46 = Taxi/Mietwagen
+                                47 = Leistungserbringer von Flugrettungs- und
+
+                                       Transportleistungen
+                                48 = Privatgewerbliche Rettungsdienste
+                                49 = Sonstige Leistungserbringer von Krankentrans-
+
+                                       portleistungen (z.B. Bergwacht, Wasserwacht,
+                                       etc.)
+                       F = Hebammen
+                                50 = Hebamme/Entbindungspfleger
+                       G = nichtärztliche Dialysesachleistungen
+                                55 = Sonstiger Leistungserbringer von nichtärztlichen
+                                       Dialysesachleistungen
+                                56 = Kuratorium für Heimdialyse (KfH)
+                                57 = Patienten-Heimversorgung (PHV)
+                       H = 61 = Leistungserbringer von Rehabilitationssport
+                       I = 62 = Leistungserbringer von Funktionstraining
+                       J = 65 = Weitere Sonstige Leistungserbringer,
+                                       sofern nicht unter A - I und K - O aufgeführt
+                       K = 66 = Leistungserbringer von Präventions- und
+                                       Gesundheitsförderungsmaßnahmen im Rahmen
+                                       von ambulanten Vorsorgeleistungen
+                       L = 63 = Leistungserbringer für ergänzenden Rehamaß-
+                                       nahmen
+                                67 = Mobile Rehabilitationseinrichtung
+                       M = 68 = Sozialpädiatrische Zentren/Frühförderstellen
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        32
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+                       N = 69 = Soziotherapeutischer Leistungserbringer
+                       O = 75 = SAPV
+                       P = 76 = Leistungserbringer nach § 132g SGB V
+                       Q = Kurzzeitpflege
+
+                                91 = privat gewerblicher Anbieter
+                                92 = frei gemeinnütziger Anbieter (gemeinnützige pri-
+
+                                       vate Anbieter)
+                                93 = öffentlicher Anbieter
+                                94 = sonstige Pflegeeinrichtung
+                       R = Außerklinische Intensivpflege
+                                ambulante AKI:
+                                A1 = freigemeinnütziger Anbieter
+                                A2 = privatgewerbliche Anbieter
+                                A3 = öffentlicher Anbieter
+                                A4 = sonstiger Anbieter
+                                stationäre AKI:
+                                A5 = freigemeinnütziger Anbieter
+                                A6 = privatgewerbliche Anbieter
+                                A7 = öffentlicher Anbieter
+                                A8 = sonstiger Anbieter
+                       S = Modellvorhaben nach § 64d SGB V:
+                                B1 = Leistungserbringer von Modellvorhaben nach
+
+                                        § 64d SGB V
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        33
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.15 Schlüssel Spezifikation Anwendungsort
+
+Schlüsselbezeichnung:   Schlüssel Spezifikation Anwendungsort
+Schlüsselbeschreibung:  Spezifikation des Anwendungsortes bei bestimmten Hilfsmitteln
+
+Schlüsselgröße:         1 Stelle
+Schlüsselinhalte:
+                         0 = Links
+                         1 = Rechts
+                         2 = beidseitig
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        34
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.16 Schlüssel Geburtsdatum
+
+Schlüsselbezeichnung:  Schlüssel Geburtsdatum des Kindes
+
+Schlüsselbeschreibung: Schlüssel welches Geburtsdatum des Kindes angegeben wurde
+
+Schlüsselgröße:        1 Stelle
+Schlüsselinhalte:
+                        1 = tatsächliches Geburtsdatum
+                        2 = errechnetes (mutmaßliches) Geburtsdatum
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3             Abschnitt        Seite:
+  Form und Inhalt des                                               8             35
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.17 Schlüssel Art der Genehmigung
+
+Schlüsselbezeichnung:   Schlüssel Art der Genehmigung
+
+Schlüsselbeschreibung:  Schlüssel zur Angabe der Art der Genehmigung, bezogen auf
+                        den Leistungsbereich
+
+Schlüsselgröße:         2 Stellen
+
+                        1. Stelle: Leistungsbereich (Angabe des Sammelgruppenschlüssels)
+                        2. Stelle: Art der Genehmigung
+
+Schlüsselinhalte:                         Bereich Hilfsmittel
+
+                        A1                = Genehmigung im Einzelfall
+
+                        A2                = Langfristige Genehmigung
+
+                                          Bereich Heilmittel
+
+                        B1                = nicht belegt
+
+                        B2                = Genehmigung gem. § 8 Abs. 3 Heilmittel-Richtlinie
+
+                                          Ärzte bzw. § 7 Abs. 1 Heilmittel-Richtlinie Zahnärzte
+
+                                          (Genehmigung eines langfristigen Heilmittelbedarfs)
+
+                                          Bereich Häusliche Krankenpflege
+
+                        C1                = Genehmigung im Einzelfall
+
+                        C2                = Leistungserbringung im Rahmen der Regelungen der
+
+                                          vorläufigen Kostenzusage nach § 6 Abs. 6 der Richtli-
+
+                                          nie des G-BA nach § 92 Abs. 1 Satz 2 Nr. 6 i.V.m.
+
+                                          Abs. 7 SGB V
+
+                                          Bereich Haushaltshilfe
+
+                        D1                = Genehmigung im Einzelfall
+
+                                          Bereich Krankentransportleistungen
+
+                        E1                = Genehmigung im Einzelfall
+
+                        E2                = Langfristige Genehmigung
+
+                                          Bereich Hebammen
+
+                        F1                = Genehmigung im Einzelfall
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3      Abschnitt               Seite:
+  Form und Inhalt des                                       8                    36
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+                                        Bereich Sonstige
+                       G1 – N1 = Genehmigung im Einzelfall
+
+                                         Bereich SAPV
+
+                       O1                Genehmigung im Einzelfall
+
+                                         Bereich Kurzzeitpflege
+
+                       Q1                = Genehmigung im Einzelfall
+
+                                         Bereich Außerklinische Intensivpflege
+
+                       R1                = Genehmigung im Einzelfall
+
+                       R2                = Leistungserbringung im Rahmen der Regelungen der
+
+                                         vorläufigen Kostenzusage nach § 11 Abs. 3 der Au-
+
+                                         ßerklinische Intensivpflege-Richtlinie des G-BA
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        37
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.1.18 Schlüssel Beleginformation
+
+Schlüsselbezeichnung:   Schlüssel Beleginformation
+
+Schlüsselbeschreibung:  Schlüssel zur Angabe, ob und in welcher Art Belege zum Ab-
+                        rechnungsfall übermittelt werden
+
+Schlüsselgröße:         1 Stelle
+
+Schlüsselinhalte:       0 = keine Belegübermittlung zum Fall
+                        1 = Belege zum Fall per Post übermittelt
+                        2 = Belege zum Fall elektronisch (z. B. Image) übermittelt.
+
+Der Schlüssel 2 ist erst bei flächendeckender, elektronischer Verarbeitung vorgesehen.
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        38
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.1.19 Schlüssel Ersatz-Beschäftigtennummer
+
+Schlüsselbezeichnung:  Ersatz-Beschäftigtennummer
+
+Schlüsselgröße:        9 Stellen, numerisch
+
+Schlüsselinhalt:
+
+                       999999998 = neue(r) Beschäftigte(r) oder neu beim Pflegedienst
+                                          Tätige(r) ohne Beschäftigungsverhältnis, die/der
+                                          noch nicht über eine Beschäftigtennummer nach §
+                                          293 Abs. 8 Satz 2 SGB V verfügt
+
+                       999999997 = Beschäftigtennummer nach § 293 Abs. 8 Satz 2 SGB
+                                          V fehlt aus sonstigem Grund
+
+                       999999996 = Auszubildende(r) ohne Beschäftigtennummer nach
+                                          § 293 Abs. 8 Satz 2 SGB V
+
+                       999999995 = Ersatzwert, wenn die Leistung ausschließlich durch
+                                          einen Arzt erbracht wurde; die Arztnummer ist in
+                                          ZZL_LANR zu erfassen
+
+                       999999990 = Ersatzwert bei AKI-Leistungen nach dem jeweils
+                                          geltenden Gebührenpositionsnummernverzeichnis,
+                                          die keiner Beschäftigtennummer zugeordnet
+                                          werden können. Hierbei handelt es sich um die
+                                          Positionsnummern, die an den ersten beiden Stellen
+                                          mit 01, 05 oder 06 beginnen und an der 4. Stelle
+                                          jeweils mit 4 oder 6.
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        39
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2 Abrechnungspositionsnummern
+
+Schlüsselbezeichnung:   Abrechnungspositionsnummer
+
+Schlüsselbeschreibung:  Kennzeichnung der Leistungsart über die
+                        Abrechnungsposition
+
+Schlüsselgröße:         3 bis 10 Stellen
+
+Schlüsselinhalte:
+
+                         • Bundeseinheitliches Heilmittelpositionsnummernverzeichnis,
+                         • Hilfsmittelverzeichnis nach § 139 SGB V,
+                         • Bundeseinheitliches Positionsnummernverzeichnis für nichtärztliche
+
+                            Dialysesachleistungen,
+                         • Bundeseinheitliches Positionsnummernverzeichnis für Leistungen der
+
+                            häuslichen Krankenpflege und Haushaltshilfe,
+                         • Bundeseinheitliches Positionsnummernverzeichnis für Krankentrans-
+
+                            portleistungen,
+                         • Bundeseinheitliches Positionsnummernverzeichnis gemäß der Heb-
+
+                            ammenhilfe-Vergütungsvereinbarung,
+                         • Positionsnummernverzeichnis für Betriebshilfe,
+                         • Bundeseinheitliches Positionsnummernverzeichnis für Präventions-
+
+                            und Gesundheitsförderungsmaßnahmen im Rahmen von ambulanten
+                            Vorsorgeleistungen,
+                         • Bundeseinheitliches Positionsnummernverzeichnis für Leistungen der
+                            medizinischen ambulanten Rehabilitation sowie für ergänzende Leis-
+                            tungen zur Rehabilitation,
+                         • Bundeseinheitliches Positionsnummernverzeichnis für sonstige Leis-
+                            tungen,
+                        • Bundeseinheitliches Positionsnummernverzeichnis für Leistungen der
+                            spezialisierten ambulanten Palliativversorgung (SAPV).
+
+Schlüsselaufbau:        S. Struktur der Abrechnungspositionsnummern
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        40
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.1 Abrechnungspositionsnummer für Heilmittel
+
+Schlüsselbezeichnung:   Heilmittelpositionsnummer
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für
+                        Heilmittel
+
+Schlüsselgröße:         5 Stellen
+
+Schlüsselinhalt:        Bundeseinheitliches Heilmittelpositionsnummernverzeichnis
+
+Schlüsselaufbau:
+
+Im Heilmittelpositionsnummernverzeichnis werden jeder Heilmittelpositionsnummer folgende Ei-
+genschaften zugeordnet:
+
+    • der Leistungstyp,
+    • der Heilmittelbereich,
+    • der Leistungserbringer,
+    • die Rechtsgrundlage der Leistung („Grundlage“),
+    • die Art der Leistung („Leistungsart“),
+    • die Bezeichnung der Leistung („Leistung“),
+    • gültig ab,
+    • gültig bis
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        41
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.2 Abrechnungspositionsnummer für Hilfsmittel
+
+Schlüsselbezeichnung:   Hilfsmittelpositionsnummer
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für
+                        Hilfsmittel
+
+Schlüsselgröße:         10 Stellen
+
+Schlüsselinhalte:       Hilfsmittelverzeichnis
+
+Schlüsselaufbau:        1. und 2. Stelle            Produktgruppe
+                        3. und 4. Stelle            wie z.B.
+                        5. und 6. Stelle            Krankenfahrzeuge
+                        7. Stelle
+                        8. bis 10. Stelle           Anwendungsort
+                                                    wie z.B.
+                                                    Außenbereich
+
+                                                    Untergruppe
+                                                    wie z.B.
+                                                    Schieberollstuhl
+
+                                                    Produktart
+                                                    wie z.B.
+                                                    Standard
+
+                                                    Produkt
+                                                    wie z.B.
+                                                    Modell 700
+
+Sofern für Hilfsmittel bundeseinheitlich zehnstellige Hilfsmittelpositionsnummern gelten, sind diese
+
+immer bei der Abrechnung anzugeben. Dies gilt auch, wenn
+ die Leistungen aufgrund eines genehmigten Kostenvoranschlages erbracht,
+ Festbeträge für Hilfsmittel festgesetzt oder
+ Vertragspreise auf Produktart- oder Untergruppenebene vereinbart wurden.
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        42
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+Sofern bundeseinheitlich noch keine zehnstelligen Hilfsmittelpositionsnummern vergeben wurden,
+die Struktur der jeweiligen Produktgruppe des Hilfsmittelverzeichnisses nach § 139 SGB V jedoch
+bereits existiert, muss bei der Abrechnung die erste bis siebte Stelle der Hilfsmittelposition (Pro-
+duktart) angegeben werden. An die achte Stelle ist grds. die Ziffer “9“ einzufügen. Die neunte und
+zehnte Stelle ist mit Nullen "0" zu füllen. Ist ein Festbetrag auf Basis einer zehnstelligen Positions-
+nummer festgelegt worden, ist diese bei der Abrechnung komplett anzugeben.
+
+Besteht noch keine Struktur einer Produktgruppe (z. B. Prothesen), aber eine Vertragspositions-
+nummer, muss an der ersten und zweiten Stelle die Nummer der Produktgruppe und rechtsbündig
+die Vertragspositionsnummer angegeben werden. Die insgesamt zehnstellige Pseudo-Hilfsmittel-
+positionsnummer ist in der Mitte mit Nullen "0" zu vervollständigen. Beispiel: Produktgruppe 24
+„Prothesen“, Vertragspositionsnummer "123", Angabe: 2400000123. Sofern auch keine Vertrags-
+positionsnummer existiert, muss die Nummer der Produktgruppe angegeben werden. Die insge-
+samt zehnstellige Pseudo-Hilfsmittelpositionsnummer ist mit den Ziffern "0" zu vervollständigen
+(Beispiel: Produktgruppe Prothesen 2400000000).
+
+Sofern abweichend von der Verordnung höherwertige Hilfsmittel abgegeben werden, so ist bei der
+Abrechnung entsprechend der Vergütungssystematik im Segment EHI die verordnete Produktun-
+tergruppe (Hilfsmittelpositionsnummer bis zur sechsten Stelle) oder die verordnete Produktart
+(Hilfsmittelpositionsnummer bis zur siebten Stelle) anzugeben. Die insgesamt zehnstellige Hilfsmit-
+telpositionsnummer ist mit den Ziffern "0" zu vervollständigen. Darüber hinaus ist das Kennzei-
+chen für Hilfsmittel „06 = Abgabe eines von der Verordnung abweichenden, höherwertigen Hilfs-
+mittels“ und im Textfeld (Segment TXT) die zehnstellige Hilfsmittelpositionsnummer oder – sofern
+noch nicht vergeben – der Name des tatsächlich abgegebenen Hilfsmittels aufzuführen.
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                     Seite:
+  Form und Inhalt des                                    8                          43
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.3 Abrechnungspositionsnummer für nichtärztliche Dialysesachleistungen
+
+Schlüsselbezeichnung:   Positionsnummer für nichtärztliche Dialysesachleistungen
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für nichtärztliche
+                        Dialysesachleistungen
+
+Schlüsselgröße:         6 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für
+                        nichtärztliche Dialysesachleistungen
+
+Schlüsselaufbau:        1. Stelle                   Personenkreis
+                        2. und 3. Stelle            wie z.B.
+                        4. bis 6. Stelle            Erwachsene, Kinder
+
+                                                    Behandlungsort/-art
+                                                    wie z.B.
+                                                    Heimdialyse, Zentrumsdialyse
+
+                                                    Behandlungsverfahren
+                                                    wie z.B.
+                                                    Hämofiltration, Hämodialyse
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025    GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        44
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.4 Abrechnungspositionsnummer für Leistungen der häuslichen Krankenpflege und
+         Haushaltshilfe
+
+Schlüsselbezeichnung:   Positionsnummer für Leistungen der
+                        häuslichen Krankenpflege und Haushaltshilfe
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für Leistungen
+                        der häuslichen Krankenpflege und Haushaltshilfe
+
+Schlüsselgröße:         6 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für
+                        Leistungen der häuslichen Krankenpflege und Haushaltshilfe
+
+Schlüsselaufbau:        1. und 2. Stelle            Gesetzliche Leistungsgrundlage
+                        3. Stelle                   wie z.B.
+                        4. bis 6. Stelle            § 37 Abs. 1 Satz 1 SGB V
+
+                                                    Art der Versorgung
+                                                    wie z.B.
+                                                    Grundpflege, Behandlungspflege
+
+                                                    Art der Leistung
+                                                    wie z.B.
+                                                    Pauschale, Einzelleistung
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        45
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.5 Abrechnungspositionsnummer für Krankentransportleistungen
+
+Schlüsselbezeichnung:   Positionsnummer für Krankentransportleistungen
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für
+                        Krankentransportleistungen
+
+Schlüsselgröße:         6 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis
+                        für Krankentransportleistungen
+
+Schlüsselaufbau:        1. Stelle                   Verordnungsart
+                        2. Stelle                   wie z.B.
+                        3. und 4. Stelle            Notarztwagen, KTW
+                        5. und 6. Stelle
+                                                    Transportart
+                                                    wie z.B.
+                                                    Einpersonentransport, Sachtransport
+
+                                                    Tarifart
+                                                    wie z.B.
+                                                    Pauschaltarif, Sondertarif
+
+                                                    Ausprägungen
+                                                    wie z.B.
+                                                    Staffelung
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3      Abschnitt               Seite:
+  Form und Inhalt des                                        8                    46
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.6 Abrechnungspositionsnummer für Hebammenhilfeleistungen
+
+Schlüsselbezeichnung:   Positionsnummer für Hebammenhilfe-
+                        leistungen
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für
+                        Hebammenhilfeleistungen
+
+Schlüsselgröße:         4-5 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis gemäß
+                        der Hebammenhilfe-Vergütungsvereinbarnung
+
+Schlüsselaufbau:        Fünfstellige Positionsnummern:
+
+                        1. Stelle:        Kategorie (z. B. Schwangerschaft, Geburt Wochen-
+                        2.+3. Stelle:     bett, Kurse)
+                        4. Stelle:        Laufende Nummer
+                                          Zuschlag nach § 3 der Anlage 1.1 zum Vertrag nach
+                        5. Stelle:        § 134a SGB V über die Versorgung mit Hebammen-
+                                          hilfe (0 - kein Zuschlag, 1 - mit Zuschlag)
+                                          Leistungsart (z. B. aufsuchend, nicht aufsuchend,
+                                          Videobetreuung)
+
+                        Vierstellige Positionsnummern nur bei Betriebskostenpauschalen für
+                        von Hebammen geleiteten Einrichtungen
+
+                        Anmerkung:
+                        Bis Leistungsdatum 31.10.2025 ist das alte Positionsnummernver-
+                        zeichnis mit ausschließlich vierstelligen Positionsnummern anzuwen-
+                        den.
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3   Abschnitt                  Seite:
+  Form und Inhalt des                                     8                       47
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.7 Abrechnungspositionsnummer für Betriebshilfe
+
+Schlüsselbezeichnung:   Positionsnummer für Leistungen der Betriebshilfe
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für
+                        Betriebshilfe
+
+Schlüsselgröße:         3 Stellen
+
+Schlüsselinhalte:       Positionsnummernverzeichnis
+                        für Betriebshilfe
+
+Schlüsselaufbau:        1. Stelle                   Leistungsart
+                        2. und 3. Stelle            wie z.B.
+                                                    Stundensatz, Fahrtkosten
+
+                                                    Abrechnende Position
+                                                    wie z.B.
+                                                    Grundgebühr, Überstunden
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        48
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.8 Abrechnungspositionsnummer für Präventions- und Gesundheitsförderungsmaß-
+         nahmen im Rahmen von ambulanten Vorsorgeleistungen
+
+Schlüsselbezeichnung:   Positionsnummer für Präventions- und Gesundheitsförderungs-
+                        maßnahmen im Rahmen von ambulanten Vorsorgeleistungen
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für
+                        Präventions- und Gesundheitsförderungsmaßnahmen im Rah-
+                        men von ambulanten Vorsorgeleistungen
+
+Schlüsselgröße:         4 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für
+                        Präventions- und Gesundheitsförderungsmaßnahmen im Rah-
+                        men von ambulanten Vorsorgeleistungen
+
+Schlüsselaufbau:        1. Stelle                   Gesetzliche Grundlage
+                        2. Stelle                   ambulante Vorsorgeleistung (§ 23 Abs. 1
+                        3. und 4. Stelle            SGB V)
+
+                                                    Leistungsart
+                                                    wie z.B.
+                                                    Patienten-Gesprächsseminar,
+                                                    Entspannungstechniken
+
+                                                    Leistung im Einzelnen
+                                                    wie z.B.
+                                                    Alltagsdrogenseminar, Atemwegserkrankungen
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        49
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.9 Abrechnungspositionsnummer für Leistungen der medizinischen ambulanten
+         Rehabilitation sowie für ergänzende Leistungen zur Rehabilitation
+
+Schlüsselbezeichnung:   Positionsnummer für Leistungen der medizinischen ambulanten
+                        Rehabilitation sowie für ergänzende Leistungen zur Rehabilita-
+                        tion
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für Leistungen der
+                        medizinischen ambulanten Rehabilitation sowie für ergänzende
+                        Leistungen zur Rehabilitation
+
+Schlüsselgröße:         6 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für Leistun-
+                        gen der medizinischen ambulanten Rehabilitation sowie für er-
+                        gänzende Leistungen zur Rehabilitation
+
+Schlüsselaufbau:        1. Stelle                   Gesetzliche Grundlage
+                        2. und 3. Stelle            wie z.B.
+                        4. bis 6. Stelle            § 40 Abs. 1 SGB V
+
+                                                    Leistungsart
+                                                    wie z.B.
+                                                    Einzelleistung, Gruppenleistung, Pauschale
+
+                                                    Leistung im Einzelnen
+                                                    wie z.B.
+                                                    Gruppenbehandlung, Pauschalen
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        50
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.10 Abrechnungspositionsnummer für sonstige Leistungen
+
+Schlüsselbezeichnung:   Positionsnummer für sonstige Leistungen
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für
+                        sonstige Leistungen
+
+Schlüsselgröße:         7 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernver-
+                        zeichnis für sonstige Leistungen
+
+Schlüsselaufbau:        1. und 2. Stelle            Art der Einrichtung
+                        3. und 4. Stelle            wie z.B.
+                        5. bis 7. Stelle            Sozialpädiatrisches Zentrum, Frühförderein-
+                                                    richtung
+
+                                                    Behandlungsart
+                                                    wie z.B.
+                                                    Einzelbehandlung, Gruppenbehandlung
+
+                                                    Vergütungsart
+                                                    wie z.B.
+                                                    Pauschalen, Einzelleistungsvergütung
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        51
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.11 Abrechnungspositionsnummer für die Spezialisierte Ambulante Palliativversorgung
+         (SAPV)
+
+Schlüsselbezeichnung:   Positionsnummer für Leistungen der Spezialisierten Ambulanten
+                        Palliativversorgung (SAPV)
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für Leistungen der
+                        Spezialisierten Ambulanten Palliativversorgung (SAPV)
+
+Schlüsselgröße:         10 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für Leistun-
+                        gen der Spezialisierten Ambulanten Palliativversorgung (SAPV)
+
+Schlüsselaufbau:        1. und 2. Stelle            Ort der Leistungserbringung (Versorgung
+                        3. und 4. Stelle            Patient)
+                        5. und 6. Stelle            wie z.B.
+                        7. bis 10. Stelle           Privater Haushalt, stationäres Hospiz
+
+                                                    Art der Leistung
+                                                    wie z.B.
+                                                    Palliativärztliche Leistung, palliativpflegerische
+                                                    Leistung
+
+                                                    Leistungen (verordnete Maßnahmen)
+                                                    wie z.B.
+                                                    Beratung, Koordination
+
+                                                    Art der Vergütung
+                                                    wie z.B.
+                                                    Erstmalige Beratung, Hausbesuch
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3                 Abschnitt    Seite:
+  Form und Inhalt des                                                   8         52
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.12 Abrechnungspositionsnummer für Kurzzeitpflege
+
+Schlüsselbezeichnung:   Positionsnummer für Leistungen der Kurzzeitpflege
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für Leistungen der
+                        Kurzzeitpflege
+
+Schlüsselgröße:         7 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für Leistun-
+                        gen der Kurzzeitpflege
+
+Schlüsselaufbau:        1. und 2. Stelle            Leistungsgrundlage
+
+                        3. und 4. Stelle            Vergütungsart
+
+                        5. Stelle                   Qualifikationsabhängige Vergütung
+
+                        6. bis 7. Stelle            Vergütungsart
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3                 Abschnitt    Seite:
+  Form und Inhalt des                                                   8         53
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.13 Abrechnungspositionsnummer für Außerklinische Intensivpflege
+
+Schlüsselbezeichnung:   Positionsnummer für Leistungen der Außerklinischen Intensiv-
+                        pflege
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für Leistungen der Au-
+                        ßerklinischen Intensivpflege
+
+Schlüsselgröße:         6 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für Leistun-
+                        gen der Außerklinischen Intensivpflege
+
+Schlüsselaufbau:        1. und 2. Stelle            Leistungsgrundlage
+
+                        3. Stelle                   Art der Funktionseinschränkung
+
+                        4. bis 6. Stelle            Vergütungsart
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3                 Abschnitt    Seite:
+  Form und Inhalt des                                                   8         54
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.2.14 Abrechnungspositionsnummer für Modellvorhaben nach § 64d SGB V
+
+Schlüsselbezeichnung:   Positionsnummer für Leistungen im Rahmen von Modellvorha-
+                        ben nach § 64d SGB V
+
+Schlüsselbeschreibung:  Kennzeichnung der Abrechnungsposition für Leistungen im
+                        Rahmen von Modellvorhaben nach § 64d SGB V
+
+Schlüsselgröße:         6 Stellen
+
+Schlüsselinhalte:       Bundeseinheitliches Positionsnummernverzeichnis für Leistun-
+                        gen im Rahmen von Modellvorhaben nach § 64d SGB V
+
+Schlüsselaufbau:        1. und 2. Stelle            Gesetzliche Leistungsgrundlage
+
+                        3. Stelle                   Art der Versorgung
+
+                        4. bis 6. Stelle            Vergütungsart
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                     Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                    8                        55
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                        Inhaltsübersicht
+
+8.3 Positionsnummer für Produktbesonderheiten von Hilfsmitteln
+
+Schlüsselbezeichnung:   Positionsnummer für Produktbesonderheiten von
+Hilfsmitteln
+
+Schlüsselbeschreibung:  Kennzeichnung für Produktbesonderheiten von Hilfsmitteln im
+                        Zusammenhang mit der Hilfsmittelpositionsnummer
+
+Schlüsselgröße:         bis 10 Stellen
+Schlüsselaufbau:
+                        Stelle 1 - 2      Produktbesonderheit Größe
+                        Stelle 3 - 4      Produktbesonderheit Menge
+                        Stelle 5 - 6      weitere Produktbesonderheit
+                        Stelle 7          weitere Produktbesonderheit
+                        Stelle 8          weitere Produktbesonderheit
+                        Stelle 9          weitere Produktbesonderheit
+                        Stelle 10         weitere Produktbesonderheit
+
+Schlüsselinhalte:       Die Schlüsselinhalte im Einzelnen werden von den Krankenkas-
+                        sen belegt und in den vertraglichen Regelungen vorgegeben.
+                        Kassenartenübergreifende vertragliche Regelungen erhalten je
+                        Produktbesonderheit einen einheitlichen – unter den Kassenar-
+                        ten abgestimmten – Schlüssel.
+
+Anlage 3                Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        56
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.4 Abrechnungspositionsnummernverzeichnisse
+
+Die Abrechnungspositionsnummernverzeichnisse werden kontinuierlich auf die vertraglichen Be-
+lange angepasst und unterliegen somit einer ständigen Ergänzung. Sie werden unabhängig von
+diesen Richtlinien fortgeschrieben.
+
+Grundlage für die Abrechnung sind die Vergütungsregelungen, die mit den entsprechenden - hier
+beschriebenen - Abrechnungspositionsnummern von den Krankenkassen versehen wurden. Es
+können nur die Abrechnungspositionsnummern angegeben und abgerechnet werden, die vertrag-
+lich vereinbart bzw. vorgegeben sind.
+
+Aus den vorgenannten Gründen sind die Abrechnungspositionsnummernverzeichnisse nicht mehr
+als Anhang beigefügt. Bei Bedarf können die aktuellen Versionen der bundeseinheitlichen Positi-
+onsnummernverzeichnisse bei den Spitzenverbänden der Krankenkassen angefordert oder im In-
+ternet abgerufen werden.
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3  Abschnitt                   Seite:
+  Form und Inhalt des                                   8                        57
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.5 Länderkennzeichen
+
+Schlüsselbezeichnung:  Länderkennzeichen
+
+Schlüsselbeschreibung: Kennzeichnung zur Identifizierung einzelner Länder
+
+Schlüsselgröße:        bis 3 Stellen
+
+Schlüsselaufbau:       1. bis. 3. Stelle
+
+Den Schlüssel "Länderkennzeichen" entnehmen Sie bitte der Anlage 8 zum Gemeinsamen Rund-
+schreiben DEÜV, das hier veröffentlicht ist:
+
+https://www.gkv-datenaustausch.de/arbeitgeber/deuev/gemeinsame_rundschreiben/gemeinsame_rundschreiben.jsp
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+     Richtlinien über                    Anlage 3        Abschnitt             Seite:
+  Form und Inhalt des                                         8                  58
+Abrechnungsverfahrens
+   nach § 302 SGB V
+
+                       Inhaltsübersicht
+
+8.6 Schlüssel Mengeneinheiten
+
+Schlüsselbezeichnung:  Mengeneinheiten
+
+Schlüsselbeschreibung: Mengeneinheiten
+
+Schlüsselgröße:        2 Stellen
+
+Schlüsselaufbau:       1. und 2. Stelle = Mengeneinheit
+
+Schlüsselinhalt:       Abkürzung                         Mengeneinheit
+                       CM                                Zentimeter
+ Schlüsselwert         ENS                               Einsätze
+ 01                    G                                 Gramm
+ 02                    KG                                Kilogramm
+ 03                    KWH                               Kilowattstunde
+ 04                    L                                 Liter
+ 05                    M                                 Meter
+ 06                    MIN                               Minute
+ 07                    MON                               Monate
+ 08                    PAA                               Paar
+ 09                    PAK                               Pack
+ 10                    ST                                Stück
+ 11                    STD                               Stunde
+ 12                    TAG                               Tage
+ 13
+ 14
+
+Anlage 3               Version 21, Stand 19.09.2025, anzuwenden ab 01.10.2025  GKV-Spitzenverband
+

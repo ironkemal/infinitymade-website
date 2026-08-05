@@ -1,0 +1,521 @@
+                                                                   Anlage 2: Vergütungsvereinbarung
+                                    zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                 Lesefassung Stand vom 01.06.2024
+
+                  Anlage 2
+       Vergütungsvereinbarung
+
+                     zum
+Vertrag nach § 125 Absatz 1 SGB V
+
+                     über
+   die Versorgung mit Leistungen
+
+            der Ergotherapie
+         und deren Vergütung1
+
+1 Diese Anlage wurde durch die Schiedsstelle (1 HE 8-24) festgesetzt  Seite 1 von 11
+
+LEGS: 2600501/2700531/2800531/2900531
+                                                                                                          Anlage 2: Vergütungsvereinbarung
+                                                                           zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                                                         Lesefassung Stand vom 01.06.2024
+
+A. Vergütungsliste nach § 125 Absatz 1 SGB V
+
+Schlüssel ”Leistungserbringergruppe”:
+Leistungserbringer gemäß § 124 Absatz 1 Nr. 1 SGB V:
+26 00 501 = Ergotherapie
+
+Leistungserbringer gemäß § 124 Absatz 5 SGB V:
+27 00 531 = Krankenhaus
+28 00 531 = Kurbetrieb
+
+Bitte im maschinellen Datenaustausch angeben!
+Heilmittelpositionsnummern:
+Abhängig vom Status des Leistungserbringers ist das X an der ersten Stelle der
+Heilmittelpositionsnummern wie folgt zu ersetzen:
+
+5.... Zugelassener Leistungserbringer gemäß § 124 Absatz 1 SGB V
+6…. Krankenhaus
+8.... Leistungserbringer von ambulanten Vorsorgeleistungen in anerkannten Kurorten
+
+Bitte im maschinellen Datenaustausch angeben!
+
+Für Behandlungen, die ab dem 01.06.2024 erbracht werden, sind die folgenden Preise
+abzurechnen:
+
+Pos.-Nr. Leistungsbeschreibung                                       Preis    Zuzahlung
+                                                                     in Euro   in Euro
+       Analyse des ergotherapeutischen Bedarfs                       38,43    3,84
+
+X4002  (Diese Position ist je Verordnungsfall bei Therapiebeginn im  52,77    5,28
+X4102  Rahmen der ersten Verordnung einmal zusätzlich ohne
+X4122  gesonderte Verordnung abrechenbar.)                           52,77    5,28
+       Motorisch-funktionelle Behandlung: Einzelbehandlung
+
+       (Regelleistungszeit 45 Minuten, davon 30 Minuten
+       Therapiezeit)
+       Motorisch-funktionelle Behandlung: Einzelbehandlung
+       als telemedizinische Leistung
+
+       (Regelleistungszeit 45 Minuten, davon 30 Minuten
+       Therapiezeit)
+
+LEGS: 2600501/2700531/2800531/2900531                                         Seite 2 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+X4103  Sensomotorisch-perzeptive Behandlung:                          70,36   7,04
+X4123  Einzelbehandlung                                               70,36   7,04
+X4104                                                                 52,77   5,28
+X4124  (Regelleistungszeit 60 Minuten, davon 45 Minuten               52,77   5,28
+X4105  Therapiezeit)                                                  87,95   8,80
+X4125  Sensomotorisch-perzeptive Behandlung:                          87,95   8,80
+       Einzelbehandlung als telemedizinische Leistung
+                                                                              14,07
+       (Regelleistungszeit 60 Minuten, davon 45 Minuten
+       Therapiezeit)
+       Ergoth. Hirnleistungstraining: Einzelbehandlung
+
+       (Regelleistungszeit 45 Minuten, davon mind. 30 Minuten
+       Therapiezeit)
+       Ergoth. Hirnleistungstraining: Einzelbehandlung als
+       telemedizinische Leistung
+
+       (Regelleistungszeit 45 Minuten, davon mind. 30 Minuten
+       Therapiezeit)
+       Psychisch-funktionelle Behandlung: Einzelbehandlung
+
+       (Regelleistungszeit 75 Minuten, davon 60 Minuten
+       Therapiezeit)
+       Psychisch-funktionelle Behandlung: Einzelbehandlung
+       als telemedizinische Leistung
+
+       (Regelleistungszeit 75 Minuten, davon 60 Minuten
+       Therapiezeit)
+       Motorisch-funktionelle Behandlung:
+       Einzelbehandlung bei Beratung zur Integration in das
+       häusliche und soziale Umfeld
+
+X4107  (Regelleistungszeit 120 Minuten, davon 105 Minuten             140,71
+       Therapiezeit)
+
+       Die Beratung zur Integration in das häusliche und soziale
+       Umfeld kann einmal pro Verordnungsfall oder orientierender
+       Behandlungsmenge als Einzeltherapie erbracht werden und
+       erfordert keine gesonderte Verordnung. Diese
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+       enthalten.
+
+LEGS: 2600501/2700531/2800531/2900531                                         Seite 3 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+       Motorisch-funktionelle Behandlung:
+       Einzelbehandlung bei Beratung zur Integration in das
+       häusliche und soziale Umfeld als telemedizinische
+       Leistung
+
+       (Regelleistungszeit 120 Minuten, davon 105 Minuten
+
+X4127  Therapiezeit)                                                  140,71  14,07
+                                                                              18,25
+       Die Beratung zur Integration in das häusliche und soziale              18,25
+
+       Umfeld kann einmal pro Verordnungsfall oder orientierender
+
+       Behandlungsmenge als Einzeltherapie erbracht werden und
+
+       erfordert keine gesonderte Verordnung. Diese
+
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+
+       enthalten.
+
+       Sensomotorisch-perzeptive Behandlung:
+
+       Einzelbehandlung bei Beratung zur Integration in das
+
+       häusliche und soziale Umfeld
+
+X4108  (Regelleistungszeit 120 Minuten, davon 105 Minuten             182,51
+       Therapiezeit)
+
+       Die Beratung zur Integration in das häusliche und soziale
+       Umfeld kann einmal pro Verordnungsfall oder orientierender
+       Behandlungsmenge als Einzeltherapie erbracht werden und
+       erfordert keine gesonderte Verordnung. Diese
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+       enthalten.
+       Sensomotorisch-perzeptive Behandlung:
+       Einzelbehandlung bei Beratung zur Integration in das
+       häusliche und soziale Umfeld als telemedizinische
+       Leistung
+
+X4128  (Regelleistungszeit 120 Minuten, davon 105 Minuten             182,51
+       Therapiezeit)
+
+       Die Beratung zur Integration in das häusliche und soziale
+       Umfeld kann einmal pro Verordnungsfall oder orientierender
+       Behandlungsmenge als Einzeltherapie erbracht werden und
+       erfordert keine gesonderte Verordnung. Diese
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+       enthalten.
+
+LEGS: 2600501/2700531/2800531/2900531                                         Seite 4 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+       Psychisch-funktionelle Behandlung:
+       Einzelbehandlung bei Beratung zur Integration in das
+       häusliche und soziale Umfeld
+
+X4109  (Regelleistungszeit 120 Minuten, davon 105 Minuten             152,32  15,23
+       Therapiezeit)                                                          15,23
+                                                                              15,23
+       Die Beratung zur Integration in das häusliche und soziale
+       Umfeld kann einmal pro Verordnungsfall oder orientierender
+       Behandlungsmenge als Einzeltherapie erbracht werden und
+       erfordert keine gesonderte Verordnung. Diese
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+       enthalten.
+       Psychisch-funktionelle Behandlung:
+       Einzelbehandlung bei Beratung zur Integration in das
+       häusliche und soziale Umfeld als telemedizinische
+       Leistung
+
+X4129  (Regelleistungszeit 120 Minuten, davon 105 Minuten             152,32
+       Therapiezeit)
+
+       Die Beratung zur Integration in das häusliche und soziale
+       Umfeld kann einmal pro Verordnungsfall oder orientierender
+       Behandlungsmenge als Einzeltherapie erbracht werden und
+       erfordert keine gesonderte Verordnung. Diese
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+       enthalten.
+       Ergoth. Hirnleistungstraining:
+       Einzelbehandlung bei Beratung zur Integration in das
+       häusliche und soziale Umfeld
+
+X4112  (Regelleistungszeit 120 Minuten, davon mind. 105 Minuten       152,32
+       Therapiezeit)
+
+       Die Beratung zur Integration in das häusliche und soziale
+       Umfeld kann einmal pro Verordnungsfall oder orientierender
+       Behandlungsmenge als Einzeltherapie erbracht werden und
+       erfordert keine gesonderte Verordnung. Diese
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+       enthalten.
+
+LEGS: 2600501/2700531/2800531/2900531                                         Seite 5 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+       Ergoth. Hirnleistungstraining:
+       Einzelbehandlung bei Beratung zur Integration in das
+       häusliche und soziale Umfeld als telemedizinische
+       Leistung
+
+X4132  (Regelleistungszeit 120 Minuten, davon mind. 105 Minuten         152,32  15,23
+       Therapiezeit)
+X4205                                                                           4,22
+X4225  Die Beratung zur Integration in das häusliche und soziale                4,22
+X4206  Umfeld kann einmal pro Verordnungsfall oder orientierender               5,63
+X4226  Behandlungsmenge als Einzeltherapie erbracht werden und                  5,63
+       erfordert keine gesonderte Verordnung. Diese
+       Leistungsposition ist in der Anzahl der verordneten Therapien
+       enthalten.
+       Motorisch-funktionelle Behandlung: Parallelbehandlung
+       bei gleichzeitiger Anwesenheit von zwei Patienten
+
+       (Regelleistungszeit 45 Minuten, davon 30 Minuten                 42,22
+       Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu  42,22
+       beachten)                                                        56,29
+       Motorisch-funktionelle Behandlung: Parallelbehandlung            56,29
+       bei gleichzeitiger Anwesenheit von zwei Patienten als
+       telemedizinische Leistung
+
+       (Regelleistungszeit 45 Minuten, davon 30 Minuten
+       Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu
+       beachten)
+       Sensomotorisch-perzeptive Behandlung:
+       Parallelbehandlung bei gleichzeitiger Anwesenheit von
+       zwei Patienten
+
+       (Regelleistungszeit 60 Minuten, davon 45 Minuten
+       Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu
+       beachten)
+       Sensomotorisch-perzeptive Behandlung:
+       Parallelbehandlung bei gleichzeitiger Anwesenheit von
+       zwei Patienten als telemedizinische Leistung
+
+       (Regelleistungszeit 60 Minuten, davon 45 Minuten
+       Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu
+       beachten)
+
+LEGS: 2600501/2700531/2800531/2900531                                           Seite 6 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+       Ergoth. Hirnleistungstraining: Parallelbehandlung bei
+       gleichzeitiger Anwesenheit von zwei Patienten
+
+X4207  (Regelleistungszeit 45 Minuten, davon mind. 30 Minuten           42,22  4,22
+X4227  Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu  42,22  4,22
+X4208  beachten)                                                               7,04
+X4228  Ergoth. Hirnleistungstraining: Parallelbehandlung bei                   7,04
+X4209  gleichzeitiger Anwesenheit von zwei Patienten als                       1,85
+       telemedizinische Leistung                                               1,85
+                                                                               2,46
+       (Regelleistungszeit 45 Minuten, davon mind. 30 Minuten
+       Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu
+       beachten)
+       Psychisch-funktionelle Behandlung: Parallelbehandlung
+       bei gleichzeitiger Anwesenheit von zwei Patienten
+
+       (Regelleistungszeit 75 Minuten, davon 60 Minuten                 70,36
+
+       Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu
+
+       beachten)
+
+       Psychisch-funktionelle Behandlung: Parallelbehandlung
+
+       bei gleichzeitiger Anwesenheit von zwei Patienten als
+
+       telemedizinische Leistung                                        70,36
+       (Regelleistungszeit 75 Minuten, davon 60 Minuten
+
+       Therapiezeit; es ist die Leistungsbeschreibung Teil 1 Pkt. 6 zu
+
+       beachten)
+
+       Motorisch-funktionelle Behandlung: Gruppenbehandlung
+
+       (3 - 6 Patienten)                                                18,47
+       (Regelleistungszeit 45 Minuten, davon 30 Minuten
+
+       Therapiezeit)
+
+       Motorisch-funktionelle Behandlung: Gruppenbehandlung
+
+X4229  (3 - 6 Patienten) als telemedizinische Leistung                  18,47
+       (Regelleistungszeit 45 Minuten, davon 30 Minuten
+
+       Therapiezeit)
+
+X4210  Sensomotorisch-perzeptive Behandlung:                            24,63
+       Gruppenbehandlung (3 - 6 Patienten)
+
+       (Regelleistungszeit 60 Minuten, davon 45 Minuten
+       Therapiezeit)
+
+LEGS: 2600501/2700531/2800531/2900531                                          Seite 7 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+X4230  Sensomotorisch-perzeptive Behandlung:                    24,63  2,46
+       Gruppenbehandlung (3 - 6 Patienten) als                         2,46
+       telemedizinische Leistung                                       2,46
+                                                                       4,31
+X4211  (Regelleistungszeit 60 Minuten, davon 45 Minuten         24,63  4,31
+X4231  Therapiezeit)                                            24,63  0,79
+       Ergoth. Hirnleistungstraining:
+       Gruppenbehandlung (3 - 6 Patienten)
+
+       (Regelleistungszeit 60 Minuten, davon 45 Minuten
+       Therapiezeit)
+       Ergoth. Hirnleistungstraining:
+       Gruppenbehandlung (3 - 6 Patienten) als
+       telemedizinische Leistung
+
+       (Regelleistungszeit 60 Minuten, davon 45 Minuten
+
+       Therapiezeit)
+
+       Psychisch-funktionelle Behandlung: Gruppenbehandlung
+
+X4212  (3 - 6 Patienten)                                        43,10
+X4232  (Regelleistungszeit 105 Minuten, davon 90 Minuten
+
+       Therapiezeit)
+
+       Psychisch-funktionelle Behandlung: Gruppenbehandlung
+
+       (3 - 6 Patienten) als telemedizinische Leistung          43,10
+       (Regelleistungszeit 105 Minuten, davon 90 Minuten
+
+       Therapiezeit)
+
+X4301 Thermische Anwendung (Wärme oder Kälte)                   7,89
+
+X4405  Ergotherapeutische temporäre Schiene: Herstellung,
+       Anpassung und Korrektur temporärer Schienen ohne
+       Kostenvoranschlag bis 400,00 €
+
+X4406  Ergotherapeutische temporäre Schiene: Herstellung,
+       Anpassung und Korrektur temporärer Schienen nach
+       Kostenvoranschlag ab 400,01 €
+
+             Übermittlungsgebühr für Mitteilung/Bericht an die  1,11
+X9701
+
+             Verordnende oder den Verordnenden
+
+LEGS: 2600501/2700531/2800531/2900531                                  Seite 8 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+       Mehraufwand für die Beratung zur Integration in das
+       häusliche und soziale Umfeld
+
+X9932  Eine Abrechnung ist nur in Kombination mit den                25,54  2,55
+X9933  Positionsnummern X4107, X4108, X4109, X4112 möglich.          25,54  2,55
+       Sofern die ergotherapeutische Einzelbehandlung als
+       Hausbesuch verordnet wurde, kann die Position X9932 nicht            1,67
+       abgerechnet werden.
+       Hausbesuch inclusive Wegegeld (Einsatzpauschale)
+
+       Die Position X9933 kann je Versicherte oder je Versicherten
+       nur einmal je Tag in Ansatz gebracht werden.
+       Hausbesuch in einer sozialen Einrichtung/Gemeinschaft
+       inclusive Wegegeld (Einsatzpauschale)
+
+       Die Position X9934 ist auch beim Besuch nur einer einzelnen
+
+       Person abzurechnen. Der Begriff „soziale Einrichtung“ in der
+
+       Beschreibung zu Position X9934 bezeichnet Einrichtungen, die
+
+       zur Pflege und Betreuung älterer, pflegebedürftiger Personen
+
+X9934  oder von Personen mit Behinderung dienen. Dies sind           16,66
+       insbesondere Alten-, Pflege- und Behinderteneinrichtungen,
+
+       Einrichtungen für die Kurzzeit- und Tagespflege. Weiter sind
+
+       dies Wohnformen, die auf die medizinische, soziale und
+
+       therapeutische Betreuung schwerkranker und/oder älterer
+
+       und/oder pflegebedürftiger Personen ausgelegt sind, dazu
+
+       gehören u.a. auch Hospize, Unterkünfte für
+
+       Ordensschwestern.
+
+B. Abrechnung der Leistungen und Laufzeit der Vereinbarung
+
+(1) Der Umfang der vergüteten Leistung besteht aus
+
+                a) der Durchführung der Maßnahmen mit der oder dem Versicherten
+                     (Pos.-Nr. X4002 – X4301) (= Therapiezeit) und
+
+                b) der Vor- und Nachbereitung (inkl. Dokumentation).
+
+        Beide Leistungsbestandteile werden zu einer „Regelleistungszeit“ zusammengefasst. Für
+        diese „Regelleistungszeit“ wird eine Vergütung vereinbart.
+
+        Die in der Vergütungsliste angegebenen Preise gelten je behandelte Versicherte oder je
+        behandelten Versicherten. An die Versicherten dürfen ausschließlich die auf der Verordnung
+        verordneten Leistungen abgegeben werden. Die Durchführung einer Therapie darf nur wie in
+        der Leistungsbeschreibung (Anlage 1) oder in der HeilM-RL beschriebenen Form erfolgen.
+        Nicht in Anspruch genommene Leistungen dürfen nicht und vorzeitig beendete
+
+LEGS: 2600501/2700531/2800531/2900531                                       Seite 9 von 11
+                                                                      Anlage 2: Vergütungsvereinbarung
+                                       zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                    Lesefassung Stand vom 01.06.2024
+
+Verordnungen dürfen nur in dem tatsächlich erbrachten Umfang abgerechnet werden (vgl.
+Vertrag § 3 Absatz 9).
+
+(2) Für die Ergotherapeutische temporäre Schiene: Herstellung, Anpassung und Korrektur
+        temporärer Schienen nach Kostenvoranschlag ab 400,01 (X4406) sind folgende
+        Mindestinhalte auf dem Kostenvoranschlag anzugeben:
+
+        a) Art/Bezeichnung der Schiene und ggf. Lokalisation oder Bezeichnung der Finger
+        b) Materialaufwand
+        c) Arbeitsaufwand je begonnene 15 Minuten
+
+Die Höhe der endgültigen Abrechnung kann um bis zu 10% des im Kostenvoranschlag
+angegebenen Betrags abweichen.
+
+Darüberhinausgehende Leistungen wie z.B. das Erstellen eines Kostenvoranschlages, die
+Indikations- und Funktionsüberprüfung, Beratungen und Kontrollen sind mit der im
+Zusammenhang verordneten Haupt- bzw. Therapieleistung (Motorisch-funktionelle oder
+Sensomotorisch-perzeptive Behandlung) zu erbringen und Bestandteil der Vergütung. Dies
+schließt auch weitere Kosten für z.B. Fort- und Weiterbildungen, Rufbereitschaft,
+Wochenenddienste, Kosten der Kalkulation, Stellungnahmen und dergleichen ein.
+
+(3) Mit den in der Vergütungsliste angegebenen Vergütungssätzen sind alle im Zusammenhang
+        mit der vertraglich vereinbarten ergotherapeutischen Leistung erforderlichen Aufwendungen
+        abgegolten (Endpreis). Die Mitteilung an die Verordnende oder den Verordnenden ist in den
+        Vergütungssätzen der Preisliste bereits enthalten.
+
+(4) Auf die ergotherapeutische temporäre Schiene (X4405, X4406) und die Übermittlungsgebühr
+        für Mitteilung/Bericht an die Verordnende oder den Verordnenden (X9701) werden keine
+        Zuzahlungen erhoben. Von der Zuzahlung ist nur der gesetzlich festgelegte Personenkreis
+        befreit.
+
+(5) Die Aufwendungen für verordnete Hausbesuche werden in Form von Pauschalen vergütet. Für
+        Hausbesuche im häuslichen Umfeld der oder des Versicherten kann die Gebührenposition
+        X9933 abgerechnet werden. Bei Hausbesuch in einer sozialen Einrichtung/Gemeinschaft ist
+        die Gebührenposition X9934 abrechnungsfähig.
+
+(6) Die Positionen X9933 und X9934 sind für eine Behandlung nicht zusammen abrechenbar und
+        können je Versicherte oder je Versicherten nur einmal täglich in Ansatz gebracht werden.
+        Sofern der Praxissitz der oder des zugelassenen Leistungserbringenden und der Ort der
+        Leistungserbringung identisch sind (z. B. innerhalb einer sozialen Einrichtung/einer
+        Einrichtung des Betreuten Wohnens), ist ein Hausbesuch nicht abrechnungsfähig. Die
+        Durchführung des Hausbesuches (HB) ist auf dem Verordnungsblatt unter Angabe des
+        Datums der Ausführung, zusammen mit der durchgeführten Leistung von der oder dem
+        Versicherten zu bestätigen.
+
+LEGS: 2600501/2700531/2800531/2900531  Seite 10 von 11
+                                                                                                          Anlage 2: Vergütungsvereinbarung
+                                                                           zum Vertrag nach § 125 Absatz 1 SGB V für Ergotherapie
+
+                                                                                                         Lesefassung Stand vom 01.06.2024
+
+(7) Für den Mehraufwand für die Beratung zur Integration in das häusliche und soziale Umfeld
+        ist für den Hausbesuch die Gebührenposition X9932 abrechnungsfähig. Eine Abrechnung ist
+        nur in Kombination mit den Positionsnummern X4107, X4108, X4109, X4112 möglich.
+        Sofern die ergotherapeutische Einzelbehandlung als Hausbesuch verordnet wurde, kann die
+        Position X9932 nicht abgerechnet werden.
+
+(8) Die Vergütungssätze gelten für Behandlungen, die ab dem 01.06.2024 erbracht werden.
+        Diese dürfen frühestens zum 01.07.2024 erstmals abgerechnet werden.
+
+(9) Diese Vergütungsvereinbarung tritt am 01.06.2024 in Kraft. Ihre Laufzeit ist nicht befristet
+        und sie kann mit einer Frist von 3 Monaten, frühestens jedoch zum 31.03.2025 schriftlich
+        gekündigt werden. Diese Anlage kann durch den GKV-Spitzenverband einerseits oder
+        andererseits durch alle leistungserbringerseitigen Vertragspartner gemeinsam gekündigt
+        werden.
+
+(10) Die Kündigung der Vergütungsvereinbarung berührt nicht die weitere Wirksamkeit des
+        Vertrages nach § 125 Absatz 1 SGB V.
+
+(11) Nach Kündigung dieser Anlage gelten die vereinbarten Preise fort, bis eine neue Anlage in
+        Kraft tritt.
+
+LEGS: 2600501/2700531/2800531/2900531  Seite 11 von 11
+

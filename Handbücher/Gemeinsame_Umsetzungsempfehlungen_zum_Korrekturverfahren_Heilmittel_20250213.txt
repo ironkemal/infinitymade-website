@@ -1,0 +1,685 @@
+    Gemeinsame Umsetzungsempfehlungen zum Korrekturverfahren im Heilmittelbereich
+
+Stand: 13.02.2025*)
+*) Die Anpassungen Stand 13.02.2025 treten zum 01.10.2025 in Kraft
+
+Allgemeines
+
+Nach Anlage 1 zur technischen Anlage für die maschinelle Abrechnung (elektronische Datenübermittlung) zu den Richtlinien der Spit-
+zenverbände der Krankenkassen nach § 302 Abs. 2 SGB V über Form und Inhalt des Abrechnungsverfahrens mit „Sonstigen Leistungs-
+erbringern“ sowie mit Hebammen und Entbindungspflegern (§ 301a SGB V) müssen Rechnungen im Korrekturverfahren ab 01.07.2020
+verbindlich per DTA übermittelt werden.
+
+Grundsatz: Für die Umsetzung des Korrekturverfahrens wurden sogenannte Verarbeitungskennzeichen vorgegeben. Jede Rechnung
+muss somit mit einem der folgenden Verarbeitungskennzeichen angeliefert werden:
+
+    - Verarbeitungskennzeichen 01 (VKZ 1) = Erstrechnung
+    - Verarbeitungskennzeichen 02 (VKZ 2) = Nachforderung (z.B. Hausbesuch wurde bei der Erstrechnung versehentlich vergessen)
+    - Verarbeitungskennzeichen 03 (VKZ 3) = Zuzahlungsnachforderung
+    - Verarbeitungskennzeichen 04 (VKZ 4) = Korrekturrechnung
+    - Verarbeitungskennzeichen 10 (VKZ 10) = Wiederaufnahme einer bereits beendeten abgerechnet Blankoverordnung (Physiothe-
+
+         rapie) bei einem Rezidiv
+
+Innerhalb einer Rechnung dürfen nicht verschiedene Verarbeitungskennzeichen genutzt werden. Somit ist je Verarbeitungskennzeichen
+eine eigene Rechnung zu übermitteln.
+
+                                                                                                                                                                                  1
+Wurde eine eingereichte Rechnung ganz oder in Teilen zurecht von der Krankenkasse oder deren Dienstleister bemängelt und gekürzt,
+so kann der Leistungserbringer, sofern dies vertraglich geregelt ist, eine Korrektur vornehmen und die nicht zuvor vergütete(n) Posi-
+tion(en) erneut mit dem Verarbeitungskennzeichen „04“ in Rechnung stellen. Ein Anspruch auf eine Korrekturdatenlieferung seitens
+der Krankenkasse oder deren Dienstleister besteht nicht, wenn sich herausstellt, dass die vorgenommene Rechnungskürzung nicht
+rechtens war und die Rechnung auf Basis der vorliegenden Abrechnungsdatensätze und ergänzenden Informationen vollumfänglich zu
+begleichen ist.
+Damit falsch angelieferte Datensätze und damit verbundene Abrechnungsprobleme möglichst reduziert werden, sind nachfolgend
+Umsetzungsempfehlungen aufgelistet.
+
+                                                                                                                                                                                  2
+Änderungshistorie                  Frage                                                     Erläuterung
+                        Allgemeines       Redaktionelle Überarbeitung
+               Datum    Nr. 13            Sachverhalt präzisiert
+          13.02.2025*)  Nr. 18            VKZ 10 ergänzt
+          13.02.2025*)  Nr. 23            Sachverhalt neu hinzugefügt
+          13.02.2025*)  Nr. 24            Sachverhalt neu hinzugefügt
+          13.02.2025*)  Nr. 25            Sachverhalt neu hinzugefügt
+          13.02.2025*)  Nr. 26            Sachverhalt neu hinzugefügt
+          13.02.2025*)  Deckblatt         Aufnahme eines Hinweises hinsichtlich ungerechtfertigter Rechnungskürzungen
+          13.02.2025*)  Nr. 11            Zuzahlungskennzeichen geändert
+           05.06.2023   Nr. 13            Beispiel gestrichen
+           20.07.2022   Nr. 21            Umsetzungsempfehlung redaktionell angepasst
+           20.07.2022   Nr. 22            Sachverhalt neu hinzugefügt.
+           20.07.2022   Nr. 21            Sachverhalt neu hinzugefügt.
+           20.07.2022   Nr. 13            Korrekturverfahren ist möglich. Lediglich das Zuzahlungskennzeichen muss auf
+           09.04.2021                     „2“ geändert werden. Vorheriger Stand wird wieder hergestellt.
+           09.02.2021   Nr. 20            Klarstellung: Bei einer Absetzung durch die Krankenkasse bzw. dessen Dienstleis-
+                                          ter wegen fehlenden / falschen Daten muss der korrekte Datensatz über das Ver-
+           09.02.2021                     arbeitungskennzeichen 4 erneut eingereicht werden.
+                                          Zuzahlungskennzeichen „1“ ist laut TA noch nicht möglich, daher auf „2“ geändert.
+19.01.2021              Nr. 8             TA wird schnellst möglich angepasst, damit das ZuZ-KNZ „1“ auch angenommen
+                                          werden kann.
+
+                                                                                                                                                       3
+19.01.2021  Nr. 11  Zuzahlungskennzeichen „1“ ist laut TA noch nicht möglich, daher auf „2“ geändert.
+
+                    TA wird schnellst möglich angepasst, damit das ZuZ-KNZ „1“ auch angenommen
+
+                    werden kann.
+
+19.01.2021  Nr. 13  Kein Korrekturverfahren möglich, daher Vorgabe für die Zuzahlungsforderung an-
+
+                    gepasst.
+
+*) Die Anpassungen Stand 13.02.2025 treten zum 01.10.2025 in Kraft
+
+                                                                    4
+         Anfrage            Erläuterung  Umsetzungsempfehlung
+
+1  In welchen Fällen darf                Der Leistungserbringer bzw. dessen Abrechner
+
+   eine Nachforderung                    darf immer dann eine Nachforderung (VKZ 2) stel-
+
+   (VKZ 2) gestellt wer-                 len, wenn bei einer Ursprungsrechnung (VKZ 1)
+
+   den?                                  Leistungen nicht berechnet worden sind, für die
+
+                                         jedoch bereits ein Anspruch auf Vergütung be-
+
+                                         stand. Dies schließt eine Ergänzung/Änderung
+
+                                         rechnungsbegründender Unterlagen im Rahmen
+
+                                         einer Nachforderung aus.
+
+2  Muss bei Nachforde- Es handelt sich um Fälle, bei denen die Ori- In diesen Fällen kann die Nachforderung (VKZ 2)
+
+   rungen (VKZ 2) durch ginalverordnungen der Krankenkasse be- alleine über den Datensatz wieder eingereicht
+
+   den Leistungserbrin- reits vorliegen, da sie bei der Ursprungs- werden. Ein Urbeleg z.B. eine Kopie der Verord-
+
+   ger zwingend ein Ur- rechnung bereits mit angeliefert wurden. nung bedarf es nicht.
+
+   beleg der Abrechnung
+
+   beigelegt  werden?
+
+   Oder reicht alleine der
+
+   Datensatz aus?
+
+3  Wie muss bei von der Es handelt sich um Fälle, bei denen die In diesen Fällen muss die Korrektur gegen die
+
+   Krankenkasse bean- Rechnung ganz oder in Teilen von der zu- Rechnungskürzung immer zwingend mit dem
+
+   standeten Belegen ver- ständigen Krankenkasse bemängelt wurde. VKZ 4 eingereicht werden.
+
+   fahren werden? Muss
+
+   hier immer zwingend
+
+   die Korrekturrechnung
+
+   mit VKZ 4 gestellt wer-
+
+   den?
+
+                                                                                             5
+4  Muss bei Korrekturen / Es handelt sich um Fälle, bei denen die In diesen Fällen muss immer zwingend ein Urbe-
+
+   Einsprüchen zu bean- Rechnung ganz oder in Teilen von der zu- leg (z.B. die zurückgeschickte und geänderte
+
+   standeten     Belegen ständigen Krankenkasse bemängelt wurde. Originalverordnung, Änderungen per Fax, nach-
+
+   (VKZ 4) durch den                                     träglich eingeholte Unterschriften vom Arzt / Pa-
+
+   Leistungserbringer                                    tienten, Änderungen der Indikationsschlüssel /
+
+   zwingend ein Urbeleg                                  Diagnosegruppen etc.) zusätzlich zum DTA ein-
+
+   der Abrechnung bei-                                   gereicht werden.
+
+   gelegt werden? Oder                                   Die Urbelege sind für die Prüfung des Einspruches
+
+   reicht alleine der Da-                                durch die Krankenkasse notwendig.
+
+   tensatz aus?
+
+5  Wie muss mit Fällen Es handelt sich um Fälle, bei denen im Da- Diese Fallkonstellation ist nicht vom Korrektur-
+
+   umgegangen werden, tensatz eine falsche und teurere Positions- verfahren umfasst. In diesen Fällen muss der
+
+   bei denen für eine Ver- nummer abgerechnet wurde.     Leistungserbringer bzw. das Abrechnungszent-
+
+   ordnung zu viel abge- z.B. Verordnet und vom Versicherten bestä- rum bei der jeweiligen Krankenkasse bzw. dessen
+
+   rechnet wurde? Greift tigt wurde die KG (x0501) – Abgerechnet Dienstleister die falsche Abrechnung melden
+
+   hier auch das neue wurde die MT (x1201)               (schriftlich oder telefonisch). Danach erfolgt eine
+
+   Korrekturverfahren?                                   Rechnungskürzung von Seiten der Krankenkasse.
+
+6  Wie muss mit Fällen Es handelt sich um Fälle, bei denen im Da- In diesem Fall müssen beide Sachverhalte vonei-
+
+   umgegangen werden, tensatz eine falsche und günstigere Positi- nander getrennt beurteilt werden:
+
+   bei denen für eine Ver- onsnummer abgerechnet wurde.  Die zu wenig abgerechneten Beträge bei der
+
+   ordnung sowohl zu z.B. Verordnet und vom Versicherten bestä- Hauptleistung müssen über das Verarbeitungs-
+
+   wenig abgerechnet tigt wurde die KG-ZNS (x0710) – Abgerech- kennzeichen „2“ per DTA neu eingereicht werden.
+
+   wurde und etwas zu net wurde die KG (x0501)           Hier dürfen dann aber nur die Differenzbeträge in
+
+   viel? (Mischkorrektur) Des Weiteren wurde für dieselbe Verord- Rechnung gestellt werden. Die Nachforderung
+
+                           nung aber eine falsche und teurere Position wird dann mit der eigentlich korrekten Positions-
+
+                                                         nummer (in diesem Beispiel die x0710) erfasst.
+
+                                                                                                                  6
+                           für den Hausbesuch abgerechnet (z.B. Ab- Die zu viel abgerechneten Beträge beim Hausbe-
+
+                           gerechnet wurde die x9933, obwohl der such müssen wie bei Frage 5 der Krankenkasse
+
+                           Versicherte im Heim ist und lediglich die bzw. deren Dienstleister gemeldet werden. Da-
+
+                           x9934 abgerechnet werden darf.)        nach erfolgt eine Rechnungskürzung von Seiten
+
+                                                                  der Krankenkasse.
+
+7  Wie muss mit Fällen Es handelt sich um Teilabsetzungen, bei de- Sofern die Termine bzw. die Positionen nicht aus
+
+   umgegangen werden, nen im Absetzungsschreiben nicht explizit dem Absetzungsschreiben hervorgehen, muss
+
+   bei denen aus dem Ab- der gekürzte Termin bzw. die Positions- der Leistungserbringer bzw. das Abrechnungs-
+
+   setzungsschreiben       nummer angegeben ist. In diesen Fällen ist zentrum bei der jeweiligen Krankenkasse bzw.
+
+   nicht alle wichtigen In- die Korrekturrechnung (VKZ 4) ohne genaue deren Dienstleistern diese Informationen erfragen
+
+   formationen hervorge- Daten nicht möglich.
+
+   hen?
+
+8  Welche Sachverhalte Es handelt sich um folgende Fälle:         Das Verarbeitungskennzeichen 3 ist für alle Zu-
+
+   sind mit dem Verarbei-  1) Der Versicherte hat im Nachgang – zahlungsforderungen zu verwenden.
+
+   tungskennzeichen 3      trotz (schriftlicher) Aufforderung – Der Grund, weshalb der Versicherte die Zuzah-
+
+   im DTA abzurechnen?     die Zuzahlung an den Leistungser- lung nicht an den Leistungserbringer gezahlt hat
+
+                           bringer verweigert.                    – ist nicht relevant.
+
+                           2) Der Versicherte ist zuzahlungsfrei
+
+                           und zahlt deswegen die geforderten Somit gilt dies auch für die Fälle, bei denen der
+
+                           Zuzahlungen nicht an den Leistungs- Versicherte zuzahlungsfrei ist und deswegen die
+
+                           erbringer.                             geforderten Zuzahlungen nicht zahlt. Im DTA
+
+                                                                  muss bei diesen Fällen dann das Zuzahlungs-
+
+                                                                  kennzeichen „1“ gesetzt werden.
+
+9  Die technische Anlage Es handelt sich um folgenden Fall:       Auch in diesen Fällen muss ein Datensatz für die
+                                                                  Nachforderung der Zuzahlungen gestellt werden.
+   sieht beim VKZ 3 nur
+
+                                                                                                   7
+    die Fälle vor, wenn der Der Versicherte ist zuzahlungsfrei und zahlt Diese Fälle müssen dann auch mit dem Verarbei-
+
+    Versicherte die Zah- deswegen die geforderten Zuzahlungen tungskennzeichen 3 angeliefert werden. (Siehe
+
+    lung der Zuzahlungen nicht an den Leistungserbringer. Der Leis- auch Ausführungen zur Frage 8)
+
+    verweigert. Greift das tungserbringer hat auf der Ursprungsrech-
+
+    Korrekturverfahren       nung (VKZ 1) dennoch die Zuzahlungen be-
+
+    und die DTA-Pflicht rechnet.
+
+    auch für Fälle bei de-
+
+    nen dem Leistungser-
+
+    bringer eine „Falschin-
+
+    formationen zu Zuzah-
+
+    lungspflicht“ vorliegt?
+
+10  Mit welchem Verarbei- Es handelt sich um Fälle, bei denen der Leis- In diesen Fällen muss die Nachberechnung der
+
+    tungskennzeichen         tungserbringer bzw. dessen Abrechnungs- Zuzahlungen auch mit VKZ 3 eingereicht werden.
+
+    müssen Fällen abge- zentrum bei der Erstrechnung (VKZ 1) keine Da alle Nachforderungen, die sich auf die Zuzah-
+
+    rechnet werden, bei Zuzahlungen berechnet hat.                      lungen beziehen mit dem VKZ 3 abgerechnet wer-
+
+    denen die Kranken- Der / die Versicherte ist jedoch nicht befreit den müssen.
+
+    kasse wegen Zuzah- und die Krankenkasse kürzt die Erstrech-
+
+    lungen die Erstrech- nung mit dem Grund, dass die Zuzahlungen
+
+    nung (VKZ 1) gekürzt nicht berechnet wurden.
+
+    hat und der Leistungs- Der Leistungserbringer erhält die Zuzahlun-
+
+    erbringer die Zuzah- gen vom Versicherten aber nicht.
+
+    lungen jedoch nicht
+
+    vom Patienten erhält?
+
+11  Muss bei Zuzahlungs- Es handelt sich um folgende Fälle:             Zu 1) In diesem Fall muss dem DTA als Urbeleg
+
+    forderung (VKZ 3)        1) Der Versicherte hat im Nachgang – entweder das Formular „Zuzahlung verweigert“
+
+                             trotz (schriftlicher) Aufforderung– die oder das Schreiben an den Versicherten bezgl. der
+
+                                                                                                    8
+    zwingend das Formu-      Zuzahlung an den Leistungserbringer Zuzahlungsforderung (Erinnerung/ Mahnung)
+
+    lar „Zuzahlung verwei-   verweigert.             beigelegt werden.
+
+    gert“ dem DTA beige-
+
+    legt werden?             2) Der Versicherte ist zuzahlungsfrei Zu 2) In diesem Fall ist ein Urbeleg nicht zwingend
+
+                             und zahlt deswegen die geforderten erforderlich. Bitte tragen Sie das Zuzahlungs-
+
+                             Zuzahlungen nicht an den Leistungs- kennzeichen „1“ im DTA ein.
+
+                             erbringer.
+
+                                                     Es ist jedoch wünschenswert, wenn
+
+                                                     - die Information über die Befreiung im Feld
+
+                                                           6 „Raum für Mitteilungen an den Kosten-
+
+                                                           träger“ eingetragen wird oder
+
+                                                     - ein zusätzlicher Hinweis auf einem Begleit-
+
+                                                           zettel vorgenommen wird oder
+
+                                                     - die Kopie eines Befreiungsausweises bei-
+
+                                                           gelegt wird.
+
+12  Ist es vorgesehen, dass Es handelt sich um Fälle bei denen eine Zu- Die Voraussetzungen der Übermittlung von Urbe-
+
+    zusätzlich erforderli- zahlungsforderung mit VKZ 3 gestellt wird legen hat sich mit dem Korrekturverfahren nicht
+
+    che Formulare (VKZ 3) und ein Formular z.B. das Formular „Zuzah- geändert. Immer wenn zusätzlich zum Datensatz
+
+    ebenfalls als Mailan- lung verweigert“ muss als Urbeleg der Kran- ein Urbeleg gefordert wird – muss dieser auch auf
+
+    hang mit den Abrech- kenkasse geschickt werden.  dem üblichen Weg der Krankenkasse bzw. deren
+
+    nungsdateien geliefert                           Dienstleister zur Verfügung gestellt werden. In
+
+    werden können?                                   der Regel handelt es sich hier um den Postver-
+
+    Oder besteht ein alter-                          sand, es sei denn die entsprechende Kranken-
+
+    nativer "online"-Ver-                            kasse akzeptiert auch jetzt schon einen digitalen
+
+    sandweg?                                         Weg.
+
+                                                                                              9
+13  Was für ein Zuzah- Es handelt sich um Fälle, bei denen im Da- Es muss im DTA das Zuzahlungskennzeichen „2“
+
+    lungskennzeichen    tensatz auf der Ursprungsrechnung (VKZ 1) gesetzt werden, weil für alle angelieferten Positi-
+
+    muss im DTA angelie- für alle Positionen und Termine die Zuzah- onen / Termine eine Zuzahlungsbefreiung vor-
+
+    fert werden, wenn auf lungen berechnet wurden.                  liegt.
+
+    der Ursprungsrech-
+
+    nung das Zuzahlungs- Im Nachgang stellt sich heraus, dass der Die Zuzahlungsforderungen VKZ 3 werden ledig-
+
+    kennzeichen       „3“ Versicherte für einen Teil der Termine be- lich für die Termine nachberechnet, an denen der
+
+    (pflichtig) angeben ist freit ist. (z.B. 3 Termine im Jahr 2019 – hier- Versicherte von der Zuzahlung befreit ist bzw. für
+
+    und nur für ein Teil der für liegt eine Befreiung von den Zuzahlun- die Positionen, für die keine Zuzahlungen gezo-
+
+    Positionen / Termine gen vor - und 3 Termine im Jahr 2020 – gen werden müssen.
+
+    die Zuzahlungen nach- keine Befreiung)
+
+    gefordert werden, weil Oder                                     Die Positionen und Termine, für die der Versi-
+
+    hierfür eine Befreiung Im Nachgang stellt sich heraus, dass eine cherte pflichtig ist, sind bei der Nachberechnung
+
+    vorliegt?           Position nicht zuzahlungspflichtig ist (Ergo- ohne Zuzahlungen anzugeben (das Kannfeld
+
+                        therapeutische Schiene etc.).               EHE_Betrag_der_Zuzahlung wird nicht geliefert).
+
+14  Wie muss mit Fällen Es handelt sich um Fälle, bei denen in der In diesen Fällen ist die Nachberechnung der Dif-
+
+    umgegangen werden, Ursprungsrechnung zu niedrige Preise ab- ferenzbeträge mit dem Verarbeitungskennzei-
+
+    in denen ein höherer gerechnet wurden.                          chen „2“ im DTA anzuliefern.
+
+    Preis nachgefordert z.B. Abgerechnet wurde die x0501 (KG) mit
+
+    wird?               jeweils 20,00 Euro pro Termin. Eigentlich
+
+                        wird die KG mit 21,11 Euro vergütet. Somit
+
+                        besteht eine Differenz von 1,11 Euro pro
+
+                        Termin, die nachberechnet werden soll.
+
+                                                                                                                     10
+15  Dürfen zusätzlich zu Es handelt sich um Fälle, bei denen zusätz- Ja, es dürfen auch nicht betragsrelevante Daten in
+
+    betragsrelevanten Da- lich zu einer monetären Korrektur auch noch der Nachforderung (VKZ 2) bzw. Korrekturrech-
+
+    ten auch weitere Daten ein weiteres nicht monetäres Feld im DTA nung (VKZ 4) gegenüber der Ursprungsrechnung
+
+    gegenüber der Origi- abgeändert werden muss.                    korrigiert werden, wenn dies für die Nachforde-
+
+    nalrechnung abgeän- z.B. Indikationsschlüssel / Diagnosegruppe, rung / Korrekturrechnung entscheidend ist.
+
+    dert werden, die nicht Ausstellungsdatum der Verordnung, AC/TK
+
+    betragsrelevant sind? etc.
+
+              Weil diese nicht betragsrelevante Änderung
+
+              eine Nachforderung / Korrekturrechnung
+
+              rechtfertigt.
+
+16  Wie muss bei von der Es handelt sich um Fälle, bei denen die Für beide Fälle muss das Verarbeitungskennzei-
+
+    Krankenkasse bean- Rechnung in Teilen von der zuständigen chen „2“ im DTA verwendet werden, da die beide
+
+    standeten Belegen ver- Krankenkasse bemängelt wurde.            Sachverhalte nichts mit der vorherigen Kürzung
+
+    fahren werden, bei de- Der Leistungserbringer bzw. dessen Ab- zu tun haben.
+
+    nen eine Nachforde- rechnungszentrum möchte für diesen Beleg
+
+    rung wegen anderer etwas nachfordern – jedoch nicht den Sach- Sind für ein und denselben Beleg mehrere Nach-
+
+    Sachverhalte vorge- verhalten der zur Kürzung geführt hat.      forderungen von verschiedenen Sachverhalten
+
+    nommen werden soll? Beispiel:                                   mit VKZ 2 notwendig (siehe Beispiel), dann kann
+
+    Was sind die korrekten Eine Abrechnungsposition wird abgesetzt, alles zusammen in einem DTA angeliefert werden.
+
+    Verarbeitungskenn- weil am Behandlungstag 30.03.2020 eine
+
+    zeichen?  stationäre Krankenhausbehandlung statt-
+
+              fand. Der Leistungserbringer schickt nun
+
+              zwei Korrekturrechnungen:
+
+              1) wegen eines abweichenden Vertragsprei-
+
+              ses fordert er den Differenzbetrag zu den
+
+                                                                                                                11
+                  bereits abgerechneten Positionen (nicht für
+
+                  den             abgesetzten  Behandlungstag
+
+                  30.03.2020)
+
+                  2) da die Hausbesuchspositionen vergessen
+
+                  wurden, werden sie mit einer Korrektur
+
+                  nachgefordert (nicht für den abgesetzten
+
+                  Behandlungstag 30.03.2020)
+
+17  Wie muss bei von der Es handelt sich um Fälle, bei denen die Für den ersten Fall (der Einspruch) muss die
+
+    Krankenkasse bean- Rechnung ganz oder in Teilen von der zu- x0501 für den Termin 30.03.2020 mit dem VKZ 4
+
+    standeten Belegen ver- ständigen Krankenkasse bemängelt wurde. angeliefert werden.
+
+    fahren werden, bei de- Der Leistungserbringer bzw. dessen Ab-
+
+    nen für eine Verord- rechnungszentrum möchte für diesen Beleg Die Nachforderung der Hausbesuche muss sepa-
+
+    nung sowohl ein Ein- sowohl einen Einspruch gegen die Rech- rat in einem weiteren Datensatz mit VKZ 2 ange-
+
+    spruch für die Rech- nungskürzung stellen und einen weiteren liefert werden.
+
+    nungskürzung und Sachverhalt nachfordern.
+
+    eine Nachforderung Beispiel:                                      Hinweis: In diesem Fall muss der Einspruch (VKZ
+
+    wegen eines anderen Eine Abrechnungsposition x0501 wird ab- 4) vor bzw. zeitgleich mit der Nachforderung der
+
+    Sachverhaltes vorge- gesetzt, weil am Behandlungstag Hausbesuche eingereicht werden, da ansonsten
+
+    nommen werden sol- 30.03.2020 die Maßnahme nicht vom Versi- ggf. der 30.03.2020 nicht vergütet werden kann.
+
+    len? Was sind die kor- cherten bestätigt wurde. Der Leistungser-
+
+    rekten Verarbeitungs- bringer schickt nun zwei Korrekturrechnun-
+
+    kennzeichen?  gen:
+
+                  1) Den Einspruch für den abgesetzten Be-
+
+                  handlungstag 30.03.2020. Der Versicherte
+
+                  hat die Unterschrift nachgeholt.
+
+                                                                                        12
+                         2) Da die Hausbesuchspositionen vergessen
+                         wurden, werden sie mit einer Korrektur
+                         nachgefordert (inkl. den abgesetzten Be-
+                         handlungstag 30.03.2020)
+
+18  Was passiert, wenn die Es handelt sich um Fälle, bei denen die  In diesen Fällen wird die Nachforderung (VKZ
+
+    Nachforderungen /    Nachforderungen / Zuzahlungsforderungen 2+3) bzw. die Wiederaufnahme (VKZ 10) von den
+
+    Zuzahlungsforderung (VKZ 2+3) bzw. die Wiederaufnahme (VKZ jeweiligen Krankenkassen abgesetzt oder bereits
+
+    (VKZ 2+3) oder die   10) den Krankenkassen eher zur Verfügung von der Datenannahmestelle abgewiesen, da in
+
+    Wiederaufnahme (VKZ stehen, als die dazugehörige Ursprungs- allen Fällen immer erst die Ursprungsrechnung
+
+    10) vor der ursprüng- rechnung (VKZ 1).                         (VKZ 1) vorliegen muss.
+
+    lichen Rechnung bei
+
+    den Krankenkassen
+
+    eingehen?
+
+19  Soll das Feld „Einzel- Bei verschiedenen Fallkonstellationen dür- Der Differenzbetrag muss bei den Nachberech-
+
+    betrag der Abrech-   fen nur die Differenzbeträge in Rechnung nungen per DTA im Feld „Einzelbetrag der Ab-
+
+    nungsposition (verein- gestellt werden, weil ein Teil des Betrages rechnungsposition (vereinbarter Preis)“ pro Ter-
+
+    barter Preis)“ auch für bereits bei der Ursprungsrechnung (VKZ 1) min angegeben werden.
+
+    Anlieferung von Diffe- gezahlt wurde.
+
+    renzbeträgen genutzt Beispiel 1:
+
+    werden?              Verordnet und vom Versicherten bestätigt
+
+                         wurde die KG-ZNS (x0710) – Abgerechnet
+
+                         wurde die KG (x0501). Die Differenz zwi-
+
+                         schen der KG und der KG-ZNS soll nachbe-
+
+                         rechnet werden.
+
+                         Beispiel 2:
+
+                                                                                                                    13
+                         Der Leistungserbringer bzw. dessen Ab-
+                         rechnungszentrum hat bei der Ursprungs-
+                         rechnung (VKZ 1) versehentlich einen zu ge-
+                         ringen Betrag pro Position abgerechnet.
+
+20  Ist das Korrekturver- Es handelt sich um Fälle, bei denen die In diesen Fällen muss der Datensatz im Korrek-
+
+    fahren auch für Be-  Krankenkasse bzw. dessen Dienstleister die turverfahren mit VKZ 4 erneut eingereicht wer-
+
+    lege, bei denen ledig- Ursprungsrechnung bemängelt, weil z.B. die den.
+
+    lich nicht betragsrele- Diagnosegruppe, der Diagnoseschlüssel, die
+
+    vante Daten abgeän- Arztnummer etc. im DTA fehlt oder falsch
+
+    dert werden sollen,  erfasst wurde.
+
+    anzuwenden?
+
+21  Wie müssen Rechnun- Es handelt sich ausschließlich um Fälle, bei In diesem Fall muss eine neue Rechnung mit
+
+    gen (VKZ 1), die von denen die Krankenkasse bzw. dessen dem Verarbeitungskennzeichen 1 eingereicht
+
+    den Krankenkassen    Dienstleister die Ursprungsrechnung (VKZ 1) werden. Des Weiteren müssen zwingend die Ver-
+
+    komplett abgesetzt   komplett absetzt hat, weil die Verordnungen ordnungen (Urbelege) zur Krankenkasse bzw.
+
+    wurden, wieder einge- fehlten.                                      dessen Dienstleister geschickt werden.
+
+    reicht werden?       D.h. der Krankenkasse bzw. dessen Dienst-
+
+                         leister lagen lediglich die Datensätze aber
+
+                         keine Urbelege vor.
+
+22  Wie müssen Rechnun- Es handelt sich ausschließlich um Fälle, bei In diesem Fall muss eine neue Rechnung mit
+
+    gen (VKZ 1), die von denen die Krankenkasse bzw. dessen dem Verarbeitungskennzeichen 1 eingereicht
+
+    den Krankenkassen    Dienstleister die Ursprungsrechnung (VKZ 1) werden. Außerdem müssten auch noch einmal
+
+    komplett abgesetzt   komplett absetzt hat, weil die Datensätze die Urbelege nachgereicht werden, falls diese mit
+
+    wurden, wieder einge- der Rechnung nicht korrekt angeliefert wur- der Datenabweisung wieder zurück geschickt
+
+    reicht werden?       den. (Rechnungsdatensatz wird abgewiesen) wurden.
+
+                                                                                                                    14
+                         D.h. der Krankenkasse bzw. dessen Dienst-
+
+                         leister lagen lediglich die Urbelege aber kein
+
+                         TA-konformer Datensatz vor.
+
+23  Wie muss bei von der Es handelt sich ausschließlich um Fälle, bei In diesem Fall muss lediglich eine neue Rech-
+
+    Krankenkasse bean- denen die Krankenkasse bzw. dessen nung mit dem Verarbeitungskennzeichen 4 mit
+
+    standeten Belegen    Dienstleister die Ursprungsrechnung (VKZ 1) den erhöhten Preisen eingereicht werden.
+
+    verfahren werden,    abgesetzt/ gekürzt hat und mit der Nachbe-
+
+    wenn im Rahmen des rechnung ein höherer Einzelpreis im Gegen-
+
+    Einspruchs der ur-   satz zur Erstrechnung abgerechnet wird.
+
+    sprüngliche Rech-
+
+    nungsbetrag (VKZ1)   Beispiel: Verordnung und bestätigte Ter-
+
+    überschritten wird?  mine aus dem Jahr 2025. Im Datensatz
+
+                         (VKZ1) wurden jedoch Termine aus 2024 mit
+
+                         dem entsprechenden Vertragspreis abge-
+
+                         rechnet.
+
+                         Bei der Nachberechnung werden jetzt die
+
+                         korrekten Termine aus 2025 mit erhöhten
+
+                         Preis angeliefert.
+
+24  Wie muss die Wieder- Es handelt sich ausschließlich um Fälle, bei In diesen Fällen muss die Wiederaufnahme der
+
+    aufnahme einer be-   denen die Blankoverordnung (Physiothera- Blankoverordnung bis zum 30.09.2025 zwin-
+
+    reits beendeten abge- pie) bereits mit der Krankenkasse abgerech- gend mit dem VKZ 2 eingereicht werden.
+
+    rechnet Blankoverord- net wurde (VKZ1) und im Falle eines Rezidivs
+
+    nung bei einem Re-   dieselbe Verordnung innerhalb des Gültig- Ab dem 01.10.2025 muss die Wiederaufnahme
+
+                         keitszeitraums (16 Wochen) erneut aufge- der Blankoverordnung immer zwingend mit dem
+
+                         nommen und therapiert wurde.                    VKZ 10 eingereicht werden.
+
+                                                                                                                     15
+    zidiv bei der Kranken- Eine Verordnung liegt nicht vor. Die Abrech-
+
+    kasse einegereicht      nung erfolgt aufgrund des Anhangs A zum
+
+    werden?                 Vertrag.
+
+25  Muss bei der Wieder- Es handelt sich um die Fallkonstellation im In diesen Fällen muss immer zwingend der voll-
+
+    aufnahme der Verord- Sachverhalt 24.                                 ständig ausgefüllte und unterschriebene Anhang
+
+    nung im Rahmen einer                                                 A zum Vertrag als Urbeleg zusätzlich zum DTA
+
+    Blankoverordnung                                                     eingereicht werden. Es wird empfohlen, die Vor-
+
+    (Physiotherapie) bei                                                 derseite der ursprünglichen Blankoverordnung
+
+    einem Rezidiv zwin-                                                  ebenfalls beizufügen.
+
+    gend ein Urbeleg der
+
+    Abrechnung beigelegt
+
+    werden? Oder reicht
+
+    alleine der Datensatz
+
+    aus?
+
+26  Wie müssen Nachfor- Es handelt sich um folgende Fälle:               In diesen Fällen ist das Korrekturverfahren (VKZ
+
+    derungen / Zuzah-       1. Bei der Wiederaufnahme VKZ 10 2, 3 und 4) wie in den anderen Sachverhalten der
+
+    lungsforderung (VKZ     wurde etwas in der Abrechnung ver- Umsetzungsempfehlung analog umzusetzen.
+
+    2+3) oder Korrektur-    gessen z.B. der Hausbesuch 20554
+
+    rechnungen (VKZ 4)      2. Zuzahlungsnachforderungen (siehe Die Nachforderung bzw. Korrekturrechnung be-
+
+    eingereicht werden,     Sachverhalte 8-13), die sich auf ei- zieht sich dann jedoch auf die Rechnung mit VKZ
+
+    wenn sie sich auf eine  ner Wiederaufnahme VKZ 10 bezie- 10 anstatt auf die Rechnung mit VKZ 1,2 oder 4.
+
+    Wiederaufnahme VKZ      hen.                                         Im URI-Segment müssen somit die Daten aus der
+
+    10 beziehen?            3. Es handelt sich um Fälle mit VKZ 10 Rechnung VKZ 10 herangezogen werden.
+
+                            (Wiederaufnahme), bei denen die
+
+                            Rechnung ganz oder in Teilen von
+
+                                                                                                                           16
+der zuständigen Krankenkasse be-
+mängelt wurde.
+
+                                                                                                                    17
+

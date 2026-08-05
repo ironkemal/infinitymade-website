@@ -1,0 +1,550 @@
+Spitzenverband Bund der Krankenkassen, Berlin
+Deutsche Rentenversicherung Bund, Berlin
+Deutsche Rentenversicherung Knappschaft-Bahn-See, Bochum
+Bundesagentur für Arbeit, Nürnberg
+Deutsche Gesetzliche Unfallversicherung e.V., Berlin
+
+                                                                                                                         06.11.2025
+
+          Gemeinsame Grundsätze Technik für die elektronische
+                      Datenübermittlung gemäß § 95 SGB IV
+
+                                    in der vom 01.01.2026 an geltenden Fassung1
+
+Der Spitzenverband Bund der Krankenkassen (GKV-Spitzenverband), die Deutsche Rentenversiche-
+rung Bund, die Deutsche Rentenversicherung Knappschaft-Bahn-See, die Bundesagentur für Arbeit
+sowie die Deutsche Gesetzliche Unfallversicherung haben Standards für die elektronische Daten-
+übermittlung an die oder innerhalb der Sozialversicherung in dem nachfolgenden Dokument auf-
+gestellt. Sie kommen damit ihrer Verpflichtung gemäß § 95 SGB IV nach. Die Sozialversicherung für
+Landwirtschaft, Forsten und Gartenbau sowie die Arbeitsgemeinschaft berufsständischer Versor-
+gungseinrichtungen (ABV) haben an der Erstellung dieser Gemeinsamen Grundsätze Technik mit-
+gewirkt.
+
+Die „Gemeinsamen Grundsätze Technik für die elektronische Datenübermittlung an die oder inner-
+halb der Sozialversicherung“ sind nach Anhörung des Bundesministeriums für Gesundheit sowie
+der Bundesvereinigung der Deutschen Arbeitgeberverbände e.V. durch das Bundesministerium für
+Arbeit und Soziales genehmigt worden.
+
+Die gemeinsamen Grundsätze werden durch gemeinsame Verlautbarungen der Spitzenorganisati-
+onen der Sozialversicherung erläutert.
+
+1 Das Bundesministerium für Arbeit und Soziales hat die Gemeinsamen Grundsätze nach Anhörung des Bundesministeri-
+   ums für Gesundheit und der Bundesvereinigung Deutscher Arbeitgeberverbände e.V. am 17.12.2025 genehmigt;
+                                                                           Seite 1 von 15
+Inhaltsverzeichnis
+
+1. Allgemeines ............................................................................................... 4
+2. Datenaustauschverfahren ........................................................................... 5
+
+      2.1 Grundlagen .................................................................................................................. 5
+      2.2 Steuerung der Datenaustauschverfahren....................................................................... 5
+      2.3 Krankenkassenkommunikationssystem (KKS)................................................................ 6
+      2.4 Einheitliches XML-basiertes Transportverfahren (eXTra) ............................................... 6
+
+3. Parameter für den Datenaustausch .............................................................. 8
+
+      3.1 Verfahrenskennung ...................................................................................................... 8
+      3.2 Weitergehende Beschreibung in den Verfahren ............................................................. 8
+      3.3 Verfahrensteilnehmer ................................................................................................... 8
+
+4. Datenaustauscharten .................................................................................. 9
+
+      4.1 Allgemeines ................................................................................................................. 9
+      4.2 Datenfernübertragung .................................................................................................. 9
+      4.2.1 Internet – E-Mail-Kommunikation ..................................................................................9
+      4.2.2 Internet – http(s)-Kommunikation ................................................................................10
+      4.2.3 Internet – (s)ftp(s)-Kommunikation ..............................................................................11
+      4.2.4 File Transfer, Access und Management over IP – FTAM over IP ....................................11
+      4.2.5 XML-Richtlinie ...............................................................................................................12
+      4.2.6 GKV-Kommunikationsserver .........................................................................................12
+      4.2.7 DSRV-Kommunikationsserver .......................................................................................13
+      4.3 Datenträger ................................................................................................................ 13
+      4.4 Zeichensätze .............................................................................................................. 13
+
+5. Sicherheitsverfahren ................................................................................. 14
+
+      5.1 Verschlüsselung und Signatur .................................................................................... 14
+      5.2 Gültigkeitsprüfung der Zertifikate............................................................................... 14
+      5.3 Überprüfung und Fortschreibung der IT-Sicherheit..................................................... 14
+      5.4 Elektronische Identitäten und Vertrauensdienste ........................................................ 15
+
+                                                                           Seite 2 von 15
+Anlagen
+
+An-      Titel
+lage
+         Krankenkassenkommunikationssystem
+  1      Auftragsdatei
+  2      eXTra (Einheitliches XML-basiertes Transportverfahren)
+  3      Verfahrenskennungen
+  4      Datenaustausch mit der Rentenversicherung
+  5      Datenaustausch mit der GKV
+  6      E-Mail
+  7      HTTP
+  8      FTP
+  9      FTAM over IP
+ 10      Nicht belegt
+ 11      XML-Richtlinie
+ 12      GKV-Kommunikationsserver
+ 13      Datenträger
+ 14      Zeichensätze
+ 15      Security Schnittstelle
+ 16      Kommunikationsserver der Deutschen Rentenversicherung
+ 17      Begriffe und Abkürzungsverzeichnis
+ 18      Schnittstelle für Digitale Gesundheitsanwendungen
+ 19      Kommunikation im Medizinwesen
+ 20      Synchroner Dialog
+ 21
+
+         Seite 3 von 15
+1. Allgemeines
+
+Der GKV-Spitzenverband, die Deutsche Rentenversicherung Bund, die Deutsche Rentenversiche-
+rung Knappschaft Bahn-See, die Bundesagentur für Arbeit sowie die Deutsche Gesetzliche Unfall-
+versicherung bestimmen in den nachfolgenden, gemeinsamen Grundsätzen
+
+     - die Datenaustauschverfahren,
+     - die Parameter für den Datenaustausch,
+     - die Datenaustauscharten,
+     - das Sicherheitsverfahren für den Datenaustausch und
+     - das Rückmeldeverfahren (soweit es nicht ein Verfahren des Datenaustauschs mit Arbeit-
+
+          gebern betrifft).
+
+Der weiter fortschreitende Wechsel von der papierbasierenden Kommunikation zur Datenfern-
+übertragung stellt die Systeme im Gesundheits- und Sozialwesen vor die besondere Anforderung,
+die technischen Rahmenbedingungen so zu gestalten, dass eine effiziente und auch effektive
+Kommunikation betrieben werden kann. So ist es von besonderer Bedeutung, dass die Kommuni-
+kationsverfahren möglichst einheitlich und transparent sind. Je einheitlicher diese Kommunikati-
+onssysteme sind, umso zuverlässiger und flexibler kann die Kommunikation betrieben werden.
+
+Zusätzliche Voraussetzung für den elektronischen Datenaustausch personenbezogener Daten ist,
+dass Vertraulichkeit, Integrität und Verbindlichkeit in gleicher Weise sichergestellt werden, wie
+beim herkömmlichen papiergebundenen Abrechnungsverfahren, z. B. durch verschlossene Um-
+schläge und persönliche Unterschriften. Im Gesundheits- und Sozialwesen werden hierfür zum
+Datenaustausch der beteiligten Partner Verschlüsselungsverfahren und elektronische Signaturen
+auf der Grundlage kryptographischer Verfahren eingesetzt. Die Nutzdaten müssen mit einem gül-
+tigen Zertifikat elektronisch signiert und verschlüsselt werden.
+
+                                                                           Seite 4 von 15
+2. Datenaustauschverfahren
+
+2.1 Grundlagen
+Der Datenaustausch im Sinne dieser gemeinsamen Grundsätze bedeutet, dass Daten zwischen ei-
+ner abgebenden Stelle und einer empfangenden Stelle per Datenfernübertragung (DFÜ) oder so-
+weit noch erforderlich, mittels Datenträger ausgetauscht werden. Bei der Gestaltung der Daten-
+fernübertragung und des Datenträgeraustausches ist die Vollständigkeit der regelungsbedürfti-
+gen Sachverhalte anhand der folgenden Liste zu prüfen:
+
+• Rechtliche Grundlage
+• Zweck und Anwendungsbereich
+• Teilnahmeberechtigte oder –verpflichtete
+• Anmeldeverfahren
+• Testverfahren
+• Beginn und Turnus des Datenaustausches
+• Bearbeitungsfristen, Verfügbarkeit
+• Datenaustauschart und ihre technischen Anforderungen
+• Zeichenvorrat / Code
+• Dateinamen, Verfahrenskennungen
+• Komprimierungsverfahren
+• Datenschutzmaßnahmen
+• Versandwege, Datenfernübertragungswege
+• Datenträgeraustausch, Datenfernübertragungsdienste, Datenübertragungssteuerung und hö-
+
+     here Kommunikationsfunktionen
+• Bereitstellung, Pflege, Löschen und Verbleib der Datenträger
+• Datensicherung und Dokumentation
+• Prüfung und Fehlerbehandlung
+• Haftung
+• Kostenregelung
+• Übergangsbestimmung
+
+2.2 Steuerung der Datenaustauschverfahren
+Der Datenaustausch zwischen den beteiligten Partnern steuert sich im Wesentlichen über den Da-
+teinamen der Datenlieferung. Dieser Dateiname ist codiert und ergibt sich aus einer Kombination
+aus Verfahrensmerkmalen und einer eindeutigen Ziffernfolge. Somit lässt sich, ohne auf den Da-
+teiinhalt zurückzugreifen, eine Zuordnung für die Weiterverarbeitung der Datenlieferung erken-
+nen. Eine detaillierte Beschreibung dieser Steuerung folgt im Kapitel 3.
+
+                                                                           Seite 5 von 15
+2.3 Krankenkassenkommunikationssystem (KKS)
+Das Krankenkassenkommunikationssystem beschreibt eine universelle Struktur von Daten, die
+per Datenfernübertragung wie auch per Datenträger übertragen werden können. Der Aufbau der
+Dateilieferung im KKS-Verfahren ist so definiert, dass unabhängig voneinander zwei korrespon-
+dierende Dateien übertragen werden. Dabei enthält die erste Datei die sog. Nutzdaten, welche in
+binärer Form vorliegen und verschlüsselt sein müssen. Die Dateistruktur bzw. der Satzaufbau die-
+ser Nutzdatendatei wird von der jeweiligen Fachanwendung definiert. Die zweite sog. Auftragsda-
+tei (Auftragssatz) wird unverschlüsselt übertragen und enthält die notwendigen Informationen,
+um die Nutzdatendatei transportieren (weiterleiten) und verarbeiten zu können. Dabei können je
+nach Übertragungsweg eine oder mehrere Stellen als Vermittlungsstellen (physikalische Empfän-
+ger) fungieren, nur die letztendlich adressierte Datenstelle (logischer Empfänger) kann die Nutz-
+daten entschlüsseln, weiterleiten oder verarbeiten. Das KKS-Verfahren erlaubt, mehrere Datenlie-
+ferungen in Form von Dateipaaren (Nutzdaten und Auftragsdatei) auf einem Datenträger zu über-
+tragen.
+
+     • Anlage 1- Krankenkassenkommunikationssystem
+          und
+
+     • Anlage 2 - Auftragsdatei
+
+2.4 Einheitliches XML-basiertes Transportverfahren (eXTra)
+Das „einheitliche XML-basierte Transportverfahren (eXTra-Standard)“ ist ein frei verfügbarer, von
+der „Arbeitsgemeinschaft für wirtschaftliche Verwaltung“ redaktionell gepflegter Standard für den
+Datenaustausch zwischen Wirtschaft und Verwaltung. In ihm wird der technische Rahmen, aller-
+dings nicht der Übertragungsweg, für standardisierte XML-Pakete festgelegt, die zwischen den
+Verfahrensbeteiligten übermittelt werden. Der eXTra-Standard kennt 6 unterschiedliche Rollen
+und 3 Ebenen:
+
+     • Rollen
+                o Erzeuger (Fachlicher Sender)
+                o Logischer Sender
+                o Physischer Sender
+                o Physischer Empfänger
+                o Logischer Empfänger
+                o Verwerter (fachlicher Empfänger)
+
+     • Ebenen:
+                o Nachrichtenebene
+                o Transportebene
+                o Logistikebene
+
+                                                                           Seite 6 von 15
+Der eXTra-Standard trifft keine Festlegungen zur Registrierung, Authentifizierung, zu Format und
+Struktur der fachlichen Nutzdaten, zu Übertragungsverfahren und -protokollen, zur Archivierung
+und zur Kommunikation innerhalb der Sender- bzw. Empfängerseite.
+Der eXTra-Standard beschreibt einen Baukasten an technischen Komponenten für den Datenaus-
+tausch. Für die einzelnen Fachverfahren können aus diesem Baukasten die notwendigen oder ge-
+wünschten Komponenten profiliert werden. Diese eXTra-Profile werden auf der Seite www.extra-
+standard.de veröffentlicht.
+Der eXTra-Standard wird für die Kommunikationsserver der Deutschen Rentenversicherung und
+der Gesetzlichen Krankenversicherung verwendet. Näheres ist in der Anlage 13 – GKV-Kommuni-
+kationsserver (siehe Abschnitt 4.2.6) und der Anlage 17 - Kommunikationsserver der Deutschen
+Rentenversicherung (siehe Abschnitt 4.2.7) geregelt.
+Die Dokumente zum eXTra-Standard werden bei der Datenstelle der Deutschen Rentenversiche-
+rung Bund, Berner Straße 1, 97084 Würzburg archiviert.
+
+     • Anlage 3 - eXTra
+
+                                                                           Seite 7 von 15
+3. Parameter für den Datenaustausch
+
+3.1 Verfahrenskennung
+Die Verfahrenskennung ist ein wichtiger Baustein bei der Generierung des (Transfer-) Dateina-
+mens der Nutzdatendatei und zur Identifikation der empfangenen Datei bei der Datenannahme-
+stelle. Die Verfahrenskennungen werden von den Fachverfahren beantragt und in einer Zusam-
+menfassung veröffentlicht. Das Feld VERFAHREN_KENNUNG ist in den Stellen 20-24 des Auftrags-
+satzes festgelegt.
+
+     • Anlage 4 - Verfahrenskennungen
+
+3.2 Weitergehende Beschreibung in den Verfahren
+In den Verfahren wird der Dateityp und die Übertragungsrichtung eindeutig pro Verfahren (bei
+Datenaustausch z. B. der Nachrichtentyp, sofern eindeutig pro Lieferung) im Feld VERFAH-
+REN_KENNUNG_SPEZIFIKATION festgelegt. Damit ist pro Verfahren eine weitere Unterscheidung
+der Nachrichtenart möglich. Dieses Feld kann benutzt werden, um die Verarbeitungspriorität aus-
+zudrücken. Das Feld VERFAHREN_KENNUNG_SPEZIFIKATION ist in den Stellen 28-32 des Auftrags-
+satzes festgelegt.
+
+     • Anlage 4 - Verfahrenskennungen
+
+3.3 Verfahrensteilnehmer
+Zur Sicherstellung aller Funktionen im Datenaustausch müssen alle teilnehmenden Kommunikati-
+onspartner bekannt sein. Ebenso die untereinander auszutauschenden Daten, die sich über die
+Verfahrenskennungen identifizieren. Für festgelegte Verfahren haben die Teilnehmer Besonder-
+heiten definiert, siehe dazu folgende Anlagen:
+
+      • Anlage 5 - Datenaustausch mit der Rentenversicherung
+           und
+
+      • Anlage 6 - Besonderheiten des GKV-internen Datenaustauschs und des Datenaustauschs
+           der GKV mit Leistungserbringern
+
+                                                                           Seite 8 von 15
+4. Datenaustauscharten
+
+4.1 Allgemeines
+Grundsätzlich ist die Datenfernübertragung (DFÜ) als Austauschart zu verwenden. Das verwen-
+dete Datenaustauschverfahren wird bilateral und einvernehmlich zwischen Datenlieferant und Da-
+tenempfänger nach Maßgabe dieser „Gemeinsamen Grundsätze Technik“ inkl. aller Anlagen ver-
+einbart. Soweit eine Fernübertragung aus technisch/wirtschaftlichen Gründen nicht realisiert
+werden kann, können die beteiligten Stellen auf einvernehmlicher Basis Datenträger vereinbaren.
+
+Im KKS-Verfahren erfolgt die Übertragung jeder verschlüsselten Nutzdatendatei als separate Da-
+tei. Nach der Übertragung einer Nutzdatendatei wird die dazugehörige Auftragsdatei übertragen.
+Ein Übertragungsvorgang besteht aus der Übertragung dieser zwei Dateien in der festgelegten
+Reihenfolge.
+
+Im eXTra-Verfahren werden die Routinginformationen im Header, die verschlüsselte Base64 co-
+dierte Nutzdatendatei im Nachrichtenbody in einer einzigen XML-Nachricht übertragen.
+
+Die unter den Punkten 4.2 und 4.3 aufgeführten Datenaustauscharten unterliegen verfahrensab-
+hängig folgender Gültigkeit:
+
+                                   Arbeitgeberverfahren                                           Verfahren der
+                                                                                               Leistungserbringer
+Internet-E-Mail-Kommunikation           -
+Internet-http(s)-Kommunikation         -2                                                             zulässig
+Internet-(s)ftp(s)-Kommunikation        -                                                             zulässig
+FTAM                                    -                                                             zulässig
+X.400                                   -                                                             zulässig
+GKV-Kommunikationsserver (eXTra)   zulässig                                                           zulässig
+DSRV-Kommunikationsserver (eXTra)  zulässig
+Datenträger                             -                                                                   -
+                                                                                                      zulässig
+                                                                                                      zulässig
+
+4.2 Datenfernübertragung
+4.2.1 Internet – E-Mail-Kommunikation
+Mit dem standardisierten E-Mail-Verfahren wird die bisherige elektronische Kommunikation zwi-
+schen Leistungserbringern und Annahmestellen als dateiorientierte Übertragung beibehalten. Es
+werden eine verschlüsselte Nutzdatendatei mit den eigentlichen Meldungen und ein Auftragssatz
+mit Routinginformationen als Anhang an die E-Mail gehängt und versendet.
+
+2 Zulässig im Rahmen der Kommunikation über die Kommunikationsserver und ausschließlich https
+
+                                                                           Seite 9 von 15
+Um zu verhindern, dass die Meldungen verfälscht oder von Unberechtigten gelesen werden, wer-
+den sie nach den Vorgaben im Gesundheits- und Sozialwesen verschlüsselt.
+
+Pro E-Mail darf immer nur eine Nutzdaten- und eine Auftragsdatei übermittelt werden. Es ist
+nicht möglich, mehrere Dateipaare mit einer E-Mail zu versenden. Die E-Mail wird an die Annah-
+mestelle adressiert, dort empfangen, geprüft und weiterverarbeitet.
+
+Das E-Mail-Verfahren sieht eine Antwort-E-Mail vor. Ebenfalls werden fehlerhafte Datenlieferun-
+gen per E-Mail quittiert.
+
+     • Anlage 7 - E-Mail
+
+4.2.2 Internet – http(s)-Kommunikation
+Es werden die beiden Übertragungsverfahren HTTP und HTTPS3 zur Kommunikation über das In-
+ternet angeboten. Die elektronische Kommunikation zwischen Arbeitgebern, Leistungserbringern
+und Annahmestellen ist dateiorientiert. Es werden eine Nutzdaten-Datei mit den eigentlichen
+Nachrichten und ein Auftragssatz mit Routinginformationen gebildet.
+
+Um zu verhindern, dass Meldungen verfälscht oder von Unberechtigten gelesen werden, werden
+die Nutzdaten verschlüsselt. Hier werden im Gesundheits- und Sozialwesen etablierte Verfahren
+verwendet, die jeweils gültige Security-Schnittstelle ist bindend.
+
+Das Übermittlungsverfahren über HTTP bzw. HTTPS kommt sowohl bei Übermittlungen an die
+GKV-Annahmestellen als auch bei Rückmeldungen an die Teilnehmer zur Anwendung. Die Über-
+mittlungen und Rückmeldungen erfolgen separat, da die Rückmeldungen nur auf eine Anfrage ei-
+nes Teilnehmers von den Datenannahmestellen bereitgestellt werden.
+
+Gemäß den Vorgaben des Gesundheits- und Sozialwesens verschlüsselt der Absender die Datei
+für den Empfänger, erstellt den dazugehörigen Auftragssatz und überträgt die Dateien mittels
+HTTP/HTTPS-Upload zu einem Server des Empfängers im Internet.
+
+Zur weiteren Erhöhung der Sicherheit des Datenaustauschs im Gesundheits- und Sozialwesen ist
+ab dem 01.01.2019 zwingend eine Transportverschlüsselung bei der Nutzung des http-Protokolls
+vorgeschrieben. Diese kann durch die Nutzung von https oder eines VPN-Tunnels sichergestellt
+werden.
+
+     • Anlage 8 - http https
+
+3 Für die Verfahren im Datenaustausch mit Arbeitgebern ist ausschließlich die Verwendung von https zugelassen.
+
+                                                                          Seite 10 von 15
+4.2.3 Internet – (s)ftp(s)-Kommunikation
+Das File Transfer Protocol (FTP) ist ein standardisiertes Netzwerkprotokoll zur Übertragung von
+Dateien über TCP/IP-Netzwerke. FTP wird benutzt, um Dateien vom Server zum Client (Herunter-
+laden), vom Client zum Server (Hochladen) oder clientgesteuert zwischen zwei Endgeräten zu
+übertragen. Außerdem können mit FTP Verzeichnisse angelegt und ausgelesen, sowie Verzeich-
+nisse und Dateien umbenannt oder gelöscht werden.
+
+Auch bei der FTP-Übertragung werden immer eine verschlüsselte Nutzdaten- und eine Auftrags-
+datei übermittelt; es ist allerdings möglich, mehrere Dateipaare in einer Übertragung zu über mit-
+teln.
+
+Die FTP-Übertragung beginnt mit einer Anmeldung vom Client (Absender) beim FTP-Server des
+Empfängers. Über diese Verbindung werden Befehle zum Server gesendet. Der Server antwortet
+auf jeden Befehl mit einem Statuscode, oft mit einem angehängten, erklärenden Text.
+
+Um eine geschützte Verbindung aufzubauen, können die erweiterten Protokolle Secure/SSH File
+Transfer Protocol (SFTP) und File Transfer Protocol über SSL/over TLS (FTPS) genutzt werden.
+
+SFTP ist eine für die Secure Shell (SSH) entworfene Alternative zum FTP, die Verschlüsselung er-
+möglicht.
+
+FTPS ist eine Methode zur Verschlüsselung des File Transfer Protocol (FTP); im Unterschied zu
+SFTP ist FTPS eine Kombination von FTP und dem Transport Layer Security (TLS).
+
+Zur weiteren Erhöhung der Sicherheit des Datenaustauschs im Gesundheits- und Sozialwesen ist
+ab dem 01.01.2019 zwingend eine Transportverschlüsselung bei der Nutzung des FTP vorge-
+schrieben. Diese kann durch die Nutzung von FTPS, SFTP oder eines VPN-Tunnels sichergestellt
+werden.
+
+     • Anlage 9 - ftp sftp ftps
+
+4.2.4 File Transfer, Access und Management over IP – FTAM over IP
+Das File Transfer, Access und Management (FTAM) dient sowohl der Unterstützung des Aus-
+tauschs vollständiger Dateien als auch dem Lesen und Ändern von Dateiausschnitten, Dateiattri-
+buten und Inhaltsverzeichnissen. Um dies unabhängig von der jeweiligen im System implemen-
+tierten Dateiorganisation zu gewährleisten, verwendet FTAM ein logisches Dateisystem, den Vir-
+tual Filestore. Dieser Virtual Filestore wird durch die jeweilige Herstellerimplementierung auf das
+reale System abgebildet.
+
+                                                                          Seite 11 von 15
+Der Zugang zu den entfernten Dateien erfolgt dabei nicht unmittelbar, sondern über Dienste der
+dort installierten FTAM-Software, ist also nicht mit einem allgemeinen Zugang zum entfernten
+System gleichzusetzen.
+
+Auch bei der FTAM-Übertragung werden immer eine verschlüsselte Nutzdaten- und eine Auf-
+tragsdatei übermittelt; es ist allerdings möglich, mehrere Dateipaare in einer Übertragung zu
+übermitteln.
+
+Die Verbindungsaufnahme zwischen FTAM-Initiator und -Responder erfolgt über eine Anmel-
+deprozedur. Dabei wird entschieden, ob der Nutzer berechtigt ist, Zugriff auf das System zu er-
+halten. Im Anschluss daran erfolgt die protokollierte Dateiübertragung.
+
+Für den Datenaustausch im Gesundheits- und Sozialwesen ist ausschließlich die Nutzung von
+FTAM over IP zulässig.
+
+     • Anlage 10 – FTAM over IP
+
+4.2.5 XML-Richtlinie
+Durch die Schaffung einer einheitlichen XML-Richtlinie sollen sämtliche XML-Aktivitäten im Um-
+feld der Sozialversicherung zentralisiert und gebündelt werden. Durch deren modularisierten Auf-
+bau sollen so zukünftig einheitliche und integrierte XML-Schnittstellen entwickelt werden können.
+Dies kann mittel– und langfristig zu Effizienzsteigerungen und Kosteneinsparungen führen. Ins-
+besondere lassen sich durch dieses Vorgehen die Implementierungsaufwände drastisch reduzie-
+ren.
+
+Durch die XML-Richtlinie wird für den Datenaustausch auf Basis von XML ein standardisiertes und
+einheitliches Rahmenwerk geschaffen, mit dessen Hilfe alle zukünftigen XML-Schnittstellenimple-
+mentierungen vollständig beschrieben werden können. Hierbei werden nicht nur die Sprachele-
+mente und konkreten Entwurfsprinzipien vorgeschrieben, sondern auch die Grundstrukturen ver-
+fahrensneutral festgelegt.
+
+Sofern im Datenaustausch XML-Strukturen verwendet werden, die durch die Koordinierungsstelle
+für IT-Standards (KoSIT) bundeseinheitlich vorgeben sind, ist die Richtlinie nicht anzuwenden.
+
+     • Anlage 12 – XML Richtlinie
+
+4.2.6 GKV-Kommunikationsserver
+Die Spitzenorganisationen der Krankenkassen auf Bundesebene haben die Einrichtung und den
+Betrieb eines zentralen GKV-Kommunikationsservers umgesetzt, um ein zentrales „Tor“ sowohl
+
+                                                                          Seite 12 von 15
+für die Annahme der Meldungen der Arbeitgeber, als auch zum Abruf der Rückmeldungen von
+den Datenannahme- und Verteilstellen (DAV) bereitzustellen.
+
+Dieser Kommunikationsserver etabliert ein zentrales elektronisches Verfahren, um vom Arbeitge-
+ber Meldungen zu den Datenannahmestellen und deren Rückmeldungen zurück an den Arbeitge-
+ber zu senden.
+
+Die Übertragung zum Kommunikationsserver erfolgt über das Hypertext Transfer Protocol Secure
+(HTTPS), die übertragenen Daten werden dabei nach dem eXTra-Standard aufbereitet.
+
+Der eXTra-Standard stellt alle Elemente, die heute bereits im Auftragssatz existieren, im XML -
+Format zum Transport zur Verfügung. Somit können die Transportinformationen aus dem Auf-
+tragssatz und die verschlüsselten Nutzdaten wie bisher geliefert werden.
+
+     • Anlage 13 - GKV-Kommunikationsserver
+
+4.2.7 DSRV-Kommunikationsserver
+Die Datenstelle der Rentenversicherung (DSRV) betreibt ebenfalls einen zentralen Kommunikati-
+onsserver. Dieser DSRV-Kommunikationsserver nimmt damit als zentrales "Tor" die für die DSRV
+registrierten Verfahren nach dem allgemeinen eXTra-Standard entgegen.
+
+Der Datenaustausch erfolgt über das HTTPS. Bei dem HTTPS erfolgt eine Verschlüsselung auf
+Transportebene. Zusätzlich sind die Daten nach den jeweils geltenden Anforderungen der Anlage
+16 verschlüsselt.
+
+     • Anlage 17 - RV-Kommunikationsserver
+
+4.3 Datenträger
+Grundsätzlich ist die Datenfernübertragung (DFÜ) als Austauschart zu verwenden. Soweit eine
+Fernübertragung aus technischen/wirtschaftlichen Gründen nicht realisiert werden kann, können
+die beteiligten Stellen auf einvernehmlicher Basis Datenträger vereinbaren, soweit dies nicht
+durch gesetzliche oder vertragliche Regelungen ausgeschlossen ist.
+
+     • Anlage 14 - Datenträger
+
+4.4 Zeichensätze
+Zur Vermeidung von technischen Problemen bei der Übertragung von Daten zwischen Systemen
+unterschiedlicher Basis ist es unabdingbar, sich vor dem vereinbarten Datenaustausch auf einen ,
+der in der Anlage 15 aufgeführten, für alle beteiligte Systeme gültigen Zeichensatz zu verständi-
+gen.
+
+                                                                          Seite 13 von 15
+     • Anlage 15 – Zeichensätze
+
+5. Sicherheitsverfahren
+
+5.1 Verschlüsselung und Signatur
+Eine zwingende Voraussetzung für den sicheren elektronischen Datenaustausch personenbezo-
+gener Daten ist, dass Vertraulichkeit, Integrität und Verbindlichkeit in gleicher Weise gewährleis-
+tet werden, wie beim herkömmlichen papiergebundenen Meldeverfahren, z. B. durch verschlos-
+sene Umschläge. Im Gesundheits- und Sozialwesen werden hierfür zum Datenaustausch mit Ar-
+beitgebern und Leistungserbringern Verschlüsselungsverfahren und die digitale Signatur auf der
+Grundlage kryptographischer Verfahren eingesetzt. Dabei nutzt jeder Beteiligte zwei Schlüssel;
+einen öffentlichen und einen privaten Schlüssel. Die Nachrichten werden von dem Absender zu-
+nächst mit seinem privaten Schlüssel signiert und bei der folgenden Verschlüsselung unter Nut-
+zung des öffentlichen Schlüssels des Empfängers unkenntlich gemacht. Dieser kann nun als Ein-
+ziger die Nachricht unter Nutzung seines privaten Schlüssels auslesen; über die Signatur wird zu-
+sätzlich die Identität des Absenders geprüft. Mit diesem Verfahren wird sichergestellt, dass nur
+die vom Absender berechtigten Empfänger Nachrichten lesen können.
+
+5.2 Gültigkeitsprüfung der Zertifikate
+Bei der Datenannahme muss das Zertifikat des Absenders auf Gültigkeit überprüft werden.
+
+     • Anlage 16 - Security Schnittstelle
+
+5.3 Überprüfung und Fortschreibung der IT-Sicherheit
+Um die Sicherheit des Datenaustauschs im Gesundheits- und Sozialwesen langfristig zu gewähr-
+leisten, ist es von Zeit zu Zeit erforderlich, die kryptographischen Verfahren hinsichtlich der Not-
+wendigkeit von Änderungen zu prüfen. Grundlage bei der Ermittlung der Änderungsbedarfe bil-
+den die strengen Empfehlungen aus der Bekanntmachung zur elektronischen Signatur nach dem
+Signaturgesetz und der Signaturverordnung (Algorithmenkatalog) der Bundesnetzagentur für
+Elektrizität, Gas, Telekommunikation, Post und Eisenbahn sowie aus der Technischen Richtlinien
+TR-02102-1, TR-02102-2 und TR-02102-4 des Bundesamtes für Sicherheit in der Informations-
+technik (BSI). Es sind folgende Dokumente maßgeblich:
+
+     • Die Verordnung (EU) Nr. 910/2014 (eiDAS-Verordnung) sowie ergänzend das Vertrauens-
+          dienstegesetz in der aktuellen Fassung vom 18.07.2017
+
+     • BSI Technische Richtlinie TR-02102-1 „Kryptographische Verfahren: Empfehlungen und
+          Schlüssellängen“
+
+     • BSI Technische Richtlinie TR-02102-2 „Kryptographische Verfahren: Verwendung von
+          Transport Layer Security (TLS)“
+
+                                                                          Seite 14 von 15
+     • BSI Technische Richtlinie TR-02102-4 „Kryptographische Verfahren: Verwendung von
+          Secure Shell (SSH)“
+
+Die o. g. Technischen Richtlinien des BSI werden im Jahresrhythmus veröffentlicht und anschlie-
+ßend in einem Gremium, welches sich aus Experten aller Träger der Sozialversicherung und ex-
+ternen Spezialisten zusammensetzt, auf ihre Relevanz für die Security Schnittstelle im Gesund-
+heits- und Sozialwesen analysiert.
+
+Aufgrund der Gültigkeit der PCA-Zertifikate von 7 Jahren und der CA-Zertifikate von 5 Jahren, ist
+turnusgemäß eine Erneuerung dieser Zertifikate erforderlich. Da sich Änderungen an den genutz-
+ten kryptografischen Verfahren meist nur in Verbindung mit neuen CA-Zertifikaten realisieren
+lassen, ist deren Erneuerung in der Regel ein geeigneter Zeitpunkt zur Umsetzung dieser Ände-
+rungen, zumal auch das BSI seine Bewertung und Empfehlung zur Sicherheit dieser Verfahren für
+einen Zeitraum von 6 bis 7 Jahre erstellt.
+
+In diesem Dokument werden keine Aussagen hinsichtlich des Datenschutzes bei den Trägern im
+Gesundheits- und Sozialwesen getroffen. Dieser liegt in deren eigenen Verantwortung und wird in
+den Paragrafen 67 bis 85a im Zweiten Kapitel des SGB X geregelt.
+
+5.4 Elektronische Identitäten und Vertrauensdienste
+Zum 1. August 2013 trat das E-Government-Gesetz (EGovG) in Kraft. Dort sind die Verwaltungs-
+leistungen der Körperschaften des Bundes und der Länder explizit enthalten, wenn sie Bundes-
+recht ausführen (vgl. §1 Abs.1, Abs. 2 EGovG).
+
+Darauf aufbauend hat das BSI die Technische Richtlinie TR-03107-1 „Elektronische Identitäten
+und Vertrauensdienste im E-Government – Teil 1: Vertrauensniveaus und Mechanismen“ in der
+Version 1.1.1 am 07.05.2019 veröffentlicht. Diese beschreibt im Detail, wie die Prozesse zu einer
+sicheren Authentifizierung und Identifizierung im E-Government für die verschiedenen Schutzbe-
+darfe aussehen sollen. Zusätzlich verweist die TR-03107-1 auf die Vorgaben der TR-03147 „Ver-
+trauensniveaubewertung von Verfahren zur Identitätsprüfung natürlicher Personen“, wie Verfah-
+ren zur initialen Identitätsprüfung hinsichtlich ihres Vertrauensniveaus zu bewerten sind.
+
+Die Teilnehmer am elektronischen Datenaustausch haben folglich sicherzustellen, dass die Vor-
+gaben der einschlägigen BSI-Richtlinien umgesetzt sind. Die Umsetzung ist auf Anforderung, im
+Rahmen einer Selbsterklärung, bei Ausstellung des Zertifikates abzugeben.
+
+                                                                          Seite 15 von 15
+

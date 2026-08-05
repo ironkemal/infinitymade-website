@@ -1,0 +1,52 @@
+                                        Anlage 4
+                           Begleitzettel für Urbelege
+
+ zu den Richtlinien der Spitzenverbände der Krankenkassen nach § 302 Abs. 2 SGB V
+über Form und Inhalt des Abrechnungsverfahrens mit „Sonstigen Leistungserbringern“
+
+               sowie mit Hebammen und Entbindungspflegern (§ 301a SGB V)
+
+Stand der Richtlinien:  20.11.2006
+Stand der Anlage 4:     01.11.2006
+Version:                2.0
+Anzuwenden ab:          01.12.2006
+     Richtlinien über  Anlage 4                  Seite: 2
+  Form und Inhalt des    Inhalt
+Abrechnungsverfahrens
+
+    nach § 302 SGB V
+
+Allgemeines
+
+(1) Der Begleitzettel für Urbelege ist für die „Sonstigen Leistungserbringer„/Abrechnungs-
+     stellen konzipiert, die ihre Abrechnung mit Mitteln der elektronischen Datenverarbei-
+     tung erstellen und gemäß Anlage 1 (Technische Anlage) an die Krankenkassen oder
+     einer von ihr benannten Stelle übermitteln.
+
+(2) Zur Sicherstellung der ordnungsgemäßen Abrechnung und späteren schnelleren Zu-
+     ordnung der Urbelege (ärztliche Verordnungsblätter, Berechtigungs- oder Reparatur-
+     scheine bzw. Kostenvoranschläge) bei den Krankenkassen oder bei einer von ihr be-
+     auftragten Stelle, ist das Ausfüllen und das Mitsenden eines Begleitzettels zwingend
+     erforderlich. Je Gesamtrechnung ist ein Begleitzettel auszufüllen.
+
+(3) Bei der Abrechnung durch eine Abrechnungsstelle ist der Begleitzettel für jede Ge-
+     samtrechnung innerhalb einer Sammelrechnung mitzuliefern.
+
+Inhalte des Begleitzettels für Urbelege
+
+(1) Der Begleitzettel für Urbelege hat die folgenden Daten zu enthalten:
+
+     IK der Krankenkasse,
+     Name der Krankenkasse,
+     Name/Anschrift des Leistungserbringers/Abrechnungsstelle,
+     IK des Leistungserbringers/Abrechnungsstelle,
+     Rechnungsnummer der Gesamtrechnung,
+     Rechnungsdatum der Gesamtrechnung,
+     Anzahl der Urbelege.
+
+(2) Abrechnungsstellen haben über die o.g. Angaben hinaus, zusätzlich zu jeder
+     Gesamtrechnung innerhalb einer Sammelrechnung, jeweils die erste und letzte
+     Belegnummer der zugehörigen Urbelege anzugeben.
+
+Anlage 4  Version 2.0, anzuwenden ab 01.12.2006  IKK-Bundesverband
+
