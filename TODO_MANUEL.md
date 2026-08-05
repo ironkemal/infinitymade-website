@@ -5,6 +5,35 @@
 
 ---
 
+## 🔴 0. ACİL — SIZAN KİMLİK BİLGİLERİ (2026-08-05 tespit edildi)
+
+> **Neden acil:** Depo GitHub'da **public** (`api.github.com` 200 döndü) ve bu değerler
+> **git geçmişinde** duruyor. Dosyayı silmek yetmez — geçmişten okunabilir.
+> Bu iki madde **sadece sen** yapabilirsin, kod tarafı temizlendi.
+
+### 0.1 Fal AI anahtarını iptal et ⬜
+- **Nerede:** `ai chatbot proje/CLAUDE.md:186` → `const FAL_KEY = '...'`
+- **Ne zamandır açık:** commit `961404e` / `46f338c` — **22.05.2026'dan beri (~2,5 ay)**
+- **Yapılacak:** [fal.ai](https://fal.ai) panelinden anahtarı **revoke** et. Yeni anahtar
+  üretmeye gerek yok — bu proje ÖLÜ, kullanılmıyor.
+- **Neden yine de acil:** kullanılmayan bir anahtar da faturalandırılabilir.
+- Çalışma ağacındaki değer 2026-08-05'te temizlendi, **geçmişte duruyor.**
+
+### 0.2 Test hesabı şifresini değiştir ⬜
+- **Nerede:** `PODOLOGIE_ORCHESTRATOR_PROMPT.md:36` → e-posta + şifre açık
+- **Yapılacak:** Supabase Auth'tan o hesabın şifresini değiştir. Yeni şifreyi **hiçbir
+  `.md` dosyasına yazma** — env var veya şifre yöneticisinde tut.
+- Çalışma ağacındaki değer 2026-08-05'te temizlendi, **geçmişte duruyor.**
+
+### 0.3 (opsiyonel, sonra) Git geçmişini temizleme ⬜
+- 0.1 ve 0.2 yapıldıktan **sonra** düşünülür. `git filter-repo` ile geçmiş yazılabilir ama
+  force-push gerekir ve depo geçmişini bozar. **Anahtar iptal edildiyse aciliyeti kalmaz** —
+  iptal edilmiş bir anahtarın geçmişte durması zararsızdır.
+- Alternatif: depoyu private yapmak (ama bkz. `feedback_vercel_private_repo` — daha önce
+  Vercel deploy'u durdurmuştu).
+
+---
+
 ## 1. Google Fonts Self-Hosting — KALAN 13 DOSYA
 
 **Durum:** `fonts/` klasorune Inter fontlari indirildi (`inter-0.ttf` ... `inter-5.ttf`) ve `fonts/inter.css` olusturuldu. Ancak ilk PowerShell scripti sadece `wght@400;500;600;700;800;900` linkini yakaladi. Su anki dosyalarda farkli weight kombinasyonlari var.
@@ -169,3 +198,32 @@
 | **P2** | n8n webhook + Twilio production gecisi | WhatsApp calisirligi |
 | **P3** | Cache busting versiyonlari guncelle | Kullanici deneyimi |
 
+
+---
+
+## GKV-Datenaustausch otomatik izleme + AI ön inceleme (FİKİR — 2026-08-04)
+
+**Bugünkü durum:** `gkv-datenaustausch.de` sayfasına yeni belge yüklendiğinde mevcut n8n
+workflow'u Telegram'dan "yeni dosya geldi" bildirimi atıyor. Sonrası tamamen manuel.
+
+**Hedef zincir:**
+1. Yeni belge tespit edilir (mevcut izleme)
+2. Otomatik indirilir → `Handbücher/` altına
+3. `pdftotext -enc UTF-8 -layout` ile `.txt` üretilir
+4. Bir AI worker belgeyi okur ve `Handbücher/INDEX.md` protokolüne göre kaydını üretir:
+   ne, kapsam, `Version:`, `Anzuwenden ab:`, anahtar bölümler
+5. **Sürüm karşılaştırması:** aynı belgenin önceki sürümü arşivde varsa fark çıkarılır
+   (`Änderungshistorie` bölümü buna uygun)
+6. Etki değerlendirmesi: değişiklik `SPEC-RULES.md`'deki bir kuralı etkiliyor mu?
+   Etkiliyorsa hangi kod dosyası (`blankoRules.js`, `billing/dta/` …) gözden geçirilmeli?
+7. Sonuç Telegram'a **özet + etki + önerilen aksiyon** olarak düşer; kod değişikliği
+   otomatik YAPILMAZ, sadece önerilir
+
+**Neden değerli:** §302 belgeleri sessizce sürüm atlıyor (ör. Anlage 3 V22 → 01.02.2027).
+Kaçırılan bir sürüm geçişi = reddedilen fatura = müşteri parasını alamaz.
+
+**Dikkat — G8 kuralı:** yeni n8n workflow'u AÇILMAZ. Bu, **mevcut** izleme workflow'unun
+genişletilmesi olarak yapılır; ağır iş `api-backend` tarafında veya yerel bir script'te çalışır.
+
+**Bağlantılı:** `Handbücher/INDEX.md` (arşiv protokolü), `Handbücher/SPEC-RULES.md`
+(süzülmüş kurallar), `.claude/agents/gkv-302.md` (uzman ajan)
