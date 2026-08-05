@@ -65,19 +65,6 @@ export async function adminRpc(fn, body) {
 }
 
 /**
- * Get decrypted secret for a business via Vault helper.
- * kind: 'whatsapp_access_token'
- */
-export async function getBusinessSecret(userId, kind) {
-  const { ok, data } = await adminRpc('business_get_secret', {
-    p_user_id: userId,
-    p_secret_kind: kind,
-  });
-  if (!ok) return null;
-  return typeof data === 'string' ? data : data?.[0] || null;
-}
-
-/**
  * Service-role fetch for Supabase Auth Admin endpoints (e.g. /auth/v1/admin/users).
  */
 export async function adminAuthFetch(path, options = {}) {

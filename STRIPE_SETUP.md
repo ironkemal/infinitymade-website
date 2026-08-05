@@ -1,5 +1,24 @@
 # Stripe Setup — Required ENV vars
 
+> ⚠️ **Bu dosya Test Mode döneminde yazıldı.** Stripe **2026-06-11'den beri LIVE** —
+> gerçek ödeme alınıyor. Aşağıdaki env var **adları** hâlâ geçerli, ama değerler ve
+> price ID'leri LIVE karşılıklarıyla değiştirilmiş olmalı.
+>
+> **LIVE ürün/fiyat oluşturma scripti:** `stripe-live-setup.js`
+> (`node stripe-live-setup.js sk_live_XXXXX`)
+>
+> **Geçerli fiyatlar (2026-08-05'te üç kaynaktan doğrulandı — `index.html`,
+> chatbot bilgi tabanı, `stripe-live-setup.js`):**
+>
+> | Plan | Aylık | Yıllık (toplam) | Yıllık (aylık karşılığı) |
+> |---|---|---|---|
+> | Starter | 29 € (`2900`) | 300 € (`30000`) | 25 € |
+> | Professional | 49 € (`4900`) | 504 € (`50400`) | 42 € |
+> | Klinik | 99 € (`9900`) | 1.008 € (`100800`) | 84 € |
+> | Enterprise | bireysel | — | — |
+>
+> Arşivdeki eski dosyalarda dolaşan **39/59** ve **89/149/219** setleri **geçersizdir.**
+
 Set these in **Vercel → Project Settings → Environment Variables** before testing checkout.
 
 ## 1) Stripe API keys
