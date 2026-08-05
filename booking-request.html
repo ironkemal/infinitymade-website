@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="theme-color" content="#FFFEFB" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
-  <link rel="stylesheet" href="booking-request.css?v=20260701" />
+  <link rel="stylesheet" href="booking-request.css?v=20260725" />
 </head>
 <body>
 
@@ -293,36 +293,6 @@
                 <label for="gkvHeilmittel">Heilmittel / Behandlungsart <span class="req">*</span></label>
                 <select id="gkvHeilmittel">
                   <option value="">Bitte wählen…</option>
-                  <optgroup label="Physiotherapie">
-                    <option value="KG">KG</option>
-                    <option value="KGG">KGG</option>
-                    <option value="KMT">KMT</option>
-                    <option value="MT">MT</option>
-                    <option value="Manuelle Lymphdrainage">Manuelle Lymphdrainage</option>
-                    <option value="Schlingentisch">Schlingentisch</option>
-                    <option value="Thermotherapie">Thermotherapie</option>
-                  </optgroup>
-                  <optgroup label="Ergotherapie">
-                    <option value="Motorisch-funktionell">Motorisch-funktionell</option>
-                    <option value="Sensomotorisch-perzeptiv">Sensomotorisch-perzeptiv</option>
-                    <option value="Neuropsychologisch">Neuropsychologisch</option>
-                    <option value="Psychosozial">Psychosozial</option>
-                  </optgroup>
-                  <optgroup label="Logopädie">
-                    <option value="Schlucktherapie">Schlucktherapie</option>
-                    <option value="Stimmtherapie">Stimmtherapie</option>
-                    <option value="Sprachtherapie">Sprachtherapie</option>
-                    <option value="Redeflussstörung">Redeflussstörung</option>
-                  </optgroup>
-                  <optgroup label="Podologie">
-                    <option value="Hornhautabtragung">Hornhautabtragung</option>
-                    <option value="Nagelpflege">Nagelpflege</option>
-                    <option value="Nagelkorrekturspange">Nagelkorrekturspange</option>
-                    <option value="Druckentlastung">Druckentlastung</option>
-                  </optgroup>
-                  <optgroup label="Sonstiges">
-                    <option value="Sonstiges">Sonstiges (Freitext)</option>
-                  </optgroup>
                 </select>
                 <span class="br-field-error" id="gkvHeilmittelError"></span>
               </div>
@@ -649,10 +619,30 @@
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
-  import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260701';
+  import { attachDiagnoseSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260726';
   const _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  document.addEventListener('DOMContentLoaded', () => {
-    icd10Autocomplete(document.getElementById('gkvIcd10'), _sb);
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Rank suggestions by the practice's Fachbereich, same as inside the
+    // dashboard. Falls back to unranked search if the sector can't be read.
+    let bereich = null;
+    const ownerId = new URLSearchParams(location.search).get('business');
+    if (ownerId) {
+      const { data } = await _sb.rpc('public_praxis_sector', { p_owner_id: ownerId });
+      bereich = data || null;
+    }
+    attachDiagnoseSearch(document.getElementById('gkvIcd10'), _sb, { bereich, kind: 'icd' });
+
+    // Heilmittel-Auswahl aus dem Katalog statt der früheren fest verdrahteten
+    // <optgroup>-Liste. Zeigt nur, was zum Fachbereich der Praxis passt und
+    // heute gültig ist. Ohne erkannten Fachbereich: alles.
+    const hmSel = document.getElementById('gkvHeilmittel');
+    if (hmSel) {
+      const rows = await searchHeilmittel(_sb, '', { bereich, limit: 200 });
+      if (rows.length) {
+        hmSel.innerHTML = heilmittelOptionsHtml(rows, '', 'Bitte wählen…')
+          + '<option value="Sonstiges">Sonstiges (Freitext)</option>';
+      }
+    }
   });
 </script>
 </body>

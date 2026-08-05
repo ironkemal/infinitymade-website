@@ -1040,3 +1040,28 @@ html, body {
 .icd10-dropdown-item:hover,
 .icd10-dropdown-item.active { background: #f1f5f9; }
 .icd10-dropdown:empty { display: none; }
+.icd10-dropdown-item .icd-title { flex: 1; min-width: 0; }
+/* Heilmittelkatalog-Diagnosegruppen (DF, NF, QF, UI1, WS2, EN1, SP6 …) */
+.icd10-dropdown-item.is-dg .icd-code { color: #15803d; }
+.icd10-dropdown-item .icd-badge {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 10px;
+  letter-spacing: .02em;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+/* Separator before results outside the practice's own Fachbereich */
+.icd10-dropdown-sep {
+  padding: 6px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #64748b;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+}

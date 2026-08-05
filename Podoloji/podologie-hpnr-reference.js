@@ -8,30 +8,41 @@
  */
 
 // ─── Diagnosegruppen ───────────────────────────────────────────────────────────
+//
+// ⚠ NICHT AUTORITATIV. Laufzeit-Quelle ist die Tabelle `diagnosegruppen`
+//   (Spalten label / icd_prefixes). Diese Datei wird nirgends importiert und
+//   dient nur als Nachschlagewerk. Bei Abweichung gilt die Tabelle.
+//
+//   `icd_prefixes` sind PRÄFIXE, keine vollständigen Kodes: In ICD-10-GM 2026
+//   ist z. B. G82.0 nur eine Gruppenüberschrift ("G82.0-"), abrechenbar sind
+//   erst die fünfstelligen Kodes G82.00–G82.09. Eine Liste exakter Kodes hätte
+//   jede echte QF-Verordnung fälschlich als ungültig markiert.
 
 export const DIAGNOSEGRUPPEN = {
   DF: {
     code: 'DF',
     label: 'Diabetisches Fußsyndrom',
     untergruppen: ['a', 'b', 'c'],
-    icd10: ['E10.74', 'E10.75', 'E11.74', 'E11.75', 'E12.74', 'E12.75', 'E13.74', 'E13.75', 'E14.74', 'E14.75', 'G63.2'],
+    icd10_prefixes: ['E10.74', 'E10.75', 'E11.74', 'E11.75', 'E12.74', 'E12.75', 'E13.74', 'E13.75', 'E14.74', 'E14.75'],
     befundpauschale_erlaubt: true,   // 78030 billable
     nagelspange_erlaubt: false,
     beschreibung: 'a=leicht/b=mittel/c=schwer',
   },
   NF: {
     code: 'NF',
-    label: 'Neuropathisches Fußsyndrom',
+    label: 'Krankhafte Schädigung am Fuß als Folge einer sensiblen oder sensomotorischen Neuropathie',
     untergruppen: null,
-    icd10: ['G60.0', 'G63.2', 'E10.40', 'E11.40'],  // Beispiele, nicht abschließend
+    // G60/G61/G62 komplett, G63.2* (Stern-Kode) sowie die diabetischen
+    // Neuropathie-Kodes E1x.40/.41.
+    icd10_prefixes: ['G60', 'G61', 'G62', 'G63.2', 'E10.4', 'E11.4', 'E12.4', 'E13.4', 'E14.4'],
     befundpauschale_erlaubt: true,
     nagelspange_erlaubt: false,
   },
   QF: {
     code: 'QF',
-    label: 'Querschnittslähmung',
+    label: 'Krankhafte Schädigung am Fuß als Folge eines Querschnittsyndroms',
     untergruppen: null,
-    icd10: ['G82.0', 'G82.1', 'G82.2', 'G82.3', 'G82.4', 'G82.5'],
+    icd10_prefixes: ['G82'],   // abrechenbar: G82.00–G82.59 (fünfstellig!)
     befundpauschale_erlaubt: true,
     nagelspange_erlaubt: false,
   },
@@ -39,7 +50,7 @@ export const DIAGNOSEGRUPPEN = {
     code: 'UI1',
     label: 'Unguis incarnatus Stufe 1',
     untergruppen: null,
-    icd10: ['L60.0'],  // NUR L60.0 erlaubt!
+    icd10_prefixes: ['L60.0'],  // NUR L60.0 erlaubt!
     befundpauschale_erlaubt: false,  // 78030 NICHT billable! (FAQ #11)
     nagelspange_erlaubt: false,
     lokalisation_pflicht: true,  // Zehe muss dokumentiert werden (Anlage 3)
@@ -48,7 +59,7 @@ export const DIAGNOSEGRUPPEN = {
     code: 'UI2',
     label: 'Unguis incarnatus Stufe 2-3 + Nagelspange',
     untergruppen: null,
-    icd10: ['L60.0'],  // NUR L60.0 erlaubt!
+    icd10_prefixes: ['L60.0'],  // NUR L60.0 erlaubt!
     befundpauschale_erlaubt: false,  // 78030 NICHT billable! (FAQ #11)
     nagelspange_erlaubt: true,   // 78610/78620 erlaubt
     lokalisation_pflicht: true,  // Zehe muss dokumentiert werden (Anlage 3)

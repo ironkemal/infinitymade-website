@@ -1,8 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { icd10Autocomplete } from './icd10-autocomplete.js?v=20260720';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260726';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
+import { attachPatientSearch } from './patient-suche.js?v=20260726';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -929,16 +930,51 @@ document.querySelectorAll('.modal-close,[data-modal]').forEach(btn => {
 // Modal'lar sadece X butonu, Abbrechen veya Escape tuşu ile kapanır.
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  // En son açık modal'ı bul (hidden olmayan en yüksek z-index'li)
+  // Der Termin-Seitenbereich liegt UNTER den Dialogen (z-index 400 vs 1000).
+  // Also zuerst einen offenen Dialog schließen und erst danach das Seitenpanel,
+  // sonst verschwindet das Panel unter einem noch offenen Dialog.
   const open = Array.from(document.querySelectorAll('.modal-overlay')).filter(m => !m.hidden);
   if (open.length) {
-    const top = open[open.length - 1];
-    closeModal(top.id);
+    closeModal(open[open.length - 1].id);
+    return;
   }
+  if (isBkActionOpen()) closeModal('bkActionModal');
 });
 
+/** Ist der Termin-Seitenbereich sichtbar? (nutzt display, nicht [hidden]) */
+function isBkActionOpen() {
+  const el = document.getElementById('bkActionModal');
+  return !!el && el.style.display !== 'none' && !el.hidden;
+}
+
 function openModal(id) { const el = document.getElementById(id); if (el) el.hidden = false; }
-function closeModal(id) { const el = document.getElementById(id); if (el) { el.hidden = true; if (id === 'bkActionModal') { el.style.display = 'none'; document.getElementById('mainArea')?.style.removeProperty('padding-right'); const calWrap = document.getElementById('calMainWrap'); if (calWrap) calWrap.style.paddingRight = ''; } } if (id === 'bkActionModal' && bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; } if (id === 'aiSuggestModal') { const wrap = document.getElementById('aiRetryFeedbackWrap'); if (wrap) { wrap.style.display = 'none'; const ta = document.getElementById('aiRetryFeedback'); if (ta) ta.value = ''; } } }
+/**
+ * Termin-Seitenbereich schließen — die EINZIGE Stelle, die das tun darf.
+ * Vorher war dieser Block an vier Stellen kopiert; wer eine davon vergaß,
+ * hinterließ ein verschobenes Layout (padding-right blieb stehen).
+ */
+function closeBkActionPanel() {
+  const el = document.getElementById('bkActionModal');
+  if (el) { el.hidden = true; el.style.display = 'none'; }
+  document.getElementById('mainArea')?.style.removeProperty('padding-right');
+  const calWrap = document.getElementById('calMainWrap');
+  if (calWrap) calWrap.style.paddingRight = '';
+  if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
+}
+
+function closeModal(id) {
+  if (id === 'bkActionModal') { closeBkActionPanel(); return; }
+  const el = document.getElementById(id);
+  if (el) el.hidden = true;
+  if (id === 'aiSuggestModal') {
+    const wrap = document.getElementById('aiRetryFeedbackWrap');
+    if (wrap) {
+      wrap.style.display = 'none';
+      const ta = document.getElementById('aiRetryFeedback');
+      if (ta) ta.value = '';
+    }
+  }
+}
 
 function showToast(msg, type = 'success') {
   const d = document.createElement('div');
@@ -1361,7 +1397,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2359,7 +2395,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2975,6 +3011,10 @@ function updateNoShowButton(startTime) {
 
 async function openBookingActionModal(booking) {
   bkActionBookingCache = booking;
+  // Hinweis vom vorherigen Termin zurücksetzen — sonst steht bei einem Termin
+  // ohne Verordnung noch der Reststand des zuletzt geöffneten da.
+  const _ftHint = document.getElementById('bkActionFolgeterminHint');
+  if (_ftHint) { _ftHint.textContent = ''; _ftHint.style.color = 'var(--text-muted)'; }
   if (booking.status === 'confirmed') {
     const endTime = new Date(booking.end_time || (new Date(booking.start_time).getTime() + 30*60000));
     if (endTime < new Date()) {
@@ -3038,6 +3078,21 @@ async function openBookingActionModal(booking) {
     document.getElementById('bkRxRemainingFill').style.width = pct + '%';
     document.getElementById('bkRxRemainingText').textContent = `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`;
 
+    // Hinweis unter "Folgetermin buchen": wie viele Sitzungen die Verordnung
+    // noch hergibt — und ob sie aufgebraucht ist.
+    const ftHint = document.getElementById('bkActionFolgeterminHint');
+    const ftBtn  = document.getElementById('bkActionFolgeterminBtn');
+    if (ftHint) {
+      if (remaining > 0) {
+        ftHint.textContent = `noch ${remaining} Behandlung${remaining === 1 ? '' : 'en'} auf dieser Verordnung`;
+        ftHint.style.color = 'var(--text-muted)';
+      } else {
+        ftHint.textContent = 'Verordnung aufgebraucht — Folgeverordnung nötig';
+        ftHint.style.color = 'var(--warning, #f59e0b)';
+      }
+    }
+    if (ftBtn) ftBtn.disabled = false;
+
     // Rezeptinfo structured fields
     const shortId = rx.id ? rx.id.slice(-4).toUpperCase() : '—';
     const icdPart = rx.icd10 ? ` (${rx.icd10})` : '';
@@ -3082,11 +3137,33 @@ async function openBookingActionModal(booking) {
 
     rxCard.hidden = false;
 
+    // Zuzahlung: nach GKV-Logik EINMAL je Verordnung, nicht je Sitzung.
+    // Offen → Betrag + Knopf zum Kassieren; erledigt → Datum + Rückgängig.
     const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
     if (rzgWarnEl) {
       if (rx.zuzahlung_befreit === false) {
+        const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : null;
+        const betragTxt = betrag != null ? betrag.toFixed(2).replace('.', ',') + ' €' : 'Betrag unbekannt';
         rzgWarnEl.hidden = false;
-        rzgWarnEl.textContent = `Rezeptgebühr offen: ${rx.zuzahlung_eur != null ? rx.zuzahlung_eur.toFixed(2) + ' €' : 'Betrag unbekannt'}`;
+        rzgWarnEl.dataset.rxId = rx.id;
+
+        if (rx.zuzahlung_kassiert_am) {
+          const am = new Date(rx.zuzahlung_kassiert_am)
+            .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          rzgWarnEl.style.background = 'rgba(34,197,94,0.12)';
+          rzgWarnEl.style.borderColor = 'rgba(34,197,94,0.3)';
+          rzgWarnEl.style.color = 'var(--success, #22c55e)';
+          rzgWarnEl.innerHTML =
+            `Zuzahlung kassiert: ${escapeHtml(betragTxt)} · ${escapeHtml(am)}`
+            + ` <button type="button" data-zuzahl="undo" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">rückgängig</button>`;
+        } else {
+          rzgWarnEl.style.background = 'rgba(251,191,36,0.12)';
+          rzgWarnEl.style.borderColor = 'rgba(251,191,36,0.3)';
+          rzgWarnEl.style.color = '#fbbf24';
+          rzgWarnEl.innerHTML =
+            `Rezeptgebühr offen: ${escapeHtml(betragTxt)}`
+            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:rgba(251,191,36,0.25);border:1px solid rgba(251,191,36,0.5);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">kassiert</button>`;
+        }
       } else {
         rzgWarnEl.hidden = true;
       }
@@ -3192,13 +3269,36 @@ async function openBookingActionModal(booking) {
         const tStr = d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
         const icon = statusIcon[b.status] || '⬜';
         const isCurrent = b.id === booking.id;
-        return `<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 6px;border-radius:4px;${isCurrent ? 'background:rgba(177,137,27,0.15);' : ''}">
+        // Anklickbar: springt auf den Termin im Seitenbereich. Vorher war die
+        // Liste reine Anzeige — man sah einen Vortermin, kam aber nicht hin.
+        const tag = isCurrent ? 'div' : 'button';
+        const extra = isCurrent
+          ? 'background:rgba(177,137,27,0.15);'
+          : 'width:100%;text-align:left;background:transparent;border:0;cursor:pointer;font:inherit;';
+        return `<${tag} ${isCurrent ? '' : `type="button" data-hist-id="${escapeHtml(b.id)}"`}
+          style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 6px;border-radius:4px;${extra}">
           <span>${icon}</span>
           <span style="color:var(--text-muted);width:40px;flex-shrink:0;">${dStr}</span>
           <span style="color:var(--text-muted);width:34px;flex-shrink:0;">${tStr}</span>
           <span style="color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.services?.title || '—'}</span>
-        </div>`;
+        </${tag}>`;
       }).join('');
+
+      if (!historyList.dataset.histWired) {
+        historyList.dataset.histWired = '1';
+        historyList.addEventListener('click', async (ev) => {
+          const btn = ev.target.closest('[data-hist-id]');
+          if (!btn) return;
+          // Die History-Zeilen tragen nur id/Zeit/Status — für das Panel muss
+          // der vollständige Datensatz nachgeladen werden.
+          const { data: full } = await supabase.from('bookings')
+            .select('*, services(title,color,code)')
+            .eq('id', btn.dataset.histId).maybeSingle();
+          if (full) openBookingActionModal(full);
+          else showToast('Termin nicht gefunden.', 'error');
+        });
+      }
+      window._bkHistCache = hist;
     } else {
       historyList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Keine Vortermine.</div>';
     }
@@ -4190,7 +4290,7 @@ async function saveFahrtEndHandler() {
   b.fahrt_ended_at = nowIso;
 
   closeModal('fahrtEndModal');
-  const _bkm1 = document.getElementById('bkActionModal'); if (_bkm1) { _bkm1.hidden = true; _bkm1.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
+  closeBkActionPanel();
   showToast('🏁 Fahrt abgeschlossen — im Fahrtenbuch eingetragen.');
   switchPanel('fahrtenbuch');
 }
@@ -4218,7 +4318,7 @@ async function handleTerminStarten() {
   }
 
   // Normal randevu: modal kapat, anamnese/notizen'e yönlendir
-  const _bkm2 = document.getElementById('bkActionModal'); if (_bkm2) { _bkm2.hidden = true; _bkm2.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
+  closeBkActionPanel();
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
   const sessionNote = await showInputModal({
@@ -4393,7 +4493,7 @@ async function handlePatientNichtErschienen() {
   const reason = await showAbsagegrundModal({ title: 'Grund für Nicht-Erscheinen', confirmText: 'Bestätigen' });
   if (reason === null) return;
 
-  const _bkm3 = document.getElementById('bkActionModal'); if (_bkm3) { _bkm3.hidden = true; _bkm3.style.display = 'none'; } document.getElementById('mainArea')?.style.removeProperty('padding-right');
+  closeBkActionPanel();
   if (bkActionTimer) { clearInterval(bkActionTimer); bkActionTimer = null; }
 
   try {
@@ -4495,16 +4595,7 @@ async function handleDirectAusfallrechnung() {
   };
 
   // Close the bkActionModal first
-  const _bkm = document.getElementById('bkActionModal');
-  if (_bkm) {
-    _bkm.hidden = true;
-    _bkm.style.display = 'none';
-  }
-  document.getElementById('mainArea')?.style.removeProperty('padding-right');
-  if (bkActionTimer) {
-    clearInterval(bkActionTimer);
-    bkActionTimer = null;
-  }
+  closeBkActionPanel();
 
   if (patientAddressIncomplete) {
     const existing = document.getElementById('_patientAddressModal');
@@ -5137,6 +5228,10 @@ async function initBkCustomerAutocomplete() {
     if (sfModal) sfModal.hidden = false;
     setTimeout(() => sfVorname?.focus(), 80);
   }
+
+  // Von außen aufrufbar machen, damit "Folgetermin buchen" im Seitenbereich den
+  // Patienten setzen kann — inklusive Hausbesuch-Panel und Verordnungskarten.
+  window._bkApplyLead = applyLeadById;
 
   function applyLeadById(id) {
     const lead = (window.bkAllLeads || []).find(l => l.id === id);
@@ -7409,6 +7504,87 @@ document.getElementById('bkActionAusfallBtn').addEventListener('click', handleDi
 document.getElementById('bkActionEditBtn').addEventListener('click', () => {
   if (!bkActionBookingCache) return;
   openBookingModal(bkActionBookingCache);
+});
+
+// Zuzahlung kassieren / rückgängig machen — einmal je Verordnung.
+document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-zuzahl]');
+  if (!btn) return;
+  const wrap = document.getElementById('bkRxZuzahlungWarn');
+  const rxId = wrap?.dataset.rxId;
+  if (!rxId) return;
+
+  const pay = btn.dataset.zuzahl === 'pay';
+  btn.disabled = true;
+
+  const patch = pay
+    ? { zuzahlung_kassiert_am: new Date().toISOString(),
+        zuzahlung_kassiert_von: currentSession?.user?.id || null }
+    : { zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null };
+
+  const { error } = await supabase.from('prescriptions').update(patch).eq('id', rxId);
+  if (error) {
+    btn.disabled = false;
+    showToast('Fehler: ' + error.message, 'error');
+    return;
+  }
+  showToast(pay ? 'Zuzahlung als kassiert vermerkt.' : 'Vermerk zurückgenommen.');
+
+  // Das Panel rendert aus bkActionBookingCache — ohne Nachziehen stünde dort
+  // weiter der alte Stand. Deshalb den zwischengespeicherten Datensatz mit
+  // patchen und erst dann neu aufbauen.
+  const cachedPs = Array.isArray(bkActionBookingCache?.prescription_sessions)
+    ? bkActionBookingCache.prescription_sessions[0] : null;
+  if (cachedPs?.prescriptions) Object.assign(cachedPs.prescriptions, patch);
+  if (bkActionBookingCache) await openBookingActionModal(bkActionBookingCache);
+});
+
+/**
+ * Folgetermin buchen — öffnet den Termin-Dialog mit demselben Patienten,
+ * derselben Leistung und demselben Therapeuten, standardmäßig eine Woche
+ * später zur selben Uhrzeit (der übliche Therapierhythmus). Datum bleibt
+ * änderbar; die Verordnungskarten laden sich mit, damit die nächste Sitzung
+ * direkt auf dieselbe Verordnung gebucht werden kann.
+ */
+document.getElementById('bkActionFolgeterminBtn')?.addEventListener('click', async () => {
+  const b = bkActionBookingCache;
+  if (!b) return;
+
+  const base = b.start_time ? new Date(b.start_time) : new Date();
+  const next = new Date(base.getTime() + 7 * 24 * 60 * 60 * 1000);
+  // Falls der Vorschlag in der Vergangenheit läge (alter Termin): auf die
+  // nächste künftige Woche desselben Wochentags schieben.
+  const now = new Date();
+  while (next < now) next.setDate(next.getDate() + 7);
+  const localIso = new Date(next.getTime() - next.getTimezoneOffset() * 60000)
+    .toISOString().substring(0, 16);
+
+  closeBkActionPanel();
+  await prefillBookingModal(localIso);
+
+  // Leistung + Therapeut übernehmen
+  const srvSel = document.getElementById('bkService');
+  if (srvSel && b.service_id) {
+    srvSel.value = b.service_id;
+    srvSel.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  const empSel = document.getElementById('bkEmployee');
+  if (empSel && b.user_id) empSel.value = b.user_id;
+
+  // Patient setzen (füllt Telefon, Hausbesuch-Panel und Verordnungskarten)
+  if (b.lead_id && typeof window._bkApplyLead === 'function') {
+    window._bkApplyLead(b.lead_id);
+  } else if (b.customer_name) {
+    const nameEl = document.getElementById('bkCustomer');
+    const searchEl = document.getElementById('bkCustomerSearch');
+    if (nameEl) nameEl.value = b.customer_name;
+    if (searchEl) searchEl.value = b.customer_name;
+  }
+
+  if (b.hausbesuch) {
+    const hb = document.getElementById('bkHausbesuch');
+    if (hb && !hb.checked) { hb.checked = true; hb.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
 });
 
 document.getElementById('bkActionDeleteBtn').addEventListener('click', async () => {
@@ -16164,42 +16340,11 @@ async function editAerzte(id) {
 window.editAerzte = editAerzte;
 window.deleteAerzte = deleteAerzte;
 
-// ICD-10 chapter ranges per Fachbereich
-const ICD_SECTORS = {
-  physiotherapy: [
-    { gte: 'M', lt: 'N' },   // M00–M99 Muskel-Skelett (primary)
-    { gte: 'G', lt: 'H' },   // G00–G99 Nervensystem
-    { gte: 'S', lt: 'U' },   // S00–T98 Verletzungen & Trauma
-  ],
-  podologie: [
-    { gte: 'E10', lt: 'E15' }, // Diabetes mellitus
-    { gte: 'I70', lt: 'I80' }, // Periphere Arterien (pAVK)
-    { gte: 'B35', lt: 'B37' }, // Dermatomykosen / Onychomykose
-    { gte: 'L60', lt: 'L76' }, // Nagelkrankheiten & Hautanhangsgebilde
-    { gte: 'L84', lt: 'L86' }, // Kallus / Hornhautverdickung
-    { gte: 'L97', lt: 'L98' }, // Ulcus cruris
-    { gte: 'M20', lt: 'M22' }, // Fußdeformitäten (Hallux, Hammerzehe)
-    { gte: 'M79', lt: 'M80' }, // Weichteilerkrankungen Fuß
-    { gte: 'Q65', lt: 'Q67' }, // Angeborene Fußdeformitäten
-  ],
-  logopaedie: [
-    { gte: 'F00', lt: 'G00' }, // Psychische Störungen / Demenz
-    { gte: 'G00', lt: 'H00' }, // Neurologisch (Aphasie, Dysarthrie)
-    { gte: 'R47', lt: 'R50' }, // Sprach-/Stimmstörungen
-    { gte: 'J00', lt: 'K00' }, // Atemwege (Dysphagie-Kontext)
-    { gte: 'Q35', lt: 'Q38' }, // Lippen-Kiefer-Gaumenspalte
-  ],
-  ergotherapie: [
-    { gte: 'F00', lt: 'G00' }, // Psychische Störungen
-    { gte: 'G00', lt: 'H00' }, // Nervensystem
-    { gte: 'M00', lt: 'N00' }, // Muskel-Skelett
-    { gte: 'S00', lt: 'U00' }, // Verletzungen
-  ],
-};
-
-function _getIcdChapters() {
-  const s = (typeof getSector === 'function' ? getSector() : '') || 'physiotherapy';
-  return ICD_SECTORS[s] || ICD_SECTORS.physiotherapy;
+// Fachbereich for diagnosis search. The ICD chapter ranges themselves live in
+// the `icd_sector_ranges` table and are applied inside the search_diagnosen()
+// RPC — see katalog-suche.js. Do not re-add a hardcoded copy here.
+function _getDiagnoseBereich() {
+  return (typeof getSector === 'function' ? getSector() : '') || 'physiotherapy';
 }
 
 function lsCollect(prefix) {
@@ -16238,63 +16383,55 @@ function lsWireToggle(prefix) {
   }
 }
 
-function _fillIcdDatalist(rows) {
-  const dl = document.getElementById('icdDatalist');
-  if (!dl || !rows?.length) return;
-  dl.innerHTML = rows.map(r => `<option value="${r.code} – ${r.titel}"></option>`).join('');
-}
+// ── Diagnose-Eingabefelder: eine Liste, eine Verdrahtung ────────────────────
+//
+// Jedes Feld der App, in das ein ICD-10-Kode oder eine Diagnosegruppe getippt
+// wird, steht hier. Ein neues Feld = eine Zeile hier, sonst nichts.
+//
+// Verdrahtet wird per Delegation beim ersten Fokus, NICHT beim Start. Grund:
+// die Felder entstehen zu ganz unterschiedlichen Zeitpunkten — manche stehen
+// fest im HTML, andere werden per innerHTML neu gerendert (Podologie) und
+// dabei samt Verdrahtung weggeworfen. Eine Verdrahtung beim Start hing außerdem
+// daran, dass init() vorher nirgends hängenbleibt; schlug ein früherer await
+// fehl, war die Suche still tot. Beim Fokus greift sie immer.
+const DIAGNOSE_FIELDS = {
+  rzIcd:       { kind: 'icd' },                                        // Rezept anlegen
+  rxcIcd:      { kind: 'icd' },                                        // Rezept-Scan bestätigen, 1. ICD
+  rxcIcd2:     { kind: 'icd' },                                        // Rezept-Scan bestätigen, 2. ICD
+  rzDg:        { kind: 'dg', codeOnly: true },                         // Diagnosegruppe
+  rxcDg:       { kind: 'dg', codeOnly: true },                         // Diagnosegruppe (Scan)
+  podNewIcd10: { kind: 'icd', multi: true, codeOnly: true, bereich: 'podologie' },
+};
 
-// On modal open: load sector-relevant ICD codes so datalist is ready to browse.
-let _icdPreloaded = false;
-async function populateIcdDatalist() {
-  if (_icdPreloaded) return;
-  _icdPreloaded = true;
-  const chapters = _getIcdChapters();
-  const results = await Promise.all(
-    chapters.map(c =>
-      supabase.from('icd10_titles').select('code,titel')
-        .gte('code', c.gte).lt('code', c.lt).limit(300)
-    )
-  );
-  const combined = results.flatMap(r => r.data || []);
-  combined.sort((a, b) => a.code.localeCompare(b.code));
-  _fillIcdDatalist(combined);
-}
+// Heilmittel-Felder — dieselbe Idee, andere Quelle (RPC search_heilmittel).
+// Bei Auswahl wird zusätzlich das versteckte Positionsnummer-Feld gesetzt;
+// vorher musste `aiMatchHeilmittel` den getippten Text erraten.
+const HEILMITTEL_FIELDS = {
+  rzHm:  { posField: 'rzHmPosition' },
+  rxcHm: { posField: 'rxcHmPosition' },
+};
 
-// On keystroke: search within sector chapters, fallback to all if no results.
-function initIcdSearch(inputId) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  let t;
-  input.addEventListener('input', () => {
-    clearTimeout(t);
-    const q = input.value.trim();
-    if (q.length < 2) return;
-    t = setTimeout(async () => {
-      const chapters = _getIcdChapters();
-      const chapterOr = chapters.map(c => `and(code.gte.${c.gte},code.lt.${c.lt})`).join(',');
-      const [byCode, byTitle] = await Promise.all([
-        supabase.from('icd10_titles').select('code,titel').or(chapterOr).ilike('code', `%${q}%`).limit(10),
-        supabase.from('icd10_titles').select('code,titel').or(chapterOr).ilike('titel', `%${q}%`).limit(15),
-      ]);
-      const seen = new Set();
-      let all = [...(byCode.data||[]), ...(byTitle.data||[])]
-        .filter(r => seen.has(r.code) ? false : seen.add(r.code));
+document.addEventListener('focusin', (e) => {
+  const el = e.target;
+  if (!el || !el.id || el.dataset.katalogWired === '1') return;
 
-      if (all.length === 0) {
-        const [fallbackCode, fallbackTitle] = await Promise.all([
-          supabase.from('icd10_titles').select('code,titel').ilike('code', `%${q}%`).limit(10),
-          supabase.from('icd10_titles').select('code,titel').ilike('titel', `%${q}%`).limit(15),
-        ]);
-        const fallbackSeen = new Set();
-        all = [...(fallbackCode.data||[]), ...(fallbackTitle.data||[])]
-          .filter(r => fallbackSeen.has(r.code) ? false : fallbackSeen.add(r.code));
-      }
-
-      if (all.length) _fillIcdDatalist(all);
-    }, 280);
-  });
-}
+  const dcfg = DIAGNOSE_FIELDS[el.id];
+  if (dcfg) {
+    attachDiagnoseSearch(el, supabase, { bereich: _getDiagnoseBereich, ...dcfg });
+  } else {
+    const hcfg = HEILMITTEL_FIELDS[el.id];
+    if (!hcfg) return;
+    attachHeilmittelSearch(el, supabase, {
+      bereich: _getDiagnoseBereich,
+      onSelect: (it) => {
+        const pos = document.getElementById(hcfg.posField);
+        if (pos) pos.value = it.code;
+      },
+    });
+  }
+  // Der modul-eigene focus-Handler ist für diesen ersten Fokus zu spät.
+  if (el.value.trim()) el.dispatchEvent(new Event('input', { bubbles: true }));
+});
 
 let rzPatientCache = [];
 let rzKkList = [];
@@ -16325,15 +16462,17 @@ function wireM13Toggles() {
     });
   });
 
-  // Patient arama alanı: yazılan etiket → lead id → otomatik doldur
+  // Patientensuche — gemeinsames Modul (patient-suche.js), damit hier dieselbe
+  // Suche greift wie im Termin-Dialog: Name, Geburtsdatum und Telefonnummer.
+  // Vorher hing das an einem <datalist>, das nur den Namensanfang treffen konnte.
   const search = document.getElementById('rzPatientSearch');
   if (search) {
-    const resolve = () => {
-      const id = rzLabelToId.get((search.value || '').trim());
-      if (id) fillRzPatientFromLead(id);
-    };
-    search.addEventListener('change', resolve);
-    search.addEventListener('input', resolve);
+    attachPatientSearch(search, {
+      loadLeads: () => rzPatientCache,
+      matches:   patientMatchesQuery,
+      labelOf:   rzPatientLabel,
+      onSelect:  lead => fillRzPatientFromLead(lead.id),
+    });
   }
 }
 
@@ -16479,28 +16618,26 @@ async function openRezeptModal(phone, leadId) {
   openModal('rezeptModal');
 
   // Datalists
-  loadPhysioPositions().then(positions => populateHmDatalist(positions)).catch(() => {});
-  populateIcdDatalist().catch(() => {});
+  // Positionen vorwärmen (Cache für die Heilmittel-Suche). Das frühere
+  // populateHmDatalist() ist entfallen — das <datalist> gibt es nicht mehr,
+  // das Feld hängt an attachHeilmittelSearch.
+  loadPhysioPositions().catch(() => {});
   try { rzKkList = await loadKkList() || []; populateKkDatalist(rzKkList); } catch { rzKkList = []; }
 
-  // Patientenliste für den Kopf-Selector (typbare Suche via datalist)
-  const dl = g('rzPatientDatalist');
+  // Patientenliste für den Kopf-Selector. Die Suche selbst macht
+  // patient-suche.js; hier wird nur der Cache gefüllt, aus dem sie liest.
   rzLabelToId = new Map();
   try {
     const ownerId = getOwnerId();
-    const { data, error } = await supabase.from('leads')
+    // bizScope ist Pflicht — sonst stehen im Rezept-Kopf Patienten aller
+    // Standorte zur Auswahl, obwohl die Freigabe abgeschaltet sein kann.
+    const { data, error } = await bizScope(supabase.from('leads')
       .select('id,first_name,last_name,title,geburtsdatum,phone,metadata')
       .eq('owner_id', ownerId)
-      .order('last_name', { ascending: true });
+      .order('last_name', { ascending: true }), 'patients');
     if (error) throw error;
     rzPatientCache = data || [];
-    if (dl) {
-      dl.innerHTML = rzPatientCache.map(l => {
-        const label = rzPatientLabel(l);
-        rzLabelToId.set(label, l.id);
-        return `<option value="${escapeHtml(label)}"></option>`;
-      }).join('');
-    }
+    rzPatientCache.forEach(l => rzLabelToId.set(rzPatientLabel(l), l.id));
     if (hint) {
       if (!rzPatientCache.length) {
         hint.textContent = '⚠ Keine Patienten gefunden — bitte zuerst Patienten anlegen';
@@ -17401,8 +17538,7 @@ async function init() {
     }
     lsWireToggle('rz');
     lsWireToggle('rxc');
-    initIcdSearch('rzIcd');
-    initIcdSearch('rxcIcd');
+    // Diagnose-Felder verdrahten sich beim Fokus selbst — siehe DIAGNOSE_FIELDS.
     await loadAerzte();
     const adminLink = document.getElementById('topbarAdminLink');
     if (adminLink && currentSession?.user?.id) {
@@ -17737,6 +17873,53 @@ async function openBookingFromRxPreset(preset) {
 const REZEPT_API = 'https://n8n.infinitymade.de/api/rezept';
 let rxStream = null;
 let rxLastUpload = null;  // { storage_path, parsed, validation, ocr_confidence, dataUri }
+let rxPendingNachweise = { befreiungsausweis: null, lhb_genehmigung: null };
+
+function clearNachweisFile(art, fileInp, btnTextEl, removeEl, hintEl) {
+  if (art === 'befreiungsausweis') {
+    rxPendingNachweise.befreiungsausweis = null;
+  } else if (art === 'lhb_genehmigung') {
+    rxPendingNachweise.lhb_genehmigung = null;
+  }
+  if (fileInp) fileInp.value = '';
+  if (btnTextEl) {
+    btnTextEl.textContent = 'Nachweis';
+    btnTextEl.removeAttribute('title');
+  }
+  if (removeEl) removeEl.style.display = 'none';
+  if (hintEl) hintEl.style.display = 'inline';
+}
+
+function resetRxPendingNachweise() {
+  rxPendingNachweise = { befreiungsausweis: null, lhb_genehmigung: null };
+  clearNachweisFile('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
+  clearNachweisFile('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
+  const wrapB = document.getElementById('rxcBefreitNachweisWrap');
+  if (wrapB) wrapB.style.display = 'none';
+  const wrapL = document.getElementById('rxcLhbBvbNachweisWrap');
+  if (wrapL) wrapL.style.display = 'none';
+}
+
+function handleNachweisFileSelect(art, fileInp, btnTextEl, removeEl, hintEl) {
+  const file = fileInp?.files?.[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Datei zu groß (max 5 MB).', 'error');
+    fileInp.value = '';
+    return;
+  }
+  if (art === 'befreiungsausweis') {
+    rxPendingNachweise.befreiungsausweis = file;
+  } else if (art === 'lhb_genehmigung') {
+    rxPendingNachweise.lhb_genehmigung = file;
+  }
+  if (btnTextEl) {
+    btnTextEl.textContent = file.name;
+    btnTextEl.title = file.name;
+  }
+  if (removeEl) removeEl.style.display = 'inline';
+  if (hintEl) hintEl.style.display = 'none';
+}
 
 function initRezeptScanner() {
   const btn = document.getElementById('rezeptScanBtn');
@@ -17757,6 +17940,48 @@ function initRezeptScanner() {
     showToast('Patient wird informiert (Demo) — Phase 3 verbindet das automatisch.', 'info'));
   document.getElementById('rxDoctorEmailBtn')?.addEventListener('click', () =>
     showToast('Arzt-E-Mail kommt in Phase 3.', 'info'));
+
+  // Nachweis-Uploads (Zuzahlungsbefreiung & LHB/BVB)
+  document.getElementById('rxcZuzahlungBefreit')?.addEventListener('change', e => {
+    const checked = e.target.checked;
+    const wrap = document.getElementById('rxcBefreitNachweisWrap');
+    if (wrap) wrap.style.display = checked ? 'inline-flex' : 'none';
+    if (!checked) {
+      clearNachweisFile('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
+    }
+  });
+
+  document.getElementById('rxcLhbBvb')?.addEventListener('change', e => {
+    const checked = e.target.checked;
+    const wrap = document.getElementById('rxcLhbBvbNachweisWrap');
+    if (wrap) wrap.style.display = checked ? 'inline-flex' : 'none';
+    if (!checked) {
+      clearNachweisFile('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
+    }
+  });
+
+  document.getElementById('rxcBefreitBtn')?.addEventListener('click', () => {
+    document.getElementById('rxcBefreitFile')?.click();
+  });
+  document.getElementById('rxcLhbBvbBtn')?.addEventListener('click', () => {
+    document.getElementById('rxcLhbBvbFile')?.click();
+  });
+
+  document.getElementById('rxcBefreitFile')?.addEventListener('change', () => {
+    handleNachweisFileSelect('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
+  });
+  document.getElementById('rxcLhbBvbFile')?.addEventListener('change', () => {
+    handleNachweisFileSelect('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
+  });
+
+  document.getElementById('rxcBefreitRemove')?.addEventListener('click', e => {
+    e.stopPropagation();
+    clearNachweisFile('befreiungsausweis', document.getElementById('rxcBefreitFile'), document.getElementById('rxcBefreitBtnText'), document.getElementById('rxcBefreitRemove'), document.getElementById('rxcBefreitHint'));
+  });
+  document.getElementById('rxcLhbBvbRemove')?.addEventListener('click', e => {
+    e.stopPropagation();
+    clearNachweisFile('lhb_genehmigung', document.getElementById('rxcLhbBvbFile'), document.getElementById('rxcLhbBvbBtnText'), document.getElementById('rxcLhbBvbRemove'), document.getElementById('rxcLhbBvbHint'));
+  });
 
   document.querySelectorAll('[data-modal="rezeptScanModal"]').forEach(el => {
     el.addEventListener('click', () => { stopWebcam(); closeRezeptScanModal(); });
@@ -17883,10 +18108,10 @@ async function uploadRezeptImage(dataUri) {
 }
 
 async function openRezeptConfirmModal(payload) {
+  resetRxPendingNachweise();
   if (!aerzteCache || aerzteCache.length === 0) {
     await loadAerzte();
   }
-  populateIcdDatalist().catch(() => {});
   const p = payload.parsed || {};
   const pat = p.patient || {};
   const arzt = p.arzt || {};
@@ -17954,6 +18179,13 @@ async function openRezeptConfirmModal(payload) {
   setVal('rxcAnzahlErg', rez.anzahl_ergaenzend);
   setVal('rxcTherapieziele', rez.therapieziele);
   setChk('rxcZuzahlungBefreit', rez.zuzahlung_befreit);
+
+  const wrapBefreit = document.getElementById('rxcBefreitNachweisWrap');
+  if (wrapBefreit) wrapBefreit.style.display = rez.zuzahlung_befreit ? 'inline-flex' : 'none';
+
+  const wrapLhb = document.getElementById('rxcLhbBvbNachweisWrap');
+  if (wrapLhb) wrapLhb.style.display = rez.is_lhb_bvb ? 'inline-flex' : 'none';
+
   // Therapiebereich: OCR-Wert oder nach Praxis-Sektor vorbelegen
   wireRxcTherapy();
   setRxcTherapy(rez.therapiebereich || M13_SECTOR_THERAPY[getSector()] || '');
@@ -18061,19 +18293,19 @@ function renderValidationBanner(v) {
   if (blockers.length) {
     html += `<div style="background:#fee;border:1px solid #c00;border-radius:8px;padding:10px;margin-bottom:8px;">
       <strong style="color:#c00;">🔴 Blocker (${blockers.length}):</strong>
-      <ul style="margin:6px 0 0 18px;color:#900;">${blockers.map(b => `<li>${b.message || b.code || b}</li>`).join('')}</ul>
+      <ul style="margin:6px 0 0 18px;color:#900;">${blockers.map(b => `<li>${b.message || b.msg || b.code || b}</li>`).join('')}</ul>
     </div>`;
   }
   if (warnings.length) {
     html += `<div style="background:#fff7e6;border:1px solid #f0a500;border-radius:8px;padding:10px;margin-bottom:8px;">
       <strong style="color:#a06200;display:inline-flex;align-items:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#a06200;">${ICON.warning}</span>Warnungen (${warnings.length}):</strong>
-      <ul style="margin:6px 0 0 18px;color:#6b4500;">${warnings.map(w => `<li>${w.message || w.code || w}</li>`).join('')}</ul>
+      <ul style="margin:6px 0 0 18px;color:#6b4500;">${warnings.map(w => `<li>${w.message || w.msg || w.code || w}</li>`).join('')}</ul>
     </div>`;
   }
   if (hinweise.length) {
     html += `<div style="background:#eef6ff;border:1px solid #2a73d3;border-radius:8px;padding:10px;margin-bottom:8px;">
       <strong style="color:#1c4d8f;display:inline-flex;align-items:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#1c4d8f;">${ICON.info}</span>Hinweise:</strong>
-      <ul style="margin:6px 0 0 18px;color:#1c4d8f;">${hinweise.map(h => `<li>${h.message || h.code || h}</li>`).join('')}</ul>
+      <ul style="margin:6px 0 0 18px;color:#1c4d8f;">${hinweise.map(h => `<li>${h.message || h.msg || h.code || h}</li>`).join('')}</ul>
     </div>`;
   }
   if (!html) {
@@ -18082,6 +18314,89 @@ function renderValidationBanner(v) {
     </div>`;
   }
   el.innerHTML = html;
+}
+
+async function uploadRxNachweise(prescriptionId, patientId) {
+  const ownerId = getOwnerId();
+  const { data: { session: s } } = await supabase.auth.getSession();
+  const userId = s?.user?.id || currentSession?.user?.id || null;
+
+  const toUpload = [
+    { art: 'befreiungsausweis', file: rxPendingNachweise.befreiungsausweis },
+    { art: 'lhb_genehmigung', file: rxPendingNachweise.lhb_genehmigung }
+  ];
+
+  for (const item of toUpload) {
+    if (!item.file) continue;
+    const file = item.file;
+    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+    const storagePath = `${ownerId}/${patientId}/rezept/${prescriptionId}/${item.art}_${Date.now()}.${ext}`;
+
+    const { error: storageErr } = await supabase.storage
+      .from('patient-documents')
+      .upload(storagePath, file, {
+        contentType: file.type || 'application/octet-stream',
+        upsert: true
+      });
+
+    if (storageErr) {
+      throw new Error(`Upload ${item.art}: ` + storageErr.message);
+    }
+
+    const docRow = {
+      owner_id: ownerId,
+      prescription_id: prescriptionId,
+      patient_id: patientId,
+      art: item.art,
+      storage_path: storagePath,
+      dateiname: file.name,
+      mime_type: file.type || 'application/octet-stream',
+      groesse_bytes: file.size,
+      uploaded_by: userId
+    };
+
+    const { error: docErr } = await supabase
+      .from('prescription_documents')
+      .insert(docRow);
+
+    if (docErr) {
+      console.warn(`[prescription_documents] Insert-Fehler (${item.art}):`, docErr);
+    }
+
+    if (item.art === 'befreiungsausweis') {
+      const ausstDateVal = document.getElementById('rxcAusstDate')?.value;
+      let jahr;
+      let befreitAb;
+      if (ausstDateVal && /^\d{4}-\d{2}-\d{2}$/.test(ausstDateVal)) {
+        befreitAb = ausstDateVal;
+        jahr = parseInt(ausstDateVal.slice(0, 4), 10);
+      } else {
+        const today = new Date();
+        jahr = today.getFullYear();
+        befreitAb = today.toISOString().slice(0, 10);
+      }
+      const befreitBis = `${jahr}-12-31`;
+
+      const befRow = {
+        owner_id: ownerId,
+        patient_id: patientId,
+        jahr: jahr,
+        befreit_ab: befreitAb,
+        befreit_bis: befreitBis,
+        beleg_url: storagePath
+      };
+
+      const { error: befErr } = await supabase
+        .from('zuzahlung_befreiung')
+        .upsert(befRow, { onConflict: 'patient_id,jahr' });
+
+      if (befErr) {
+        console.warn('[zuzahlung_befreiung] Upsert-Fehler:', befErr);
+      }
+    }
+  }
+
+  rxPendingNachweise = { befreiungsausweis: null, lhb_genehmigung: null };
 }
 
 async function submitConfirm() {
@@ -18189,7 +18504,7 @@ async function submitConfirm() {
     const blockers = rxLastUpload.validation?.blockers || [];
     let proceedAnyway = false;
     if (blockers.length > 0) {
-      const detail = (blockers.slice(0, 5).map(b => '• ' + (b.message || b.code || b)).join('\n'));
+      const detail = (blockers.slice(0, 5).map(b => '• ' + (b.message || b.msg || b.code || b)).join('\n'));
       proceedAnyway = await showConfirmModal({
         title: `<span class="svg-icon" style="width:18px;height:18px;display:inline-flex;vertical-align:-4px;margin-right:6px;color:var(--danger);">${ICON.warning}</span>${blockers.length} Blocker erkannt`,
         message: `${detail}\n\nMöchten Sie trotzdem fortfahren? Der Override wird protokolliert.`,
@@ -18215,6 +18530,16 @@ async function submitConfirm() {
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error || 'Fehler');
+
+    // Nachweise hochladen, wenn vorgemerkt (Upload-Fehler dürfen Verordnung nicht stoppen)
+    if (rxPendingNachweise.befreiungsausweis || rxPendingNachweise.lhb_genehmigung) {
+      try {
+        await uploadRxNachweise(json.prescription_id, json.patient_id);
+      } catch (uploadErr) {
+        console.warn('[rezept-confirm] Nachweis-Upload fehlgeschlagen:', uploadErr);
+        showToast('Verordnung gespeichert — Nachweis konnte nicht hochgeladen werden, bitte in der Patientenakte nachholen.', 'error');
+      }
+    }
 
     document.getElementById('rezeptConfirmModal').hidden = true;
     showToast('Rezept gespeichert ✓ Weiter zur Terminplanung.', 'success');
@@ -18364,14 +18689,6 @@ function populateKkDatalist(kkList) {
   }).join('');
 }
 
-function populateHmDatalist(positions) {
-  const dl = document.getElementById('hmDatalist');
-  if (!dl) return;
-  // Show short labels with X-code so user can type either
-  dl.innerHTML = positions.map(p =>
-    `<option value="${escapeHtml(p.x + ' · ' + p.label)}"></option>`
-  ).join('');
-}
 
 async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText, hmNormalized) {
   // Auswahl aus einem vorherigen Rezept darf nicht ins nächste durchschlagen
@@ -18406,7 +18723,6 @@ async function setupRezeptConfirmDropdowns(ocrKkText, ocrHmText, hmNormalized) {
 async function setupRezeptKkHmDropdowns(ocrKkText, ocrHmText, hmNormalized) {
   const [kkList, positions] = await Promise.all([loadKkList(), loadPhysioPositions()]);
   populateKkDatalist(kkList);
-  populateHmDatalist(positions);
 
   const kkInput = document.getElementById('rxcKasse');
   const kkIkInput = document.getElementById('rxcKasseIk');
@@ -21439,31 +21755,24 @@ async function initWlPatientAutocomplete() {
   input.dataset.wlBound = '1';
 
   const ownerId = getOwnerId();
-  const { data: leads } = await supabase.from('leads')
-    .select('id,title,first_name,last_name,phone,geburtsdatum,metadata').eq('owner_id', ownerId).order('title');
+  // bizScope ist Pflicht: ohne sie zeigt die Warteliste Patienten ALLER
+  // Standorte, auch wenn der Owner die Patienten-Freigabe abgeschaltet hat.
+  const { data: leads } = await bizScope(supabase.from('leads')
+    .select('id,title,first_name,last_name,phone,geburtsdatum,metadata')
+    .eq('owner_id', ownerId).order('title'), 'patients');
   const allLeads = leads || [];
 
-  function renderWlList(q) {
-    const filtered = q ? allLeads.filter(l => patientMatchesQuery(l, q)) : allLeads.slice(0, 20);
-    list.innerHTML = filtered.map(l => {
-      const name = `${l.first_name||''} ${l.last_name||''}`.trim() || l.title;
-      return `<li data-id="${l.id}">${name}</li>`;
-    }).join('');
-    list.hidden = false;
-  }
-
-  input.addEventListener('input', () => renderWlList(input.value));
-  input.addEventListener('focus', () => renderWlList(input.value));
-  list.addEventListener('mousedown', e => {
-    const li = e.target.closest('li[data-id]');
-    if (!li) return;
-    e.preventDefault();
-    input.value = li.textContent;
-    idH.value = li.dataset.id;
-    list.hidden = true;
-  });
-  document.addEventListener('mousedown', e => {
-    if (!document.getElementById('wlPatientWrap')?.contains(e.target)) list.hidden = true;
+  // Gemeinsames Modul: bringt Pfeiltasten, Treffer-Hervorhebung und die Suche
+  // über Geburtsdatum/Telefon mit. Die alte Fassung zeigte bei leerem Feld nur
+  // die ersten 20 Patienten und konnte nur über den Namen suchen.
+  attachPatientSearch(input, {
+    listEl:       list,
+    containerEl:  document.getElementById('wlPatientWrap'),
+    loadLeads:    () => allLeads,
+    matches:      patientMatchesQuery,
+    labelOf:      displayNameWithBirth,
+    emptyLimit:   20,
+    onSelect:     lead => { idH.value = lead.id; },
   });
 }
 
@@ -22371,26 +22680,33 @@ window.openPatientDetail = async function(leadId) {
 
 // ===== PODOLOGIE BILLING =====
 
-const HPNR_LABELS = {
-  '78010': 'Podologische Behandlung (klein)',
-  '78020': 'Podologische Behandlung (groß)',
-  '78030': 'Podologische Befundung',
-  '78040': 'Eingangsbefundung',
-  '78100': 'Nagelspange Erstbefundung groß',
-  '78110': 'Nagelspange Erstbefundung klein',
-  '78510': 'Kontrolle Sitz- und Passgenauigkeit',
-  '78520': 'Behandlungsabschluss / Entfernung Spange',
-  '78530': 'Therapiebericht UI2',
-  '78610': 'Nagelspangenbehandlung',
-  '78620': 'Aufschlag für besonderen Aufwand',
-  '79933': 'Hausbesuch inkl. Wegegeld',
-  '79934': 'Hausbesuch in soz. Einrichtung inkl. Wegegeld',
-};
+// HPNR-Positionen kommen aus `heilmittel_katalog` (RPC search_heilmittel),
+// erzeugt aus den Abrechnungs-Codedateien. Die früher hier fest verdrahtete
+// Liste kannte nur 13 Kodes und keine Gültigkeitsdaten — dadurch fehlten der
+// Hausbesuch (79933/79934) bei UI1/UI2, und abgelöste Positionen hätten nicht
+// von den gültigen unterschieden werden können.
+let _hpnrByDiag = new Map();   // diagRoot -> [{code,label,preis_eur,…}]
+let _podCurrentHpnr = [];      // die aktuell gerenderte Liste
 
-function podGetHpnrList(diagRoot) {
-  if (diagRoot === 'UI1') return ['78100','78110','78610','78620','78510','78520'];
-  if (diagRoot === 'UI2') return ['78100','78110','78610','78620','78530','78510','78520'];
-  return ['78010','78020','78030','78040','79933','79934']; // DF/NF/QF
+async function podLoadHpnr(diagRoot, datum = null) {
+  const key = `${diagRoot}|${datum || ''}`;
+  if (_hpnrByDiag.has(key)) return _hpnrByDiag.get(key);
+  const rows = await searchHeilmittel(supabase, '', {
+    bereich: 'podologie', diagnosegruppe: diagRoot || null, datum, limit: 100,
+  });
+  _hpnrByDiag.set(key, rows);
+  return rows;
+}
+
+/** Label für eine HPNR aus dem geladenen Katalog (Fallback: der Kode selbst). */
+function hpnrLabel(code) {
+  const cur = _podCurrentHpnr.find(r => r.code === code);
+  if (cur) return cur.label;
+  for (const rows of _hpnrByDiag.values()) {
+    const hit = rows.find(r => r.code === code);
+    if (hit) return hit.label;
+  }
+  return code;
 }
 
 function podDiagRoot(diagCode) {
@@ -22399,13 +22715,55 @@ function podDiagRoot(diagCode) {
   return diagCode; // NF, QF, UI1, UI2
 }
 
-const PODOLOGIE_ICD_MAP = {
-  'DF': ['E10.74','E10.75','E11.74','E11.75','E12.74','E12.75','E13.74','E13.75','E14.74','E14.75'],
-  'NF': ['G60.0','G60.1','G60.2','G60.3','G60.8','G60.9','G61.0','G61.1','G61.8','G61.9','G62.0','G62.1','G62.2','G62.8','G62.9','G63.2'],
-  'QF': ['G82.0','G82.1','G82.2','G82.3','G82.4','G82.5'],
-  'UI1': ['L60.0'],
-  'UI2': ['L60.0'],
-};
+// ICD-10-Pool je Diagnosegruppe — Quelle ist die Tabelle `diagnosegruppen`
+// (Spalte icd_prefixes), NICHT eine Kopie hier. Es sind PRÄFIXE: für QF ist
+// "G82" hinterlegt, weil G82.0 nur eine Gruppenüberschrift ist und erst
+// G82.02 ein abrechenbarer Kode. Exakte Listen haben genau daran gescheitert.
+let _dgIcdPrefixes = null;
+let _podDiagGroups = null;   // [{code,label,untergruppen}] aus der Tabelle
+
+async function loadDgIcdPrefixes() {
+  if (_dgIcdPrefixes) return _dgIcdPrefixes;
+  const { data, error } = await supabase
+    .from('diagnosegruppen')
+    .select('code, label, untergruppen, icd_prefixes, bereich, sort')
+    .eq('aktiv', true)
+    .order('sort');
+  if (error) { console.warn('[diagnosegruppen] load failed:', error.message); return {}; }
+  _dgIcdPrefixes = Object.fromEntries((data || []).map(r => [r.code, r.icd_prefixes || []]));
+  _podDiagGroups = (data || []).filter(r => r.bereich === 'podologie');
+  return _dgIcdPrefixes;
+}
+
+// Optionen der Podologie-Diagnosegruppe. Bezeichnungen kommen aus der Tabelle
+// `diagnosegruppen` (HeilM-RL-Wortlaut) — vorher standen hier fest verdrahtete,
+// teils falsche Kurztexte. DF hat die Untergruppen a/b/c.
+function podDiagOptionsHtml(selected = '') {
+  const groups = _podDiagGroups && _podDiagGroups.length
+    ? _podDiagGroups
+    : [ // Notnagel, falls die Tabelle nicht geladen werden konnte
+        { code:'DF',  label:'Diabetisches Fußsyndrom', untergruppen:['a','b','c'] },
+        { code:'NF',  label:'Neuropathisches Fußsyndrom', untergruppen:null },
+        { code:'QF',  label:'Querschnittslähmung', untergruppen:null },
+        { code:'UI1', label:'Unguis incarnatus Stadium 1', untergruppen:null },
+        { code:'UI2', label:'Unguis incarnatus Stadium 2 oder 3', untergruppen:null },
+      ];
+  const opt = (val, text) =>
+    `<option value="${escapeHtml(val)}"${val === selected ? ' selected' : ''}>${escapeHtml(text)}</option>`;
+  return groups.flatMap(g =>
+    (g.untergruppen && g.untergruppen.length)
+      ? g.untergruppen.map(u => opt(`${g.code}-${u}`, `${g.code}-${u} – ${g.label} Typ ${u}`))
+      : [opt(g.code, `${g.code} – ${g.label}`)]
+  ).join('');
+}
+
+/** True if `code` belongs to the ICD pool of Diagnosegruppe `dg`. */
+function icdMatchesDiagnosegruppe(code, dg) {
+  const prefixes = (_dgIcdPrefixes || {})[dg] || [];
+  if (!prefixes.length) return true;   // no pool defined → don't warn
+  const c = String(code || '').trim().toUpperCase();
+  return prefixes.some(p => c.startsWith(String(p).toUpperCase()));
+}
 
 let _podState = { selectedVordId: null, verordnungen: [] };
 let _podKkCache = [];
@@ -22414,6 +22772,9 @@ async function loadPodologieBilling() {
   const el = document.getElementById('podBillingContent');
   if (!el) return;
   el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade…</span>';
+
+  // ICD-Pools der Diagnosegruppen — Voraussetzung für podValidateIcd10()
+  await loadDgIcdPrefixes();
 
   // Load kostentraeger for billing KK selection (IK numbers required)
   if (_podKkCache.length === 0) {
@@ -22487,9 +22848,12 @@ async function loadPodologieBilling() {
 
   const selectedVord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
   const diagRoot = selectedVord ? podDiagRoot(selectedVord.diagnosegruppe) : '';
-  const hpnrList = podGetHpnrList(diagRoot);
   const isUI = diagRoot === 'UI1' || diagRoot === 'UI2';
   const todayStr = today.toISOString().split('T')[0];
+  // Gültige Positionen zum Behandlungsdatum — abgelöste (z. B. Ross-Fraser)
+  // filtert die RPC bereits heraus.
+  const hpnrRows = diagRoot ? await podLoadHpnr(diagRoot, todayStr) : [];
+  _podCurrentHpnr = hpnrRows;
 
   const behandlungFormHtml = selectedVord ? `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
@@ -22502,13 +22866,14 @@ async function loadPodologieBilling() {
         <div>
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('pod_hpnr')}</label>
           <div id="podHpnrChecks" style="display:flex;flex-wrap:wrap;gap:8px;">
-            ${hpnrList.map(code => {
+            ${hpnrRows.map(r => {
+              const code = r.code;
               const isHausbesuch = selectedVord?.hausbesuch === true;
               const autoChecked =
                 (diagRoot !== 'UI1' && diagRoot !== 'UI2' && code === '78030') ? 'checked' :
                 (isHausbesuch && code === '79933') ? 'checked' : '';
               return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
-                <input type="checkbox" class="pod-hpnr-cb" value="${code}" ${autoChecked}> ${code} – ${HPNR_LABELS[code]||code}
+                <input type="checkbox" class="pod-hpnr-cb" value="${escapeHtml(code)}" ${autoChecked}> ${escapeHtml(code)} – ${escapeHtml(r.label)}
               </label>`;
             }).join('')}
           </div>
@@ -22565,13 +22930,7 @@ async function loadPodologieBilling() {
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_diagnosegruppe')}</label>
               <select id="podNewDiag" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
                 <option value="">— Wählen —</option>
-                <option value="DF-a">DF-a – Diabetisches Fußsyndrom Typ a</option>
-                <option value="DF-b">DF-b – Diabetisches Fußsyndrom Typ b</option>
-                <option value="DF-c">DF-c – Diabetisches Fußsyndrom Typ c</option>
-                <option value="NF">NF – Neuropathisches Fußsyndrom</option>
-                <option value="QF">QF – Querschnittslähmung</option>
-                <option value="UI1">UI1 – Unguis incarnatus Stufe 1</option>
-                <option value="UI2">UI2 – Unguis incarnatus Stufe 2-3</option>
+                ${podDiagOptionsHtml()}
               </select>
             </div>
             <div id="podWagnerWrap" style="display:none;">
@@ -22702,7 +23061,7 @@ async function loadPodologieBilling() {
     document.querySelectorAll('#podHeilmittelItems .pod-hm-row').forEach(row => {
       const code = row.querySelector('.pod-hm-code')?.value;
       const anzahl = parseInt(row.querySelector('.pod-hm-anzahl')?.value) || 1;
-      if (code) heilmittelItems.push({ code, bezeichnung: HPNR_LABELS[code] || code, anzahl });
+      if (code) heilmittelItems.push({ code, bezeichnung: hpnrLabel(code), anzahl });
     });
 
     // Compute beginn_spaetestens
@@ -22763,9 +23122,9 @@ async function loadPodologieBilling() {
     el.style.display = 'block';
   }
 
-  function podRenderHeilmittelRow(diagRootVal) {
-    const list = podGetHpnrList(diagRootVal);
-    const options = list.map(code => `<option value="${code}">${code} – ${HPNR_LABELS[code]||code}</option>`).join('');
+  async function podRenderHeilmittelRow(diagRootVal) {
+    const rows = await podLoadHpnr(diagRootVal);
+    const options = heilmittelOptionsHtml(rows, '', '— HPNR —').replace(/^<option value="">.*?<\/option>/, '');
     const row = document.createElement('div');
     row.className = 'pod-hm-row';
     row.style.cssText = 'display:flex;gap:6px;align-items:center;';
@@ -22779,14 +23138,12 @@ async function loadPodologieBilling() {
     return row;
   }
 
-  function podUpdateHeilmittelOptions() {
+  async function podUpdateHeilmittelOptions() {
     const diagVal = document.getElementById('podNewDiag')?.value || '';
     const diagRootVal = podDiagRoot(diagVal);
-    const list = podGetHpnrList(diagRootVal);
+    const rows = await podLoadHpnr(diagRootVal);
     document.querySelectorAll('#podHeilmittelItems .pod-hm-code').forEach(sel => {
-      const cur = sel.value;
-      sel.innerHTML = `<option value="">— HPNR —</option>` +
-        list.map(code => `<option value="${code}"${code===cur?' selected':''}>${code} – ${HPNR_LABELS[code]||code}</option>`).join('');
+      sel.innerHTML = heilmittelOptionsHtml(rows, sel.value, '— HPNR —');
     });
   }
 
@@ -22797,9 +23154,9 @@ async function loadPodologieBilling() {
     const warnEl = document.getElementById('podIcd10Warning');
     if (!warnEl) return;
     if (!raw.trim() || !diagRootVal) { warnEl.style.display = 'none'; return; }
-    const validPool = PODOLOGIE_ICD_MAP[diagRootVal] || [];
+    const validPool = (_dgIcdPrefixes || {})[diagRootVal] || [];
     const entered = raw.split(',').map(s => s.trim()).filter(Boolean);
-    const invalid = entered.filter(code => !validPool.includes(code));
+    const invalid = entered.filter(code => !icdMatchesDiagnosegruppe(code, diagRootVal));
     if (invalid.length > 0) {
       warnEl.textContent = `Hinweis: ${invalid.join(', ')} nicht im Standardpool für ${diagRootVal} (${validPool.join(', ')}).`;
       warnEl.style.display = 'block';
@@ -22825,39 +23182,36 @@ async function loadPodologieBilling() {
     podValidateIcd10();
   });
 
-  const podIcdInput = document.getElementById('podNewIcd10');
-  if (podIcdInput && !podIcdInput.dataset.icdWired) {
-    podIcdInput.dataset.icdWired = '1';
-    icd10Autocomplete(podIcdInput, supabase, { chapters: ICD_SECTORS.podologie, multi: true, codeOnly: true });
-  }
+  // podNewIcd10 verdrahtet sich beim Fokus selbst (DIAGNOSE_FIELDS) — wichtig,
+  // weil dieses Panel bei jedem loadPodologieBilling() neu gerendert wird.
 
-  // Wire up: Patient datalist
-  const podPatientList = document.getElementById('podPatientList');
-  if (podPatientList && leadsCache.length) {
-    podPatientList.innerHTML = leadsCache.map(l =>
-      `<option value="${escapeHtml((l.last_name||'') + ', ' + (l.first_name||''))}">`
-    ).join('');
+  // Patientensuche — gemeinsames Modul statt <datalist>. Damit findet man hier
+  // endlich auch über Geburtsdatum und Telefonnummer, und die Zuordnung hängt
+  // nicht mehr daran, dass der getippte Text exakt dem Label entspricht.
+  const podPatientInput = document.getElementById('podNewPatient');
+  if (podPatientInput) {
+    attachPatientSearch(podPatientInput, {
+      loadLeads: () => leadsCache,
+      matches:   patientMatchesQuery,
+      labelOf:   displayNameWithBirth,
+      onSelect:  lead => {
+        const leadIdEl = document.getElementById('podNewLeadId');
+        const vsnrEl   = document.getElementById('podNewVsnr');
+        const podKkSel = document.getElementById('podNewKk');
+        if (leadIdEl) leadIdEl.value = lead.id;
+        if (vsnrEl && !vsnrEl.value.trim()) vsnrEl.value = lead.versichertennummer || '';
+        if (podKkSel && !podKkSel.value && lead.krankenkasse) {
+          const matchedKk = _podKkCache.find(k => k.name === lead.krankenkasse);
+          if (matchedKk) podKkSel.value = matchedKk.ik;
+        }
+      },
+    });
+    // Freitext ohne Auswahl → keine Lead-Bindung
+    podPatientInput.addEventListener('input', () => {
+      const leadIdEl = document.getElementById('podNewLeadId');
+      if (leadIdEl && !podPatientInput.value.trim()) leadIdEl.value = '';
+    });
   }
-  document.getElementById('podNewPatient')?.addEventListener('input', () => {
-    const val = document.getElementById('podNewPatient').value.trim();
-    const lead = leadsCache.find(l =>
-      `${l.last_name||''}, ${l.first_name||''}` === val ||
-      `${l.first_name||''} ${l.last_name||''}` === val
-    );
-    const leadIdEl  = document.getElementById('podNewLeadId');
-    const vsnrEl    = document.getElementById('podNewVsnr');
-    const podKkSel  = document.getElementById('podNewKk');
-    if (lead) {
-      if (leadIdEl) leadIdEl.value = lead.id;
-      if (vsnrEl && !vsnrEl.value.trim()) vsnrEl.value = lead.versichertennummer || '';
-      if (podKkSel && !podKkSel.value && lead.krankenkasse) {
-        const matchedKk = _podKkCache.find(k => k.name === lead.krankenkasse);
-        if (matchedKk) podKkSel.value = matchedKk.ik;
-      }
-    } else {
-      if (leadIdEl) leadIdEl.value = '';
-    }
-  });
 
   // Wire up: KK select populate
   const podKkSel = document.getElementById('podNewKk');
@@ -22900,11 +23254,11 @@ async function loadPodologieBilling() {
   document.getElementById('podNewIcd10')?.addEventListener('input', podValidateIcd10);
 
   // Wire up: Add heilmittel row button
-  document.getElementById('podAddHeilmittelBtn')?.addEventListener('click', () => {
+  document.getElementById('podAddHeilmittelBtn')?.addEventListener('click', async () => {
     const diagVal = document.getElementById('podNewDiag')?.value || '';
     const diagRootVal = podDiagRoot(diagVal);
     const container = document.getElementById('podHeilmittelItems');
-    if (container) container.appendChild(podRenderHeilmittelRow(diagRootVal));
+    if (container) container.appendChild(await podRenderHeilmittelRow(diagRootVal));
   });
 
   // Wire up: Remove heilmittel row (event delegation)
@@ -22965,16 +23319,26 @@ async function loadPodologieBilling() {
     const notiz   = document.getElementById('podBehNotizen').value.trim();
     const errEl   = document.getElementById('podBehError');
 
+    // ICD-Pools sicherstellen, BEVOR geprüft wird: icdMatchesDiagnosegruppe()
+    // ist bei fehlendem Pool absichtlich nachsichtig (nur Hinweis-Text), für
+    // die harte UI1/UI2-Abrechnungsregel darf es das aber nicht sein.
+    await loadDgIcdPrefixes();
+
     const vord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
     const dRoot = vord ? podDiagRoot(vord.diagnosegruppe) : '';
     const isUIx = dRoot === 'UI1' || dRoot === 'UI2';
     const icd10 = vord?.icd10 || [];
+    const uiPool = (_dgIcdPrefixes || {})[dRoot] || [];
 
     // Validasyon
     let err = '';
     if (checks.length === 0) err = t('pod_kein_hpnr');
     else if (isUIx && checks.includes('78030')) err = 'Befundung (78030) kann bei UI1/UI2 nicht verwendet werden.';
-    else if (isUIx && !icd10.includes('L60.0')) err = 'UI1/UI2 erfordert ICD-10 L60.0.';
+    // Pool nicht geladen → auf die feste Regel zurückfallen, nicht durchwinken.
+    else if (isUIx && !(uiPool.length
+              ? icd10.some(c => icdMatchesDiagnosegruppe(c, dRoot))
+              : icd10.some(c => String(c).trim().toUpperCase().startsWith('L60.0'))))
+      err = 'UI1/UI2 erfordert ICD-10 L60.0.';
     else if (checks.includes('78040') && checks.includes('78030')) err = 'Eingangsbefundung (78040) und Befundung (78030) können nicht am gleichen Tag kombiniert werden.';
     else if ((checks.includes('78610') || checks.includes('78620')) && dRoot !== 'UI2') err = 'Nagelspange (78610/78620) ist nur bei UI2 zulässig.';
     else if (isUIx && !lokal) err = t('pod_lokalisation') + ' ist bei UI1/UI2 erforderlich.';
