@@ -476,15 +476,28 @@ Stripe **2026-06-11'den beri LIVE**, gerçek ödeme alınıyor. Kalanlar:
 **Sorun:** Desktop için yapılan her değişiklik mobile de geçiyor ama **öğeler üst üste
 biniyor**, düzen tam oturmuyor. Yani mobil ayrı bir tasarım katmanı olarak ele alınmıyor.
 
-**Yapılacak:**
-1. Bunun için ayrı bir **uzman ajan** oluştur (responsive/mobil UI) — mevcut ajanların hiçbiri
-   bu alanı kapsamıyor.
-2. Ajan tüm dashboard + public sayfaları küçük ekran genişliklerinde tarasın, taşma/üst üste
-   binme noktalarını çıkarsın.
-3. En son toplu bir düzeltme turu.
+**🔴 Kök sebep bulundu (2026-08-05):** Kod tabanında **12'den fazla farklı breakpoint** var ve
+hiçbiri ortak bir ölçeğe ait değil — `480 · 600 · 640 · 700 · 760 · 768 · 800 · 860 · 900 ·
+1000 · 1024`. Her özellik kendi kırılma noktasıyla eklenmiş; iki kural aynı öğeye farklı
+davranış dayattığında üst üste binme doğuyor. Üstüne `dashboard.css`/`styles.css` içinde
+sabit `width: 768px / 600px / 720px` gibi değerler yatay taşma üretiyor.
 
-**Not:** 2026-06-05'te bir responsive audit yapılıp topbar/tablet/telefon taşma düzeltmeleri
-push'lanmıştı (`8564b12`, `2ef8ae2`) — ama sorun devam ediyor, yani o tur yeterli olmamış.
+**Eleme:** viewport meta etiketi **tüm sayfalarda var**, sorun o değil.
+
+**Yapılacak:**
+- [x] Uzman ajan oluşturuldu → `.claude/agents/mobil-ui.md` (2026-08-05).
+      Playwright ile **ölçer** (taşma/çakışma/dokunma hedefi, 360–1024 arası 5 genişlik),
+      sonra **sadece CSS** katmanında düzeltir. JS'e ve ortak modüllerin davranışına dokunmaz.
+      Konseyde de oturuyor.
+- [ ] İlk tarama: `demo-dashboard.html` panelleri + public sayfalar → taşma envanteri
+- [ ] Breakpoint ölçeğini sadeleştir (öneri `480 / 768 / 1024`) — dosya dosya, tek hamlede değil
+- [ ] Sabit px genişlikleri esnek hale getir (`max-width` + `width:100%`)
+
+**Not:** 2026-06-05'te bir responsive tur atılmıştı (`8564b12`, `2ef8ae2`) ama sorun sürüyor —
+o tur belirtiye dokunmuş, kök sebebe (breakpoint kaosu) dokunmamış.
+
+**Altyapı hazır:** Python Playwright kurulu; `capture_mobile.py` / `capture_mobile2.py`
+demo-dashboard'u 390×844'te panel panel geziyor. Ajan sıfırdan başlamıyor.
 
 ### 3.2 ⚠️ reCAPTCHA — kayıtlardaki çelişki düzeltildi
 

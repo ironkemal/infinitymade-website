@@ -326,6 +326,7 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | `gkv-302` | §302 SGB V, EDIFACT/DTA, Kostenträger/IK, Heilmittel-Richtlinie, Diagnosegruppen, Korrekturverfahren. **"Para gelir mi?"** | ❌ |
 | `legal-de` | DSGVO/BDSG, §203 StGB, MDR, EU AI Act, AGB/Impressum/UWG. Startup bütçesine kalibreli. **"Başımız derde girer mi?"** | ❌ |
 | `podoloji` | Podolog'un gerçek iş günü, Fußbefund/Wagner-Armstrong, HPNR 78xxx, tık-ekonomisi | ❌ |
+| `mobil-ui` | Küçük ekran: üst üste binme, yatay taşma, dokunma hedefi, breakpoint çakışması. Playwright ile **ölçer**, sonra sadece CSS'te düzeltir | ✅ (yalnız CSS) |
 | `muhalif` | Yapıcı muhalif — fikir nerede kırılır, gizli maliyet ne. Alternatifsiz itiraz yasak | ❌ |
 | `deger-mi` | Efor/değer, fırsat maliyeti, daha küçük sürüm yeterli mi | ❌ |
 
