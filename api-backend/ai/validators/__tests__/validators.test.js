@@ -289,6 +289,62 @@ test('validate: standard engine adds BLANKO_HINT when ICD eligible but no marker
   assert.ok(r.warnings.find(w => w.code === 'BLANKO_HINT'));
 });
 
+// ── Blanko scope guard (Ratsbeschluss 2026-08-05) ───────────────────────────
+test('guard: podologisches Rezept mit Blanko-Typ liefert genau EINEN Blocker', () => {
+  const r = validateRezept({
+    rezept_typ: 'blanko',
+    icd10: 'E11.74',
+    diagnosegruppe: 'DF',
+    heilmittel_feld_text: 'BLANKOVERORDNUNG',
+    ausstellungsdatum: '2026-08-05'
+  });
+  assert.equal(r.ok, false);
+  assert.equal(r.engine, 'blanko');
+  assert.equal(r.blockers.length, 1, JSON.stringify(r.blockers));
+  assert.equal(r.blockers[0].code, 'BLANKO_NICHT_VERFUEGBAR');
+  assert.ok(r.blockers[0].msg.includes('Podologie'));
+  assert.equal(r.blockers.find(b => b.code === 'NOT_ON_BLANKO_LIST'), undefined);
+  assert.equal(r.blockers.find(b => b.code === 'BLANKO_DG_NOT_EX'), undefined);
+});
+
+test('guard: greift auch ohne rezept_typ, allein über den BLANKOVERORDNUNG-Marker', () => {
+  const r = validateRezept({
+    icd10: 'E11.74',
+    diagnosegruppe: 'DF',
+    heilmittel_feld_text: 'Blankoverordnung Podologie',
+    ausstellungsdatum: '2026-08-05'
+  });
+  assert.equal(r.engine, 'blanko');
+  assert.equal(r.blockers.length, 1);
+  assert.equal(r.blockers[0].code, 'BLANKO_NICHT_VERFUEGBAR');
+});
+
+test('guard: gültige Physio-Schulter-Blanko läuft weiterhin durch die Engine', () => {
+  const r = validateRezept({
+    icd10: 'M19.01',
+    diagnosegruppe: 'EX',
+    heilmittel_feld_text: 'BLANKOVERORDNUNG',
+    ausstellungsdatum: '2026-05-10',
+    behandlungsbeginn: '2026-05-15'
+  });
+  assert.equal(r.engine, 'blanko');
+  assert.equal(r.ok, true, JSON.stringify(r.blockers));
+  assert.equal(r.computed.verordnung_typ, 'blanko_physio_shoulder');
+});
+
+test('blanko: keine Bonusbeträge, solange Blocker vorliegen', () => {
+  const r = validateBlanko({
+    icd10: 'M19.01',
+    diagnosegruppe: 'EX',
+    heilmittel_feld_text: '',   // Marker fehlt → Blocker
+    ausstellungsdatum: '2026-05-10'
+  });
+  assert.equal(r.ok, false);
+  assert.equal(r.computed.bonuses_eur, null);
+  assert.equal(r.computed.total_bonuses_eur, null);
+  assert.equal(r.computed.gueltig_bis, '2026-08-30');  // übrige computed-Felder bleiben gefüllt
+});
+
 test('validate: null payload returns INVALID_INPUT blocker', () => {
   const r = validateRezept(null);
   assert.equal(r.ok, false);

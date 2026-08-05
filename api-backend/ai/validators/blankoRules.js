@@ -1,3 +1,7 @@
+// SCOPE: Physiotherapie-Schulter only (Stand 08/2026). Podologie: kein §125a-Vertrag
+//        → siehe Guard in validate.js. Ergotherapie-Blanko (seit 01.04.2024) ist hier
+//        ebenfalls NICHT abgebildet — separater Regelsatz, wenn priorisiert.
+//
 // Blankoverordnung rules (Physiotherapie, Schulter-Diagnosen, seit 1.11.2024).
 //
 // Key constraints:
@@ -120,7 +124,9 @@ export function validateBlanko(rezept) {
     }
   }
 
-  // Automatic billing bonuses
+  // Automatic billing bonuses — NUR wenn die Verordnung fehlerfrei ist.
+  // Bei Blockern darf kein abrechenbarer Betrag ausgewiesen werden (stille Falschabrechnung).
+  const ok = blockers.length === 0;
   const bonuses = {
     physiotherapeutische_diagnostik: BLANKO_VERGUETUNG.physiotherapeutische_diagnostik,
     mehraufwandspauschale: BLANKO_VERGUETUNG.mehraufwandspauschale
@@ -132,7 +138,7 @@ export function validateBlanko(rezept) {
   const total_bonuses_eur = Object.values(bonuses).reduce((a, b) => a + b, 0);
 
   return {
-    ok: blockers.length === 0,
+    ok,
     warnings,
     blockers,
     computed: {
@@ -142,8 +148,8 @@ export function validateBlanko(rezept) {
       behandlungsbeginn_spaetestens: latestBeginDate ? latestBeginDate.toISOString().slice(0,10) : null,
       gueltig_wochen: GUELTIG_WOCHEN,
       ampel,
-      bonuses_eur: bonuses,
-      total_bonuses_eur: Number(total_bonuses_eur.toFixed(2)),
+      bonuses_eur: ok ? bonuses : null,
+      total_bonuses_eur: ok ? Number(total_bonuses_eur.toFixed(2)) : null,
       zuzahlung_required: true,
       zuzahlung_percent: 10,
       zuzahlung_eur_per_blatt: 10,

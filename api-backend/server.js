@@ -2408,7 +2408,7 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
         confirmed_by: userId,
         confirmed_at: new Date().toISOString(),
         proceed_anyway: !!proceed_anyway,
-        total_bonuses_eur: validation.computed?.bonus_eur ?? null,
+        total_bonuses_eur: validation.computed?.total_bonuses_eur ?? null,
         // DSGVO Art. 32 — encrypted PHI shadow columns (written when key is configured)
         ...(encryptionAvailable() ? {
           icd10_enc: encryptPHI(rezept.icd10 || null),

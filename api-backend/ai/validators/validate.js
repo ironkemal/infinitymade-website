@@ -30,6 +30,30 @@ function inferRezeptTyp(rezept) {
   return 'standard';
 }
 
+// Guard: Blankoverordnung ist nach § 125a SGB V bislang nur für Ergotherapie (ab 01.04.2024)
+// und Physiotherapie (ab 01.11.2024) vertraglich in Kraft. Dieses Modul bildet ausschließlich
+// das Physiotherapie-Schulterprofil ab. Läuft ein Rezept mit Blanko-Kennzeichnung in die
+// Blanko-Weiche, passt aber nicht auf dieses Profil (z. B. Podologie: Diagnosegruppe DF,
+// ICD E11.7x), wird die Engine gar nicht erst betreten — sonst entstünden mehrere irreführende
+// Einzelfehler (NOT_ON_BLANKO_LIST + BLANKO_DG_NOT_EX) statt einer verständlichen Aussage.
+// Ratsbeschluss 2026-08-05 (konsey/tutanak/2026-08-05-blanko-fachbereich.md).
+function blankoScopeGuard(rezept) {
+  const icdOffList = !lookupBlankoShoulder(rezept.icd10);
+  const dgNotEx = !!rezept.diagnosegruppe && rezept.diagnosegruppe !== 'EX';
+  if (!icdOffList && !dgNotEx) return null;
+  return {
+    ok: false,
+    warnings: [],
+    blockers: [{
+      code: 'BLANKO_NICHT_VERFUEGBAR',
+      msg: 'Blankoverordnung ist derzeit nur für Physiotherapie mit Schulter-Diagnosen (Diagnosegruppe EX) vorgesehen — für andere Fachbereiche wie Podologie besteht kein Vertrag nach §125a SGB V. Bitte ICD-10 und Diagnosegruppe prüfen oder als Standardverordnung (Muster 13) ausstellen.',
+      field: 'rezept_typ',
+      regulation: '§125a SGB V — Blankoverordnung nur Ergotherapie (ab 01.04.2024) und Physiotherapie (ab 01.11.2024)'
+    }],
+    computed: {}
+  };
+}
+
 export function validateRezept(rezept) {
   if (!rezept || typeof rezept !== 'object') {
     return {
@@ -42,6 +66,12 @@ export function validateRezept(rezept) {
   }
 
   const typ = inferRezeptTyp(rezept);
+
+  if (typ === 'blanko') {
+    const guarded = blankoScopeGuard(rezept);
+    if (guarded) return { ...guarded, engine: 'blanko' };
+  }
+
   let result;
   switch (typ) {
     case 'blanko':
