@@ -109,9 +109,11 @@ website/                              ← BU DİZİN (Claude Code burada açıl�
 
 ---
 
-## 💳 Stripe (Test Mode)
+## 💳 Stripe (LIVE — 2026-06-11'den beri gerçek ödeme alınıyor)
 
-- **Plans:** Starter €29 / Professional €49 / Klinik €99 (monthly + yearly)
+- **Plans (2026-08-05 canlı `index.html`'den doğrulandı — TEK GEÇERLİ SET):**
+  Starter **29 €**/ay (25 € yıllık) · Professional **49 €**/ay (42 €) · Klinik **99 €**/ay (84 €) · Enterprise bireysel.
+  ⚠️ Eski pazarlama/plan dosyalarında dolaşan 39/59 ve 89/149/219 setleri **geçersizdir.**
 - **Trial:** 14 gün
 - **Webhook URL:** `https://www.infinitymade.de/api/stripe/webhook` (www zorunlu)
 - **Customer Portal:** Aktif
@@ -156,6 +158,18 @@ stripe_price_id, billing_interval, current_period_end
 - Yeni özellikler buluta YENİ zincir ekleyemez: **yeni Vercel serverless fonksiyonu yok** (Express'e/api-backend'e yaz), Supabase cloud-only özelliği yok, yeni üçüncü-parti CDN script'i yok, yeni n8n workflow'u yok
 - Sebep: SaaS→on-premise geçişi planlanıyor; her yeni bulut bağımlılığı geçiş maliyetini büyütür
 
+### 📚 Belge arşivi protokolü (2026-08-04)
+`Handbücher/`, `Podoloji/`, `verordnung rezept/` altındaki GKV/§302/Heilmittel belgelerine
+dokunan her iş şu sırayı izler:
+1. **Önce `Handbücher/INDEX.md`** — 33 belgenin kaydı, sürümü ve bölüm haritası orada
+2. **Hedefli oku** — kayıttaki "Anahtar bölümler"den `Grep` ile ilgili kısmı bul, sadece onu oku.
+   Belgenin tamamını okumak neredeyse her zaman hatadır (`Anlage_1_TP5_V21` tek başına ~130k token)
+3. **Sonra kaydet** — INDEX'te kaydı olmayan bir belge okunduysa kaydı INDEX'e eklenir
+4. Okuma her zaman `.txt` üzerinden; `.pdf` açılmaz (`pdftotext -enc UTF-8 -layout` ile üretilir)
+
+Süzülmüş kurallar: `Handbücher/SPEC-RULES.md` (kaynak + sürüm + kod satırı üçlüsü zorunlu).
+Geçerli sürüm: **Anlage 1 ve 3 TP5 = V21**. V22/V10 → 01.02.2027, erken geçiş dosya reddi demektir.
+
 ### Genel
 - API anahtarlarını ASLA hardcode etme — env var
 - `console.log` yerine proper error response
@@ -198,10 +212,18 @@ stripe_price_id, billing_interval, current_period_end
 ## 📚 İlgili Dosyalar
 
 - `ONPREM_MIGRATION_PLAYBOOK.md` — ★ ON-PREMISE GEÇİŞ PLAYBOOK'U (2026-07-06): kullanıcı "bu dosyayı uygula" dediğinde SaaS→self-hosted geçişin tam uygulama rehberi; kilitli kararlar + fazlar + kabul kriterleri. Arka plan: `ON_PREMISE_ANALYSE.md`
-- `INFINITYMADE_DASHBOARD.md` — dashboard tasarım dokümantasyonu
-- `PRAXISAI_UPGRADE_CHEATSHEET.md` — n8n workflow upgrade notları
-- `STRIPE_SETUP.md` — Stripe kurulum rehberi
-- `infinitymade.md`, `infinitymade_v2.md` — eski plan dokümanları (referans)
+- `STRIPE_SETUP.md` — Stripe kurulum rehberi (⚠️ Test Mode döneminde yazıldı, LIVE için gözden geçirilmeli)
+- `INFRASTRUCTURE.md` — SSH/VPS erişimi, deploy pipeline, sık operasyonlar
+- `BETA_ROADMAP_6WOCHEN.md` — haftalık modül planı + veri katmanı zinciri (T1–T6 = hafta)
+- `Handbücher/INDEX.md` — 33 GKV/§302 belgesinin haritası + okuma protokolü
+- `Handbücher/SPEC-RULES.md` — süzülmüş §302 kuralları (kaynak + sürüm + kod satırı)
+- `konsey/KARARLAR.md` — `/konsey` kararlarının dizini
+- `compliance/LEGAL_DECISIONS.md` — kapatılmış hukuki kararlar
+
+### 🗄️ Arşiv (2026-08-05)
+39 eskimiş rapor/plan `archive/` altına taşındı — **silinmedi.** Neden eskidikleri ve içlerinden
+neyin kurtarıldığı `archive/README.md`'de. Oradaki audit bulguları **iddiadır**, aksiyon almadan
+önce koda/DB'ye karşı doğrula (2026-08-05'te iki güvenlik iddiası doğrulandı ve çürüdü).
 
 ---
 

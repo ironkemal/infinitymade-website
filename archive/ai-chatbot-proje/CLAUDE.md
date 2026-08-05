@@ -183,7 +183,7 @@ function findAnswer(userMessage) {
 ### API Ayarlari
 
 ```javascript
-const FAL_KEY = '3c2e1b25-c850-4e3f-9822-9f88b6807a63:e41f4d159c6dd129bb795b812e27d75a';
+const FAL_KEY = process.env.FAL_KEY; // ⚠️ Anahtar 2026-08-05'te kaldirildi. Iptal edildi/edilecek -> TODO_MANUEL.md ss0.1
 
 async function generateImage(prompt) {
   const response = await fetch('https://fal.run/fal-ai/nano-banana-2', {
