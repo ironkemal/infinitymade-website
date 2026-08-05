@@ -1,0 +1,734 @@
+     Downloadbedingungen
+                  für
+
+ICD-10-GM, OPS, ICD-10-WHO,
+Alpha-ID-SE, ICD-O-3 und ICF
+
+Stand: 01. August 2025
+
+Herausgegeben vom
+Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+
+Postadresse                     Abteilung K – Kodiersysteme und Register
+Dienstsitz Bonn                 Dienstort Köln
+
+Kurt-Georg-Kiesinger-Allee 3    Waisenhausgasse 36-38a
+53175 Bonn                      50676 Köln
+Telefon +49 (0)228 99 307-0     Telefon +49 (0)228 99 307-4945
+Telefax +49 (0)228 99 307-5207
+poststelle@bfarm.de             klassi@bfarm.de
+www.bfarm.de                    www.bfarm.de
+                                                                       Downloadbedingungen
+
+Downloadbedingungen für ICD-10-GM, OPS,
+ICD-10-WHO, Alpha-ID-SE, ICD-O-3 und ICF
+
+Mit dem Download von Dateien kommt ein Nutzungsvertrag zwischen Ihnen und dem
+Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM), Kurt-Georg-Kiesinger-Allee 3, 53175
+Bonn, zustande. Sie verpflichten sich dadurch, unsere Abgabebedingungen einzuhalten. Diese
+umfassen:
+
+I. ICD-10-GM.............................................................................................................................................................3
+     § 1 Urheberrecht/Nutzungsumfang zur ICD-10-GM..................................................................................3
+     § 2 Gewährleistung und Haftung.......................................................................................................................3
+     Anhang zu den Downloadbedingungen für die ICD-10-GM.....................................................................4
+
+II. OPS............................................................................................................................................................................6
+     § 1 Urheberrecht/Nutzungsumfang zum OPS..............................................................................................6
+     § 2 Gewährleistung und Haftung.......................................................................................................................6
+     Anhang zu den Downloadbedingungen für den OPS..................................................................................7
+
+III. ICD-10-WHO.........................................................................................................................................................8
+     § 1 Urheberrecht/Nutzungsumfang zur ICD-10-WHO..............................................................................8
+     § 2 Gewährleistung und Haftung.......................................................................................................................8
+     Anhang zu den Downloadbedingungen für die ICD-10-WHO.................................................................9
+
+IV. Alpha-ID-SE (Anwendungsbereich Seltene Erkrankungen)....................................................................12
+     § 1 Urheberrecht/Nutzungsumfang zur Alpha-ID-SE..............................................................................12
+     § 2 Gewährleistung und Haftung....................................................................................................................12
+
+V. ICD-O-3.................................................................................................................................................................13
+     § 1 Urheberrecht/Nutzungsumfang zur ICD-O-3.....................................................................................13
+     § 2 Gewährleistung und Haftung....................................................................................................................14
+     Anhang zu den Downloadbedingungen für die ICD-O-3........................................................................15
+
+VI. ICF...........................................................................................................................................................................16
+     § 1 Urheberrecht/Nutzungsumfang zur ICF................................................................................................16
+     § 2 Gewährleistung und Haftung....................................................................................................................17
+     Anhang zu den Downloadbedingungen für die ICF...................................................................................18
+
+Seite 2 von 18
+              Downloadbedingungen
+
+I. ICD-10-GM
+
+§ 1 Urheberrecht/Nutzungsumfang zur ICD-10-GM
+
+    1. Bei den vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) herausgegebenen
+         amtlichen Ausgaben der ICD-10-GM (Internationale statistische Klassifikation der
+         Krankheiten und verwandter Gesundheitsprobleme, 10. Revision, German Modification),
+         Systematisches Verzeichnis, handelt es sich um ein "anderes amtliches Werk" i. S. des
+         § 5 Abs. 2 Urheberrechtsgesetz (UrhG).
+
+    2. Das Alphabetische Verzeichnis zur ICD-10-GM wird vom BfArM als zugehöriges
+         Ergänzungswerk zum Systematischen Verzeichnis der ICD-10-GM herausgegeben.
+
+    3. Bei Beachtung des Änderungsverbotes (§ 62 UrhG) und des Gebotes der Quellenangabe (§ 63
+         UrhG) verfügen Sie über die Nutzungsrechte an diesen Werken.
+
+    4. Wollen Sie diese Werke vervielfältigen, verbreiten oder Dritten zugänglich machen, so bitten
+         wir um Beachtung folgender Punkte:
+
+                    a. Gemäß den Vorgaben der WHO dürfen die Werke keine kommerzielle Werbung
+                        enthalten. Erlaubt sind lediglich werbende Hinweise auf (verlags-)eigene
+                        Publikationen.
+
+                    b. Bei der Weitergabe sind die im Anhang zu den Downloadbedingungen für die
+                        ICD-10-GM aufgeführten Quellenangaben (nach § 63 UrhG) aufzunehmen.
+
+§ 2 Gewährleistung und Haftung
+
+    1. Für Schäden ist das BfArM nur insoweit haftbar, als ihm Vorsatz oder grobe Fahrlässigkeit
+         zur Last fällt.
+
+    2. Das BfArM haftet nicht für solche Schäden aller Art bei Dritten, die durch die Weitergabe
+         von fehlerhaften oder unvollständigen Informationen verursacht wurden, soweit nicht die
+         Fehlerhaftigkeit oder Unvollständigkeit der Informationen bereits in den
+         Verantwortungsbereich des BfArM fällt und nachweislich vorsätzliches oder grob
+         fahrlässiges Verhalten vorliegt. Sie stellen das BfArM von sämtlichen Ansprüchen Dritter,
+         ggf. gekürzt um einen Verschuldensanteil des BfArM, frei.
+
+    3. Sie stellen das BfArM frei von Ansprüchen, die dadurch entstehen, dass Sie die Rechte
+         Dritter bei der Vervielfältigung, Verbreitung oder jeglichen Zugänglichmachung an Dritte
+         verletzen.
+
+                                   Seite 3 von 18
+                                                                       Downloadbedingungen
+
+Anhang zu den Downloadbedingungen für die ICD-10-GM
+Quellenangaben für den Band 1 (Systematisches Verzeichnis) der ICD-10-GM (bei Druckwerken
+auf der Rückseite des Titelblattes)
+
+Die vorliegende Ausgabe beruht
+
+(1) auf der vollständigen amtlichen Fassung der Internationalen statistischen Klassifikation der
+Krankheiten und verwandter Gesundheitsprobleme, 10. Revision, und
+
+(2) auf der australischen ICD-10-AM, First Edition.
+
+Die englischsprachige Originalausgabe zu (1) wurde 1992 von der Weltgesundheitsorganisation
+(WHO) veröffentlicht als International Statistical Classification of Diseases and Related Health
+Problems, Tenth Revision, Geneva, WHO, Vol. 1, 1992; die englischsprachige Originalausgabe zu (2)
+wurde 1998 vom australischen National Centre for Classification in Health veröffentlicht als Volume
+1 of The International Statistical Classification of Diseases and Related Health Problems, 10th
+Revision, Australian Modification (ICD-10-AM), First Edition.
+© zu (1): Weltgesundheitsorganisation (WHO) 1992
+© zu (2): Commonwealth of Australia 1998
+
+Der Generaldirektor der Weltgesundheitsorganisation (WHO) hat die Übersetzungsrechte für eine
+deutschsprachige Ausgabe an das Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+vergeben, das für die Übersetzung allein verantwortlich ist.
+
+Das Commonwealth of Australia hat die Übersetzungsrechte für eine deutschsprachige Ausgabe an
+das Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) vergeben, das für die Übersetzung
+allein verantwortlich ist.
+
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) im Auftrag des
+Bundesministeriums für Gesundheit (BMG)
+
+Die Erstellung bzw. der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des
+Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+
+Weitere Texte und Angaben bei Druckwerken
+
+ISBN – angeben –
+
+Druck NNNN (zutreffende Jahreszahl angeben)
+
+Bibliografische Informationen der Deutschen Nationalbibliothek
+
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+
+– Verlag: (Informationen eintragen) –
+
+– Satz: (Informationen eintragen) –
+
+– Druck: (Informationen eintragen) –
+
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+Seite 4 von 18
+                                                                      Downloadbedingungen
+
+Quellenangaben für den Band 2 (Alphabetisches Verzeichnis) der ICD-10-GM (bei Druckwerken
+auf der Rückseite des Titelblattes)
+Das Alphabetische Verzeichnis zur ICD-10-GM entstand auf der Basis des Diagnosenthesaurus des
+Zentralinstituts für die kassenärztliche Versorgung in der Bundesrepublik Deutschland (Zi). Es wurde
+im Laufe der Jahre ergänzt um Texte aus dem Alphabetischen Verzeichnis der ICD-10-WHO.
+Für den Diagnosenthesaurus gilt als Inhaber der Nutzungsrechte:
+Zentralinstitut für die kassenärztliche Versorgung in der Bundesrepublik Deutschland (Zi)
+Salzufer 8, 10587 Berlin
+Internet: https://www.zi.de
+Der Inhaber der Nutzungsrechte für diese Teile ist:
+Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM), Kurt-Georg-Kiesinger-Allee 3, 53175
+Bonn.
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) im Auftrag des
+Bundesministeriums für Gesundheit (BMG)
+Der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des Bundesinstituts für
+Arzneimittel und Medizinprodukte (BfArM).
+Weitere Texte und Angaben bei Druckwerken
+ISBN – angeben –
+Druck NNNN (zutreffende Jahreszahl angeben)
+Bibliografische Informationen der Deutschen Nationalbibliothek
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+– Verlag: (Informationen eintragen) –
+– Satz: (Informationen eintragen) –
+– Druck: (Informationen eintragen) –
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+                                                                                                          Seite 5 von 18
+                Downloadbedingungen
+
+II. OPS
+
+§ 1 Urheberrecht/Nutzungsumfang zum OPS
+
+    1. Bei den vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+         herausgegebenen amtlichen Ausgaben des OPS (Operationen- und Prozedurenschlüssel),
+         Systematisches Verzeichnis, handelt es sich um ein "anderes amtliches Werk" i. S. des § 5
+         Abs. 2 Urheberrechtsgesetz (UrhG).
+
+    2. Das Alphabetische Verzeichnis zum OPS wird vom BfArM als zugehöriges Ergänzungswerk
+         zum Systematischen Verzeichnis des OPS herausgegeben.
+
+    3. Bei Beachtung des Änderungsverbotes (§ 62 UrhG) und des Gebotes der Quellenangabe (§ 63
+         UrhG) verfügen Sie über die Nutzungsrechte an diesen Werken.
+
+    4. Wollen Sie diese Werke vervielfältigen, verbreiten oder Dritten zugänglich machen, so sind
+         bei der Weitergabe die im Anhang zu den Downloadbedingungen für den OPS aufgeführten
+         Quellenangaben (nach § 63 UrhG) aufzunehmen.
+
+§ 2 Gewährleistung und Haftung
+
+    1. Für Schäden ist das BfArM nur insoweit haftbar, als ihm Vorsatz oder grobe Fahrlässigkeit
+         zur Last fällt.
+
+    2. Das BfArM haftet nicht für solche Schäden aller Art bei Dritten, die durch die Weitergabe
+         von fehlerhaften oder unvollständigen Informationen verursacht wurden, soweit nicht die
+         Fehlerhaftigkeit oder Unvollständigkeit der Informationen bereits in den
+         Verantwortungsbereich des BfArM fällt und nachweislich vorsätzliches oder grob
+         fahrlässiges Verhalten vorliegt. Sie stellen das BfArM von sämtlichen Ansprüchen Dritter,
+         ggf. gekürzt um einen Verschuldensanteil des BfArM, frei.
+
+    3. Sie stellen das BfArM frei von Ansprüchen, die dadurch entstehen, dass Sie die Rechte
+         Dritter bei der Vervielfältigung, Verbreitung oder jeglichen Zugänglichmachung an Dritte
+         verletzen.
+
+Seite 6 von 18
+                                                                      Downloadbedingungen
+
+Anhang zu den Downloadbedingungen für den OPS
+Quellenangaben für den OPS (Systematisches und Alphabetisches Verzeichnis)
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) im Auftrag des
+Bundesministeriums für Gesundheit (BMG)
+Die Erstellung bzw. der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des
+Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+Weitere Texte und Angaben bei Druckwerken
+ISBN – angeben –
+Druck NNNN (zutreffende Jahreszahl angeben)
+Bibliografische Informationen der Deutschen Nationalbibliothek
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+– Verlag: (Informationen eintragen) –
+– Satz: (Informationen eintragen) –
+– Druck: (Informationen eintragen) –
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+                                                                                                          Seite 7 von 18
+                 Downloadbedingungen
+
+III. ICD-10-WHO
+
+§ 1 Urheberrecht/Nutzungsumfang zur ICD-10-WHO
+
+    1. Bei den vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) herausgegebenen
+         amtlichen deutschsprachigen Ausgaben der ICD-10-WHO (Internationale statistische
+         Klassifikation der Krankheiten und verwandter Gesundheitsprobleme, 10. Revision),
+         Systematisches Verzeichnis und Regelwerk, handelt es sich um ein "anderes amtliches Werk"
+         i. S. des § 5 Abs. 2 Urheberrechtsgesetz (UrhG).
+
+    2. Das Alphabetische Verzeichnis zur ICD-10-WHO wird vom BfArM als zugehöriges
+         Ergänzungswerk zum Systematischen Verzeichnis der ICD-10-WHO herausgegeben.
+
+    3. Bei Beachtung des Änderungsverbotes (§ 62 UrhG) und des Gebotes der Quellenangabe
+         (§ 63 UrhG) verfügen Sie über die Nutzungsrechte an diesen Werken.
+
+    4. Wollen Sie diese Werke vervielfältigen, verbreiten oder Dritten zugänglich machen, so bitten
+         wir um Beachtung folgender Punkte:
+
+                    a. Gemäß den Vorgaben der WHO dürfen die Werke keine kommerzielle Werbung
+                        enthalten. Erlaubt sind lediglich werbende Hinweise auf (verlags-)eigene
+                        Publikationen.
+
+                    b. Bei der Weitergabe sind die im Anhang zu den Downloadbedingungen für die
+                        ICD-10-WHO aufgeführten Quellenangaben (nach § 63 UrhG) aufzunehmen.
+
+§ 2 Gewährleistung und Haftung
+
+    1. Für Schäden ist das BfArM nur insoweit haftbar, als ihm Vorsatz oder grobe Fahrlässigkeit
+         zur Last fällt.
+
+    2. Das BfArM haftet nicht für solche Schäden aller Art bei Dritten, die durch die Weitergabe
+         von fehlerhaften oder unvollständigen Informationen verursacht wurden, soweit nicht die
+         Fehlerhaftigkeit oder Unvollständigkeit der Informationen bereits in den
+         Verantwortungsbereich des BfArM fällt und nachweislich vorsätzliches oder grob
+         fahrlässiges Verhalten vorliegt. Sie stellen das BfArM von sämtlichen Ansprüchen Dritter,
+         ggf. gekürzt um einen Verschuldensanteil des BfArM, frei.
+
+    3. Sie stellen das BfArM frei von Ansprüchen, die dadurch entstehen, dass Sie die Rechte
+         Dritter bei der Vervielfältigung, Verbreitung oder jeglichen Zugänglichmachung an Dritte
+         verletzen.
+
+Seite 8 von 18
+                                                                      Downloadbedingungen
+
+Anhang zu den Downloadbedingungen für die ICD-10-WHO
+Quellenangaben für den Band 1 (Systematisches Verzeichnis) der ICD-10-WHO (bei Druckwerken
+auf der Rückseite des Titelblattes)
+Die englischsprachige Originalausgabe wurde 1992 von der Weltgesundheitsorganisation (WHO)
+veröffentlicht als International Statistical Classification of Diseases and Related Health Problems,
+Tenth Revision, Geneva, WHO, Vol. 1, 1992.
+© Weltgesundheitsorganisation (WHO) 1992
+Der Generaldirektor der Weltgesundheitsorganisation (WHO) hat die Übersetzungsrechte für eine
+deutschsprachige Ausgabe an das Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+vergeben, das für die Übersetzung allein verantwortlich ist.
+Diese Ausgabe enthält alle offiziellen Änderungen der Weltgesundheitsorganisation (WHO), die ab
+dem 01.01.NNNN gültig sind. (zutreffende Jahreszahl angeben)
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) im Auftrag des
+Bundesministeriums für Gesundheit (BMG)
+Die Erstellung bzw. der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des
+Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+Weitere Texte und Angaben bei Druckwerken
+ISBN – angeben –
+Druck NNNN (zutreffende Jahreszahl angeben)
+Bibliografische Informationen der Deutschen Nationalbibliothek
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+– Verlag: (Informationen eintragen) –
+– Satz: (Informationen eintragen) –
+– Druck: (Informationen eintragen) –
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+                                                                                                          Seite 9 von 18
+                                                                       Downloadbedingungen
+
+Quellenangaben für den Band 2 (Regelwerk) der ICD-10-WHO (bei Druckwerken auf der Rückseite
+des Titelblattes)
+Die englischsprachige Originalausgabe wurde 1993 von der Weltgesundheitsorganisation (WHO)
+veröffentlicht als International Statistical Classification of Diseases and Related Health Problems,
+Tenth Revision, Geneva, WHO, Vol. 2, 1993.
+© Weltgesundheitsorganisation (WHO) 1993
+Der Generaldirektor der Weltgesundheitsorganisation (WHO) hat die Übersetzungsrechte für eine
+deutschsprachige Ausgabe an das Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+vergeben, das für die Übersetzung allein verantwortlich ist.
+Diese Ausgabe enthält alle offiziellen Änderungen der Weltgesundheitsorganisation (WHO), die ab
+dem 01.01.NNNN gültig sind. (zutreffende Jahreszahl angeben)
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) im Auftrag des
+Bundesministeriums für Gesundheit (BMG)
+Die Erstellung bzw. der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des
+Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+Weitere Texte und Angaben bei Druckwerken
+ISBN – angeben –
+Druck NNNN (zutreffende Jahreszahl angeben)
+Bibliografische Informationen der Deutschen Nationalbibliothek
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+– Verlag: (Informationen eintragen) –
+– Satz: (Informationen eintragen) –
+– Druck: (Informationen eintragen) –
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+Seite 10 von 18
+                                                                      Downloadbedingungen
+
+Quellenangaben für den Band 3 (Alphabetisches Verzeichnis) der ICD-10-WHO (bei Druckwerken
+auf der Rückseite des Titelblattes)
+
+Die englischsprachige Originalausgabe wurde 1994 von der Weltgesundheitsorganisation (WHO)
+veröffentlicht als International Statistical Classification of Diseases and Related Health Problems,
+Tenth Revision, Geneva, WHO, Vol. 3, 1994.
+© Weltgesundheitsorganisation (WHO) 1994
+
+Der Generaldirektor der Weltgesundheitsorganisation (WHO) hat die Übersetzungsrechte für eine
+deutschsprachige Ausgabe an das Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+vergeben, das für die Übersetzung allein verantwortlich ist.
+
+Diese Ausgabe enthält alle offiziellen Änderungen der Weltgesundheitsorganisation (WHO), die ab
+dem 01.01.NNNN gültig sind. (zutreffende Jahreszahl angeben)
+
+Die Originalausgabe des Alphabetischen Verzeichnisses der ICD-10-WHO wurde im Laufe der Jahre
+ergänzt um Texte aus dem Alphabetischen Verzeichnis der ICD-10-GM.
+
+Für einen Teil dieser Ergänzungen gilt als Inhaber der Nutzungsrechte:
+Zentralinstitut für die kassenärztliche Versorgung in der Bundesrepublik Deutschland (Zi)
+Salzufer 8, 10587 Berlin
+Internet: https://www.zi.de
+
+Der Inhaber der Nutzungsrechte für diese Teile ist:
+Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM), Kurt-Georg-Kiesinger-Allee 3, 53175
+Bonn.
+
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) im Auftrag des
+Bundesministeriums für Gesundheit (BMG)
+
+Die Erstellung bzw. der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des
+Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+
+Weitere Texte und Angaben bei Druckwerken
+
+ISBN – angeben –
+
+Druck NNNN (zutreffende Jahreszahl angeben)
+
+Bibliografische Informationen der Deutschen Nationalbibliothek
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+
+– Verlag: (Informationen eintragen) –
+
+– Satz: (Informationen eintragen) –
+
+– Druck: (Informationen eintragen) –
+
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+                                                                                                        Seite 11 von 18
+                                                                       Downloadbedingungen
+
+IV. Alpha-ID-SE (Anwendungsbereich Seltene Erkrankungen)
+
+§ 1 Urheberrecht/Nutzungsumfang zur Alpha-ID-SE
+
+     1. Die vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) herausgegebene
+          Datei Alpha-ID-SE basiert auf dem Alphabetischen Verzeichnis zur ICD-10-GM. Sie enthält
+          eine fortlaufende, stabile nichtsprechende Identifikationsnummer (Alpha-ID), die die Texte
+          des Alphabetischen Verzeichnisses der ICD-10-GM eindeutig identifiziert. Die
+          Identifikationsnummer in der Alpha-ID-SE hat die Funktion eines nicht klassifizierenden
+          Diagnosenkodes und ist für die elektronische Weiterverarbeitung medizinischer
+          Diagnosentexte gedacht. Es handelt es sich um ein "anderes amtliches Werk" i. S. des § 5
+          Abs. 2 Urheberrechtsgesetz (UrhG).
+
+     2. Bei Beachtung des Änderungsverbotes (§ 62 UrhG) und des Gebotes der Quellenangabe
+         (§ 63 UrhG) verfügen Sie über die Nutzungsrechte an der Alpha-ID-SE. Für die in der Alpha-
+         ID-SE enthaltenen Orpha-Kennnummern ist der Inhaber der Nutzungsrechte das INSERM
+         US14 (Institut national de la santé et de la recherche médicale), 96, rue Didot, 75014 Paris,
+         Frankreich. Es wird ausdrücklich auf die Nutzungsbedingungen von Orphadata und die
+         Nutzungsbedingungen von INSERM US14 hingewiesen.
+
+     3. Wollen Sie die Alpha-ID-SE vervielfältigen, verbreiten oder Dritten zugänglich machen, so
+          bitten wir um Beachtung folgender Punkte:
+                    a. Gemäß den Vorgaben der WHO dürfen die Werke keine kommerzielle Werbung
+                         enthalten. Erlaubt sind lediglich werbende Hinweise auf eigene Publikationen.
+                    b. Bei der Weitergabe ist die folgende Quellenangabe (nach § 63 UrhG)
+                         aufzunehmen:
+                         „Die Erstellung erfolgt unter Verwendung der maschinenlesbaren Fassung des
+                         Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+                         Für die in der Alpha-ID-SE enthaltenen Orpha-Kennnummern ist der Inhaber
+                         der Nutzungsrechte das INSERM US14 (Institut national de la santé et de la
+                         recherche médicale), 96, rue Didot, 75014 Paris, Frankreich.“
+
+§ 2 Gewährleistung und Haftung
+
+     1. Für Schäden ist das BfArM nur insoweit haftbar, als ihm Vorsatz oder grobe Fahrlässigkeit
+          zur Last fällt.
+
+     2. Das BfArM haftet nicht für solche Schäden aller Art bei Dritten, die durch die Weitergabe
+          von fehlerhaften oder unvollständigen Informationen verursacht wurden, soweit nicht die
+          Fehlerhaftigkeit oder Unvollständigkeit der Informationen bereits in den
+          Verantwortungsbereich des BfArM fällt und nachweislich vorsätzliches oder grob
+          fahrlässiges Verhalten vorliegt. Sie stellen das BfArM von sämtlichen Ansprüchen Dritter,
+          ggf. gekürzt um einen Verschuldensanteil des BfArM, frei.
+
+     3. Sie stellen das BfArM frei von Ansprüchen, die dadurch entstehen, dass Sie die Rechte
+          Dritter bei der Vervielfältigung, Verbreitung oder jeglichen Zugänglichmachung an Dritte
+          verletzen.
+
+Seite 12 von 18
+            Downloadbedingungen
+
+V. ICD-O-3
+
+§ 1 Urheberrecht/Nutzungsumfang zur ICD-O-3
+
+    1. Bei der vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) herausgegebenen
+         amtlichen deutschsprachigen Ausgabe der ICD-O-3 (Internationale Klassifikation der
+         Krankheiten für die Onkologie) handelt es sich um ein "anderes amtliches Werk" i. S. des
+         § 5 Abs. 2 Urheberrechtsgesetz (UrhG).
+
+    2. Bei Beachtung des Änderungsverbotes (§ 62 UrhG) und des Gebotes der Quellenangabe
+         (§ 63 UrhG) verfügen Sie über die Nutzungsrechte an diesem Werk. Das Änderungsverbot
+         umfasst insbesondere das Verbot einer Änderung an Überschrift, Inhalt und der Definition
+         der bestehenden Zeichencodes, an Schlüsselnummern, Begriffen und den dazugehörigen
+         Texten, an den Hinweisen für die Benutzung des Schlüssels und sonstigen Informationen für
+         die Kodierung.
+
+    3. Wir bitten zu beachten, dass die ICD-O-3 nach den Vorgaben der WHO nur dafür bezweckt
+         ist, innerhalb der Landesgrenzen der Bundesrepublik Deutschland eingesetzt zu werden.
+         Nutzer bzw. Erwerber in anderen Ländern, deren Amtssprache Deutsch ist, sind nur dann
+         autorisiert, wenn die landesweite Nutzung der ICD-O-3 im öffentlichen Gesundheitssektor
+         durch eine entsprechende Lizenzvereinbarung der jeweiligen Landesregierung genehmigt
+         wurde.
+
+    4. Die WHO hat für die Verwendung der ICD-O-3 genehmigte Zwecke festgelegt, um deren
+         Beachtung gebeten wird. Dies sind alle Aktivitäten, die von der für die Festlegung oder
+         Erfüllung der jeweiligen Aufgaben offiziell zuständigen Stelle als notwendig oder
+         zweckmäßig erachtet werden. Dies beinhaltet unter anderem die Nutzung der Klassifikation
+         für die folgenden Aktivitäten:
+
+                    a. Erhebung, Zusammenführung, Auswertung von oder Berichterstattung über
+                        Diagnosedaten durch, an, in oder bei regionalen und lokalen Verwaltungen und
+                        deren Auftragnehmern sowie Krankenhäusern, Kliniken, medizinischem
+                        Fachpersonal und anderen Organisationen, die mit der Administration von
+                        Gesundheitsprogrammen oder vergleichbaren Anwendungen betraut sind;
+
+                    b. Berichterstattung in Bezug auf Diagnoseinformationen an nationale, regionale
+                        und lokale Verwaltungen zum Zweck der Gesundheitsinformation und Statistik;
+
+                    c. Entwicklung von elektronischen Werkzeugen und Systemen für die unter a. und
+                        b. genannten administrativen und statistischen sowie Forschungs- und
+                        Planungszwecke;
+
+                    d. Erhebung, Zusammenführung, Auswertung, Verbreitung oder sonstige
+                        Anwendungen von Diagnosedaten (und der dafür verwendeten elektronischen
+                        Werkzeuge und Systeme) durch akademische Institutionen (einschließlich ihrer
+                        Kliniken), gemeinnützige oder Nichtregierungsorganisationen und deren
+                        Auftragnehmer oder durch sonstige Organisationen oder Personen zur
+                        Unterstützung der für die unter a. bis c. genannten genehmigten behördlichen
+                        Zwecke erfolgen mit Genehmigung des BfArM;
+
+                    e. Entwicklung von Informations- und Schulungsmaterialien sowie von
+                        Erprobungsverfahren zur Implementierung der vorstehend unter a. bis d.
+                        genannten Anwendungen und Systeme.
+
+         Die genehmigten Zwecke müssen in einer Weise durchgeführt werden, die der ICD-O-3 und
+         den Definitionen und Standards entspricht, die gemäß den Nomenklaturvorschriften der
+         Weltgesundheitsversammlung (1967) entwickelt wurden.
+
+         Die ICD-O-3 soll nur in der Weise verwendet werden, die im Handbuch der Internationalen
+         Klassifikation der Krankheiten für die Onkologie, 3. Auflage, 1. Revision (2013) festgelegt ist.
+
+                                                                                                        Seite 13 von 18
+                                                                       Downloadbedingungen
+
+     5. Wir bitten zu beachten, dass nach den Vorgaben der WHO die Klassifikation nicht in
+          Verbindung mit der Förderung, dem Marketing oder zu Werbezwecken verwendet werden
+          darf.
+
+     6. Wollen Sie dieses Werk vervielfältigen, verbreiten oder Dritten zugänglich machen, so bitten
+          wir um Beachtung folgender Punkte:
+                    a. Gemäß den Vorgaben der WHO darf das Werk keine kommerzielle Werbung
+                         enthalten.
+                    b. Bei der Weitergabe sind die im Anhang zu den Downloadbedingungen für die
+                         ICD-O-3 aufgeführten Quellenangaben (nach § 63 UrhG) aufzunehmen.
+
+§ 2 Gewährleistung und Haftung
+     1. Für Schäden ist das BfArM nur insoweit haftbar, als ihm Vorsatz oder grobe Fahrlässigkeit
+          zur Last fällt.
+     2. Das BfArM haftet nicht für solche Schäden aller Art bei Dritten, die durch die Weitergabe
+         von fehlerhaften oder unvollständigen Informationen verursacht wurden, soweit nicht die
+         Fehlerhaftigkeit oder Unvollständigkeit der Informationen bereits in den
+         Verantwortungsbereich des BfArM fällt und nachweislich vorsätzliches oder grob
+         fahrlässiges Verhalten vorliegt. Sie stellen das BfArM von sämtlichen Ansprüchen Dritter,
+         ggf. gekürzt um einen Verschuldensanteil des BfArM, frei.
+     3. Sie stellen das BfArM frei von Ansprüchen, die dadurch entstehen, dass Sie die Rechte
+          Dritter bei der Vervielfältigung, Verbreitung oder jeglichen Zugänglichmachung an Dritte
+          verletzen.
+
+Seite 14 von 18
+                                                                      Downloadbedingungen
+
+Anhang zu den Downloadbedingungen für die ICD-O-3
+Quellenangaben für die ICD-O-3 Zweite Revision, Stand November 2020
+Die englischsprachige Originalausgabe wurde 2019 von der Weltgesundheitsorganisation (WHO)
+veröffentlicht als International Classification of Diseases for Oncology (ICD-O) – 3rd Edition, 2nd
+Revision, 2019.
+© World Health Organization (WHO) 2019
+Der Generaldirektor der Weltgesundheitsorganisation (WHO) hat die Übersetzungs-,
+Veröffentlichungs- und Verwertungsrechte für eine deutschsprachige Ausgabe an das Bundesinstitut
+für Arzneimittel und Medizinprodukte (BfArM) vergeben, das für die Übersetzung allein
+verantwortlich ist.
+ICD-O-3-Kodes, -Begriffe und -Texte © Bundesinstitut für Arzneimittel und Medizinprodukte
+(BfArM), übersetzt von der International Classification of Diseases for Oncology, 3rd Edition – ICD-
+O-3, herausgegeben durch die Weltgesundheitsorganisation (WHO)
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) im Auftrag des
+Bundesministeriums für Gesundheit (BMG)
+Die Erstellung bzw. der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des
+Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+Weitere Texte und Angaben bei Druckwerken
+ISBN – angeben –
+Druck NNNN (zutreffende Jahreszahl angeben)
+Bibliografische Informationen der Deutschen Nationalbibliothek
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+Verlag: (Informationen eintragen) –
+Satz: (Informationen eintragen) –
+Druck: (Informationen eintragen) –
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+                                                                                                        Seite 15 von 18
+                 Downloadbedingungen
+
+VI. ICF
+
+§ 1 Urheberrecht/Nutzungsumfang zur ICF
+
+    1. Bei der vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) herausgegebenen
+         amtlichen deutschsprachigen Ausgabe der ICF (Internationale Klassifikation der
+         Funktionsfähigkeit, Behinderung und Gesundheit) handelt es sich um ein "anderes
+         amtliches Werk" i. S. des § 5 Abs. 2 Urheberrechtsgesetz (UrhG). Die Urheberrechte an der
+         deutschsprachigen Fassung liegen bei der WHO (World Health Organization).
+
+    2. Bei Beachtung des Änderungsverbotes (§ 62 UrhG) und des Gebotes der Quellenangabe
+         (§ 63 UrhG) verfügen Sie über die Nutzungsrechte an diesem Werk. Das Änderungsverbot
+         umfasst insbesondere das Verbot einer Änderung an Überschrift, Inhalt und der Definition
+         der bestehenden Zeichencodes, an Schlüsselnummern, Begriffen und den dazugehörigen
+         Texten, an den Hinweisen für die Benutzung des Schlüssels und sonstigen Informationen für
+         die Kodierung.
+
+    3. Wir bitten zu beachten, dass die ICF nach den Vorgaben der WHO nur dafür bezweckt ist,
+         innerhalb der Landesgrenzen der Bundesrepublik Deutschland eingesetzt zu werden. Nutzer
+         bzw. Erwerber in anderen Ländern, deren Amtssprache Deutsch ist, sind nur dann autorisiert,
+         wenn die landesweite Nutzung der ICF im öffentlichen Gesundheitssektor durch eine
+         entsprechende Lizenzvereinbarung der jeweiligen Landesregierung genehmigt wurde.
+
+    4. Die WHO hat für die Verwendung der ICF genehmigte Zwecke festgelegt, um deren
+         Beachtung gebeten wird. Dies sind alle Aktivitäten, die von der für die Festlegung oder
+         Erfüllung der jeweiligen Aufgaben offiziell zuständigen Stelle als notwendig oder
+         zweckmäßig erachtet werden. Dies beinhaltet unter anderem die Nutzung der Klassifikation
+         für die folgenden Aktivitäten:
+
+                    a. Erhebung, Zusammenführung, Auswertung von oder Berichterstattung über
+                        Funktionsfähigkeitsdaten durch, an, in oder bei regionalen und lokalen
+                        Verwaltungen und deren Auftragnehmern sowie Krankenhäusern, Kliniken,
+                        medizinischem Fachpersonal und anderen Organisationen, die mit der
+                        Administration von Gesundheitsprogrammen oder vergleichbaren
+                        Anwendungen betraut sind;
+
+                    b. Berichterstattung in Bezug auf Funktionsfähigkeitsinformationen an nationale,
+                        regionale und lokale Verwaltungen zum Zweck der Gesundheitsinformation und
+                        Statistik;
+
+                    c. Entwicklung von elektronischen Werkzeugen und Systemen für die unter a. und
+                        b. genannten administrativen und statistischen sowie Forschungs- und
+                        Planungszwecke;
+
+                    d. Erhebung, Zusammenführung, Auswertung, Verbreitung oder sonstige
+                        Anwendungen von Funktionsfähigkeitsdaten (und der dafür verwendeten
+                        elektronischen Werkzeuge und Systeme) durch akademische Institutionen
+                        (einschließlich ihrer Kliniken), gemeinnützige oder
+                        Nichtregierungsorganisationen und deren Auftragnehmer oder durch sonstige
+                        Organisationen oder Personen zur Unterstützung der für die unter a. bis c.
+                        genannten genehmigten behördlichen Zwecke erfolgen mit Genehmigung des
+                        BfArM;
+
+                    e. Entwicklung von Informations- und Schulungsmaterialien sowie von
+                        Erprobungsverfahren zur Implementierung der vorstehend unter a. bis d.
+                        genannten Anwendungen und Systeme.
+
+Seite 16 von 18
+                                                                      Downloadbedingungen
+
+         Die genehmigten Zwecke müssen in einer Weise durchgeführt werden, die der ICF und den
+         Definitionen und Standards entspricht, die gemäß den Nomenklaturvorschriften der
+         Weltgesundheitsversammlung (1967) entwickelt wurden.
+         Gemäß den Vorgaben der WHO ist die ICF so zu nutzen, wie in der Klassifikation und in der
+         Einführung und in Anhängen zur ICF beschrieben. Die Nutzung muss insbesondere gemäß
+         der in Anhang 3 „Mögliche Verwendung der Liste der Aktivitäten und Partizipationen“ als
+         Option 4 „Verwendung der gleichen Domänen sowohl für die Aktivitäten als auch für
+         Partizipation [Teilhabe] mit einer umfänglichen Überlappung der Domänen“ beschriebenen
+         Weise erfolgen. Die Beurteilungsmerkmale sind entsprechend Anhang 2
+         „Kodierungsleitlinien für die ICF“ anzuwenden, Skala und prozentuale Bereiche dürfen ohne
+         Genehmigung der WHO nicht geändert werden.
+    5. Wir bitten zu beachten, dass nach den Vorgaben der WHO die Klassifikation nicht in
+         Verbindung mit der Förderung, dem Marketing oder zu Werbezwecken verwendet werden
+         darf.
+    6. Wollen Sie dieses Werk vervielfältigen, verbreiten oder Dritten zugänglich machen, so bitten
+         wir um Beachtung folgender Punkte:
+
+                    a. Gemäß den Vorgaben der WHO darf das Werk keine kommerzielle Werbung
+                        enthalten.
+
+                    b. Bei der Weitergabe sind die im Anhang zu den Downloadbedingungen für die
+                        ICF aufgeführten Quellenangaben (nach § 63 UrhG) aufzunehmen.
+
+§ 2 Gewährleistung und Haftung
+    1. Für Schäden ist das BfArM nur insoweit haftbar, als ihm Vorsatz oder grobe Fahrlässigkeit
+         zur Last fällt.
+    2. Das BfArM haftet nicht für solche Schäden aller Art bei Dritten, die durch die Weitergabe
+         von fehlerhaften oder unvollständigen Informationen verursacht wurden, soweit nicht die
+         Fehlerhaftigkeit oder Unvollständigkeit der Informationen bereits in den
+         Verantwortungsbereich des BfArM fällt und nachweislich vorsätzliches oder grob
+         fahrlässiges Verhalten vorliegt. Sie stellen das BfArM von sämtlichen Ansprüchen Dritter,
+         ggf. gekürzt um einen Verschuldensanteil des BfArM, frei.
+    3. Sie stellen das BfArM frei von Ansprüchen, die dadurch entstehen, dass Sie die Rechte
+         Dritter bei der Vervielfältigung, Verbreitung oder jeglichen Zugänglichmachung an Dritte
+         verletzen.
+
+                                                                                                        Seite 17 von 18
+                                                                       Downloadbedingungen
+
+Anhang zu den Downloadbedingungen für die ICF
+Quellenangaben für die ICF, Stand Oktober 2005
+Die englischsprachige Originalausgabe wurde 2001 von der Weltgesundheitsorganisation (WHO)
+veröffentlicht als International Classification of Functioning, Disability and Health.
+© World Health Organization (WHO) 2001
+Der Generaldirektor der Weltgesundheitsorganisation (WHO) hat die Übersetzungs-,
+Veröffentlichungs- und Verwertungsrechte für eine deutschsprachige Ausgabe an das Bundesinstitut
+für Arzneimittel und Medizinprodukte (BfArM) vergeben, das für die Übersetzung allein
+verantwortlich ist.
+ICF-Kodes, -Begriffe und -Texte © Weltgesundheitsorganisation (WHO), übersetzt und
+herausgegeben durch das Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM) von der
+International Classification of Functioning, Disability and Health – ICF, herausgegeben durch die
+Weltgesundheitsorganisation (WHO)
+Herausgegeben vom Bundesinstitut für Arzneimittel und Medizinprodukte (BfArM)
+Die Erstellung bzw. der Druck erfolgt unter Verwendung der maschinenlesbaren Fassung des
+Bundesinstituts für Arzneimittel und Medizinprodukte (BfArM).
+Weitere Texte und Angaben bei Druckwerken
+ISBN – angeben –
+Druck NNNN (zutreffende Jahreszahl angeben)
+Bibliografische Informationen der Deutschen Nationalbibliothek
+Die Deutsche Nationalbibliothek verzeichnet diese Publikation in der Deutschen
+Nationalbibliografie; detaillierte bibliografische Daten sind im Internet unter https://portal.dnb.de
+abrufbar.
+Verlag: (Informationen eintragen) –
+Satz: (Informationen eintragen) –
+Druck: (Informationen eintragen) –
+Hinweis bei Druckwerken
+Informationen zum Sammelauftrag der Deutschen Nationalbibliothek finden Sie unter www.dnb.de
+– DNB Professionell – Unser Sammelauftrag.
+
+Seite 18 von 18
+

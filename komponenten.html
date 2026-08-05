@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Funktionen-Übersicht — Praxura</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<style>
+  :root {
+    --bg:#0f172a; --card:#1e293b; --card2:#172033; --border:#334155;
+    --text:#f1f5f9; --muted:#94a3b8; --accent:#b1891b; --ok:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  header {
+    padding:22px 28px; border-bottom:1px solid var(--border);
+    position:sticky; top:0; background:var(--bg); z-index:50;
+  }
+  header h1 { margin:0 0 4px; font-size:19px; font-weight:650; }
+  header p  { margin:0; color:var(--muted); font-size:13px; }
+  #toc { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  #toc a {
+    font-size:12px; padding:3px 9px; border:1px solid var(--border); border-radius:20px;
+    color:var(--muted); text-decoration:none;
+  }
+  #toc a:hover { color:var(--text); border-color:var(--accent); }
+
+  main { padding:24px 28px 80px; max-width:1400px; }
+
+  .fn { border:1px solid var(--border); border-radius:10px; margin-bottom:18px; background:var(--card); overflow:hidden; }
+  .fn > h2 {
+    margin:0; padding:13px 16px; font-size:15px; font-weight:600;
+    border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .fn > h2 .sig { font:12px ui-monospace,Menlo,Consolas,monospace; color:var(--accent); font-weight:400; }
+  .tag {
+    font-size:10px; text-transform:uppercase; letter-spacing:.05em;
+    padding:2px 7px; border-radius:10px; background:#334155; color:var(--muted);
+  }
+  .tag.shared  { background:rgba(34,197,94,.15);  color:var(--ok); }
+  .tag.dup     { background:rgba(239,68,68,.15);  color:var(--bad); }
+  .tag.bug     { background:rgba(245,158,11,.15); color:var(--warn); }
+
+  .body { display:grid; grid-template-columns:1fr 300px; gap:0; }
+  @media (max-width:1000px) { .body { grid-template-columns:1fr; } }
+
+  .left  { padding:16px; min-width:0; }
+  .right { padding:16px; border-left:1px solid var(--border); background:var(--card2); font-size:12px; }
+  @media (max-width:1000px) { .right { border-left:0; border-top:1px solid var(--border); } }
+
+  .what { color:var(--muted); margin:0 0 14px; font-size:13px; }
+
+  .demo {
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:14px; margin-bottom:12px;
+  }
+  .demo-label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:9px; }
+
+  input[type=text], input[type=number], select {
+    background:#0f172a; border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:7px 10px; font-size:13px; width:100%;
+  }
+  button {
+    background:var(--accent); color:#0f172a; border:0; border-radius:6px;
+    padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  button.ghost { background:transparent; border:1px solid var(--border); color:var(--text); font-weight:400; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  .out {
+    margin-top:10px; font:12.5px ui-monospace,Menlo,Consolas,monospace;
+    background:#0b1220; border:1px solid var(--border); border-radius:6px;
+    padding:9px 11px; white-space:pre-wrap; word-break:break-word; min-height:20px;
+  }
+  .out .k { color:var(--muted); }
+  .out .g { color:var(--ok); }
+  .out .r { color:var(--bad); }
+  .out .y { color:var(--warn); }
+
+  details.code { margin-top:4px; }
+  details.code > summary {
+    cursor:pointer; font-size:12px; color:var(--muted); padding:4px 0; user-select:none;
+  }
+  details.code > summary:hover { color:var(--text); }
+  pre {
+    margin:8px 0 0; background:#0b1220; border:1px solid var(--border); border-radius:6px;
+    padding:12px; overflow:auto; max-height:440px;
+    font:12px/1.5 ui-monospace,Menlo,Consolas,monospace; color:#cbd5e1;
+  }
+
+  .right h4 { margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .right ul { margin:0 0 14px; padding-left:0; list-style:none; }
+  .right li { padding:3px 0; border-bottom:1px solid rgba(51,65,85,.5); }
+  .right li:last-child { border-bottom:0; }
+  .right code { font:11.5px ui-monospace,Menlo,Consolas,monospace; color:var(--accent); }
+  .right .note { color:var(--muted); font-size:11.5px; line-height:1.5; }
+  .right .warnbox {
+    background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.3);
+    border-radius:6px; padding:9px 10px; color:#fca5a5; font-size:11.5px; margin-top:10px;
+  }
+
+  .toast-host { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:9999; }
+  .toast { padding:11px 16px; border-radius:8px; font-size:13px; color:#fff; box-shadow:0 4px 16px rgba(0,0,0,.4); }
+  .toast.success { background:#16a34a; } .toast.error { background:#dc2626; }
+  .toast.info { background:#2563eb; }    .toast.warning { background:#d97706; }
+
+  .modal-demo {
+    position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex;
+    align-items:center; justify-content:center; z-index:9998;
+  }
+  .modal-demo[hidden] { display:none; }
+  .modal-demo > div { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:22px; max-width:380px; }
+
+  /* Dropdown des echten katalog-suche-Moduls */
+  .icd10-dropdown {
+    position:fixed; z-index:1200; background:var(--card); border:1px solid var(--border);
+    border-radius:8px; max-height:280px; overflow-y:auto; box-shadow:0 4px 16px rgba(0,0,0,.4);
+  }
+  .icd10-dropdown-item { padding:8px 12px; cursor:pointer; color:var(--text); font-size:13px; display:flex; gap:8px; }
+  .icd10-dropdown-item .icd-code { color:var(--accent); font-weight:600; min-width:60px; }
+  .icd10-dropdown-item .icd-title { flex:1; min-width:0; }
+  .icd10-dropdown-item.is-dg .icd-code { color:var(--ok); }
+  .icd10-dropdown-item .icd-badge {
+    flex-shrink:0; align-self:center; font-size:10px; padding:2px 6px;
+    border-radius:10px; background:#334155; color:var(--muted);
+  }
+  .icd10-dropdown-item:hover, .icd10-dropdown-item.active { background:#334155; }
+  .icd10-dropdown-sep {
+    padding:6px 12px; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--muted); background:var(--bg); border-top:1px solid var(--border); position:sticky; top:0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Funktionen-Übersicht</h1>
+  <p>
+    Jede gemeinsam genutzte Funktion einmal: was sie macht, live zum Ausprobieren, der echte Code, und wo sie aufgerufen wird.
+    <strong>Der Code wird zur Laufzeit aus den echten Dateien geladen</strong> — keine Kopie, nichts kann veralten.
+  </p>
+  <nav id="toc"></nav>
+</header>
+
+<main id="main">
+  <p id="boot" style="color:var(--muted)">Lade Quelldateien …</p>
+</main>
+
+<div class="toast-host" id="toastHost"></div>
+<div class="modal-demo" id="demoModal" hidden>
+  <div>
+    <h3 style="margin:0 0 8px">Beispiel-Modal</h3>
+    <p style="color:var(--muted);margin:0 0 16px">Geöffnet mit <code>openModal('demoModal')</code>.</p>
+    <button class="ghost" onclick="document.getElementById('demoModal').hidden=true">Schließen</button>
+  </div>
+</div>
+
+<script type="module">
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260725';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchDiagnosen, searchHeilmittel, heilmittelOptionsHtml, normalizeBereich } from './katalog-suche.js?v=20260726';
+import { mountCalendar } from './calendar-widget.js?v=20260512h';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Quellcode-Lader.
+   Holt die echten .js-Dateien und schneidet eine Funktion per Klammerzählung
+   heraus. Damit ist der angezeigte UND der ausgeführte Code immer der, der
+   wirklich im Repo steht — eine Kopie hier würde genau das Problem
+   reproduzieren, das diese Seite sichtbar machen soll.
+   ────────────────────────────────────────────────────────────────────────── */
+const fileCache = new Map();
+async function getFile(path) {
+  if (!fileCache.has(path)) {
+    fileCache.set(path, fetch(path).then(r => r.ok ? r.text() : Promise.reject(new Error(`${r.status} ${path}`))));
+  }
+  return fileCache.get(path);
+}
+
+// Klammern zählen reicht nicht: '{' kommt auch in Strings, Template-Literalen,
+// Kommentaren und Regex-Literalen vor. Deshalb ein kleiner Zustandsautomat, der
+// diese Bereiche überspringt.
+function cutFunction(src, name) {
+  const re = new RegExp(`(?:^|\\n)((?:export\\s+)?(?:async\\s+)?function\\s+${name}\\s*\\()`, 'm');
+  const m = re.exec(src);
+  if (!m) return null;
+  const start = m.index + (m[0].startsWith('\n') ? 1 : 0);
+
+  // Zuerst die Parameterliste überspringen — sonst trifft die Suche nach '{'
+  // bei `function f(opts = {})` auf den Default-Wert statt auf den Rumpf.
+  let p = src.indexOf('(', start);
+  if (p < 0) return null;
+  let pd = 0;
+  for (; p < src.length; p++) {
+    if (src[p] === '(') pd++;
+    else if (src[p] === ')') { pd--; if (pd === 0) { p++; break; } }
+  }
+
+  let i = src.indexOf('{', p);
+  if (i < 0) return null;
+
+  let depth = 0;
+  const tplStack = [];              // verschachtelte `…${ … }…`
+  let mode = 'code';                // code | sq | dq | tpl | line | blockC | regex
+
+  for (; i < src.length; i++) {
+    const c = src[i], n2 = src[i + 1], prev = src[i - 1];
+    const escaped = prev === '\\' && src[i - 2] !== '\\';
+
+    if (mode === 'sq')     { if (c === "'"  && !escaped) mode = 'code'; continue; }
+    if (mode === 'dq')     { if (c === '"'  && !escaped) mode = 'code'; continue; }
+    if (mode === 'line')   { if (c === '\n') mode = 'code'; continue; }
+    if (mode === 'blockC') { if (c === '*' && n2 === '/') { mode = 'code'; i++; } continue; }
+    if (mode === 'regex')  { if (c === '/'  && !escaped) mode = 'code'; continue; }
+    if (mode === 'tpl') {
+      if (c === '`' && !escaped) { mode = 'code'; continue; }
+      if (c === '$' && n2 === '{' && !escaped) { tplStack.push(depth); mode = 'code'; depth++; i++; }
+      continue;
+    }
+
+    // mode === 'code'
+    if (c === "'")  { mode = 'sq';  continue; }
+    if (c === '"')  { mode = 'dq';  continue; }
+    if (c === '`')  { mode = 'tpl'; continue; }
+    if (c === '/' && n2 === '/') { mode = 'line';   i++; continue; }
+    if (c === '/' && n2 === '*') { mode = 'blockC'; i++; continue; }
+    if (c === '/') {
+      // Regex-Literal nur dort, wo kein Wert davorstehen kann (sonst Division)
+      const before = src.slice(Math.max(0, i - 40), i).replace(/\s+$/, '');
+      if (!/[\w)\]$]$/.test(before)) { mode = 'regex'; continue; }
+    }
+    if (c === '{') depth++;
+    else if (c === '}') {
+      if (tplStack.length && depth - 1 === tplStack[tplStack.length - 1]) {
+        tplStack.pop(); depth--; mode = 'tpl'; continue;   // zurück ins Template
+      }
+      depth--;
+      if (depth === 0) { i++; break; }
+    }
+  }
+  const line = src.slice(0, start).split('\n').length;
+  return { code: src.slice(start, i), line };
+}
+
+/** Extract several functions and evaluate them together into callable form. */
+async function pull(path, names) {
+  const src = await getFile(path);
+  const parts = [], meta = {};
+  for (const n of names) {
+    const c = cutFunction(src, n);
+    if (!c) { meta[n] = { code: `// ${n}: in ${path} nicht gefunden`, line: 0 }; continue; }
+    meta[n] = c;
+    parts.push(c.code.replace(/^export\s+/, ''));
+  }
+  let fns = {};
+  try {
+    fns = new Function(`${parts.join('\n\n')}\nreturn { ${names.join(', ')} };`)();
+  } catch (e) {
+    console.warn('[komponenten] eval failed for', path, names, e);
+  }
+  return { fns, meta, path };
+}
+
+/* ── Seitengerüst ──────────────────────────────────────────────────────── */
+const main = document.getElementById('main');
+const toc  = document.getElementById('toc');
+document.getElementById('boot').remove();
+
+let n = 0;
+function block({ id, title, sig, tags = [], what, demo, sources, usedIn, note, warn }) {
+  n++;
+  const el = document.createElement('section');
+  el.className = 'fn';
+  el.id = id;
+  el.innerHTML = `
+    <h2>
+      <span>${n}. ${title}</span>
+      <span class="sig">${sig}</span>
+      ${tags.map(t => `<span class="tag ${t.k}">${t.t}</span>`).join('')}
+    </h2>
+    <div class="body">
+      <div class="left">
+        <p class="what">${what}</p>
+        <div class="demo"><div class="demo-label">Ausprobieren</div><div class="demo-slot"></div></div>
+        <div class="code-slot"></div>
+      </div>
+      <div class="right">
+        <h4>Wird aufgerufen in</h4>
+        <ul>${usedIn.map(u => `<li><code>${u.at}</code><br><span class="note">${u.what}</span></li>`).join('')}</ul>
+        ${note ? `<div class="note">${note}</div>` : ''}
+        ${warn ? `<div class="warnbox">${warn}</div>` : ''}
+      </div>
+    </div>`;
+  main.appendChild(el);
+
+  const a = document.createElement('a');
+  a.href = '#' + id; a.textContent = title;
+  toc.appendChild(a);
+
+  const slot = el.querySelector('.demo-slot');
+  if (demo) demo(slot);
+
+  const cs = el.querySelector('.code-slot');
+  for (const s of sources) {
+    const d = document.createElement('details');
+    d.className = 'code';
+    d.innerHTML = `<summary>Code — ${s.label}</summary><pre>Lade …</pre>`;
+    cs.appendChild(d);
+    s.load().then(txt => { d.querySelector('pre').textContent = txt; })
+            .catch(e => { d.querySelector('pre').textContent = 'Fehler: ' + e.message; });
+  }
+  return el;
+}
+
+async function codeOf(path, names) {
+  const src = await getFile(path);
+  return names.map(nm => {
+    const c = cutFunction(src, nm);
+    return c ? `// ${path}:${c.line}\n${c.code}` : `// ${nm} nicht gefunden in ${path}`;
+  }).join('\n\n');
+}
+async function wholeFile(path) { return getFile(path); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1 — Diagnose-Suche (ICD-10 + Diagnosegruppen)
+   ═══════════════════════════════════════════════════════════════════════ */
+block({
+  id: 'diagnose', title: 'Diagnose-Suche (ICD-10 + Diagnosegruppen)',
+  sig: 'attachDiagnoseSearch(input, supabase, opts)',
+  tags: [{ k:'shared', t:'eine Quelle' }],
+  what: 'Tippen Sie einen Kode oder ein Wort. Sucht gleichzeitig in allen 16.905 ICD-10-GM-2026-Kodes '
+      + 'und in den 57 Heilmittelkatalog-Diagnosegruppen (DF, NF, QF, UI1, WS2, EN1, SP6 …). '
+      + 'Der eigene Fachbereich steht oben, alles andere darunter — nichts wird versteckt. '
+      + 'Ein einzelner Buchstabe reicht: „Q“ als Podologe zeigt QF und die Q-Kodes.',
+  demo(slot) {
+    slot.innerHTML = `
+      <div class="row" style="margin-bottom:8px">
+        <select id="dgBereich" style="width:170px">
+          <option value="podologie">Podologie</option>
+          <option value="physiotherapy">Physiotherapie</option>
+          <option value="logopaedie">Logopädie</option>
+          <option value="ergotherapie">Ergotherapie</option>
+          <option value="">— ohne Fachbereich —</option>
+        </select>
+        <select id="dgKind" style="width:190px">
+          <option value="both">ICD + Diagnosegruppen</option>
+          <option value="icd">nur ICD-10</option>
+          <option value="dg">nur Diagnosegruppen</option>
+        </select>
+      </div>
+      <input type="text" id="dgInput" placeholder="Q · N · DF · M54.5 · Kreuzschmerz · Fußsyndrom …" />
+      <div class="out" id="dgOut"><span class="k">Ergebnisse erscheinen im Dropdown; Auswahl wird hier protokolliert.</span></div>`;
+
+    const input = slot.querySelector('#dgInput');
+    const out   = slot.querySelector('#dgOut');
+    const wire = () => {
+      // Neu aufbauen, damit Fachbereich/Art-Wechsel sofort greifen
+      const fresh = input.cloneNode(true);
+      input.replaceWith(fresh);
+      attachDiagnoseSearch(fresh, supabase, {
+        bereich: () => slot.querySelector('#dgBereich').value || null,
+        kind:    slot.querySelector('#dgKind').value,
+        onSelect: it => {
+          out.innerHTML = `<span class="g">gewählt</span>  ${it.kind === 'dg' ? 'Diagnosegruppe' : 'ICD-10'}  `
+            + `<strong>${it.code}</strong>\n${it.titel}\n<span class="k">eigener Fachbereich: ${it.in_sector ? 'ja' : 'nein'}</span>`;
+        },
+      });
+      return fresh;
+    };
+    let cur = wire();
+    slot.querySelector('#dgKind').onchange = () => { cur = wire(); };
+  },
+  sources: [
+    { label: 'katalog-suche.js — die Funktionen', load: () =>
+        codeOf('./katalog-suche.js', ['attachDiagnoseSearch', 'attachHeilmittelSearch', 'searchDiagnosen', 'searchHeilmittel']) },
+    { label: 'katalog-suche.js — komplettes Modul', load: () => wholeFile('./katalog-suche.js') },
+    { label: 'search_diagnosen() — Postgres-RPC', load: async () =>
+`-- Die einzige Suchquelle für Diagnosen. Rangfolge statt Filter:
+-- der eigene Fachbereich zuerst, Diagnosegruppen vor rohen ICD-Kodes,
+-- exakte Treffer vor Präfix vor Titel-Teiltreffer.
+search_diagnosen(
+  p_q       text,   -- Suchtext, Kode mit oder ohne Punkt
+  p_bereich text,   -- physiotherapy | podologie | logopaedie | ergotherapie | null
+  p_kind    text,   -- 'icd' | 'dg' | 'both'
+  p_limit   int
+) returns table (kind, code, titel, bereich, terminal, in_sector, rank)
+
+-- Tabellen dahinter:
+--   icd10_titles       16.905 Kodes (ICD-10-GM 2026, BfArM)
+--   diagnosegruppen    57 Gruppen  (HeilM-RL Anlage 1)
+--   icd_sector_ranges  Kapitelbereiche je Fachbereich` },
+  ],
+  usedIn: [
+    { at:'dashboard.js — DIAGNOSE_FIELDS', what:'rzIcd, rxcIcd, rxcIcd2, rzDg, rxcDg, podNewIcd10 — Verdrahtung per focusin' },
+    { at:'booking-request.html', what:'Externe Terminanfrage (Patientenseite)' },
+  ],
+  note: 'Ersetzt fünf frühere Einzel-Implementierungen. Ein neues Diagnosefeld = eine Zeile '
+      + 'in <code>DIAGNOSE_FIELDS</code>. Verdrahtet wird beim ersten Fokus, nicht beim Start — '
+      + 'so überlebt es auch Panels, die sich per innerHTML neu rendern.',
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1b — Heilmittel-Suche
+   ═══════════════════════════════════════════════════════════════════════ */
+block({
+  id: 'heilmittel', title: 'Heilmittel-Suche (Positionen / HPNR)',
+  sig: 'attachHeilmittelSearch(input, supabase, opts)',
+  tags: [{ k:'shared', t:'eine Quelle' }],
+  what: 'Leeres Feld = die vollständige, <em>heute gültige</em> Liste des Fachbereichs. '
+      + 'Sucht über Kürzel (KG, MT, MLD), Kode (X0106, 78610) und Bezeichnung. '
+      + 'Filtert automatisch heraus, was abgelöst ist — z. B. die Ross-Fraser-Spangen '
+      + '78210/78220/78230/78300/78400, seit 01.10.2025 durch 78610 ersetzt — und '
+      + 'respektiert die Diagnosegruppen-Bindung (78530 nur bei UI2).',
+  demo(slot) {
+    slot.innerHTML = `
+      <div class="row" style="margin-bottom:8px">
+        <select id="hmBereich" style="width:170px">
+          <option value="physiotherapy">Physiotherapie</option>
+          <option value="podologie">Podologie</option>
+        </select>
+        <select id="hmDg" style="width:150px">
+          <option value="">— alle Diagnosegruppen —</option>
+          <option>DF</option><option>NF</option><option>QF</option>
+          <option>UI1</option><option>UI2</option>
+        </select>
+      </div>
+      <input type="text" id="hmInput" placeholder="leer lassen für die ganze Liste · KG · MT · X0106 · 78610 …" />
+      <div class="out" id="hmOut"><span class="k">Ins Feld klicken.</span></div>`;
+
+    const out = slot.querySelector('#hmOut');
+    const wire = () => {
+      const old = slot.querySelector('#hmInput');
+      const fresh = old.cloneNode(true);
+      old.replaceWith(fresh);
+      attachHeilmittelSearch(fresh, supabase, {
+        bereich: () => slot.querySelector('#hmBereich').value,
+        diagnosegruppe: () => slot.querySelector('#hmDg').value || null,
+        onSelect: it => {
+          out.innerHTML = `<span class="g">gewählt</span>  <strong>${it.code}</strong>`
+            + `${it.kuerzel ? ' (' + it.kuerzel + ')' : ''}\n${it.label}\n`
+            + `<span class="k">${it.preis_eur != null ? Number(it.preis_eur).toFixed(2).replace('.', ',') + ' € · ' : ''}`
+            + `${it.dauer ? it.dauer + ' Min' : ''}</span>`;
+        },
+      });
+    };
+    wire();
+    slot.querySelector('#hmBereich').onchange = wire;
+    slot.querySelector('#hmDg').onchange = wire;
+  },
+  sources: [
+    { label: 'katalog-suche.js — attachHeilmittelSearch + searchHeilmittel',
+      load: () => codeOf('./katalog-suche.js', ['attachHeilmittelSearch', 'searchHeilmittel', 'heilmittelOptionsHtml']) },
+    { label: 'search_heilmittel() — Postgres-RPC', load: async () =>
+`-- Einzige Auswahlquelle für Heilmittel/Positionen.
+search_heilmittel(
+  p_q              text,   -- Kode, Kürzel oder Bezeichnung; leer = ganze Liste
+  p_bereich        text,   -- physiotherapy | podologie | …
+  p_diagnosegruppe text,   -- DF/NF/QF/UI1/UI2 (Podologie)
+  p_datum          date,   -- Behandlungsdatum, Standard heute
+  p_limit          int
+)
+
+-- Tabelle heilmittel_katalog (94 Positionen) wird ERZEUGT aus
+--   api-backend/billing/codes/physio_positions.js      (58)
+--   api-backend/billing/codes/podologie_positions.js   (36)
+-- via  npm run katalog:sync   ·  Drift-Test:  npm run katalog:check
+--
+-- Die RPC filtert selbst:
+--   gueltig_ab <= Datum <= gueltig_bis
+--   not deprecated  and  (ungueltig_ab is null or ungueltig_ab > Datum)
+--   Diagnosegruppen-Bindung` },
+  ],
+  usedIn: [
+    { at:'dashboard.js — HEILMITTEL_FIELDS', what:'rzHm, rxcHm (Rezept + Scan); setzt zusätzlich die versteckte Positionsnummer' },
+    { at:'dashboard.js — podLoadHpnr()', what:'Podologie: HPNR-Checkboxen + Verordnungs-Zeilen' },
+    { at:'booking-request.html', what:'Heilmittel-<select> der Terminanfrage' },
+  ],
+  note: 'Ersetzt vier getrennte Listen: <code>HPNR_LABELS</code> + <code>podGetHpnrList()</code> '
+      + '(13 Kodes, ohne Hausbesuch), das <code>hmDatalist</code> und ein fest verdrahtetes '
+      + '<code>&lt;optgroup&gt;</code> in der Terminanfrage.',
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2 — Patientensuche
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  const P = await pull('./dashboard.js', ['patientMatchesQuery', 'displayNameWithBirth', 'displayName', 'leadBirthDate']);
+  const demoLeads = [
+    { id:1, first_name:'Anna',   last_name:'Müller',    geburtsdatum:'1985-03-12', phone:'0170 1234567', phone_normalized:'+491701234567', title:'Dr.' },
+    { id:2, first_name:'Bernd',  last_name:'Schmidt',   geburtsdatum:'1972-11-04', phone:'0151 9876543', phone_normalized:'+491519876543' },
+    { id:3, first_name:'Chiara', last_name:'Rossi',     geburtsdatum:'1990-07-21', phone:'0176 5551212', phone_normalized:'+491765551212' },
+    { id:4, first_name:'Deniz',  last_name:'Yılmaz',    geburtsdatum:'1968-01-30', phone:'0162 3334444', phone_normalized:'+491623334444' },
+  ];
+  block({
+    id:'patient', title:'Patientensuche',
+    sig:'patientMatchesQuery(lead, q)',
+    tags:[{ k:'shared', t:'eine Quelle' }, { k:'dup', t:'3 Eingabefelder' }],
+    what:'Prüft, ob ein Patient zur Suchanfrage passt. Findet über Name, Geburtsdatum '
+       + '(ISO <em>und</em> deutsches Format, mit und ohne führende Null) und Telefonnummer — '
+       + 'wobei <code>0170…</code> und <code>+49170…</code> als dasselbe gelten.',
+    demo(slot) {
+      slot.innerHTML = `
+        <input type="text" id="pqInput" placeholder="Müller · 12.03.1985 · 1985-03-12 · 0170 · +49176 …" />
+        <div class="out" id="pqOut"></div>`;
+      const inp = slot.querySelector('#pqInput'), out = slot.querySelector('#pqOut');
+      const run = () => {
+        const q = inp.value;
+        const hits = demoLeads.filter(l => { try { return P.fns.patientMatchesQuery(l, q); } catch { return false; } });
+        out.innerHTML = hits.length
+          ? hits.map(l => `<span class="g">✓</span> ${P.fns.displayNameWithBirth(l)}  <span class="k">${l.phone}</span>`).join('\n')
+          : `<span class="r">kein Treffer</span>`;
+      };
+      inp.addEventListener('input', run); run();
+    },
+    sources:[{ label:`dashboard.js — Suchfunktion + Namens-Helfer`,
+               load:() => codeOf('./dashboard.js', ['patientMatchesQuery','displayNameWithBirth','displayName','leadBirthDate']) }],
+    usedIn:[
+      { at:'dashboard.js:7548', what:'Patientenliste — Suchfeld über der Tabelle' },
+      { at:'dashboard.js (7×)',  what:'Terminvergabe, Rezept-Kopf, Serientermine' },
+    ],
+    warn:'Die <strong>Eingabefelder</strong> sind noch dreifach gebaut: Patientenliste nutzt diese Funktion, '
+       + 'Rezept-Kopf (<code>rzPatientDatalist</code>, dashboard.js:16423) und Podologie '
+       + '(<code>podPatientList</code>, dashboard.js:22987) nutzen je ein eigenes '
+       + '<code>&lt;datalist&gt;</code> ohne Telefon-/Datumssuche. Kandidat für die nächste Zusammenführung.',
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3 — Kalender
+   ═══════════════════════════════════════════════════════════════════════ */
+block({
+  id:'kalender', title:'Kalender-Widget',
+  sig:'mountCalendar(container, opts)',
+  tags:[{ k:'shared', t:'gemeinsames Modul' }, { k:'dup', t:'2× umgangen' }],
+  what:'Der Monatskalender aus dem Dashboard. Hier ohne Termine, damit man Navigation und Auswahl sieht.',
+  demo(slot) {
+    slot.innerHTML = `<div id="calHost" style="max-width:520px"></div><div class="out" id="calOut"><span class="k">Einen Tag anklicken.</span></div>`;
+    try {
+      mountCalendar(slot.querySelector('#calHost'), {
+        placeholder: 'Bitte Datum wählen',
+        emptyText: 'Keine freien Termine verfügbar.',
+        disabledWeekdays: [0],                     // Sonntag zu, damit man den Effekt sieht
+        onDaySelect: d => { slot.querySelector('#calOut').innerHTML = `<span class="g">gewählt</span>  ${d}`; },
+        onMonthChange: (y, mo) => { slot.querySelector('#calOut').innerHTML = `<span class="k">Monat gewechselt</span>  ${y}-${String(mo + 1).padStart(2, '0')}`; },
+      });
+    } catch (e) {
+      slot.querySelector('#calHost').innerHTML =
+        `<span style="color:var(--muted)">Widget braucht Dashboard-Kontext — Signatur siehe Code.</span>`;
+      console.warn(e);
+    }
+  },
+  sources:[{ label:'calendar-widget.js — mountCalendar', load:() => codeOf('./calendar-widget.js', ['mountCalendar']) }],
+  usedIn:[{ at:'dashboard.js:2230', what:'Terminkalender (Hauptansicht)' }],
+  warn:'<strong>Zwei Stellen bauen ihren eigenen Kalender:</strong> '
+     + '<code>booking-request.js:572</code> (<code>renderCalendar</code>) und '
+     + '<code>booking.js:373</code> (<code>renderBookingCalendar</code>). '
+     + 'Feiertags- und Locale-Fixes hier erreichen die beiden nicht. '
+     + '<code>booking.js</code> gehört zur entfernten öffentlichen Buchung — vor dem Aufräumen prüfen, ob sie noch ausgeliefert wird.',
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4 — Benachrichtigung
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  const S = await pull('./dashboard.js', ['showToast']);
+  block({
+    id:'toast', title:'Benachrichtigung (Toast)',
+    sig:'showToast(msg, type)',
+    tags:[{ k:'dup', t:'2 Kopien' }],
+    what:'Die kurze Meldung unten rechts nach dem Speichern. Vier Typen.',
+    demo(slot) {
+      slot.innerHTML = `<div class="row">
+        ${['success','error','info','warning'].map(t => `<button class="ghost" data-t="${t}">${t}</button>`).join('')}
+      </div>`;
+      // Der echte showToast schreibt in #toastContainer — hier bereitgestellt.
+      const host = document.getElementById('toastHost'); host.id = 'toastContainer';
+      slot.querySelectorAll('button').forEach(b => b.onclick = () => {
+        try { S.fns.showToast(`Beispielmeldung: ${b.dataset.t}`, b.dataset.t); } catch (e) { console.warn(e); }
+      });
+    },
+    sources:[{ label:'dashboard.js — showToast', load:() => codeOf('./dashboard.js', ['showToast']) }],
+    usedIn:[{ at:'dashboard.js (435×)', what:'praktisch jede Speicher-/Fehleraktion' }],
+    warn:'Zweite Definition in <code>admin.js:22</code> mit anderer Signatur '
+       + '(<code>text</code> statt <code>msg</code>). Getrennte Anwendungen, daher tolerierbar — '
+       + 'aber Styling-Änderungen müssen doppelt gemacht werden.',
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5 — HTML-Escaping
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  const E = await pull('./dashboard.js', ['escapeHtml']);
+  const B = await pull('./booking-request.js', ['escHtml']);
+  block({
+    id:'escape', title:'HTML-Escaping (XSS-Schutz)',
+    sig:'escapeHtml(str)',
+    tags:[{ k:'dup', t:'9 Kopien' }, { k:'bug', t:'stürzt ab' }],
+    what:'Macht Benutzereingaben für <code>innerHTML</code> sicher. '
+       + 'Probieren Sie <code>&lt;script&gt;</code> — und dann die Zahl <code>0</code> oder <code>42</code>.',
+    demo(slot) {
+      slot.innerHTML = `
+        <div class="row" style="margin-bottom:8px">
+          <button class="ghost" data-v='<script>alert(1)<\/script>'>&lt;script&gt;</button>
+          <button class="ghost" data-v='Müller & Söhne'>Text mit &amp;</button>
+          <button class="ghost" data-v='0'>Zahl 0</button>
+          <button class="ghost" data-v='42'>Zahl 42</button>
+        </div>
+        <input type="text" id="escIn" placeholder="oder selbst eintippen…" />
+        <div class="out" id="escOut"></div>`;
+      const inp = slot.querySelector('#escIn'), out = slot.querySelector('#escOut');
+      const run = (raw, asNumber) => {
+        const val = asNumber ? Number(raw) : raw;
+        let a, b;
+        try { a = JSON.stringify(E.fns.escapeHtml(val)); } catch (e) { a = `✗ ${e.constructor.name}: ${e.message}`; }
+        try { b = JSON.stringify(B.fns.escHtml(val)); }    catch (e) { b = `✗ ${e.constructor.name}: ${e.message}`; }
+        const bad = a.startsWith('✗') || a === '""' && String(val) !== '';
+        out.innerHTML =
+          `<span class="k">Eingabe</span>  ${JSON.stringify(val)} (${typeof val})\n\n` +
+          `<span class="${bad ? 'r' : 'g'}">dashboard.js:538</span>      ${a}\n` +
+          `<span class="g">booking-request.js:1159</span> ${b}`;
+      };
+      slot.querySelectorAll('button[data-v]').forEach(btn => btn.onclick = () => {
+        const isNum = /^\d+$/.test(btn.dataset.v) && btn.textContent.startsWith('Zahl');
+        inp.value = btn.dataset.v; run(btn.dataset.v, isNum);
+      });
+      inp.addEventListener('input', () => run(inp.value, false));
+      run('<script>alert(1)<\/script>', false);
+    },
+    sources:[
+      { label:'dashboard.js — escapeHtml (fehlerhaft)', load:() => codeOf('./dashboard.js', ['escapeHtml']) },
+      { label:'booking-request.js — escHtml (korrekt)', load:() => codeOf('./booking-request.js', ['escHtml']) },
+    ],
+    usedIn:[
+      { at:'dashboard.js (278×)', what:'jede Tabelle, jede Liste, jedes Modal' },
+      { at:'booking-request.js',  what:'Patientenseite' },
+      { at:'6 PDF-Templates',     what:'Rechnung, Mahnung, Quittung, Begleitzettel …' },
+    ],
+    warn:'<strong>Echter Fehler:</strong> <code>dashboard.js:538</code> ruft <code>str.replace()</code> '
+       + 'direkt auf. Bei einer Zahl gibt es kein <code>.replace</code> → <code>TypeError</code>. '
+       + 'Und <code>if (!str)</code> macht aus der Zahl <code>0</code> einen leeren String. '
+       + 'Die 6 PDF-Templates machen es mit <code>String(s ?? \'\')</code> richtig.',
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6 — Geldbeträge
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  const F = await pull('./dashboard.js', ['fmtEur']);
+  // Die abweichenden Varianten wörtlich, wie sie im Code stehen:
+  const variants = {
+    'dashboard.js:18843 (Funktion)': v => F.fns.fmtEur(v),
+    'dashboard.js:20760 / :20882'   : v => Number(v).toLocaleString('de-DE', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €',
+    'dashboard.js:20960'            : v => Number(v || 0).toLocaleString('de-DE', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €',
+    'PDF rechnung.template.js:10'   : v => (v == null ? '' : Number(v).toLocaleString('de-DE', { minimumFractionDigits:2, maximumFractionDigits:2 })) + ' €',
+    'PDF mahnung.template.js:5'     : v => Number(v ?? 0).toLocaleString('de-DE', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €',
+  };
+  block({
+    id:'geld', title:'Geldbeträge formatieren',
+    sig:'fmtEur(n)',
+    tags:[{ k:'dup', t:'10 Kopien' }, { k:'bug', t:'widersprüchlich' }],
+    what:'Zahl → <code>1.234,50 €</code>. Klicken Sie <strong>leer (null)</strong> und dann '
+       + '<strong>undefined</strong> — die Kopien liefern für denselben Wert verschiedene Ergebnisse.',
+    demo(slot) {
+      slot.innerHTML = `
+        <div class="row" style="margin-bottom:8px">
+          <button class="ghost" data-v="1234.5">1234.5</button>
+          <button class="ghost" data-v="0">0</button>
+          <button class="ghost" data-v="null">leer (null)</button>
+          <button class="ghost" data-v="undefined">undefined</button>
+        </div>
+        <div class="out" id="eurOut"></div>`;
+      const out = slot.querySelector('#eurOut');
+      const run = raw => {
+        const v = raw === 'null' ? null : raw === 'undefined' ? undefined : Number(raw);
+        const res = Object.entries(variants).map(([k, f]) => {
+          let r; try { r = f(v); } catch (e) { r = '✗ ' + e.message; }
+          return [k, r];
+        });
+        const uniq = new Set(res.map(r => r[1]));
+        out.innerHTML = `<span class="k">Eingabe</span>  ${String(v)}\n\n` +
+          res.map(([k, r]) => {
+            const cls = /NaN/.test(r) ? 'r' : r.trim() === '€' ? 'y' : 'g';
+            return `<span class="${cls}">${r.padEnd(14)}</span> <span class="k">${k}</span>`;
+          }).join('\n') +
+          (uniq.size > 1 ? `\n\n<span class="r">→ ${uniq.size} verschiedene Ergebnisse für denselben Wert.</span>` : '');
+      };
+      slot.querySelectorAll('button').forEach(b => b.onclick = () => run(b.dataset.v));
+      run('null');
+    },
+    sources:[{ label:'dashboard.js — fmtEur', load:() => codeOf('./dashboard.js', ['fmtEur']) }],
+    usedIn:[
+      { at:'dashboard.js (12×)', what:'Rechnungsliste, Umsatzübersicht, Zuzahlung' },
+      { at:'6 PDF-Templates',    what:'gedruckte Rechnungen und Mahnungen' },
+    ],
+    warn:'Bei <code>null</code> steht je nach Kopie <code>0,00 €</code> oder nur <code>€</code>; '
+       + 'bei <code>undefined</code> zusätzlich <code>NaN €</code> '
+       + '(<code>dashboard.js:20760</code> und <code>:20882</code>). Auf einer Patientenrechnung. '
+       + 'Ziel: <code>lib/format.js</code> + <code>api-backend/lib/format.js</code>.',
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7 — Datum
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  const D = await pull('./dashboard.js', ['formatDateDE']);
+  const R = await pull('./booking-request.js', ['formatDateDE']);
+  block({
+    id:'datum', title:'Datum anzeigen',
+    sig:'formatDateDE(d)',
+    tags:[{ k:'dup', t:'2 Kopien' }, { k:'bug', t:'unvereinbar' }],
+    what:'Gleicher Name, zwei unvereinbare Erwartungen: die eine will ein <code>Date</code>-Objekt, '
+       + 'die andere einen ISO-String. Jede stürzt bei der Eingabe der anderen ab.',
+    demo(slot) {
+      slot.innerHTML = `
+        <div class="row" style="margin-bottom:8px">
+          <button class="ghost" data-k="iso">ISO-String "2026-05-01"</button>
+          <button class="ghost" data-k="date">Date-Objekt</button>
+        </div>
+        <div class="out" id="dtOut"></div>`;
+      const out = slot.querySelector('#dtOut');
+      const run = kind => {
+        const v = kind === 'iso' ? '2026-05-01' : new Date(2026, 4, 1);
+        let a, b;
+        try { a = D.fns.formatDateDE(v); } catch (e) { a = `✗ ${e.constructor.name}: ${e.message}`; }
+        try { b = R.fns.formatDateDE(v); } catch (e) { b = `✗ ${e.constructor.name}: ${e.message}`; }
+        out.innerHTML =
+          `<span class="k">Eingabe</span>  ${kind === 'iso' ? '"2026-05-01" (String)' : 'new Date(2026,4,1) (Date)'}\n\n` +
+          `<span class="${a.startsWith('✗') ? 'r' : 'g'}">dashboard.js:2311</span>       ${a}\n` +
+          `<span class="${b.startsWith('✗') ? 'r' : 'g'}">booking-request.js:177</span>  ${b}`;
+      };
+      slot.querySelectorAll('button').forEach(x => x.onclick = () => run(x.dataset.k));
+      run('iso');
+    },
+    sources:[
+      { label:'dashboard.js — erwartet Date',            load:() => codeOf('./dashboard.js', ['formatDateDE']) },
+      { label:'booking-request.js — erwartet ISO-String', load:() => codeOf('./booking-request.js', ['formatDateDE']) },
+    ],
+    usedIn:[
+      { at:'dashboard.js (5×)',  what:'Rezept-Gültigkeit, Terminliste' },
+      { at:'booking-request.js', what:'Terminbestätigung Patientenseite' },
+    ],
+    warn:'Auch das Format unterscheidet sich: <code>1. Mai 2026</code> vs <code>01.05.2026</code>. '
+       + 'Code zwischen den Dateien zu kopieren baut still einen Absturz ein.',
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8 — Versichertennummer
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  const K = await pull('./api-backend/billing/dta/preflight.js', ['isValidKvnr', 'isValidVersichertenstatus']);
+  block({
+    id:'kvnr', title:'Versichertennummer (KVNR) prüfen',
+    sig:'isValidKvnr(kvnr)',
+    tags:[{ k:'dup', t:'3 Stellen' }],
+    what:'Ein Großbuchstabe + 9 Ziffern. Wird beim §302-Versand geprüft — im Frontend aber nur locker.',
+    demo(slot) {
+      slot.innerHTML = `
+        <div class="row" style="margin-bottom:8px">
+          ${['A123456789','a123456789','1123456789','A12345678'].map(v => `<button class="ghost" data-v="${v}">${v}</button>`).join('')}
+        </div>
+        <input type="text" id="kvIn" placeholder="z. B. A123456789" />
+        <div class="out" id="kvOut"></div>`;
+      const inp = slot.querySelector('#kvIn'), out = slot.querySelector('#kvOut');
+      const run = v => {
+        const backend  = (() => { try { return K.fns.isValidKvnr(v); } catch { return false; } })();
+        const frontend = /^[A-Z]\d{9}$/.test(v);      // booking-request.js:1180
+        out.innerHTML =
+          `<span class="k">Eingabe</span>  ${JSON.stringify(v)}\n\n` +
+          `<span class="${backend  ? 'g' : 'r'}">Backend  preflight.js:57</span>      ${backend  ? 'gültig' : 'abgelehnt'}\n` +
+          `<span class="${frontend ? 'g' : 'r'}">Frontend booking-request:1180</span> ${frontend ? 'gültig' : 'abgelehnt'}\n` +
+          `<span class="y">Frontend dashboard.js:15500</span>   ${v.trim() ? 'gültig (prüft nur „nicht leer“)' : 'abgelehnt'}`;
+      };
+      slot.querySelectorAll('button[data-v]').forEach(b => b.onclick = () => { inp.value = b.dataset.v; run(b.dataset.v); });
+      inp.addEventListener('input', () => run(inp.value));
+      run('A123456789');
+    },
+    sources:[{ label:'api-backend/billing/dta/preflight.js', load:() => codeOf('./api-backend/billing/dta/preflight.js', ['isValidKvnr','isValidVersichertenstatus']) }],
+    usedIn:[
+      { at:'preflight.js:180',        what:'§302-DTA-Vorprüfung vor dem Versand' },
+      { at:'booking-request.js:1180', what:'Patienten-Terminanfrage (Regex inline)' },
+      { at:'dashboard.js:15500',      what:'Patientenstammdaten (prüft nur „nicht leer“)' },
+    ],
+    warn:'Das Dashboard akzeptiert alles Nichtleere. Eine falsche KVNR fällt erst Wochen später '
+       + 'beim §302-Preflight durch — dann muss der Patient nachträglich kontaktiert werden.',
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9 — Modal
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  const M = await pull('./dashboard.js', ['openModal']);
+  block({
+    id:'modal', title:'Modal öffnen / schließen',
+    sig:"openModal(id) · closeModal(id)",
+    tags:[{ k:'shared', t:'eine Quelle' }],
+    what:'Setzt schlicht <code>hidden</code>. <code>closeModal</code> räumt zusätzlich Timer und '
+       + 'Sonderfälle bestimmter Modals auf — deshalb nie direkt <code>hidden = true</code> setzen.',
+    demo(slot) {
+      slot.innerHTML = `<button id="mdOpen">openModal('demoModal')</button>`;
+      slot.querySelector('#mdOpen').onclick = () => {
+        try { M.fns.openModal('demoModal'); } catch { document.getElementById('demoModal').hidden = false; }
+      };
+    },
+    sources:[{ label:'dashboard.js — openModal / closeModal', load:() => codeOf('./dashboard.js', ['openModal','closeModal']) }],
+    usedIn:[{ at:'dashboard.js (33×)', what:'Rezept, Termin, Patient, Abrechnung, KI-Vorschlag …' }],
+    note:'<code>closeModal</code> enthält Sonderbehandlung für <code>bkActionModal</code> und '
+       + '<code>aiSuggestModal</code> (Timer stoppen, Layout zurücksetzen).',
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10 — Menü-Registry
+   ═══════════════════════════════════════════════════════════════════════ */
+block({
+  id:'nav', title:'Menü-Registry (welches Modul sieht wer)',
+  sig:'NAV_REGISTRY · resolveSector(sector)',
+  tags:[{ k:'shared', t:'eine Quelle' }],
+  what:'Legt fest, welche Sidebar-Module ein Fachbereich und eine Rolle sehen. '
+     + 'Ein neues Modul wird hier eingetragen — nicht im HTML.',
+  demo(slot) {
+    slot.innerHTML = `
+      <div class="row" style="margin-bottom:8px">
+        <select id="navSec" style="width:180px">
+          ${['physiotherapy','podologie','logopaedie','ergotherapie'].map(s => `<option>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="out" id="navOut"></div>`;
+    const run = () => {
+      const s = slot.querySelector('#navSec').value;
+      const resolved = resolveSector(s);
+      const keys = Object.keys(NAV_REGISTRY);
+      slot.querySelector('#navOut').innerHTML =
+        `<span class="k">Fachbereich</span>  ${s}\n` +
+        `<span class="k">aufgelöst zu</span> <span class="g">${resolved}</span>\n\n` +
+        `<span class="k">${keys.length} Module in der Registry:</span>\n` +
+        keys.map(k => '  · ' + k).join('\n');
+    };
+    slot.querySelector('#navSec').onchange = run; run();
+  },
+  sources:[
+    { label:'nav-registry.js — resolveSector', load:() => codeOf('./nav-registry.js', ['resolveSector']) },
+    { label:'nav-registry.js — komplette Registry', load:() => wholeFile('./nav-registry.js') },
+  ],
+  usedIn:[
+    { at:'dashboard.js:5', what:'Sidebar aufbauen, Modul-Sichtbarkeit' },
+    { at:'module_visibility', what:'DB-Tabelle: Owner kann Module einzeln abschalten' },
+  ],
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11 — Mandanten-Zuordnung
+   ═══════════════════════════════════════════════════════════════════════ */
+{
+  block({
+    id:'owner', title:'Mandanten-Zuordnung (wessen Daten sehe ich)',
+    sig:'getOwnerId()',
+    tags:[{ k:'shared', t:'eine Quelle' }],
+    what:'Bei einem Owner die eigene ID, bei einem Mitarbeiter die des Chefs. '
+       + 'Steckt in fast jeder Abfrage — ohne sie würde ein Mitarbeiter die eigenen (leeren) Daten sehen.',
+    demo(slot) {
+      slot.innerHTML = `<div class="out"><span class="k">Kein Live-Test möglich — braucht eine angemeldete Sitzung.</span>
+<span class="k">Logik:</span>  role === 'owner'  →  eigene user.id
+          sonst              →  profiles.owner_id</div>`;
+    },
+    sources:[{ label:'dashboard.js — getOwnerId', load:() => codeOf('./dashboard.js', ['getOwnerId']) }],
+    usedIn:[{ at:'dashboard.js (127×)', what:'nahezu jede Supabase-Abfrage' }],
+    note:'Zweite, <em>asynchrone</em> Variante im Backend: <code>lib/supabase.js:264</code> '
+       + '<code>getOwnerId(userId)</code>. Anderer Zweck, keine Dublette.',
+  });
+}
+
+/* ── Fertig ────────────────────────────────────────────────────────────── */
+const done = document.createElement('p');
+done.style.cssText = 'color:var(--muted);font-size:12px;margin-top:24px';
+done.innerHTML = `${n} Funktionen. Code und Demo werden bei jedem Laden frisch aus den echten `
+  + `Quelldateien gezogen — diese Seite kann nicht veralten. Vollständiger Bericht: <code>DUPLICATION_AUDIT.md</code>.`;
+main.appendChild(done);
+</script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<title>Muster 13 — Heilmittelverordnung (Prototyp)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* ===== Sayfa çerçevesi (ekrandaki masa) ===== */
+  :root{
+    --paper:#ffffff;
+    --line:#3a4a63;          /* form çizgi rengi — orijinaldeki mavi-gri baskı */
+    --line-soft:#9aa8bd;
+    --cap:#5b6472;           /* minik kutu-üstü etiketler */
+    --ink:#1a2740;           /* elle/daktilo doldurulmuş değerler (mavi-siyah) */
+    --field-focus:#eef4ff;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:28px 16px 70px;
+    background:#c9ccd4;
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    color:#111;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet-wrap{ max-width:760px; margin:0 auto; }
+  .toolbar{ display:flex; gap:8px; justify-content:flex-end; margin:0 0 12px; }
+  .toolbar button{
+    font:600 13px/1 "Segoe UI",sans-serif; padding:8px 14px; border-radius:7px;
+    border:1px solid #8a93a6; background:#fff; color:#1a2740; cursor:pointer;
+  }
+  .toolbar button.primary{ background:#b1891b; border-color:#8a6614; color:#14100a; }
+
+  /* ===== Kağıt ===== */
+  .sheet{
+    background:var(--paper);
+    box-shadow:0 10px 34px rgba(0,0,0,.28);
+    padding:20px 22px 26px;
+    color:#111;
+    /* orijinal form biraz daha uzun; içerik üstte yoğun */
+  }
+  /* Kağıt her zaman beyaz — koyu tema override YOK (gerçek kağıt hissi) */
+
+  .form{
+    font-family:"Segoe UI",Arial,sans-serif;
+    position:relative;
+  }
+
+  /* değer input'ları — daktilo görünümü */
+  .v{
+    border:none; background:transparent; outline:none;
+    font-family:"Courier New",ui-monospace,monospace;
+    font-size:15px; color:var(--ink); font-weight:700;
+    letter-spacing:.3px; width:100%; padding:1px 2px;
+  }
+  .v:focus{ background:var(--field-focus); border-radius:3px; }
+  .v.sm{ font-size:13px; }
+  .v.center{ text-align:center; }
+
+  /* minik kutu-üstü etiket */
+  .cap{ font-size:9px; line-height:1.15; color:var(--cap); letter-spacing:.1px; }
+
+  /* ===== ÜST BÖLÜM: sol kimlik kutusu + sağ başlık/terapi ===== */
+  .top{ display:grid; grid-template-columns:1.35fr 1fr; gap:14px; align-items:start; }
+
+  /* sol: Versicherten-Kartei kutusu */
+  .ins-box{ border:1.4px solid var(--line); position:relative; }
+  .ins-row{ display:flex; }
+  .ins-row + .ins-row{ border-top:1px solid var(--line-soft); }
+  .ins-cell{ padding:2px 6px 3px; min-width:0; }
+  .ins-cell + .ins-cell{ border-left:1px solid var(--line-soft); }
+
+  /* sol dikey etiket şeridi (Zuzahlung/Gebühr/Unfall/BVG) */
+  .side-strip{
+    position:absolute; left:0; top:0; bottom:0; width:26px;
+    border-right:1px solid var(--line-soft);
+    display:flex; flex-direction:column; font-size:6.5px; color:var(--cap);
+  }
+  .side-strip > div{ flex:1; border-bottom:1px solid var(--line-soft);
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:1px; line-height:1.05; }
+  .side-strip > div:last-child{ border-bottom:none; }
+  .ins-inner{ margin-left:26px; }
+
+  .kk-line{ display:flex; align-items:flex-start; }
+  .kk-num{ width:52px; border-left:1px solid var(--line-soft); padding-left:6px; }
+
+  /* sağ: başlık + terapi checkbox listesi */
+  .head-right{ }
+  .title-line{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .title-line b{ font-size:16px; letter-spacing:.2px; }
+  .title-line .mnum{ font-size:13px; font-weight:700; }
+  .therapies{ margin-top:8px; display:flex; flex-direction:column; gap:5px; }
+  .th{ display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer; }
+  .chk{
+    width:15px; height:15px; border:1.3px solid var(--line); flex:0 0 auto;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:"Courier New",monospace; font-weight:700; font-size:13px; color:var(--ink);
+    background:#fff; cursor:pointer; user-select:none; margin-top:1px;
+  }
+  .chk.on{ background:#fff; }
+
+  /* ===== ORTA: Diagnose ===== */
+  .sec{ margin-top:12px; }
+  .lbl{ font-size:11.5px; font-weight:600; color:#20304d; }
+  .lbl small{ font-weight:400; color:var(--cap); font-size:9.5px; display:block; }
+
+  .diag-row{ display:grid; grid-template-columns:150px 1fr; gap:10px; align-items:end; margin-top:3px; }
+  .u-in{ border-bottom:1.1px solid var(--line); }
+
+  .dg-row{ display:grid; grid-template-columns:auto 90px auto auto auto; gap:10px 14px; align-items:end; margin-top:14px; }
+  .dg-field{ display:flex; flex-direction:column; }
+  .ls-boxes{ display:flex; align-items:center; gap:14px; }
+  .ls-boxes .th{ font-size:12.5px; }
+
+  .ls-free{ margin-top:12px; }
+
+  /* ===== Heilmittel tablosu ===== */
+  .hm-head{ display:flex; justify-content:space-between; align-items:baseline; margin-top:20px; }
+  .hm-head .lbl{ font-size:13px; }
+  .hm-head .beh{ font-size:10px; color:var(--cap); text-align:right; }
+  .hm-table{ margin-top:4px; border-top:1.2px solid var(--line); }
+  .hm-line{ display:grid; grid-template-columns:1fr 70px; border-bottom:1px solid var(--line-soft); }
+  .hm-line > div{ padding:6px 6px; }
+  .hm-line > div:first-child{ border-right:1px solid var(--line-soft); }
+  .hm-cap{ font-size:9px; color:var(--cap); }
+
+  /* ===== Alt seçenekler ===== */
+  .opts{ margin-top:16px; display:grid; grid-template-columns:auto 1fr; gap:14px 20px; align-items:start; }
+  .opt-line{ display:flex; align-items:center; gap:10px; font-size:12.5px; }
+  .freq{ display:flex; align-items:baseline; gap:8px; }
+  .freq .u-in{ flex:1; }
+
+  .hinweise{ margin-top:14px; }
+  .hinweise textarea{
+    width:100%; min-height:46px; border:none; border-bottom:1px solid var(--line-soft);
+    resize:vertical; font-family:"Courier New",monospace; font-size:13px; color:var(--ink);
+    background:transparent; outline:none; padding:2px;
+  }
+  .hinweise textarea:focus{ background:var(--field-focus); }
+
+  /* ===== Alt: barkod + kaşe ===== */
+  .bottom{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; align-items:end; }
+  .barcode{ height:40px; background:
+      repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 9px);
+      opacity:.85; }
+  .barcode-cap{ font-size:8.5px; color:var(--cap); margin-top:4px; }
+  .stamp{ border:1px dashed var(--line-soft); min-height:92px; padding:6px 8px; position:relative; }
+  .stamp .cap{ position:absolute; bottom:3px; left:8px; right:8px; border-top:1px solid var(--line-soft); padding-top:2px; }
+  .stamp textarea{ width:100%; height:64px; border:none; background:transparent; outline:none;
+    font-family:"Courier New",monospace; font-size:11px; color:var(--ink); resize:none; }
+
+  .footline{ display:flex; justify-content:space-between; font-size:9px; color:var(--cap); margin-top:8px; }
+
+  @media (max-width:640px){
+    .top{ grid-template-columns:1fr; }
+    .dg-row{ grid-template-columns:1fr 1fr; }
+    .bottom{ grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="sheet-wrap">
+  <div class="toolbar">
+    <button type="button" onclick="window.print()">Drucken</button>
+    <button type="button" class="primary" id="protoSave">Speichern (Demo)</button>
+  </div>
+
+  <div class="sheet">
+    <form class="form" id="m13" autocomplete="off" onsubmit="return false">
+
+      <!-- ===================== ÜST ===================== -->
+      <div class="top">
+        <!-- SOL: sigortalı / kostenträger kutusu -->
+        <div class="ins-box">
+          <div class="side-strip">
+            <div>Zuzah&shy;lungs&shy;frei</div>
+            <div>Gebühr&shy;pflichtig</div>
+            <div>Unfall / Unfall&shy;folgen</div>
+            <div>BVG</div>
+          </div>
+          <div class="ins-inner">
+            <div class="ins-row">
+              <div class="ins-cell" style="flex:1;">
+                <div class="cap">Krankenkasse bzw. Kostenträger</div>
+                <div class="kk-line">
+                  <input class="v" id="rxcKasse" placeholder="IKK classic">
+                  <input class="v center kk-num" id="kkNum" placeholder="71" style="width:52px;">
+                </div>
+              </div>
+            </div>
+            <div class="ins-row">
+              <div class="ins-cell" style="flex:1;">
+                <div class="cap">Name, Vorname des Versicherten</div>
+                <input class="v" id="rxcLastName" placeholder="Nachname">
+                <div style="display:flex; gap:8px; align-items:flex-end;">
+                  <input class="v" id="rxcFirstName" placeholder="Vorname" style="flex:1;">
+                  <div style="text-align:right; white-space:nowrap;">
+                    <span class="cap">geb. am</span>
+                    <input class="v center" id="rxcDob" placeholder="16.10.58" style="width:92px;">
+                  </div>
+                </div>
+                <input class="v sm" id="rxcStreet" placeholder="Straße + Hausnr.">
+                <input class="v sm" id="rxcOrt" placeholder="PLZ Ort">
+              </div>
+            </div>
+            <div class="ins-row">
+              <div class="ins-cell" style="flex:1.3;">
+                <div class="cap">Kostenträgerkennung</div>
+                <input class="v sm" id="rxcKasseIk" placeholder="101500154">
+              </div>
+              <div class="ins-cell" style="flex:1.2;">
+                <div class="cap">Versicherten-Nr.</div>
+                <input class="v sm" id="rxcVersNr" placeholder="X526952419">
+              </div>
+              <div class="ins-cell" style="flex:1;">
+                <div class="cap">Status</div>
+                <input class="v sm" id="rxcStatus" placeholder="5000300">
+              </div>
+            </div>
+            <div class="ins-row">
+              <div class="ins-cell" style="flex:1.3;">
+                <div class="cap">Betriebsstätten-Nr.</div>
+                <input class="v sm" id="rzBsnr" placeholder="666300200" maxlength="9">
+              </div>
+              <div class="ins-cell" style="flex:1.2;">
+                <div class="cap">Arzt-Nr.</div>
+                <input class="v sm" id="rzLanr" placeholder="933480701" maxlength="9">
+              </div>
+              <div class="ins-cell" style="flex:1;">
+                <div class="cap">Datum</div>
+                <input class="v sm" id="rzAusstDate" placeholder="29.06.26">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SAĞ: başlık + terapi tipleri -->
+        <div class="head-right">
+          <div class="title-line">
+            <b>Heilmittel&shy;verordnung&nbsp;13</b>
+            <span class="mnum">13</span>
+          </div>
+          <div class="therapies">
+            <label class="th"><span class="chk" data-th="physio"></span> Physiotherapie</label>
+            <label class="th"><span class="chk" data-th="podo"></span> Podologische Therapie</label>
+            <label class="th"><span class="chk" data-th="stimme"></span> Stimm-, Sprech-, Sprach- und Schlucktherapie</label>
+            <label class="th"><span class="chk" data-th="ergo"></span> Ergotherapie</label>
+            <label class="th"><span class="chk" data-th="ernaehrung"></span> Ernährungstherapie</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== DIAGNOSE ===================== -->
+      <div class="sec">
+        <div class="lbl">Behandlungsrelevante Diagnose(n) <small>ICD-10-Code</small></div>
+        <div class="diag-row">
+          <input class="v u-in" id="rzIcd" placeholder="L60.0">
+          <input class="v u-in" id="rzDiagnoseText" placeholder="Unguis incarnatus rechts">
+        </div>
+
+        <div class="dg-row">
+          <div class="dg-field">
+            <span class="cap">Diagnose&shy;gruppe</span>
+            <input class="v u-in center" id="rzDg" placeholder="UI1" style="width:80px;">
+          </div>
+          <div class="dg-field">
+            <span class="cap">Leitsymptomatik<br>gemäß Heilmittelkatalog</span>
+          </div>
+          <div class="ls-boxes">
+            <label class="th"><span class="chk" data-ls="a"></span> a</label>
+            <label class="th"><span class="chk" data-ls="b"></span> b</label>
+            <label class="th"><span class="chk" data-ls="c"></span> c</label>
+          </div>
+          <div class="dg-field">
+            <span class="cap" style="text-align:right;">patientenindividuelle<br>Leitsymptomatik</span>
+          </div>
+          <div><label class="th"><span class="chk" data-ls="d"></span></label></div>
+        </div>
+
+        <div class="ls-free">
+          <div class="cap">Leitsymptomatik (patientenindividuelle Leitsymptomatik als Freitext angeben)</div>
+          <input class="v u-in" id="rzLsDText" placeholder="Pathologisches Nagelwachstum mit beginnender Entzündung">
+        </div>
+      </div>
+
+      <!-- ===================== HEILMITTEL ===================== -->
+      <div class="hm-head">
+        <div class="lbl">Heilmittel nach Maßgabe des Kataloges</div>
+        <div class="beh">Behandlungseinheiten</div>
+      </div>
+      <div class="hm-table">
+        <div class="hm-line">
+          <div><div class="hm-cap">Heilmittel</div><input class="v" id="rzHm" placeholder="Nagelspangenbehandlung"></div>
+          <div><input class="v center" id="rzAnzahl" placeholder="8"></div>
+        </div>
+        <div class="hm-line">
+          <div><input class="v" id="rzHm2" placeholder=""></div>
+          <div><input class="v center" id="rzAnzahl2" placeholder=""></div>
+        </div>
+        <div class="hm-line">
+          <div><div class="hm-cap">Ergänzendes Heilmittel</div><input class="v" id="rzHmErg" placeholder=""></div>
+          <div><input class="v center" id="rzAnzahlErg" placeholder=""></div>
+        </div>
+      </div>
+
+      <!-- ===================== SEÇENEKLER ===================== -->
+      <div class="opts">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <label class="th"><span class="chk" data-opt="bericht"></span> Therapiebericht</label>
+          <label class="th"><span class="chk" data-opt="dringend"></span> Dringlicher Behandlungsbedarf innerhalb von 14 Tagen</label>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="opt-line">
+            Hausbesuch
+            <label class="th"><span class="chk" data-hb="ja"></span> ja</label>
+            <label class="th"><span class="chk" data-hb="nein"></span> nein</label>
+          </div>
+          <div class="freq">
+            <span class="cap" style="white-space:nowrap;">Therapie&shy;frequenz</span>
+            <input class="v u-in" id="rzFreq" placeholder="z. B. 1× pro Woche">
+          </div>
+        </div>
+      </div>
+
+      <div class="hinweise">
+        <div class="cap">ggf. Therapieziele / weitere med. Befunde und Hinweise</div>
+        <textarea id="rzHinweise"></textarea>
+      </div>
+
+      <!-- ===================== ALT ===================== -->
+      <div class="bottom">
+        <div>
+          <div class="barcode"></div>
+          <div class="barcode-cap">Der Barcode enthält keine auf dem Formular nicht lesbaren Daten.</div>
+          <div style="margin-top:10px;">
+            <div class="cap">IK des Leistungserbringers</div>
+            <input class="v u-in sm" id="rzIkLE" placeholder="">
+          </div>
+        </div>
+        <div class="stamp">
+          <textarea id="rzArztName" placeholder="Vertragsarztstempel / Name des Arztes"></textarea>
+          <div class="cap">Vertragsarztstempel / Unterschrift des Arztes</div>
+        </div>
+      </div>
+
+      <div class="footline">
+        <span>PRF.NR. Y/9/2401/36/216</span>
+        <span>Muster 13.1/E (10.2020)</span>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  // Checkbox / X-kutuları — X toggle
+  document.querySelectorAll('.chk').forEach(box => {
+    box.addEventListener('click', () => {
+      const on = box.textContent.trim() === 'X';
+      // ja/nein ve terapi-tipi tekli davranış (radyo gibi) — opsiyonel
+      const grp = box.dataset.hb ? 'hb' : (box.dataset.th ? 'th' : null);
+      if (grp && !on) {
+        document.querySelectorAll(`.chk[data-${grp}]`).forEach(o => o.textContent='');
+      }
+      box.textContent = on ? '' : 'X';
+    });
+  });
+
+  // Demo kaydet — sadece toplanan değeri gösterir
+  document.getElementById('protoSave').addEventListener('click', () => {
+    const get = id => (document.getElementById(id)?.value || '').trim();
+    const checked = sel => [...document.querySelectorAll(sel)].filter(b=>b.textContent.trim()==='X');
+    const therapy = checked('.chk[data-th]').map(b=>b.dataset.th);
+    const ls = checked('.chk[data-ls]').map(b=>b.dataset.ls);
+    const data = {
+      kasse:get('rxcKasse'), patient:get('rxcLastName')+' '+get('rxcFirstName'),
+      geb:get('rxcDob'), versNr:get('rxcVersNr'), ik:get('rxcKasseIk'),
+      bsnr:get('rzBsnr'), lanr:get('rzLanr'), datum:get('rzAusstDate'),
+      therapie:therapy, icd:get('rzIcd'), diagnose:get('rzDiagnoseText'),
+      dg:get('rzDg'), leitsymptomatik:ls, lsText:get('rzLsDText'),
+      heilmittel:get('rzHm'), einheiten:get('rzAnzahl'), freq:get('rzFreq')
+    };
+    alert('Erfasste Daten:\n\n'+JSON.stringify(data,null,2));
+  });
+</script>
