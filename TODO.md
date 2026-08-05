@@ -29,26 +29,49 @@ Son güncelleme: 2026-08-05
 > **git geçmişinde** duruyor. Dosyayı silmek yetmez — geçmişten okunabilir.
 > Bu iki madde **sadece sen** yapabilirsin, kod tarafı temizlendi.
 
-### 0.1 Fal AI anahtarını iptal et ⬜
+### 0.1 Fal AI anahtarını iptal et ⬜ — **CANLI OLDUĞU DOĞRULANDI**
 - **Nerede:** `ai chatbot proje/CLAUDE.md:186` → `const FAL_KEY = '...'`
 - **Ne zamandır açık:** commit `961404e` / `46f338c` — **22.05.2026'dan beri (~2,5 ay)**
-- **Yapılacak:** [fal.ai](https://fal.ai) panelinden anahtarı **revoke** et. Yeni anahtar
-  üretmeye gerek yok — bu proje ÖLÜ, kullanılmıyor.
-- **Neden yine de acil:** kullanılmayan bir anahtar da faturalandırılabilir.
+- **Key ID (gizli değil):** `3c2e1b25-c850-4e3f-9822-9f88b6807a63`
+- 🔴 **2026-08-05 testi: anahtar HÂLÂ GEÇERLİ.** `queue.fal.run` kimlik doğrulama testi:
+  anahtarsız `401` · sahte anahtar `401` · **sızan anahtar `200`**.
+  "Süresi dolmuş / otomatik silinmiş" ihtimali elendi.
+- **Engel:** Hesaba erişilemiyor. GitHub OAuth ile girilen hesapta Keys bölümü **boş** —
+  büyük ihtimalle o giriş **yeni bir hesap** oluşturdu; anahtar başka bir hesaba ait.
+- **Yapılacak:** (a) panelde org/team seçici ve Billing tekrar kontrol edilir, key ID aranır;
+  (b) bulunamazsa `support@fal.ai`'ye iptal talebi — **sadece key ID paylaşılır, gizli kısım asla.**
+- ✅ **Mali zarar SIFIR — doğrulandı 2026-08-05.** Sızıntı dönemine denk gelen üç fatura da
+  `$0.00` (01.06 / 01.07 / 01.08.2026). Tek gerçek ödeme 12.08.2025'te `$10.00` — sızıntıdan
+  9 ay önce. Yani anahtar açıktaydı ama **kimse kullanmamış.**
+- ⚠️ **Panelde görünmüyor:** Hesap bulundu (fatura geçmişi 2025'e gidiyor) ama API Keys
+  sayfası **boş**. Anahtar `200` döndüğüne göre bir yerde duruyor — muhtemelen farklı bir
+  team/scope altında.
+- **Durum: `support@fal.ai` yanıtı bekleniyor.** Hazır mail taslağı: `c:\tmp\fal-support-mail.txt`
+  (key ID var, gizli kısım yok). İstenen: anahtarı iptal et · hangi hesaba ait söyle ·
+  kart kayıtlı mı bildir.
+- **Aciliyet DÜŞÜK** — zarar oluşmadı, proje ölü. Destek cevabı gelince kapatılır.
 - Çalışma ağacındaki değer 2026-08-05'te temizlendi, **geçmişte duruyor.**
 
-### 0.2 Test hesabı şifresini değiştir ⬜
-- **Nerede:** `PODOLOGIE_ORCHESTRATOR_PROMPT.md:36` → e-posta + şifre açık
-- **Yapılacak:** Supabase Auth'tan o hesabın şifresini değiştir. Yeni şifreyi **hiçbir
-  `.md` dosyasına yazma** — env var veya şifre yöneticisinde tut.
-- Çalışma ağacındaki değer 2026-08-05'te temizlendi, **geçmişte duruyor.**
+### 0.2 Test hesabı şifresini değiştir ✅ **TAMAMLANDI 2026-08-05**
+- **Hesap:** `fizyo6@gmail.com` — owner, enterprise/trial, 24 hasta kaydı, 32 rezept,
+  12 randevu, 5 bağlı çalışan. **Veri gerçek hasta verisi DEĞİL**, kullanıcının kendi
+  oluşturduğu test verisi → DSGVO Art. 33 bildirim konusu yok.
+- **Maruz kalma:** `PODOLOGIE_ORCHESTRATOR_PROMPT.md`'de 18.06.2026 → 05.08.2026 (~7 hafta,
+  public depo).
+- **Yetkisiz erişim YOK:** `auth.sessions`'ta tek oturum vardı — 28.07.2026, Alman IP,
+  kullanıcının kendisi.
+- **Çözüm:** Mail kutusu gerçek olmadığı için (o dönem e-posta doğrulaması kapalıymış)
+  password-recovery işe yaramıyordu → şifre Supabase SQL editöründen `crypt()` ile
+  değiştirildi, `auth.sessions` temizlendi.
+- **Doğrulandı:** hash `$2a$`/60 karakter (bcrypt, GoTrue uyumlu), açık oturum 0,
+  refresh token 0.
 
-### 0.3 (opsiyonel, sonra) Git geçmişini temizleme ⬜
-- 0.1 ve 0.2 yapıldıktan **sonra** düşünülür. `git filter-repo` ile geçmiş yazılabilir ama
-  force-push gerekir ve depo geçmişini bozar. **Anahtar iptal edildiyse aciliyeti kalmaz** —
-  iptal edilmiş bir anahtarın geçmişte durması zararsızdır.
-- Alternatif: depoyu private yapmak (ama bkz. `feedback_vercel_private_repo` — daha önce
-  Vercel deploy'u durdurmuştu).
+### 0.3 Git geçmişini temizleme — ❌ **GEREKSİZ, YAPILMAYACAK**
+- Gerekçe: test şifresi değiştirildi (artık geçersiz bir dize), Fal anahtarında **mali zarar
+  sıfır** doğrulandı. `git filter-repo` + force-push depo geçmişini bozar ve tüm klonları
+  kırar; kazancı yok.
+- Depoyu private yapma seçeneği de duruyor ama Vercel deploy'unu durdurmuştu
+  (`feedback_vercel_private_repo`) — ayrı bir iş, bu maddeye bağlı değil.
 
 ---
 
