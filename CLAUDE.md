@@ -166,7 +166,11 @@ rate limit (`express-rate-limit`, public route'larda).
   ⚠️ Eski pazarlama/plan dosyalarında dolaşan 39/59 ve 89/149/219 setleri **geçersizdir.**
 - **Trial:** 14 gün · **Customer Portal:** aktif · **Checkout domain:** `pay.praxura.de`
 - **Enterprise price ID hâlâ YOK** — `pricing.js`/`stripe-live-setup.js`'te geçmiyor (`TODO.md` §2.3)
-- **Webhook:** endpoint'in praxura.de'ye baktığı **panelden doğrulanmalı** (`TODO.md` §2.3)
+- **Webhook:** `https://app.praxura.de/api/stripe/webhook` — ✅ 2026-08-05'te panelden
+  doğrulandı. Kodun fallback'i de aynı (`create-checkout-session.js:10`,
+  `portal-session.js:8`), yani `NEXT_PUBLIC_URL` boş olsa bile doğru domain'e gider.
+  ⚠️ Ama env **yanlış** bir değere set edilmişse fallback devreye girmez — Vercel'de
+  `NEXT_PUBLIC_URL` varsa `https://app.praxura.de` olmalı.
 
 `STRIPE_SETUP.md` — env var **adları** geçerli, ama dosya Test Mode döneminde yazıldı.
 LIVE ürün/fiyat scripti: `stripe-live-setup.js`.

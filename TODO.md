@@ -385,9 +385,13 @@ Stripe **2026-06-11'den beri LIVE**, gerçek ödeme alınıyor. Kalanlar:
       `STRIPE_PRICE_ENTERPRISE_MONTHLY` / `_YEARLY` env var'larına koy.
       **Doğrulandı 2026-08-05:** `stripe-live-setup.js` ve `api/_lib/pricing.js` içinde
       `ENTERPRISE` hiç geçmiyor — gerçekten açık.
-- [ ] **Webhook domain doğrulaması** — Stripe Dashboard'daki endpoint praxura.de'ye mi bakıyor?
-      Vercel `NEXT_PUBLIC_URL` hâlâ `infinitymade.de` yazıyor olabilir. **Repodan görülemiyor,
-      panelden kontrol edilecek.**
+- [x] **Webhook domain doğrulaması** — ✅ 2026-08-05 panelden doğrulandı:
+      `https://app.praxura.de/api/stripe/webhook`. Doğru. Kodun fallback'i de aynı
+      (`create-checkout-session.js:10`, `portal-session.js:8`) → `NEXT_PUBLIC_URL` boş
+      olsa bile çalışır.
+- [ ] **`NEXT_PUBLIC_URL` değerini gör** (küçük, tamamlayıcı) — Vercel → Settings → Environment
+      Variables. Boşsa sorun yok (fallback doğru). Set edilmişse `https://app.praxura.de`
+      olmalı; `infinitymade.de` yazıyorsa checkout dönüş yönlendirmeleri yanlış domain'e gider.
 - [ ] **Stripe Tax** (opsiyonel) — otomatik USt, B2B reverse-charge
 - [ ] **Stripe Radar** — en azından default fraud kuralları aktif
 - [x] **Live mode end-to-end test** — ✅ 2026-06-11
