@@ -33,7 +33,7 @@ Uzun prompt'ları mutlaka dosyaya yaz, `cat` ile geçir. `run_in_background: tru
 
 ## Test Hesabı
 - **URL:** http://localhost:3000 (veya https://praxura.de eğer localde server yok)
-- **Login:** test hesabi -- kimlik bilgileri env var / sifre yoneticisinde tutulur (2026-08-05 kaldirildi -> TODO_MANUEL.md ss0.2)
+- **Login:** test hesabi -- kimlik bilgileri env var / sifre yoneticisinde tutulur (2026-08-05 kaldirildi -> TODO.md ss0.2)
 - **Not:** Localde test için `cd c:\Users\Test\Desktop\claude\website && npx serve . -p 3000` çalıştır.
 
 ---

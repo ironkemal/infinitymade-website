@@ -63,7 +63,7 @@ Score-Skala: 1-4 niedrig · 5-9 mittel · 10-14 hoch · 15-25 sehr hoch.
 
 ### Maßnahmen zu offenen Risiken
 
-- **R4 / MFA-Pflicht**: Supabase `enrollMfa` Flow erzwingen für Owner-Konten ab Go-Live. Implementierung als P0 in PRE_LAUNCH_CHECKLIST.md.
+- **R4 / MFA-Pflicht**: Supabase `enrollMfa` Flow erzwingen für Owner-Konten ab Go-Live. Implementierung als P0 in TODO.md §2.
 - **R6 / Backup-Drill**: 1× vollständiger Restore-Test vor Go-Live, Protokoll in `compliance/BACKUP_DRILL_LOG.md`.
 - **R7 / Datenpannen-Runbook**: Erstellung `compliance/DATAPANNE_RUNBOOK.md` mit Eskalations-Flowchart, Meldetemplate Aufsichtsbehörde, Kommunikationsvorlage Auftraggeber.
 - **R9 / Log-Filter**: Custom Logger der bekannte PII-Felder (KVNR-Regex, ICD-10) durch `[REDACTED]` ersetzt — bereits in `api-backend/_log.js` einplanen.
@@ -82,7 +82,7 @@ Konsultation erfolgt indirekt über:
 
 ## 5. Ergebnis
 
-Die Verarbeitung ist nach Umsetzung aller offenen P0/P1-Maßnahmen aus PRE_LAUNCH_CHECKLIST.md **mit den Anforderungen der DSGVO und § 22 BDSG vereinbar**.
+Die Verarbeitung ist nach Umsetzung aller offenen P0/P1-Maßnahmen aus TODO.md §2 **mit den Anforderungen der DSGVO und § 22 BDSG vereinbar**.
 
 Eine erneute DSFA ist erforderlich, wenn:
 - KI-Modelle ausgetauscht werden (z. B. Anbieterwechsel von Azure auf US-only Provider)

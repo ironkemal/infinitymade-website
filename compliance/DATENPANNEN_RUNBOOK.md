@@ -460,7 +460,7 @@ Folgende Fragen sind schriftlich zu beantworten und im Incident-Dokument zu erg�
 5. **Dokumentationsanpassung:**
    - `TOM.md` anpassen falls Sicherheitsmaßnahme versagt hat
    - `DSFA.md` Risikomatrix aktualisieren falls neues Risiko identifiziert
-   - `PRE_LAUNCH_CHECKLIST.md` ergänzen falls Maßnahme vor Go-Live fehlte
+   - `TODO.md` §2 (Launch-Checkliste) ergänzen falls Maßnahme vor Go-Live fehlte
 
 ---
 

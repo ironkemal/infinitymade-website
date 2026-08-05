@@ -296,7 +296,7 @@ Görevler:
 - [ ] 6.2 Fiyatlandırma sayfası (K13 diliyle) + "So funktioniert's" kurulum sayfası + resimli Hetzner/IONOS rehberleri.
 - [ ] 6.3 EU AI Act Art. 6(3) non-high-risk gerekçe dokümanı (yazılı, kayıtlı) + MDR metin taraması (G6 ihlali var mı — tüm UI/pazarlama).
 - [ ] 6.4 Destek runbook'u: tanılama paketi nasıl okunur, en olası 10 arıza + çözümü.
-- [ ] 6.5 `PRE_LAUNCH_CHECKLIST.md` ile çapraz kontrol; `CLAUDE.md`'yi yeni mimariye göre güncelle.
+- [ ] 6.5 `TODO.md` §2 (Launch-Checkliste) ile çapraz kontrol; `CLAUDE.md`'yi yeni mimariye göre güncelle.
 
 **Kabul kriterleri:** hepsi tamam + kullanıcının son onayı.
 
@@ -400,7 +400,7 @@ G8 kuralı (buluta yeni zincir yok) yürürlük tarihi: ⬜ (Faz 1 başlangıcı
 - `ON_PREMISE_ANALYSE.md` — regülasyon analizi (bu playbook'un temeli)
 - `REGULATORY_AUDIT.md` — SaaS landmine audit'i (Haziran 2026)
 - `INFRASTRUCTURE.md` — mevcut VPS/deploy düzeni
-- `PRE_LAUNCH_CHECKLIST.md` — go-live çapraz kontrol
+- `TODO.md` §2 (Launch-Checkliste) — go-live çapraz kontrol
 
 ---
 
