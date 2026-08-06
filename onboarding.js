@@ -8,61 +8,13 @@ const PRAXIS_SECTORS = ['physiotherapy', 'logopaedie', 'ergotherapie', 'podologi
 
 const STEPS = ['account', 'business', 'billing', 'owner', 'services', 'hours', 'plan', 'done'];
 
+// Nur Selbstzahler-/Privatleistungen. GKV-Positionen werden ausschließlich von
+// dashboard.js autoSeedGkvServices() angelegt — Vorlagen dürfen keine GKV-Namen
+// enthalten, sonst entstehen doppelte Einträge in der Leistungsauswahl.
 const SERVICE_TEMPLATES = {
-  barber: [
-    { name: 'Haarschnitt', price_config: { durations: { '15': { price: 15, active: true }, '30': { price: 25, active: true }, '45': { price: 35, active: true } } } },
-    { name: 'Bart schneiden', price_config: { durations: { '15': { price: 10, active: true }, '30': { price: 15, active: true } } } },
-    { name: 'Rasur', price_config: { durations: { '15': { price: 10, active: true }, '30': { price: 15, active: true } } } },
-    { name: 'Färbung', price_config: { durations: { '60': { price: 45, active: true }, '90': { price: 65, active: true }, '120': { price: 85, active: true } } } },
-    { name: 'Komplett-Service', price_config: { durations: { '45': { price: 40, active: true }, '60': { price: 50, active: true }, '90': { price: 65, active: true } } } },
-    { name: 'Kinderhaarschnitt', price_config: { durations: { '15': { price: 10, active: true }, '30': { price: 15, active: true } } } },
-    { name: 'Augenbrauen', price_config: { durations: { '15': { price: 8, active: true } } } },
-  ],
-  beauty: [
-    { name: 'Behandlung', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
-    { name: 'Kosmetische Reinigung', price_config: { durations: { '60': { price: 55, active: true }, '90': { price: 75, active: true } } } },
-    { name: 'Anti-Aging', price_config: { durations: { '60': { price: 70, active: true }, '90': { price: 95, active: true }, '120': { price: 120, active: true } } } },
-    { name: 'Make-up', price_config: { durations: { '45': { price: 45, active: true }, '60': { price: 60, active: true }, '90': { price: 80, active: true } } } },
-    { name: 'Wimpernverlängerung', price_config: { durations: { '60': { price: 50, active: true }, '90': { price: 70, active: true }, '120': { price: 90, active: true } } } },
-    { name: 'Faltenglättung', price_config: { durations: { '45': { price: 80, active: true }, '60': { price: 100, active: true }, '90': { price: 130, active: true } } } },
-  ],
-  nails: [
-    { name: 'Nagelmodellage', price_config: { durations: { '30': { price: 25, active: true }, '45': { price: 35, active: true }, '60': { price: 50, active: true } } } },
-    { name: 'Nagelreparatur', price_config: { durations: { '15': { price: 10, active: true }, '30': { price: 15, active: true } } } },
-    { name: 'French Manicure', price_config: { durations: { '30': { price: 20, active: true }, '45': { price: 30, active: true } } } },
-    { name: 'Gel-Nägel', price_config: { durations: { '45': { price: 35, active: true }, '60': { price: 45, active: true }, '90': { price: 60, active: true } } } },
-    { name: 'Acryl-Nägel', price_config: { durations: { '45': { price: 35, active: true }, '60': { price: 45, active: true }, '90': { price: 60, active: true } } } },
-    { name: 'Nagelpflege', price_config: { durations: { '30': { price: 20, active: true }, '45': { price: 30, active: true } } } },
-  ],
-  tattoo: [
-    { name: 'Tattoo', price_config: { durations: { '60': { price: 80, active: true }, '120': { price: 150, active: true }, '180': { price: 220, active: true } } } },
-    { name: 'Cover-up', price_config: { durations: { '60': { price: 90, active: true }, '120': { price: 160, active: true }, '180': { price: 240, active: true } } } },
-    { name: 'Piercing', price_config: { durations: { '15': { price: 20, active: true }, '30': { price: 30, active: true }, '45': { price: 40, active: true } } } },
-  ],
-  spa: [
-    { name: 'Massage', price_config: { durations: { '30': { price: 39, active: true }, '60': { price: 69, active: true }, '90': { price: 99, active: true } } } },
-    { name: 'Wellness', price_config: { durations: { '60': { price: 80, active: true }, '90': { price: 110, active: true }, '120': { price: 140, active: true } } } },
-    { name: 'Aromatherapie', price_config: { durations: { '30': { price: 35, active: true }, '60': { price: 60, active: true }, '90': { price: 85, active: true } } } },
-    { name: 'Hot Stone', price_config: { durations: { '60': { price: 75, active: true }, '90': { price: 100, active: true }, '120': { price: 130, active: true } } } },
-    { name: 'Body Wraps', price_config: { durations: { '60': { price: 65, active: true }, '90': { price: 90, active: true }, '120': { price: 115, active: true } } } },
-  ],
-  massage: [
-    { name: 'Massage', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 75, active: true } } } },
-    { name: 'Thai Massage', price_config: { durations: { '60': { price: 70, active: true }, '90': { price: 95, active: true }, '120': { price: 120, active: true } } } },
-    { name: 'Rückenmassage', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
-    { name: 'Fußmassage', price_config: { durations: { '30': { price: 30, active: true }, '45': { price: 40, active: true }, '60': { price: 55, active: true } } } },
-    { name: 'Sportmassage', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
-    { name: 'Entspannungsmassage', price_config: { durations: { '60': { price: 65, active: true }, '90': { price: 90, active: true }, '120': { price: 115, active: true } } } },
-  ],
   physiotherapy: [
     { name: 'Erstberatung', code: null, price_config: { durations: { '15': { price: 30, active: true }, '30': { price: 45, active: true } } } },
-    { name: 'Krankengymnastik (KG)', code: 'KG', price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 65, active: true }, '60': { price: 85, active: true } } } },
-    { name: 'Manuelle Therapie', code: 'MT', price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 70, active: true }, '60': { price: 90, active: true } } } },
-    { name: 'Manuelle Lymphdrainage', code: 'MLD', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
     { name: 'Kräftigungstraining', code: null, price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
-    { name: 'Klassische Massage / Sportmassage', code: 'KMT', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
-    { name: 'Elektrotherapie', code: 'ES', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
-    { name: 'Ultraschall', code: 'US', price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 50, active: true }, '60': { price: 65, active: true } } } },
     { name: 'Schmerztherapie', code: null, price_config: { durations: { '30': { price: 45, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
   ],
   logopaedie: [
@@ -82,36 +34,13 @@ const SERVICE_TEMPLATES = {
     { name: 'Beratung', code: null, price_config: { durations: { '15': { price: 25, active: true }, '30': { price: 45, active: true } } } },
   ],
   podologie: [
-    { name: 'Podologische Erstbehandlung', code: null, price_config: { durations: { '30': { price: 35, active: true }, '45': { price: 48, active: true } } } },
-    { name: 'Hornhautabtragung', code: null, price_config: { durations: { '15': { price: 20, active: true }, '30': { price: 35, active: true } } } },
-    { name: 'Nagelbearbeitung', code: null, price_config: { durations: { '15': { price: 20, active: true }, '30': { price: 35, active: true } } } },
     { name: 'Hühneraugenbehandlung', code: null, price_config: { durations: { '15': { price: 22, active: true }, '30': { price: 38, active: true } } } },
-    { name: 'Komplexbehandlung (beide Füße)', code: null, price_config: { durations: { '45': { price: 55, active: true }, '60': { price: 70, active: true } } } },
     { name: 'Beratung', code: null, price_config: { durations: { '15': { price: 20, active: true }, '30': { price: 35, active: true } } } },
-  ],
-  restaurant: [
-    { name: 'Tischreservierung', price_config: { durations: { '60': { price: 0, active: true }, '90': { price: 0, active: true }, '120': { price: 0, active: true } } } },
-    { name: 'Gruppenreservierung', price_config: { durations: { '60': { price: 0, active: true }, '90': { price: 0, active: true }, '120': { price: 0, active: true } } } },
-    { name: 'Event-Reservierung', price_config: { durations: { '120': { price: 0, active: true }, '180': { price: 0, active: true }, '240': { price: 0, active: true } } } },
   ],
   other: [
     { name: 'Behandlung', price_config: { durations: { '30': { price: 40, active: true }, '45': { price: 60, active: true }, '60': { price: 80, active: true } } } },
     { name: 'Beratung', price_config: { durations: { '30': { price: 30, active: true }, '45': { price: 45, active: true } } } },
     { name: 'Diagnostik', price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 70, active: true }, '60': { price: 90, active: true } } } },
-  ],
-  praxis: [
-    { name: 'Behandlung', price_config: { durations: { '15': { price: 0, active: true }, '30': { price: 0, active: true }, '45': { price: 65, active: true }, '60': { price: 85, active: true } } } },
-    { name: 'Beratung', price_config: { durations: { '15': { price: 0, active: true }, '30': { price: 0, active: true } } } },
-    { name: 'Kontrolluntersuchung', price_config: { durations: { '15': { price: 0, active: true }, '30': { price: 0, active: true } } } },
-    { name: 'Akupunktur', price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 70, active: true }, '60': { price: 90, active: true } } } },
-    { name: 'Chiropraktik', price_config: { durations: { '30': { price: 50, active: true }, '45': { price: 70, active: true }, '60': { price: 90, active: true } } } },
-  ],
-  gym: [
-    { name: 'Training', price_config: { durations: { '30': { price: 20, active: true }, '60': { price: 40, active: true }, '90': { price: 60, active: true } } } },
-    { name: 'Persönliches Training', price_config: { durations: { '60': { price: 50, active: true }, '90': { price: 70, active: true }, '120': { price: 90, active: true } } } },
-    { name: 'Gruppentraining', price_config: { durations: { '60': { price: 15, active: true }, '90': { price: 20, active: true }, '120': { price: 25, active: true } } } },
-    { name: 'Yoga', price_config: { durations: { '60': { price: 20, active: true }, '90': { price: 30, active: true }, '120': { price: 40, active: true } } } },
-    { name: 'EMS-Training', price_config: { durations: { '30': { price: 30, active: true }, '45': { price: 40, active: true }, '60': { price: 50, active: true } } } },
   ],
 };
 
@@ -396,10 +325,15 @@ function bindAccount() {
           return;
         }
 
-        // New flow: store in sessionStorage, create Supabase user after payment
+        // New flow: store in sessionStorage, create Supabase user after payment.
+        // Start from a clean slate — Daten eines vorherigen Onboardings im selben Tab
+        // dürfen nicht in die neue Registrierung überlaufen.
+        sessionStorage.removeItem('onboarding_profile');
+        sessionStorage.removeItem('onboarding_services');
+        services = [];
+        profile = { email };
         sessionStorage.setItem('onboarding_email', email);
         sessionStorage.setItem('onboarding_password', password);
-        profile = { ...profile, email };
         saveSessionProfile();
         goToStep(STEPS.indexOf('business'));
       } else {
@@ -629,10 +563,176 @@ function createServiceRow(r = {}) {
   return div;
 }
 
+const normName = (s) => (s || '').trim().toLowerCase();
+
+/**
+ * Speichert die Selbstzahler-Leistungen des Onboardings ohne Datenverlust.
+ *
+ * Schema-Realität, die dieses Verfahren erzwingt:
+ *  - GKV-Positionen (`services.gkv_position_nr IS NOT NULL`) gehören ausschließlich
+ *    `autoSeedGkvServices()` in dashboard.js. Das Onboarding schreibt, ändert und
+ *    löscht sie in KEINEM Codepfad.
+ *  - `bookings.service_id` ist NO ACTION — eine verbuchte Leistung lässt sich gar nicht
+ *    löschen (früher: harter Fehler, der den ganzen Schritt blockierte).
+ *    `booking_requests.service_id` und `warteliste.service_id` sind SET NULL, ein Löschen
+ *    entwertet dort still vorhandene Daten. Deshalb: nur referenzfreie Zeilen werden gelöscht.
+ *  - `services` hat KEINE Spalte `is_active`; ein Soft-Deaktivieren ist nicht möglich.
+ *    Referenzierte Zeilen bleiben daher unverändert stehen (ohne Fehlermeldung).
+ *  - `row.dataset.svcId` ist eine `business_services.id`, KEINE `services.id`.
+ *    Beide Tabellen lassen sich nur über den Namen verbinden.
+ */
+async function syncServices(items) {
+  const formNames = new Set(items.map(i => normName(i.name)));
+
+  // ---- Bestand lesen ----
+  const { data: exBs, error: exBsErr } = await supabase
+    .from('business_services').select('id,name').eq('business_id', userId);
+  if (exBsErr) throw exBsErr;
+
+  const { data: exPrivSvc, error: exPrivErr } = await supabase
+    .from('services').select('id,title').eq('owner_id', userId).is('gkv_position_nr', null);
+  if (exPrivErr) throw exPrivErr;
+
+  const { data: exGkvSvc, error: exGkvErr } = await supabase
+    .from('services').select('id,title').eq('owner_id', userId).not('gkv_position_nr', 'is', null);
+  if (exGkvErr) throw exGkvErr;
+
+  const gkvTitles = new Set((exGkvSvc || []).map(s => normName(s.title)));
+  const privByName = new Map((exPrivSvc || []).map(s => [normName(s.title), s]));
+
+  // ---- 1. services: vorhandene aktualisieren, neue anlegen ----
+  const insertPayloads = [];
+  for (const it of items) {
+    const key = normName(it.name);
+    const match = privByName.get(key);
+    if (match) {
+      const { error } = await supabase.from('services').update({
+        title: it.name,
+        code: it.code || null,
+        duration_minutes: it.duration_minutes,
+        price: it.price_eur,
+      }).eq('id', match.id).is('gkv_position_nr', null);
+      if (error) throw error;
+      continue;
+    }
+    if (gkvTitles.has(key)) {
+      // Gleichnamige GKV-Position existiert bereits — kein privates Duplikat anlegen.
+      // Sonst wählt die Therapeutin später die Position ohne `gkv_position_nr` aus und
+      // die Sitzung fällt aus der §302-Abrechnung heraus (stiller Umsatzverlust).
+      console.warn('[onboarding] GKV-Leistung gleichen Namens vorhanden, kein Duplikat angelegt:', it.name);
+      continue;
+    }
+    insertPayloads.push({
+      user_id: userId,
+      owner_id: userId,
+      title: it.name,
+      code: it.code || null,
+      duration_minutes: it.duration_minutes,
+      price: it.price_eur,
+      is_online_meeting: false,
+    });
+  }
+
+  let inserted = [];
+  if (insertPayloads.length) {
+    const { data, error } = await supabase.from('services').insert(insertPayloads).select('id');
+    if (error) throw error;
+    inserted = data || [];
+  }
+
+  // ---- 2. services: entfernte Zeilen löschen, aber nur referenzfreie ----
+  // Löschbar ist ausschließlich, was das Onboarding selbst verwaltet: ein Name, der in
+  // `business_services` stand und den die Nutzerin jetzt aus dem Formular entfernt hat.
+  // Im Dashboard angelegte Privatleistungen tauchen hier gar nicht auf und bleiben unberührt.
+  const bsNames = new Set((exBs || []).map(b => normName(b.name)));
+  const candIds = (exPrivSvc || [])
+    .filter(s => bsNames.has(normName(s.title)) && !formNames.has(normName(s.title)))
+    .map(s => s.id);
+  if (candIds.length) {
+    const blocked = new Set();
+    for (const tbl of ['bookings', 'booking_requests', 'warteliste']) {
+      try {
+        const { data: refs, error } = await supabase.from(tbl).select('service_id').in('service_id', candIds);
+        // Im Zweifelsfall nicht löschen: lieber eine Zeile zu viel als stiller Datenverlust.
+        if (error) { candIds.forEach(id => blocked.add(id)); continue; }
+        (refs || []).forEach(r => { if (r.service_id) blocked.add(r.service_id); });
+      } catch {
+        candIds.forEach(id => blocked.add(id));
+      }
+    }
+    if (blocked.size) {
+      console.info('[onboarding] Leistungen mit bestehenden Verweisen bleiben erhalten:', [...blocked]);
+    }
+    const deletable = candIds.filter(id => !blocked.has(id));
+    if (deletable.length) {
+      const { error } = await supabase.from('services')
+        .delete().in('id', deletable).is('gkv_position_nr', null);
+      if (error) throw error;
+    }
+  }
+
+  // ---- 3. employee_services: nur fehlende Verknüpfungen ergänzen ----
+  const keptIds = items.map(it => privByName.get(normName(it.name))?.id).filter(Boolean);
+  const linkIds = [...new Set([...keptIds, ...inserted.map(s => s.id)])];
+  if (linkIds.length) {
+    const { data: links, error: linkErr } = await supabase
+      .from('employee_services').select('service_id').eq('employee_id', userId);
+    if (linkErr) throw linkErr;
+    const have = new Set((links || []).map(l => l.service_id));
+    const missing = linkIds.filter(id => !have.has(id)).map(id => ({ employee_id: userId, service_id: id }));
+    if (missing.length) {
+      const { error } = await supabase.from('employee_services').insert(missing);
+      if (error) throw error;
+    }
+  }
+  // Verknüpfungen gelöschter Leistungen räumt der CASCADE-Fremdschlüssel selbst ab.
+
+  // ---- 4. business_services spiegeln ----
+  const bsById = new Map((exBs || []).map(b => [b.id, b]));
+  const bsByName = new Map((exBs || []).map(b => [normName(b.name), b]));
+  const usedBsIds = new Set();
+  for (const it of items) {
+    const fields = {
+      name: it.name,
+      duration_minutes: it.duration_minutes,
+      price_eur: it.price_eur,
+      is_active: it.is_active,
+      display_order: it.display_order,
+      code: it.code || null,
+    };
+    const target = (it.id && bsById.get(it.id)) || bsByName.get(normName(it.name));
+    if (target) {
+      usedBsIds.add(target.id);
+      const { error } = await supabase.from('business_services')
+        .update(fields).eq('id', target.id).eq('business_id', userId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from('business_services')
+        .insert({ business_id: userId, ...fields });
+      if (error) throw error;
+    }
+  }
+  const staleBs = (exBs || []).filter(b => !usedBsIds.has(b.id)).map(b => b.id);
+  if (staleBs.length) {
+    const { error } = await supabase.from('business_services')
+      .delete().in('id', staleBs).eq('business_id', userId);
+    if (error) throw error;
+  }
+}
+
 function bindServices() {
   document.getElementById('addServiceBtn').addEventListener('click', () => {
     document.getElementById('servicesList').appendChild(createServiceRow());
   });
+
+  // Später ausfüllen — dieser Schritt ist optional und speichert nichts.
+  const skipBtn = document.getElementById('servicesSkip');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', async () => {
+      await saveStepProgress('hours');
+      goToStep(STEPS.indexOf('hours'));
+    });
+  }
 
   document.getElementById('servicesForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -648,54 +748,11 @@ function bindServices() {
       code: row.dataset.code || null,
     })).filter(s => s.name);
 
-    if (items.length === 0) return showError('Mindestens eine Dienstleistung wird benötigt.');
+    // Eine leere Liste ist gültig — dieser Schritt ist optional (nur Selbstzahler-Leistungen).
 
     if (userId) {
       try {
-        const { error: delBs } = await supabase.from('business_services').delete().eq('business_id', userId);
-        if (delBs) throw delBs;
-        const { error: delEs } = await supabase.from('employee_services').delete().eq('employee_id', userId);
-        if (delEs) throw delEs;
-        const { data: oldSvcs } = await supabase.from('services').select('id').eq('owner_id', userId);
-        if (oldSvcs?.length) {
-          const { error: delSvc } = await supabase.from('services').delete().in('id', oldSvcs.map(s => s.id));
-          if (delSvc) throw delSvc;
-        }
-
-        const svcInserts = items.map(s => {
-          if (s.price_config) {
-            return {
-              user_id: userId,
-              owner_id: userId,
-              title: s.name,
-              code: s.code || null,
-              price_config: s.price_config,
-              duration_minutes: null,
-              price: null,
-              is_online_meeting: false,
-            };
-          }
-          return {
-            user_id: userId,
-            owner_id: userId,
-            title: s.name,
-            code: s.code || null,
-            duration_minutes: s.duration_minutes,
-            price: s.price_eur,
-            is_online_meeting: false,
-          };
-        });
-        const { data: inserted, error: svcErr } = await supabase.from('services').insert(svcInserts).select();
-        if (svcErr) throw svcErr;
-
-        const empRows = inserted.map(s => ({ employee_id: userId, service_id: s.id }));
-        const { error: empErr } = await supabase.from('employee_services').insert(empRows);
-        if (empErr) throw empErr;
-
-        const bsInserts = items.map(({ id, ...rest }) => rest);
-        const { error: bsErr } = await supabase.from('business_services').insert(bsInserts);
-        if (bsErr) throw bsErr;
-
+        await syncServices(items);
         await saveStepProgress('hours');
       } catch (err) {
         showError(err.message);

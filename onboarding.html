@@ -15,7 +15,7 @@
   <link rel="alternate icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <meta name="theme-color" content="#F8F3E8" />
-<link rel="stylesheet" href="onboarding.css" />
+<link rel="stylesheet" href="onboarding.css?v=20260806" />
 </head>
 <body>
 
@@ -111,13 +111,13 @@
       <h1>Über Ihre <em>Praxis</em></h1>
       <p>Diese Daten erscheinen auf Ihrer Online-Buchungsseite und auf Rechnungen.</p>
     </div>
-    <form class="ob-form" id="businessForm" novalidate>
+    <form class="ob-form" id="businessForm" novalidate autocomplete="off">
       <!-- Hidden input to store booking slug cleanly and prevent JS crashes -->
       <input type="hidden" id="bookingSlug" />
 
       <label class="ob-form-field">
         <span class="ob-field-label">Name Ihrer Praxis</span>
-        <input type="text" id="bizName" required placeholder="z.B. Physiotherapie Müller" />
+        <input type="text" id="bizName" required placeholder="z.B. Physiotherapie Müller" autocomplete="off" data-lpignore="true" data-form-type="other" />
       </label>
       <label class="ob-form-field">
         <span class="ob-field-label">Branche</span>
@@ -131,7 +131,7 @@
       </label>
       <label class="ob-form-field">
         <span class="ob-field-label">Stadt</span>
-        <input type="text" id="bizCity" required placeholder="z.B. Koblenz" />
+        <input type="text" id="bizCity" required placeholder="z.B. Koblenz" autocomplete="off" data-lpignore="true" data-form-type="other" />
       </label>
       
       <div class="ob-section-subtitle">Adresse</div>
@@ -139,16 +139,16 @@
       <div class="ob-row-2">
         <label class="ob-form-field">
           <span class="ob-field-label">PLZ</span>
-          <input type="text" id="bizZip" required placeholder="z.B. 56068" maxlength="10" />
+          <input type="text" id="bizZip" required placeholder="z.B. 56068" maxlength="10" autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
         <label class="ob-form-field">
           <span class="ob-field-label">Hausnummer</span>
-          <input type="text" id="bizHouse" required placeholder="z.B. 12a" />
+          <input type="text" id="bizHouse" required placeholder="z.B. 12a" autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
       </div>
       <label class="ob-form-field">
         <span class="ob-field-label">Straße</span>
-        <input type="text" id="bizStreet" required placeholder="z.B. Hauptstraße" />
+        <input type="text" id="bizStreet" required placeholder="z.B. Hauptstraße" autocomplete="off" data-lpignore="true" data-form-type="other" />
       </label>
       <div class="ob-actions">
         <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
@@ -164,7 +164,7 @@
       <h1>Abrechnung &amp; <em>Finanzen</em></h1>
       <p>Geben Sie Ihre Abrechnungsdaten für die gesetzliche Krankenversicherung (§302) ein. Diese Angaben sind optional und können später ergänzt werden.</p>
     </div>
-    <form class="ob-form" id="billingForm" novalidate>
+    <form class="ob-form" id="billingForm" novalidate autocomplete="off">
       <label class="ob-form-field">
         <span class="ob-field-label">Institutionskennzeichen (IK-Nummer)</span>
         <input type="text" id="bizIk" inputmode="numeric" placeholder="9-stellige IK-Nummer" />
@@ -174,16 +174,16 @@
       <div class="ob-section-subtitle">Bankverbindung</div>
       <label class="ob-form-field">
         <span class="ob-field-label">Bankverbindung Name</span>
-        <input type="text" id="bizBankName" placeholder="z.B. Sparkasse" />
+        <input type="text" id="bizBankName" placeholder="z.B. Sparkasse" autocomplete="off" data-lpignore="true" data-form-type="other" />
       </label>
       <div class="ob-row-2">
         <label class="ob-form-field">
           <span class="ob-field-label">IBAN</span>
-          <input type="text" id="bizIban" placeholder="DE..." />
+          <input type="text" id="bizIban" placeholder="DE..." autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
         <label class="ob-form-field">
           <span class="ob-field-label">BIC</span>
-          <input type="text" id="bizBic" placeholder="z.B. WELADED1..." />
+          <input type="text" id="bizBic" placeholder="z.B. WELADED1..." autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
       </div>
 
@@ -191,11 +191,11 @@
       <div class="ob-row-2">
         <label class="ob-form-field">
           <span class="ob-field-label">Steuernummer</span>
-          <input type="text" id="bizSteuernummer" placeholder="z.B. 12/345/67890" />
+          <input type="text" id="bizSteuernummer" placeholder="z.B. 12/345/67890" autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
         <label class="ob-form-field">
           <span class="ob-field-label">USt-IdNr. (optional)</span>
-          <input type="text" id="bizUstId" placeholder="z.B. DE123456789" />
+          <input type="text" id="bizUstId" placeholder="z.B. DE123456789" autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
       </div>
 
@@ -219,7 +219,7 @@
       <h1>Ihre <em>Inhaberdaten</em></h1>
       <p>Wer führt die Behandlungen durch? Ihre Patient(inn)en sehen diesen Namen bei der Online-Buchung.</p>
     </div>
-    <form class="ob-form" id="ownerForm" novalidate>
+    <form class="ob-form" id="ownerForm" novalidate autocomplete="off">
       <div class="ob-info-callout">
         <span class="ob-callout-icon">ℹ️</span>
         <div class="ob-callout-content">
@@ -229,11 +229,11 @@
       <div class="ob-row-2">
         <label class="ob-form-field">
           <span class="ob-field-label">Vorname</span>
-          <input type="text" id="ownerFirstName" required placeholder="z.B. Thomas" />
+          <input type="text" id="ownerFirstName" required placeholder="z.B. Thomas" autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
         <label class="ob-form-field">
           <span class="ob-field-label">Nachname</span>
-          <input type="text" id="ownerLastName" required placeholder="z.B. Müller" />
+          <input type="text" id="ownerLastName" required placeholder="z.B. Müller" autocomplete="off" data-lpignore="true" data-form-type="other" />
         </label>
       </div>
       
@@ -257,10 +257,16 @@
   <section class="ob-step" data-step="services" hidden>
     <div class="ob-step-header">
       <span class="ob-step-tag">Schritt 4 / 7</span>
-      <h1>Ihre <em>Dienstleistungen</em></h1>
-      <p>Welche Leistungen bieten Sie an? Diese erscheinen in Ihrer Online-Buchung — Sie können sie später jederzeit bearbeiten.</p>
+      <h1>Ihre <em>Selbstzahler-Leistungen</em></h1>
+      <p>Welche Leistungen bieten Sie privat an? Diese erscheinen in Ihrer Online-Buchung — Sie können sie später jederzeit bearbeiten.</p>
     </div>
     <form class="ob-form" id="servicesForm" novalidate>
+      <div class="ob-info-callout">
+        <span class="ob-callout-icon">ℹ️</span>
+        <div class="ob-callout-content">
+          <strong>Hinweis:</strong> GKV-Leistungen werden automatisch angelegt — hier tragen Sie nur Ihre Selbstzahler-Leistungen ein.
+        </div>
+      </div>
       <div class="ob-services-header">
         <span></span>
         <span>Dienstleistung</span>
@@ -274,6 +280,7 @@
       <button type="button" class="ob-link-btn" id="addServiceBtn">+ Eigene Dienstleistung hinzufügen</button>
       <div class="ob-actions">
         <button type="button" class="ob-btn ghost" data-back>← Zurück</button>
+        <button type="button" class="ob-btn ghost" id="servicesSkip">Später ausfüllen</button>
         <button type="submit" class="ob-btn primary">Speichern &amp; weiter →</button>
       </div>
     </form>
@@ -432,7 +439,7 @@
 
 <div class="ob-error" id="errorBox" hidden></div>
 
-<script type="module" src="onboarding.js?v=20260615"></script>
+<script type="module" src="onboarding.js?v=20260806"></script>
 <footer style="text-align:center;padding:1rem;font-size:0.78rem;color:#aaa;">
   <a href="/impressum.html" target="_blank" style="color:#aaa;text-decoration:underline;margin:0 0.4rem;">Impressum</a> ·
   <a href="/datenschutz.html" target="_blank" style="color:#aaa;text-decoration:underline;margin:0 0.4rem;">Datenschutz</a>
