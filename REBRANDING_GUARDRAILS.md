@@ -28,10 +28,11 @@
 
 2. **`storageKey: 'infinitymade-auth'`** (lib/supabase.js + sentry-init.js okur + admin izolasyonu). Origin-scoped, kullanıcı görmez. Adını değiştirirsen herkes logout olur + Sentry user attach kırılır. **BIRAK.** (admin: `sb-admin-auth` — o da kalsın.)
 
-3. **E-posta adresleri:** praxura.de'de SADECE `info@` ve `support@` alias'ları var.
-   - `support@praxura.de` → ürün support sayfasında zaten yapıldı. ✓
-   - `kontakt@infinitymade.de`, `datenschutz@infinitymade.de` → bu alias'lar praxura'da YOK + legal/şirket iletişimi → **@infinitymade.de KALIR.**
-   - Yeni bir adrese işaret etmeden önce alias'ın gerçekten var olduğundan emin ol.
+3. ~~**E-posta adresleri:** praxura.de'de SADECE `info@` ve `support@` var…~~
+   **⚠️ GEÇERSİZ — 2026-08-06'da değişti.** `@infinitymade.de` kutuları **artık yok.**
+   praxura.de'de beşi de çalışıyor: `info@` · `kontakt@` · `support@` · `datenschutz@` · `security@`.
+   79 adres 40 dosyada birebir `@praxura.de`'ye çevrildi (alias adı korunarak).
+   **Kural artık:** `@infinitymade.de` yazan her yer bir hatadır, düzelt.
 
 4. **`server.js` OAuth callback'leri** → zaten `app.praxura.de/dashboard.html` (canlı, doğrulandı). Geri alma.
    - ⚠️ `api-backend/**` değişikliği main'e push edilince **GitHub Actions + Watchtower otomatik VPS'e deploy eder** (~4 dk). Test etmeden push etme.
@@ -65,4 +66,6 @@ App başlıkları (login/booking/onboarding/employee-signup/support/demo), manif
 
 ---
 
-*Son güncelleme: 2026-06-02 — domain migration + kısmi rebrand sonrası.*
+*Son güncelleme: 2026-08-06 — mail alias'ları praxura.de'ye taşındı (madde 3 değişti).
+Altın kural (şirket=InfinityMade, ürün=Praxura) 2026-08-06'da kullanıcı tarafından teyit edildi:
+legal sayfalarda **InfinityMade kalır.***

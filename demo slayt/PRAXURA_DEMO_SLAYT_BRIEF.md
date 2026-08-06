@@ -552,7 +552,7 @@ Ich zeige Ihnen jetzt [5-minütige Live-Demo einfügen]."
 
 **Option C — Direkt anrufen**
 Team Praxura, Siegburg (NRW)
-info@infinitymade.de
+info@praxura.de
 
 **Schlussakkord:**
 > "Ihre Praxis. Ihre Abrechnung. Ihre 100 %."

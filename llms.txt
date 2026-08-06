@@ -52,7 +52,7 @@ Germany (nationwide), cloud-based SaaS. Operator based in Siegburg, NRW.
 # Contact
 - Product / website: https://praxura.de
 - Web app (login): https://app.praxura.de
-- Email: kontakt@infinitymade.de
+- Email: kontakt@praxura.de
 - Phone: +49 152 28033834
 - Operator / Anbieter: InfinityMade (Einzelunternehmen), Industriestraße 33, 53721 Siegburg, Germany
 

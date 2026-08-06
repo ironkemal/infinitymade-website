@@ -76,7 +76,7 @@ Score-Skala: 1-4 niedrig · 5-9 mittel · 10-14 hoch · 15-25 sehr hoch.
 Konsultation erfolgt indirekt über:
 - Datenschutzerklärung mit klarer Information über Verarbeitungszwecke
 - Möglichkeit zur Auskunft (Art. 15 DSGVO) und Löschung (Art. 17) über Praxis als Verantwortliche
-- Beschwerdemöglichkeit über `support@infinitymade.de` und Aufsichtsbehörde
+- Beschwerdemöglichkeit über `support@praxura.de` und Aufsichtsbehörde
 
 ---
 

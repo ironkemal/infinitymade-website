@@ -24401,7 +24401,7 @@ async function ensureBusinessCoords() {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
-      { headers: { 'User-Agent': 'Praxura/1.0 (info@infinitymade.de)' } }
+      { headers: { 'User-Agent': 'Praxura/1.0 (info@praxura.de)' } }
     );
     const data = await res.json();
     if (!data.length) return;

@@ -1,5 +1,9 @@
 *.pdf
 INFRASTRUCTURE.md
+PARTNERSHIP_NOTES.md
+
+# Sözleşmeler ve imzalı belgeler — depo PUBLIC, asla commit edilmez
+legal/
 .agents/
 .claude/
 .mcp.json

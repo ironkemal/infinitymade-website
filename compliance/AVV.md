@@ -29,7 +29,7 @@ InfinityMade (Einzelunternehmen)
 Industriestraße 33
 53721 Siegburg
 Deutschland
-E-Mail: kontakt@infinitymade.de
+E-Mail: kontakt@praxura.de
 (nachfolgend: **„Auftragnehmer"**)
 
 ---
@@ -99,7 +99,7 @@ Der Auftraggeber stellt sicher, dass die Verarbeitung der Gesundheitsdaten auf A
 
 ### 4.1 Weisungsrecht
 
-Der Auftraggeber ist allein weisungsbefugt hinsichtlich der Verarbeitung der ihm zuzurechnenden personenbezogenen Daten. Weisungen erteilt der Auftraggeber schriftlich (E-Mail an support@infinitymade.de oder über das Dashboard). Mündliche Weisungen sind unverzüglich schriftlich zu bestätigen.
+Der Auftraggeber ist allein weisungsbefugt hinsichtlich der Verarbeitung der ihm zuzurechnenden personenbezogenen Daten. Weisungen erteilt der Auftraggeber schriftlich (E-Mail an support@praxura.de oder über das Dashboard). Mündliche Weisungen sind unverzüglich schriftlich zu bestätigen.
 
 ### 4.2 Pflichten des Auftraggebers
 
@@ -221,7 +221,7 @@ Die Haftung des Auftragnehmers für mittelbare Schäden, entgangenen Gewinn, Ums
 
 ## Anhänge
 
-- **Anhang 1** — Weisungsformular (kann formlos per E-Mail an support@infinitymade.de erteilt werden)
+- **Anhang 1** — Weisungsformular (kann formlos per E-Mail an support@praxura.de erteilt werden)
 - **Anhang 2** — Technische und Organisatorische Maßnahmen (TOM.md)
 
 ---

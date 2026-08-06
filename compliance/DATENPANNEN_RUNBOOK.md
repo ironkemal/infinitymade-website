@@ -221,7 +221,7 @@ MELDUNG EINER DATENSCHUTZVERLETZUNG (Art. 33 DSGVO)
 Name: Yavuz Kemal Demir
 Unternehmen: InfinityMade (Einzelunternehmen)
 Anschrift: Industriestraße 33, 53721 Siegburg
-E-Mail: kontakt@infinitymade.de
+E-Mail: kontakt@praxura.de
 Telefon: [Telefonnummer eintragen]
 Datenschutzbeauftragter: Yavuz Kemal Demir (DSB-Interim, kein externer DSB bestellt)
 
@@ -273,7 +273,7 @@ Geplant:
 7. KONTAKTPERSON FÜR RÜCKFRAGEN
 
 Yavuz Kemal Demir
-E-Mail: kontakt@infinitymade.de
+E-Mail: kontakt@praxura.de
 Telefon: [Telefonnummer]
 
 ---
@@ -362,7 +362,7 @@ WAS SOLLTEN SIE TUN?
   Ihrer Krankenversichertennummer vermuten.
 - [Ggf.: Bitte ändern Sie Ihr Passwort auf der Praxura-Plattform umgehend.]
 - Falls Sie Fragen haben oder weitere Vorfälle bemerken, kontaktieren
-  Sie uns bitte unter: datenschutz@infinitymade.de
+  Sie uns bitte unter: datenschutz@praxura.de
 
 Wir bedauern diesen Vorfall aufrichtig und haben alle notwendigen
 Maßnahmen ergriffen, um eine Wiederholung zu verhindern.
@@ -372,7 +372,7 @@ Mit freundlichen Grüßen
 Yavuz Kemal Demir
 InfinityMade — Betreiber von Praxura
 Industriestraße 33, 53721 Siegburg
-E-Mail: kontakt@infinitymade.de
+E-Mail: kontakt@praxura.de
 ```
 
 ---
@@ -468,7 +468,7 @@ Folgende Fragen sind schriftlich zu beantworten und im Incident-Dokument zu erg�
 
 | Rolle | Person / Organisation | Kontakt |
 |---|---|---|
-| Verantwortlicher / DSB-Interim | Yavuz Kemal Demir | kontakt@infinitymade.de |
+| Verantwortlicher / DSB-Interim | Yavuz Kemal Demir | kontakt@praxura.de |
 | Datenschutz (extern, bei Bedarf) | [Anwalt eintragen] | [Kontakt eintragen] |
 | Aufsichtsbehörde | LDI NRW | poststelle@ldi.nrw.de · 0211 38424-0 |
 | Melde-Formular LDI NRW | — | https://www.ldi.nrw.de/datenpanne |

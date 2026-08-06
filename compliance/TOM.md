@@ -97,7 +97,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 
 - Schriftlicher AVV mit jedem Auftraggeber (siehe `dpa.html`)
 - Schriftlicher AVV mit jedem Sub-Prozessor (siehe VVT.md Übersicht)
-- Weisungen des Auftraggebers werden ausschließlich über das Dashboard oder per E-Mail an `support@infinitymade.de` entgegengenommen und schriftlich dokumentiert
+- Weisungen des Auftraggebers werden ausschließlich über das Dashboard oder per E-Mail an `support@praxura.de` entgegengenommen und schriftlich dokumentiert
 
 ---
 

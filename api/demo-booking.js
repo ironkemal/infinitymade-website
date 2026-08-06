@@ -136,7 +136,7 @@ function buildICS(booking, meetLink) {
     `DTEND:${endDt}`,
     'SUMMARY:Analysegespräch – Praxura',
     `DESCRIPTION:${desc}`,
-    'ORGANIZER;CN=Praxura:mailto:kontakt@infinitymade.de',
+    'ORGANIZER;CN=Praxura:mailto:kontakt@praxura.de',
     `ATTENDEE;CN=${booking.name};RSVP=FALSE:mailto:${booking.email}`,
     meetLink ? `URL:${meetLink}` : null,
     'END:VEVENT',
@@ -151,7 +151,7 @@ function fmtDE(dateStr) {
 }
 
 function cardHtml(inner) {
-  return `<div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:520px;margin:0 auto;background:#FFFEFB;padding:32px;border-radius:12px;border:1px solid #e8e0d0">${inner}<hr style="border:none;border-top:1px solid #e8e0d0;margin:24px 0"><p style="font-size:12px;color:#6E6458">Praxura · praxura.de · Bei Fragen: kontakt@infinitymade.de</p></div>`;
+  return `<div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:520px;margin:0 auto;background:#FFFEFB;padding:32px;border-radius:12px;border:1px solid #e8e0d0">${inner}<hr style="border:none;border-top:1px solid #e8e0d0;margin:24px 0"><p style="font-size:12px;color:#6E6458">Praxura · praxura.de · Bei Fragen: kontakt@praxura.de</p></div>`;
 }
 
 async function sendConfirmationEmails(booking, meetLink, rescheduleToken) {
