@@ -349,17 +349,17 @@ Olgusal sorular ve onay arayışı için kullanılmaz. Kararlar: `konsey/KARARLA
   bağlıdır, ops tarafına MCP ile SQL çalıştırma.
 - **`TODO.md`** — artık yapılacaklar listesi **değil.** Sadece iki şey kaldı: §1 haftalık beta
   roadmap (T1–T6 plan metni, katman zinciri, DoD) ve §5 kapanmış maddelerin kaydı.
-- **Paylaşılan belge klasörü** — `C:\Users\Test\OneDrive\Praxura-Shared\` (2026-08-08).
-  Depoya girmeyen ama Melih'in de görmesi gereken belgeler burada, OneDrive ile senkron:
+- **Paylaşılan belge klasörü** — `I:\My Drive\Ops Praxura gitnogo\` (Google Drive, 2026-08-08).
+  Depoya girmeyen ama Melih'in de görmesi gereken belgeler burada:
   `vertraege/` (imzalı sözleşmeler + üretim script'i) · `meetings/` (toplantı dökümleri,
-  beta müşteri ismi içerir) · `partnerschaft/` (`PARTNERSHIP_NOTES.md`) · `finanzen/`.
-  ⛔ **Kod ve `.git` buraya KONMAZ** — depo 1,1 GB, `.git` 352 MB; OneDrive'da `.git` bozulur
-  ve iki kişi aynı anda çalışınca çakışan-kopya üretir. Kod GitHub'dan paylaşılır.
-  ⛔ Sırlar (`.env`, SSH anahtarı, API key) buraya da girmez → parola kasası.
+  beta müşteri ismi içerir) · `partnerschaft/` (`PARTNERSHIP_NOTES.md`) ·
+  `infra/` (`INFRASTRUCTURE.md`) · `finanzen/`.
+  ⛔ **Kod ve `.git` buraya KONMAZ** — depo 1,1 GB, `.git` 352 MB; senkron istemcisi `.git`'i
+  bozar ve iki kişi aynı anda çalışınca çakışan-kopya üretir. Kod GitHub'dan paylaşılır.
+  ⛔ Sırlar (`.env`, SSH özel anahtarı, API key) buraya da girmez → parola kasası.
 - `INFRASTRUCTURE.md` — SSH/VPS erişimi, deploy pipeline, sık operasyonlar.
-  **Bilinçli olarak paylaşılan klasörde DEĞİL:** koruyucu belgeler (NDA ·
-  Datengeheimnis · IP devri · §203) imzalanana kadar altyapı erişimi paylaşılmıyor —
-  bkz. Ops-Dashboard → **Ortaklık**.
+  Depoda (gitignore'lu) **ve** paylaşılan klasörün `infra/` altında. Ön koşul olan koruyucu
+  belgeler 2026-08-06'da imzalandı (Datengeheimnis · Nutzungsrechte · §203 kapsanıyor).
 - `ONPREM_MIGRATION_PLAYBOOK.md` — ★ on-premise geçiş rehberi; "bu dosyayı uygula" tetikleyici.
   Arka plan: `ON_PREMISE_ANALYSE.md`
 - `Handbücher/INDEX.md` — 33 GKV/§302 belgesinin haritası + okuma protokolü
