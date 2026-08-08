@@ -155,7 +155,7 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 rate limit (`express-rate-limit`, public route'larda).
 
 **Bilinen eksik:** reCAPTCHA yok — public route'larda tek koruma rate limit.
-(Diğer açık işlerin tamamı → `TODO.md`)
+(Diğer açık işlerin tamamı → Ops-Dashboard, kategori **Teknik**)
 
 ---
 
@@ -165,7 +165,7 @@ rate limit (`express-rate-limit`, public route'larda).
   Starter **29 €**/ay (25 € yıllık) · Professional **49 €**/ay (42 €) · Klinik **99 €**/ay (84 €) · Enterprise bireysel.
   ⚠️ Eski pazarlama/plan dosyalarında dolaşan 39/59 ve 89/149/219 setleri **geçersizdir.**
 - **Trial:** 14 gün · **Customer Portal:** aktif · **Checkout domain:** `pay.praxura.de`
-- **Enterprise price ID hâlâ YOK** — `pricing.js`/`stripe-live-setup.js`'te geçmiyor (`TODO.md` §2.3)
+- **Enterprise price ID hâlâ YOK** — `pricing.js`/`stripe-live-setup.js`'te geçmiyor (Ops-Dashboard → **Launch**)
 - **Webhook:** `https://app.praxura.de/api/stripe/webhook` — ✅ 2026-08-05'te panelden
   doğrulandı. Kodun fallback'i de aynı (`create-checkout-session.js:10`,
   `portal-session.js:8`), yani `NEXT_PUBLIC_URL` boş olsa bile doğru domain'e gider.
@@ -203,7 +203,7 @@ DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine 
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (client'a `/api/config` ile gider)
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS`
-- `NEXT_PUBLIC_URL` — ⚠️ praxura.de olmalı, doğrulanmadı (`TODO.md` §2.3)
+- `NEXT_PUBLIC_URL` — ⚠️ praxura.de olmalı, doğrulanmadı (Ops-Dashboard → **Launch**)
 
 **VPS (`/opt/calendar-api/.env.calendar`):**
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
@@ -254,7 +254,7 @@ bağımlılığı geçiş maliyetini büyütür.
 - Bir alanın ince ayarı bitmeden **o alanda müşteri alınmaz**
 - Başka alanda bulunan eksik → not edilir, hemen yapılmaz
 - Örnek: Ergotherapie Blankoverordnung sözleşmesi 01.04.2024'ten beri yürürlükte ve kodumuz
-  onu blokluyor. Gelir etkisi var ama **bilinçli olarak beklemede** (`TODO.md` §3.7)
+  onu blokluyor. Gelir etkisi var ama **bilinçli olarak beklemede** (Ops-Dashboard → **Teknik**)
 
 ### Frontend
 
@@ -341,8 +341,14 @@ Olgusal sorular ve onay arayışı için kullanılmaz. Kararlar: `konsey/KARARLA
 
 ## 📚 İlgili Dosyalar
 
-- **`TODO.md`** — ★ **PROJEDEKİ TEK YAPILACAKLAR LİSTESİ.** Acil işler + haftalık beta planı
-  (T1–T6) + launch checklist + açık teknik işler. Başka yerde TODO tutma.
+- **Ops-Dashboard** — ★ **AÇIK İŞLERİN TEK YERİ:** https://ops.infinitymade.de → Aufgaben.
+  Kemal + Melih ortak panosu; kategoriler **Ortaklık · Launch · Güvenlik · Teknik · Podoloji ·
+  Fikir**. 2026-08-08'de `TODO.md`'deki 54 açık madde buraya taşındı. **Yeni iş çıkarsa
+  buraya yazılır.** Kod `ops/`, kurulum `ops/SETUP.md`, yazma kanalı `ops/tools/ingest.mjs`.
+  ⚠️ **Ayrı Supabase projesi** (`farkaejociddtgqkusvm`) — Supabase MCP aracı ÜRÜN projesine
+  bağlıdır, ops tarafına MCP ile SQL çalıştırma.
+- **`TODO.md`** — artık yapılacaklar listesi **değil.** Sadece iki şey kaldı: §1 haftalık beta
+  roadmap (T1–T6 plan metni, katman zinciri, DoD) ve §5 kapanmış maddelerin kaydı.
 - `INFRASTRUCTURE.md` — SSH/VPS erişimi, deploy pipeline, sık operasyonlar
 - `ONPREM_MIGRATION_PLAYBOOK.md` — ★ on-premise geçiş rehberi; "bu dosyayı uygula" tetikleyici.
   Arka plan: `ON_PREMISE_ANALYSE.md`
