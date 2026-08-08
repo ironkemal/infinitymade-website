@@ -1,5 +1,5 @@
 // Wissensbank — Notizen, Erkenntnisse, Logs
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808b';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808c';
 
 let items = [];
 let query = '';

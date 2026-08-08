@@ -2,9 +2,9 @@
 //
 // Bewusst nur Lesen. Der Code selbst wird über Git bearbeitet, nicht hier.
 // Gitignore'lu belgeler (legal/, Verträge, Rechnungen) burada GÖRÜNMEZ —
-// onlar paylaşılan OneDrive klasöründedir, sağ üstteki bağlantı oraya gider.
-import { $, esc, fail } from './app.js?v=20260808b';
-import { GITHUB_REPO, GITHUB_BRANCH, ONEDRIVE_SHARE_URL } from './config.js?v=20260808b';
+// onlar paylaşılan Google Drive klasöründedir, sağ üstteki bağlantı oraya gider.
+import { $, esc, fail } from './app.js?v=20260808c';
+import { GITHUB_REPO, GITHUB_BRANCH, SHARED_FOLDER_URL } from './config.js?v=20260808c';
 
 let tree = null;        // { name → node }, node: { dir:bool, path, children }
 let openDirs = new Set();
@@ -113,9 +113,9 @@ async function openFile(path) {
 }
 
 export function mountFiles() {
-  if (ONEDRIVE_SHARE_URL) {
+  if (SHARED_FOLDER_URL) {
     const a = $('#driveLink');
-    a.href = ONEDRIVE_SHARE_URL;
+    a.href = SHARED_FOLDER_URL;
     a.hidden = false;
   }
   loadTree();

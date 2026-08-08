@@ -16,9 +16,10 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_0GMmZtNiJvThgIGgsBHA7Q_hV7ZVwg6
 export const GITHUB_REPO   = 'ironkemal/infinitymade-website';   // owner/repo
 export const GITHUB_BRANCH = 'main';
 
-// Gitignore'lu paylaşılan belgelerin durduğu OneDrive klasörünün paylaşım linki.
-// (legal/, toplantı notları, faturalar — kod ve .git ASLA buraya konmaz.)
-export const ONEDRIVE_SHARE_URL = '';
+// Gitignore'lu paylaşılan belgelerin durduğu Google Drive klasörü.
+// (sözleşmeler, toplantı dökümleri, ortaklık notları, faturalar, infra belgesi
+//  — kod ve .git ASLA buraya konmaz.)
+export const SHARED_FOLDER_URL = 'https://drive.google.com/drive/folders/1aGnc4WWXHeT2UxD_D4mCgzJCDzU7dHnm';
 
 // Bitmiş görevler kaç gün sonra arşive gizlensin
 export const DONE_ARCHIVE_DAYS = 7;

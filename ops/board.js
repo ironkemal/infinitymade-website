@@ -1,6 +1,6 @@
 // Aufgaben-Board — Kemal | Pool | Melih
-import { sb, state, $, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog, memberById } from './app.js?v=20260808b';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808b';
+import { sb, state, $, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog, memberById } from './app.js?v=20260808c';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808c';
 
 let todos = [];
 let showArchived = false;
