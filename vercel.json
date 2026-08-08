@@ -91,6 +91,16 @@
   ],
   "redirects": [
     {
+      "source": "/ops/:path*",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/ops",
+      "destination": "/",
+      "permanent": false
+    },
+    {
       "source": "/",
       "has": [
         {
