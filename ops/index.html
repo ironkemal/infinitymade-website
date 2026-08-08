@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Praxura Ops</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
+<link rel="stylesheet" href="app.css?v=20260808">
+</head>
+<body>
+
+<!-- ── Login ──────────────────────────────────────────────────────────── -->
+<div id="login" class="login" hidden>
+  <form class="login-card" id="loginForm">
+    <div class="login-mark">Prax<em>ura</em></div>
+    <p class="login-sub">Ops-Dashboard — intern</p>
+    <label class="fld">
+      <span>E-Mail</span>
+      <input type="email" id="loginEmail" autocomplete="username" required>
+    </label>
+    <label class="fld">
+      <span>Passwort</span>
+      <input type="password" id="loginPass" autocomplete="current-password" required>
+    </label>
+    <button class="btn btn-primary" type="submit" id="loginBtn">Anmelden</button>
+    <p class="login-err" id="loginErr" hidden></p>
+  </form>
+</div>
+
+<!-- ── App ────────────────────────────────────────────────────────────── -->
+<div id="app" class="app" hidden>
+
+  <header class="top">
+    <div class="brand">Prax<em>ura</em> <span class="brand-tag">Ops</span></div>
+    <nav class="tabs" id="tabs">
+      <button class="tab is-active" data-view="todo">Aufgaben</button>
+      <button class="tab" data-view="wissen">Wissensbank</button>
+      <button class="tab" data-view="decisions">Entscheidungen</button>
+      <button class="tab" data-view="meetings">Meetings</button>
+      <button class="tab" data-view="files">Dateien</button>
+    </nav>
+    <div class="top-right">
+      <span class="who" id="who"></span>
+      <button class="btn btn-ghost" id="logoutBtn" title="Abmelden">Abmelden</button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- ── Aufgaben ─────────────────────────────────────────────────── -->
+    <section class="view" id="view-todo">
+      <div class="view-bar">
+        <button class="btn btn-primary" id="addTodoBtn">+ Aufgabe</button>
+        <div class="spacer"></div>
+        <label class="chk-inline">
+          <input type="checkbox" id="showArchived">
+          <span>Archiv zeigen</span>
+        </label>
+        <span class="hint" id="boardHint"></span>
+      </div>
+      <div class="board" id="board"><!-- kolonlar JS ile --></div>
+    </section>
+
+    <!-- ── Wissensbank ──────────────────────────────────────────────── -->
+    <section class="view" id="view-wissen" hidden>
+      <div class="view-bar">
+        <button class="btn btn-primary" id="addWissenBtn">+ Eintrag</button>
+        <input class="search" id="wissenSearch" type="search" placeholder="Suchen … (Titel, Inhalt, #tag)">
+        <div class="spacer"></div>
+        <span class="hint" id="wissenCount"></span>
+      </div>
+      <div class="tagbar" id="wissenTags"></div>
+      <div class="cards" id="wissenList"></div>
+    </section>
+
+    <!-- ── Entscheidungen ───────────────────────────────────────────── -->
+    <section class="view" id="view-decisions" hidden>
+      <div class="view-bar">
+        <button class="btn btn-primary" id="addDecisionBtn">+ Entscheidung</button>
+        <input class="search" id="decisionSearch" type="search" placeholder="Suchen …">
+        <div class="spacer"></div>
+        <span class="hint">Warum haben wir das so gemacht</span>
+      </div>
+      <div class="timeline" id="decisionList"></div>
+    </section>
+
+    <!-- ── Meetings ─────────────────────────────────────────────────── -->
+    <section class="view" id="view-meetings" hidden>
+      <div class="view-bar">
+        <button class="btn btn-primary" id="addMeetingBtn">+ Meeting</button>
+        <div class="spacer"></div>
+        <span class="hint">Notiz einfügen → Claude macht Aufgaben daraus</span>
+      </div>
+      <div class="cards" id="meetingList"></div>
+    </section>
+
+    <!-- ── Dateien ──────────────────────────────────────────────────── -->
+    <section class="view" id="view-files" hidden>
+      <div class="view-bar">
+        <div class="crumbs" id="fileCrumbs"></div>
+        <div class="spacer"></div>
+        <a class="btn btn-ghost" id="driveLink" target="_blank" rel="noopener" hidden>Geteilter Ordner ↗</a>
+      </div>
+      <div class="files-split">
+        <div class="filetree" id="fileTree"></div>
+        <div class="fileview" id="fileView">
+          <p class="empty">Links eine Datei wählen.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Modal (tüm formlar burada render edilir) ────────────────────────── -->
+<div class="modal-back" id="modalBack" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <header class="modal-top">
+      <h2 id="modalTitle"></h2>
+      <button class="btn btn-icon" id="modalClose" aria-label="Schließen">×</button>
+    </header>
+    <div class="modal-body" id="modalBody"></div>
+    <footer class="modal-foot" id="modalFoot"></footer>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="app.js?v=20260808"></script>
+</body>
+</html>
