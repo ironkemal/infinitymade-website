@@ -8,6 +8,7 @@
 // Kullanım:
 //   node ops/tools/ingest.mjs --meeting 2026-08-08 --file notes.md
 //   node ops/tools/ingest.mjs --json tasks.json
+//   node ops/tools/ingest.mjs --file launch.md --category Launch
 //   node ops/tools/ingest.mjs --meeting 2026-08-08 --file notes.md --dry
 //
 // notes.md formatı — her satır bir görev:
@@ -105,6 +106,7 @@ const rows = tasks.map(t => {
     notes: t.notes || null,
     assignee: key ? byName.get(key) : null,       // boş → ortak havuz
     priority: t.priority || 'normal',
+    category: t.category || arg('category') || null,
     source: 'claude',
     meeting_date: meetingDate || null,
     sort_order: 0

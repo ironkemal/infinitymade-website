@@ -43,6 +43,8 @@ create table if not exists ops_todos (
   done_at      timestamptz,
   done_by      uuid references ops_members(id) on delete set null,
   priority     text not null default 'normal' check (priority in ('hoch','normal','niedrig')),
+  -- Kategori: pano filtresi. 50+ madde tek kolonda okunmuyor, ayrım buradan.
+  category     text,
   -- Görev nereden geldi: elle mi eklendi, Claude toplantı notundan mı çıkardı
   source       text not null default 'manuell' check (source in ('manuell','claude')),
   meeting_date date,                     -- claude kaynaklıysa hangi toplantıdan
@@ -53,6 +55,7 @@ create table if not exists ops_todos (
 );
 
 create index if not exists ops_todos_board_idx on ops_todos (done, assignee, sort_order);
+create index if not exists ops_todos_cat_idx on ops_todos (category) where not done;
 create index if not exists ops_todos_done_at_idx on ops_todos (done_at desc) where done;
 
 -- ── Wissensbank ─────────────────────────────────────────────────────────────

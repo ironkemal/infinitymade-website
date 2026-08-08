@@ -13,7 +13,7 @@ export const SUPABASE_URL      = 'https://farkaejociddtgqkusvm.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable_0GMmZtNiJvThgIGgsBHA7Q_hV7ZVwg6';
 
 // Dateien sekmesi — GitHub'daki kod ağacı
-export const GITHUB_REPO   = 'ironkemal5/website';   // owner/repo
+export const GITHUB_REPO   = 'ironkemal/infinitymade-website';   // owner/repo
 export const GITHUB_BRANCH = 'main';
 
 // Gitignore'lu paylaşılan belgelerin durduğu OneDrive klasörünün paylaşım linki.

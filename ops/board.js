@@ -4,6 +4,7 @@ import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808';
 
 let todos = [];
 let showArchived = false;
+let activeCat = null;      // kategori filtresi — 55 madde tek kolonda okunmaz
 let openMenu = null;
 
 const POOL = '__pool__';   // assignee === null kolonu için anahtar
@@ -40,7 +41,25 @@ async function load() {
 
 // ── Rendern ────────────────────────────────────────────────────────────
 
+/** Kategori filtresi çubuğu — açık görev sayısıyla. */
+function renderCatBar() {
+  const open = todos.filter(t => !t.done);
+  const cats = [...new Set(open.map(t => t.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
+  const count = (c) => open.filter(t => c === null || t.category === c).length;
+
+  $('#catBar').innerHTML =
+    `<button class="tag ${activeCat === null ? 'is-on' : ''}" data-cat="">Alle ${count(null)}</button>` +
+    cats.map(c => `<button class="tag ${activeCat === c ? 'is-on' : ''}" data-cat="${esc(c)}">${esc(c)} ${count(c)}</button>`).join('');
+
+  $('#catBar').onclick = (e) => {
+    const b = e.target.closest('.tag'); if (!b) return;
+    activeCat = b.dataset.cat || null;
+    render();
+  };
+}
+
 function render() {
+  renderCatBar();
   const board = $('#board');
   const cols = columns();
   board.style.gridTemplateColumns = window.matchMedia('(max-width: 900px)').matches
@@ -48,7 +67,8 @@ function render() {
 
   let hidden = 0;
   board.innerHTML = cols.map(c => {
-    const mine  = todos.filter(t => colKeyOf(t) === c.key);
+    const mine  = todos.filter(t => colKeyOf(t) === c.key
+                                 && (activeCat === null || t.category === activeCat));
     const open  = mine.filter(t => !t.done);
     const done  = mine.filter(t => t.done && (showArchived || !isArchived(t)))
                       .sort((a, b) => new Date(b.done_at || 0) - new Date(a.done_at || 0));
@@ -88,6 +108,7 @@ function cardHTML(t) {
       <div class="t-body">
         <div class="t-title">${esc(t.title)}</div>
         <div class="t-meta">
+          ${t.category ? `<span class="pill">${esc(t.category)}</span>` : ''}
           ${author}
           ${t.priority === 'hoch' ? '<span class="pill">Hoch</span>' : ''}
           ${t.meeting_date ? `<span class="pill">Meeting ${esc(fmtDate(t.meeting_date))}</span>` : ''}
@@ -240,24 +261,51 @@ function todoForm(t = {}) {
       <label class="fld"><span>Priorität</span>
         <select id="f_prio">${['hoch', 'normal', 'niedrig'].map(p =>
           `<option ${(t.priority || 'normal') === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label>
-    </div>`;
+    </div>
+    <label class="fld"><span>Kategorie</span>
+      <select id="f_cat">
+        <option value="">— ohne —</option>
+        ${categoryList().map(c =>
+          `<option ${t.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+        <option value="__new__">+ neue Kategorie …</option>
+      </select></label>
+    <label class="fld" id="f_cat_new_wrap" hidden><span>Neue Kategorie</span>
+      <input id="f_cat_new" maxlength="40" placeholder="z. B. Marketing"></label>`;
+}
+
+/** Panoda hâlihazırda kullanılan kategoriler — yeni kart açarken listeden seçilsin. */
+function categoryList() {
+  return [...new Set(todos.map(t => t.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
+}
+
+/** "+ neue Kategorie" seçilince serbest metin alanını aç. */
+function wireCategoryField() {
+  const sel = $('#f_cat'); if (!sel) return;
+  sel.onchange = () => {
+    const isNew = sel.value === '__new__';
+    $('#f_cat_new_wrap').hidden = !isNew;
+    if (isNew) $('#f_cat_new').focus();
+  };
 }
 
 function readForm() {
   const title = $('#f_title').value.trim();
   if (!title) { toast('Titel fehlt', true); return null; }
+  const catSel = $('#f_cat').value;
   return {
     title,
     notes: $('#f_notes').value.trim() || null,
     assignee: $('#f_assignee').value || null,
-    priority: $('#f_prio').value
+    priority: $('#f_prio').value,
+    category: (catSel === '__new__' ? $('#f_cat_new').value.trim() : catSel) || null
   };
 }
 
 function newTodo() {
   openModal({
     title: 'Neue Aufgabe',
-    bodyHTML: todoForm({ assignee: state.me.id }),
+    bodyHTML: todoForm({ assignee: state.me.id, category: activeCat }),
+    onOpen: wireCategoryField,
     actions: [
       { label: 'Abbrechen', onClick: () => true },
       { label: 'Anlegen', kind: 'primary', onClick: async () => {
@@ -277,6 +325,7 @@ function editTodo(t) {
   openModal({
     title: 'Aufgabe bearbeiten',
     bodyHTML: todoForm(t),
+    onOpen: wireCategoryField,
     actions: [
       { label: 'Abbrechen', onClick: () => true },
       { label: 'Speichern', kind: 'primary', onClick: async () => {
