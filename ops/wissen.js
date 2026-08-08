@@ -1,9 +1,10 @@
 // Wissensbank — Notizen, Erkenntnisse, Logs
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808e';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808f';
 
 let items = [];
 let query = '';
 let activeTag = null;
+let channel = null;   // mount tekrarinda eski kanal kapatilir
 
 const BUCKET = 'wissen';
 const MAX_MB = 20;          // ücretsiz katmanda toplam 1 GB — tek dosyayı sınırlı tut
@@ -164,9 +165,10 @@ function form(it = null) {
 export function mountWissen() {
   $('#addWissenBtn').onclick = () => form();
   $('#wissenSearch').oninput = (e) => { query = e.target.value; render(); };
+  if (channel) { sb.removeChannel(channel); channel = null; }
   let t = null;
   const reload = () => { clearTimeout(t); t = setTimeout(load, 250); };
-  sb.channel('ops_wissen_live')
+  channel = sb.channel('ops_wissen_live')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'ops_wissen' }, reload)
     .subscribe();
   load();

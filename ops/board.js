@@ -1,11 +1,12 @@
 // Aufgaben-Board — Kemal | Pool | Melih
-import { sb, state, $, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog, memberById } from './app.js?v=20260808e';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808e';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808f';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808f';
 
 let todos = [];
 let showArchived = false;
 let activeCat = null;      // kategori filtresi — 55 madde tek kolonda okunmaz
 let openMenu = null;
+const expanded = new Set();   // acik detay panelleri — yeniden cizimde korunur
 
 const POOL = '__pool__';   // assignee === null kolonu için anahtar
 const mq = window.matchMedia('(max-width: 900px)');
@@ -121,13 +122,14 @@ function cardHTML(t) {
           ${author}
           ${t.priority === 'hoch' ? '<span class="pill">Hoch</span>' : ''}
           ${t.meeting_date ? `<span class="pill">Meeting ${esc(fmtDate(t.meeting_date))}</span>` : ''}
-          ${t.notes ? '<span class="pill">Notiz</span>' : ''}
+          ${t.notes ? `<span class="pill pill-open">${expanded.has(t.id) ? '▾' : '▸'} Details</span>` : ''}
           ${t.done && t.done_at ? `<span>✓ ${esc(fmtDate(t.done_at))}</span>` : ''}
         </div>
       </div>
       <div class="t-move">
         <button class="t-move-btn" aria-label="Aktionen">⋮</button>
       </div>
+      ${t.notes ? `<div class="t-detail" ${expanded.has(t.id) ? '' : 'hidden'}>${md(t.notes)}</div>` : ''}
     </div>`;
 }
 
@@ -144,6 +146,20 @@ function wire() {
       const { error } = await sb.from('ops_todos').update({ done }).eq('id', id);
       if (error) { fail('Speichern', error); load(); }
     };
+  });
+
+  // Karta tiklayinca detay acilir/kapanir. Checkbox, menu ve baglantilar haric.
+  document.querySelectorAll('#board .card-t').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('input, button, a')) return;
+      const t = todos.find(x => x.id === card.dataset.id);
+      if (!t?.notes) return;
+      expanded.has(t.id) ? expanded.delete(t.id) : expanded.add(t.id);
+      const box = card.querySelector('.t-detail');
+      if (box) box.hidden = !expanded.has(t.id);
+      const badge = card.querySelector('.pill-open');
+      if (badge) badge.textContent = (expanded.has(t.id) ? '▾' : '▸') + ' Details';
+    });
   });
 
   // Aktionsmenü — auf dem Handy der einzige Weg zum Zuweisen (HTML5-Drag geht dort nicht)
@@ -349,21 +365,30 @@ function editTodo(t) {
 
 // ── Mount ──────────────────────────────────────────────────────────────
 
+let channel = null;
+let onceWired = false;
+
 export function mountTodo() {
   $('#addTodoBtn').onclick = newTodo;
   $('#showArchived').onchange = (e) => { showArchived = e.target.checked; render(); };
 
-  // Eskiden 'resize' dinleniyordu. Tehlikeli: render() içerik yüksekliğini değiştirip
-  // kaydırma çubuğunu açıp kapatabiliyor, bu da yeni bir resize doğurup sonsuz döngü
-  // yaratabiliyor (sayfa kilitlenir). matchMedia sadece eşik geçilince tetiklenir.
-  mq.addEventListener('change', () => { if (!$('#view-todo').hidden) render(); });
+  if (!onceWired) {
+    onceWired = true;
+    // Eskiden 'resize' dinleniyordu. Tehlikeli: render() icerik yuksekligini degistirip
+    // kaydirma cubugunu acip kapatabiliyor, bu da yeni bir resize dogurup sonsuz dongu
+    // yaratabiliyor (sayfa kilitlenir). matchMedia sadece esik gecilince tetiklenir.
+    mq.addEventListener('change', () => { if (!$('#view-todo').hidden) render(); });
+  }
 
-  // Realtime: ikiniz aynı anda açıkken karşı tarafın değişikliği anında düşsün.
-  // Debounce: 63 satırlık toplu bir güncelleme 63 ayrı olay üretir; her biri için
-  // yeniden çizmek tarayıcıyı kilitler.
+  // Oturum tazelenince mount tekrar calisir. Eski kanali kapatmazsak kanallar birikir
+  // ve tek bir degisiklik icin birden fazla yeniden cizim tetiklenir.
+  if (channel) { sb.removeChannel(channel); channel = null; }
+
+  // Debounce: 63 satirlik toplu bir guncelleme 63 ayri olay uretir; her biri icin
+  // yeniden cizmek tarayiciyi kilitler.
   let t = null;
   const reload = () => { clearTimeout(t); t = setTimeout(load, 250); };
-  sb.channel('ops_todos_live')
+  channel = sb.channel('ops_todos_live')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'ops_todos' }, reload)
     .subscribe();
 

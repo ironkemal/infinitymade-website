@@ -1,6 +1,6 @@
 // Praxura Ops-Dashboard — Shell: Auth, Router, gemeinsame Helfer
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260808e';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260808f';
 
 export const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, storageKey: 'praxura-ops-auth' }
@@ -157,22 +157,39 @@ export function showView(name) {
   if (!views[name]) name = 'todo';
   $$('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.view === name));
   $$('.view').forEach(v => { v.hidden = v.id !== `view-${name}`; });
-  location.hash = name;
+  if (location.hash.replace('#', '') !== name) location.hash = name;
+
   const v = views[name];
-  if (!v.mounted) { v.mounted = true; v.mount(); }
+  if (v.mounted) return;
+  // mounted'ı ancak başarıdan SONRA işaretle: mount patlarsa sekme kalıcı olarak
+  // ölü kalmasın, bir sonraki tıklamada yeniden denensin.
+  try { v.mount(); v.mounted = true; }
+  catch (e) { fail('Ansicht ' + name, e); }
+}
+
+/** Görünür sekmeyi baştan kurmaya zorla — oturum tazelendikten sonra kullanılır. */
+export function remountCurrent() {
+  const name = location.hash.replace('#', '') || 'todo';
+  if (views[name]) { views[name].mounted = false; showView(name); }
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────
 
 async function loadMe() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) return null;
+  // getSession() yalnızca yereldeki kaydı okur — süresi dolmuş bir belirteci de
+  // "geçerli" diye döndürür. getUser() sunucuya sorar; böylece ölü oturumu burada
+  // yakalarız, sorgular 401 döndürüp uygulama sessizce boş kalmaz.
+  const { data: { user }, error: authErr } = await sb.auth.getUser();
+  if (authErr || !user) {
+    if (authErr) await sb.auth.signOut().catch(() => {});
+    return null;
+  }
 
   const { data, error } = await sb.from('ops_members').select('*').order('display_name');
   if (error) { fail('Mitglieder', error); return null; }
 
   state.members = data || [];
-  state.me = state.members.find(m => m.id === session.user.id) || null;
+  state.me = state.members.find(m => m.id === user.id) || null;
 
   if (!state.me) {
     // Oturum var ama üye kaydı yok → RLS hiçbir şey göstermez, boş ekran yerine açıkça söyle.
@@ -196,11 +213,11 @@ async function showApp() {
   $('#who').textContent = state.me.display_name;
 
   // Görünümler yüklendikten sonra route
-  const { mountTodo }      = await import('./board.js?v=20260808e');
-  const { mountWissen }    = await import('./wissen.js?v=20260808e');
-  const { mountDecisions } = await import('./decisions.js?v=20260808e');
-  const { mountMeetings }  = await import('./meetings.js?v=20260808e');
-  const { mountFiles }     = await import('./files.js?v=20260808e');
+  const { mountTodo }      = await import('./board.js?v=20260808f');
+  const { mountWissen }    = await import('./wissen.js?v=20260808f');
+  const { mountDecisions } = await import('./decisions.js?v=20260808f');
+  const { mountMeetings }  = await import('./meetings.js?v=20260808f');
+  const { mountFiles }     = await import('./files.js?v=20260808f');
 
   registerView('todo', mountTodo);
   registerView('wissen', mountWissen);
@@ -239,6 +256,35 @@ $('#tabs').addEventListener('click', (e) => {
 $('#modalClose').addEventListener('click', closeModal);
 $('#modalBack').addEventListener('click', (e) => { if (e.target.id === 'modalBack') closeModal(); });
 window.addEventListener('hashchange', () => showView(location.hash.replace('#', '')));
+
+// ── Oturum dayanıklılığı ───────────────────────────────────────────────
+// Belirti: sekme uzun süre açık kalınca pano boşalıyor, ancak çıkış+giriş
+// yapınca düzeliyordu. Sebebi: erişim belirteci sessizce ölüyor, sorgular
+// 401 dönüyor ve ekranda hiçbir şey söylenmiyordu.
+
+sb.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') {
+    showLogin('Sitzung beendet — bitte neu anmelden.');
+  } else if (event === 'TOKEN_REFRESHED' && state.me) {
+    // Yeni belirteçle veriyi tazele; realtime soketi de yeni belirteci alsın.
+    remountCurrent();
+  }
+});
+
+// Sekmeye geri dönüldüğünde oturumu doğrula ve veriyi tazele.
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !state.me) return;
+  const { data: { user }, error } = await sb.auth.getUser();
+  if (error || !user) {
+    const { error: refreshErr } = await sb.auth.refreshSession();
+    if (refreshErr) {
+      await sb.auth.signOut().catch(() => {});
+      showLogin('Sitzung abgelaufen — bitte neu anmelden.');
+      return;
+    }
+  }
+  remountCurrent();
+});
 
 if (SUPABASE_URL.includes('PROJE_REF')) {
   showLogin('config.js noch nicht ausgefüllt — Supabase-URL und Anon-Key eintragen (siehe SETUP.md).');

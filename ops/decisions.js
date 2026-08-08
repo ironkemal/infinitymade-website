@@ -1,5 +1,5 @@
 // Entscheidungen — "warum haben wir das so gemacht"
-import { sb, state, $, esc, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808e';
+import { sb, state, $, esc, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808f';
 
 let items = [];
 let query = '';

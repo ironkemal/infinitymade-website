@@ -372,3 +372,33 @@ a { color: var(--blue); }
 .att:hover { color: var(--text); border-color: var(--gold); }
 .att-list { display: grid; gap: 6px; margin-top: 4px; }
 .fld input[type="file"] { padding: 8px; background: var(--bg-2); }
+
+/* ── Kart detay paneli ──────────────────────────────────────────────── */
+
+.t-detail {
+  grid-column: 1 / -1;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px; color: var(--text-dim);
+}
+.t-detail > *:first-child { margin-top: 0; }
+.t-detail > *:last-child  { margin-bottom: 0; }
+.t-detail h3, .t-detail h4, .t-detail h5, .t-detail h6 {
+  margin: 12px 0 4px; font-size: 12px; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--text-mute);
+}
+.t-detail p  { margin: 0 0 8px; }
+.t-detail ul { margin: 0 0 8px; padding-left: 18px; }
+.t-detail li { margin-bottom: 3px; }
+.t-detail strong { color: var(--text); }
+.t-detail code {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
+  padding: 1px 5px; font-size: 12px;
+}
+.t-detail pre {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 12px; overflow-x: auto; font-size: 12px; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+}
+.pill-open { cursor: pointer; border-color: rgba(201,162,39,.35); color: var(--gold); }
+.card-t:has(.t-detail) { cursor: pointer; }
