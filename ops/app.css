@@ -20,6 +20,11 @@
 
 * { box-sizing: border-box; }
 
+/* hidden özniteliği her zaman kazansın.
+   Tarayıcının [hidden]{display:none} kuralı düşük özgüllükte — .modal-back{display:grid}
+   gibi sınıf kuralları onu eziyor ve gizli katmanlar ekranda kalıyor. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0; height: 100%;
   background: var(--bg);

@@ -1,6 +1,6 @@
 // Praxura Ops-Dashboard — Shell: Auth, Router, gemeinsame Helfer
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260808';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260808b';
 
 export const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, storageKey: 'praxura-ops-auth' }
@@ -183,11 +183,11 @@ async function showApp() {
   $('#who').textContent = state.me.display_name;
 
   // Görünümler yüklendikten sonra route
-  const { mountTodo }      = await import('./board.js?v=20260808');
-  const { mountWissen }    = await import('./wissen.js?v=20260808');
-  const { mountDecisions } = await import('./decisions.js?v=20260808');
-  const { mountMeetings }  = await import('./meetings.js?v=20260808');
-  const { mountFiles }     = await import('./files.js?v=20260808');
+  const { mountTodo }      = await import('./board.js?v=20260808b');
+  const { mountWissen }    = await import('./wissen.js?v=20260808b');
+  const { mountDecisions } = await import('./decisions.js?v=20260808b');
+  const { mountMeetings }  = await import('./meetings.js?v=20260808b');
+  const { mountFiles }     = await import('./files.js?v=20260808b');
 
   registerView('todo', mountTodo);
   registerView('wissen', mountWissen);
