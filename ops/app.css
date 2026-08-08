@@ -402,3 +402,8 @@ a { color: var(--blue); }
 }
 .pill-open { cursor: pointer; border-color: rgba(201,162,39,.35); color: var(--gold); }
 .card-t:has(.t-detail) { cursor: pointer; }
+
+.more { cursor: pointer; background: var(--bg-2); font: inherit; font-size: 11px;
+        min-height: 26px; margin-top: 8px; color: var(--text-mute); }
+.more:hover { color: var(--gold); border-color: var(--gold); }
+.t-more { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }

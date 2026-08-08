@@ -1,6 +1,6 @@
 // Aufgaben-Board — Kemal | Pool | Melih
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808f';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808f';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808g';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808g';
 
 let todos = [];
 let showArchived = false;
@@ -106,6 +106,12 @@ function render() {
   wire();
 }
 
+// Not iki parcali: ustte kisa ozet, "## Ayrintili" ayracindan sonra uzun hali.
+// Kart acilinca sadece ozet gorunur; uzun kisim ayri bir dugmeyle acilir.
+const SPLIT = /^## Ayrıntı\s*$/m;
+const kurzOf = (t) => String(t.notes || '').split(SPLIT)[0].trim();
+const langOf = (t) => String(t.notes || '').split(SPLIT).slice(1).join('').trim();
+
 function cardHTML(t) {
   const author = t.source === 'claude'
     ? '<span class="pill pill-claude">Claude</span>'
@@ -129,7 +135,11 @@ function cardHTML(t) {
       <div class="t-move">
         <button class="t-move-btn" aria-label="Aktionen">⋮</button>
       </div>
-      ${t.notes ? `<div class="t-detail" ${expanded.has(t.id) ? '' : 'hidden'}>${md(t.notes)}</div>` : ''}
+      ${t.notes ? `<div class="t-detail" ${expanded.has(t.id) ? '' : 'hidden'}>
+        ${md(kurzOf(t))}
+        ${langOf(t) ? `<button class="pill more">Ayrıntı ▾</button>
+          <div class="t-more" hidden>${md(langOf(t))}</div>` : ''}
+      </div>` : ''}
     </div>`;
 }
 
@@ -160,6 +170,16 @@ function wire() {
       const badge = card.querySelector('.pill-open');
       if (badge) badge.textContent = (expanded.has(t.id) ? '▾' : '▸') + ' Details';
     });
+  });
+
+  // "Ayrıntı" düğmesi — uzun metni açar/kapar
+  document.querySelectorAll('#board .more').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const box = btn.parentElement.querySelector('.t-more');
+      box.hidden = !box.hidden;
+      btn.textContent = box.hidden ? 'Ayrıntı ▾' : 'Ayrıntı ▴';
+    };
   });
 
   // Aktionsmenü — auf dem Handy der einzige Weg zum Zuweisen (HTML5-Drag geht dort nicht)
