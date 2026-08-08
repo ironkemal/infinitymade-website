@@ -1,6 +1,6 @@
 // Praxura Ops-Dashboard — Shell: Auth, Router, gemeinsame Helfer
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260808d';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260808e';
 
 export const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, storageKey: 'praxura-ops-auth' }
@@ -32,6 +32,19 @@ export function toast(msg, isErr = false) {
   clearTimeout(toast._t);
   toast._t = setTimeout(() => { el.hidden = true; }, isErr ? 5000 : 2600);
 }
+
+// Yakalanmamış hata sessizce yutulmasın — ekranda görelim ki teşhis edilebilsin.
+// Re-entrancy koruması: toast'ın kendisi patlarsa hata→toast→hata döngüsüne girmeyelim.
+let reporting = false;
+function report(label, err) {
+  console.error(`[ops:${label}]`, err);
+  if (reporting) return;
+  reporting = true;
+  try { toast('Fehler: ' + (err?.message || err), true); } catch {}
+  setTimeout(() => { reporting = false; }, 1000);
+}
+window.addEventListener('error', (e) => report('uncaught', e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => report('promise', e.reason));
 
 /** Supabase hatasını yut ve göster — her çağrıyı sarmalıyoruz ki UI sessizce ölmesin. */
 export function fail(where, error) {
@@ -183,11 +196,11 @@ async function showApp() {
   $('#who').textContent = state.me.display_name;
 
   // Görünümler yüklendikten sonra route
-  const { mountTodo }      = await import('./board.js?v=20260808d');
-  const { mountWissen }    = await import('./wissen.js?v=20260808d');
-  const { mountDecisions } = await import('./decisions.js?v=20260808d');
-  const { mountMeetings }  = await import('./meetings.js?v=20260808d');
-  const { mountFiles }     = await import('./files.js?v=20260808d');
+  const { mountTodo }      = await import('./board.js?v=20260808e');
+  const { mountWissen }    = await import('./wissen.js?v=20260808e');
+  const { mountDecisions } = await import('./decisions.js?v=20260808e');
+  const { mountMeetings }  = await import('./meetings.js?v=20260808e');
+  const { mountFiles }     = await import('./files.js?v=20260808e');
 
   registerView('todo', mountTodo);
   registerView('wissen', mountWissen);

@@ -1,6 +1,6 @@
 // Aufgaben-Board — Kemal | Pool | Melih
-import { sb, state, $, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog, memberById } from './app.js?v=20260808d';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808d';
+import { sb, state, $, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog, memberById } from './app.js?v=20260808e';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808e';
 
 let todos = [];
 let showArchived = false;
@@ -8,6 +8,9 @@ let activeCat = null;      // kategori filtresi — 55 madde tek kolonda okunmaz
 let openMenu = null;
 
 const POOL = '__pool__';   // assignee === null kolonu için anahtar
+const mq = window.matchMedia('(max-width: 900px)');
+
+let loading = false;       // üst üste binen yüklemeleri engelle
 
 /** Kolon düzeni: üyeler alfabetik, havuz tam ortada. */
 function columns() {
@@ -31,12 +34,18 @@ function isArchived(t) {
 // ── Laden ──────────────────────────────────────────────────────────────
 
 async function load() {
-  const { data, error } = await sb.from('ops_todos').select('*')
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: true });
-  if (error) return fail('Aufgaben laden', error);
-  todos = data || [];
-  render();
+  if (loading) return;
+  loading = true;
+  try {
+    const { data, error } = await sb.from('ops_todos').select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error) return fail('Aufgaben laden', error);
+    todos = data || [];
+    render();
+  } finally {
+    loading = false;
+  }
 }
 
 // ── Rendern ────────────────────────────────────────────────────────────
@@ -62,7 +71,7 @@ function render() {
   renderCatBar();
   const board = $('#board');
   const cols = columns();
-  board.style.gridTemplateColumns = window.matchMedia('(max-width: 900px)').matches
+  board.style.gridTemplateColumns = mq.matches
     ? '1fr' : `repeat(${cols.length}, 1fr)`;
 
   let hidden = 0;
@@ -343,11 +352,19 @@ function editTodo(t) {
 export function mountTodo() {
   $('#addTodoBtn').onclick = newTodo;
   $('#showArchived').onchange = (e) => { showArchived = e.target.checked; render(); };
-  window.addEventListener('resize', () => { if (!$('#view-todo').hidden) render(); });
+
+  // Eskiden 'resize' dinleniyordu. Tehlikeli: render() içerik yüksekliğini değiştirip
+  // kaydırma çubuğunu açıp kapatabiliyor, bu da yeni bir resize doğurup sonsuz döngü
+  // yaratabiliyor (sayfa kilitlenir). matchMedia sadece eşik geçilince tetiklenir.
+  mq.addEventListener('change', () => { if (!$('#view-todo').hidden) render(); });
 
   // Realtime: ikiniz aynı anda açıkken karşı tarafın değişikliği anında düşsün.
+  // Debounce: 63 satırlık toplu bir güncelleme 63 ayrı olay üretir; her biri için
+  // yeniden çizmek tarayıcıyı kilitler.
+  let t = null;
+  const reload = () => { clearTimeout(t); t = setTimeout(load, 250); };
   sb.channel('ops_todos_live')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'ops_todos' }, load)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'ops_todos' }, reload)
     .subscribe();
 
   load();

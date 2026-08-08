@@ -1,5 +1,5 @@
 // Meetings — wöchentliche Notiz + daraus entstandene Aufgaben
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog } from './app.js?v=20260808d';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog } from './app.js?v=20260808e';
 
 let meetings = [];
 let counts = {};   // 'YYYY-MM-DD' → { open, done }

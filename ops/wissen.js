@@ -1,5 +1,5 @@
 // Wissensbank — Notizen, Erkenntnisse, Logs
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808d';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808e';
 
 let items = [];
 let query = '';
@@ -164,8 +164,10 @@ function form(it = null) {
 export function mountWissen() {
   $('#addWissenBtn').onclick = () => form();
   $('#wissenSearch').oninput = (e) => { query = e.target.value; render(); };
+  let t = null;
+  const reload = () => { clearTimeout(t); t = setTimeout(load, 250); };
   sb.channel('ops_wissen_live')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'ops_wissen' }, load)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'ops_wissen' }, reload)
     .subscribe();
   load();
 }
