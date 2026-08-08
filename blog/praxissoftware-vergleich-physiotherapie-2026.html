@@ -204,7 +204,7 @@
         <div class="step-block" data-reveal>
           <span class="step-block-label">B) Software mit eigenem Abrechnungszentrum</span>
           <p class="step-block-text">
-            Anbieter, die Software günstig oder kostenlos abgeben, dafür aber an das hauseigene Abrechnungszentrum binden (1,5–4&nbsp;% Kommission). <strong>Schwachstellen:</strong> Kommission ist langfristig deutlich teurer als Software-Lizenzgebühr; Vendor-Lock-In; Datensouveränität fragwürdig.
+            Anbieter, die Software günstig oder kostenlos abgeben, dafür aber an das hauseigene Abrechnungszentrum binden (1,5–4&nbsp;% Kommission). <strong>Schwachstellen:</strong> Kommission ist langfristig deutlich teurer als Software-Lizenzgebühr; Vendor-Lock-In. Die Daten liegen beim Abrechnungszentrum; ein Anbieterwechsel ist entsprechend aufwendiger.
           </p>
         </div>
         <div class="step-block" data-reveal>
@@ -216,13 +216,13 @@
         <div class="step-block" data-reveal>
           <span class="step-block-label">D) Moderne SaaS für Heilmittel (Praxura-Archetyp)</span>
           <p class="step-block-text">
-            Cloud-native, mobile-first, TI-ready ab Tag 1, KI-gestützte Vorprüfung, kommissionsfreie §302-Selbstabrechnung. <strong>Stärken:</strong> kurze Update-Zyklen, transparente Preise, Filialbetrieb &amp; Hausbesuche eingebaut. <strong>Schwachstellen:</strong> oft jünger als A oder B, weniger "Branchen-Lobby"-Geschichte.
+            Cloud-native, eine Codebase für alle Geräte, KI-gestützte Rezept-Vorprüfung, kommissionsfreie §302-Selbstabrechnung, TI-Anbindung als Zusatzmodul vorgesehen. <strong>Stärken:</strong> kurze Update-Zyklen, transparente Preise, Filialbetrieb &amp; Hausbesuche eingebaut. <strong>Schwachstellen:</strong> oft jünger als A oder B, weniger "Branchen-Lobby"-Geschichte.
           </p>
         </div>
       </div>
 
       <p data-reveal style="margin-top: 2rem;">
-        <strong>Faustregel:</strong> Wer 2026 startet oder migriert, kommt um Archetyp D nicht herum. Die anderen drei sind für die TI-Pflicht 2027 architekturell schlecht aufgestellt — und ihre Roadmap zeigt das.
+        <strong>Faustregel:</strong> Wer 2026 startet oder migriert, kommt um Archetyp D nicht herum. Die anderen drei sind für die TI-Pflicht 2027 architekturell schlecht aufgestellt.
       </p>
     </article>
 
@@ -309,6 +309,10 @@
         Volle Transparenz: Wir bewerten Praxura selbst — aber gegen die 12 Kriterien aus Schritt 1, nicht gegen unsere eigene Marketing-Sprache.
       </p>
 
+      <p data-reveal style="margin: 1.5rem 0 0; padding: 1rem 1.25rem; border: 1px solid var(--line); border-left: 3px solid var(--bronze); border-radius: 8px; background: var(--bg-warm); font-size: 0.88rem; color: var(--ink-2); line-height: 1.6;">
+        <strong>Stand: 08.08.2026 · Produktstatus: Beta.</strong> Dies ist eine Selbstauskunft des Anbieters, keine unabhängige Prüfung. Der tatsächliche Funktionsumfang zum Zeitpunkt Ihres Vertragsschlusses kann abweichen — fragen Sie uns oder lassen Sie sich die Funktion live zeigen.
+      </p>
+
       <div class="table-container" style="overflow-x: auto; margin: 2rem 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface);" data-reveal>
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
           <thead>
@@ -319,24 +323,28 @@
             </tr>
           </thead>
           <tbody>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Cloud / SaaS</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Browser, keine Installation, automatische Updates</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">TI-ready 2027</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">eVO, KIM, ePA, eHBA-Signatur über zertifizierten TI-Partner</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">§302-Selbstabrechnung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Kommissionsfrei, alle Datenannahmestellen integriert</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Online-Terminbuchung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Embedded auf Praxis-Website, mit Warteliste</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">SMS / WhatsApp-Erinnerung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Zusätzlich KI-Telefon-Rezeption verfügbar</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">KI-Rezeptprüfung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Smartphone-Foto bzw. eVO-Strukturdaten</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Fahrtenbuch integriert</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">GoBD-konform, Hausbesuchs-Pauschalen automatisch</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Mahnwesen &amp; Zuzahlung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Automatische Mahnstufen, BFH-konforme Vorlagen</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Mobile-first</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Tablet, Smartphone, Desktop — alles eine Codebase</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Transparente Preise</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Auf praxura.de öffentlich, keine versteckten Gebühren</td></tr>
-            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">EU-Server &amp; ISO 27001</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Frankfurt am Main, ISO-zertifiziertes Rechenzentrum</td></tr>
-            <tr><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Monatlich kündbar</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Keine Knebelverträge; jährliche Zahlung mit Rabatt optional</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Cloud / SaaS</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Läuft im Browser, keine lokale Installation, Updates ohne Praxis-Stillstand.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">TI-ready 2027</td><td style="padding: 1rem; color: var(--bronze); font-weight: 600;">Geplant</td><td style="padding: 1rem; color: var(--ink-3);">eVO, KIM, ePA und eHBA-Signatur sind für die TI-Pflicht ab 01.10.2027 als optionales Zusatzmodul über einen zertifizierten TI-Anbieter vorgesehen. Heute noch nicht verfügbar.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">§302-Selbstabrechnung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Praxura erzeugt die §302-Datenlieferung (EDIFACT/DTA) inkl. Signatur — die Praxis rechnet selbst und kommissionsfrei ab. Praxura ist ein Werkzeug zur Abrechnungsvorbereitung, kein Abrechnungsdienstleister. Der Versand erfolgt durch die Praxis mit eigenem Zertifikat.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Online-Terminbuchung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Öffentliche Buchungsseite mit eigener Praxis-Adresse, verlinkbar von der Praxis-Website; inkl. Warteliste und Termin-Anfrage mit Freigabe durch die Praxis.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Warteliste &amp; SMS-Erinnerung</td><td style="padding: 1rem; color: var(--bronze); font-weight: 600;">Teilweise</td><td style="padding: 1rem; color: var(--ink-3);">Warteliste ist verfügbar. SMS- und WhatsApp-Erinnerungen bieten wir derzeit nicht an — Terminkommunikation läuft über E-Mail.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">KI-Rezeptprüfung</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Verordnung per Smartphone-Foto erfassen, KI-gestützte Auslesung und formale Vorprüfung gegen die Heilmittel-Richtlinie. Keine medizinische Bewertung — die fachliche und formale Letztverantwortung bleibt bei der Praxis. Strukturdaten aus der eVO folgen mit der TI-Anbindung.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Fahrtenbuch integriert</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Hausbesuchsfahrten werden im System erfasst, Wegegeld- und Hausbesuchs-Positionen automatisch vorbelegt und in die Abrechnung übernommen.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Mahnwesen &amp; Zuzahlung</td><td style="padding: 1rem; color: var(--bronze); font-weight: 600;">Teilweise</td><td style="padding: 1rem; color: var(--ink-3);">Zuzahlungs-Berechnung, Befreiungs-Prüfung und Quittung sind verfügbar. Ein automatisches mehrstufiges Mahnwesen ist in Entwicklung.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Mobile-first</td><td style="padding: 1rem; color: var(--bronze); font-weight: 600;">Teilweise</td><td style="padding: 1rem; color: var(--ink-3);">Eine einzige Codebase für Desktop, Tablet und Smartphone — kein separater Client. Die Darstellung auf kleinen Displays wird laufend weiter optimiert.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Transparente Monatspreise</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Alle Preise öffentlich auf praxura.de (29 / 49 / 99 € pro Monat, zzgl. USt.), keine Kommission und keine versteckten Gebühren. Nur für Praxisverbünde (Enterprise) erstellen wir ein individuelles Angebot.</td></tr>
+            <tr style="border-bottom: 1px solid var(--line-soft);"><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">EU-Server &amp; ISO 27001</td><td style="padding: 1rem; color: var(--bronze); font-weight: 600;">Teilweise</td><td style="padding: 1rem; color: var(--ink-3);">Alle Daten liegen ausschließlich in deutschen Rechenzentren (Datenbank: Frankfurt am Main; Anwendungsserver: Falkenstein/Vogtland). Diese Rechenzentren sind nach ISO 27001 zertifiziert. Praxura selbst ist derzeit nicht ISO-27001-zertifiziert — eine eigene Zertifizierung ist nicht ausgeschlossen, aber nicht vorhanden.</td></tr>
+            <tr><td style="padding: 1rem; color: var(--ink-2); font-weight: 500;">Monatlich kündbar</td><td style="padding: 1rem; color: var(--ink-3);">Ja</td><td style="padding: 1rem; color: var(--ink-3);">Monatlich kündbar, keine Mindestlaufzeit über den laufenden Monat hinaus. Jährliche Zahlung mit Rabatt ist optional. Maßgeblich sind die AGB.</td></tr>
           </tbody>
         </table>
       </div>
 
+      <p data-reveal style="font-size: 0.8rem; color: var(--ink-4); margin-top: -1rem;">
+        <strong>Ja</strong> = heute in der Live-Version verfügbar · <strong>Teilweise</strong> = in Teilen verfügbar, Einschränkung in der Anmerkung · <strong>Geplant</strong> = in Entwicklung, noch nicht verfügbar · <strong>Über Partner</strong> = wird durch einen Drittanbieter erbracht.
+      </p>
+
       <p data-reveal>
-        Praxura erfüllt alle 12 Kriterien — mit Schwerpunkten bei <a href="/blog/telematikinfrastruktur-heilmittelerbringer-2027.html">TI-Anbindung</a>, <a href="/blog/paragraph-302-dakota-zertifikat-datenannahmestellen.html">§302-Selbstabrechnung</a> und KI-gestützter Absetzungs-Vermeidung. Wenn Sie eine andere Software vergleichen, bringen Sie diese 12 Punkte mit — und prüfen Sie jede Antwort.
+        Praxura erfüllt <strong>7 der 12 Kriterien vollständig</strong>, vier weitere teilweise, eines ist in Entwicklung — bei Erinnerungs-SMS, automatischem Mahnwesen, der Darstellung auf kleinen Displays und einer eigenen ISO-27001-Zertifizierung sind wir noch nicht da, wo wir hinwollen; die TI-Anbindung ist für die Pflicht ab Oktober 2027 vorgesehen. Genau deshalb steht es in dieser Tabelle. Unsere Schwerpunkte liegen bei der <a href="/blog/paragraph-302-dakota-zertifikat-datenannahmestellen.html">§302-Selbstabrechnung</a>, der KI-gestützten Rezept-Vorprüfung und der Absetzungs-Vermeidung. Wenn Sie eine andere Software vergleichen, bringen Sie diese 12 Punkte mit — und lassen Sie sich jede Antwort <strong>live im System zeigen</strong>, nicht auf einer Folie.
       </p>
     </article>
   </div>
