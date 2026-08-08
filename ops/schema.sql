@@ -65,6 +65,8 @@ create table if not exists ops_wissen (
   title       text not null check (length(trim(title)) > 0),
   body        text not null default '',          -- markdown
   tags        text[] not null default '{}',
+  -- Ekler: [{path,name,size,type}] — dosyanın kendisi Storage'ın 'wissen' bucket'ında
+  attachments jsonb not null default '[]'::jsonb,
   created_by  uuid references ops_members(id) on delete set null,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
@@ -177,6 +179,24 @@ end $$;
 drop policy if exists ops_members_read on ops_members;
 create policy ops_members_read on ops_members
   for select to authenticated using (ops_is_member());
+
+-- ── Storage: Wissensbank ekleri ─────────────────────────────────────────────
+-- Bucket private; dosyalar imzalı kısa ömürlü bağlantıyla açılır.
+
+insert into storage.buckets (id, name, public)
+values ('wissen', 'wissen', false)
+on conflict (id) do nothing;
+
+drop policy if exists wissen_read   on storage.objects;
+drop policy if exists wissen_write  on storage.objects;
+drop policy if exists wissen_delete on storage.objects;
+
+create policy wissen_read on storage.objects
+  for select to authenticated using (bucket_id = 'wissen' and ops_is_member());
+create policy wissen_write on storage.objects
+  for insert to authenticated with check (bucket_id = 'wissen' and ops_is_member());
+create policy wissen_delete on storage.objects
+  for delete to authenticated using (bucket_id = 'wissen' and ops_is_member());
 
 -- ── Realtime ────────────────────────────────────────────────────────────────
 -- İkiniz aynı anda açıkken değişiklik karşı tarafta anında görünsün.

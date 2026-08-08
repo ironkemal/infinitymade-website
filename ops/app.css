@@ -360,3 +360,15 @@ a { color: var(--blue); }
   .row-2 { grid-template-columns: 1fr; }
   .modal { max-height: 92dvh; }
 }
+
+/* ── Wissensbank ekleri ─────────────────────────────────────────────── */
+
+.atts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.att {
+  background: var(--bg-2); cursor: pointer; color: var(--text-dim);
+  font: inherit; font-size: 11px; min-height: 28px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.att:hover { color: var(--text); border-color: var(--gold); }
+.att-list { display: grid; gap: 6px; margin-top: 4px; }
+.fld input[type="file"] { padding: 8px; background: var(--bg-2); }
