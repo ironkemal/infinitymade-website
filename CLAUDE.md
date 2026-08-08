@@ -328,6 +328,7 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | `podoloji` | Podolog'un gerçek iş günü, Fußbefund/Wagner-Armstrong, HPNR 78xxx, tık-ekonomisi | ❌ |
 | `mobil-ui` | Küçük ekran: üst üste binme, yatay taşma, dokunma hedefi, breakpoint çakışması. Playwright ile **ölçer**, sonra sadece CSS'te düzeltir | ✅ (yalnız CSS) |
 | `muhalif` | Yapıcı muhalif — fikir nerede kırılır, gizli maliyet ne. Alternatifsiz itiraz yasak | ❌ |
+| `todo-maker` | Ham girdiyi (toplantı dökümü, transkript, hata raporu) zengin pano kartlarına çevirir — hangi ekran, hangi dosya, kim istedi, bitti sayılır ölçütü, gerekirse kopyala-yapıştır Fix-Prompt | ❌ (JSON üretir) |
 | `deger-mi` | Efor/değer, fırsat maliyeti, daha küçük sürüm yeterli mi | ❌ |
 
 **`/konsey`** — karar **öncesi** danışma kurulu. "Şunu şöyle mi yapsam böyle mi" tipi
