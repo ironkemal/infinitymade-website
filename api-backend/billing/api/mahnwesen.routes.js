@@ -7,6 +7,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { renderMahnung } from '../pdf/mahnung.template.js';
+import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -63,7 +64,7 @@ router.get('/mahnwesen/offene', async (req, res) => {
       .from('prescriptions')
       .select(`
         id, owner_id, patient_id, zuzahlung_eur, zuzahlung_befreit,
-        abrechnung_id, ausstellungsdatum,
+        abrechnung_id, ausstellungsdatum, zuzahlung_kassiert_am,
         leads:patient_id (first_name, last_name, versichertennummer, street, plz, city)
       `)
       .eq('owner_id', tenantId)
@@ -76,27 +77,29 @@ router.get('/mahnwesen/offene', async (req, res) => {
 
     const rxIds = rxRows.map(r => r.id);
 
-    // 2. Find prescriptions already paid via belegliste.
-    //    Stornos werden mitgelesen und gegengerechnet: die belegliste ist
-    //    unveränderlich, ein Rückgängigmachen erzeugt eine Gegenbuchung mit
-    //    negativem Betrag. Würde man nur auf das Vorhandensein einer
-    //    'zuzahlung'-Zeile prüfen, bliebe ein storniertes Rezept für immer als
-    //    bezahlt stehen und würde nie gemahnt.
-    const { data: paidEntries } = await supabase
+    // 2. Bezahlt-Status je Rezept. Die Regel steht in zuzahlung/bezahlt.js,
+    //    damit Mahnwesen und Statistik nicht auseinanderlaufen — genau das war
+    //    vorher der Fall.
+    //    Ein Fehler bei dieser Abfrage darf NICHT durchrutschen: ohne Belege
+    //    saehe jedes Rezept unbezahlt aus und alle Patienten bekaemen eine
+    //    Mahnung.
+    const { data: paidEntries, error: belegErr } = await supabase
       .from('belegliste')
       .select('prescription_id, amount_eur')
       .eq('owner_id', tenantId)
       .in('type', ['zuzahlung', 'storno'])
       .in('prescription_id', rxIds);
+    if (belegErr) return res.status(500).json({ error: 'belegliste: ' + belegErr.message });
 
-    const saldoByRx = new Map();
-    for (const e of (paidEntries || [])) {
-      if (!e.prescription_id) continue;
-      saldoByRx.set(e.prescription_id, (saldoByRx.get(e.prescription_id) || 0) + Number(e.amount_eur || 0));
-    }
-    // Als bezahlt gilt nur, wo unterm Strich noch Geld liegt.
+    const saldoByRx = saldoJeRezept(paidEntries);
     const paidRxIds = new Set(
-      [...saldoByRx.entries()].filter(([, saldo]) => saldo > 0).map(([id]) => id)
+      rxRows
+        .filter(rx => istZuzahlungBezahlt({
+          zuzahlungEur: rx.zuzahlung_eur,
+          kassiertAm: rx.zuzahlung_kassiert_am,
+          saldo: saldoByRx.get(rx.id) || 0,
+        }))
+        .map(rx => rx.id)
     );
 
     // 3. Fetch latest mahnung per prescription

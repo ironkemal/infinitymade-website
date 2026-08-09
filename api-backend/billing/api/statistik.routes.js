@@ -4,6 +4,7 @@
 
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
+import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -74,10 +75,13 @@ router.get('/statistik', async (req, res) => {
       zahlungenResult,
       ausfallResult,
     ] = await Promise.all([
-      // 1. Monthly revenue from belegliste
+      // 1. Kassenbuch im Zeitraum. `type` wird mitgelesen, weil die Grafik
+      //    Forderungen (Zuzahlung + Ausfall) gegen Offenes stellt — ein
+      //    Barverkauf gehört nicht in diesen Vergleich, wohl aber in den
+      //    Gesamtumsatz.
       supabase
         .from('belegliste')
-        .select('created_at, amount_eur')
+        .select('created_at, amount_eur, type')
         .eq('owner_id', tenantId)
         .gte('created_at', cutoffIso),
 
@@ -108,7 +112,7 @@ router.get('/statistik', async (req, res) => {
       //    eingereicht" und hatte mit der Patientenzahlung nichts zu tun.
       supabase
         .from('prescriptions')
-        .select('id, zuzahlung_eur, ausstellungsdatum')
+        .select('id, zuzahlung_eur, ausstellungsdatum, zuzahlung_kassiert_am')
         .eq('owner_id', tenantId)
         .gt('zuzahlung_eur', 0)
         .eq('zuzahlung_befreit', false),
@@ -169,24 +173,40 @@ router.get('/statistik', async (req, res) => {
 
     const r2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
 
-    // ── 1a. Bezahlt je Monat aus dem Kassenbuch ─────────────────────────────
+    // ── 1a. Einnahmen je Monat aus dem Kassenbuch ───────────────────────────
     // Stornos liegen mit negativem Betrag in der Tabelle (siehe
     // billing/belegliste/helper.js), die Summe rechnet sie also von selbst raus.
+    //
+    // Zwei getrennte Reihen:
+    //   umsatz  = alles (auch Barverkäufe) — die bisherige Bedeutung, unverändert
+    //   bezahlt = nur Forderungen (Zuzahlung, Ausfall, deren Stornos) — das ist
+    //             die Reihe, die im Diagramm gegen "offen" gestellt wird.
+    //             Ein Barverkauf hat mit offenen Forderungen nichts zu tun und
+    //             würde den Vergleich verfälschen.
+    const FORDERUNGS_TYPEN = new Set(['zuzahlung', 'ausfall', 'storno']);
+    const umsatzByMonth = {};
     const bezahltByMonth = {};
     for (const b of (belegResult.data || [])) {
       const key = b.created_at.slice(0, 7); // "2026-04"
-      bezahltByMonth[key] = (bezahltByMonth[key] || 0) + Number(b.amount_eur || 0);
+      const betrag = Number(b.amount_eur || 0);
+      umsatzByMonth[key] = (umsatzByMonth[key] || 0) + betrag;
+      if (FORDERUNGS_TYPEN.has(b.type)) {
+        bezahltByMonth[key] = (bezahltByMonth[key] || 0) + betrag;
+      }
     }
 
     // ── 1b. Offen je Monat ───────────────────────────────────────────────────
-    // Bezahlt ist ein Rezept, wenn unterm Strich Geld dafür im Kassenbuch liegt.
-    const saldoByRx = new Map();
-    for (const z of (zahlungenResult.error ? [] : (zahlungenResult.data || []))) {
-      if (!z.prescription_id) continue;
-      saldoByRx.set(z.prescription_id, (saldoByRx.get(z.prescription_id) || 0) + Number(z.amount_eur || 0));
+    // Regel steht in zuzahlung/bezahlt.js — dieselbe wie im Mahnwesen.
+    if (zahlungenResult.error) {
+      return res.status(500).json({ error: 'belegliste: ' + zahlungenResult.error.message });
     }
+    const saldoByRx = saldoJeRezept(zahlungenResult.data);
 
-    const offeneRx = (offeneRxResult.data || []).filter(rx => (saldoByRx.get(rx.id) || 0) <= 0);
+    const offeneRx = (offeneRxResult.data || []).filter(rx => !istZuzahlungBezahlt({
+      zuzahlungEur: rx.zuzahlung_eur,
+      kassiertAm: rx.zuzahlung_kassiert_am,
+      saldo: saldoByRx.get(rx.id) || 0,
+    }));
 
     const offenByMonth = {};
     for (const rx of offeneRx) {
@@ -210,8 +230,8 @@ router.get('/statistik', async (req, res) => {
       const key = d.toISOString().slice(0, 7);
       monatlich.push({
         monat: key,
-        umsatz: r2(bezahltByMonth[key]),   // Name beibehalten: Frontend nutzt ihn
-        bezahlt: r2(bezahltByMonth[key]),
+        umsatz: r2(umsatzByMonth[key]),    // alle Belegarten — Bedeutung wie bisher
+        bezahlt: r2(bezahltByMonth[key]),  // nur Forderungen, gehört zu `offen`
         offen: r2(offenByMonth[key]),
       });
     }
@@ -242,6 +262,10 @@ router.get('/statistik', async (req, res) => {
     const offene_zuzahlungen = offeneRx.length;
     const offene_zuzahlungen_summe = r2(offeneRx.reduce((s, rx) => s + Number(rx.zuzahlung_eur || 0), 0));
     const offeneAusfall = ausfallRows.filter(a => a.status === 'offen');
+    const offene_ausfall_summe = r2(offeneAusfall.reduce((s, a) => s + Number(a.amount_eur || 0), 0));
+    // Gesamtsumme, damit die Kachel denselben Wert zeigt wie die gelben Balken
+    // im Diagramm — dort sind Ausfallrechnungen ebenfalls enthalten.
+    const offen_gesamt_summe = r2(offene_zuzahlungen_summe + offene_ausfall_summe);
 
     // ── 6. No-show rate ───────────────────────────────────────────────────────
     const noShowRows = noShowResult.error ? [] : (noShowResult.data || []);
@@ -294,9 +318,10 @@ router.get('/statistik', async (req, res) => {
       },
       offene_zuzahlungen,
       offene_zuzahlungen_summe,
+      offen_gesamt_summe,
       ausfallrechnungen: {
         offen: offeneAusfall.length,
-        offen_summe: r2(offeneAusfall.reduce((s, a) => s + Number(a.amount_eur || 0), 0)),
+        offen_summe: offene_ausfall_summe,
         bezahlt: ausfallRows.filter(a => a.status === 'bezahlt').length,
       },
       no_show: { count: noShowCount, rate: noShowRate },

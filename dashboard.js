@@ -159,7 +159,7 @@ const T = {
     kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges',
     kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
     kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
-    kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', kass_undo: 'stornieren',
+    kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', stat_bezahlt: 'Bezahlt', stat_offen: 'Offen', kass_undo: 'stornieren',
     kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
     kass_err_betrag: 'Kein Zuzahlungsbetrag hinterlegt — bitte zuerst am Rezept eintragen.',
     kass_err_bereits: 'Diese Zuzahlung wurde bereits kassiert.',
@@ -168,7 +168,9 @@ const T = {
     kass_storno_msg: 'Der Beleg im Kassenbuch kann nicht gelöscht werden. Es wird eine Gegenbuchung erzeugt.',
     kass_storno_grund: 'Storno-Grund (optional)',
     kass_storno_confirm: 'Stornieren',
+    kass_storno_kein_beleg: 'Für dieses Rezept gibt es keinen Kassenbuch-Beleg (vor August 2026 kassiert). Der Vermerk wird zurückgenommen, im Kassenbuch ändert sich nichts.',
     kass_popup: 'Popup-Blocker verhindert das Öffnen des Druckfensters.',
+    kass_popup_gebucht: 'Gebucht — aber die Quittung konnte nicht geöffnet werden (Popup-Blocker). Über „Rechnung öffnen“ nachholen.',
   },
   en: {
     logout: 'Sign out',
@@ -287,7 +289,7 @@ const T = {
     kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other',
     kass_print: 'Print receipt', kass_cancel: 'Cancel',
     kass_befreit: 'Exempt from co-payment', kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
-    kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', kass_undo: 'reverse',
+    kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', stat_bezahlt: 'Paid', stat_offen: 'Outstanding', kass_undo: 'reverse',
     kass_ok: 'Co-payment collected ✓', kass_storno_ok: 'Co-payment reversed ✓',
     kass_err_betrag: 'No co-payment amount set — please enter it on the prescription first.',
     kass_err_bereits: 'This co-payment has already been collected.',
@@ -296,7 +298,9 @@ const T = {
     kass_storno_msg: 'The cash ledger entry cannot be deleted. A counter-entry will be created.',
     kass_storno_grund: 'Reason for reversal (optional)',
     kass_storno_confirm: 'Reverse',
+    kass_storno_kein_beleg: 'There is no cash ledger entry for this prescription (collected before August 2026). The note will be removed; the ledger stays unchanged.',
     kass_popup: 'A popup blocker prevented the print window from opening.',
+    kass_popup_gebucht: 'Booked — but the receipt could not be opened (popup blocker). Use “Open invoice” to retrieve it.',
   },
   tr: {
     logout: 'Çıkış',
@@ -415,7 +419,7 @@ const T = {
     kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer',
     kass_print: 'Makbuz yazdır', kass_cancel: 'İptal',
     kass_befreit: 'Katkı payından muaf', kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
-    kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', kass_undo: 'iptal et',
+    kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', stat_bezahlt: 'Ödenen', stat_offen: 'Açık', kass_undo: 'iptal et',
     kass_ok: 'Katkı payı tahsil edildi ✓', kass_storno_ok: 'Katkı payı iptal edildi ✓',
     kass_err_betrag: 'Katkı payı tutarı girilmemiş — önce reçetede belirtin.',
     kass_err_bereits: 'Bu katkı payı zaten tahsil edilmiş.',
@@ -424,7 +428,9 @@ const T = {
     kass_storno_msg: 'Kasa defteri kaydı silinemez. Ters kayıt oluşturulacak.',
     kass_storno_grund: 'İptal gerekçesi (isteğe bağlı)',
     kass_storno_confirm: 'İptal et',
+    kass_storno_kein_beleg: 'Bu reçete için kasa defteri kaydı yok (Ağustos 2026 öncesi tahsil edilmiş). Not geri alınır, kasa defteri değişmez.',
     kass_popup: 'Popup engelleyici yazdırma penceresini açmayı engelledi.',
+    kass_popup_gebucht: 'Kaydedildi — ancak makbuz açılamadı (popup engelleyici). „Faturayı aç“ ile tekrar deneyin.',
   }
 };
 
@@ -7042,15 +7048,28 @@ function zahlartLabel(key) {
   return z ? t(z.i18n) : (key || '—');
 }
 
-// Öffnet die Zuzahlungsrechnung in einem neuen Tab und startet den Druck.
+// Öffnet die Zuzahlungsrechnung in einem neuen Tab.
 // Der Link ist dauerhaft gültig: die Rechnung wird bei jedem Aufruf frisch aus
 // dem Rezept erzeugt, es gibt keinen gespeicherten Rechnungsdatensatz.
-async function openZuzahlungsrechnung(rxId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const url = `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${session?.access_token || ''}`;
-  const w = window.open(url, '_blank');
-  if (w) w.onload = () => { w.print(); };
-  else showToast(t('kass_popup'), 'error');
+//
+// Der Druck wird NICHT von hier aus ausgelöst. Die Rechnung liegt auf einer
+// anderen Domain (n8n.infinitymade.de); ein Zugriff auf das fremde Fenster —
+// auch nur das Setzen von onload — kann einen SecurityError werfen. Genau das
+// darf beim Kassieren nicht passieren, sonst bricht der Ablauf ab, nachdem das
+// Geld bereits gebucht ist. Der Ausdruck erfolgt im geöffneten Tab.
+//
+// Gibt true zurück, wenn das Fenster aufging.
+async function openZuzahlungsrechnung(rxId, { stillBeiFehler = false } = {}) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const url = `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${session?.access_token || ''}`;
+    const w = window.open(url, '_blank');
+    if (w) return true;
+  } catch (e) {
+    console.error('[zuzahlungsrechnung]', e);
+  }
+  if (!stillBeiFehler) showToast(t('kass_popup'), 'error');
+  return false;
 }
 
 // Ein Klick pro Zahlart: der Zahlart-Knopf ist gleichzeitig der Bestätigen-Knopf.
@@ -7185,20 +7204,44 @@ async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
     return false;
   }
 
-  if (choice.drucken) await openZuzahlungsrechnung(rxId);
-
+  // Das Geld ist gebucht. Ab hier darf nichts mehr den Ablauf abbrechen — die
+  // Erfolgsmeldung kommt zuerst, ein blockiertes Druckfenster danach als eigener
+  // Hinweis. Sonst sähe der Nutzer erst einen Fehler und dann einen Erfolg für
+  // dieselbe Handlung.
   showToast(belegNr != null
     ? `${t('kass_ok')} · ${t('kass_beleg')} ${String(belegNr).padStart(6, '0')}`
     : t('kass_ok'));
+
+  if (choice.drucken) {
+    const auf = await openZuzahlungsrechnung(rxId, { stillBeiFehler: true });
+    if (!auf) showToast(t('kass_popup_gebucht'), 'warning');
+  }
+
   return true;
 }
 
 // Rückgängig = Gegenbuchung. Löschen ist im Kassenbuch gesetzlich verboten.
 async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   const betrag = Number(betragEur);
+
+  // Wieviel liegt für dieses Rezept überhaupt im Kassenbuch? Zuzahlungen positiv,
+  // frühere Stornos negativ. Ohne diese Prüfung würde für Rezepte, die vor
+  // August 2026 über den alten Panel-Knopf kassiert wurden (Vermerk gesetzt,
+  // aber kein Beleg angelegt), eine Gegenbuchung ohne Original entstehen — das
+  // Kassenbuch ginge ins Minus und die Monatszahlen wären zu niedrig.
+  const { data: belege, error: belegErr } = await supabase
+    .from('belegliste')
+    .select('amount_eur')
+    .eq('prescription_id', rxId)
+    .in('type', ['zuzahlung', 'storno']);
+  if (belegErr) { showToast('Fehler: ' + belegErr.message, 'error'); return false; }
+  const saldo = (belege || []).reduce((s, b) => s + Number(b.amount_eur || 0), 0);
+
   const grund = await showInputModal({
     title: t('kass_storno_title'),
-    message: `${t('kass_storno_msg')} (${fmtEur(betrag)})`,
+    message: saldo > 0
+      ? `${t('kass_storno_msg')} (${fmtEur(saldo)})`
+      : t('kass_storno_kein_beleg'),
     inputLabel: t('kass_storno_grund'),
     inputPlaceholder: 'z. B. falsche Zahlart, Doppelbuchung …',
     confirmText: t('kass_storno_confirm'),
@@ -7207,29 +7250,35 @@ async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
   });
   if (grund === null) return false;
 
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`${API}/billing/belegliste`, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + (session?.access_token || ''), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'storno',
-        amount_eur: -Math.abs(betrag),
-        patient_id: patientId || null,
-        // prescription_id mitgeben, damit Mahnwesen und Statistik die
-        // Gegenbuchung dem Rezept zuordnen und verrechnen können.
-        prescription_id: rxId,
-        reference_text: `STORNO Zuzahlung${patientName ? ': ' + patientName : ''}`,
-        storno_reason: grund || null,
-      }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Serverfehler');
+  // Nur gegenbuchen, was tatsächlich gebucht wurde — und nur so viel.
+  if (saldo > 0) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${API}/billing/belegliste`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + (session?.access_token || ''), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'storno',
+          // Der tatsächliche Saldo, nicht rx.zuzahlung_eur: der Betrag am Rezept
+          // kann nach dem Kassieren geändert worden sein und würde dann nicht
+          // auf null aufgehen.
+          amount_eur: -saldo,
+          patient_id: patientId || null,
+          // prescription_id mitgeben, damit Mahnwesen und Statistik die
+          // Gegenbuchung dem Rezept zuordnen und verrechnen können.
+          prescription_id: rxId,
+          reference_text: `STORNO Zuzahlung${patientName ? ': ' + patientName : ''}`,
+          storno_reason: grund || null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Serverfehler');
+      }
+    } catch (err) {
+      showToast('Storno gescheitert: ' + err.message, 'error');
+      return false;
     }
-  } catch (err) {
-    showToast('Storno gescheitert: ' + err.message, 'error');
-    return false;
   }
 
   // Erst nach erfolgreicher Gegenbuchung das Rezept wieder auf offen setzen.
@@ -8489,11 +8538,12 @@ async function loadPatientDetailRezepte(leadId) {
       const url = type === 'quittung_zuzahlung'
         ? `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${s.access_token}`
         : `${API}/billing/prescription/${rxId}/rechnung?type=${type}&token=${s.access_token}`;
+      // Kein Zugriff auf das geöffnete Fenster: das Dokument liegt auf einer
+      // anderen Domain, schon das Setzen von onload kann einen SecurityError
+      // werfen. Gedruckt wird im geöffneten Tab.
       const printWindow = window.open(url, '_blank');
-      if (printWindow) {
-        printWindow.onload = () => { printWindow.print(); };
-      } else {
-        showToast('Popup-Blocker verhindert das Öffnen des Druckfensters.', 'error');
+      if (!printWindow) {
+        showToast(t('kass_popup'), 'error');
       }
     });
     // hover effect
@@ -21152,6 +21202,22 @@ async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null
       throw new Error(errData.error || 'Serverfehler');
     }
 
+    // Gehört der Beleg zu einer Zuzahlung, muss das Rezept wieder auf offen —
+    // sonst zeigt die Oberfläche weiter grün "bezahlt", während Mahnwesen und
+    // Statistik es als offen führen. Schlimmer noch: erneutes Kassieren wäre
+    // gesperrt, weil kassiereZuzahlung nur greift, solange
+    // zuzahlung_kassiert_am NULL ist. Das wäre eine Sackgasse ohne Ausweg.
+    if (prescriptionId) {
+      const { error: rxErr } = await supabase.from('prescriptions')
+        .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
+        .eq('id', prescriptionId);
+      if (rxErr) {
+        showToast('Stornobuchung erzeugt, aber das Rezept steht noch auf "bezahlt": ' + rxErr.message, 'error');
+        loadBelegliste();
+        return;
+      }
+    }
+
     showToast('Stornobuchung erzeugt ✓');
     loadBelegliste();
   } catch (err) {
@@ -21486,15 +21552,17 @@ async function loadStatistik() {
     setEl('statAbrAkz', d.abrechnung?.akzeptiert ?? '—');
     setEl('statAbrSumme', fmtEur(d.abrechnung?.summe_akzeptiert));
     // "17" allein sagt nichts — der offene Betrag ist die Zahl, die zählt.
-    setEl('statOffeneZuz', d.offene_zuzahlungen_summe != null
-      ? fmtEur(d.offene_zuzahlungen_summe)
+    // Gezeigt wird dieselbe Summe wie in den gelben Balken des Diagramms
+    // (Zuzahlungen + offene Ausfallrechnungen), sonst widersprechen sich beide.
+    setEl('statOffeneZuz', d.offen_gesamt_summe != null
+      ? fmtEur(d.offen_gesamt_summe)
       : (d.offene_zuzahlungen ?? '—'));
     const offZuzSub = document.getElementById('statOffeneZuzSub');
     if (offZuzSub) {
       const anzahl = d.offene_zuzahlungen ?? 0;
       const af = d.ausfallrechnungen?.offen ?? 0;
       offZuzSub.textContent = `${anzahl} Rezept${anzahl === 1 ? '' : 'e'}`
-        + (af > 0 ? ` · ${af} Ausfallrechnung${af === 1 ? '' : 'en'} offen` : '');
+        + (af > 0 ? ` · ${af} Ausfallrechnung${af === 1 ? '' : 'en'}` : '');
     }
 
     // No-show
@@ -21557,7 +21625,7 @@ async function loadStatistik() {
       const stack = document.createElement('div');
       const stackPct = Math.max((gesamt / maxVal) * 100, gesamt > 0 ? 4 : 0);
       stack.style.cssText = `width:100%;height:${stackPct}%;min-height:${gesamt > 0 ? 4 : 0}px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden;transition:height 0.3s;`;
-      stack.title = `${label} — ${t('kass_bezahlt')}: ${fmtEur(bezahlt)} · ${t('kass_offen')}: ${fmtEur(offen)}`;
+      stack.title = `${label} — ${t('stat_bezahlt')}: ${fmtEur(bezahlt)} · ${t('stat_offen')}: ${fmtEur(offen)}`;
 
       if (offen > 0) {
         const offenSeg = document.createElement('div');
@@ -21588,8 +21656,8 @@ async function loadStatistik() {
     const legHead = document.createElement('span');
     legHead.style.cssText = 'font-size:11px;color:var(--text-muted);display:inline-flex;align-items:center;gap:10px;width:100%;margin-bottom:2px;';
     legHead.innerHTML =
-      `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--success);display:inline-block;"></span>${escapeHtml(t('kass_bezahlt'))}</span>`
-      + `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--warning);display:inline-block;"></span>${escapeHtml(t('kass_offen'))}</span>`;
+      `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--success);display:inline-block;"></span>${escapeHtml(t('stat_bezahlt'))}</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--warning);display:inline-block;"></span>${escapeHtml(t('stat_offen'))}</span>`;
     legendEl.prepend(legHead);
 
   } catch (e) {
