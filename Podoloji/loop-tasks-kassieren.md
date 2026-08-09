@@ -15,8 +15,12 @@ angehen, wenn die genannte Nummer `[x]` ist.
       ⚠️ SQL-Migration muss vor dem Deploy im Supabase SQL-Editor laufen.
 
 - [ ] 2. Zuzahlung- und GKV-Preise zentral und versioniert pflegen
-      Code: prüfen wo Preise aktuell herkommen — `katalog-suche.js`, `api-backend/sync_heilmittel_katalog.js`.
-      Vermutlich fehlt eine Tabelle mit "gültig ab Datum" für Preisänderungen.
+      ⏸ Analyse liegt vor, Umbau bewusst zurückgestellt (Entscheidung Melih, 10.08.2026).
+      Neu: `api-backend/billing/PREISE-ANALYSE.md`
+      Kurz: es gibt DREI Preisquellen (physio_positions.js ohne Datumsfenster,
+      podologie_positions.js mit, DB-Tabelle heilmittel_tarif). Die Druckrouten fragen
+      heilmittel_tarif gar nicht ab — gedruckte Rechnung und §302-Datei können deshalb
+      unterschiedliche Preise nennen. Melih entscheidet nach dem Lesen, ob umgebaut wird.
 
 - [x] 3. Ein-Klick-Zuzahlungsrechnung — 10 % vom Heilmittel + 10 €, automatisch berechnet
       (Sperre "Zuerst: 2" von Melih am 10.08.2026 aufgehoben — geht auch ohne den Preis-Umbau.)
