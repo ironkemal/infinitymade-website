@@ -15375,9 +15375,17 @@ async function openInvView(invoiceId) {
   }
 
   // Recipient (DIN 5008)
+  //
+  // Der Name kommt ausschliesslich aus der Patientenakte, nie aus dem
+  // Freitextfeld invoices.patient_name. Das Feld ist eine Kopie vom Zeitpunkt
+  // der Rechnungserstellung — nach einer Namenskorrektur (Heirat, Schreibfehler,
+  // Namensangleichung) stuende dort weiter der alte Name, und die Rechnung waere
+  // auf eine Person ausgestellt, die es so nicht gibt.
   const patientLines = [];
-  if (patient) {
-    const fullName = [patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || inv.patient_name || '';
+  const fullName = patient
+    ? ([patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || '')
+    : '';
+  if (fullName) {
     patientLines.push(`<strong>${escapeHtml(fullName)}</strong>`);
     if (patient.street) patientLines.push(escapeHtml(patient.street));
     const pc = [patient.plz, patient.city].filter(Boolean).join(' ');
@@ -15386,7 +15394,10 @@ async function openInvView(invoiceId) {
     if (patient.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
     if (patient.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(patient.versichertennummer));
   } else {
-    patientLines.push(`<strong>${escapeHtml(inv.patient_name || '—')}</strong>`);
+    // Kein verknuepfter Patient → lieber sichtbar unvollstaendig als mit einem
+    // veralteten Namen gedruckt.
+    patientLines.push('<strong style="color:var(--danger);">Kein Patient verknüpft</strong>');
+    patientLines.push('<span style="color:var(--text-muted);">Bitte die Rechnung einem Patienten zuordnen — der Name wird immer aus der Patientenakte übernommen.</span>');
   }
   document.getElementById('invvPatient').innerHTML = patientLines.join('<br>');
 

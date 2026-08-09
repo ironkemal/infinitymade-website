@@ -60,8 +60,14 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Code: `api-backend/billing/pdf/mahnung.template.js` + `api-backend/billing/api/mahnwesen.routes.js`
       (existiert schon — prüfen ob Ausfallrechnung dort mit abgedeckt ist).
 
-- [ ] 10. Bei Namenskorrektur automatisch aktuellen Namen auf neuer Rechnung anzeigen — kein Freitext auf der Rechnung erlaubt
-      Code: `api-backend/billing/pdf/rechnung.template.js` prüfen, woher der Patientenname gezogen wird.
+- [x] 10. Bei Namenskorrektur automatisch aktuellen Namen auf neuer Rechnung anzeigen — kein Freitext auf der Rechnung erlaubt
+      Geändert: `dashboard.js` (Rechnungsansicht nutzt nur noch die Patientenakte) ·
+      `api-backend/billing/api/abrechnung.routes.js` (Podologie-§302: Freitext-Rückfall entfernt,
+      klare 422-Meldung statt falschem Namen)
+      Befund: alle rezeptbasierten Dokumente zogen den Namen schon live aus `leads` — dort war
+      nichts zu tun. Zwei Freitext-Lücken gab es: `verordnungen.patient_name` (Podologie) und
+      `invoices.patient_name` (Rechnungsansicht). Beide sind zu.
+      Offen und gemeldet: die Rechnungs-Liste zeigt weiterhin die gespeicherte Namenskopie.
 
 ---
 

@@ -1649,6 +1649,20 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
   }
 
   const np = nameParts(lead);
+  // Der Name kommt ausschliesslich aus der Patientenakte (leads), nie aus dem
+  // Freitextfeld verordnungen.patient_name. Dieses Feld ist eine Kopie vom
+  // Anlagezeitpunkt — nach einer Namenskorrektur stuende dort weiter der alte
+  // Name. Lieber die Abrechnung stoppen als sie mit einem falschen Namen an die
+  // Kasse schicken; eine Korrektur dort ist ungleich aufwendiger.
+  if (!np.nachname) {
+    const e = new Error(
+      `Verordnung ${vord.id.slice(0, 8)}${vord.patient_name ? ` (${vord.patient_name})` : ''}: ` +
+      'kein Patient aus der Kartei verknüpft. Bitte die Verordnung einem Patienten zuordnen — ' +
+      'der Name für die Abrechnung wird immer aus der Patientenakte übernommen.'
+    );
+    e.status = 422; throw e;
+  }
+
   const abrechnungscode = '71'; // ZL-Podologe prefix
 
   // Flatten: each behandlung × each hpnr_code = one session entry
@@ -1684,8 +1698,8 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
     patient: {
       kvnr:               vord.versichertennummer || lead?.versichertennummer || '',
       versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '1',
-      nachname:           np.nachname || vord.patient_name?.split(' ').at(-1) || '',
-      vorname:            np.vorname  || vord.patient_name?.split(' ')[0] || '',
+      nachname:           np.nachname,
+      vorname:            np.vorname,
       geburtsdatum:       lead?.geburtsdatum || '',
       belegnummer:        vord.id.slice(0, 10),
     },
