@@ -34,6 +34,9 @@ function loadEnv() {
 
 const env = loadEnv();
 const dry = process.argv.includes('--dry');
+// --flat: parent_id sütunu olmadan yapılabilecek kısım — herkesi ortak havuza al
+// ve kartları tasarlanan tema sırasına diz. Tema kartı açmaz, hiyerarşi kurmaz.
+const flat = process.argv.includes('--flat');
 
 async function api(path, opts = {}) {
   const r = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
@@ -66,7 +69,7 @@ const all = await api('ops_todos?select=*');
 if (!all.length) die('Board boş.');
 // --dry planı sütunlar olmadan da hesaplanabilir; yazmak için şart.
 const schemaReady = 'parent_id' in all[0] && 'blocked_by' in all[0];
-if (!schemaReady && !dry)
+if (!schemaReady && !dry && !flat)
   die('parent_id / blocked_by sütunları yok. Önce ops/schema-groups.sql dosyasını\n'
     + '  Supabase (praxura-ops) → SQL Editor içinde çalıştır.');
 
@@ -103,6 +106,31 @@ GROUPS.forEach((g, gi) => {
     it._row = row;
   });
 });
+
+// ── --flat: sütunsuz yapılabilecek kısım ────────────────────────────────
+// Tema başlıklarına göre sıralama + herkes ortak havuza. Hiyerarşi yok, ama
+// pano en azından doğru sırada ve kimseye atanmamış olur.
+if (flat) {
+  let n = 0;
+  for (const [gi, g] of GROUPS.entries()) {
+    console.log(`\n${gi + 1}. ${g.title}`);
+    for (const [ii, it] of g.items.entries()) {
+      const sort_order = (gi + 1) * 1000 + (ii + 1) * 10;
+      console.log(`   ${String(sort_order).padStart(5)}  ${it._row.title.slice(0, 78)}`);
+      if (!dry) {
+        await api(`ops_todos?id=eq.${it._row.id}`, {
+          method: 'PATCH', body: JSON.stringify({ assignee: null, sort_order })
+        });
+      }
+      n++;
+    }
+  }
+  console.log(dry
+    ? `\n--dry: ${n} kart sıralanacaktı, hiçbir şey yazılmadı.`
+    : `\n✓ ${n} kart ortak havuza alındı ve tema sırasına dizildi.`);
+  console.log('Hiyerarşi (tema → alt görev) için ops/schema-groups.sql çalıştırılmalı.');
+  process.exit(0);
+}
 
 // Blocker referansları: önce tam eşleşme, sonra "içeren" araması.
 function blockerId(needle, ctx) {
