@@ -50,6 +50,11 @@
   --danger-dim: rgba(156, 58, 58, 0.12);
   --warning: #C9A876;
   --warning-dim: rgba(201, 168, 118, 0.18);
+  /* --warning ist als Rahmen-/Flächenfarbe gedacht und auf hellem Grund zu
+     blass für Text (2,2:1). --warning-text ist die lesbare Variante (5,1:1). */
+  --warning-text: #8A6A2F;
+  --success: #2F6B4A;
+  --success-dim: rgba(47, 107, 74, 0.12);
   --info: #4E5C45;
 
   /* Brand tokens (additions) */
@@ -92,6 +97,9 @@
   --danger-dim: rgba(217, 138, 138, 0.16);
   --warning: #D9BD8A;
   --warning-dim: rgba(217, 189, 138, 0.16);
+  --warning-text: #D9BD8A;
+  --success: #7FC49E;
+  --success-dim: rgba(127, 196, 158, 0.16);
   --info: #A8BBA0;
   --bronze: #C9A876;
   --bronze-deep: #B08D5B;

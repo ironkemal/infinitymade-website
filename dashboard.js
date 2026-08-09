@@ -155,6 +155,20 @@ const T = {
     anfragen_sessions: 'Sitzungen', anfragen_notizen: 'Notizen',
     anfragen_link_title: 'Buchungslink', anfragen_link_sub: 'Teilen Sie diesen Link mit Ihren Patienten',
     anfragen_copy_link: 'Link kopieren',
+    kass_title: 'Zuzahlung kassieren', kass_zahlart: 'Womit wird bezahlt?',
+    kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges',
+    kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
+    kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
+    kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', kass_undo: 'stornieren',
+    kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
+    kass_err_betrag: 'Kein Zuzahlungsbetrag hinterlegt — bitte zuerst am Rezept eintragen.',
+    kass_err_bereits: 'Diese Zuzahlung wurde bereits kassiert.',
+    kass_err_beleg: 'Kassenbuch-Beleg fehlgeschlagen, nichts wurde gebucht:',
+    kass_storno_title: 'Zuzahlung stornieren',
+    kass_storno_msg: 'Der Beleg im Kassenbuch kann nicht gelöscht werden. Es wird eine Gegenbuchung erzeugt.',
+    kass_storno_grund: 'Storno-Grund (optional)',
+    kass_storno_confirm: 'Stornieren',
+    kass_popup: 'Popup-Blocker verhindert das Öffnen des Druckfensters.',
   },
   en: {
     logout: 'Sign out',
@@ -269,6 +283,20 @@ const T = {
     anfragen_sessions: 'Sessions', anfragen_notizen: 'Notes',
     anfragen_link_title: 'Booking link', anfragen_link_sub: 'Share this link with your patients',
     anfragen_copy_link: 'Copy link',
+    kass_title: 'Collect co-payment', kass_zahlart: 'How is it being paid?',
+    kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other',
+    kass_print: 'Print receipt', kass_cancel: 'Cancel',
+    kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
+    kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', kass_undo: 'reverse',
+    kass_ok: 'Co-payment collected ✓', kass_storno_ok: 'Co-payment reversed ✓',
+    kass_err_betrag: 'No co-payment amount set — please enter it on the prescription first.',
+    kass_err_bereits: 'This co-payment has already been collected.',
+    kass_err_beleg: 'Cash ledger entry failed, nothing was booked:',
+    kass_storno_title: 'Reverse co-payment',
+    kass_storno_msg: 'The cash ledger entry cannot be deleted. A counter-entry will be created.',
+    kass_storno_grund: 'Reason for reversal (optional)',
+    kass_storno_confirm: 'Reverse',
+    kass_popup: 'A popup blocker prevented the print window from opening.',
   },
   tr: {
     logout: 'Çıkış',
@@ -383,6 +411,20 @@ const T = {
     anfragen_sessions: 'Seans', anfragen_notizen: 'Notlar',
     anfragen_link_title: 'Rezervasyon linki', anfragen_link_sub: 'Bu linki hastalarınızla paylaşın',
     anfragen_copy_link: 'Linki kopyala',
+    kass_title: 'Katkı payını tahsil et', kass_zahlart: 'Ödeme nasıl yapılıyor?',
+    kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer',
+    kass_print: 'Makbuz yazdır', kass_cancel: 'İptal',
+    kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
+    kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', kass_undo: 'iptal et',
+    kass_ok: 'Katkı payı tahsil edildi ✓', kass_storno_ok: 'Katkı payı iptal edildi ✓',
+    kass_err_betrag: 'Katkı payı tutarı girilmemiş — önce reçetede belirtin.',
+    kass_err_bereits: 'Bu katkı payı zaten tahsil edilmiş.',
+    kass_err_beleg: 'Kasa defteri kaydı başarısız, hiçbir şey kaydedilmedi:',
+    kass_storno_title: 'Katkı payını iptal et',
+    kass_storno_msg: 'Kasa defteri kaydı silinemez. Ters kayıt oluşturulacak.',
+    kass_storno_grund: 'İptal gerekçesi (isteğe bağlı)',
+    kass_storno_confirm: 'İptal et',
+    kass_popup: 'Popup engelleyici yazdırma penceresini açmayı engelledi.',
   }
 };
 
@@ -513,6 +555,7 @@ let prefillAnamnesePatientId = null;
 let bkActionBookingCache = null;
 let bkActionTimer = null;
 let pdCurrentLeadId = null;
+let pdCurrentLeadName = '';
 
 // Ausfallgebühr-Einstellung des Owners (aus profiles.ausfall_*). Owner-Level,
 // nicht pro Standort — gilt für alle Termine. Von loadAusfallConfig() befüllt.
@@ -1397,7 +1440,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2395,7 +2438,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -3112,7 +3155,7 @@ async function openBookingActionModal(booking) {
     const rzgEl = document.getElementById('bkRxRZG');
     if (rzgEl) {
       if (rx.zuzahlung_befreit) {
-        rzgEl.innerHTML = '<span style="color:#4ade80;font-weight:600;">befreit</span>';
+        rzgEl.innerHTML = '<span style="color:var(--success);font-weight:600;">befreit</span>';
       } else if (rx.zuzahlung_eur != null) {
         rzgEl.textContent = `${rx.zuzahlung_eur.toFixed(2)} €`;
       } else {
@@ -3138,31 +3181,35 @@ async function openBookingActionModal(booking) {
     rxCard.hidden = false;
 
     // Zuzahlung: nach GKV-Logik EINMAL je Verordnung, nicht je Sitzung.
-    // Offen → Betrag + Knopf zum Kassieren; erledigt → Datum + Rückgängig.
+    // Bewusst reduziert: offen = nur die Summe in Gelb + ein Knopf.
+    // Bezahlt = dieselbe Zeile in Grün, mit Zahlart und Link auf die Rechnung.
     const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
     if (rzgWarnEl) {
-      if (rx.zuzahlung_befreit === false) {
-        const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : null;
-        const betragTxt = betrag != null ? betrag.toFixed(2).replace('.', ',') + ' €' : 'Betrag unbekannt';
+      const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : null;
+      if (rx.zuzahlung_befreit === false && betrag != null) {
         rzgWarnEl.hidden = false;
         rzgWarnEl.dataset.rxId = rx.id;
+        rzgWarnEl.dataset.betrag = String(betrag);
+        rzgWarnEl.dataset.patientId = rx.patient_id || booking.lead_id || '';
+        rzgWarnEl.dataset.patientName = booking.customer_name || '';
 
-        if (rx.zuzahlung_kassiert_am) {
+        const bezahlt = !!rx.zuzahlung_kassiert_am;
+        rzgWarnEl.style.background = bezahlt ? 'var(--success-dim)' : 'var(--warning-dim)';
+        rzgWarnEl.style.borderColor = bezahlt ? 'var(--success)' : 'var(--warning)';
+        rzgWarnEl.style.color = bezahlt ? 'var(--success)' : 'var(--warning-text)';
+
+        if (bezahlt) {
           const am = new Date(rx.zuzahlung_kassiert_am)
             .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          rzgWarnEl.style.background = 'rgba(34,197,94,0.12)';
-          rzgWarnEl.style.borderColor = 'rgba(34,197,94,0.3)';
-          rzgWarnEl.style.color = 'var(--success, #22c55e)';
+          const art = rx.zuzahlung_zahlart ? ` · ${zahlartLabel(rx.zuzahlung_zahlart)}` : '';
           rzgWarnEl.innerHTML =
-            `Zuzahlung kassiert: ${escapeHtml(betragTxt)} · ${escapeHtml(am)}`
-            + ` <button type="button" data-zuzahl="undo" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">rückgängig</button>`;
+            `${escapeHtml(t('kass_bezahlt'))}: ${escapeHtml(fmtEur(betrag))} · ${escapeHtml(am)}${escapeHtml(art)}`
+            + ` <button type="button" data-zuzahl="rechnung" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_rechnung'))}</button>`
+            + ` <button type="button" data-zuzahl="undo" style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_undo'))}</button>`;
         } else {
-          rzgWarnEl.style.background = 'rgba(251,191,36,0.12)';
-          rzgWarnEl.style.borderColor = 'rgba(251,191,36,0.3)';
-          rzgWarnEl.style.color = '#fbbf24';
           rzgWarnEl.innerHTML =
-            `Rezeptgebühr offen: ${escapeHtml(betragTxt)}`
-            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:rgba(251,191,36,0.25);border:1px solid rgba(251,191,36,0.5);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">kassiert</button>`;
+            `${escapeHtml(t('kass_offen'))}: ${escapeHtml(fmtEur(betrag))}`
+            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:var(--warning-dim);border:1px solid var(--warning);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">${escapeHtml(t('kass_btn'))}</button>`;
         }
       } else {
         rzgWarnEl.hidden = true;
@@ -6976,6 +7023,230 @@ function showAbsagegrundModal({ title = 'Termin absagen', confirmText = 'Bestät
   });
 }
 
+// ─── Kassieren: Zahlart wählen → Beleg buchen → Quittung drucken ─────────────
+//
+// Ein gemeinsamer Ablauf für Termin-Panel UND Patientenakte. Vorher gab es zwei
+// getrennte Wege, die nichts voneinander wussten:
+//   - Termin-Panel: schrieb nur zuzahlung_kassiert_am. Kein Kassenbuch-Beleg,
+//     also unsichtbar für Mahnwesen (mahnwesen.routes.js) und Statistik — wer so
+//     kassierte, wurde trotzdem gemahnt.
+//   - Patientenakte: schrieb einen Beleg, setzte aber zusätzlich
+//     abrechnung_status='accepted'. Das bedeutet "die Kasse hat die
+//     §302-Abrechnung akzeptiert" und hat mit der Patientenzahlung nichts zu tun.
+// Beides ist hier zusammengeführt; der §302-Status wird nicht mehr angefasst.
+
+const ZAHLARTEN = [
+  { key: 'bar',          icon: '💶', i18n: 'kass_bar' },
+  { key: 'ec',           icon: '💳', i18n: 'kass_ec' },
+  { key: 'ueberweisung', icon: '🏦', i18n: 'kass_ueberweisung' },
+  { key: 'sonstiges',    icon: '⋯',  i18n: 'kass_sonstiges' },
+];
+
+function zahlartLabel(key) {
+  const z = ZAHLARTEN.find(x => x.key === key);
+  return z ? t(z.i18n) : (key || '—');
+}
+
+// Öffnet die Zuzahlungsrechnung in einem neuen Tab und startet den Druck.
+// Der Link ist dauerhaft gültig: die Rechnung wird bei jedem Aufruf frisch aus
+// dem Rezept erzeugt, es gibt keinen gespeicherten Rechnungsdatensatz.
+async function openZuzahlungsrechnung(rxId) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const url = `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${session?.access_token || ''}`;
+  const w = window.open(url, '_blank');
+  if (w) w.onload = () => { w.print(); };
+  else showToast(t('kass_popup'), 'error');
+}
+
+// Ein Klick pro Zahlart: der Zahlart-Knopf ist gleichzeitig der Bestätigen-Knopf.
+// Bewusst keine Vorauswahl — eine per Gewohnheit durchgeklickte Zahlart macht das
+// Kassenbuch falsch, und Belege lassen sich nachträglich nicht korrigieren.
+// Auflösung: { zahlart, drucken } oder null bei Abbruch.
+function openKassierenDialog({ betragEur, patientName }) {
+  return new Promise(resolve => {
+    document.getElementById('_kassierenModal')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_kassierenModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    const box = document.createElement('div');
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-labelledby', '_kassTitle');
+    box.style.cssText = 'background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:400px;';
+
+    const zahlartBtns = ZAHLARTEN.map(z => `
+      <button type="button" class="_kassZahlart" data-zahlart="${z.key}"
+        style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;text-align:left;">
+        <span aria-hidden="true">${z.icon}</span><span>${escapeHtml(t(z.i18n))}</span>
+      </button>`).join('');
+
+    box.innerHTML = `
+      <h3 id="_kassTitle" style="margin:0 0 2px;font-size:16px;font-weight:700;color:var(--text-main);">${escapeHtml(t('kass_title'))}</h3>
+      <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted);">${escapeHtml(patientName || '')}</p>
+      <div style="text-align:center;font-size:30px;font-weight:700;color:var(--text-main);letter-spacing:-0.5px;margin-bottom:18px;">${escapeHtml(fmtEur(betragEur))}</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-main);cursor:pointer;margin-bottom:14px;">
+        <input type="checkbox" id="_kassPrint" checked style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary);" />
+        ${escapeHtml(t('kass_print'))}
+      </label>
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">${escapeHtml(t('kass_zahlart'))}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${zahlartBtns}</div>
+      <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+        <button type="button" id="_kassCancel" style="padding:8px 16px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:inherit;">${escapeHtml(t('kass_cancel'))}</button>
+      </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    let settled = false;
+    const cleanup = (result) => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener('keydown', onEsc);
+      overlay.remove();
+      resolve(result);
+    };
+    function onEsc(e) { if (e.key === 'Escape') cleanup(null); }
+
+    box.querySelectorAll('._kassZahlart').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Sofort alle Knöpfe sperren — ein zweiter Klick darf keinen zweiten
+        // Beleg auslösen.
+        box.querySelectorAll('._kassZahlart').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+        cleanup({
+          zahlart: btn.dataset.zahlart,
+          drucken: !!document.getElementById('_kassPrint')?.checked,
+        });
+      });
+      btn.addEventListener('mouseenter', () => { if (!btn.disabled) btn.style.borderColor = 'var(--primary)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'var(--border)'; });
+    });
+
+    document.getElementById('_kassCancel').addEventListener('click', () => cleanup(null));
+    overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(null); });
+    document.addEventListener('keydown', onEsc);
+    box.querySelector('._kassZahlart')?.focus();
+  });
+}
+
+// Kassiert die Zuzahlung eines Rezepts. Gibt true zurück, wenn gebucht wurde.
+async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
+  const betrag = Number(betragEur);
+  if (!(betrag > 0)) { showToast(t('kass_err_betrag'), 'error'); return false; }
+
+  const choice = await openKassierenDialog({ betragEur: betrag, patientName });
+  if (!choice) return false;
+
+  // Erst den Anspruch sichern, dann buchen: das Update greift nur, solange
+  // zuzahlung_kassiert_am noch NULL ist. Zwei offene Fenster oder ein Doppelklick
+  // erzeugen so keinen zweiten Beleg — wichtig, weil die belegliste per Trigger
+  // unveränderlich ist und ein Fehlbeleg nur noch storniert, nie gelöscht werden
+  // kann (database_v27_gobd_belegliste.sql).
+  const { data: claimed, error: claimErr } = await supabase
+    .from('prescriptions')
+    .update({
+      zuzahlung_kassiert_am: new Date().toISOString(),
+      zuzahlung_kassiert_von: currentSession?.user?.id || null,
+      zuzahlung_zahlart: choice.zahlart,
+    })
+    .eq('id', rxId)
+    .is('zuzahlung_kassiert_am', null)
+    .select('id');
+
+  if (claimErr) { showToast('Fehler: ' + claimErr.message, 'error'); return false; }
+  if (!claimed || claimed.length === 0) { showToast(t('kass_err_bereits'), 'error'); return false; }
+
+  // Kassenbuch-Beleg über das Backend buchen, damit created_by gesetzt wird und
+  // die GoBD-Prüfung aus billing/belegliste/helper.js greift.
+  let belegNr = null;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${API}/billing/belegliste`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + (session?.access_token || ''), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'zuzahlung',
+        amount_eur: betrag,
+        zahlart: choice.zahlart,
+        patient_id: patientId || null,
+        prescription_id: rxId,
+        reference_text: `Zuzahlung ${zahlartLabel(choice.zahlart)}${patientName ? ': ' + patientName : ''}`,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Serverfehler');
+    }
+    belegNr = (await res.json())?.beleg_nr ?? null;
+  } catch (err) {
+    // Beleg gescheitert → Anspruch zurücknehmen. Sonst gälte die Zuzahlung als
+    // kassiert, ohne dass sie im Kassenbuch steht.
+    await supabase.from('prescriptions')
+      .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
+      .eq('id', rxId);
+    showToast(`${t('kass_err_beleg')} ${err.message}`, 'error');
+    return false;
+  }
+
+  if (choice.drucken) await openZuzahlungsrechnung(rxId);
+
+  showToast(belegNr != null
+    ? `${t('kass_ok')} · ${t('kass_beleg')} ${String(belegNr).padStart(6, '0')}`
+    : t('kass_ok'));
+  return true;
+}
+
+// Rückgängig = Gegenbuchung. Löschen ist im Kassenbuch gesetzlich verboten.
+async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
+  const betrag = Number(betragEur);
+  const grund = await showInputModal({
+    title: t('kass_storno_title'),
+    message: `${t('kass_storno_msg')} (${fmtEur(betrag)})`,
+    inputLabel: t('kass_storno_grund'),
+    inputPlaceholder: 'z. B. falsche Zahlart, Doppelbuchung …',
+    confirmText: t('kass_storno_confirm'),
+    cancelText: t('kass_cancel'),
+    variant: 'danger',
+  });
+  if (grund === null) return false;
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${API}/billing/belegliste`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + (session?.access_token || ''), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'storno',
+        amount_eur: -Math.abs(betrag),
+        patient_id: patientId || null,
+        // prescription_id mitgeben, damit Mahnwesen und Statistik die
+        // Gegenbuchung dem Rezept zuordnen und verrechnen können.
+        prescription_id: rxId,
+        reference_text: `STORNO Zuzahlung${patientName ? ': ' + patientName : ''}`,
+        storno_reason: grund || null,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Serverfehler');
+    }
+  } catch (err) {
+    showToast('Storno gescheitert: ' + err.message, 'error');
+    return false;
+  }
+
+  // Erst nach erfolgreicher Gegenbuchung das Rezept wieder auf offen setzen.
+  const { error } = await supabase.from('prescriptions')
+    .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
+    .eq('id', rxId);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return false; }
+
+  showToast(t('kass_storno_ok'));
+  return true;
+}
+
 function openMailOfferModal({ hasEmail, patientName }) {
   return new Promise(resolve => {
     const modal = document.getElementById('mailOfferModal');
@@ -7506,7 +7777,9 @@ document.getElementById('bkActionEditBtn').addEventListener('click', () => {
   openBookingModal(bkActionBookingCache);
 });
 
-// Zuzahlung kassieren / rückgängig machen — einmal je Verordnung.
+// Zuzahlung kassieren / stornieren / Rechnung öffnen — einmal je Verordnung.
+// Der eigentliche Ablauf liegt in kassiereZuzahlung(); hier wird nur der Klick
+// eingesammelt und danach das Panel neu aufgebaut.
 document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-zuzahl]');
   if (!btn) return;
@@ -7514,28 +7787,35 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
   const rxId = wrap?.dataset.rxId;
   if (!rxId) return;
 
-  const pay = btn.dataset.zuzahl === 'pay';
+  const aktion = btn.dataset.zuzahl;
+  if (aktion === 'rechnung') { await openZuzahlungsrechnung(rxId); return; }
+
+  const args = {
+    rxId,
+    patientId: wrap.dataset.patientId || null,
+    patientName: wrap.dataset.patientName || '',
+    betragEur: Number(wrap.dataset.betrag || 0),
+  };
+
   btn.disabled = true;
-
-  const patch = pay
-    ? { zuzahlung_kassiert_am: new Date().toISOString(),
-        zuzahlung_kassiert_von: currentSession?.user?.id || null }
-    : { zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null };
-
-  const { error } = await supabase.from('prescriptions').update(patch).eq('id', rxId);
-  if (error) {
-    btn.disabled = false;
-    showToast('Fehler: ' + error.message, 'error');
-    return;
-  }
-  showToast(pay ? 'Zuzahlung als kassiert vermerkt.' : 'Vermerk zurückgenommen.');
+  const ok = aktion === 'pay'
+    ? await kassiereZuzahlung(args)
+    : await storniereZuzahlung(args);
+  btn.disabled = false;
+  if (!ok) return;
 
   // Das Panel rendert aus bkActionBookingCache — ohne Nachziehen stünde dort
-  // weiter der alte Stand. Deshalb den zwischengespeicherten Datensatz mit
-  // patchen und erst dann neu aufbauen.
+  // weiter der alte Stand. Den echten Stand zurücklesen statt ihn zu raten:
+  // die Zahlart kennt nur der Dialog, und ein fehlgeschlagener Teilschritt darf
+  // hier nicht als Erfolg angezeigt werden.
+  const { data: frisch } = await supabase
+    .from('prescriptions')
+    .select('zuzahlung_kassiert_am, zuzahlung_kassiert_von, zuzahlung_zahlart')
+    .eq('id', rxId)
+    .maybeSingle();
   const cachedPs = Array.isArray(bkActionBookingCache?.prescription_sessions)
     ? bkActionBookingCache.prescription_sessions[0] : null;
-  if (cachedPs?.prescriptions) Object.assign(cachedPs.prescriptions, patch);
+  if (frisch && cachedPs?.prescriptions) Object.assign(cachedPs.prescriptions, frisch);
   if (bkActionBookingCache) await openBookingActionModal(bkActionBookingCache);
 });
 
@@ -7810,6 +8090,7 @@ function renderPdInfoBlock(lead) {
 
 async function openPatientDetailModal(lead) {
   pdCurrentLeadId = lead.id;
+  pdCurrentLeadName = displayName(lead) || '';
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
   renderPdInfoBlock(lead);
   document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'notes'));
@@ -7922,6 +8203,7 @@ async function loadPatientDetailRezepte(leadId) {
         behandlungsbeginn, deadline_reminders,
         is_dringend, hausbesuch, dmrz_exported_at, created_at,
         abrechnung_status, kostentraeger_ik, zuzahlung_befreit,
+        zuzahlung_eur, zuzahlung_kassiert_am, zuzahlung_zahlart,
         heilmittel_typ_blanko, vorrangig_einheiten, ergaenzend_einheiten,
         prescription_sessions ( id, session_number, status, done_at )
       `)
@@ -8076,9 +8358,17 @@ async function loadPatientDetailRezepte(leadId) {
       }
     }
 
-    const paidButton = (rx.zuzahlung_eur > 0 && !rx.zuzahlung_befreit && abrStatus !== 'accepted')
-      ? `<button class="btn-ghost btn-sm rx-mark-paid" data-id="${rx.id}" style="color:#15803d;font-weight:600;" title="Zuzahlung als bezahlt markieren"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#15803d;">${ICON.checkCircle}</span>Zuzahlung erhalten</button>`
-      : '';
+    // Zuzahlung: offen → kassieren; bereits kassiert → Zahlart + Direktlink auf
+    // die Rechnung. Der §302-Status (abrStatus) spielt hier bewusst keine Rolle
+    // mehr — ob der Patient bezahlt hat, hat nichts damit zu tun, ob die Kasse
+    // die Sammelabrechnung akzeptiert hat.
+    let paidButton = '';
+    if (rx.zuzahlung_eur > 0 && !rx.zuzahlung_befreit) {
+      paidButton = rx.zuzahlung_kassiert_am
+        ? `<span class="badge badge-green" title="Kassiert am ${escapeHtml(new Date(rx.zuzahlung_kassiert_am).toLocaleDateString('de-DE'))}">${escapeHtml(t('kass_bezahlt'))}${rx.zuzahlung_zahlart ? ' · ' + escapeHtml(zahlartLabel(rx.zuzahlung_zahlart)) : ''}</span>
+           <button class="btn-ghost btn-sm rx-open-rechnung" data-id="${rx.id}" title="${escapeHtml(t('kass_rechnung'))}">${escapeHtml(t('kass_rechnung'))}</button>`
+        : `<button class="btn-ghost btn-sm rx-mark-paid" data-id="${rx.id}" data-betrag="${rx.zuzahlung_eur}" style="color:var(--success);font-weight:600;" title="${escapeHtml(t('kass_title'))}"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--success);">${ICON.checkCircle}</span>${escapeHtml(t('kass_btn'))} · ${escapeHtml(fmtEur(rx.zuzahlung_eur))}</button>`;
+    }
 
     return `<div class="pd-rech-item" style="padding:14px 20px;border-bottom:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
@@ -8146,8 +8436,19 @@ async function loadPatientDetailRezepte(leadId) {
   });
   content.querySelectorAll('.rx-mark-paid').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await flipAbrechnungStatus(btn.dataset.id, 'accepted', leadId);
+      btn.disabled = true;
+      const ok = await kassiereZuzahlung({
+        rxId: btn.dataset.id,
+        patientId: leadId,
+        patientName: pdCurrentLeadName,
+        betragEur: Number(btn.dataset.betrag || 0),
+      });
+      btn.disabled = false;
+      if (ok) await loadPatientDetailRezepte(leadId);
     });
+  });
+  content.querySelectorAll('.rx-open-rechnung').forEach(btn => {
+    btn.addEventListener('click', () => openZuzahlungsrechnung(btn.dataset.id));
   });
   // Drucken dropdown: toggle open/close
   content.querySelectorAll('.rx-drucken-toggle').forEach(btn => {
@@ -8211,34 +8512,17 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
       }
     }
 
-    if (newStatus === 'accepted') {
-      const { data: rxInfo, error: rxErr } = await supabase
-        .from('prescriptions')
-        .select('*, leads:patient_id(first_name, last_name)')
-        .eq('id', rxId)
-        .single();
-      if (rxErr) throw rxErr;
-
-      if (rxInfo && rxInfo.zuzahlung_eur > 0) {
-        const { error: blErr } = await supabase.from('belegliste').insert({
-          owner_id: getOwnerId(),
-          type: 'zuzahlung',
-          amount_eur: Number(rxInfo.zuzahlung_eur),
-          patient_id: rxInfo.patient_id,
-          prescription_id: rxId,
-          reference_text: `Zuzahlung erhalten: ${rxInfo.leads?.first_name || ''} ${rxInfo.leads?.last_name || ''}`.trim()
-        });
-        if (blErr) throw blErr;
-      }
-    }
-
+    // Hinweis: abrechnung_status beschreibt ausschließlich den §302-Weg
+    // (bereit → in_abrechnung → gesendet → accepted/rejected durch die Kasse).
+    // Die Patientenzuzahlung wird davon getrennt über kassiereZuzahlung()
+    // gebucht — früher wurden beide hier vermischt.
     const { error } = await supabase
       .from('prescriptions')
       .update({ abrechnung_status: newStatus })
       .eq('id', rxId);
     if (error) throw error;
-    
-    showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : (newStatus === 'accepted' ? 'Zuzahlung als bezahlt gebucht ✓' : 'Zurück auf offen ✓'));
+
+    showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : 'Zurück auf offen ✓');
     await loadPatientDetailRezepte(leadId);
   } catch (e) {
     console.error('[abrechnung-status]', e);
@@ -20770,7 +21054,7 @@ async function loadBelegliste() {
     rows.forEach(r => {
       const dateStr = new Date(r.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
       const isNegative = Number(r.amount_eur) < 0;
-      const color = isNegative ? '#b91c1c' : '#15803d';
+      const color = isNegative ? 'var(--danger)' : 'var(--success)';
       const tr = document.createElement('tr');
       tr.style.borderBottom = '1px solid var(--border)';
       
@@ -20782,6 +21066,7 @@ async function loadBelegliste() {
         <td style="font-family:monospace;font-weight:600;color:var(--text-main);">${String(r.beleg_nr).padStart(6, '0')}</td>
         <td style="color:var(--text-main);">${dateStr}</td>
         <td><span class="badge" style="background:var(--border);color:var(--text-main);">${r.type}</span></td>
+        <td style="color:var(--text-muted);">${r.zahlart ? escapeHtml(zahlartLabel(r.zahlart)) : '—'}</td>
         <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
         <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
         <td style="color:var(--text-muted);font-size:12px;">${escapeHtml(r.storno_reason || (r.type === 'storno' ? '—' : ''))}</td>

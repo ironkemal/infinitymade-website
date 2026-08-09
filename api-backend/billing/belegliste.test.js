@@ -55,21 +55,39 @@ test('validateBelegEntry: rejects non-numeric amount', () => {
   assert.equal(res.isValid, false);
 });
 
+test('validateBelegEntry: akzeptiert alle vier Zahlarten', () => {
+  for (const z of ['bar', 'ec', 'ueberweisung', 'sonstiges']) {
+    assert.equal(validateBelegEntry('zuzahlung', 13.50, z).isValid, true, `Zahlart ${z} sollte gültig sein`);
+  }
+});
+
+test('validateBelegEntry: Zahlart bleibt optional (Altbelege vor v32)', () => {
+  assert.equal(validateBelegEntry('zuzahlung', 13.50).isValid, true);
+  assert.equal(validateBelegEntry('zuzahlung', 13.50, null).isValid, true);
+  assert.equal(validateBelegEntry('zuzahlung', 13.50, '').isValid, true);
+});
+
+test('validateBelegEntry: weist unbekannte Zahlart ab', () => {
+  const res = validateBelegEntry('zuzahlung', 13.50, 'bitcoin');
+  assert.equal(res.isValid, false);
+  assert.ok(res.error.includes('Ungültige Zahlart'));
+});
+
 console.log('\nGoBD Belegliste CSV formatting checks');
 
 test('generateCsvString: outputs valid GoBD headers and formats German commas', () => {
   const mockRows = [
-    { beleg_nr: 1, created_at: '2026-05-25T14:05:00Z', type: 'zuzahlung', amount_eur: 13.50, reference_text: 'Co-pay rx_1' },
+    { beleg_nr: 1, created_at: '2026-05-25T14:05:00Z', type: 'zuzahlung', zahlart: 'bar', amount_eur: 13.50, reference_text: 'Co-pay rx_1' },
     { beleg_nr: 2, created_at: '2026-05-25T14:15:00Z', type: 'barverkauf', amount_eur: 25.00, reference_text: 'Massage "Premium"' }
   ];
-  
+
   const csv = generateCsvString(mockRows);
-  
+
   // Verify delimiter directive is present and starts directly (without UTF-8 BOM)
   assert.equal(csv.startsWith('sep=;\r\n'), true, 'CSV must start directly with delimiter declaration (sep=;)');
-  
+
   // Verify Headers and CRLF line endings
-  assert.ok(csv.includes('Beleg-Nr;Datum;Uhrzeit;Typ;Betrag EUR;Referenztext\r\n'), 'CSV headers mismatch or missing CRLF');
+  assert.ok(csv.includes('Beleg-Nr;Datum;Uhrzeit;Typ;Zahlart;Betrag EUR;Referenztext\r\n'), 'CSV headers mismatch or missing CRLF');
   
   // Verify Sequential Padding
   assert.ok(csv.includes('"000001"'), 'Beleg-Nr should be padded to 6 digits');
@@ -84,6 +102,10 @@ test('generateCsvString: outputs valid GoBD headers and formats German commas', 
   
   // Verify quote escaping in Reference Texts
   assert.ok(csv.includes('Massage ""Premium""'), 'Quotes must be escaped as double-quotes');
+
+  // Zahlart wird deutsch ausgeschrieben, Altbelege ohne Zahlart bleiben leer
+  assert.ok(csv.includes('"zuzahlung";"Bar";"13,50"'), 'Zahlart muss als deutsches Label erscheinen');
+  assert.ok(csv.includes('"barverkauf";"";"25,00"'), 'Beleg ohne Zahlart muss eine leere Spalte haben');
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

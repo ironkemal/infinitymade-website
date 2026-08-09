@@ -928,8 +928,11 @@ router.patch('/prescription/:id/position', async (req, res) => {
 router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
   try {
     // ---- Auth ----
+    // Query-Token nötig: die Rechnung wird per window.open() in einem neuen Tab
+    // geöffnet, dort kann kein Authorization-Header gesetzt werden. Gleiche
+    // Regelung wie bei GET /prescription/:id/rechnung weiter unten.
     const authHdr = req.headers.authorization || '';
-    const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (authHdr || null);
+    const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (req.query.token || null);
     if (!token) return res.status(401).send('Nicht autorisiert');
     const { data: { user }, error: uErr } = await supabase.auth.getUser(token);
     if (uErr || !user) return res.status(401).send('Ungültiges Token');
@@ -1261,7 +1264,7 @@ router.get('/belegliste', async (req, res) => {
     const { from, to, type } = req.query || {};
     let query = supabase
       .from('belegliste')
-      .select('id, owner_id, beleg_nr, type, amount_eur, patient_id, prescription_id, abrechnung_id, reference_text, storno_reason, created_at, created_by')
+      .select('id, owner_id, beleg_nr, type, zahlart, amount_eur, patient_id, prescription_id, abrechnung_id, reference_text, storno_reason, created_at, created_by')
       .eq('owner_id', tenantId)
       .order('beleg_nr', { ascending: false });
 
@@ -1343,9 +1346,9 @@ router.post('/belegliste', async (req, res) => {
       : profile.id;
 
     // ---- Input Validation ----
-    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id, storno_reason } = req.body || {};
-    
-    const validation = validateBelegEntry(type, amount_eur);
+    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id, storno_reason, zahlart } = req.body || {};
+
+    const validation = validateBelegEntry(type, amount_eur, zahlart);
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.error });
     }
@@ -1364,6 +1367,7 @@ router.post('/belegliste', async (req, res) => {
           abrechnung_id: abrechnung_id || null,
           reference_text: reference_text || null,
           created_by: u.user.id,
+          zahlart: zahlart || null,
           storno_reason: (type === 'storno' ? (storno_reason || null) : null)
         })
         .select()
@@ -1385,6 +1389,7 @@ router.post('/belegliste', async (req, res) => {
           reference_text: reference_text || null,
           created_at: new Date().toISOString(),
           created_by: u.user.id,
+          zahlart: zahlart || null,
           storno_reason: (type === 'storno' ? (storno_reason || null) : null)
         };
       } else {
@@ -1425,7 +1430,7 @@ router.get('/belegliste/export', async (req, res) => {
     const { from, to, type } = req.query || {};
     let query = supabase
       .from('belegliste')
-      .select('beleg_nr, created_at, type, amount_eur, reference_text')
+      .select('beleg_nr, created_at, type, zahlart, amount_eur, reference_text')
       .eq('owner_id', tenantId)
       .order('beleg_nr', { ascending: true }); // GoBD chronological order
 

@@ -76,15 +76,28 @@ router.get('/mahnwesen/offene', async (req, res) => {
 
     const rxIds = rxRows.map(r => r.id);
 
-    // 2. Find prescriptions already paid via belegliste (type='zuzahlung')
+    // 2. Find prescriptions already paid via belegliste.
+    //    Stornos werden mitgelesen und gegengerechnet: die belegliste ist
+    //    unveränderlich, ein Rückgängigmachen erzeugt eine Gegenbuchung mit
+    //    negativem Betrag. Würde man nur auf das Vorhandensein einer
+    //    'zuzahlung'-Zeile prüfen, bliebe ein storniertes Rezept für immer als
+    //    bezahlt stehen und würde nie gemahnt.
     const { data: paidEntries } = await supabase
       .from('belegliste')
-      .select('prescription_id')
+      .select('prescription_id, amount_eur')
       .eq('owner_id', tenantId)
-      .eq('type', 'zuzahlung')
+      .in('type', ['zuzahlung', 'storno'])
       .in('prescription_id', rxIds);
 
-    const paidRxIds = new Set((paidEntries || []).map(e => e.prescription_id).filter(Boolean));
+    const saldoByRx = new Map();
+    for (const e of (paidEntries || [])) {
+      if (!e.prescription_id) continue;
+      saldoByRx.set(e.prescription_id, (saldoByRx.get(e.prescription_id) || 0) + Number(e.amount_eur || 0));
+    }
+    // Als bezahlt gilt nur, wo unterm Strich noch Geld liegt.
+    const paidRxIds = new Set(
+      [...saldoByRx.entries()].filter(([, saldo]) => saldo > 0).map(([id]) => id)
+    );
 
     // 3. Fetch latest mahnung per prescription
     const { data: mahnungen } = await supabase
@@ -92,7 +105,10 @@ router.get('/mahnwesen/offene', async (req, res) => {
       .select('prescription_id, level, status, sent_at')
       .eq('owner_id', tenantId)
       .in('prescription_id', rxIds)
-      .order('created_at', { ascending: false });
+      // sent_at, nicht created_at: die Tabelle mahnungen hat kein created_at
+      // (database_v28_mahnwesen.sql). Die Sortierung lief bisher ins Leere und
+      // die Mahnstufe wurde deshalb nie angezeigt.
+      .order('sent_at', { ascending: false });
 
     // Build a map: prescription_id → latest mahnung
     const latestMahnung = new Map();
