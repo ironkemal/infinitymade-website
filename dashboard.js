@@ -21084,7 +21084,7 @@ async function loadBelegliste() {
       tr.style.borderBottom = '1px solid var(--border)';
       
       const stornoBtn = r.type !== 'storno' 
-        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
+        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
         : '';
 
       tr.innerHTML = `
@@ -21103,14 +21103,18 @@ async function loadBelegliste() {
 
     // Wire Storno Event
     tbody.querySelectorAll('.bl-storno-btn').forEach(btn => {
-      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref));
+      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null));
     });
   } catch (err) {
     showToast('Kassenbuch Fehler: ' + err.message, 'error');
   }
 }
 
-async function triggerStorno(belegNr, amount, originalRef) {
+// prescriptionId/patientId werden mitgegeben, damit die Gegenbuchung dem Rezept
+// zugeordnet bleibt. Mahnwesen und Statistik rechnen Zuzahlung und Storno je
+// Rezept gegeneinander auf — ohne die ID bliebe ein storniertes Rezept dort
+// faelschlich als bezahlt stehen.
+async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null, patientId = null) {
   // Storno reason input modal
   const reason = await showInputModal({
     title: 'Beleg Stornieren',
@@ -21136,6 +21140,8 @@ async function triggerStorno(belegNr, amount, originalRef) {
       body: JSON.stringify({
         type: 'storno',
         amount_eur: -Number(amount),
+        prescription_id: prescriptionId || null,
+        patient_id: patientId || null,
         reference_text: `STORNO für Beleg-Nr: ${belegNr} (${originalRef})`,
         storno_reason: reason || null
       })
