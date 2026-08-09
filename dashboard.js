@@ -158,7 +158,7 @@ const T = {
     kass_title: 'Zuzahlung kassieren', kass_zahlart: 'Womit wird bezahlt?',
     kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges',
     kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
-    kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
+    kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
     kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', kass_undo: 'stornieren',
     kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
     kass_err_betrag: 'Kein Zuzahlungsbetrag hinterlegt — bitte zuerst am Rezept eintragen.',
@@ -286,7 +286,7 @@ const T = {
     kass_title: 'Collect co-payment', kass_zahlart: 'How is it being paid?',
     kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other',
     kass_print: 'Print receipt', kass_cancel: 'Cancel',
-    kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
+    kass_befreit: 'Exempt from co-payment', kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
     kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', kass_undo: 'reverse',
     kass_ok: 'Co-payment collected ✓', kass_storno_ok: 'Co-payment reversed ✓',
     kass_err_betrag: 'No co-payment amount set — please enter it on the prescription first.',
@@ -414,7 +414,7 @@ const T = {
     kass_title: 'Katkı payını tahsil et', kass_zahlart: 'Ödeme nasıl yapılıyor?',
     kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer',
     kass_print: 'Makbuz yazdır', kass_cancel: 'İptal',
-    kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
+    kass_befreit: 'Katkı payından muaf', kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
     kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', kass_undo: 'iptal et',
     kass_ok: 'Katkı payı tahsil edildi ✓', kass_storno_ok: 'Katkı payı iptal edildi ✓',
     kass_err_betrag: 'Katkı payı tutarı girilmemiş — önce reçetede belirtin.',
@@ -3152,17 +3152,6 @@ async function openBookingActionModal(booking) {
       verordnungEl.textContent = `${rx.anzahl_einheiten}x ${hm}${typ}`;
     }
 
-    const rzgEl = document.getElementById('bkRxRZG');
-    if (rzgEl) {
-      if (rx.zuzahlung_befreit) {
-        rzgEl.innerHTML = '<span style="color:var(--success);font-weight:600;">befreit</span>';
-      } else if (rx.zuzahlung_eur != null) {
-        rzgEl.textContent = `${rx.zuzahlung_eur.toFixed(2)} €`;
-      } else {
-        rzgEl.textContent = '—';
-      }
-    }
-
     const mandantEl = document.getElementById('bkRxMandant');
     if (mandantEl) mandantEl.textContent = empName || '—';
 
@@ -3186,19 +3175,25 @@ async function openBookingActionModal(booking) {
     const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
     if (rzgWarnEl) {
       const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : null;
-      if (rx.zuzahlung_befreit === false && betrag != null) {
+      const befreit = !!rx.zuzahlung_befreit;
+      const bezahlt = !!rx.zuzahlung_kassiert_am;
+
+      if (befreit || betrag != null) {
         rzgWarnEl.hidden = false;
         rzgWarnEl.dataset.rxId = rx.id;
-        rzgWarnEl.dataset.betrag = String(betrag);
+        rzgWarnEl.dataset.betrag = String(betrag ?? 0);
         rzgWarnEl.dataset.patientId = rx.patient_id || booking.lead_id || '';
         rzgWarnEl.dataset.patientName = booking.customer_name || '';
 
-        const bezahlt = !!rx.zuzahlung_kassiert_am;
-        rzgWarnEl.style.background = bezahlt ? 'var(--success-dim)' : 'var(--warning-dim)';
-        rzgWarnEl.style.borderColor = bezahlt ? 'var(--success)' : 'var(--warning)';
-        rzgWarnEl.style.color = bezahlt ? 'var(--success)' : 'var(--warning-text)';
+        // Grün, sobald nichts mehr offen ist — bezahlt oder befreit.
+        const gruen = befreit || bezahlt;
+        rzgWarnEl.style.background = gruen ? 'var(--success-dim)' : 'var(--warning-dim)';
+        rzgWarnEl.style.borderColor = gruen ? 'var(--success)' : 'var(--warning)';
+        rzgWarnEl.style.color = gruen ? 'var(--success)' : 'var(--warning-text)';
 
-        if (bezahlt) {
+        if (befreit) {
+          rzgWarnEl.innerHTML = escapeHtml(t('kass_befreit'));
+        } else if (bezahlt) {
           const am = new Date(rx.zuzahlung_kassiert_am)
             .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
           const art = rx.zuzahlung_zahlart ? ` · ${zahlartLabel(rx.zuzahlung_zahlart)}` : '';
@@ -8194,7 +8189,7 @@ async function loadPatientDetailRezepte(leadId) {
   if (!content) return;
   if (loading) loading.hidden = false;
 
-  const [rxRes, befRes] = await Promise.all([
+  const [rxRes, befRes, belegRes] = await Promise.all([
     supabase
       .from('prescriptions')
       .select(`
@@ -8214,9 +8209,24 @@ async function loadPatientDetailRezepte(leadId) {
       .select('id, jahr, befreit_ab, befreit_bis, beleg_url')
       .eq('patient_id', leadId)
       .order('jahr', { ascending: false }),
+    // Kassenbuch-Belege des Patienten. Die Beleg-Nr. ist die dauerhafte,
+    // pruefbare Referenz auf die Zahlung — sie steht sonst nur im Kassenbuch.
+    supabase
+      .from('belegliste')
+      .select('beleg_nr, prescription_id, zahlart, amount_eur, created_at')
+      .eq('patient_id', leadId)
+      .eq('type', 'zuzahlung')
+      .order('beleg_nr', { ascending: false }),
   ]);
   const { data: rxs, error } = rxRes;
   const befreiungen = befRes.data || [];
+  // Rezept-ID → jüngste Beleg-Nr. (absteigend sortiert, der erste Treffer gewinnt).
+  const belegNrByRx = new Map();
+  for (const b of (belegRes.data || [])) {
+    if (b.prescription_id && !belegNrByRx.has(b.prescription_id)) {
+      belegNrByRx.set(b.prescription_id, b.beleg_nr);
+    }
+  }
 
   if (loading) loading.hidden = true;
   if (error) { content.innerHTML = '<div class="pd-empty">Fehler: ' + escapeHtml(error.message) + '</div>'; return; }
@@ -8364,8 +8374,12 @@ async function loadPatientDetailRezepte(leadId) {
     // die Sammelabrechnung akzeptiert hat.
     let paidButton = '';
     if (rx.zuzahlung_eur > 0 && !rx.zuzahlung_befreit) {
+      const belegNr = belegNrByRx.get(rx.id);
+      const belegTxt = belegNr != null
+        ? ` · ${t('kass_beleg')} ${String(belegNr).padStart(6, '0')}`
+        : '';
       paidButton = rx.zuzahlung_kassiert_am
-        ? `<span class="badge badge-green" title="Kassiert am ${escapeHtml(new Date(rx.zuzahlung_kassiert_am).toLocaleDateString('de-DE'))}">${escapeHtml(t('kass_bezahlt'))}${rx.zuzahlung_zahlart ? ' · ' + escapeHtml(zahlartLabel(rx.zuzahlung_zahlart)) : ''}</span>
+        ? `<span class="badge badge-green" title="Kassiert am ${escapeHtml(new Date(rx.zuzahlung_kassiert_am).toLocaleDateString('de-DE'))}">${escapeHtml(t('kass_bezahlt'))}${rx.zuzahlung_zahlart ? ' · ' + escapeHtml(zahlartLabel(rx.zuzahlung_zahlart)) : ''}${escapeHtml(belegTxt)}</span>
            <button class="btn-ghost btn-sm rx-open-rechnung" data-id="${rx.id}" title="${escapeHtml(t('kass_rechnung'))}">${escapeHtml(t('kass_rechnung'))}</button>`
         : `<button class="btn-ghost btn-sm rx-mark-paid" data-id="${rx.id}" data-betrag="${rx.zuzahlung_eur}" style="color:var(--success);font-weight:600;" title="${escapeHtml(t('kass_title'))}"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--success);">${ICON.checkCircle}</span>${escapeHtml(t('kass_btn'))} · ${escapeHtml(fmtEur(rx.zuzahlung_eur))}</button>`;
     }

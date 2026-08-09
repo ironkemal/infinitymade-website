@@ -26,11 +26,17 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Befund: Formel 10 % + 10 € war korrekt, aber zuzahlungsfreie Positionen wurden mit
       10 % belastet. Ein Klick liefert der Kassieren-Dialog aus Aufgabe 1.
 
-- [ ] 4. Zuzahlung-Bildschirm vereinfachen — nur Summe in Gelb, wird grün sobald bezahlt
-      Code: `dashboard.js` ca. Zeile 3114–3165 (`bkRxZuzahlungWarn`, `rzgWarnEl`).
+- [x] 4. Zuzahlung-Bildschirm vereinfachen — nur Summe in Gelb, wird grün sobald bezahlt
+      Geändert: `dashboard.js` (eine Zeile statt zwei, drei Zustände: befreit/offen/bezahlt) ·
+      `dashboard.html` (Zeile "RZG" entfernt — zeigte denselben Betrag als Abkürzung nochmal) ·
+      `dashboard.css` (`--success`, `--success-dim`, `--warning-text` als lesbare Textfarbe)
+      Alle festen Farben (#fbbf24, #4ade80, rgba(34,197,94,…)) sind raus.
 
-- [ ] 5. Nach dem Kassieren dauerhafte Verlinkung zur Rechnung — von Termin/Patient aus öffenbar
-      Zuerst: 1
+- [x] 5. Nach dem Kassieren dauerhafte Verlinkung zur Rechnung — von Termin/Patient aus öffenbar
+      Geändert: `dashboard.js` (`openZuzahlungsrechnung`, Link im Termin-Panel und in der
+      Patientenakte, Beleg-Nr. aus dem Kassenbuch in der Rezeptzeile)
+      Der Link ist dauerhaft gültig: die Rechnung wird bei jedem Aufruf frisch aus dem Rezept
+      erzeugt (Nummer ZU-<Rezept-ID>), es gibt keinen gespeicherten Rechnungsdatensatz.
 
 - [ ] 6. Monatsübersicht Zahlungsstatus — welche Rechnung bezahlt, welche offen ist
       Code: `api-backend/billing/api/statistik.routes.js` prüfen, ob das schon als Basis reicht.
