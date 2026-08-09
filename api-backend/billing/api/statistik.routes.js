@@ -61,7 +61,7 @@ router.get('/statistik', async (req, res) => {
     // Start of last month
     const startOfLastMonth = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth() - 1, 1)).toISOString();
 
-    // Run all 8 queries in parallel
+    // Run all 10 queries in parallel
     const [
       belegResult,
       leadsResult,
@@ -71,6 +71,8 @@ router.get('/statistik', async (req, res) => {
       noShowResult,
       mahnungenResult,
       therapeutenResult,
+      zahlungenResult,
+      ausfallResult,
     ] = await Promise.all([
       // 1. Monthly revenue from belegliste
       supabase
@@ -100,14 +102,16 @@ router.get('/statistik', async (req, res) => {
         .eq('owner_id', tenantId)
         .gte('created_at', cutoffIso),
 
-      // 5. Open prescriptions with unpaid Zuzahlung
+      // 5. Rezepte mit Zuzahlungspflicht. Ob sie offen sind, entscheidet der
+      //    Kassenbuch-Saldo (Abfrage 9) — nicht abrechnung_id. Der frühere
+      //    Filter `abrechnung_id IS NULL` bedeutete "noch nicht bei der Kasse
+      //    eingereicht" und hatte mit der Patientenzahlung nichts zu tun.
       supabase
         .from('prescriptions')
-        .select('id', { count: 'exact' })
+        .select('id, zuzahlung_eur, ausstellungsdatum')
         .eq('owner_id', tenantId)
         .gt('zuzahlung_eur', 0)
-        .eq('zuzahlung_befreit', false)
-        .is('abrechnung_id', null),
+        .eq('zuzahlung_befreit', false),
 
       // 6. No-show sessions in the period
       supabase
@@ -118,19 +122,41 @@ router.get('/statistik', async (req, res) => {
         .gte('created_at', cutoffIso),
 
       // 7. Mahnung conversion
+      //    sent_at statt created_at: die Tabelle mahnungen hat kein created_at
+      //    (database_v28_mahnwesen.sql). Die Abfrage lief bisher in einen Fehler
+      //    und die Mahnungs-Kennzahlen standen deshalb immer auf 0.
       supabase
         .from('mahnungen')
-        .select('id, status, created_at')
+        .select('id, status, sent_at')
         .eq('owner_id', tenantId)
-        .gte('created_at', cutoffIso),
+        .gte('sent_at', cutoffIso),
 
       // 8. Therapist session counts from bookings
+      //    start_time statt start_date: bookings hat kein start_date. Auch diese
+      //    Abfrage schlug fehl, die Therapeutenliste blieb immer leer.
       supabase
         .from('bookings')
         .select('employee_id, profiles:employee_id(first_name, last_name)')
         .eq('owner_id', tenantId)
-        .gte('start_date', cutoffIso)
+        .gte('start_time', cutoffIso)
         .neq('status', 'canceled'),
+
+      // 9. Zahlungseingänge je Rezept — bewusst OHNE Datumsfilter: eine
+      //    Zuzahlung kann lange nach Ausstellung des Rezepts eingehen. Stornos
+      //    sind negativ gespeichert und rechnen sich damit von selbst gegen.
+      supabase
+        .from('belegliste')
+        .select('prescription_id, amount_eur')
+        .eq('owner_id', tenantId)
+        .in('type', ['zuzahlung', 'storno'])
+        .not('prescription_id', 'is', null),
+
+      // 10. Ausfallrechnungen im Zeitraum — offen vs. bezahlt
+      supabase
+        .from('ausfallrechnungen')
+        .select('amount_eur, status, created_at')
+        .eq('owner_id', tenantId)
+        .gte('created_at', cutoffIso),
     ]);
 
     // Check for fatal errors
@@ -141,11 +167,39 @@ router.get('/statistik', async (req, res) => {
     // Sessions query may fail if table doesn't exist yet — treat as empty
     const sessionRows = sessionsResult.error ? [] : (sessionsResult.data || []);
 
-    // ── 1. Aggregate monthly revenue in JS ──────────────────────────────────
-    const byMonth = {};
+    const r2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
+
+    // ── 1a. Bezahlt je Monat aus dem Kassenbuch ─────────────────────────────
+    // Stornos liegen mit negativem Betrag in der Tabelle (siehe
+    // billing/belegliste/helper.js), die Summe rechnet sie also von selbst raus.
+    const bezahltByMonth = {};
     for (const b of (belegResult.data || [])) {
       const key = b.created_at.slice(0, 7); // "2026-04"
-      byMonth[key] = (byMonth[key] || 0) + Number(b.amount_eur || 0);
+      bezahltByMonth[key] = (bezahltByMonth[key] || 0) + Number(b.amount_eur || 0);
+    }
+
+    // ── 1b. Offen je Monat ───────────────────────────────────────────────────
+    // Bezahlt ist ein Rezept, wenn unterm Strich Geld dafür im Kassenbuch liegt.
+    const saldoByRx = new Map();
+    for (const z of (zahlungenResult.error ? [] : (zahlungenResult.data || []))) {
+      if (!z.prescription_id) continue;
+      saldoByRx.set(z.prescription_id, (saldoByRx.get(z.prescription_id) || 0) + Number(z.amount_eur || 0));
+    }
+
+    const offeneRx = (offeneRxResult.data || []).filter(rx => (saldoByRx.get(rx.id) || 0) <= 0);
+
+    const offenByMonth = {};
+    for (const rx of offeneRx) {
+      if (!rx.ausstellungsdatum) continue; // ohne Datum keinem Monat zuzuordnen
+      const key = String(rx.ausstellungsdatum).slice(0, 7);
+      offenByMonth[key] = (offenByMonth[key] || 0) + Number(rx.zuzahlung_eur || 0);
+    }
+    // Unbezahlte Ausfallrechnungen zählen ebenfalls als offener Betrag.
+    const ausfallRows = ausfallResult.error ? [] : (ausfallResult.data || []);
+    for (const a of ausfallRows) {
+      if (a.status !== 'offen') continue;
+      const key = a.created_at.slice(0, 7);
+      offenByMonth[key] = (offenByMonth[key] || 0) + Number(a.amount_eur || 0);
     }
 
     const monatlich = [];
@@ -154,7 +208,12 @@ router.get('/statistik', async (req, res) => {
       d.setDate(1); // avoid month-overflow edge cases
       d.setMonth(d.getMonth() - i);
       const key = d.toISOString().slice(0, 7);
-      monatlich.push({ monat: key, umsatz: Math.round((byMonth[key] || 0) * 100) / 100 });
+      monatlich.push({
+        monat: key,
+        umsatz: r2(bezahltByMonth[key]),   // Name beibehalten: Frontend nutzt ihn
+        bezahlt: r2(bezahltByMonth[key]),
+        offen: r2(offenByMonth[key]),
+      });
     }
 
     // ── 2. Patient stats ─────────────────────────────────────────────────────
@@ -177,8 +236,12 @@ router.get('/statistik', async (req, res) => {
       .filter(a => a.status === 'accepted')
       .reduce((sum, a) => sum + Number(a.total_eur || 0), 0);
 
-    // ── 5. Open prescriptions ────────────────────────────────────────────────
-    const offene_zuzahlungen = offeneRxResult.count ?? (offeneRxResult.data || []).length;
+    // ── 5. Offene Zuzahlungen ────────────────────────────────────────────────
+    // Rückwärtskompatibel: offene_zuzahlungen bleibt eine Anzahl. Die Summe
+    // kommt zusätzlich, weil "17 offene Rezepte" ohne Betrag wenig aussagt.
+    const offene_zuzahlungen = offeneRx.length;
+    const offene_zuzahlungen_summe = r2(offeneRx.reduce((s, rx) => s + Number(rx.zuzahlung_eur || 0), 0));
+    const offeneAusfall = ausfallRows.filter(a => a.status === 'offen');
 
     // ── 6. No-show rate ───────────────────────────────────────────────────────
     const noShowRows = noShowResult.error ? [] : (noShowResult.data || []);
@@ -230,6 +293,12 @@ router.get('/statistik', async (req, res) => {
         summe_akzeptiert: Math.round(summe_akzeptiert * 100) / 100,
       },
       offene_zuzahlungen,
+      offene_zuzahlungen_summe,
+      ausfallrechnungen: {
+        offen: offeneAusfall.length,
+        offen_summe: r2(offeneAusfall.reduce((s, a) => s + Number(a.amount_eur || 0), 0)),
+        bezahlt: ausfallRows.filter(a => a.status === 'bezahlt').length,
+      },
       no_show: { count: noShowCount, rate: noShowRate },
       mahnungen: { gesamt: mahnGesamt, bezahlt: mahnBezahlt, offen: mahnOffen },
       therapeuten,

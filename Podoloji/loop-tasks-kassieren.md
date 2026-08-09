@@ -38,8 +38,13 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Der Link ist dauerhaft gültig: die Rechnung wird bei jedem Aufruf frisch aus dem Rezept
       erzeugt (Nummer ZU-<Rezept-ID>), es gibt keinen gespeicherten Rechnungsdatensatz.
 
-- [ ] 6. Monatsübersicht Zahlungsstatus — welche Rechnung bezahlt, welche offen ist
-      Code: `api-backend/billing/api/statistik.routes.js` prüfen, ob das schon als Basis reicht.
+- [x] 6. Monatsübersicht Zahlungsstatus — welche Rechnung bezahlt, welche offen ist
+      Geändert: `api-backend/billing/api/statistik.routes.js` (Offen-Reihe je Monat, offener
+      Betrag statt nur Anzahl, Ausfallrechnungen mit drin, zwei kaputte Spaltennamen) ·
+      `dashboard.js` (gestapeltes Balkendiagramm grün/gelb + Farblegende, KPI zeigt Betrag) ·
+      `dashboard.html` (KPI-Kachel)
+      Die Basis reichte nicht: es gab nur Umsatz (also ausschliesslich Bezahltes) und keine
+      Offen-Reihe.
 
 - [ ] 7. Ausfallrechnung-Muster von Stefan holen
       ⚠️ Menschliche Aufgabe, kein Code — der builder-Agent kann das nicht selbst erledigen.

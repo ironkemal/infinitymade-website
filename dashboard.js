@@ -21468,7 +21468,17 @@ async function loadStatistik() {
 
     setEl('statAbrAkz', d.abrechnung?.akzeptiert ?? '—');
     setEl('statAbrSumme', fmtEur(d.abrechnung?.summe_akzeptiert));
-    setEl('statOffeneZuz', d.offene_zuzahlungen ?? '—');
+    // "17" allein sagt nichts — der offene Betrag ist die Zahl, die zählt.
+    setEl('statOffeneZuz', d.offene_zuzahlungen_summe != null
+      ? fmtEur(d.offene_zuzahlungen_summe)
+      : (d.offene_zuzahlungen ?? '—'));
+    const offZuzSub = document.getElementById('statOffeneZuzSub');
+    if (offZuzSub) {
+      const anzahl = d.offene_zuzahlungen ?? 0;
+      const af = d.ausfallrechnungen?.offen ?? 0;
+      offZuzSub.textContent = `${anzahl} Rezept${anzahl === 1 ? '' : 'e'}`
+        + (af > 0 ? ` · ${af} Ausfallrechnung${af === 1 ? '' : 'en'} offen` : '');
+    }
 
     // No-show
     if (d.no_show) {
@@ -21511,34 +21521,59 @@ async function loadStatistik() {
     chartEl.innerHTML = '';
     legendEl.innerHTML = '';
 
-    const maxVal = Math.max(...d.monatlich.map(m => m.umsatz), 1);
+    // Zwei Werte je Monat: bezahlt (grün, unten) und offen (gelb, darüber).
+    // Die Höhe richtet sich nach der Summe beider, damit die Balken vergleichbar
+    // bleiben. Ältere Antworten ohne `offen` fallen sauber auf 0 zurück.
+    const maxVal = Math.max(...d.monatlich.map(m => (m.bezahlt ?? m.umsatz ?? 0) + (m.offen ?? 0)), 1);
     const MO = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
     d.monatlich.forEach(m => {
-      const pct = Math.max((m.umsatz / maxVal) * 100, m.umsatz > 0 ? 4 : 0);
+      const bezahlt = Number(m.bezahlt ?? m.umsatz ?? 0);
+      const offen = Number(m.offen ?? 0);
+      const gesamt = bezahlt + offen;
       const [yr, mo] = m.monat.split('-');
       const label = `${MO[parseInt(mo) - 1]} ${yr.slice(2)}`;
 
       const col = document.createElement('div');
       col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:28px;';
 
-      const bar = document.createElement('div');
-      bar.style.cssText = `width:100%;background:var(--primary);border-radius:4px 4px 0 0;height:${pct}%;min-height:${m.umsatz > 0 ? 4 : 0}px;transition:height 0.3s;cursor:default;`;
-      bar.title = `${label}: ${fmtEur(m.umsatz)}`;
+      const stack = document.createElement('div');
+      const stackPct = Math.max((gesamt / maxVal) * 100, gesamt > 0 ? 4 : 0);
+      stack.style.cssText = `width:100%;height:${stackPct}%;min-height:${gesamt > 0 ? 4 : 0}px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden;transition:height 0.3s;`;
+      stack.title = `${label} — ${t('kass_bezahlt')}: ${fmtEur(bezahlt)} · ${t('kass_offen')}: ${fmtEur(offen)}`;
+
+      if (offen > 0) {
+        const offenSeg = document.createElement('div');
+        offenSeg.style.cssText = `background:var(--warning);height:${(offen / gesamt) * 100}%;`;
+        stack.appendChild(offenSeg);
+      }
+      if (bezahlt > 0) {
+        const bezahltSeg = document.createElement('div');
+        bezahltSeg.style.cssText = `background:var(--success);height:${(bezahlt / gesamt) * 100}%;`;
+        stack.appendChild(bezahltSeg);
+      }
 
       const lbl = document.createElement('div');
       lbl.style.cssText = 'font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;';
       lbl.textContent = label;
 
-      col.appendChild(bar);
+      col.appendChild(stack);
       col.appendChild(lbl);
       chartEl.appendChild(col);
 
       const leg = document.createElement('span');
       leg.style.cssText = 'font-size:11px;color:var(--text-muted);';
-      leg.textContent = `${label}: ${fmtEur(m.umsatz)}`;
+      leg.textContent = `${label}: ${fmtEur(bezahlt)}${offen > 0 ? ` (+ ${fmtEur(offen)} offen)` : ''}`;
       legendEl.appendChild(leg);
     });
+
+    // Farblegende, damit Grün und Gelb erklärt sind
+    const legHead = document.createElement('span');
+    legHead.style.cssText = 'font-size:11px;color:var(--text-muted);display:inline-flex;align-items:center;gap:10px;width:100%;margin-bottom:2px;';
+    legHead.innerHTML =
+      `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--success);display:inline-block;"></span>${escapeHtml(t('kass_bezahlt'))}</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--warning);display:inline-block;"></span>${escapeHtml(t('kass_offen'))}</span>`;
+    legendEl.prepend(legHead);
 
   } catch (e) {
     const chartEl = document.getElementById('statBarChart');
