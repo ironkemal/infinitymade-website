@@ -1,8 +1,8 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809c';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809c';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809d';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809d';
 
 let todos = [];
 let showArchived = false;
@@ -189,8 +189,15 @@ function render() {
   renderCatBar();
   const board = $('#board');
   const cols = columns();
+
+  // Her şey ortak havuzdayken üç eşit kolon, ekranın üçte ikisini boşa harcıyor
+  // ve içeriği ortadaki dar şeride sıkıştırıyordu. Boş kolon yer kaplamasın:
+  // dolu kolon büyür, boş olan atama için hedef olarak ince kalır.
+  const openIn = (key) => todos.filter(t => !t.parent_id && !t.done && colKeyOf(t) === key
+                                         && catMatch(t)).length;
   board.style.gridTemplateColumns = mq.matches
-    ? '1fr' : `repeat(${cols.length}, 1fr)`;
+    ? '1fr'
+    : cols.map(c => openIn(c.key) ? 'minmax(0, 3fr)' : 'minmax(150px, 0.6fr)').join(' ');
 
   let hidden = 0;
   board.innerHTML = cols.map(c => {
