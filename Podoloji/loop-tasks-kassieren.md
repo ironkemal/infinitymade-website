@@ -18,10 +18,13 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Code: prüfen wo Preise aktuell herkommen — `katalog-suche.js`, `api-backend/sync_heilmittel_katalog.js`.
       Vermutlich fehlt eine Tabelle mit "gültig ab Datum" für Preisänderungen.
 
-- [ ] 3. Ein-Klick-Zuzahlungsrechnung — 10 % vom Heilmittel + 10 €, automatisch berechnet
-      Zuerst: 2
-      Code: `api-backend/billing/pdf/zuzahlungsrechnung.template.js` (Template existiert schon —
-      prüfen ob Berechnung korrekt ist und ob wirklich nur ein Klick nötig ist).
+- [x] 3. Ein-Klick-Zuzahlungsrechnung — 10 % vom Heilmittel + 10 €, automatisch berechnet
+      (Sperre "Zuerst: 2" von Melih am 10.08.2026 aufgehoben — geht auch ohne den Preis-Umbau.)
+      Geändert: `api-backend/billing/zuzahlung/calculator.js` (neu: `resolvePositionZuzahlung`) ·
+      `api-backend/billing/zuzahlung/calculator.test.js` (10 neue Fälle) ·
+      `api-backend/billing/api/abrechnung.routes.js` (Zuzahlungsrechnung + RZG-Quittung)
+      Befund: Formel 10 % + 10 € war korrekt, aber zuzahlungsfreie Positionen wurden mit
+      10 % belastet. Ein Klick liefert der Kassieren-Dialog aus Aufgabe 1.
 
 - [ ] 4. Zuzahlung-Bildschirm vereinfachen — nur Summe in Gelb, wird grün sobald bezahlt
       Code: `dashboard.js` ca. Zeile 3114–3165 (`bkRxZuzahlungWarn`, `rzgWarnEl`).

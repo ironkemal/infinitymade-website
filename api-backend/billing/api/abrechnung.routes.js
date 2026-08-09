@@ -22,7 +22,7 @@ import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js'
 import { renderRechnung } from '../pdf/rechnung.template.js';
 import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
 import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
-import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
+import { calcAbrechnungsfallZuzahlung, resolvePositionZuzahlung } from '../zuzahlung/calculator.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
 import { buildTarifkennzeichen } from '../codes/anlage3_v22.js';
 
@@ -983,22 +983,27 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
       : findPosition(storedPos, '22');
     const priceUnit = pos?.preis ?? 0;
-    const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
+    // Zuzahlungsfreie Positionen (zuzahlung: null im Katalog) dürfen nicht mit
+    // 10 % belastet werden — siehe resolvePositionZuzahlung().
+    const { zuzahlungUnit: coPayUnit, positionFrei } = resolvePositionZuzahlung(pos, priceUnit);
+    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
 
     const doneSessions = (rx.prescription_sessions || [])
       .filter(s => s.status === 'done');
 
     const calcSessions = doneSessions.map(s => ({
       preis_eur: priceUnit,
-      zuzahlung_eur_position: rx.zuzahlung_befreit ? 0 : coPayUnit,
-      position_frei: rx.zuzahlung_befreit
+      zuzahlung_eur_position: zuzahlungsfrei ? 0 : coPayUnit,
+      position_frei: zuzahlungsfrei
     }));
 
     const totals = calcAbrechnungsfallZuzahlung({
       sessions: calcSessions,
       patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
       behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
-      verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
+      // Auch die Verordnungspauschale von 10 € entfällt bei einer
+      // zuzahlungsfreien Position, nicht nur die prozentuale Zuzahlung.
+      verordnung_zuzahlungsfrei: zuzahlungsfrei
     });
 
     const printSessions = doneSessions.map(s => ({
@@ -1006,7 +1011,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       position: storedPos,
       bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
       brutto: priceUnit,
-      zuzahlung: rx.zuzahlung_befreit ? 0 : coPayUnit
+      zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
     }));
 
     // ---- Render PDF/HTML Template ----
@@ -1118,7 +1123,10 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
       : findPosition(storedPos, '22');
     const priceUnit = pos?.preis ?? 0;
-    const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
+    // Gleiche Regel wie bei der Zuzahlungsrechnung: `zuzahlung: null` im Katalog
+    // heisst zuzahlungsfrei, nicht "dann eben 10 %".
+    const { zuzahlungUnit: coPayUnit, positionFrei } = resolvePositionZuzahlung(pos, priceUnit);
+    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
     const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
 
     const praxisData = {
@@ -1165,20 +1173,20 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     } else if (type === 'rzg_quittung') {
       const calcSessions = doneSessions.map(s => ({
         preis_eur: priceUnit,
-        zuzahlung_eur_position: rx.zuzahlung_befreit ? 0 : coPayUnit,
-        position_frei: rx.zuzahlung_befreit
+        zuzahlung_eur_position: zuzahlungsfrei ? 0 : coPayUnit,
+        position_frei: zuzahlungsfrei
       }));
       const totals = calcAbrechnungsfallZuzahlung({
         sessions: calcSessions,
         patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
         behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
-        verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
+        verordnung_zuzahlungsfrei: zuzahlungsfrei
       });
       const printSessions = doneSessions.map(s => ({
         datum: s.done_at,
         position: storedPos,
         bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
-        zuzahlung: rx.zuzahlung_befreit ? 0 : coPayUnit
+        zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
       }));
       html = renderRzgQuittung({
         praxis: praxisData,
