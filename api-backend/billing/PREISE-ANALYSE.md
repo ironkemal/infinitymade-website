@@ -119,6 +119,25 @@ und sollte nicht nebenbei fallen.
 
 ---
 
+## Offene Fachfrage für `gkv-302`
+
+**Löst eine Verordnung, die ausschließlich aus zuzahlungsfreien Positionen besteht, die
+10-€-Verordnungspauschale aus?**
+
+Stand 10.08.2026 lautet die Antwort im Code **ja** — sowohl auf der Rechnung als auch im
+§302-Weg (`dta/builder.js` berechnet sie, sobald das Zuzahlungskennzeichen `0` ist).
+Beide Wege sind sich also einig, was wichtiger ist als die Frage selbst: weichen sie
+voneinander ab, zieht die Kasse einen anderen Betrag ab als auf der Patientenrechnung steht.
+
+Der häufigste Fall in der Praxis ist ohnehin abgedeckt: bei **KG-ZNS Kinder** ist der Patient
+unter 18, und `calcAbrechnungsfallZuzahlung` setzt dann alles auf 0 — Prozente **und**
+Pauschale. Offen bleibt der seltene Fall eines erwachsenen Patienten auf einer rein
+zuzahlungsfreien Position (z. B. Therapiebericht als einzige Position einer Verordnung).
+
+Vor der ersten echten Abrechnung sollte das jemand mit §302-Kenntnis bestätigen.
+
+---
+
 ## Was hier NICHT drinsteht
 
 Ob die aktuell hinterlegten Preise **inhaltlich** korrekt sind. Dafür müssten die

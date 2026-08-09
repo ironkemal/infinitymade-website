@@ -168,17 +168,32 @@ test('Podologie 78010 traegt eine Zuzahlung', () => {
   assert.equal(r.zuzahlungUnit, 3.52);
 });
 
-test('zuzahlungsfreie Position: weder Prozente noch die 10-Euro-Pauschale', () => {
+test('zuzahlungsfreie Position: keine prozentuale Zuzahlung', () => {
+  // Die 10-€-Verordnungspauschale bleibt hier bewusst bestehen — sie haengt an
+  // der Verordnung, nicht an der Position, und der §302-Weg berechnet sie
+  // ebenfalls. Beide Wege muessen dasselbe sagen.
   const pos = findPosition('X1906', '22');
   const { zuzahlungUnit, positionFrei } = resolvePositionZuzahlung(pos, pos.preis);
   const totals = calcAbrechnungsfallZuzahlung({
     sessions: [{ preis_eur: pos.preis, zuzahlung_eur_position: positionFrei ? 0 : zuzahlungUnit, position_frei: positionFrei }],
     patient: { geburtsdatum: '1980-01-01', befreit_im_jahr: false },
     behandlungsende: '2026-06-01',
-    verordnung_zuzahlungsfrei: positionFrei,
+    verordnung_zuzahlungsfrei: false,
   });
   assert.equal(totals.prozZuzahlung, 0, 'keine prozentuale Zuzahlung');
-  assert.equal(totals.pauschZuzahlung, 0, 'keine Verordnungspauschale');
+});
+
+test('Kind unter 18 auf zuzahlungsfreier Position: gar nichts, auch keine Pauschale', () => {
+  // Der haeufigste Fall in der Praxis (KG-ZNS Kinder) — hier greift die
+  // Altersregel des Calculators und setzt alles auf 0.
+  const pos = findPosition('X0708', '22');
+  const { zuzahlungUnit, positionFrei } = resolvePositionZuzahlung(pos, pos.preis);
+  const totals = calcAbrechnungsfallZuzahlung({
+    sessions: [{ preis_eur: pos.preis, zuzahlung_eur_position: positionFrei ? 0 : zuzahlungUnit, position_frei: positionFrei }],
+    patient: { geburtsdatum: '2015-03-01', befreit_im_jahr: false },
+    behandlungsende: '2026-06-01',
+    verordnung_zuzahlungsfrei: false,
+  });
   assert.equal(totals.gesZuzahlung, 0);
   assert.equal(totals.netto, totals.brutto);
 });

@@ -153,7 +153,12 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
         ? findPodologiePosition(stored, dateStr)
         : findPosition(stored, abrechnungscode);
       einzelbetrag = staticPos?.preis ?? 0;
-      zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+      // Gleiche Regel wie im Tarif-Zweig darueber: dort leitet seed_tarifs.js
+      // `zuzahlung_pflicht` aus `pos.zuzahlung !== null` ab, eine zuzahlungsfreie
+      // Position ergibt also 0. Der Rueckfall hier machte daraus 10 % — dadurch
+      // wurde der Kasse eine Zuzahlung gemeldet, die es nicht gibt, und die
+      // Praxis bekam entsprechend weniger ausgezahlt.
+      ({ zuzahlungUnit: zuzahlungProPos } = resolvePositionZuzahlung(staticPos, einzelbetrag));
     }
 
     return {
@@ -184,7 +189,12 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
         ? findPodologiePosition(stored, dateStr)
         : findPosition(stored, abrechnungscode);
       einzelbetrag = staticPos?.preis ?? 0;
-      zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+      // Gleiche Regel wie im Tarif-Zweig darueber: dort leitet seed_tarifs.js
+      // `zuzahlung_pflicht` aus `pos.zuzahlung !== null` ab, eine zuzahlungsfreie
+      // Position ergibt also 0. Der Rueckfall hier machte daraus 10 % — dadurch
+      // wurde der Kasse eine Zuzahlung gemeldet, die es nicht gibt, und die
+      // Praxis bekam entsprechend weniger ausgezahlt.
+      ({ zuzahlungUnit: zuzahlungProPos } = resolvePositionZuzahlung(staticPos, einzelbetrag));
     }
 
     sessions.push({
@@ -1001,9 +1011,16 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       sessions: calcSessions,
       patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
       behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
-      // Auch die Verordnungspauschale von 10 € entfällt bei einer
-      // zuzahlungsfreien Position, nicht nur die prozentuale Zuzahlung.
-      verordnung_zuzahlungsfrei: zuzahlungsfrei
+      // Bewusst rx.zuzahlung_befreit, NICHT `zuzahlungsfrei`: die 10-€-
+      // Verordnungspauschale haengt an der Verordnung, nicht an der einzelnen
+      // Position. Der §302-Weg (dta/builder.js) berechnet sie ebenfalls immer,
+      // solange das Zuzahlungskennzeichen '0' ist — beide Wege muessen sich hier
+      // einig sein, sonst weicht die Rechnung von dem ab, was die Kasse abzieht.
+      // Der haeufigste Fall (KG-ZNS Kinder) ist ohnehin abgedeckt: der
+      // Calculator setzt fuer Patienten unter 18 alles auf 0.
+      // ⚠️ Ob eine ausschliesslich zuzahlungsfreie Verordnung die Pauschale
+      // ausloest, gehoert von gkv-302 geprueft — siehe PREISE-ANALYSE.md.
+      verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
     });
 
     const printSessions = doneSessions.map(s => ({
@@ -1180,7 +1197,8 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         sessions: calcSessions,
         patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
         behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
-        verordnung_zuzahlungsfrei: zuzahlungsfrei
+        // wie oben: die Pauschale haengt an der Verordnung, nicht an der Position
+        verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
       });
       const printSessions = doneSessions.map(s => ({
         datum: s.done_at,
@@ -1671,8 +1689,10 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
     const datum = beh.behandlungsdatum || new Date().toISOString().slice(0, 10);
     for (const hpnr of (beh.hpnr_codes || [])) {
       const pos = findPodologiePosition(hpnr, datum);
-      const einzelbetrag   = pos?.preis     ?? 0;
-      const zuzahlungRaw   = pos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+      const einzelbetrag   = pos?.preis ?? 0;
+      // `zuzahlung: null` heisst zuzahlungsfrei (Podologie 78220, 78530), nicht
+      // "dann eben 10 %". Gleiche Regel wie im Physio-Pfad und auf der Rechnung.
+      const { zuzahlungUnit: zuzahlungRaw } = resolvePositionZuzahlung(pos, einzelbetrag);
       sessions.push({
         positionsnummer:  `${abrechnungscode}${hpnr}`.slice(0, 9),
         datumLeistung:    datum,
