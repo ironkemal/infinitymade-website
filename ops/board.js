@@ -1,8 +1,8 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809e';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809e';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809f';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809f';
 
 let todos = [];
 let showArchived = false;
@@ -168,13 +168,24 @@ async function load(retry = true) {
 
 /** Kategorie-Filterleiste — mit offener Aufgabenzahl (Unteraufgaben mitgezählt). */
 function renderCatBar() {
-  // Tema kartları sayılmaz — yoksa 108 görev "124" gibi görünür.
-  const open = todos.filter(t => !t.done && !isTheme(t));
-  const cats = [...new Set(open.map(t => t.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
-  const count = (c) => open.filter(t => c === null || t.category === c).length;
+  // Liste HER açık karttan toplanır — tema kartları dahil. Aksi hâlde bir temaya
+  // verilen yeni kategori çubukta hiç görünmüyordu (sadece o kartta kalıyordu).
+  const openAll  = todos.filter(t => !t.done);
+  // Sayarken tema kartı bir iş sayılmaz, yoksa 108 görev "124" görünür.
+  const openWork = openAll.filter(t => !isTheme(t));
+
+  const cats = [...new Set(openAll.map(t => t.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'de'));
+
+  // Kategori yalnızca bir temada duruyorsa (altındaki işlerde yoksa) sayı 0 çıkar;
+  // o durumda temaların kendisini sayıyoruz ki rozet "0" diye yanıltmasın.
+  const count = (c) => c === null
+    ? openWork.length
+    : (openWork.filter(t => t.category === c).length
+       || openAll.filter(t => t.category === c).length);
 
   // Meeting-Chip zuerst: er beantwortet die Frage "was muss diese Woche fertig sein".
-  const weekCount = open.filter(isWeek).length;
+  const weekCount = openWork.filter(isWeek).length;
   const weekChip = currentMeeting
     ? `<button class="tag tag-week ${weekOnly ? 'is-on' : ''}" data-week="1">
          ◆ Diese Woche · Meeting ${esc(fmtDate(currentMeeting))} ${weekCount}</button>`
