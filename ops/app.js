@@ -2,7 +2,7 @@
 // Sürüm sabitlenmiş: "@2" yazmak, CDN'in bir gün yeni bir küçük sürümü sessizce
 // göndermesi ve oturum davranışının bizden habersiz değişmesi demekti.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.112.2';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260809b';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260809c';
 
 const AUTH_STORAGE_KEY = 'praxura-ops-auth';
 
@@ -263,26 +263,34 @@ function showLogin(msg) {
 }
 
 async function showApp() {
+  // Görünümler yüklenmeden kabuğu AÇMA. Aksi hâlde import takılırsa kullanıcı
+  // üst çubuğu görür, panoyu göremez ve sekmeler ölü olur — teşhis edilemeyen
+  // bir "boş uygulama" hâli. Önce yükle, sonra göster.
+  const modules = [
+    ['todo',      './board.js?v=20260809c',     'mountTodo'],
+    ['wissen',    './wissen.js?v=20260809c',    'mountWissen'],
+    ['decisions', './decisions.js?v=20260809c', 'mountDecisions'],
+    ['meetings',  './meetings.js?v=20260809c',  'mountMeetings'],
+    ['files',     './files.js?v=20260809c',     'mountFiles']
+  ];
+
+  // Her görünüm tek tek ve süreli yüklenir: biri patlar ya da asılırsa
+  // diğerleri çalışmaya devam etsin, uygulama sessizce ölmesin.
+  const broken = [];
+  await Promise.all(modules.map(async ([name, path, fn]) => {
+    const mod = await withTimeout(import(path).catch(e => ({ __err: e })), 15000);
+    if (mod === TIMEOUT || mod?.__err) {
+      broken.push(name);
+      console.error('[ops:view ' + name + ']', mod === TIMEOUT ? 'Zeitüberschreitung' : mod.__err);
+      return;
+    }
+    registerView(name, mod[fn]);
+  }));
+
   $('#boot').hidden = true;
   $('#login').hidden = true;
   $('#app').hidden = false;
   $('#who').textContent = state.me.display_name;
-
-  // Her görünüm tek tek yüklenir: biri patlarsa diğerleri çalışmaya devam etsin.
-  // Eskiden tek bir başarısız import bütün uygulamayı içeriksiz bırakıyordu.
-  const modules = [
-    ['todo',      './board.js?v=20260809b',     'mountTodo'],
-    ['wissen',    './wissen.js?v=20260809b',    'mountWissen'],
-    ['decisions', './decisions.js?v=20260809b', 'mountDecisions'],
-    ['meetings',  './meetings.js?v=20260809b',  'mountMeetings'],
-    ['files',     './files.js?v=20260809b',     'mountFiles']
-  ];
-
-  const broken = [];
-  await Promise.all(modules.map(async ([name, path, fn]) => {
-    try { registerView(name, (await import(path))[fn]); }
-    catch (e) { broken.push(name); console.error('[ops:view ' + name + ']', e); }
-  }));
 
   if (broken.length) toast('Ansicht nicht geladen: ' + broken.join(', '), true);
 
@@ -372,10 +380,26 @@ const TIMEOUT = Symbol('timeout');
 const withTimeout = (p, ms) =>
   Promise.race([p, new Promise(r => setTimeout(() => r(TIMEOUT), ms))]);
 
-try {
-  if (SUPABASE_URL.includes('PROJE_REF')) {
-    showLogin('config.js noch nicht ausgefüllt — Supabase-URL und Anon-Key eintragen (siehe SETUP.md).');
-  } else {
+/** ⚠️ BU FONKSİYON MODÜL GÖVDESİNDE `await` EDİLMEZ — sebebi hayati:
+ *
+ *  showApp() görünümleri `import('./board.js')` ile yüklüyor. board.js de bu
+ *  dosyayı (`app.js`) import ediyor. Eğer start() en tepede await edilirse,
+ *  app.js "hâlâ çalışıyor" durumunda kalır; board.js app.js'in bitmesini bekler,
+ *  app.js de board.js'in gelmesini → KARŞILIKLI KİLİT. Hata yok, konsol boş,
+ *  sonsuza kadar bekler.
+ *
+ *  Belirtisi tam olarak şuydu: sayfa yenilenince üst çubuk geliyor ama pano boş
+ *  kalıyor ve hiçbir sekme açılmıyordu; çıkış+giriş düzeltiyordu, çünkü orada
+ *  showApp() bir tıklama olayından çağrılıyor ve app.js çoktan bitmiş oluyor.
+ *
+ *  Await etmeden çağırınca modül değerlendirmesi hemen biter, dinamik import
+ *  çözülür, döngü kurulmaz. */
+async function start() {
+  try {
+    if (SUPABASE_URL.includes('PROJE_REF')) {
+      showLogin('config.js noch nicht ausgefüllt — Supabase-URL und Anon-Key eintragen (siehe SETUP.md).');
+      return;
+    }
     // 12 sn: yavaş bağlantıya yeter, sonsuz beklemeye izin vermez.
     const me = await withTimeout(loadMe(), 12000);
     if (me === TIMEOUT) {
@@ -387,13 +411,14 @@ try {
     } else {
       showLogin();
     }
+  } catch (e) {
+    // Ağ/CDN/beklenmedik hata: oturumu SİLMEDEN giriş ekranını göster.
+    console.error('[ops:start]', e);
+    showLogin('Start fehlgeschlagen: ' + (e?.message || e) + ' — bitte neu laden.');
+  } finally {
+    clearTimeout(slow);
+    boot.hidden = true;
   }
-} catch (e) {
-  // Ağ/CDN/beklenmedik hata: oturumu SİLMEDEN giriş ekranını göster.
-  // Sebep konsolda; kullanıcı en azından bir ekran görür ve giriş yapabilir.
-  console.error('[ops:start]', e);
-  showLogin('Start fehlgeschlagen: ' + (e?.message || e) + ' — bitte neu laden.');
-} finally {
-  clearTimeout(slow);
-  boot.hidden = true;
 }
+
+start();   // ← await YOK. Yukarıdaki açıklamayı okumadan await ekleme.

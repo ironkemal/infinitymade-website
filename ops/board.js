@@ -1,8 +1,8 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809b';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809b';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809c';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809c';
 
 let todos = [];
 let showArchived = false;
