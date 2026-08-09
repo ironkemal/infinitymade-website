@@ -63,6 +63,13 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Zuerst: 8
       Code: `api-backend/billing/pdf/mahnung.template.js` + `api-backend/billing/api/mahnwesen.routes.js`
       (existiert schon — prüfen ob Ausfallrechnung dort mit abgedeckt ist).
+      📋 Beim Lesen für Aufgabe 1 mit aufgefallen, damit es später nicht neu gesucht wird:
+      Ausfallrechnungen sind dort **nicht** abgedeckt und können es ohne Schemaänderung auch
+      nicht sein — `mahnungen.prescription_id` ist `NOT NULL` (`database_v28_mahnwesen.sql:10`),
+      eine Ausfallrechnung hat aber kein Rezept. Auch die Vorlage ist auf Zuzahlung
+      festgeschrieben ("Offene Zuzahlung", "Ausstehender Betrag (Zuzahlung)").
+      Mahnstufen gibt es drei (14/10/7 Tage), die Stufe wird aber vom Aufrufer bestimmt und
+      nicht gegen die Historie geprüft — Stufe 3 lässt sich als erste Mahnung verschicken.
 
 - [x] 10. Bei Namenskorrektur automatisch aktuellen Namen auf neuer Rechnung anzeigen — kein Freitext auf der Rechnung erlaubt
       Geändert: `dashboard.js` (Rechnungsansicht nutzt nur noch die Patientenakte) ·
