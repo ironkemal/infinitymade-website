@@ -2,7 +2,7 @@
 // Sürüm sabitlenmiş: "@2" yazmak, CDN'in bir gün yeni bir küçük sürümü sessizce
 // göndermesi ve oturum davranışının bizden habersiz değişmesi demekti.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.112.2';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260809a';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260809b';
 
 const AUTH_STORAGE_KEY = 'praxura-ops-auth';
 
@@ -271,11 +271,11 @@ async function showApp() {
   // Her görünüm tek tek yüklenir: biri patlarsa diğerleri çalışmaya devam etsin.
   // Eskiden tek bir başarısız import bütün uygulamayı içeriksiz bırakıyordu.
   const modules = [
-    ['todo',      './board.js?v=20260809a',     'mountTodo'],
-    ['wissen',    './wissen.js?v=20260809a',    'mountWissen'],
-    ['decisions', './decisions.js?v=20260809a', 'mountDecisions'],
-    ['meetings',  './meetings.js?v=20260809a',  'mountMeetings'],
-    ['files',     './files.js?v=20260809a',     'mountFiles']
+    ['todo',      './board.js?v=20260809b',     'mountTodo'],
+    ['wissen',    './wissen.js?v=20260809b',    'mountWissen'],
+    ['decisions', './decisions.js?v=20260809b', 'mountDecisions'],
+    ['meetings',  './meetings.js?v=20260809b',  'mountMeetings'],
+    ['files',     './files.js?v=20260809b',     'mountFiles']
   ];
 
   const broken = [];

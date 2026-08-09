@@ -1,8 +1,8 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809a';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809a';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809b';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809b';
 
 let todos = [];
 let showArchived = false;
@@ -77,17 +77,81 @@ function catMatch(t) {
 
 // ── Laden ──────────────────────────────────────────────────────────────
 
-async function load() {
+// Belirti: refresh sonrası kabuk geliyor ama görevler hiç gelmiyordu — hata da
+// yoktu. Sebebi ne olursa olsun (asılı sorgu, ölü belirteç, RLS) pano SESSİZ
+// KALMAMALI: ya veri gösterir ya da sebebini ekrana yazar ve yeniden denetir.
+const QUERY_TIMEOUT = 10000;
+const TIMEOUT = Symbol('timeout');
+const withTimeout = (p, ms) =>
+  Promise.race([p, new Promise(r => setTimeout(() => r(TIMEOUT), ms))]);
+
+/** Kalıcı durum paneli — toast gibi kaybolmaz, çünkü teşhis edilecek şey budur. */
+function boardNotice(title, detail, actions = true) {
+  $('#board').style.gridTemplateColumns = '1fr';
+  $('#board').innerHTML = `
+    <div class="col">
+      <p class="empty" style="margin:0 0 10px"><strong>${esc(title)}</strong></p>
+      <p class="empty" style="margin:0 0 12px">${esc(detail)}</p>
+      ${actions ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="boardRetry">Erneut versuchen</button>
+        <button class="btn btn-ghost" id="boardRelogin">Neu anmelden</button>
+      </div>` : ''}`;
+  if (!actions) return;
+  $('#boardRetry').onclick = () => load();
+  $('#boardRelogin').onclick = async () => { await sb.auth.signOut().catch(() => {}); location.reload(); };
+}
+
+async function load(retry = true) {
   if (loading) return;
   loading = true;
   try {
-    const { data, error } = await sb.from('ops_todos').select('*')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true });
-    if (error) return fail('Aufgaben laden', error);
-    todos = data || [];
+    if (!todos.length) boardNotice('Laden …', 'Aufgaben werden geholt.', false);
+
+    const res = await withTimeout(
+      sb.from('ops_todos').select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true }),
+      QUERY_TIMEOUT);
+
+    if (res === TIMEOUT || res.error) {
+      const why = res === TIMEOUT ? 'Zeitüberschreitung (Anfrage kam nicht zurück)' : res.error.message;
+      window.__opsLastError = why;
+      console.error('[ops:board]', why, res === TIMEOUT ? '' : res.error);
+
+      // Kendi kendine onarma: büyük ihtimalle belirteç ölü. Bir kez tazeleyip
+      // yeniden dene — kullanıcının çıkış yapıp girmesi gerekmesin.
+      if (retry) {
+        loading = false;
+        const { error: rErr } = await sb.auth.refreshSession().catch(e => ({ error: e }));
+        if (!rErr) return load(false);
+        console.error('[ops:board] refreshSession', rErr);
+      }
+      return boardNotice('Aufgaben konnten nicht geladen werden', why);
+    }
+
+    todos = res.data || [];
     if (todos.length) hasGroupCols = 'parent_id' in todos[0] && 'blocked_by' in todos[0];
-    render();
+
+    // Çizim patlarsa da boş ekran bırakma — sebebi yaz.
+    try { render(); }
+    catch (e) {
+      window.__opsLastError = String(e?.message || e);
+      console.error('[ops:render]', e);
+      return boardNotice('Anzeige-Fehler', String(e?.message || e));
+    }
+
+    if (!todos.length) {
+      // 0 satır iki farklı şey olabilir: gerçekten boş pano, ya da sorgunun
+      // kullanıcı belirteci olmadan gitmesi (o zaman RLS her şeyi süzer, HTTP 200
+      // döner ve hata görünmez). Hangisi olduğunu burada açıkça yazıyoruz.
+      let who = 'unbekannt';
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        who = session?.user?.id ? `angemeldet (${session.user.id.slice(0, 8)}…)` : 'KEIN Token — anonyme Anfrage';
+      } catch { /* teşhis için, kritik değil */ }
+      boardNotice('Keine Aufgaben sichtbar',
+        `0 Zeilen zurückgekommen · Sitzung: ${who} · Mitglied: ${state.me ? state.me.display_name : 'nein'}`);
+    }
   } finally {
     loading = false;
   }
