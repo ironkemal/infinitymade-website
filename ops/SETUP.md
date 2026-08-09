@@ -93,6 +93,49 @@ node ops/tools/ingest.mjs --meeting 2026-08-08 --file "Praxura weekly meeting/08
 Script aynı başlıkta açık bir görev varsa atlar — aynı toplantıyı iki kez işlersen
 kopya oluşmaz. Yazılan görevler panoda **Claude** rozetiyle ve meeting tarihiyle görünür.
 
+## Themen ve Unteraufgaben
+
+Pano iki seviyeli: **Thema** (Oberaufgabe) → altında açılıp kapanan **Unteraufgaben**.
+
+- Bir tema kendi checkbox'ını taşımaz; `4/12` rozetiyle ilerlemesini gösterir ve son
+  alt görev işaretlenince kendiliğinden "erledigt" olur.
+- Bir kart **başka bir kartı bekleyebilir**: kartta `Zuerst: …` yazar. Bunu kart
+  düzenleme kutusundaki *"Erst nach …"* alanından ayarlarsın.
+- Kartı bir temanın altına sürükle-bırakla ya da **⋮ → ↳ Thema** ile taşırsın;
+  kolonun boşluğuna bırakmak kartı tekrar en üst seviyeye çıkarır.
+- İki seviye sabittir (DB trigger'ı üçüncüyü reddeder) — daha derini pano okunmaz yapar.
+
+Sıralama elle: temalar yukarıdan aşağıya **yapılma sırasına** göre dizilidir
+(önce hukuki zemin ve erişim güvenliği, en sonda launch smoke testi).
+
+Mevcut panoyu yeniden gruplamak için (kart silmez, sadece bağlar ve sıralar):
+
+```bash
+node ops/tools/regroup.mjs --dry     # ne olacağını gösterir
+node ops/tools/regroup.mjs
+```
+
+Gruplama tanımı `ops/tools/groups.mjs` dosyasında — tema başlıkları, sıra ve
+"önce şu bitsin" bağları orada duruyor.
+
+## Haftalık toplantı odağı — mavi kartlar
+
+Toplantıdan çıkan görevler `meeting_date` taşır (bkz. `ingest.mjs`). Pano bunu
+renk olarak kullanıyor:
+
+- **Mavi kart = en son toplantıdan gelen, hâlâ açık istek.** Yani müşteri/kullanıcı
+  isteği. Bir tema, altında o haftadan açık madde varsa mavi olur ve
+  `◆ Diese Woche 6` rozetiyle kaç tane olduğunu yazar.
+- Daha eski toplantılardan gelen kartlar soluk mavi `Meeting 08.08.` rozetiyle işaretli —
+  kaynağı belli ama odakta değil.
+- Filtre çubuğundaki **◆ Diese Woche** düğmesi panoyu sadece o haftaya indirger:
+  temalar kendiliğinden açılır ve içinde yalnız o haftanın maddeleri görünür,
+  rozet `6/13` olur. Tekrar basınca tam pano geri gelir.
+
+"Bu hafta" otomatik ilerler: yeni toplantı notu işlendiğinde en yeni tarih o olur.
+Eski haftanın tüm maddeleri kapandığında da odak kendiliğinden bir önceki açık
+toplantıya döner — elle ayar yok.
+
 ## Sınırlar — bilinçli
 
 - **TODO.md burada değil.** `TODO.md` ürün/teknik listesi olarak kalır (§302, launch, kod).

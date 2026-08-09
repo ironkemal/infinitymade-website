@@ -54,7 +54,15 @@ create table if not exists ops_todos (
   updated_at   timestamptz not null default now()
 );
 
+-- Gruppierung + Abhängigkeiten. Bei bestehenden Projekten liefert
+-- schema-groups.sql dieselben Spalten nach (create table if not exists greift dort nicht).
+alter table ops_todos
+  add column if not exists parent_id uuid references ops_todos(id) on delete set null;
+alter table ops_todos
+  add column if not exists blocked_by uuid[] not null default '{}';
+
 create index if not exists ops_todos_board_idx on ops_todos (done, assignee, sort_order);
+create index if not exists ops_todos_parent_idx on ops_todos (parent_id) where not done;
 create index if not exists ops_todos_cat_idx on ops_todos (category) where not done;
 create index if not exists ops_todos_done_at_idx on ops_todos (done_at desc) where done;
 

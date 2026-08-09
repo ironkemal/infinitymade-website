@@ -406,4 +406,59 @@ a { color: var(--blue); }
 .more { cursor: pointer; background: var(--bg-2); font: inherit; font-size: 11px;
         min-height: 26px; margin-top: 8px; color: var(--text-mute); }
 .more:hover { color: var(--gold); border-color: var(--gold); }
+
+/* ── Themen (Oberaufgaben) und Unteraufgaben ────────────────────────── */
+
+/* Ein Thema hat keine eigene Checkbox — es ist fertig, wenn seine Punkte fertig sind.
+   An der Stelle der Checkbox steht deshalb der Fortschritt. */
+.t-progress {
+  min-width: 34px; height: 20px; margin-top: 1px; flex: none;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 20px;
+  font-size: 11px; color: var(--text-mute); background: var(--bg-2);
+}
+.t-progress.is-full { border-color: var(--green); color: var(--green); }
+.card-t.is-group > .t-body > .t-title { font-weight: 600; }
+.pill-subs { cursor: pointer; border-color: rgba(201,162,39,.35); color: var(--gold); }
+
+.subs {
+  grid-column: 1 / -1;
+  display: grid; gap: 6px;
+  margin-top: 10px; padding-top: 10px; padding-left: 10px;
+  border-top: 1px solid var(--line);
+  border-left: 2px solid var(--line);
+  min-height: 24px;
+}
+.subs.is-over { border-left-color: var(--gold); }
+.subs > .card-t { background: var(--bg-2); }
+.subs > .card-t:hover { background: var(--card); }
+
+/* ── Meeting-Fokus: was diese Woche vom Kunden kam ──────────────────── */
+/* Blau = aus dem jüngsten wöchentlichen Gespräch. Der Prioritätsrand links
+   bleibt sichtbar (rot = hoch), das Blau kommt als Fläche und Rand rechts
+   dazu — sonst müsste eine der beiden Informationen weichen. */
+
+.card-t.is-week {
+  background: linear-gradient(90deg, rgba(79,142,247,.10), rgba(79,142,247,.03) 60%, transparent);
+  box-shadow: inset -3px 0 0 var(--blue);
+}
+.card-t.is-week:hover { background: linear-gradient(90deg, rgba(79,142,247,.16), rgba(79,142,247,.05) 60%, transparent); }
+.subs > .card-t.is-week { background: linear-gradient(90deg, rgba(79,142,247,.13), rgba(79,142,247,.04) 60%, transparent); }
+
+.pill-week {
+  border-color: rgba(79,142,247,.55); color: var(--blue);
+  background: rgba(79,142,247,.10);
+}
+.pill-meeting { border-color: rgba(79,142,247,.28); color: #7ea9f0; }
+
+.tag-week { border-color: rgba(79,142,247,.45); color: var(--blue); }
+.tag-week.is-on { border-color: var(--blue); background: rgba(79,142,247,.14); color: var(--blue); }
+
+/* Wartet auf eine andere Aufgabe: sichtbar zurückgenommen, damit man nicht
+   aus Versehen daran anfängt. */
+.card-t.is-blocked { opacity: .72; }
+.t-block {
+  margin-top: 5px; font-size: 11px; color: var(--gold);
+  word-break: break-word;
+}
 .t-more { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }

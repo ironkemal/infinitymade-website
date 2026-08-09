@@ -1,9 +1,38 @@
 // Praxura Ops-Dashboard — Shell: Auth, Router, gemeinsame Helfer
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260808g';
+// Sürüm sabitlenmiş: "@2" yazmak, CDN'in bir gün yeni bir küçük sürümü sessizce
+// göndermesi ve oturum davranışının bizden habersiz değişmesi demekti.
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.112.2';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260809a';
+
+const AUTH_STORAGE_KEY = 'praxura-ops-auth';
+
+/** Web Locks: supabase oturum yenilemeyi sekmeler arasında kilitle sıraya sokar.
+ *  Kilidi tutan sekme onu bırakmazsa (asılı bir istek, uyuyan sekme, çöken kod),
+ *  diğer sekme AÇILIŞTA sonsuza kadar bekler — ekran bomboş kalır ve ancak
+ *  çıkış+giriş sonrası düzelir. Bu yüzden kilidi süreli alıyoruz: alınamazsa iş
+ *  kilitsiz yürür. En kötü ihtimalle iki sekme aynı anda belirteç yeniler —
+ *  sonsuza kadar beklemekten iyidir. */
+async function boundedLock(name, acquireTimeout, fn) {
+  if (!globalThis.navigator?.locks || !globalThis.AbortSignal?.timeout) return fn();
+  try {
+    return await navigator.locks.request(
+      name, { signal: AbortSignal.timeout(acquireTimeout > 0 ? acquireTimeout : 5000) }, fn);
+  } catch (e) {
+    if (e?.name === 'AbortError' || e?.name === 'TimeoutError') {
+      console.warn('[ops:auth] Sperre nicht erhalten, laufe ohne:', name);
+      return fn();
+    }
+    throw e;
+  }
+}
 
 export const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'praxura-ops-auth' }
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: AUTH_STORAGE_KEY,
+    lock: boundedLock
+  }
 });
 
 // ── Zustand ────────────────────────────────────────────────────────────
@@ -160,6 +189,7 @@ export function showView(name) {
   if (location.hash.replace('#', '') !== name) location.hash = name;
 
   const v = views[name];
+  if (!v) return;                 // görünüm yüklenememiş — çökme yerine boş sekme
   if (v.mounted) return;
   // mounted'ı ancak başarıdan SONRA işaretle: mount patlarsa sekme kalıcı olarak
   // ölü kalmasın, bir sonraki tıklamada yeniden denensin.
@@ -175,13 +205,37 @@ export function remountCurrent() {
 
 // ── Auth ───────────────────────────────────────────────────────────────
 
+/** Gerçekten "bu oturum geçersiz" mi, yoksa sadece ağ mı takıldı?
+ *  Ağ hatasında oturumu SİLMEK, geçici bir aksaklığı zorunlu yeniden girişe
+ *  çeviriyordu — sadece sunucu açıkça reddettiğinde çıkış yapıyoruz. */
+const isAuthRejection = (err) =>
+  err?.status === 401 || err?.status === 403 ||
+  /invalid|expired|not_?found|jwt|token/i.test(err?.code || err?.name || '');
+
+/** "Hiç oturum yok" — bir arıza değil, sadece giriş yapılmamış demek.
+ *  supabase bunu duruma göre bazen döndürür bazen fırlatır; ikisini de aynı sayıyoruz. */
+const isSessionMissing = (err) =>
+  err?.name === 'AuthSessionMissingError' || /session missing/i.test(err?.message || '');
+
 async function loadMe() {
   // getSession() yalnızca yereldeki kaydı okur — süresi dolmuş bir belirteci de
   // "geçerli" diye döndürür. getUser() sunucuya sorar; böylece ölü oturumu burada
   // yakalarız, sorgular 401 döndürüp uygulama sessizce boş kalmaz.
-  const { data: { user }, error: authErr } = await sb.auth.getUser();
+  let user = null, authErr = null;
+  try {
+    ({ data: { user } = {}, error: authErr } = await sb.auth.getUser());
+  } catch (e) {
+    // ⚠️ Oturum yokken getUser() hata DÖNDÜRMEZ, hata FIRLATIR (AuthSessionMissingError).
+    // Bu, en tepedeki await'i düşürüyordu: ne showApp ne showLogin çalışıyor, sayfa
+    // bomboş kalıyordu — ve yalnızca Abmelden+yeniden giriş kurtarıyordu, çünkü
+    // signOut() olayı showLogin'i tetikliyordu. Burada sessizce "giriş yapılmamış"a çeviriyoruz.
+    if (isSessionMissing(e)) return null;
+    throw e;
+  }
   if (authErr || !user) {
-    if (authErr) await sb.auth.signOut().catch(() => {});
+    if (isSessionMissing(authErr)) return null;               // sadece giriş yapılmamış
+    if (authErr && isAuthRejection(authErr)) await sb.auth.signOut().catch(() => {});
+    else if (authErr) throw authErr;          // ağ sorunu → başlangıç bunu ayrı ele alır
     return null;
   }
 
@@ -201,6 +255,7 @@ async function loadMe() {
 }
 
 function showLogin(msg) {
+  $('#boot').hidden = true;
   $('#app').hidden = true;
   $('#login').hidden = false;
   const err = $('#loginErr');
@@ -208,22 +263,28 @@ function showLogin(msg) {
 }
 
 async function showApp() {
+  $('#boot').hidden = true;
   $('#login').hidden = true;
   $('#app').hidden = false;
   $('#who').textContent = state.me.display_name;
 
-  // Görünümler yüklendikten sonra route
-  const { mountTodo }      = await import('./board.js?v=20260808g');
-  const { mountWissen }    = await import('./wissen.js?v=20260808g');
-  const { mountDecisions } = await import('./decisions.js?v=20260808g');
-  const { mountMeetings }  = await import('./meetings.js?v=20260808g');
-  const { mountFiles }     = await import('./files.js?v=20260808g');
+  // Her görünüm tek tek yüklenir: biri patlarsa diğerleri çalışmaya devam etsin.
+  // Eskiden tek bir başarısız import bütün uygulamayı içeriksiz bırakıyordu.
+  const modules = [
+    ['todo',      './board.js?v=20260809a',     'mountTodo'],
+    ['wissen',    './wissen.js?v=20260809a',    'mountWissen'],
+    ['decisions', './decisions.js?v=20260809a', 'mountDecisions'],
+    ['meetings',  './meetings.js?v=20260809a',  'mountMeetings'],
+    ['files',     './files.js?v=20260809a',     'mountFiles']
+  ];
 
-  registerView('todo', mountTodo);
-  registerView('wissen', mountWissen);
-  registerView('decisions', mountDecisions);
-  registerView('meetings', mountMeetings);
-  registerView('files', mountFiles);
+  const broken = [];
+  await Promise.all(modules.map(async ([name, path, fn]) => {
+    try { registerView(name, (await import(path))[fn]); }
+    catch (e) { broken.push(name); console.error('[ops:view ' + name + ']', e); }
+  }));
+
+  if (broken.length) toast('Ansicht nicht geladen: ' + broken.join(', '), true);
 
   showView(location.hash.replace('#', '') || 'todo');
 }
@@ -240,7 +301,8 @@ $('#loginForm').addEventListener('submit', async (e) => {
   });
   btn.disabled = false; btn.textContent = 'Anmelden';
   if (error) { showLogin('Anmeldung fehlgeschlagen: ' + error.message); return; }
-  if (await loadMe()) showApp();
+  try { if (await loadMe()) await showApp(); }
+  catch (e) { console.error('[ops:login]', e); showLogin('Laden fehlgeschlagen: ' + (e?.message || e)); }
 });
 
 $('#logoutBtn').addEventListener('click', async () => {
@@ -274,8 +336,11 @@ sb.auth.onAuthStateChange((event) => {
 // Sekmeye geri dönüldüğünde oturumu doğrula ve veriyi tazele.
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState !== 'visible' || !state.me) return;
-  const { data: { user }, error } = await sb.auth.getUser();
+  let user = null, error = null;
+  try { ({ data: { user }, error } = await sb.auth.getUser()); }
+  catch (e) { console.warn('[ops:auth] getUser beim Tabwechsel', e); return; }  // ağ: dokunma
   if (error || !user) {
+    if (error && !isAuthRejection(error)) return;   // ağ sorunu → oturuma dokunma
     const { error: refreshErr } = await sb.auth.refreshSession();
     if (refreshErr) {
       await sb.auth.signOut().catch(() => {});
@@ -286,10 +351,49 @@ document.addEventListener('visibilitychange', async () => {
   remountCurrent();
 });
 
-if (SUPABASE_URL.includes('PROJE_REF')) {
-  showLogin('config.js noch nicht ausgefüllt — Supabase-URL und Anon-Key eintragen (siehe SETUP.md).');
-} else if (await loadMe()) {
-  await showApp();
-} else {
-  showLogin();
+// ── Başlangıç ──────────────────────────────────────────────────────────
+// Kural: bu blok NE OLURSA OLSUN bir şey göstermek zorunda. Eskiden oturum
+// kontrolü takılırsa (kilit, ağ, CDN) ne uygulama ne giriş ekranı açılıyordu;
+// sayfa bomboş kalıyor ve ancak Abmelden + yeniden giriş kurtarıyordu.
+
+const boot = $('#boot'), bootMsg = $('#bootMsg'), bootReload = $('#bootReload');
+bootReload.onclick = () => location.reload();
+const slow = setTimeout(() => {
+  bootMsg.textContent = 'Dauert ungewöhnlich lange …';
+  bootReload.hidden = false;
+}, 5000);
+
+/** Yerelde kayıtlı bir oturum var mı — ağa çıkmadan, asılı kalmadan. */
+function hasStoredSession() {
+  try { return !!localStorage.getItem(AUTH_STORAGE_KEY); } catch { return false; }
+}
+
+const TIMEOUT = Symbol('timeout');
+const withTimeout = (p, ms) =>
+  Promise.race([p, new Promise(r => setTimeout(() => r(TIMEOUT), ms))]);
+
+try {
+  if (SUPABASE_URL.includes('PROJE_REF')) {
+    showLogin('config.js noch nicht ausgefüllt — Supabase-URL und Anon-Key eintragen (siehe SETUP.md).');
+  } else {
+    // 12 sn: yavaş bağlantıya yeter, sonsuz beklemeye izin vermez.
+    const me = await withTimeout(loadMe(), 12000);
+    if (me === TIMEOUT) {
+      showLogin(hasStoredSession()
+        ? 'Sitzung konnte nicht geprüft werden (Verbindung?). Neu laden oder hier neu anmelden.'
+        : 'Keine Verbindung zu Supabase. Bitte neu laden.');
+    } else if (me) {
+      await showApp();
+    } else {
+      showLogin();
+    }
+  }
+} catch (e) {
+  // Ağ/CDN/beklenmedik hata: oturumu SİLMEDEN giriş ekranını göster.
+  // Sebep konsolda; kullanıcı en azından bir ekran görür ve giriş yapabilir.
+  console.error('[ops:start]', e);
+  showLogin('Start fehlgeschlagen: ' + (e?.message || e) + ' — bitte neu laden.');
+} finally {
+  clearTimeout(slow);
+  boot.hidden = true;
 }

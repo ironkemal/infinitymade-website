@@ -6,9 +6,20 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Praxura Ops</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
-<link rel="stylesheet" href="app.css?v=20260808g">
+<link rel="stylesheet" href="app.css?v=20260809a">
 </head>
 <body>
+
+<!-- ── Start ──────────────────────────────────────────────────────────────
+     Sichtbar, bis der Start entschieden ist (App oder Login). Ohne diesen
+     Zwischenschritt wäre die Seite bei jedem hängenden Start einfach leer. -->
+<div id="boot" class="login">
+  <div class="login-card" style="text-align:center">
+    <div class="login-mark">Prax<em>ura</em></div>
+    <p class="login-sub" id="bootMsg">Laden …</p>
+    <button class="btn btn-ghost" id="bootReload" hidden>Neu laden</button>
+  </div>
+</div>
 
 <!-- ── Login ──────────────────────────────────────────────────────────── -->
 <div id="login" class="login" hidden>
@@ -128,6 +139,6 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="app.js?v=20260808g"></script>
+<script type="module" src="app.js?v=20260809a"></script>
 </body>
 </html>

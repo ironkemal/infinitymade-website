@@ -1,17 +1,26 @@
 // Aufgaben-Board — Kemal | Pool | Melih
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260808g';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260808g';
+// Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
+// Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809a';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809a';
 
 let todos = [];
 let showArchived = false;
 let activeCat = null;      // kategori filtresi — 55 madde tek kolonda okunmaz
+let weekOnly = false;      // sadece son toplantıdan gelen istekler
 let openMenu = null;
 const expanded = new Set();   // acik detay panelleri — yeniden cizimde korunur
+const openGroups = new Set(); // aufgeklappte Unteraufgaben-Listen
 
 const POOL = '__pool__';   // assignee === null kolonu için anahtar
 const mq = window.matchMedia('(max-width: 900px)');
 
 let loading = false;       // üst üste binen yüklemeleri engelle
+
+// schema-groups.sql çalıştırılmadıysa parent_id/blocked_by sütunları yoktur.
+// O hâlde pano düz liste olarak çalışır; bu alanları yazmaya kalkarsak PostgREST
+// 400 döner ve kart kaydetmek tamamen bozulur. Bu yüzden veriden okuyup uyum sağlıyoruz.
+let hasGroupCols = true;
 
 /** Kolon düzeni: üyeler alfabetik, havuz tam ortada. */
 function columns() {
@@ -25,11 +34,45 @@ function columns() {
 }
 
 const colKeyOf = (t) => t.assignee || POOL;
+const byId = (id) => todos.find(t => t.id === id);
+
+/** Unteraufgaben in Board-Reihenfolge. */
+const kidsOf = (id) => todos
+  .filter(t => t.parent_id === id)
+  .sort((a, b) => (a.sort_order - b.sort_order) || (new Date(a.created_at) - new Date(b.created_at)));
+
+/** Offene Blocker: "das hier geht erst, wenn jene Aufgabe fertig ist." */
+const blockersOf = (t) => (t.blocked_by || [])
+  .map(byId).filter(b => b && !b.done);
+
+// ── Meeting-Fokus ──────────────────────────────────────────────────────
+// Alles mit meeting_date kommt aus einem wöchentlichen Gespräch — also aus einem
+// echten Nutzerwunsch. Das jüngste Meeting ist "diese Woche" und wird blau.
+
+/** Datum des jüngsten Meetings, aus dem noch etwas offen ist. */
+function latestMeeting() {
+  const ds = todos.filter(t => t.meeting_date && !t.done).map(t => t.meeting_date);
+  return ds.length ? ds.sort().at(-1) : null;
+}
+let currentMeeting = null;   // render() başında tazelenir
+
+const isWeek = (t) => !!currentMeeting && t.meeting_date === currentMeeting && !t.done;
+/** Ein Thema zählt zur Woche, wenn eine seiner offenen Unteraufgaben dazugehört. */
+const weekKids = (t) => kidsOf(t.id).filter(isWeek);
+const inWeek   = (t) => isWeek(t) || weekKids(t).length > 0;
 
 function isArchived(t) {
   if (!t.done || !t.done_at) return false;
   const age = (Date.now() - new Date(t.done_at).getTime()) / 86400000;
   return age > DONE_ARCHIVE_DAYS;
+}
+
+/** Kategoriefilter greift auf Themen-Ebene: das Thema bleibt sichtbar,
+ *  wenn es selbst oder eine seiner Unteraufgaben passt. */
+function catMatch(t) {
+  if (weekOnly && !inWeek(t)) return false;
+  if (activeCat === null) return true;
+  return t.category === activeCat || kidsOf(t.id).some(k => k.category === activeCat);
 }
 
 // ── Laden ──────────────────────────────────────────────────────────────
@@ -43,6 +86,7 @@ async function load() {
       .order('created_at', { ascending: true });
     if (error) return fail('Aufgaben laden', error);
     todos = data || [];
+    if (todos.length) hasGroupCols = 'parent_id' in todos[0] && 'blocked_by' in todos[0];
     render();
   } finally {
     loading = false;
@@ -51,24 +95,33 @@ async function load() {
 
 // ── Rendern ────────────────────────────────────────────────────────────
 
-/** Kategori filtresi çubuğu — açık görev sayısıyla. */
+/** Kategorie-Filterleiste — mit offener Aufgabenzahl (Unteraufgaben mitgezählt). */
 function renderCatBar() {
   const open = todos.filter(t => !t.done);
   const cats = [...new Set(open.map(t => t.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
   const count = (c) => open.filter(t => c === null || t.category === c).length;
 
-  $('#catBar').innerHTML =
+  // Meeting-Chip zuerst: er beantwortet die Frage "was muss diese Woche fertig sein".
+  const weekCount = open.filter(isWeek).length;
+  const weekChip = currentMeeting
+    ? `<button class="tag tag-week ${weekOnly ? 'is-on' : ''}" data-week="1">
+         ◆ Diese Woche · Meeting ${esc(fmtDate(currentMeeting))} ${weekCount}</button>`
+    : '';
+
+  $('#catBar').innerHTML = weekChip +
     `<button class="tag ${activeCat === null ? 'is-on' : ''}" data-cat="">Alle ${count(null)}</button>` +
     cats.map(c => `<button class="tag ${activeCat === c ? 'is-on' : ''}" data-cat="${esc(c)}">${esc(c)} ${count(c)}</button>`).join('');
 
   $('#catBar').onclick = (e) => {
     const b = e.target.closest('.tag'); if (!b) return;
-    activeCat = b.dataset.cat || null;
+    if (b.dataset.week) weekOnly = !weekOnly;
+    else activeCat = b.dataset.cat || null;
     render();
   };
 }
 
 function render() {
+  currentMeeting = latestMeeting();
   renderCatBar();
   const board = $('#board');
   const cols = columns();
@@ -77,25 +130,27 @@ function render() {
 
   let hidden = 0;
   board.innerHTML = cols.map(c => {
-    const mine  = todos.filter(t => colKeyOf(t) === c.key
-                                 && (activeCat === null || t.category === activeCat));
+    // Nur oberste Ebene wandert in die Spalte; Unteraufgaben hängen an ihrem Thema.
+    const mine  = todos.filter(t => !t.parent_id && colKeyOf(t) === c.key && catMatch(t));
     const open  = mine.filter(t => !t.done);
     const done  = mine.filter(t => t.done && (showArchived || !isArchived(t)))
                       .sort((a, b) => new Date(b.done_at || 0) - new Date(a.done_at || 0));
     hidden += mine.filter(t => t.done && isArchived(t)).length;
+
+    const openTotal = open.reduce((n, t) => n + 1 + kidsOf(t.id).filter(k => !k.done).length, 0);
 
     return `
       <div class="col" data-col="${esc(c.key)}">
         <div class="col-head">
           <span class="dot" style="background:${esc(c.color)}"></span>
           <span class="col-name">${esc(c.name)}</span>
-          <span class="col-count">${open.length}</span>
+          <span class="col-count">${open.length} Themen · ${openTotal} offen</span>
         </div>
         <div class="stack" data-stack="${esc(c.key)}">
-          ${open.map(cardHTML).join('') || '<p class="empty">Nichts offen.</p>'}
+          ${open.map(t => cardHTML(t)).join('') || '<p class="empty">Nichts offen.</p>'}
         </div>
         ${done.length ? `<div class="done-head">Erledigt (${done.length})</div>
-          <div class="stack">${done.map(cardHTML).join('')}</div>` : ''}
+          <div class="stack">${done.map(t => cardHTML(t)).join('')}</div>` : ''}
       </div>`;
   }).join('');
 
@@ -117,20 +172,35 @@ function cardHTML(t) {
     ? '<span class="pill pill-claude">Claude</span>'
     : (memberById(t.created_by) ? `<span class="pill">${esc(memberById(t.created_by).display_name)}</span>` : '');
 
+  const kids     = kidsOf(t.id);
+  const kidsDone = kids.filter(k => k.done).length;
+  const isGroup  = kids.length > 0;
+  // Im Wochenfilter zeigt ein Thema nur die Punkte dieser Woche — und ist offen,
+  // sonst müsste man 16 Themen von Hand aufklappen.
+  const shown    = weekOnly ? kids.filter(isWeek) : kids;
+  const isOpenG  = openGroups.has(t.id) || (weekOnly && shown.length > 0);
+  const blockers = blockersOf(t);
+  const wKids    = weekKids(t);
+
   return `
-    <div class="card-t prio-${esc(t.priority)} ${t.done ? 'is-done' : ''}"
+    <div class="card-t prio-${esc(t.priority)} ${t.done ? 'is-done' : ''} ${isGroup ? 'is-group' : ''} ${blockers.length && !t.done ? 'is-blocked' : ''} ${inWeek(t) ? 'is-week' : ''}"
          data-id="${t.id}" draggable="${t.done ? 'false' : 'true'}">
-      <input type="checkbox" class="t-check" ${t.done ? 'checked' : ''} aria-label="erledigt">
+      ${isGroup
+        ? `<span class="t-progress ${kidsDone === kids.length ? 'is-full' : ''}">${kidsDone}/${kids.length}</span>`
+        : `<input type="checkbox" class="t-check" ${t.done ? 'checked' : ''} aria-label="erledigt">`}
       <div class="t-body">
         <div class="t-title">${esc(t.title)}</div>
         <div class="t-meta">
           ${t.category ? `<span class="pill">${esc(t.category)}</span>` : ''}
           ${author}
           ${t.priority === 'hoch' ? '<span class="pill">Hoch</span>' : ''}
-          ${t.meeting_date ? `<span class="pill">Meeting ${esc(fmtDate(t.meeting_date))}</span>` : ''}
+          ${t.meeting_date ? `<span class="pill ${isWeek(t) ? 'pill-week' : 'pill-meeting'}">${isWeek(t) ? '◆ ' : ''}Meeting ${esc(fmtDate(t.meeting_date))}</span>` : ''}
+          ${isGroup && wKids.length ? `<span class="pill pill-week">◆ Diese Woche ${wKids.length}</span>` : ''}
           ${t.notes ? `<span class="pill pill-open">${expanded.has(t.id) ? '▾' : '▸'} Details</span>` : ''}
+          ${isGroup ? `<span class="pill pill-subs">${isOpenG ? '▾' : '▸'} ${weekOnly ? `${shown.length}/${kids.length}` : kids.length} Unteraufgaben</span>` : ''}
           ${t.done && t.done_at ? `<span>✓ ${esc(fmtDate(t.done_at))}</span>` : ''}
         </div>
+        ${blockers.length && !t.done ? `<div class="t-block">Zuerst: ${blockers.map(b => esc(b.title)).join(' · ')}</div>` : ''}
       </div>
       <div class="t-move">
         <button class="t-move-btn" aria-label="Aktionen">⋮</button>
@@ -139,6 +209,9 @@ function cardHTML(t) {
         ${md(kurzOf(t))}
         ${langOf(t) ? `<button class="pill more">Ayrıntı ▾</button>
           <div class="t-more" hidden>${md(langOf(t))}</div>` : ''}
+      </div>` : ''}
+      ${isGroup ? `<div class="subs" data-parent="${t.id}" ${isOpenG ? '' : 'hidden'}>
+        ${shown.map(k => cardHTML(k)).join('')}
       </div>` : ''}
     </div>`;
 }
@@ -149,12 +222,15 @@ function wire() {
   // Checkbox
   document.querySelectorAll('#board .t-check').forEach(cb => {
     cb.onchange = async (e) => {
+      e.stopPropagation();
       const id = e.target.closest('.card-t').dataset.id;
       const done = e.target.checked;
-      const t = todos.find(x => x.id === id);
-      if (t) { t.done = done; t.done_at = done ? new Date().toISOString() : null; render(); }
+      const t = byId(id);
+      if (t) { t.done = done; t.done_at = done ? new Date().toISOString() : null; }
       const { error } = await sb.from('ops_todos').update({ done }).eq('id', id);
-      if (error) { fail('Speichern', error); load(); }
+      if (error) { fail('Speichern', error); return load(); }
+      await syncParent(t?.parent_id);
+      render();
     };
   });
 
@@ -162,12 +238,19 @@ function wire() {
   document.querySelectorAll('#board .card-t').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('input, button, a')) return;
-      const t = todos.find(x => x.id === card.dataset.id);
-      if (!t?.notes) return;
+      // Klick auf eine Unteraufgabe darf das Thema nicht mit umschalten.
+      if (e.target.closest('.card-t') !== card) return;
+
+      const t = byId(card.dataset.id);
+      if (!t) return;
+
+      if (e.target.closest('.pill-subs')) return toggleGroup(card, t);
+      if (!t.notes) return;
+
       expanded.has(t.id) ? expanded.delete(t.id) : expanded.add(t.id);
-      const box = card.querySelector('.t-detail');
+      const box = card.querySelector(':scope > .t-detail');
       if (box) box.hidden = !expanded.has(t.id);
-      const badge = card.querySelector('.pill-open');
+      const badge = card.querySelector(':scope > .t-body .pill-open');
       if (badge) badge.textContent = (expanded.has(t.id) ? '▾' : '▸') + ' Details';
     });
   });
@@ -194,11 +277,32 @@ function wire() {
   // Drag & Drop (Desktop)
   document.querySelectorAll('#board .card-t[draggable="true"]').forEach(card => {
     card.addEventListener('dragstart', (e) => {
+      e.stopPropagation();                       // sonst zieht das Thema mit
       e.dataTransfer.setData('text/plain', card.dataset.id);
       e.dataTransfer.effectAllowed = 'move';
       card.classList.add('dragging');
     });
-    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    card.addEventListener('dragend', (e) => { e.stopPropagation(); card.classList.remove('dragging'); });
+  });
+
+  // Ablegen in einer Unteraufgaben-Liste = "gehört unter dieses Thema"
+  document.querySelectorAll('#board .subs').forEach(box => {
+    const parent = byId(box.dataset.parent);
+    box.addEventListener('dragover', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      box.classList.add('is-over');
+    });
+    box.addEventListener('dragleave', (e) => {
+      if (!box.contains(e.relatedTarget)) box.classList.remove('is-over');
+    });
+    box.addEventListener('drop', async (e) => {
+      e.preventDefault(); e.stopPropagation();
+      box.classList.remove('is-over');
+      const id = e.dataTransfer.getData('text/plain');
+      if (!id || id === box.dataset.parent) return;
+      await moveTo(id, colKeyOf(parent || {}), dropIndexIn(box, e.clientY), box.dataset.parent);
+    });
   });
 
   document.querySelectorAll('#board .col').forEach(col => {
@@ -214,15 +318,46 @@ function wire() {
       e.preventDefault();
       col.classList.remove('is-over');
       const id = e.dataTransfer.getData('text/plain');
-      if (id) await moveTo(id, col.dataset.col, dropIndexIn(col, e.clientY));
+      // Auf die Spalte fallen lassen heißt: oberste Ebene, kein Thema mehr.
+      if (id) await moveTo(id, col.dataset.col, dropIndexIn(col, e.clientY), null);
     });
   });
 }
 
+/** Unteraufgaben-Liste auf-/zuklappen. */
+function toggleGroup(card, t) {
+  openGroups.has(t.id) ? openGroups.delete(t.id) : openGroups.add(t.id);
+  const box = card.querySelector(':scope > .subs');
+  if (box) box.hidden = !openGroups.has(t.id);
+  const badge = card.querySelector(':scope > .t-body .pill-subs');
+  const kids = kidsOf(t.id);
+  const n = weekOnly ? `${kids.filter(isWeek).length}/${kids.length}` : kids.length;
+  if (badge) badge.textContent = `${openGroups.has(t.id) ? '▾' : '▸'} ${n} Unteraufgaben`;
+}
+
+/** Thema gilt als erledigt, sobald alle Unteraufgaben erledigt sind — und umgekehrt.
+ *  Ohne das bliebe ein abgehaktes Thema mit offenen Punkten stehen. */
+async function syncParent(parentId) {
+  if (!parentId) return;
+  const p = byId(parentId);
+  if (!p) return;
+  const kids = kidsOf(parentId);
+  if (!kids.length) return;
+  const shouldBeDone = kids.every(k => k.done);
+  if (shouldBeDone === p.done) return;
+  p.done = shouldBeDone;
+  p.done_at = shouldBeDone ? new Date().toISOString() : null;
+  const { error } = await sb.from('ops_todos').update({ done: shouldBeDone }).eq('id', parentId);
+  if (error) fail('Thema aktualisieren', error);
+}
+
 /** Bırakılan noktaya en yakın kartın indeksi — kolon içi sıralama için. */
-function dropIndexIn(col, y) {
-  // data-stack sadece açık görevlerin yığınında var — "Erledigt" yığınına düşürülemez.
-  const cards = [...col.querySelectorAll('.stack[data-stack] > .card-t:not(.dragging)')];
+function dropIndexIn(container, y) {
+  // In der Spalte nur der offene Stapel (data-stack), in einem Thema die .subs-Liste.
+  const sel = container.classList.contains('subs')
+    ? ':scope > .card-t:not(.dragging)'
+    : '.stack[data-stack] > .card-t:not(.dragging)';
+  const cards = [...container.querySelectorAll(sel)];
   for (let i = 0; i < cards.length; i++) {
     const r = cards[i].getBoundingClientRect();
     if (y < r.top + r.height / 2) return i;
@@ -232,14 +367,19 @@ function dropIndexIn(col, y) {
 
 function toggleMenu(card, host) {
   closeMenu();
-  const t = todos.find(x => x.id === card.dataset.id);
+  const t = byId(card.dataset.id);
   if (!t) return;
 
   const targets = columns().filter(c => c.key !== colKeyOf(t));
+  const groups  = !hasGroupCols ? []
+    : todos.filter(g => !g.parent_id && !g.done && g.id !== t.id && !kidsOf(t.id).length);
+
   const el = document.createElement('div');
   el.className = 'menu';
   el.innerHTML =
     targets.map(c => `<button data-to="${esc(c.key)}">→ ${esc(c.name)}</button>`).join('') +
+    (groups.length ? '<hr><button data-sub="">↑ Eigenes Thema (oberste Ebene)</button>' +
+      groups.map(g => `<button data-sub="${g.id}">↳ ${esc(g.title.slice(0, 42))}</button>`).join('') : '') +
     '<hr><button data-act="edit">Bearbeiten</button>' +
     '<button data-act="del">Löschen</button>';
 
@@ -247,13 +387,18 @@ function toggleMenu(card, host) {
     const b = e.target.closest('button');
     if (!b) return;
     closeMenu();
-    if (b.dataset.to) return moveTo(t.id, b.dataset.to, 0);
+    if (b.dataset.to) return moveTo(t.id, b.dataset.to, 0, t.parent_id);
+    if (b.dataset.sub !== undefined) return moveTo(t.id, colKeyOf(t), 0, b.dataset.sub || null);
     if (b.dataset.act === 'edit') return editTodo(t);
-    if (b.dataset.act === 'del') return confirmDialog('Aufgabe löschen', t.title, async () => {
-      const { error } = await sb.from('ops_todos').delete().eq('id', t.id);
-      if (error) return fail('Löschen', error), false;
-      todos = todos.filter(x => x.id !== t.id); render(); return true;
-    });
+    if (b.dataset.act === 'del') return confirmDialog('Aufgabe löschen',
+      kidsOf(t.id).length
+        ? `${t.title}\n\n${kidsOf(t.id).length} Unteraufgaben bleiben erhalten und rücken auf die oberste Ebene.`
+        : t.title,
+      async () => {
+        const { error } = await sb.from('ops_todos').delete().eq('id', t.id);
+        if (error) return fail('Löschen', error), false;
+        await load(); return true;
+      });
   };
 
   host.appendChild(el);
@@ -263,14 +408,18 @@ function toggleMenu(card, host) {
 
 function closeMenu() { openMenu?.remove(); openMenu = null; }
 
-/** Kolon değiştir ve/veya kolon içinde sırala. */
-async function moveTo(id, colKey, index) {
-  const t = todos.find(x => x.id === id);
+/** Spalte wechseln, Thema wechseln und/oder innerhalb neu einsortieren. */
+async function moveTo(id, colKey, index, parentId = null) {
+  const t = byId(id);
   if (!t) return;
+
+  // Ein Thema mit Unteraufgaben darf nicht selbst Unteraufgabe werden (2 Ebenen).
+  if (parentId && kidsOf(id).length) return toast('Thema mit Unteraufgaben kann nicht eingehängt werden', true);
 
   const assignee = colKey === POOL ? null : colKey;
   const siblings = todos
-    .filter(x => x.id !== id && !x.done && colKeyOf(x) === colKey)
+    .filter(x => x.id !== id && !x.done &&
+                 (parentId ? x.parent_id === parentId : (!x.parent_id && colKeyOf(x) === colKey)))
     .sort((a, b) => a.sort_order - b.sort_order);
 
   const before = siblings[index - 1]?.sort_order;
@@ -281,11 +430,19 @@ async function moveTo(id, colKey, index) {
     after  == null ? before + 1 :
     (before + after) / 2;
 
-  t.assignee = assignee; t.sort_order = sort_order;
+  const patch = hasGroupCols
+    ? { assignee, sort_order, parent_id: parentId }
+    : { assignee, sort_order };
+  const oldParent = t.parent_id;
+  Object.assign(t, patch);
+  if (parentId) openGroups.add(parentId);
   render();
 
-  const { error } = await sb.from('ops_todos').update({ assignee, sort_order }).eq('id', id);
-  if (error) { fail('Verschieben', error); load(); }
+  const { error } = await sb.from('ops_todos').update(patch).eq('id', id);
+  if (error) { fail('Verschieben', error); return load(); }
+  await syncParent(oldParent);
+  await syncParent(parentId);
+  render();
 }
 
 // ── Formular ───────────────────────────────────────────────────────────
@@ -293,6 +450,14 @@ async function moveTo(id, colKey, index) {
 function todoForm(t = {}) {
   const opts = [{ id: '', name: 'Gemeinsam (Pool)' },
                 ...state.members.map(m => ({ id: m.id, name: m.display_name }))];
+
+  // Als Thema kommen nur Aufgaben der obersten Ebene in Frage — und nicht man selbst.
+  const groups = todos.filter(g => !g.parent_id && g.id !== t.id && !kidsOf(t.id || '').length);
+  // Blocker: alles außer der Aufgabe selbst und ihren eigenen Unteraufgaben.
+  const kidIds = new Set(kidsOf(t.id || '').map(k => k.id));
+  const blockCands = todos.filter(x => x.id !== t.id && !kidIds.has(x.id) && !x.done);
+  const chosen = new Set(t.blocked_by || []);
+
   return `
     <label class="fld"><span>Aufgabe</span>
       <input id="f_title" value="${esc(t.title || '')}" maxlength="300" required></label>
@@ -307,6 +472,18 @@ function todoForm(t = {}) {
         <select id="f_prio">${['hoch', 'normal', 'niedrig'].map(p =>
           `<option ${(t.priority || 'normal') === p ? 'selected' : ''}>${p}</option>`).join('')}</select></label>
     </div>
+    ${!hasGroupCols ? '' : `
+    <label class="fld"><span>Gehört zu (Thema)</span>
+      <select id="f_parent">
+        <option value="">— eigenes Thema —</option>
+        ${groups.map(g =>
+          `<option value="${g.id}" ${t.parent_id === g.id ? 'selected' : ''}>${esc(g.title.slice(0, 70))}</option>`).join('')}
+      </select></label>
+    <label class="fld"><span>Erst nach … (Voraussetzung, Mehrfachauswahl mit Strg)</span>
+      <select id="f_block" multiple size="5">
+        ${blockCands.map(x =>
+          `<option value="${x.id}" ${chosen.has(x.id) ? 'selected' : ''}>${x.parent_id ? '↳ ' : ''}${esc(x.title.slice(0, 70))}</option>`).join('')}
+      </select></label>`}
     <label class="fld"><span>Kategorie</span>
       <select id="f_cat">
         <option value="">— ohne —</option>
@@ -337,19 +514,25 @@ function readForm() {
   const title = $('#f_title').value.trim();
   if (!title) { toast('Titel fehlt', true); return null; }
   const catSel = $('#f_cat').value;
-  return {
+  const v = {
     title,
     notes: $('#f_notes').value.trim() || null,
     assignee: $('#f_assignee').value || null,
     priority: $('#f_prio').value,
     category: (catSel === '__new__' ? $('#f_cat_new').value.trim() : catSel) || null
   };
+  if (hasGroupCols) {
+    v.parent_id  = $('#f_parent').value || null;
+    v.blocked_by = [...$('#f_block').selectedOptions].map(o => o.value);
+  }
+  return v;
 }
 
 function newTodo() {
   openModal({
     title: 'Neue Aufgabe',
-    bodyHTML: todoForm({ assignee: state.me.id, category: activeCat }),
+    // Standard ist bewusst der gemeinsame Pool: verteilt wird später, bewusst.
+    bodyHTML: todoForm({ assignee: null, category: activeCat }),
     onOpen: wireCategoryField,
     actions: [
       { label: 'Abbrechen', onClick: () => true },
@@ -360,7 +543,9 @@ function newTodo() {
           .insert({ ...v, source: 'manuell', created_by: state.me.id, sort_order: max + 1 })
           .select().single();
         if (error) return fail('Anlegen', error), false;
-        todos.push(data); render(); toast('Angelegt');
+        todos.push(data);
+        if (data.parent_id) openGroups.add(data.parent_id);
+        render(); toast('Angelegt');
       } }
     ]
   });
@@ -377,7 +562,7 @@ function editTodo(t) {
         const v = readForm(); if (!v) return false;
         const { data, error } = await sb.from('ops_todos').update(v).eq('id', t.id).select().single();
         if (error) return fail('Speichern', error), false;
-        Object.assign(todos.find(x => x.id === t.id), data); render(); toast('Gespeichert');
+        Object.assign(byId(t.id), data); render(); toast('Gespeichert');
       } }
     ]
   });
