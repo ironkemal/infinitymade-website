@@ -1,8 +1,8 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809d';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809d';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809e';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809e';
 
 let todos = [];
 let showArchived = false;
@@ -44,6 +44,13 @@ const kidsOf = (id) => todos
 /** Offene Blocker: "das hier geht erst, wenn jene Aufgabe fertig ist." */
 const blockersOf = (t) => (t.blocked_by || [])
   .map(byId).filter(b => b && !b.done);
+
+/** Başlığın kısa hâli — kartlarda tam başlık iki satır kaplıyor ve gürültü yapıyor.
+ *  Başlıklarımız "Kısa ad — uzun açıklama" biçiminde, ilk parçası yeter. */
+const shortTitle = (t) => String(t.title).split(' — ')[0].slice(0, 60);
+
+/** Tema kartı mı — sayaçlarda görev gibi sayılmamalı. */
+const isTheme = (t) => todos.some(x => x.parent_id === t.id);
 
 // ── Meeting-Fokus ──────────────────────────────────────────────────────
 // Alles mit meeting_date kommt aus einem wöchentlichen Gespräch — also aus einem
@@ -161,7 +168,8 @@ async function load(retry = true) {
 
 /** Kategorie-Filterleiste — mit offener Aufgabenzahl (Unteraufgaben mitgezählt). */
 function renderCatBar() {
-  const open = todos.filter(t => !t.done);
+  // Tema kartları sayılmaz — yoksa 108 görev "124" gibi görünür.
+  const open = todos.filter(t => !t.done && !isTheme(t));
   const cats = [...new Set(open.map(t => t.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
   const count = (c) => open.filter(t => c === null || t.category === c).length;
 
@@ -208,7 +216,12 @@ function render() {
                       .sort((a, b) => new Date(b.done_at || 0) - new Date(a.done_at || 0));
     hidden += mine.filter(t => t.done && isArchived(t)).length;
 
-    const openTotal = open.reduce((n, t) => n + 1 + kidsOf(t.id).filter(k => !k.done).length, 0);
+    // Tema kartının kendisi bir iş değil: sayarken alt görevleri say,
+    // alt görevi olmayan kartı tek iş say.
+    const openTotal = open.reduce((n, t) => {
+      const k = kidsOf(t.id);
+      return n + (k.length ? k.filter(x => !x.done).length : 1);
+    }, 0);
 
     return `
       <div class="col" data-col="${esc(c.key)}">
@@ -271,7 +284,7 @@ function cardHTML(t) {
           ${isGroup ? `<span class="pill pill-subs">${isOpenG ? '▾' : '▸'} ${weekOnly ? `${shown.length}/${kids.length}` : kids.length} Unteraufgaben</span>` : ''}
           ${t.done && t.done_at ? `<span>✓ ${esc(fmtDate(t.done_at))}</span>` : ''}
         </div>
-        ${blockers.length && !t.done ? `<div class="t-block">Zuerst: ${blockers.map(b => esc(b.title)).join(' · ')}</div>` : ''}
+        ${blockers.length && !t.done ? `<div class="t-block">Zuerst: ${blockers.map(b => esc(shortTitle(b))).join(' · ')}</div>` : ''}
       </div>
       <div class="t-move">
         <button class="t-move-btn" aria-label="Aktionen">⋮</button>
