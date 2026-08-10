@@ -284,10 +284,17 @@
                 <span class="br-field-error" id="gkvVerordDatumError"></span>
               </div>
             </div>
-            <div class="br-field" style="position:relative;">
-              <label for="gkvIcd10">Diagnose ICD-10 <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
-              <input type="text" id="gkvIcd10" placeholder="z.B. M54.5 – Lumbago" />
-              <div id="icd10-dropdown-gkv" class="icd10-dropdown"></div>
+            <div class="br-form-row">
+              <div class="br-field" style="position:relative;">
+                <label for="gkvIcd10">Diagnose ICD-10 <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <input type="text" id="gkvIcd10" placeholder="z.B. M54.5 – Lumbago" />
+                <div id="icd10-dropdown-gkv" class="icd10-dropdown"></div>
+              </div>
+              <div class="br-field" style="position:relative;">
+                <label for="gkvDiagnosegruppe">Diagnosegruppe <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                <input type="text" id="gkvDiagnosegruppe" placeholder="z.B. WS2" autocomplete="off" />
+                <span class="br-field-hint">Steht auf dem Rezept, meist als Kürzel wie WS2 oder EX3.</span>
+              </div>
             </div>
             <div class="br-form-row">
               <div class="br-field">
@@ -616,7 +623,7 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20260717"></script>
+<script type="module" src="booking-request.js?v=20260810"></script>
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
@@ -633,17 +640,28 @@
     }
     attachDiagnoseSearch(document.getElementById('gkvIcd10'), _sb, { bereich, kind: 'icd' });
 
+    // Diagnosegruppe — dasselbe Feld, das die Verordnung-Maske im Dashboard hat.
+    // Ohne sie musste die Praxis das Rezept nachträglich von Hand ergänzen.
+    const dgInput = document.getElementById('gkvDiagnosegruppe');
+    attachDiagnoseSearch(dgInput, _sb, { bereich, kind: 'dg', codeOnly: true, onSelect: () => fillHeilmittel() });
+
     // Heilmittel-Auswahl aus dem Katalog statt der früheren fest verdrahteten
     // <optgroup>-Liste. Zeigt nur, was zum Fachbereich der Praxis passt und
     // heute gültig ist. Ohne erkannten Fachbereich: alles.
+    // Ist eine Diagnosegruppe gewählt, wird zusätzlich danach gefiltert — genau
+    // wie in der Verordnung-Maske.
     const hmSel = document.getElementById('gkvHeilmittel');
-    if (hmSel) {
-      const rows = await searchHeilmittel(_sb, '', { bereich, limit: 200 });
-      if (rows.length) {
-        hmSel.innerHTML = heilmittelOptionsHtml(rows, '', 'Bitte wählen…')
-          + '<option value="Sonstiges">Sonstiges (Freitext)</option>';
-      }
+    async function fillHeilmittel() {
+      if (!hmSel) return;
+      const dg = (dgInput?.value || '').trim() || null;
+      const bisher = hmSel.value;
+      const rows = await searchHeilmittel(_sb, '', { bereich, diagnosegruppe: dg, limit: 200 });
+      if (!rows.length) return;
+      hmSel.innerHTML = heilmittelOptionsHtml(rows, bisher, 'Bitte wählen…')
+        + '<option value="Sonstiges">Sonstiges (Freitext)</option>';
     }
+    dgInput?.addEventListener('change', fillHeilmittel);
+    await fillHeilmittel();
   });
 </script>
 </body>

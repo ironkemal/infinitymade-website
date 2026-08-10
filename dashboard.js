@@ -25134,6 +25134,7 @@ function showAnfrageDetail(requestId) {
     if (req.verordnung_typ) extraFields.push(['Verordnungsart', req.verordnung_typ === 'erst' ? 'Erstverordnung' : 'Folgeverordnung']);
     if (req.doppelbehandlung) extraFields.push(['Doppelbehandlung', 'Ja']);
     if (req.icd10_diagnose) extraFields.push(['ICD-10', req.icd10_diagnose]);
+    if (req.diagnosegruppe) extraFields.push(['Diagnosegruppe', req.diagnosegruppe]);
   } else if (req.payment_type === 'pkv') {
     if (req.pkv_versicherung) extraFields.push(['Versicherung', req.pkv_versicherung]);
     if (req.arzt_ueberweisung) extraFields.push(['Ärztliche Überweisung', req.arzt_ueberweisung_name || 'Ja']);

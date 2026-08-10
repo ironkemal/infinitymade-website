@@ -67,8 +67,23 @@ angehen, wenn die genannte Nummer `[x]` ist.
 - [ ] 5. Termin-Anfrage: Nachricht an Patient — nur per E-Mail, KEIN In-App-Chat
       Zuerst: 4
 
-- [ ] 6. Termin-Anfrage-Formular an die gleiche Struktur wie die Verordnung-Maske angleichen
-      Code: `booking-request.html`/`.js` mit der Verordnung-Erfassung in `dashboard.js` vergleichen.
+- [x] 6. Termin-Anfrage-Formular an die gleiche Struktur wie die Verordnung-Maske angleichen
+      (Entscheidung Melih, 10.08.2026: nur die fehlenden Rezept-Felder ergänzen, kein
+      Muster-13-Formular für Patienten.)
+      Geändert: `database_v33_anfrage_diagnosegruppe.sql` (neu) · `booking-request.html`
+      (Feld Diagnosegruppe + Heilmittel-Liste nach Diagnosegruppe gefiltert) ·
+      `booking-request.js` (State, Zusammenfassung, Versand) · `api-backend/server.js`
+      (speichert `diagnosegruppe`) · `dashboard.js` (Anfrage-Detail zeigt sie an)
+      ⚠️ SQL-Migration muss vor dem Deploy im Supabase SQL-Editor laufen.
+      Befund: ICD-10 und Heilmittel kamen **schon** aus der gemeinsamen `katalog-suche.js`,
+      inklusive Fachbereich der Praxis über die RPC `public_praxis_sector` — da war nichts
+      zu tun. Gefehlt hat allein die **Diagnosegruppe**, das Feld, auf dem in der
+      Verordnung-Maske alles aufbaut. Sie ist jetzt da (dasselbe Suchfeld, `kind: 'dg'`)
+      und filtert zusätzlich die Heilmittel-Liste, genau wie im Dashboard.
+      📋 Nebenbei gesehen, nicht angefasst: im Versand-Objekt in `booking-request.js` steht
+      `icd10_diagnose` **zweimal** (Zeile ~1038 und ~1054). Der zweite Eintrag gewinnt und
+      liefert zufällig dasselbe Ergebnis, deshalb fällt es heute nicht auf — aber die Zeile
+      ist eine Falle für die nächste Änderung.
 
 - [x] 7. Minuten-Genauigkeit bei Terminzeiten — Labels klären (5–10 Min Kulanz)
       (Entscheidung Melih, 10.08.2026: nur Beschriftung, kein Umbau der Schrittweite.)

@@ -43,6 +43,7 @@ const state = {
   arzt_name: null,
   verordnung_datum: null,
   icd10_diagnose: null,
+  diagnosegruppe: null,
   behandlungsart: null,
   verordnung_sitzungen: null,
   frequenz: null,
@@ -842,6 +843,7 @@ function validateStep4() {
     else state.verordnung_datum = vd;
 
     state.icd10_diagnose = document.getElementById('gkvIcd10').value.trim() || null;
+    state.diagnosegruppe = document.getElementById('gkvDiagnosegruppe').value.trim() || null;
 
     const hm = document.getElementById('gkvHeilmittel').value;
     if (!hm) { fieldError('gkvHeilmittel', 'gkvHeilmittelError', 'Bitte Heilmittel auswählen.'); ok = false; }
@@ -984,6 +986,7 @@ function buildSummary() {
   if (state.payment_type === 'gkv' && state.krankenkasse) {
     data.push({ label: 'Krankenkasse', value: state.krankenkasse });
     if (state.arzt_name) data.push({ label: 'Verordnender Arzt', value: state.arzt_name });
+    if (state.diagnosegruppe) data.push({ label: 'Diagnosegruppe', value: state.diagnosegruppe });
     if (state.behandlungsart) data.push({ label: 'Heilmittel', value: state.behandlungsart });
   }
   if (state.payment_type === 'bg' && state.bg_name) {
@@ -1033,6 +1036,7 @@ async function handleSubmit() {
     arzt_name: state.arzt_name,
     verordnung_datum: state.verordnung_datum,
     icd10_diagnose: state.icd10_diagnose,
+    diagnosegruppe: state.diagnosegruppe,
     behandlungsart: state.behandlungsart || state.bg_behandlungsart,
     verordnung_sitzungen: state.verordnung_sitzungen || state.bg_anzahl,
     frequenz: state.frequenz || state.bg_frequenz,
