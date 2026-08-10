@@ -348,6 +348,11 @@ Olgusal sorular ve onay arayışı için kullanılmaz. Kararlar: `konsey/KARARLA
   buraya yazılır.** Kod `ops/`, kurulum `ops/SETUP.md`, yazma kanalı `ops/tools/ingest.mjs`.
   ⚠️ **Ayrı Supabase projesi** (`farkaejociddtgqkusvm`) — Supabase MCP aracı ÜRÜN projesine
   bağlıdır, ops tarafına MCP ile SQL çalıştırma.
+- **`fortschritte/`** — günlük ilerleme kaydı. **Kural: bir gün = bir dosya**
+  (`fortschritte/JJJJ-MM-TT.md`). Aynı güne ait yeni iş, o günün dosyasına
+  **eklenir**; ikinci dosya açılmaz. Tam kural ve dosya şablonu:
+  `fortschritte/REGELN.md`. Açık işler yine Ops-Dashboard'a yazılır — burası
+  sadece "o gün ne oldu ve neden" sorusunu yanıtlar.
 - **`TODO.md`** — artık yapılacaklar listesi **değil.** Sadece iki şey kaldı: §1 haftalık beta
   roadmap (T1–T6 plan metni, katman zinciri, DoD) ve §5 kapanmış maddelerin kaydı.
 - **Paylaşılan belge klasörü** — `I:\My Drive\Ops Praxura gitnogo\` (Google Drive, 2026-08-08).
