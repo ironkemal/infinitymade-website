@@ -145,14 +145,69 @@ test('unklare Frequenz legt nur den ersten Termin an und meldet Handarbeit', asy
   assert.equal(supabase.inserts.length, 1);
 });
 
-test('Fehler beim ersten Termin wird durchgereicht, nichts wird stillschweigend geschluckt', async () => {
+test('belegter Wunschtermin: kein Insert, sondern conflict', async () => {
+  const supabase = fakeSupabase();
+  const create = createBookingsFromRequestFactory({
+    supabase, berlinLocalToUTC, generateRecurringDates,
+    getAvailableSlots: async () => ({ slots: ['09:00', '11:00'] }), // 10:00 fehlt
+  });
+
+  const result = await create(baseRequest, 'owner-1', 'therapeut-1', 'Max Mustermann');
+
+  assert.equal(result.conflict, true);
+  assert.equal(supabase.inserts.length, 0, 'bei Konflikt darf kein Termin entstehen');
+});
+
+test('geschlossener Tag (Feiertag/Urlaub) zaehlt ebenfalls als Konflikt', async () => {
+  const supabase = fakeSupabase();
+  const create = createBookingsFromRequestFactory({
+    supabase, berlinLocalToUTC, generateRecurringDates,
+    getAvailableSlots: async () => ({ slots: ['10:00'], reason: 'Feiertag' }),
+  });
+
+  const result = await create(baseRequest, 'owner-1', 'therapeut-1', 'Max Mustermann');
+
+  assert.equal(result.conflict, true);
+  assert.equal(supabase.inserts.length, 0);
+});
+
+test('Rennen mit der DB-Sperre (23P01) endet als conflict, nicht als Absturz', async () => {
   const supabase = fakeSupabase({ insertError: { code: '23P01', message: 'conflicting key value' } });
+  const create = createBookingsFromRequestFactory({
+    supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: allSlotsFree,
+  });
+
+  const result = await create(baseRequest, 'owner-1', 'therapeut-1', 'Max Mustermann');
+
+  assert.equal(result.conflict, true);
+});
+
+test('andere Datenbankfehler werden durchgereicht, nichts wird stillschweigend geschluckt', async () => {
+  const supabase = fakeSupabase({ insertError: { code: '23503', message: 'foreign key violation' } });
   const create = createBookingsFromRequestFactory({
     supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: allSlotsFree,
   });
 
   await assert.rejects(
     () => create(baseRequest, 'owner-1', 'therapeut-1', 'Max Mustermann'),
-    (e) => e.code === '23P01',
+    (e) => e.code === '23503',
   );
+});
+
+test('ohne Wunschzeit wird nicht geprueft, der Termin entsteht trotzdem', async () => {
+  const supabase = fakeSupabase();
+  let geprueft = false;
+  const create = createBookingsFromRequestFactory({
+    supabase, berlinLocalToUTC, generateRecurringDates,
+    getAvailableSlots: async () => { geprueft = true; return { slots: [] }; },
+  });
+
+  const result = await create(
+    { ...baseRequest, preferred_date: null, preferred_time: null },
+    'owner-1', 'therapeut-1', 'Max Mustermann',
+  );
+
+  assert.equal(geprueft, false);
+  assert.equal(result.conflict, undefined);
+  assert.equal(supabase.inserts.length, 1);
 });

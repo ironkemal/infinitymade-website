@@ -20,6 +20,16 @@ export function createBookingsFromRequestFactory({
   generateRecurringDates,
   getAvailableSlots,
 }) {
+  // Ist die Wunschzeit an diesem Tag beim Therapeuten wirklich frei?
+  // Die DB-Sperre allein reicht nicht: ein laut Sperre "freier" Slot kann trotzdem
+  // ein Feiertag, ein Urlaubstag oder ausserhalb der Arbeitszeiten liegen.
+  async function slotIstFrei(empId, dateStr, timeStr, duration, serviceId) {
+    const avail = await getAvailableSlots(empId, dateStr, duration, null, 0, 30, serviceId || null);
+    if (avail.reason) return false;
+    const slotTimes = (avail.slots || []).map(s => (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5));
+    return slotTimes.includes(timeStr.substring(0, 5));
+  }
+
   return async function createBookingsFromRequest(bookReq, ownerId, empId, patName) {
     let duration = 30;
     if (bookReq.service_id) {
@@ -28,7 +38,17 @@ export function createBookingsFromRequestFactory({
       if (svc?.duration_minutes) duration = svc.duration_minutes;
     }
 
-    const startTime = bookReq.preferred_date && bookReq.preferred_time
+    const hatWunschzeit = Boolean(bookReq.preferred_date && bookReq.preferred_time);
+
+    // Der Wunschtermin kann zwischen Anfrage und Bestaetigung an jemand anderen
+    // vergeben worden sein. Vorher pruefen, damit der Praxisinhaber eine klare
+    // Meldung bekommt statt eines Datenbankfehlers.
+    if (hatWunschzeit) {
+      const frei = await slotIstFrei(empId, bookReq.preferred_date, bookReq.preferred_time, duration, bookReq.service_id);
+      if (!frei) return { conflict: true };
+    }
+
+    const startTime = hatWunschzeit
       ? berlinLocalToUTC(bookReq.preferred_date, bookReq.preferred_time).toISOString()
       : new Date().toISOString();
     const endUTC = new Date(new Date(startTime).getTime() + duration * 60000).toISOString();
@@ -37,6 +57,9 @@ export function createBookingsFromRequestFactory({
       user_id: empId, owner_id: ownerId, service_id: bookReq.service_id || null,
       customer_name: patName, start_time: startTime, end_time: endUTC, status: 'confirmed',
     }).select('id').single();
+    // 23P01 = no_overlapping_bookings. Zwischen Pruefung und Insert kann jemand
+    // schneller gewesen sein — die DB-Sperre bleibt der letzte, verlaessliche Schutz.
+    if (bookErr?.code === '23P01') return { conflict: true };
     if (bookErr) throw bookErr;
 
     // Auto-schedule remaining sessions for unambiguous frequencies (deterministic, no AI).
@@ -53,12 +76,7 @@ export function createBookingsFromRequestFactory({
         const remainingDates = generateRecurringDates(bookReq.preferred_date, recurrence, sessionsTotal).slice(1);
         for (const dateStr of remainingDates) {
           try {
-            // Don't just rely on the DB overlap constraint — a "free" slot per the
-            // exclusion constraint can still be a holiday, a day off, or outside
-            // working hours. Check real availability the same way patients do.
-            const avail = await getAvailableSlots(empId, dateStr, duration, null, 0, 30, bookReq.service_id || null);
-            const slotTimes = (avail.slots || []).map(s => (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5));
-            if (avail.reason || !slotTimes.includes(bookReq.preferred_time.substring(0, 5))) {
+            if (!await slotIstFrei(empId, dateStr, bookReq.preferred_time, duration, bookReq.service_id)) {
               extraConflicts++;
               continue;
             }

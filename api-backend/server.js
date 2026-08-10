@@ -3273,22 +3273,27 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
         frequenz: frequenz || null,
       }, owner_id, employee_id, patName);
 
-      await supabase.from('booking_requests')
-        .update({ status: 'approved', auto_approved: true, booking_id: autoResult.booking_id })
-        .eq('id', request.id);
-      if (pat?.email && process.env.SMTP_HOST) {
-        const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
-          .update(`${request.id}:${resolvedPatientId}`).digest('hex').substring(0, 32);
-        const t = createSMTPTransport();
-        t.sendMail({
-          from: `"${ownerProfile.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
-          replyTo: ownerProfile.email || undefined,
-          to: pat.email,
-          subject: `Ihr Termin wurde bestätigt – ${ownerProfile.business_name || 'Praxura'}`,
-          html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${pat.vorname},</p><p>Ihr Termin wurde automatisch bestätigt${preferred_date ? ` für den <strong>${new Date(preferred_date).toLocaleDateString('de-DE')}</strong>` : ''}${preferred_time ? ` um <strong>${preferred_time} Uhr</strong>` : ''}.</p><p>Wir freuen uns auf Ihren Besuch.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request.id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
-        }).catch(e => console.error('[booking-request] auto-approve email', e.message));
+      // Wunschtermin inzwischen belegt: NICHT automatisch bestaetigen, sondern die
+      // Anfrage offen lassen — sonst haette der Patient eine Zusage ohne Termin.
+      // Der Ablauf faellt dann unten in den normalen "offen"-Weg samt Praxis-Mail.
+      if (!autoResult.conflict) {
+        await supabase.from('booking_requests')
+          .update({ status: 'approved', auto_approved: true, booking_id: autoResult.booking_id })
+          .eq('id', request.id);
+        if (pat?.email && process.env.SMTP_HOST) {
+          const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+            .update(`${request.id}:${resolvedPatientId}`).digest('hex').substring(0, 32);
+          const t = createSMTPTransport();
+          t.sendMail({
+            from: `"${ownerProfile.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+            replyTo: ownerProfile.email || undefined,
+            to: pat.email,
+            subject: `Ihr Termin wurde bestätigt – ${ownerProfile.business_name || 'Praxura'}`,
+            html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${pat.vorname},</p><p>Ihr Termin wurde automatisch bestätigt${preferred_date ? ` für den <strong>${new Date(preferred_date).toLocaleDateString('de-DE')}</strong>` : ''}${preferred_time ? ` um <strong>${preferred_time} Uhr</strong>` : ''}.</p><p>Wir freuen uns auf Ihren Besuch.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request.id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+          }).catch(e => console.error('[booking-request] auto-approve email', e.message));
+        }
+        return res.json({ id: request.id, status: 'auto_approved' });
       }
-      return res.json({ id: request.id, status: 'auto_approved' });
     }
 
     if (process.env.SMTP_HOST && ownerProfile.email) {
@@ -3358,6 +3363,11 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
 
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
     const result = await createBookingsFromRequest(bookReq, owner_id, empId, patName);
+    if (result.conflict) {
+      return res.status(409).json({
+        error: 'Der Wunschtermin ist inzwischen belegt. Bitte einen anderen Termin mit dem Patienten vereinbaren.',
+      });
+    }
 
     await supabase.from('booking_requests').update({ status: 'approved', booking_id: result.booking_id }).eq('id', request_id);
 

@@ -28,14 +28,17 @@ angehen, wenn die genannte Nummer `[x]` ist.
       4. Der Storno-Link in der Patienten-Mail liess den bestätigten Termin als
          Geistertermin im Kalender stehen.
 
-- [ ] 2. Slot-Kollisionstest bei Termin-Anfrage — wird eine angefragte Zeit ausgeblendet/abgelehnt, sobald sie an jemand anderen vergeben wurde?
-      Zuerst: 1
-      Code: `api-backend/server.js` — approve-Route (~3318) prüfen, ob sie die Verfügbarkeit vor
-      dem Bestätigen erneut checkt (Vorbild: `hasOverlap`-Logik in der Booking-Create-Route,
-      ~Zeile 749).
-      ⚠️ Doppel-Buchung ist laut CLAUDE.md bereits über die DB-Constraint
-      `no_overlapping_bookings` (EXCLUDE GIST) gelöst — nicht neu erfinden, nur prüfen ob der
-      Anfrage-Pfad diese Constraint auch wirklich trifft.
+- [x] 2. Slot-Kollisionstest bei Termin-Anfrage — wird eine angefragte Zeit ausgeblendet/abgelehnt, sobald sie an jemand anderen vergeben wurde?
+      Geändert: `api-backend/booking/from-request.js` (Vorabprüfung `slotIstFrei`, 23P01 → `conflict`) ·
+      `api-backend/booking/from-request.test.js` (4 neue Fälle) · `api-backend/server.js`
+      (approve antwortet mit 409, Auto-Akzeptieren lässt die Anfrage bei Konflikt offen)
+      Befund: die **Folgetermine** einer Serie wurden schon korrekt geprüft, der **Wunschtermin
+      selbst gar nicht**. Er wurde blind eingefügt und die Antwort hing allein an der
+      DB-Sperre — die wegen Punkt 1 (fehlendes `user_id`) sowieso nicht griff.
+      Jetzt: erst dieselbe Verfügbarkeitsprüfung wie beim Patienten (fängt auch Feiertag,
+      Urlaub und Zeiten ausserhalb der Öffnungszeiten ab), dann Insert; verliert man
+      trotzdem das Rennen, wird `23P01` als 409 mit klarer deutscher Meldung beantwortet.
+      Die DB-Sperre bleibt unverändert der letzte Schutz.
 
 - [ ] 3. Kalender: "Verschieben"-Modus einbauen — Verschieben-Button drücken, Ziel-Slot anklicken [Priorität: Hoch]
       Code: `kalender.js`, `dashboard.js` (Suchbegriff "verschieben" kommt an mehreren Stellen
