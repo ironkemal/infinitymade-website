@@ -105,3 +105,44 @@ Bewusst nicht geraten, es gibt hier keinen `legal-de`/`gkv-302`-Agenten.
 > (https://ops.infinitymade.de → Aufgaben), nicht in Repo-Dateien. Diese Liste
 > hängt bewusst neben dem Skript, das noch laufen muss — nach Schritt 1–4
 > löschen und Restliches ins Dashboard übertragen.
+
+---
+
+## Nachtrag 11.08.2026 — Dateiablage rund um das Skript
+
+### Das Sammelskript liegt doppelt
+
+Byte-identisch an zwei Stellen:
+
+- `SUPABASE-JETZT-AUSFUEHREN.sql` (Projektwurzel) — zuerst dort angelegt
+- `sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql` — hierher kopiert
+
+Egal welche du ausführst, der Inhalt ist derselbe. Aber eine der beiden sollte
+weg, sonst wird später eine davon gepflegt und die andere nicht. Vorschlag:
+`sql-melih/` behalten (steht neben dieser Liste), die Kopie in der Wurzel
+löschen. **Nicht gelöscht** — die Entscheidung gehört dir.
+
+### Die drei Quelldateien einzeln nicht mehr nötig
+
+Das Sammelskript fasst diese zusammen; alle drei liegen weiterhin im Repo:
+
+- `database_v32_kassieren_zahlart.sql`
+- `supabase/migrations/20260810000000_ausfallvereinbarung.sql`
+- `supabase/migrations/20260810010000_mahnwesen_ausfall.sql`
+
+Nach Schritt 1 brauchen sie **nicht** noch einmal einzeln zu laufen. Täte man
+es doch, passierte nichts Schlimmes (alles `IF NOT EXISTS`), es ist nur
+unnötig.
+
+Zur Einordnung, weil die Nummerierung verwirren kann: die Umnummerierung
+`v32/v33 → v35/v36` betraf **nur die neuen Dateien** (Ärzte-Register,
+Diagnosegruppen-Regeln). `database_v32_kassieren_zahlart.sql` heisst
+unverändert so und ist genau die Datei, die oben gemeint ist.
+
+### Ergänzung zu Schritt 3
+
+Seit dieser Liste ist noch **`cc80940`** dazugekommen (`.DS_Store` aus dem Repo
+genommen und in `.gitignore` aufgenommen). Beim Commit des Fortschrittsberichts
+lagen 47 fremde Dateien im Index und gingen versehentlich mit — darunter fünf
+`.DS_Store`. Inhaltlich ist nichts verloren gegangen, der Arbeitsbaum ist
+sauber; das Repo ist aber öffentlich, deshalb der Aufräum-Commit.
