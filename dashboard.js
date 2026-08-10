@@ -1,10 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260726';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260810';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 import { attachPatientSearch } from './patient-suche.js?v=20260726';
-import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810';
+import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -17189,7 +17189,9 @@ document.addEventListener('focusin', (e) => {
     });
   }
   // Der modul-eigene focus-Handler ist für diesen ersten Fokus zu spät.
-  if (el.value.trim()) el.dispatchEvent(new Event('input', { bubbles: true }));
+  // Immer feuern — ob ein leeres Feld eine Liste zeigt, entscheidet minChars
+  // im Modul (Diagnosegruppen und Heilmittel: ja, ICD: nein).
+  el.dispatchEvent(new Event('input', { bubbles: true }));
 });
 
 // ── Bidirektionale ICD ↔ DG Verdrahtung ─────────────────────────────────────

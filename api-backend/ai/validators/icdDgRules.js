@@ -46,6 +46,13 @@ export function normalizeIcd(code) {
 }
 
 /**
+ * Form eines ICD-10-GM-Kodes: Buchstabe, zwei Ziffern, optional Punkt mit ein
+ * bis zwei Stellen, optional †, * oder !. Beispiele: E11.74, G63.2*, G82.60!
+ * Identisch mit icd-dg-match.js (Oberflaeche).
+ */
+const ICD_SHAPE = /^[A-Z]\d{2}(?:\.\d{1,2})?[†*!]?$/;
+
+/**
  * Parst eine rohe ICD-Angabe (String mit Komma-/Semikolon-Trennung oder Array)
  * und gibt ein Array normalisierter, nicht leerer Kodes zurueck.
  */
@@ -53,10 +60,18 @@ export function parseIcdList(raw) {
   if (!raw) return [];
   const items = Array.isArray(raw)
     ? raw
-    : String(raw).split(/[,;]/);
+    : String(raw).split(/[,;\n]/);
   return items
+    // Die Diagnosefelder der Oberflaeche zeigen „Kode – Titel", und die OCR
+    // liefert oft denselben Aufbau. Der Titel enthaelt selbst Kommas, ein
+    // Split am Komma allein zieht „E11.74 – Diabetes mellitus, Typ 2: …"
+    // deshalb zu einem Pseudokode zusammen und meldet faelschlich eine
+    // Abweichung. Erst am Trennstrich abschneiden, dann alles verwerfen, was
+    // nicht die Form eines ICD-Kodes hat. Freitext erzeugt so keine Warnung —
+    // richtig, denn der ICD ist nicht Pflicht (Anlage 3 k).
+    .map(s => String(s ?? '').split(/\s[–—-]\s/)[0])
     .map(s => normalizeIcd(s.trim()))
-    .filter(s => s.length > 0);
+    .filter(s => ICD_SHAPE.test(s));
 }
 
 /**
