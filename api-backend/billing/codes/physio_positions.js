@@ -13,7 +13,12 @@
 
 const PHYSIO_PREFIX = '2';  // Abrechnungscode 22 → first digit 2
 
-export const PHYSIO_POSITIONS = Object.freeze([
+// Preisfenster. Physio-Preise ändern sich regelmässig zum 01.07. — bisher gab es
+// hier gar kein Datum, dadurch bekam eine Behandlung aus Dezember 2025 heute den
+// 2026er Preis (rückwirkende Abrechnung und Korrekturverfahren rechneten still
+// falsch). Struktur bewusst wie podologie_positions.js: ein neues Preisfenster
+// wird als weiterer Eintrag in PHYSIO_PREISFENSTER ergänzt, das alte bleibt stehen.
+export const PHYSIO_POSITIONS_2026 = Object.freeze([
   // Massage (X01xx)
   { x:'X0102', label:'Unterwasserdruckstrahlmassage',      preis:33.75, zuzahlung:3.38, dauer:'15-20', kat:'Massage' },
   { x:'X0106', label:'Klassische Massagetherapie (KMT)',   preis:21.63, zuzahlung:2.16, dauer:'15-20', kat:'Massage' },
@@ -94,6 +99,44 @@ export const PHYSIO_POSITIONS = Object.freeze([
 ]);
 
 /**
+ * Alle bekannten Preisfenster, aufsteigend nach gueltig_ab.
+ *
+ * ⚠️ gueltig_ab '2026-01-01' ist keine neue Annahme: sie stand schon im Dateikopf
+ * und seed_tarifs.js schreibt sie seit jeher so in heilmittel_tarif. Sie ist nie
+ * gegen Anlage 2 Physiotherapie geprüft worden. Preise für Zeiträume davor liegen
+ * uns nicht vor — sie werden hier bewusst NICHT erfunden.
+ */
+export const PHYSIO_PREISFENSTER = Object.freeze([
+  Object.freeze({
+    gueltig_ab:  '2026-01-01',
+    gueltig_bis: '9999-12-31',
+    positionen:  PHYSIO_POSITIONS_2026,
+  }),
+]);
+
+/** Aktuellstes Preisfenster — Rückwärtskompatibilität für bestehende Importeure. */
+export const PHYSIO_POSITIONS = PHYSIO_PREISFENSTER[PHYSIO_PREISFENSTER.length - 1].positionen;
+
+/**
+ * Wählt das Preisfenster für ein Datum.
+ * Liegt das Datum vor dem ersten bzw. nach dem letzten Fenster, wird das
+ * nächstgelegene Fenster genommen und `ausserhalb` gesetzt — ein Preis fliesst
+ * also weiter (Abrechnung bleibt bedienbar), die Abweichung ist aber sichtbar
+ * statt still.
+ */
+function fensterFuerDatum(dateStr) {
+  const fenster = PHYSIO_PREISFENSTER;
+  if (!dateStr) return { fenster: fenster[fenster.length - 1], ausserhalb: false };
+
+  const d = String(dateStr).slice(0, 10);
+  const treffer = fenster.find(f => f.gueltig_ab <= d && f.gueltig_bis >= d);
+  if (treffer) return { fenster: treffer, ausserhalb: false };
+
+  if (d < fenster[0].gueltig_ab) return { fenster: fenster[0], ausserhalb: true };
+  return { fenster: fenster[fenster.length - 1], ausserhalb: true };
+}
+
+/**
  * Resolve template position (e.g. 'X0501') → concrete EDIFACT code for the
  * given Abrechnungscode (e.g. '22' → '20501').
  */
@@ -114,21 +157,33 @@ export function resolvePositionsnummer(templateOrCode, abrechnungscode = '22') {
 /**
  * Find a position by template code (X0501) OR resolved code (20501).
  * Returns the entry plus the resolved positionsnummer for the given Abrechnungscode.
+ *
+ * @param {string} code
+ * @param {string} [abrechnungscode='22']
+ * @param {string} [dateStr] Leistungsdatum (ISO). Ohne Angabe gilt das aktuellste
+ *                           Preisfenster — identisches Verhalten wie vor der
+ *                           Versionierung, deshalb rückwärtskompatibel.
  */
-export function findPosition(code, abrechnungscode = '22') {
+export function findPosition(code, abrechnungscode = '22', dateStr = null) {
+  const { fenster, ausserhalb } = fensterFuerDatum(dateStr);
+  const positionen = fenster.positionen;
+
   // Try template match first
-  let entry = PHYSIO_POSITIONS.find(p => p.x === code);
+  let entry = positionen.find(p => p.x === code);
   if (!entry) {
     // Try resolved: strip prefix digit, prepend X
     if (/^\d{5}$/.test(code)) {
       const template = 'X' + code.slice(1);
-      entry = PHYSIO_POSITIONS.find(p => p.x === template);
+      entry = positionen.find(p => p.x === template);
     }
   }
   if (!entry) return null;
   return {
     ...entry,
     positionsnummer: resolvePositionsnummer(entry.x, abrechnungscode),
+    gueltig_ab:  fenster.gueltig_ab,
+    gueltig_bis: fenster.gueltig_bis,
+    ausserhalb_preisfenster: ausserhalb,
   };
 }
 

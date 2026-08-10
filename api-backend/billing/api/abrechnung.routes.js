@@ -13,8 +13,10 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { buildDtaFile } from '../dta/builder.js';
-import { findPosition, resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
-import { findPodologiePosition, getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
+// Preise/Zuzahlung kommen ab Aufgabe 2 ausschliesslich über preise/resolver.js.
+// Aus den Katalogen wird hier nur noch gebraucht, was nichts mit Geld zu tun hat.
+import { resolvePositionsnummer, PHYSIO_POSITIONS } from '../codes/physio_positions.js';
+import { getPodologiePositionenFuerDiagnosegruppe } from '../codes/podologie_positions.js';
 import { renderBegleitzettel } from '../pdf/begleitzettel.template.js';
 import { parseZaaFile } from '../zaa/parser.js';
 import { logAccess } from '../../_lib/access-log.js';
@@ -22,7 +24,8 @@ import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js'
 import { renderRechnung } from '../pdf/rechnung.template.js';
 import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
 import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
-import { calcAbrechnungsfallZuzahlung, resolvePositionZuzahlung } from '../zuzahlung/calculator.js';
+import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
+import { resolvePreis } from '../preise/resolver.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
 import { buildTarifkennzeichen } from '../codes/anlage3_v22.js';
 
@@ -77,17 +80,8 @@ function getBundeslandFromPlz(plz) {
   return prefixMap[prefix] || 'NW';
 }
 
-function findPriceForDate(tariffs, positionNr, dateStr) {
-  if (!Array.isArray(tariffs) || tariffs.length === 0) return null;
-  const targetDate = new Date(dateStr);
-  const match = tariffs.find(t => {
-    if (t.position_nr !== positionNr) return false;
-    const ab = new Date(t.gueltig_ab);
-    const bis = t.gueltig_bis ? new Date(t.gueltig_bis) : null;
-    return targetDate >= ab && (!bis || targetDate <= bis);
-  });
-  return match;
-}
+// findPriceForDate() ist nach billing/preise/resolver.js gewandert (findTarifForDate)
+// und wird von dort aus für alle Wege gleich benutzt.
 
 // Map a DB prescription row → buildDtaFile prescription shape.
 // DTA ZHE-Feld 17 Therapiefrequenz ist n1 (einstellig, Behandlungen pro Woche).
@@ -140,26 +134,16 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
 
     const dateStr = s.done_at ? s.done_at.slice(0, 10) : (rx.ausstellungsdatum || new Date().toISOString().slice(0, 10));
 
-    // Dynamic price lookup
-    let einzelbetrag = 0;
-    let zuzahlungProPos = 0;
-
-    const dbTarif = findPriceForDate(tariffs, resolvedPos, dateStr);
-    if (dbTarif) {
-      einzelbetrag = Number(dbTarif.preis_eur);
-      zuzahlungProPos = dbTarif.zuzahlung_pflicht ? einzelbetrag * 0.10 : 0;
-    } else {
-      const staticPos = sector === 'podologie'
-        ? findPodologiePosition(stored, dateStr)
-        : findPosition(stored, abrechnungscode);
-      einzelbetrag = staticPos?.preis ?? 0;
-      // Gleiche Regel wie im Tarif-Zweig darueber: dort leitet seed_tarifs.js
-      // `zuzahlung_pflicht` aus `pos.zuzahlung !== null` ab, eine zuzahlungsfreie
-      // Position ergibt also 0. Der Rueckfall hier machte daraus 10 % — dadurch
-      // wurde der Kasse eine Zuzahlung gemeldet, die es nicht gibt, und die
-      // Praxis bekam entsprechend weniger ausgezahlt.
-      ({ zuzahlungUnit: zuzahlungProPos } = resolvePositionZuzahlung(staticPos, einzelbetrag));
-    }
+    // Preis + Zuzahlung zentral (billing/preise/resolver.js) — derselbe Aufruf,
+    // den auch die Druckrouten benutzen. Vorher liefen beide Wege auseinander.
+    const { preis_eur: einzelbetrag, zuzahlung_eur: zuzahlungProPos } = resolvePreis({
+      bereich: sector === 'podologie' ? 'podologie' : 'physiotherapie',
+      code: stored,
+      datum: dateStr,
+      abrechnungscode,
+      tariffs,
+      positionsnummer: resolvedPos,
+    });
 
     return {
       positionsnummer: resolvedPos,
@@ -176,26 +160,15 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
   if (sessions.length === 0) {
     const dateStr = rx.ausstellungsdatum || new Date().toISOString().slice(0, 10);
     
-    // Dynamic price lookup for fallback
-    let einzelbetrag = 0;
-    let zuzahlungProPos = 0;
-
-    const dbTarif = findPriceForDate(tariffs, resolvedPos, dateStr);
-    if (dbTarif) {
-      einzelbetrag = Number(dbTarif.preis_eur);
-      zuzahlungProPos = dbTarif.zuzahlung_pflicht ? einzelbetrag * 0.10 : 0;
-    } else {
-      const staticPos = sector === 'podologie'
-        ? findPodologiePosition(stored, dateStr)
-        : findPosition(stored, abrechnungscode);
-      einzelbetrag = staticPos?.preis ?? 0;
-      // Gleiche Regel wie im Tarif-Zweig darueber: dort leitet seed_tarifs.js
-      // `zuzahlung_pflicht` aus `pos.zuzahlung !== null` ab, eine zuzahlungsfreie
-      // Position ergibt also 0. Der Rueckfall hier machte daraus 10 % — dadurch
-      // wurde der Kasse eine Zuzahlung gemeldet, die es nicht gibt, und die
-      // Praxis bekam entsprechend weniger ausgezahlt.
-      ({ zuzahlungUnit: zuzahlungProPos } = resolvePositionZuzahlung(staticPos, einzelbetrag));
-    }
+    // Preis + Zuzahlung zentral — siehe Kommentar im Sitzungs-Zweig oben.
+    const { preis_eur: einzelbetrag, zuzahlung_eur: zuzahlungProPos } = resolvePreis({
+      bereich: sector === 'podologie' ? 'podologie' : 'physiotherapie',
+      code: stored,
+      datum: dateStr,
+      abrechnungscode,
+      tariffs,
+      positionsnummer: resolvedPos,
+    });
 
     sessions.push({
       positionsnummer: resolvedPos,
@@ -491,10 +464,13 @@ router.post('/abrechnung/create', async (req, res) => {
     const belege = rxRows.map(r => {
       const np = nameParts(r.leads);
       const brutto = (() => {
-        const pos = tenantSector === 'podologie'
-          ? findPodologiePosition(r.heilmittel_position, r.ausstellungsdatum || new Date().toISOString().slice(0, 10))
-          : findPosition(r.heilmittel_position, '22');
-        return ((pos?.preis ?? 0) * (r.anzahl_einheiten || 1)).toFixed(2);
+        const { preis_eur } = resolvePreis({
+          bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
+          code: r.heilmittel_position,
+          datum: r.ausstellungsdatum || new Date().toISOString().slice(0, 10),
+          abrechnungscode: '22',
+        });
+        return (preis_eur * (r.anzahl_einheiten || 1)).toFixed(2);
       })();
       return {
         belegnummer:        r.id.slice(0, 10),
@@ -825,13 +801,19 @@ router.get('/positions', async (req, res) => {
     if (uErr || !u?.user) return res.status(401).json({ error: 'Invalid token' });
 
     // Return the template list. UI shows x/label/kat; preis is informational.
+    // `zuzahlung` fehlte hier — dadurch war _posLookup.zuzahlung im Dashboard
+    // immer undefined und die Abrechnungs-Vorschau rechnete stur brutto × 10 %.
+    // Zuzahlungsfreie Positionen (null) wurden dem Therapeuten also mit
+    // Zuzahlung angezeigt, obwohl die gedruckte Rechnung 0 € auswies.
     const list = PHYSIO_POSITIONS.map(p => ({
-      x:        p.x,
-      label:    p.label,
-      kat:      p.kat,
-      preis:    p.preis,
-      gruppe:   !!p.gruppe,
-      telemed:  !!p.telemed,
+      x:         p.x,
+      label:     p.label,
+      kat:       p.kat,
+      preis:     p.preis,
+      zuzahlung: p.zuzahlung,                  // Betrag je Einheit, null = frei
+      zuzahlung_frei: p.zuzahlung === null,    // explizit: "frei" ist nicht "unbekannt"
+      gruppe:    !!p.gruppe,
+      telemed:   !!p.telemed,
     }));
     res.set('Cache-Control', 'private, max-age=3600');
     return res.json({ ok: true, positions: list });
@@ -988,14 +970,20 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     if (rx.owner_id !== tenantId) return res.status(403).send('Kein Zugriff');
 
     // ---- Map Sessions & Calculate Totals ----
+    // Preis + Zuzahlung über denselben Auflöser wie der §302-Weg, damit
+    // gedruckte Rechnung und Kassendatei nicht auseinanderlaufen.
     const storedPos = rx.heilmittel_position || '';
-    const pos = tenantSector === 'podologie'
-      ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
-      : findPosition(storedPos, '22');
-    const priceUnit = pos?.preis ?? 0;
-    // Zuzahlungsfreie Positionen (zuzahlung: null im Katalog) dürfen nicht mit
-    // 10 % belastet werden — siehe resolvePositionZuzahlung().
-    const { zuzahlungUnit: coPayUnit, positionFrei } = resolvePositionZuzahlung(pos, priceUnit);
+    const {
+      preis_eur: priceUnit,
+      zuzahlung_eur: coPayUnit,
+      position_frei: positionFrei,
+      katalogPosition: pos,
+    } = resolvePreis({
+      bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
+      code: storedPos,
+      datum: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
+      abrechnungscode: '22',
+    });
     const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
 
     const doneSessions = (rx.prescription_sessions || [])
@@ -1135,14 +1123,19 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     if (rx.owner_id !== tenantId) return res.status(403).send('Kein Zugriff');
 
     // ---- Shared data ----
+    // Gleicher zentraler Auflöser wie Zuzahlungsrechnung und §302-Weg.
     const storedPos = rx.heilmittel_position || '';
-    const pos = tenantSector === 'podologie'
-      ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
-      : findPosition(storedPos, '22');
-    const priceUnit = pos?.preis ?? 0;
-    // Gleiche Regel wie bei der Zuzahlungsrechnung: `zuzahlung: null` im Katalog
-    // heisst zuzahlungsfrei, nicht "dann eben 10 %".
-    const { zuzahlungUnit: coPayUnit, positionFrei } = resolvePositionZuzahlung(pos, priceUnit);
+    const {
+      preis_eur: priceUnit,
+      zuzahlung_eur: coPayUnit,
+      position_frei: positionFrei,
+      katalogPosition: pos,
+    } = resolvePreis({
+      bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
+      code: storedPos,
+      datum: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
+      abrechnungscode: '22',
+    });
     const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
     const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
 
@@ -1688,11 +1681,13 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
   for (const beh of behandlungen) {
     const datum = beh.behandlungsdatum || new Date().toISOString().slice(0, 10);
     for (const hpnr of (beh.hpnr_codes || [])) {
-      const pos = findPodologiePosition(hpnr, datum);
-      const einzelbetrag   = pos?.preis ?? 0;
-      // `zuzahlung: null` heisst zuzahlungsfrei (Podologie 78220, 78530), nicht
-      // "dann eben 10 %". Gleiche Regel wie im Physio-Pfad und auf der Rechnung.
-      const { zuzahlungUnit: zuzahlungRaw } = resolvePositionZuzahlung(pos, einzelbetrag);
+      // Zentraler Auflöser — gleiche Quelle wie Physio-§302 und alle Druckwege.
+      const { preis_eur: einzelbetrag, zuzahlung_eur: zuzahlungRaw } = resolvePreis({
+        bereich: 'podologie',
+        code: hpnr,
+        datum,
+        abrechnungscode,
+      });
       sessions.push({
         positionsnummer:  `${abrechnungscode}${hpnr}`.slice(0, 9),
         datumLeistung:    datum,

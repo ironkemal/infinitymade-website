@@ -19691,7 +19691,9 @@ function renderTaxierungList() {
             })();
             const anzahl = rx.anzahl_einheiten || 1;
             const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
-            const zuPerEin = _posLookup?.zuzahlung;
+            // zuzahlung_frei kommt aus dem Katalog und heisst wirklich "0 €",
+            // nicht "unbekannt" — siehe zweite Vorschau weiter unten.
+            const zuPerEin = _posLookup?.zuzahlung_frei ? 0 : _posLookup?.zuzahlung;
             const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
             const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
             const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;
@@ -20050,7 +20052,11 @@ function renderAbrechnungReady() {
               })();
               const anzahl = rx.anzahl_einheiten || 1;
               const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
-              const zuPerEin = _posLookup?.zuzahlung;
+              // zuzahlung_frei kommt aus dem Katalog und heisst wirklich "0 €",
+              // nicht "unbekannt". Ohne diese Unterscheidung zeigte die Vorschau
+              // fuer zuzahlungsfreie Positionen 10 % an, waehrend die gedruckte
+              // Rechnung korrekt 0 € auswies.
+              const zuPerEin = _posLookup?.zuzahlung_frei ? 0 : _posLookup?.zuzahlung;
               const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
               const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
               const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;

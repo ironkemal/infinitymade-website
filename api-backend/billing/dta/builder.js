@@ -17,6 +17,7 @@
 // Faz A2 simplifying assumption: one Krankenkasse per file (batch-per-KK).
 
 import { UNA_HEADER } from './encoding.js';
+import { calcSessionZuzahlung } from '../zuzahlung/calculator.js';
 import {
   buildUNB, buildUNH, buildUNT, buildUNZ,
 } from './envelope.js';
@@ -67,8 +68,17 @@ function calcAbrechnungsfallTotals(item) {
   const brutto = r2(sessions.reduce((a, s) => a + num(s.einzelbetrag) * num(s.anzahl || 1), 0));
   let prozZuzahlung = 0, pauschZuzahlung = 0;
   if (verordnung.zuzahlungskennzeichen === '0') {
+    // Zweite Zuzahlungsformel entfernt (Aufgabe 2): hier stand
+    // `s.zuzahlungProPos || s.einzelbetrag * 0.10`. Bei einer Zuzahlung von
+    // GENAU 0 € — also einer zuzahlungsfreien Position — ist 0 falsy, dadurch
+    // kippte die Rechnung in den 10-%-Zweig und meldete der Kasse eine
+    // Zuzahlung, die es nicht gibt. Die Regel steht jetzt nur noch in
+    // zuzahlung/calculator.js.
     prozZuzahlung = r2(sessions.reduce(
-      (a, s) => a + num(s.zuzahlungProPos || s.einzelbetrag * 0.10) * num(s.anzahl || 1), 0));
+      (a, s) => a + calcSessionZuzahlung({
+        preis_eur: num(s.einzelbetrag),
+        zuzahlung_eur_position: s.zuzahlungProPos,
+      }) * num(s.anzahl || 1), 0));
     pauschZuzahlung = Math.min(10.00, r2(brutto - prozZuzahlung));
     if (pauschZuzahlung < 0) pauschZuzahlung = 0;
   }
