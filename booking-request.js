@@ -1035,7 +1035,10 @@ async function handleSubmit() {
     krankenkasse: state.krankenkasse,
     arzt_name: state.arzt_name,
     verordnung_datum: state.verordnung_datum,
-    icd10_diagnose: state.icd10_diagnose,
+    // GKV trägt die Diagnose in icd10_diagnose ein, BG in bg_diagnose — beides landet
+    // in derselben Spalte. Stand hier zweimal im Objekt (einmal hier, einmal unten im
+    // BG-Block); der zweite Eintrag gewann und lieferte zufällig dasselbe Ergebnis.
+    icd10_diagnose: state.icd10_diagnose || state.bg_diagnose,
     diagnosegruppe: state.diagnosegruppe,
     behandlungsart: state.behandlungsart || state.bg_behandlungsart,
     verordnung_sitzungen: state.verordnung_sitzungen || state.bg_anzahl,
@@ -1051,7 +1054,6 @@ async function handleSubmit() {
     bg_name: state.bg_name,
     unfalldatum: state.unfalldatum,
     durchgangsarzt: state.durchgangsarzt,
-    icd10_diagnose: state.icd10_diagnose || state.bg_diagnose,
     // common
     notizen: state.notizen || null,
     dsgvo_consent: true,

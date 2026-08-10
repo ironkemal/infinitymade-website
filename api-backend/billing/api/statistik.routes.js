@@ -62,7 +62,8 @@ router.get('/statistik', async (req, res) => {
     // Start of last month
     const startOfLastMonth = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth() - 1, 1)).toISOString();
 
-    // Run all 10 queries in parallel
+    // Neun Abfragen parallel. Die Zahlungseingänge laufen bewusst danach,
+    // weil sie auf die Rezept-IDs aus Abfrage 5 eingegrenzt werden.
     const [
       belegResult,
       leadsResult,
@@ -72,7 +73,6 @@ router.get('/statistik', async (req, res) => {
       noShowResult,
       mahnungenResult,
       therapeutenResult,
-      zahlungenResult,
       ausfallResult,
     ] = await Promise.all([
       // 1. Kassenbuch im Zeitraum. `type` wird mitgelesen, weil die Grafik
@@ -149,17 +149,7 @@ router.get('/statistik', async (req, res) => {
         // Termine als geleistete Sitzungen mit.
         .neq('status', 'cancelled'),
 
-      // 9. Zahlungseingänge je Rezept — bewusst OHNE Datumsfilter: eine
-      //    Zuzahlung kann lange nach Ausstellung des Rezepts eingehen. Stornos
-      //    sind negativ gespeichert und rechnen sich damit von selbst gegen.
-      supabase
-        .from('belegliste')
-        .select('prescription_id, amount_eur')
-        .eq('owner_id', tenantId)
-        .in('type', ['zuzahlung', 'storno'])
-        .not('prescription_id', 'is', null),
-
-      // 10. Ausfallrechnungen im Zeitraum — offen vs. bezahlt
+      // 9. Ausfallrechnungen im Zeitraum — offen vs. bezahlt
       supabase
         .from('ausfallrechnungen')
         .select('amount_eur, status, created_at')
@@ -201,10 +191,27 @@ router.get('/statistik', async (req, res) => {
 
     // ── 1b. Offen je Monat ───────────────────────────────────────────────────
     // Regel steht in zuzahlung/bezahlt.js — dieselbe wie im Mahnwesen.
-    if (zahlungenResult.error) {
-      return res.status(500).json({ error: 'belegliste: ' + zahlungenResult.error.message });
+    //
+    // Zahlungseingänge bewusst OHNE Datumsfilter: eine Zuzahlung kann lange nach
+    // Ausstellung des Rezepts eingehen. Dafür auf genau die Rezepte eingegrenzt,
+    // um die es hier geht — vorher lief die Abfrage über das gesamte Kassenbuch
+    // des Mandanten. Greift dort ein Zeilenlimit, fehlen Zahlungen still und die
+    // betroffenen Rezepte gelten fälschlich als offen; genau das soll diese
+    // Auswertung ja verhindern. In Blöcken, damit die URL nicht überläuft.
+    const offeneRxIds = (offeneRxResult.data || []).map(rx => rx.id);
+    const zahlungen = [];
+    for (let i = 0; i < offeneRxIds.length; i += 200) {
+      const block = offeneRxIds.slice(i, i + 200);
+      const { data, error } = await supabase
+        .from('belegliste')
+        .select('prescription_id, amount_eur')
+        .eq('owner_id', tenantId)
+        .in('type', ['zuzahlung', 'storno'])
+        .in('prescription_id', block);
+      if (error) return res.status(500).json({ error: 'belegliste: ' + error.message });
+      zahlungen.push(...(data || []));
     }
-    const saldoByRx = saldoJeRezept(zahlungenResult.data);
+    const saldoByRx = saldoJeRezept(zahlungen);
 
     const offeneRx = (offeneRxResult.data || []).filter(rx => !istZuzahlungBezahlt({
       zuzahlungEur: rx.zuzahlung_eur,
@@ -267,9 +274,21 @@ router.get('/statistik', async (req, res) => {
     const offene_zuzahlungen_summe = r2(offeneRx.reduce((s, rx) => s + Number(rx.zuzahlung_eur || 0), 0));
     const offeneAusfall = ausfallRows.filter(a => a.status === 'offen');
     const offene_ausfall_summe = r2(offeneAusfall.reduce((s, a) => s + Number(a.amount_eur || 0), 0));
-    // Gesamtsumme, damit die Kachel denselben Wert zeigt wie die gelben Balken
-    // im Diagramm — dort sind Ausfallrechnungen ebenfalls enthalten.
+    // Gesamtsumme aller offenen Forderungen — Zuzahlungen und Ausfallrechnungen.
+    //
+    // Achtung: das ist NICHT die Summe der gelben Balken. Das Diagramm zeigt nur
+    // die letzten `monate` Monate, die Kachel dagegen alles Offene, auch ältere
+    // Forderungen. Die Kachel absichtlich so: eine Praxis will wissen, wie viel
+    // Geld insgesamt aussteht, nicht wie viel davon zufällig ins Fenster fällt.
+    // Damit die Oberfläche die Lücke benennen kann statt sie zu verschweigen,
+    // kommt der ausserhalb liegende Anteil separat mit.
     const offen_gesamt_summe = r2(offene_zuzahlungen_summe + offene_ausfall_summe);
+    const fensterStart = monatlich.length ? monatlich[0].monat : null;
+    const offen_ausserhalb_fenster = fensterStart
+      ? r2(Object.entries(offenByMonth)
+          .filter(([key]) => key < fensterStart)
+          .reduce((s, [, betrag]) => s + betrag, 0))
+      : 0;
 
     // ── 6. No-show rate ───────────────────────────────────────────────────────
     const noShowRows = noShowResult.error ? [] : (noShowResult.data || []);
@@ -323,6 +342,9 @@ router.get('/statistik', async (req, res) => {
       offene_zuzahlungen,
       offene_zuzahlungen_summe,
       offen_gesamt_summe,
+      // Anteil von offen_gesamt_summe, der älter ist als das Diagramm-Fenster und
+      // deshalb in keinem gelben Balken auftaucht.
+      offen_ausserhalb_fenster,
       ausfallrechnungen: {
         offen: offeneAusfall.length,
         offen_summe: offene_ausfall_summe,
