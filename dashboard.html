@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260810b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260810c" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -3490,7 +3490,10 @@
     .m13-chk.on::after{ content:"X"; }
 
     .m13-sec{ margin-top:14px; }
-    .m13-diagrow{ display:grid; grid-template-columns:160px 1fr; gap:12px; align-items:end; margin-top:4px; }
+    /* ICD-Feld bekommt den Löwenanteil: aus der Auswahl landet "E11.74 – Diabetes
+       mellitus, Typ 2: …" im Feld, das war in 160px unlesbar. Der Freitext daneben
+       wird selten getippt und darf schmal bleiben. */
+    .m13-diagrow{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; align-items:end; margin-top:4px; }
     .m13-dgrow{ display:grid; grid-template-columns:auto 140px auto 1fr auto; gap:10px 16px; align-items:end; margin-top:16px; }
     .m13-dgfield{ display:flex; flex-direction:column; }
     .m13-lsboxes{ display:flex; align-items:center; gap:16px; }
@@ -5825,7 +5828,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260810e"></script>
+  <script type="module" src="dashboard.js?v=20260810f"></script>
 </body>
 
 </html>

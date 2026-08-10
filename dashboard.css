@@ -7388,7 +7388,8 @@ body.compact-mode .patient-row {
   background: var(--bg-card-solid, #1e293b);
   border: 1px solid var(--border, #334155);
   border-radius: 8px;
-  max-height: 280px;
+  /* ~12 Zeilen statt ~9 — bei 155 podologischen E-Kodes zählt jede sichtbare Zeile. */
+  max-height: 360px;
   overflow-y: auto;
   box-shadow: 0 4px 16px rgba(0,0,0,.4);
 }

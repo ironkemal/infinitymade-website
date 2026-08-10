@@ -46,8 +46,10 @@ export function normalizeBereich(sector) {
 /** @returns {Promise<Array<{kind,code,titel,bereich,terminal,in_sector,rank}>>} */
 export async function searchDiagnosen(sb, query, opts = {}) {
   const { bereich = null, kind = 'both', limit = 25 } = opts;
+  // Leere Query ist erlaubt: die RPC liefert dann die Diagnosegruppen des
+  // Fachbereichs (nie ICD — 16.905 Kodes ohne Suchbegriff sind keine Auswahl).
   const q = String(query || '').trim();
-  if (!q || !sb) return [];
+  if (!sb) return [];
   const { data, error } = await sb.rpc('search_diagnosen', {
     p_q: q, p_bereich: normalizeBereich(bereich), p_kind: kind, p_limit: limit,
   });
@@ -227,7 +229,10 @@ function attachAutocomplete(inputEl, cfg) {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => search(inputEl.value), 180);
   });
-  inputEl.addEventListener('focus', () => { if (inputEl.value.trim()) search(inputEl.value); });
+  // minChars: 0 heisst "Klick genuegt" — dann auch bei leerem Feld suchen.
+  inputEl.addEventListener('focus', () => {
+    if (inputEl.value.trim() || minChars === 0) search(inputEl.value);
+  });
   inputEl.addEventListener('keydown', e => {
     if (!dropdown.querySelectorAll('.icd10-dropdown-item').length) return;
     if (e.key === 'ArrowDown')      { e.preventDefault(); setActive(Math.min(activeIndex + 1, currentItems.length - 1)); }
@@ -252,12 +257,17 @@ function attachAutocomplete(inputEl, cfg) {
  */
 export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
   if (!inputEl || !sb) return;
-  const { multi = false, codeOnly = false, kind = 'both', limit = 25, onSelect = null } = opts;
+  // limit 50: "E" trifft in der Podologie allein 155 gültige ICD-Kodes. Mit 25
+  // brach die Liste mitten in E10.x ab, bevor der Nutzer weitertippen konnte.
+  const { multi = false, codeOnly = false, kind = 'both', limit = 50, onSelect = null } = opts;
   const resolveBereich = typeof opts.bereich === 'function' ? opts.bereich : () => opts.bereich ?? null;
 
   attachAutocomplete(inputEl, {
     ariaLabel: 'Diagnose-Vorschläge',
     multi, onSelect,
+    // Diagnosegruppen sind eine kurze, feste Auswahl (Podologie 5, Physio 28):
+    // ein Klick ins leere Feld listet sie. ICD-Felder brauchen weiter ein Zeichen.
+    minChars: opts.minChars ?? (kind === 'dg' ? 0 : 1),
     fetchItems: q => searchDiagnosen(sb, q, { bereich: resolveBereich(), kind, limit }),
     toText: it => (codeOnly ? it.code : `${it.code} – ${it.titel}`),
     renderItem: it =>
