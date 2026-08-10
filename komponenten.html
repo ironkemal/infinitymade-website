@@ -162,7 +162,7 @@
 <script type="module">
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260725';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchDiagnosen, searchHeilmittel, heilmittelOptionsHtml, normalizeBereich } from './katalog-suche.js?v=20260726';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchDiagnosen, searchHeilmittel, heilmittelOptionsHtml, normalizeBereich } from './katalog-suche.js?v=20260810g';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 
@@ -336,7 +336,9 @@ block({
   tags: [{ k:'shared', t:'eine Quelle' }],
   what: 'Tippen Sie einen Kode oder ein Wort. Sucht gleichzeitig in allen 16.905 ICD-10-GM-2026-Kodes '
       + 'und in den 57 Heilmittelkatalog-Diagnosegruppen (DF, NF, QF, UI1, WS2, EN1, SP6 …). '
-      + 'Der eigene Fachbereich steht oben, alles andere darunter — nichts wird versteckt. '
+      + 'Zwei Modi: normal steht der eigene Fachbereich oben und alles andere unter einem Trenner; '
+      + 'mit „nur eigener Fachbereich“ (strict) bleibt fachfremdes ganz weg — so läuft es in der '
+      + 'Podologie, und so wird es nach und nach in jedem Fachbereich laufen. '
       + 'Ein einzelner Buchstabe reicht: „Q“ als Podologe zeigt QF und die Q-Kodes.',
   demo(slot) {
     slot.innerHTML = `
@@ -353,28 +355,35 @@ block({
           <option value="icd">nur ICD-10</option>
           <option value="dg">nur Diagnosegruppen</option>
         </select>
+        <label style="display:inline-flex;align-items:center;gap:6px">
+          <input type="checkbox" id="dgStrict" /> nur eigener Fachbereich (strict)
+        </label>
       </div>
       <input type="text" id="dgInput" placeholder="Q · N · DF · M54.5 · Kreuzschmerz · Fußsyndrom …" />
       <div class="out" id="dgOut"><span class="k">Ergebnisse erscheinen im Dropdown; Auswahl wird hier protokolliert.</span></div>`;
 
-    const input = slot.querySelector('#dgInput');
-    const out   = slot.querySelector('#dgOut');
+    const out = slot.querySelector('#dgOut');
+    // Fachbereich wird zur Laufzeit gelesen, kind/strict beim Anhängen — für
+    // die beiden also neu verdrahten. Immer das AKTUELLE Feld klonen, nicht
+    // das erste: das hängt nach dem ersten Austausch nicht mehr im Dokument.
+    let cur = slot.querySelector('#dgInput');
     const wire = () => {
-      // Neu aufbauen, damit Fachbereich/Art-Wechsel sofort greifen
-      const fresh = input.cloneNode(true);
-      input.replaceWith(fresh);
+      const fresh = cur.cloneNode(true);
+      cur.replaceWith(fresh);
+      cur = fresh;
       attachDiagnoseSearch(fresh, supabase, {
         bereich: () => slot.querySelector('#dgBereich').value || null,
         kind:    slot.querySelector('#dgKind').value,
+        strict:  slot.querySelector('#dgStrict').checked,
         onSelect: it => {
           out.innerHTML = `<span class="g">gewählt</span>  ${it.kind === 'dg' ? 'Diagnosegruppe' : 'ICD-10'}  `
             + `<strong>${it.code}</strong>\n${it.titel}\n<span class="k">eigener Fachbereich: ${it.in_sector ? 'ja' : 'nein'}</span>`;
         },
       });
-      return fresh;
     };
-    let cur = wire();
-    slot.querySelector('#dgKind').onchange = () => { cur = wire(); };
+    wire();
+    slot.querySelector('#dgKind').onchange   = wire;
+    slot.querySelector('#dgStrict').onchange = wire;
   },
   sources: [
     { label: 'katalog-suche.js — die Funktionen', load: () =>
@@ -384,6 +393,11 @@ block({
 `-- Die einzige Suchquelle für Diagnosen. Rangfolge statt Filter:
 -- der eigene Fachbereich zuerst, Diagnosegruppen vor rohen ICD-Kodes,
 -- exakte Treffer vor Präfix vor Titel-Teiltreffer.
+--
+-- Der strict-Modus filtert deshalb im Client (rows.filter(in_sector)) und
+-- braucht keine zweite RPC-Signatur: weil "in_sector desc" das erste
+-- Sortierkriterium ist, sind die ersten N Zeilen exakt die, die ein
+-- serverseitiger Filter liefern würde.
 search_diagnosen(
   p_q       text,   -- Suchtext, Kode mit oder ohne Punkt
   p_bereich text,   -- physiotherapy | podologie | logopaedie | ergotherapie | null
@@ -397,12 +411,19 @@ search_diagnosen(
 --   icd_sector_ranges  Kapitelbereiche je Fachbereich` },
   ],
   usedIn: [
-    { at:'dashboard.js — DIAGNOSE_FIELDS', what:'rzIcd, rxcIcd, rxcIcd2, rzDg, rxcDg, podNewIcd10 — Verdrahtung per focusin' },
+    { at:'dashboard.js — DIAGNOSE_FIELDS', what:'rzIcd, rxcIcd, rxcIcd2, rzDg, rxcDg, podNewIcd10 (strict) — Verdrahtung per focusin' },
     { at:'booking-request.html', what:'Externe Terminanfrage (Patientenseite)' },
   ],
   note: 'Ersetzt fünf frühere Einzel-Implementierungen. Ein neues Diagnosefeld = eine Zeile '
       + 'in <code>DIAGNOSE_FIELDS</code>. Verdrahtet wird beim ersten Fokus, nicht beim Start — '
-      + 'so überlebt es auch Panels, die sich per innerHTML neu rendern.',
+      + 'so überlebt es auch Panels, die sich per innerHTML neu rendern.<br>'
+      + '<strong>Fachbereichs-Filter:</strong> <code>strict:true</code> zeigt ausschliesslich '
+      + 'Diagnosen des eigenen Fachbereichs und hebt das Limit auf 100 (Obergrenze der RPC), '
+      + 'weil keine Zeile mehr an fachfremde Kodes geht. Aktiv in der Podologie '
+      + '(<code>podNewIcd10</code>); <strong>vorgesehen für jeden Fachbereich</strong>, jeweils '
+      + 'wenn sein Feinschliff dran ist — <code>icd_sector_ranges</code> ist für alle vier '
+      + 'gepflegt, es fehlt nur der Schalter am Feld. Ohne erkannten Fachbereich fällt strict '
+      + 'bewusst auf die Rangfolge zurück, sonst wäre die Liste leer.',
 });
 
 /* ═══════════════════════════════════════════════════════════════════════

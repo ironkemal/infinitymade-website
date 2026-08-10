@@ -168,6 +168,8 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Betrieb, aber ein Fehler in `getAvailableSlots` trifft sofort alle. Reihenfolge, wenn
       es soweit ist: erst Tests für `getAvailableSlots`, dann Migration, dann die
       zwölf Lesestellen, zuletzt der Bildschirm.
+      🔒 Bestätigt (Melih, 10.08.2026): bewusst NICHT jetzt bauen. Erst wieder aufgreifen,
+      wenn eine echte Praxis einen zweiten Standort bekommt.
 
 ---
 

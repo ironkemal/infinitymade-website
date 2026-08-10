@@ -17,6 +17,12 @@
  * Do NOT hand-roll a picker anywhere else. Every field goes through
  * `attachDiagnoseSearch` / `attachHeilmittelSearch`, so one fix fixes all of them.
  * (Formerly: 5 diagnosis implementations and 4 Heilmittel lists that disagreed.)
+ *
+ * Fachbereichs-Filter: `attachDiagnoseSearch(..., { strict: true })` blendet
+ * fachfremde Diagnosen ganz aus, statt sie unter einen Trenner zu schieben.
+ * Aktiv für Podologie. Vorgesehen für JEDEN Fachbereich, jeweils sobald sein
+ * Feinschliff an der Reihe ist (Physio · Ergo · Logopädie) — dafür genügt das
+ * `strict: true` in der Feld-Definition, am Modul ist nichts mehr zu tun.
  */
 
 'use strict';
@@ -46,8 +52,10 @@ export function normalizeBereich(sector) {
 /** @returns {Promise<Array<{kind,code,titel,bereich,terminal,in_sector,rank}>>} */
 export async function searchDiagnosen(sb, query, opts = {}) {
   const { bereich = null, kind = 'both', limit = 25 } = opts;
+  // Leere Query ist erlaubt: die RPC liefert dann die Diagnosegruppen des
+  // Fachbereichs (nie ICD — 16.905 Kodes ohne Suchbegriff sind keine Auswahl).
   const q = String(query || '').trim();
-  if (!q || !sb) return [];
+  if (!sb) return [];
   const { data, error } = await sb.rpc('search_diagnosen', {
     p_q: q, p_bereich: normalizeBereich(bereich), p_kind: kind, p_limit: limit,
   });
@@ -94,9 +102,14 @@ function esc(str) {
 }
 
 /**
+ * Das generische Dropdown. Exportiert, damit verwandte Picker (arzt-suche.js)
+ * es benutzen statt eines nachgebauten — eine Implementierung, ein Fix.
+ *
  * @param {HTMLInputElement} inputEl
  * @param {object} cfg
- * @param {(q:string)=>Promise<Array>} cfg.fetchItems
+ * @param {(q:string)=>Promise<Array|{items:Array,note?:string}>} cfg.fetchItems
+ *        `note` wird angezeigt, wenn `items` leer ist — sonst klappt das
+ *        Dropdown wortlos zu und wirkt kaputt.
  * @param {(item:any)=>string}         cfg.toText      value written into the input
  * @param {(item:any)=>string}         cfg.renderItem  innerHTML of one row
  * @param {(a:any,b:any)=>boolean}    [cfg.needsSeparator] insert the "other" divider between a and b
@@ -106,7 +119,7 @@ function esc(str) {
  * @param {Function}                  [cfg.onSelect]
  * @param {string}                    [cfg.ariaLabel]
  */
-function attachAutocomplete(inputEl, cfg) {
+export function attachAutocomplete(inputEl, cfg) {
   if (!inputEl) return;
   if (inputEl.dataset.katalogWired === '1') return;
   inputEl.dataset.katalogWired = '1';
@@ -176,11 +189,24 @@ function attachAutocomplete(inputEl, cfg) {
     if (onSelect) { try { onSelect(item); } catch (e) { console.warn('[katalog-suche] onSelect:', e); } }
   }
 
-  function renderItems(items) {
+  function renderItems(items, note = '') {
     dropdown.innerHTML = '';
     activeIndex = -1;
     currentItems = items;
-    if (!items.length) { dropdown.style.display = 'none'; return; }
+    // Leere Liste heisst normalerweise "nichts gefunden", da genügt Zuklappen.
+    // Wurde aber gefiltert (strict), muss dastehen WARUM — ein wortlos leeres
+    // Dropdown liest sich wie ein kaputtes Suchfeld.
+    if (!items.length && !note) { dropdown.style.display = 'none'; return; }
+    if (!items.length) {
+      positionDropdown();
+      dropdown.style.display = 'block';
+      const hint = document.createElement('div');
+      hint.className = 'icd10-dropdown-sep';
+      hint.style.position = 'static';   // kein sticky, es ist die einzige Zeile
+      hint.textContent = note;
+      dropdown.appendChild(hint);
+      return;
+    }
 
     positionDropdown();
     dropdown.style.display = 'block';
@@ -212,9 +238,12 @@ function attachAutocomplete(inputEl, cfg) {
     // Q-codes; "N" must list the N-Diagnosegruppen.
     if (q.length < minChars) { closeDropdown(); return; }
     const seq = ++requestSeq;
-    const items = await fetchItems(q);
+    const result = await fetchItems(q);
     if (seq !== requestSeq) return;     // a newer keystroke already won
-    renderItems(items);
+    // fetchItems darf entweder ein Array liefern oder { items, note } — die
+    // Notiz erscheint, wenn die Liste durch Filtern leer geblieben ist.
+    if (Array.isArray(result)) renderItems(result);
+    else renderItems(result?.items || [], result?.note || '');
   }
 
   inputEl.setAttribute('autocomplete', 'off');
@@ -227,7 +256,10 @@ function attachAutocomplete(inputEl, cfg) {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => search(inputEl.value), 180);
   });
-  inputEl.addEventListener('focus', () => { if (inputEl.value.trim()) search(inputEl.value); });
+  // minChars: 0 heisst "Klick genuegt" — dann auch bei leerem Feld suchen.
+  inputEl.addEventListener('focus', () => {
+    if (inputEl.value.trim() || minChars === 0) search(inputEl.value);
+  });
   inputEl.addEventListener('keydown', e => {
     if (!dropdown.querySelectorAll('.icd10-dropdown-item').length) return;
     if (e.key === 'ArrowDown')      { e.preventDefault(); setActive(Math.min(activeIndex + 1, currentItems.length - 1)); }
@@ -248,24 +280,70 @@ function attachAutocomplete(inputEl, cfg) {
 /**
  * ICD-10 und/oder Diagnosegruppen an ein Textfeld hängen.
  * @param {object} [opts] bereich (string|Function), kind 'icd'|'dg'|'both',
- *                        multi, codeOnly, limit, onSelect
+ *                        multi, codeOnly, limit, strict, onSelect
  */
 export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
   if (!inputEl || !sb) return;
-  const { multi = false, codeOnly = false, kind = 'both', limit = 25, onSelect = null } = opts;
+  // limit 50: "E" trifft in der Podologie allein 155 gültige ICD-Kodes. Mit 25
+  // brach die Liste mitten in E10.x ab, bevor der Nutzer weitertippen konnte.
+  // Im strict-Modus (siehe unten) sind es 100 — die Obergrenze der RPC —, weil
+  // dort keine Zeile mehr an fachfremde Kodes verloren geht.
+  const { multi = false, codeOnly = false, kind = 'both', strict = false, onSelect = null } = opts;
+  const limit = opts.limit ?? (strict ? 100 : 50);
   const resolveBereich = typeof opts.bereich === 'function' ? opts.bereich : () => opts.bereich ?? null;
+
+  /*
+   * Zwei Modi, eine Implementierung:
+   *
+   *   strict:false (Vorgabe)  Eigener Fachbereich oben, alles andere unter dem
+   *                           Trenner "Andere Fachbereiche" — sichtbar, nur
+   *                           nachrangig. So verhielt sich das Feld seit jeher.
+   *
+   *   strict:true             Nur der eigene Fachbereich. Kein Trenner, keine
+   *                           fachfremden Kodes. Eine Podologin wählt nie
+   *                           "M54.5 Kreuzschmerz"; die Zeile ist reines
+   *                           Rauschen und ein Fehlgriff kostet eine Absetzung.
+   *
+   * ZIEL: strict wird pro Fachbereich scharf geschaltet, sobald dessen
+   * Feinschliff dran ist — Podologie zuerst (siehe CLAUDE.md, "Vertikal-
+   * sortierung"), danach Physio · Ergo · Logopädie mit demselben Schalter.
+   * `icd_sector_ranges` ist für alle vier Bereiche gepflegt, es fehlt also
+   * nur das `strict: true` an der jeweiligen Feld-Definition.
+   *
+   * Gefiltert wird im Client, nicht in der RPC — search_diagnosen() sortiert
+   * bereits `in_sector desc` als erstes Kriterium. Die ersten N Zeilen sind
+   * damit dieselben, die ein serverseitiger Filter liefern würde; wir sparen
+   * uns eine zweite RPC-Signatur.
+   */
+  // Ohne aufgelösten Fachbereich liefert die RPC in_sector=false für JEDEN
+  // ICD-Kode. Strikt filtern hiesse dann: leere Liste. Also fällt der Modus
+  // in diesem Fall bewusst auf die alte Rangfolge zurück.
+  const strictNow = () => strict && !!normalizeBereich(resolveBereich());
 
   attachAutocomplete(inputEl, {
     ariaLabel: 'Diagnose-Vorschläge',
     multi, onSelect,
-    fetchItems: q => searchDiagnosen(sb, q, { bereich: resolveBereich(), kind, limit }),
+    // Diagnosegruppen sind eine kurze, feste Auswahl (Podologie 5, Physio 28):
+    // ein Klick ins leere Feld listet sie. ICD-Felder brauchen weiter ein Zeichen.
+    minChars: opts.minChars ?? (kind === 'dg' ? 0 : 1),
+    fetchItems: async q => {
+      const rows = await searchDiagnosen(sb, q, { bereich: resolveBereich(), kind, limit });
+      if (!strictNow()) return rows;
+      const own = rows.filter(it => it.in_sector);
+      // Nur gefiltert und nichts übrig? Dann sagen, dass es Treffer GAB, sie
+      // aber nicht zum Fachbereich gehören. Sonst sucht die Nutzerin den
+      // Fehler bei sich ("M54 gibt es doch") statt beim Fachbereich.
+      if (own.length || !rows.length) return own;
+      return { items: own, note: 'Keine Diagnose Ihres Fachbereichs — kein Treffer für diesen Text' };
+    },
     toText: it => (codeOnly ? it.code : `${it.code} – ${it.titel}`),
     renderItem: it =>
       `<span class="icd-code">${esc(it.code)}</span>` +
       `<span class="icd-title">${esc(it.titel)}</span>` +
       (it.kind === 'dg' ? `<span class="icd-badge">Diagnosegruppe</span>` : ''),
-    // Own Fachbereich on top, everything else below a divider — ranked, never hidden.
-    needsSeparator: (prev, cur) => prev.in_sector && !cur.in_sector,
+    // Own Fachbereich on top, everything else below a divider — ranked, never
+    // hidden. Im strict-Modus gibt es nichts zu trennen, dann entfällt er.
+    needsSeparator: (prev, cur) => !strictNow() && prev.in_sector && !cur.in_sector,
     separatorLabel: 'Andere Fachbereiche',
   });
 }

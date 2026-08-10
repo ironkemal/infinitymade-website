@@ -95,6 +95,11 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   ├── lib/phi-encrypt.js         Hasta verisi şifreleme
 │   ├── Dockerfile · docker-compose.yml
 │
+├── db/                            ★ Şema dökümü — SQL yazmadan ÖNCE oku
+│   ├── README.md                  Yönelim + 6 tuzak + tazeleme kuralı
+│   ├── SCHEMA.sql                 78 tablo, tüm kolonlar, constraint'ler, view'lar
+│   └── SCHEMA-RLS.sql             153 RLS policy · 52 fonksiyon · 58 trigger · 271 index
+│
 ├── Handbücher/                    GKV/§302 belge arşivi — INDEX.md protokolü zorunlu
 ├── Podoloji/ · verordnung rezept/  Alan belgeleri
 ├── billing/ compliance/ konsey/   DSGVO belgeleri, konsey kararları
@@ -217,6 +222,23 @@ DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine 
 
 ## 📐 Kurallar
 
+### 🗄️ Şema dökümü protokolü (2026-08-10)
+
+**SQL yazmadan / tablo-kolon varsayımı yapmadan önce `db/README.md` okunur.**
+Orada 6 tuzak yazılı (en önemlisi: hasta tablosu `patients` değil **`leads`**).
+
+- **Her şema değişikliğinden sonra döküm aynı commit'te tazelenir.**
+  `mcp__supabase__apply_migration` çalıştırdıysan, iş bitmedi — `db/SCHEMA.sql` ve
+  `db/SCHEMA-RLS.sql` yeniden üretilir, iki dosyanın başındaki tarih + son migration
+  satırı güncellenir. Tetikleyici cümle: **"şema güncelle"**.
+- **Eski döküm hiç dökümden kötüdür** — okuyan ona inanır. Bu yüzden tazeleme
+  ertelenmez, "sonra yaparım" denmez.
+- `supabase/migrations/` **kaynak değildir**: repoda 5 dosya var, DB'de 195 migration
+  kayıtlı. Şema gerçeği `db/` altındadır.
+- Döküm **sadece yapı** içerir, tek satır veri yok — depo public.
+- Melih'in (ve DB'yi göremeyen her aracın) tek bağlamı bu dosyalar.
+  Onun ürettiği SQL bize gelir, MCP ile burada uygulanır, sonra döküm tazelenir.
+
 ### 📚 Belge arşivi protokolü (2026-08-04)
 `Handbücher/`, `Podoloji/`, `verordnung rezept/` altındaki GKV/§302/Heilmittel belgelerine
 dokunan her iş şu sırayı izler:
@@ -253,6 +275,11 @@ bağımlılığı geçiş maliyetini büyütür.
 
 - Bir alanın ince ayarı bitmeden **o alanda müşteri alınmaz**
 - Başka alanda bulunan eksik → not edilir, hemen yapılmaz
+- **Fachbereich filtresi (`strict`)** — `attachDiagnoseSearch(..., { strict: true })`
+  diagnoz listesinden fachfremd kodları tamamen çıkarır (ayraç altına itmek yerine).
+  Bugün sadece podolojide (`podNewIcd10`) açık. **Her alan için düşünülmüştür**;
+  `icd_sector_ranges` dördü için de dolu, sırası gelen alanın alan tanımına
+  `strict: true` eklenir — modülde yapılacak iş yok
 - Örnek: Ergotherapie Blankoverordnung sözleşmesi 01.04.2024'ten beri yürürlükte ve kodumuz
   onu blokluyor. Gelir etkisi var ama **bilinçli olarak beklemede** (Ops-Dashboard → **Teknik**)
 

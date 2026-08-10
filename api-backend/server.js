@@ -25,6 +25,7 @@ import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.j
 import { logAccess, accessLogger } from './_lib/access-log.js';
 import crypto from 'crypto';
 import { encryptPHI, encryptionAvailable } from './lib/phi-encrypt.js';
+import { resolveOrCreateArzt } from './lib/arzt-registry.js';
 import nodemailer from 'nodemailer';
 
 dotenv.config();
@@ -2287,30 +2288,16 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
       patientId = newLead.id;
     }
 
-    // --- Auto-match-or-create doctor (aerzte) ---
-    let arztId = null;
-    if (arzt.lanr) {
-      const { data: existing } = await supabase
-        .from('aerzte')
-        .select('id')
-        .eq('owner_id', tenantId)
-        .eq('lanr', arzt.lanr)
-        .maybeSingle();
-      if (existing) arztId = existing.id;
-    }
-    if (!arztId && arzt.name) {
-      const { data: newArzt, error: arztErr } = await supabase
-        .from('aerzte')
-        .insert({
-          owner_id: tenantId,
-          arzt_name: arzt.name,
-          lanr: arzt.lanr || null,
-          bsnr: arzt.bsnr || null
-        })
-        .select('id')
-        .single();
-      if (!arztErr && newArzt) arztId = newArzt.id;
-    }
+    // --- Arzt ins Register übernehmen (LANR = Identität, siehe lib/arzt-registry.js) ---
+    const arztResult = await resolveOrCreateArzt(supabase, tenantId, {
+      name:         arzt.name,
+      lanr:         arzt.lanr,
+      bsnr:         arzt.bsnr,
+      adresse:      arzt.adresse,
+      fachrichtung: arzt.fachrichtung,
+      praxis_name:  arzt.praxis_name
+    }, { quelle: 'ocr' });
+    const arztId = arztResult.id;
 
     // --- Re-validate with possibly edited fields ---
     const rezeptForValidator = {
@@ -2462,28 +2449,20 @@ app.post('/api/rezept/save', requireAuthAI, async (req, res) => {
     }
 
     const nameNorm = arztName.trim();
-    const { data: existingArzt } = await supabase
-      .from('aerzte')
-      .select('id, arzt_nummer')
-      .eq('owner_id', ownerId)
-      .ilike('arzt_name', nameNorm)
-      .maybeSingle();
+    // `arztNummer` ist das Altfeld dieses Endpunkts. Es wurde in der Maske als
+    // Telefon/Fax befüllt, in der DTA-Erzeugung aber als LANR gelesen. Deshalb
+    // hier entscheiden, was es tatsächlich ist, statt es blind zu übernehmen.
+    const arztNummerDigits = String(arztNummer || '').replace(/\D/g, '');
+    const arztIsLanr = /^\d{9}$/.test(arztNummerDigits);
 
-    let arztId;
-    if (existingArzt) {
-      arztId = existingArzt.id;
-      if (arztNummer && arztNummer !== existingArzt.arzt_nummer) {
-        await supabase.from('aerzte').update({ arzt_nummer: arztNummer }).eq('id', arztId);
-      }
-    } else {
-      const { data: newArzt, error: arztErr } = await supabase.from('aerzte').insert({
-        owner_id: ownerId,
-        arzt_name: nameNorm,
-        arzt_nummer: arztNummer || null
-      }).select().single();
-      if (arztErr) throw arztErr;
-      arztId = newArzt.id;
-    }
+    const arztResult = await resolveOrCreateArzt(supabase, ownerId, {
+      name:    nameNorm,
+      lanr:    arztIsLanr ? arztNummerDigits : null,
+      telefon: !arztIsLanr ? arztNummer : null
+    }, { quelle: 'rezept' });
+
+    if (!arztResult.id) throw new Error('Arzt konnte nicht angelegt werden');
+    const arztId = arztResult.id;
 
     await supabase.from('leads').update({
       arzt_id: arztId,
@@ -2530,6 +2509,55 @@ app.post('/api/rezept/save', requireAuthAI, async (req, res) => {
     res.json({ success: true, arztId });
   } catch (err) {
     console.error('[rezept/save]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===== Ärzte-Register =====
+// Gemeinsamer Einstieg für alle Masken, die einen Arzt erfassen: manuelle
+// Rezepterfassung, Podologie-Verordnung und die Ärzte-Verwaltung. Findet den
+// Arzt über die LANR (bei Namensänderung/Umzug stabil), reichert vorhandene
+// Datensätze an und legt nur an, wenn er wirklich neu ist.
+// Siehe lib/arzt-registry.js für die Identitätsregeln.
+app.post('/api/arzt/resolve', requireAuthAI, async (req, res) => {
+  try {
+    const ownerId = req.auth.tenantId; // niemals aus dem Body — immer aus dem JWT
+    const {
+      name, lanr, bsnr, adresse, telefon, fax, email,
+      fachrichtung, praxis_name, notizen,
+      business_id = null, quelle = 'manuell'
+    } = req.body || {};
+
+    if (!name && !lanr) {
+      return res.status(400).json({ error: 'name oder lanr erforderlich' });
+    }
+
+    const result = await resolveOrCreateArzt(
+      supabase, ownerId,
+      { name, lanr, bsnr, adresse, telefon, fax, email, fachrichtung, praxis_name, notizen },
+      { businessId: business_id, quelle }
+    );
+
+    if (!result.id) {
+      return res.status(500).json({ error: 'Arzt konnte nicht angelegt werden' });
+    }
+
+    const { data: arzt } = await supabase
+      .from('aerzte')
+      .select('id, arzt_name, lanr, bsnr, fachrichtung, telefon, fax, email, adresse, praxis_name')
+      .eq('id', result.id)
+      .maybeSingle();
+
+    res.json({
+      success: true,
+      arzt,
+      arzt_id: result.id,
+      created: result.created,     // true = neu angelegt
+      matched_by: result.matchedBy, // 'lanr' | 'name' | null
+      enriched: result.enriched     // welche Felder ergänzt/aktualisiert wurden
+    });
+  } catch (err) {
+    console.error('[arzt/resolve]', err);
     res.status(500).json({ error: err.message });
   }
 });

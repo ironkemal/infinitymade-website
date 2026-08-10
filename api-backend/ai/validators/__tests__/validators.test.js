@@ -367,3 +367,123 @@ test('validate: null payload returns INVALID_INPUT blocker', () => {
   assert.equal(r.ok, false);
   assert.equal(r.blockers[0].code, 'INVALID_INPUT');
 });
+
+// ── ICD <-> Diagnosegruppe (Podologie) ──────────────────────────────────────
+// Geraet: standardRules + icdDgRules + catalog (getIcdDgRules).
+// Alle tests nutzen validateStandard damit DG_UNKNOWN und ICD-Pruefung zusammen laufen.
+
+const PODO_BASE = {
+  anzahl_einheiten: 6,
+  ausstellungsdatum: '2026-08-10'
+};
+
+// ── DG_UNKNOWN nicht mehr fuer Podologie-DGs ────────────────────────────────
+
+test('podo: DF loest kein DG_UNKNOWN aus', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'DF', icd10: 'E11.74' });
+  assert.equal(r.blockers.find(b => b.code === 'DG_UNKNOWN'), undefined, JSON.stringify(r.blockers));
+});
+
+test('podo: NF loest kein DG_UNKNOWN aus', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'NF', icd10: 'G60.0' });
+  assert.equal(r.blockers.find(b => b.code === 'DG_UNKNOWN'), undefined, JSON.stringify(r.blockers));
+});
+
+test('podo: QF loest kein DG_UNKNOWN aus', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'QF', icd10: 'G82.02' });
+  assert.equal(r.blockers.find(b => b.code === 'DG_UNKNOWN'), undefined, JSON.stringify(r.blockers));
+});
+
+test('podo: UI1 loest kein DG_UNKNOWN aus', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'UI1', icd10: 'L60.0' });
+  assert.equal(r.blockers.find(b => b.code === 'DG_UNKNOWN'), undefined, JSON.stringify(r.blockers));
+});
+
+test('podo: UI2 loest kein DG_UNKNOWN aus', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'UI2', icd10: 'L60.0' });
+  assert.equal(r.blockers.find(b => b.code === 'DG_UNKNOWN'), undefined, JSON.stringify(r.blockers));
+});
+
+// ── ICD-Matching: sauber, keine ICD-Warnung ─────────────────────────────────
+
+test('podo: DF + E11.74 => sauber, keine ICD-Warnung', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'DF', icd10: 'E11.74' });
+  assert.equal(r.blockers.find(b => b.code === 'DG_UNKNOWN'), undefined, 'kein DG_UNKNOWN');
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+});
+
+test('podo: DF + E11.40 => sauber (Neuropathie-Code)', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'DF', icd10: 'E11.40' });
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+});
+
+test('podo: QF + G82.02 => sauber', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'QF', icd10: 'G82.02' });
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined, JSON.stringify(r.warnings));
+});
+
+test('podo: UI1 + L60.0 => sauber', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'UI1', icd10: 'L60.0' });
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined);
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+});
+
+test('podo: DF + E11.74, I10 => sauber (Nebendiagnose unschaedlich)', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'DF', icd10: 'E11.74, I10' });
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined, JSON.stringify(r.warnings));
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+});
+
+// ── ICD-Matching: Warnung erwartet ──────────────────────────────────────────
+
+test('podo: NF + G63.2 => ICD_DG_MISMATCH Warnung (G63.2 gehoert zu DF)', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'NF', icd10: 'G63.2' });
+  const w = r.warnings.find(w => w.code === 'ICD_DG_MISMATCH');
+  assert.ok(w, 'ICD_DG_MISMATCH erwartet: ' + JSON.stringify(r.warnings));
+  // Kein Blocker
+  assert.equal(r.blockers.find(b => b.code === 'ICD_DG_MISMATCH'), undefined);
+  assert.equal(r.ok, true); // Nur Warnung, kein Blocker => ok
+});
+
+test('podo: QF + G82.60! => ICD_DG_MISMATCH Warnung (Ausrufezeichenkode ist excluded)', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'QF', icd10: 'G82.60!' });
+  const w = r.warnings.find(w => w.code === 'ICD_DG_MISMATCH');
+  assert.ok(w, 'ICD_DG_MISMATCH erwartet: ' + JSON.stringify(r.warnings));
+  assert.equal(r.blockers.find(b => b.code === 'ICD_DG_MISMATCH'), undefined);
+});
+
+test('podo: UI1 + M20.1 => ICD_DG_MISMATCH_STRENG, kein Blocker', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'UI1', icd10: 'M20.1' });
+  const w = r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG');
+  assert.ok(w, 'ICD_DG_MISMATCH_STRENG erwartet: ' + JSON.stringify(r.warnings));
+  // Kein Blocker -- die Sperre erfolgt erst vor der DTA-Erzeugung
+  assert.equal(r.blockers.find(b => b.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+  assert.equal(r.ok, true);
+});
+
+// ── Kein ICD angegeben => keine ICD-Warnung ──────────────────────────────────
+
+test('podo: DF ohne ICD => keine ICD-Warnung', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'DF' });
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined);
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+});
+
+// ── Suffix -a/-b/-c wird wie Stammkuerzel behandelt ─────────────────────────
+
+test('podo: DF-a wird wie DF behandelt -- kein DG_UNKNOWN', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'DF-a', icd10: 'E11.74' });
+  assert.equal(r.blockers.find(b => b.code === 'DG_UNKNOWN'), undefined, JSON.stringify(r.blockers));
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined);
+});
+
+// ── Physio-DG: kein ICD-Pool, kein ICD_DG_MISMATCH ─────────────────────────
+
+test('physio: WS2 mit beliebigem ICD => keine ICD-DG-Warnung', () => {
+  const r = validateStandard({ ...PODO_BASE, diagnosegruppe: 'WS2', icd10: 'E11.74' });
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH'), undefined);
+  assert.equal(r.warnings.find(w => w.code === 'ICD_DG_MISMATCH_STRENG'), undefined);
+});
+

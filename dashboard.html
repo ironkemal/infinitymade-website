@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260810b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260810c" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -1694,6 +1694,34 @@
               <div style="color:var(--text-muted);font-size:13px;">Lade…</div>
             </div>
           </div>
+
+          <!-- Überweisende Ärzte -->
+          <div class="card" style="background:var(--bg-card);border:1px solid var(--border);margin-top:16px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px;">
+              <div style="font-weight:600;font-size:14px;color:var(--text-main);">Überweisende Ärzte</div>
+              <div id="statAerzteSumme" style="font-size:12px;color:var(--text-muted);"></div>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+              Wer schickt Patienten — und welche Behandlungen werden verordnet?
+            </div>
+            <div style="overflow-x:auto;">
+              <table id="statAerzteTable" style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px;">
+                <thead>
+                  <tr style="text-align:left;color:var(--text-muted);font-size:12px;">
+                    <th style="padding:6px 8px;font-weight:600;">Arzt</th>
+                    <th style="padding:6px 8px;font-weight:600;text-align:right;">Patienten</th>
+                    <th style="padding:6px 8px;font-weight:600;text-align:right;">Verordnungen</th>
+                    <th style="padding:6px 8px;font-weight:600;">Häufigste Heilmittel</th>
+                    <th style="padding:6px 8px;font-weight:600;">Zuletzt</th>
+                    <th style="padding:6px 8px;font-weight:600;">Kontakt</th>
+                  </tr>
+                </thead>
+                <tbody id="statAerzteBody">
+                  <tr><td colspan="6" style="padding:8px;color:var(--text-muted);">Lade…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
         <!-- ===== PANEL: NOTIZEN ===== -->
@@ -2142,7 +2170,7 @@
             <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
               <div class="form-group">
                 <label class="form-label">Behandelnder Arzt</label>
-                <input type="text" class="form-input" id="anamArztName" placeholder="Name der Praxis / Arzt" list="aerzteDatalist" />
+                <input type="text" class="form-input" id="anamArztName" placeholder="Name der Praxis / Arzt" autocomplete="off" />
               </div>
               <div class="form-group">
                 <label class="form-label">Arzt-Telefon / Fax</label>
@@ -2512,13 +2540,42 @@
               <div class="settings-section" id="aerzteSection">
                 <div class="settings-section-title">Ärzte</div>
                 <div class="settings-section-body">
+                  <p class="text-muted" style="font-size:12px;margin:0 0 10px;">
+                    Ärzte werden beim Erfassen einer Verordnung automatisch aufgenommen.
+                    Erkannt werden sie an der LANR — die bleibt bei Namensänderung und
+                    Praxiswechsel gleich. Hier lassen sie sich ergänzen oder nachtragen.
+                  </p>
                   <div id="aerzteList" style="margin-bottom:12px;"></div>
                   <div class="form-row">
                     <div class="form-group">
                       <input class="form-input" id="aeName" type="text" placeholder="Arztname" />
                     </div>
                     <div class="form-group">
-                      <input class="form-input" id="aeNummer" type="text" placeholder="Telefon / Fax" />
+                      <input class="form-input" id="aeLanr" type="text" inputmode="numeric" maxlength="9" placeholder="LANR (9-stellig)" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <input class="form-input" id="aeBsnr" type="text" inputmode="numeric" maxlength="9" placeholder="BSNR (9-stellig)" />
+                    </div>
+                    <div class="form-group">
+                      <input class="form-input" id="aeFach" type="text" placeholder="Fachrichtung" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <input class="form-input" id="aeTelefon" type="text" placeholder="Telefon" />
+                    </div>
+                    <div class="form-group">
+                      <input class="form-input" id="aeFax" type="text" placeholder="Fax" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <input class="form-input" id="aeEmail" type="email" placeholder="E-Mail" />
+                    </div>
+                    <div class="form-group">
+                      <input class="form-input" id="aeAdresse" type="text" placeholder="Straße, PLZ Ort" />
                     </div>
                   </div>
                   <button class="btn-primary" id="aeAddBtn">Hinzufügen</button>
@@ -3227,7 +3284,7 @@
                 </div>
                 <input type="hidden" id="rzTherapieBereich" />
                 <div class="m13-arzt-lbl m13-cap" style="margin-top:14px;">Ausstellende Praxis / Arzt</div>
-                <input class="m13-v m13-sm m13-uline" id="rzArztName" list="aerzteDatalist" placeholder="">
+                <input class="m13-v m13-sm m13-uline" id="rzArztName" autocomplete="off" placeholder="">
               </div>
             </div>
 
@@ -3238,6 +3295,7 @@
                 <input class="m13-v m13-uline" id="rzIcd" autocomplete="off" placeholder="">
                 <input class="m13-v m13-uline" id="rzDiagnoseText" placeholder="">
               </div>
+              <div id="rzIcdDgWarning" style="display:none;color:var(--warning);font-size:11px;margin-top:3px;"></div>
               <div class="m13-dgrow">
                 <div class="m13-dgfield">
                   <span class="m13-cap">Diagnose&shy;gruppe</span>
@@ -3432,7 +3490,10 @@
     .m13-chk.on::after{ content:"X"; }
 
     .m13-sec{ margin-top:14px; }
-    .m13-diagrow{ display:grid; grid-template-columns:160px 1fr; gap:12px; align-items:end; margin-top:4px; }
+    /* ICD-Feld bekommt den Löwenanteil: aus der Auswahl landet "E11.74 – Diabetes
+       mellitus, Typ 2: …" im Feld, das war in 160px unlesbar. Der Freitext daneben
+       wird selten getippt und darf schmal bleiben. */
+    .m13-diagrow{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; align-items:end; margin-top:4px; }
     .m13-dgrow{ display:grid; grid-template-columns:auto 140px auto 1fr auto; gap:10px 16px; align-items:end; margin-top:16px; }
     .m13-dgfield{ display:flex; flex-direction:column; }
     .m13-lsboxes{ display:flex; align-items:center; gap:16px; }
@@ -3623,7 +3684,7 @@
                     </div>
                     <input type="hidden" id="rxcTherapiebereich" />
                     <div class="m13-arzt-lbl m13-cap" style="margin-top:14px;">Ausstellende Praxis / Arzt</div>
-                    <input class="m13-v m13-sm m13-uline" id="rxcArztName" list="aerzteDatalist" placeholder="">
+                    <input class="m13-v m13-sm m13-uline" id="rxcArztName" autocomplete="off" placeholder="">
                   </div>
                 </div>
 
@@ -3635,6 +3696,7 @@
                     <input class="m13-v m13-uline" id="rxcIcd2" autocomplete="off" placeholder="2. ICD" style="width:90px;flex-shrink:0;">
                     <input class="m13-v m13-uline" id="rxcDiagnoseText" placeholder="Diagnose-Freitext" style="flex:1;min-width:0;">
                   </div>
+                  <div id="rxcIcdDgWarning" style="display:none;color:var(--warning);font-size:11px;margin-top:3px;"></div>
                   <div class="m13-dgrow">
                     <div class="m13-dgfield">
                       <span class="m13-cap">Diagnose&shy;gruppe <span id="rxcDgStatus" style="font-size:11px;font-weight:400;"></span></span>
@@ -3764,7 +3826,6 @@
 
                 <!-- DATALISTS FOR MODAL -->
                 <datalist id="kkDatalist"></datalist>
-                <datalist id="aerzteDatalist"></datalist>
                 
                 
 
@@ -5766,7 +5827,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260810c"></script>
+  <script type="module" src="dashboard.js?v=20260810k"></script>
 </body>
 
 </html>
