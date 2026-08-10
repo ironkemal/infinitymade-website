@@ -13193,9 +13193,12 @@ async function loadSettings() {
   await loadAerzte();
 
   // Physio/Praxis: IK number for §302/DMRZ + Krankenkasse-Abrechnung
+  // sec wird weiter unten von der TI-Sektion mitbenutzt — deshalb hier und
+  // nicht im if-Block: dort war es blockskopiert und die TI-Zeile warf
+  // "sec is not defined", was den Rest von loadSettings abbrach.
+  const sec = getSector();
   const abrSection = document.getElementById('settingsAbrechnungSection');
   if (abrSection) {
-    const sec = getSector();
     if (isPraxisSector(sec)) {
       abrSection.style.display = '';
       document.getElementById('setIkNumber').value = currentProfile.ik_number || '';
