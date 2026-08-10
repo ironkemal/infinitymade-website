@@ -30,8 +30,9 @@ export function istZuzahlungBezahlt({ zuzahlungEur, kassiertAm, saldo }) {
   const soll = Number(zuzahlungEur) || 0;
   const ist  = Number(saldo) || 0;
 
-  // Voll bezahlt laut Kassenbuch. Toleranz von einem Cent gegen Rundungsreste
-  // aus alten Belegen.
+  // Voll bezahlt laut Kassenbuch. Toleranz von einem halben Cent gegen
+  // Rundungsreste aus alten Belegen — bewusst kleiner als ein Cent, damit eine
+  // echte Restforderung von 0,01 € nicht als bezahlt durchgeht.
   if (soll > 0 && ist >= soll - 0.005) return true;
 
   // Teilzahlung: der Rest ist weiter offen und darf gemahnt werden.

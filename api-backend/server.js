@@ -3175,6 +3175,21 @@ app.get('/api/krankenkassen', async (req, res) => {
   }
 });
 
+// Gehört der Therapeut wirklich zu dieser Praxis?
+//
+// Muss vor JEDEM Termin-Insert laufen. Die Therapeuten-ID kommt teils aus dem
+// oeffentlichen Anfrage-Formular und ist ueber /api/team/public auch noch
+// auffindbar; die Inserts laufen mit service_role, also ohne RLS. Ohne diese
+// Pruefung liesse sich der Kalender einer FREMDEN Praxis mit bestaetigten
+// Terminen zustellen — und ueber no_overlapping_bookings blockieren.
+async function gehoertZurPraxis(empId, ownerId) {
+  if (!empId || !ownerId) return false;
+  if (empId === ownerId) return true;
+  const { data } = await supabase.from('profiles')
+    .select('id').eq('id', empId).eq('owner_id', ownerId).maybeSingle();
+  return Boolean(data);
+}
+
 // Legt aus einer bestätigten Terminanfrage die Termine im Kalender an.
 // Wird vom Auto-Akzeptieren (/booking-request/create) und vom manuellen Bestätigen
 // (/booking-request/approve) benutzt, damit beide Wege exakt dieselben Termine erzeugen.
@@ -3260,7 +3275,8 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
     // Auto-Akzeptieren braucht einen Therapeuten — ohne ihn koennte kein Termin im
     // Kalender entstehen. Ohne Therapeut laeuft die Anfrage deshalb ganz normal als
     // "offen" weiter, damit die Praxis beim Bestaetigen jemanden auswaehlen kann.
-    if (autoConfig?.booking_auto_approve && autoTypes.includes(payment_type) && employee_id) {
+    if (autoConfig?.booking_auto_approve && autoTypes.includes(payment_type)
+        && employee_id && await gehoertZurPraxis(employee_id, owner_id)) {
       const { data: pat } = resolvedPatientId
         ? await supabase.from('patients').select('email, vorname, nachname').eq('id', resolvedPatientId).maybeSingle()
         : { data: null };
@@ -3279,7 +3295,10 @@ app.post('/api/booking-request/create', bookingRequestLimiter, async (req, res) 
       // Der Ablauf faellt dann unten in den normalen "offen"-Weg samt Praxis-Mail.
       if (!autoResult.conflict) {
         await supabase.from('booking_requests')
-          .update({ status: 'approved', auto_approved: true, booking_id: autoResult.booking_id })
+          .update({
+            status: 'approved', auto_approved: true,
+            booking_id: autoResult.booking_id, booking_ids: autoResult.booking_ids,
+          })
           .eq('id', request.id);
         if (pat?.email && process.env.SMTP_HOST) {
           const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
@@ -3361,6 +3380,9 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
 
     const empId = overrideEmployee || bookReq.employee_id;
     if (!empId) return res.status(400).json({ error: 'Bitte wählen Sie einen Therapeuten für diesen Termin' });
+    if (!await gehoertZurPraxis(empId, owner_id)) {
+      return res.status(400).json({ error: 'Dieser Therapeut gehört nicht zu Ihrer Praxis' });
+    }
 
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
     const result = await createBookingsFromRequest(bookReq, owner_id, empId, patName);
@@ -3370,7 +3392,9 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
       });
     }
 
-    await supabase.from('booking_requests').update({ status: 'approved', booking_id: result.booking_id }).eq('id', request_id);
+    await supabase.from('booking_requests')
+      .update({ status: 'approved', booking_id: result.booking_id, booking_ids: result.booking_ids })
+      .eq('id', request_id);
 
     if (bookReq.patients?.email && process.env.SMTP_HOST) {
       const [{ data: ownerP }, { data: empP }] = await Promise.all([
@@ -3439,7 +3463,7 @@ app.post('/api/booking-request/cancel', bookingRequestLimiter, async (req, res) 
   if (!request_id || !token) return res.status(400).json({ error: 'request_id und token required' });
   try {
     const { data: bookReq } = await supabase.from('booking_requests')
-      .select('id, patient_id, status, booking_id').eq('id', request_id).maybeSingle();
+      .select('id, patient_id, status, booking_id, booking_ids').eq('id', request_id).maybeSingle();
     if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
     if (['cancelled', 'declined'].includes(bookReq.status)) return res.status(409).json({ error: 'Anfrage bereits storniert' });
 
@@ -3448,9 +3472,14 @@ app.post('/api/booking-request/cancel', bookingRequestLimiter, async (req, res) 
     if (token !== expectedToken) return res.status(403).json({ error: 'Ungültiger Token' });
 
     await supabase.from('booking_requests').update({ status: 'cancelled' }).eq('id', request_id);
-    // Sonst bliebe der bereits bestaetigte Termin als Geistertermin im Kalender stehen.
-    if (bookReq.booking_id) {
-      await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', bookReq.booking_id);
+    // Sonst blieben die bereits bestaetigten Termine als Geistertermine im Kalender.
+    // booking_ids enthaelt auch die Folgetermine einer Serie; booking_id ist der
+    // Rueckfall fuer Anfragen von vor dieser Aenderung.
+    const zuStornieren = Array.isArray(bookReq.booking_ids) && bookReq.booking_ids.length
+      ? bookReq.booking_ids
+      : (bookReq.booking_id ? [bookReq.booking_id] : []);
+    if (zuStornieren.length) {
+      await supabase.from('bookings').update({ status: 'cancelled' }).in('id', zuStornieren);
     }
     return res.json({ ok: true });
   } catch (e) {
@@ -3461,9 +3490,13 @@ app.post('/api/booking-request/cancel', bookingRequestLimiter, async (req, res) 
 
 // Ein Token pro angebotenem Termin. Der Index gehoert mit hinein, sonst koennte
 // der Patient mit demselben Link jeden beliebigen Vorschlag annehmen.
-function alternativToken(requestId, patientId, index) {
+// Ein Token pro angebotenem Termin. Der Index gehoert mit hinein, sonst koennte
+// der Patient mit demselben Link jeden beliebigen Vorschlag annehmen. Der
+// Angebots-Zeitstempel ebenfalls: schickt die Praxis ein zweites, anderes Angebot,
+// wuerde der alte slot=0-Link sonst den ersten Eintrag der NEUEN Liste buchen.
+function alternativToken(requestId, patientId, index, angebotenAt) {
   return crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
-    .update(`alt:${requestId}:${patientId}:${index}`).digest('hex').substring(0, 32);
+    .update(`alt:${requestId}:${patientId}:${index}:${angebotenAt}`).digest('hex').substring(0, 32);
 }
 
 // POST /api/booking-request/offer — auth required (owner)
@@ -3494,12 +3527,19 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
       return res.status(400).json({ error: 'Ohne E-Mail-Adresse des Patienten kann kein Gegenangebot verschickt werden' });
     }
 
+    for (const a of alternatives) {
+      if (!await gehoertZurPraxis(a.employee_id, owner_id)) {
+        return res.status(400).json({ error: 'Ein angebotener Termin gehört zu einem fremden Therapeuten' });
+      }
+    }
+
     const gespeichert = alternatives.map(a => ({
       date: a.date, time: a.time.substring(0, 5), employee_id: a.employee_id,
     }));
+    const angebotenAt = new Date().toISOString();
     const { error: updErr } = await supabase.from('booking_requests').update({
       alternativ_termine: gespeichert,
-      alternativ_angeboten_at: new Date().toISOString(),
+      alternativ_angeboten_at: angebotenAt,
     }).eq('id', request_id);
     if (updErr) throw updErr;
 
@@ -3507,7 +3547,7 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
       const { data: ownerP } = await supabase.from('profiles')
         .select('business_name, email').eq('id', owner_id).maybeSingle();
       const zeilen = gespeichert.map((a, i) => {
-        const token = alternativToken(request_id, bookReq.patient_id, i);
+        const token = alternativToken(request_id, bookReq.patient_id, i, angebotenAt);
         const link = `https://app.praxura.de/booking-request.html?accept=${encodeURIComponent(request_id)}&slot=${i}&token=${token}`;
         const datum = new Date(`${a.date}T12:00:00`).toLocaleDateString('de-DE', {
           weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
@@ -3590,14 +3630,19 @@ app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req,
       .eq('id', request_id).maybeSingle();
     if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
 
-    if (token !== alternativToken(request_id, bookReq.patient_id, index)) {
-      return res.status(403).json({ error: 'Ungültiger Link' });
+    if (!bookReq.alternativ_angeboten_at
+        || token !== alternativToken(request_id, bookReq.patient_id, index, bookReq.alternativ_angeboten_at)) {
+      return res.status(403).json({ error: 'Dieser Link ist nicht mehr gültig. Bitte melden Sie sich bei der Praxis.' });
     }
     if (bookReq.status !== 'pending') return res.status(409).json({ error: 'Diese Anfrage wurde bereits bearbeitet.' });
 
     const alternativen = Array.isArray(bookReq.alternativ_termine) ? bookReq.alternativ_termine : [];
     const gewaehlt = alternativen[index];
     if (!gewaehlt) return res.status(404).json({ error: 'Dieser Vorschlag ist nicht mehr gültig.' });
+
+    if (!await gehoertZurPraxis(gewaehlt.employee_id, bookReq.owner_id)) {
+      return res.status(409).json({ error: 'Dieser Vorschlag ist nicht mehr gültig.' });
+    }
 
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
     // Der Vorschlag kann inzwischen selbst belegt sein — dieselbe Pruefung wie beim
@@ -3613,6 +3658,7 @@ app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req,
     await supabase.from('booking_requests').update({
       status: 'approved',
       booking_id: result.booking_id,
+      booking_ids: result.booking_ids,
       preferred_date: gewaehlt.date,
       preferred_time: gewaehlt.time,
       employee_id: gewaehlt.employee_id,

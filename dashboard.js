@@ -25159,10 +25159,13 @@ function renderAnfragenList(requests) {
 
   list.innerHTML = requests.map(req => {
     const pat = req.patients;
-    const patName = pat ? `${pat.vorname} ${pat.nachname}` : '—';
+    // Alles ab hier kommt aus dem OEFFENTLICHEN Anfrage-Formular und wird unveraendert
+    // gespeichert. Ohne escapeHtml wuerde ein Patient Markup in das Dashboard des
+    // Praxisinhabers schreiben koennen — inklusive Zugriff auf dessen Sitzung.
+    const patName = pat ? escapeHtml(`${pat.vorname} ${pat.nachname}`) : '—';
     const patDob = pat?.geburtsdatum ? new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : '';
-    const svcName = req.services?.title || '—';
-    const badge = paymentBadge[req.payment_type] || req.payment_type?.toUpperCase();
+    const svcName = escapeHtml(req.services?.title || '—');
+    const badge = escapeHtml(paymentBadge[req.payment_type] || req.payment_type?.toUpperCase() || '');
     const badgeColor = paymentColor[req.payment_type] || '#6b7280';
     const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
     const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
@@ -25208,7 +25211,8 @@ function showAnfrageDetail(requestId) {
   const lang = document.getElementById('langSelect')?.value || 'de';
   const tl = T[lang] || T.de;
   const pat = req.patients;
-  const patName = pat ? `${pat.vorname} ${pat.nachname}` : '—';
+  // Siehe renderAnfragenList: diese Werte stammen aus dem oeffentlichen Formular.
+  const patName = pat ? escapeHtml(`${pat.vorname} ${pat.nachname}`) : '—';
   const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
   const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
   const paymentLabel = { gkv: 'GKV – Kassenpatient', pkv: 'PKV – Privatpatient', selbstzahler: 'Selbstzahler', bg: 'BG – Berufsgenossenschaft' };
@@ -25236,19 +25240,19 @@ function showAnfrageDetail(requestId) {
     if (req.behandlungsart) extraFields.push(['Behandlungsart', req.behandlungsart]);
   }
 
-  const extraHTML = extraFields.map(([k,v]) => `<div class="detail-row"><span class="detail-label">${k}</span><span>${v}</span></div>`).join('');
+  const extraHTML = extraFields.map(([k, v]) => `<div class="detail-row"><span class="detail-label">${escapeHtml(k)}</span><span>${escapeHtml(String(v))}</span></div>`).join('');
   const isPending = req.status === 'pending';
 
   showHtmlModal({ title: tl.anfragen_detail_title, html: `
     <div class="anfragen-detail">
       <div class="detail-row"><span class="detail-label">${tl.anfragen_patient}</span><span>${patName}${pat?.geburtsdatum ? ' · ' + new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : ''}</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_payment}</span><span>${paymentLabel[req.payment_type] || req.payment_type}</span></div>
-      <div class="detail-row"><span class="detail-label">${tl.anfragen_service}</span><span>${req.services?.title || '—'} · ${req.session_count} Sitzung(en)</span></div>
+      <div class="detail-row"><span class="detail-label">${tl.anfragen_service}</span><span>${escapeHtml(req.services?.title || '—')} · ${Number(req.session_count) || 1} Sitzung(en)</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_date}</span><span>${prefDate}${prefTime ? ' um ' + prefTime : ''}</span></div>
       ${extraHTML}
-      ${req.notizen ? `<div class="detail-row"><span class="detail-label">${tl.anfragen_notizen}</span><span>${req.notizen}</span></div>` : ''}
-      ${pat?.email ? `<div class="detail-row"><span class="detail-label">E-Mail</span><span>${pat.email}</span></div>` : ''}
-      ${pat?.telefon ? `<div class="detail-row"><span class="detail-label">Telefon</span><span>${pat.telefon}</span></div>` : ''}
+      ${req.notizen ? `<div class="detail-row"><span class="detail-label">${tl.anfragen_notizen}</span><span>${escapeHtml(req.notizen)}</span></div>` : ''}
+      ${pat?.email ? `<div class="detail-row"><span class="detail-label">E-Mail</span><span>${escapeHtml(pat.email)}</span></div>` : ''}
+      ${pat?.telefon ? `<div class="detail-row"><span class="detail-label">Telefon</span><span>${escapeHtml(pat.telefon)}</span></div>` : ''}
     </div>
     ${pat?.email ? `
       <div style="margin-top:16px">
@@ -25274,7 +25278,7 @@ async function approveAnfrage(requestId) {
     const lang = document.getElementById('langSelect')?.value || 'de';
     const tl = T[lang] || T.de;
 
-    const empOptions = allPeople.map(p => `<option value="${p.id}">${p.full_name}</option>`).join('');
+    const empOptions = allPeople.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.full_name || '')}</option>`).join('');
     showHtmlModal({
       title: tl.anfragen_select_employee,
       confirmText: tl.anfragen_confirm_approve,

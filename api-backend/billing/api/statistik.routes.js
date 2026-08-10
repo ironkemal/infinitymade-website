@@ -143,7 +143,11 @@ router.get('/statistik', async (req, res) => {
         .select('employee_id, profiles:employee_id(first_name, last_name)')
         .eq('owner_id', tenantId)
         .gte('start_time', cutoffIso)
-        .neq('status', 'canceled'),
+        // 'cancelled' mit zwei l — so steht es in bookings_status_check und in
+        // jeder anderen Abfrage. Mit 'canceled' traf die Bedingung nie, seit der
+        // start_time-Fix die Abfrage ueberhaupt durchlaesst zaehlten stornierte
+        // Termine als geleistete Sitzungen mit.
+        .neq('status', 'cancelled'),
 
       // 9. Zahlungseingänge je Rezept — bewusst OHNE Datumsfilter: eine
       //    Zuzahlung kann lange nach Ausstellung des Rezepts eingehen. Stornos

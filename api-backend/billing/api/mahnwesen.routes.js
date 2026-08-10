@@ -134,7 +134,12 @@ router.get('/mahnwesen/offene', async (req, res) => {
           first_name: rx.leads?.first_name || '',
           last_name:  rx.leads?.last_name  || '',
         },
-        zuzahlung_eur:    rx.zuzahlung_eur,
+        // Nur der Restbetrag wird gemahnt. Seit die Bezahlt-Pruefung den vollen
+        // Betrag verlangt, tauchen Teilzahler wieder in dieser Liste auf — mit
+        // rx.zuzahlung_eur wuerde die Mahnung Geld fordern, das schon da ist.
+        zuzahlung_eur:    Math.round((rx.zuzahlung_eur - (saldoByRx.get(rx.id) || 0)) * 100) / 100,
+        zuzahlung_gesamt: rx.zuzahlung_eur,
+        bereits_gezahlt:  Math.round((saldoByRx.get(rx.id) || 0) * 100) / 100,
         abrechnung_id:    rx.abrechnung_id,
         ausstellungsdatum: rx.ausstellungsdatum,
         latest_mahnung:   latestMahnung.get(rx.id) || null,

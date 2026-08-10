@@ -62,6 +62,10 @@ export function createBookingsFromRequestFactory({
     if (bookErr?.code === '23P01') return { conflict: true };
     if (bookErr) throw bookErr;
 
+    // Alle entstandenen Termine mitfuehren: booking_id allein reicht beim Stornieren
+    // nicht, sonst blieben die Folgetermine einer Serie als Geistertermine stehen.
+    const alleIds = [booking.id];
+
     // Auto-schedule remaining sessions for unambiguous frequencies (deterministic, no AI).
     // "2x/Woche" etc. need a second/third weekday we were never told, so we don't guess —
     // the owner books those manually via the existing series tool.
@@ -82,11 +86,11 @@ export function createBookingsFromRequestFactory({
             }
             const st = berlinLocalToUTC(dateStr, bookReq.preferred_time).toISOString();
             const et = new Date(new Date(st).getTime() + duration * 60000).toISOString();
-            const { error: extraErr } = await supabase.from('bookings').insert({
+            const { data: extra, error: extraErr } = await supabase.from('bookings').insert({
               user_id: empId, owner_id: ownerId, service_id: bookReq.service_id || null,
               customer_name: patName, start_time: st, end_time: et, status: 'confirmed',
-            });
-            if (extraErr) extraConflicts++; else extraCreated++;
+            }).select('id').single();
+            if (extraErr) { extraConflicts++; } else { extraCreated++; alleIds.push(extra.id); }
           } catch {
             extraConflicts++;
           }
@@ -98,6 +102,7 @@ export function createBookingsFromRequestFactory({
 
     return {
       booking_id: booking.id,
+      booking_ids: alleIds,
       sessions_total: sessionsTotal,
       sessions_created: 1 + extraCreated,
       sessions_conflicts: extraConflicts,

@@ -145,6 +145,39 @@ test('unklare Frequenz legt nur den ersten Termin an und meldet Handarbeit', asy
   assert.equal(supabase.inserts.length, 1);
 });
 
+test('booking_ids enthält jeden Termin der Serie, nicht nur den ersten', async () => {
+  const supabase = fakeSupabase();
+  const create = createBookingsFromRequestFactory({
+    supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots: allSlotsFree,
+  });
+
+  const result = await create(
+    { ...baseRequest, verordnung_sitzungen: 3, frequenz: '1x/Woche' },
+    'owner-1', 'therapeut-1', 'Max Mustermann',
+  );
+
+  // Ohne das bleiben beim Patienten-Storno die Folgetermine im Kalender stehen.
+  assert.deepEqual(result.booking_ids, ['booking-1', 'booking-2', 'booking-3']);
+  assert.equal(result.booking_id, 'booking-1');
+});
+
+test('booking_ids zählt einen belegten Folgetermin nicht mit', async () => {
+  const supabase = fakeSupabase();
+  const getAvailableSlots = async (_emp, dateStr) =>
+    dateStr === '2026-09-08' ? { slots: [] } : { slots: ['10:00'] };
+  const create = createBookingsFromRequestFactory({
+    supabase, berlinLocalToUTC, generateRecurringDates, getAvailableSlots,
+  });
+
+  const result = await create(
+    { ...baseRequest, verordnung_sitzungen: 3, frequenz: '1x/Woche' },
+    'owner-1', 'therapeut-1', 'Max Mustermann',
+  );
+
+  assert.equal(result.booking_ids.length, 2);
+  assert.equal(result.booking_ids.length, result.sessions_created);
+});
+
 test('belegter Wunschtermin: kein Insert, sondern conflict', async () => {
   const supabase = fakeSupabase();
   const create = createBookingsFromRequestFactory({
