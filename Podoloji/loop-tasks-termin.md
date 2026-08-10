@@ -40,10 +40,25 @@ angehen, wenn die genannte Nummer `[x]` ist.
       trotzdem das Rennen, wird `23P01` als 409 mit klarer deutscher Meldung beantwortet.
       Die DB-Sperre bleibt unverändert der letzte Schutz.
 
-- [ ] 3. Kalender: "Verschieben"-Modus einbauen — Verschieben-Button drücken, Ziel-Slot anklicken [Priorität: Hoch]
-      Code: `kalender.js`, `dashboard.js` (Suchbegriff "verschieben" kommt an mehreren Stellen
-      schon vor — vermutlich Teil-Grundgerüst da, der eigentliche Klick-Modus fehlt noch).
-      ⚠️ Beim Verschieben immer gegen `no_overlapping_bookings` prüfen — siehe Punkt 2.
+- [x] 3. Kalender: "Verschieben"-Modus einbauen — Verschieben-Button drücken, Ziel-Slot anklicken [Priorität: Hoch]
+      Geändert: `dashboard.js` (`cancelMoveBooking`, `updateMoveBanner`, Escape-Taste,
+      Panel-Wechsel beendet den Modus, klare Kollisionsmeldung, i18n de/en/tr) ·
+      `dashboard.html` (Hinweisleiste) · `dashboard.css` (`.cal-move-banner`) ·
+      Cache-Version für `dashboard.js` und `dashboard.css`
+      Befund: der Klick-Modus **existierte schon** in beiden Kalendern
+      (`dashboard.js` `startMoveBooking` + Geist-Vorschau + `doMoveBooking`;
+      `kalender.js` mit eigenem Banner). In `kalender.js` war nichts zu tun — dort gibt es
+      Banner, Abbrechen-Knopf und die saubere 409-Meldung über `patchBooking` bereits.
+      Im Dashboard fehlten drei Dinge:
+      1. **Kein Weg zurück.** War der Modus aktiv, legte jeder Slot-Klick nur einen neuen
+         Vorschlag an; er blieb sogar nach dem Wechsel in ein anderes Modul unsichtbar aktiv.
+         Jetzt: Hinweisleiste mit „Verschieben abbrechen", Escape-Taste, und der Wechsel
+         des Moduls beendet den Modus.
+      2. Bei Kollision zeigte die Meldung rohen Postgres-Text; jetzt ein verständlicher Satz.
+      3. Aus dem Tagesplan geöffnet wäre der Modus aktiv, aber unsichtbar gewesen —
+         es wird jetzt in den Kalender gewechselt.
+      Die DB-Sperre `no_overlapping_bookings` bleibt unangetastet; sie ist weiterhin das,
+      was die Doppelbuchung verhindert — nur die Meldung ist jetzt lesbar.
 
 - [ ] 4. Termin-Anfrage: Gegenangebot — bei ausgebuchter Zeit schlägt die Praxis eine Alternativzeit vor
       Zuerst: 1

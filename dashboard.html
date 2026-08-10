@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260810a" />
+  <link rel="stylesheet" href="dashboard.css?v=20260810b" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -279,6 +279,11 @@
             </div>
           </div>
           <div class="cal-emp-chips" id="calEmpChips"></div>
+
+          <div class="cal-move-banner" id="calMoveBanner" hidden>
+            <span id="calMoveBannerText" data-i18n="move_banner">Zielzeit anklicken, dann den Vorschlag bestätigen.</span>
+            <button class="btn-secondary btn-sm" type="button" id="calMoveCancelBtn" data-i18n="move_cancel">Verschieben abbrechen</button>
+          </div>
 
           <div class="month-grid-wrap" id="monthViewWrap" style="display:none;">
             <div class="month-grid-header" id="monthGridHeader"></div>

@@ -1910,6 +1910,26 @@ textarea {
   outline-offset: 2px;
 }
 
+/* Hinweisleiste im Verschieben-Modus — ohne sie gibt es keinen sichtbaren Weg zurueck. */
+.cal-move-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-main);
+  background: var(--bg-card-solid);
+  border: 1px dashed var(--primary);
+}
+
+.cal-move-banner[hidden] {
+  display: none;
+}
+
 .dv-ghost {
   position: absolute;
   left: 4px;

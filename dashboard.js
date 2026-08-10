@@ -155,6 +155,11 @@ const T = {
     anfragen_sessions: 'Sitzungen', anfragen_notizen: 'Notizen',
     anfragen_link_title: 'Buchungslink', anfragen_link_sub: 'Teilen Sie diesen Link mit Ihren Patienten',
     anfragen_copy_link: 'Link kopieren',
+    move_banner: 'Zielzeit anklicken, dann den Vorschlag bestätigen.',
+    move_cancel: 'Verschieben abbrechen',
+    move_conflict: 'Zu dieser Zeit ist schon ein Termin eingetragen. Bitte eine andere Zeit wählen.',
+    move_error: 'Termin konnte nicht verschoben werden',
+    move_done: 'Termin verschoben',
     kass_title: 'Zuzahlung kassieren', kass_zahlart: 'Womit wird bezahlt?',
     kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges',
     kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
@@ -285,6 +290,11 @@ const T = {
     anfragen_sessions: 'Sessions', anfragen_notizen: 'Notes',
     anfragen_link_title: 'Booking link', anfragen_link_sub: 'Share this link with your patients',
     anfragen_copy_link: 'Copy link',
+    move_banner: 'Click the target time, then confirm the preview.',
+    move_cancel: 'Cancel move',
+    move_conflict: 'There is already an appointment at that time. Please pick another slot.',
+    move_error: 'Could not move the appointment',
+    move_done: 'Appointment moved',
     kass_title: 'Collect co-payment', kass_zahlart: 'How is it being paid?',
     kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other',
     kass_print: 'Print receipt', kass_cancel: 'Cancel',
@@ -415,6 +425,11 @@ const T = {
     anfragen_sessions: 'Seans', anfragen_notizen: 'Notlar',
     anfragen_link_title: 'Rezervasyon linki', anfragen_link_sub: 'Bu linki hastalarınızla paylaşın',
     anfragen_copy_link: 'Linki kopyala',
+    move_banner: 'Hedef saati tıklayın, sonra önizlemeyi onaylayın.',
+    move_cancel: 'Taşımayı iptal et',
+    move_conflict: 'Bu saatte zaten bir randevu var. Lütfen başka bir saat seçin.',
+    move_error: 'Randevu taşınamadı',
+    move_done: 'Randevu taşındı',
     kass_title: 'Katkı payını tahsil et', kass_zahlart: 'Ödeme nasıl yapılıyor?',
     kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer',
     kass_print: 'Makbuz yazdır', kass_cancel: 'İptal',
@@ -857,6 +872,9 @@ async function switchPanel(id) {
       }
     }
   }
+  // Ein angefangenes Verschieben gehoert zum Kalender. Verlaesst man ihn, wird es
+  // beendet — sonst bliebe der Modus unsichtbar aktiv.
+  if (id !== 'calendar' && moveBooking) cancelMoveBooking();
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + id);
@@ -5457,13 +5475,49 @@ async function initBkCustomerAutocomplete() {
   }
 }
 
-function startMoveBooking(b) {
+async function startMoveBooking(b) {
   moveBooking = b;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   closeModal('bookingModal');
-  if (calendarView !== 'day') setCalendarView('day');
-  else renderDayView(toISODate(dayViewDate));
+  // Der Termin laesst sich auch aus dem Tagesplan heraus oeffnen. Ohne den Wechsel
+  // in den Kalender waere der Verschieben-Modus aktiv, aber unsichtbar.
+  if (activePanel !== 'calendar') await switchPanel('calendar');
+  else if (calendarView !== 'day') setCalendarView('day');
+  else await renderDayView(toISODate(dayViewDate));
+  updateMoveBanner();
 }
+
+// Ohne sichtbaren Abbruch war der Verschieben-Modus eine Sackgasse: jeder Klick auf
+// einen Slot legte nur einen neuen Vorschlag an, und der Modus blieb auch beim
+// Wechsel der Ansicht aktiv.
+function cancelMoveBooking() {
+  if (!moveBooking) return;
+  moveBooking = null;
+  if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
+  updateMoveBanner();
+  if (activePanel === 'calendar' && calendarView === 'day') renderDayView(toISODate(dayViewDate));
+}
+
+function updateMoveBanner() {
+  const banner = document.getElementById('calMoveBanner');
+  if (!banner) return;
+  banner.hidden = !moveBooking;
+  if (!moveBooking) return;
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
+  const name = moveBooking.customer_name || moveBooking.services?.title || 'Termin';
+  const textEl = document.getElementById('calMoveBannerText');
+  if (textEl) textEl.textContent = `${name}: ${tl.move_banner}`;
+  const btn = document.getElementById('calMoveCancelBtn');
+  if (btn) {
+    btn.textContent = tl.move_cancel;
+    btn.onclick = cancelMoveBooking;
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && moveBooking) cancelMoveBooking();
+});
 
 function placeGhost(slotEl, empId, text) {
   if (moveGhostEl) moveGhostEl.remove();
@@ -5491,6 +5545,8 @@ function placeGhost(slotEl, empId, text) {
 
 async function doMoveBooking(startStr, empId) {
   if (!moveBooking) return;
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
   const s = new Date(startStr + ':00');
   const e = new Date(moveBooking.end_time);
   const oldS = new Date(moveBooking.start_time);
@@ -5502,10 +5558,16 @@ async function doMoveBooking(startStr, empId) {
   };
   if (empId && empId !== moveBooking.user_id) payload.user_id = empId;
   const { error } = await supabase.from('bookings').update(payload).eq('id', moveBooking.id);
-  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  if (error) {
+    // 23P01 ist die Doppelbuchungs-Sperre der Datenbank. Ohne diese Uebersetzung
+    // sah der Praxisinhaber rohen Postgres-Text.
+    showToast(error.code === '23P01' ? tl.move_conflict : `${tl.move_error}: ${error.message}`, 'error');
+    return;
+  }
   moveBooking = null;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
-  showToast('Termin verschoben');
+  updateMoveBanner();
+  showToast(tl.move_done);
   await renderDayView(toISODate(dayViewDate));
   if (typeof scheduleDate !== 'undefined' && toISODate(dayViewDate) === toISODate(scheduleDate)) {
     loadScheduleBookings(scheduleDate);
