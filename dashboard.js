@@ -1,7 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260810b';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260810f';
+import { attachArztSearch, arztMetaText } from './arzt-suche.js?v=20260810f';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 import { attachPatientSearch } from './patient-suche.js?v=20260726';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
@@ -16745,21 +16746,9 @@ function bindAnamneseEvents() {
   const printBtn = document.getElementById('anamPrintBtn');
   if (printBtn) printBtn.onclick = printAnamneseInline;
 
-  const anamArztName = document.getElementById('anamArztName');
-  if (anamArztName) {
-    anamArztName.addEventListener('input', () => {
-      const val = anamArztName.value.trim();
-      const matched = aerzteCache.find(a => a.arzt_name === val);
-      // anamnese.arzt_nummer ist ein Freitextfeld der Anamnese; im Register
-      // ist die LANR der maßgebliche Wert.
-      if (matched && matched.lanr) {
-        const numInput = document.getElementById('anamArztNummer');
-        if (numInput && !numInput.value.trim()) {
-          numInput.value = matched.lanr;
-        }
-      }
-    });
-  }
+  // anamArztNummer ist mit "Telefon / Fax" beschriftet: bevorzugt die Telefon-
+  // nummer aus dem Register, LANR nur als Rückfall (so war es vorher immer).
+  wireArztFeld({ name: 'anamArztName', tel: 'anamArztNummer' });
 
   const slider = document.getElementById('anamSchmerzSkala');
   const skalaVal = document.getElementById('anamSkalaVal');
@@ -16944,11 +16933,74 @@ function toastArztErgebnis(out) {
   }
 }
 
-function populateAerzteDatalist() {
-  const datalist = document.getElementById('aerzteDatalist');
-  if (!datalist) return;
-  if (!Array.isArray(aerzteCache)) return;
-  datalist.innerHTML = aerzteCache.map(a => `<option value="${escapeHtml(a.arzt_name)}"></option>`).join('');
+/**
+ * Register für die Picker bereitstellen. Beim ersten Feld-Fokus wird geladen,
+ * damit ein Formular auch dann Vorschläge hat, wenn es vor loadAerzte() offen war.
+ */
+async function ensureAerzteLoaded() {
+  if (!Array.isArray(aerzteCache) || aerzteCache.length === 0) {
+    await loadAerzte().catch(e => console.warn('[aerzte] load:', e));
+  }
+  return aerzteCache || [];
+}
+
+/**
+ * Ein Arzt-Feld an den gemeinsamen Picker hängen (arzt-suche.js).
+ *
+ * Die Nummernfelder werden bei einer Auswahl bewusst ÜBERSCHRIEBEN: wer einen
+ * Arzt anklickt, meint diesen Arzt. Die alte "nur füllen, wenn leer"-Regel ließ
+ * beim Wechsel die LANR des vorigen Arztes stehen — eine falsche LANR ist ein
+ * Absetzungsgrund, ein leeres Feld nicht.
+ *
+ * @param {object} f  {name, lanr, bsnr, tel, id, hint} — Element-IDs, alle optional außer name
+ */
+function wireArztFeld(f) {
+  const nameEl = document.getElementById(f.name);
+  const lanrEl = f.lanr ? document.getElementById(f.lanr) : null;
+  const bsnrEl = f.bsnr ? document.getElementById(f.bsnr) : null;
+  const telEl  = f.tel  ? document.getElementById(f.tel)  : null;
+  const idEl   = f.id   ? document.getElementById(f.id)   : null;
+  const hintEl = f.hint ? document.getElementById(f.hint) : null;
+
+  const uebernehmen = (a) => {
+    if (!a) return;
+    if (lanrEl) lanrEl.value = a.lanr || '';
+    if (bsnrEl) bsnrEl.value = a.bsnr || '';
+    if (telEl)  telEl.value  = a.telefon || a.fax || a.lanr || '';
+    if (idEl)   idEl.value   = a.id || '';
+    if (hintEl) {
+      const meta = arztMetaText(a);
+      hintEl.textContent = meta ? `Bekannter Arzt · ${meta}` : 'Bekannter Arzt';
+      hintEl.style.display = 'block';
+    }
+  };
+
+  // Panels wie die Podologie-Verordnung rendern per innerHTML neu; sollte ein
+  // Feld doch einmal überleben, darf es keinen zweiten Listener bekommen.
+  if (nameEl && nameEl.dataset.arztWired !== '1') {
+    nameEl.dataset.arztWired = '1';
+    attachArztSearch(nameEl, { loadAerzte: ensureAerzteLoaded, onSelect: uebernehmen });
+    // Freitext ohne Auswahl: Bindung lösen, damit beim Speichern ein neuer Arzt
+    // entsteht statt den zuletzt gewählten zu überschreiben.
+    nameEl.addEventListener('input', () => {
+      const val = nameEl.value.trim();
+      const treffer = (aerzteCache || []).find(a => a.arzt_name === val);
+      if (treffer) return;                       // onSelect hat schon gefüllt
+      if (idEl) idEl.value = '';
+      if (hintEl) {
+        hintEl.textContent = val ? 'Neuer Arzt — wird beim Speichern ins Ärzte-Register aufgenommen.' : '';
+        hintEl.style.display = val ? 'block' : 'none';
+      }
+    });
+  }
+  // Stefans Weg: die ersten Ziffern der LANR tippen, Namen anklicken.
+  if (lanrEl) {
+    attachArztSearch(lanrEl, {
+      loadAerzte: ensureAerzteLoaded,
+      writes: 'lanr',
+      onSelect: (a) => { if (nameEl) nameEl.value = a.arzt_name || ''; uebernehmen(a); },
+    });
+  }
 }
 
 function populateLeadArztSelect() {
@@ -16970,7 +17022,6 @@ async function loadAerzte() {
     .order('arzt_name', { ascending: true });
   aerzteCache = data || [];
 
-  populateAerzteDatalist();
   populateLeadArztSelect();
 
   const list = document.getElementById('aerzteList');
@@ -18440,33 +18491,10 @@ async function init() {
       if (!sel || !sel.value) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
       openRezeptModal(null, sel.value);
     });
-    const rxcArztName = document.getElementById('rxcArztName');
-    if (rxcArztName) {
-      rxcArztName.addEventListener('input', () => {
-        const val = rxcArztName.value.trim();
-        const matched = aerzteCache.find(a => a.arzt_name === val);
-        if (matched) {
-          const lanr = document.getElementById('rxcLanr');
-          const bsnr = document.getElementById('rxcBsnr');
-          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || '';
-          if (bsnr && !bsnr.value.trim()) bsnr.value = matched.bsnr || '';
-        }
-      });
-    }
-    // Wire rzArztName autocomplete → rzLanr / rzBsnr
-    const rzArztName = document.getElementById('rzArztName');
-    if (rzArztName) {
-      rzArztName.addEventListener('input', () => {
-        const val = rzArztName.value.trim();
-        const matched = aerzteCache.find(a => a.arzt_name === val);
-        if (matched) {
-          const lanr = document.getElementById('rzLanr');
-          const bsnr = document.getElementById('rzBsnr');
-          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || '';
-          if (bsnr && !bsnr.value.trim()) bsnr.value = matched.bsnr || '';
-        }
-      });
-    }
+    // Arzt-Felder → gemeinsamer Picker (arzt-suche.js): Name ODER LANR tippen,
+    // Auswahl füllt Name + LANR + BSNR zusammen.
+    wireArztFeld({ name: 'rxcArztName', lanr: 'rxcLanr', bsnr: 'rxcBsnr' });
+    wireArztFeld({ name: 'rzArztName',  lanr: 'rzLanr',  bsnr: 'rzBsnr'  });
     // Wire rzHm → rzHmPosition (reuse same physio positions cache)
     const rzHmInput = document.getElementById('rzHm');
     const rzHmPosInput = document.getElementById('rzHmPosition');
@@ -23976,8 +24004,7 @@ async function loadPodologieBilling() {
             </div>
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Verordnender Arzt</label>
-              <input type="text" id="podNewArztName" list="podArztList" placeholder="Arztname suchen oder eingeben…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
-              <datalist id="podArztList"></datalist>
+              <input type="text" id="podNewArztName" placeholder="Arztname oder LANR suchen…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
               <input type="hidden" id="podNewArztId">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
                 <input type="text" id="podNewArztLanr" inputmode="numeric" maxlength="9" placeholder="LANR (9-stellig)" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
@@ -24336,39 +24363,10 @@ async function loadPodologieBilling() {
       _podKkCache.map(k => `<option value="${escapeHtml(k.ik)}">${escapeHtml(k.name)}</option>`).join('');
   }
 
-  // Wire up: Arzt datalist + hint
-  const podArztList = document.getElementById('podArztList');
-  if (podArztList && aerzteCache.length) {
-    podArztList.innerHTML = aerzteCache.map(a =>
-      `<option value="${escapeHtml(a.arzt_name)}">`
-    ).join('');
-  }
-  document.getElementById('podNewArztName')?.addEventListener('input', () => {
-    const val = document.getElementById('podNewArztName').value.trim();
-    const matched = aerzteCache.find(a => a.arzt_name === val);
-    const arztIdEl = document.getElementById('podNewArztId');
-    const hintEl   = document.getElementById('podArztHint');
-    const lanrEl   = document.getElementById('podNewArztLanr');
-    const bsnrEl   = document.getElementById('podNewArztBsnr');
-    if (matched) {
-      if (arztIdEl) arztIdEl.value = matched.id;
-      // Bekannte Nummern vorbelegen, aber eine bereits getippte Eingabe des
-      // Anwenders nicht überschreiben.
-      if (lanrEl && !lanrEl.value.trim()) lanrEl.value = matched.lanr || '';
-      if (bsnrEl && !bsnrEl.value.trim()) bsnrEl.value = matched.bsnr || '';
-      if (hintEl) {
-        hintEl.textContent = `Bekannter Arzt · LANR: ${matched.lanr || '—'}  |  BSNR: ${matched.bsnr || '—'}`;
-        hintEl.style.display = 'block';
-      }
-    } else {
-      if (arztIdEl) arztIdEl.value = '';
-      if (hintEl) {
-        hintEl.textContent = val
-          ? 'Neuer Arzt — wird beim Speichern ins Ärzte-Register aufgenommen.'
-          : '';
-        hintEl.style.display = val ? 'block' : 'none';
-      }
-    }
+  // Wire up: Arzt-Picker + Hinweis (gemeinsames Modul, siehe wireArztFeld)
+  wireArztFeld({
+    name: 'podNewArztName', lanr: 'podNewArztLanr', bsnr: 'podNewArztBsnr',
+    id:   'podNewArztId',   hint: 'podArztHint',
   });
 
   // Wire up: Ausstelldatum change

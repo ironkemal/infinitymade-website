@@ -96,6 +96,9 @@ function esc(str) {
 }
 
 /**
+ * Das generische Dropdown. Exportiert, damit verwandte Picker (arzt-suche.js)
+ * es benutzen statt eines nachgebauten — eine Implementierung, ein Fix.
+ *
  * @param {HTMLInputElement} inputEl
  * @param {object} cfg
  * @param {(q:string)=>Promise<Array>} cfg.fetchItems
@@ -108,7 +111,7 @@ function esc(str) {
  * @param {Function}                  [cfg.onSelect]
  * @param {string}                    [cfg.ariaLabel]
  */
-function attachAutocomplete(inputEl, cfg) {
+export function attachAutocomplete(inputEl, cfg) {
   if (!inputEl) return;
   if (inputEl.dataset.katalogWired === '1') return;
   inputEl.dataset.katalogWired = '1';

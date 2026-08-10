@@ -2170,7 +2170,7 @@
             <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
               <div class="form-group">
                 <label class="form-label">Behandelnder Arzt</label>
-                <input type="text" class="form-input" id="anamArztName" placeholder="Name der Praxis / Arzt" list="aerzteDatalist" />
+                <input type="text" class="form-input" id="anamArztName" placeholder="Name der Praxis / Arzt" autocomplete="off" />
               </div>
               <div class="form-group">
                 <label class="form-label">Arzt-Telefon / Fax</label>
@@ -3284,7 +3284,7 @@
                 </div>
                 <input type="hidden" id="rzTherapieBereich" />
                 <div class="m13-arzt-lbl m13-cap" style="margin-top:14px;">Ausstellende Praxis / Arzt</div>
-                <input class="m13-v m13-sm m13-uline" id="rzArztName" list="aerzteDatalist" placeholder="">
+                <input class="m13-v m13-sm m13-uline" id="rzArztName" autocomplete="off" placeholder="">
               </div>
             </div>
 
@@ -3684,7 +3684,7 @@
                     </div>
                     <input type="hidden" id="rxcTherapiebereich" />
                     <div class="m13-arzt-lbl m13-cap" style="margin-top:14px;">Ausstellende Praxis / Arzt</div>
-                    <input class="m13-v m13-sm m13-uline" id="rxcArztName" list="aerzteDatalist" placeholder="">
+                    <input class="m13-v m13-sm m13-uline" id="rxcArztName" autocomplete="off" placeholder="">
                   </div>
                 </div>
 
@@ -3826,7 +3826,6 @@
 
                 <!-- DATALISTS FOR MODAL -->
                 <datalist id="kkDatalist"></datalist>
-                <datalist id="aerzteDatalist"></datalist>
                 
                 
 
@@ -5828,7 +5827,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260810f"></script>
+  <script type="module" src="dashboard.js?v=20260810g"></script>
 </body>
 
 </html>
