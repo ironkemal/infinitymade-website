@@ -1,0 +1,93 @@
+# Loop-Liste: Kassieren, Zuzahlung, Rechnungen
+
+Quelle: Ops-Dashboard → Podoloji → "Kassieren, Zuzahlung ve fatura akışı" (Meeting 08.08.2026)
+Regel für den builder-Agenten: von oben nach unten abarbeiten. Ein Punkt mit `Zuerst:` erst
+angehen, wenn die genannte Nummer `[x]` ist.
+
+- [x] 1. Kassieren-Ablauf neu bauen — Zahlart wählen (Bar/Überweisung) → Drucken → als "kassiert" markieren [Priorität: Hoch]
+      Geändert: `database_v32_kassieren_zahlart.sql` (neu) · `dashboard.js` (Dialog `openKassierenDialog`,
+      `kassiereZuzahlung`, `storniereZuzahlung`, `openZuzahlungsrechnung`, i18n de/en/tr, beide
+      Einstiegspunkte, `flipAbrechnungStatus` entkoppelt) · `dashboard.html` (Kassenbuch-Spalte Zahlart,
+      Cache-Version) · `dashboard.css` (`--success`, `--success-dim`, `--warning-text`) ·
+      `api-backend/billing/belegliste/helper.js` · `api-backend/billing/belegliste.test.js` ·
+      `api-backend/billing/api/abrechnung.routes.js` (Zahlart + Token-Fix) ·
+      `api-backend/billing/api/mahnwesen.routes.js` (Stornos gegenrechnen)
+      ⚠️ SQL-Migration muss vor dem Deploy im Supabase SQL-Editor laufen.
+
+- [ ] 2. Zuzahlung- und GKV-Preise zentral und versioniert pflegen
+      ⏸ Analyse liegt vor, Umbau bewusst zurückgestellt (Entscheidung Melih, 10.08.2026).
+      Neu: `api-backend/billing/PREISE-ANALYSE.md`
+      Kurz: es gibt DREI Preisquellen (physio_positions.js ohne Datumsfenster,
+      podologie_positions.js mit, DB-Tabelle heilmittel_tarif). Die Druckrouten fragen
+      heilmittel_tarif gar nicht ab — gedruckte Rechnung und §302-Datei können deshalb
+      unterschiedliche Preise nennen. Melih entscheidet nach dem Lesen, ob umgebaut wird.
+
+- [x] 3. Ein-Klick-Zuzahlungsrechnung — 10 % vom Heilmittel + 10 €, automatisch berechnet
+      (Sperre "Zuerst: 2" von Melih am 10.08.2026 aufgehoben — geht auch ohne den Preis-Umbau.)
+      Geändert: `api-backend/billing/zuzahlung/calculator.js` (neu: `resolvePositionZuzahlung`) ·
+      `api-backend/billing/zuzahlung/calculator.test.js` (10 neue Fälle) ·
+      `api-backend/billing/api/abrechnung.routes.js` (Zuzahlungsrechnung + RZG-Quittung)
+      Befund: Formel 10 % + 10 € war korrekt, aber zuzahlungsfreie Positionen wurden mit
+      10 % belastet. Ein Klick liefert der Kassieren-Dialog aus Aufgabe 1.
+
+- [x] 4. Zuzahlung-Bildschirm vereinfachen — nur Summe in Gelb, wird grün sobald bezahlt
+      Geändert: `dashboard.js` (eine Zeile statt zwei, drei Zustände: befreit/offen/bezahlt) ·
+      `dashboard.html` (Zeile "RZG" entfernt — zeigte denselben Betrag als Abkürzung nochmal) ·
+      `dashboard.css` (`--success`, `--success-dim`, `--warning-text` als lesbare Textfarbe)
+      Alle festen Farben (#fbbf24, #4ade80, rgba(34,197,94,…)) sind raus.
+
+- [x] 5. Nach dem Kassieren dauerhafte Verlinkung zur Rechnung — von Termin/Patient aus öffenbar
+      Geändert: `dashboard.js` (`openZuzahlungsrechnung`, Link im Termin-Panel und in der
+      Patientenakte, Beleg-Nr. aus dem Kassenbuch in der Rezeptzeile)
+      Der Link ist dauerhaft gültig: die Rechnung wird bei jedem Aufruf frisch aus dem Rezept
+      erzeugt (Nummer ZU-<Rezept-ID>), es gibt keinen gespeicherten Rechnungsdatensatz.
+
+- [x] 6. Monatsübersicht Zahlungsstatus — welche Rechnung bezahlt, welche offen ist
+      Geändert: `api-backend/billing/api/statistik.routes.js` (Offen-Reihe je Monat, offener
+      Betrag statt nur Anzahl, Ausfallrechnungen mit drin, zwei kaputte Spaltennamen) ·
+      `dashboard.js` (gestapeltes Balkendiagramm grün/gelb + Farblegende, KPI zeigt Betrag) ·
+      `dashboard.html` (KPI-Kachel)
+      Die Basis reichte nicht: es gab nur Umsatz (also ausschliesslich Bezahltes) und keine
+      Offen-Reihe.
+
+- [ ] 7. Ausfallrechnung-Muster von Stefan holen
+      ⚠️ Menschliche Aufgabe, kein Code — der builder-Agent kann das nicht selbst erledigen.
+      Melih muss das Muster besorgen, dann diesen Punkt selbst abhaken.
+
+- [ ] 8. Ausfallrechnung-Vorlage mit Stefans Muster abgleichen und fertigstellen
+      Zuerst: 7
+      Code: `api-backend/billing/pdf/ausfallrechnung.template.js` + `ausfallrechnung.test.js`
+      (Vorlage existiert schon, muss mit dem Muster verglichen werden).
+
+- [ ] 9. Mahnung-Vorlage für unbezahlte Ausfallrechnungen
+      Zuerst: 8
+      Code: `api-backend/billing/pdf/mahnung.template.js` + `api-backend/billing/api/mahnwesen.routes.js`
+      (existiert schon — prüfen ob Ausfallrechnung dort mit abgedeckt ist).
+      📋 Beim Lesen für Aufgabe 1 mit aufgefallen, damit es später nicht neu gesucht wird:
+      Ausfallrechnungen sind dort **nicht** abgedeckt und können es ohne Schemaänderung auch
+      nicht sein — `mahnungen.prescription_id` ist `NOT NULL` (`database_v28_mahnwesen.sql:10`),
+      eine Ausfallrechnung hat aber kein Rezept. Auch die Vorlage ist auf Zuzahlung
+      festgeschrieben ("Offene Zuzahlung", "Ausstehender Betrag (Zuzahlung)").
+      Mahnstufen gibt es drei (14/10/7 Tage), die Stufe wird aber vom Aufrufer bestimmt und
+      nicht gegen die Historie geprüft — Stufe 3 lässt sich als erste Mahnung verschicken.
+
+- [x] 10. Bei Namenskorrektur automatisch aktuellen Namen auf neuer Rechnung anzeigen — kein Freitext auf der Rechnung erlaubt
+      Geändert: `dashboard.js` (Rechnungsansicht nutzt nur noch die Patientenakte) ·
+      `api-backend/billing/api/abrechnung.routes.js` (Podologie-§302: Freitext-Rückfall entfernt,
+      klare 422-Meldung statt falschem Namen)
+      Befund: alle rezeptbasierten Dokumente zogen den Namen schon live aus `leads` — dort war
+      nichts zu tun. Zwei Freitext-Lücken gab es: `verordnungen.patient_name` (Podologie) und
+      `invoices.patient_name` (Rechnungsansicht). Beide sind zu.
+      Offen und gemeldet: die Rechnungs-Liste zeigt weiterhin die gespeicherte Namenskopie.
+
+---
+
+## Für den builder-Agenten
+
+- Diese Datei ist die einzige Quelle für "was ist als nächstes dran".
+- Nach jeder erledigten Aufgabe: Checkbox auf `[x]` setzen + eine kurze Zeile darunter,
+  welche Dateien geändert wurden.
+- Bei Punkt 7 (menschliche Aufgabe) oder bei echten Unklarheiten: nicht raten, anhalten,
+  Melih in einfachen Worten fragen was fehlt.
+- Themen rund um Zuzahlung/Abrechnung (§302 SGB V) sind rechtlich/fachlich heikel —
+  im Zweifel lieber fragen statt selbst zu entscheiden.

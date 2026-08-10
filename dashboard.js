@@ -161,6 +161,40 @@ const T = {
     anfragen_sessions: 'Sitzungen', anfragen_notizen: 'Notizen',
     anfragen_link_title: 'Buchungslink', anfragen_link_sub: 'Teilen Sie diesen Link mit Ihren Patienten',
     anfragen_copy_link: 'Link kopieren',
+    anfragen_absage_senden: 'Absage senden',
+    anfragen_nachricht: 'Nachricht an Patient',
+    anfragen_nachricht_senden: 'Nachricht senden',
+    anfragen_nachricht_hint: 'Geht als E-Mail an den Patienten. Antworten landen direkt in Ihrem Postfach.',
+    anfragen_nachricht_leer: 'Bitte eine Nachricht eingeben.',
+    anfragen_nachricht_ok: 'Nachricht gesendet ✓',
+    anfragen_alt_offen: 'Vorschläge verschickt, warten auf Antwort',
+    anfragen_alt_anbieten: 'Alternativtermine anbieten',
+    anfragen_alt_hint: 'Höchstens drei auswählen. Der Patient nimmt einen davon per Klick in der E-Mail an.',
+    anfragen_alt_leer: 'In den nächsten Tagen ist bei diesem Therapeuten nichts frei.',
+    anfragen_alt_max: 'Höchstens drei Termine anbieten.',
+    anfragen_alt_gesendet: 'Terminvorschläge verschickt ✓',
+    anfragen_alt_keine_mail: 'Ohne E-Mail-Adresse des Patienten können keine Alternativtermine angeboten werden.',
+    move_banner: 'Zielzeit anklicken, dann den Vorschlag bestätigen.',
+    move_cancel: 'Verschieben abbrechen',
+    move_conflict: 'Zu dieser Zeit ist schon ein Termin eingetragen. Bitte eine andere Zeit wählen.',
+    move_error: 'Termin konnte nicht verschoben werden',
+    move_done: 'Termin verschoben',
+    kass_title: 'Zuzahlung kassieren', kass_zahlart: 'Womit wird bezahlt?',
+    kass_bar: 'Bar', kass_ec: 'EC-Karte', kass_ueberweisung: 'Überweisung', kass_sonstiges: 'Sonstiges',
+    kass_print: 'Quittung drucken', kass_cancel: 'Abbrechen',
+    kass_befreit: 'Zuzahlung befreit', kass_offen: 'Zuzahlung offen', kass_bezahlt: 'Zuzahlung bezahlt', kass_btn: 'Kassieren',
+    kass_beleg: 'Beleg', kass_rechnung: 'Rechnung öffnen', stat_bezahlt: 'Bezahlt', stat_offen: 'Offen', kass_undo: 'stornieren',
+    kass_ok: 'Zuzahlung kassiert ✓', kass_storno_ok: 'Zuzahlung storniert ✓',
+    kass_err_betrag: 'Kein Zuzahlungsbetrag hinterlegt — bitte zuerst am Rezept eintragen.',
+    kass_err_bereits: 'Diese Zuzahlung wurde bereits kassiert.',
+    kass_err_beleg: 'Kassenbuch-Beleg fehlgeschlagen, nichts wurde gebucht:',
+    kass_storno_title: 'Zuzahlung stornieren',
+    kass_storno_msg: 'Der Beleg im Kassenbuch kann nicht gelöscht werden. Es wird eine Gegenbuchung erzeugt.',
+    kass_storno_grund: 'Storno-Grund (optional)',
+    kass_storno_confirm: 'Stornieren',
+    kass_storno_kein_beleg: 'Für dieses Rezept gibt es keinen Kassenbuch-Beleg (vor August 2026 kassiert). Der Vermerk wird zurückgenommen, im Kassenbuch ändert sich nichts.',
+    kass_popup: 'Popup-Blocker verhindert das Öffnen des Druckfensters.',
+    kass_popup_gebucht: 'Gebucht — aber die Quittung konnte nicht geöffnet werden (Popup-Blocker). Über „Rechnung öffnen“ nachholen.',
   },
   en: {
     logout: 'Sign out',
@@ -280,6 +314,40 @@ const T = {
     anfragen_sessions: 'Sessions', anfragen_notizen: 'Notes',
     anfragen_link_title: 'Booking link', anfragen_link_sub: 'Share this link with your patients',
     anfragen_copy_link: 'Copy link',
+    anfragen_absage_senden: 'Send decline',
+    anfragen_nachricht: 'Message patient',
+    anfragen_nachricht_senden: 'Send message',
+    anfragen_nachricht_hint: 'Sent as an email. Replies land straight in your inbox.',
+    anfragen_nachricht_leer: 'Please enter a message.',
+    anfragen_nachricht_ok: 'Message sent ✓',
+    anfragen_alt_offen: 'Suggestions sent, awaiting reply',
+    anfragen_alt_anbieten: 'Offer alternative times',
+    anfragen_alt_hint: 'Pick up to three. The patient accepts one with a click in the email.',
+    anfragen_alt_leer: 'Nothing free with this therapist over the next few days.',
+    anfragen_alt_max: 'Offer at most three times.',
+    anfragen_alt_gesendet: 'Suggestions sent ✓',
+    anfragen_alt_keine_mail: 'Without the patient\'s email address no alternatives can be offered.',
+    move_banner: 'Click the target time, then confirm the preview.',
+    move_cancel: 'Cancel move',
+    move_conflict: 'There is already an appointment at that time. Please pick another slot.',
+    move_error: 'Could not move the appointment',
+    move_done: 'Appointment moved',
+    kass_title: 'Collect co-payment', kass_zahlart: 'How is it being paid?',
+    kass_bar: 'Cash', kass_ec: 'Debit card', kass_ueberweisung: 'Bank transfer', kass_sonstiges: 'Other',
+    kass_print: 'Print receipt', kass_cancel: 'Cancel',
+    kass_befreit: 'Exempt from co-payment', kass_offen: 'Co-payment open', kass_bezahlt: 'Co-payment paid', kass_btn: 'Collect',
+    kass_beleg: 'Receipt', kass_rechnung: 'Open invoice', stat_bezahlt: 'Paid', stat_offen: 'Outstanding', kass_undo: 'reverse',
+    kass_ok: 'Co-payment collected ✓', kass_storno_ok: 'Co-payment reversed ✓',
+    kass_err_betrag: 'No co-payment amount set — please enter it on the prescription first.',
+    kass_err_bereits: 'This co-payment has already been collected.',
+    kass_err_beleg: 'Cash ledger entry failed, nothing was booked:',
+    kass_storno_title: 'Reverse co-payment',
+    kass_storno_msg: 'The cash ledger entry cannot be deleted. A counter-entry will be created.',
+    kass_storno_grund: 'Reason for reversal (optional)',
+    kass_storno_confirm: 'Reverse',
+    kass_storno_kein_beleg: 'There is no cash ledger entry for this prescription (collected before August 2026). The note will be removed; the ledger stays unchanged.',
+    kass_popup: 'A popup blocker prevented the print window from opening.',
+    kass_popup_gebucht: 'Booked — but the receipt could not be opened (popup blocker). Use “Open invoice” to retrieve it.',
   },
   tr: {
     logout: 'Çıkış',
@@ -399,6 +467,40 @@ const T = {
     anfragen_sessions: 'Seans', anfragen_notizen: 'Notlar',
     anfragen_link_title: 'Rezervasyon linki', anfragen_link_sub: 'Bu linki hastalarınızla paylaşın',
     anfragen_copy_link: 'Linki kopyala',
+    anfragen_absage_senden: 'Ret gönder',
+    anfragen_nachricht: 'Hastaya mesaj',
+    anfragen_nachricht_senden: 'Mesaj gönder',
+    anfragen_nachricht_hint: 'E-posta olarak gider. Yanıtlar doğrudan gelen kutunuza düşer.',
+    anfragen_nachricht_leer: 'Lütfen bir mesaj girin.',
+    anfragen_nachricht_ok: 'Mesaj gönderildi ✓',
+    anfragen_alt_offen: 'Öneriler gönderildi, yanıt bekleniyor',
+    anfragen_alt_anbieten: 'Alternatif saat öner',
+    anfragen_alt_hint: 'En fazla üç tane seçin. Hasta e-postadaki bağlantıyla birini kabul eder.',
+    anfragen_alt_leer: 'Önümüzdeki günlerde bu terapistte boş saat yok.',
+    anfragen_alt_max: 'En fazla üç saat önerin.',
+    anfragen_alt_gesendet: 'Öneriler gönderildi ✓',
+    anfragen_alt_keine_mail: 'Hastanın e-posta adresi olmadan alternatif saat önerilemez.',
+    move_banner: 'Hedef saati tıklayın, sonra önizlemeyi onaylayın.',
+    move_cancel: 'Taşımayı iptal et',
+    move_conflict: 'Bu saatte zaten bir randevu var. Lütfen başka bir saat seçin.',
+    move_error: 'Randevu taşınamadı',
+    move_done: 'Randevu taşındı',
+    kass_title: 'Katkı payını tahsil et', kass_zahlart: 'Ödeme nasıl yapılıyor?',
+    kass_bar: 'Nakit', kass_ec: 'Banka kartı', kass_ueberweisung: 'Havale', kass_sonstiges: 'Diğer',
+    kass_print: 'Makbuz yazdır', kass_cancel: 'İptal',
+    kass_befreit: 'Katkı payından muaf', kass_offen: 'Katkı payı açık', kass_bezahlt: 'Katkı payı ödendi', kass_btn: 'Tahsil et',
+    kass_beleg: 'Fiş', kass_rechnung: 'Faturayı aç', stat_bezahlt: 'Ödenen', stat_offen: 'Açık', kass_undo: 'iptal et',
+    kass_ok: 'Katkı payı tahsil edildi ✓', kass_storno_ok: 'Katkı payı iptal edildi ✓',
+    kass_err_betrag: 'Katkı payı tutarı girilmemiş — önce reçetede belirtin.',
+    kass_err_bereits: 'Bu katkı payı zaten tahsil edilmiş.',
+    kass_err_beleg: 'Kasa defteri kaydı başarısız, hiçbir şey kaydedilmedi:',
+    kass_storno_title: 'Katkı payını iptal et',
+    kass_storno_msg: 'Kasa defteri kaydı silinemez. Ters kayıt oluşturulacak.',
+    kass_storno_grund: 'İptal gerekçesi (isteğe bağlı)',
+    kass_storno_confirm: 'İptal et',
+    kass_storno_kein_beleg: 'Bu reçete için kasa defteri kaydı yok (Ağustos 2026 öncesi tahsil edilmiş). Not geri alınır, kasa defteri değişmez.',
+    kass_popup: 'Popup engelleyici yazdırma penceresini açmayı engelledi.',
+    kass_popup_gebucht: 'Kaydedildi — ancak makbuz açılamadı (popup engelleyici). „Faturayı aç“ ile tekrar deneyin.',
   }
 };
 
@@ -529,6 +631,7 @@ let prefillAnamnesePatientId = null;
 let bkActionBookingCache = null;
 let bkActionTimer = null;
 let pdCurrentLeadId = null;
+let pdCurrentLeadName = '';
 
 // Ausfallgebühr-Einstellung des Owners (aus profiles.ausfall_*). Owner-Level,
 // nicht pro Standort — gilt für alle Termine. Von loadAusfallConfig() befüllt.
@@ -824,6 +927,9 @@ async function switchPanel(id) {
       }
     }
   }
+  // Ein angefangenes Verschieben gehoert zum Kalender. Verlaesst man ihn, wird es
+  // beendet — sonst bliebe der Modus unsichtbar aktiv.
+  if (id !== 'calendar' && moveBooking) cancelMoveBooking();
   activePanel = id;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('panel-' + id);
@@ -1413,7 +1519,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2411,7 +2517,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2691,7 +2797,9 @@ async function renderMonthView(year, month) {
     .eq('owner_id', ownerId)
     .gte('start_time', mStart)
     .lte('start_time', mEnd)
-    .in('user_id', empIds)
+    // Leere Liste wuerde zu einem ungueltigen in.() werden — wie in der Wochenansicht
+    // absichern.
+    .in('user_id', empIds.length ? empIds : ['none'])
     .neq('status', 'cancelled');
 
   // Update date label
@@ -3125,17 +3233,6 @@ async function openBookingActionModal(booking) {
       verordnungEl.textContent = `${rx.anzahl_einheiten}x ${hm}${typ}`;
     }
 
-    const rzgEl = document.getElementById('bkRxRZG');
-    if (rzgEl) {
-      if (rx.zuzahlung_befreit) {
-        rzgEl.innerHTML = '<span style="color:#4ade80;font-weight:600;">befreit</span>';
-      } else if (rx.zuzahlung_eur != null) {
-        rzgEl.textContent = `${rx.zuzahlung_eur.toFixed(2)} €`;
-      } else {
-        rzgEl.textContent = '—';
-      }
-    }
-
     const mandantEl = document.getElementById('bkRxMandant');
     if (mandantEl) mandantEl.textContent = empName || '—';
 
@@ -3154,31 +3251,41 @@ async function openBookingActionModal(booking) {
     rxCard.hidden = false;
 
     // Zuzahlung: nach GKV-Logik EINMAL je Verordnung, nicht je Sitzung.
-    // Offen → Betrag + Knopf zum Kassieren; erledigt → Datum + Rückgängig.
+    // Bewusst reduziert: offen = nur die Summe in Gelb + ein Knopf.
+    // Bezahlt = dieselbe Zeile in Grün, mit Zahlart und Link auf die Rechnung.
     const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
     if (rzgWarnEl) {
-      if (rx.zuzahlung_befreit === false) {
-        const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : null;
-        const betragTxt = betrag != null ? betrag.toFixed(2).replace('.', ',') + ' €' : 'Betrag unbekannt';
+      const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : null;
+      const befreit = !!rx.zuzahlung_befreit;
+      const bezahlt = !!rx.zuzahlung_kassiert_am;
+
+      if (befreit || betrag != null) {
         rzgWarnEl.hidden = false;
         rzgWarnEl.dataset.rxId = rx.id;
+        rzgWarnEl.dataset.betrag = String(betrag ?? 0);
+        rzgWarnEl.dataset.patientId = rx.patient_id || booking.lead_id || '';
+        rzgWarnEl.dataset.patientName = booking.customer_name || '';
 
-        if (rx.zuzahlung_kassiert_am) {
+        // Grün, sobald nichts mehr offen ist — bezahlt oder befreit.
+        const gruen = befreit || bezahlt;
+        rzgWarnEl.style.background = gruen ? 'var(--success-dim)' : 'var(--warning-dim)';
+        rzgWarnEl.style.borderColor = gruen ? 'var(--success)' : 'var(--warning)';
+        rzgWarnEl.style.color = gruen ? 'var(--success)' : 'var(--warning-text)';
+
+        if (befreit) {
+          rzgWarnEl.innerHTML = escapeHtml(t('kass_befreit'));
+        } else if (bezahlt) {
           const am = new Date(rx.zuzahlung_kassiert_am)
             .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          rzgWarnEl.style.background = 'rgba(34,197,94,0.12)';
-          rzgWarnEl.style.borderColor = 'rgba(34,197,94,0.3)';
-          rzgWarnEl.style.color = 'var(--success, #22c55e)';
+          const art = rx.zuzahlung_zahlart ? ` · ${zahlartLabel(rx.zuzahlung_zahlart)}` : '';
           rzgWarnEl.innerHTML =
-            `Zuzahlung kassiert: ${escapeHtml(betragTxt)} · ${escapeHtml(am)}`
-            + ` <button type="button" data-zuzahl="undo" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">rückgängig</button>`;
+            `${escapeHtml(t('kass_bezahlt'))}: ${escapeHtml(fmtEur(betrag))} · ${escapeHtml(am)}${escapeHtml(art)}`
+            + ` <button type="button" data-zuzahl="rechnung" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_rechnung'))}</button>`
+            + ` <button type="button" data-zuzahl="undo" style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_undo'))}</button>`;
         } else {
-          rzgWarnEl.style.background = 'rgba(251,191,36,0.12)';
-          rzgWarnEl.style.borderColor = 'rgba(251,191,36,0.3)';
-          rzgWarnEl.style.color = '#fbbf24';
           rzgWarnEl.innerHTML =
-            `Rezeptgebühr offen: ${escapeHtml(betragTxt)}`
-            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:rgba(251,191,36,0.25);border:1px solid rgba(251,191,36,0.5);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">kassiert</button>`;
+            `${escapeHtml(t('kass_offen'))}: ${escapeHtml(fmtEur(betrag))}`
+            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:var(--warning-dim);border:1px solid var(--warning);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">${escapeHtml(t('kass_btn'))}</button>`;
         }
       } else {
         rzgWarnEl.hidden = true;
@@ -5425,19 +5532,56 @@ async function initBkCustomerAutocomplete() {
   }
 }
 
-function startMoveBooking(b) {
+async function startMoveBooking(b) {
   moveBooking = b;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   closeModal('bookingModal');
-  if (calendarView !== 'day') setCalendarView('day');
-  else renderDayView(toISODate(dayViewDate));
+  // Der Termin laesst sich auch aus dem Tagesplan heraus oeffnen. Ohne den Wechsel
+  // in den Kalender waere der Verschieben-Modus aktiv, aber unsichtbar.
+  if (activePanel !== 'calendar') await switchPanel('calendar');
+  else if (calendarView !== 'day') setCalendarView('day');
+  else await renderDayView(toISODate(dayViewDate));
+  updateMoveBanner();
 }
+
+// Ohne sichtbaren Abbruch war der Verschieben-Modus eine Sackgasse: jeder Klick auf
+// einen Slot legte nur einen neuen Vorschlag an, und der Modus blieb auch beim
+// Wechsel der Ansicht aktiv.
+function cancelMoveBooking() {
+  if (!moveBooking) return;
+  moveBooking = null;
+  if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
+  updateMoveBanner();
+  if (activePanel === 'calendar' && calendarView === 'day') renderDayView(toISODate(dayViewDate));
+}
+
+function updateMoveBanner() {
+  const banner = document.getElementById('calMoveBanner');
+  if (!banner) return;
+  banner.hidden = !moveBooking;
+  if (!moveBooking) return;
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
+  const name = moveBooking.customer_name || moveBooking.services?.title || 'Termin';
+  const textEl = document.getElementById('calMoveBannerText');
+  if (textEl) textEl.textContent = `${name}: ${tl.move_banner}`;
+  const btn = document.getElementById('calMoveCancelBtn');
+  if (btn) {
+    btn.textContent = tl.move_cancel;
+    btn.onclick = cancelMoveBooking;
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && moveBooking) cancelMoveBooking();
+});
 
 function placeGhost(slotEl, empId, text) {
   if (moveGhostEl) moveGhostEl.remove();
-  const allEmps = currentProfile.role === 'owner' ? teamMembers : [currentProfile];
-  const idx = allEmps.findIndex(e => e.id === empId);
-  const color = EMP_COLORS[idx % EMP_COLORS.length];
+  // Farbe immer ueber teamMembers bestimmen — genau wie Tages-, Wochen- und
+  // Monatsansicht. Sonst bekaeme die Vorschau eine andere Farbe als die Spalte.
+  const idx = teamMembers.findIndex(e => e.id === empId);
+  const color = EMP_COLORS[idx % EMP_COLORS.length] || 'var(--primary)';
   const ghost = document.createElement('div');
   ghost.className = 'dv-ghost';
   ghost.style.background = color + '25';
@@ -5459,6 +5603,8 @@ function placeGhost(slotEl, empId, text) {
 
 async function doMoveBooking(startStr, empId) {
   if (!moveBooking) return;
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
   const s = new Date(startStr + ':00');
   const e = new Date(moveBooking.end_time);
   const oldS = new Date(moveBooking.start_time);
@@ -5470,10 +5616,16 @@ async function doMoveBooking(startStr, empId) {
   };
   if (empId && empId !== moveBooking.user_id) payload.user_id = empId;
   const { error } = await supabase.from('bookings').update(payload).eq('id', moveBooking.id);
-  if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+  if (error) {
+    // 23P01 ist die Doppelbuchungs-Sperre der Datenbank. Ohne diese Uebersetzung
+    // sah der Praxisinhaber rohen Postgres-Text.
+    showToast(error.code === '23P01' ? tl.move_conflict : `${tl.move_error}: ${error.message}`, 'error');
+    return;
+  }
   moveBooking = null;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
-  showToast('Termin verschoben');
+  updateMoveBanner();
+  showToast(tl.move_done);
   await renderDayView(toISODate(dayViewDate));
   if (typeof scheduleDate !== 'undefined' && toISODate(dayViewDate) === toISODate(scheduleDate)) {
     loadScheduleBookings(scheduleDate);
@@ -6992,6 +7144,273 @@ function showAbsagegrundModal({ title = 'Termin absagen', confirmText = 'Bestät
   });
 }
 
+// ─── Kassieren: Zahlart wählen → Beleg buchen → Quittung drucken ─────────────
+//
+// Ein gemeinsamer Ablauf für Termin-Panel UND Patientenakte. Vorher gab es zwei
+// getrennte Wege, die nichts voneinander wussten:
+//   - Termin-Panel: schrieb nur zuzahlung_kassiert_am. Kein Kassenbuch-Beleg,
+//     also unsichtbar für Mahnwesen (mahnwesen.routes.js) und Statistik — wer so
+//     kassierte, wurde trotzdem gemahnt.
+//   - Patientenakte: schrieb einen Beleg, setzte aber zusätzlich
+//     abrechnung_status='accepted'. Das bedeutet "die Kasse hat die
+//     §302-Abrechnung akzeptiert" und hat mit der Patientenzahlung nichts zu tun.
+// Beides ist hier zusammengeführt; der §302-Status wird nicht mehr angefasst.
+
+const ZAHLARTEN = [
+  { key: 'bar',          icon: '💶', i18n: 'kass_bar' },
+  { key: 'ec',           icon: '💳', i18n: 'kass_ec' },
+  { key: 'ueberweisung', icon: '🏦', i18n: 'kass_ueberweisung' },
+  { key: 'sonstiges',    icon: '⋯',  i18n: 'kass_sonstiges' },
+];
+
+function zahlartLabel(key) {
+  const z = ZAHLARTEN.find(x => x.key === key);
+  return z ? t(z.i18n) : (key || '—');
+}
+
+// Öffnet die Zuzahlungsrechnung in einem neuen Tab.
+// Der Link ist dauerhaft gültig: die Rechnung wird bei jedem Aufruf frisch aus
+// dem Rezept erzeugt, es gibt keinen gespeicherten Rechnungsdatensatz.
+//
+// Der Druck wird NICHT von hier aus ausgelöst. Die Rechnung liegt auf einer
+// anderen Domain (n8n.infinitymade.de); ein Zugriff auf das fremde Fenster —
+// auch nur das Setzen von onload — kann einen SecurityError werfen. Genau das
+// darf beim Kassieren nicht passieren, sonst bricht der Ablauf ab, nachdem das
+// Geld bereits gebucht ist. Der Ausdruck erfolgt im geöffneten Tab.
+//
+// Gibt true zurück, wenn das Fenster aufging.
+async function openZuzahlungsrechnung(rxId, { stillBeiFehler = false } = {}) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const url = `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${session?.access_token || ''}`;
+    const w = window.open(url, '_blank');
+    if (w) return true;
+  } catch (e) {
+    console.error('[zuzahlungsrechnung]', e);
+  }
+  if (!stillBeiFehler) showToast(t('kass_popup'), 'error');
+  return false;
+}
+
+// Ein Klick pro Zahlart: der Zahlart-Knopf ist gleichzeitig der Bestätigen-Knopf.
+// Bewusst keine Vorauswahl — eine per Gewohnheit durchgeklickte Zahlart macht das
+// Kassenbuch falsch, und Belege lassen sich nachträglich nicht korrigieren.
+// Auflösung: { zahlart, drucken } oder null bei Abbruch.
+function openKassierenDialog({ betragEur, patientName }) {
+  return new Promise(resolve => {
+    document.getElementById('_kassierenModal')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_kassierenModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    const box = document.createElement('div');
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-labelledby', '_kassTitle');
+    box.style.cssText = 'background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:400px;';
+
+    const zahlartBtns = ZAHLARTEN.map(z => `
+      <button type="button" class="_kassZahlart" data-zahlart="${z.key}"
+        style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;text-align:left;">
+        <span aria-hidden="true">${z.icon}</span><span>${escapeHtml(t(z.i18n))}</span>
+      </button>`).join('');
+
+    box.innerHTML = `
+      <h3 id="_kassTitle" style="margin:0 0 2px;font-size:16px;font-weight:700;color:var(--text-main);">${escapeHtml(t('kass_title'))}</h3>
+      <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted);">${escapeHtml(patientName || '')}</p>
+      <div style="text-align:center;font-size:30px;font-weight:700;color:var(--text-main);letter-spacing:-0.5px;margin-bottom:18px;">${escapeHtml(fmtEur(betragEur))}</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-main);cursor:pointer;margin-bottom:14px;">
+        <input type="checkbox" id="_kassPrint" checked style="width:16px;height:16px;cursor:pointer;accent-color:var(--primary);" />
+        ${escapeHtml(t('kass_print'))}
+      </label>
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">${escapeHtml(t('kass_zahlart'))}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${zahlartBtns}</div>
+      <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+        <button type="button" id="_kassCancel" style="padding:8px 16px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;font-family:inherit;">${escapeHtml(t('kass_cancel'))}</button>
+      </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    let settled = false;
+    const cleanup = (result) => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener('keydown', onEsc);
+      overlay.remove();
+      resolve(result);
+    };
+    function onEsc(e) { if (e.key === 'Escape') cleanup(null); }
+
+    box.querySelectorAll('._kassZahlart').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Sofort alle Knöpfe sperren — ein zweiter Klick darf keinen zweiten
+        // Beleg auslösen.
+        box.querySelectorAll('._kassZahlart').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+        cleanup({
+          zahlart: btn.dataset.zahlart,
+          drucken: !!document.getElementById('_kassPrint')?.checked,
+        });
+      });
+      btn.addEventListener('mouseenter', () => { if (!btn.disabled) btn.style.borderColor = 'var(--primary)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.borderColor = 'var(--border)'; });
+    });
+
+    document.getElementById('_kassCancel').addEventListener('click', () => cleanup(null));
+    overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(null); });
+    document.addEventListener('keydown', onEsc);
+    box.querySelector('._kassZahlart')?.focus();
+  });
+}
+
+// Kassiert die Zuzahlung eines Rezepts. Gibt true zurück, wenn gebucht wurde.
+async function kassiereZuzahlung({ rxId, patientId, patientName, betragEur }) {
+  const betrag = Number(betragEur);
+  if (!(betrag > 0)) { showToast(t('kass_err_betrag'), 'error'); return false; }
+
+  const choice = await openKassierenDialog({ betragEur: betrag, patientName });
+  if (!choice) return false;
+
+  // Erst den Anspruch sichern, dann buchen: das Update greift nur, solange
+  // zuzahlung_kassiert_am noch NULL ist. Zwei offene Fenster oder ein Doppelklick
+  // erzeugen so keinen zweiten Beleg — wichtig, weil die belegliste per Trigger
+  // unveränderlich ist und ein Fehlbeleg nur noch storniert, nie gelöscht werden
+  // kann (database_v27_gobd_belegliste.sql).
+  const { data: claimed, error: claimErr } = await supabase
+    .from('prescriptions')
+    .update({
+      zuzahlung_kassiert_am: new Date().toISOString(),
+      zuzahlung_kassiert_von: currentSession?.user?.id || null,
+      zuzahlung_zahlart: choice.zahlart,
+    })
+    .eq('id', rxId)
+    .is('zuzahlung_kassiert_am', null)
+    .select('id');
+
+  if (claimErr) { showToast('Fehler: ' + claimErr.message, 'error'); return false; }
+  if (!claimed || claimed.length === 0) { showToast(t('kass_err_bereits'), 'error'); return false; }
+
+  // Kassenbuch-Beleg über das Backend buchen, damit created_by gesetzt wird und
+  // die GoBD-Prüfung aus billing/belegliste/helper.js greift.
+  let belegNr = null;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${API}/billing/belegliste`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + (session?.access_token || ''), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'zuzahlung',
+        amount_eur: betrag,
+        zahlart: choice.zahlart,
+        patient_id: patientId || null,
+        prescription_id: rxId,
+        reference_text: `Zuzahlung ${zahlartLabel(choice.zahlart)}${patientName ? ': ' + patientName : ''}`,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Serverfehler');
+    }
+    belegNr = (await res.json())?.beleg_nr ?? null;
+  } catch (err) {
+    // Beleg gescheitert → Anspruch zurücknehmen. Sonst gälte die Zuzahlung als
+    // kassiert, ohne dass sie im Kassenbuch steht.
+    await supabase.from('prescriptions')
+      .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
+      .eq('id', rxId);
+    showToast(`${t('kass_err_beleg')} ${err.message}`, 'error');
+    return false;
+  }
+
+  // Das Geld ist gebucht. Ab hier darf nichts mehr den Ablauf abbrechen — die
+  // Erfolgsmeldung kommt zuerst, ein blockiertes Druckfenster danach als eigener
+  // Hinweis. Sonst sähe der Nutzer erst einen Fehler und dann einen Erfolg für
+  // dieselbe Handlung.
+  showToast(belegNr != null
+    ? `${t('kass_ok')} · ${t('kass_beleg')} ${String(belegNr).padStart(6, '0')}`
+    : t('kass_ok'));
+
+  if (choice.drucken) {
+    const auf = await openZuzahlungsrechnung(rxId, { stillBeiFehler: true });
+    if (!auf) showToast(t('kass_popup_gebucht'), 'warning');
+  }
+
+  return true;
+}
+
+// Rückgängig = Gegenbuchung. Löschen ist im Kassenbuch gesetzlich verboten.
+async function storniereZuzahlung({ rxId, patientId, patientName, betragEur }) {
+  const betrag = Number(betragEur);
+
+  // Wieviel liegt für dieses Rezept überhaupt im Kassenbuch? Zuzahlungen positiv,
+  // frühere Stornos negativ. Ohne diese Prüfung würde für Rezepte, die vor
+  // August 2026 über den alten Panel-Knopf kassiert wurden (Vermerk gesetzt,
+  // aber kein Beleg angelegt), eine Gegenbuchung ohne Original entstehen — das
+  // Kassenbuch ginge ins Minus und die Monatszahlen wären zu niedrig.
+  const { data: belege, error: belegErr } = await supabase
+    .from('belegliste')
+    .select('amount_eur')
+    .eq('prescription_id', rxId)
+    .in('type', ['zuzahlung', 'storno']);
+  if (belegErr) { showToast('Fehler: ' + belegErr.message, 'error'); return false; }
+  const saldo = (belege || []).reduce((s, b) => s + Number(b.amount_eur || 0), 0);
+
+  const grund = await showInputModal({
+    title: t('kass_storno_title'),
+    message: saldo > 0
+      ? `${t('kass_storno_msg')} (${fmtEur(saldo)})`
+      : t('kass_storno_kein_beleg'),
+    inputLabel: t('kass_storno_grund'),
+    inputPlaceholder: 'z. B. falsche Zahlart, Doppelbuchung …',
+    confirmText: t('kass_storno_confirm'),
+    cancelText: t('kass_cancel'),
+    variant: 'danger',
+  });
+  if (grund === null) return false;
+
+  // Nur gegenbuchen, was tatsächlich gebucht wurde — und nur so viel.
+  if (saldo > 0) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${API}/billing/belegliste`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + (session?.access_token || ''), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'storno',
+          // Der tatsächliche Saldo, nicht rx.zuzahlung_eur: der Betrag am Rezept
+          // kann nach dem Kassieren geändert worden sein und würde dann nicht
+          // auf null aufgehen.
+          amount_eur: -saldo,
+          patient_id: patientId || null,
+          // prescription_id mitgeben, damit Mahnwesen und Statistik die
+          // Gegenbuchung dem Rezept zuordnen und verrechnen können.
+          prescription_id: rxId,
+          reference_text: `STORNO Zuzahlung${patientName ? ': ' + patientName : ''}`,
+          storno_reason: grund || null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Serverfehler');
+      }
+    } catch (err) {
+      showToast('Storno gescheitert: ' + err.message, 'error');
+      return false;
+    }
+  }
+
+  // Erst nach erfolgreicher Gegenbuchung das Rezept wieder auf offen setzen.
+  const { error } = await supabase.from('prescriptions')
+    .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
+    .eq('id', rxId);
+  if (error) { showToast('Fehler: ' + error.message, 'error'); return false; }
+
+  showToast(t('kass_storno_ok'));
+  return true;
+}
+
 function openMailOfferModal({ hasEmail, patientName }) {
   return new Promise(resolve => {
     const modal = document.getElementById('mailOfferModal');
@@ -7522,7 +7941,9 @@ document.getElementById('bkActionEditBtn').addEventListener('click', () => {
   openBookingModal(bkActionBookingCache);
 });
 
-// Zuzahlung kassieren / rückgängig machen — einmal je Verordnung.
+// Zuzahlung kassieren / stornieren / Rechnung öffnen — einmal je Verordnung.
+// Der eigentliche Ablauf liegt in kassiereZuzahlung(); hier wird nur der Klick
+// eingesammelt und danach das Panel neu aufgebaut.
 document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-zuzahl]');
   if (!btn) return;
@@ -7530,28 +7951,35 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
   const rxId = wrap?.dataset.rxId;
   if (!rxId) return;
 
-  const pay = btn.dataset.zuzahl === 'pay';
+  const aktion = btn.dataset.zuzahl;
+  if (aktion === 'rechnung') { await openZuzahlungsrechnung(rxId); return; }
+
+  const args = {
+    rxId,
+    patientId: wrap.dataset.patientId || null,
+    patientName: wrap.dataset.patientName || '',
+    betragEur: Number(wrap.dataset.betrag || 0),
+  };
+
   btn.disabled = true;
-
-  const patch = pay
-    ? { zuzahlung_kassiert_am: new Date().toISOString(),
-        zuzahlung_kassiert_von: currentSession?.user?.id || null }
-    : { zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null };
-
-  const { error } = await supabase.from('prescriptions').update(patch).eq('id', rxId);
-  if (error) {
-    btn.disabled = false;
-    showToast('Fehler: ' + error.message, 'error');
-    return;
-  }
-  showToast(pay ? 'Zuzahlung als kassiert vermerkt.' : 'Vermerk zurückgenommen.');
+  const ok = aktion === 'pay'
+    ? await kassiereZuzahlung(args)
+    : await storniereZuzahlung(args);
+  btn.disabled = false;
+  if (!ok) return;
 
   // Das Panel rendert aus bkActionBookingCache — ohne Nachziehen stünde dort
-  // weiter der alte Stand. Deshalb den zwischengespeicherten Datensatz mit
-  // patchen und erst dann neu aufbauen.
+  // weiter der alte Stand. Den echten Stand zurücklesen statt ihn zu raten:
+  // die Zahlart kennt nur der Dialog, und ein fehlgeschlagener Teilschritt darf
+  // hier nicht als Erfolg angezeigt werden.
+  const { data: frisch } = await supabase
+    .from('prescriptions')
+    .select('zuzahlung_kassiert_am, zuzahlung_kassiert_von, zuzahlung_zahlart')
+    .eq('id', rxId)
+    .maybeSingle();
   const cachedPs = Array.isArray(bkActionBookingCache?.prescription_sessions)
     ? bkActionBookingCache.prescription_sessions[0] : null;
-  if (cachedPs?.prescriptions) Object.assign(cachedPs.prescriptions, patch);
+  if (frisch && cachedPs?.prescriptions) Object.assign(cachedPs.prescriptions, frisch);
   if (bkActionBookingCache) await openBookingActionModal(bkActionBookingCache);
 });
 
@@ -7826,6 +8254,7 @@ function renderPdInfoBlock(lead) {
 
 async function openPatientDetailModal(lead) {
   pdCurrentLeadId = lead.id;
+  pdCurrentLeadName = displayName(lead) || '';
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
   renderPdInfoBlock(lead);
   document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'notes'));
@@ -7929,7 +8358,7 @@ async function loadPatientDetailRezepte(leadId) {
   if (!content) return;
   if (loading) loading.hidden = false;
 
-  const [rxRes, befRes] = await Promise.all([
+  const [rxRes, befRes, belegRes] = await Promise.all([
     supabase
       .from('prescriptions')
       .select(`
@@ -7938,6 +8367,7 @@ async function loadPatientDetailRezepte(leadId) {
         behandlungsbeginn, deadline_reminders,
         is_dringend, hausbesuch, dmrz_exported_at, created_at,
         abrechnung_status, kostentraeger_ik, zuzahlung_befreit,
+        zuzahlung_eur, zuzahlung_kassiert_am, zuzahlung_zahlart,
         heilmittel_typ_blanko, vorrangig_einheiten, ergaenzend_einheiten,
         prescription_sessions ( id, session_number, status, done_at )
       `)
@@ -7948,9 +8378,24 @@ async function loadPatientDetailRezepte(leadId) {
       .select('id, jahr, befreit_ab, befreit_bis, beleg_url')
       .eq('patient_id', leadId)
       .order('jahr', { ascending: false }),
+    // Kassenbuch-Belege des Patienten. Die Beleg-Nr. ist die dauerhafte,
+    // pruefbare Referenz auf die Zahlung — sie steht sonst nur im Kassenbuch.
+    supabase
+      .from('belegliste')
+      .select('beleg_nr, prescription_id, zahlart, amount_eur, created_at')
+      .eq('patient_id', leadId)
+      .eq('type', 'zuzahlung')
+      .order('beleg_nr', { ascending: false }),
   ]);
   const { data: rxs, error } = rxRes;
   const befreiungen = befRes.data || [];
+  // Rezept-ID → jüngste Beleg-Nr. (absteigend sortiert, der erste Treffer gewinnt).
+  const belegNrByRx = new Map();
+  for (const b of (belegRes.data || [])) {
+    if (b.prescription_id && !belegNrByRx.has(b.prescription_id)) {
+      belegNrByRx.set(b.prescription_id, b.beleg_nr);
+    }
+  }
 
   if (loading) loading.hidden = true;
   if (error) { content.innerHTML = '<div class="pd-empty">Fehler: ' + escapeHtml(error.message) + '</div>'; return; }
@@ -8092,9 +8537,21 @@ async function loadPatientDetailRezepte(leadId) {
       }
     }
 
-    const paidButton = (rx.zuzahlung_eur > 0 && !rx.zuzahlung_befreit && abrStatus !== 'accepted')
-      ? `<button class="btn-ghost btn-sm rx-mark-paid" data-id="${rx.id}" style="color:#15803d;font-weight:600;" title="Zuzahlung als bezahlt markieren"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:#15803d;">${ICON.checkCircle}</span>Zuzahlung erhalten</button>`
-      : '';
+    // Zuzahlung: offen → kassieren; bereits kassiert → Zahlart + Direktlink auf
+    // die Rechnung. Der §302-Status (abrStatus) spielt hier bewusst keine Rolle
+    // mehr — ob der Patient bezahlt hat, hat nichts damit zu tun, ob die Kasse
+    // die Sammelabrechnung akzeptiert hat.
+    let paidButton = '';
+    if (rx.zuzahlung_eur > 0 && !rx.zuzahlung_befreit) {
+      const belegNr = belegNrByRx.get(rx.id);
+      const belegTxt = belegNr != null
+        ? ` · ${t('kass_beleg')} ${String(belegNr).padStart(6, '0')}`
+        : '';
+      paidButton = rx.zuzahlung_kassiert_am
+        ? `<span class="badge badge-green" title="Kassiert am ${escapeHtml(new Date(rx.zuzahlung_kassiert_am).toLocaleDateString('de-DE'))}">${escapeHtml(t('kass_bezahlt'))}${rx.zuzahlung_zahlart ? ' · ' + escapeHtml(zahlartLabel(rx.zuzahlung_zahlart)) : ''}${escapeHtml(belegTxt)}</span>
+           <button class="btn-ghost btn-sm rx-open-rechnung" data-id="${rx.id}" title="${escapeHtml(t('kass_rechnung'))}">${escapeHtml(t('kass_rechnung'))}</button>`
+        : `<button class="btn-ghost btn-sm rx-mark-paid" data-id="${rx.id}" data-betrag="${rx.zuzahlung_eur}" style="color:var(--success);font-weight:600;" title="${escapeHtml(t('kass_title'))}"><span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--success);">${ICON.checkCircle}</span>${escapeHtml(t('kass_btn'))} · ${escapeHtml(fmtEur(rx.zuzahlung_eur))}</button>`;
+    }
 
     return `<div class="pd-rech-item" style="padding:14px 20px;border-bottom:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
@@ -8162,8 +8619,19 @@ async function loadPatientDetailRezepte(leadId) {
   });
   content.querySelectorAll('.rx-mark-paid').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await flipAbrechnungStatus(btn.dataset.id, 'accepted', leadId);
+      btn.disabled = true;
+      const ok = await kassiereZuzahlung({
+        rxId: btn.dataset.id,
+        patientId: leadId,
+        patientName: pdCurrentLeadName,
+        betragEur: Number(btn.dataset.betrag || 0),
+      });
+      btn.disabled = false;
+      if (ok) await loadPatientDetailRezepte(leadId);
     });
+  });
+  content.querySelectorAll('.rx-open-rechnung').forEach(btn => {
+    btn.addEventListener('click', () => openZuzahlungsrechnung(btn.dataset.id));
   });
   // Drucken dropdown: toggle open/close
   content.querySelectorAll('.rx-drucken-toggle').forEach(btn => {
@@ -8190,11 +8658,12 @@ async function loadPatientDetailRezepte(leadId) {
       const url = type === 'quittung_zuzahlung'
         ? `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${s.access_token}`
         : `${API}/billing/prescription/${rxId}/rechnung?type=${type}&token=${s.access_token}`;
+      // Kein Zugriff auf das geöffnete Fenster: das Dokument liegt auf einer
+      // anderen Domain, schon das Setzen von onload kann einen SecurityError
+      // werfen. Gedruckt wird im geöffneten Tab.
       const printWindow = window.open(url, '_blank');
-      if (printWindow) {
-        printWindow.onload = () => { printWindow.print(); };
-      } else {
-        showToast('Popup-Blocker verhindert das Öffnen des Druckfensters.', 'error');
+      if (!printWindow) {
+        showToast(t('kass_popup'), 'error');
       }
     });
     // hover effect
@@ -8227,34 +8696,17 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
       }
     }
 
-    if (newStatus === 'accepted') {
-      const { data: rxInfo, error: rxErr } = await supabase
-        .from('prescriptions')
-        .select('*, leads:patient_id(first_name, last_name)')
-        .eq('id', rxId)
-        .single();
-      if (rxErr) throw rxErr;
-
-      if (rxInfo && rxInfo.zuzahlung_eur > 0) {
-        const { error: blErr } = await supabase.from('belegliste').insert({
-          owner_id: getOwnerId(),
-          type: 'zuzahlung',
-          amount_eur: Number(rxInfo.zuzahlung_eur),
-          patient_id: rxInfo.patient_id,
-          prescription_id: rxId,
-          reference_text: `Zuzahlung erhalten: ${rxInfo.leads?.first_name || ''} ${rxInfo.leads?.last_name || ''}`.trim()
-        });
-        if (blErr) throw blErr;
-      }
-    }
-
+    // Hinweis: abrechnung_status beschreibt ausschließlich den §302-Weg
+    // (bereit → in_abrechnung → gesendet → accepted/rejected durch die Kasse).
+    // Die Patientenzuzahlung wird davon getrennt über kassiereZuzahlung()
+    // gebucht — früher wurden beide hier vermischt.
     const { error } = await supabase
       .from('prescriptions')
       .update({ abrechnung_status: newStatus })
       .eq('id', rxId);
     if (error) throw error;
-    
-    showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : (newStatus === 'accepted' ? 'Zuzahlung als bezahlt gebucht ✓' : 'Zurück auf offen ✓'));
+
+    showToast(newStatus === 'bereit' ? 'Als abrechnungsbereit markiert ✓' : 'Zurück auf offen ✓');
     await loadPatientDetailRezepte(leadId);
   } catch (e) {
     console.error('[abrechnung-status]', e);
@@ -10930,6 +11382,10 @@ async function loadTeam() {
       <div class="emp-name">${name} ${m.id === currentSession.user.id ? t('me') : ''}</div>
       <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
       ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
+      <div class="emp-link-row">
+        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">${shortLink}</a>
+        <button class="btn-icon emp-copy-link" type="button" data-link="${bookingLink}" title="${t('anfragen_copy_link')}" aria-label="${t('anfragen_copy_link')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      </div>
       <div class="emp-urlaub-toggle" data-emp-id="${m.id}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px;">
         <span>🌴 Urlaub / Abwesenheit</span>
         <span class="emp-urlaub-chevron" style="transition:transform 0.2s;">›</span>
@@ -15231,9 +15687,17 @@ async function openInvView(invoiceId) {
   }
 
   // Recipient (DIN 5008)
+  //
+  // Der Name kommt ausschliesslich aus der Patientenakte, nie aus dem
+  // Freitextfeld invoices.patient_name. Das Feld ist eine Kopie vom Zeitpunkt
+  // der Rechnungserstellung — nach einer Namenskorrektur (Heirat, Schreibfehler,
+  // Namensangleichung) stuende dort weiter der alte Name, und die Rechnung waere
+  // auf eine Person ausgestellt, die es so nicht gibt.
   const patientLines = [];
-  if (patient) {
-    const fullName = [patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || inv.patient_name || '';
+  const fullName = patient
+    ? ([patient.first_name, patient.last_name].filter(Boolean).join(' ') || patient.title || '')
+    : '';
+  if (fullName) {
     patientLines.push(`<strong>${escapeHtml(fullName)}</strong>`);
     if (patient.street) patientLines.push(escapeHtml(patient.street));
     const pc = [patient.plz, patient.city].filter(Boolean).join(' ');
@@ -15242,7 +15706,10 @@ async function openInvView(invoiceId) {
     if (patient.krankenkasse) patientLines.push('Krankenkasse: ' + escapeHtml(patient.krankenkasse));
     if (patient.versichertennummer) patientLines.push('Versichertennr.: ' + escapeHtml(patient.versichertennummer));
   } else {
-    patientLines.push(`<strong>${escapeHtml(inv.patient_name || '—')}</strong>`);
+    // Kein verknuepfter Patient → lieber sichtbar unvollstaendig als mit einem
+    // veralteten Namen gedruckt.
+    patientLines.push('<strong style="color:var(--danger);">Kein Patient verknüpft</strong>');
+    patientLines.push('<span style="color:var(--text-muted);">Bitte die Rechnung einem Patienten zuordnen — der Name wird immer aus der Patientenakte übernommen.</span>');
   }
   document.getElementById('invvPatient').innerHTML = patientLines.join('<br>');
 
@@ -21242,18 +21709,19 @@ async function loadBelegliste() {
     rows.forEach(r => {
       const dateStr = new Date(r.created_at).toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
       const isNegative = Number(r.amount_eur) < 0;
-      const color = isNegative ? '#b91c1c' : '#15803d';
+      const color = isNegative ? 'var(--danger)' : 'var(--success)';
       const tr = document.createElement('tr');
       tr.style.borderBottom = '1px solid var(--border)';
       
       const stornoBtn = r.type !== 'storno' 
-        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
+        ? `<button class="btn-ghost btn-sm bl-storno-btn" data-nr="${r.beleg_nr}" data-val="${r.amount_eur}" data-rx="${r.prescription_id || ''}" data-pat="${r.patient_id || ''}" data-ref="${escapeHtml(r.reference_text || '')}">Storno</button>`
         : '';
 
       tr.innerHTML = `
         <td style="font-family:monospace;font-weight:600;color:var(--text-main);">${String(r.beleg_nr).padStart(6, '0')}</td>
         <td style="color:var(--text-main);">${dateStr}</td>
         <td><span class="badge" style="background:var(--border);color:var(--text-main);">${r.type}</span></td>
+        <td style="color:var(--text-muted);">${r.zahlart ? escapeHtml(zahlartLabel(r.zahlart)) : '—'}</td>
         <td style="color:${color};font-weight:600;text-align:right;">${fmtEur(r.amount_eur)}</td>
         <td style="color:var(--text-main);">${escapeHtml(r.reference_text || '')}</td>
         <td style="color:var(--text-muted);font-size:12px;">${escapeHtml(r.storno_reason || (r.type === 'storno' ? '—' : ''))}</td>
@@ -21265,14 +21733,18 @@ async function loadBelegliste() {
 
     // Wire Storno Event
     tbody.querySelectorAll('.bl-storno-btn').forEach(btn => {
-      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref));
+      btn.addEventListener('click', () => triggerStorno(btn.dataset.nr, btn.dataset.val, btn.dataset.ref, btn.dataset.rx || null, btn.dataset.pat || null));
     });
   } catch (err) {
     showToast('Kassenbuch Fehler: ' + err.message, 'error');
   }
 }
 
-async function triggerStorno(belegNr, amount, originalRef) {
+// prescriptionId/patientId werden mitgegeben, damit die Gegenbuchung dem Rezept
+// zugeordnet bleibt. Mahnwesen und Statistik rechnen Zuzahlung und Storno je
+// Rezept gegeneinander auf — ohne die ID bliebe ein storniertes Rezept dort
+// faelschlich als bezahlt stehen.
+async function triggerStorno(belegNr, amount, originalRef, prescriptionId = null, patientId = null) {
   // Storno reason input modal
   const reason = await showInputModal({
     title: 'Beleg Stornieren',
@@ -21298,6 +21770,8 @@ async function triggerStorno(belegNr, amount, originalRef) {
       body: JSON.stringify({
         type: 'storno',
         amount_eur: -Number(amount),
+        prescription_id: prescriptionId || null,
+        patient_id: patientId || null,
         reference_text: `STORNO für Beleg-Nr: ${belegNr} (${originalRef})`,
         storno_reason: reason || null
       })
@@ -21306,6 +21780,22 @@ async function triggerStorno(belegNr, amount, originalRef) {
     if (!res.ok) {
       const errData = await res.json();
       throw new Error(errData.error || 'Serverfehler');
+    }
+
+    // Gehört der Beleg zu einer Zuzahlung, muss das Rezept wieder auf offen —
+    // sonst zeigt die Oberfläche weiter grün "bezahlt", während Mahnwesen und
+    // Statistik es als offen führen. Schlimmer noch: erneutes Kassieren wäre
+    // gesperrt, weil kassiereZuzahlung nur greift, solange
+    // zuzahlung_kassiert_am NULL ist. Das wäre eine Sackgasse ohne Ausweg.
+    if (prescriptionId) {
+      const { error: rxErr } = await supabase.from('prescriptions')
+        .update({ zuzahlung_kassiert_am: null, zuzahlung_kassiert_von: null, zuzahlung_zahlart: null })
+        .eq('id', prescriptionId);
+      if (rxErr) {
+        showToast('Stornobuchung erzeugt, aber das Rezept steht noch auf "bezahlt": ' + rxErr.message, 'error');
+        loadBelegliste();
+        return;
+      }
     }
 
     showToast('Stornobuchung erzeugt ✓');
@@ -21641,7 +22131,19 @@ async function loadStatistik() {
 
     setEl('statAbrAkz', d.abrechnung?.akzeptiert ?? '—');
     setEl('statAbrSumme', fmtEur(d.abrechnung?.summe_akzeptiert));
-    setEl('statOffeneZuz', d.offene_zuzahlungen ?? '—');
+    // "17" allein sagt nichts — der offene Betrag ist die Zahl, die zählt.
+    // Gezeigt wird dieselbe Summe wie in den gelben Balken des Diagramms
+    // (Zuzahlungen + offene Ausfallrechnungen), sonst widersprechen sich beide.
+    setEl('statOffeneZuz', d.offen_gesamt_summe != null
+      ? fmtEur(d.offen_gesamt_summe)
+      : (d.offene_zuzahlungen ?? '—'));
+    const offZuzSub = document.getElementById('statOffeneZuzSub');
+    if (offZuzSub) {
+      const anzahl = d.offene_zuzahlungen ?? 0;
+      const af = d.ausfallrechnungen?.offen ?? 0;
+      offZuzSub.textContent = `${anzahl} Rezept${anzahl === 1 ? '' : 'e'}`
+        + (af > 0 ? ` · ${af} Ausfallrechnung${af === 1 ? '' : 'en'}` : '');
+    }
 
     // No-show
     if (d.no_show) {
@@ -21731,34 +22233,59 @@ async function loadStatistik() {
     chartEl.innerHTML = '';
     legendEl.innerHTML = '';
 
-    const maxVal = Math.max(...d.monatlich.map(m => m.umsatz), 1);
+    // Zwei Werte je Monat: bezahlt (grün, unten) und offen (gelb, darüber).
+    // Die Höhe richtet sich nach der Summe beider, damit die Balken vergleichbar
+    // bleiben. Ältere Antworten ohne `offen` fallen sauber auf 0 zurück.
+    const maxVal = Math.max(...d.monatlich.map(m => (m.bezahlt ?? m.umsatz ?? 0) + (m.offen ?? 0)), 1);
     const MO = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
     d.monatlich.forEach(m => {
-      const pct = Math.max((m.umsatz / maxVal) * 100, m.umsatz > 0 ? 4 : 0);
+      const bezahlt = Number(m.bezahlt ?? m.umsatz ?? 0);
+      const offen = Number(m.offen ?? 0);
+      const gesamt = bezahlt + offen;
       const [yr, mo] = m.monat.split('-');
       const label = `${MO[parseInt(mo) - 1]} ${yr.slice(2)}`;
 
       const col = document.createElement('div');
       col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:28px;';
 
-      const bar = document.createElement('div');
-      bar.style.cssText = `width:100%;background:var(--primary);border-radius:4px 4px 0 0;height:${pct}%;min-height:${m.umsatz > 0 ? 4 : 0}px;transition:height 0.3s;cursor:default;`;
-      bar.title = `${label}: ${fmtEur(m.umsatz)}`;
+      const stack = document.createElement('div');
+      const stackPct = Math.max((gesamt / maxVal) * 100, gesamt > 0 ? 4 : 0);
+      stack.style.cssText = `width:100%;height:${stackPct}%;min-height:${gesamt > 0 ? 4 : 0}px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden;transition:height 0.3s;`;
+      stack.title = `${label} — ${t('stat_bezahlt')}: ${fmtEur(bezahlt)} · ${t('stat_offen')}: ${fmtEur(offen)}`;
+
+      if (offen > 0) {
+        const offenSeg = document.createElement('div');
+        offenSeg.style.cssText = `background:var(--warning);height:${(offen / gesamt) * 100}%;`;
+        stack.appendChild(offenSeg);
+      }
+      if (bezahlt > 0) {
+        const bezahltSeg = document.createElement('div');
+        bezahltSeg.style.cssText = `background:var(--success);height:${(bezahlt / gesamt) * 100}%;`;
+        stack.appendChild(bezahltSeg);
+      }
 
       const lbl = document.createElement('div');
       lbl.style.cssText = 'font-size:9px;color:var(--text-muted);text-align:center;margin-top:4px;';
       lbl.textContent = label;
 
-      col.appendChild(bar);
+      col.appendChild(stack);
       col.appendChild(lbl);
       chartEl.appendChild(col);
 
       const leg = document.createElement('span');
       leg.style.cssText = 'font-size:11px;color:var(--text-muted);';
-      leg.textContent = `${label}: ${fmtEur(m.umsatz)}`;
+      leg.textContent = `${label}: ${fmtEur(bezahlt)}${offen > 0 ? ` (+ ${fmtEur(offen)} offen)` : ''}`;
       legendEl.appendChild(leg);
     });
+
+    // Farblegende, damit Grün und Gelb erklärt sind
+    const legHead = document.createElement('span');
+    legHead.style.cssText = 'font-size:11px;color:var(--text-muted);display:inline-flex;align-items:center;gap:10px;width:100%;margin-bottom:2px;';
+    legHead.innerHTML =
+      `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--success);display:inline-block;"></span>${escapeHtml(t('stat_bezahlt'))}</span>`
+      + `<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--warning);display:inline-block;"></span>${escapeHtml(t('stat_offen'))}</span>`;
+    legendEl.prepend(legHead);
 
   } catch (e) {
     const chartEl = document.getElementById('statBarChart');
@@ -25148,6 +25675,57 @@ async function fetchAnwesenheitReport() {
 // ============================================================================
 // TERMIN-ANFRAGEN PANEL
 // ============================================================================
+
+/**
+ * Dialog mit freiem HTML-Inhalt.
+ *
+ * showInputModal() nimmt ein Optionsobjekt und kann nur EIN Textfeld. Die
+ * Anfrage-Dialoge riefen es mit (Titel, HTML, Callback) auf — diese Signatur gab
+ * es nie: der String wurde destrukturiert, also war alles undefined. Ergebnis war
+ * ein leerer Dialog "Eingabe" und ein Callback, der nie lief.
+ *
+ * @param {object}   o
+ * @param {string}   o.title
+ * @param {string}   o.html          Inhalt des Dialogs
+ * @param {Function} [o.onConfirm]   Ohne Callback wird nur ein Schliessen-Knopf gezeigt
+ * @param {string}   [o.confirmText]
+ * @param {Function} [o.afterRender] Läuft, sobald der Inhalt im DOM steht
+ */
+function showHtmlModal({ title, html, onConfirm = null, confirmText = 'Bestätigen', afterRender = null }) {
+  const titleEl = document.getElementById('htmlModalTitle');
+  const bodyEl = document.getElementById('htmlModalBody');
+  const okBtn = document.getElementById('htmlModalOk');
+  const cancelBtn = document.getElementById('htmlModalCancel');
+  const closeBtn = document.querySelector('#htmlModal .modal-close');
+  if (!titleEl || !bodyEl) return;
+
+  titleEl.textContent = title;
+  bodyEl.innerHTML = html;
+  okBtn.textContent = confirmText;
+  okBtn.hidden = !onConfirm;
+  cancelBtn.textContent = onConfirm ? 'Abbrechen' : 'Schließen';
+
+  const cleanup = () => {
+    okBtn.onclick = null; cancelBtn.onclick = null; closeBtn.onclick = null;
+    closeModal('htmlModal');
+  };
+  okBtn.onclick = async () => {
+    okBtn.disabled = true;
+    try {
+      const ergebnis = await onConfirm?.();
+      // false = der Dialog bleibt offen (z. B. weil eine Eingabe fehlt)
+      if (ergebnis !== false) cleanup();
+    } finally {
+      okBtn.disabled = false;
+    }
+  };
+  cancelBtn.onclick = cleanup;
+  closeBtn.onclick = cleanup;
+  openModal('htmlModal');
+  afterRender?.();
+}
+window.closeHtmlModal = () => closeModal('htmlModal');
+
 let anfragenCurrentStatus = 'pending';
 let anfragenCurrentRequests = [];
 
@@ -25169,6 +25747,11 @@ async function loadAnfragen(status) {
     const json = await r.json();
     anfragenCurrentRequests = json.requests || [];
     renderAnfragenList(anfragenCurrentRequests);
+    // Der Zähler zählt offene Anfragen. Er darf nur aus dem Tab "Offen" kommen —
+    // sonst stünde er auf den Tabs "Bestätigt"/"Abgelehnt" fälschlich auf 0.
+    if (anfragenCurrentStatus === 'pending') {
+      updateAnfragenBadge(anfragenCurrentRequests.filter(r => r.status === 'pending').length);
+    }
   } catch (e) {
     list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>';
     console.error('[anfragen]', e);
@@ -25191,10 +25774,13 @@ function renderAnfragenList(requests) {
 
   list.innerHTML = requests.map(req => {
     const pat = req.patients;
-    const patName = pat ? `${pat.vorname} ${pat.nachname}` : '—';
+    // Alles ab hier kommt aus dem OEFFENTLICHEN Anfrage-Formular und wird unveraendert
+    // gespeichert. Ohne escapeHtml wuerde ein Patient Markup in das Dashboard des
+    // Praxisinhabers schreiben koennen — inklusive Zugriff auf dessen Sitzung.
+    const patName = pat ? escapeHtml(`${pat.vorname} ${pat.nachname}`) : '—';
     const patDob = pat?.geburtsdatum ? new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : '';
-    const svcName = req.services?.title || '—';
-    const badge = paymentBadge[req.payment_type] || req.payment_type?.toUpperCase();
+    const svcName = escapeHtml(req.services?.title || '—');
+    const badge = escapeHtml(paymentBadge[req.payment_type] || req.payment_type?.toUpperCase() || '');
     const badgeColor = paymentColor[req.payment_type] || '#6b7280';
     const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
     const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
@@ -25219,14 +25805,12 @@ function renderAnfragenList(requests) {
         <span>${prefDate}${prefTime ? ' · ' + prefTime : ''}</span>
       </div>
       <div class="anfragen-card-footer">
-        <span class="text-sub" style="font-size:12px">${createdAt}</span>
+        <span class="text-sub" style="font-size:12px">${createdAt}${req.alternativ_angeboten_at ? ` · <span style="color:var(--warning-text)">${tl.anfragen_alt_offen}</span>` : ''}</span>
         ${actions}
       </div>
     </div>`;
   }).join('');
 
-  // Update badge count
-  updateAnfragenBadge(requests.filter(r => r.status === 'pending').length);
 }
 
 function updateAnfragenBadge(count) {
@@ -25242,7 +25826,8 @@ function showAnfrageDetail(requestId) {
   const lang = document.getElementById('langSelect')?.value || 'de';
   const tl = T[lang] || T.de;
   const pat = req.patients;
-  const patName = pat ? `${pat.vorname} ${pat.nachname}` : '—';
+  // Siehe renderAnfragenList: diese Werte stammen aus dem oeffentlichen Formular.
+  const patName = pat ? escapeHtml(`${pat.vorname} ${pat.nachname}`) : '—';
   const prefDate = req.preferred_date ? new Date(req.preferred_date).toLocaleDateString('de-DE') : '—';
   const prefTime = req.preferred_time ? req.preferred_time.substring(0,5) + ' Uhr' : '';
   const paymentLabel = { gkv: 'GKV – Kassenpatient', pkv: 'PKV – Privatpatient', selbstzahler: 'Selbstzahler', bg: 'BG – Berufsgenossenschaft' };
@@ -25258,6 +25843,7 @@ function showAnfrageDetail(requestId) {
     if (req.verordnung_typ) extraFields.push(['Verordnungsart', req.verordnung_typ === 'erst' ? 'Erstverordnung' : 'Folgeverordnung']);
     if (req.doppelbehandlung) extraFields.push(['Doppelbehandlung', 'Ja']);
     if (req.icd10_diagnose) extraFields.push(['ICD-10', req.icd10_diagnose]);
+    if (req.diagnosegruppe) extraFields.push(['Diagnosegruppe', req.diagnosegruppe]);
   } else if (req.payment_type === 'pkv') {
     if (req.pkv_versicherung) extraFields.push(['Versicherung', req.pkv_versicherung]);
     if (req.arzt_ueberweisung) extraFields.push(['Ärztliche Überweisung', req.arzt_ueberweisung_name || 'Ja']);
@@ -25269,26 +25855,30 @@ function showAnfrageDetail(requestId) {
     if (req.behandlungsart) extraFields.push(['Behandlungsart', req.behandlungsart]);
   }
 
-  const extraHTML = extraFields.map(([k,v]) => `<div class="detail-row"><span class="detail-label">${k}</span><span>${v}</span></div>`).join('');
+  const extraHTML = extraFields.map(([k, v]) => `<div class="detail-row"><span class="detail-label">${escapeHtml(k)}</span><span>${escapeHtml(String(v))}</span></div>`).join('');
   const isPending = req.status === 'pending';
 
-  showInputModal(tl.anfragen_detail_title, `
+  showHtmlModal({ title: tl.anfragen_detail_title, html: `
     <div class="anfragen-detail">
       <div class="detail-row"><span class="detail-label">${tl.anfragen_patient}</span><span>${patName}${pat?.geburtsdatum ? ' · ' + new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : ''}</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_payment}</span><span>${paymentLabel[req.payment_type] || req.payment_type}</span></div>
-      <div class="detail-row"><span class="detail-label">${tl.anfragen_service}</span><span>${req.services?.title || '—'} · ${req.session_count} Sitzung(en)</span></div>
+      <div class="detail-row"><span class="detail-label">${tl.anfragen_service}</span><span>${escapeHtml(req.services?.title || '—')} · ${Number(req.session_count) || 1} Sitzung(en)</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_date}</span><span>${prefDate}${prefTime ? ' um ' + prefTime : ''}</span></div>
       ${extraHTML}
-      ${req.notizen ? `<div class="detail-row"><span class="detail-label">${tl.anfragen_notizen}</span><span>${req.notizen}</span></div>` : ''}
-      ${pat?.email ? `<div class="detail-row"><span class="detail-label">E-Mail</span><span>${pat.email}</span></div>` : ''}
-      ${pat?.telefon ? `<div class="detail-row"><span class="detail-label">Telefon</span><span>${pat.telefon}</span></div>` : ''}
+      ${req.notizen ? `<div class="detail-row"><span class="detail-label">${tl.anfragen_notizen}</span><span>${escapeHtml(req.notizen)}</span></div>` : ''}
+      ${pat?.email ? `<div class="detail-row"><span class="detail-label">E-Mail</span><span>${escapeHtml(pat.email)}</span></div>` : ''}
+      ${pat?.telefon ? `<div class="detail-row"><span class="detail-label">Telefon</span><span>${escapeHtml(pat.telefon)}</span></div>` : ''}
     </div>
+    ${pat?.email ? `
+      <div style="margin-top:16px">
+        <button class="btn-secondary" onclick="closeHtmlModal();nachrichtAnPatient('${req.id}')" style="width:100%">${tl.anfragen_nachricht}</button>
+      </div>` : ''}
     ${isPending ? `
       <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
-        <button class="btn-primary" onclick="approveAnfrage('${req.id}');closeModal()" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
-        <button class="btn-danger" onclick="declineAnfrage('${req.id}');closeModal()" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
+        <button class="btn-primary" onclick="closeHtmlModal();approveAnfrage('${req.id}')" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
+        <button class="btn-danger" onclick="closeHtmlModal();declineAnfrage('${req.id}')" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
       </div>` : ''}
-  `, null);
+  ` });
 }
 
 async function approveAnfrage(requestId) {
@@ -25303,16 +25893,20 @@ async function approveAnfrage(requestId) {
     const lang = document.getElementById('langSelect')?.value || 'de';
     const tl = T[lang] || T.de;
 
-    const empOptions = allPeople.map(p => `<option value="${p.id}">${p.full_name}</option>`).join('');
-    showInputModal(tl.anfragen_select_employee, `
-      <select id="approveEmpSelect" class="input-field" style="width:100%">
-        <option value="">— Therapeuten wählen —</option>
-        ${empOptions}
-      </select>
-    `, async () => {
-      const empId = document.getElementById('approveEmpSelect')?.value;
-      if (!empId) return showToast('Bitte einen Therapeuten wählen', 'error');
-      await doApproveAnfrage(requestId, ownerId, empId);
+    const empOptions = allPeople.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.full_name || '')}</option>`).join('');
+    showHtmlModal({
+      title: tl.anfragen_select_employee,
+      confirmText: tl.anfragen_confirm_approve,
+      html: `
+        <select id="approveEmpSelect" class="form-input" style="width:100%">
+          <option value="">— Therapeuten wählen —</option>
+          ${empOptions}
+        </select>`,
+      onConfirm: async () => {
+        const empId = document.getElementById('approveEmpSelect')?.value;
+        if (!empId) { showToast('Bitte einen Therapeuten wählen', 'error'); return false; }
+        await doApproveAnfrage(requestId, ownerId, empId);
+      },
     });
     return;
   }
@@ -25351,29 +25945,158 @@ async function doApproveAnfrage(requestId, ownerId, employeeId) {
   }
 }
 
+/**
+ * Freitext-Nachricht an den Patienten — nur per E-Mail, kein Chat in der App.
+ * Der Patient antwortet per Reply direkt an die Praxis.
+ */
+function nachrichtAnPatient(requestId) {
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
+  const ownerId = currentProfile?.id;
+
+  showHtmlModal({
+    title: tl.anfragen_nachricht,
+    confirmText: tl.anfragen_nachricht_senden,
+    html: `
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:8px">${tl.anfragen_nachricht_hint}</p>
+      <textarea id="patNachrichtInput" class="form-input" maxlength="2000" style="width:100%;height:120px;resize:vertical"></textarea>`,
+    onConfirm: async () => {
+      const text = document.getElementById('patNachrichtInput')?.value?.trim() || '';
+      if (!text) { showToast(tl.anfragen_nachricht_leer, 'error'); return false; }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const r = await fetch(`${API}/booking-request/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ request_id: requestId, owner_id: ownerId, text }),
+        });
+        const json = await r.json();
+        if (!r.ok) throw new Error(json.error || 'Fehler');
+        showToast(tl.anfragen_nachricht_ok, 'success');
+      } catch (e) {
+        showToast(e.message || 'Fehler beim Senden', 'error');
+        return false;
+      }
+    },
+  });
+}
+
+/**
+ * Sucht ab dem Wunschtag vorwärts nach freien Zeiten beim selben Therapeuten.
+ * Bricht ab, sobald genug zusammen ist — nicht mehr Abfragen als nötig.
+ */
+async function sucheAlternativTermine(req, empId, maxVorschlaege = 6, maxTage = 7) {
+  const start = req.preferred_date ? new Date(req.preferred_date + 'T12:00:00') : new Date();
+  const dauer = req.services?.duration_minutes || 30;
+  const gefunden = [];
+
+  for (let i = 1; i <= maxTage && gefunden.length < maxVorschlaege; i++) {
+    const tag = new Date(start.getTime() + i * 86400000);
+    const datum = toISODate(tag);
+    try {
+      const r = await fetch(`${API}/booking/get-slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: empId, date: datum, duration: dauer, serviceId: req.service_id || null }),
+      });
+      const json = await r.json();
+      for (const s of (json.slots || [])) {
+        const zeit = (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5);
+        if (!zeit) continue;
+        gefunden.push({ date: datum, time: zeit, employee_id: empId });
+        if (gefunden.length >= maxVorschlaege) break;
+      }
+    } catch {
+      // Ein Tag ohne Antwort ist kein Grund abzubrechen — der nächste zählt.
+    }
+  }
+  return gefunden;
+}
+
 async function declineAnfrage(requestId) {
   const lang = document.getElementById('langSelect')?.value || 'de';
   const tl = T[lang] || T.de;
-  showInputModal(tl.anfragen_ablehnen, `
-    <textarea id="declineReasonInput" class="input-field" style="width:100%;height:80px;resize:vertical" placeholder="${tl.anfragen_decline_reason}"></textarea>
-  `, async () => {
-    const reason = document.getElementById('declineReasonInput')?.value?.trim() || '';
-    const ownerId = currentProfile?.id;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      const r = await fetch(`${API}/booking-request/decline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ request_id: requestId, owner_id: ownerId, reason })
+  const ownerId = currentProfile?.id;
+  const req = anfragenCurrentRequests.find(r => r.id === requestId);
+  const empId = req?.employee_id || ownerId;
+  const hatEmail = Boolean(req?.patients?.email);
+
+  showHtmlModal({
+    title: tl.anfragen_ablehnen,
+    confirmText: tl.anfragen_absage_senden,
+    html: `
+      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:6px">${tl.anfragen_decline_reason}</label>
+      <textarea id="declineReasonInput" class="form-input" style="width:100%;height:70px;resize:vertical"></textarea>
+      ${hatEmail ? `
+        <label class="anfragen-alt-toggle" style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;color:var(--text-main);cursor:pointer">
+          <input type="checkbox" id="altAnbietenCb"> ${tl.anfragen_alt_anbieten}
+        </label>
+        <div id="altSlotsWrap" hidden style="margin-top:10px">
+          <p style="font-size:12px;color:var(--text-sub);margin-bottom:8px">${tl.anfragen_alt_hint}</p>
+          <div id="altSlotsList"></div>
+        </div>`
+        : `<p style="margin-top:14px;font-size:12px;color:var(--text-sub)">${tl.anfragen_alt_keine_mail}</p>`}
+    `,
+    afterRender: () => {
+      const cb = document.getElementById('altAnbietenCb');
+      const wrap = document.getElementById('altSlotsWrap');
+      const list = document.getElementById('altSlotsList');
+      if (!cb || !wrap || !list) return;
+      let geladen = false;
+      cb.addEventListener('change', async () => {
+        wrap.hidden = !cb.checked;
+        if (!cb.checked || geladen) return;
+        geladen = true;
+        list.innerHTML = '<div class="loading-spinner" style="margin:16px auto"></div>';
+        const slots = await sucheAlternativTermine(req, empId);
+        if (!slots.length) {
+          list.innerHTML = `<p style="font-size:13px;color:var(--text-sub)">${tl.anfragen_alt_leer}</p>`;
+          return;
+        }
+        list.innerHTML = slots.map((s, i) => {
+          const datum = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+          return `<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;color:var(--text-main);cursor:pointer">
+            <input type="checkbox" class="alt-slot-cb" data-idx="${i}"> ${datum} · ${s.time} Uhr
+          </label>`;
+        }).join('');
+        list.dataset.slots = JSON.stringify(slots);
+        // Höchstens drei — mehr Auswahl hilft niemandem und macht die Mail unübersichtlich.
+        list.querySelectorAll('.alt-slot-cb').forEach(box => {
+          box.addEventListener('change', () => {
+            const gewaehlt = list.querySelectorAll('.alt-slot-cb:checked').length;
+            if (gewaehlt > 3) { box.checked = false; showToast(tl.anfragen_alt_max, 'info'); }
+          });
+        });
       });
-      const json = await r.json();
-      if (!r.ok) throw new Error(json.error || 'Fehler');
-      showToast('Anfrage abgelehnt', 'info');
-      loadAnfragen(anfragenCurrentStatus);
-    } catch (e) {
-      showToast(e.message || 'Fehler beim Ablehnen', 'error');
-    }
+    },
+    onConfirm: async () => {
+      const reason = document.getElementById('declineReasonInput')?.value?.trim() || '';
+      const list = document.getElementById('altSlotsList');
+      const alleSlots = list?.dataset.slots ? JSON.parse(list.dataset.slots) : [];
+      const gewaehlt = Array.from(list?.querySelectorAll('.alt-slot-cb:checked') || [])
+        .map(box => alleSlots[Number(box.dataset.idx)]).filter(Boolean);
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const gegenangebot = gewaehlt.length > 0;
+        const r = await fetch(`${API}/booking-request/${gegenangebot ? 'offer' : 'decline'}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(gegenangebot
+            ? { request_id: requestId, owner_id: ownerId, reason, alternatives: gewaehlt }
+            : { request_id: requestId, owner_id: ownerId, reason }),
+        });
+        const json = await r.json();
+        if (!r.ok) throw new Error(json.error || 'Fehler');
+        showToast(gegenangebot ? tl.anfragen_alt_gesendet : 'Anfrage abgelehnt', gegenangebot ? 'success' : 'info');
+        loadAnfragen(anfragenCurrentStatus);
+      } catch (e) {
+        showToast(e.message || 'Fehler beim Ablehnen', 'error');
+        return false;
+      }
+    },
   });
 }
 
@@ -25440,3 +26163,4 @@ function initAnfragenPanel() {
 window.approveAnfrage = approveAnfrage;
 window.declineAnfrage = declineAnfrage;
 window.showAnfrageDetail = showAnfrageDetail;
+window.nachrichtAnPatient = nachrichtAnPatient;

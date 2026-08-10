@@ -29,6 +29,39 @@ export function calcSessionZuzahlung({ preis_eur, zuzahlung_eur_position, positi
 }
 
 /**
+ * Löst eine Katalogposition in Preis + Zuzahlung auf.
+ *
+ * Wichtig: die Katalogdateien (physio_positions.js, podologie_positions.js)
+ * kennen drei verschiedene Zustände, die vorher alle mit `??` in denselben
+ * 10-%-Fall gekippt sind:
+ *
+ *   1. Position gefunden, `zuzahlung` ist eine Zahl  → dieser Betrag gilt.
+ *   2. Position gefunden, `zuzahlung` ist `null`     → die Position ist
+ *      zuzahlungsfrei. Betrifft KG-ZNS Kinder (X0708/X0728/X0709), X0805,
+ *      Therapiebericht (X1906), Übermittlungsgebühr (X9701),
+ *      Geburtsvorbereitung/Rückbildung (21901/21904) sowie in der Podologie
+ *      78220 und 78530. Diese Fälle mit 10 % zu belasten, belastet Patienten
+ *      mit einer Zuzahlung, die sie gar nicht schulden.
+ *   3. Position gar nicht gefunden (unbekannter/leerer Code) → wir wissen es
+ *      nicht und rechnen ersatzweise mit 10 % vom Bruttopreis.
+ *
+ * @param {object|null|undefined} pos  Treffer aus findPosition/findPodologiePosition
+ * @param {number} priceUnit           Bruttopreis je Einheit
+ * @returns {{ preisUnit: number, zuzahlungUnit: number, positionFrei: boolean, gefunden: boolean }}
+ */
+export function resolvePositionZuzahlung(pos, priceUnit) {
+  const preisUnit = Number(priceUnit) || 0;
+
+  if (!pos) {
+    return { preisUnit, zuzahlungUnit: r2(preisUnit * 0.10), positionFrei: false, gefunden: false };
+  }
+  if (pos.zuzahlung == null) {
+    return { preisUnit, zuzahlungUnit: 0, positionFrei: true, gefunden: true };
+  }
+  return { preisUnit, zuzahlungUnit: r2(pos.zuzahlung), positionFrei: false, gefunden: true };
+}
+
+/**
  * Compute Abrechnungsfall (per prescription) totals.
  *
  * @param {object} opts

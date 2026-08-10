@@ -2,9 +2,12 @@
 import {
   calcSessionZuzahlung,
   calcAbrechnungsfallZuzahlung,
+  resolvePositionZuzahlung,
   isUnter18,
   isBefreit,
 } from './calculator.js';
+import { findPosition } from '../codes/physio_positions.js';
+import { findPodologiePosition } from '../codes/podologie_positions.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
@@ -97,6 +100,102 @@ test('isBefreit: aktive Befreiung im Jahr', () => {
 test('isBefreit: befreit_ab in Zukunft → false', () => {
   const b = [{ jahr: 2026, befreit_ab: '2026-12-01', befreit_bis: null }];
   assert.equal(isBefreit(b, 2026, '2026-05-18'), false);
+});
+
+// ── resolvePositionZuzahlung: die drei Katalog-Zustände ────────────────────
+// Vorher wurden alle drei mit `pos?.zuzahlung ?? preis * 0.10` in denselben
+// 10-%-Fall gekippt — zuzahlungsfreie Positionen wurden dem Patienten belastet.
+
+test('resolvePositionZuzahlung: Position mit Betrag → dieser Betrag', () => {
+  const r = resolvePositionZuzahlung({ preis: 30.00, zuzahlung: 3.00 }, 30.00);
+  assert.equal(r.zuzahlungUnit, 3.00);
+  assert.equal(r.positionFrei, false);
+  assert.equal(r.gefunden, true);
+});
+
+test('resolvePositionZuzahlung: zuzahlung null → zuzahlungsfrei, nicht 10 %', () => {
+  const r = resolvePositionZuzahlung({ preis: 58.83, zuzahlung: null }, 58.83);
+  assert.equal(r.zuzahlungUnit, 0);
+  assert.equal(r.positionFrei, true);
+  assert.equal(r.gefunden, true);
+});
+
+test('resolvePositionZuzahlung: Position unbekannt → 10 % als Ersatzwert', () => {
+  const r = resolvePositionZuzahlung(null, 30.00);
+  assert.equal(r.zuzahlungUnit, 3.00);
+  assert.equal(r.positionFrei, false);
+  assert.equal(r.gefunden, false);
+});
+
+test('resolvePositionZuzahlung: rundet kaufmaennisch auf 2 Stellen', () => {
+  assert.equal(resolvePositionZuzahlung(null, 58.83).zuzahlungUnit, 5.88);
+  assert.equal(resolvePositionZuzahlung({ preis: 1, zuzahlung: 2.345 }, 1).zuzahlungUnit, 2.35);
+});
+
+test('KG-ZNS Kinder X0708 ist im Katalog zuzahlungsfrei', () => {
+  const pos = findPosition('X0708', '22');
+  assert.ok(pos, 'X0708 muss im Physio-Katalog stehen');
+  assert.equal(resolvePositionZuzahlung(pos, pos.preis).positionFrei, true);
+});
+
+test('Therapiebericht X1906 und Uebermittlungsgebuehr X9701 sind zuzahlungsfrei', () => {
+  for (const code of ['X1906', 'X9701']) {
+    const pos = findPosition(code, '22');
+    assert.ok(pos, `${code} muss im Physio-Katalog stehen`);
+    assert.equal(resolvePositionZuzahlung(pos, pos.preis).positionFrei, true, `${code} sollte frei sein`);
+  }
+});
+
+test('Normale Physio-Position X0501 ist NICHT zuzahlungsfrei', () => {
+  const pos = findPosition('X0501', '22');
+  assert.ok(pos, 'X0501 muss im Physio-Katalog stehen');
+  const r = resolvePositionZuzahlung(pos, pos.preis);
+  assert.equal(r.positionFrei, false);
+  assert.ok(r.zuzahlungUnit > 0);
+});
+
+test('Podologie 78530 (Therapiebericht UI2) ist zuzahlungsfrei', () => {
+  const pos = findPodologiePosition('78530', '2026-01-15');
+  assert.ok(pos, '78530 muss im Podologie-Katalog stehen');
+  assert.equal(resolvePositionZuzahlung(pos, pos.preis).positionFrei, true);
+});
+
+test('Podologie 78010 traegt eine Zuzahlung', () => {
+  const pos = findPodologiePosition('78010', '2026-01-15');
+  assert.ok(pos, '78010 muss im Podologie-Katalog stehen');
+  const r = resolvePositionZuzahlung(pos, pos.preis);
+  assert.equal(r.positionFrei, false);
+  assert.equal(r.zuzahlungUnit, 3.52);
+});
+
+test('zuzahlungsfreie Position: keine prozentuale Zuzahlung', () => {
+  // Die 10-€-Verordnungspauschale bleibt hier bewusst bestehen — sie haengt an
+  // der Verordnung, nicht an der Position, und der §302-Weg berechnet sie
+  // ebenfalls. Beide Wege muessen dasselbe sagen.
+  const pos = findPosition('X1906', '22');
+  const { zuzahlungUnit, positionFrei } = resolvePositionZuzahlung(pos, pos.preis);
+  const totals = calcAbrechnungsfallZuzahlung({
+    sessions: [{ preis_eur: pos.preis, zuzahlung_eur_position: positionFrei ? 0 : zuzahlungUnit, position_frei: positionFrei }],
+    patient: { geburtsdatum: '1980-01-01', befreit_im_jahr: false },
+    behandlungsende: '2026-06-01',
+    verordnung_zuzahlungsfrei: false,
+  });
+  assert.equal(totals.prozZuzahlung, 0, 'keine prozentuale Zuzahlung');
+});
+
+test('Kind unter 18 auf zuzahlungsfreier Position: gar nichts, auch keine Pauschale', () => {
+  // Der haeufigste Fall in der Praxis (KG-ZNS Kinder) — hier greift die
+  // Altersregel des Calculators und setzt alles auf 0.
+  const pos = findPosition('X0708', '22');
+  const { zuzahlungUnit, positionFrei } = resolvePositionZuzahlung(pos, pos.preis);
+  const totals = calcAbrechnungsfallZuzahlung({
+    sessions: [{ preis_eur: pos.preis, zuzahlung_eur_position: positionFrei ? 0 : zuzahlungUnit, position_frei: positionFrei }],
+    patient: { geburtsdatum: '2015-03-01', befreit_im_jahr: false },
+    behandlungsende: '2026-06-01',
+    verordnung_zuzahlungsfrei: false,
+  });
+  assert.equal(totals.gesZuzahlung, 0);
+  assert.equal(totals.netto, totals.brutto);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -7,6 +7,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { renderMahnung } from '../pdf/mahnung.template.js';
+import { istZuzahlungBezahlt, saldoJeRezept } from '../zuzahlung/bezahlt.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -63,7 +64,7 @@ router.get('/mahnwesen/offene', async (req, res) => {
       .from('prescriptions')
       .select(`
         id, owner_id, patient_id, zuzahlung_eur, zuzahlung_befreit,
-        abrechnung_id, ausstellungsdatum,
+        abrechnung_id, ausstellungsdatum, zuzahlung_kassiert_am,
         leads:patient_id (first_name, last_name, versichertennummer, street, plz, city)
       `)
       .eq('owner_id', tenantId)
@@ -76,15 +77,30 @@ router.get('/mahnwesen/offene', async (req, res) => {
 
     const rxIds = rxRows.map(r => r.id);
 
-    // 2. Find prescriptions already paid via belegliste (type='zuzahlung')
-    const { data: paidEntries } = await supabase
+    // 2. Bezahlt-Status je Rezept. Die Regel steht in zuzahlung/bezahlt.js,
+    //    damit Mahnwesen und Statistik nicht auseinanderlaufen — genau das war
+    //    vorher der Fall.
+    //    Ein Fehler bei dieser Abfrage darf NICHT durchrutschen: ohne Belege
+    //    saehe jedes Rezept unbezahlt aus und alle Patienten bekaemen eine
+    //    Mahnung.
+    const { data: paidEntries, error: belegErr } = await supabase
       .from('belegliste')
-      .select('prescription_id')
+      .select('prescription_id, amount_eur')
       .eq('owner_id', tenantId)
-      .eq('type', 'zuzahlung')
+      .in('type', ['zuzahlung', 'storno'])
       .in('prescription_id', rxIds);
+    if (belegErr) return res.status(500).json({ error: 'belegliste: ' + belegErr.message });
 
-    const paidRxIds = new Set((paidEntries || []).map(e => e.prescription_id).filter(Boolean));
+    const saldoByRx = saldoJeRezept(paidEntries);
+    const paidRxIds = new Set(
+      rxRows
+        .filter(rx => istZuzahlungBezahlt({
+          zuzahlungEur: rx.zuzahlung_eur,
+          kassiertAm: rx.zuzahlung_kassiert_am,
+          saldo: saldoByRx.get(rx.id) || 0,
+        }))
+        .map(rx => rx.id)
+    );
 
     // 3. Fetch latest mahnung per prescription
     const { data: mahnungen } = await supabase
@@ -92,7 +108,10 @@ router.get('/mahnwesen/offene', async (req, res) => {
       .select('prescription_id, level, status, sent_at')
       .eq('owner_id', tenantId)
       .in('prescription_id', rxIds)
-      .order('created_at', { ascending: false });
+      // sent_at, nicht created_at: die Tabelle mahnungen hat kein created_at
+      // (database_v28_mahnwesen.sql). Die Sortierung lief bisher ins Leere und
+      // die Mahnstufe wurde deshalb nie angezeigt.
+      .order('sent_at', { ascending: false });
 
     // Build a map: prescription_id → latest mahnung
     const latestMahnung = new Map();
@@ -115,7 +134,12 @@ router.get('/mahnwesen/offene', async (req, res) => {
           first_name: rx.leads?.first_name || '',
           last_name:  rx.leads?.last_name  || '',
         },
-        zuzahlung_eur:    rx.zuzahlung_eur,
+        // Nur der Restbetrag wird gemahnt. Seit die Bezahlt-Pruefung den vollen
+        // Betrag verlangt, tauchen Teilzahler wieder in dieser Liste auf — mit
+        // rx.zuzahlung_eur wuerde die Mahnung Geld fordern, das schon da ist.
+        zuzahlung_eur:    Math.round((rx.zuzahlung_eur - (saldoByRx.get(rx.id) || 0)) * 100) / 100,
+        zuzahlung_gesamt: rx.zuzahlung_eur,
+        bereits_gezahlt:  Math.round((saldoByRx.get(rx.id) || 0) * 100) / 100,
         abrechnung_id:    rx.abrechnung_id,
         ausstellungsdatum: rx.ausstellungsdatum,
         latest_mahnung:   latestMahnung.get(rx.id) || null,

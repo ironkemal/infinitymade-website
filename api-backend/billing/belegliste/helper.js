@@ -3,16 +3,35 @@
  */
 
 /**
+ * Erlaubte Zahlarten. Muss zum CHECK-Constraint aus
+ * database_v32_kassieren_zahlart.sql passen.
+ */
+export const ZAHLARTEN = ['bar', 'ec', 'ueberweisung', 'sonstiges'];
+
+/**
+ * Deutsche Beschriftung für den CSV-Export / die Belegliste.
+ */
+export const ZAHLART_LABELS = {
+  bar: 'Bar',
+  ec: 'EC-Karte',
+  ueberweisung: 'Überweisung',
+  sonstiges: 'Sonstiges',
+};
+
+/**
  * Validates a Belegliste entry's types and amount constraints.
  * GoBD cash rules:
  * - Sales and co-payments must be positive (> 0)
  * - Storno / reversals must be negative (< 0)
- * 
+ * - Zahlart ist optional (Altbelege vor v32 haben keine), muss aber, wenn
+ *   angegeben, einer der bekannten Werte sein.
+ *
  * @param {string} type - 'zuzahlung' | 'barverkauf' | 'storno'
  * @param {number} amount - The currency amount in EUR
+ * @param {string|null} [zahlart] - 'bar' | 'ec' | 'ueberweisung' | 'sonstiges'
  * @returns {{isValid: boolean, error?: string}} Validation result
  */
-export function validateBelegEntry(type, amount) {
+export function validateBelegEntry(type, amount, zahlart) {
   if (!type || !['zuzahlung', 'barverkauf', 'storno'].includes(type)) {
     return { isValid: false, error: 'Ungültiger oder fehlender Typ. Typ muss zuzahlung, barverkauf oder storno sein.' };
   }
@@ -32,6 +51,10 @@ export function validateBelegEntry(type, amount) {
     }
   }
 
+  if (zahlart != null && zahlart !== '' && !ZAHLARTEN.includes(zahlart)) {
+    return { isValid: false, error: `Ungültige Zahlart. Erlaubt: ${ZAHLARTEN.join(', ')}.` };
+  }
+
   return { isValid: true };
 }
 
@@ -43,7 +66,7 @@ export function validateBelegEntry(type, amount) {
  */
 export function generateCsvString(rows) {
   let csv = 'sep=;\r\n';
-  csv += 'Beleg-Nr;Datum;Uhrzeit;Typ;Betrag EUR;Referenztext\r\n';
+  csv += 'Beleg-Nr;Datum;Uhrzeit;Typ;Zahlart;Betrag EUR;Referenztext\r\n';
 
   for (const r of (rows || [])) {
     // Treat the date in Europe/Berlin local timezone
@@ -75,7 +98,9 @@ export function generateCsvString(rows) {
     // Double quote escape reference texts to protect CSV structure
     const escapedRef = (r.reference_text || '').replace(/"/g, '""');
     
-    csv += `"${String(r.beleg_nr).padStart(6, '0')}";"${dateStr}";"${timeStr}";"${r.type}";"${amountStr}";"${escapedRef}"\r\n`;
+    const zahlartStr = ZAHLART_LABELS[r.zahlart] || '';
+
+    csv += `"${String(r.beleg_nr).padStart(6, '0')}";"${dateStr}";"${timeStr}";"${r.type}";"${zahlartStr}";"${amountStr}";"${escapedRef}"\r\n`;
   }
 
   return csv;

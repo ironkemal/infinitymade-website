@@ -22,7 +22,7 @@ import { renderZuzahlungsrechnung } from '../pdf/zuzahlungsrechnung.template.js'
 import { renderRechnung } from '../pdf/rechnung.template.js';
 import { renderRzgQuittung } from '../pdf/rzg-quittung.template.js';
 import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
-import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
+import { calcAbrechnungsfallZuzahlung, resolvePositionZuzahlung } from '../zuzahlung/calculator.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
 import { buildTarifkennzeichen } from '../codes/anlage3_v22.js';
 
@@ -153,7 +153,12 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
         ? findPodologiePosition(stored, dateStr)
         : findPosition(stored, abrechnungscode);
       einzelbetrag = staticPos?.preis ?? 0;
-      zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+      // Gleiche Regel wie im Tarif-Zweig darueber: dort leitet seed_tarifs.js
+      // `zuzahlung_pflicht` aus `pos.zuzahlung !== null` ab, eine zuzahlungsfreie
+      // Position ergibt also 0. Der Rueckfall hier machte daraus 10 % — dadurch
+      // wurde der Kasse eine Zuzahlung gemeldet, die es nicht gibt, und die
+      // Praxis bekam entsprechend weniger ausgezahlt.
+      ({ zuzahlungUnit: zuzahlungProPos } = resolvePositionZuzahlung(staticPos, einzelbetrag));
     }
 
     return {
@@ -184,7 +189,12 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
         ? findPodologiePosition(stored, dateStr)
         : findPosition(stored, abrechnungscode);
       einzelbetrag = staticPos?.preis ?? 0;
-      zuzahlungProPos = staticPos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+      // Gleiche Regel wie im Tarif-Zweig darueber: dort leitet seed_tarifs.js
+      // `zuzahlung_pflicht` aus `pos.zuzahlung !== null` ab, eine zuzahlungsfreie
+      // Position ergibt also 0. Der Rueckfall hier machte daraus 10 % — dadurch
+      // wurde der Kasse eine Zuzahlung gemeldet, die es nicht gibt, und die
+      // Praxis bekam entsprechend weniger ausgezahlt.
+      ({ zuzahlungUnit: zuzahlungProPos } = resolvePositionZuzahlung(staticPos, einzelbetrag));
     }
 
     sessions.push({
@@ -932,8 +942,11 @@ router.patch('/prescription/:id/position', async (req, res) => {
 router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
   try {
     // ---- Auth ----
+    // Query-Token nötig: die Rechnung wird per window.open() in einem neuen Tab
+    // geöffnet, dort kann kein Authorization-Header gesetzt werden. Gleiche
+    // Regelung wie bei GET /prescription/:id/rechnung weiter unten.
     const authHdr = req.headers.authorization || '';
-    const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (authHdr || null);
+    const token = authHdr.startsWith('Bearer ') ? authHdr.slice(7) : (req.query.token || null);
     if (!token) return res.status(401).send('Nicht autorisiert');
     const { data: { user }, error: uErr } = await supabase.auth.getUser(token);
     if (uErr || !user) return res.status(401).send('Ungültiges Token');
@@ -984,21 +997,33 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
       : findPosition(storedPos, '22');
     const priceUnit = pos?.preis ?? 0;
-    const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
+    // Zuzahlungsfreie Positionen (zuzahlung: null im Katalog) dürfen nicht mit
+    // 10 % belastet werden — siehe resolvePositionZuzahlung().
+    const { zuzahlungUnit: coPayUnit, positionFrei } = resolvePositionZuzahlung(pos, priceUnit);
+    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
 
     const doneSessions = (rx.prescription_sessions || [])
       .filter(s => s.status === 'done');
 
     const calcSessions = doneSessions.map(s => ({
       preis_eur: priceUnit,
-      zuzahlung_eur_position: rx.zuzahlung_befreit ? 0 : coPayUnit,
-      position_frei: rx.zuzahlung_befreit
+      zuzahlung_eur_position: zuzahlungsfrei ? 0 : coPayUnit,
+      position_frei: zuzahlungsfrei
     }));
 
     const totals = calcAbrechnungsfallZuzahlung({
       sessions: calcSessions,
       patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
       behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
+      // Bewusst rx.zuzahlung_befreit, NICHT `zuzahlungsfrei`: die 10-€-
+      // Verordnungspauschale haengt an der Verordnung, nicht an der einzelnen
+      // Position. Der §302-Weg (dta/builder.js) berechnet sie ebenfalls immer,
+      // solange das Zuzahlungskennzeichen '0' ist — beide Wege muessen sich hier
+      // einig sein, sonst weicht die Rechnung von dem ab, was die Kasse abzieht.
+      // Der haeufigste Fall (KG-ZNS Kinder) ist ohnehin abgedeckt: der
+      // Calculator setzt fuer Patienten unter 18 alles auf 0.
+      // ⚠️ Ob eine ausschliesslich zuzahlungsfreie Verordnung die Pauschale
+      // ausloest, gehoert von gkv-302 geprueft — siehe PREISE-ANALYSE.md.
       verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
     });
 
@@ -1007,7 +1032,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       position: storedPos,
       bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
       brutto: priceUnit,
-      zuzahlung: rx.zuzahlung_befreit ? 0 : coPayUnit
+      zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
     }));
 
     // ---- Render PDF/HTML Template ----
@@ -1119,7 +1144,10 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       ? findPodologiePosition(storedPos, rx.ausstellungsdatum || new Date().toISOString().slice(0, 10))
       : findPosition(storedPos, '22');
     const priceUnit = pos?.preis ?? 0;
-    const coPayUnit = pos?.zuzahlung ?? (priceUnit * 0.10);
+    // Gleiche Regel wie bei der Zuzahlungsrechnung: `zuzahlung: null` im Katalog
+    // heisst zuzahlungsfrei, nicht "dann eben 10 %".
+    const { zuzahlungUnit: coPayUnit, positionFrei } = resolvePositionZuzahlung(pos, priceUnit);
+    const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
     const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
 
     const praxisData = {
@@ -1166,20 +1194,21 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     } else if (type === 'rzg_quittung') {
       const calcSessions = doneSessions.map(s => ({
         preis_eur: priceUnit,
-        zuzahlung_eur_position: rx.zuzahlung_befreit ? 0 : coPayUnit,
-        position_frei: rx.zuzahlung_befreit
+        zuzahlung_eur_position: zuzahlungsfrei ? 0 : coPayUnit,
+        position_frei: zuzahlungsfrei
       }));
       const totals = calcAbrechnungsfallZuzahlung({
         sessions: calcSessions,
         patient: { geburtsdatum: rx.leads?.geburtsdatum, befreit_im_jahr: rx.zuzahlung_befreit },
         behandlungsende: doneSessions.length ? doneSessions[doneSessions.length - 1].done_at : new Date(),
+        // wie oben: die Pauschale haengt an der Verordnung, nicht an der Position
         verordnung_zuzahlungsfrei: rx.zuzahlung_befreit
       });
       const printSessions = doneSessions.map(s => ({
         datum: s.done_at,
         position: storedPos,
         bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
-        zuzahlung: rx.zuzahlung_befreit ? 0 : coPayUnit
+        zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
       }));
       html = renderRzgQuittung({
         praxis: praxisData,
@@ -1265,7 +1294,7 @@ router.get('/belegliste', async (req, res) => {
     const { from, to, type } = req.query || {};
     let query = supabase
       .from('belegliste')
-      .select('id, owner_id, beleg_nr, type, amount_eur, patient_id, prescription_id, abrechnung_id, reference_text, storno_reason, created_at, created_by')
+      .select('id, owner_id, beleg_nr, type, zahlart, amount_eur, patient_id, prescription_id, abrechnung_id, reference_text, storno_reason, created_at, created_by')
       .eq('owner_id', tenantId)
       .order('beleg_nr', { ascending: false });
 
@@ -1347,9 +1376,9 @@ router.post('/belegliste', async (req, res) => {
       : profile.id;
 
     // ---- Input Validation ----
-    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id, storno_reason } = req.body || {};
-    
-    const validation = validateBelegEntry(type, amount_eur);
+    const { type, amount_eur, reference_text, patient_id, prescription_id, abrechnung_id, storno_reason, zahlart } = req.body || {};
+
+    const validation = validateBelegEntry(type, amount_eur, zahlart);
     if (!validation.isValid) {
       return res.status(400).json({ error: validation.error });
     }
@@ -1368,6 +1397,7 @@ router.post('/belegliste', async (req, res) => {
           abrechnung_id: abrechnung_id || null,
           reference_text: reference_text || null,
           created_by: u.user.id,
+          zahlart: zahlart || null,
           storno_reason: (type === 'storno' ? (storno_reason || null) : null)
         })
         .select()
@@ -1389,6 +1419,7 @@ router.post('/belegliste', async (req, res) => {
           reference_text: reference_text || null,
           created_at: new Date().toISOString(),
           created_by: u.user.id,
+          zahlart: zahlart || null,
           storno_reason: (type === 'storno' ? (storno_reason || null) : null)
         };
       } else {
@@ -1429,7 +1460,7 @@ router.get('/belegliste/export', async (req, res) => {
     const { from, to, type } = req.query || {};
     let query = supabase
       .from('belegliste')
-      .select('beleg_nr, created_at, type, amount_eur, reference_text')
+      .select('beleg_nr, created_at, type, zahlart, amount_eur, reference_text')
       .eq('owner_id', tenantId)
       .order('beleg_nr', { ascending: true }); // GoBD chronological order
 
@@ -1640,6 +1671,20 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
   }
 
   const np = nameParts(lead);
+  // Der Name kommt ausschliesslich aus der Patientenakte (leads), nie aus dem
+  // Freitextfeld verordnungen.patient_name. Dieses Feld ist eine Kopie vom
+  // Anlagezeitpunkt — nach einer Namenskorrektur stuende dort weiter der alte
+  // Name. Lieber die Abrechnung stoppen als sie mit einem falschen Namen an die
+  // Kasse schicken; eine Korrektur dort ist ungleich aufwendiger.
+  if (!np.nachname) {
+    const e = new Error(
+      `Verordnung ${vord.id.slice(0, 8)}${vord.patient_name ? ` (${vord.patient_name})` : ''}: ` +
+      'kein Patient aus der Kartei verknüpft. Bitte die Verordnung einem Patienten zuordnen — ' +
+      'der Name für die Abrechnung wird immer aus der Patientenakte übernommen.'
+    );
+    e.status = 422; throw e;
+  }
+
   const abrechnungscode = '71'; // ZL-Podologe prefix
 
   // Flatten: each behandlung × each hpnr_code = one session entry
@@ -1648,8 +1693,10 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
     const datum = beh.behandlungsdatum || new Date().toISOString().slice(0, 10);
     for (const hpnr of (beh.hpnr_codes || [])) {
       const pos = findPodologiePosition(hpnr, datum);
-      const einzelbetrag   = pos?.preis     ?? 0;
-      const zuzahlungRaw   = pos?.zuzahlung ?? Number(einzelbetrag) * 0.10;
+      const einzelbetrag   = pos?.preis ?? 0;
+      // `zuzahlung: null` heisst zuzahlungsfrei (Podologie 78220, 78530), nicht
+      // "dann eben 10 %". Gleiche Regel wie im Physio-Pfad und auf der Rechnung.
+      const { zuzahlungUnit: zuzahlungRaw } = resolvePositionZuzahlung(pos, einzelbetrag);
       sessions.push({
         positionsnummer:  `${abrechnungscode}${hpnr}`.slice(0, 9),
         datumLeistung:    datum,
@@ -1675,8 +1722,8 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
     patient: {
       kvnr:               vord.versichertennummer || lead?.versichertennummer || '',
       versichertenstatus: /^[1359]\d{4}$/.test(lead?.versichertenstatus || '') ? lead.versichertenstatus : '1',
-      nachname:           np.nachname || vord.patient_name?.split(' ').at(-1) || '',
-      vorname:            np.vorname  || vord.patient_name?.split(' ')[0] || '',
+      nachname:           np.nachname,
+      vorname:            np.vorname,
       geburtsdatum:       lead?.geburtsdatum || '',
       belegnummer:        vord.id.slice(0, 10),
     },

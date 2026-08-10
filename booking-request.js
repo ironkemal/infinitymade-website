@@ -43,6 +43,7 @@ const state = {
   arzt_name: null,
   verordnung_datum: null,
   icd10_diagnose: null,
+  diagnosegruppe: null,
   behandlungsart: null,
   verordnung_sitzungen: null,
   frequenz: null,
@@ -842,6 +843,7 @@ function validateStep4() {
     else state.verordnung_datum = vd;
 
     state.icd10_diagnose = document.getElementById('gkvIcd10').value.trim() || null;
+    state.diagnosegruppe = document.getElementById('gkvDiagnosegruppe').value.trim() || null;
 
     const hm = document.getElementById('gkvHeilmittel').value;
     if (!hm) { fieldError('gkvHeilmittel', 'gkvHeilmittelError', 'Bitte Heilmittel auswählen.'); ok = false; }
@@ -984,6 +986,7 @@ function buildSummary() {
   if (state.payment_type === 'gkv' && state.krankenkasse) {
     data.push({ label: 'Krankenkasse', value: state.krankenkasse });
     if (state.arzt_name) data.push({ label: 'Verordnender Arzt', value: state.arzt_name });
+    if (state.diagnosegruppe) data.push({ label: 'Diagnosegruppe', value: state.diagnosegruppe });
     if (state.behandlungsart) data.push({ label: 'Heilmittel', value: state.behandlungsart });
   }
   if (state.payment_type === 'bg' && state.bg_name) {
@@ -1033,6 +1036,7 @@ async function handleSubmit() {
     arzt_name: state.arzt_name,
     verordnung_datum: state.verordnung_datum,
     icd10_diagnose: state.icd10_diagnose,
+    diagnosegruppe: state.diagnosegruppe,
     behandlungsart: state.behandlungsart || state.bg_behandlungsart,
     verordnung_sitzungen: state.verordnung_sitzungen || state.bg_anzahl,
     frequenz: state.frequenz || state.bg_frequenz,
@@ -1111,6 +1115,49 @@ async function handleCancelFlow(requestId, token) {
   });
 }
 
+// ─── Alternativtermin annehmen ────────────────────────────────────────────────
+// Der Patient kommt über einen Link aus der Gegenangebots-Mail. Der Termin wird
+// erst auf Knopfdruck gebucht — ein Klick auf einen Mail-Link ist noch keine
+// bewusste Zusage, und Mailprogramme öffnen Links teilweise selbst vor.
+
+async function handleAcceptFlow(requestId, slot, token) {
+  hide('progressBar');
+  document.querySelectorAll('.br-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('acceptScreen').classList.add('active');
+
+  const body = document.getElementById('acceptBody');
+  const btn = document.getElementById('confirmAcceptBtn');
+  const status = document.getElementById('acceptStatus');
+
+  body.textContent = 'Bitte bestätigen Sie den vorgeschlagenen Termin.';
+  btn.hidden = false;
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Wird gebucht…';
+    status.textContent = '';
+
+    try {
+      const res = await apiFetch('/booking-request/accept-offer', {
+        method: 'POST',
+        body: JSON.stringify({ request_id: requestId, slot, token }),
+      });
+      btn.style.display = 'none';
+      const datum = res?.date ? new Date(`${res.date}T12:00:00`).toLocaleDateString('de-DE') : '';
+      body.textContent = datum
+        ? `Ihr Termin am ${datum} um ${res.time} Uhr ist bestätigt.`
+        : 'Ihr Termin ist bestätigt.';
+      status.textContent = 'Wir freuen uns auf Ihren Besuch.';
+      status.style.color = 'var(--success)';
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Termin verbindlich annehmen';
+      status.textContent = err.message;
+      status.style.color = 'var(--error)';
+    }
+  });
+}
+
 // ─── Step entry side-effects ──────────────────────────────────────────────────
 
 function onStepEnter(logicalStep) {
@@ -1173,6 +1220,15 @@ function init() {
   const businessId = params.get('business');
   const cancelId = params.get('cancel');
   const cancelToken = params.get('token');
+  const acceptId = params.get('accept');
+  const acceptSlot = params.get('slot');
+
+  // Alternativtermin aus der Gegenangebots-Mail annehmen
+  if (acceptId && acceptSlot !== null && cancelToken) {
+    state.owner_id = businessId || null;
+    handleAcceptFlow(acceptId, Number(acceptSlot), cancelToken);
+    return;
+  }
 
   // Cancel flow
   if (cancelId && cancelToken) {
