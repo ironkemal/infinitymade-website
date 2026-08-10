@@ -3459,6 +3459,127 @@ app.post('/api/booking-request/cancel', bookingRequestLimiter, async (req, res) 
   }
 });
 
+// Ein Token pro angebotenem Termin. Der Index gehoert mit hinein, sonst koennte
+// der Patient mit demselben Link jeden beliebigen Vorschlag annehmen.
+function alternativToken(requestId, patientId, index) {
+  return crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
+    .update(`alt:${requestId}:${patientId}:${index}`).digest('hex').substring(0, 32);
+}
+
+// POST /api/booking-request/offer — auth required (owner)
+// Passt der Wunschtermin nicht, bietet die Praxis 2–3 freie Zeiten an. Die Anfrage
+// bleibt bewusst offen: entschieden ist erst, wenn der Patient geantwortet hat.
+app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
+  const userId = req.auth.userId;
+  const { request_id, owner_id, alternatives, reason } = req.body || {};
+  if (!request_id || !owner_id) return res.status(400).json({ error: 'request_id und owner_id required' });
+  if (!Array.isArray(alternatives) || alternatives.length < 1 || alternatives.length > 3) {
+    return res.status(400).json({ error: 'Bitte ein bis drei Alternativtermine angeben' });
+  }
+  for (const a of alternatives) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(a?.date || '')) || !/^\d{2}:\d{2}$/.test(String(a?.time || '')) || !a?.employee_id) {
+      return res.status(400).json({ error: 'Alternativtermin unvollständig (Datum, Uhrzeit, Therapeut)' });
+    }
+  }
+  try {
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+    if (profile?.id !== owner_id) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    const { data: bookReq } = await supabase.from('booking_requests')
+      .select('*, patients(vorname, email)')
+      .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
+    if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+    if (bookReq.status !== 'pending') return res.status(409).json({ error: 'Anfrage wurde bereits bearbeitet' });
+    if (!bookReq.patients?.email) {
+      return res.status(400).json({ error: 'Ohne E-Mail-Adresse des Patienten kann kein Gegenangebot verschickt werden' });
+    }
+
+    const gespeichert = alternatives.map(a => ({
+      date: a.date, time: a.time.substring(0, 5), employee_id: a.employee_id,
+    }));
+    const { error: updErr } = await supabase.from('booking_requests').update({
+      alternativ_termine: gespeichert,
+      alternativ_angeboten_at: new Date().toISOString(),
+    }).eq('id', request_id);
+    if (updErr) throw updErr;
+
+    if (process.env.SMTP_HOST) {
+      const { data: ownerP } = await supabase.from('profiles')
+        .select('business_name, email').eq('id', owner_id).maybeSingle();
+      const zeilen = gespeichert.map((a, i) => {
+        const token = alternativToken(request_id, bookReq.patient_id, i);
+        const link = `https://app.praxura.de/booking-request.html?accept=${encodeURIComponent(request_id)}&slot=${i}&token=${token}`;
+        const datum = new Date(`${a.date}T12:00:00`).toLocaleDateString('de-DE', {
+          weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
+        });
+        return `<p style="margin:10px 0"><a href="${link}" style="display:inline-block;background:#b1891b;color:#fff;padding:10px 18px;text-decoration:none;border-radius:6px">${datum} um ${a.time} Uhr annehmen</a></p>`;
+      }).join('');
+      const t = createSMTPTransport();
+      t.sendMail({
+        from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+        replyTo: ownerP?.email || undefined,
+        to: bookReq.patients.email,
+        subject: `Terminvorschlag – ${ownerP?.business_name || 'Praxura'}`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Ihr Wunschtermin ist leider belegt</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihren Wunschtermin können wir leider nicht anbieten.${reason ? ` <strong>${reason}</strong>` : ''}</p><p>Diese Zeiten hätten wir frei — ein Klick genügt:</p>${zeilen}<p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein. Es gilt, was zuerst angenommen wird; passt nichts davon, rufen Sie uns gerne an.</p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+      }).catch(e => console.error('[booking-request/offer] email', e.message));
+    }
+
+    return res.json({ ok: true, angeboten: gespeichert.length });
+  } catch (e) {
+    console.error('[booking-request/offer]', e.message);
+    return res.status(500).json({ error: 'Gegenangebot fehlgeschlagen' });
+  }
+});
+
+// POST /api/booking-request/accept-offer — public (Patientenlink mit HMAC-Token)
+app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req, res) => {
+  const { request_id, slot, token } = req.body || {};
+  const index = Number(slot);
+  if (!request_id || !token || !Number.isInteger(index) || index < 0) {
+    return res.status(400).json({ error: 'request_id, slot und token required' });
+  }
+  try {
+    const { data: bookReq } = await supabase.from('booking_requests')
+      .select('*, patients(vorname, nachname, email)')
+      .eq('id', request_id).maybeSingle();
+    if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+
+    if (token !== alternativToken(request_id, bookReq.patient_id, index)) {
+      return res.status(403).json({ error: 'Ungültiger Link' });
+    }
+    if (bookReq.status !== 'pending') return res.status(409).json({ error: 'Diese Anfrage wurde bereits bearbeitet.' });
+
+    const alternativen = Array.isArray(bookReq.alternativ_termine) ? bookReq.alternativ_termine : [];
+    const gewaehlt = alternativen[index];
+    if (!gewaehlt) return res.status(404).json({ error: 'Dieser Vorschlag ist nicht mehr gültig.' });
+
+    const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
+    // Der Vorschlag kann inzwischen selbst belegt sein — dieselbe Pruefung wie beim
+    // Bestaetigen, damit auch dieser Weg keine Doppelbuchung erzeugen kann.
+    const result = await createBookingsFromRequest(
+      { ...bookReq, preferred_date: gewaehlt.date, preferred_time: gewaehlt.time },
+      bookReq.owner_id, gewaehlt.employee_id, patName,
+    );
+    if (result.conflict) {
+      return res.status(409).json({ error: 'Dieser Termin ist inzwischen leider vergeben. Bitte melden Sie sich bei der Praxis.' });
+    }
+
+    await supabase.from('booking_requests').update({
+      status: 'approved',
+      booking_id: result.booking_id,
+      preferred_date: gewaehlt.date,
+      preferred_time: gewaehlt.time,
+      employee_id: gewaehlt.employee_id,
+      alternativ_angeboten_at: null,
+    }).eq('id', request_id);
+
+    return res.json({ ok: true, date: gewaehlt.date, time: gewaehlt.time });
+  } catch (e) {
+    console.error('[booking-request/accept-offer]', e.message);
+    return res.status(500).json({ error: 'Annahme fehlgeschlagen' });
+  }
+});
+
 // ============================================================================
 // BOOKING REQUEST — SMTP helper
 // ============================================================================

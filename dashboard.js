@@ -155,6 +155,14 @@ const T = {
     anfragen_sessions: 'Sitzungen', anfragen_notizen: 'Notizen',
     anfragen_link_title: 'Buchungslink', anfragen_link_sub: 'Teilen Sie diesen Link mit Ihren Patienten',
     anfragen_copy_link: 'Link kopieren',
+    anfragen_absage_senden: 'Absage senden',
+    anfragen_alt_offen: 'Vorschläge verschickt, warten auf Antwort',
+    anfragen_alt_anbieten: 'Alternativtermine anbieten',
+    anfragen_alt_hint: 'Höchstens drei auswählen. Der Patient nimmt einen davon per Klick in der E-Mail an.',
+    anfragen_alt_leer: 'In den nächsten Tagen ist bei diesem Therapeuten nichts frei.',
+    anfragen_alt_max: 'Höchstens drei Termine anbieten.',
+    anfragen_alt_gesendet: 'Terminvorschläge verschickt ✓',
+    anfragen_alt_keine_mail: 'Ohne E-Mail-Adresse des Patienten können keine Alternativtermine angeboten werden.',
     move_banner: 'Zielzeit anklicken, dann den Vorschlag bestätigen.',
     move_cancel: 'Verschieben abbrechen',
     move_conflict: 'Zu dieser Zeit ist schon ein Termin eingetragen. Bitte eine andere Zeit wählen.',
@@ -290,6 +298,14 @@ const T = {
     anfragen_sessions: 'Sessions', anfragen_notizen: 'Notes',
     anfragen_link_title: 'Booking link', anfragen_link_sub: 'Share this link with your patients',
     anfragen_copy_link: 'Copy link',
+    anfragen_absage_senden: 'Send decline',
+    anfragen_alt_offen: 'Suggestions sent, awaiting reply',
+    anfragen_alt_anbieten: 'Offer alternative times',
+    anfragen_alt_hint: 'Pick up to three. The patient accepts one with a click in the email.',
+    anfragen_alt_leer: 'Nothing free with this therapist over the next few days.',
+    anfragen_alt_max: 'Offer at most three times.',
+    anfragen_alt_gesendet: 'Suggestions sent ✓',
+    anfragen_alt_keine_mail: 'Without the patient\'s email address no alternatives can be offered.',
     move_banner: 'Click the target time, then confirm the preview.',
     move_cancel: 'Cancel move',
     move_conflict: 'There is already an appointment at that time. Please pick another slot.',
@@ -425,6 +441,14 @@ const T = {
     anfragen_sessions: 'Seans', anfragen_notizen: 'Notlar',
     anfragen_link_title: 'Rezervasyon linki', anfragen_link_sub: 'Bu linki hastalarınızla paylaşın',
     anfragen_copy_link: 'Linki kopyala',
+    anfragen_absage_senden: 'Ret gönder',
+    anfragen_alt_offen: 'Öneriler gönderildi, yanıt bekleniyor',
+    anfragen_alt_anbieten: 'Alternatif saat öner',
+    anfragen_alt_hint: 'En fazla üç tane seçin. Hasta e-postadaki bağlantıyla birini kabul eder.',
+    anfragen_alt_leer: 'Önümüzdeki günlerde bu terapistte boş saat yok.',
+    anfragen_alt_max: 'En fazla üç saat önerin.',
+    anfragen_alt_gesendet: 'Öneriler gönderildi ✓',
+    anfragen_alt_keine_mail: 'Hastanın e-posta adresi olmadan alternatif saat önerilemez.',
     move_banner: 'Hedef saati tıklayın, sonra önizlemeyi onaylayın.',
     move_cancel: 'Taşımayı iptal et',
     move_conflict: 'Bu saatte zaten bir randevu var. Lütfen başka bir saat seçin.',
@@ -25021,6 +25045,57 @@ async function fetchAnwesenheitReport() {
 // ============================================================================
 // TERMIN-ANFRAGEN PANEL
 // ============================================================================
+
+/**
+ * Dialog mit freiem HTML-Inhalt.
+ *
+ * showInputModal() nimmt ein Optionsobjekt und kann nur EIN Textfeld. Die
+ * Anfrage-Dialoge riefen es mit (Titel, HTML, Callback) auf — diese Signatur gab
+ * es nie: der String wurde destrukturiert, also war alles undefined. Ergebnis war
+ * ein leerer Dialog "Eingabe" und ein Callback, der nie lief.
+ *
+ * @param {object}   o
+ * @param {string}   o.title
+ * @param {string}   o.html          Inhalt des Dialogs
+ * @param {Function} [o.onConfirm]   Ohne Callback wird nur ein Schliessen-Knopf gezeigt
+ * @param {string}   [o.confirmText]
+ * @param {Function} [o.afterRender] Läuft, sobald der Inhalt im DOM steht
+ */
+function showHtmlModal({ title, html, onConfirm = null, confirmText = 'Bestätigen', afterRender = null }) {
+  const titleEl = document.getElementById('htmlModalTitle');
+  const bodyEl = document.getElementById('htmlModalBody');
+  const okBtn = document.getElementById('htmlModalOk');
+  const cancelBtn = document.getElementById('htmlModalCancel');
+  const closeBtn = document.querySelector('#htmlModal .modal-close');
+  if (!titleEl || !bodyEl) return;
+
+  titleEl.textContent = title;
+  bodyEl.innerHTML = html;
+  okBtn.textContent = confirmText;
+  okBtn.hidden = !onConfirm;
+  cancelBtn.textContent = onConfirm ? 'Abbrechen' : 'Schließen';
+
+  const cleanup = () => {
+    okBtn.onclick = null; cancelBtn.onclick = null; closeBtn.onclick = null;
+    closeModal('htmlModal');
+  };
+  okBtn.onclick = async () => {
+    okBtn.disabled = true;
+    try {
+      const ergebnis = await onConfirm?.();
+      // false = der Dialog bleibt offen (z. B. weil eine Eingabe fehlt)
+      if (ergebnis !== false) cleanup();
+    } finally {
+      okBtn.disabled = false;
+    }
+  };
+  cancelBtn.onclick = cleanup;
+  closeBtn.onclick = cleanup;
+  openModal('htmlModal');
+  afterRender?.();
+}
+window.closeHtmlModal = () => closeModal('htmlModal');
+
 let anfragenCurrentStatus = 'pending';
 let anfragenCurrentRequests = [];
 
@@ -25097,7 +25172,7 @@ function renderAnfragenList(requests) {
         <span>${prefDate}${prefTime ? ' · ' + prefTime : ''}</span>
       </div>
       <div class="anfragen-card-footer">
-        <span class="text-sub" style="font-size:12px">${createdAt}</span>
+        <span class="text-sub" style="font-size:12px">${createdAt}${req.alternativ_angeboten_at ? ` · <span style="color:var(--warning-text)">${tl.anfragen_alt_offen}</span>` : ''}</span>
         ${actions}
       </div>
     </div>`;
@@ -25149,7 +25224,7 @@ function showAnfrageDetail(requestId) {
   const extraHTML = extraFields.map(([k,v]) => `<div class="detail-row"><span class="detail-label">${k}</span><span>${v}</span></div>`).join('');
   const isPending = req.status === 'pending';
 
-  showInputModal(tl.anfragen_detail_title, `
+  showHtmlModal({ title: tl.anfragen_detail_title, html: `
     <div class="anfragen-detail">
       <div class="detail-row"><span class="detail-label">${tl.anfragen_patient}</span><span>${patName}${pat?.geburtsdatum ? ' · ' + new Date(pat.geburtsdatum).toLocaleDateString('de-DE') : ''}</span></div>
       <div class="detail-row"><span class="detail-label">${tl.anfragen_payment}</span><span>${paymentLabel[req.payment_type] || req.payment_type}</span></div>
@@ -25162,10 +25237,10 @@ function showAnfrageDetail(requestId) {
     </div>
     ${isPending ? `
       <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
-        <button class="btn-primary" onclick="approveAnfrage('${req.id}');closeModal()" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
-        <button class="btn-danger" onclick="declineAnfrage('${req.id}');closeModal()" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
+        <button class="btn-primary" onclick="closeHtmlModal();approveAnfrage('${req.id}')" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
+        <button class="btn-danger" onclick="closeHtmlModal();declineAnfrage('${req.id}')" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ${tl.anfragen_ablehnen}</button>
       </div>` : ''}
-  `, null);
+  ` });
 }
 
 async function approveAnfrage(requestId) {
@@ -25181,15 +25256,19 @@ async function approveAnfrage(requestId) {
     const tl = T[lang] || T.de;
 
     const empOptions = allPeople.map(p => `<option value="${p.id}">${p.full_name}</option>`).join('');
-    showInputModal(tl.anfragen_select_employee, `
-      <select id="approveEmpSelect" class="input-field" style="width:100%">
-        <option value="">— Therapeuten wählen —</option>
-        ${empOptions}
-      </select>
-    `, async () => {
-      const empId = document.getElementById('approveEmpSelect')?.value;
-      if (!empId) return showToast('Bitte einen Therapeuten wählen', 'error');
-      await doApproveAnfrage(requestId, ownerId, empId);
+    showHtmlModal({
+      title: tl.anfragen_select_employee,
+      confirmText: tl.anfragen_confirm_approve,
+      html: `
+        <select id="approveEmpSelect" class="form-input" style="width:100%">
+          <option value="">— Therapeuten wählen —</option>
+          ${empOptions}
+        </select>`,
+      onConfirm: async () => {
+        const empId = document.getElementById('approveEmpSelect')?.value;
+        if (!empId) { showToast('Bitte einen Therapeuten wählen', 'error'); return false; }
+        await doApproveAnfrage(requestId, ownerId, empId);
+      },
     });
     return;
   }
@@ -25228,29 +25307,121 @@ async function doApproveAnfrage(requestId, ownerId, employeeId) {
   }
 }
 
+/**
+ * Sucht ab dem Wunschtag vorwärts nach freien Zeiten beim selben Therapeuten.
+ * Bricht ab, sobald genug zusammen ist — nicht mehr Abfragen als nötig.
+ */
+async function sucheAlternativTermine(req, empId, maxVorschlaege = 6, maxTage = 7) {
+  const start = req.preferred_date ? new Date(req.preferred_date + 'T12:00:00') : new Date();
+  const dauer = req.services?.duration_minutes || 30;
+  const gefunden = [];
+
+  for (let i = 1; i <= maxTage && gefunden.length < maxVorschlaege; i++) {
+    const tag = new Date(start.getTime() + i * 86400000);
+    const datum = toISODate(tag);
+    try {
+      const r = await fetch(`${API}/booking/get-slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: empId, date: datum, duration: dauer, serviceId: req.service_id || null }),
+      });
+      const json = await r.json();
+      for (const s of (json.slots || [])) {
+        const zeit = (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5);
+        if (!zeit) continue;
+        gefunden.push({ date: datum, time: zeit, employee_id: empId });
+        if (gefunden.length >= maxVorschlaege) break;
+      }
+    } catch {
+      // Ein Tag ohne Antwort ist kein Grund abzubrechen — der nächste zählt.
+    }
+  }
+  return gefunden;
+}
+
 async function declineAnfrage(requestId) {
   const lang = document.getElementById('langSelect')?.value || 'de';
   const tl = T[lang] || T.de;
-  showInputModal(tl.anfragen_ablehnen, `
-    <textarea id="declineReasonInput" class="input-field" style="width:100%;height:80px;resize:vertical" placeholder="${tl.anfragen_decline_reason}"></textarea>
-  `, async () => {
-    const reason = document.getElementById('declineReasonInput')?.value?.trim() || '';
-    const ownerId = currentProfile?.id;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      const r = await fetch(`${API}/booking-request/decline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ request_id: requestId, owner_id: ownerId, reason })
+  const ownerId = currentProfile?.id;
+  const req = anfragenCurrentRequests.find(r => r.id === requestId);
+  const empId = req?.employee_id || ownerId;
+  const hatEmail = Boolean(req?.patients?.email);
+
+  showHtmlModal({
+    title: tl.anfragen_ablehnen,
+    confirmText: tl.anfragen_absage_senden,
+    html: `
+      <label style="display:block;font-size:13px;color:var(--text-sub);margin-bottom:6px">${tl.anfragen_decline_reason}</label>
+      <textarea id="declineReasonInput" class="form-input" style="width:100%;height:70px;resize:vertical"></textarea>
+      ${hatEmail ? `
+        <label class="anfragen-alt-toggle" style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;color:var(--text-main);cursor:pointer">
+          <input type="checkbox" id="altAnbietenCb"> ${tl.anfragen_alt_anbieten}
+        </label>
+        <div id="altSlotsWrap" hidden style="margin-top:10px">
+          <p style="font-size:12px;color:var(--text-sub);margin-bottom:8px">${tl.anfragen_alt_hint}</p>
+          <div id="altSlotsList"></div>
+        </div>`
+        : `<p style="margin-top:14px;font-size:12px;color:var(--text-sub)">${tl.anfragen_alt_keine_mail}</p>`}
+    `,
+    afterRender: () => {
+      const cb = document.getElementById('altAnbietenCb');
+      const wrap = document.getElementById('altSlotsWrap');
+      const list = document.getElementById('altSlotsList');
+      if (!cb || !wrap || !list) return;
+      let geladen = false;
+      cb.addEventListener('change', async () => {
+        wrap.hidden = !cb.checked;
+        if (!cb.checked || geladen) return;
+        geladen = true;
+        list.innerHTML = '<div class="loading-spinner" style="margin:16px auto"></div>';
+        const slots = await sucheAlternativTermine(req, empId);
+        if (!slots.length) {
+          list.innerHTML = `<p style="font-size:13px;color:var(--text-sub)">${tl.anfragen_alt_leer}</p>`;
+          return;
+        }
+        list.innerHTML = slots.map((s, i) => {
+          const datum = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+          return `<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;color:var(--text-main);cursor:pointer">
+            <input type="checkbox" class="alt-slot-cb" data-idx="${i}"> ${datum} · ${s.time} Uhr
+          </label>`;
+        }).join('');
+        list.dataset.slots = JSON.stringify(slots);
+        // Höchstens drei — mehr Auswahl hilft niemandem und macht die Mail unübersichtlich.
+        list.querySelectorAll('.alt-slot-cb').forEach(box => {
+          box.addEventListener('change', () => {
+            const gewaehlt = list.querySelectorAll('.alt-slot-cb:checked').length;
+            if (gewaehlt > 3) { box.checked = false; showToast(tl.anfragen_alt_max, 'info'); }
+          });
+        });
       });
-      const json = await r.json();
-      if (!r.ok) throw new Error(json.error || 'Fehler');
-      showToast('Anfrage abgelehnt', 'info');
-      loadAnfragen(anfragenCurrentStatus);
-    } catch (e) {
-      showToast(e.message || 'Fehler beim Ablehnen', 'error');
-    }
+    },
+    onConfirm: async () => {
+      const reason = document.getElementById('declineReasonInput')?.value?.trim() || '';
+      const list = document.getElementById('altSlotsList');
+      const alleSlots = list?.dataset.slots ? JSON.parse(list.dataset.slots) : [];
+      const gewaehlt = Array.from(list?.querySelectorAll('.alt-slot-cb:checked') || [])
+        .map(box => alleSlots[Number(box.dataset.idx)]).filter(Boolean);
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const gegenangebot = gewaehlt.length > 0;
+        const r = await fetch(`${API}/booking-request/${gegenangebot ? 'offer' : 'decline'}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(gegenangebot
+            ? { request_id: requestId, owner_id: ownerId, reason, alternatives: gewaehlt }
+            : { request_id: requestId, owner_id: ownerId, reason }),
+        });
+        const json = await r.json();
+        if (!r.ok) throw new Error(json.error || 'Fehler');
+        showToast(gegenangebot ? tl.anfragen_alt_gesendet : 'Anfrage abgelehnt', gegenangebot ? 'success' : 'info');
+        loadAnfragen(anfragenCurrentStatus);
+      } catch (e) {
+        showToast(e.message || 'Fehler beim Ablehnen', 'error');
+        return false;
+      }
+    },
   });
 }
 

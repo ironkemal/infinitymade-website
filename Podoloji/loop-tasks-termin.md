@@ -27,6 +27,9 @@ angehen, wenn die genannte Nummer `[x]` ist.
          absagen, der Termin blieb im Kalender stehen.
       4. Der Storno-Link in der Patienten-Mail liess den bestätigten Termin als
          Geistertermin im Kalender stehen.
+      ⚠️ Nachtrag (bei Punkt 4 gefunden): die **Dialoge** des Moduls waren doch nicht
+      fertig verdrahtet — `showInputModal` wurde mit einer Signatur aufgerufen, die es
+      nicht gibt. Details siehe Punkt 4. Erst damit ist Punkt 1 wirklich zu.
 
 - [x] 2. Slot-Kollisionstest bei Termin-Anfrage — wird eine angefragte Zeit ausgeblendet/abgelehnt, sobald sie an jemand anderen vergeben wurde?
       Geändert: `api-backend/booking/from-request.js` (Vorabprüfung `slotIstFrei`, 23P01 → `conflict`) ·
@@ -60,9 +63,30 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Die DB-Sperre `no_overlapping_bookings` bleibt unangetastet; sie ist weiterhin das,
       was die Doppelbuchung verhindert — nur die Meldung ist jetzt lesbar.
 
-- [ ] 4. Termin-Anfrage: Gegenangebot — bei ausgebuchter Zeit schlägt die Praxis eine Alternativzeit vor
-      Zuerst: 1
-      Code: nichts Vorhandenes gefunden ("Gegenangebot" kommt im Code nirgends vor) — komplett neu.
+- [x] 4. Termin-Anfrage: Gegenangebot — bei ausgebuchter Zeit schlägt die Praxis eine Alternativzeit vor
+      (Entscheidung Melih, 10.08.2026: E-Mail mit 2–3 Alternativterminen, ein Klick genügt.)
+      Geändert: `database_v34_anfrage_gegenangebot.sql` (neu) · `api-backend/server.js`
+      (`POST /booking-request/offer`, `POST /booking-request/accept-offer`) ·
+      `booking-request.html`/`.js`/`.css` (Annahme-Seite für den Link aus der Mail) ·
+      `dashboard.js` (`showHtmlModal`, Ablehnen-Dialog mit Terminvorschlägen, i18n de/en/tr) ·
+      `dashboard.html` (Dialog-Gerüst `#htmlModal`)
+      ⚠️ SQL-Migration muss vor dem Deploy im Supabase SQL-Editor laufen.
+      Ablauf: Ablehnen-Dialog → Haken „Alternativtermine anbieten" → die nächsten freien
+      Zeiten desselben Therapeuten werden gesucht (`/booking/get-slots`, max. 7 Tage
+      vorwärts), höchstens drei ankreuzen → der Patient bekommt eine Mail mit je einem
+      Annehmen-Link. Jeder Link hat ein eigenes HMAC-Token **inklusive Index**, sonst
+      liesse sich mit einem Link jeder Vorschlag annehmen. Angenommen wird erst auf
+      Knopfdruck auf der Seite, nicht schon durch das Öffnen des Links.
+      Die Anfrage bleibt bewusst **offen**, solange der Patient nicht geantwortet hat —
+      das erspart einen vierten Status samt Constraint-Änderung und ist inhaltlich richtig.
+      Die Annahme läuft durch dieselbe Kollisionsprüfung wie das Bestätigen (Punkt 2),
+      kann also keine Doppelbuchung erzeugen.
+      🚨 **Dabei gefunden — Punkt 1 war noch nicht ganz zu:** die drei Dialoge des
+      Anfragen-Moduls riefen `showInputModal(Titel, HTML, Callback)` auf. Diese Signatur
+      gibt es nicht (`showInputModal` nimmt ein Optionsobjekt). Der String wurde
+      destrukturiert, also war alles `undefined`: **Anfrage-Details, Therapeutenauswahl
+      und Ablehnen öffneten einen leeren Dialog namens „Eingabe", und der Callback lief
+      nie** — Ablehnen tat schlicht gar nichts. Dafür gibt es jetzt `showHtmlModal`.
 
 - [ ] 5. Termin-Anfrage: Nachricht an Patient — nur per E-Mail, KEIN In-App-Chat
       Zuerst: 4

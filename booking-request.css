@@ -876,6 +876,7 @@ html, body {
 
 #successScreen,
 #cancelScreen,
+#acceptScreen,
 #errorScreen {
   display: none;
   text-align: center;
@@ -885,6 +886,7 @@ html, body {
 
 #successScreen.active,
 #cancelScreen.active,
+#acceptScreen.active,
 #errorScreen.active { display: block; }
 
 .br-result-icon {

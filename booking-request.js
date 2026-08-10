@@ -1115,6 +1115,49 @@ async function handleCancelFlow(requestId, token) {
   });
 }
 
+// ─── Alternativtermin annehmen ────────────────────────────────────────────────
+// Der Patient kommt über einen Link aus der Gegenangebots-Mail. Der Termin wird
+// erst auf Knopfdruck gebucht — ein Klick auf einen Mail-Link ist noch keine
+// bewusste Zusage, und Mailprogramme öffnen Links teilweise selbst vor.
+
+async function handleAcceptFlow(requestId, slot, token) {
+  hide('progressBar');
+  document.querySelectorAll('.br-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('acceptScreen').classList.add('active');
+
+  const body = document.getElementById('acceptBody');
+  const btn = document.getElementById('confirmAcceptBtn');
+  const status = document.getElementById('acceptStatus');
+
+  body.textContent = 'Bitte bestätigen Sie den vorgeschlagenen Termin.';
+  btn.hidden = false;
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Wird gebucht…';
+    status.textContent = '';
+
+    try {
+      const res = await apiFetch('/booking-request/accept-offer', {
+        method: 'POST',
+        body: JSON.stringify({ request_id: requestId, slot, token }),
+      });
+      btn.style.display = 'none';
+      const datum = res?.date ? new Date(`${res.date}T12:00:00`).toLocaleDateString('de-DE') : '';
+      body.textContent = datum
+        ? `Ihr Termin am ${datum} um ${res.time} Uhr ist bestätigt.`
+        : 'Ihr Termin ist bestätigt.';
+      status.textContent = 'Wir freuen uns auf Ihren Besuch.';
+      status.style.color = 'var(--success)';
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Termin verbindlich annehmen';
+      status.textContent = err.message;
+      status.style.color = 'var(--error)';
+    }
+  });
+}
+
 // ─── Step entry side-effects ──────────────────────────────────────────────────
 
 function onStepEnter(logicalStep) {
@@ -1177,6 +1220,15 @@ function init() {
   const businessId = params.get('business');
   const cancelId = params.get('cancel');
   const cancelToken = params.get('token');
+  const acceptId = params.get('accept');
+  const acceptSlot = params.get('slot');
+
+  // Alternativtermin aus der Gegenangebots-Mail annehmen
+  if (acceptId && acceptSlot !== null && cancelToken) {
+    state.owner_id = businessId || null;
+    handleAcceptFlow(acceptId, Number(acceptSlot), cancelToken);
+    return;
+  }
 
   // Cancel flow
   if (cancelId && cancelToken) {
