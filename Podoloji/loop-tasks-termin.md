@@ -70,7 +70,16 @@ angehen, wenn die genannte Nummer `[x]` ist.
 - [ ] 6. Termin-Anfrage-Formular an die gleiche Struktur wie die Verordnung-Maske angleichen
       Code: `booking-request.html`/`.js` mit der Verordnung-Erfassung in `dashboard.js` vergleichen.
 
-- [ ] 7. Minuten-Genauigkeit bei Terminzeiten — Labels klären (5–10 Min Kulanz)
+- [x] 7. Minuten-Genauigkeit bei Terminzeiten — Labels klären (5–10 Min Kulanz)
+      (Entscheidung Melih, 10.08.2026: nur Beschriftung, kein Umbau der Schrittweite.)
+      Geändert: `booking-request.html` + `booking-request.css` (Hinweis unter der Uhrzeit-Liste) ·
+      `booking.html` (gleicher Hinweis im öffentlichen Buchungsweg) ·
+      `api-backend/server.js` (derselbe Satz in beiden Bestätigungs-Mails)
+      Befund: **intern ist die Minute längst frei wählbar** — `bkStart` ist ein
+      `datetime-local`-Feld, 10:05 lässt sich eintragen und der Kalender zeichnet es
+      minutengenau (`topPx` rechnet proportional). Nur der öffentliche Weg bietet feste
+      30-Minuten-Schritte an. Geändert wurde deshalb nichts an der Mechanik, nur der Satz
+      „Die Uhrzeit ist ein Richtwert. Bitte planen Sie 5–10 Minuten Puffer ein."
 
 - [x] 8. Kalender: Mitarbeiter-Filter und Farbcodierung prüfen — Termine eines einzelnen Mitarbeiters sollen isoliert sichtbar sein
       Geändert: `dashboard.js` (Farbe der Verschieben-Vorschau, Absicherung der Monatsabfrage)

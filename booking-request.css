@@ -703,6 +703,14 @@ html, body {
   padding: 0.5rem 0;
 }
 
+/* Die angezeigte Uhrzeit ist ein Richtwert — das steht sonst nirgends. */
+.br-slots-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 0.75rem;
+}
+
 .br-slots-loading {
   display: flex;
   align-items: center;
