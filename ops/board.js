@@ -1,8 +1,8 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260809f';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260809f';
+import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260810a';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260810a';
 
 let todos = [];
 let showArchived = false;
@@ -329,10 +329,30 @@ function wire() {
     };
   });
 
+  // Metin secmek surukleme sayilmasin: detay/baslik uzerinde sol tusa basildigi
+  // anda kartin draggable'ini kapatiriz, fare birakilinca geri acariz. Boylece
+  // karti kenarindan/bosluktan surukleme aynen calisir, yazi ise secilebilir.
+  document.querySelectorAll('#board .t-detail').forEach(box => {
+    box.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      const card = box.closest('.card-t');
+      if (!card || card.getAttribute('draggable') !== 'true') return;
+      card.setAttribute('draggable', 'false');
+      const restore = () => {
+        card.setAttribute('draggable', 'true');
+        document.removeEventListener('mouseup', restore);
+      };
+      document.addEventListener('mouseup', restore);
+    });
+  });
+
   // Karta tiklayinca detay acilir/kapanir. Checkbox, menu ve baglantilar haric.
   document.querySelectorAll('#board .card-t').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('input, button, a')) return;
+      // Yazi secildikten sonra fare birakilinca kart kapanmasin.
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.anchorNode && card.contains(sel.anchorNode)) return;
       // Klick auf eine Unteraufgabe darf das Thema nicht mit umschalten.
       if (e.target.closest('.card-t') !== card) return;
 
@@ -460,6 +480,54 @@ function dropIndexIn(container, y) {
   return cards.length;
 }
 
+/** Karti duz metin olarak dokur — baslik, etiketler, kisa + uzun not, alt maddeler. */
+function todoText(t, depth = 0) {
+  const pad  = '  '.repeat(depth);
+  const meta = [
+    t.category,
+    t.priority === 'hoch' ? 'Hoch' : null,
+    t.meeting_date ? `Meeting ${fmtDate(t.meeting_date)}` : null,
+    t.done ? `erledigt ${t.done_at ? fmtDate(t.done_at) : ''}`.trim() : null,
+  ].filter(Boolean).join(' · ');
+
+  const lines = [`${pad}${depth ? '- ' : '# '}${t.title}`];
+  if (meta) lines.push(`${pad}${meta}`);
+  if (t.notes) {
+    lines.push('');
+    lines.push(...String(t.notes).trim().split('\n').map(l => (l ? pad + l : '')));
+  }
+  const kids = kidsOf(t.id);
+  if (kids.length) {
+    lines.push('');
+    kids.forEach(k => { lines.push(todoText(k, depth + 1), ''); });
+  }
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd();
+}
+
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return true; }
+  } catch {}
+  // Fallback: Clipboard-API fehlt oder wurde blockiert.
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch { return false; }
+}
+
+async function copyTodo(t) {
+  const text = todoText(t);
+  const ok = await copyToClipboard(text);
+  toast(ok ? 'Inhalt kopiert' : 'Kopieren nicht möglich', !ok);
+}
+
 function toggleMenu(card, host) {
   closeMenu();
   const t = byId(card.dataset.id);
@@ -475,7 +543,8 @@ function toggleMenu(card, host) {
     targets.map(c => `<button data-to="${esc(c.key)}">→ ${esc(c.name)}</button>`).join('') +
     (groups.length ? '<hr><button data-sub="">↑ Eigenes Thema (oberste Ebene)</button>' +
       groups.map(g => `<button data-sub="${g.id}">↳ ${esc(g.title.slice(0, 42))}</button>`).join('') : '') +
-    '<hr><button data-act="edit">Bearbeiten</button>' +
+    '<hr><button data-act="copy">Inhalt kopieren</button>' +
+    '<button data-act="edit">Bearbeiten</button>' +
     '<button data-act="del">Löschen</button>';
 
   el.onclick = async (e) => {
@@ -484,6 +553,7 @@ function toggleMenu(card, host) {
     closeMenu();
     if (b.dataset.to) return moveTo(t.id, b.dataset.to, 0, t.parent_id);
     if (b.dataset.sub !== undefined) return moveTo(t.id, colKeyOf(t), 0, b.dataset.sub || null);
+    if (b.dataset.act === 'copy') return copyTodo(t);
     if (b.dataset.act === 'edit') return editTodo(t);
     if (b.dataset.act === 'del') return confirmDialog('Aufgabe löschen',
       kidsOf(t.id).length

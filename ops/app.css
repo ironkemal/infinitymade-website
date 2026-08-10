@@ -403,6 +403,11 @@ a { color: var(--blue); }
 .pill-open { cursor: pointer; border-color: rgba(201,162,39,.35); color: var(--gold); }
 .card-t:has(.t-detail) { cursor: pointer; }
 
+/* Detay metni kopyalanabilir olmali: burada imlec yazi imleci, secim serbest.
+   Surukleme kartin geri kalanindan (baslik, etiketler, bosluk) aynen calisir. */
+.t-detail, .t-more { cursor: text; user-select: text; -webkit-user-select: text; }
+.t-detail a, .t-detail .more { cursor: pointer; }
+
 .more { cursor: pointer; background: var(--bg-2); font: inherit; font-size: 11px;
         min-height: 26px; margin-top: 8px; color: var(--text-mute); }
 .more:hover { color: var(--gold); border-color: var(--gold); }
