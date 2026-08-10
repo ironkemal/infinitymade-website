@@ -72,8 +72,18 @@ angehen, wenn die genannte Nummer `[x]` ist.
 
 - [ ] 7. Minuten-Genauigkeit bei Terminzeiten — Labels klären (5–10 Min Kulanz)
 
-- [ ] 8. Kalender: Mitarbeiter-Filter und Farbcodierung prüfen — Termine eines einzelnen Mitarbeiters sollen isoliert sichtbar sein
-      Code: `kalender.js`/`dashboard.js`, Kalenderansicht + Mitarbeiter-Filter-Logik.
+- [x] 8. Kalender: Mitarbeiter-Filter und Farbcodierung prüfen — Termine eines einzelnen Mitarbeiters sollen isoliert sichtbar sein
+      Geändert: `dashboard.js` (Farbe der Verschieben-Vorschau, Absicherung der Monatsabfrage)
+      Geprüft und in Ordnung: die Filter-Chips (`renderCalEmpChips`) wirken in **allen drei**
+      Ansichten — Tag, Woche und Monat filtern über `calEmpFilter` und fragen nur die
+      Termine der gewählten Person ab. Die Farbe wird überall über die Position in
+      `teamMembers` bestimmt, nicht über die gefilterte Liste — sie bleibt also gleich,
+      egal ob gefiltert ist oder nicht. Das war der Punkt, an dem so etwas üblicherweise kippt.
+      Zwei Kleinigkeiten korrigiert:
+      1. Die Vorschau beim Verschieben nahm ihre Farbe aus einer anderen Liste — bei einem
+         angemeldeten Mitarbeiter konnte sie deshalb anders aussehen als die eigene Spalte.
+      2. Die Monatsabfrage war bei leerer Mitarbeiterliste nicht abgesichert (die
+         Wochenansicht war es); jetzt gleich behandelt.
 
 - [ ] 9. Für jeden Mitarbeiter einen eigenen Buchungslink — prüfen ob vorhanden, sonst fertigstellen
       Code: `booking.html`/`.js` (öffentliche Reservierung per Slug) — prüfen ob der Slug pro

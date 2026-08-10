@@ -2742,7 +2742,9 @@ async function renderMonthView(year, month) {
     .eq('owner_id', ownerId)
     .gte('start_time', mStart)
     .lte('start_time', mEnd)
-    .in('user_id', empIds)
+    // Leere Liste wuerde zu einem ungueltigen in.() werden — wie in der Wochenansicht
+    // absichern.
+    .in('user_id', empIds.length ? empIds : ['none'])
     .neq('status', 'cancelled');
 
   // Update date label
@@ -5521,9 +5523,10 @@ document.addEventListener('keydown', (e) => {
 
 function placeGhost(slotEl, empId, text) {
   if (moveGhostEl) moveGhostEl.remove();
-  const allEmps = currentProfile.role === 'owner' ? teamMembers : [currentProfile];
-  const idx = allEmps.findIndex(e => e.id === empId);
-  const color = EMP_COLORS[idx % EMP_COLORS.length];
+  // Farbe immer ueber teamMembers bestimmen — genau wie Tages-, Wochen- und
+  // Monatsansicht. Sonst bekaeme die Vorschau eine andere Farbe als die Spalte.
+  const idx = teamMembers.findIndex(e => e.id === empId);
+  const color = EMP_COLORS[idx % EMP_COLORS.length] || 'var(--primary)';
   const ghost = document.createElement('div');
   ghost.className = 'dv-ghost';
   ghost.style.background = color + '25';
