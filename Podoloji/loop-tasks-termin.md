@@ -85,9 +85,18 @@ angehen, wenn die genannte Nummer `[x]` ist.
       2. Die Monatsabfrage war bei leerer Mitarbeiterliste nicht abgesichert (die
          Wochenansicht war es); jetzt gleich behandelt.
 
-- [ ] 9. Für jeden Mitarbeiter einen eigenen Buchungslink — prüfen ob vorhanden, sonst fertigstellen
-      Code: `booking.html`/`.js` (öffentliche Reservierung per Slug) — prüfen ob der Slug pro
-      Mitarbeiter oder nur pro Business existiert.
+- [x] 9. Für jeden Mitarbeiter einen eigenen Buchungslink — prüfen ob vorhanden, sonst fertigstellen
+      Geändert: `dashboard.js` (Link-Zeile in der Mitarbeiterkarte wieder eingesetzt)
+      Befund: der Link **funktioniert schon vollständig**. `booking_slug` hängt am Profil,
+      also auch an jedem Mitarbeiter, und `booking.js` erkennt ein Mitarbeiter-Profil
+      (Zeile 111–135): der Buchungsweg springt dann direkt auf diese Person, ohne
+      Mitarbeiterauswahl. Ohne eigenen Slug greift der Link auf die Profil-ID zurück,
+      der funktioniert genauso. Jeder Mitarbeiter sieht seinen Link im Kalender oben.
+      Fehlte: in der **Team-Übersicht** war die Link-Zeile aus der Karte verschwunden.
+      Der Link wurde im Code noch berechnet (`buildBookingUrl(m)`), das CSS
+      (`.emp-link-row`, `.emp-link-text`) und die Klick-Handler (`.emp-copy-link`) waren
+      auch noch da — nur das Markup fehlte. Der Praxisinhaber konnte die Links seiner
+      Mitarbeiter deshalb nicht sehen oder kopieren. Wieder eingesetzt.
 
 - [ ] 10. Arbeitszeiten pro Standort statt nur global [Launch-Thema]
       Bestätigt: `working_hours` ist aktuell rein `user_id`-basiert (`kalender.js` Zeile 575,

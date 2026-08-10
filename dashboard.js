@@ -11189,6 +11189,10 @@ async function loadTeam() {
       <div class="emp-name">${name} ${m.id === currentSession.user.id ? t('me') : ''}</div>
       <div class="emp-role">${m.role === 'owner' ? 'Geschäftsführung' : 'Mitarbeiter'}</div>
       ${m.id === currentSession.user.id ? '<div class="emp-badge" title="Sie"></div>' : ''}
+      <div class="emp-link-row">
+        <a class="emp-link-text" href="${bookingLink}" target="_blank" rel="noopener" title="${bookingLink}">${shortLink}</a>
+        <button class="btn-icon emp-copy-link" type="button" data-link="${bookingLink}" title="${t('anfragen_copy_link')}" aria-label="${t('anfragen_copy_link')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+      </div>
       <div class="emp-urlaub-toggle" data-emp-id="${m.id}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px;">
         <span>🌴 Urlaub / Abwesenheit</span>
         <span class="emp-urlaub-chevron" style="transition:transform 0.2s;">›</span>
