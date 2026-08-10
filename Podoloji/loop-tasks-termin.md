@@ -154,9 +154,20 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Mitarbeiter deshalb nicht sehen oder kopieren. Wieder eingesetzt.
 
 - [ ] 10. Arbeitszeiten pro Standort statt nur global [Launch-Thema]
-      Bestätigt: `working_hours` ist aktuell rein `user_id`-basiert (`kalender.js` Zeile 575,
-      mehrfach in `dashboard.js`, `api-backend/server.js` Zeile 592+) — kein Standort-Override.
-      Vermutlich größerer Umbau mit Schema-Änderung. Nicht auf die leichte Schulter nehmen.
+      ⏸ **Plan liegt vor, Umbau bewusst zurückgestellt** (Entscheidung Melih, 10.08.2026:
+      erst planen, dann entscheiden). Neu: `ARBEITSZEITEN_PRO_STANDORT.md`
+      Kurz: besser als gedacht. Die Spalte `working_hours.business_id` **existiert schon**,
+      samt Index — sie wird nur von keiner Codestelle benutzt. Dasselbe bei
+      `custom_days.business_id`. Der eigentliche Blocker ist die Constraint
+      `UNIQUE (user_id, day_of_week)`: eine Zeile pro Person und Wochentag, ein zweiter
+      Standort passt nicht hinein. Vorgeschlagen: Constraint auf
+      `UNIQUE NULLS NOT DISTINCT (user_id, day_of_week, business_id)` umstellen,
+      `business_id IS NULL` heisst „gilt überall". Kein Backfill, bestehende Praxen
+      unverändert.
+      Empfehlung im Plan: **nicht jetzt** — es gibt keine Praxis mit zwei Standorten in
+      Betrieb, aber ein Fehler in `getAvailableSlots` trifft sofort alle. Reihenfolge, wenn
+      es soweit ist: erst Tests für `getAvailableSlots`, dann Migration, dann die
+      zwölf Lesestellen, zuletzt der Bildschirm.
 
 ---
 
