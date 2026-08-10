@@ -1,0 +1,79 @@
+# Loop-Liste: Termin und Kalender
+
+Quelle: Ops-Dashboard → Podoloji → "Termin ve takvim" (Meeting 08.08.2026)
+Kontext aus dem Meeting: Der Termin-Anfrage-Ablauf läuft schon live, gilt aber erst als
+fertig wenn Annehmen/Ablehnen komplett steht — Gegenangebot oder Patienten-Nachricht vorher
+zu bauen wäre verschwendete Arbeit. Deshalb startet die Kette mit Punkt 1.
+
+Regel für den builder-Agenten: von oben nach unten abarbeiten. Ein Punkt mit `Zuerst:` erst
+angehen, wenn die genannte Nummer `[x]` ist.
+
+- [x] 1. Termin-Anfrage Annehmen/Ablehnen-Ablauf fertigstellen — inkl. E-Mail-Benachrichtigung [Priorität: Hoch]
+      Geändert: `api-backend/booking/from-request.js` (neu) · `api-backend/booking/from-request.test.js`
+      (neu, 6 Tests) · `api-backend/server.js` (approve nutzt die neue Funktion, Auto-Akzeptieren legt
+      jetzt einen Termin an, Ablehnen prüft den Status, Patienten-Storno storniert auch die Buchung) ·
+      `dashboard.js` (Sidebar-Zähler) · `dashboard.html` (Cache-Version)
+      Befund: die Oberfläche war komplett fertig verdrahtet (Liste, Tabs, Detail-Modal,
+      Therapeutenauswahl, alle drei Sprachen). Kaputt war das **Backend**:
+      1. `bookings` wurde mit `employee_id` beschrieben — diese Spalte gibt es dort nicht,
+         der Therapeut gehört in `user_id` (`NOT NULL`). Jedes Bestätigen endete in
+         „Bestätigung fehlgeschlagen". Nebenwirkung: nur über `user_id` greift die
+         Doppelbuchungs-Sperre `no_overlapping_bookings` überhaupt.
+      2. Auto-Akzeptieren setzte die Anfrage auf „bestätigt", legte aber **keinen Termin**
+         an — der Patient bekam eine Bestätigung für einen Termin, den niemand sah.
+         Läuft jetzt über dieselbe Funktion; ohne gewählten Therapeuten bleibt die Anfrage
+         bewusst offen, damit die Praxis jemanden auswählen kann.
+      3. Ablehnen prüfte den Status nicht — eine bereits bestätigte Anfrage liess sich
+         absagen, der Termin blieb im Kalender stehen.
+      4. Der Storno-Link in der Patienten-Mail liess den bestätigten Termin als
+         Geistertermin im Kalender stehen.
+
+- [ ] 2. Slot-Kollisionstest bei Termin-Anfrage — wird eine angefragte Zeit ausgeblendet/abgelehnt, sobald sie an jemand anderen vergeben wurde?
+      Zuerst: 1
+      Code: `api-backend/server.js` — approve-Route (~3318) prüfen, ob sie die Verfügbarkeit vor
+      dem Bestätigen erneut checkt (Vorbild: `hasOverlap`-Logik in der Booking-Create-Route,
+      ~Zeile 749).
+      ⚠️ Doppel-Buchung ist laut CLAUDE.md bereits über die DB-Constraint
+      `no_overlapping_bookings` (EXCLUDE GIST) gelöst — nicht neu erfinden, nur prüfen ob der
+      Anfrage-Pfad diese Constraint auch wirklich trifft.
+
+- [ ] 3. Kalender: "Verschieben"-Modus einbauen — Verschieben-Button drücken, Ziel-Slot anklicken [Priorität: Hoch]
+      Code: `kalender.js`, `dashboard.js` (Suchbegriff "verschieben" kommt an mehreren Stellen
+      schon vor — vermutlich Teil-Grundgerüst da, der eigentliche Klick-Modus fehlt noch).
+      ⚠️ Beim Verschieben immer gegen `no_overlapping_bookings` prüfen — siehe Punkt 2.
+
+- [ ] 4. Termin-Anfrage: Gegenangebot — bei ausgebuchter Zeit schlägt die Praxis eine Alternativzeit vor
+      Zuerst: 1
+      Code: nichts Vorhandenes gefunden ("Gegenangebot" kommt im Code nirgends vor) — komplett neu.
+
+- [ ] 5. Termin-Anfrage: Nachricht an Patient — nur per E-Mail, KEIN In-App-Chat
+      Zuerst: 4
+
+- [ ] 6. Termin-Anfrage-Formular an die gleiche Struktur wie die Verordnung-Maske angleichen
+      Code: `booking-request.html`/`.js` mit der Verordnung-Erfassung in `dashboard.js` vergleichen.
+
+- [ ] 7. Minuten-Genauigkeit bei Terminzeiten — Labels klären (5–10 Min Kulanz)
+
+- [ ] 8. Kalender: Mitarbeiter-Filter und Farbcodierung prüfen — Termine eines einzelnen Mitarbeiters sollen isoliert sichtbar sein
+      Code: `kalender.js`/`dashboard.js`, Kalenderansicht + Mitarbeiter-Filter-Logik.
+
+- [ ] 9. Für jeden Mitarbeiter einen eigenen Buchungslink — prüfen ob vorhanden, sonst fertigstellen
+      Code: `booking.html`/`.js` (öffentliche Reservierung per Slug) — prüfen ob der Slug pro
+      Mitarbeiter oder nur pro Business existiert.
+
+- [ ] 10. Arbeitszeiten pro Standort statt nur global [Launch-Thema]
+      Bestätigt: `working_hours` ist aktuell rein `user_id`-basiert (`kalender.js` Zeile 575,
+      mehrfach in `dashboard.js`, `api-backend/server.js` Zeile 592+) — kein Standort-Override.
+      Vermutlich größerer Umbau mit Schema-Änderung. Nicht auf die leichte Schulter nehmen.
+
+---
+
+## Für den builder-Agenten
+
+- Diese Datei ist die einzige Quelle für "was ist als nächstes dran".
+- Nach jeder erledigten Aufgabe: Checkbox auf `[x]` setzen + eine kurze Zeile darunter,
+  welche Dateien geändert wurden.
+- Bereits gelöste Probleme aus CLAUDE.md NICHT wieder aufmachen: OAuth-Race
+  (`newOAuthClient()`-Factory), Doppel-Buchung (`no_overlapping_bookings` EXCLUDE GIST),
+  Zeitzone (`Intl.DateTimeFormat` + `berlinOffsetMin()`, DST-safe), Service-Role-Fallback,
+  Rate-Limit auf öffentlichen Routen. Diese vier gelten als erledigt — nur nutzen, nicht neu bauen.

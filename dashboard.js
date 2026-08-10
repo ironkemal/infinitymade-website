@@ -24973,6 +24973,11 @@ async function loadAnfragen(status) {
     const json = await r.json();
     anfragenCurrentRequests = json.requests || [];
     renderAnfragenList(anfragenCurrentRequests);
+    // Der Zähler zählt offene Anfragen. Er darf nur aus dem Tab "Offen" kommen —
+    // sonst stünde er auf den Tabs "Bestätigt"/"Abgelehnt" fälschlich auf 0.
+    if (anfragenCurrentStatus === 'pending') {
+      updateAnfragenBadge(anfragenCurrentRequests.filter(r => r.status === 'pending').length);
+    }
   } catch (e) {
     list.innerHTML = '<p style="color:var(--danger);padding:16px">Fehler beim Laden.</p>';
     console.error('[anfragen]', e);
@@ -25029,8 +25034,6 @@ function renderAnfragenList(requests) {
     </div>`;
   }).join('');
 
-  // Update badge count
-  updateAnfragenBadge(requests.filter(r => r.status === 'pending').length);
 }
 
 function updateAnfragenBadge(count) {
