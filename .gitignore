@@ -28,3 +28,7 @@ api-backend/.env.poc
 
 # Toplanti dokumleri — beta musteri ismi ve klinik/abrechnung detaylari icerir, depo PUBLIC
 Praxura weekly meeting/
+
+# macOS Finder-Muell
+.DS_Store
+**/.DS_Store
