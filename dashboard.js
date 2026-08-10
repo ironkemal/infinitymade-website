@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260810f';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260810g';
 import { attachArztSearch, arztMetaText } from './arzt-suche.js?v=20260810f';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 import { attachPatientSearch } from './patient-suche.js?v=20260726';
@@ -125,6 +125,9 @@ const T = {
     pod_warn_expired: 'Verordnung möglicherweise ungültig (>84 Tage)',
     pod_kein_hpnr: 'Bitte mindestens einen HPNR-Code wählen.',
     pod_rezeptart: 'Rezeptart',
+    pod_gkv_angaben: 'GKV-Angaben (Kasse, Diagnosegruppe, ICD) — nur bei Kassenrezept nötig',
+    pod_behandlungsanlass: 'Behandlungsanlass',
+    pod_behandlungsanlass_hint: 'Freitext für die Rechnung — kein Kode nötig.',
     pod_beginn_hint: 'Beginn spätestens',
     pod_heilmittel_items: 'Verordnete Leistungen',
     pod_icd10_label: 'ICD-10 Code',
@@ -285,6 +288,9 @@ const T = {
     pod_warn_frist: 'Treatment deadline expired', pod_warn_expired: 'Prescription possibly invalid (>84 days)',
     pod_kein_hpnr: 'Please select at least one HPNR code.',
     pod_rezeptart: 'Prescription Type',
+    pod_gkv_angaben: 'Statutory insurance details (fund, diagnosis group, ICD) — only needed for GKV prescriptions',
+    pod_behandlungsanlass: 'Reason for treatment',
+    pod_behandlungsanlass_hint: 'Free text for the invoice — no code required.',
     pod_beginn_hint: 'Must Start By',
     pod_heilmittel_items: 'Prescribed Services',
     pod_icd10_label: 'ICD-10 Code',
@@ -438,6 +444,9 @@ const T = {
     pod_warn_frist: 'Tedavi başlangıç süresi doldu', pod_warn_expired: 'Reçete geçersiz olabilir (>84 gün)',
     pod_kein_hpnr: 'Lütfen en az bir HPNR kodu seçin.',
     pod_rezeptart: 'Reçete Türü',
+    pod_gkv_angaben: 'GKV bilgileri (kasa, tanı grubu, ICD) — sadece kasa reçetesinde gerekli',
+    pod_behandlungsanlass: 'Tedavi gerekçesi',
+    pod_behandlungsanlass_hint: 'Fatura için serbest metin — kod gerekmiyor.',
     pod_beginn_hint: 'En Geç Başlama',
     pod_heilmittel_items: 'Reçete Edilen Hizmetler',
     pod_icd10_label: 'ICD-10 Kodu',
@@ -17200,6 +17209,11 @@ function lsWireToggle(prefix) {
 // dabei samt Verdrahtung weggeworfen. Eine Verdrahtung beim Start hing außerdem
 // daran, dass init() vorher nirgends hängenbleibt; schlug ein früherer await
 // fehl, war die Suche still tot. Beim Fokus greift sie immer.
+// `strict: true` = nur Diagnosen des eigenen Fachbereichs, ohne den Trenner
+// "Andere Fachbereiche". Vorgesehen für ALLE vier Bereiche; scharf geschaltet
+// wird pro Bereich, sobald sein Feinschliff dran ist — Podologie zuerst
+// (CLAUDE.md, "Vertikal sıralaması"). Die Felder unten sind mandanten-
+// abhängig, sie bekommen strict, wenn Physio/Ergo/Logopädie an der Reihe sind.
 const DIAGNOSE_FIELDS = {
   rzIcd:       { kind: 'icd',  dgField: 'rzDg',     dgKind: 'text', warnId: 'rzIcdDgWarning'  }, // Rezept anlegen
   rxcIcd:      { kind: 'icd',  dgField: 'rxcDg',    dgKind: 'text', warnId: 'rxcIcdDgWarning' }, // Rezept-Scan bestätigen, 1. ICD
@@ -17207,7 +17221,7 @@ const DIAGNOSE_FIELDS = {
   rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true },                            // Diagnosegruppe
   rxcDg:       { kind: 'dg',   icdField: 'rxcIcd',  codeOnly: true },                            // Diagnosegruppe (Scan)
   podNewIcd10: { kind: 'icd',  dgField: 'podNewDiag', dgKind: 'select', warnId: 'podIcd10Warning',
-                 multi: true, codeOnly: true, bereich: 'podologie' },
+                 multi: true, codeOnly: true, bereich: 'podologie', strict: true },
 };
 
 // Heilmittel-Felder — dieselbe Idee, andere Quelle (RPC search_heilmittel).
@@ -23864,6 +23878,12 @@ function _icdMatchesDgRule(code, dg) {
 let _podState = { selectedVordId: null, verordnungen: [] };
 let _podKkCache = [];
 
+// Nur 'kassen' ist eine GKV-Verordnung. Für alles andere gibt es weder eine
+// Diagnosegruppe nach HeilM-RL noch einen Kostenträger — die Abrechnungsfelder
+// klappen weg und dürfen nie in eine §302-Datei geraten (Konsey 2026-08-10).
+const POD_GKV_REZEPTART = 'kassen';
+const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
+
 async function loadPodologieBilling() {
   const el = document.getElementById('podBillingContent');
   if (!el) return;
@@ -23925,7 +23945,12 @@ async function loadPodologieBilling() {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
               <span style="font-weight:600;color:var(--text-main);">${escapeHtml(v.patient_name || '—')}</span>
-              <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${escapeHtml(v.diagnosegruppe || '—')}</span>
+              <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${escapeHtml(
+                (v.rezeptart || 'kassen') === POD_GKV_REZEPTART
+                  ? (v.diagnosegruppe || '—')
+                  : (v.behandlungsanlass || POD_ANLASS_DEFAULT)
+              )}</span>
+              ${(v.rezeptart || 'kassen') !== POD_GKV_REZEPTART ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${escapeHtml(v.rezeptart)}</span>` : ''}
               ${v.status === 'abrechenbar' ? '<span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abrechenbar</span>' : ''}
               ${v.status === 'abgerechnet' ? '<span style="font-size:11px;background:#2563eb;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abgerechnet</span>' : ''}
               ${v.status === 'archiviert' ? '<span style="font-size:11px;background:#6b7280;color:#fff;padding:2px 7px;border-radius:12px;">Archiviert</span>' : ''}
@@ -24016,22 +24041,60 @@ async function loadPodologieBilling() {
               <div id="podArztHint" style="font-size:12px;color:var(--text-muted);margin-top:3px;display:none;"></div>
             </div>
             <div>
-              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Krankenkasse</label>
-              <select id="podNewKk" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
-                <option value="">— Krankenkasse wählen —</option>
-              </select>
-            </div>
-            <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_ausstelldatum')}</label>
               <input type="date" id="podNewAusstelldatum" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
             </div>
+            <!-- Rezeptart steuert das Formular: bei allem außer 'kassen' wandern die
+                 Abrechnungsfelder in den eingeklappten GKV-Block (Konsey 2026-08-10). -->
             <div>
-              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_diagnosegruppe')}</label>
-              <select id="podNewDiag" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
-                <option value="">— Wählen —</option>
-                ${podDiagOptionsHtml()}
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_rezeptart')}</label>
+              <select id="podNewRezeptart" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="kassen">Kassen-Rezept (GKV)</option>
+                <option value="privat">Privat-Rezept</option>
+                <option value="bg">BG-Rezept</option>
+                <option value="selbstzahler">Selbstzahler</option>
               </select>
             </div>
+            <div id="podBehandlungsanlassWrap" style="display:none;">
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_behandlungsanlass')}</label>
+              <input type="text" id="podNewBehandlungsanlass" placeholder="${escapeHtml(POD_ANLASS_DEFAULT)}" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">${t('pod_behandlungsanlass_hint')}</div>
+            </div>
+            <details id="podGkvDetails" open style="border:1px solid var(--border);border-radius:6px;padding:0;background:transparent;">
+              <summary id="podGkvSummary" style="display:none;cursor:pointer;padding:8px 10px;font-size:13px;color:var(--text-muted);list-style:none;">${t('pod_gkv_angaben')}</summary>
+              <div id="podGkvBody" style="display:grid;gap:10px;padding:0;">
+                <div>
+                  <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Krankenkasse</label>
+                  <select id="podNewKk" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                    <option value="">— Krankenkasse wählen —</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_diagnosegruppe')}</label>
+                  <select id="podNewDiag" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                    <option value="">— Wählen —</option>
+                    ${podDiagOptionsHtml()}
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_icd10_label')}</label>
+                  <input type="text" id="podNewIcd10" placeholder="z. B. E11.74" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+                  <div id="podIcd10Warning" style="color:var(--warning);font-size:12px;margin-top:4px;display:none;"></div>
+                  <div id="podL60Hint" style="display:none;margin-top:6px;padding:8px 10px;border-radius:6px;border:1px solid var(--warning);background:var(--bg-card-solid,#1f2937);font-size:13px;color:var(--text-main);">
+                    <div style="margin-bottom:6px;color:var(--warning);font-weight:500;">${escapeHtml(t('pod_l60_hint'))}</div>
+                    <div style="display:flex;gap:8px;">
+                      <button type="button" id="podL60UI1Btn" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">${escapeHtml(t('pod_l60_ui1'))}</button>
+                      <button type="button" id="podL60UI2Btn" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">${escapeHtml(t('pod_l60_ui2'))}</button>
+                    </div>
+                  </div>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
+                  <input type="checkbox" id="podNewZuzahlBefreit"> Zuzahlung befreit
+                </label>
+              </div>
+            </details>
+            <!-- Wagner ist klinische Dokumentation (§630f BGB), kein Abrechnungsfeld —
+                 bleibt unabhängig von der Rezeptart sichtbar (Konsey 2026-08-10). -->
             <div id="podWagnerWrap" style="display:none;">
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Wagner-Klassifikation</label>
               <select id="podNewWagner" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
@@ -24054,27 +24117,6 @@ async function loadPodologieBilling() {
                 <select id="podNewFrequenz" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">${frequenzOptionsHtml()}</select>
               </div>
             </div>
-            <div>
-              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_rezeptart')}</label>
-              <select id="podNewRezeptart" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
-                <option value="kassen">Kassen-Rezept (GKV)</option>
-                <option value="privat">Privat-Rezept</option>
-                <option value="bg">BG-Rezept</option>
-                <option value="selbstzahler">Selbstzahler</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_icd10_label')}</label>
-              <input type="text" id="podNewIcd10" placeholder="z. B. E11.74" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
-              <div id="podIcd10Warning" style="color:var(--warning);font-size:12px;margin-top:4px;display:none;"></div>
-              <div id="podL60Hint" style="display:none;margin-top:6px;padding:8px 10px;border-radius:6px;border:1px solid var(--warning);background:var(--bg-card-solid,#1f2937);font-size:13px;color:var(--text-main);">
-                <div style="margin-bottom:6px;color:var(--warning);font-weight:500;">${escapeHtml(t('pod_l60_hint'))}</div>
-                <div style="display:flex;gap:8px;">
-                  <button type="button" id="podL60UI1Btn" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">${escapeHtml(t('pod_l60_ui1'))}</button>
-                  <button type="button" id="podL60UI2Btn" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">${escapeHtml(t('pod_l60_ui2'))}</button>
-                </div>
-              </div>
-            </div>
             <div id="podBeginHintEl" style="font-size:13px;color:var(--text-muted);padding:6px 10px;background:var(--bg-card-solid,#1f2937);border-radius:6px;border:1px solid var(--border);display:none;"></div>
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('pod_heilmittel_items')}</label>
@@ -24088,9 +24130,6 @@ async function loadPodologieBilling() {
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
                 <input type="checkbox" id="podNewHausbesuch"> ${t('pod_hausbesuch')}
               </label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;">
-                <input type="checkbox" id="podNewZuzahlBefreit"> Zuzahlung befreit
-              </label>
             </div>
             <div id="podNewError" style="color:#ef4444;font-size:13px;display:none;"></div>
             <button id="podSaveVordBtn" class="btn-primary" style="width:fit-content;">${t('pod_save')}</button>
@@ -24103,7 +24142,10 @@ async function loadPodologieBilling() {
         </div>
 
         ${(() => {
-          const abrechenbar = _podState.verordnungen.filter(v => v.status === 'abrechenbar' && v.kostentraeger_ik);
+          // Nur GKV-Verordnungen sind §302-fähig. Der Server lehnt alles andere
+          // ohnehin ab (abrechnung.routes.js) — hier gar nicht erst anbieten.
+          const abrechenbar = _podState.verordnungen.filter(v =>
+            v.status === 'abrechenbar' && v.kostentraeger_ik && (v.rezeptart || 'kassen') === POD_GKV_REZEPTART);
           if (!abrechenbar.length) return '';
           // Group by KK
           const byKk = {};
@@ -24150,8 +24192,15 @@ async function loadPodologieBilling() {
     const icd10Raw   = document.getElementById('podNewIcd10')?.value || '';
     const errEl      = document.getElementById('podNewError');
 
-    if (!patient || !datum || !diagVal) {
-      errEl.textContent = 'Bitte Patient, Datum und Diagnosegruppe ausfüllen.';
+    // Diagnosegruppe ist nur bei GKV Pflicht — sie stammt aus der HeilM-RL und
+    // gilt ausschließlich für Verordnungen zulasten der GKV. Früher war sie
+    // immer Pflicht, weshalb bei Selbstzahlern erfundene Gruppen eingetragen
+    // wurden (Konsey 2026-08-10).
+    const istGkv = rezeptart === POD_GKV_REZEPTART;
+    if (!patient || !datum || (istGkv && !diagVal)) {
+      errEl.textContent = istGkv
+        ? 'Bitte Patient, Datum und Diagnosegruppe ausfüllen.'
+        : 'Bitte Patient und Datum ausfüllen.';
       errEl.style.display = 'block';
       return;
     }
@@ -24201,12 +24250,17 @@ async function loadPodologieBilling() {
     const kkIk       = document.getElementById('podNewKk')?.value || null;
     const zuzahlBef  = document.getElementById('podNewZuzahlBefreit')?.checked || false;
 
+    const anlassRaw = document.getElementById('podNewBehandlungsanlass')?.value.trim() || '';
+
     const { error } = await supabase.from('verordnungen').insert({
       owner_id: getOwnerId(),
       patient_name: patient,
       ausstellungsdatum: datum,
-      diagnosegruppe: diagRoot,
-      leitsymptomatik: diagVal !== diagRoot ? diagVal : null,
+      // podDiagRoot('') liefert einen Leerstring — der würde am Fremdschlüssel
+      // verordnungen_diagnosegruppe_fkey scheitern. Leer heißt NULL.
+      diagnosegruppe: diagRoot || null,
+      leitsymptomatik: (diagVal && diagVal !== diagRoot) ? diagVal : null,
+      behandlungsanlass: istGkv ? null : (anlassRaw || POD_ANLASS_DEFAULT),
       icd10,
       behandlungseinheiten: einh,
       therapiefrequenz: freq || null,
@@ -24220,8 +24274,11 @@ async function loadPodologieBilling() {
       lead_id: leadId,
       versichertennummer: vsnr,
       arzt_id: arztId,
-      kostentraeger_ik: kkIk,
-      zuzahlung_befreit: zuzahlBef,
+      // Kostenträger und Zuzahlung gibt es nur in der GKV. Sonst hart auf
+      // null/false — sonst schleppt ein vorher ausgewählter Wert aus dem
+      // zugeklappten Block eine falsche Kasse in den Datensatz.
+      kostentraeger_ik: istGkv ? kkIk : null,
+      zuzahlung_befreit: istGkv ? zuzahlBef : false,
     });
     if (error) {
       errEl.textContent = error.message;
@@ -24233,6 +24290,22 @@ async function loadPodologieBilling() {
   });
 
   // ---- New field helpers ----
+
+  // Rezeptart → Formular. Bei GKV bleibt alles wie bisher (Block offen, Summary
+  // versteckt). Sonst klappt der Block zu — versteckt, aber mit einem Klick
+  // erreichbar: der Patient bringt sein Rezept oft erst später nach.
+  function podApplyRezeptart() {
+    const isGkv = (document.getElementById('podNewRezeptart')?.value || POD_GKV_REZEPTART) === POD_GKV_REZEPTART;
+    const details = document.getElementById('podGkvDetails');
+    const summary = document.getElementById('podGkvSummary');
+    const anlass  = document.getElementById('podBehandlungsanlassWrap');
+    if (details) {
+      details.open = isGkv;
+      details.style.border = isGkv ? 'none' : '1px solid var(--border)';
+    }
+    if (summary) summary.style.display = isGkv ? 'none' : 'block';
+    if (anlass)  anlass.style.display  = isGkv ? 'none' : 'block';
+  }
 
   function computeBeginHint() {
     const datum = document.getElementById('podNewAusstelldatum')?.value;
@@ -24371,6 +24444,10 @@ async function loadPodologieBilling() {
     name: 'podNewArztName', lanr: 'podNewArztLanr', bsnr: 'podNewArztBsnr',
     id:   'podNewArztId',   hint: 'podArztHint',
   });
+
+  // Wire up: Rezeptart change (steuert GKV-Block + Behandlungsanlass)
+  document.getElementById('podNewRezeptart')?.addEventListener('change', podApplyRezeptart);
+  podApplyRezeptart();
 
   // Wire up: Ausstelldatum change
   document.getElementById('podNewAusstelldatum')?.addEventListener('change', computeBeginHint);

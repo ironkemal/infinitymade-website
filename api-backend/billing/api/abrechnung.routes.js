@@ -1815,6 +1815,16 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
 
     // ---- validate each verordnung ----
     for (const v of (vords || [])) {
+      // §302 SGB V gilt nur für Leistungen zulasten der GKV. Privat-, Selbst-
+      // zahler- und BG-Verordnungen haben weder Kostenträger noch Diagnose-
+      // gruppe nach HeilM-RL und dürfen nie in eine DTA-Datei geraten. Bisher
+      // hing das allein am kostentraeger_ik-Vergleich unten — das war Zufall,
+      // keine Zusicherung (Konsey 2026-08-10).
+      if (v.rezeptart && v.rezeptart !== 'kassen') {
+        return res.status(422).json({
+          error: `Verordnung ${v.id.slice(0,8)} (${v.patient_name}): Rezeptart „${v.rezeptart}" ist nicht GKV-abrechenbar und kann nicht per §302 eingereicht werden.`
+        });
+      }
       if (v.kostentraeger_ik !== kostentraegerIk) {
         return res.status(400).json({ error: `Verordnung ${v.id.slice(0,8)}: andere Krankenkasse.` });
       }
