@@ -69,6 +69,50 @@
 - ⚠️ **Kaynak niteliği: ticari yayın.** Bağlayıcı metin HeilM-RL § 15'tir — kural koda
   girmeden önce § 15'ten teyit edilmeli.
 
+### Podologie: Einzelmaßnahme immer 78010, nie 78020
+- **Kural:** Hornhautabtragung veya Nagelbearbeitung **tek başına** verordnet edilmişse her zaman
+  **78010 + 78030** ile faturalanır — Therapiezeit 20 dakikayı aşsa bile. **78020**
+  („Podologische Behandlung (groß)") **yalnızca** verordnete Podologische Komplexbehandlung
+  **ve** >20 dk Therapiezeit birlikte varsa abrechenbar.
+- **Kaynak:** FAK Podologie Q25 (Stand 24.05.2023, `Podoloji/20230524_Podologie_FAK_bf.txt`
+  Z.199-207) — *"Die Nagelbearbeitung oder Hornhautabtragung sind immer mit 78010 zzgl. 78030
+  abzurechnen."*; Anlage 1a Leistungsbeschreibung i.d.F. 17.06.2024 Teil 1 Z.167-171 + Teil 2
+  Ziff. 1/2/3
+- **Geçerlilik:** 17.06.2024 (HPNR-Verzeichnis gültig ab 01.01.2026'da değişmedi)
+- **Kodda:** `Podoloji/podologie-hpnr-reference.js` → `VALIDIERUNGS_REGELN`
+  `78020_nur_komplexbehandlung` (2026-08-10 eklendi). Canlı katalog
+  `api-backend/billing/codes/podologie_positions.js:22-23,64-65` etiket/fiyat olarak doğru,
+  ama Maßnahme bazlı kısıt **uygulanmamış**.
+- **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF, Standard-Verordnung (Muster 13)
+
+### Podologie: HPNR 78001–78006 abrechenbar değildir
+- **Kural:** Maßnahmen-pozisyonları 78001 (Hornhautabtragung), **78002 (Nagelbearbeitung)**,
+  78003 (Komplexbehandlung) ve 78004–78006 („an einem Fuß") GKV-SV
+  Heilmittelpositionsnummernverzeichnis'te **vardır**, ancak §125-Podologie-Vertrag Anlage 2'de
+  **fiyatları yoktur** → SLLA'ya konursa Absetzung/Nullretaxation. Ayırt edici işaret:
+  Verzeichnis'te `Grundlage` ve `Eigentümer` sütunları **boş**.
+- **Kaynak:** `Podoloji/Podologie_Positionsnummern_2026_Filtered.csv` Z.2-19 (gültig ab
+  01.01.2026); `Podoloji/Leistungen/20250617_Podologie_Anlage_2.txt` i.d.F. 01.07.2025 —
+  `7800x` için **0 eşleşme**
+- **Geçerlilik:** 01.01.2026 (pozisyonların kendisi `gültig ab 1900-01-01`, yani yeni değil)
+- **Kodda:** `Podoloji/podologie-hpnr-reference.js` → `HPNR_PODOLOGIE_NICHT_ABRECHENBAR`
+  (2026-08-10 eklendi)
+- **Kapsam:** Podologie, tüm Verordnungsart'lar
+
+### Podologie: Heilmittel a/b/c Pflichtangabe'dir ve HPNR'yi belirler
+- **Kural:** Muster 13'te **a) Hornhautabtragung · b) Nagelbearbeitung · c) Podologische
+  Komplexbehandlung** verordnete Heilmittel'i gösterir (alan `g1`, Pflichtangabe). Bu bilgi
+  78010 ↔ 78020 kararını belirlediği için **persistiert edilmelidir.** Ergänzendes Heilmittel
+  (`g2`) Podologie'de tamamen **entfällt**.
+- **Kaynak:** HeilM-RL Stand 15.05.2025 (iK 05.08.2025), Heilmittelkatalog Podologische
+  Therapie — DF Z.3369-3381 / NF Z.3421-3434 / QF Z.3471-3483; Anlage 3 i.d.F. 16.06.2025
+  `g1` (Z.443-454), `g2` (Z.465-472)
+- **Geçerlilik:** 05.08.2025
+- **Kodda:** **uygulanmamış** — `verordnungen` tablosunda verordnetes Heilmittel için alan yok.
+  Önerilen: `heilmittel_massnahme` ∈ {Hornhautabtragung, Nagelbearbeitung, Podologische
+  Komplexbehandlung}
+- **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF
+
 ---
 
 # §302 Abrechnung / Korrekturverfahren

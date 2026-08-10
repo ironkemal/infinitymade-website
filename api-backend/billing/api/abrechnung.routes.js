@@ -215,7 +215,11 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
     verordnung: {
       ausstellungsdatum:        rx.ausstellungsdatum,
       icd10:                    rx.icd10 || '',
-      diagnosegruppe:           rx.diagnosegruppe || '9999',
+      // Suffix -a/-b/-c ist Leitsymptomatik, keine Diagnosegruppe. Im ZHE-Feld
+      // sind nur 4 Stellen aus A-Z0-9 erlaubt, Sonderzeichen machen die Datei
+      // ungültig (Anlage 1 TP5 V21). Gleiche Bereinigung wie im Podologie-Weg.
+      // Wird heute nicht ausgelöst, die Stelle war aber bruchgefährdet.
+      diagnosegruppe:           (rx.diagnosegruppe || '').replace(/-[abc]$/i, '') || '9999',
       verordnungsart:           rx.is_blanko ? '04' : (rx.is_lhb_bvb ? '02' : '01'),
       hausbesuch:               !!rx.hausbesuch,
       leitsymptomatik:          rx.leitsymptomatik || '',
@@ -1677,7 +1681,11 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
       belegnummer:        vord.id.slice(0, 10),
     },
     doctor: {
-      lanr: arzt?.lanr || arzt?.arzt_nummer || '999999999',
+      // NICHT auf arzt_nummer zurückfallen: das Altfeld enthielt Telefonnummern
+      // und Praxisnamen (Maske bot es als "Telefon / Fax" an) und hätte diese
+      // als LANR in die Kassendatei geschrieben. Ersatzwert bei fehlendem Wert
+      // ist 999999999 — Anlage 1 TP5 V21, Kap. 5.5.3.3 (SLLA: B, ZHE-Segment).
+      lanr: arzt?.lanr || '999999999',
       bsnr: arzt?.bsnr || '999999999',
     },
     verordnung: {
@@ -1752,7 +1760,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .select(`
         *,
         leads:lead_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus),
-        aerzte:arzt_id (id, arzt_name, lanr, bsnr, arzt_nummer)
+        aerzte:arzt_id (id, arzt_name, lanr, bsnr)
       `)
       .eq('owner_id', tenantId)
       .in('id', verordnungIds);
@@ -1784,6 +1792,61 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     for (const b of (allBeh || [])) {
       if (!behByVord[b.verordnung_id]) behByVord[b.verordnung_id] = [];
       behByVord[b.verordnung_id].push(b);
+    }
+
+    // ---- harte Sperre vor der DTA-Erzeugung (nur hier zulässig) ----
+    //
+    // In der Oberfläche und im Rezept-Validator sind ICD-Prüfungen bewusst nur
+    // Hinweise: die ICD-Zuordnung ist bei DF/NF/QF nicht normativ, und ein
+    // falscher Blocker würde eine abrechenbare Verordnung verhindern.
+    // Vor der Einreichung bei der Kasse ist das anders: eine Korrektur muss
+    // nach Anlage 3 TP5 V21, Abschnitt k) c) (i.d.F. 16.06.2025) mit erneuter
+    // Arztunterschrift und Datumsangabe VOR der Einreichung erfolgt sein.
+    // Deshalb ist dies die einzige Stelle, an der hart gesperrt wird.
+    const sperren = [];
+    for (const v of (vords || [])) {
+      const dgRoot = String(v.diagnosegruppe || '')
+        .replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
+      if (dgRoot !== 'UI1' && dgRoot !== 'UI2') continue;
+      const beleg = v.id.slice(0, 8);
+
+      // 1) UI1/UI2 lassen ausschließlich L60.0 zu.
+      //    Fehlt der ICD ganz, wird NICHT gesperrt — auf Muster 13 ist der
+      //    ICD-Kode keine Pflichtangabe, die Diagnose darf im Klartext stehen
+      //    (Anlage 3 k).
+      const kodes = String(v.icd10 || '')
+        .split(/[,;]/).map(s => s.replace(/\s+/g, '').toUpperCase()).filter(Boolean);
+      if (kodes.length > 0 && !kodes.includes('L60.0')) {
+        sperren.push(
+          `Verordnung ${beleg} (${v.patient_name || '—'}): Diagnosegruppe ${dgRoot} lässt ` +
+          `ausschließlich den ICD-10-Kode L60.0 zu (angegeben: ${kodes.join(', ')}). ` +
+          `Eine Korrektur der Verordnung ist nur mit erneuter Arztunterschrift und ` +
+          `Datumsangabe zulässig und muss vor der Einreichung zur Abrechnung erfolgt sein.`
+        );
+      }
+
+      // 2) Befundpauschale ist bei Nagelspangenbehandlungen nicht abrechenbar.
+      //    GKV-SV FAK Podologie, Stand 24.05.2023; Anlage 2 i.d.F. 01.07.2025
+      //    § 2 Abs. 2 a. 78030 = ambulant, 68030 = Krankenhaus, 88030 = Kurort.
+      const VERBOTEN = ['78030', '68030', '88030'];
+      const hpnrs = new Set();
+      for (const b of (behByVord[v.id] || [])) {
+        for (const c of (b.hpnr_codes || [])) hpnrs.add(String(c).trim());
+      }
+      const treffer = VERBOTEN.filter(c => hpnrs.has(c));
+      if (treffer.length) {
+        sperren.push(
+          `Verordnung ${beleg} (${v.patient_name || '—'}): Die Befundpauschale ` +
+          `(${treffer.join(', ')}) ist bei Nagelspangenbehandlungen (Diagnosegruppen ` +
+          `UI1 und UI2) nicht abrechenbar. Bitte die Position aus der Verordnung entfernen.`
+        );
+      }
+    }
+    if (sperren.length) {
+      return res.status(422).json({
+        error: 'Abrechnung blockiert: ' + sperren.length + ' Verordnung(en) dürfen so nicht eingereicht werden.',
+        details: sperren,
+      });
     }
 
     // ---- map to DTA shape ----

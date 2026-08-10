@@ -355,6 +355,15 @@ PDF'leri (Barthel-Index, MMSE, FIM, FRB, Adipositas) — kodumuz bunlara dokunmu
 - **Ne zaman lazım:** Podoloji çerçeve sözleşmesindeki değişiklikleri, yeni § 3b kurallarını ve yeni eklerin yürürlük şartlarını incelemek gerektiğinde.
 - **İçerdiği fiyat/pozisyon numarası var mı:** hayır
 
+### Podoloji/Positionsnummernverzeichnis_2026_Full.csv · Podoloji/Podologie_Positionsnummern_2026_Filtered.csv
+- **Ne:** GKV-SV Heilmittelpositionsnummernverzeichnis, CSV'ye çevrilmiş hâli (kaynak: `20251215_Heilmittelpositionsnummernverzeichnis_gueltig_ab_01.01.2026.xlsx`). `Full` = tüm Heilmittelbereich'ler (2023 satır), `Filtered` = yalnız Podologie (68 satır).
+- **Kapsam:** 10 sütun — HPNR · Leistungstyp · Heilmittelbereich · Leistungserbringer · Grundlage · Leistungsart · Leistung · gültig ab · gültig bis · Eigentümer.
+- **Prefix kuralı:** `68xxx` = Krankenhaus · `78xxx` = Podologe (ambulant, bizim scope) · `88xxx` = Kurort.
+- **⚠ Verzeichnis'te olmak abrechenbar olmak DEĞİLDİR.** `Grundlage` ve `Eigentümer` sütunları BOŞ olan satırların §125-Vertrag Anlage 2'de fiyatı yoktur → SLLA'ya konursa Absetzung. Örnek: 78001–78006 (Maßnahmen-Ebene).
+- **Sürüm / Stand:** gültig ab 01.01.2026, Stand 15.12.2025
+- **Ne zaman lazım:** Bir HPNR'nin var olup olmadığını, tam Leistungsbezeichnung'unu ve geçerlilik tarihlerini doğrularken. Faturalanabilirlik için **ayrıca** `Podoloji/Leistungen/20250617_Podologie_Anlage_2.txt` kontrol edilir.
+- **İçerdiği fiyat/pozisyon numarası var mı:** pozisyon numarası **evet** · fiyat **hayır** (fiyatlar Anlage 2'de)
+
 ## Heilmittel-Richtlinie, Diagnoseliste, ICD-10-GM
 
 ### verordnung rezept/HeilM-RL_2025-05-15_iK-2025-08-05.txt

@@ -4,6 +4,7 @@ import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260726';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 import { attachPatientSearch } from './patient-suche.js?v=20260726';
+import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -126,6 +127,11 @@ const T = {
     pod_beginn_hint: 'Beginn spätestens',
     pod_heilmittel_items: 'Verordnete Leistungen',
     pod_icd10_label: 'ICD-10 Code',
+    pod_icd_mismatch: 'Code stimmt nicht mit der Diagnosegruppe überein',
+    pod_icd_hard: 'Eine Korrektur ist nur mit erneuter Arztunterschrift und Datumsangabe zulässig und muss vor der Einreichung zur Abrechnung erfolgt sein.',
+    pod_l60_hint: 'L60.0 – bitte Stadium bestätigen (maßgeblich ist die Angabe auf der Verordnung):',
+    pod_l60_ui1: 'Unguis incarnatus – Stadium 1 (UI1)',
+    pod_l60_ui2: 'Stadium 2 oder 3 (UI2)',
     fuss_new: 'Neuer Fußstatus',
     fuss_history: 'Verlauf (letzte 10)',
     fuss_patient: 'Patient',
@@ -247,6 +253,11 @@ const T = {
     pod_beginn_hint: 'Must Start By',
     pod_heilmittel_items: 'Prescribed Services',
     pod_icd10_label: 'ICD-10 Code',
+    pod_icd_mismatch: 'Code does not match the diagnosis group',
+    pod_icd_hard: 'A correction is only permitted with a new physician signature and date and must be completed before submission for billing.',
+    pod_l60_hint: 'L60.0 – please confirm the stage (use the physician\'s notation on the prescription):',
+    pod_l60_ui1: 'Unguis incarnatus – Stage 1 (UI1)',
+    pod_l60_ui2: 'Stage 2 or 3 (UI2)',
     fuss_new: 'New Foot Status', fuss_history: 'History (last 10)',
     fuss_patient: 'Patient', fuss_datum: 'Date', fuss_seite: 'Side',
     fuss_wagner: 'Wagner Grade', fuss_befunde: 'Findings', fuss_notizen: 'Notes',
@@ -361,6 +372,11 @@ const T = {
     pod_beginn_hint: 'En Geç Başlama',
     pod_heilmittel_items: 'Reçete Edilen Hizmetler',
     pod_icd10_label: 'ICD-10 Kodu',
+    pod_icd_mismatch: 'Kod, tanı grubuyla örtüşmüyor',
+    pod_icd_hard: 'Düzeltme yalnızca yeni hekim imzası ve tarihiyle yapılabilir; faturalandırma için gönderimden önce tamamlanmalıdır.',
+    pod_l60_hint: 'L60.0 – lütfen evresi onaylayın (reçetedeki hekim kaydı geçerlidir):',
+    pod_l60_ui1: 'Unguis incarnatus – Evre 1 (UI1)',
+    pod_l60_ui2: 'Evre 2 veya 3 (UI2)',
     fuss_new: 'Yeni Ayak Durumu', fuss_history: 'Geçmiş (son 10)',
     fuss_patient: 'Hasta', fuss_datum: 'Tarih', fuss_seite: 'Taraf',
     fuss_wagner: 'Wagner Derecesi', fuss_befunde: 'Bulgular', fuss_notizen: 'Notlar',
@@ -9670,6 +9686,10 @@ async function loadServices() {
   const { data } = await q;
   servicesCache = data || [];
 
+  // Önce eski uydurma podoloji kodlarını gerçek HPNR'lere taşı, sonra seed et —
+  // ters sırada olsaydı hem eskisi hem yenisi listede durur, mükerrer görünürdü.
+  await migratePodologieLegacyServices();
+
   // Sektöre göre GKV kataloğu DB'de eksik hizmetleri oto-seed et
   await autoSeedGkvServices();
 
@@ -9759,14 +9779,68 @@ const GKV_LEISTUNGSKATALOG = {
     { code: 'X0102', kuerzel: 'MAS',   title: 'Massage Einzel',                           duration: 25, duration_label: '20–30', price: 33.75, price_min: 33.75, price_max: 33.75, locked: true },
     { code: 'X1104', kuerzel: 'TRK',   title: 'Traktion',                                 duration: 10, price: 8.63, price_min: 8.63, price_max: 8.63, locked: true },
   ],
+  // Podologie: echte Heilmittelpositionsnummern (HPNR), keine Platzhalter.
+  //
+  //   Preise      → Anlage 2 (Vergütung) zum Vertrag nach § 125 Abs. 1 SGB V,
+  //                 i. d. F. vom 01.07.2025, § 2 (ab 01.07.2025) und § 3 (ab 01.07.2026)
+  //   Zeiten      → Anlage 1a/1b/1c (Leistungsbeschreibung), „Regelleistungszeit"
+  //   Quelle der  → api-backend/billing/codes/podologie_positions.js
+  //   Wahrheit      (dieselben Zahlen, dort für die §302-Abrechnung getestet)
+  //
+  // ⚠️ Die Vergütung ist seit dem Vertrag vom 30.11.2020 BUNDESEINHEITLICH.
+  //    Kein Kassen- und kein Landesvertragsspielraum → price_min = price_max,
+  //    locked: true. Frühere Fassungen dieser Liste behaupteten Preisspannen
+  //    „je nach Kassenvertrag" — das war falsch.
+  //
+  // ⚠️ Die Unterscheidung „ein Fuß / beide Füße" (alte HPNR 78001–78006) wurde
+  //    mit dem Vertrag vom 30.11.2020 abgeschafft. Maßgeblich ist heute allein
+  //    die Therapiezeit: bis 20 Min → 78010 (klein), über 20 Min → 78020 (groß).
+  //
+  // `duration` ist die Regelleistungszeit (Therapiezeit + Vor-/Nachbereitung).
+  // `therapiezeit` ist die reine Zeit am Patienten; die Differenz ist an
+  // nichttherapeutisches Personal delegierbar. Welche der beiden Zahlen den
+  // Terminslot bestimmen soll, ist noch offen (Ops-Dashboard → Podoloji).
   podologie: [
-    { code: 'P01',  kuerzel: 'PKB',   title: 'Podologische Komplexbehandlung (beide Füße)', duration: 60, duration_label: '45–60', price: 38.00, price_min: 35.00, price_max: 40.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 35–40 €. Mindestbehandlungszeit lt. Vertrag.' },
-    { code: 'P02',  kuerzel: 'PEB',   title: 'Podologische Behandlung (ein Fuß)',           duration: 35, duration_label: '25–40', price: 24.00, price_min: 22.00, price_max: 26.00, locked: false, hinweis: 'Preis je nach Kassenvertrag ca. 22–26 €.' },
-    { code: 'P03a', kuerzel: 'NSP-K', title: 'Nagelspangenbehandlung Erstanlage (Kunststoff)', duration: 30, duration_label: '25–35', price: 32.00, price_min: 28.00, price_max: 38.00, locked: false },
-    { code: 'P03b', kuerzel: 'NSP-B', title: 'Nagelspangenbehandlung Erstanlage (B/S-Spange)', duration: 45, duration_label: '35–50', price: 50.00, price_min: 42.00, price_max: 58.00, locked: false },
-    { code: 'P03c', kuerzel: 'NSP-V', title: 'Nagelspangenbehandlung Erstanlage (VHO/3TO)',    duration: 55, duration_label: '45–60', price: 70.00, price_min: 62.00, price_max: 75.00, locked: false },
-    { code: 'P04',  kuerzel: 'NSP-F', title: 'Nagelspangenbehandlung Folgetermin',          duration: 20, duration_label: '15–25', price: 18.00, price_min: 15.00, price_max: 25.00, locked: false },
-    { code: 'P-HB', kuerzel: 'HB',    title: 'Hausbesuchszuschlag (Pos. 18510)',             duration: null, price: 13.75, price_min: 13.75, price_max: 13.75, locked: true, hinweis: 'Pauschale pro Hausbesuch, unabhängig von der Behandlungszeit.' },
+    { code: '78010', kuerzel: 'pod. Beh. kl.', title: 'Podologische Behandlung (klein)', duration: 35, therapiezeit: 20, price: 35.16, price_min: 35.16, price_max: 35.16, locked: true,
+      preise: { '2025-07-01': 35.16, '2026-07-01': 36.10 },
+      hinweis: 'Therapiezeit bis 20 Min. Regelleistungszeit 35 Min, davon 15 Min Vor-/Nachbereitung und Dokumentation (delegationsfähig).' },
+    { code: '78020', kuerzel: 'pod. Beh. gr.', title: 'Podologische Behandlung (groß)', duration: 50, therapiezeit: 35, price: 50.55, price_min: 50.55, price_max: 50.55, locked: true,
+      preise: { '2025-07-01': 50.55, '2026-07-01': 51.92 },
+      hinweis: 'Podologische Komplexbehandlung mit Therapiezeit über 20 Min. Regelleistungszeit 50 Min, davon 15 Min Vor-/Nachbereitung (delegationsfähig).' },
+    { code: '78030', kuerzel: 'pod. Bef.', title: 'Podologische Befundung', duration: null, price: 3.47, price_min: 3.47, price_max: 3.47, locked: true,
+      preise: { '2025-07-01': 3.47, '2026-07-01': 3.57 },
+      hinweis: 'Je Behandlungsserie. Nicht am selben Tag wie die Eingangsbefundung (78040) abrechenbar.' },
+    { code: '78040', kuerzel: 'Eing.-Bef.', title: 'Eingangsbefundung', duration: 20, price: 22.48, price_min: 22.48, price_max: 22.48, locked: true,
+      preise: { '2025-07-01': 22.48, '2026-07-01': 23.11 },
+      hinweis: 'Einmalig je Patient (lebenslang). Nicht am selben Tag wie 78030.' },
+
+    // Nagelkorrekturspange (Diagnosegruppen UI1/UI2)
+    { code: '78100', kuerzel: 'Erstbef. gr.', title: 'Erstbefundung groß (Nagelspange)', duration: 45, price: 56.00, price_min: 56.00, price_max: 56.00, locked: true,
+      preise: { '2025-07-01': 56.00, '2026-07-01': 57.52 },
+      hinweis: 'Einmal je Kalenderjahr, auch bei Wiedervorstellung.' },
+    { code: '78110', kuerzel: 'Erstbef. kl.', title: 'Erstbefundung klein (Nagelspange)', duration: 20, price: 27.90, price_min: 27.90, price_max: 27.90, locked: true,
+      preise: { '2025-07-01': 27.90, '2026-07-01': 28.63 } },
+    { code: '78610', kuerzel: 'NSP', title: 'Nagelspangenbehandlung', duration: 45, price: 55.90, price_min: 55.90, price_max: 55.90, locked: true,
+      preise: { '2025-10-01': 55.90, '2026-07-01': 57.20 },
+      hinweis: 'Seit 01.10.2025 die einzige Spangen-Position — unabhängig vom Material (Kunststoff, B/S, VHO, 3TO). Höchstens 2× je Tag.' },
+    { code: '78620', kuerzel: 'NSP-Zuschl.', title: 'Aufschlag für besonderen Aufwand', duration: 15, price: 16.86, price_min: 16.86, price_max: 16.86, locked: true,
+      preise: { '2025-10-01': 16.86, '2026-07-01': 17.33 },
+      hinweis: 'Nur bei Kindern unter 14 Jahren oder Nagelschweregrad UI2/UI3. Höchstens 2× je Behandlungstermin.' },
+    { code: '78510', kuerzel: 'NSP-Kontr.', title: 'Kontrolle auf Sitz- und Passgenauigkeit', duration: 15, price: 17.21, price_min: 17.21, price_max: 17.21, locked: true,
+      preise: { '2025-07-01': 17.21, '2026-07-01': 17.64 } },
+    { code: '78520', kuerzel: 'NSP-Abschl.', title: 'Behandlungsabschluss / Entfernung der Spange', duration: 25, price: 25.91, price_min: 25.91, price_max: 25.91, locked: true,
+      preise: { '2025-07-01': 25.91, '2026-07-01': 26.59 } },
+    { code: '78530', kuerzel: 'Ther.-Ber.', title: 'Therapiebericht UI 2', duration: 15, price: 16.86, price_min: 16.86, price_max: 16.86, locked: true,
+      preise: { '2025-07-01': 16.86, '2026-07-01': 17.33 },
+      hinweis: 'Nur in der Diagnosegruppe UI2.' },
+
+    // Hausbesuche
+    { code: '79933', kuerzel: 'HB', title: 'Hausbesuch inkl. Wegegeld', duration: null, price: 23.61, price_min: 23.61, price_max: 23.61, locked: true,
+      preise: { '2025-07-01': 23.61, '2026-07-01': 25.54 },
+      hinweis: 'Nur abrechenbar, wenn auf Muster 13 „Hausbesuch = Ja" angekreuzt ist.' },
+    { code: '79934', kuerzel: 'HB-Einr.', title: 'Hausbesuch in sozialer Einrichtung inkl. Wegegeld', duration: null, price: 13.60, price_min: 13.60, price_max: 13.60, locked: true,
+      preise: { '2025-07-01': 13.60, '2026-07-01': 16.66 },
+      hinweis: 'Bei mehreren Patienten in derselben Einrichtung. Nur mit „Hausbesuch = Ja" auf Muster 13.' },
   ],
   ergotherapie: [
     { code: 'ET1', kuerzel: 'MF',  title: 'Motorisch-funktionelle Behandlung',          duration: 45, price: 55.00, price_min: 55.00, price_max: 55.00, locked: true },
@@ -9783,6 +9857,79 @@ const GKV_LEISTUNGSKATALOG = {
   ],
 };
 GKV_LEISTUNGSKATALOG.praxis = GKV_LEISTUNGSKATALOG.physiotherapy;
+
+// Vergütungsvereinbarungen haben ein Gültigkeitsdatum — die Podologie-Preise
+// steigen z. B. zum 01.07.2026. Statt die Zahlen jedes Mal von Hand zu ändern
+// (und es zu vergessen) trägt jeder Eintrag seine Preisstaffel in `preise`;
+// hier wird beim Laden die heute gültige Stufe gesetzt.
+function applyGueltigePreise(stichtag = new Date().toISOString().slice(0, 10)) {
+  for (const entry of Object.values(GKV_LEISTUNGSKATALOG).flat()) {
+    if (!entry.preise) continue;
+    const gueltig = Object.keys(entry.preise).filter(ab => ab <= stichtag).sort().pop();
+    if (!gueltig) continue;
+    entry.price = entry.preise[gueltig];
+    entry.price_min = entry.price;
+    entry.price_max = entry.price;
+    entry.gueltig_ab = gueltig;
+  }
+}
+applyGueltigePreise();
+
+// Einmalige Bereinigung: bis 08/2026 stand im Podologie-Katalog eine erfundene
+// Positionsliste (P01, P02, P03a–c, P04, P-HB) mit frei geschätzten Preisen und
+// dem vor 2020 abgeschafften Modell „ein Fuß / beide Füße". Beta-Praxen haben
+// diese Einträge bereits in `services` liegen. Sie einfach neu zu seeden würde
+// Dubletten erzeugen, sie zu löschen würde bestehende Termine ins Leere laufen
+// lassen — also werden sie umgeschrieben.
+//
+//   P01 / P02 / P-HB → echte HPNR, Titel und Preis werden korrigiert
+//   P03a–c / P04     → es gibt dafür keine GKV-Position (Spangen werden seit
+//                      01.10.2025 materialunabhängig über 78610 abgerechnet).
+//                      Sie bleiben als Privatleistung bestehen, damit die
+//                      Terminhistorie lesbar bleibt.
+const GKV_PODO_LEGACY_MAP = {
+  P01:    '78020',
+  P02:    '78010',
+  'P-HB': '79933',
+};
+const GKV_PODO_LEGACY_PRIVAT = ['P03a', 'P03b', 'P03c', 'P04'];
+
+async function migratePodologieLegacyServices() {
+  if (getSector() !== 'podologie') return;
+
+  const legacy = servicesCache.filter(s =>
+    s.gkv_position_nr && (GKV_PODO_LEGACY_MAP[s.gkv_position_nr] || GKV_PODO_LEGACY_PRIVAT.includes(s.gkv_position_nr)));
+  if (!legacy.length) return;
+
+  const katalog = GKV_LEISTUNGSKATALOG.podologie;
+
+  for (const srv of legacy) {
+    const alt = srv.gkv_position_nr;
+    let patch;
+
+    if (GKV_PODO_LEGACY_MAP[alt]) {
+      const neu = katalog.find(e => e.code === GKV_PODO_LEGACY_MAP[alt]);
+      // Die Zielposition ist schon eingerichtet → die alte Karte wäre eine
+      // Dublette. Sie verliert nur ihren GKV-Bezug und bleibt als Privatposten.
+      const schonDa = servicesCache.some(s => s.gkv_position_nr === neu.code && s.id !== srv.id);
+      patch = schonDa
+        ? { gkv_position_nr: null }
+        : {
+            gkv_position_nr: neu.code,
+            title: neu.title,
+            code: neu.kuerzel,
+            price: neu.price.toString(),
+            duration_minutes: neu.duration ?? srv.duration_minutes,
+          };
+    } else {
+      patch = { gkv_position_nr: null };
+    }
+
+    const { error } = await supabase.from('services').update(patch).eq('id', srv.id);
+    if (error) { console.warn('Podologie-Migration fehlgeschlagen für', alt, error.message); continue; }
+    Object.assign(srv, patch);
+  }
+}
 
 function renderGkvCatalog() {
   const section = document.getElementById('gkvCatalogSection');
@@ -9816,7 +9963,12 @@ function renderGkvCatalog() {
         const configured = !!existing;
         const hasRange = s.price_min !== s.price_max;
 
-        const durLabel = s.duration != null ? (s.duration_label || s.duration) + ' Min' : '—';
+        // Bei Podologie ist die Regelleistungszeit nicht die Zeit am Patienten.
+        // Beides zu zeigen verhindert, dass jemand den Terminslot zu lang plant.
+        const durLabel = s.duration == null
+          ? '—'
+          : (s.duration_label || s.duration) + ' Min'
+            + (s.therapiezeit ? ` · davon ${s.therapiezeit} Min am Patienten` : '');
         const durChip = s.locked
           ? `<span class="srv-chip srv-chip-locked">${lockSvg}${escapeHtml(durLabel)}</span>`
           : `<span class="srv-chip srv-chip-flex">${escapeHtml(durLabel)}</span>`;
@@ -9840,7 +9992,9 @@ function renderGkvCatalog() {
              </div>`
           : '';
 
-        const hinweis = s.hinweis && !configured
+        // Auch nach dem Einrichten sichtbar: die Hinweise tragen Abrechnungs-
+        // regeln (Höchstmengen, Ausschlüsse), die dauerhaft gelten.
+        const hinweis = s.hinweis
           ? `<div class="gkv-hinweis">${infoSvg}${escapeHtml(s.hinweis)}</div>`
           : '';
 
@@ -16129,10 +16283,12 @@ function bindAnamneseEvents() {
     anamArztName.addEventListener('input', () => {
       const val = anamArztName.value.trim();
       const matched = aerzteCache.find(a => a.arzt_name === val);
-      if (matched && matched.arzt_nummer) {
+      // anamnese.arzt_nummer ist ein Freitextfeld der Anamnese; im Register
+      // ist die LANR der maßgebliche Wert.
+      if (matched && matched.lanr) {
         const numInput = document.getElementById('anamArztNummer');
         if (numInput && !numInput.value.trim()) {
-          numInput.value = matched.arzt_nummer;
+          numInput.value = matched.lanr;
         }
       }
     });
@@ -16267,6 +16423,60 @@ function bindInvEvents() {
 
 let aerzteCache = [];
 
+// ---------------------------------------------------------------------------
+// Ärzte-Register (Frontend-Seite)
+//
+// Alle Masken, die einen Arzt erfassen, gehen über resolveArzt(). Der Server
+// entscheidet über die Identität — Schlüssel ist die LANR, weil sie an die
+// Person gebunden ist und Heirat wie Praxiswechsel übersteht. Deshalb hier
+// KEINE eigene "gibt es den schon?"-Logik nachbauen.
+// Backend: api-backend/lib/arzt-registry.js
+// ---------------------------------------------------------------------------
+
+/**
+ * Legt den Arzt an oder findet ihn wieder und reichert ihn an.
+ * @returns {Promise<{arzt:object, arzt_id:string, created:boolean,
+ *                    matched_by:'lanr'|'name'|null, enriched:string[]}|null>}
+ */
+async function resolveArzt(input, quelle = 'manuell') {
+  if (!input?.name && !input?.lanr) return null;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) return null;
+
+    const res = await fetch(`${API}/arzt/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        ...input,
+        quelle,
+        business_id: currentBusiness?.id || null
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const out = await res.json();
+
+    // Cache aktuell halten, damit Datalists den neuen Arzt sofort anbieten.
+    await loadAerzte();
+    return out;
+  } catch (e) {
+    console.error('[resolveArzt]', e);
+    showToast('Arzt konnte nicht gespeichert werden.', 'error');
+    return null;
+  }
+}
+
+/** Kurze Rückmeldung, damit sichtbar ist, was mit dem Arzt passiert ist. */
+function toastArztErgebnis(out) {
+  if (!out?.arzt_id) return;
+  if (out.created) {
+    showToast(`Arzt „${out.arzt?.arzt_name}" neu ins Register aufgenommen.`);
+  } else if (out.enriched?.length) {
+    showToast(`Arzt „${out.arzt?.arzt_name}" erkannt und aktualisiert.`);
+  }
+}
+
 function populateAerzteDatalist() {
   const datalist = document.getElementById('aerzteDatalist');
   if (!datalist) return;
@@ -16283,7 +16493,14 @@ function populateLeadArztSelect() {
 }
 
 async function loadAerzte() {
-  const { data } = await bizScope(supabase.from('aerzte').select('*').order('arzt_name', { ascending: true }), 'network');
+  // Bewusst NICHT nach Standort gefiltert: das Ärzte-Register ist owner-weit.
+  // Derselbe Facharzt überweist an mehrere Standorte, und die Identität (LANR)
+  // ist je Inhaber eindeutig — eine Standortfilterung würde vorhandene Ärzte
+  // unsichtbar machen, statt sie erneut anzulegen.
+  const { data } = await supabase.from('aerzte')
+    .select('*')
+    .eq('owner_id', getOwnerId())
+    .order('arzt_name', { ascending: true });
   aerzteCache = data || [];
 
   populateAerzteDatalist();
@@ -16292,27 +16509,61 @@ async function loadAerzte() {
   const list = document.getElementById('aerzteList');
   if (!list) return;
   if (!aerzteCache.length) { list.innerHTML = '<p class="text-muted">Keine Ärzte.</p>'; return; }
-  list.innerHTML = aerzteCache.map(a => `
+  list.innerHTML = aerzteCache.map(a => {
+    const meta = [
+      a.lanr         ? `LANR ${escapeHtml(a.lanr)}` : null,
+      a.bsnr         ? `BSNR ${escapeHtml(a.bsnr)}` : null,
+      a.fachrichtung ? escapeHtml(a.fachrichtung)   : null,
+      a.telefon      ? escapeHtml(a.telefon)        : null
+    ].filter(Boolean).join(' · ');
+    return `
     <div class="aerzte-row" data-id="${a.id}">
-      <span>${escapeHtml(a.arzt_name)} <span class="text-muted" style="font-size:12px;">${escapeHtml(a.arzt_nummer || '')}</span></span>
+      <span>${escapeHtml(a.arzt_name)}
+        ${meta ? `<span class="text-muted" style="font-size:12px;display:block;">${meta}</span>` : ''}
+      </span>
       <div>
         <button class="btn-outline" onclick="editAerzte('${a.id}')">Bearbeiten</button>
         <button class="btn-danger" onclick="deleteAerzte('${a.id}')">Löschen</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
+const AE_FELDER = [
+  ['aeName',    'name'],
+  ['aeLanr',    'lanr'],
+  ['aeBsnr',    'bsnr'],
+  ['aeFach',    'fachrichtung'],
+  ['aeTelefon', 'telefon'],
+  ['aeFax',     'fax'],
+  ['aeEmail',   'email'],
+  ['aeAdresse', 'adresse']
+];
+
 async function addAerzte() {
-  const name = document.getElementById('aeName').value.trim();
-  const nummer = document.getElementById('aeNummer').value.trim();
-  if (!name) { showToast('Bitte einen Namen eingeben.', 'error'); return; }
-  const ownerId = getOwnerId();
-  const { error } = await supabase.from('aerzte').insert({ owner_id: ownerId, arzt_name: name, arzt_nummer: nummer || null });
-  if (error) { showToast(t('err_generic'), 'error'); return; }
-  document.getElementById('aeName').value = '';
-  document.getElementById('aeNummer').value = '';
-  await loadAerzte();
-  showToast('Arzt gespeichert.');
+  const input = {};
+  for (const [id, key] of AE_FELDER) {
+    input[key] = (document.getElementById(id)?.value || '').trim() || null;
+  }
+  if (!input.name) { showToast('Bitte einen Namen eingeben.', 'error'); return; }
+  if (input.lanr && !/^\d{9}$/.test(input.lanr)) {
+    showToast('LANR muss genau 9 Ziffern haben.', 'error'); return;
+  }
+  if (input.bsnr && !/^\d{9}$/.test(input.bsnr)) {
+    showToast('BSNR muss genau 9 Ziffern haben.', 'error'); return;
+  }
+
+  // Über das Register, damit ein bereits bekannter Arzt (gleiche LANR) nicht
+  // doppelt entsteht, sondern ergänzt wird.
+  const out = await resolveArzt(input, 'manuell');
+  if (!out?.arzt_id) return;
+
+  for (const [id] of AE_FELDER) {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  }
+  if (out.created) showToast('Arzt gespeichert.');
+  else showToast(`„${out.arzt?.arzt_name}" war bereits im Register — Daten ergänzt.`);
 }
 
 async function deleteAerzte(id) {
@@ -16327,12 +16578,46 @@ async function deleteAerzte(id) {
 async function editAerzte(id) {
   const a = aerzteCache.find(x => x.id === id);
   if (!a) return;
-  const name = await showInputModal({ title: 'Arzt bearbeiten', message: 'Name:', defaultValue: a.arzt_name, placeholder: 'Arzt Name', confirmText: 'Weiter', cancelText: 'Abbrechen' });
-  if (name === null) return;
-  const nummer = await showInputModal({ title: 'Arzt bearbeiten', message: 'Telefon / Fax:', defaultValue: a.arzt_nummer || '', placeholder: 'Telefon oder Fax', confirmText: 'Speichern', cancelText: 'Abbrechen' });
-  if (nummer === null) return;
-  const { error } = await supabase.from('aerzte').update({ arzt_name: name.trim(), arzt_nummer: nummer.trim() || null }).eq('id', id);
-  if (error) { showToast(t('err_generic'), 'error'); return; }
+
+  const felder = [
+    ['arzt_name',    'Name',                a.arzt_name,          'Arzt Name'],
+    ['lanr',         'LANR (9-stellig)',    a.lanr || '',         '123456789'],
+    ['bsnr',         'BSNR (9-stellig)',    a.bsnr || '',         '123456789'],
+    ['fachrichtung', 'Fachrichtung',        a.fachrichtung || '', 'z. B. Orthopädie'],
+    ['telefon',      'Telefon',             a.telefon || '',      '030 123456'],
+    ['fax',          'Fax',                 a.fax || '',          ''],
+    ['email',        'E-Mail',              a.email || '',        ''],
+    ['adresse',      'Adresse',             a.adresse || '',      'Straße, PLZ Ort']
+  ];
+
+  const patch = {};
+  for (let i = 0; i < felder.length; i++) {
+    const [key, label, val, ph] = felder[i];
+    const letzte = i === felder.length - 1;
+    const antwort = await showInputModal({
+      title: 'Arzt bearbeiten',
+      message: `${label}:`,
+      defaultValue: val,
+      placeholder: ph,
+      confirmText: letzte ? 'Speichern' : 'Weiter',
+      cancelText: 'Abbrechen'
+    });
+    if (antwort === null) return;           // Abbruch verwirft alles
+    patch[key] = antwort.trim() || null;
+  }
+
+  if (!patch.arzt_name) { showToast('Name darf nicht leer sein.', 'error'); return; }
+  if (patch.lanr && !/^\d{9}$/.test(patch.lanr)) { showToast('LANR muss genau 9 Ziffern haben.', 'error'); return; }
+  if (patch.bsnr && !/^\d{9}$/.test(patch.bsnr)) { showToast('BSNR muss genau 9 Ziffern haben.', 'error'); return; }
+
+  const { error } = await supabase.from('aerzte').update(patch).eq('id', id);
+  if (error) {
+    // 23505 = derselbe Arzt existiert bereits (gleiche LANR bzw. gleicher Name).
+    showToast(error.code === '23505'
+      ? 'Dieser Arzt ist bereits im Register vorhanden.'
+      : t('err_generic'), 'error');
+    return;
+  }
   loadAerzte();
   showToast('Aktualisiert.');
 }
@@ -16395,12 +16680,13 @@ function lsWireToggle(prefix) {
 // daran, dass init() vorher nirgends hängenbleibt; schlug ein früherer await
 // fehl, war die Suche still tot. Beim Fokus greift sie immer.
 const DIAGNOSE_FIELDS = {
-  rzIcd:       { kind: 'icd' },                                        // Rezept anlegen
-  rxcIcd:      { kind: 'icd' },                                        // Rezept-Scan bestätigen, 1. ICD
-  rxcIcd2:     { kind: 'icd' },                                        // Rezept-Scan bestätigen, 2. ICD
-  rzDg:        { kind: 'dg', codeOnly: true },                         // Diagnosegruppe
-  rxcDg:       { kind: 'dg', codeOnly: true },                         // Diagnosegruppe (Scan)
-  podNewIcd10: { kind: 'icd', multi: true, codeOnly: true, bereich: 'podologie' },
+  rzIcd:       { kind: 'icd',  dgField: 'rzDg',     dgKind: 'text', warnId: 'rzIcdDgWarning'  }, // Rezept anlegen
+  rxcIcd:      { kind: 'icd',  dgField: 'rxcDg',    dgKind: 'text', warnId: 'rxcIcdDgWarning' }, // Rezept-Scan bestätigen, 1. ICD
+  rxcIcd2:     { kind: 'icd',  dgField: 'rxcDg',    dgKind: 'text', warnId: 'rxcIcdDgWarning' }, // Rezept-Scan bestätigen, 2. ICD
+  rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true },                            // Diagnosegruppe
+  rxcDg:       { kind: 'dg',   icdField: 'rxcIcd',  codeOnly: true },                            // Diagnosegruppe (Scan)
+  podNewIcd10: { kind: 'icd',  dgField: 'podNewDiag', dgKind: 'select', warnId: 'podIcd10Warning',
+                 multi: true, codeOnly: true, bereich: 'podologie' },
 };
 
 // Heilmittel-Felder — dieselbe Idee, andere Quelle (RPC search_heilmittel).
@@ -16418,6 +16704,12 @@ document.addEventListener('focusin', (e) => {
   const dcfg = DIAGNOSE_FIELDS[el.id];
   if (dcfg) {
     attachDiagnoseSearch(el, supabase, { bereich: _getDiagnoseBereich, ...dcfg });
+    // ICD-Felder: bidirektionale DG-Verdrahtung beim ersten Fokus anstossen.
+    // bereich zur Laufzeit auflösen: dcfg.bereich hat Vorrang (podNewIcd10),
+    // für rzIcd / rxcIcd / rxcIcd2 gilt der Mandanten-Fachbereich.
+    if (dcfg.kind === 'icd' && dcfg.dgField) {
+      _wireDgIcdPair(el.id, dcfg.dgField, dcfg.dgKind || 'text', dcfg.warnId, dcfg.bereich ?? _getDiagnoseBereich());
+    }
   } else {
     const hcfg = HEILMITTEL_FIELDS[el.id];
     if (!hcfg) return;
@@ -16432,6 +16724,176 @@ document.addEventListener('focusin', (e) => {
   // Der modul-eigene focus-Handler ist für diesen ersten Fokus zu spät.
   if (el.value.trim()) el.dispatchEvent(new Event('input', { bubbles: true }));
 });
+
+// ── Bidirektionale ICD ↔ DG Verdrahtung ─────────────────────────────────────
+//
+// Registriert input/change-Handler auf ICD- und DG-Feldern, sobald sie im DOM
+// auftauchen. Wird beim ersten Fokus gecheckt und ist idempotent (data-attr).
+// Für das Podologie-Panel wird diese Funktion nach jedem Re-Render erneut
+// aufgerufen (die Elemente werden neu erzeugt).
+
+/**
+ * Verdrahtet das bidirektionale Verhalten für ein ICD-Feld und sein DG-Gegenstück.
+ * @param {string} icdId   - ID des ICD-Feldes (z.B. 'podNewIcd10', 'rzIcd')
+ * @param {string} dgId    - ID des DG-Feldes (z.B. 'podNewDiag', 'rzDg')
+ * @param {string} dgKind  - 'select' oder 'text'
+ * @param {string} [warnId] - ID des Warn-Elements
+ * @param {string} [bereich] - Fachbereich ('podologie' od. leer für andere)
+ */
+function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
+  const icdEl  = document.getElementById(icdId);
+  const dgEl   = document.getElementById(dgId);
+  if (!icdEl || icdEl.dataset.dgIcdWired) return;
+  icdEl.dataset.dgIcdWired = '1';
+
+  // FIX 1: Normaliserungshilfe für DG-Textwert (Großbuchstaben, Leerzeichen weg,
+  // Untergruppen-Suffix -a/-b/-c abschneiden, damit _dgIcdRules nachgeschlagen werden kann)
+  function _normDgCode(raw) {
+    return String(raw || '').replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
+  }
+
+  /**
+   * Setzt die Diagnosegruppe programmatisch und löst dabei input/change aus,
+   * damit abhängige Logik mitläuft. Die Marke `autoSetting` sorgt dafür, dass
+   * das eigene Ereignis nicht als Eingabe des Anwenders gewertet wird.
+   * Ein vom Anwender gesetzter Wert wird nie überschrieben.
+   */
+  function _setDgProgrammatically(value) {
+    if (!dgEl || dgEl.dataset.manualOverride) return;
+    if (dgEl.value === value) return;
+    dgEl.dataset.autoSetting = '1';
+    try {
+      dgEl.value = value;
+      dgEl.dispatchEvent(new Event('input',  { bubbles: true }));
+      dgEl.dispatchEvent(new Event('change', { bubbles: true }));
+    } finally {
+      delete dgEl.dataset.autoSetting;
+    }
+  }
+
+  async function onIcdChange() {
+    const rawIcd = icdEl.value;
+    const codes  = parseIcdList(rawIcd);
+    const warnEl = warnId ? document.getElementById(warnId) : null;
+
+    // Keine Kodes → kein Hinweis
+    if (codes.length === 0) {
+      if (warnEl) warnEl.style.display = 'none';
+      if (icdId === 'podNewIcd10') {
+        const h = document.getElementById('podL60Hint');
+        if (h) h.style.display = 'none';
+      }
+      return;
+    }
+
+    // FIX 1: Nur Podologie hat Regeln; Fachbereich wurde beim Verdrahten eingefroren.
+    // Regeln bei Bedarf nachladen (z.B. Rezept-Formular ohne vorherigen Podologie-Besuch).
+    if (bereich !== 'podologie') return;
+    if (!_dgIcdRules || !Object.keys(_dgIcdRules).length) {
+      await loadDgIcdRules();
+    }
+    const rules = _dgIcdRules || {};
+    if (!Object.keys(rules).length) return;
+
+    // Spezialfall L60.0: keine automatische Auswahl, stattdessen Rückfrage
+    const hasL60 = codes.some(c => /^L60\.0$/.test(c));
+    if (hasL60) {
+      const l60hint = document.getElementById('podL60Hint');
+      if (l60hint) l60hint.style.display = 'block';
+      if (dgEl && dgEl.tagName === 'SELECT') {
+        const cur = dgEl.value;
+        Array.from(dgEl.options).forEach(opt => {
+          opt.style.display = (!opt.value || opt.value === 'UI1' || opt.value === 'UI2') ? '' : 'none';
+        });
+        if (cur && cur !== 'UI1' && cur !== 'UI2') {
+          if (!dgEl.dataset.manualOverride) dgEl.value = '';
+        }
+      }
+      // Warnung zurücksetzen (L60.0 ist für UI1/UI2 korrekt)
+      if (warnEl) warnEl.style.display = 'none';
+      return;
+    }
+
+    // Normale Kodes: L60.0-Hint ausblenden, Optionen zurücksetzen
+    const l60hint = document.getElementById('podL60Hint');
+    if (l60hint) l60hint.style.display = 'none';
+    if (dgEl && dgEl.tagName === 'SELECT') {
+      Array.from(dgEl.options).forEach(opt => { opt.style.display = ''; });
+    }
+
+    // Eine vom Anwender gesetzte Diagnosegruppe wird nicht überschrieben — das
+    // prüft _setDgProgrammatically. Hier darf NICHT abgebrochen werden, sonst
+    // bliebe genau der interessante Fall ohne Hinweis: der Anwender hat die
+    // Gruppe von Hand gewählt und der Kode passt nicht dazu.
+
+    // autoSelectDg: genau eine DG passt?
+    const selected = autoSelectDg(codes, rules);
+    if (selected && dgEl) {
+      // Beim <select> nur setzen, wenn es die Option wirklich gibt.
+      const optExists = dgEl.tagName !== 'SELECT'
+        || Array.from(dgEl.options).some(o => o.value === selected);
+      if (optExists) _setDgProgrammatically(selected);
+    }
+
+    // Warnhinweis
+    if (!warnEl || !dgEl) return;
+    const dgRoot = _normDgCode(dgEl.value);
+    if (!dgRoot) { warnEl.style.display = 'none'; return; }
+    const rule = rules[dgRoot];
+    if (!rule || !rule.icd_accept || !rule.icd_accept.length) { warnEl.style.display = 'none'; return; }
+    const result = matchIcdToDg(codes, rule);
+    if (result.status === 'mismatch') {
+      const isHard = rule.icd_enforcement === 'hard_before_dta';
+      let msg = `${t('pod_icd_mismatch')}: ${codes.join(', ')} (${dgRoot})`;
+      if (result.hints.length > 0) msg += ` — ${result.hints.join('; ')}`;
+      if (isHard) { msg += ' ⚠ ' + t('pod_icd_hard'); warnEl.style.fontWeight = '600'; }
+      else { warnEl.style.fontWeight = ''; }
+      warnEl.textContent = msg;
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+
+  // Manuell-Override-Erkennung auf dem DG-Feld (wie wireManualOverrideBadge).
+  //
+  // ⚠ Der Wert wird auch programmatisch gesetzt, und dabei werden input/change
+  //   ausgelöst, damit abhängige Logik (Wagner-Feld, Heilmittelliste) mitläuft.
+  //   Ohne die Marke `autoSetting` würde sich die Automatik damit selbst als
+  //   „vom Anwender geändert" eintragen und ab der ersten automatischen Auswahl
+  //   nie wieder greifen.
+  if (dgEl && !dgEl.dataset.dgManualWired) {
+    dgEl.dataset.dgManualWired = '1';
+    const markManual = () => {
+      if (dgEl.dataset.autoSetting) return;
+      dgEl.dataset.manualOverride = '1';
+    };
+    dgEl.addEventListener('change', markManual);
+    if (dgEl.tagName === 'INPUT') dgEl.addEventListener('input', markManual);
+
+    // Gegenrichtung DG → ICD: nur wo sich aus der Diagnosegruppe genau ein Kode
+    // ableiten lässt. Das ist ausschließlich UI1/UI2 → L60.0; bei DF/NF/QF ist
+    // der Pool nicht normativ, dort wird nichts eingetragen.
+    dgEl.addEventListener('change', async () => {
+      if (dgEl.dataset.autoSetting) return;          // kein Ping-Pong
+      if (icdEl.value.trim()) return;                // Gefülltes Feld bleibt
+      if (bereich !== 'podologie') return;
+      if (!_dgIcdRules || !Object.keys(_dgIcdRules).length) await loadDgIcdRules();
+      const rule = (_dgIcdRules || {})[_normDgCode(dgEl.value)];
+      const sole = rule ? soleIcdForDg(rule) : null;
+      if (!sole || icdEl.value.trim()) return;
+      icdEl.value = sole;
+      icdEl.dispatchEvent(new Event('input',  { bubbles: true }));
+      icdEl.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  icdEl.addEventListener('input',  onIcdChange);
+  icdEl.addEventListener('change', onIcdChange);
+
+  // Wenn Feld bereits befüllt: sofort prüfen
+  if (icdEl.value.trim()) onIcdChange();
+}
 
 let rzPatientCache = [];
 let rzKkList = [];
@@ -16550,10 +17012,10 @@ async function fillRzPatientFromLead(leadId) {
   if (lead.arzt_id && !g('rzArztName').value) {
     try {
       const { data: arzt } = await supabase.from('aerzte')
-        .select('arzt_name,arzt_nummer,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle();
+        .select('arzt_name,lanr,bsnr').eq('id', lead.arzt_id).maybeSingle();
       if (arzt) {
         g('rzArztName').value = arzt.arzt_name || '';
-        if (!g('rzLanr').value) g('rzLanr').value = arzt.lanr || arzt.arzt_nummer || '';
+        if (!g('rzLanr').value) g('rzLanr').value = arzt.lanr || '';
         if (!g('rzBsnr').value) g('rzBsnr').value = arzt.bsnr || '';
       }
     } catch { /* ignore */ }
@@ -16719,13 +17181,23 @@ async function saveRezept() {
   btn.disabled = true;
 
   try {
-    // 1. Resolve arzt_id from name
+    // 1. Arzt ins Register übernehmen. Früher wurde hier nur gesucht — stand
+    //    der Arzt noch nicht drin, ging er verloren (arzt_id blieb leer).
+    //    Jetzt entscheidet das Register: LANR-Treffer = derselbe Arzt (auch
+    //    nach Heirat/Umzug), sonst wird er neu aufgenommen.
     const arztName = document.getElementById('rzArztName').value.trim();
+    const arztLanrRaw = (document.getElementById('rzLanr')?.value || '').replace(/\D/g, '');
+    const arztBsnrRaw = (document.getElementById('rzBsnr')?.value || '').replace(/\D/g, '');
+
     let arztId = null;
-    if (arztName) {
-      const { data: arzt } = await supabase.from('aerzte')
-        .select('id').eq('arzt_name', arztName).eq('owner_id', ownerId).maybeSingle();
-      arztId = arzt?.id || null;
+    if (arztName || /^\d{9}$/.test(arztLanrRaw)) {
+      const arztOut = await resolveArzt({
+        name: arztName,
+        lanr: arztLanrRaw,
+        bsnr: arztBsnrRaw
+      }, 'rezept');
+      arztId = arztOut?.arzt_id || null;
+      toastArztErgebnis(arztOut);
     }
 
     // 2. Parse ICD value — strip the " – Titel" part to get just the code
@@ -17507,7 +17979,7 @@ async function init() {
         if (matched) {
           const lanr = document.getElementById('rxcLanr');
           const bsnr = document.getElementById('rxcBsnr');
-          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || matched.arzt_nummer || '';
+          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || '';
           if (bsnr && !bsnr.value.trim()) bsnr.value = matched.bsnr || '';
         }
       });
@@ -17521,7 +17993,7 @@ async function init() {
         if (matched) {
           const lanr = document.getElementById('rzLanr');
           const bsnr = document.getElementById('rzBsnr');
-          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || matched.arzt_nummer || '';
+          if (lanr && !lanr.value.trim()) lanr.value = matched.lanr || '';
           if (bsnr && !bsnr.value.trim()) bsnr.value = matched.bsnr || '';
         }
       });
@@ -21204,6 +21676,53 @@ async function loadStatistik() {
       thEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Keine Daten</div>';
     }
 
+    // Überweisende Ärzte — beide Datenpools (prescriptions + verordnungen)
+    // sind serverseitig bereits zusammengeführt.
+    const aeBody = document.getElementById('statAerzteBody');
+    const aeSum  = document.getElementById('statAerzteSumme');
+    if (aeBody) {
+      const liste = d.aerzte || [];
+      if (aeSum) {
+        const patGesamt = liste.reduce((s, a) => s + (a.patienten || 0), 0);
+        aeSum.textContent = liste.length
+          ? `${liste.length} Ärzte · ${patGesamt} Patienten im Zeitraum`
+          : '';
+      }
+      if (!liste.length) {
+        aeBody.innerHTML = '<tr><td colspan="6" style="padding:8px;color:var(--text-muted);">'
+          + 'Noch keine Verordnungen mit erfasstem Arzt im gewählten Zeitraum.</td></tr>';
+      } else {
+        aeBody.innerHTML = liste.map((a, i) => {
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+          const hm = (a.top_heilmittel || [])
+            .map(h => `${escapeHtml(h.wert)} <span style="color:var(--text-muted);">(${h.anzahl})</span>`)
+            .join(', ') || '—';
+          const letzte = a.letzte_verordnung
+            ? new Date(a.letzte_verordnung).toLocaleDateString('de-DE')
+            : '—';
+          const kontakt = [
+            a.telefon ? escapeHtml(a.telefon) : null,
+            a.email ? `<a href="mailto:${escapeHtml(a.email)}" style="color:var(--accent,#b1891b);">${escapeHtml(a.email)}</a>` : null
+          ].filter(Boolean).join('<br>') || '—';
+          const unter = [
+            a.fachrichtung ? escapeHtml(a.fachrichtung) : null,
+            a.lanr ? `LANR ${escapeHtml(a.lanr)}` : null
+          ].filter(Boolean).join(' · ');
+          return `<tr style="border-top:1px solid var(--border);">
+            <td style="padding:8px;color:var(--text-main);">
+              ${medal} ${escapeHtml(a.name)}
+              ${unter ? `<div style="font-size:11px;color:var(--text-muted);">${unter}</div>` : ''}
+            </td>
+            <td style="padding:8px;text-align:right;color:var(--text-main);font-weight:600;">${a.patienten}</td>
+            <td style="padding:8px;text-align:right;color:var(--text-main);">${a.verordnungen}</td>
+            <td style="padding:8px;color:var(--text-main);">${hm}</td>
+            <td style="padding:8px;color:var(--text-muted);white-space:nowrap;">${letzte}</td>
+            <td style="padding:8px;color:var(--text-main);font-size:12px;">${kontakt}</td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
     // Bar chart
     const chartEl = document.getElementById('statBarChart');
     const legendEl = document.getElementById('statBarLegend');
@@ -22715,24 +23234,35 @@ function podDiagRoot(diagCode) {
   return diagCode; // NF, QF, UI1, UI2
 }
 
-// ICD-10-Pool je Diagnosegruppe — Quelle ist die Tabelle `diagnosegruppen`
-// (Spalte icd_prefixes), NICHT eine Kopie hier. Es sind PRÄFIXE: für QF ist
-// "G82" hinterlegt, weil G82.0 nur eine Gruppenüberschrift ist und erst
-// G82.02 ein abrechenbarer Kode. Exakte Listen haben genau daran gescheitert.
-let _dgIcdPrefixes = null;
-let _podDiagGroups = null;   // [{code,label,untergruppen}] aus der Tabelle
+// ICD-Prüfregeln je Diagnosegruppe — Quelle ist die Tabelle `diagnosegruppen`
+// (Spalten icd_accept / icd_exclude / icd_auto_select / icd_accept_unsicher /
+// icd_enforcement), geladen beim ersten Aufruf. Fällt die Abfrage fehl (z. B.
+// weil die Migration noch nicht eingespielt ist), wird still auf "keine Regeln"
+// zurückgefallen — dann wird nicht gewarnt.
+let _dgIcdRules   = null;  // { [dgCode]: { icd_accept, icd_exclude, ... } } (podologie)
+let _podDiagGroups = null;  // [{code,label,untergruppen}] aus der Tabelle
 
-async function loadDgIcdPrefixes() {
-  if (_dgIcdPrefixes) return _dgIcdPrefixes;
+async function loadDgIcdRules() {
+  if (_dgIcdRules) return _dgIcdRules;
   const { data, error } = await supabase
     .from('diagnosegruppen')
-    .select('code, label, untergruppen, icd_prefixes, bereich, sort')
+    .select('code, label, untergruppen, icd_accept, icd_exclude, icd_auto_select, icd_accept_unsicher, icd_enforcement, bereich, sort')
     .eq('aktiv', true)
     .order('sort');
   if (error) { console.warn('[diagnosegruppen] load failed:', error.message); return {}; }
-  _dgIcdPrefixes = Object.fromEntries((data || []).map(r => [r.code, r.icd_prefixes || []]));
+  _dgIcdRules = Object.fromEntries(
+    (data || [])
+      .filter(r => r.bereich === 'podologie')
+      .map(r => [r.code, {
+        icd_accept:          r.icd_accept          || [],
+        icd_exclude:         r.icd_exclude         || [],
+        icd_auto_select:     r.icd_auto_select     || [],
+        icd_accept_unsicher: r.icd_accept_unsicher || [],
+        icd_enforcement:     r.icd_enforcement     || 'warn',
+      }])
+  );
   _podDiagGroups = (data || []).filter(r => r.bereich === 'podologie');
-  return _dgIcdPrefixes;
+  return _dgIcdRules;
 }
 
 // Optionen der Podologie-Diagnosegruppe. Bezeichnungen kommen aus der Tabelle
@@ -22757,12 +23287,18 @@ function podDiagOptionsHtml(selected = '') {
   ).join('');
 }
 
-/** True if `code` belongs to the ICD pool of Diagnosegruppe `dg`. */
-function icdMatchesDiagnosegruppe(code, dg) {
-  const prefixes = (_dgIcdPrefixes || {})[dg] || [];
-  if (!prefixes.length) return true;   // no pool defined → don't warn
-  const c = String(code || '').trim().toUpperCase();
-  return prefixes.some(p => c.startsWith(String(p).toUpperCase()));
+/**
+ * Prüft einen einzelnen Kode gegen die Regel einer DG.
+ * Rückgabe true, wenn der Kode nicht ausgeschlossen ist UND auf icd_accept passt,
+ * oder wenn keine Regeln vorhanden sind (kein Pool = keine Warnung).
+ * Interne Hilfsfunktion — außen nur noch matchIcdToDg verwenden.
+ */
+function _icdMatchesDgRule(code, dg) {
+  const rule = (_dgIcdRules || {})[dg];
+  if (!rule || !rule.icd_accept || rule.icd_accept.length === 0) return true;
+  const codes = parseIcdList(code);
+  if (codes.length === 0) return true;
+  return matchIcdToDg(codes, rule).status === 'ok';
 }
 
 let _podState = { selectedVordId: null, verordnungen: [] };
@@ -22773,8 +23309,8 @@ async function loadPodologieBilling() {
   if (!el) return;
   el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade…</span>';
 
-  // ICD-Pools der Diagnosegruppen — Voraussetzung für podValidateIcd10()
-  await loadDgIcdPrefixes();
+  // ICD-Prüfregeln der Diagnosegruppen — Voraussetzung für podValidateIcd10()
+  await loadDgIcdRules();
 
   // Load kostentraeger for billing KK selection (IK numbers required)
   if (_podKkCache.length === 0) {
@@ -22911,9 +23447,13 @@ async function loadPodologieBilling() {
             </div>
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">Verordnender Arzt</label>
-              <input type="text" id="podNewArztName" list="podArztList" placeholder="Arztname suchen…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              <input type="text" id="podNewArztName" list="podArztList" placeholder="Arztname suchen oder eingeben…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
               <datalist id="podArztList"></datalist>
               <input type="hidden" id="podNewArztId">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
+                <input type="text" id="podNewArztLanr" inputmode="numeric" maxlength="9" placeholder="LANR (9-stellig)" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+                <input type="text" id="podNewArztBsnr" inputmode="numeric" maxlength="9" placeholder="BSNR (9-stellig)" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
+              </div>
               <div id="podArztHint" style="font-size:12px;color:var(--text-muted);margin-top:3px;display:none;"></div>
             </div>
             <div>
@@ -22967,7 +23507,14 @@ async function loadPodologieBilling() {
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_icd10_label')}</label>
               <input type="text" id="podNewIcd10" placeholder="z. B. E11.74" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
-              <div id="podIcd10Warning" style="color:#f59e0b;font-size:12px;margin-top:4px;display:none;"></div>
+              <div id="podIcd10Warning" style="color:var(--warning);font-size:12px;margin-top:4px;display:none;"></div>
+              <div id="podL60Hint" style="display:none;margin-top:6px;padding:8px 10px;border-radius:6px;border:1px solid var(--warning);background:var(--bg-card-solid,#1f2937);font-size:13px;color:var(--text-main);">
+                <div style="margin-bottom:6px;color:var(--warning);font-weight:500;">${escapeHtml(t('pod_l60_hint'))}</div>
+                <div style="display:flex;gap:8px;">
+                  <button type="button" id="podL60UI1Btn" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">${escapeHtml(t('pod_l60_ui1'))}</button>
+                  <button type="button" id="podL60UI2Btn" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;cursor:pointer;">${escapeHtml(t('pod_l60_ui2'))}</button>
+                </div>
+              </div>
             </div>
             <div id="podBeginHintEl" style="font-size:13px;color:var(--text-muted);padding:6px 10px;background:var(--bg-card-solid,#1f2937);border-radius:6px;border:1px solid var(--border);display:none;"></div>
             <div>
@@ -23073,7 +23620,25 @@ async function loadPodologieBilling() {
     const wagnerGrad = (wagnerRaw !== '' && wagnerRaw != null) ? parseInt(wagnerRaw) : null;
     const leadId     = document.getElementById('podNewLeadId')?.value || null;
     const vsnr       = document.getElementById('podNewVsnr')?.value.trim() || null;
-    const arztId     = document.getElementById('podNewArztId')?.value || null;
+
+    // Arzt ins Register übernehmen — auch wenn er noch nicht in der Liste
+    // stand. Ohne diesen Schritt sammelte die Podologie gar keine Ärzte.
+    const arztNameIn = document.getElementById('podNewArztName')?.value.trim() || '';
+    const arztLanrIn = (document.getElementById('podNewArztLanr')?.value || '').replace(/\D/g, '');
+    const arztBsnrIn = (document.getElementById('podNewArztBsnr')?.value || '').replace(/\D/g, '');
+    let arztId = document.getElementById('podNewArztId')?.value || null;
+    if (arztNameIn || /^\d{9}$/.test(arztLanrIn)) {
+      const arztOut = await resolveArzt({
+        name: arztNameIn,
+        lanr: arztLanrIn,
+        bsnr: arztBsnrIn
+      }, 'verordnung');
+      if (arztOut?.arzt_id) {
+        arztId = arztOut.arzt_id;
+        toastArztErgebnis(arztOut);
+      }
+    }
+
     const kkIk       = document.getElementById('podNewKk')?.value || null;
     const zuzahlBef  = document.getElementById('podNewZuzahlBefreit')?.checked || false;
 
@@ -23153,29 +23718,51 @@ async function loadPodologieBilling() {
     const raw = document.getElementById('podNewIcd10')?.value || '';
     const warnEl = document.getElementById('podIcd10Warning');
     if (!warnEl) return;
+    // Leeres ICD-Feld → keine Warnung (ICD ist nicht Pflicht)
     if (!raw.trim() || !diagRootVal) { warnEl.style.display = 'none'; return; }
-    const validPool = (_dgIcdPrefixes || {})[diagRootVal] || [];
-    const entered = raw.split(',').map(s => s.trim()).filter(Boolean);
-    const invalid = entered.filter(code => !icdMatchesDiagnosegruppe(code, diagRootVal));
-    if (invalid.length > 0) {
-      warnEl.textContent = `Hinweis: ${invalid.join(', ')} nicht im Standardpool für ${diagRootVal} (${validPool.join(', ')}).`;
+
+    const rule = (_dgIcdRules || {})[diagRootVal];
+    // Keine Regeln geladen (Migration noch nicht eingespielt) → still keine Warnung
+    if (!rule || !rule.icd_accept || rule.icd_accept.length === 0) { warnEl.style.display = 'none'; return; }
+
+    const codes = parseIcdList(raw);
+    const result = matchIcdToDg(codes, rule);
+
+    if (result.status === 'mismatch') {
+      const isHard = rule.icd_enforcement === 'hard_before_dta';
+      let msg = `${t('pod_icd_mismatch')}: ${codes.join(', ')} (${diagRootVal})`;
+      if (result.hints.length > 0) msg += ` — ${result.hints.join('; ')}`;
+      if (isHard) {
+        msg += ' ⚠ ' + t('pod_icd_hard');
+        warnEl.style.fontWeight = '600';
+      } else {
+        warnEl.style.fontWeight = '';
+      }
+      warnEl.textContent = msg;
       warnEl.style.display = 'block';
     } else {
       warnEl.style.display = 'none';
     }
   }
 
-  // Wire up: Diagnosegruppe change
+  // Wire up: Diagnosegruppe change (DG → ICD Gegenrichtung)
   document.getElementById('podNewDiag')?.addEventListener('change', () => {
     const diagVal = document.getElementById('podNewDiag').value;
     const diagRootVal = podDiagRoot(diagVal);
-    // Auto-populate ICD-10 with first default from map
-    const defaults = PODOLOGIE_ICD_MAP[diagRootVal] || [];
     const icd10El = document.getElementById('podNewIcd10');
-    if (icd10El && defaults.length > 0) {
-      icd10El.value = defaults[0];
+
+    // DG → ICD: nur wenn ICD-Feld leer und genau ein Kode ableitbar (UI1/UI2 → L60.0)
+    if (icd10El && !icd10El.value.trim()) {
+      const rule = (_dgIcdRules || {})[diagRootVal];
+      const sole = rule ? soleIcdForDg(rule) : null;
+      if (sole) icd10El.value = sole;
     }
-    // Wagner only for DF
+
+    // L60.0-Rückfrage ausblenden wenn Diagnosegruppe wechselt
+    const l60hint = document.getElementById('podL60Hint');
+    if (l60hint) l60hint.style.display = 'none';
+
+    // Wagner nur bei DF
     const wagnerWrap = document.getElementById('podWagnerWrap');
     if (wagnerWrap) wagnerWrap.style.display = diagRootVal === 'DF' ? 'block' : 'none';
     podUpdateHeilmittelOptions();
@@ -23232,15 +23819,26 @@ async function loadPodologieBilling() {
     const matched = aerzteCache.find(a => a.arzt_name === val);
     const arztIdEl = document.getElementById('podNewArztId');
     const hintEl   = document.getElementById('podArztHint');
+    const lanrEl   = document.getElementById('podNewArztLanr');
+    const bsnrEl   = document.getElementById('podNewArztBsnr');
     if (matched) {
       if (arztIdEl) arztIdEl.value = matched.id;
+      // Bekannte Nummern vorbelegen, aber eine bereits getippte Eingabe des
+      // Anwenders nicht überschreiben.
+      if (lanrEl && !lanrEl.value.trim()) lanrEl.value = matched.lanr || '';
+      if (bsnrEl && !bsnrEl.value.trim()) bsnrEl.value = matched.bsnr || '';
       if (hintEl) {
-        hintEl.textContent = `LANR: ${matched.lanr || matched.arzt_nummer || '—'}  |  BSNR: ${matched.bsnr || '—'}`;
+        hintEl.textContent = `Bekannter Arzt · LANR: ${matched.lanr || '—'}  |  BSNR: ${matched.bsnr || '—'}`;
         hintEl.style.display = 'block';
       }
     } else {
       if (arztIdEl) arztIdEl.value = '';
-      if (hintEl) hintEl.style.display = 'none';
+      if (hintEl) {
+        hintEl.textContent = val
+          ? 'Neuer Arzt — wird beim Speichern ins Ärzte-Register aufgenommen.'
+          : '';
+        hintEl.style.display = val ? 'block' : 'none';
+      }
     }
   });
 
@@ -23250,8 +23848,25 @@ async function loadPodologieBilling() {
   // Wire up: Dringend change
   document.getElementById('podNewDringend')?.addEventListener('change', computeBeginHint);
 
-  // Wire up: ICD-10 input event
-  document.getElementById('podNewIcd10')?.addEventListener('input', podValidateIcd10);
+  // Wire up: ICD-10 bidirektional (ICD → DG auto-select, L60.0-Rückfrage, Warnung)
+  _wireDgIcdPair('podNewIcd10', 'podNewDiag', 'select', 'podIcd10Warning', 'podologie');
+
+  // Wire up: L60.0 Rückfrage-Schaltflächen (inline onclick aus ES-Modul nicht erlaubt → addEventListener)
+  function _podChooseUI(dg) {
+    const dgEl   = document.getElementById('podNewDiag');
+    const l60hint = document.getElementById('podL60Hint');
+    if (dgEl) {
+      // Optionen zurücksetzen, dann Wert setzen
+      Array.from(dgEl.options).forEach(opt => { opt.style.display = ''; });
+      dgEl.value = dg;
+      dgEl.dataset.manualOverride = '1';
+      dgEl.dispatchEvent(new Event('input',  { bubbles: true }));
+      dgEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (l60hint) l60hint.style.display = 'none';
+  }
+  document.getElementById('podL60UI1Btn')?.addEventListener('click', () => _podChooseUI('UI1'));
+  document.getElementById('podL60UI2Btn')?.addEventListener('click', () => _podChooseUI('UI2'));
 
   // Wire up: Add heilmittel row button
   document.getElementById('podAddHeilmittelBtn')?.addEventListener('click', async () => {
@@ -23319,24 +23934,24 @@ async function loadPodologieBilling() {
     const notiz   = document.getElementById('podBehNotizen').value.trim();
     const errEl   = document.getElementById('podBehError');
 
-    // ICD-Pools sicherstellen, BEVOR geprüft wird: icdMatchesDiagnosegruppe()
-    // ist bei fehlendem Pool absichtlich nachsichtig (nur Hinweis-Text), für
+    // ICD-Regeln sicherstellen, BEVOR geprüft wird: _icdMatchesDgRule()
+    // ist bei fehlenden Regeln absichtlich nachsichtig (nur Hinweis-Text), für
     // die harte UI1/UI2-Abrechnungsregel darf es das aber nicht sein.
-    await loadDgIcdPrefixes();
+    await loadDgIcdRules();
 
     const vord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
     const dRoot = vord ? podDiagRoot(vord.diagnosegruppe) : '';
     const isUIx = dRoot === 'UI1' || dRoot === 'UI2';
     const icd10 = vord?.icd10 || [];
-    const uiPool = (_dgIcdPrefixes || {})[dRoot] || [];
+    const uiRule = (_dgIcdRules || {})[dRoot];
 
     // Validasyon
     let err = '';
     if (checks.length === 0) err = t('pod_kein_hpnr');
     else if (isUIx && checks.includes('78030')) err = 'Befundung (78030) kann bei UI1/UI2 nicht verwendet werden.';
-    // Pool nicht geladen → auf die feste Regel zurückfallen, nicht durchwinken.
-    else if (isUIx && !(uiPool.length
-              ? icd10.some(c => icdMatchesDiagnosegruppe(c, dRoot))
+    // Regeln nicht geladen → auf die feste Literal-Regel zurückfallen, nicht durchwinken.
+    else if (isUIx && !(uiRule
+              ? icd10.some(c => matchIcdToDg(parseIcdList(c), uiRule).status === 'ok')
               : icd10.some(c => String(c).trim().toUpperCase().startsWith('L60.0'))))
       err = 'UI1/UI2 erfordert ICD-10 L60.0.';
     else if (checks.includes('78040') && checks.includes('78030')) err = 'Eingangsbefundung (78040) und Befundung (78030) können nicht am gleichen Tag kombiniert werden.';

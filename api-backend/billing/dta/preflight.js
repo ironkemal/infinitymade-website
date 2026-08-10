@@ -63,10 +63,18 @@ export function isValidVersichertenstatus(vs) {
   return /^[1359]\d{4}$/.test(vs || '');
 }
 
-// LANR (Lebenslange Arztnummer): 9 digits, last digit Prüfziffer.
-// 999999900 = dummy used when LANR unknown (allowed by §302).
+// LANR (Lebenslange Arztnummer): 9 Ziffern.
+//
+// Ersatzwert bei fehlendem Wert ist 999999999 — Anlage 1 TP5 V21, Kap. 5.5.3.3
+// (SLLA: B Heilmittel, ZHE-Segment): "Ist kein Wert vorhanden, ist das Feld mit
+// '999999999' zu übermitteln". Nicht 999999900 — das ist die KBV-Pseudo-LANR
+// aus dem §295-Kontext und gehört nicht in die §302-Heilmittelabrechnung.
+// (333333300 gilt ausschliesslich für SLLA: O / SAPV, nicht für Heilmittel.)
+export const LANR_ERSATZWERT = '999999999';
+export const BSNR_ERSATZWERT = '999999999';
+
 export function isValidLanr(lanr) {
-  if (lanr === '999999900') return true;
+  if (lanr === LANR_ERSATZWERT) return true;
   if (!/^\d{9}$/.test(lanr || '')) return false;
   // Mod-10 check: pos 1-6 with alternating weights 4,9,4,9,4,9 (KBV spec)
   const weights = [4, 9, 4, 9, 4, 9];
@@ -194,11 +202,25 @@ export function preflight(input) {
     if (p.patient?.plz && !isValidPlz(p.patient.plz))
       W(warnings, 'P:01008', `${at}.patient.plz`, 'PLZ ist nicht 5-stellig (nur bei DE Pflicht)');
 
-    // Doctor (optional in §302 — dummy 999999900/999999999 allowed)
-    if (p.doctor?.lanr && !isValidLanr(p.doctor.lanr))
-      E(errors, 'D:01001', `${at}.doctor.lanr`, `LANR "${p.doctor.lanr}" Prüfziffer/Format ungültig`);
-    if (p.doctor?.bsnr && !isValidBsnr(p.doctor.bsnr))
-      E(errors, 'D:01002', `${at}.doctor.bsnr`, `BSNR "${p.doctor.bsnr}" muss 9 Ziffern haben`);
+    // Arzt — §302 fordert für LANR/BSNR nur "9 Stellen, nur Ziffern 0-9" und
+    // erlaubt den Ersatzwert 999999999 (Anlage 1 TP5 V21, 5.5.3.3). Eine
+    // Prüfziffernprüfung schreibt die Spezifikation NICHT vor; sie darf den
+    // Versand deshalb nicht blockieren, sondern nur warnen.
+    const lanrIn = p.doctor?.lanr;
+    if (lanrIn && !/^\d{9}$/.test(lanrIn))
+      E(errors, 'D:01001', `${at}.doctor.lanr`, `LANR "${lanrIn}" muss genau 9 Ziffern haben`);
+    else if (lanrIn === LANR_ERSATZWERT)
+      W(warnings, 'D:01003', `${at}.doctor.lanr`,
+        'LANR fehlt — es wird der Ersatzwert 999999999 übermittelt. Bitte gegen den Urbeleg prüfen: steht auf der Verordnung eine Arztnummer, führt der Ersatzwert zur Bemängelung und zum Korrekturverfahren (VKZ 4).');
+    else if (lanrIn && !isValidLanr(lanrIn))
+      W(warnings, 'D:01001', `${at}.doctor.lanr`, `LANR "${lanrIn}" besteht die Prüfziffernprüfung nicht — bitte gegen den Urbeleg prüfen`);
+
+    const bsnrIn = p.doctor?.bsnr;
+    if (bsnrIn && !isValidBsnr(bsnrIn))
+      E(errors, 'D:01002', `${at}.doctor.bsnr`, `BSNR "${bsnrIn}" muss genau 9 Ziffern haben`);
+    else if (bsnrIn === BSNR_ERSATZWERT)
+      W(warnings, 'D:01004', `${at}.doctor.bsnr`,
+        'BSNR fehlt — es wird der Ersatzwert 999999999 übermittelt. Bitte gegen den Urbeleg prüfen.');
 
     // Verordnung
     const v = p.verordnung || {};

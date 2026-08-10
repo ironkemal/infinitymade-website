@@ -30,11 +30,31 @@ export function lookupBlankoShoulder(icd) {
 
 /**
  * Resolve Diagnosegruppe metadata.
- * Accepts e.g. "WS2", "EX", "ZN1". Returns hoechstmenge/orientierende_menge/frequency_hint or null.
+ * Accepts e.g. "WS2", "EX", "ZN1", "DF", "DF-a", "UI1".
+ * Strips trailing -a/-b/-c suffix before lookup.
+ * Searches physio first, then podologie (skips _-prefixed meta keys).
+ * Returns hoechstmenge/orientierende_menge/frequency_hint or null.
  */
 export function getDiagnosegruppe(dg) {
   if (!dg) return null;
-  return diagnosegruppen.physio[dg.trim()] || null;
+  // Suffix -a/-b/-c abschneiden (z. B. DF-a -> DF)
+  const key = dg.trim().replace(/-[abc]$/i, '');
+  if (diagnosegruppen.physio[key]) return diagnosegruppen.physio[key];
+  const podo = diagnosegruppen.podologie;
+  if (podo && !key.startsWith('_') && podo[key]) return podo[key];
+  return null;
+}
+
+/**
+ * Returns the ICD-rule map for all Podologie Diagnosegruppen.
+ * Keys with leading _ are metadata and excluded.
+ * Shape: { DF: {...}, NF: {...}, QF: {...}, UI1: {...}, UI2: {...} }
+ */
+export function getIcdDgRules() {
+  const podo = diagnosegruppen.podologie || {};
+  return Object.fromEntries(
+    Object.entries(podo).filter(([k]) => !k.startsWith('_'))
+  );
 }
 
 export const BLANKO_AMPEL = diagnosegruppen.blanko_ampel;

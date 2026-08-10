@@ -23,7 +23,9 @@
 //   }
 // }
 
-import { getDiagnosegruppe } from './catalog.js';
+import { getDiagnosegruppe, getIcdDgRules } from './catalog.js';
+import { checkIcdDg } from './icdDgRules.js';
+
 
 const ZUZAHLUNG_PERCENT = 10;
 const ZUZAHLUNG_PER_BLATT_EUR = 10;
@@ -134,6 +136,14 @@ export function validateStandard(rezept) {
       field: 'patient_geburtsdatum'
     });
   }
+
+  // ICD <-> Diagnosegruppe-Prüfung (Podologie: DF/NF/QF/UI1/UI2)
+  // Physio/Logo/Ergo haben keinen ICD-Pool => checkIcdDg gibt [] zurueck.
+  const icdDgWarnings = checkIcdDg(
+    { icd10: rezept.icd10, diagnosegruppe: dg },
+    getIcdDgRules()
+  );
+  warnings.push(...icdDgWarnings);
 
   return {
     ok: blockers.length === 0,

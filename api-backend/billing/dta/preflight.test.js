@@ -36,8 +36,10 @@ test('Versichertenstatus 10000 valid',  () => assert.equal(isValidVersichertenst
 test('Versichertenstatus 30000 valid',  () => assert.equal(isValidVersichertenstatus('30000'), true));
 test('Versichertenstatus 20000 invalid', () => assert.equal(isValidVersichertenstatus('20000'), false));
 
-test('LANR dummy 999999900 allowed',   () => assert.equal(isValidLanr('999999900'), true));
-test('LANR too short rejected',        () => assert.equal(isValidLanr('12345'), false));
+// Ersatzwert laut Anlage 1 TP5 V21, 5.5.3.3 (SLLA: B, ZHE) ist 999999999.
+// 999999900 ist die KBV-Pseudo-LANR aus dem §295-Kontext und hier NICHT gültig.
+test('LANR Ersatzwert 999999999 allowed', () => assert.equal(isValidLanr('999999999'), true));
+test('LANR too short rejected',           () => assert.equal(isValidLanr('12345'), false));
 
 test('ICD-10 M54.5 valid',             () => assert.equal(isValidIcd10('M54.5'), true));
 test('ICD-10 with modifier valid',     () => assert.equal(isValidIcd10('M54.5G'), true));
@@ -63,7 +65,7 @@ const validInput = {
   prescriptions: [{
     patient: { kvnr: 'A123456789', versichertenstatus: '10000', nachname: 'Müller', vorname: 'Hans',
                geburtsdatum: '1972-04-13', plz: '40213', belegnummer: '0000001' },
-    doctor: { lanr: '999999900', bsnr: '999999999' },
+    doctor: { lanr: '999999999', bsnr: '999999999' },
     verordnung: { ausstellungsdatum: '2026-05-02', icd10: 'M54.5', diagnosegruppe: 'WS2',
                   verordnungsart: '03', leitsymptomatik: '1010', therapiefrequenz: '3',
                   zuzahlungskennzeichen: '0', kostentraegerIk: '108310400' },

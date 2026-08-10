@@ -9,21 +9,41 @@
 
 // ─── Diagnosegruppen ───────────────────────────────────────────────────────────
 //
-// ⚠ NICHT AUTORITATIV. Laufzeit-Quelle ist die Tabelle `diagnosegruppen`
-//   (Spalten label / icd_prefixes). Diese Datei wird nirgends importiert und
-//   dient nur als Nachschlagewerk. Bei Abweichung gilt die Tabelle.
+// ⛔ NICHT AUTORITATIV — NICHT ALS DATENQUELLE KOPIEREN.
+//   Diese Datei wird nirgends importiert und dient nur als Nachschlagewerk.
+//   Maßgeblich ist die Tabelle `diagnosegruppen` mit den Spalten
+//   `icd_accept` / `icd_exclude` / `icd_auto_select` / `icd_accept_unsicher`;
+//   die Backend-Kopie derselben Regeln steht in
+//   `api-backend/ai/validators/diagnosegruppen.json` (Abschnitt `podologie`).
+//   Bei Abweichung gilt die Tabelle.
 //
-//   `icd_prefixes` sind PRÄFIXE, keine vollständigen Kodes: In ICD-10-GM 2026
-//   ist z. B. G82.0 nur eine Gruppenüberschrift ("G82.0-"), abrechenbar sind
-//   erst die fünfstelligen Kodes G82.00–G82.09. Eine Liste exakter Kodes hätte
-//   jede echte QF-Verordnung fälschlich als ungültig markiert.
+//   Das Feld `icd10_prefixes` unten ist bewusst nur noch eine grobe Merkhilfe.
+//   Ein reines Präfixmodell kann die Regeln nicht abbilden, weil zwei Dinge
+//   fehlen:
+//     • Ausschlüsse — G63.2* (diabetische Polyneuropathie) gehört zu DF, nicht
+//       zu NF; ein Präfix „G63." würde es fälschlich NF zuschlagen.
+//     • Endständigkeit — G82.0 ist in ICD-10-GM 2026 nur eine
+//       Gruppenüberschrift („G82.0-"); abrechenbar sind erst die fünfstelligen
+//       Kodes. G82.6-! ist ein Ausrufezeichenkode (funktionale Höhe der
+//       Schädigung) und niemals Hauptdiagnose.
+//   Deshalb wurde die Spalte `icd_prefixes` in der Tabelle 2026-08-10 durch das
+//   Regexmodell ersetzt.
+//
+//   Korrektur 2026-08-10: E1x.40/.41 und G63.2* standen hier fälschlich bei NF.
+//   Diabetische Neuropathie ist DF (HeilM-RL § 27 Abs. 1 Nr. 1); NF ist
+//   ausdrücklich die NICHT diabetische Neuropathie (§ 27 Abs. 1 Nr. 2a).
 
 export const DIAGNOSEGRUPPEN = {
   DF: {
     code: 'DF',
     label: 'Diabetisches Fußsyndrom',
     untergruppen: ['a', 'b', 'c'],
-    icd10_prefixes: ['E10.74', 'E10.75', 'E11.74', 'E11.75', 'E12.74', 'E12.75', 'E13.74', 'E13.75', 'E14.74', 'E14.75'],
+    // E1x.74/.75 = diabetisches Fußsyndrom; E1x.40/.41 = neurologische
+    // Komplikationen (diabetische Neuropathie); G63.2* = diabetische
+    // Polyneuropathie, Sternkode und ohne Primärkode E1x.4x† nicht kodierfähig.
+    icd10_prefixes: ['E10.74', 'E10.75', 'E11.74', 'E11.75', 'E12.74', 'E12.75', 'E13.74', 'E13.75', 'E14.74', 'E14.75',
+                     'E10.40', 'E10.41', 'E11.40', 'E11.41', 'E12.40', 'E12.41', 'E13.40', 'E13.41', 'E14.40', 'E14.41',
+                     'G63.2'],
     befundpauschale_erlaubt: true,   // 78030 billable
     nagelspange_erlaubt: false,
     beschreibung: 'a=leicht/b=mittel/c=schwer',
@@ -32,9 +52,10 @@ export const DIAGNOSEGRUPPEN = {
     code: 'NF',
     label: 'Krankhafte Schädigung am Fuß als Folge einer sensiblen oder sensomotorischen Neuropathie',
     untergruppen: null,
-    // G60/G61/G62 komplett, G63.2* (Stern-Kode) sowie die diabetischen
-    // Neuropathie-Kodes E1x.40/.41.
-    icd10_prefixes: ['G60', 'G61', 'G62', 'G63.2', 'E10.4', 'E11.4', 'E12.4', 'E13.4', 'E14.4'],
+    // NF ist die NICHT diabetische Neuropathie. G60/G61/G62 komplett sowie
+    // G63.0/.1/.3–.6/.8* — G63.2* ausdrücklich NICHT (das ist DF).
+    // ⛔ Diabetes-Kodes (E10–E14) gehören nie zu NF.
+    icd10_prefixes: ['G60', 'G61', 'G62', 'G63.0', 'G63.1', 'G63.3', 'G63.4', 'G63.5', 'G63.6', 'G63.8'],
     befundpauschale_erlaubt: true,
     nagelspange_erlaubt: false,
   },
@@ -42,7 +63,11 @@ export const DIAGNOSEGRUPPEN = {
     code: 'QF',
     label: 'Krankhafte Schädigung am Fuß als Folge eines Querschnittsyndroms',
     untergruppen: null,
-    icd10_prefixes: ['G82'],   // abrechenbar: G82.00–G82.59 (fünfstellig!)
+    // abrechenbar: G82.00–G82.59 (fünfstellig!) sowie S14.1-/S24.1-/S34.1-/T09.3.
+    // ⛔ G82.6-! ist ein Ausrufezeichenkode (funktionale Höhe der Schädigung)
+    //    und niemals Hauptdiagnose; G82.0–G82.6 ohne fünfte Stelle sind
+    //    Gruppenüberschriften und nicht endständig.
+    icd10_prefixes: ['G82.0', 'G82.1', 'G82.2', 'G82.3', 'G82.4', 'G82.5', 'S14.1', 'S24.1', 'S34.1', 'T09.3'],
     befundpauschale_erlaubt: true,
     nagelspange_erlaubt: false,
   },
@@ -71,10 +96,19 @@ export const DIAGNOSEGRUPPEN = {
 export const HPNR_PODOLOGIE = {
 
   // Standard-Leistungen (alle Diagnosegruppen außer wo angegeben)
+  //
+  // ⚠ Maßnahme ≠ Leistung. Die drei Maßnahmen (Hornhautabtragung /
+  //   Nagelbearbeitung / Podologische Komplexbehandlung) sind das, was der Arzt
+  //   auf Muster 13 als Heilmittel a/b/c verordnet. Abgerechnet werden sie über
+  //   die Leistungen 78010 bzw. 78020 — siehe HPNR_PODOLOGIE_NICHT_ABRECHENBAR.
   '78010': {
     hpnr: '78010',
-    leistungsart: 'Podologische Behandlung',
-    leistung: 'Podologische Komplexbehandlung (Hornhautabtragung + Nagelbehandlung)',
+    leistungsart: 'Maßnahmen der podologischen Therapie',
+    leistung: 'Podologische Behandlung (klein)',
+    kuerzel: 'pod. Beh. kl.',
+    massnahmen: ['Hornhautabtragung', 'Nagelbearbeitung', 'Podologische Komplexbehandlung'],
+    regelleistungszeit_min: 35,
+    therapiezeit_min: 20,           // + 15 Min Vor-/Nachbereitung (delegationsfähig)
     diagnosegruppen: ['DF', 'NF', 'QF'],
     kombinierbar_mit_78030: true,
     kombinierbar_mit_78040: false,  // nicht am gleichen Tag wie 78040
@@ -82,13 +116,21 @@ export const HPNR_PODOLOGIE = {
     gueltig_bis: '9999-12-31',
     grundlage: '§125 Abs. 1 SGB V',
     quelle: 'GKV-SV',
-    notiz: 'Standardbehandlung für DFS/NF/QF. Auch wenn Behandlung >20 Min — KEINE höhere Position',
+    verguetung: { ab_2025_07_01: 35.16, ab_2026_07_01: 36.10 },
+    quelle_detail: 'Anlage 1a Teil 2 Ziff. 1/2/3; Anlage 2 §2 Z.72, §3 Z.321',
+    notiz: 'Standardposition für ALLE drei Maßnahmen. Hornhautabtragung ODER Nagelbearbeitung allein => IMMER 78010 + 78030, auch bei >20 Min Therapiezeit (FAK Q25).',
   },
 
   '78020': {
     hpnr: '78020',
-    leistungsart: 'Podologische Behandlung',
-    leistung: 'Hornhautabtragung',
+    leistungsart: 'Maßnahmen der podologischen Therapie',
+    leistung: 'Podologische Behandlung (groß)',
+    kuerzel: 'pod. Beh. gr.',
+    massnahmen: ['Podologische Komplexbehandlung'],   // NUR Komplexbehandlung
+    nur_bei_komplexbehandlung: true,
+    mindest_therapiezeit_min: 21,                     // "mehr als 20 Minuten"
+    regelleistungszeit_min: 50,
+    therapiezeit_min: 35,
     diagnosegruppen: ['DF', 'NF', 'QF'],
     kombinierbar_mit_78030: true,
     kombinierbar_mit_78040: false,
@@ -96,6 +138,9 @@ export const HPNR_PODOLOGIE = {
     gueltig_bis: '9999-12-31',
     grundlage: '§125 Abs. 1 SGB V',
     quelle: 'GKV-SV',
+    verguetung: { ab_2025_07_01: 50.55, ab_2026_07_01: 51.92 },
+    quelle_detail: 'Anlage 1a Z.167-171 + Teil 2 Ziff. 3 (Z.348-372); Anlage 2 §2 Z.82, §3 Z.332',
+    notiz: 'NUR wenn Arzt die Komplexbehandlung (Heilmittel c) verordnet hat UND Therapiezeit >20 Min. Bei Einzelmaßnahme (Heilmittel a oder b) NICHT abrechenbar — sonst Retaxation.',
   },
 
   '78030': {
@@ -148,7 +193,9 @@ export const HPNR_PODOLOGIE = {
   '78620': {
     hpnr: '78620',
     leistungsart: 'Nagelspange',
-    leistung: 'Aufschlag für besonderen Aufwand (+15 Min, bei Kinder <14 J. oder Nagel UI2/UI3)',
+    // „Grad 2/3" ist der Nagelschweregrad, KEINE Diagnosegruppe — eine
+    // Diagnosegruppe UI3 gibt es nicht (Stadium 3 wird über UI2 verordnet).
+    leistung: 'Aufschlag für besonderen Aufwand (+15 Min, bei Kindern <14 J. oder Nagelschweregrad 2/3)',
     diagnosegruppen: ['UI1', 'UI2'],
     kombinierbar_mit_78030: false,
     lokalisation_pflicht: true,
@@ -158,7 +205,7 @@ export const HPNR_PODOLOGIE = {
     quelle: 'GKV-SV Anlage 1c (16.06.2025)',
     aenderung: 'Neu aufgenommen 01.07.2025 (Anlage 1c)',
     max_pro_termin: 2,
-    notiz: 'Aufschlag bei Kinder <14 Jahren ODER Nagelschweregrad UI2/3. Max 2x je Behandlungstermin.',
+    notiz: 'Aufschlag bei Kindern <14 Jahren ODER Nagelschweregrad 2/3. Max 2x je Behandlungstermin. Nagelschweregrad ≠ Diagnosegruppe; UI3 existiert nicht.',
   },
 
   // Therapiebericht UI2
@@ -245,6 +292,33 @@ export const HPNR_PODOLOGIE = {
   },
 };
 
+// ─── Maßnahmen-Ebene: existiert im Verzeichnis, ist aber NICHT abrechenbar ─────
+//
+// Die Positionsnummern 78001–78006 stehen im GKV-SV
+// Heilmittelpositionsnummernverzeichnis (gültig ab 01.01.2026), sind aber NICHT
+// Bestandteil der Vergütungsvereinbarung (Anlage 2 i.d.F. 01.07.2025) —
+// kein Preis => nicht abrechenbar. Niemals in der SLLA senden: der Kostenträger
+// setzt sie ab (Nullretaxation).
+//
+// Erkennungsmerkmal im Verzeichnis: Spalten `Grundlage` und `Eigentümer` leer.
+// Nicht neu in 2026 (gültig ab 1900-01-01) — sie fehlten in dieser Datei bisher
+// zu Recht, nur ohne dokumentierten Grund. Dieser Eintrag ist die Dokumentation.
+export const HPNR_PODOLOGIE_NICHT_ABRECHENBAR = {
+  '78001': { leistung: 'Hornhautabtragung',                          abrechnen_mit: ['78010', '78030'] },
+  '78002': { leistung: 'Nagelbearbeitung',                           abrechnen_mit: ['78010', '78030'] },
+  '78003': { leistung: 'Podologische Komplexbehandlung',             abrechnen_mit: ['78010', '78030'] },
+  '78004': { leistung: 'Hornhautabtragung an einem Fuß',             abrechnen_mit: ['78010', '78030'] },
+  '78005': { leistung: 'Nagelbearbeitung an einem Fuß',              abrechnen_mit: ['78010', '78030'] },
+  '78006': { leistung: 'Podologische Komplexbehandlung an einem Fuß', abrechnen_mit: ['78010', '78030'] },
+  _meta: {
+    grund: 'Keine Vergütung in Anlage 2 (§125 Abs. 1 SGB V, i.d.F. 01.07.2025); Grundlage- und Eigentümer-Spalte im HPNR-Verzeichnis leer',
+    quelle: 'Podologie_Positionsnummern_2026_Filtered.csv Z.2-19; Anlage 2 (0 Treffer für 7800x)',
+    gueltig_ab: '1900-01-01',
+    gueltig_bis: '9999-12-31',
+    notiz: 'Maßnahmen-Ebene, nicht Leistungs-Ebene. Die Maßnahme wird über 78010/78020 abgerechnet.',
+  },
+};
+
 // Alte Nagelspange-Codes — ab 01.10.2025 ungültig
 export const HPNR_PODOLOGIE_DEPRECATED = {
   '78210': { label: 'Nagelkeil (alt)', ungueltig_ab: '2025-10-01', ersetzt_durch: '78610' },
@@ -307,6 +381,15 @@ export const VALIDIERUNGS_REGELN = [
       ['UI1', 'UI2'].includes(diagnosegruppe) && icd10 !== 'L60.0',
     fehler: 'Diagnosegruppe UI1/UI2 erfordert ausschließlich ICD-10 L60.0.',
     quelle: 'Anlage 3, Abschnitt j',
+  },
+  {
+    regel: '78020_nur_komplexbehandlung',
+    beschreibung: '78020 nur bei verordneter Podologischer Komplexbehandlung (Heilmittel c)',
+    check: (verordnetesHeilmittel, hpnrList) =>
+      hpnrList.includes('78020') && verordnetesHeilmittel !== 'Podologische Komplexbehandlung',
+    fehler: 'Podologische Behandlung (groß) / 78020 ist nur bei verordneter Komplexbehandlung abrechenbar. Bei Hornhautabtragung oder Nagelbearbeitung allein ist immer 78010 zzgl. 78030 abzurechnen.',
+    quelle: 'FAK Podologie Q25 (24.05.2023); Anlage 1a i.d.F. 17.06.2024, Teil 1 Z.167-171',
+    notiz: 'Voraussetzung: das verordnete Heilmittel (Muster 13, Feld g1 — a/b/c) muss persistiert werden. Feld existiert in `verordnungen` noch NICHT.',
   },
   {
     regel: '78040_nicht_mit_78030',

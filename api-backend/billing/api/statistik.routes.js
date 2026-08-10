@@ -61,6 +61,9 @@ router.get('/statistik', async (req, res) => {
     // Start of last month
     const startOfLastMonth = new Date(Date.UTC(nowForMonth.getUTCFullYear(), nowForMonth.getUTCMonth() - 1, 1)).toISOString();
 
+    // Date-only cutoff for `date` columns (ausstellungsdatum)
+    const cutoffDate = cutoffIso.slice(0, 10);
+
     // Run all 8 queries in parallel
     const [
       belegResult,
@@ -71,6 +74,8 @@ router.get('/statistik', async (req, res) => {
       noShowResult,
       mahnungenResult,
       therapeutenResult,
+      aerztePrescriptionsResult,
+      aerzteVerordnungenResult,
     ] = await Promise.all([
       // 1. Monthly revenue from belegliste
       supabase
@@ -131,6 +136,22 @@ router.get('/statistik', async (req, res) => {
         .eq('owner_id', tenantId)
         .gte('start_date', cutoffIso)
         .neq('status', 'canceled'),
+
+      // 9. Überweisende Ärzte — Pool 1: Physio/Ergo/Logo (prescriptions)
+      supabase
+        .from('prescriptions')
+        .select('arzt_id, patient_id, heilmittel, diagnosegruppe, ausstellungsdatum, aerzte:arzt_id(id, arzt_name, lanr, fachrichtung, telefon, email)')
+        .eq('owner_id', tenantId)
+        .not('arzt_id', 'is', null)
+        .gte('ausstellungsdatum', cutoffDate),
+
+      // 10. Überweisende Ärzte — Pool 2: Podologie (verordnungen)
+      supabase
+        .from('verordnungen')
+        .select('arzt_id, lead_id, patient_name, heilmittel_items, diagnosegruppe, ausstellungsdatum, aerzte:arzt_id(id, arzt_name, lanr, fachrichtung, telefon, email)')
+        .eq('owner_id', tenantId)
+        .not('arzt_id', 'is', null)
+        .gte('ausstellungsdatum', cutoffDate),
     ]);
 
     // Check for fatal errors
@@ -213,6 +234,87 @@ router.get('/statistik', async (req, res) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    // ── 9. Überweisende Ärzte ─────────────────────────────────────────────────
+    // Beide Datenpools zusammenführen: prescriptions (Physio/Ergo/Logo) und
+    // verordnungen (Podologie). Die Tabellen bleiben getrennt — hier wird nur
+    // für die Auswertung addiert.
+    const arztMap = {};
+
+    /** Zählt eine Verordnung auf das Konto ihres Arztes. */
+    function erfasseVerordnung({ arzt, arztId, patientKey, heilmittel, diagnosegruppe, datum }) {
+      if (!arztId) return;
+      if (!arztMap[arztId]) {
+        arztMap[arztId] = {
+          id:            arztId,
+          name:          arzt?.arzt_name || 'Unbekannt',
+          lanr:          arzt?.lanr || null,
+          fachrichtung:  arzt?.fachrichtung || null,
+          telefon:       arzt?.telefon || null,
+          email:         arzt?.email || null,
+          verordnungen:  0,
+          _patienten:    new Set(),
+          _heilmittel:   {},
+          _diagnosen:    {},
+          letzte_verordnung: null
+        };
+      }
+      const e = arztMap[arztId];
+      e.verordnungen++;
+      if (patientKey) e._patienten.add(patientKey);
+      for (const hm of [].concat(heilmittel || [])) {
+        if (hm) e._heilmittel[hm] = (e._heilmittel[hm] || 0) + 1;
+      }
+      if (diagnosegruppe) e._diagnosen[diagnosegruppe] = (e._diagnosen[diagnosegruppe] || 0) + 1;
+      if (datum && (!e.letzte_verordnung || datum > e.letzte_verordnung)) e.letzte_verordnung = datum;
+    }
+
+    for (const rx of (aerztePrescriptionsResult?.error ? [] : (aerztePrescriptionsResult?.data || []))) {
+      erfasseVerordnung({
+        arzt:           rx.aerzte,
+        arztId:         rx.arzt_id,
+        patientKey:     rx.patient_id,
+        heilmittel:     rx.heilmittel,
+        diagnosegruppe: rx.diagnosegruppe,
+        datum:          rx.ausstellungsdatum
+      });
+    }
+
+    for (const v of (aerzteVerordnungenResult?.error ? [] : (aerzteVerordnungenResult?.data || []))) {
+      // Podologie führt mehrere Heilmittel je Verordnung als JSON-Liste.
+      const items = Array.isArray(v.heilmittel_items) ? v.heilmittel_items : [];
+      erfasseVerordnung({
+        arzt:           v.aerzte,
+        arztId:         v.arzt_id,
+        patientKey:     v.lead_id || (v.patient_name ? `name:${v.patient_name}` : null),
+        heilmittel:     items.map(i => i?.bezeichnung || i?.code).filter(Boolean),
+        diagnosegruppe: v.diagnosegruppe,
+        datum:          v.ausstellungsdatum
+      });
+    }
+
+    const top = (obj, n = 3) => Object.entries(obj)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, n)
+      .map(([wert, anzahl]) => ({ wert, anzahl }));
+
+    const aerzte = Object.values(arztMap)
+      .map(e => ({
+        id:                e.id,
+        name:              e.name,
+        lanr:              e.lanr,
+        fachrichtung:      e.fachrichtung,
+        telefon:           e.telefon,
+        email:             e.email,
+        patienten:         e._patienten.size,
+        verordnungen:      e.verordnungen,
+        letzte_verordnung: e.letzte_verordnung,
+        top_heilmittel:    top(e._heilmittel),
+        top_diagnosen:     top(e._diagnosen)
+      }))
+      // Nach überwiesenen Patienten sortieren — das ist die Frage, die der
+      // Inhaber stellt: wer schickt uns die meisten Patienten?
+      .sort((a, b) => b.patienten - a.patienten || b.verordnungen - a.verordnungen);
+
     return res.json({
       monatlich,
       patienten: {
@@ -233,6 +335,7 @@ router.get('/statistik', async (req, res) => {
       no_show: { count: noShowCount, rate: noShowRate },
       mahnungen: { gesamt: mahnGesamt, bezahlt: mahnBezahlt, offen: mahnOffen },
       therapeuten,
+      aerzte,
     });
   } catch (e) {
     console.error('[billing/statistik]', e);

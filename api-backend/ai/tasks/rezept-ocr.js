@@ -37,6 +37,9 @@ WICHTIG:
 - "signature_confidence" = "high" wenn klar erkennbar, "medium" wenn wahrscheinlich, "low" wenn unsicher; null wenn "unterschrift_vorhanden" null ist.
 - "ocr_confidence" zwischen 0 und 1: deine Selbsteinschätzung der Bildqualität / Lesbarkeit.
 
+- Arztstempel (unten rechts, beim Unterschriftsfeld): lies dort "praxis_name", "adresse" und "fachrichtung" mit aus, soweit vorhanden. Die Angaben stehen oft mehrzeilig im Stempel; gib "adresse" einzeilig als "Straße Nr., PLZ Ort" zurück. Rate nichts — was nicht lesbar ist, bleibt null.
+- "lanr" und "bsnr" sind reine Ziffernfolgen. Übernimm sie exakt wie gedruckt, ohne führende Buchstaben und ohne Auffüllen auf 9 Stellen.
+
 Schema:
 {
   "patient": {
@@ -53,6 +56,9 @@ Schema:
     "name": string|null,
     "lanr": string|null,                   // 9-stellig
     "bsnr": string|null,                   // 9-stellig
+    "praxis_name": string|null,            // Praxis-/Einrichtungsname aus dem Arztstempel
+    "adresse": string|null,                // Straße + PLZ + Ort aus dem Arztstempel, einzeilig
+    "fachrichtung": string|null,           // z. B. "Orthopädie", "Allgemeinmedizin", falls im Stempel genannt
     "ausstellungsdatum": "YYYY-MM-DD"|null
   },
   "rezept": {
@@ -102,6 +108,9 @@ function mockResponse() {
       name: 'Dr. med. Anna Schmidt',
       lanr: '123456701',
       bsnr: '987654300',
+      praxis_name: 'Orthopädische Gemeinschaftspraxis Schmidt & Kollegen',
+      adresse: 'Zeil 42, 60313 Frankfurt am Main',
+      fachrichtung: 'Orthopädie',
       ausstellungsdatum: '2026-05-14'
     },
     rezept: {

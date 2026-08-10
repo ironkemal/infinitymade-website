@@ -2,7 +2,7 @@
   "_meta": {
     "source": "G-BA Heilmittel-Richtlinie 2025-05-15 (iK 2025-08-05), Anlage 1 Heilmittelkatalog",
     "note": "Höchstmenge je Verordnung im Regelfall. Bei LHB/BVB: bis zu 12 Wochen je Verordnung erlaubt. Bei Blanko: keine Mengenbegrenzung, aber Ampelsystem. Bezeichnungen entsprechen der HeilM-RL; autoritative Laufzeitquelle ist die Tabelle diagnosegruppen.",
-    "version": "2026-07-25-v2"
+    "version": "2026-08-10-v3"
   },
   "physio": {
     "WS1": {
@@ -155,6 +155,134 @@
       "hoechstmenge": 6,
       "orientierende_menge": 18,
       "frequency_hint": "1-3 x wöchentlich"
+    }
+  },
+  "podologie": {
+    "_note": "ICD-10 <-> Diagnosegruppe Regeln fuer Podologie. `re` ist ein JavaScript-Regulaerausdruck, geprueft gegen den NORMALISIERTEN Kode (Grossbuchstaben, ohne Leerzeichen, Zeichen †, * und ! bleiben erhalten). Die Anker gehoeren zum Muster: '^E11\\.74$' ist exakt, '^S14\\.1' ist ein Praefix. Semantik: eine Kodemenge passt zur Diagnosegruppe, wenn MINDESTENS EIN nicht ausgeschlossener Kode auf `icd_accept` passt (Anlage 3 k: weitere Angaben sind unschaedlich). `icd_exclude` nimmt einen Kode aus der Betrachtung. `icd_accept_unsicher` unterdrueckt die Warnung, loest aber keine automatische Auswahl aus. Kein ICD = keine Warnung (ICD ist nicht Pflicht, Klartext ist zulaessig). Massgebliche Laufzeitquelle ist die Tabelle `diagnosegruppen` (Spalten icd_accept/icd_exclude/icd_auto_select/icd_accept_unsicher); diese Datei ist die Backend-Kopie — Drift prueft `node check_diagnosegruppen_icd.js --check`.",
+    "DF": {
+      "title": "Diabetisches Fußsyndrom",
+      "hoechstmenge": 6,
+      "orientierende_menge": null,
+      "frequency_hint": null,
+      "untergruppen": ["a", "b", "c"],
+      "enforcement": "warn",
+      "note": "Nur Wagner-Stadium 0 verordnungsfähig (HeilM-RL § 27 Abs. 3). a/b/c ist Leitsymptomatik, keine eigene Diagnosegruppe — aus dem ICD nicht ableitbar.",
+      "icd_accept": [
+        { "re": "^E1[0-4]\\.7[45]$", "note": "Diabetisches Fußsyndrom (…74 nicht entgleist / …75 entgleist)" },
+        { "re": "^E1[0-4]\\.4[01]$", "note": "Diabetes mellitus mit neurologischen Komplikationen = diabetische Neuropathie" },
+        { "re": "^G63\\.2\\*?$", "note": "Diabetische Polyneuropathie — Sternkode, allein nicht kodierfähig: Primärkode fehlt (E1x.4x†)" }
+      ],
+      "icd_accept_unsicher": [
+        { "re": "^E1[0-4]\\.7[23]$", "note": "Sonstige multiple Komplikationen — ein diabetisches Fußsyndrom ist damit nicht ausdrücklich angegeben" }
+      ],
+      "icd_exclude": [],
+      "icd_auto_select": [
+        { "re": "^E1[0-4]\\.7[45]$" },
+        { "re": "^E1[0-4]\\.4[01]$" },
+        { "re": "^G63\\.2\\*?$" }
+      ]
+    },
+    "NF": {
+      "title": "Krankhafte Schädigung am Fuß als Folge einer sensiblen oder sensomotorischen Neuropathie",
+      "hoechstmenge": 6,
+      "orientierende_menge": null,
+      "frequency_hint": null,
+      "untergruppen": null,
+      "enforcement": "warn",
+      "note": "NICHT diabetisch (HeilM-RL § 27 Abs. 1 Nr. 2a). Diabetische Neuropathie gehört nach DF.",
+      "icd_accept": [
+        { "re": "^G60\\.", "note": "Hereditäre und idiopathische Neuropathie" },
+        { "re": "^G61\\.", "note": "Polyneuritis" },
+        { "re": "^G62\\.", "note": "Sonstige Polyneuropathien (G62.8- ist fünfstellig: G62.80/G62.88)" },
+        { "re": "^G63\\.[013-68]\\*?$", "note": "Polyneuropathie bei anderenorts klassifizierten Krankheiten — Sternkode (G63.2 ausgenommen, gehört nach DF)" }
+      ],
+      "icd_accept_unsicher": [
+        { "re": "^G90\\.", "note": "Krankheiten des autonomen Nervensystems — nach § 27 Abs. 1 Nr. 2b ein zusätzliches Kriterium, für sich genommen weder sensibel noch sensomotorisch" },
+        { "re": "^G58\\.", "note": "Sonstige Mononeuropathien" },
+        { "re": "^M3[0-5]", "note": "Kollagenose — in der HeilM-RL als Beispiel genannt, erklärt selbst aber keine Neuropathie (therapierelevant wäre G63.5*)" }
+      ],
+      "icd_exclude": [
+        { "re": "^G63\\.2\\*?$", "note": "Diabetische Polyneuropathie gehört zur Diagnosegruppe DF, nicht NF" },
+        { "re": "^E1[0-4]\\.", "note": "Diabetes-Kodes gehören zur Diagnosegruppe DF, nicht NF" }
+      ],
+      "icd_auto_select": [
+        { "re": "^G6[012]\\." },
+        { "re": "^G63\\.[013-68]\\*?$" }
+      ]
+    },
+    "QF": {
+      "title": "Krankhafte Schädigung am Fuß als Folge eines Querschnittsyndroms",
+      "hoechstmenge": 6,
+      "orientierende_menge": null,
+      "frequency_hint": null,
+      "untergruppen": null,
+      "enforcement": "warn",
+      "note": "HeilM-RL § 27 Abs. 1 Nr. 2b. G82.- ist erst fünfstellig abrechenbar.",
+      "icd_accept": [
+        { "re": "^G82\\.[0-5][0-3]$", "note": "Para-/Tetraparese und -plegie, fünfstellig (x0 akut komplett, x1 akut inkomplett, x2 chronisch komplett, x3 chronisch inkomplett)" },
+        { "re": "^G82\\.[0-5]9$", "note": "Para-/Tetraparese und -plegie, nicht näher bezeichnet" },
+        { "re": "^S14\\.1", "note": "Verletzung des zervikalen Rückenmarks" },
+        { "re": "^S24\\.1", "note": "Verletzung des thorakalen Rückenmarks" },
+        { "re": "^S34\\.1", "note": "Verletzung des lumbalen Rückenmarks" },
+        { "re": "^T09\\.3$", "note": "Verletzung des Rückenmarks, Höhe nicht näher bezeichnet" }
+      ],
+      "icd_accept_unsicher": [
+        { "re": "^Q05\\.", "note": "Spina bifida — benennt die Grundkrankheit, nicht das Querschnittsyndrom" },
+        { "re": "^G95\\.0$", "note": "Syringomyelie — benennt die Grundkrankheit, nicht das Querschnittsyndrom" },
+        { "re": "^G04\\.", "note": "Myelitis — benennt die Grundkrankheit, nicht das Querschnittsyndrom" }
+      ],
+      "icd_exclude": [
+        { "re": "^G82\\.6[0-9]!?$", "note": "G82.6-! beschreibt die funktionale Höhe der Schädigung — Ausrufezeichenkode, niemals Hauptdiagnose (ICD-10-GM Feld 13 = 'Z')" },
+        { "re": "^G82\\.[0-6]-?$", "note": "Vierstellige Gruppenüberschrift, nicht endständig (§ 301 Feld 14 = 'V')" }
+      ],
+      "icd_auto_select": [
+        { "re": "^G82\\.[0-5][0-39]$" },
+        { "re": "^S14\\.1" },
+        { "re": "^S24\\.1" },
+        { "re": "^S34\\.1" },
+        { "re": "^T09\\.3$" }
+      ]
+    },
+    "UI1": {
+      "title": "Unguis incarnatus Stadium 1",
+      "hoechstmenge": 8,
+      "orientierende_menge": 8,
+      "frequency_hint": "nach Bedarf",
+      "untergruppen": null,
+      "enforcement": "hard_before_dta",
+      "leitsymptomatik": "a",
+      "verbotene_positionen": ["78030", "68030", "88030"],
+      "note": "Zehen-Lokalisation ist Pflichtangabe im Begründungsfeld (Anlage 3 o2, z. B. „U 1 links“). Je Nagel eine eigene Verordnung (HeilM-RL § 28 Abs. 1 S. 3). Befundpauschale nicht abrechenbar.",
+      "icd_accept": [
+        { "re": "^L60\\.0$", "note": "Unguis incarnatus — ausschließlich zulässiger Kode" }
+      ],
+      "icd_accept_unsicher": [],
+      "icd_exclude": [],
+      "icd_auto_select": []
+    },
+    "UI2": {
+      "title": "Unguis incarnatus Stadium 2 oder 3",
+      "hoechstmenge": 4,
+      "orientierende_menge": 8,
+      "frequency_hint": null,
+      "untergruppen": null,
+      "enforcement": "hard_before_dta",
+      "leitsymptomatik": "b",
+      "verbotene_positionen": ["78030", "68030", "88030"],
+      "note": "Zehen-Lokalisation ist Pflichtangabe im Begründungsfeld. Je Nagel eine eigene Verordnung. Über die Höchstmenge hinaus ist eine ärztliche Wiedervorstellung erforderlich. Nagelspange und Therapiebericht-Position nur hier. Befundpauschale nicht abrechenbar.",
+      "icd_accept": [
+        { "re": "^L60\\.0$", "note": "Unguis incarnatus — ausschließlich zulässiger Kode" }
+      ],
+      "icd_accept_unsicher": [],
+      "icd_exclude": [],
+      "icd_auto_select": []
+    },
+    "_global": {
+      "ICD_OPTIONAL": "Ein fehlender ICD-10-Kode ist kein Fehler — auf Muster 13 ist die Diagnose auch als Klartext zulässig (Anlage 3 k). Niemals ein Blocker.",
+      "ZUSATZ_ICD_UNSCHAEDLICH": "Mehrere ICD-Kodes sind zulässig; nur einer muss therapierelevant sein. Eine Warnung je Kode ist falsch.",
+      "UI3_EXISTIERT_NICHT": "Eine Diagnosegruppe UI3 gibt es nicht. Nagelschweregrad 3 wird über UI2 verordnet.",
+      "KEINE_BLANKO_PODO": "Für Podologie besteht kein Blankoverordnungs-Vertrag nach § 125a SGB V.",
+      "NUR_PODOLOGIE": "Für die 52 Diagnosegruppen der Physio-/Logo-/Ergotherapie ist kein ICD-Pool hinterlegt. Dort bleibt die Prüfung still deaktiviert — kein Pool heißt keine Warnung."
     }
   },
   "blanko_ampel": {
