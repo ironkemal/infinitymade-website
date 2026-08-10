@@ -21490,7 +21490,7 @@ async function loadMahnwesen() {
     tbody.innerHTML = '';
     if (!rows.length) {
       empty.hidden = false;
-      summary.innerHTML = '<span style="color:#15803d;font-size:13px;">Alle Zuzahlungen beglichen ✓</span>';
+      summary.innerHTML = '<span style="color:var(--success);font-size:13px;">Keine offenen Forderungen ✓</span>';
       return;
     }
     empty.hidden = true;
@@ -21499,8 +21499,8 @@ async function loadMahnwesen() {
     const totalOffen = rows.reduce((s, r) => s + Number(r.zuzahlung_eur), 0);
     const fmtEur = n => Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
     summary.innerHTML = `
-      <div><span style="font-size:11px;color:var(--text-muted);">Offen gesamt</span><br><strong style="color:#dc2626;">${fmtEur(totalOffen)}</strong></div>
-      <div><span style="font-size:11px;color:var(--text-muted);">Patienten</span><br><strong>${rows.length}</strong></div>
+      <div><span style="font-size:11px;color:var(--text-muted);">Offen gesamt</span><br><strong style="color:var(--danger);">${fmtEur(totalOffen)}</strong></div>
+      <div><span style="font-size:11px;color:var(--text-muted);">Forderungen</span><br><strong>${rows.length}</strong></div>
     `;
 
     const LEVEL_LABELS = { 1: 'Erinnerung', 2: '1. Mahnung', 3: '2. Mahnung' };
@@ -21509,28 +21509,39 @@ async function loadMahnwesen() {
     rows.forEach(r => {
       const pname = `${escapeHtml(r.patient?.first_name || '')} ${escapeHtml(r.patient?.last_name || '')}`.trim();
       const lm = r.latest_mahnung;
-      const nextLevel = lm ? Math.min(lm.level + 1, 3) : 1;
+      // Nach der letzten Mahnung (Stufe 3) gibt es keine weitere — der Server
+      // lehnt sie jetzt ab, also wird der Knopf gar nicht erst angeboten.
+      const nextLevel = lm ? (lm.level >= 3 ? null : lm.level + 1) : 1;
       const levelColor = lm ? LEVEL_COLORS[lm.level] : '#6b7280';
       const levelLabel = lm ? LEVEL_LABELS[lm.level] : '—';
+      // Ausfallhonorar ist eine Privatforderung, keine Zuzahlung — der
+      // Unterschied muss in der Liste sichtbar sein.
+      const istAusfall = r.art === 'ausfall';
+      const artBadge = istAusfall
+        ? `<span class="badge" style="background:var(--warning-dim);color:var(--warning-text);">Ausfall${r.rechnung_nr ? ' ' + escapeHtml(r.rechnung_nr) : ''}</span>`
+        : '<span class="badge badge-gray">Zuzahlung</span>';
       const statusBadge = lm
         ? `<span class="badge" style="background:${lm.status === 'bezahlt' ? '#dcfce7' : lm.status === 'abgeschrieben' ? '#f3f4f6' : '#fef3c7'};color:${lm.status === 'bezahlt' ? '#15803d' : lm.status === 'abgeschrieben' ? '#6b7280' : '#92400e'};">${escapeHtml(lm.status)}</span>`
         : '<span class="badge badge-gray">neu</span>';
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${pname}</strong></td>
-        <td style="text-align:right;font-weight:600;color:#dc2626;">${fmtEur(r.zuzahlung_eur)}</td>
+        <td><strong>${pname}</strong><br>${artBadge}</td>
+        <td style="text-align:right;font-weight:600;color:var(--danger);">${fmtEur(r.zuzahlung_eur)}</td>
         <td style="font-size:12px;color:var(--text-muted);">${lm ? new Date(lm.sent_at).toLocaleDateString('de-DE') : '—'}</td>
         <td><span style="color:${levelColor};font-weight:600;font-size:12px;">${levelLabel}</span></td>
         <td>${statusBadge}</td>
         <td style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${nextLevel ? `
           <button class="btn-ghost btn-sm mw-send-btn"
             data-rx="${r.id}"
+            data-art="${istAusfall ? 'ausfall' : 'zuzahlung'}"
             data-level="${nextLevel}"
             data-name="${escapeHtml(pname)}"
             style="font-size:12px;">
             ${LEVEL_LABELS[nextLevel]} senden
-          </button>
+          </button>` : `
+          <span style="font-size:12px;color:var(--text-muted);">Letzte Mahnung verschickt</span>`}
           ${lm && lm.status === 'offen' ? `
             <button class="btn-ghost btn-sm mw-paid-btn" data-mw="${lm.id}" style="font-size:12px;color:#15803d;">✓ Bezahlt</button>
             <button class="btn-ghost btn-sm mw-write-off-btn" data-mw="${lm.id}" style="font-size:12px;color:#6b7280;">Abschreiben</button>
@@ -21547,12 +21558,20 @@ async function loadMahnwesen() {
         btn.disabled = true;
         btn.textContent = 'Erstelle…';
         try {
+          // Genau eine Quelle: Rezept ODER Ausfallrechnung.
+          const koerper = btn.dataset.art === 'ausfall'
+            ? { ausfallrechnungId: btn.dataset.rx, level }
+            : { prescriptionId: btn.dataset.rx, level };
           const res2 = await fetch(`${API}/billing/mahnwesen/create`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ prescriptionId: btn.dataset.rx, level })
+            body: JSON.stringify(koerper)
           });
-          if (!res2.ok) throw new Error(await res2.text());
+          if (!res2.ok) {
+            let msg = await res2.text();
+            try { msg = JSON.parse(msg).error || msg; } catch (_) {}
+            throw new Error(msg);
+          }
           const html = await res2.text();
           const w = window.open('', '_blank');
           if (w) {

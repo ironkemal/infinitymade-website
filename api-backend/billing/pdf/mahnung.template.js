@@ -15,10 +15,29 @@ const LEVEL_META = {
   3: { title: '2. Mahnung (letzte)',   salutation: 'letzte Mahnung',          tone: 'final',     color: '#dc2626' },
 };
 
+// Die Vorlage war fest auf Zuzahlung formuliert ("Offene Zuzahlung",
+// "Ausstehender Betrag (Zuzahlung)"). Eine Ausfallrechnung ist aber kein
+// GKV-Vorgang: dort darf weder von Zuzahlung die Rede sein noch die IK-Nummer
+// in der Fusszeile stehen.
+const FORDERUNGSART = {
+  zuzahlung: {
+    betreff:      'Offene Zuzahlung',
+    betragLabel:  'Ausstehender Betrag (Zuzahlung)',
+    rechnungWort: 'Zuzahlungsrechnung',
+    zeigtIk:      true,
+  },
+  ausfall: {
+    betreff:      'Offene Ausfallrechnung',
+    betragLabel:  'Ausstehender Betrag (Ausfallhonorar)',
+    rechnungWort: 'Ausfallrechnung',
+    zeigtIk:      false,
+  },
+};
+
 const TONE_BODY = {
-  friendly: (p, fällig) => `wir möchten Sie freundlich daran erinnern, dass folgende Zuzahlungsrechnung noch offen ist. Möglicherweise hat Ihre Zahlung unsere Buchung noch nicht erreicht. Bitte begleichen Sie den ausstehenden Betrag bis zum <strong>${fällig}</strong>.`,
-  firm:     (p, fällig) => `trotz unserer Zahlungserinnerung haben wir bisher keinen Zahlungseingang feststellen können. Wir bitten Sie dringend, den offenen Betrag bis zum <strong>${fällig}</strong> zu begleichen, um weitere Schritte zu vermeiden.`,
-  final:    (p, fällig) => `leider ist der ausstehende Betrag trotz unserer vorherigen Mahnung immer noch nicht bei uns eingegangen. Dies ist unsere letzte Mahnung. Sollten wir bis zum <strong>${fällig}</strong> keinen Zahlungseingang verbuchen können, sehen wir uns gezwungen, das Inkassobüro einzuschalten.`,
+  friendly: (rechnungWort, fällig) => `wir möchten Sie freundlich daran erinnern, dass folgende ${rechnungWort} noch offen ist. Möglicherweise hat Ihre Zahlung unsere Buchung noch nicht erreicht. Bitte begleichen Sie den ausstehenden Betrag bis zum <strong>${fällig}</strong>.`,
+  firm:     (rechnungWort, fällig) => `trotz unserer Zahlungserinnerung haben wir bisher keinen Zahlungseingang feststellen können. Wir bitten Sie dringend, den offenen Betrag bis zum <strong>${fällig}</strong> zu begleichen, um weitere Schritte zu vermeiden.`,
+  final:    (rechnungWort, fällig) => `leider ist der ausstehende Betrag trotz unserer vorherigen Mahnung immer noch nicht bei uns eingegangen. Dies ist unsere letzte Mahnung. Sollten wir bis zum <strong>${fällig}</strong> keinen Zahlungseingang verbuchen können, sehen wir uns gezwungen, das Inkassobüro einzuschalten.`,
 };
 
 /**
@@ -33,6 +52,7 @@ const TONE_BODY = {
  * @param {Date|string} opts.neue_faelligkeit
  * @param {string} opts.bankverbindung
  * @param {Date|string} opts.datum             letter date (default: today)
+ * @param {'zuzahlung'|'ausfall'} [opts.forderungsart='zuzahlung']
  */
 export function renderMahnung(opts) {
   const {
@@ -41,10 +61,12 @@ export function renderMahnung(opts) {
     original_rechnung_nr = '', original_faelligkeit,
     neue_faelligkeit, bankverbindung = '',
     datum = new Date(),
+    forderungsart = 'zuzahlung',
   } = opts;
 
   const meta = LEVEL_META[level] || LEVEL_META[1];
-  const bodyText = TONE_BODY[meta.tone](patient, fmtDate(neue_faelligkeit));
+  const art = FORDERUNGSART[forderungsart] || FORDERUNGSART.zuzahlung;
+  const bodyText = TONE_BODY[meta.tone](art.rechnungWort, fmtDate(neue_faelligkeit));
   const letterDate = fmtDate(datum);
 
   return `<!DOCTYPE html>
@@ -100,7 +122,7 @@ export function renderMahnung(opts) {
 
   <!-- Subject -->
   <div class="mahnung-badge">${esc(meta.title)}</div>
-  <div class="subject">${esc(meta.title)}: Offene Zuzahlung – ${esc(original_rechnung_nr)}</div>
+  <div class="subject">${esc(meta.title)}: ${esc(art.betreff)} – ${esc(original_rechnung_nr)}</div>
 
   <!-- Salutation & body -->
   <p>Sehr geehrte/r ${esc(patient.vorname)} ${esc(patient.nachname)},</p>
@@ -118,7 +140,7 @@ export function renderMahnung(opts) {
         <td>${fmtDate(original_faelligkeit)}</td>
       </tr>
       <tr class="total-row">
-        <td><strong>Ausstehender Betrag (Zuzahlung):</strong></td>
+        <td><strong>${esc(art.betragLabel)}:</strong></td>
         <td><strong>${fmtEur(amount_eur)}</strong></td>
       </tr>
       <tr>
@@ -147,7 +169,7 @@ export function renderMahnung(opts) {
   </div>
 
   <div class="footer-note">
-    Dieses Schreiben wurde maschinell erstellt und ist ohne Unterschrift gültig. · IK-Nr.: ${esc(praxis.ik)} · ${esc(praxis.email)}
+    Dieses Schreiben wurde maschinell erstellt und ist ohne Unterschrift gültig.${art.zeigtIk ? ` · IK-Nr.: ${esc(praxis.ik)}` : ''} · ${esc(praxis.email)}
   </div>
 
 </div>

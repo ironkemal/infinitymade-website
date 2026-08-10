@@ -101,7 +101,20 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Code: `api-backend/billing/pdf/ausfallrechnung.template.js` + `ausfallrechnung.test.js`
       (Vorlage existiert schon als Gerüst — mit dem Entwurf aus Aufgabe 7 finalisieren).
 
-- [ ] 9. Mahnung-Vorlage für unbezahlte Ausfallrechnungen
+- [x] 9. Mahnung-Vorlage für unbezahlte Ausfallrechnungen
+      Geändert: `supabase/migrations/20260810010000_mahnwesen_ausfall.sql` (neu:
+      `prescription_id` nullable, `ausfallrechnung_id`, CHECK „genau eine Quelle") ·
+      `api-backend/billing/mahnwesen/stufe.js` + `stufe.test.js` (neu, 21 Fälle) ·
+      `api-backend/billing/pdf/mahnung.template.js` (`forderungsart`, keine IK-Nr. bei
+      Ausfall) · `api-backend/billing/api/mahnwesen.routes.js` (Ausfallrechnungen in
+      `/offene`, `ausfallrechnungId` in `/create`, Mahnstufe gegen Historie, `id` der
+      Mahnung im Payload) · `dashboard.js` (beide Forderungsarten in der Liste,
+      Stufe-3-Sperre, Farben über CSS-Variablen)
+      Der Blocker ist damit weg. Zwei Nebenfunde mit behoben: Stufe 3 liess sich als
+      allererste Mahnung verschicken, und die Knöpfe „Bezahlt"/„Abschreiben" liefen ins
+      Leere, weil die Mahnungs-`id` gar nicht im Payload war.
+      ⚠️ SQL-Migration muss vor dem Deploy im Supabase SQL-Editor laufen.
+      ⚠️ Nicht gebaut, weil Rechtsfrage: Mahngebühr und Verzugszinsen.
       Zuerst: 8
       ✅ Schema-Umbau freigegeben (Entscheidung Melih, 10.08.2026): der unter Aufgabe 9
       gefundene Blocker (`mahnungen.prescription_id NOT NULL`, Vorlage fest auf
