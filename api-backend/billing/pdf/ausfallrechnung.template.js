@@ -13,11 +13,14 @@ const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
 }[c]));
 
 const fmtEur = (n) => (n == null ? '' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €';
+// timeZone bewusst gesetzt: der Server läuft in UTC. Ohne die Angabe erschien ein
+// Termin um 00:30 Berliner Zeit mit dem VORTAGSDATUM — auf einem Dokument, dessen
+// Zweck es ist, genau dieses Datum zu behaupten. fmtTime hatte die Zone schon.
 const fmtDate = (d) => {
   if (!d) return '';
   const dt = d instanceof Date ? d : new Date(d);
   if (Number.isNaN(dt.getTime())) return '';
-  return dt.toLocaleDateString('de-DE');
+  return dt.toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' });
 };
 const fmtTime = (d) => {
   if (!d) return '';

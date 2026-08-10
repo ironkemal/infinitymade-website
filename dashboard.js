@@ -189,6 +189,10 @@ const T = {
     kass_storno_kein_beleg: 'Für dieses Rezept gibt es keinen Kassenbuch-Beleg (vor August 2026 kassiert). Der Vermerk wird zurückgenommen, im Kassenbuch ändert sich nichts.',
     kass_popup: 'Popup-Blocker verhindert das Öffnen des Druckfensters.',
     kass_popup_gebucht: 'Gebucht — aber die Quittung konnte nicht geöffnet werden (Popup-Blocker). Über „Rechnung öffnen“ nachholen.',
+    af_keine_vereinbarung: 'Für diesen Patienten ist keine unterschriebene Ausfallvereinbarung hinterlegt. Ohne sie ist die Forderung in der Regel nicht durchsetzbar.',
+    af_vereinbarung_seit: 'Ausfallvereinbarung liegt vor seit',
+    af_trotzdem_erstellen: 'Trotzdem erstellen',
+    af_gesperrt_titel: 'Ausfallrechnung nicht möglich',
   },
   en: {
     logout: 'Sign out',
@@ -337,6 +341,10 @@ const T = {
     kass_storno_kein_beleg: 'There is no cash ledger entry for this prescription (collected before August 2026). The note will be removed; the ledger stays unchanged.',
     kass_popup: 'A popup blocker prevented the print window from opening.',
     kass_popup_gebucht: 'Booked — but the receipt could not be opened (popup blocker). Use “Open invoice” to retrieve it.',
+    af_keine_vereinbarung: 'No signed cancellation agreement is on file for this patient. Without one the claim is usually not enforceable.',
+    af_vereinbarung_seit: 'Cancellation agreement on file since',
+    af_trotzdem_erstellen: 'Create anyway',
+    af_gesperrt_titel: 'Cancellation invoice not possible',
   },
   tr: {
     logout: 'Çıkış',
@@ -485,6 +493,10 @@ const T = {
     kass_storno_kein_beleg: 'Bu reçete için kasa defteri kaydı yok (Ağustos 2026 öncesi tahsil edilmiş). Not geri alınır, kasa defteri değişmez.',
     kass_popup: 'Popup engelleyici yazdırma penceresini açmayı engelledi.',
     kass_popup_gebucht: 'Kaydedildi — ancak makbuz açılamadı (popup engelleyici). „Faturayı aç“ ile tekrar deneyin.',
+    af_keine_vereinbarung: 'Bu hasta için imzalı randevu iptal sözleşmesi kayıtlı değil. Sözleşme olmadan alacak genelde tahsil edilemez.',
+    af_vereinbarung_seit: 'İptal sözleşmesi şu tarihten beri mevcut',
+    af_trotzdem_erstellen: 'Yine de oluştur',
+    af_gesperrt_titel: 'Ausfall faturası oluşturulamıyor',
   }
 };
 
@@ -4812,6 +4824,22 @@ function ausfallSuggestedAmount(cfg, booking) {
 // Shows the offer modal if the business has Ausfallgebühr enabled.
 // Resolves when the user has decided (created or dismissed) — callers that
 // delete the booking afterwards must await this.
+// Liest, ob der Patient eine Ausfallvereinbarung unterschrieben hat. Fehlt sie,
+// warnt der Dialog sichtbar — blockiert aber nicht, weil viele Praxen die
+// Vereinbarung auf Papier führen (Entscheidung Melih, 10.08.2026).
+async function ausfallVereinbarungDatum(leadId) {
+  if (!leadId) return null;
+  try {
+    const { data } = await supabase.from('leads')
+      .select('ausfallvereinbarung_am')
+      .eq('id', leadId).maybeSingle();
+    return data?.ausfallvereinbarung_am || null;
+  } catch (e) {
+    console.warn('[ausfallVereinbarungDatum]', e);
+    return null;
+  }
+}
+
 function offerAusfallrechnung(booking, reason) {
   return new Promise(resolve => {
     if (!booking) return resolve(false);
@@ -4835,7 +4863,8 @@ function offerAusfallrechnung(booking, reason) {
         <label style="font-size:12px;color:var(--text-muted,#94a3b8);display:block;margin-bottom:4px;">Betrag (€)</label>
         <input id="_afAmount" type="number" min="0.01" step="0.01" value="${suggested != null ? suggested.toFixed(2) : ''}"
           style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#334155);background:transparent;color:inherit;font-size:14px;margin-bottom:6px;" />
-        <div id="_afErr" style="color:#f87171;font-size:12px;display:none;margin-bottom:6px;"></div>
+        <div id="_afErr" style="color:var(--danger,#f87171);font-size:12px;display:none;margin-bottom:6px;"></div>
+        <div id="_afVereinbarung" style="font-size:12px;margin-bottom:10px;" hidden></div>
         <div style="font-size:11px;color:var(--text-muted,#94a3b8);margin-bottom:16px;">Private Rechnung an den Patienten (Schadensersatz, umsatzsteuerfrei). Setzt eine unterschriebene Ausfallvereinbarung voraus.</div>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button id="_afSkip" class="btn-secondary">Nicht berechnen</button>
@@ -4844,9 +4873,28 @@ function offerAusfallrechnung(booking, reason) {
       </div>`;
     document.body.appendChild(overlay);
 
+    // Ausfallvereinbarung nachladen — die Rechnung nimmt im Text darauf Bezug,
+    // deshalb muss sichtbar sein, ob sie überhaupt vorliegt.
+    ausfallVereinbarungDatum(booking.lead_id).then(datum => {
+      const box = overlay.querySelector('#_afVereinbarung');
+      if (!box) return;
+      box.hidden = false;
+      if (datum) {
+        box.style.color = 'var(--text-muted, #94a3b8)';
+        box.textContent = `✓ ${t('af_vereinbarung_seit')} ${new Date(datum).toLocaleDateString('de-DE')}`;
+      } else {
+        box.style.color = 'var(--warning-text, #b45309)';
+        box.textContent = `⚠ ${t('af_keine_vereinbarung')}`;
+      }
+    });
+
     const done = (created) => { overlay.remove(); resolve(created); };
     overlay.onclick = e => { if (e.target === overlay) done(false); };
     overlay.querySelector('#_afSkip').onclick = () => done(false);
+    // Wird auf true gesetzt, sobald der Server gesperrt hat und der Praxisinhaber
+    // bewusst übersteuern will. Der Server protokolliert das dann in notes.
+    let uebersteuern = false;
+
     overlay.querySelector('#_afCreate').onclick = async () => {
       const btn = overlay.querySelector('#_afCreate');
       const errEl = overlay.querySelector('#_afErr');
@@ -4859,11 +4907,22 @@ function offerAusfallrechnung(booking, reason) {
         const res = await fetch(`${API}/billing/ausfall/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ bookingId: booking.id, amountEur: amount, reason }),
+          body: JSON.stringify({ bookingId: booking.id, amountEur: amount, reason, override: uebersteuern }),
         });
         if (!res.ok) {
           let msg = await res.text();
-          try { msg = JSON.parse(msg).error || msg; } catch (_) {}
+          let payload = null;
+          try { payload = JSON.parse(msg); msg = payload.error || msg; } catch (_) {}
+          // 422 = Absagefrist nicht verletzt oder Funktion aus. Ist der Fall
+          // übersteuerbar, bekommt die Praxis einen zweiten, bewussten Klick.
+          if (res.status === 422 && payload?.uebersteuerbar && !uebersteuern) {
+            uebersteuern = true;
+            errEl.innerHTML = `<strong>${escapeHtml(t('af_gesperrt_titel'))}:</strong> ${escapeHtml(msg)}`;
+            errEl.style.display = '';
+            btn.disabled = false;
+            btn.textContent = t('af_trotzdem_erstellen');
+            return;
+          }
           throw new Error(msg);
         }
         const html = await res.text();

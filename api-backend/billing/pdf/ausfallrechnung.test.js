@@ -134,5 +134,24 @@ test('plz-Fallback (praxisProfile ohne zip aber mit plz)', () => {
   assert.ok(htmlPlz.includes('40213 Düsseldorf'));
 });
 
+test('Termindatum wird in Berliner Zeit gerendert, nicht in UTC', () => {
+  // 00:30 Berliner Zeit am 11.07. ist 22:30 UTC am 10.07. Ohne timeZone-Angabe
+  // stand auf der Rechnung der 10.07. — ein Datum, das der Termin nie hatte.
+  const res = renderAusfallrechnung({
+    rechnung: {}, amount_eur: 10,
+    termin: { datum: '2026-07-10T22:30:00Z' },
+  });
+  assert.ok(res.includes('11.7.2026'), 'Berliner Kalendertag erwartet');
+  assert.ok(!res.includes('10.7.2026'), 'UTC-Kalendertag darf nicht erscheinen');
+});
+
+test('Uhrzeit und Datum stammen aus derselben Zeitzone', () => {
+  const res = renderAusfallrechnung({
+    rechnung: {}, amount_eur: 10,
+    termin: { datum: '2026-07-10T22:30:00Z' },
+  });
+  assert.ok(/11\.7\.2026, 00:30 Uhr/.test(res));
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

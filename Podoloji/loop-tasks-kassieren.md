@@ -83,7 +83,20 @@ angehen, wenn die genannte Nummer `[x]` ist.
       für Ausfallhonorar in Heilmittelpraxen (siehe Hinweise im Loop-Prompt). Wenn Stefans
       Muster später doch noch kommt: gegen diesen Entwurf abgleichen statt neu zu bauen.
 
-- [ ] 8. Ausfallrechnung-Vorlage fertigstellen
+- [x] 8. Ausfallrechnung-Vorlage fertigstellen
+      Geändert: `api-backend/billing/ausfall/frist.js` (neu: `pruefeAusfallFrist`,
+      `uebersteuerungsNotiz`) · `api-backend/billing/ausfall/frist.test.js` (neu, 16 Fälle) ·
+      `api-backend/billing/api/ausfall.routes.js` (serverseitige Fristprüfung mit 422 +
+      `override`, Protokoll in `notes`, `.maybeSingle()`) ·
+      `api-backend/billing/api/mahnwesen.routes.js` (`.maybeSingle()`) ·
+      `api-backend/billing/pdf/ausfallrechnung.template.js` (Zeitzone Europe/Berlin) ·
+      `api-backend/billing/pdf/ausfallrechnung.test.js` (2 Zeitzonen-Fälle) ·
+      `supabase/migrations/20260810000000_ausfallvereinbarung.sql` (neu) ·
+      `dashboard.js` (Vereinbarungs-Hinweis im Dialog, Übersteuern-Knopf, i18n de/en/tr) ·
+      `dashboard.html` (Cache-Version)
+      Alle vier Lücken aus Aufgabe 7 sind zu. Der 24-h-Vorlauf gilt als fristgerecht
+      (Grenze inklusiv), `no_show` braucht keine Fristprüfung.
+      ⚠️ SQL-Migration muss vor dem Deploy im Supabase SQL-Editor laufen.
       Zuerst: 7
       Code: `api-backend/billing/pdf/ausfallrechnung.template.js` + `ausfallrechnung.test.js`
       (Vorlage existiert schon als Gerüst — mit dem Entwurf aus Aufgabe 7 finalisieren).

@@ -11,6 +11,7 @@
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { renderAusfallrechnung } from '../pdf/ausfallrechnung.template.js';
+import { pruefeAusfallFrist, uebersteuerungsNotiz } from '../ausfall/frist.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -32,7 +33,7 @@ async function resolveAuth(req, res) {
     .from('profiles')
     .select('id, role, owner_id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis')
     .eq('id', u.user.id)
-    .single();
+    .maybeSingle();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
 
   const tenantId = profile.role === 'employee' && profile.owner_id
@@ -49,7 +50,7 @@ async function loadPraxisProfile(profile, tenantId) {
       .from('profiles')
       .select('id, business_name, phone, city, zip, plz, street, house_number, email, bank_name, iban, bic, steuernummer, praxis_logo_url, invoice_footer_text, ausfall_hinweis')
       .eq('id', tenantId)
-      .single();
+      .maybeSingle();
     if (ownerProf) return ownerProf;
   }
   return profile;
@@ -143,13 +144,21 @@ router.post('/ausfall/create', async (req, res) => {
     if (!auth) return;
     const { user, profile, tenantId } = auth;
 
-    const { bookingId, amountEur, reason, notes } = req.body || {};
+    const { bookingId, amountEur, reason, notes, override } = req.body || {};
     if (!bookingId) return res.status(400).json({ error: 'bookingId required' });
     const amount = Number(amountEur);
     if (!(amount > 0)) return res.status(400).json({ error: 'amountEur must be > 0' });
     if (!['no_show', 'late_cancel'].includes(reason || 'no_show')) {
       return res.status(400).json({ error: "reason must be 'no_show' or 'late_cancel'" });
     }
+
+    // Ausfallgebühr-Einstellungen des Praxisinhabers (Owner-Ebene, nicht pro
+    // Standort — siehe migration 20260725000000_ausfall_settings_on_profiles).
+    const { data: ausfallCfg } = await supabase
+      .from('profiles')
+      .select('ausfall_enabled, ausfall_cutoff_hours')
+      .eq('id', tenantId)
+      .maybeSingle();
 
     // Fetch owner's default 'rechnung_ausfall' template
     const { data: vorlage } = await supabase
@@ -167,14 +176,33 @@ router.post('/ausfall/create', async (req, res) => {
       .select(`
         id, owner_id, user_id, business_id, lead_id, customer_name, start_time, status,
         services:service_id (title),
-        leads:lead_id (id, first_name, last_name, street, plz, city, geburtsdatum, metadata)
+        leads:lead_id (id, first_name, last_name, street, plz, city, geburtsdatum, metadata, ausfallvereinbarung_am)
       `)
       .eq('id', bookingId)
-      .single();
+      .maybeSingle();
     if (bkErr || !booking) return res.status(404).json({ error: 'Booking not found' });
 
     const bookingOwner = booking.owner_id || booking.user_id;
     if (bookingOwner !== tenantId) return res.status(403).json({ error: 'Forbidden' });
+
+    // 1b. Darf für diesen Termin überhaupt abgerechnet werden? (Lücke L1)
+    // Bis hierher lief die Prüfung nur im Browser — direkt abgesetzte Aufrufe
+    // kamen an ihr vorbei. `override: true` erlaubt der Praxis das bewusste
+    // Übersteuern; der Grund wird dann in notes protokolliert.
+    const fristPruefung = pruefeAusfallFrist({
+      enabled:      ausfallCfg?.ausfall_enabled,
+      reason:       reason || 'no_show',
+      cutoffHours:  ausfallCfg?.ausfall_cutoff_hours ?? 24,
+      terminStart:  booking.start_time,
+      override:     override === true,
+    });
+    if (!fristPruefung.erlaubt) {
+      return res.status(422).json({
+        error: fristPruefung.meldung,
+        grund: fristPruefung.grund,
+        uebersteuerbar: fristPruefung.grund !== 'ausfallgebuehr_deaktiviert',
+      });
+    }
 
     // 2. Guard: only one open/paid invoice per booking
     const { data: existing } = await supabase
@@ -207,6 +235,16 @@ router.post('/ausfall/create', async (req, res) => {
     }
 
     // 4. Insert (rechnung_nr auto-assigned via DB trigger)
+    // Übersteuerung und fehlende Ausfallvereinbarung werden in notes festgehalten,
+    // damit später nachvollziehbar bleibt, auf welcher Grundlage abgerechnet wurde.
+    const notizen = [
+      (notes || '').trim() || null,
+      uebersteuerungsNotiz(fristPruefung),
+      booking.leads && !booking.leads.ausfallvereinbarung_am
+        ? 'Hinweis: keine unterschriebene Ausfallvereinbarung hinterlegt.'
+        : null,
+    ].filter(Boolean);
+
     const { data: row, error: insErr } = await supabase
       .from('ausfallrechnungen')
       .insert({
@@ -218,7 +256,7 @@ router.post('/ausfall/create', async (req, res) => {
         amount_eur: amount,
         leistung_datum: booking.start_time,
         service_name: booking.services?.title || null,
-        notes: (notes || '').trim() || null,
+        notes: notizen.length ? notizen.join(' · ') : null,
         created_by: user.id,
         status: 'offen',
       })
@@ -306,7 +344,7 @@ router.get('/ausfall/:id/print', async (req, res) => {
         businesses:business_id (id, business_name, phone, ausfall_hinweis)
       `)
       .eq('id', req.params.id)
-      .single();
+      .maybeSingle();
     if (error || !row) return res.status(404).send('Ausfallrechnung nicht gefunden');
     if (row.owner_id !== tenantId) return res.status(403).send('Kein Zugriff');
 
@@ -384,7 +422,7 @@ router.patch('/ausfall/:id/status', async (req, res) => {
       .from('ausfallrechnungen')
       .select('id, owner_id, status, amount_eur, patient_id, rechnung_nr, leads:patient_id (first_name, last_name), bookings:booking_id (customer_name)')
       .eq('id', req.params.id)
-      .single();
+      .maybeSingle();
     if (fetchErr || !existing) return res.status(404).json({ error: 'Ausfallrechnung not found' });
     if (existing.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
     // Paid invoices are locked — the Belegliste entry already exists (GoBD)

@@ -29,7 +29,7 @@ async function resolveAuth(req, res) {
     .from('profiles')
     .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, email, bank_name, iban, bic')
     .eq('id', u.user.id)
-    .single();
+    .maybeSingle();
   if (pErr || !profile) { res.status(403).json({ error: 'Profile not found' }); return null; }
 
   const tenantId = profile.role === 'employee' && profile.owner_id
@@ -177,7 +177,7 @@ router.post('/mahnwesen/create', async (req, res) => {
         leads:patient_id (first_name, last_name, street, plz, city, versichertennummer)
       `)
       .eq('id', prescriptionId)
-      .single();
+      .maybeSingle();
 
     if (rxErr || !rx) return res.status(404).json({ error: 'Prescription not found' });
     if (rx.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
@@ -193,7 +193,7 @@ router.post('/mahnwesen/create', async (req, res) => {
         .from('profiles')
         .select('id, business_name, phone, city, zip, street, house_number, ik_number, email, bank_name, iban, bic')
         .eq('id', profile.owner_id)
-        .single();
+        .maybeSingle();
       if (ownerProf) praxisProfile = ownerProf;
     }
 
@@ -293,7 +293,7 @@ router.patch('/mahnwesen/:id/status', async (req, res) => {
       .from('mahnungen')
       .select('id, owner_id')
       .eq('id', req.params.id)
-      .single();
+      .maybeSingle();
 
     if (fetchErr || !existing) return res.status(404).json({ error: 'Mahnung not found' });
     if (existing.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
