@@ -3531,6 +3531,52 @@ app.post('/api/booking-request/offer', requireAuthAI, bookingRequestApprovalLimi
   }
 });
 
+// POST /api/booking-request/message — auth required (owner)
+// Freitext-Nachricht der Praxis an den Patienten. Bewusst NUR E-Mail: kein Chat in
+// der App, also auch kein Postfach, das jemand betreuen müsste. Der Patient
+// antwortet direkt per Reply an die Praxis.
+app.post('/api/booking-request/message', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
+  const userId = req.auth.userId;
+  const { request_id, owner_id, text } = req.body || {};
+  if (!request_id || !owner_id) return res.status(400).json({ error: 'request_id und owner_id required' });
+  const nachricht = String(text || '').trim();
+  if (!nachricht) return res.status(400).json({ error: 'Bitte eine Nachricht eingeben' });
+  if (nachricht.length > 2000) return res.status(400).json({ error: 'Die Nachricht ist zu lang (max. 2000 Zeichen)' });
+  try {
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+    if (profile?.id !== owner_id) return res.status(403).json({ error: 'Zugriff verweigert' });
+
+    const { data: bookReq } = await supabase.from('booking_requests')
+      .select('id, patients(vorname, email)')
+      .eq('id', request_id).eq('owner_id', owner_id).maybeSingle();
+    if (!bookReq) return res.status(404).json({ error: 'Anfrage nicht gefunden' });
+    if (!bookReq.patients?.email) return res.status(400).json({ error: 'Für diesen Patienten ist keine E-Mail-Adresse hinterlegt' });
+    if (!process.env.SMTP_HOST) return res.status(503).json({ error: 'E-Mail-Versand ist nicht eingerichtet' });
+
+    const { data: ownerP } = await supabase.from('profiles')
+      .select('business_name, email').eq('id', owner_id).maybeSingle();
+    // Der Text kommt aus einem Eingabefeld und landet in HTML — maskieren, sonst
+    // koennte ein Praxismitarbeiter (versehentlich) Markup in die Mail schreiben.
+    const sicher = nachricht
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
+
+    const t = createSMTPTransport();
+    await t.sendMail({
+      from: `"${ownerP?.business_name || 'Praxura'} via Praxura" <noreply@praxura.de>`,
+      replyTo: ownerP?.email || undefined,
+      to: bookReq.patients.email,
+      subject: `Nachricht von ${ownerP?.business_name || 'Ihrer Praxis'}`,
+      html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Nachricht zu Ihrer Terminanfrage</h2><p>Hallo ${bookReq.patients.vorname},</p><p>${sicher}</p><p style="font-size:13px;color:#666">Sie können auf diese E-Mail direkt antworten.</p><hr><p style="font-size:12px;color:#888">${ownerP?.business_name || 'Praxura'} · praxura.de</p></div>`,
+    });
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[booking-request/message]', e.message);
+    return res.status(500).json({ error: 'Nachricht konnte nicht gesendet werden' });
+  }
+});
+
 // POST /api/booking-request/accept-offer — public (Patientenlink mit HMAC-Token)
 app.post('/api/booking-request/accept-offer', bookingRequestLimiter, async (req, res) => {
   const { request_id, slot, token } = req.body || {};

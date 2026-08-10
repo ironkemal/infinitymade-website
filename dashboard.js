@@ -156,6 +156,11 @@ const T = {
     anfragen_link_title: 'Buchungslink', anfragen_link_sub: 'Teilen Sie diesen Link mit Ihren Patienten',
     anfragen_copy_link: 'Link kopieren',
     anfragen_absage_senden: 'Absage senden',
+    anfragen_nachricht: 'Nachricht an Patient',
+    anfragen_nachricht_senden: 'Nachricht senden',
+    anfragen_nachricht_hint: 'Geht als E-Mail an den Patienten. Antworten landen direkt in Ihrem Postfach.',
+    anfragen_nachricht_leer: 'Bitte eine Nachricht eingeben.',
+    anfragen_nachricht_ok: 'Nachricht gesendet ✓',
     anfragen_alt_offen: 'Vorschläge verschickt, warten auf Antwort',
     anfragen_alt_anbieten: 'Alternativtermine anbieten',
     anfragen_alt_hint: 'Höchstens drei auswählen. Der Patient nimmt einen davon per Klick in der E-Mail an.',
@@ -299,6 +304,11 @@ const T = {
     anfragen_link_title: 'Booking link', anfragen_link_sub: 'Share this link with your patients',
     anfragen_copy_link: 'Copy link',
     anfragen_absage_senden: 'Send decline',
+    anfragen_nachricht: 'Message patient',
+    anfragen_nachricht_senden: 'Send message',
+    anfragen_nachricht_hint: 'Sent as an email. Replies land straight in your inbox.',
+    anfragen_nachricht_leer: 'Please enter a message.',
+    anfragen_nachricht_ok: 'Message sent ✓',
     anfragen_alt_offen: 'Suggestions sent, awaiting reply',
     anfragen_alt_anbieten: 'Offer alternative times',
     anfragen_alt_hint: 'Pick up to three. The patient accepts one with a click in the email.',
@@ -442,6 +452,11 @@ const T = {
     anfragen_link_title: 'Rezervasyon linki', anfragen_link_sub: 'Bu linki hastalarınızla paylaşın',
     anfragen_copy_link: 'Linki kopyala',
     anfragen_absage_senden: 'Ret gönder',
+    anfragen_nachricht: 'Hastaya mesaj',
+    anfragen_nachricht_senden: 'Mesaj gönder',
+    anfragen_nachricht_hint: 'E-posta olarak gider. Yanıtlar doğrudan gelen kutunuza düşer.',
+    anfragen_nachricht_leer: 'Lütfen bir mesaj girin.',
+    anfragen_nachricht_ok: 'Mesaj gönderildi ✓',
     anfragen_alt_offen: 'Öneriler gönderildi, yanıt bekleniyor',
     anfragen_alt_anbieten: 'Alternatif saat öner',
     anfragen_alt_hint: 'En fazla üç tane seçin. Hasta e-postadaki bağlantıyla birini kabul eder.',
@@ -25235,6 +25250,10 @@ function showAnfrageDetail(requestId) {
       ${pat?.email ? `<div class="detail-row"><span class="detail-label">E-Mail</span><span>${pat.email}</span></div>` : ''}
       ${pat?.telefon ? `<div class="detail-row"><span class="detail-label">Telefon</span><span>${pat.telefon}</span></div>` : ''}
     </div>
+    ${pat?.email ? `
+      <div style="margin-top:16px">
+        <button class="btn-secondary" onclick="closeHtmlModal();nachrichtAnPatient('${req.id}')" style="width:100%">${tl.anfragen_nachricht}</button>
+      </div>` : ''}
     ${isPending ? `
       <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
         <button class="btn-primary" onclick="closeHtmlModal();approveAnfrage('${req.id}')" style="flex:1;min-width:120px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> ${tl.anfragen_annehmen}</button>
@@ -25305,6 +25324,43 @@ async function doApproveAnfrage(requestId, ownerId, employeeId) {
   } catch (e) {
     showToast(e.message || 'Fehler beim Bestätigen', 'error');
   }
+}
+
+/**
+ * Freitext-Nachricht an den Patienten — nur per E-Mail, kein Chat in der App.
+ * Der Patient antwortet per Reply direkt an die Praxis.
+ */
+function nachrichtAnPatient(requestId) {
+  const lang = document.getElementById('langSelect')?.value || 'de';
+  const tl = T[lang] || T.de;
+  const ownerId = currentProfile?.id;
+
+  showHtmlModal({
+    title: tl.anfragen_nachricht,
+    confirmText: tl.anfragen_nachricht_senden,
+    html: `
+      <p style="font-size:12px;color:var(--text-sub);margin-bottom:8px">${tl.anfragen_nachricht_hint}</p>
+      <textarea id="patNachrichtInput" class="form-input" maxlength="2000" style="width:100%;height:120px;resize:vertical"></textarea>`,
+    onConfirm: async () => {
+      const text = document.getElementById('patNachrichtInput')?.value?.trim() || '';
+      if (!text) { showToast(tl.anfragen_nachricht_leer, 'error'); return false; }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const r = await fetch(`${API}/booking-request/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ request_id: requestId, owner_id: ownerId, text }),
+        });
+        const json = await r.json();
+        if (!r.ok) throw new Error(json.error || 'Fehler');
+        showToast(tl.anfragen_nachricht_ok, 'success');
+      } catch (e) {
+        showToast(e.message || 'Fehler beim Senden', 'error');
+        return false;
+      }
+    },
+  });
 }
 
 /**
@@ -25488,3 +25544,4 @@ function initAnfragenPanel() {
 window.approveAnfrage = approveAnfrage;
 window.declineAnfrage = declineAnfrage;
 window.showAnfrageDetail = showAnfrageDetail;
+window.nachrichtAnPatient = nachrichtAnPatient;

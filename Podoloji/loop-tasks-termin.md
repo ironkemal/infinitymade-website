@@ -88,8 +88,15 @@ angehen, wenn die genannte Nummer `[x]` ist.
       und Ablehnen öffneten einen leeren Dialog namens „Eingabe", und der Callback lief
       nie** — Ablehnen tat schlicht gar nichts. Dafür gibt es jetzt `showHtmlModal`.
 
-- [ ] 5. Termin-Anfrage: Nachricht an Patient — nur per E-Mail, KEIN In-App-Chat
-      Zuerst: 4
+- [x] 5. Termin-Anfrage: Nachricht an Patient — nur per E-Mail, KEIN In-App-Chat
+      Geändert: `api-backend/server.js` (`POST /booking-request/message`) ·
+      `dashboard.js` (`nachrichtAnPatient`, Knopf im Anfrage-Detail, i18n de/en/tr)
+      Im Anfrage-Detail steht jetzt „Nachricht an Patient" (nur, wenn eine E-Mail-Adresse
+      hinterlegt ist). Die Mail geht mit `replyTo` der Praxis raus — der Patient antwortet
+      also direkt ins Praxis-Postfach. **Kein Chat in der App**, damit kein zweites
+      Postfach entsteht, das jemand betreuen müsste.
+      Der Text wird vor dem Einsetzen in die HTML-Mail maskiert und ist auf 2000 Zeichen
+      begrenzt.
 
 - [x] 6. Termin-Anfrage-Formular an die gleiche Struktur wie die Verordnung-Maske angleichen
       (Entscheidung Melih, 10.08.2026: nur die fehlenden Rezept-Felder ergänzen, kein
