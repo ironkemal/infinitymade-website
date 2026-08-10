@@ -35,6 +35,20 @@ Datum + letzte Migration im Kopf beider Dateien fortgeschrieben.
 Wer die Datei liest: **zuerst das Datum oben prüfen.** Liegt es weit zurück und
 sind seither Migrationen gelaufen, dem Inhalt nicht blind trauen.
 
+### ⏳ Ausstehend — steht im Dump, existiert in der DB aber noch nicht
+
+`sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql` ist **noch nicht ausgeführt**
+(Stand 2026-08-11). Was daraus kommt, ist in beiden Dateien mit **⏳** markiert:
+`belegliste.zahlart` · `prescriptions.zuzahlung_zahlart` ·
+`leads.ausfallvereinbarung_am` · `mahnungen.ausfallrechnung_id`
+(+ `mahnungen.prescription_id` wird nullable) sowie die Indizes
+`idx_prescriptions_zuzahlung_offen` und `idx_mahnungen_ausfall`.
+
+Der Code dazu ist bereits live — eine Abfrage gegen diese Spalten scheitert
+heute mit `column does not exist`. Nach dem Lauf im Supabase-SQL-Editor:
+⏳-Markierungen entfernen, Datum + letzte Migration in beiden Köpfen
+fortschreiben, diesen Abschnitt löschen.
+
 Was hier **nicht** drinsteht: Daten. Kein einziger Patientendatensatz, keine
 Zeile aus einer Tabelle — nur Struktur. Das ist Absicht: das Repo ist öffentlich,
 und Gesundheitsdaten haben in keinem Repo etwas verloren.

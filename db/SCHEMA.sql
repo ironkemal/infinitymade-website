@@ -16,6 +16,20 @@
 -- nicht zum Ausführen. Sie enthält keine Daten, nur Struktur.
 -- RLS-Policies, Funktionen und Trigger: db/SCHEMA-RLS.sql
 -- =====================================================================
+--
+-- ⏳ AUSSTEHEND — im Repo geschrieben, in der Live-DB NOCH NICHT vorhanden
+-- ---------------------------------------------------------------------
+-- Skript: sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql (Stand 2026-08-11 offen)
+-- Alles daraus ist unten mit ⏳ markiert. Wer heute dagegen abfragt,
+-- bekommt „column does not exist". Betroffen:
+--   belegliste.zahlart                  (Kassieren)
+--   prescriptions.zuzahlung_zahlart     (Kassieren)
+--   leads.ausfallvereinbarung_am        (Ausfallrechnung)
+--   mahnungen.ausfallrechnung_id        (Mahnwesen) + prescription_id nullable
+--   Indizes: idx_prescriptions_zuzahlung_offen · idx_mahnungen_ausfall
+-- Nach dem Ausführen: ⏳-Markierungen entfernen und Kopf oben
+-- (ERZEUGT AM / LETZTE MIGRATION) fortschreiben — siehe db/README.md.
+-- =====================================================================
 
 
 -- =====================================================================
@@ -246,8 +260,11 @@ CREATE TABLE belegliste (
   created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
   created_by uuid
   storno_reason text
+  zahlart text                          -- ⏳ AUSSTEHEND (Sammelskript Teil 1)
 );
 --   CHECK type IN (zuzahlung, barverkauf, storno, ausfall)
+--   ⏳ CHECK belegliste_zahlart_check: zahlart IS NULL OR zahlart IN
+--      (bar, ec, ueberweisung, sonstiges) — NULL = Altbeleg vor v32.
 --   FK owner_id -> profiles(id) ON DELETE RESTRICT
 --   FK patient_id -> leads(id) · prescription_id -> prescriptions(id) · abrechnung_id -> abrechnung(id)
 --   PK (id) · UNIQUE (owner_id, beleg_nr)
@@ -911,6 +928,7 @@ CREATE TABLE leads (
   versichertennummer_enc bytea
   krankenkasse_enc bytea
   pii_encrypted boolean NOT NULL DEFAULT false
+  ausfallvereinbarung_am date          -- ⏳ AUSSTEHEND (Sammelskript Teil 2)
 );
 --   CHECK geschlecht IN (m, f, d) · insurance_type IN (gkv, privat)
 --   CHECK status IN (new, contacted, booked, won, lost)
@@ -926,7 +944,8 @@ CREATE TABLE leads (
 CREATE TABLE mahnungen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
   owner_id uuid NOT NULL
-  prescription_id uuid NOT NULL
+  prescription_id uuid NOT NULL         -- ⏳ wird nullable (Sammelskript Teil 3)
+  ausfallrechnung_id uuid               -- ⏳ AUSSTEHEND (Sammelskript Teil 3)
   patient_id uuid
   mahnung_nr bigint NOT NULL
   level smallint NOT NULL
@@ -939,6 +958,11 @@ CREATE TABLE mahnungen (
 );
 --   CHECK level BETWEEN 1 AND 3 · status IN (offen, bezahlt, abgeschrieben)
 --   PK (id) · UNIQUE (owner_id, mahnung_nr) · nr via TRIGGER
+--   ⏳ FK ausfallrechnung_id -> ausfallrechnungen(id) ON DELETE CASCADE
+--   ⏳ CHECK mahnungen_genau_eine_quelle:
+--        num_nonnulls(prescription_id, ausfallrechnung_id) = 1
+--      Eine Mahnung hängt an GENAU EINER Quelle — Rezept (offene Zuzahlung)
+--      ODER Ausfallrechnung. Deshalb verliert prescription_id sein NOT NULL.
 
 CREATE TABLE messreihen (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1172,6 +1196,7 @@ CREATE TABLE prescriptions (
   zuzahlung_kassiert_am timestamptz
   zuzahlung_kassiert_von uuid
   zuzahlung_kassiert_eur numeric(10,2)
+  zuzahlung_zahlart text               -- ⏳ AUSSTEHEND (Sammelskript Teil 1)
 );
 --   CHECK status IN (parsed, confirmed, in_therapy, completed, billed, cancelled)
 --   CHECK rezept_typ IN (standard, blanko, lhb_bvb, kassen, privat)
