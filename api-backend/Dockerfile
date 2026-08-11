@@ -6,12 +6,19 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
-# Then copy source
+# Then copy source.
+# ACHTUNG: Diese Liste ist vollstaendig aufzufuehren — es gibt kein "COPY . .".
+# Ein neues Quellverzeichnis, das hier fehlt, fehlt auch im Image: server.js
+# startet dann nicht (ERR_MODULE_NOT_FOUND), PM2 startet endlos neu und Traefik
+# antwortet mit 502. Genau so ist booking/ am 11.08.2026 in die Produktion
+# gegangen. Beim Anlegen eines neuen Verzeichnisses in api-backend/ hier eine
+# Zeile ergaenzen.
 COPY server.js ./
 COPY instrument.js ./
 COPY _lib ./_lib
 COPY ai ./ai
 COPY billing ./billing
+COPY booking ./booking
 COPY lib ./lib
 
 ENV NODE_ENV=production
