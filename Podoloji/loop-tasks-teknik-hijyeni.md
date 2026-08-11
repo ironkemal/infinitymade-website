@@ -51,7 +51,25 @@ zwischen diesen Punkten — trotzdem von oben nach unten abarbeiten der Einfachh
       dann entscheiden was UI ist und wirklich weg muss vs. was Backend-Altlast ohne
       sichtbare Karte ist (letzteres ist ein anderes Thema, nicht dieser Punkt).
 
-- [ ] 3. Falsches "Google Kalender"-Label in den Einstellungen — eigentlich Gmail/Mail-Verbindung
+- [ ] 3. Falsches "Google Kalender"-Label in den Einstellungen — **OFFEN, Rückfrage an Melih**
+      → Keine Datei geändert. Nichts wird auf Verdacht umbenannt.
+      **Zusätzlich geprüft (2026-08-11), alles korrekt — bitte nicht nochmal prüfen:**
+      · `server.js:309–386` — `/calendar/google-auth`, `/gmail/connect` und der gemeinsame
+        Callback sind über `flowType` im signierten State sauber getrennt. Gmail schreibt
+        `profiles.b2b_from_email` + `set_gmail_token`, Kalender schreibt
+        `calendar_integrations`. Keine gemeinsame Tabelle, kein Überschreiben.
+      · Die drei Verbinden-Knöpfe zeigen auf die richtigen Routen: `dashboard.js:13253`
+        und `kalender.js:628` → `/calendar/google-auth`, `dashboard.js:12758` → `/gmail/connect`.
+      · Die Gmail-Oberflächen heißen auch Gmail: „E-Mail-Konto", „Gmail-Konto",
+        „Mit Google verbinden" (`dashboard.html:942, 1042, 4779`). Nirgends steht dort „Kalender".
+      · Statusanzeigen lesen jeweils aus der richtigen Quelle (`dashboard.js:12194`, `:13226`).
+      **Nötig von Melih:** ein Screenshot oder der genaue Bildschirm aus dem Meeting
+      08.08.2026 (welcher Bereich, welcher Text). Ohne das wäre jede Änderung geraten.
+      **Nebenbefund, eigener Punkt fürs Ops-Dashboard (Teknik):** `kalender.js:628` ruft
+      `/calendar/google-auth?userId=…` auf, die Route verlangt aber `?token=` bzw. einen
+      Bearer-Header (`api-backend/ai/auth.js:19`). Der Verbinden-Knopf auf `kalender.html`
+      läuft damit in ein 401 — der in `dashboard.js` funktioniert. Nicht hier gefixt,
+      weil er nicht zu diesem Punkt gehört.
       ⚠️ Bereits geprüft, NICHT die Ursache: `dashboard.html:801` (`lbl_google_cal`,
       Mitarbeiter-Detail-Tab) und `dashboard.html:2689` (`googleCalStatus`, Owner-Settings)
       sowie `kalender.html:275` ("Google Calendar & Meet") — alle drei sind korrekt an
@@ -65,7 +83,23 @@ zwischen diesen Punkten — trotzdem von oben nach unten abarbeiten der Einfachh
       Label falsch war: bei Melih nachfragen statt zu raten (Meeting-Kontext 08.08.2026
       könnte helfen, den genauen Bildschirm zu identifizieren).
 
-- [ ] 4. UTF-8-Encoding-Problem — ü/ä/ß können in dashboard.html/dashboard.js kaputtgehen
+- [x] 4. UTF-8 geprüft — aktuell kein Fehler, dafür Schutz gegen den nächsten
+      → Neu: `.editorconfig`, `.gitattributes`
+      **Gemessen, nicht vermutet (2026-08-11):**
+      · Datei-Kodierung: alle `*.html`/`*.js` im Root sind gültiges UTF-8
+        (`iconv -f UTF-8 -t UTF-8` über alle Dateien, kein einziger Treffer).
+      · Auslieferung live geprüft mit `curl -I`: `dashboard.js` kommt als
+        `content-type: application/javascript; charset=utf-8`, `dashboard.html` und
+        `praxura.de/` als `text/html; charset=utf-8`. Der `<meta charset>`-Tag ist
+        also gar nicht die einzige Absicherung — der Header stimmt bereits.
+      · Es gibt keinen Build-/Kopierschritt: Vercel liefert die Dateien statisch aus.
+      · 40 Dateien haben ein BOM am Dateianfang (u. a. `login.html`, `kalender.html`,
+        alle Blog-Seiten). Das ist erlaubt und im Browser unschädlich —
+        **bewusst gelassen**, sonst wären 40 Dateien ohne Nutzen im Verlauf.
+      **Was neu ist:** `.editorconfig` schreibt jedem Editor UTF-8 + LF vor,
+      `.gitattributes` hält die Zeilenenden im Repo auf LF und schützt Binärdateien.
+      Damit kann ein Editor die Umlaute künftig nicht mehr unbemerkt als Latin-1 speichern.
+      (Heute ändert sich dadurch nichts: es gibt keine einzige CRLF-Datei im Repo.)
       `dashboard.html` hat `<meta charset="UTF-8" />` (Zeile 5) — das allein reicht nicht
       immer. Prüfen: Content-Type-Header beim Ausliefern von `dashboard.js` (Vercel-Default
       vs. explizit gesetzt), Datei-Encoding der Quelldateien selbst (`file -i dashboard.js`),

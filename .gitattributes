@@ -1,0 +1,38 @@
+# Praxura — Zeilenenden und Binärdateien
+#
+# Wir arbeiten auf Windows und macOS gemischt. Ohne diese Datei checkt Windows
+# Textdateien mit CRLF aus und committet sie irgendwann auch so zurück; dann
+# besteht ein Diff plötzlich aus der ganzen Datei und echte Änderungen sind
+# darin nicht mehr zu finden. `text=auto eol=lf` legt fest: im Repository immer
+# LF, egal wer speichert.
+#
+# Die Binäreinträge verhindern, dass Git Schriftarten, Bilder oder PDFs als Text
+# behandelt und daran "Zeilenenden korrigiert" — das zerstört solche Dateien.
+
+* text=auto eol=lf
+
+# Quelltext ausdrücklich als Text (UTF-8 ist über .editorconfig geregelt)
+*.html  text
+*.js    text
+*.mjs   text
+*.css   text
+*.json  text
+*.md    text
+*.sql   text
+*.svg   text
+*.yml   text
+*.yaml  text
+
+# Binär — Git darf hier nichts umschreiben
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.zip   binary

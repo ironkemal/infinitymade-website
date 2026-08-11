@@ -1,0 +1,27 @@
+# Praxura — verbindliche Datei-Kodierung
+#
+# Warum: Die Oberflächen sind deutsch, ü/ä/ö/ß stehen überall im Quelltext. Speichert
+# ein Editor eine Datei versehentlich als Windows-1252/Latin-1, werden daraus im
+# Browser Zeichen wie "fÃ¼r" — und zwar erst nach dem Deployen, wo es niemand sofort
+# sieht. Diese Datei stellt sicher, dass jeder Editor UTF-8 ohne BOM schreibt.
+#
+# Stand 2026-08-11 sind alle Quelldateien geprüft gültiges UTF-8; hier geht es um
+# den nächsten Editor, nicht um eine bestehende Reparatur.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+# In Markdown sind zwei Leerzeichen am Zeilenende ein Zeilenumbruch.
+trim_trailing_whitespace = false
+
+[*.{png,jpg,jpeg,webp,gif,svg,ico,woff,woff2,ttf,pdf}]
+charset = unset
+end_of_line = unset
+insert_final_newline = false
+trim_trailing_whitespace = false
