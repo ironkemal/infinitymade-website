@@ -13,7 +13,11 @@
 --  verändert, es wird nichts gelöscht.
 --  ⚠️ NICHT im Produkt-Projekt (njvuclullotbksskpwgk) ausführen — dort liegen
 --     Patientendaten, das Ops-Werkzeug hat dort nichts zu suchen.
+--
+--  Läuft als eine Transaktion — bricht ein Schritt ab, bleibt nichts halb getan.
 -- ============================================================================
+
+BEGIN;
 
 -- ── Protokolltabelle ────────────────────────────────────────────────────────
 -- Bewusst OHNE Fremdschlüssel auf ops_todos: wird eine Aufgabe gelöscht, muss
@@ -47,15 +51,23 @@ set search_path = public
 as $$
 declare
   actor uuid := auth.uid();
+  -- parent_id gibt es nur, wenn schema-groups.sql (bzw. der alter-Block in
+  -- schema.sql) gelaufen ist. Direkt `new.parent_id` zu schreiben würde bei
+  -- fehlender Spalte "record new has no field parent_id" werfen — und zwar bei
+  -- JEDER Änderung an ops_todos, das Board wäre komplett blockiert. Über
+  -- to_jsonb gelesen ist der Wert einfach NULL, wenn es die Spalte nicht gibt.
+  -- (ops/board.js verteidigt sich aus demselben Grund mit `hasGroupCols`.)
+  old_parent text := to_jsonb(old) ->> 'parent_id';
+  new_parent text := to_jsonb(new) ->> 'parent_id';
 begin
   if new.assignee is distinct from old.assignee then
     insert into ops_todos_audit (todo_id, todo_title, field, old_value, new_value, changed_by)
     values (old.id, old.title, 'assignee', old.assignee::text, new.assignee::text, actor);
   end if;
 
-  if new.parent_id is distinct from old.parent_id then
+  if new_parent is distinct from old_parent then
     insert into ops_todos_audit (todo_id, todo_title, field, old_value, new_value, changed_by)
-    values (old.id, old.title, 'parent_id', old.parent_id::text, new.parent_id::text, actor);
+    values (old.id, old.title, 'parent_id', old_parent, new_parent, actor);
   end if;
 
   if new.done is distinct from old.done then
@@ -101,6 +113,8 @@ alter table ops_todos_audit enable row level security;
 drop policy if exists ops_todos_audit_read on ops_todos_audit;
 create policy ops_todos_audit_read on ops_todos_audit
   for select to authenticated using (ops_is_member());
+
+COMMIT;
 
 -- ============================================================================
 --  KONTROLLBLOCK — direkt nach dem Run separat ausführen
