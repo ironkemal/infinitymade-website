@@ -106,7 +106,19 @@ zwischen diesen Punkten — trotzdem von oben nach unten abarbeiten der Einfachh
       und ob irgendein Build-/Kopier-Schritt die Datei anfasst und dabei die Kodierung
       verändern könnte.
 
-- [ ] 5. demo-booking.html: Google Fonts selbst hosten statt von CDN laden
+- [x] 5. demo-booking.html: Google Fonts selbst gehostet
+      → Geändert: `demo-booking.html`
+      Kein Download nötig: Fraunces, Plus Jakarta Sans **und** JetBrains Mono liegen
+      bereits selbst gehostet in `fonts/system-fonts.css` (Gewichte 300–700) und werden
+      von `index.html` und rund zehn weiteren Seiten so eingebunden. `demo-booking.html`
+      war die einzige Produktseite, die noch das CDN benutzte. Die drei Zeilen
+      (2× preconnect + CSS-Link) sind durch `<link href="fonts/system-fonts.css">` ersetzt;
+      die `--serif/--sans/--mono`-Variablen der Seite bleiben unverändert.
+      Anmerkung: echte Kursivschnitte sind lokal nicht vorhanden, die eine Kursivstelle
+      wird vom Browser synthetisiert — genau wie auf allen anderen Praxura-Seiten.
+      Nicht angefasst: `ai chatbot proje/index.html` lädt weiter von Google (altes
+      Nebenprojekt). Deshalb bleiben `fonts.googleapis.com`/`fonts.gstatic.com` vorerst
+      in der CSP in `vercel.json` — erst wenn dieser Ordner weg ist, kann man sie streichen.
       Bestätigt: `demo-booking.html` Zeile 10-12 lädt `fonts.googleapis.com` /
       `fonts.gstatic.com` (Fraunces, Plus Jakarta Sans, JetBrains Mono). Fonts
       herunterladen, lokal einbinden (`@font-face`), Preconnect-Links entfernen. Grund
