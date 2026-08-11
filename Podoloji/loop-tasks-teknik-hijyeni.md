@@ -9,6 +9,17 @@ Liste.
 Regel für den builder-Agenten: Reihenfolge ist nicht zwingend, keine "Zuerst:"-Kette
 zwischen diesen Punkten — trotzdem von oben nach unten abarbeiten der Einfachheit halber.
 
+---
+
+**Stand 2026-08-11:** 6 von 7 abgearbeitet. Offen bleibt nur **Punkt 3** — dort wurde
+nach gründlicher Prüfung keine Verwechslung gefunden, es braucht einen Screenshot von
+Melih statt einer Änderung auf Verdacht. Punkt 1 ist als *Falle gestellt* geschlossen,
+die Ursache ist weiterhin unbekannt.
+Bei jedem Punkt steht unter der Überschrift zuerst das **Ergebnis**, darunter der
+ursprüngliche Auftragstext von der Pano.
+Noch von Melih zu tun: `ops/schema-audit.sql` einmalig im ops-Supabase ausführen,
+`git push`, danach die 404-Seite einmal live aufrufen.
+
 - [x] 1. Pano-Zuweisungen verschwinden von selbst — **Falle gestellt, Ursache weiter unbekannt** [Priorität: Hoch]
       → Geändert: `ops/schema-audit.sql` (neu), `ops/board.js`, `ops/SETUP.md`,
         Cache-Version in `ops/*.js` + `ops/index.html` auf `?v=20260811a`.
@@ -142,7 +153,13 @@ zwischen diesen Punkten — trotzdem von oben nach unten abarbeiten der Einfachh
       zusätzliche Routing-Konfiguration nötig, kurz gegenprüfen ob `vercel.json` etwas
       Abweichendes vorschreibt.
 
-- [ ] 7. noindex-Kontrolle: Login/Onboarding/Mitarbeiter-Anmeldung
+- [x] 7. noindex-Kontrolle: Login/Onboarding/Mitarbeiter-Anmeldung — bestätigt
+      → Keine Datei geändert, kein Code nötig.
+      Am 2026-08-11 nachgeprüft: `login.html`, `onboarding.html` und
+      `employee-signup.html` haben jeweils in Zeile 6 und 7
+      `<meta name="robots" content="noindex, nofollow" />` und
+      `<meta name="googlebot" content="noindex, nofollow" />`. Die neue `404.html`
+      hat beides ebenfalls bekommen.
       ✅ Bereits geprüft — **schon korrekt vorhanden** in allen drei Dateien
       (`login.html`, `onboarding.html`, `employee-signup.html`, jeweils
       `<meta name="robots" content="noindex, nofollow" />` +
