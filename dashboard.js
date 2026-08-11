@@ -17738,7 +17738,7 @@ async function loadVerordnungen() {
 
   const { data, error } = await supabase
     .from('prescriptions')
-    .select('id, patient_id, ausstellungsdatum, icd10, heilmittel, anzahl_einheiten, status, gueltig_bis, leads(name)')
+    .select('id, patient_id, ausstellungsdatum, icd10, heilmittel, anzahl_einheiten, status, gueltig_bis, leads(first_name, last_name)')
     .eq('owner_id', ownerId)
     .order('ausstellungsdatum', { ascending: false })
     .limit(200);
@@ -17756,7 +17756,9 @@ async function loadVerordnungen() {
   const STATUS_COLOR = { parsed: '#f59e0b', confirmed: '#22c55e', in_therapy: '#38bdf8', completed: '#64748b', billed: '#3b82f6', cancelled: '#ef4444' };
 
   tbody.innerHTML = data.map(rx => {
-    const patName = escapeHtml(rx.leads?.name || '—');
+    const patName = escapeHtml(
+      `${rx.leads?.first_name || ''} ${rx.leads?.last_name || ''}`.trim() || '—'
+    );
     const date = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
     const gueltig = rx.gueltig_bis ? new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : '—';
     const st = rx.status || 'parsed';
