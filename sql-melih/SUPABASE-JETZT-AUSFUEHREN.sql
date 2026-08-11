@@ -1,7 +1,7 @@
 -- =============================================================================
 -- SAMMELSKRIPT — jetzt im Supabase SQL-Editor ausführen
 -- Projekt: njvuclullotbksskpwgk (Produkt, NICHT das Ops-Projekt)
--- Stand: 10.08.2026
+-- Stand: 11.08.2026
 -- =============================================================================
 --
 -- ANLASS: Der Code wurde bereits gepusht und ist live (Vercel sofort, Backend
@@ -10,11 +10,21 @@
 --   1. Kassieren            → belegliste.zahlart / prescriptions.zuzahlung_zahlart
 --   2. Ausfallrechnung      → leads.ausfallvereinbarung_am
 --   3. Mahnwesen-Bildschirm → mahnungen.ausfallrechnung_id
+--   4. GKV-Terminanfrage    → booking_requests.diagnosegruppe
+--   5. Gegenangebot         → booking_requests.alternativ_termine u. a.
 --
 -- Fasst zusammen:
---   database_v32_kassieren_zahlart.sql                        (Aufgabe 1)
+--   database_v32_kassieren_zahlart.sql                         (Aufgabe 1)
 --   supabase/migrations/20260810000000_ausfallvereinbarung.sql (Aufgabe 8)
 --   supabase/migrations/20260810010000_mahnwesen_ausfall.sql   (Aufgabe 9)
+--   database_v33_anfrage_diagnosegruppe.sql                    (Terminanfrage)
+--   database_v34_anfrage_gegenangebot.sql                      (Gegenangebot)
+--
+-- NACHTRAG 11.08.2026: Teil 4 und 5 sind neu dazugekommen. Sie standen am
+-- 10.08. in der Liste „vor dem Push ausführen", waren aber nie in diesem
+-- Sammelskript — und laut Schemaabzug (db/SCHEMA.sql) fehlen die Spalten in der
+-- Live-DB weiterhin. v35 (aerzte_register) und v36 (diagnosegruppen_icd_rules)
+-- sind dagegen nachweislich angekommen und deshalb hier bewusst NICHT enthalten.
 --
 -- Wer die Einzeldateien schon ausgeführt hat, kann dieses Skript trotzdem
 -- laufen lassen: alles ist IF NOT EXISTS / DROP IF EXISTS, also gefahrlos
@@ -120,11 +130,59 @@ CREATE INDEX IF NOT EXISTS idx_mahnungen_ausfall
 COMMENT ON COLUMN public.mahnungen.ausfallrechnung_id IS
   'Gemahnte Ausfallrechnung. Genau eines von prescription_id / ausfallrechnung_id ist gesetzt (CHECK mahnungen_genau_eine_quelle).';
 
+
+-- =============================================================================
+-- TEIL 4 — v33: Diagnosegruppe in der Terminanfrage
+-- =============================================================================
+-- Das Anfrage-Formular fragt ICD-10 und Heilmittel ab, aber nicht die
+-- Diagnosegruppe. Genau die braucht die Verordnung-Maske im Dashboard, damit die
+-- Angaben des Patienten übernommen werden können statt sie erneut zu erfassen.
+--
+-- Nur eine zusätzliche, optionale Textspalte. Bestandszeilen bekommen NULL,
+-- kein Backfill nötig, keine Constraint-Änderung. Ohne die Spalte lehnt
+-- PostgREST das Speichern einer GKV-Anfrage ab.
+
+ALTER TABLE public.booking_requests
+  ADD COLUMN IF NOT EXISTS diagnosegruppe text;
+
+COMMENT ON COLUMN public.booking_requests.diagnosegruppe IS
+  'Diagnosegruppe aus dem Heilmittelkatalog (z. B. WS2, EX3, SP6), vom Patienten aus dem Rezept übernommen. Optional.';
+
+
+-- =============================================================================
+-- TEIL 5 — v34: Gegenangebot zur Terminanfrage
+-- =============================================================================
+-- Passt der Wunschtermin nicht, blieb der Praxis bisher nur die Absage. Jetzt
+-- kann sie 2–3 freie Zeiten anbieten; der Patient nimmt eine davon per Klick in
+-- der E-Mail an.
+--
+-- Bewusst KEIN neuer Status: solange der Patient nicht geantwortet hat, ist die
+-- Anfrage weiterhin 'pending'. Das erspart eine Änderung an der
+-- Status-Constraint — und ist inhaltlich richtig, denn entschieden ist nichts.
+--
+-- Format von alternativ_termine (Array, 2–3 Einträge):
+--   [{"date":"2026-09-15","time":"09:00","employee_id":"<uuid>"}, ...]
+
+ALTER TABLE public.booking_requests
+  ADD COLUMN IF NOT EXISTS alternativ_termine jsonb,
+  ADD COLUMN IF NOT EXISTS alternativ_angeboten_at timestamptz,
+  -- Alle aus der Anfrage entstandenen Termine. booking_id hält nur den ersten;
+  -- bei einer Serie ("1x/Woche", 10 Sitzungen) blieben die übrigen neun beim
+  -- Patienten-Storno als Geistertermine im Kalender stehen.
+  ADD COLUMN IF NOT EXISTS booking_ids jsonb;
+
+COMMENT ON COLUMN public.booking_requests.alternativ_termine IS
+  'Der Praxis angebotene Ersatztermine: [{date,time,employee_id}]. Der Patient nimmt einen davon per Link aus der E-Mail an.';
+COMMENT ON COLUMN public.booking_requests.alternativ_angeboten_at IS
+  'Wann das Gegenangebot verschickt wurde. NULL = kein Gegenangebot offen. Geht auch in das HMAC der Annehmen-Links ein, damit ein zweites Angebot die Links des ersten entwertet.';
+COMMENT ON COLUMN public.booking_requests.booking_ids IS
+  'Alle aus dieser Anfrage entstandenen Termine (auch die Folgetermine einer Serie). Wird beim Stornieren gebraucht.';
+
 COMMIT;
 
 
 -- =============================================================================
--- KONTROLLE — separat ausführen. Alle fünf Zeilen müssen "true" zeigen.
+-- KONTROLLE — separat ausführen. Alle neun Zeilen müssen "true" zeigen.
 -- =============================================================================
 -- SELECT 'v32 belegliste.zahlart' AS pruefung,
 --        EXISTS (SELECT 1 FROM information_schema.columns
@@ -145,4 +203,20 @@ COMMIT;
 -- UNION ALL SELECT 'mahnungen.prescription_id ist jetzt nullable',
 --        EXISTS (SELECT 1 FROM information_schema.columns
 --                WHERE table_schema='public' AND table_name='mahnungen'
---                  AND column_name='prescription_id' AND is_nullable='YES');
+--                  AND column_name='prescription_id' AND is_nullable='YES')
+-- UNION ALL SELECT 'v33 booking_requests.diagnosegruppe',
+--        EXISTS (SELECT 1 FROM information_schema.columns
+--                WHERE table_schema='public' AND table_name='booking_requests'
+--                  AND column_name='diagnosegruppe')
+-- UNION ALL SELECT 'v34 booking_requests.alternativ_termine',
+--        EXISTS (SELECT 1 FROM information_schema.columns
+--                WHERE table_schema='public' AND table_name='booking_requests'
+--                  AND column_name='alternativ_termine')
+-- UNION ALL SELECT 'v34 booking_requests.alternativ_angeboten_at',
+--        EXISTS (SELECT 1 FROM information_schema.columns
+--                WHERE table_schema='public' AND table_name='booking_requests'
+--                  AND column_name='alternativ_angeboten_at')
+-- UNION ALL SELECT 'v34 booking_requests.booking_ids',
+--        EXISTS (SELECT 1 FROM information_schema.columns
+--                WHERE table_schema='public' AND table_name='booking_requests'
+--                  AND column_name='booking_ids');

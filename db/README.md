@@ -41,8 +41,15 @@ sind seither Migrationen gelaufen, dem Inhalt nicht blind trauen.
 (Stand 2026-08-11). Was daraus kommt, ist in beiden Dateien mit **⏳** markiert:
 `belegliste.zahlart` · `prescriptions.zuzahlung_zahlart` ·
 `leads.ausfallvereinbarung_am` · `mahnungen.ausfallrechnung_id`
-(+ `mahnungen.prescription_id` wird nullable) sowie die Indizes
+(+ `mahnungen.prescription_id` wird nullable) ·
+`booking_requests.diagnosegruppe` · `booking_requests.alternativ_termine` ·
+`alternativ_angeboten_at` · `booking_ids` sowie die Indizes
 `idx_prescriptions_zuzahlung_offen` und `idx_mahnungen_ausfall`.
+
+Die vier `booking_requests`-Spalten (Teil 4 + 5) sind am 11.08. dazugekommen:
+`database_v33_anfrage_diagnosegruppe.sql` und `database_v34_anfrage_gegenangebot.sql`
+standen am 10.08. in der Ausführungsliste, waren aber nie im Sammelskript und
+sind in der DB nie angekommen. Jetzt sind sie im Skript enthalten.
 
 Der Code dazu ist bereits live — eine Abfrage gegen diese Spalten scheitert
 heute mit `column does not exist`. Nach dem Lauf im Supabase-SQL-Editor:

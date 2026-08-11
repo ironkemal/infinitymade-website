@@ -18,6 +18,16 @@ kaputt, für Beta-Kunden sichtbar:
 | `belegliste.zahlart` · `prescriptions.zuzahlung_zahlart` | Kassieren schlägt fehl |
 | `leads.ausfallvereinbarung_am` | Ausfallrechnung erstellen → 404/500 |
 | `mahnungen.ausfallrechnung_id` | Mahnwesen-Bildschirm → 500 |
+| `booking_requests.diagnosegruppe` | GKV-Terminanfrage speichern schlägt fehl |
+| `booking_requests.alternativ_termine` u. a. | Gegenangebot schlägt fehl |
+
+**Erweitert am 11.08.:** Die letzten beiden Zeilen (Teil 4 + 5) sind neu im
+Skript. `database_v33_anfrage_diagnosegruppe.sql` und
+`database_v34_anfrage_gegenangebot.sql` standen am 10.08. in der
+Ausführungsliste, waren aber nie im Sammelskript — und laut Schemaabzug nie in
+der DB. Jetzt musst du nur noch diese eine Datei ausführen.
+`database_v35_aerzte_register.sql` und `database_v36_diagnosegruppen_icd_rules.sql`
+sind nachweislich angekommen und deshalb **nicht** enthalten.
 
 Kein Datenschaden — der Code bricht mit Fehler ab, es wird nichts Falsches
 geschrieben. Nicht gebuchte Zuzahlungen lassen sich normal nachholen.
@@ -26,7 +36,7 @@ Das Skript läuft als **eine Transaktion**, ist durchgehend `IF NOT EXISTS` /
 `DROP IF EXISTS`, verändert keine Bestandsdaten und ist gefahrlos wiederholbar.
 
 **Danach:** den auskommentierten Kontrollblock am Dateiende separat laufen
-lassen — alle fünf Zeilen müssen `true` zeigen.
+lassen — alle **neun** Zeilen müssen `true` zeigen.
 
 ## 1b. `ops/schema-audit.sql` ausführen — anderes Projekt, unabhängig von Schritt 1
 
@@ -149,13 +159,15 @@ weg, sonst wird später eine davon gepflegt und die andere nicht. Vorschlag:
 `sql-melih/` behalten (steht neben dieser Liste), die Kopie in der Wurzel
 löschen. **Nicht gelöscht** — die Entscheidung gehört dir.
 
-### Die drei Quelldateien einzeln nicht mehr nötig
+### Die fünf Quelldateien einzeln nicht mehr nötig
 
-Das Sammelskript fasst diese zusammen; alle drei liegen weiterhin im Repo:
+Das Sammelskript fasst diese zusammen; alle fünf liegen weiterhin im Repo:
 
 - `database_v32_kassieren_zahlart.sql`
 - `supabase/migrations/20260810000000_ausfallvereinbarung.sql`
 - `supabase/migrations/20260810010000_mahnwesen_ausfall.sql`
+- `database_v33_anfrage_diagnosegruppe.sql` *(seit 11.08. im Sammelskript)*
+- `database_v34_anfrage_gegenangebot.sql` *(seit 11.08. im Sammelskript)*
 
 Nach Schritt 1 brauchen sie **nicht** noch einmal einzeln zu laufen. Täte man
 es doch, passierte nichts Schlimmes (alles `IF NOT EXISTS`), es ist nur

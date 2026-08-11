@@ -26,7 +26,15 @@
 --   prescriptions.zuzahlung_zahlart     (Kassieren)
 --   leads.ausfallvereinbarung_am        (Ausfallrechnung)
 --   mahnungen.ausfallrechnung_id        (Mahnwesen) + prescription_id nullable
+--   booking_requests.diagnosegruppe     (GKV-Terminanfrage, Teil 4)
+--   booking_requests.alternativ_termine · alternativ_angeboten_at ·
+--     booking_ids                       (Gegenangebot, Teil 5)
 --   Indizes: idx_prescriptions_zuzahlung_offen · idx_mahnungen_ausfall
+--
+-- Teil 4 und 5 kamen am 11.08. dazu: die beiden Migrationen v33/v34 standen am
+-- 10.08. in der Ausführungsliste, waren aber nie im Sammelskript und sind in
+-- der Live-DB nie angekommen. v35 (aerzte) und v36 (diagnosegruppen) dagegen
+-- schon — deren Spalten stehen unten ohne ⏳.
 -- Nach dem Ausführen: ⏳-Markierungen entfernen und Kopf oben
 -- (ERZEUGT AM / LETZTE MIGRATION) fortschreiben — siehe db/README.md.
 -- =====================================================================
@@ -305,6 +313,10 @@ CREATE TABLE booking_requests (
   consent_at timestamptz
   created_at timestamptz DEFAULT now()
   updated_at timestamptz DEFAULT now()
+  diagnosegruppe text                   -- ⏳ AUSSTEHEND (Sammelskript Teil 4)
+  alternativ_termine jsonb              -- ⏳ AUSSTEHEND (Sammelskript Teil 5)
+  alternativ_angeboten_at timestamptz   -- ⏳ AUSSTEHEND (Sammelskript Teil 5)
+  booking_ids jsonb                     -- ⏳ AUSSTEHEND (Sammelskript Teil 5)
 );
 --   CHECK payment_type IN (gkv, pkv, selbstzahler, bg)
 --   CHECK status IN (pending, approved, declined, cancelled)
