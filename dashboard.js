@@ -130,6 +130,8 @@ const T = {
     pod_behandlungsanlass_hint: 'Freitext für die Rechnung — kein Kode nötig.',
     pod_beginn_hint: 'Beginn spätestens',
     pod_heilmittel_items: 'Verordnete Leistungen',
+    pod_heilmittel_g: 'Verordnetes Heilmittel (Muster 13, Feld g)',
+    pod_hm_gross: 'Therapiezeit über 20 Minuten → Behandlung groß (78020)',
     pod_icd10_label: 'ICD-10 Code',
     pod_icd_mismatch: 'Code stimmt nicht mit der Diagnosegruppe überein',
     pod_icd_hard: 'Eine Korrektur ist nur mit erneuter Arztunterschrift und Datumsangabe zulässig und muss vor der Einreichung zur Abrechnung erfolgt sein.',
@@ -297,6 +299,8 @@ const T = {
     pod_behandlungsanlass_hint: 'Free text for the invoice — no code required.',
     pod_beginn_hint: 'Must Start By',
     pod_heilmittel_items: 'Prescribed Services',
+    pod_heilmittel_g: 'Prescribed remedy (Muster 13, field g)',
+    pod_hm_gross: 'Therapy time over 20 minutes → large treatment (78020)',
     pod_icd10_label: 'ICD-10 Code',
     pod_icd_mismatch: 'Code does not match the diagnosis group',
     pod_icd_hard: 'A correction is only permitted with a new physician signature and date and must be completed before submission for billing.',
@@ -457,6 +461,8 @@ const T = {
     pod_behandlungsanlass_hint: 'Fatura için serbest metin — kod gerekmiyor.',
     pod_beginn_hint: 'En Geç Başlama',
     pod_heilmittel_items: 'Reçete Edilen Hizmetler',
+    pod_heilmittel_g: 'Reçete edilen Heilmittel (Muster 13, alan g)',
+    pod_hm_gross: 'Tedavi süresi 20 dakikadan uzun → büyük tedavi (78020)',
     pod_icd10_label: 'ICD-10 Kodu',
     pod_icd_mismatch: 'Kod, tanı grubuyla örtüşmüyor',
     pod_icd_hard: 'Düzeltme yalnızca yeni hekim imzası ve tarihiyle yapılabilir; faturalandırma için gönderimden önce tamamlanmalıdır.',
@@ -23892,6 +23898,62 @@ function podDiagRoot(diagCode) {
   return diagCode; // NF, QF, UI1, UI2
 }
 
+// ─── Muster 13, Feld g: verordnetes Heilmittel ────────────────────────────────
+//
+// Quelle: HeilM-RL (Stand 15.05.2025, iK 05.08.2025), Heilmittelkatalog
+// Podologische Therapie. Für DF, NF und QF ist der Katalog wortgleich; UI1/UI2
+// haben keinen a/b/c-Katalog (dort läuft die Nagelspangenbehandlung).
+// Leitsymptomatik und Heilmittel sind in der Richtlinie parallel buchstabiert:
+// a↔a, b↔b, c↔c.
+//
+// ⚠ Positionszuordnung — hier wird am häufigsten zu viel abgerechnet:
+// Hornhautabtragung ODER Nagelbearbeitung allein werden IMMER mit 78010 zzgl.
+// 78030 abgerechnet, auch bei mehr als 20 Minuten Therapiezeit
+// (FAK Podologie Q25). 78020 „Podologische Behandlung (groß)" ist
+// ausschließlich bei verordneter Komplexbehandlung mit Therapiezeit über
+// 20 Minuten abrechenbar — sonst Retaxation (~15 € je Sitzung).
+// Siehe Handbücher/SPEC-RULES.md und Podoloji/podologie-hpnr-reference.js.
+const POD_HEILMITTEL_KATALOG = {
+  a: {
+    heilmittel:      'Hornhautabtragung',
+    leitsymptomatik: 'Hyperkeratose (schmerzlos und schmerzhaft)',
+    hpnr:            '78010',
+    hpnrGross:       null,
+  },
+  b: {
+    heilmittel:      'Nagelbearbeitung',
+    leitsymptomatik: 'Pathologisches Nagelwachstum (Verdickung, Tendenz zum Einwachsen)',
+    hpnr:            '78010',
+    hpnrGross:       null,
+  },
+  c: {
+    heilmittel:      'Podologische Komplexbehandlung',
+    leitsymptomatik: 'Hyperkeratose und pathologisches Nagelwachstum',
+    hpnr:            '78010',
+    hpnrGross:       '78020',   // nur bei Therapiezeit > 20 Min
+  },
+};
+const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-Katalog
+const POD_BEFUNDPAUSCHALE = '78030';             // Pflicht je Behandlungstag, außer UI1/UI2
+
+/**
+ * Verordnetes Heilmittel einer Verordnung als Buchstabe a|b|c, sonst ''.
+ * Neue Verordnungen führen ihn in `leitsymptomatik`; ältere nur in den
+ * einzelnen `heilmittel_items` — und ganz alte gar nicht, dann bleibt es leer
+ * und es wird nicht geprüft (lieber keine Regel als eine falsche).
+ *
+ * Altbestand steht als "DF-a" in der Spalte (die Diagnosegruppe war mit
+ * eingetragen); der Buchstabe dahinter ist dieselbe Leitsymptomatik.
+ */
+function podVordMassnahme(vord) {
+  const roh = String(vord?.leitsymptomatik || '').trim().toLowerCase();
+  const direkt = (roh.match(/^(?:df-)?([abc])$/) || [])[1] || '';
+  if (POD_HEILMITTEL_KATALOG[direkt]) return direkt;
+  const items = Array.isArray(vord?.heilmittel_items) ? vord.heilmittel_items : [];
+  const ausItem = items.map(i => i?.massnahme).find(m => POD_HEILMITTEL_KATALOG[m]);
+  return ausItem || '';
+}
+
 // ICD-Prüfregeln je Diagnosegruppe — Quelle ist die Tabelle `diagnosegruppen`
 // (Spalten icd_accept / icd_exclude / icd_auto_select / icd_accept_unsicher /
 // icd_enforcement), geladen beim ersten Aufruf. Fällt die Abfrage fehl (z. B.
@@ -24202,6 +24264,19 @@ async function loadPodologieBilling() {
               </div>
             </div>
             <div id="podBeginHintEl" style="font-size:13px;color:var(--text-muted);padding:6px 10px;background:var(--bg-card-solid,#1f2937);border-radius:6px;border:1px solid var(--border);display:none;"></div>
+            <div id="podHeilmittelWrap" style="display:none;">
+              <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_heilmittel_g')}</label>
+              <select id="podNewHeilmittel" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;appearance:none;">
+                <option value="">— Wählen —</option>
+                <option value="a">a) Hornhautabtragung</option>
+                <option value="b">b) Nagelbearbeitung</option>
+                <option value="c">c) Podologische Komplexbehandlung</option>
+              </select>
+              <label id="podHmGrossWrap" style="display:none;align-items:center;gap:6px;font-size:13px;color:var(--text-main);cursor:pointer;margin-top:6px;">
+                <input type="checkbox" id="podHmGross"> ${t('pod_hm_gross')}
+              </label>
+              <div id="podLeitsymptHint" style="display:none;font-size:12px;color:var(--text-muted);margin-top:6px;padding:6px 10px;background:var(--bg-card-solid,#1f2937);border-radius:6px;border:1px solid var(--border);"></div>
+            </div>
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">${t('pod_heilmittel_items')}</label>
               <div id="podHeilmittelItems" style="display:flex;flex-direction:column;gap:6px;"></div>
@@ -24295,12 +24370,21 @@ async function loadPodologieBilling() {
     // ICD-10: read from form input (user may have edited it)
     const icd10 = icd10Raw.split(',').map(s => s.trim()).filter(Boolean);
 
+    // Verordnetes Heilmittel (Muster 13 Feld g). Steuert 78010 ↔ 78020 und ist
+    // gleichzeitig die Leitsymptomatik — beide tragen in der HeilM-RL denselben
+    // Buchstaben.
+    const hmLetter = POD_HEILMITTEL_KATALOG[document.getElementById('podNewHeilmittel')?.value]
+      ? document.getElementById('podNewHeilmittel').value : '';
+
     // Heilmittel items from dynamic rows
     const heilmittelItems = [];
     document.querySelectorAll('#podHeilmittelItems .pod-hm-row').forEach(row => {
       const code = row.querySelector('.pod-hm-code')?.value;
       const anzahl = parseInt(row.querySelector('.pod-hm-anzahl')?.value) || 1;
-      if (code) heilmittelItems.push({ code, bezeichnung: hpnrLabel(code), anzahl });
+      if (code) heilmittelItems.push({
+        code, bezeichnung: hpnrLabel(code), anzahl,
+        ...(hmLetter ? { massnahme: hmLetter } : {}),
+      });
     });
 
     // Compute beginn_spaetestens
@@ -24343,7 +24427,10 @@ async function loadPodologieBilling() {
       // podDiagRoot('') liefert einen Leerstring — der würde am Fremdschlüssel
       // verordnungen_diagnosegruppe_fkey scheitern. Leer heißt NULL.
       diagnosegruppe: diagRoot || null,
-      leitsymptomatik: (diagVal && diagVal !== diagRoot) ? diagVal : null,
+      // Buchstabe a/b/c wie im übrigen System (prescriptions führt ihn ebenso).
+      // Bisher stand hier "DF-a" — die Diagnosegruppe steht schon in der Spalte
+      // daneben, der Buchstabe allein ist die Leitsymptomatik.
+      leitsymptomatik: hmLetter || (diagVal.match(/-([abc])$/) || [])[1] || null,
       behandlungsanlass: istGkv ? null : (anlassRaw || POD_ANLASS_DEFAULT),
       icd10,
       behandlungseinheiten: einh,
@@ -24403,9 +24490,9 @@ async function loadPodologieBilling() {
     el.style.display = 'block';
   }
 
-  async function podRenderHeilmittelRow(diagRootVal) {
+  async function podRenderHeilmittelRow(diagRootVal, preset = '', anzahl = 1) {
     const rows = await podLoadHpnr(diagRootVal);
-    const options = heilmittelOptionsHtml(rows, '', '— HPNR —').replace(/^<option value="">.*?<\/option>/, '');
+    const options = heilmittelOptionsHtml(rows, preset, '— HPNR —').replace(/^<option value="">.*?<\/option>/, '');
     const row = document.createElement('div');
     row.className = 'pod-hm-row';
     row.style.cssText = 'display:flex;gap:6px;align-items:center;';
@@ -24414,7 +24501,7 @@ async function loadPodologieBilling() {
         <option value="">— HPNR —</option>
         ${options}
       </select>
-      <input type="number" class="pod-hm-anzahl" min="1" max="99" value="1" style="width:64px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;">
+      <input type="number" class="pod-hm-anzahl" min="1" max="99" value="${anzahl}" style="width:64px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:13px;">
       <button type="button" class="pod-hm-remove" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--danger,#ef4444);font-size:14px;cursor:pointer;line-height:1;">×</button>`;
     return row;
   }
@@ -24426,6 +24513,76 @@ async function loadPodologieBilling() {
     document.querySelectorAll('#podHeilmittelItems .pod-hm-code').forEach(sel => {
       sel.innerHTML = heilmittelOptionsHtml(rows, sel.value, '— HPNR —');
     });
+  }
+
+  /**
+   * Muster 13 Feld g (verordnetes Heilmittel) → Leitsymptomatik-Text und
+   * HPNR-Zeilen vorbelegen. Alles bleibt von Hand änderbar: automatisch
+   * gesetzte Zeilen tragen data-auto="1" und werden beim nächsten Lauf ersetzt;
+   * sobald der Anwender eine Zeile anfasst, verliert sie die Markierung und
+   * bleibt stehen.
+   */
+  async function podApplyHeilmittel() {
+    const wrap      = document.getElementById('podHeilmittelWrap');
+    const sel       = document.getElementById('podNewHeilmittel');
+    const grossWrap = document.getElementById('podHmGrossWrap');
+    const grossCb   = document.getElementById('podHmGross');
+    const hintEl    = document.getElementById('podLeitsymptHint');
+    const container = document.getElementById('podHeilmittelItems');
+    if (!wrap || !sel || !container) return;
+
+    const diagRootVal = podDiagRoot(document.getElementById('podNewDiag')?.value || '');
+    const anwendbar   = POD_HEILMITTEL_DGS.includes(diagRootVal);
+    wrap.style.display = anwendbar ? 'block' : 'none';
+    if (!anwendbar) sel.value = '';
+
+    const eintrag = POD_HEILMITTEL_KATALOG[sel.value];
+
+    // „Behandlung groß" gibt es nur bei der Komplexbehandlung (FAK Q25).
+    const grossMoeglich = !!(eintrag && eintrag.hpnrGross);
+    if (grossWrap) grossWrap.style.display = grossMoeglich ? 'flex' : 'none';
+    if (grossCb && !grossMoeglich) grossCb.checked = false;
+
+    if (hintEl) {
+      hintEl.textContent = eintrag
+        ? `Leitsymptomatik ${sel.value}) ${eintrag.leitsymptomatik}`
+        : '';
+      hintEl.style.display = eintrag ? 'block' : 'none';
+    }
+
+    // Leitsymptomatik-Buchstabe in die Diagnosegruppe spiegeln — nur DF führt
+    // Untergruppen im Auswahlfeld. NF/QF tragen den Buchstaben erst beim
+    // Speichern (Spalte leitsymptomatik).
+    if (eintrag && diagRootVal === 'DF') {
+      const dgEl = document.getElementById('podNewDiag');
+      const ziel = `DF-${sel.value}`;
+      if (dgEl && dgEl.value !== ziel && [...dgEl.options].some(o => o.value === ziel)) {
+        dgEl.value = ziel;
+      }
+    }
+
+    container.querySelectorAll('.pod-hm-row[data-auto="1"]').forEach(r => r.remove());
+    if (!eintrag) return;
+
+    const katalog   = await podLoadHpnr(diagRootVal);
+    const einheiten = parseInt(document.getElementById('podNewEinheiten')?.value) || 1;
+    const vorhanden = new Set(
+      [...container.querySelectorAll('.pod-hm-code')].map(s => s.value).filter(Boolean));
+    const codes = [
+      (grossCb?.checked && eintrag.hpnrGross) ? eintrag.hpnrGross : eintrag.hpnr,
+      POD_BEFUNDPAUSCHALE,
+    ];
+
+    for (const code of codes) {
+      if (vorhanden.has(code)) continue;
+      // Steht die Position im Katalog dieser Diagnosegruppe nicht zur Verfügung,
+      // lieber gar keine Zeile als eine mit leerem Auswahlfeld.
+      if (!katalog.some(r => r.code === code)) continue;
+      const row = await podRenderHeilmittelRow(diagRootVal, code, einheiten);
+      row.dataset.auto = '1';
+      container.appendChild(row);
+      vorhanden.add(code);
+    }
   }
 
   function podValidateIcd10() {
@@ -24481,8 +24638,28 @@ async function loadPodologieBilling() {
     // Wagner nur bei DF
     const wagnerWrap = document.getElementById('podWagnerWrap');
     if (wagnerWrap) wagnerWrap.style.display = diagRootVal === 'DF' ? 'block' : 'none';
-    podUpdateHeilmittelOptions();
+
+    // Untergruppe der Diagnosegruppe (DF-a/b/c) ist derselbe Buchstabe wie das
+    // Heilmittel — Auswahlfeld nachziehen, damit beide nicht auseinanderlaufen.
+    const hmSel = document.getElementById('podNewHeilmittel');
+    const letter = (diagVal.match(/-([abc])$/) || [])[1];
+    if (hmSel && letter && hmSel.value !== letter) hmSel.value = letter;
+
+    // Erst die Optionen der bestehenden Zeilen auf die neue Diagnosegruppe
+    // umstellen, dann die automatischen Zeilen neu setzen — umgekehrt würde die
+    // Umstellung die frisch gesetzte Auswahl wieder überschreiben.
+    podUpdateHeilmittelOptions().then(podApplyHeilmittel);
     podValidateIcd10();
+  });
+
+  // Wire up: verordnetes Heilmittel (Muster 13 Feld g) → HPNR + Leitsymptomatik
+  document.getElementById('podNewHeilmittel')?.addEventListener('change', podApplyHeilmittel);
+  document.getElementById('podHmGross')?.addEventListener('change', podApplyHeilmittel);
+  podApplyHeilmittel();   // Erstzustand (Feld ist bei UI1/UI2 ausgeblendet)
+  document.getElementById('podNewEinheiten')?.addEventListener('change', () => {
+    const einh = parseInt(document.getElementById('podNewEinheiten')?.value) || 1;
+    document.querySelectorAll('#podHeilmittelItems .pod-hm-row[data-auto="1"] .pod-hm-anzahl')
+      .forEach(inp => { inp.value = einh; });
   });
 
   // podNewIcd10 verdrahtet sich beim Fokus selbst (DIAGNOSE_FIELDS) — wichtig,
@@ -24574,6 +24751,13 @@ async function loadPodologieBilling() {
     }
   });
 
+  // Von Hand geänderte Zeile ist nicht mehr „automatisch" — sie darf beim
+  // nächsten podApplyHeilmittel() nicht weggeräumt werden.
+  document.getElementById('podHeilmittelItems')?.addEventListener('change', e => {
+    const row = e.target.closest('.pod-hm-row');
+    if (row) delete row.dataset.auto;
+  });
+
   document.getElementById('podVordList')?.addEventListener('click', e => {
     const row = e.target.closest('[data-vord-id]');
     if (!row) return;
@@ -24647,6 +24831,13 @@ async function loadPodologieBilling() {
       err = 'UI1/UI2 erfordert ICD-10 L60.0.';
     else if (checks.includes('78040') && checks.includes('78030')) err = 'Eingangsbefundung (78040) und Befundung (78030) können nicht am gleichen Tag kombiniert werden.';
     else if ((checks.includes('78610') || checks.includes('78620')) && dRoot !== 'UI2') err = 'Nagelspange (78610/78620) ist nur bei UI2 zulässig.';
+    // 78020 „Behandlung groß" gilt nur für die Komplexbehandlung. Bei einzeln
+    // verordneter Hornhautabtragung oder Nagelbearbeitung ist immer 78010 zzgl.
+    // 78030 abzurechnen — auch über 20 Minuten (FAK Podologie Q25). Sonst wird
+    // die Differenz später zurückgefordert.
+    else if (checks.includes('78020') && ['a', 'b'].includes(podVordMassnahme(vord)))
+      err = `78020 ist nur bei verordneter Komplexbehandlung abrechenbar. Verordnet ist `
+          + `„${POD_HEILMITTEL_KATALOG[podVordMassnahme(vord)].heilmittel}" — bitte 78010 zzgl. 78030 verwenden.`;
     else if (isUIx && !lokal) err = t('pod_lokalisation') + ' ist bei UI1/UI2 erforderlich.';
 
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
