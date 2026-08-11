@@ -115,6 +115,10 @@ const T = {
     pod_dringend: 'Dringend (14-Tage-Frist)',
     pod_hausbesuch: 'Hausbesuch',
     pod_save: 'Speichern',
+    pod_edit: 'Bearbeiten',
+    pod_edit_vord: 'Verordnung bearbeiten',
+    pod_update: 'Aktualisieren',
+    pod_cancel_edit: 'Abbrechen',
     pod_no_vord: 'Keine aktiven Verordnungen.',
     pod_behandlungsdatum: 'Behandlungsdatum',
     pod_hpnr: 'HPNR-Codes',
@@ -287,7 +291,8 @@ const T = {
     pod_ausstelldatum: 'Issue Date', pod_diagnosegruppe: 'Diagnosis Group',
     pod_einheiten: 'Treatment Units', pod_frequenz: 'Therapy Frequency',
     pod_dringend: 'Urgent (14-day deadline)', pod_hausbesuch: 'Home Visit',
-    pod_save: 'Save', pod_no_vord: 'No active prescriptions.',
+    pod_save: 'Save', pod_edit: 'Edit', pod_edit_vord: 'Edit prescription', pod_update: 'Update', pod_cancel_edit: 'Cancel',
+    pod_no_vord: 'No active prescriptions.',
     pod_behandlungsdatum: 'Treatment Date', pod_hpnr: 'HPNR Codes',
     pod_lokalisation: 'Location (toe)', pod_notizen: 'Notes',
     pod_save_behandlung: 'Save Treatment',
@@ -449,7 +454,8 @@ const T = {
     pod_ausstelldatum: 'Düzenleme Tarihi', pod_diagnosegruppe: 'Tanı Grubu',
     pod_einheiten: 'Tedavi Birimi', pod_frequenz: 'Terapi Sıklığı',
     pod_dringend: 'Acil (14 gün)', pod_hausbesuch: 'Ev Ziyareti',
-    pod_save: 'Kaydet', pod_no_vord: 'Aktif reçete yok.',
+    pod_save: 'Kaydet', pod_edit: 'Düzenle', pod_edit_vord: 'Reçeteyi düzenle', pod_update: 'Güncelle', pod_cancel_edit: 'İptal',
+    pod_no_vord: 'Aktif reçete yok.',
     pod_behandlungsdatum: 'Tedavi Tarihi', pod_hpnr: 'HPNR Kodları',
     pod_lokalisation: 'Lokalizasyon (parmak)', pod_notizen: 'Notlar',
     pod_save_behandlung: 'Tedaviyi Kaydet',
@@ -24023,7 +24029,7 @@ function _icdMatchesDgRule(code, dg) {
   return matchIcdToDg(codes, rule).status === 'ok';
 }
 
-let _podState = { selectedVordId: null, verordnungen: [] };
+let _podState = { selectedVordId: null, editVordId: null, verordnungen: [] };
 let _podKkCache = [];
 
 // Nur 'kassen' ist eine GKV-Verordnung. Für alles andere gibt es weder eine
@@ -24086,6 +24092,13 @@ async function loadPodologieBilling() {
           `<div style="color:${a.type==='danger'?'#ef4444':'#f59e0b'};font-size:12px;margin-top:4px;">⚠ ${escapeHtml(a.msg)}</div>`
         ).join('');
         const isSelected = _podState.selectedVordId === v.id;
+        const _hmLetter = podVordMassnahme(v);
+        const _isGkv    = (v.rezeptart || 'kassen') === POD_GKV_REZEPTART;
+        const _hmRozet  = (_isGkv && _hmLetter && POD_HEILMITTEL_KATALOG[_hmLetter])
+          ? `<span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);border:1px solid var(--border);">` +
+            escapeHtml((v.diagnosegruppe ? `${v.diagnosegruppe}-` : '') + `${_hmLetter} · ${POD_HEILMITTEL_KATALOG[_hmLetter].heilmittel}`) +
+            `</span>`
+          : '';
         return `<div class="pod-vord-row${isSelected?' pod-vord-selected':''}" data-vord-id="${v.id}" style="
           padding:12px 14px;border:1px solid ${isSelected?'var(--primary)':'var(--border-subtle,var(--border))'};
           border-radius:8px;cursor:pointer;background:${isSelected?'var(--bg-card)':'transparent'};
@@ -24094,16 +24107,20 @@ async function loadPodologieBilling() {
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
               <span style="font-weight:600;color:var(--text-main);">${escapeHtml(v.patient_name || '—')}</span>
               <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${escapeHtml(
-                (v.rezeptart || 'kassen') === POD_GKV_REZEPTART
+                _isGkv
                   ? (v.diagnosegruppe || '—')
                   : (v.behandlungsanlass || POD_ANLASS_DEFAULT)
               )}</span>
-              ${(v.rezeptart || 'kassen') !== POD_GKV_REZEPTART ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${escapeHtml(v.rezeptart)}</span>` : ''}
+              ${_hmRozet}
+              ${!_isGkv ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${escapeHtml(v.rezeptart)}</span>` : ''}
               ${v.status === 'abrechenbar' ? '<span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abrechenbar</span>' : ''}
               ${v.status === 'abgerechnet' ? '<span style="font-size:11px;background:#2563eb;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abgerechnet</span>' : ''}
               ${v.status === 'archiviert' ? '<span style="font-size:11px;background:#6b7280;color:#fff;padding:2px 7px;border-radius:12px;">Archiviert</span>' : ''}
             </div>
-            <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
+              <button class="pod-vord-edit" data-edit-id="${v.id}" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;cursor:pointer;white-space:nowrap;">${t('pod_edit')}</button>
+            </div>
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
             ${v.behandlungseinheiten ? `${v.behandlungseinheiten} Einheiten` : ''}
@@ -24160,13 +24177,15 @@ async function loadPodologieBilling() {
       </div>
     </div>` : `<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">← Wählen Sie eine Verordnung aus der Liste.</div>`;
 
+  const editVord = _podState.editVordId ? _podState.verordnungen.find(v => v.id === _podState.editVordId) : null;
+
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
 
       <!-- Links: Neue Verordnung + Liste -->
       <div>
         <div class="card" style="background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;margin-bottom:16px;">
-          <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${t('pod_new_vord')}</h4>
+          <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${editVord ? t('pod_edit_vord') : t('pod_new_vord')}</h4>
           <div style="display:grid;gap:10px;">
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_patient')}</label>
@@ -24293,7 +24312,10 @@ async function loadPodologieBilling() {
               </label>
             </div>
             <div id="podNewError" style="color:#ef4444;font-size:13px;display:none;"></div>
-            <button id="podSaveVordBtn" class="btn-primary" style="width:fit-content;">${t('pod_save')}</button>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <button id="podSaveVordBtn" class="btn-primary" style="width:fit-content;">${editVord ? t('pod_update') : t('pod_save')}</button>
+              ${editVord ? `<button id="podCancelEditBtn" style="padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;cursor:pointer;">${t('pod_cancel_edit')}</button>` : ''}
+            </div>
           </div>
         </div>
 
@@ -24422,7 +24444,7 @@ async function loadPodologieBilling() {
 
     const anlassRaw = document.getElementById('podNewBehandlungsanlass')?.value.trim() || '';
 
-    const { error } = await supabase.from('verordnungen').insert({
+    const _payload = {
       owner_id: getOwnerId(),
       patient_name: patient,
       ausstellungsdatum: datum,
@@ -24439,7 +24461,6 @@ async function loadPodologieBilling() {
       therapiefrequenz: freq || null,
       dringend: dring,
       hausbesuch: hausb,
-      status: 'aktiv',
       rezeptart,
       beginn_spaetestens,
       heilmittel_items: heilmittelItems,
@@ -24452,13 +24473,34 @@ async function loadPodologieBilling() {
       // zugeklappten Block eine falsche Kasse in den Datensatz.
       kostentraeger_ik: istGkv ? kkIk : null,
       zuzahlung_befreit: istGkv ? zuzahlBef : false,
-    });
-    if (error) {
-      errEl.textContent = error.message;
+    };
+
+    let _saveError;
+    if (_podState.editVordId) {
+      // UPDATE: status-Feld NICHT überschreiben — ein 'abrechenbar'-Datensatz
+      // darf nicht auf 'aktiv' zurückfallen (Retaxation-Risiko).
+      const { error: ue } = await supabase
+        .from('verordnungen')
+        .update(_payload)
+        .eq('id', _podState.editVordId)
+        .eq('owner_id', getOwnerId());
+      _saveError = ue;
+    } else {
+      // INSERT: 'aktiv' als Startstatus
+      const { error: ie } = await supabase
+        .from('verordnungen')
+        .insert({ ..._payload, status: 'aktiv' });
+      _saveError = ie;
+    }
+
+    if (_saveError) {
+      errEl.textContent = _saveError.message;
       errEl.style.display = 'block';
       return;
     }
-    showToast('Verordnung gespeichert ✓');
+    const _toastMsg = _podState.editVordId ? 'Verordnung aktualisiert ✓' : 'Verordnung gespeichert ✓';
+    _podState.editVordId = null;
+    showToast(_toastMsg);
     loadPodologieBilling();
   });
 
@@ -24524,7 +24566,7 @@ async function loadPodologieBilling() {
    * sobald der Anwender eine Zeile anfasst, verliert sie die Markierung und
    * bleibt stehen.
    */
-  async function podApplyHeilmittel() {
+  async function podApplyHeilmittel(opts = {}) {
     const wrap      = document.getElementById('podHeilmittelWrap');
     const sel       = document.getElementById('podNewHeilmittel');
     const grossWrap = document.getElementById('podHmGrossWrap');
@@ -24562,6 +24604,10 @@ async function loadPodologieBilling() {
         dgEl.value = ziel;
       }
     }
+
+    // nurAnzeige: Im Bearbeitungsmodus nur Sichtbarkeit/Hinweis aktualisieren,
+    // aber die bestehenden Heilmittel-Zeilen unangetastet lassen.
+    if (opts.nurAnzeige) return;
 
     container.querySelectorAll('.pod-hm-row[data-auto="1"]').forEach(r => r.remove());
     if (!eintrag) return;
@@ -24702,6 +24748,95 @@ async function loadPodologieBilling() {
       _podKkCache.map(k => `<option value="${escapeHtml(k.ik)}">${escapeHtml(k.name)}</option>`).join('');
   }
 
+  // ---- Bearbeitungsmodus: Formular mit vorhandenen Daten füllen ----
+  // Muss NACH der KK-Befüllung stehen, da podNewKk-Optionen erst jetzt existieren.
+  async function podFillEditForm(v) {
+    const _set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+    const _chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+
+    _set('podNewPatient',  v.patient_name || '');
+    _set('podNewLeadId',   v.lead_id || '');
+    _set('podNewVsnr',     v.versichertennummer || '');
+    _set('podNewAusstelldatum', v.ausstellungsdatum || '');
+    _set('podNewWagner',   v.wagner_grad != null ? String(v.wagner_grad) : '');
+    _set('podNewEinheiten', v.behandlungseinheiten || '');
+    _set('podNewFrequenz',  v.therapiefrequenz || '');
+    _chk('podNewDringend',  v.dringend);
+    _chk('podNewHausbesuch', v.hausbesuch);
+    _chk('podNewZuzahlBefreit', v.zuzahlung_befreit);
+    _set('podNewIcd10', (v.icd10 || []).join(', '));
+
+    // Rezeptart zuerst setzen, dann Sichtbarkeit anpassen
+    _set('podNewRezeptart', v.rezeptart || 'kassen');
+    podApplyRezeptart();
+
+    // Behandlungsanlass (nur Nicht-GKV)
+    _set('podNewBehandlungsanlass', v.behandlungsanlass || '');
+
+    // Arzt aus Tabelle lesen (§ 16390 Muster)
+    if (v.arzt_id) {
+      const { data: arzt } = await supabase
+        .from('aerzte')
+        .select('arzt_name,lanr,bsnr')
+        .eq('id', v.arzt_id)
+        .eq('owner_id', getOwnerId())
+        .maybeSingle();
+      if (arzt) {
+        _set('podNewArztName', arzt.arzt_name || '');
+        _set('podNewArztLanr', arzt.lanr || '');
+        _set('podNewArztBsnr', arzt.bsnr || '');
+        _set('podNewArztId',   v.arzt_id);
+      }
+    }
+
+    // Krankenkasse
+    _set('podNewKk', v.kostentraeger_ik || '');
+
+    // Diagnosegruppe + Heilmittel-Buchstabe
+    const letter = podVordMassnahme(v);
+    const ziel   = letter ? `${v.diagnosegruppe}-${letter}` : (v.diagnosegruppe || '');
+    const dgEl   = document.getElementById('podNewDiag');
+    if (dgEl) {
+      const hat = [...dgEl.options].some(o => o.value === ziel);
+      dgEl.value = hat ? ziel : (v.diagnosegruppe || '');
+      // Automatische ICD-Vorauswahl durch _wireDgIcdPair unterdrücken
+      dgEl.dataset.manualOverride = '1';
+    }
+
+    // Heilmittel-Buchstabe (Muster 13 Feld g)
+    _set('podNewHeilmittel', letter);
+
+    // Therapiezeit > 20 Min (78020)
+    const grossCb = document.getElementById('podHmGross');
+    if (grossCb) grossCb.checked = (v.heilmittel_items || []).some(i => i?.code === '78020');
+
+    // Bestehende Heilmittel-Zeilen laden (ohne data-auto — dürfen nicht auto-gelöscht werden)
+    const diagRootVal = podDiagRoot(dgEl?.value || '');
+    const container   = document.getElementById('podHeilmittelItems');
+    if (container && Array.isArray(v.heilmittel_items)) {
+      container.innerHTML = '';
+      for (const item of v.heilmittel_items) {
+        if (!item?.code) continue;
+        const row = await podRenderHeilmittelRow(diagRootVal, item.code, item.anzahl || 1);
+        // data-auto NICHT setzen — diese Zeilen wurden vom Arzt eingetragen
+        container.appendChild(row);
+      }
+    }
+
+    computeBeginHint();
+    await podApplyHeilmittel({ nurAnzeige: true });
+    // Werte wurden programmatisch gesetzt — das löst kein change-Event aus,
+    // also die ICD-Prüfung einmal von Hand nachziehen.
+    podValidateIcd10();
+  }
+
+  // Bewusst awaited: die Felder müssen stehen, BEVOR _wireDgIcdPair() weiter
+  // unten seine Automatik anhängt — sonst kann die ICD→DG-Vorauswahl die
+  // gespeicherte Diagnosegruppe überschreiben.
+  if (editVord) {
+    await podFillEditForm(editVord);
+  }
+
   // Wire up: Arzt-Picker + Hinweis (gemeinsames Modul, siehe wireArztFeld)
   wireArztFeld({
     name: 'podNewArztName', lanr: 'podNewArztLanr', bsnr: 'podNewArztBsnr',
@@ -24761,9 +24896,22 @@ async function loadPodologieBilling() {
   });
 
   document.getElementById('podVordList')?.addEventListener('click', e => {
+    // Edit-Schaltfläche: Zeile NICHT als Behandlungsauswahl markieren
+    const editBtn = e.target.closest('.pod-vord-edit');
+    if (editBtn) {
+      e.stopPropagation();
+      _podState.editVordId = editBtn.dataset.editId;
+      loadPodologieBilling();
+      return;
+    }
     const row = e.target.closest('[data-vord-id]');
     if (!row) return;
     _podState.selectedVordId = row.dataset.vordId === _podState.selectedVordId ? null : row.dataset.vordId;
+    loadPodologieBilling();
+  });
+
+  document.getElementById('podCancelEditBtn')?.addEventListener('click', () => {
+    _podState.editVordId = null;
     loadPodologieBilling();
   });
 
