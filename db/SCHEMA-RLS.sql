@@ -1,16 +1,15 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-10
+-- ERZEUGT AM:        2026-08-11
 -- LETZTE MIGRATION:  20260810142703_verordnungen_privat_selbstzahler_flow
+--                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
+--                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
+--                     der DB vorhanden)
+-- UMFANG:            153 RLS-Policies · 273 Indizes · 58 Trigger · 52 Funktionen
 -- Tabellen/Spalten:  db/SCHEMA.sql · Orientierung: db/README.md
 --
 -- ⚠️  MOMENTAUFNAHME. Nach jeder Migration neu erzeugen.
---
--- ⏳ Mit ⏳ markierte und auskommentierte Zeilen sind im Repo geschrieben,
---    aber in der Live-DB NOCH NICHT vorhanden
---    (sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql, Stand 2026-08-11 offen).
---    Übersicht aller ausstehenden Objekte: Kopf von db/SCHEMA.sql.
 -- =====================================================================
 
 
@@ -607,8 +606,7 @@ CREATE INDEX idx_leads_pii_not_encrypted ON public.leads USING btree (owner_id) 
 CREATE INDEX idx_leads_status ON public.leads USING btree (status);
 CREATE INDEX idx_mahnungen_owner_status ON public.mahnungen USING btree (owner_id, status, sent_at DESC);
 CREATE INDEX idx_mahnungen_prescription ON public.mahnungen USING btree (prescription_id);
--- ⏳ AUSSTEHEND (sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql Teil 3):
--- CREATE INDEX idx_mahnungen_ausfall ON public.mahnungen USING btree (ausfallrechnung_id);
+CREATE INDEX idx_mahnungen_ausfall ON public.mahnungen USING btree (ausfallrechnung_id);
 CREATE INDEX idx_messreihen_lead ON public.messreihen USING btree (lead_id, gemessen_am);
 CREATE INDEX idx_messreihen_owner ON public.messreihen USING btree (owner_id);
 CREATE INDEX pat_fussbefund_lead_idx ON public.pat_fussbefund USING btree (lead_id, erstellt_am DESC);
@@ -628,9 +626,9 @@ CREATE INDEX idx_prescriptions_owner_status ON public.prescriptions USING btree 
 CREATE INDEX idx_prescriptions_patient ON public.prescriptions USING btree (patient_id, created_at DESC);
 CREATE INDEX idx_prescriptions_phi_not_encrypted ON public.prescriptions USING btree (owner_id) WHERE (phi_encrypted = false);
 CREATE INDEX prescriptions_zuzahlung_offen ON public.prescriptions USING btree (patient_id) WHERE ((zuzahlung_kassiert_am IS NULL) AND (COALESCE(zuzahlung_befreit, false) = false));
--- ⏳ AUSSTEHEND (sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql Teil 1) — anderer Index,
---    trotz fast gleichem Namen: für die Monatsübersicht (statistik.routes.js).
--- CREATE INDEX idx_prescriptions_zuzahlung_offen ON public.prescriptions USING btree (owner_id, ausstellungsdatum) WHERE ((zuzahlung_eur > 0) AND (zuzahlung_befreit = false));
+-- ⚠️ Anderer Index als die Zeile darüber, trotz fast gleichem Namen:
+--    dieser hier ist für die Monatsübersicht (statistik.routes.js).
+CREATE INDEX idx_prescriptions_zuzahlung_offen ON public.prescriptions USING btree (owner_id, ausstellungsdatum) WHERE ((zuzahlung_eur > (0)::numeric) AND (zuzahlung_befreit = false));
 CREATE INDEX idx_profiles_booking_slug ON public.profiles USING btree (booking_slug);
 CREATE INDEX idx_profiles_clinic_location ON public.profiles USING gist (clinic_location);
 CREATE INDEX idx_profiles_deletion_scheduled ON public.profiles USING btree (deletion_scheduled_at) WHERE (deletion_scheduled_at IS NOT NULL);
