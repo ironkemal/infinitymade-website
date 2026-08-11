@@ -7,8 +7,10 @@
 --  Änderung an assignee / parent_id / done sowie jedes Löschen einer Aufgabe.
 --  Beim nächsten Auftreten steht im Protokoll, wer es wann getan hat.
 --
---  Ausführen: Supabase (praxura-ops) → SQL Editor → alles einfügen → Run.
---  Idempotent: mehrfaches Ausführen schadet nicht.
+--  Ausführen: Supabase → Ops-Projekt `farkaejociddtgqkusvm` (praxura-ops) →
+--  SQL Editor → alles einfügen → Run. Danach der Kontrollblock am Dateiende.
+--  Idempotent: mehrfaches Ausführen schadet nicht, keine Bestandsdaten werden
+--  verändert, es wird nichts gelöscht.
 --  ⚠️ NICHT im Produkt-Projekt (njvuclullotbksskpwgk) ausführen — dort liegen
 --     Patientendaten, das Ops-Werkzeug hat dort nichts zu suchen.
 -- ============================================================================
@@ -101,20 +103,51 @@ create policy ops_todos_audit_read on ops_todos_audit
   for select to authenticated using (ops_is_member());
 
 -- ============================================================================
---  Auswertung beim nächsten Vorfall
+--  KONTROLLBLOCK — direkt nach dem Run separat ausführen
 --
+--  Muss eine einzige Zeile mit fünfmal `true` liefern. Zeigt eine Spalte
+--  `false`, ist das Skript nicht sauber durchgelaufen.
+-- ============================================================================
+
+-- select
+--   to_regclass('public.ops_todos_audit') is not null                      as tabelle_da,
+--   to_regproc('public.ops_todos_audit_log') is not null                   as funktion_update_da,
+--   to_regproc('public.ops_todos_audit_del') is not null                   as funktion_delete_da,
+--   exists (select 1 from pg_trigger
+--            where tgrelid = 'ops_todos'::regclass
+--              and tgname = 'ops_todos_audit_upd')                         as trigger_update_da,
+--   exists (select 1 from pg_trigger
+--            where tgrelid = 'ops_todos'::regclass
+--              and tgname = 'ops_todos_audit_del')                         as trigger_delete_da;
+
+-- ============================================================================
+--  FUNKTIONSTEST — im Pano eine Karte in eine andere Spalte ziehen, dann:
+--  Es muss mindestens eine Zeile erscheinen. Kommt nichts, greift der Trigger
+--  nicht (oder die Karte wurde nicht wirklich verschoben).
+-- ============================================================================
+
+-- select changed_at, todo_title, field, old_value, new_value
+--   from ops_todos_audit
+--  order by changed_at desc
+--  limit 10;
+
+-- ============================================================================
+--  AUSWERTUNG BEIM NÄCHSTEN VORFALL
 --  Wer hat zuletzt Zuweisungen entfernt (Zuweisung → Gemeinsam)?
---
---    select a.changed_at, a.todo_title, m_old.display_name as war_bei,
---           m_who.display_name as geaendert_von
---      from ops_todos_audit a
---      left join ops_members m_old on m_old.id = a.old_value::uuid
---      left join ops_members m_who on m_who.id = a.changed_by
---     where a.field = 'assignee' and a.new_value is null
---     order by a.changed_at desc
---     limit 50;
---
---  changed_by IS NULL bedeutet: nicht aus dem Board heraus geändert, sondern
---  mit service_role bzw. direkt im SQL-Editor (z. B. ops/tools/ingest.mjs).
---  Genau das wäre der Hinweis auf ein Skript als Ursache statt auf einen Klick.
+-- ============================================================================
+
+-- select a.changed_at, a.todo_title,
+--        m_old.display_name as war_bei,
+--        m_who.display_name as geaendert_von
+--   from ops_todos_audit a
+--   left join ops_members m_old on m_old.id = a.old_value::uuid
+--   left join ops_members m_who on m_who.id = a.changed_by
+--  where a.field = 'assignee' and a.new_value is null
+--  order by a.changed_at desc
+--  limit 50;
+
+--  `geaendert_von` IS NULL bedeutet: nicht aus dem Board heraus geändert, sondern
+--  mit service_role bzw. direkt im SQL-Editor (z. B. ops/tools/ingest.mjs oder
+--  regroup.mjs). Genau das wäre der Hinweis auf ein Skript als Ursache statt auf
+--  einen Klick — und damit die eigentliche Antwort auf die offene Frage.
 -- ============================================================================

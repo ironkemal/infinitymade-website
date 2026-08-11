@@ -28,6 +28,32 @@ Das Skript läuft als **eine Transaktion**, ist durchgehend `IF NOT EXISTS` /
 **Danach:** den auskommentierten Kontrollblock am Dateiende separat laufen
 lassen — alle fünf Zeilen müssen `true` zeigen.
 
+## 1b. `ops/schema-audit.sql` ausführen — anderes Projekt, unabhängig von Schritt 1
+
+Supabase-SQL-Editor, **Ops-Projekt `farkaejociddtgqkusvm`** (praxura-ops) —
+**nicht** das Produkt. Reihenfolge egal, hängt an nichts.
+
+Die Datei liegt **nicht hier**, sondern bei den anderen ops-Skripten:
+**`ops/schema-audit.sql`** (neben `schema.sql` und `schema-groups.sql`, weil sie
+zum selben Projekt gehört). Bewusst nicht nach `sql-melih/` kopiert — doppelte
+Skripte driften auseinander, siehe Nachtrag unten.
+
+Legt `ops_todos_audit` + zwei Trigger an: ab dann wird jede Änderung an
+*Zuständig*, *Thema*, *Erledigt* und jedes Löschen einer Karte protokolliert,
+mit Verursacher und Zeit. Das ist die Falle für die Zuweisungen, die von selbst
+verschwinden — die Ursache ist weiter unbekannt.
+
+Erstellt nur Neues, verändert keine Bestandsdaten, gefahrlos wiederholbar.
+
+**Danach:** den Kontrollblock am Dateiende auskommentieren und laufen lassen —
+fünfmal `true`. Dann im Pano eine Karte in eine andere Spalte ziehen und den
+Funktionstest darunter ausführen; es muss eine Zeile erscheinen.
+
+⏱️ **Je früher, desto besser** — aufgezeichnet wird erst ab dem Run. Alles
+Frühere ist verloren.
+
+Ansehen später im Pano: Karte → **⋮ → Verlauf**.
+
 ## 2. Schema-Dump tazelen
 
 Erst wenn Schritt 1 durch ist. In `db/SCHEMA.sql` und `db/SCHEMA-RLS.sql`:
@@ -46,7 +72,8 @@ die ⏳-Markierungen als Zwischenlösung (Commit `e1c9ef8`).
 ## 3. `git push`
 
 Offen sind: `8acb226` (Sammelskript) · Bericht `fortschritte/2026-08-11.md` ·
-`e1c9ef8` (⏳-Markierungen im Dump) · diese Datei.
+`e1c9ef8` (⏳-Markierungen im Dump) · diese Datei · dazu die sieben Commits der
+Loop-Liste Teknik-Hygiene (`c8ade0f` … `ddc3a28`).
 
 ⚠️ `git push` im Vordergrund ausführen, nicht im Subagenten/Hintergrund —
 sonst kein Zugriff auf den Credential Manager, der Befehl hängt still.
