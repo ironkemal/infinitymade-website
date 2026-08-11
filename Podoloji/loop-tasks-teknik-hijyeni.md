@@ -124,7 +124,18 @@ zwischen diesen Punkten — trotzdem von oben nach unten abarbeiten der Einfachh
       herunterladen, lokal einbinden (`@font-face`), Preconnect-Links entfernen. Grund
       vermutlich DSGVO (keine Drittanbieter-Verbindung vom Browser des Besuchers).
 
-- [ ] 6. 404-Seite prüfen/anlegen
+- [x] 6. 404-Seite angelegt
+      → Neu: `404.html`
+      Bindet `fonts/system-fonts.css` und `assets/system.css` ein und benutzt
+      ausschließlich die Design-Tokens (`--bg`, `--ink`, `--bronze`, `--serif` …) —
+      **kein einziger Farbwert im Stylesheet der Seite**, damit sie bei einer
+      Farbänderung automatisch mitzieht. Knöpfe sind `.btn-primary-arrow` und
+      `.btn-secondary` aus dem Designsystem, Inhalt deutsch, mit `noindex, nofollow`.
+      Links geprüft: `/`, `/kontakt.html`, `app.praxura.de/login.html`, `/blog/`,
+      `/support.html`, `/impressum.html` existieren alle.
+      `vercel.json` schreibt nichts Abweichendes vor — eine `404.html` im Root greift
+      bei Vercel automatisch für unbekannte Pfade. **Ungeprüft:** noch nicht live
+      aufgerufen, das geht erst nach dem Deploy.
       Bestätigt: es gibt aktuell **keine** `404.html` im Repo-Root. Anlegen, im
       Praxura-Look (gleiche Fonts/Farben wie `index.html`), mit Link zurück zur Startseite.
       Bei Vercel greift eine `404.html` im Root automatisch für unbekannte Pfade — keine

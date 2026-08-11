@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Seite nicht gefunden · Praxura</title>
+  <meta name="description" content="Diese Seite gibt es nicht (mehr). Zurück zur Praxura-Startseite." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="googlebot" content="noindex, nofollow" />
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#F8F3E8" />
+
+  <!-- Schriften und Designsystem wie auf der Startseite — keine eigenen Farben. -->
+  <link rel="stylesheet" href="/fonts/system-fonts.css" />
+  <link rel="stylesheet" href="/assets/system.css?v=20260524" />
+
+  <style>
+    /* Nur Layout. Sämtliche Farben, Schriften und Rundungen kommen aus
+       assets/system.css — hier steht bewusst kein einziger Farbwert. */
+    .nf {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+    .nf-inner { max-width: 34rem; }
+
+    .nf-code {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--bronze);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.8rem;
+    }
+    .nf-code::before {
+      content: '';
+      width: 5px; height: 5px;
+      background: var(--bronze);
+      border-radius: 999px;
+    }
+
+    .nf h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      margin-bottom: 1.1rem;
+    }
+    .nf h1 em { font-style: italic; font-weight: 300; color: var(--bronze); }
+
+    .nf p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      margin: 0 auto 2.6rem;
+      max-width: 28rem;
+    }
+
+    .nf-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      justify-content: center;
+    }
+
+    .nf-links {
+      margin-top: 3.2rem;
+      padding-top: 1.6rem;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.4rem;
+      justify-content: center;
+    }
+    .nf-links a {
+      color: var(--ink-quiet);
+      text-decoration: none;
+      transition: color 200ms var(--ease-out);
+    }
+    .nf-links a:hover { color: var(--bronze); }
+  </style>
+</head>
+<body>
+
+  <main class="nf">
+    <div class="nf-inner">
+      <span class="nf-code">Fehler 404</span>
+
+      <h1>Diese Seite gibt es <em>nicht</em>.</h1>
+
+      <p>
+        Der Link ist veraltet oder enthält einen Tippfehler. Ihre Daten sind davon
+        nicht betroffen — nur diese Adresse führt ins Leere.
+      </p>
+
+      <div class="nf-actions">
+        <a class="btn btn-primary-arrow" href="/">
+          <span>Zur Startseite</span>
+          <span class="arrow-pill" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="btn btn-secondary" href="/kontakt.html">Kontakt aufnehmen</a>
+      </div>
+
+      <nav class="nf-links">
+        <a href="https://app.praxura.de/login.html">Anmelden</a>
+        <a href="/blog/">Blog</a>
+        <a href="/support.html">Hilfe</a>
+        <a href="/impressum.html">Impressum</a>
+      </nav>
+    </div>
+  </main>
+
+</body>
+</html>
