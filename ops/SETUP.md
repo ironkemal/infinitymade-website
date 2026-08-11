@@ -136,6 +136,39 @@ renk olarak kullanıyor:
 Eski haftanın tüm maddeleri kapandığında da odak kendiliğinden bir önceki açık
 toplantıya döner — elle ayar yok.
 
+## Verlauf / Audit-Trail — die Falle für verschwundene Zuweisungen
+
+Zuweisungen sind auf dem Board schon mehrfach von selbst verschwunden, ohne dass
+sich hinterher sagen ließ, wer oder was sie entfernt hat. Ohne einen Vorfall zum
+Untersuchen lässt sich die Ursache nicht finden — deshalb wird ab jetzt jede
+Änderung mitgeschrieben.
+
+**Einmalig einspielen** (Supabase → Projekt `praxura-ops` → SQL Editor):
+
+```
+ops/schema-audit.sql        ← Inhalt einfügen → Run
+```
+
+⚠️ Nicht im Produkt-Projekt (`njvuclullotbksskpwgk`) ausführen — dort liegen
+Patientendaten. Das Skript ist idempotent, mehrfaches Ausführen schadet nicht.
+
+Danach protokolliert die Tabelle `ops_todos_audit` jede Änderung an **Zuständig**,
+**Thema** und **Erledigt** sowie jedes **Löschen** einer Aufgabe — mit Zeitpunkt und
+Verursacher.
+
+**Ansehen:** auf der Karte **⋮ → Verlauf**. Ist das Skript noch nicht gelaufen,
+sagt der Dialog das offen, statt einen Fehler zu zeigen.
+
+Zwei Dinge, die man beim nächsten Vorfall dort abliest:
+
+- `Verursacher = Skript / SQL-Editor` heißt: nicht geklickt, sondern von
+  `ops/tools/ingest.mjs`, `regroup.mjs` oder direkt im SQL-Editor geändert.
+- Ein Eintrag `Zuständig: Melih → Gemeinsam (Pool)` direkt neben einem Eintrag
+  `Thema: kein Thema → …` heißt: die Karte wurde unter ein Thema gehängt und hat
+  dabei dessen Spalte übernommen. Das ist so gewollt (Unteraufgaben werden nur
+  unter ihrem Thema gezeichnet), das Board weist beim Einhängen jetzt ausdrücklich
+  darauf hin.
+
 ## Sınırlar — bilinçli
 
 - **TODO.md burada değil.** `TODO.md` ürün/teknik listesi olarak kalır (§302, launch, kod).

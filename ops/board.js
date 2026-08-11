@@ -1,8 +1,8 @@
 // Aufgaben-Board — Kemal | Pool | Melih
 // Zwei Ebenen: Oberaufgabe (Thema) → aufklappbare Unteraufgaben.
 // Zusätzlich "Zuerst: …" — eine Aufgabe kann auf andere warten.
-import { sb, state, $, esc, md, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260810a';
-import { DONE_ARCHIVE_DAYS } from './config.js?v=20260810a';
+import { sb, state, $, esc, md, toast, fail, fmtDate, fmtDateTime, openModal, confirmDialog, memberById } from './app.js?v=20260811a';
+import { DONE_ARCHIVE_DAYS } from './config.js?v=20260811a';
 
 let todos = [];
 let showArchived = false;
@@ -545,6 +545,7 @@ function toggleMenu(card, host) {
       groups.map(g => `<button data-sub="${g.id}">↳ ${esc(g.title.slice(0, 42))}</button>`).join('') : '') +
     '<hr><button data-act="copy">Inhalt kopieren</button>' +
     '<button data-act="edit">Bearbeiten</button>' +
+    '<button data-act="log">Verlauf</button>' +
     '<button data-act="del">Löschen</button>';
 
   el.onclick = async (e) => {
@@ -555,6 +556,7 @@ function toggleMenu(card, host) {
     if (b.dataset.sub !== undefined) return moveTo(t.id, colKeyOf(t), 0, b.dataset.sub || null);
     if (b.dataset.act === 'copy') return copyTodo(t);
     if (b.dataset.act === 'edit') return editTodo(t);
+    if (b.dataset.act === 'log')  return showHistory(t);
     if (b.dataset.act === 'del') return confirmDialog('Aufgabe löschen',
       kidsOf(t.id).length
         ? `${t.title}\n\n${kidsOf(t.id).length} Unteraufgaben bleiben erhalten und rücken auf die oberste Ebene.`
@@ -581,7 +583,18 @@ async function moveTo(id, colKey, index, parentId = null) {
   // Ein Thema mit Unteraufgaben darf nicht selbst Unteraufgabe werden (2 Ebenen).
   if (parentId && kidsOf(id).length) return toast('Thema mit Unteraufgaben kann nicht eingehängt werden', true);
 
-  const assignee = colKey === POOL ? null : colKey;
+  // Unteraufgaben werden ausschließlich unter ihrem Thema gezeichnet — sie landen
+  // damit zwangsläufig in der Spalte des Themas. Deshalb übernimmt eine Karte beim
+  // Einhängen die Zuweisung des Themas, egal über welchen Weg sie eingehängt wird
+  // (Drag & Drop oder ⋮-Menü). Früher taten die beiden Wege Unterschiedliches:
+  // per Drag wurde die Zuweisung überschrieben, per Menü nicht — die Karte hing
+  // dann sichtbar in einer fremden Spalte. Unten wird ausdrücklich darauf
+  // hingewiesen, wenn dabei eine Zuweisung wechselt; genau dieses stille
+  // Überschreiben war der Verdacht hinter "Zuweisungen verschwinden von selbst".
+  const parentCard = parentId ? byId(parentId) : null;
+  const targetKey  = parentCard ? colKeyOf(parentCard) : colKey;
+  const assignee   = targetKey === POOL ? null : targetKey;
+  const oldAssignee = t.assignee || null;
   const siblings = todos
     .filter(x => x.id !== id && !x.done &&
                  (parentId ? x.parent_id === parentId : (!x.parent_id && colKeyOf(x) === colKey)))
@@ -605,9 +618,76 @@ async function moveTo(id, colKey, index, parentId = null) {
 
   const { error } = await sb.from('ops_todos').update(patch).eq('id', id);
   if (error) { fail('Verschieben', error); return load(); }
+
+  // Beim Einhängen darf eine Zuweisung nicht unbemerkt wechseln.
+  if (parentId && assignee !== oldAssignee) {
+    toast(`Zuweisung auf „${assigneeName(assignee)}" geändert — das Thema liegt in dieser Spalte`);
+  }
+
   await syncParent(oldParent);
   await syncParent(parentId);
   render();
+}
+
+// ── Verlauf (Audit-Trail) ──────────────────────────────────────────────
+// Speist sich aus ops_todos_audit — angelegt von ops/schema-audit.sql.
+// Ist das Skript noch nicht eingespielt, sagt der Dialog das offen, statt
+// mit einem PostgREST-Fehler abzustürzen.
+
+/** uuid → Anzeigename; null = gemeinsamer Pool. */
+function assigneeName(v) {
+  if (!v) return 'Gemeinsam (Pool)';
+  return memberById(v)?.display_name || `${String(v).slice(0, 8)}…`;
+}
+
+const AUDIT_FIELDS = {
+  assignee:    'Zuständig',
+  parent_id:   'Thema',
+  done:        'Erledigt',
+  row_deleted: 'Aufgabe gelöscht'
+};
+
+/** Protokollwert lesbar machen — je nach Feld ein Name, ein Titel oder ja/nein. */
+function auditValue(field, v) {
+  if (field === 'assignee' || field === 'row_deleted') return assigneeName(v);
+  if (field === 'parent_id') return v ? (byId(v) ? shortTitle(byId(v)) : `${v.slice(0, 8)}…`) : 'kein Thema';
+  if (field === 'done') return v === 'true' ? 'ja' : 'nein';
+  return v == null ? '—' : String(v);
+}
+
+async function showHistory(t) {
+  const { data, error } = await sb.from('ops_todos_audit')
+    .select('field, old_value, new_value, changed_by, changed_at')
+    .eq('todo_id', t.id)
+    .order('changed_at', { ascending: false })
+    .limit(30);
+
+  let bodyHTML;
+  if (error) {
+    bodyHTML = `<p class="empty">Verlauf nicht verfügbar: ${esc(error.message)}</p>
+      <p class="empty">Fehlt die Tabelle noch, muss <code>ops/schema-audit.sql</code>
+      einmalig im SQL-Editor des ops-Projekts ausgeführt werden.</p>`;
+  } else if (!data.length) {
+    bodyHTML = `<p class="empty">Für diese Aufgabe wurde noch nichts protokolliert.
+      Aufgezeichnet wird ab dem Zeitpunkt, an dem <code>schema-audit.sql</code> lief.</p>`;
+  } else {
+    bodyHTML = `<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;">` +
+      data.map(r => `
+        <li style="border-left:2px solid var(--line);padding:2px 0 2px 10px;font-size:13px;">
+          <div style="color:var(--text-dim);font-size:11px;">${esc(fmtDateTime(r.changed_at))}
+            · ${r.changed_by ? esc(assigneeName(r.changed_by)) : 'Skript / SQL-Editor'}</div>
+          <div>${r.field === 'row_deleted'
+            ? `<strong>Aufgabe gelöscht</strong> (war: ${esc(assigneeName(r.old_value))})`
+            : `<strong>${esc(AUDIT_FIELDS[r.field] || r.field)}</strong>:
+               ${esc(auditValue(r.field, r.old_value))} → ${esc(auditValue(r.field, r.new_value))}`}</div>
+        </li>`).join('') + '</ul>';
+  }
+
+  openModal({
+    title: `Verlauf — ${shortTitle(t)}`,
+    bodyHTML,
+    actions: [{ label: 'Schließen', onClick: () => true }]
+  });
 }
 
 // ── Formular ───────────────────────────────────────────────────────────
