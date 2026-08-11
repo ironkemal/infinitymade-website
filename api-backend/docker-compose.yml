@@ -61,8 +61,14 @@ services:
       - ./.env.calendar
     labels:
       - traefik.enable=true
-      # Only our calendar-api paths — leave the rest (incl. /api/v1/* for n8n REST) to n8n.
-      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api/booking`) || PathPrefix(`/api/calendar`) || PathPrefix(`/api/team`) || PathPrefix(`/api/verify-code`) || PathPrefix(`/api/health`) || PathPrefix(`/api/gmail`) || PathPrefix(`/api/apify`) || PathPrefix(`/api/rezept`) || PathPrefix(`/api/prescription`) || PathPrefix(`/api/ai`) || PathPrefix(`/api/billing`) || PathPrefix(`/api/warteliste`) || PathPrefix(`/api/patients`) || PathPrefix(`/api/services`) || PathPrefix(`/api/krankenkassen`))"
+      # Alles unter /api gehört uns — AUSSER /api/v1, das ist n8n's Public REST API.
+      # Vorher stand hier eine Positivliste einzelner Pfade. Die ist zweimal
+      # stillschweigend veraltet (2026-08-11: /api/attendance, /api/admin und
+      # /api/arzt fehlten → Traefik schickte sie an n8n, das mit 200 HTML bzw.
+      # 404 antwortete und im Browser wie ein CORS-Fehler aussah).
+      # Eine neue Route in server.js darf nicht davon abhängen, dass jemand
+      # daran denkt, hier nachzuziehen.
+      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`) && !PathPrefix(`/api/v1`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls=true"
       - "traefik.http.routers.api.tls.certresolver=le"
