@@ -17,8 +17,9 @@ Melih statt einer Änderung auf Verdacht. Punkt 1 ist als *Falle gestellt* gesch
 die Ursache ist weiterhin unbekannt.
 Bei jedem Punkt steht unter der Überschrift zuerst das **Ergebnis**, darunter der
 ursprüngliche Auftragstext von der Pano.
-Noch von Melih zu tun: `ops/schema-audit.sql` einmalig im ops-Supabase ausführen,
-`git push`, danach die 404-Seite einmal live aufrufen.
+Gepusht und deployt am 11.08.; die Punkte 2, 5, 6 und 7 sind **live gegengeprüft**
+(HTTP-Status, ausgeliefertes HTML, Assets). Noch von Melih zu tun: nur noch
+`ops/schema-audit.sql` einmalig im ops-Supabase ausführen und der Screenshot zu Punkt 3.
 
 - [x] 1. Pano-Zuweisungen verschwinden von selbst — **Falle gestellt, Ursache weiter unbekannt** [Priorität: Hoch]
       → Geändert: `ops/schema-audit.sql` (neu), `ops/board.js`, `ops/SETUP.md`,
@@ -47,6 +48,8 @@ Noch von Melih zu tun: `ops/schema-audit.sql` einmalig im ops-Supabase ausführe
       „WhatsApp Erinnerungen an Patienten" (Einstellungen → Benachrichtigungen) und der
       Tarif-Text „Rechnungen, Kassenbuch, WhatsApp & Termine" → „… Kassenbuch & Termine".
       Damit wirbt die Demo nicht länger mit einer Funktion, die es seit 2026-05-20 nicht gibt.
+      ✅ **Live bestätigt (11.08.):** die ausgelieferte `demo-dashboard.html` enthält
+      null Treffer für „WhatsApp".
       Bewusst **nicht** angefasst: `dashboard.html:4969` („Via WhatsApp teilen" = Teilen-Knopf,
       kein Feature), Backend-Reste (`server.js`, `ai/router.js`, `api/admin/data.js`) sowie
       `script.js`/`index-old.html` — Letztere gehören zur alten InfinityMade-Seite und
@@ -127,6 +130,9 @@ Noch von Melih zu tun: `ops/schema-audit.sql` einmalig im ops-Supabase ausführe
       die `--serif/--sans/--mono`-Variablen der Seite bleiben unverändert.
       Anmerkung: echte Kursivschnitte sind lokal nicht vorhanden, die eine Kursivstelle
       wird vom Browser synthetisiert — genau wie auf allen anderen Praxura-Seiten.
+      ✅ **Live bestätigt (11.08.):** die ausgelieferte Seite enthält keinen einzigen
+      Treffer mehr für `fonts.googleapis.com`/`fonts.gstatic.com`; `system-fonts.css`
+      und die woff2-Dateien kommen mit 200 vom eigenen Server.
       Nicht angefasst: `ai chatbot proje/index.html` lädt weiter von Google (altes
       Nebenprojekt). Deshalb bleiben `fonts.googleapis.com`/`fonts.gstatic.com` vorerst
       in der CSP in `vercel.json` — erst wenn dieser Ordner weg ist, kann man sie streichen.
@@ -145,8 +151,10 @@ Noch von Melih zu tun: `ops/schema-audit.sql` einmalig im ops-Supabase ausführe
       Links geprüft: `/`, `/kontakt.html`, `app.praxura.de/login.html`, `/blog/`,
       `/support.html`, `/impressum.html` existieren alle.
       `vercel.json` schreibt nichts Abweichendes vor — eine `404.html` im Root greift
-      bei Vercel automatisch für unbekannte Pfade. **Ungeprüft:** noch nicht live
-      aufgerufen, das geht erst nach dem Deploy.
+      bei Vercel automatisch für unbekannte Pfade.
+      ✅ **Live bestätigt (11.08. nach dem Deploy):** `praxura.de/gibtesnichtxyz`
+      antwortet mit HTTP **404** und liefert unsere Seite aus; `assets/system.css`
+      lädt mit 200, das Design zieht also.
       Bestätigt: es gibt aktuell **keine** `404.html` im Repo-Root. Anlegen, im
       Praxura-Look (gleiche Fonts/Farben wie `index.html`), mit Link zurück zur Startseite.
       Bei Vercel greift eine `404.html` im Root automatisch für unbekannte Pfade — keine
