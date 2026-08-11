@@ -29,7 +29,17 @@ zwischen diesen Punkten — trotzdem von oben nach unten abarbeiten der Einfachh
       "Falle gestellt, wartet auf nächsten Vorfall" — das ist ein akzeptables Ergebnis für
       diesen Punkt.
 
-- [ ] 2. Tote WhatsApp/Twilio-Integrationskarte aus den Dashboard-Einstellungen entfernen
+- [x] 2. Tote WhatsApp/Twilio-Integrationskarte aus den Dashboard-Einstellungen entfernt
+      → Geändert: `demo-dashboard.html`
+      Gefunden **nicht** in `dashboard.html`, sondern in `demo-dashboard.html` — der
+      öffentlichen Marketing-Demo, verlinkt von `index.html:1154`. Entfernt: der Schalter
+      „WhatsApp Erinnerungen an Patienten" (Einstellungen → Benachrichtigungen) und der
+      Tarif-Text „Rechnungen, Kassenbuch, WhatsApp & Termine" → „… Kassenbuch & Termine".
+      Damit wirbt die Demo nicht länger mit einer Funktion, die es seit 2026-05-20 nicht gibt.
+      Bewusst **nicht** angefasst: `dashboard.html:4969` („Via WhatsApp teilen" = Teilen-Knopf,
+      kein Feature), Backend-Reste (`server.js`, `ai/router.js`, `api/admin/data.js`) sowie
+      `script.js`/`index-old.html` — Letztere gehören zur alten InfinityMade-Seite und
+      sind ein eigenes Thema.
       Kontext: WhatsApp/Twilio wurde laut CLAUDE.md am 2026-05-20 endgültig eingestellt,
       Tabellen sind gedroppt. Der Suchbegriff "WhatsApp" taucht in `dashboard.html` nur an
       einer harmlosen Stelle auf (Zeile ~4969, "Via WhatsApp teilen" — das ist ein
