@@ -239,6 +239,20 @@ Orada 6 tuzak yazılı (en önemlisi: hasta tablosu `patients` değil **`leads`*
 - Melih'in (ve DB'yi göremeyen her aracın) tek bağlamı bu dosyalar.
   Onun ürettiği SQL bize gelir, MCP ile burada uygulanır, sonra döküm tazelenir.
 
+### 🗺️ Fonksiyon haritası protokolü (2026-08-12)
+
+**"Böyle bir fonksiyon var mı" sorusu okuyarak değil `funktionen/INDEX.json` okunarak
+cevaplanır.** `dashboard.js` 26.000+ satır, projede 1300+ fonksiyon var — hiçbir model bunu
+tek seferde kapsayamaz, okur ve *makul ama eksik* cevap verir.
+
+- Harita `node tools/funktionskarte.mjs` ile **üretilir, elle düzenlenmez.**
+- **Fonksiyon eklendiğinde/silindiğinde harita aynı commit'te tazelenir.**
+  Tetikleyici cümle: **"harita güncelle"**. Eski harita hiç haritadan kötüdür.
+- Yeni bir fonksiyon yazmadan önce `fonksiyon-ustasi` ajanına sorulur — **elimizde olanı
+  sıfırdan yazmıyoruz, modifiye ediyoruz.** Ortak taban + üstüne binen alan modifikasyonu
+  bu projenin mimarisidir (bkz. `funktionen/README.md`).
+- Kopya adayları `funktionen/INDEX.md`'de; **karar kullanıcınındır**, sessizce birleştirilmez.
+
 ### 📚 Belge arşivi protokolü (2026-08-04)
 `Handbücher/`, `Podoloji/`, `verordnung rezept/` altındaki GKV/§302/Heilmittel belgelerine
 dokunan her iş şu sırayı izler:
