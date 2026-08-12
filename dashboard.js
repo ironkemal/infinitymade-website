@@ -14794,7 +14794,11 @@ async function loadNotizen() {
   const empty = document.getElementById('notesEmpty');
   const ownerId = getOwnerId();
 
-  const { data: leads } = await supabase.from('leads').select('id,title,first_name,last_name,metadata,phone,geburtsdatum').eq('owner_id', ownerId).order('title');
+  // bizScope ist Pflicht — sonst weicht die Notizen-Patientenliste von der
+  // Patientenliste ab (siehe bizScope-Kommentar).
+  const { data: leads } = await bizScope(supabase.from('leads')
+    .select('id,title,first_name,last_name,metadata,phone,geburtsdatum')
+    .eq('owner_id', ownerId).order('title'), 'patients');
   const allLeads = leads || [];
 
   input.value = '';
@@ -18494,10 +18498,20 @@ function getActiveBusinessId() {
 //   dataSharing[cat] === true  -> shared (owner-wide, no business filter)
 //   dataSharing[cat] === false -> separate (only the active business)
 // Single-business owners (no currentBusiness) are never filtered.
+// Standort-Filter. WICHTIG: business_id IS NULL zählt als "gehört der ganzen Praxis"
+// und bleibt aus JEDEM Standort sichtbar.
+//
+// Grund (Bug 2026-08-12, Podologie Nord): Zeilen bekommen ihre business_id vom
+// DB-Trigger `set_business_id_default` — der greift aber nur, wenn zum Zeitpunkt des
+// INSERT schon eine businesses-Zeile existiert. Alles, was VOR dem Anlegen des
+// Standorts entstanden ist (und alles, was das Backend schreibt — server.js kennt
+// currentBusiness nicht), hat business_id = NULL. Mit einem harten
+// `.eq('business_id', …)` verschwanden diese Patienten/Termine/Leistungen in dem
+// Moment, in dem der Standort angelegt wurde — ohne Fehlermeldung.
 function bizScope(query, cat) {
   if (dataSharing[cat]) return query;
   if (!currentBusiness?.id) return query;
-  return query.eq('business_id', currentBusiness.id);
+  return query.or(`business_id.eq.${currentBusiness.id},business_id.is.null`);
 }
 
 // Load the owner's cross-business sharing policy. Absent row keeps the defaults (all separate).
@@ -25553,11 +25567,13 @@ async function loadFussstatus() {
   el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade Fußbefund-Karte…</span>';
 
   const ownerId = getOwnerId();
-  const { data: patienten, error: patErr } = await supabase
+  // bizScope ist Pflicht: ohne sie zeigte die Fußbefund-Karte Patienten ALLER
+  // Standorte — und wich damit von der Patientenliste/Verordnung ab.
+  const { data: patienten, error: patErr } = await bizScope(supabase
     .from('leads')
     .select('id, first_name, last_name, geburtsdatum, metadata, krankenkasse, phone, phone_normalized, plz, versichertennummer')
     .eq('owner_id', ownerId)
-    .order('last_name', { ascending: true });
+    .order('last_name', { ascending: true }), 'patients');
 
   if (patErr) {
     console.error('Fehler beim Laden der Patienten:', patErr);
