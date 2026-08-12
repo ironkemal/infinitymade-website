@@ -2604,13 +2604,21 @@
                 <div class="settings-section-title">Praxis-Branding</div>
                 <div class="settings-section-body">
                   <div class="form-group">
-                    <label class="form-label">Logo-URL</label>
-                    <input class="form-input" id="setBrandingLogo" type="url" placeholder="https://…/logo.png" />
-                    <div class="form-hint">Wird auf Rechnungen und Quittungen angezeigt. Empfohlen: PNG mit transparentem Hintergrund, min. 200 × 80 px.</div>
+                    <label class="form-label">Praxis-Logo</label>
+                    <div class="form-hint" style="margin-bottom:10px;">Einmal hochladen — das Logo erscheint danach auf allen Rechnungen und Quittungen. Empfohlen: PNG mit transparentem Hintergrund, min. 200 × 80 px.</div>
+                    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                      <div id="brandingLogoPreview" style="display:none;">
+                        <img id="brandingLogoImg" alt="Logo" style="max-height:60px;max-width:200px;border-radius:4px;border:1px solid var(--border);padding:4px;background:#fff;" />
+                      </div>
+                      <input type="file" id="brandingLogoInput" accept="image/png,image/jpeg,image/webp" hidden />
+                      <button class="btn-secondary btn-sm" id="brandingLogoUploadBtn" type="button">Logo hochladen</button>
+                      <button class="btn-ghost btn-sm" id="brandingLogoRemoveBtn" type="button" style="display:none;color:#f87171;">Entfernen</button>
+                    </div>
                   </div>
-                  <div id="brandingLogoPreview" style="display:none;margin-bottom:12px;">
-                    <img id="brandingLogoImg" alt="Logo" style="max-height:60px;max-width:200px;border-radius:4px;border:1px solid var(--border);padding:4px;background:#fff;" />
-                  </div>
+                  <details class="form-group" style="margin-bottom:12px;">
+                    <summary style="cursor:pointer;font-size:12px;color:var(--text-muted);">Stattdessen Logo-URL verwenden</summary>
+                    <input class="form-input" id="setBrandingLogo" type="url" placeholder="https://…/logo.png" style="margin-top:8px;" />
+                  </details>
                   <div class="form-group">
                     <label class="form-label">Fußzeile auf Rechnungen</label>
                     <textarea class="form-input" id="setBrandingFooter" rows="3" placeholder="z. B. Ihre Physiotherapiepraxis · Praxisinhaber: Max Mustermann · Steuernummer: 220/5070/0815&#10;Bankverbindung: IBAN DE89 3704 0044 0532 0130 00 · BIC: COBADEFFXXX"></textarea>
@@ -4985,6 +4993,36 @@
     </div>
   </div>
 
+  <!-- Praxis-Logo zuschneiden. Eigener Dialog statt avatarCropModal: das Logo
+       braucht freies Seitenverhältnis, der Mitarbeiter-Avatar ist fest quadratisch. -->
+  <div class="modal-overlay" id="logoCropModal" hidden>
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <span class="modal-title">Logo zuschneiden</span>
+        <button class="modal-close" id="logoCropClose">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0;">
+        <div style="display:flex;gap:8px;padding:12px 16px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12px;color:var(--text-muted);">Form:</span>
+          <button class="btn-ghost btn-sm logo-shape-btn" data-shape="frei" type="button">Frei</button>
+          <button class="btn-ghost btn-sm logo-shape-btn" data-shape="breit" type="button">Breit (3:1)</button>
+          <button class="btn-ghost btn-sm logo-shape-btn" data-shape="rund" type="button">Rund</button>
+        </div>
+        <div style="display:flex;justify-content:center;background:#000;">
+          <img id="logoCropImage" style="max-width:100%;max-height:400px;display:block;" />
+        </div>
+        <div class="form-hint" style="padding:10px 16px;">
+          Auf Rechnungen wird das Logo auf ca. 20 mm Höhe skaliert. „Rund“ schneidet
+          breite Wortmarken ab — für Bildmarken gut, für Schriftzüge eher „Frei“.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="logoCropCancelBtn" type="button">Abbrechen</button>
+        <button class="btn-primary" id="logoCropSaveBtn" type="button">Übernehmen</button>
+      </div>
+    </div>
+  </div>
+
   <div id="bkActionModal" style="position:fixed;top:56px;right:0;bottom:0;width:380px;background:var(--bg-card-solid,#1f2937);border-left:1px solid var(--border,#374151);z-index:400;overflow-y:auto;display:none;flex-direction:column;">
     <div class="modal-header" style="position:sticky;top:0;z-index:1;background:var(--bg-card-solid,#1f2937);">
       <span class="modal-title">Termin Aksiyon</span>
@@ -5818,7 +5856,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260812c"></script>
+  <script type="module" src="dashboard.js?v=20260812e"></script>
 </body>
 
 </html>

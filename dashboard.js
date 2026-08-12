@@ -4627,7 +4627,10 @@ async function openZuzahlBefreiungModal(patientId, lead, existing) {
       notiz: overlay.querySelector('#_zbNotiz').value.trim() || null,
     };
     const { error } = await supabase.from('zuzahlung_befreiung').upsert(payload, {
-      onConflict: 'owner_id,patient_id,jahr',
+      // Canlı kısıt: UNIQUE (patient_id, jahr) — db/SCHEMA.sql.
+      // 'owner_id' eklenince Postgres eşleşen index bulamıyor ve 42P10 atıyordu,
+      // yani bu modal hiç kaydetmiyordu. saveBefreiung() zaten doğrusunu kullanıyor.
+      onConflict: 'patient_id,jahr',
       ignoreDuplicates: false,
     });
     if (error) {
@@ -8668,7 +8671,6 @@ async function loadPatientDetailRezepte(leadId) {
               <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
               <div class="rx-drucken-item" data-type="rechnung_privat" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Privat</div>
               <div class="rx-drucken-item" data-type="rechnung_selbstzahler" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Selbstzahler</div>
-              <div class="rx-drucken-item" data-type="rechnung_eigenanteil" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Eigenanteil</div>
               <div class="rx-drucken-item" data-type="rechnung_sonder" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung Sonder</div>
               <div class="rx-drucken-item" data-type="rechnung_bg" style="padding:7px 14px;cursor:pointer;font-size:12px;color:var(--text-main,#e2e8f0);white-space:nowrap;">📄 Rechnung BG</div>
               <div style="border-top:1px solid var(--border,#2d3a4a);margin:3px 0;"></div>
@@ -13331,16 +13333,158 @@ async function loadSettings() {
 function updateBrandingLogoPreview(url) {
   const preview = document.getElementById('brandingLogoPreview');
   const img = document.getElementById('brandingLogoImg');
+  const removeBtn = document.getElementById('brandingLogoRemoveBtn');
   if (!preview || !img) return;
-  if (url && url.startsWith('http')) {
-    img.src = url;
-    preview.style.display = '';
-  } else {
-    preview.style.display = 'none';
-  }
+  const hat = !!(url && url.startsWith('http'));
+  if (hat) img.src = url;
+  preview.style.display = hat ? '' : 'none';
+  if (removeBtn) removeBtn.style.display = hat ? '' : 'none';
 }
 
 document.getElementById('setBrandingLogo')?.addEventListener('input', e => updateBrandingLogoPreview(e.target.value));
+
+// ---------------------------------------------------------------------------
+// Praxis-Logo hochladen + zuschneiden (Konsey 2026-08-12)
+//
+// Vorher gab es hier nur ein URL-Feld — der Nutzer musste sein Logo erst
+// irgendwo anders hosten. Jetzt: einmal hochladen, danach steht das Logo auf
+// jeder Rechnung und Quittung (die Vorlagen lesen praxis_logo_url bereits).
+//
+// Seitenverhältnis ist bewusst standardmäßig FREI, nicht rund: Praxis-Logos
+// sind meist Wortmarken, ein Kreis schneidet den Schriftzug ab. Rund bleibt
+// als Preset verfügbar.
+// ---------------------------------------------------------------------------
+(function initBrandingLogoUpload() {
+  const fileInput = document.getElementById('brandingLogoInput');
+  const uploadBtn = document.getElementById('brandingLogoUploadBtn');
+  const removeBtn = document.getElementById('brandingLogoRemoveBtn');
+  const modal = document.getElementById('logoCropModal');
+  const cropImg = document.getElementById('logoCropImage');
+  if (!fileInput || !uploadBtn || !modal || !cropImg) return;
+
+  const SHAPES = { frei: NaN, breit: 3, rund: 1 };
+  let cropper = null;
+  let shape = 'frei';
+
+  function markActiveShape() {
+    modal.querySelectorAll('.logo-shape-btn').forEach(b => {
+      const on = b.getAttribute('data-shape') === shape;
+      b.style.background = on ? 'var(--accent, #b1891b)' : '';
+      b.style.color = on ? '#fff' : '';
+    });
+  }
+
+  function buildCropper() {
+    if (cropper) cropper.destroy();
+    cropper = new Cropper(cropImg, {
+      aspectRatio: SHAPES[shape],
+      viewMode: 1,
+      autoCropArea: 0.9,
+      dragMode: 'move',
+      guides: false,
+      background: false,
+      zoomable: true,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+    });
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    if (cropper) { cropper.destroy(); cropper = null; }
+    cropImg.src = '';
+    fileInput.value = '';
+  }
+
+  uploadBtn.onclick = () => fileInput.click();
+
+  fileInput.onchange = ev => {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      showToast('Datei zu groß (max. 4 MB)', 'error');
+      fileInput.value = '';
+      return;
+    }
+    cropImg.src = URL.createObjectURL(file);
+    modal.hidden = false;
+    shape = 'frei';
+    markActiveShape();
+    // Cropper braucht ein geladenes Bild mit bekannten Maßen.
+    cropImg.onload = buildCropper;
+  };
+
+  modal.querySelectorAll('.logo-shape-btn').forEach(btn => {
+    btn.onclick = () => {
+      shape = btn.getAttribute('data-shape');
+      markActiveShape();
+      if (cropper) cropper.setAspectRatio(SHAPES[shape]);
+    };
+  });
+
+  document.getElementById('logoCropClose').onclick = closeModal;
+  document.getElementById('logoCropCancelBtn').onclick = closeModal;
+
+  document.getElementById('logoCropSaveBtn').onclick = async () => {
+    if (!cropper) return;
+    let canvas = cropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 800 });
+    if (!canvas) { showToast('Bildverarbeitung fehlgeschlagen', 'error'); return; }
+
+    // „Rund“ wirklich rund ausstanzen — sonst bliebe es ein Quadrat.
+    if (shape === 'rund') {
+      const size = Math.min(canvas.width, canvas.height);
+      const round = document.createElement('canvas');
+      round.width = size; round.height = size;
+      const ctx = round.getContext('2d');
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(canvas, 0, 0, size, size);
+      canvas = round;
+    }
+
+    // PNG, damit Transparenz erhalten bleibt (Briefkopf auf weißem Papier).
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if (!blob) { showToast('Bildverarbeitung fehlgeschlagen', 'error'); return; }
+
+    const userId = currentSession.user.id;
+    const path = `${userId}/praxis-logo-${Date.now()}.png`;
+    showToast('Logo wird hochgeladen…');
+    try {
+      const { error: upErr } = await supabase.storage
+        .from('avatars').upload(path, blob, { upsert: true, contentType: 'image/png' });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      const logoUrl = urlData?.publicUrl;
+      if (!logoUrl) throw new Error('URL fehlgeschlagen');
+
+      const { error: dbErr } = await supabase.from('profiles')
+        .update({ praxis_logo_url: logoUrl }).eq('id', userId);
+      if (dbErr) throw dbErr;
+
+      currentProfile.praxis_logo_url = logoUrl;
+      const urlField = document.getElementById('setBrandingLogo');
+      if (urlField) urlField.value = logoUrl;
+      updateBrandingLogoPreview(logoUrl);
+      closeModal();
+      showToast('Logo gespeichert — erscheint ab jetzt auf allen Belegen', 'success');
+    } catch (e) {
+      showToast('Fehler beim Hochladen: ' + e.message, 'error');
+    }
+  };
+
+  removeBtn.onclick = async () => {
+    const { error } = await supabase.from('profiles')
+      .update({ praxis_logo_url: null }).eq('id', currentSession.user.id);
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+    currentProfile.praxis_logo_url = null;
+    const urlField = document.getElementById('setBrandingLogo');
+    if (urlField) urlField.value = '';
+    updateBrandingLogoPreview('');
+    showToast('Logo entfernt', 'success');
+  };
+})();
 
 document.getElementById('brandingSaveBtn')?.addEventListener('click', async () => {
   const logoUrl = (document.getElementById('setBrandingLogo')?.value || '').trim();
@@ -13487,6 +13631,7 @@ function getVorlagenSampleHtml(v, editMode = false) {
 
   const typeColors = {
     quittung_zuzahlung: '#0a4a7a',
+    rechnung_ausfall: '#7a2a4a',
     rechnung_bg: '#2a3a8c',
     rechnung_privat: '#2a5c3a',
     rechnung_eigenanteil: '#5c4a2a',
@@ -13497,6 +13642,7 @@ function getVorlagenSampleHtml(v, editMode = false) {
   };
   const typeLabels = {
     quittung_zuzahlung: 'Zuzahlungs-Quittung',
+    rechnung_ausfall: 'Ausfallrechnung',
     rechnung_bg: 'Rechnung BG',
     rechnung_privat: 'Rechnung Privat',
     rechnung_eigenanteil: 'Rechnung Eigenanteil',
@@ -13785,6 +13931,7 @@ function _enterAnsichtEditMode(v, modal) {
 
 const VORLAGE_TYPE_LABELS = {
   quittung_zuzahlung: 'Quittung Zuzahlung',
+  rechnung_ausfall: 'Ausfallrechnung',
   rechnung_bg: 'Rechnung BG',
   rechnung_privat: 'Rechnung Privat',
   rechnung_eigenanteil: 'Rechnung Eigenanteil',
@@ -13975,6 +14122,7 @@ const DEFAULT_VORLAGE_SEEDS = [
   { name: 'Rechnung BG', vorlage_type: 'rechnung_bg', is_default: true, content_json: { betreff: 'Rechnung für Berufsgenossenschaft', zahlungsziel_tage: '30', fusszeile: '' } },
   { name: 'Rechnung Privat', vorlage_type: 'rechnung_privat', is_default: true, content_json: { betreff: 'Rechnung für physiotherapeutische Leistungen', zahlungsziel_tage: '14', fusszeile: '' } },
   { name: 'Rechnung Eigenanteil', vorlage_type: 'rechnung_eigenanteil', is_default: true, content_json: { hinweis: 'Eigenanteil gemäß Heilmittelrichtlinien.', fusszeile: '' } },
+  { name: 'Ausfallrechnung', vorlage_type: 'rechnung_ausfall', is_default: true, content_json: { betreff: 'Ausfallrechnung', zahlungsziel_tage: '14', hinweis: '', fusszeile: '' } },
   { name: 'Rechnung Selbstzahler', vorlage_type: 'rechnung_selbstzahler', is_default: true, content_json: { betreff: 'Selbstzahler-Rechnung', zahlungsziel_tage: '14', fusszeile: '' } },
   { name: 'Rechnung Sonder', vorlage_type: 'rechnung_sonder', is_default: true, content_json: { betreff: 'Rechnung Sonderkostenträger', fusszeile: '' } },
   { name: 'Rezeptvorderseite', vorlage_type: 'rezeptvorderseite', is_default: true, content_json: { praxis_zusatz: 'Physiotherapie & Manuelle Therapie', stempel_hinweis: 'Bitte Stempel beifügen' } },
