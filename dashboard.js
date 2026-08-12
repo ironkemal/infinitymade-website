@@ -8249,6 +8249,13 @@ function renderLeads() {
     const q = leadSearchVal.toLowerCase();
     rows = rows.filter(r => patientMatchesQuery(r, q) || (r.city || '').toLowerCase().includes(q));
   }
+  // Standort-Spalte nur, wenn es überhaupt mehrere Standorte gibt. In der
+  // Einzelpraxis sagt sie in jeder Zeile dasselbe und kostet nur Breite.
+  // `hidden` reicht bei <th> nicht zuverlässig (Autoren-CSS überschreibt es) → display.
+  const multiBiz = (myBusinesses || []).length > 1;
+  const standortTh = document.getElementById('leadStandortTh');
+  if (standortTh) standortTh.style.display = multiBiz ? '' : 'none';
+
   if (rows.length === 0) { tbody.innerHTML = ''; emptyEl.hidden = false; return; }
   emptyEl.hidden = true;
   // Standort lookup: lead.business_id → business_name
@@ -8268,7 +8275,7 @@ function renderLeads() {
       <td>${r.city || '—'}</td>
       <td>${r.phone || '—'}</td>
       <td>${r.email || '—'}</td>
-      <td>${escapeHtml(standort)}</td>
+      ${multiBiz ? `<td>${escapeHtml(standort)}</td>` : ''}
       <td>
         ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? `<span class="badge badge-green" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;vertical-align:middle;"><span class="svg-icon" style="width:11px;height:11px;display:inline-flex;">${ICON.whatsapp}</span></span> ` : ''}
         <span class="badge ${leadStatusBadge(r.status)}">${r.status || '—'}</span>

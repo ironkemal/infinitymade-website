@@ -338,7 +338,8 @@
                   <th data-i18n="lead_city">Stadt</th>
                   <th data-i18n="lead_phone">Telefon</th>
                   <th>E-Mail</th>
-                  <th data-i18n="lead_standort">Standort</th>
+                  <!-- nur bei mehreren Standorten sichtbar — siehe renderLeads() -->
+                  <th data-i18n="lead_standort" id="leadStandortTh" style="display:none;">Standort</th>
                   <th data-i18n="lead_status">Status</th>
                   <th></th>
                 </tr>
@@ -5827,7 +5828,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260812a"></script>
+  <script type="module" src="dashboard.js?v=20260812b"></script>
 </body>
 
 </html>
