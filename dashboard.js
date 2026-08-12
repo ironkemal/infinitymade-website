@@ -993,7 +993,7 @@ async function switchPanel(id) {
   if (id === 'b2b') { loadB2B(); checkB2bSetup(); }
   if (id === 'b2c') { loadB2C(); checkB2cSetup(); }
   if (id === 'vorlagen') { loadVorlagenPanel(); }
-  if (id === 'settings') { loadSettings(); loadVorlagen(); }
+  if (id === 'settings') { loadSettings(); }
   if (id === 'doctors') loadDoctors();
   if (id === 'notizen') loadNotizen();
   if (id === 'beispielmodus') loadBeispielmodus();
@@ -13763,7 +13763,6 @@ function _enterAnsichtEditMode(v, modal) {
     _exitAnsichtEditMode();
     setTimeout(_resizeVorlagenIframe, 50);
     loadVorlagenPanel();
-    loadVorlagen();
   };
 
   // Cancel button logic:
@@ -13794,37 +13793,6 @@ const VORLAGE_TYPE_LABELS = {
   rezeptvorderseite: 'Rezeptvorderseite',
   rzg_quittung: 'RZG-Quittung'
 };
-
-async function loadVorlagen() {
-  const list = document.getElementById('vorlagenList');
-  if (!list) return;
-  list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Wird geladen…</div>';
-
-  const { data, error } = await supabase
-    .from('document_vorlagen')
-    .select('id, name, vorlage_type, is_default, created_at, content_json')
-    .eq('owner_id', getOwnerId())
-    .order('vorlage_type').order('name');
-
-  if (error) { list.innerHTML = `<div style="color:#f87171;">Fehler: ${error.message}</div>`; return; }
-  if (!data || data.length === 0) {
-    list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Noch keine Vorlagen erstellt.</div>';
-    return;
-  }
-
-  list.innerHTML = data.map(v => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:6px;gap:8px;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(v.name)}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHtml(VORLAGE_TYPE_LABELS[v.vorlage_type] || v.vorlage_type)}${v.is_default ? ' · <span style="color:#f59e0b;font-weight:600;">Standard</span>' : ''}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button class="btn-ghost btn-sm" onclick="openVorlagenEdit('${v.id}')" style="font-size:12px;">Bearbeiten</button>
-        <button class="btn-ghost btn-sm" onclick="deleteVorlage('${v.id}')" style="font-size:12px;color:#f87171;">Löschen</button>
-      </div>
-    </div>
-  `).join('');
-}
 
 let _vorlagenCache = {};
 
@@ -13943,7 +13911,6 @@ async function saveVorlage() {
 
   document.getElementById('vorlagenModal').hidden = true;
   showToast('Vorlage gespeichert', 'success');
-  loadVorlagen();
   if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
 }
 
@@ -13953,7 +13920,6 @@ async function deleteVorlage(id) {
   const { error } = await supabase.from('document_vorlagen').delete().eq('id', id);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
   showToast('Vorlage gelöscht', 'success');
-  loadVorlagen();
   if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
 }
 
@@ -13970,7 +13936,6 @@ async function duplicateVorlage(id) {
   });
   if (insErr) { showToast('Fehler: ' + insErr.message, 'error'); return; }
   showToast('Vorlage kopiert: ' + newName, 'success');
-  loadVorlagen();
   if (document.getElementById('panel-vorlagen')?.classList.contains('active')) loadVorlagenPanel();
 }
 
@@ -13994,7 +13959,6 @@ function startVorlagenInlineRename(titleEl, vorlagenId, vorlagenList) {
     }
     titleEl.style.display = '';
     input.remove();
-    loadVorlagen();
   };
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } if (e.key === 'Escape') { titleEl.textContent = currentName; titleEl.style.display = ''; input.remove(); } });
@@ -14029,8 +13993,26 @@ async function seedMissingVorlagen(missingTypes) {
   if (rows.length > 0) await supabase.from('document_vorlagen').insert(rows);
 }
 
-document.getElementById('vorlagenNewBtn')?.addEventListener('click', openVorlagenNew);
 document.getElementById('vorlagenSaveBtn')?.addEventListener('click', saveVorlage);
+
+// Vorlagen-Panel: Zahnrad-Menü (Vorlage-Einstellungen)
+(function initVorlagenSettingsMenu() {
+  const btn = document.getElementById('vorlagenSettingsBtn');
+  const menu = document.getElementById('vorlagenSettingsMenu');
+  if (!btn || !menu) return;
+
+  const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const willOpen = menu.hidden;
+    menu.hidden = !willOpen;
+    btn.setAttribute('aria-expanded', String(willOpen));
+  });
+  menu.addEventListener('click', (e) => { e.stopPropagation(); close(); });
+  document.addEventListener('click', () => { if (!menu.hidden) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) close(); });
+})();
 
 document.getElementById('befSaveBtn')?.addEventListener('click', () => {
   const lead = document.getElementById('befSaveBtn').dataset.lead;

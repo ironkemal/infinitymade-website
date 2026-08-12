@@ -2306,9 +2306,25 @@
         <section class="panel" id="panel-vorlagen">
           <div class="panel-header">
             <h2>Dokument-Vorlagen</h2>
-            <p class="panel-sub">Vorlagen für Quittungen, Rechnungen und §302-Dokumente</p>
+            <p class="panel-sub">Erstellen Sie individuelle Vorlagen für Quittungen, Rechnungen und §302-Dokumente. Die als Standard markierte Vorlage wird automatisch verwendet.</p>
           </div>
-          <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:16px;">
+            <div style="position:relative;">
+              <button class="btn-ghost btn-sm" id="vorlagenSettingsBtn" type="button" title="Vorlage-Einstellungen" aria-haspopup="true" aria-expanded="false" style="display:inline-flex;align-items:center;gap:6px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Vorlage-Einstellungen
+              </button>
+              <div id="vorlagenSettingsMenu" hidden style="position:absolute;top:calc(100% + 6px);right:0;z-index:60;min-width:280px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:8px;text-align:left;">
+                <div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted);padding:6px 8px 4px;">Druck</div>
+                <button class="btn-ghost" id="openDruckModalBtn" type="button" style="display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;padding:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  <span style="min-width:0;">
+                    <span style="display:block;font-size:13px;font-weight:600;color:var(--text-main);">Druckeinstellungen</span>
+                    <span style="display:block;font-size:12px;color:var(--text-muted);line-height:1.4;margin-top:2px;white-space:normal;">Position des Adressfensters für DIN-lang-Umschläge anpassen.</span>
+                  </span>
+                </button>
+              </div>
+            </div>
             <button class="btn-primary" id="vorlagenPanelNewBtn" type="button">＋ Neue Vorlage</button>
           </div>
           <div id="vorlagenPanelGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;padding-bottom:32px;">
@@ -2604,32 +2620,6 @@
                 </div>
               </div>
 
-              <!-- Dokument-Vorlagen -->
-              <div class="settings-section" id="settingsVorlagenSection">
-                <div class="settings-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-                  <span>Dokument-Vorlagen</span>
-                  <button class="btn-ghost btn-sm" id="vorlagenNewBtn" type="button" style="font-size:12px;">+ Neue Vorlage</button>
-                </div>
-                <div class="settings-section-body">
-                  <p class="form-hint" style="margin-bottom:12px;">Erstellen Sie individuelle Vorlagen für Quittungen, Rechnungen und §302-Dokumente. Die als Standard markierte Vorlage wird automatisch verwendet.</p>
-                  <div id="vorlagenList" style="display:flex;flex-direction:column;gap:6px;">
-                    <div style="color:var(--text-muted);font-size:13px;">Wird geladen…</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <div class="settings-section-title">Druck</div>
-                <div class="settings-section-body">
-                  <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">
-                    Passen Sie die Position des Adressfensters für DIN-lang-Umschläge an.
-                  </p>
-                  <button class="btn-ghost" id="openDruckModalBtn" type="button">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    Druckeinstellungen öffnen
-                  </button>
-                </div>
-              </div>
             </div><!-- /gruppe dokumente -->
 
             <!-- ── GRUPPE 3: KONTO & ABONNEMENT ── -->
@@ -5828,7 +5818,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260812b"></script>
+  <script type="module" src="dashboard.js?v=20260812c"></script>
 </body>
 
 </html>
