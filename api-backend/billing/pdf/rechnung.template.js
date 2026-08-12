@@ -15,8 +15,9 @@ const fmtDate = (d) => {
   return dt.toLocaleDateString('de-DE');
 };
 
+// rechnung_privat trägt den Fachbereich im Titel — der wird übergeben, damit auf
+// einer Podologie-Rechnung nicht "Physiotherapeutische Leistungen" steht.
 const TYPE_TITLES = {
-  rechnung_privat:       'Rechnung – Physiotherapeutische Leistungen',
   rechnung_selbstzahler: 'Rechnung – Selbstzahler',
   rechnung_eigenanteil:  'Rechnung – Eigenanteil',
   rechnung_sonder:       'Rechnung – Sonderkostenträger',
@@ -36,6 +37,7 @@ const TYPE_TITLES = {
  * @param {string} opts.logoUrl
  * @param {string} opts.invoiceFooterText
  * @param {string} opts.betreff         Optional, from vorlage content_json.betreff
+ * @param {string} opts.bereichTitel    Fachbereichs-Bezeichnung für rechnung_privat
  */
 export function renderRechnung(opts) {
   const {
@@ -43,10 +45,15 @@ export function renderRechnung(opts) {
     praxis = {}, patient = {}, verordnung = {}, rechnung = {},
     sessions = [], totals = {}, bankverbindung = '',
     logoUrl = '', invoiceFooterText = '', betreff = null,
+    bereichTitel = 'Heilmittelleistungen',
   } = opts;
 
-  const title = TYPE_TITLES[type] || 'Rechnung';
+  const title = TYPE_TITLES[type] || `Rechnung – ${bereichTitel}`;
   const isBg = type === 'rechnung_bg';
+
+  // Steuernummer ODER USt-IdNr. genügt (§ 14 Abs. 4 Nr. 2 UStG).
+  const steuerLabel = praxis.steuernummer ? 'Steuer-Nr.' : 'USt-IdNr.';
+  const steuerWert = praxis.steuernummer || praxis.ust_id || '';
 
   const sessionRows = sessions.map(s => `
     <tr>
@@ -157,13 +164,13 @@ export function renderRechnung(opts) {
       ? `<div style="grid-column:1/-1;font-size:8pt;color:#555;">${escapeHtml(invoiceFooterText).replace(/\n/g, '<br>')}</div>`
       : `<div>
       <strong>${escapeHtml(praxis.name || '')}</strong><br>
-      Steuer-Nr.: ${escapeHtml(praxis.steuernummer || '')}<br>
+      ${steuerWert ? `${steuerLabel}: ${escapeHtml(steuerWert)}<br>` : ''}
       E-Mail: ${escapeHtml(praxis.email || '')}
     </div>
-    <div>
+    ${bankverbindung ? `<div>
       <strong>Bankverbindung</strong><br>
-      ${escapeHtml(bankverbindung)}
-    </div>
+      ${escapeHtml(bankverbindung).replace(/\n/g, '<br>')}
+    </div>` : ''}
     <div>
       <strong>Zahlungsweise</strong><br>
       Bitte überweisen Sie den Betrag bis zum

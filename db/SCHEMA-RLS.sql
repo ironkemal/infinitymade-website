@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-11
--- LETZTE MIGRATION:  20260810142703_verordnungen_privat_selbstzahler_flow
+-- ERZEUGT AM:        2026-08-12
+-- LETZTE MIGRATION:  tighten_avatars_storage_policies (12.08.)
+--                    davor: 20260810142703_verordnungen_privat_selbstzahler_flow
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
@@ -10,6 +11,18 @@
 -- Tabellen/Spalten:  db/SCHEMA.sql · Orientierung: db/README.md
 --
 -- ⚠️  MOMENTAUFNAHME. Nach jeder Migration neu erzeugen.
+--
+-- ⚠️  NICHT ENTHALTEN: storage.objects-Policies (Schema `storage`, nicht
+--     `public`). Stand 12.08.2026 gibt es dort fünf Buckets:
+--       avatars           public  — Mitarbeiterbilder + Praxis-Logo,
+--                                   Schreiben nur im eigenen Ordner
+--                                   (<profile_id>/…) oder im Ordner eines
+--                                   eigenen Mitarbeiters
+--       prescriptions     privat  — Ordner = owner_id
+--       patient-documents privat  — Ordner = owner_id
+--       abrechnungen      privat  — nur Lesen, Ordner = owner_id
+--       referrals         privat
+--     Wer Storage-Zugriff plant, prüft die Policies direkt in der DB.
 -- =====================================================================
 
 

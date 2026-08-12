@@ -150,13 +150,15 @@ export function renderZuzahlungsrechnung(opts) {
       ? `<div style="grid-column:1/-1;font-size:8pt;color:#555;">${escapeHtml(invoiceFooterText).replace(/\n/g, '<br>')}</div>`
       : `<div>
       <strong>${escapeHtml(praxis.name || '')}</strong><br>
-      Steuer-Nr.: ${escapeHtml(praxis.steuernummer || '')}<br>
+      ${(praxis.steuernummer || praxis.ust_id)
+          ? `${praxis.steuernummer ? 'Steuer-Nr.' : 'USt-IdNr.'}: ${escapeHtml(praxis.steuernummer || praxis.ust_id)}<br>`
+          : ''}
       E-Mail: ${escapeHtml(praxis.email || '')}
     </div>
-    <div>
+    ${bankverbindung ? `<div>
       <strong>Bankverbindung</strong><br>
-      ${escapeHtml(bankverbindung)}
-    </div>
+      ${escapeHtml(bankverbindung).replace(/\n/g, '<br>')}
+    </div>` : ''}
     <div>
       <strong>Zahlungsweise</strong><br>
       Bitte überweisen Sie den Betrag bis zum

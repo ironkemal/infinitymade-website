@@ -102,6 +102,83 @@ function frequenzToDigit(freq) {
   return '1';
 }
 
+// ---------------------------------------------------------------------------
+// Praxis-Stammdaten für gedruckte Belege — Konsey 2026-08-12
+//
+// Vorher stand hier eine fest kodierte Musterbank-IBAN. Eine Rechnung mit
+// fremder IBAN ist eine irreführende Zahlungsaufforderung: der Patient zahlt
+// nicht oder zahlt falsch. Leere Bankzeile ist nicht besser — sie macht das
+// Problem nur unsichtbar. Deshalb: Daten aus dem Profil, und wenn sie fehlen,
+// wird der Druck blockiert statt einen unbrauchbaren Beleg auszugeben.
+// ---------------------------------------------------------------------------
+
+// Zusatzfelder, die jedes Druck-Route-Profil braucht.
+const PRAXIS_DRUCK_FELDER = 'steuernummer, ust_id, iban, bic, bank_name';
+
+// Abrechnungscode je Leistungsbereich (Anlage 3: 71 = Podologe, 22 = Physio).
+// Vorher an drei Stellen als '22' fest kodiert — in der Podologie zog das
+// stillschweigend den falschen Katalogausschnitt und damit den falschen Preis.
+function abrechnungscodeFuer(sector) {
+  return sector === 'podologie' ? '71' : '22';
+}
+
+const BEREICH_TEXTE = {
+  podologie:      { leistung: 'Podologische Behandlung',      titel: 'Podologische Leistungen' },
+  logopaedie:     { leistung: 'Logopädische Behandlung',      titel: 'Logopädische Leistungen' },
+  ergotherapie:   { leistung: 'Ergotherapeutische Behandlung', titel: 'Ergotherapeutische Leistungen' },
+  physiotherapy:  { leistung: 'Physiotherapeutische Behandlung', titel: 'Physiotherapeutische Leistungen' },
+};
+
+function bereichTexte(sector) {
+  return BEREICH_TEXTE[sector] || BEREICH_TEXTE.physiotherapy;
+}
+
+// Mehrzeilige Bankverbindung aus dem Profil. Leerer String = keine Daten
+// hinterlegt; die Vorlagen blenden den Block dann komplett aus.
+function buildBankverbindung(profile) {
+  if (!profile?.iban) return '';
+  return [
+    profile.bank_name || null,
+    `IBAN: ${profile.iban}`,
+    profile.bic ? `BIC: ${profile.bic}` : null,
+  ].filter(Boolean).join('\n');
+}
+
+// Pflichtangaben für rechnungsartige Belege (§ 14 Abs. 4 UStG).
+// Steuernummer ODER USt-IdNr. genügt — eine von beiden muss vorhanden sein.
+function fehlendePflichtangaben(profile) {
+  const fehlend = [];
+  if (!profile?.iban) fehlend.push('Bankverbindung (IBAN)');
+  if (!profile?.steuernummer && !profile?.ust_id) fehlend.push('Steuernummer oder USt-IdNr.');
+  return fehlend;
+}
+
+function pflichtangabenHinweisHtml(fehlend) {
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
+<title>Angaben unvollständig</title>
+<style>
+  body { font: 15px/1.6 'Inter','Segoe UI',sans-serif; color:#1a1a1a; background:#f6f7f9;
+         display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:24px; }
+  .box { background:#fff; border-radius:12px; padding:32px 36px; max-width:520px;
+         box-shadow:0 4px 24px rgba(0,0,0,.08); }
+  h1 { font-size:19px; margin:0 0 12px; color:#b45309; }
+  ul { margin:12px 0 20px; padding-left:20px; }
+  li { margin-bottom:6px; font-weight:600; }
+  p { margin:0 0 14px; color:#444; }
+  .hint { font-size:13px; color:#666; }
+</style></head><body>
+  <div class="box">
+    <h1>Rechnung kann nicht gedruckt werden</h1>
+    <p>Für eine Rechnung sind folgende Angaben gesetzlich vorgeschrieben (§ 14 Abs. 4 UStG),
+       fehlen aber in Ihrem Praxisprofil:</p>
+    <ul>${fehlend.map(f => `<li>${f}</li>`).join('')}</ul>
+    <p>Bitte tragen Sie die Angaben unter <strong>Einstellungen → Praxisdaten</strong> nach
+       und öffnen Sie den Druck danach erneut.</p>
+    <p class="hint">Quittungen ohne Rechnungscharakter sind davon nicht betroffen.</p>
+  </div>
+</body></html>`;
+}
+
 function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW', sector = 'physiotherapy') {
   if (!rx.kostentraeger_ik) {
     const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
@@ -111,7 +188,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
   }
 
   const np = nameParts(lead);
-  const abrechnungscode = sector === 'podologie' ? '71' : '22';
+  const abrechnungscode = abrechnungscodeFuer(sector);
 
   // Resolve Positionsnummer (template like 'X0501' or stored numeric).
   const stored = rx.heilmittel_position;
@@ -246,11 +323,18 @@ router.post('/abrechnung/create', async (req, res) => {
       ? profile.owner_id
       : profile.id;
 
-    let tenantSector = profile.sector || 'physiotherapy';
+    // Praxis-Stammdaten hängen am Inhaber, nicht am druckenden Mitarbeiter.
+    // Vorher wurde nur der Sector nachgeladen — Bankverbindung, Steuernummer
+    // und Anschrift kamen aus dem (leeren) Mitarbeiterprofil.
+    let praxisProfil = profile;
     if (profile.role === 'employee' && profile.owner_id) {
-      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
-      tenantSector = op?.sector || tenantSector;
+      const { data: op } = await supabase
+        .from('profiles')
+        .select(`business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector, ${PRAXIS_DRUCK_FELDER}`)
+        .eq('id', tenantId).maybeSingle();
+      if (op) praxisProfil = { ...profile, ...op };
     }
+    const tenantSector = praxisProfil.sector || 'physiotherapy';
 
     // ---- input ----
     const { ownerId, kostentraegerIk, prescriptionIds } = req.body || {};
@@ -472,7 +556,7 @@ router.post('/abrechnung/create', async (req, res) => {
           bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
           code: r.heilmittel_position,
           datum: r.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-          abrechnungscode: '22',
+          abrechnungscode: abrechnungscodeFuer(tenantSector),
         });
         return (preis_eur * (r.anzahl_einheiten || 1)).toFixed(2);
       })();
@@ -934,16 +1018,23 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     if (uErr || !user) return res.status(401).send('Ungültiges Token');
 
     const { data: profile } = await supabase
-      .from('profiles').select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector')
+      .from('profiles').select(`id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector, ${PRAXIS_DRUCK_FELDER}`)
       .eq('id', user.id).single();
     if (!profile) return res.status(403).send('Profil nicht gefunden');
     const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
 
-    let tenantSector = profile.sector || 'physiotherapy';
+    // Praxis-Stammdaten hängen am Inhaber, nicht am druckenden Mitarbeiter.
+    // Vorher wurde nur der Sector nachgeladen — Bankverbindung, Steuernummer
+    // und Anschrift kamen aus dem (leeren) Mitarbeiterprofil.
+    let praxisProfil = profile;
     if (profile.role === 'employee' && profile.owner_id) {
-      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
-      tenantSector = op?.sector || tenantSector;
+      const { data: op } = await supabase
+        .from('profiles')
+        .select(`business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector, ${PRAXIS_DRUCK_FELDER}`)
+        .eq('id', tenantId).maybeSingle();
+      if (op) praxisProfil = { ...profile, ...op };
     }
+    const tenantSector = praxisProfil.sector || 'physiotherapy';
 
     // ---- Fetch owner's default Zuzahlung vorlage for custom hinweis/fusszeile ----
     const { data: vorlage } = await supabase
@@ -953,6 +1044,14 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       .eq('vorlage_type', 'quittung_zuzahlung')
       .eq('is_default', true)
       .maybeSingle();
+    // Zuzahlungsrechnung ist trotz des Typnamens eine Rechnung (Fälligkeit +
+    // Bankzeile), also gelten die Pflichtangaben nach § 14 Abs. 4 UStG.
+    const fehlend = fehlendePflichtangaben(praxisProfil);
+    if (fehlend.length > 0) {
+      res.set('Content-Type', 'text/html; charset=utf-8');
+      return res.status(400).send(pflichtangabenHinweisHtml(fehlend));
+    }
+
     const vorlagenJson = vorlage?.content_json || {};
     const customHinweis = vorlagenJson.hinweis || null;
     const customFusszeile = vorlagenJson.fusszeile || null;
@@ -986,7 +1085,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
       code: storedPos,
       datum: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-      abrechnungscode: '22',
+      abrechnungscode: abrechnungscodeFuer(tenantSector),
     });
     const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
 
@@ -1018,7 +1117,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     const printSessions = doneSessions.map(s => ({
       datum: s.done_at,
       position: storedPos,
-      bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
+      bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
       brutto: priceUnit,
       zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
     }));
@@ -1026,12 +1125,13 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     // ---- Render PDF/HTML Template ----
     const html = renderZuzahlungsrechnung({
       praxis: {
-        name: profile.business_name || 'Praxis für Physiotherapie',
-        strasse: [profile.street, profile.house_number].filter(Boolean).join(' '),
-        plz_ort: [profile.zip, profile.city].filter(Boolean).join(' '),
-        telefon: profile.phone || '',
-        ik: profile.ik_number || rx.doctor_bsnr || '',
-        steuernummer: profile.steuernummer || '',
+        name: praxisProfil.business_name || 'Praxis',
+        strasse: [praxisProfil.street, praxisProfil.house_number].filter(Boolean).join(' '),
+        plz_ort: [praxisProfil.zip, praxisProfil.city].filter(Boolean).join(' '),
+        telefon: praxisProfil.phone || '',
+        ik: praxisProfil.ik_number || rx.doctor_bsnr || '',
+        steuernummer: praxisProfil.steuernummer || '',
+        ust_id: praxisProfil.ust_id || '',
         email: user.email || ''
       },
       patient: {
@@ -1055,9 +1155,9 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
       },
       sessions: printSessions,
       totals,
-      bankverbindung: 'DE89 1002 0030 0040 0500 00 (Musterbank)',
-      logoUrl: profile.praxis_logo_url || '',
-      invoiceFooterText: customFusszeile || profile.invoice_footer_text || '',
+      bankverbindung: buildBankverbindung(praxisProfil),
+      logoUrl: praxisProfil.praxis_logo_url || '',
+      invoiceFooterText: customFusszeile || praxisProfil.invoice_footer_text || '',
       hinweisText: customHinweis
     });
 
@@ -1073,8 +1173,15 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
 // Renders print-ready document for rechnung_privat|selbstzahler|eigenanteil|sonder|bg,
 // rzg_quittung, or rezeptvorderseite — applies owner's default vorlage settings.
 router.get('/prescription/:id/rechnung', async (req, res) => {
-  const VALID_TYPES = ['rechnung_privat','rechnung_selbstzahler','rechnung_eigenanteil',
+  // rechnung_eigenanteil ist bewusst NICHT dabei: die Vorlage rechnete den
+  // vollen Positionspreis ab statt des Eigenanteils, also eine Überforderung
+  // gegenüber dem Patienten. Der Typ kommt zurück, sobald die Berechnung steht
+  // (Konsey 2026-08-12).
+  const VALID_TYPES = ['rechnung_privat','rechnung_selbstzahler',
                        'rechnung_sonder','rechnung_bg','rzg_quittung','rezeptvorderseite'];
+  // Belege mit Rechnungscharakter — nur hier greifen die Pflichtangaben.
+  // rzg_quittung und rezeptvorderseite sind Quittung bzw. Kopie, keine Rechnung.
+  const RECHNUNGS_TYPEN = ['rechnung_privat','rechnung_selbstzahler','rechnung_sonder','rechnung_bg'];
   const type = req.query.type;
   if (!type || !VALID_TYPES.includes(type)) {
     return res.status(400).send('Ungültiger Dokumenttyp');
@@ -1090,15 +1197,31 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector')
+      .select(`id, role, owner_id, business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector, ${PRAXIS_DRUCK_FELDER}`)
       .eq('id', user.id).single();
     if (!profile) return res.status(403).send('Profil nicht gefunden');
     const tenantId = profile.role === 'employee' && profile.owner_id ? profile.owner_id : user.id;
 
-    let tenantSector = profile.sector || 'physiotherapy';
+    // Praxis-Stammdaten hängen am Inhaber, nicht am druckenden Mitarbeiter.
+    // Vorher wurde nur der Sector nachgeladen — Bankverbindung, Steuernummer
+    // und Anschrift kamen aus dem (leeren) Mitarbeiterprofil.
+    let praxisProfil = profile;
     if (profile.role === 'employee' && profile.owner_id) {
-      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
-      tenantSector = op?.sector || tenantSector;
+      const { data: op } = await supabase
+        .from('profiles')
+        .select(`business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector, ${PRAXIS_DRUCK_FELDER}`)
+        .eq('id', tenantId).maybeSingle();
+      if (op) praxisProfil = { ...profile, ...op };
+    }
+    const tenantSector = praxisProfil.sector || 'physiotherapy';
+
+    // Pflichtangaben nur für rechnungsartige Belege prüfen (§ 14 Abs. 4 UStG).
+    if (RECHNUNGS_TYPEN.includes(type)) {
+      const fehlend = fehlendePflichtangaben(praxisProfil);
+      if (fehlend.length > 0) {
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        return res.status(400).send(pflichtangabenHinweisHtml(fehlend));
+      }
     }
 
     // ---- Owner's default vorlage for this type ----
@@ -1138,18 +1261,19 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       bereich: tenantSector === 'podologie' ? 'podologie' : 'physiotherapie',
       code: storedPos,
       datum: rx.ausstellungsdatum || new Date().toISOString().slice(0, 10),
-      abrechnungscode: '22',
+      abrechnungscode: abrechnungscodeFuer(tenantSector),
     });
     const zuzahlungsfrei = !!rx.zuzahlung_befreit || positionFrei;
     const doneSessions = (rx.prescription_sessions || []).filter(s => s.status === 'done');
 
     const praxisData = {
-      name: profile.business_name || 'Praxis für Physiotherapie',
-      strasse: [profile.street, profile.house_number].filter(Boolean).join(' '),
-      plz_ort: [profile.zip, profile.city].filter(Boolean).join(' '),
-      telefon: profile.phone || '',
-      ik: profile.ik_number || '',
-      steuernummer: profile.steuernummer || '',
+      name: praxisProfil.business_name || 'Praxis',
+      strasse: [praxisProfil.street, praxisProfil.house_number].filter(Boolean).join(' '),
+      plz_ort: [praxisProfil.zip, praxisProfil.city].filter(Boolean).join(' '),
+      telefon: praxisProfil.phone || '',
+      ik: praxisProfil.ik_number || '',
+      steuernummer: praxisProfil.steuernummer || '',
+      ust_id: praxisProfil.ust_id || '',
       email: user.email || ''
     };
     const patientData = {
@@ -1169,8 +1293,8 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       heilmittel: rx.heilmittel || '',
       frequenz: rx.frequenz || ''
     };
-    const logoUrl = profile.praxis_logo_url || '';
-    const invoiceFooterText = cj.fusszeile || profile.invoice_footer_text || '';
+    const logoUrl = praxisProfil.praxis_logo_url || '';
+    const invoiceFooterText = cj.fusszeile || praxisProfil.invoice_footer_text || '';
 
     let html = '';
 
@@ -1181,7 +1305,10 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         verordnung: verordnungData,
         logoUrl,
         praxisZusatz: cj.praxis_zusatz || null,
-        stempelHinweis: cj.stempel_hinweis || null
+        stempelHinweis: cj.stempel_hinweis || null,
+        // Der Ausdruck ist kein Original-Vordruck Muster 13. Ohne diesen
+        // Hinweis entsteht der Eindruck, das Blatt sei abrechnungsfähig.
+        kopieHinweis: 'Kopie — nicht zur Vorlage bei der Krankenkasse'
       });
 
     } else if (type === 'rzg_quittung') {
@@ -1200,7 +1327,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       const printSessions = doneSessions.map(s => ({
         datum: s.done_at,
         position: storedPos,
-        bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
+        bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
         zuzahlung: zuzahlungsfrei ? 0 : coPayUnit
       }));
       html = renderRzgQuittung({
@@ -1226,7 +1353,7 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       const printSessions = doneSessions.map(s => ({
         datum: s.done_at,
         position: storedPos,
-        bezeichnung: rx.heilmittel || 'Physiotherapeutische Behandlung',
+        bezeichnung: rx.heilmittel || bereichTexte(tenantSector).leistung,
         brutto: priceUnit
       }));
       html = renderRechnung({
@@ -1243,10 +1370,11 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
         },
         sessions: printSessions,
         totals: { brutto: bruttoSum, netto: bruttoSum, mwst: 0, gesamt: bruttoSum },
-        bankverbindung: 'DE89 1002 0030 0040 0500 00 (Musterbank)',
+        bankverbindung: buildBankverbindung(praxisProfil),
         logoUrl,
         invoiceFooterText,
-        betreff: cj.betreff || null
+        betreff: cj.betreff || null,
+        bereichTitel: bereichTexte(tenantSector).titel
       });
     }
 
@@ -1540,11 +1668,18 @@ router.post('/abrechnung/preflight', async (req, res) => {
       ? profile.owner_id
       : profile.id;
 
-    let tenantSector = profile.sector || 'physiotherapy';
+    // Praxis-Stammdaten hängen am Inhaber, nicht am druckenden Mitarbeiter.
+    // Vorher wurde nur der Sector nachgeladen — Bankverbindung, Steuernummer
+    // und Anschrift kamen aus dem (leeren) Mitarbeiterprofil.
+    let praxisProfil = profile;
     if (profile.role === 'employee' && profile.owner_id) {
-      const { data: op } = await supabase.from('profiles').select('sector').eq('id', tenantId).maybeSingle();
-      tenantSector = op?.sector || tenantSector;
+      const { data: op } = await supabase
+        .from('profiles')
+        .select(`business_name, phone, city, zip, street, house_number, ik_number, praxis_logo_url, invoice_footer_text, sector, ${PRAXIS_DRUCK_FELDER}`)
+        .eq('id', tenantId).maybeSingle();
+      if (op) praxisProfil = { ...profile, ...op };
     }
+    const tenantSector = praxisProfil.sector || 'physiotherapy';
 
     const { prescriptionIds } = req.body || {};
     if (!Array.isArray(prescriptionIds) || !prescriptionIds.length) {

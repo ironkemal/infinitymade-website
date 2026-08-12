@@ -7624,11 +7624,12 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
       .eq('id', prescriptionId)
       .maybeSingle();
 
-    // Count existing sessions (all statuses)
+    // Count only filled sessions (booking_id IS NOT NULL) for capacity check
     const { count: existingCount } = await supabase
       .from('prescription_sessions')
       .select('id', { count: 'exact', head: true })
-      .eq('prescription_id', prescriptionId);
+      .eq('prescription_id', prescriptionId)
+      .not('booking_id', 'is', null);
 
     const cap = rx?.anzahl_einheiten;
     const used = existingCount || 0;
@@ -7646,23 +7647,47 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
       if (!ok) return;
     }
 
-    // Continue numbering after any existing sessions for this Rx
-    const { data: existing } = await supabase
+    // Fetch empty slots (booking_id IS NULL) ordered by session_number ASC
+    const { data: emptySlots, error: emptyErr } = await supabase
       .from('prescription_sessions')
-      .select('session_number')
+      .select('id, session_number')
       .eq('prescription_id', prescriptionId)
-      .order('session_number', { ascending: false })
-      .limit(1);
-    let next = (existing?.[0]?.session_number || 0) + 1;
+      .is('booking_id', null)
+      .order('session_number', { ascending: true });
+    if (emptyErr) console.warn('[prescription_sessions fetch empty]', emptyErr);
 
-    const rows = bookingIds.map((bid, i) => ({
-      prescription_id: prescriptionId,
-      booking_id: bid,
-      session_number: next + i,
-      status: 'planned'
-    }));
-    const { error } = await supabase.from('prescription_sessions').insert(rows);
-    if (error) console.warn('[prescription_sessions insert]', error);
+    const slots = emptySlots || [];
+    let remaining = [...bookingIds];
+
+    // Step 1: Fill existing empty slots via UPDATE (preserves session_number)
+    for (let i = 0; i < slots.length && remaining.length > 0; i++) {
+      const bid = remaining.shift();
+      const { error: upErr } = await supabase
+        .from('prescription_sessions')
+        .update({ booking_id: bid, status: 'planned' })
+        .eq('id', slots[i].id);
+      if (upErr) console.warn('[prescription_sessions update]', upErr);
+    }
+
+    // Step 2: Insert new rows for any leftover bookingIds beyond empty slots
+    if (remaining.length > 0) {
+      const { data: highRow } = await supabase
+        .from('prescription_sessions')
+        .select('session_number')
+        .eq('prescription_id', prescriptionId)
+        .order('session_number', { ascending: false })
+        .limit(1);
+      let next = (highRow?.[0]?.session_number || 0) + 1;
+
+      const rows = remaining.map((bid, i) => ({
+        prescription_id: prescriptionId,
+        booking_id: bid,
+        session_number: next + i,
+        status: 'planned'
+      }));
+      const { error: insErr } = await supabase.from('prescription_sessions').insert(rows);
+      if (insErr) console.warn('[prescription_sessions insert]', insErr);
+    }
   } catch (e) {
     console.warn('[linkBookingsToPrescriptionSessions]', e);
   }
@@ -16503,7 +16528,11 @@ async function downloadDmrzForInvoice() {
 
   const okExport = await showConfirmModal({
     title: 'DMRZ-Export (§302) erstellen?',
-    message: 'Die Rechnung wird als „abgerechnet" markiert und die §302-Exportdatei wird erzeugt. Dieser Schritt ist verbindlich und kann nicht rückgängig gemacht werden.',
+    // ⚠️ Bu dosya §302 gönderimi DEĞİLDİR — kendi XML formatımız (dashboard.js:16481,
+    // xmlns "infinitymade.de/dmrz/v1"). §302'de tek geçerli taşıma EDIFACT SLGA/SLLA'dır
+    // (Anlage 1 V21 §5). Eski metin "verbindlich" diyordu; kullanıcı bunu gerçek gönderim
+    // sanıp asıl DTA'yı hiç göndermiyordu. Düğmenin akıbeti Ops kartında.
+    message: 'Es wird eine lokale Exportdatei erzeugt und die Rechnung als „abgerechnet" markiert.\n\nACHTUNG: Dies ist KEINE §302-Übermittlung an die Krankenkasse. Die eigentliche §302-Abrechnung erfolgt weiterhin über den Abrechnungs-Bereich.',
     confirmText: 'Exportieren',
     cancelText: 'Abbrechen',
     variant: 'danger'

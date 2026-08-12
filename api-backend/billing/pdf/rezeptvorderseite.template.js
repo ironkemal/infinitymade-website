@@ -28,6 +28,7 @@ export function renderRezeptvorderseite(opts) {
     praxis = {}, patient = {}, verordnung = {},
     logoUrl = '',
     praxisZusatz = null, stempelHinweis = null,
+    kopieHinweis = null,
   } = opts;
 
   const hinweis = stempelHinweis || 'Praxisstempel (IK, Name, Anschrift)';
@@ -57,11 +58,16 @@ export function renderRezeptvorderseite(opts) {
   .stempel-content { font-size: 9.5pt; font-weight: 500; }
   .praxis-zusatz { font-size: 8.5pt; color: #555; margin-top: 2mm; }
   .archiv-hinweis { margin-top: 10mm; padding: 3mm 4mm; border-left: 3px solid #0a4a7a; background: #f3f6fa; font-size: 8pt; color: #555; }
+  .kopie-stempel { border: 2px solid #b45309; color: #b45309; border-radius: 4pt;
+    padding: 2mm 4mm; font-size: 9pt; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; text-align: center; margin: 0 0 5mm; }
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head>
 <body>
 <div class="doc">
+
+  ${kopieHinweis ? `<div class="kopie-stempel">${escapeHtml(kopieHinweis)}</div>` : ''}
 
   <header>
     <div class="praxis">
