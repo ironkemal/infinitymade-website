@@ -23952,10 +23952,14 @@ const POD_BEFUNDPAUSCHALE = '78030';             // Pflicht je Behandlungstag, a
  *
  * Altbestand steht als "DF-a" in der Spalte (die Diagnosegruppe war mit
  * eingetragen); der Buchstabe dahinter ist dieselbe Leitsymptomatik.
+ * Das gilt für JEDE Diagnosegruppe mit a/b/c-Katalog, nicht nur DF — ein
+ * Altbestand "NF-c" muss genauso gelesen werden, sonst fällt bei ihm die
+ * 78020-Sperre still aus (Retaxationsrisiko, ~15 € je Sitzung).
  */
 function podVordMassnahme(vord) {
   const roh = String(vord?.leitsymptomatik || '').trim().toLowerCase();
-  const direkt = (roh.match(/^(?:df-)?([abc])$/) || [])[1] || '';
+  const _dgPrefix = POD_HEILMITTEL_DGS.map(d => d.toLowerCase()).join('|');
+  const direkt = (roh.match(new RegExp(`^(?:(?:${_dgPrefix})-)?([abc])$`)) || [])[1] || '';
   if (POD_HEILMITTEL_KATALOG[direkt]) return direkt;
   const items = Array.isArray(vord?.heilmittel_items) ? vord.heilmittel_items : [];
   const ausItem = items.map(i => i?.massnahme).find(m => POD_HEILMITTEL_KATALOG[m]);
