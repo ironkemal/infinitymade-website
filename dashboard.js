@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260810g';
@@ -21209,7 +21209,7 @@ async function downloadAbrechnungFile(path, abrechnungId, kind) {
 let _forgeMod = null;
 async function loadForge() {
   if (_forgeMod) return _forgeMod;
-  const m = await import('https://esm.sh/node-forge@1.3.1');
+  const m = await import('./vendor/node-forge.js?v=20260813');
   _forgeMod = m.default || m;
   return _forgeMod;
 }
