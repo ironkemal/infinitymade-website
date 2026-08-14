@@ -2,7 +2,8 @@
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
 -- ERZEUGT AM:        2026-08-14
--- LETZTE MIGRATION:  20260814101707_patient_consents
+-- LETZTE MIGRATION:  20260814200147_leads_handy_getrennt
+--                    davor: 20260814101707_patient_consents
 --                    davor: 20260814101624_kiosk_pin_hardening
 --                    davor: 20260814083941_fussbefund_termin_legende
 --                    davor: 20260814082430_verordnungen_abrechnungsstatus_absetzung
@@ -646,6 +647,7 @@ CREATE INDEX idx_invoices_prescription ON public.invoices USING btree (prescript
 CREATE INDEX idx_kostentraeger_active ON public.kostentraeger USING btree (active, payer_type) WHERE (active = true);
 CREATE INDEX idx_kostentraeger_das ON public.kostentraeger USING btree (das_ik) WHERE (das_ik IS NOT NULL);
 CREATE INDEX idx_leads_business ON public.leads USING btree (business_id);
+CREATE INDEX idx_leads_handy_normalized ON public.leads USING btree (owner_id, handy_normalized) WHERE (handy_normalized IS NOT NULL);
 CREATE INDEX idx_leads_insurance_type ON public.leads USING btree (insurance_type) WHERE (insurance_type IS NOT NULL);
 CREATE INDEX idx_leads_location ON public.leads USING gist (location);
 CREATE INDEX idx_leads_name_dob ON public.leads USING btree (owner_id, lower(COALESCE(first_name, ''::text)), lower(COALESCE(last_name, ''::text)), geburtsdatum);

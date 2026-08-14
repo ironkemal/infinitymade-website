@@ -335,11 +335,19 @@
           <div class="table-wrap">
             <table class="data-table">
               <thead>
+                <!-- „Dieses ist besser so, weil dann hast du einen Überblick" —
+                     Nausad, 12.08.2026: die Angaben, für die man bisher jede Zeile
+                     aufklappen musste, stehen jetzt nebeneinander. E-Mail und
+                     Telefon sind dafür raus; sie werden beim Überfliegen einer
+                     Patientenliste nicht gebraucht und stehen in der Karte. -->
                 <tr>
-                  <th data-i18n="lead_title">Name</th>
-                  <th data-i18n="lead_city">Stadt</th>
-                  <th data-i18n="lead_phone">Telefon</th>
-                  <th>E-Mail</th>
+                  <th>Nachname</th>
+                  <th>Vorname</th>
+                  <th data-i18n="lead_geburtsdatum">Geburtsdatum</th>
+                  <th>Patienten-Nr.</th>
+                  <th>Straße</th>
+                  <th>PLZ</th>
+                  <th data-i18n="lead_city">Ort</th>
                   <!-- nur bei mehreren Standorten sichtbar — siehe renderLeads() -->
                   <th data-i18n="lead_standort" id="leadStandortTh" style="display:none;">Standort</th>
                   <th data-i18n="lead_status">Status</th>
@@ -3238,7 +3246,7 @@
                     <div class="m13-cell" style="flex:1;">
                       <div class="m13-cap">Krankenkasse bzw. Kostenträger</div>
                       <div style="display:flex;align-items:flex-start;">
-                        <input class="m13-v" id="rzPatKasse" list="kkDatalist" placeholder="">
+                        <input class="m13-v" id="rzPatKasse" autocomplete="off" placeholder="">
                         <input class="m13-v m13-center m13-kknum" id="rzKkNum" placeholder="">
                       </div>
                     </div>
@@ -3636,7 +3644,7 @@
                         <div class="m13-cell" style="flex:1;">
                           <div class="m13-cap">Krankenkasse bzw. Kostenträger <span id="rxcKasseStatus" style="font-size:11px;color:#15803d;font-weight:400;"></span></div>
                           <div style="display:flex;align-items:flex-start;">
-                            <input class="m13-v" id="rxcKasse" list="kkDatalist" autocomplete="off" placeholder="Krankenkasse wählen…">
+                            <input class="m13-v" id="rxcKasse" autocomplete="off" placeholder="Krankenkasse wählen…">
                           </div>
                         </div>
                       </div>
@@ -3844,7 +3852,6 @@
                 </div>
 
                 <!-- DATALISTS FOR MODAL -->
-                <datalist id="kkDatalist"></datalist>
                 
                 
 
@@ -3910,7 +3917,11 @@
           <div id="pdInfoGrid" style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:8px 20px;font-size:13px;"></div>
         </div>
         <div class="pd-tabs">
-          <button class="pd-tab active" data-tab="notes">Notizen</button>
+          <!-- Verlauf zuerst und beim Öffnen aktiv: „nur Datum und was du gemacht
+               hast" (Kemal/Nausad, 12.08.2026). Die Fachreiter bleiben daneben —
+               der Verlauf ist der Einstieg, nicht ihr Ersatz. -->
+          <button class="pd-tab active" data-tab="verlauf">Verlauf</button>
+          <button class="pd-tab" data-tab="notes">Notizen</button>
           <button class="pd-tab" data-tab="anamnese">Anamnese</button>
           <!-- Einwilligungen: Konsey 2026-08-14. Wiederfinden gehört zum v1-Umfang —
                ohne Liste und Kopie druckt die Praxis weiter Papier. -->
@@ -3924,7 +3935,10 @@
           <button class="pd-tab" data-tab="mail">Mail</button>
         </div>
         <div class="pd-content">
-          <div class="pd-panel active" id="pdPanelNotes">
+          <div class="pd-panel active" id="pdPanelVerlauf">
+            <div id="pdVerlaufContent"></div>
+          </div>
+          <div class="pd-panel" id="pdPanelNotes">
             <div class="pd-loading" id="pdNotesLoading">
               <div class="spinner-sm"></div>
             </div>
@@ -4708,8 +4722,9 @@
           <div class="form-row" id="lead-physio-row" style="display:none; grid-template-columns: 1fr 1fr 1fr;">
             <div class="form-group">
               <label class="form-label">Krankenkasse</label>
-              <input class="form-input" id="lead-krankenkasse" type="text" list="leadKkDatalist" autocomplete="off" placeholder="Krankenkasse wählen oder tippen." />
-              <datalist id="leadKkDatalist"></datalist>
+              <!-- Kein <datalist> mehr (CLAUDE.md → Frontend): eigenes Dropdown,
+                   Kassen dieser Praxis zuerst — module/krankenkasse-suche.js -->
+              <input class="form-input" id="lead-krankenkasse" type="text" autocomplete="off" placeholder="Krankenkasse wählen oder tippen." />
             </div>
             <div class="form-group">
               <label class="form-label">Versichertennummer</label>
@@ -5884,7 +5899,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260814f"></script>
+  <script type="module" src="dashboard.js?v=20260814g"></script>
 </body>
 
 </html>

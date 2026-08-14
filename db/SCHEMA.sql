@@ -2,7 +2,8 @@
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
 -- ERZEUGT AM:        2026-08-14
--- LETZTE MIGRATION:  20260814101707_patient_consents
+-- LETZTE MIGRATION:  20260814200147_leads_handy_getrennt
+--                    davor: 20260814101707_patient_consents
 --                    davor: 20260814101624_kiosk_pin_hardening
 --                    davor: 20260814083941_fussbefund_termin_legende
 --                    davor: 20260814082430_verordnungen_abrechnungsstatus_absetzung
@@ -915,6 +916,8 @@ CREATE TABLE leads (
   created_at timestamptz DEFAULT now()
   updated_at timestamptz DEFAULT now()
   phone_normalized text
+  handy text
+  handy_normalized text
   first_name text
   last_name text
   metadata jsonb DEFAULT '{}'::jsonb
@@ -947,6 +950,12 @@ CREATE TABLE leads (
 --   CHECK geschlecht IN (m, f, d) · insurance_type IN (gkv, privat)
 --   CHECK status IN (new, contacted, booked, won, lost)
 --   FK arzt_id -> aerzte(id) · PK (id)
+--   ⚠️ `status` ist der ALTE CRM-Trichter und wird im Praxisablauf seit dem
+--      14.08.2026 weder gesetzt noch angezeigt. Nur die alten B2B/B2C-Panels
+--      lesen ihn noch (dashboard.html:988, :1079). Der Status, der zählt,
+--      steht an der Verordnung (verordnungen.status).
+--   ⚠️ `phone` = Festnetz/Hauptnummer — der Buchungsabgleich hängt an
+--      phone_normalized. `handy` ist die Zweitnummer (seit 14.08.2026).
 --   ★ DIES IST DIE HAUPT-PATIENTENTABELLE, trotz des Namens "leads".
 --     Historisch als Akquise-Tabelle entstanden (title, google_url,
 --     reviews_count stammen daher), heute die reale Patientenakte.

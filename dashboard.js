@@ -4,10 +4,17 @@ import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260814a';
 import { attachArztSearch, arztMetaText } from './arzt-suche.js?v=20260810f';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
-import { attachPatientSearch } from './patient-suche.js?v=20260726';
+import { attachPatientSearch } from './patient-suche.js?v=20260814';
+import { emit } from './module/signal.js?v=20260813';
+import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
+import { attachPlzOrt } from './module/plz.js?v=20260814';
+import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260814';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260814';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260814';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf } from './module/fussbefund.js?v=20260814a';
+import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260814';
+import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
@@ -8218,8 +8225,9 @@ function patientMatchesQuery(lead, q) {
   }
   const qDigits = query.replace(/\D/g, '');
   if (qDigits.length >= 3) {
-    const pDigits = String(lead.phone || '').replace(/\D/g, '');
-    const pNorm = String(lead.phone_normalized || '').replace(/\D/g, '');
+    // Handy zählt mit: wer eine Nummer sucht, weiss nicht in welchem Feld sie steht.
+    const pDigits = [lead.phone, lead.handy].map(v => String(v || '').replace(/\D/g, '')).join(' ');
+    const pNorm = [lead.phone_normalized, lead.handy_normalized].map(v => String(v || '').replace(/\D/g, '')).join(' ');
     if (pDigits.includes(qDigits) || pNorm.includes(qDigits)) return true;
     // 0170… ↔ +49170…: führende 0 gegen Ländervorwahl tauschen
     const qAlt = qDigits.startsWith('0') ? '49' + qDigits.slice(1) : null;
@@ -8292,11 +8300,17 @@ function renderLeads() {
     const insBadge = r.insurance_type
       ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${r.insurance_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:#60a5fa;' : 'background:rgba(177,137,27,0.15);color:#b1891b;'}">${r.insurance_type.toUpperCase()}</span>`
       : '';
+    // Patienten-Nr. bleibt vorerst leer: sie entsteht erst mit der praxistauglichen
+    // Belegnummer (Ops-Karte 74e45d6e). Die Spalte steht schon, damit die Reihenfolge
+    // sich später nicht noch einmal verschiebt.
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
-      <td>${displayName(r)}${insBadge}${bd ? ` <span style="color:var(--text-muted);font-size:12px;">· ${bd}</span>` : ''}</td>
-      <td>${r.city || '—'}</td>
-      <td>${r.phone || '—'}</td>
-      <td>${r.email || '—'}</td>
+      <td>${escapeHtml(r.last_name || '')}${insBadge}</td>
+      <td>${escapeHtml(r.first_name || '')}</td>
+      <td>${bd ? new Date(bd).toLocaleDateString('de-DE') : '—'}</td>
+      <td style="color:var(--text-muted);">${escapeHtml(r.patientennummer || '—')}</td>
+      <td>${escapeHtml(r.street || '—')}</td>
+      <td>${escapeHtml(r.plz || '—')}</td>
+      <td>${escapeHtml(r.city || '—')}</td>
       ${multiBiz ? `<td>${escapeHtml(standort)}</td>` : ''}
       <td>
         ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? `<span class="badge badge-green" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;vertical-align:middle;"><span class="svg-icon" style="width:11px;height:11px;display:inline-flex;">${ICON.whatsapp}</span></span> ` : ''}
@@ -8321,54 +8335,26 @@ function renderLeads() {
   });
 }
 
-function renderPdInfoBlock(lead) {
-  const grid = document.getElementById('pdInfoGrid');
-  if (!grid) return;
-  const md = lead.metadata || {};
-  const dob = lead.geburtsdatum || md.geburtsdatum || '';
-  const dobStr = dob ? new Date(dob).toLocaleDateString('de-DE') : '—';
-  const addrParts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
-  const addr = addrParts.length ? addrParts.join(', ') : '—';
-  const km = lead.distance_km != null ? `ca. ${Number(lead.distance_km).toFixed(1)} km` : '—';
-  const dur = lead.duration_min != null ? `ca. ${lead.duration_min} min` : '—';
-  const krankenkasse = lead.krankenkasse || md.krankenkasse || '—';
-  const vNr = lead.versichertennummer || md.krankenkassennummer || '—';
-  const sex = md.geschlecht || lead.geschlecht || '—';
-  const cell = (label, value) => `
-    <div>
-      <div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">${label}</div>
-      <div style="font-weight:500;">${escapeHtml(value)}</div>
-    </div>`;
-  const cellHtml = (label, htmlValue) => `
-    <div>
-      <div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">${label}</div>
-      <div style="font-weight:500;display:flex;align-items:center;gap:4px;">${htmlValue}</div>
-    </div>`;
-  grid.innerHTML = [
-    cell('Name', displayName(lead) || '—'),
-    cell('Geburtsdatum', dobStr),
-    cell('Geschlecht', sex),
-    cell('Telefon', lead.phone || '—'),
-    cell('E-Mail', lead.email || '—'),
-    cell('Krankenkasse', krankenkasse),
-    cell('Versicherten-Nr.', vNr),
-    cell('Adresse', addr),
-    md.hausbesuch
-      ? cellHtml('Hausbesuch', `<span class="svg-icon" style="width:14px;height:14px;display:inline-flex;color:var(--text-main);">${ICON.car}</span> Ja`)
-      : cell('Hausbesuch', 'Nein'),
-    cell('Entfernung', km),
-    cell('Fahrzeit (einfach)', dur),
-    cell('Status', lead.status || '—')
-  ].join('');
+// Kopf der Patientenakte (Stammdaten + Verlauf) → module/patientenkarte.js
+// Klick auf eine Verlaufszeile: Karte schliessen, zuständiges Panel öffnen.
+// Panel-Namen gegen nav-registry.js geprüft — 'calendar', nicht 'kalender';
+// die Podologie heisst 'podologie-billing', der Fussbefund 'fussstatus'.
+const PD_SPRUNGZIEL = { kalender: 'calendar', podologie: 'podologie-billing', verordnungen: 'verordnungen', fussbefund: 'fussstatus' };
+function pdSpringeZu(ziel, id) {
+  const panel = PD_SPRUNGZIEL[ziel];
+  if (!panel) return;
+  closeModal('patientDetailModal');
+  window._pdSprungId = id;   // das Zielpanel darf den Datensatz vorwählen
+  switchPanel(panel);
 }
 
 async function openPatientDetailModal(lead) {
   pdCurrentLeadId = lead.id;
   pdCurrentLeadName = displayName(lead) || '';
   document.getElementById('pdModalTitle').textContent = displayName(lead) || 'Patientendetails';
-  renderPdInfoBlock(lead);
-  document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'notes'));
-  document.querySelectorAll('.pd-panel').forEach(p => p.classList.toggle('active', p.id === 'pdPanelNotes'));
+  renderPatientenkarte(lead, { sb: supabase, ownerId: getOwnerId(), name: displayName, icons: ICON, onSprung: pdSpringeZu });
+  document.querySelectorAll('.pd-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'verlauf'));
+  document.querySelectorAll('.pd-panel').forEach(p => p.classList.toggle('active', p.id === 'pdPanelVerlauf'));
   document.getElementById('pdNotesLoading').hidden = false;
   document.getElementById('pdNotesContent').innerHTML = '';
   document.getElementById('pdAnamLoading').hidden = false;
@@ -9804,6 +9790,8 @@ async function openLeadModal(lead) {
   document.getElementById('lead-first-name').value = lead?.first_name || '';
   document.getElementById('lead-last-name').value = lead?.last_name || '';
   document.getElementById('lead-phone').value = lead?.phone || '';
+  document.getElementById('lead-handy').value = lead?.handy || '';
+  document.getElementById('lead-geschlecht').value = lead?.geschlecht || '';
   document.getElementById('lead-email').value = lead?.email || '';
   document.getElementById('lead-city').value = lead?.city || '';
   document.getElementById('lead-notes').value = lead?.notes || '';
@@ -9828,14 +9816,12 @@ async function openLeadModal(lead) {
     if (arztRow) arztRow.style.display = 'grid';
     hausbesuchRow.style.display = 'grid';
 
-    const kkList = await loadKkList();
-    const leadKkDl = document.getElementById('leadKkDatalist');
-    if (leadKkDl) {
-      leadKkDl.innerHTML = kkList.map(k => `<option value="${escapeHtml(k.name)}"></option>`).join('');
-    }
+    // Kassenauswahl: eigenes Dropdown statt <datalist> (im Haus untersagt),
+    // Reihenfolge nach Häufigkeit in DIESER Praxis → module/krankenkasse-suche.js
     const kkInput = document.getElementById('lead-krankenkasse');
     if (kkInput) {
       kkInput.value = (lead?.krankenkasse || md.krankenkasse) || '';
+      attachKrankenkasseSuche(kkInput, { sb: supabase, ownerId: getOwnerId });
     }
     const kvnrEl = document.getElementById('lead-krankenkassennummer');
     kvnrEl.value = (lead?.versichertennummer || md.krankenkassennummer) || '';
@@ -9863,6 +9849,7 @@ async function openLeadModal(lead) {
       if (!plzEl.value) plzEl.value = parsed.plz || '';
       if (!document.getElementById('lead-city').value) document.getElementById('lead-city').value = parsed.city || '';
     }
+    attachPlzOrt(plzEl, document.getElementById('lead-city'));   // → module/plz.js
     const hb = !!md.hausbesuch;
     document.getElementById('lead-hausbesuch').checked = hb;
     toggleLeadHausbesuchUI(hb);
@@ -10018,6 +10005,9 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     last_name: lastName,
     title: firstName + ' ' + lastName,
     phone: document.getElementById('lead-phone').value.trim() || null,
+    handy: document.getElementById('lead-handy').value.trim() || null,
+    handy_normalized: normalize_phone_js(document.getElementById('lead-handy').value.trim()),
+    geschlecht: document.getElementById('lead-geschlecht').value || null,
     email: document.getElementById('lead-email').value.trim() || null,
     street,
     plz,
@@ -10046,6 +10036,9 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     : await supabase.from('leads').insert(payload).select().single();
   if (error) { showToast(t('err_generic'), 'error'); return; }
   closeModal('leadModal');
+  // Wer schreibt, meldet — Patientensucher und Kassenreihenfolge ziehen selbst nach.
+  verwerfeKassenCache();
+  emit('leads:changed', { id: savedLead?.id, neu: !id });
   await loadLeads();
   showToast(t('saved'));
 
@@ -10107,6 +10100,7 @@ document.getElementById('csvFile').addEventListener('change', async (e) => {
     }));
     if (inserts.length === 0) throw new Error('empty');
     await supabase.from('leads').insert(inserts);
+    emit('leads:changed', { anzahl: inserts.length });
     await loadLeads();
     showToast(t('csv_imported') + inserts.length);
   } catch (err) {
@@ -17838,16 +17832,13 @@ async function saveRezept() {
     const ausstDate = document.getElementById('rzAusstDate').value || null;
     const isDringend = document.getElementById('rzDringend').checked;
 
-    // 3. Compute gueltig_bis. Podologie rechnet nach Anlage 3 Abschnitt 3 e)
-    // mit der Frist für den Behandlungsbeginn (14 Tage dringlich, sonst 28) —
-    // Beleg in module/verordnung-podo.js. Alle anderen Fachbereiche behalten
-    // die bisherige Rechnung 14/84, bis deren Anlage 3 nachgelesen ist.
-    let gueltigBis = podBehandlungsbeginnFrist(ausstDate, isDringend);
-    if (!gueltigBis && ausstDate) {
-      const d = new Date(ausstDate);
-      d.setDate(d.getDate() + (isDringend ? 14 : 84));
-      gueltigBis = d.toISOString().split('T')[0];
-    }
+    // 3. gueltig_bis = spätester Behandlungsbeginn nach HeilM-RL § 15
+    // (14 Kalendertage bei dringlichem Behandlungsbedarf, sonst 28; wird die
+    // Frist versäumt, verliert die Verordnung ihre Gültigkeit, § 15 Abs. 2).
+    // Gilt für alle Fachbereiche — Beleg in module/heilmittel-fristen.js.
+    // Vorher standen hier 84 Tage für alles ausser dringlich; diese Zahl hat
+    // in Richtlinie und Anlagen keine Entsprechung.
+    const gueltigBis = behandlungsbeginnFrist(ausstDate, isDringend);
 
     const rzLanr = document.getElementById('rzLanr').value.trim() || null;
     const rzBsnr = document.getElementById('rzBsnr').value.trim() || null;
@@ -17950,6 +17941,7 @@ async function saveRezept() {
       }
       if (Object.keys(patch).length) {
         await supabase.from('leads').update(patch).eq('id', patientId).eq('owner_id', ownerId);
+        emit('leads:changed', { id: patientId });
       }
     } catch (wbErr) { console.warn('[saveRezept] Patient-Rückschreiben übersprungen', wbErr); }
 
@@ -19783,14 +19775,14 @@ function aiMatchHeilmittel(text, positions) {
   return bestScore >= 0.55 ? { ...best, score: bestScore } : null;
 }
 
-function populateKkDatalist(kkList) {
-  const dl = document.getElementById('kkDatalist');
-  if (!dl) return;
-  dl.innerHTML = kkList.map(k => {
-    const dataIk = k.ik ? ` data-ik="${k.ik}"` : '';
-    const label = k.ik ? `IK ${k.ik}` : '';
-    return `<option${dataIk} value="${escapeHtml(k.name)}">${label}</option>`;
-  }).join('');
+// Früher füllte das ein <datalist> (im Haus untersagt) mit 93 Kassen in
+// alphabetischer Reihenfolge. Jetzt dasselbe Dropdown wie in der Patientenmaske:
+// die Kassen DIESER Praxis zuerst → module/krankenkasse-suche.js
+function populateKkDatalist() {
+  for (const id of ['rzPatKasse', 'rxcKasse']) {
+    const el = document.getElementById(id);
+    if (el) attachKrankenkasseSuche(el, { sb: supabase, ownerId: getOwnerId });
+  }
 }
 
 
@@ -22585,6 +22577,7 @@ function initSchnellerfassung() {
         .select('id')
         .single();
       if (error) throw error;
+      emit('leads:changed', { id: newLead?.id, neu: true });
 
       // Leads listesini güncelle ve yeni lead'i seç
       // loadBkLeads initBkCustomerAutocomplete içinde tanımlı; window üzerinden erişemeyiz.
