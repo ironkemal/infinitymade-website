@@ -9,7 +9,7 @@
 | **Adresse** | Industriestraße 33, 53721 Siegburg, Deutschland |
 | **Aufsichtsbehörde** | Landesbeauftragter für Datenschutz NRW |
 | **Letzte Aktualisierung** | 2026-08-14 |
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 
 InfinityMade tritt **doppelt** in Erscheinung:
 - als **Verantwortlicher** für eigene Geschäftskunden-Daten (B2B-Stammdaten, Login, Abrechnung)
@@ -106,7 +106,19 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | Hetzner Online GmbH | VPS für Calendar-API & n8n | DE (Falkenstein) — ISO 27001 | ✅ | nein |
 | Vercel Inc. | Frontend-Hosting | EU + DPF-zertifiziert | ✅ | (USA via DPF) |
 | Stripe Payments Europe | Zahlungsabwicklung | EU (Irland) | ✅ | (USA via SCC + DPF) |
-| Resend (geplant) | Transaktions-E-Mails | EU | ⏳ vor Live | nein |
+| GoDaddy (Mailhosting `praxura.de`) | Transaktions-E-Mails über SMTP (nodemailer) sowie Supabase-Auth-Mails | ⚠️ **offen** | ⚠️ **offen** | ⚠️ **zu prüfen** |
 | Google LLC | OAuth + Calendar (nur opt-in) | DPF-zertifiziert | (Google Workspace DPA) | (USA via DPF) |
+
+> **Korrektur 14.08.2026:** In diesem Verzeichnis stand bis dahin „Resend (geplant) — Transaktions-E-Mails". **Resend wird nicht eingesetzt und ist nicht vorgesehen.** Der Versand läuft über `nodemailer` gegen den SMTP-Server des Mailhostings (`SMTP_HOST`/`SMTP_USER`, siehe `api/contact.js`); belegt in `ONPREM_MIGRATION_PLAYBOOK.md` und `ON_PREMISE_ANALYSE.md`. Ein Verzeichnis, das einen nicht existierenden Auftragsverarbeiter nennt und den tatsächlichen verschweigt, ist nach Art. 30 unvollständig — deshalb korrigiert.
+>
+> **Offener Punkt:** Für das Mailhosting liegen AVV-Status, Sitz der vertragspartnerischen Gesellschaft und Drittlandbewertung noch nicht geprüft vor. Das ist vor Go-Live zu klären und im AVV (DPA.html) nachzuführen.
+
+### Nicht-Auftragsverarbeiter: entfallene CDN-Abrufe (14.08.2026)
+
+`esm.sh` und `cdn.jsdelivr.net` lieferten bis 14.08.2026 **Programmbibliotheken** an den Browser der Praxis (kein Zugriff auf Patientendaten, aber Übermittlung der IP-Adresse und potenzieller Codeausführungskontext). Sie waren **nie** als Auftragsverarbeiter geführt.
+
+Die richtige Antwort war nicht, sie nachzutragen, sondern die Abrufe **abzustellen**: Die Bibliotheken werden seit 14.08.2026 von der eigenen Domain ausgeliefert, die Content-Security-Policy sperrt beide Hosts. Damit entfällt der Übermittlungsvorgang; ein AVV bzw. Garantien nach Art. 44 ff. werden für sie gegenstandslos. Einzelheiten: TOM.md § 2.3, DSFA.md R14/R15.
+
+Verbleibende externe Abrufe im Anwendungskontext — Sentry-Loader, Cropper.js (cdnjs), Google Fonts — sind als Aufgaben erfasst; Stripe (`js.stripe.com`) bleibt aus PCI-DSS-Gründen bewusst extern.
 
 Alle Sub-Prozessoren sind im AVV (DPA.html) aufgeführt; Änderungen werden 30 Tage vor Inkrafttreten kommuniziert.

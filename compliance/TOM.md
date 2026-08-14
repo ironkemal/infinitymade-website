@@ -7,7 +7,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 | | |
 |---|---|
 | Anbieter | InfinityMade |
-| Stand | 2026-08-14, Version 1.1 |
+| Stand | 2026-08-14, Version 1.2 |
 | Geltungsbereich | Alle Verarbeitungen gemäß VVT.md |
 
 ---
@@ -102,6 +102,43 @@ gefasste TOM-Zusage wäre eine Verletzung des AVV.
 - DTA-Dateien für DMRZ werden ab Sprint 9 mit ITSG-Zertifikat PKCS#7 signiert
 - Storage-Bucket `abrechnungen` nur über Signed URLs (Gültigkeit ≤ 15 Min) zugänglich
 
+### 2.3 Lieferketten-Integrität des Anwendungscodes (seit 2026-08-14)
+
+**Alle JavaScript-Bibliotheken, die im Anwendungskontext (angemeldete Sitzung
+mit Patientendaten) ausgeführt werden, werden von der eigenen Domain
+ausgeliefert.** Kein Programmcode wird zur Laufzeit von einem fremden CDN
+nachgeladen.
+
+Hintergrund: Ein fremdes CDN, das Programmcode in den Anwendungskontext liefert,
+kann bei Kompromittierung beliebigen Code im Browser der Praxis ausführen und
+damit auf **sämtliche Daten der laufenden Sitzung** zugreifen. Dieses Risiko
+war in der DSFA zuvor nicht adressiert.
+
+Umgesetzt:
+
+| Bibliothek | vorher | jetzt |
+|---|---|---|
+| `@supabase/supabase-js` (14 Aufrufstellen) | `esm.sh`, teils `cdn.jsdelivr.net` | `/vendor/supabase-js.js` |
+| `node-forge` (PKCS#7-Signatur § 302) | `esm.sh` | `/vendor/node-forge.js` |
+| FullCalendar (Terminkalender) | `cdn.jsdelivr.net` | `/vendor/fullcalendar/` |
+
+Die Content-Security-Policy (`vercel.json`) erlaubt `esm.sh` und
+`cdn.jsdelivr.net` seit 2026-08-14 **nicht mehr** — die Sperre ist technisch
+erzwungen, nicht nur organisatorisch.
+
+**Nachweis:** Sperrtest am 2026-08-14 — bei blockierten Drittanbieter-Hosts
+starten Anmeldung und Dashboard unverändert. Wiederholbare Anleitung:
+`vendor/README.md`.
+
+**Noch offen** (Stand 2026-08-14, jeweils als Aufgabe erfasst):
+
+| Ressource | Kontext | Bewertung |
+|---|---|---|
+| Sentry-Loader (`js-de.sentry-cdn.com`) | Fehlerdiagnose, alle Seiten | Letzte externe Laufzeit-Abhängigkeit im Startpfad. Ausfall ist **nicht** funktionskritisch (im Sperrtest bestätigt). |
+| Cropper.js (`cdnjs.cloudflare.com`) | Logo-Zuschnitt, `dashboard.html` | Kein Patientendatenbezug, aber gleicher Anwendungskontext → wird nachgezogen. |
+| Google Fonts | Darstellung | Rein gestalterisch; Selbst-Hosting vorgesehen. |
+| Stripe (`js.stripe.com`) | Bezahlung | **Bleibt bewusst extern.** PCI-DSS verlangt das Laden aus der Stripe-Domain; Selbst-Hosting wäre ein Verstoß. Kein Patientendatenbezug. |
+
 ---
 
 ## § 3 Verfügbarkeit & Belastbarkeit (Art. 32 Abs. 1 lit. b/c DSGVO)
@@ -110,6 +147,10 @@ gefasste TOM-Zusage wäre eine Verletzung des AVV.
 - Supabase: integrierte tägliche Backups, Point-in-Time-Recovery (Pro-Plan ab Go-Live)
 - Hetzner VPS: tägliche Snapshots, Aufbewahrung 7 Tage
 - Cloudflare/Vercel CDN für statisches Frontend → globale Edge-Verfügbarkeit
+- **Keine Abhängigkeit von fremden CDN für Programmcode** (§ 2.3): der Ausfall
+  eines Drittanbieters kann die Anwendung nicht mehr startunfähig machen.
+  Vor dem 14.08.2026 hätte ein Ausfall von `esm.sh` das Dashboard vollständig
+  blockiert — es wäre gar nicht erst geladen worden.
 - Status-Monitoring (Uptime Kuma) ab Go-Live
 
 ### 3.2 Wiederherstellbarkeit

@@ -59,6 +59,8 @@ Eine SaaS-Plattform für Praxen (Physiotherapie, Heilmittelerbringer) zur:
 | R11 | Mitarbeiter-Konto behält Zugriff nach Kündigung | 2 | 3 | 6 | mitigiert (Owner-Deaktivierungsflow) |
 | R12 | Klartext-Diagnose in DB-Spalte → Datenbankleck enthüllt Gesundheitsdaten | 3 | 5 | 15 | **offen → P1 (Column-Encryption pgcrypto)** |
 | R13 | Unterschriftenerfassung auf einem an Patient*innen übergebenen Gerät — Einblick in andere Patientendaten über den Kiosk-Modus hinweg | 2 | 4 | 8 | **teilmitigiert → siehe Maßnahmen R13** |
+| R14 | Fremdes CDN liefert Programmcode in den Anwendungskontext → bei Kompromittierung beliebiger Code im Browser der Praxis mit Zugriff auf die gesamte Sitzung (Lieferkette) | 2 | 5 | 10 | **mitigiert (14.08.2026) → Restpunkte siehe Maßnahmen R14** |
+| R15 | Ausfall eines fremden CDN macht die Anwendung startunfähig (Verfügbarkeit) | 3 | 3 | 9 | **mitigiert (14.08.2026)** |
 
 Score-Skala: 1-4 niedrig · 5-9 mittel · 10-14 hoch · 15-25 sehr hoch.
 
@@ -72,6 +74,17 @@ Score-Skala: 1-4 niedrig · 5-9 mittel · 10-14 hoch · 15-25 sehr hoch.
 - **R13 / Kiosk-Modus und Einwilligung** (neu 14.08.2026, Konsey-Beschluss `konsey/tutanak/2026-08-14-patienten-uebergabe-einwilligung.md`): PIN serverseitig als scrypt-Hash mit Rate Limit und Sperre; „PIN vergessen“ beendet die Sitzung statt den Kiosk; Vollbild-Wächter; Abmeldung des Termin-Realtime-Kanals; Protokollierung von Ein- und Austritt in `data_access_log` (vorher gab es **keine**). Einwilligungsnachweise unveränderlich per DB-Trigger, Unterschriften nur über Signed URLs (300 s), **keine IP-Adresse**, **keine Signaturdynamik**. Details: TOM.md § 1.6 und § 1.7.
   **Verbleibendes Risiko, bewusst akzeptiert:** der Kiosk-Modus ist eine Irrtumssperre, keine Sicherheitsgrenze — die Sitzung der Therapeut*in bleibt auf dem Gerät offen. Der Gegenentwurf (sitzungslose Seite mit Einmal-Token) wäre ein zweiter Code- und Deployment-Pfad und wurde vertagt. Organisatorische Kompensation: das Gerät wird nicht unbeaufsichtigt überlassen.
   **Art. 33 DSGVO:** Aus dem bis 14.08.2026 bestehenden Zustand ergibt sich **keine Meldepflicht** — es liegt kein Nachweis eines tatsächlichen unbefugten Zugriffs vor, nur ein Risiko (siehe `compliance/LEGAL_DECISIONS.md`, 2026-08-14).
+- **R14 / R15 — Lieferkette und Verfügbarkeit fremder CDN** (neu 14.08.2026, Konsey-Beschluss `konsey/tutanak/2026-08-13-frontend-mimari-katman.md`):
+
+  *Zustand vorher:* Die Anwendung lud `@supabase/supabase-js` an 14 Stellen sowie `node-forge` (PKCS#7-Signatur § 302) und FullCalendar **zur Laufzeit von `esm.sh` bzw. `cdn.jsdelivr.net`**. Damit hätte eine Kompromittierung dieser Anbieter beliebigen Code in der angemeldeten Sitzung ausführen können — mit Zugriff auf sämtliche dort sichtbaren Patientendaten. Ein Ausfall hätte die Anwendung nicht nur gestört, sondern **gar nicht erst starten lassen**. Dieses Risiko war in dieser DSFA bis dahin **nicht erfasst**.
+
+  *Maßnahme:* Alle betroffenen Bibliotheken werden seit 14.08.2026 von der eigenen Domain ausgeliefert (`/vendor/`). Die Content-Security-Policy erlaubt `esm.sh` und `cdn.jsdelivr.net` nicht mehr, die Sperre ist also technisch erzwungen. Einzelheiten TOM.md § 2.3.
+
+  *Nachweis:* Sperrtest am 14.08.2026 — mit blockierten Drittanbieter-Hosts starten Anmeldung und Dashboard unverändert; Supabase-Client, `node-forge` und FullCalendar werden lokal geladen. Wiederholbare Anleitung in `vendor/README.md`; der Test ist Pflichtpunkt der On-Premise-Freigabe.
+
+  **Verbleibendes Risiko, benannt und terminiert:** Der Sentry-Loader (`js-de.sentry-cdn.com`) ist die **letzte externe Laufzeit-Abhängigkeit im Startpfad**; im Sperrtest bestätigt, dass sein Ausfall die Anwendung nicht funktionsunfähig macht. Ebenfalls offen: Cropper.js über `cdnjs.cloudflare.com` (Logo-Zuschnitt, kein Patientendatenbezug, aber gleicher Anwendungskontext) und Google Fonts (rein gestalterisch). **Bewusst extern bleibt Stripe** (`js.stripe.com`) — PCI-DSS verlangt das Laden aus der Stripe-Domain; kein Patientendatenbezug.
+
+  *Rechtlicher Nebenaspekt:* Das Nachladen aus fremden CDN übermittelte zugleich die IP-Adresse der Praxis an Dritte (Analogie LG München I, 20 O 14368/19 — Google Fonts). Mit der Umstellung entfällt dieser Übermittlungsvorgang für die betroffenen Bibliotheken; ein Vertrag nach Art. 28 bzw. Garantien nach Art. 44 ff. werden für sie damit gegenstandslos.
 
 ---
 
