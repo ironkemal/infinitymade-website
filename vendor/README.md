@@ -82,8 +82,36 @@ node -e "import('./vendor/supabase-js.js').then(m=>console.log(typeof m.createCl
 node -e "import('./vendor/node-forge.js').then(m=>console.log(typeof (m.default||m).pkcs7))"
 ```
 
-Son olarak **airgap testi**: ağı kes, `app.praxura.de` açılmalı (giriş ekranı
-gelene kadar). Bu, on-prem release checklist'inin zorunlu maddesidir.
+Son olarak **airgap testi**: tüm üçüncü-parti host'lar bloklanıp uygulama yine
+de açılmalı. Bu, on-prem release checklist'inin zorunlu maddesidir.
+
+```bash
+for h in "https://esm.sh/**" "https://cdn.jsdelivr.net/**" \
+         "https://cdnjs.cloudflare.com/**" "https://js-de.sentry-cdn.com/**" \
+         "https://browser.sentry-cdn.com/**" "https://fonts.googleapis.com/**" \
+         "https://fonts.gstatic.com/**" "https://fast.wistia.net/**"; do
+  playwright-cli -s=praxura route "$h" --status=404
+done
+playwright-cli -s=praxura goto "https://app.praxura.de/login.html"
+playwright-cli -s=praxura console          # ölçüt: uygulamayı durduran hata YOK
+```
+
+### Sonuç — 2026-08-14
+
+| | |
+|---|---|
+| `login.html` | ✅ açıldı, giriş formu render oldu |
+| `dashboard.html` | ✅ `dashboard.js` çalıştı, oturumsuz olduğu için login'e yönlendirdi |
+| `vendor/supabase-js.js` | ✅ `createClient: function` |
+| `vendor/node-forge.js` | ✅ `pkcs7 · pki · asn1` |
+| `vendor/fullcalendar/…` | ✅ `FullCalendar.Calendar: function` |
+| Konsol | **tek hata:** Sentry loader 404 |
+
+**Bulgu:** Sentry loader artık açılış yolundaki **son dış runtime bağımlılığı.**
+Bloklandığında uygulama çalışmaya devam ediyor (ölümcül değil), ama on-prem
+imajında bu satırın da gitmesi gerekiyor — `legal-de`'nin sert şartı "tek bir
+dış runtime çağrısı kalamaz" diyor. Ayrı kart: *"Sentry CDN loader — on-prem'de
+kapatılmalı."*
 
 ## Kapsam dışı kalanlar
 
