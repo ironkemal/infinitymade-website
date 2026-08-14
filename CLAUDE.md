@@ -299,6 +299,26 @@ bağımlılığı geçiş maliyetini büyütür.
 
 ### Frontend
 
+#### 🚧 Yeni kod yeni dosyaya — `dashboard.js` BÜYÜMEZ (Konsey 2026-08-13)
+
+**`dashboard.js` bugün 26.857 satır. Bir satır daha büyümeyecek.** Yeni bir modül/ekran/akış
+yazılacaksa `module/<alan>.js` olarak **ayrı dosya** açılır ve `dashboard.js`'e tek `import`
+satırıyla bağlanır. Altyapı zaten var ve çalışıyor — `dashboard.js:1-8`'de 8 örnek
+(`katalog-suche`, `patient-suche`, `calendar-widget`, `nav-registry`, `icd-dg-match`, `arzt-suche`).
+
+- Bu bir tavsiye değil **kapı**: pre-commit hook `dashboard.js` satır sayısı artarsa commit'i
+  reddeder (`tools/check-dashboard-size.sh`, taban `tools/.dashboard-baseline`).
+  **Kurulum — her geliştirici bir kez:** `git config core.hooksPath .githooks`
+  (dosya küçülürse taban otomatik sıkışır, kazanım geri alınamaz.)
+- Mevcut bir fonksiyonu düzeltmek serbest — dosyayı **büyütmemek** şartıyla.
+- Eski kod yeniden yazılmaz; **kuşatma** yöntemiyle dokunuldukça ayrı modüle göç eder.
+  Göç tek yönlüdür: modülden `dashboard.js`'e geri taşıma yasak.
+- İlk kuşatma hedefi **podoloji kümesi** (`dashboard.js:24030-25696`) — bitişik tek küme.
+
+> Gerekçe ve ölçüm: `konsey/tutanak/2026-08-13-frontend-mimari-katman.md`.
+> Kararın özeti: React'a geçilmeyecek, 27k satır yeniden yazılmayacak; eksik katmanlar
+> (olay/sinyal, tip kontrolü, veri katmanı) vanilla kalınarak eklenir.
+
 - **Ortak modülleri yeniden yazma.** Yeni seçici/arama/takvim gerekiyorsa önce bak:
   `katalog-suche.js` (ICD/Diagnosegruppe/Heilmittel) · `patient-suche.js` · `calendar-widget.js`
 - **`<datalist>` kullanma** — bu modüller onun yerine var

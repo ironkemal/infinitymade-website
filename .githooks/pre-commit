@@ -1,0 +1,9 @@
+#!/bin/sh
+# Depo hook'ları. Kurulum (her geliştirici bir kez):
+#   git config core.hooksPath .githooks
+
+repo_root=$(git rev-parse --show-toplevel)
+
+sh "$repo_root/tools/check-dashboard-size.sh" || exit 1
+
+exit 0
