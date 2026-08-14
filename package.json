@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=20"
   },
+  "scripts": {
+    "test": "node --test \"module/**/*.test.js\""
+  },
   "dependencies": {
     "nodemailer": "^6.9.14"
   }
