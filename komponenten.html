@@ -161,7 +161,7 @@
 
 <script type="module">
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260725';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchDiagnosen, searchHeilmittel, heilmittelOptionsHtml, normalizeBereich } from './katalog-suche.js?v=20260810g';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';

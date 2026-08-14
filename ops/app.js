@@ -1,7 +1,7 @@
 // Praxura Ops-Dashboard — Shell: Auth, Router, gemeinsame Helfer
 // Sürüm sabitlenmiş: "@2" yazmak, CDN'in bir gün yeni bir küçük sürümü sessizce
 // göndermesi ve oturum davranışının bizden habersiz değişmesi demekti.
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.112.2';
+import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js?v=20260811a';
 
 const AUTH_STORAGE_KEY = 'praxura-ops-auth';
