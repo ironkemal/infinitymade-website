@@ -15,6 +15,7 @@ import billingMahnwesenRouter from './billing/api/mahnwesen.routes.js';
 import { createBookingsFromRequestFactory } from './booking/from-request.js';
 import billingAusfallRouter from './billing/api/ausfall.routes.js';
 import billingStatistikRouter from './billing/api/statistik.routes.js';
+import verordnungStatusRouter from './billing/api/verordnung-status.routes.js';
 import wartelisteRouter from './billing/api/warteliste.routes.js';
 import { defaultPositionForHeilmittel, resolvePositionsnummer, PHYSIO_POSITIONS } from './billing/codes/physio_positions.js';
 import { requireAuth as requireAuthAI } from './ai/auth.js';
@@ -301,6 +302,9 @@ app.use('/api/billing', billingAusfallRouter);
 
 // Statistik / analytics routes.
 app.use('/api/billing', billingStatistikRouter);
+
+// Abrechnungsstatus einer Verordnung (Podologie) — Zustandsuebergaenge.
+app.use('/api/billing', verordnungStatusRouter);
 
 // Warteliste (Bekleme Listesi) routes.
 app.use('/api/warteliste', wartelisteRouter);

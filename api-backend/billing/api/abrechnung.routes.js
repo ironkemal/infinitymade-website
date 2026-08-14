@@ -789,6 +789,17 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       (rxRows || []).map(r => [r.id.slice(0, 10), r.id])
     );
 
+    // Dasselbe fuer den Podologie-Topf. Beide Toepfe koennen in derselben
+    // DTA-Datei stecken; die Belegnummer entsteht in beiden Faellen als
+    // id.slice(0,10) (siehe mapVerordnungToDtaShape und den Physio-Pfad).
+    const { data: vordRows } = await supabase
+      .from('verordnungen')
+      .select('id')
+      .eq('abrechnung_id', req.params.id);
+    const belegToVordId = new Map(
+      (vordRows || []).map(v => [v.id.slice(0, 10), v.id])
+    );
+
     const parsed = parseZaaFile(buf);
 
     // Wipe stale errors for this abrechnung (re-upload semantics).
@@ -825,12 +836,38 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
       }).in('id', rejectedRxIds);
     }
 
+    // Podologie-Verordnungen: die Kasse hat diese Belege abgesetzt.
+    //
+    // Warum 'abgesetzt' und nicht 'teilabsetzung': die ZAA-Datei nennt Fehler
+    // je Beleg, keine Betraege und keine Positionen. Ob die Kasse gekuerzt oder
+    // ganz abgesetzt hat, steht erst im Zahlungsavis. Ein automatisch geratenes
+    // 'teilabsetzung' waere eine erfundene Zahl in der Buchhaltung — die
+    // Teilabsetzung setzt deshalb der Anwender mit Betrag (siehe PATCH
+    // /verordnung/:id/abrechnungsstatus).
+    const vordGrund = new Map();
+    for (const e of parsed.errors) {
+      if (!e.belegnummer) continue;
+      const vId = belegToVordId.get(e.belegnummer);
+      if (!vId) continue;
+      const txt = [e.code, e.uebersetzung || e.text].filter(Boolean).join(' — ');
+      vordGrund.set(vId, [...(vordGrund.get(vId) || []), txt]);
+    }
+    const heute = new Date().toISOString().slice(0, 10);
+    for (const [vId, gruende] of vordGrund) {
+      await supabase.from('verordnungen').update({
+        status:          'abgesetzt',
+        absetzung_grund: gruende.join('\n').slice(0, 2000),
+        absetzung_am:    heute,
+      }).eq('id', vId).eq('owner_id', tenantId);
+    }
+
     return res.json({
       ok: true,
       format: parsed.format,
       errorCount: inserts.length,
       status: newStatus,
       errors: parsed.errors,
+      verordnungenAbgesetzt: vordGrund.size,
       filename: filename || null,
     });
   } catch (e) {
@@ -2109,8 +2146,11 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     }
 
     // ---- mark verordnungen as abgerechnet ----
+    // abrechnung_id ist die Ruecktrasse: ohne sie laesst sich eine spaetere
+    // Kassenrueckmeldung (ZAA) nicht der Verordnung zuordnen und die Absetzung
+    // bliebe unsichtbar.
     await supabase.from('verordnungen')
-      .update({ status: 'abgerechnet' })
+      .update({ status: 'abgerechnet', abrechnung_id: ab.id })
       .in('id', verordnungIds);
 
     return res.json({
