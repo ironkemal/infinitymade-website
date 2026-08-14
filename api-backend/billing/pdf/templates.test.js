@@ -27,13 +27,25 @@ const zhr = renderZuzahlungsrechnung({
 
 test('starts with doctype', () => assert.ok(zhr.startsWith('<!DOCTYPE html>')));
 test('escapes umlauts intact', () => assert.ok(zhr.includes('Müller, Hans') || zhr.includes('Müller</strong>')));
-test('formats EUR with comma + €', () => assert.ok(zhr.includes('29,63 €') || zhr.includes('29,63 €')));
+test('formats EUR with comma + EUR sign', () => assert.ok(zhr.includes('2,96') && zhr.includes('€')));
 test('shows session table rows', () => {
   // de-DE locale yields '5.5.2026' (no leading zeros)
   assert.ok(/(05|5)\.(05|5)\.2026/.test(zhr), 'session date');
   assert.ok(zhr.includes('KG Einzel'), 'leistung name');
 });
 test('includes Pauschale 10€', () => assert.ok(zhr.includes('Verordnungspauschale (10 €)')));
+// Der Patient darf auf seinem Beleg weder den Behandlungsbetrag noch den
+// Kassenanteil sehen (Nausad, 12.08.2026). Beides liesse sich aus der
+// Bruttospalte ablesen — deshalb ist sie weg und bleibt weg.
+test('zeigt KEINEN Brutto-/Kassenbetrag', () => {
+  assert.ok(!zhr.includes('Bruttosumme'), 'Bruttosumme darf nicht erscheinen');
+  assert.ok(!zhr.includes('>Brutto<'), 'Bruttospalte darf nicht erscheinen');
+  assert.ok(!zhr.includes('29,63'), 'Einzelpreis der Behandlung darf nicht erscheinen');
+  assert.ok(!zhr.includes('59,26'), 'Gesamtbetrag der Behandlung darf nicht erscheinen');
+});
+test('zeigt den Eigenanteil als "Zu zahlen"', () => {
+  assert.ok(zhr.includes('Zu zahlen') && zhr.includes('15,92'));
+});
 test('escapes potential XSS', () => {
   const evil = renderZuzahlungsrechnung({
     praxis: { name: '<script>alert(1)</script>' },

@@ -288,6 +288,7 @@ export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
   // brach die Liste mitten in E10.x ab, bevor der Nutzer weitertippen konnte.
   // Im strict-Modus (siehe unten) sind es 100 — die Obergrenze der RPC —, weil
   // dort keine Zeile mehr an fachfremde Kodes verloren geht.
+  // nurCodes: () => string[]  — optionale Allowlist für Diagnosegruppen.
   const { multi = false, codeOnly = false, kind = 'both', strict = false, onSelect = null } = opts;
   const limit = opts.limit ?? (strict ? 100 : 50);
   const resolveBereich = typeof opts.bereich === 'function' ? opts.bereich : () => opts.bereich ?? null;
@@ -327,7 +328,16 @@ export function attachDiagnoseSearch(inputEl, sb, opts = {}) {
     // ein Klick ins leere Feld listet sie. ICD-Felder brauchen weiter ein Zeichen.
     minChars: opts.minChars ?? (kind === 'dg' ? 0 : 1),
     fetchItems: async q => {
-      const rows = await searchDiagnosen(sb, q, { bereich: resolveBereich(), kind, limit });
+      let rows = await searchDiagnosen(sb, q, { bereich: resolveBereich(), kind, limit });
+      // `nurCodes` engt die Diagnosegruppen auf die ein, die zum bereits
+      // eingegebenen ICD-Kode passen (Podologie: L60.0 lässt nur UI1/UI2 zu).
+      // Liefert die Funktion nichts, wird nicht eingeengt — eine leere Liste
+      // wäre schlimmer als eine lange.
+      const erlaubt = typeof opts.nurCodes === 'function' ? opts.nurCodes() : null;
+      if (erlaubt?.length) {
+        const gefiltert = rows.filter(it => it.kind !== 'dg' || erlaubt.includes(it.code));
+        if (gefiltert.length) rows = gefiltert;
+      }
       if (!strictNow()) return rows;
       const own = rows.filter(it => it.in_sector);
       // Nur gefiltert und nichts übrig? Dann sagen, dass es Treffer GAB, sie

@@ -27,7 +27,10 @@ const SKIP_DIRS = new Set([
   'node_modules', '.git', 'archive', 'dist', 'build', '.vercel', '.next',
   'funktionen', 'coverage', '.claude'
 ]);
-const SCAN_ROOTS = ['.', 'api', 'api-backend', 'ops', 'lib'];
+// 'module' — Konsey 2026-08-13 yeni frontend kodunu oraya yönlendiriyor. Kök dizin
+// taraması yalnız üst seviyeyi okuduğu için alt klasör ayrıca yazılmalı; yazılmazsa
+// haritanın kör noktası tam da büyümesi beklenen yer olurdu.
+const SCAN_ROOTS = ['.', 'module', 'api', 'api-backend', 'ops', 'lib'];
 
 function walk(dir, acc = []) {
   let entries;

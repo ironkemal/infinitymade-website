@@ -39,6 +39,18 @@ export function renderRzgQuittung(opts) {
   const signLabel = unterschriftLabel || 'Unterschrift Praxisinhaber/in';
   const footerText = fusszeile || invoiceFooterText || '';
 
+  // Auf diesem Beleg darf ausschliesslich der Anteil des Patienten stehen —
+  // niemals der Gesamtbetrag der Behandlung und niemals der Kassenanteil.
+  // Der frühere Rückfall `totals.gesZuzahlung ?? totals.gesamt ?? 0` tat genau
+  // das Gegenteil: fehlte gesZuzahlung, druckte die Quittung den vollen
+  // Behandlungsbetrag als "erhaltenen Betrag". Der Patient las daraus, es sei
+  // ihm mehr abgenommen worden als vereinbart (Nausad, 12.08.2026).
+  // Lieber laut scheitern als dem Patienten ein falsches Papier mitgeben.
+  const erhaltenerBetrag = Number(totals.gesZuzahlung);
+  if (!Number.isFinite(erhaltenerBetrag)) {
+    throw new Error('RZG-Quittung: totals.gesZuzahlung fehlt oder ist keine Zahl — Quittung wird nicht erzeugt.');
+  }
+
   const sessionRows = sessions.map(s => `
     <tr>
       <td>${fmtDate(s.datum)}</td>
@@ -127,7 +139,7 @@ export function renderRzgQuittung(opts) {
 
   <div class="total-row">
     <span class="label">Erhaltener Betrag:</span>
-    <span>${fmtEur(totals.gesZuzahlung ?? totals.gesamt ?? 0)}</span>
+    <span>${fmtEur(erhaltenerBetrag)}</span>
   </div>
 
   <div class="sign-area">

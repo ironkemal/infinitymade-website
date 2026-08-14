@@ -24,8 +24,10 @@ const fmtDate = (d) => {
  * @param {object} opts.patient       { nachname, vorname, strasse, plz, ort, geburtsdatum, kvnr }
  * @param {object} opts.verordnung    { ausstellungsdatum, krankenkasse, arzt }
  * @param {object} opts.rechnung      { nummer, datum, faelligkeit }
- * @param {Array}  opts.sessions      [{ datum, position, bezeichnung, brutto, zuzahlung }]
- * @param {object} opts.totals        { brutto, prozZuzahlung, pauschZuzahlung, gesZuzahlung }
+ * @param {Array}  opts.sessions      [{ datum, position, bezeichnung, zuzahlung }]
+ *                                    (brutto wird bewusst nicht gedruckt, s.u.)
+ * @param {object} opts.totals        { prozZuzahlung, pauschZuzahlung, gesZuzahlung }
+ *                                    (totals.brutto wird bewusst nicht gedruckt)
  * @param {string} opts.bankverbindung
  */
 export function renderZuzahlungsrechnung(opts) {
@@ -39,12 +41,17 @@ export function renderZuzahlungsrechnung(opts) {
     ? escapeHtml(hinweisText)
     : 'Die Zuzahlung ist gesetzlich vorgeschrieben (§ 32 Abs. 2 i.V.m. § 61 SGB V). Wenden Sie sich an Ihre Krankenkasse, wenn Sie wegen Erreichens der Belastungsgrenze (§ 62 SGB V) von der Zuzahlung befreit sind — die Befreiungsbescheinigung kann auch noch nachgereicht werden. Versicherte unter 18 Jahren sind grundsätzlich zuzahlungsfrei.';
 
+  // Bewusst OHNE Bruttospalte: der Patient soll auf diesem Beleg nur seinen
+  // eigenen Anteil sehen. Aus Brutto minus Zuzahlung liesse sich der
+  // Kassenanteil ausrechnen — genau das darf hier nicht ablesbar sein
+  // (Nausad, 12.08.2026: "nicht sehen, was die Kasse zahlt").
+  // Rechtlich unbedenklich: geschuldet ist ausschliesslich die Zuzahlung, und
+  // nur der geschuldete Betrag ist Pflichtangabe (§ 14 Abs. 4 Nr. 7 UStG).
   const sessionRows = sessions.map(s => `
     <tr>
       <td>${fmtDate(s.datum)}</td>
       <td>${escapeHtml(s.position || '')}</td>
       <td>${escapeHtml(s.bezeichnung || '')}</td>
-      <td class="num">${fmtEur(s.brutto)}</td>
       <td class="num">${fmtEur(s.zuzahlung)}</td>
     </tr>
   `).join('');
@@ -125,7 +132,6 @@ export function renderZuzahlungsrechnung(opts) {
         <th>Datum</th>
         <th>Pos.-Nr.</th>
         <th>Leistung</th>
-        <th class="num">Brutto</th>
         <th class="num">Zuzahlung</th>
       </tr>
     </thead>
@@ -135,7 +141,6 @@ export function renderZuzahlungsrechnung(opts) {
   </table>
 
   <div class="totals">
-    <div class="row"><span class="label">Bruttosumme</span><span class="num">${fmtEur(totals.brutto)}</span></div>
     <div class="row"><span class="label">10 % prozentuale Zuzahlung</span><span class="num">${fmtEur(totals.prozZuzahlung)}</span></div>
     <div class="row"><span class="label">Verordnungspauschale (10 €)</span><span class="num">${fmtEur(totals.pauschZuzahlung)}</span></div>
     <div class="row sum"><span>Zu zahlen</span><span class="num">${fmtEur(totals.gesZuzahlung)}</span></div>

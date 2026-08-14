@@ -1,13 +1,16 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-11
--- LETZTE MIGRATION:  20260810142703_verordnungen_privat_selbstzahler_flow
---                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
+-- ERZEUGT AM:        2026-08-14
+-- LETZTE MIGRATION:  20260814101707_patient_consents
+--                    davor: 20260814101624_kiosk_pin_hardening
+--                    davor: 20260814083941_fussbefund_termin_legende
+--                    davor: 20260814082430_verordnungen_abrechnungsstatus_absetzung
+--                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            78 Tabellen · 1133 Spalten · 153 RLS-Policies
---                    273 Indizes · 58 Trigger · 52 Funktionen · 4 Views
+-- UMFANG:            80 Tabellen · 1164 Spalten · 156 RLS-Policies
+--                    281 Indizes · 59 Trigger · 53 Funktionen · 4 Views
 -- QUELLE:            Direkt aus der Live-DB introspiziert (kein Handentwurf)
 --
 -- ⚠️  DIES IST EINE MOMENTAUFNAHME, KEINE LIVE-VERBINDUNG.
@@ -874,6 +877,23 @@ CREATE TABLE krankenkassen (
 --   PK (id) — 93 GKV-Kassen geseedet. Quelle für das UI-Dropdown.
 --   ⚠️ Nicht dasselbe wie `kostentraeger` (das ist die §302-Seite).
 
+CREATE TABLE kiosk_pins (
+  user_id uuid NOT NULL
+  pin_hash text NOT NULL
+  failed_attempts integer NOT NULL DEFAULT 0
+  locked_until timestamptz
+  updated_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+--   PK (user_id) · FK user_id -> profiles(id) ON DELETE CASCADE
+--   Kiosk-PIN als scrypt-Hash (Node crypto.scrypt, keine externe Abhängigkeit).
+--   ⚠️ RLS aktiv, aber BEWUSST OHNE POLICY + REVOKE ALL FROM anon, authenticated
+--     → nur service_role kommt ran. Ein 4-stelliger PIN wäre im Client in
+--     Millisekunden durchprobiert (10.000 Kandidaten); der Hash darf den Server
+--     nie verlassen. Prüfung ausschließlich über POST /api/kiosk/pin/verify.
+--   Ersetzt die gelöschte Klartext-Spalte `profiles.tablet_kiosk_pin`
+--   (Konsey 2026-08-14, Art. 32 Abs. 1 TOM).
+
 CREATE TABLE leads (
   id uuid NOT NULL DEFAULT gen_random_uuid()
   owner_id uuid NOT NULL
@@ -996,9 +1016,66 @@ CREATE TABLE pat_fussbefund (
   notiz text
   erfasst_von uuid
   created_at timestamptz NOT NULL DEFAULT now()
+  booking_id uuid                        -- Termin, zu dem der Befund gehört
+  uebernommen_von uuid                   -- Herkunft der Übernahme (nur Doku)
 );
 --   FK lead_id -> leads(id) ON DELETE CASCADE · PK (id)
+--   FK booking_id -> bookings(id) ON DELETE SET NULL
+--   FK uebernommen_von -> pat_fussbefund(id) ON DELETE SET NULL
+--   ★ UNIQUE (booking_id) WHERE booking_id IS NOT NULL
+--     → ein Termin trägt höchstens einen Befund.
 --   ★ Aktueller Podologie-Fußbefund (markierungen = Punkte auf der Fußgrafik).
+--   ★ Jede Zeile ist ein VOLLSTÄNDIGER Schnappschuss. Ein Folgebefund wird als
+--     Kopie des vorherigen angelegt (neue Zeile), nie als Verweis — sonst
+--     änderte sich die Dokumentation eines vergangenen Termins rückwirkend.
+--     `uebernommen_von` hält nur fest, wovon kopiert wurde.
+--   ⚠️ markierungen speichern symbol/color/label als KOPIE der Legende
+--     (profiles.fussbefund_legende). Umbenennen der Legende deutet alte
+--     Befunde deshalb nicht um.
+
+CREATE TABLE patient_consents (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  owner_id uuid NOT NULL
+  business_id uuid
+  patient_id uuid NOT NULL
+  consent_type text NOT NULL
+  text_version text NOT NULL
+  text_sha256 text NOT NULL
+  text_snapshot text NOT NULL
+  signature_path text
+  signed_name text
+  consented_at timestamptz NOT NULL DEFAULT now()
+  captured_by_user_id uuid
+  device_label text
+  revoked_at timestamptz
+  revoke_reason text
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+--   CHECK consent_type IN (behandlungsvertrag, datenschutz, selbstzahler, foto)
+--   CHECK text_sha256 ~ '^[0-9a-f]{64}$'
+--   PK (id) · FK owner_id -> profiles(id) ON DELETE RESTRICT
+--   FK patient_id -> leads(id) ON DELETE RESTRICT   ⚠️ zeigt auf leads
+--   FK business_id -> businesses(id) ON DELETE SET NULL
+--   FK captured_by_user_id -> profiles(id) ON DELETE SET NULL
+--   INDEX (patient_id, consented_at DESC) · (owner_id, consented_at DESC)
+--         · (patient_id, consent_type, consented_at DESC)
+--   Digitale Patienten-Einwilligung, einfache elektronische Signatur
+--   (Konsey 2026-08-14 · compliance/LEGAL_DECISIONS.md).
+--   ⚠️ NICHT mit `consent_log` verwechseln — das ist die B2B-Seite
+--     (Praxisinhaber, AVV/AGB). Andere betroffene Person, andere Löschfrist.
+--   ⚠️ BEWUSST OHNE ip_address: auf dem Praxis-Tablet ist die IP der
+--     Praxis-Router → Beweiswert null → Art. 5 Abs. 1 lit. c. Das Muster aus
+--     `consent_log.ip_address` wird hier absichtlich NICHT übernommen.
+--   ⚠️ text_snapshot hält den VOLLEN unterschriebenen Text (Art. 7 Abs. 1
+--     Nachweispflicht) — ein Häkchen genügt nicht. Änderungen an der Vorlage
+--     dürfen den Nachweis nicht berühren.
+--   ⚠️ Zwei Texte = zwei Zeilen (behandlungsvertrag §630d BGB / datenschutz
+--     Art. 7 DSGVO). Zusammenlegen verboten — Koppelungsverbot.
+--   ⚠️ Widerruf LÖSCHT nicht, er markiert (revoked_at/revoke_reason).
+--   ⚠️ ON DELETE RESTRICT auf owner_id und patient_id: solange eine
+--     Einwilligung existiert, sind Patient und Inhaber nicht löschbar
+--     (§630f Abs. 3 BGB, 10 Jahre). Beim Bau eines Lösch-/Offboarding-Flows
+--     einplanen — Trigger fn_patient_consents_immutable blockt zusätzlich.
 
 CREATE TABLE patient_notes (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1271,7 +1348,7 @@ CREATE TABLE profiles (
   deletion_scheduled_at timestamptz
   deletion_consent_at timestamptz
   deletion_consent_ip text
-  tablet_kiosk_pin text
+  tablet_kiosk_pin_set boolean NOT NULL DEFAULT false
   praxis_logo_url text
   invoice_footer_text text
   urlaub_jahrestage integer DEFAULT 30
@@ -1286,6 +1363,7 @@ CREATE TABLE profiles (
   ausfall_percent numeric(5,2)
   ausfall_cutoff_hours integer NOT NULL DEFAULT 24
   ausfall_hinweis text
+  fussbefund_legende jsonb NOT NULL DEFAULT '[]'::jsonb   -- Podologie-Legende
 );
 --   CHECK plan IN (starter, professional, klinik, mitarbeiter, enterprise)
 --   CHECK plan_status IN (pending, trial, active, past_due, canceled, expired)
@@ -1537,12 +1615,26 @@ CREATE TABLE verordnungen (
   zuzahlung_befreit boolean DEFAULT false
   pat_leitsymptomatik text
   behandlungsanlass text
+  abrechnung_id uuid
+  absetzung_betrag numeric(10,2)
+  absetzung_grund text
+  absetzung_am date
+  storno_grund text
+  storno_am date
 );
---   CHECK status IN (aktiv, abrechenbar, abgerechnet, archiviert)
+--   CHECK status IN (aktiv, abrechenbar, abgerechnet, teilabsetzung, abgesetzt,
+--                    storniert, archiviert)
+--   CHECK absetzung_betrag IS NULL OR (> 0 AND status IN (teilabsetzung, abgesetzt))
+--   CHECK status <> 'teilabsetzung' OR absetzung_betrag IS NOT NULL
 --   CHECK wagner_grad BETWEEN 0 AND 5
 --   CHECK rezeptart <> 'kassen' OR diagnosegruppe IS NOT NULL
 --   FK diagnosegruppe -> diagnosegruppen(code) · arzt_id -> aerzte(id) · lead_id -> leads(id)
+--      abrechnung_id -> abrechnung(id) ON DELETE SET NULL
 --   PK (id)
+--   ⚠️ Status ist ein Tor, kein Etikett: Uebergaenge laufen ausschliesslich ueber
+--      PATCH /api/billing/verordnung/:id/abrechnungsstatus — 'abgerechnet' vergibt
+--      nur /abrechnung/create-podologie. Direkte UPDATEs aus der Oberflaeche
+--      umgehen die Regeln (Doppelabrechnung, Absetzung ohne Betrag).
 --   ★ PODOLOGIE-Verordnungstopf. Physio/Ergo/Logo nutzen `prescriptions`.
 --     Die beiden Töpfe bestehen bewusst nebeneinander.
 --   ⚠️ icd10 ist hier text[] — in prescriptions dagegen zwei Einzelspalten

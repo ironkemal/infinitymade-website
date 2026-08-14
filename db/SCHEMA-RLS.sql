@@ -1,13 +1,16 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-12
--- LETZTE MIGRATION:  tighten_avatars_storage_policies (12.08.)
---                    davor: 20260810142703_verordnungen_privat_selbstzahler_flow
+-- ERZEUGT AM:        2026-08-14
+-- LETZTE MIGRATION:  20260814101707_patient_consents
+--                    davor: 20260814101624_kiosk_pin_hardening
+--                    davor: 20260814083941_fussbefund_termin_legende
+--                    davor: 20260814082430_verordnungen_abrechnungsstatus_absetzung
+--                    davor: tighten_avatars_storage_policies (12.08.)
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            153 RLS-Policies · 273 Indizes · 58 Trigger · 52 Funktionen
+-- UMFANG:            156 RLS-Policies · 281 Indizes · 59 Trigger · 53 Funktionen
 -- Tabellen/Spalten:  db/SCHEMA.sql · Orientierung: db/README.md
 --
 -- ⚠️  MOMENTAUFNAHME. Nach jeder Migration neu erzeugen.
@@ -54,7 +57,7 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (153)
+-- 2. RLS-POLICIES (156)
 -- =====================================================================
 
 -- abrechnung
@@ -207,6 +210,15 @@
 -- krankenkassen
 --   Allow authenticated read [SELECT / authenticated] USING (true)
 
+-- kiosk_pins   ⚠️ RLS AKTIV, ABER BEWUSST OHNE POLICY
+--   Keine einzige Policy + REVOKE ALL ON kiosk_pins FROM anon, authenticated.
+--   PostgREST liefert damit garantiert nichts aus; nur service_role (Backend)
+--   kommt an den scrypt-Hash. Ein 4-stelliger PIN wäre im Client in
+--   Millisekunden durchprobiert — der Hash darf den Server nie verlassen.
+--   Prüfung ausschließlich über POST /api/kiosk/pin/verify (api-backend).
+--   ⚠️ Wer hier "der Vollständigkeit halber" eine Policy ergänzt, hebt den
+--     Schutz auf. Das Fehlen ist die Maßnahme.
+
 -- leads   ★ Hauptpatiententabelle
 --   team view/insert/update/delete leads [/ authenticated]
 --     owner_id = auth.uid() OR owner_id = (SELECT owner_id FROM profiles WHERE id = auth.uid())
@@ -223,6 +235,18 @@
 
 -- pat_fussbefund
 --   pat_fussbefund_owner_access [ALL] owner + Team
+
+-- patient_consents   ★ digitale Patienten-Einwilligung (Konsey 2026-08-14)
+--   patient_consents_owner_select [SELECT] owner + Team
+--   patient_consents_owner_insert [INSERT] owner + Team
+--   patient_consents_owner_revoke [UPDATE] owner + Team
+--     alle drei: auth.uid() = owner_id
+--                OR auth.uid() IN (SELECT id FROM profiles WHERE owner_id = patient_consents.owner_id)
+--   ⚠️ KEIN DELETE-Policy — Löschen für authenticated grundsätzlich unmöglich.
+--     Zusätzlich blockt trg_patient_consents_immutable 10 Jahre lang
+--     (§630f Abs. 3 BGB) und lässt beim UPDATE nur revoked_at/revoke_reason zu.
+--   ⚠️ Nicht mit `consent_log` verwechseln — das ist die B2B-Seite
+--     (Praxisinhaber, AVV/AGB), andere betroffene Person, andere Frist.
 
 -- patient_notes
 --   owner_only [ALL] USING (auth.uid() = owner_id)   ⚠️ ohne Team-Zugriff
@@ -327,7 +351,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (52 eigene; PostGIS-Funktionen ausgelassen)
+-- 3. FUNKTIONEN (53 eigene; PostGIS-Funktionen ausgelassen)
 -- =====================================================================
 
 -- --- Berechtigung / Mandant --------------------------------------------
@@ -439,6 +463,15 @@ $function$;
 -- prevent_belegliste_mod() -> trigger   GoBD: blockt UPDATE/DELETE auf belegliste.
 
 
+-- --- Einwilligung / Nachweis --------------------------------------------
+-- fn_patient_consents_immutable() -> trigger              [SECURITY DEFINER]
+--   Hält den Einwilligungsnachweis unveränderlich (Art. 7 Abs. 1 DSGVO):
+--   DELETE erst 10 Jahre nach consented_at (§630f Abs. 3 BGB), UPDATE nur auf
+--   revoked_at/revoke_reason — jede Änderung an Text, Unterschrift, Patient
+--   oder Zeitpunkt wirft check_violation.
+--   Gegenstück zu prevent_belegliste_mod() (GoBD), nur für die DSGVO-Seite.
+
+
 -- --- Termine / Mandant --------------------------------------------------
 -- fn_check_booking_closed_day() -> trigger   Blockt Termine an geschlossenen Tagen.
 -- set_business_id_default() -> trigger       Füllt business_id beim INSERT.
@@ -481,7 +514,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (58)
+-- 4. TRIGGER (59)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -498,6 +531,10 @@ $function$;
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng
 --   profiles              trg_sync_profiles_clinic_location BEFORE INSERT/UPDATE OF clinic_lat, clinic_lng
 --   businesses            trg_seed_default_groups        AFTER INSERT
+--   patient_consents      trg_patient_consents_immutable BEFORE UPDATE/DELETE
+--                         → fn_patient_consents_immutable(): DELETE erst nach
+--                           10 Jahren (§630f Abs. 3 BGB), UPDATE nur auf
+--                           revoked_at/revoke_reason. Art. 7 Abs. 1 DSGVO.
 --   belegliste            trg_prevent_belegliste_mod     BEFORE UPDATE/DELETE   (GoBD)
 --                         trg_set_beleg_nr               BEFORE INSERT WHEN beleg_nr IS NULL OR 0
 --   mahnungen             trg_set_mahnung_nr             BEFORE INSERT (analog)
@@ -624,6 +661,10 @@ CREATE INDEX idx_messreihen_lead ON public.messreihen USING btree (lead_id, geme
 CREATE INDEX idx_messreihen_owner ON public.messreihen USING btree (owner_id);
 CREATE INDEX pat_fussbefund_lead_idx ON public.pat_fussbefund USING btree (lead_id, erstellt_am DESC);
 CREATE INDEX pat_fussbefund_owner_idx ON public.pat_fussbefund USING btree (owner_id);
+CREATE UNIQUE INDEX pat_fussbefund_booking_uidx ON public.pat_fussbefund USING btree (booking_id) WHERE (booking_id IS NOT NULL);
+CREATE INDEX patient_consents_patient_idx ON public.patient_consents USING btree (patient_id, consented_at DESC);
+CREATE INDEX patient_consents_owner_idx ON public.patient_consents USING btree (owner_id, consented_at DESC);
+CREATE INDEX patient_consents_type_idx ON public.patient_consents USING btree (patient_id, consent_type, consented_at DESC);
 CREATE INDEX idx_patient_notes_business ON public.patient_notes USING btree (business_id);
 CREATE INDEX idx_patient_notes_lead ON public.patient_notes USING btree (lead_id);
 CREATE INDEX prescription_documents_owner_idx ON public.prescription_documents USING btree (owner_id, created_at DESC);
@@ -673,9 +714,11 @@ CREATE INDEX idx_user_preferences_user ON public.user_preferences USING btree (u
 CREATE INDEX idx_vehicles_business ON public.vehicles USING btree (business_id);
 CREATE INDEX idx_vehicles_created_by ON public.vehicles USING btree (created_by);
 CREATE INDEX idx_vehicles_owner_kind ON public.vehicles USING btree (owner_id, kind);
+CREATE INDEX idx_verordnungen_abrechnung_id ON public.verordnungen USING btree (abrechnung_id) WHERE (abrechnung_id IS NOT NULL);
 CREATE INDEX idx_verordnungen_arzt ON public.verordnungen USING btree (owner_id, arzt_id) WHERE (arzt_id IS NOT NULL);
 CREATE INDEX idx_verordnungen_arzt_id ON public.verordnungen USING btree (arzt_id);
 CREATE INDEX idx_verordnungen_lead_id ON public.verordnungen USING btree (lead_id);
+CREATE INDEX idx_verordnungen_owner_status_lead ON public.verordnungen USING btree (owner_id, status, lead_id);
 CREATE INDEX idx_warteliste_owner ON public.warteliste USING btree (owner_id);
 CREATE INDEX idx_warteliste_status ON public.warteliste USING btree (owner_id, status);
 CREATE INDEX idx_working_hours_business ON public.working_hours USING btree (business_id);

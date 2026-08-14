@@ -1,11 +1,17 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260810g';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260814a';
 import { attachArztSearch, arztMetaText } from './arzt-suche.js?v=20260810f';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 import { attachPatientSearch } from './patient-suche.js?v=20260726';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260814';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf } from './module/fussbefund.js?v=20260814a';
+import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
+import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
+import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
+import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -41,7 +47,7 @@ const T = {
     btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin',
     kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
-    lf_all: 'Alle', lf_new: 'Neu', lf_contacted: 'Kontaktiert', lf_booked: 'Termin', lf_won: 'Gewonnen', lf_lost: 'Verloren',
+    lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
     lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
     lead_status: 'Status', lead_notes: 'Notizen', lead_email: 'E-Mail', lead_website: 'Website',
     lead_country_code: 'Land', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategorie',
@@ -209,6 +215,31 @@ const T = {
     af_vereinbarung_seit: 'Ausfallvereinbarung liegt vor seit',
     af_trotzdem_erstellen: 'Trotzdem erstellen',
     af_gesperrt_titel: 'Ausfallrechnung nicht möglich',
+    // ── Kiosk / „Tablet an Patient übergeben" (Konsey 2026-08-14) ──
+    kiosk_start_btn: 'An Patient übergeben',
+    kiosk_overlay_title: 'Anamnese-Formular',
+    kiosk_overlay_sub: 'Bitte füllen Sie alle Felder aus',
+    kiosk_exit_btn: 'Beenden (PIN)',
+    kiosk_pin_title: 'PIN eingeben',
+    kiosk_pin_subtitle: 'Bitte geben Sie Ihre 4-stellige PIN ein, um den Kiosk-Modus zu beenden.',
+    kiosk_pin_cancel: 'Abbrechen',
+    kiosk_pin_confirm: 'Bestätigen',
+    kiosk_pin_forgot: 'PIN vergessen?',
+    kiosk_forgot_confirm: 'Ohne PIN wird der Kiosk-Modus nicht verlassen. Stattdessen wird die Sitzung beendet und Sie werden abgemeldet. Fortfahren?',
+    kiosk_setup_title: 'PIN festlegen',
+    kiosk_setup_sub: 'Legen Sie eine 4-stellige PIN fest. Ohne PIN startet der Kiosk-Modus nicht.',
+    kiosk_setup_current_label: 'Aktuelle PIN',
+    kiosk_setup_pin_label: 'Neue PIN (4 Ziffern)',
+    kiosk_setup_confirm_label: 'PIN wiederholen',
+    kiosk_setup_save: 'Speichern',
+    kiosk_status_error: 'Kiosk-Modus kann nicht gestartet werden — der PIN-Status ist nicht abrufbar.',
+    kiosk_err_pin_format: 'Die PIN muss aus genau 4 Ziffern bestehen.',
+    kiosk_err_pin_mismatch: 'Die PINs stimmen nicht überein.',
+    kiosk_err_pin_save: 'PIN konnte nicht gespeichert werden.',
+    kiosk_err_pin_incomplete: 'Bitte alle 4 Stellen eingeben.',
+    kiosk_err_pin_wrong: 'Falsche PIN. Verbleibende Versuche:',
+    kiosk_err_locked: 'Zu viele Fehlversuche. Gesperrt bis',
+    kiosk_err_network: 'Keine Verbindung zum Server. Der Kiosk-Modus bleibt aus Sicherheitsgründen aktiv.',
   },
   en: {
     logout: 'Sign out',
@@ -224,7 +255,7 @@ const T = {
     calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_add_booking: '+ Appointment',
     kunden_sub: 'Leads & customer info', leads_import: 'Import CSV', leads_add: '+ New lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Search',
-    lf_all: 'All', lf_new: 'New', lf_contacted: 'Contacted', lf_booked: 'Booked', lf_won: 'Won', lf_lost: 'Lost',
+    lf_all: 'All', lf_abrechenbar: 'Ready to bill', lf_abgerechnet: 'Billed', lf_teilabsetzung: 'Partial rejection', lf_abgesetzt: 'Rejected', lf_storniert: 'Cancelled',
     lead_title: 'Name', lead_city: 'City', lead_phone: 'Phone', lead_rating: 'Rating', lead_standort: 'Practice',
     lead_status: 'Status', lead_notes: 'Notes', lead_email: 'Email', lead_website: 'Website',
     lead_country_code: 'Country', lead_google_url: 'Google Maps URL', lead_category_name: 'Category',
@@ -372,6 +403,31 @@ const T = {
     af_vereinbarung_seit: 'Cancellation agreement on file since',
     af_trotzdem_erstellen: 'Create anyway',
     af_gesperrt_titel: 'Cancellation invoice not possible',
+    // ── Kiosk / "hand the tablet to the patient" (council 2026-08-14) ──
+    kiosk_start_btn: 'Hand to patient',
+    kiosk_overlay_title: 'Medical history form',
+    kiosk_overlay_sub: 'Please fill in all fields',
+    kiosk_exit_btn: 'Exit (PIN)',
+    kiosk_pin_title: 'Enter PIN',
+    kiosk_pin_subtitle: 'Enter your 4-digit PIN to leave kiosk mode.',
+    kiosk_pin_cancel: 'Cancel',
+    kiosk_pin_confirm: 'Confirm',
+    kiosk_pin_forgot: 'Forgot PIN?',
+    kiosk_forgot_confirm: 'Without the PIN, kiosk mode will not be left. Your session will be ended and you will be signed out instead. Continue?',
+    kiosk_setup_title: 'Set a PIN',
+    kiosk_setup_sub: 'Choose a 4-digit PIN. Kiosk mode will not start without one.',
+    kiosk_setup_current_label: 'Current PIN',
+    kiosk_setup_pin_label: 'New PIN (4 digits)',
+    kiosk_setup_confirm_label: 'Repeat PIN',
+    kiosk_setup_save: 'Save',
+    kiosk_status_error: 'Cannot start kiosk mode — PIN status is unavailable.',
+    kiosk_err_pin_format: 'The PIN must be exactly 4 digits.',
+    kiosk_err_pin_mismatch: 'The PINs do not match.',
+    kiosk_err_pin_save: 'The PIN could not be saved.',
+    kiosk_err_pin_incomplete: 'Please enter all 4 digits.',
+    kiosk_err_pin_wrong: 'Wrong PIN. Attempts left:',
+    kiosk_err_locked: 'Too many failed attempts. Locked until',
+    kiosk_err_network: 'No connection to the server. Kiosk mode stays active for safety.',
   },
   tr: {
     logout: 'Çıkış',
@@ -387,7 +443,7 @@ const T = {
     calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_add_booking: '+ Randevu',
     kunden_sub: 'Lead & müşteri bilgileri', leads_import: 'CSV içe aktar', leads_add: '+ Yeni Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
-    lf_all: 'Tümü', lf_new: 'Yeni', lf_contacted: 'İletişim kuruldu', lf_booked: 'Randevu', lf_won: 'Kazanıldı', lf_lost: 'Kaybedildi',
+    lf_all: 'Tümü', lf_abrechenbar: 'Faturaya hazır', lf_abgerechnet: 'Fatura edildi', lf_teilabsetzung: 'Kısmi kesinti', lf_abgesetzt: 'Kesinti', lf_storniert: 'İptal edildi',
     lead_title: 'Ad', lead_city: 'Şehir', lead_phone: 'Telefon', lead_rating: 'Puan', lead_standort: 'Şube',
     lead_status: 'Durum', lead_notes: 'Notlar', lead_email: 'E-posta', lead_website: 'Website',
     lead_country_code: 'Ülke', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategori',
@@ -535,6 +591,31 @@ const T = {
     af_vereinbarung_seit: 'İptal sözleşmesi şu tarihten beri mevcut',
     af_trotzdem_erstellen: 'Yine de oluştur',
     af_gesperrt_titel: 'Ausfall faturası oluşturulamıyor',
+    // ── Kiosk / „Tableti hastaya uzat" (Konsey 2026-08-14) ──
+    kiosk_start_btn: 'Hastaya uzat',
+    kiosk_overlay_title: 'Anamnez formu',
+    kiosk_overlay_sub: 'Lütfen tüm alanları doldurun',
+    kiosk_exit_btn: 'Bitir (PIN)',
+    kiosk_pin_title: 'PIN girin',
+    kiosk_pin_subtitle: 'Kiosk modundan çıkmak için 4 haneli PIN kodunuzu girin.',
+    kiosk_pin_cancel: 'İptal',
+    kiosk_pin_confirm: 'Onayla',
+    kiosk_pin_forgot: 'PIN unuttunuz mu?',
+    kiosk_forgot_confirm: 'PIN olmadan kiosk modundan çıkılmaz. Bunun yerine oturum sonlandırılır ve çıkış yaparsınız. Devam edilsin mi?',
+    kiosk_setup_title: 'PIN belirle',
+    kiosk_setup_sub: '4 haneli bir PIN belirleyin. PIN olmadan kiosk modu başlamaz.',
+    kiosk_setup_current_label: 'Mevcut PIN',
+    kiosk_setup_pin_label: 'Yeni PIN (4 hane)',
+    kiosk_setup_confirm_label: 'PIN tekrar',
+    kiosk_setup_save: 'Kaydet',
+    kiosk_status_error: 'Kiosk modu başlatılamıyor — PIN durumu alınamadı.',
+    kiosk_err_pin_format: 'PIN tam olarak 4 haneli olmalı.',
+    kiosk_err_pin_mismatch: 'PIN kodları eşleşmiyor.',
+    kiosk_err_pin_save: 'PIN kaydedilemedi.',
+    kiosk_err_pin_incomplete: 'Lütfen 4 hanenin tamamını girin.',
+    kiosk_err_pin_wrong: 'Yanlış PIN. Kalan deneme:',
+    kiosk_err_locked: 'Çok fazla hatalı deneme. Şu saate kadar kilitli:',
+    kiosk_err_network: 'Sunucuya bağlanılamadı. Güvenlik gereği kiosk modu açık kalıyor.',
   }
 };
 
@@ -1001,7 +1082,7 @@ async function switchPanel(id) {
   if (id === 'rechnungen') loadRechnungen();
   if (id === 'abrechnung') loadAbrechnung();
   if (id === 'podologie-billing') loadPodologieBilling();
-  if (id === 'fussstatus') loadFussstatus();
+  if (id === 'fussstatus') mountFussbefund(fussbefundCtx());
   if (id === 'belegliste') loadBelegliste();
   if (id === 'mahnwesen') loadMahnwesen();
   if (id === 'warteliste') loadWarteliste();
@@ -3169,6 +3250,7 @@ function updateNoShowButton(startTime) {
 
 async function openBookingActionModal(booking) {
   bkActionBookingCache = booking;
+  verdrahteFussbefundKnopf(fussbefundCtx(), booking);
   // Hinweis vom vorherigen Termin zurücksetzen — sonst steht bei einem Termin
   // ohne Verordnung noch der Reststand des zuletzt geöffneten da.
   const _ftHint = document.getElementById('bkActionFolgeterminHint');
@@ -3608,7 +3690,21 @@ async function openBookingActionModal(booking) {
           zbBadge.hidden = false;
         }
         zbBadge.querySelector('[data-zb-edit]')?.addEventListener('click', () => {
-          openZuzahlBefreiungModal(leadId, lead, zuzahlBefreiung);
+          // Dasselbe Formular wie in der Patientenakte — siehe
+          // module/zuzahlung-befreiung.js. Vorher waren es zwei verschiedene.
+          oeffneBefreiungsFormular({
+            supabase,
+            patientId: leadId,
+            ownerId: getOwnerId(),
+            patientName: `${lead.first_name || ''} ${lead.last_name || ''}`.trim(),
+            existing: zuzahlBefreiung || null,
+            toast: showToast,
+            confirm: showConfirmModal,
+          }).then(ok => {
+            // Nach dem Speichern muss das Abzeichen die neue Wahrheit zeigen,
+            // sonst steht dort weiter „+ Befreiungsnachweis eintragen".
+            if (ok && bkActionBookingCache) openBookingActionModal(bkActionBookingCache);
+          });
         });
       }
 
@@ -4539,110 +4635,6 @@ function checkPlanActive() {
     return false;
   }
   return true;
-}
-
-async function openZuzahlBefreiungModal(patientId, lead, existing) {
-  const year = new Date().getFullYear();
-  const patName = lead ? `${lead.first_name || ''} ${lead.last_name || ''}`.trim() : '';
-
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
-
-  const befreitAb = existing?.befreit_ab || `${year}-01-01`;
-  const befreitBis = existing?.befreit_bis || `${year}-12-31`;
-  const nachweisArt = existing?.nachweis_art || 'bescheinigung';
-  const notiz = existing?.notiz || '';
-
-  overlay.innerHTML = `
-    <div style="background:var(--bg-card-solid,#1e2129);border:1px solid var(--border,#2d3348);border-radius:12px;padding:24px;max-width:400px;width:100%;color:var(--text-main,#e2e8f0);font-family:inherit;">
-      <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Zuzahlungsbefreiung</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHtml(patName)} · ${year}</div>
-      <div style="display:grid;gap:12px;">
-        <label style="font-size:13px;">
-          <div style="margin-bottom:4px;color:var(--text-muted);">Befreit ab</div>
-          <input id="_zbAb" type="date" value="${escapeHtml(befreitAb)}" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
-        </label>
-        <label style="font-size:13px;">
-          <div style="margin-bottom:4px;color:var(--text-muted);">Befreit bis</div>
-          <input id="_zbBis" type="date" value="${escapeHtml(befreitBis)}" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
-        </label>
-        <label style="font-size:13px;">
-          <div style="margin-bottom:4px;color:var(--text-muted);">Nachweis-Art</div>
-          <select id="_zbNachweisArt" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
-            <option value="bescheinigung" ${nachweisArt==='bescheinigung'?'selected':''}>KK-Bescheinigung</option>
-            <option value="automatisch" ${nachweisArt==='automatisch'?'selected':''}>Automatisch (KK-Daten)</option>
-            <option value="manuell" ${nachweisArt==='manuell'?'selected':''}>Manuelle Eingabe</option>
-          </select>
-        </label>
-        <label style="font-size:13px;">
-          <div style="margin-bottom:4px;color:var(--text-muted);">Notiz (optional)</div>
-          <input id="_zbNotiz" type="text" value="${escapeHtml(notiz)}" placeholder="z. B. Antrag eingereicht am…" style="width:100%;padding:7px 10px;border:1px solid var(--border,#2d3348);border-radius:7px;background:var(--bg-card,#252a35);color:var(--text-main);font-size:13px;">
-        </label>
-      </div>
-      <div id="_zbErr" style="color:#f87171;font-size:12px;margin-top:8px;display:none;"></div>
-      <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
-        ${existing ? `<button id="_zbDel" style="padding:8px 14px;border:1px solid #dc2626;border-radius:7px;background:transparent;color:#f87171;cursor:pointer;font-size:13px;margin-right:auto;">Löschen</button>` : ''}
-        <button id="_zbCancel" style="padding:8px 16px;border:1px solid var(--border,#2d3348);border-radius:7px;background:transparent;color:var(--text-main);cursor:pointer;font-size:13px;">Abbrechen</button>
-        <button id="_zbSave" style="padding:8px 16px;border:none;border-radius:7px;background:var(--accent,#b1891b);color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Speichern</button>
-      </div>
-    </div>`;
-
-  document.body.appendChild(overlay);
-
-  const remove = () => overlay.remove();
-  overlay.querySelector('#_zbCancel').onclick = remove;
-  overlay.onclick = e => { if (e.target === overlay) remove(); };
-
-  const delBtn = overlay.querySelector('#_zbDel');
-  if (delBtn) {
-    delBtn.onclick = async () => {
-      const ok = await showConfirmModal({ title: 'Befreiung löschen', message: 'Zuzahlungsbefreiung für dieses Jahr wirklich löschen?', confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
-      if (!ok) return;
-      delBtn.disabled = true;
-      const ownerId = getOwnerId();
-      await supabase.from('zuzahlung_befreiung')
-        .delete().eq('patient_id', patientId).eq('owner_id', ownerId).eq('jahr', year);
-      showToast('Befreiung gelöscht');
-      remove();
-    };
-  }
-
-  overlay.querySelector('#_zbSave').onclick = async () => {
-    const saveBtn = overlay.querySelector('#_zbSave');
-    const errEl = overlay.querySelector('#_zbErr');
-    const ab = overlay.querySelector('#_zbAb').value;
-    const bis = overlay.querySelector('#_zbBis').value;
-    if (!ab || !bis) { errEl.textContent = 'Bitte Datum ausfüllen.'; errEl.style.display = ''; return; }
-    if (bis < ab) { errEl.textContent = '"Befreit bis" muss nach "Befreit ab" liegen.'; errEl.style.display = ''; return; }
-    saveBtn.disabled = true;
-    saveBtn.textContent = '…';
-    const ownerId = getOwnerId();
-    const payload = {
-      owner_id: ownerId,
-      patient_id: patientId,
-      jahr: year,
-      befreit_ab: ab,
-      befreit_bis: bis,
-      nachweis_art: overlay.querySelector('#_zbNachweisArt').value,
-      notiz: overlay.querySelector('#_zbNotiz').value.trim() || null,
-    };
-    const { error } = await supabase.from('zuzahlung_befreiung').upsert(payload, {
-      // Canlı kısıt: UNIQUE (patient_id, jahr) — db/SCHEMA.sql.
-      // 'owner_id' eklenince Postgres eşleşen index bulamıyor ve 42P10 atıyordu,
-      // yani bu modal hiç kaydetmiyordu. saveBefreiung() zaten doğrusunu kullanıyor.
-      onConflict: 'patient_id,jahr',
-      ignoreDuplicates: false,
-    });
-    if (error) {
-      errEl.textContent = 'Fehler: ' + error.message;
-      errEl.style.display = '';
-      saveBtn.disabled = false;
-      saveBtn.textContent = 'Speichern';
-      return;
-    }
-    showToast('Zuzahlungsbefreiung gespeichert ✓');
-    remove();
-  };
 }
 
 async function handlePatientNichtErschienen() {
@@ -8190,6 +8182,7 @@ document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
 
 let leadsCache = [];
 let leadsMeta = {};
+let leadAbrStatus = new Map();   // lead_id → Abrechnungsstatus, siehe module/abrechnungsstatus.js
 
 function displayName(lead) {
   const fn = lead.first_name || '';
@@ -8254,6 +8247,7 @@ async function loadLeads() {
       leadsMeta[b.customer_phone_normalized].bookings.push(b);
     });
   }
+  leadAbrStatus = await ladeStatusJePatient(supabase, ownerId);
   renderLeads();
 }
 
@@ -8272,7 +8266,7 @@ function renderLeads() {
   const tbody = document.getElementById('leadTableBody');
   const emptyEl = document.getElementById('leadEmpty');
   let rows = leadsCache;
-  if (leadFilter !== 'all') rows = rows.filter(r => r.status === leadFilter);
+  if (leadFilter !== 'all') rows = rows.filter(r => (leadAbrStatus.get(r.id)?.status) === leadFilter);
   if (leadSearchVal) {
     const q = leadSearchVal.toLowerCase();
     rows = rows.filter(r => patientMatchesQuery(r, q) || (r.city || '').toLowerCase().includes(q));
@@ -8306,7 +8300,7 @@ function renderLeads() {
       ${multiBiz ? `<td>${escapeHtml(standort)}</td>` : ''}
       <td>
         ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? `<span class="badge badge-green" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;vertical-align:middle;"><span class="svg-icon" style="width:11px;height:11px;display:inline-flex;">${ICON.whatsapp}</span></span> ` : ''}
-        <span class="badge ${leadStatusBadge(r.status)}">${r.status || '—'}</span>
+        ${abrStatusBadge(leadAbrStatus.get(r.id)?.status, { kurz: true })}
       </td>
       <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit" title="Bearbeiten" style="display:inline-flex;align-items:center;justify-content:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;">${ICON.edit}</span></button></td>
     </tr>`;
@@ -8837,21 +8831,25 @@ function renderBefreiungCard(leadId, befreiungen) {
   const others = befreiungen.filter(b => b.jahr !== currentYear);
 
   const fmt = (d) => d ? new Date(d).toLocaleDateString('de-DE') : '—';
+  // „Ändern" fehlte hier: eine eingetragene Befreiung liess sich nur noch
+  // entfernen und neu anlegen — dabei ging das eingetragene „ab"-Datum
+  // verloren. Beide Knöpfe öffnen dasselbe Formular wie das Termin-Panel.
   const head = current
     ? `<span class="badge badge-green" style="font-size:13px;">Befreit ${currentYear}</span>
-       <span style="font-size:13px;color:#555;">ab ${fmt(current.befreit_ab)}${current.befreit_bis ? ' – ' + fmt(current.befreit_bis) : ''}</span>
+       <span style="font-size:13px;color:var(--text-muted);">ab ${fmt(current.befreit_ab)}${current.befreit_bis ? ' – ' + fmt(current.befreit_bis) : ''}</span>
        ${current.beleg_url ? `<button class="btn-ghost btn-sm bef-view" data-path="${escapeHtml(current.beleg_url)}">📄 Beleg</button>` : ''}
-       <button class="btn-ghost btn-sm bef-remove" data-id="${current.id}" style="color:#b91c1c;">Entfernen</button>`
+       <button class="btn-ghost btn-sm bef-edit" data-lead="${escapeHtml(leadId)}" data-id="${current.id}">Ändern</button>
+       <button class="btn-ghost btn-sm bef-remove" data-id="${current.id}" style="color:var(--danger,#b91c1c);">Entfernen</button>`
     : `<span class="badge badge-gray" style="font-size:13px;">Zuzahlungspflichtig ${currentYear}</span>
        <button class="btn-primary btn-sm bef-add" data-lead="${escapeHtml(leadId)}">+ Befreiungsbescheinigung</button>`;
 
   const history = others.length
-    ? `<div style="margin-top:8px;font-size:12px;color:#666;">
+    ? `<div style="margin-top:8px;font-size:12px;color:var(--text-muted);">
         ${others.map(b => `<span>${b.jahr}: befreit ab ${fmt(b.befreit_ab)}${b.beleg_url ? ` · <a href="#" class="bef-view" data-path="${escapeHtml(b.beleg_url)}">Beleg</a>` : ''}</span>`).join(' · ')}
       </div>`
     : '';
 
-  return `<div class="pd-rech-item" style="padding:12px 20px;border-bottom:1px solid var(--border);background:#fafbfc;">
+  return `<div class="pd-rech-item" style="padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg-card);">
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;">
       <strong style="font-size:14px;">Zuzahlungs-Befreiung</strong>
       ${head}
@@ -8863,8 +8861,21 @@ function renderBefreiungCard(leadId, befreiungen) {
 function wireBefreiungCard(leadId) {
   const root = document.getElementById('pdRezContent');
   if (!root) return;
-  root.querySelectorAll('.bef-add').forEach(btn => {
-    btn.addEventListener('click', () => openBefreiungModal(btn.dataset.lead));
+  // Anlegen und Ändern führen in dasselbe Formular (module/zuzahlung-befreiung.js).
+  // `existing: undefined` heisst: das Modul lädt die vorhandene Zeile selbst.
+  const oeffnen = async (btn) => {
+    const ok = await oeffneBefreiungsFormular({
+      supabase,
+      patientId: btn.dataset.lead || leadId,
+      ownerId: getOwnerId(),
+      patientName: document.getElementById('pdModalTitle')?.textContent?.trim() || '',
+      toast: showToast,
+      confirm: showConfirmModal,
+    });
+    if (ok) loadPatientDetailRezepte(leadId);
+  };
+  root.querySelectorAll('.bef-add, .bef-edit').forEach(btn => {
+    btn.addEventListener('click', () => oeffnen(btn));
   });
   root.querySelectorAll('.bef-remove').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -9493,80 +9504,6 @@ async function saveFussbefund(leadId) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-function openBefreiungModal(leadId) {
-  const modal = document.getElementById('befreiungModal');
-  if (!modal) return;
-  const yearInp = document.getElementById('befJahr');
-  const abInp = document.getElementById('befAb');
-  const bisInp = document.getElementById('befBis');
-  const fileInp = document.getElementById('befFile');
-  const errEl = document.getElementById('befErr');
-  const saveBtn = document.getElementById('befSaveBtn');
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  yearInp.value = String(yyyy);
-  abInp.value = today.toISOString().slice(0, 10);
-  bisInp.value = `${yyyy}-12-31`;
-  fileInp.value = '';
-  if (errEl) errEl.textContent = '';
-  saveBtn.dataset.lead = leadId;
-  openModal('befreiungModal');
-}
-
-async function saveBefreiung(leadId) {
-  const errEl = document.getElementById('befErr');
-  errEl.textContent = '';
-  const jahr = parseInt(document.getElementById('befJahr').value, 10);
-  const ab = document.getElementById('befAb').value;
-  const bis = document.getElementById('befBis').value || null;
-  const file = document.getElementById('befFile').files[0];
-  if (!jahr || !ab) { errEl.textContent = 'Jahr und „befreit ab“ sind Pflicht.'; return; }
-
-  const ownerId = getOwnerId();
-
-  // Upload beleg if present
-  let belegPath = null;
-  if (file) {
-    if (file.size > 5 * 1024 * 1024) {
-      errEl.textContent = 'Datei zu groß (max 5 MB).'; return;
-    }
-    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-    belegPath = `${ownerId}/${leadId}/befreiung_${jahr}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('patient-documents').upload(belegPath, file, {
-      contentType: file.type || 'application/octet-stream',
-      upsert: true,
-    });
-    if (upErr) { errEl.textContent = 'Upload-Fehler: ' + upErr.message; return; }
-  }
-
-  const row = {
-    owner_id: ownerId,
-    patient_id: leadId,
-    jahr,
-    befreit_ab: ab,
-    befreit_bis: bis,
-    beleg_url: belegPath,
-  };
-  const { error } = await supabase.from('zuzahlung_befreiung').upsert(row, { onConflict: 'patient_id,jahr' });
-  if (error) { errEl.textContent = 'Speicherfehler: ' + error.message; return; }
-
-  // Prescriptions otomatik befreit işaretle
-  try {
-    await supabase
-      .from('prescriptions')
-      .update({ zuzahlung_befreit: true, zuzahlung_eur: 0 })
-      .eq('patient_id', leadId)
-      .eq('owner_id', ownerId)
-      .filter('ausstellungsdatum', 'gte', `${jahr}-01-01`)
-      .filter('ausstellungsdatum', 'lte', `${jahr}-12-31`);
-  } catch (autoErr) {
-    console.warn('[befreiung auto-mark]', autoErr);
-  }
-
-  closeModal('befreiungModal');
-  showToast('Befreiung gespeichert ✓');
-  loadPatientDetailRezepte(leadId);
-}
 
 async function loadPatientDetailNotes(leadId) {
   const { data: notes } = await supabase.from('patient_notes')
@@ -9838,16 +9775,11 @@ document.querySelectorAll('.pd-tab').forEach(tab => {
     if (tab.dataset.tab === 'fussbefund' && pdCurrentLeadId) {
       refreshFussbefundVerlauf(pdCurrentLeadId);
     }
+    if (tab.dataset.tab === 'einwilligung' && pdCurrentLeadId) {
+      renderEinwilligungListe(document.getElementById('pdEinwilligungContent'), pdCurrentLeadId);
+    }
   });
 });
-
-function leadStatusBadge(s) {
-  if (s === 'won') return 'badge-green';
-  if (s === 'lost') return 'badge-red';
-  if (s === 'contacted') return 'badge-blue';
-  if (s === 'booked') return 'badge-yellow';
-  return 'badge-gray';
-}
 
 document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
   if (btn.closest('#panel-kunden')) {
@@ -9874,7 +9806,6 @@ async function openLeadModal(lead) {
   document.getElementById('lead-phone').value = lead?.phone || '';
   document.getElementById('lead-email').value = lead?.email || '';
   document.getElementById('lead-city').value = lead?.city || '';
-  document.getElementById('lead-status').value = lead?.status || 'new';
   document.getElementById('lead-notes').value = lead?.notes || '';
   document.getElementById('leadModalTitle').textContent = lead ? t('lead_modal_edit') : t('lead_modal_new');
 
@@ -9906,7 +9837,9 @@ async function openLeadModal(lead) {
     if (kkInput) {
       kkInput.value = (lead?.krankenkasse || md.krankenkasse) || '';
     }
-    document.getElementById('lead-krankenkassennummer').value = (lead?.versichertennummer || md.krankenkassennummer) || '';
+    const kvnrEl = document.getElementById('lead-krankenkassennummer');
+    kvnrEl.value = (lead?.versichertennummer || md.krankenkassennummer) || '';
+    attachKvnrPruefung(kvnrEl);
     document.getElementById('lead-versichertenstatus').value = (lead?.versichertenstatus || md.versichertenstatus) || '';
 
     if (!aerzteCache || aerzteCache.length === 0) {
@@ -10089,7 +10022,6 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     street,
     plz,
     city: city || null,
-    status: document.getElementById('lead-status').value,
     notes: document.getElementById('lead-notes').value.trim() || null,
     metadata: Object.keys(metadata).length ? metadata : null,
     krankenkasse: document.getElementById('lead-krankenkasse').value || null,
@@ -10376,7 +10308,7 @@ const GKV_LEISTUNGSKATALOG = {
       hinweis: 'Podologische Komplexbehandlung mit Therapiezeit über 20 Min. Regelleistungszeit 50 Min, davon 15 Min Vor-/Nachbereitung (delegationsfähig).' },
     { code: '78030', kuerzel: 'pod. Bef.', title: 'Podologische Befundung', duration: null, price: 3.47, price_min: 3.47, price_max: 3.47, locked: true,
       preise: { '2025-07-01': 3.47, '2026-07-01': 3.57 },
-      hinweis: 'Je Behandlungsserie. Nicht am selben Tag wie die Eingangsbefundung (78040) abrechenbar.' },
+      hinweis: 'Bei DF/NF/QF im Vorfeld jeder Behandlung (Anlage 1a Teil 2 Nr. 4.2), nicht je Serie. Bei UI1/UI2 nicht abrechenbar. Nicht am selben Tag wie die Eingangsbefundung (78040).' },
     { code: '78040', kuerzel: 'Eing.-Bef.', title: 'Eingangsbefundung', duration: 20, price: 22.48, price_min: 22.48, price_max: 22.48, locked: true,
       preise: { '2025-07-01': 22.48, '2026-07-01': 23.11 },
       hinweis: 'Einmalig je Patient (lebenslang). Nicht am selben Tag wie 78030.' },
@@ -14187,10 +14119,6 @@ document.getElementById('vorlagenSaveBtn')?.addEventListener('click', saveVorlag
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) close(); });
 })();
 
-document.getElementById('befSaveBtn')?.addEventListener('click', () => {
-  const lead = document.getElementById('befSaveBtn').dataset.lead;
-  if (lead) saveBefreiung(lead);
-});
 
 document.getElementById('signRunBtn')?.addEventListener('click', runSignAbrechnung);
 
@@ -16358,105 +16286,23 @@ async function saveInvoice() {
   if (dmrzBtn) dmrzBtn.disabled = false;
   window._currentInvoiceId = inserted?.id || null;
 
-  // Payment status dialog
-  const invoiceIdForPayment = inserted?.id;
-  if (invoiceIdForPayment) {
-    await askInvoicePaymentStatus(invoiceIdForPayment);
+  // Zahlungsstatus — hängt an der Rechnung ein Rezept mit offener Zuzahlung,
+  // übernimmt der Kassieren-Ablauf und es wird nicht zweimal gefragt.
+  // Begründung in module/rechnung-zahlung.js.
+  if (inserted?.id) {
+    await frageZahlungsstatus(inserted.id, {
+      supabase,
+      prescriptionId: invPrescriptionId || null,
+      patientId,
+      patientName,
+      kassiere: kassiereZuzahlung,
+      toast: showToast,
+    });
   }
 
   await loadRechnungen();
 }
 
-async function askInvoicePaymentStatus(invoiceId) {
-  return new Promise(resolve => {
-    const existing = document.getElementById('_paymentStatusModal');
-    if (existing) existing.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = '_paymentStatusModal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-
-    overlay.innerHTML = `
-      <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:400px;">
-        <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">Wurde bereits bezahlt?</h3>
-        <p style="margin:0 0 18px;font-size:13px;color:var(--text-muted,#9ca3af);">Bitte wählen Sie den Zahlungsstatus für diese Rechnung.</p>
-
-        <div id="_psMethodWrap" style="display:none;margin-bottom:16px;">
-          <p style="margin:0 0 8px;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);">Zahlungsart:</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="bar" style="accent-color:var(--accent,#b1891b);"> Bar</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="karte" style="accent-color:var(--accent,#b1891b);"> Karte</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-main,#f9fafb);"><input type="radio" name="_psMethod" value="ueberweisung" style="accent-color:var(--accent,#b1891b);"> Überweisung</label>
-          </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <button id="_psYes" style="padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Ja — sofort bezahlt</button>
-          <button id="_psLater" style="padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Nein — Zahlung ausstehend</button>
-          <button id="_psIban" style="padding:10px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">Lastschrift (IBAN)</button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    const psYes = document.getElementById('_psYes');
-    const psLater = document.getElementById('_psLater');
-    const psIban = document.getElementById('_psIban');
-    const methodWrap = document.getElementById('_psMethodWrap');
-
-    let selectedMethod = 'bar';
-
-    psYes.addEventListener('click', async () => {
-      methodWrap.style.display = 'block';
-      psYes.textContent = '✓ Bestätigen (bezahlt)';
-      psYes.style.background = '#16a34a';
-
-      // Remove previous confirm handler and add new one
-      const oldConf = document.getElementById('_psConfirmFinal');
-      if (oldConf) oldConf.remove();
-      const confBtn = document.createElement('button');
-      confBtn.id = '_psConfirmFinal';
-      confBtn.style.cssText = 'margin-top:8px;padding:10px;background:#16a34a;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;width:100%;';
-      confBtn.textContent = 'Zahlung speichern';
-      methodWrap.parentNode.insertBefore(confBtn, methodWrap.nextSibling);
-
-      // Wire method radios
-      overlay.querySelectorAll('input[name="_psMethod"]').forEach(r => {
-        r.addEventListener('change', () => { selectedMethod = r.value; });
-      });
-      // Default bar checked
-      const barRadio = overlay.querySelector('input[value="bar"]');
-      if (barRadio) { barRadio.checked = true; selectedMethod = 'bar'; }
-
-      confBtn.addEventListener('click', async () => {
-        overlay.remove();
-        await supabase.from('invoices').update({
-          payment_status: 'paid',
-          payment_method: selectedMethod,
-          paid_at: new Date().toISOString(),
-          status: 'paid'
-        }).eq('id', invoiceId);
-        showToast('Zahlung gespeichert ✓');
-        resolve();
-      });
-    });
-
-    psLater.addEventListener('click', async () => {
-      overlay.remove();
-      await supabase.from('invoices').update({ payment_status: 'pending' }).eq('id', invoiceId);
-      showToast('Rechnung als ausstehend markiert.');
-      resolve();
-    });
-
-    psIban.addEventListener('click', async () => {
-      overlay.remove();
-      await supabase.from('invoices').update({ payment_status: 'pending', payment_method: 'lastschrift' }).eq('id', invoiceId);
-      showToast('Lastschrift vorgemerkt.');
-      resolve();
-    });
-  });
-}
 
 // ===== DMRZ XML export (Phase 3) =====
 
@@ -17459,7 +17305,11 @@ const DIAGNOSE_FIELDS = {
   rzIcd:       { kind: 'icd',  dgField: 'rzDg',     dgKind: 'text', warnId: 'rzIcdDgWarning'  }, // Rezept anlegen
   rxcIcd:      { kind: 'icd',  dgField: 'rxcDg',    dgKind: 'text', warnId: 'rxcIcdDgWarning' }, // Rezept-Scan bestätigen, 1. ICD
   rxcIcd2:     { kind: 'icd',  dgField: 'rxcDg',    dgKind: 'text', warnId: 'rxcIcdDgWarning' }, // Rezept-Scan bestätigen, 2. ICD
-  rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true },                            // Diagnosegruppe
+  // Diagnosegruppe. `nurCodes` liest die Allowlist, die module/verordnung-podo.js
+  // aus dem eingegebenen ICD-Kode ableitet (leer = keine Einengung).
+  rzDg:        { kind: 'dg',   icdField: 'rzIcd',   codeOnly: true,
+                 nurCodes: () => (document.getElementById('rzDg')?.getAttribute('data-pod-erlaubt') || '')
+                   .split(',').filter(Boolean) },
   rxcDg:       { kind: 'dg',   icdField: 'rxcIcd',  codeOnly: true },                            // Diagnosegruppe (Scan)
   podNewIcd10: { kind: 'icd',  dgField: 'podNewDiag', dgKind: 'select', warnId: 'podIcd10Warning',
                  multi: true, codeOnly: true, bereich: 'podologie', strict: true },
@@ -17988,9 +17838,12 @@ async function saveRezept() {
     const ausstDate = document.getElementById('rzAusstDate').value || null;
     const isDringend = document.getElementById('rzDringend').checked;
 
-    // 3. Compute gueltig_bis (14 days for dringend, 84 days for normal)
-    let gueltigBis = null;
-    if (ausstDate) {
+    // 3. Compute gueltig_bis. Podologie rechnet nach Anlage 3 Abschnitt 3 e)
+    // mit der Frist für den Behandlungsbeginn (14 Tage dringlich, sonst 28) —
+    // Beleg in module/verordnung-podo.js. Alle anderen Fachbereiche behalten
+    // die bisherige Rechnung 14/84, bis deren Anlage 3 nachgelesen ist.
+    let gueltigBis = podBehandlungsbeginnFrist(ausstDate, isDringend);
+    if (!gueltigBis && ausstDate) {
       const d = new Date(ausstDate);
       d.setDate(d.getDate() + (isDringend ? 14 : 84));
       gueltigBis = d.toISOString().split('T')[0];
@@ -18720,6 +18573,8 @@ async function init() {
     await loadAusfallConfig();
     renderAusfallSettings();
     console.log('[init] ausfallConfig ok');
+    // Legende der Fußgrafik (Podologie) — ebenfalls Owner-Level in profiles.
+    renderLegendeSettings(fussbefundCtx());
     await renderSidebar();
     console.log('[init] sidebar ok');
     await loadTeam();
@@ -18735,7 +18590,10 @@ async function init() {
 
     // Realtime subscription for bookings — refreshes calendar when a booking is created from booking.html
     const ownerId = getOwnerId();
-    const bkChannel = supabase.channel('bookings-realtime');
+    // Referenz global halten: der Kiosk-Modus meldet den Kanal ab, solange das
+    // Tablet beim Patienten ist (module/kiosk.js) — sonst ploppt der Termin
+    // eines ANDEREN Patienten vor dessen Augen auf.
+    const bkChannel = window.__praxuraBookingsChannel = supabase.channel('bookings-realtime');
     bkChannel
       .on('postgres_changes', {
         event: 'INSERT',
@@ -18756,6 +18614,8 @@ async function init() {
     console.log('[init] anamnese ok');
     document.getElementById('aeAddBtn')?.addEventListener('click', addAerzte);
     document.getElementById('rzSaveBtn')?.addEventListener('click', saveRezept);
+    // Podologie-Feinschliff der Muster-13-Maske (greift nur bei Bereich "podo").
+    mountVerordnungPodo(supabase, { getOwnerId, getProfile: () => currentProfile });
     document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
       const sel = document.getElementById('anamPatientSelect');
       if (!sel || !sel.value) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
@@ -19604,33 +19464,38 @@ async function uploadRxNachweise(prescriptionId, patientId) {
 
     if (item.art === 'befreiungsausweis') {
       const ausstDateVal = document.getElementById('rxcAusstDate')?.value;
-      let jahr;
-      let befreitAb;
-      if (ausstDateVal && /^\d{4}-\d{2}-\d{2}$/.test(ausstDateVal)) {
-        befreitAb = ausstDateVal;
-        jahr = parseInt(ausstDateVal.slice(0, 4), 10);
-      } else {
-        const today = new Date();
-        jahr = today.getFullYear();
-        befreitAb = today.toISOString().slice(0, 10);
-      }
-      const befreitBis = `${jahr}-12-31`;
+      const gueltigesDatum = ausstDateVal && /^\d{4}-\d{2}-\d{2}$/.test(ausstDateVal);
+      const befreitAb = gueltigesDatum ? ausstDateVal : new Date().toISOString().slice(0, 10);
+      const jahr = parseInt(befreitAb.slice(0, 4), 10);
 
-      const befRow = {
-        owner_id: ownerId,
-        patient_id: patientId,
-        jahr: jahr,
-        befreit_ab: befreitAb,
-        befreit_bis: befreitBis,
-        beleg_url: storagePath
-      };
-
-      const { error: befErr } = await supabase
+      // Eine bereits erfasste Befreiung wird NICHT überschrieben, nur um einen
+      // Beleg anzuhängen. Vorher setzte dieser Zweig `befreit_ab` hart auf das
+      // Ausstellungsdatum des Rezepts: wer „befreit ab September" eingetragen
+      // hatte und danach ein Januar-Rezept mit Nachweis hochlud, hatte die
+      // Befreiung plötzlich ab Januar — acht Monate Zuzahlung verschwanden.
+      const { data: vorhanden } = await supabase
         .from('zuzahlung_befreiung')
-        .upsert(befRow, { onConflict: 'patient_id,jahr' });
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('jahr', jahr)
+        .maybeSingle();
+
+      const { error: befErr } = vorhanden
+        ? await supabase.from('zuzahlung_befreiung')
+            .update({ beleg_url: storagePath })
+            .eq('id', vorhanden.id)
+        : await supabase.from('zuzahlung_befreiung')
+            .insert({
+              owner_id: ownerId,
+              patient_id: patientId,
+              jahr,
+              befreit_ab: befreitAb,
+              befreit_bis: `${jahr}-12-31`,
+              beleg_url: storagePath,
+            });
 
       if (befErr) {
-        console.warn('[zuzahlung_befreiung] Upsert-Fehler:', befErr);
+        console.warn('[zuzahlung_befreiung] Schreibfehler:', befErr);
       }
     }
   }
@@ -22779,179 +22644,23 @@ function initCompactMode() {
   });
 }
 
-// ============================================================
-// Kiosk / Tablet Mode (madde 4)
-// ============================================================
-
-let _kioskPinMode = 'exit'; // 'exit' or 'setup'
-
-function initKioskMode() {
-  const startBtn = document.getElementById('kioskStartBtn');
-  if (startBtn) {
-    startBtn.addEventListener('click', handleKioskStart);
-  }
-
-  const exitBtn = document.getElementById('kioskExitBtn');
-  if (exitBtn) {
-    exitBtn.addEventListener('click', () => showKioskPinModal('exit'));
-  }
-
-  // PIN entry modal
-  document.getElementById('kioskPinCancelBtn')?.addEventListener('click', hideKioskPinModal);
-  document.getElementById('kioskPinConfirmBtn')?.addEventListener('click', handleKioskPinConfirm);
-  document.getElementById('kioskPinForgotBtn')?.addEventListener('click', handleKioskPinForgot);
-
-  // Setup modal
-  document.getElementById('kioskSetupCancelBtn')?.addEventListener('click', () => {
-    document.getElementById('kioskPinSetupModal').hidden = true;
+// Kiosk-Modus lebt in module/kiosk.js (Konsey 2026-08-13/14). Hier nur die
+// Verdrahtung: die Abhängigkeiten, die das Modul nicht selbst kennt.
+function initKioskModeWired() {
+  mountKiosk({
+    supabase, API, showToast, t,
+    getBookingsChannel: () => window.__praxuraBookingsChannel || null,
   });
-  document.getElementById('kioskSetupSaveBtn')?.addEventListener('click', handleKioskPinSetup);
-
-  // PIN digit auto-advance
-  ['kioskPin1','kioskPin2','kioskPin3','kioskPin4'].forEach((id, idx, arr) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input', () => {
-      el.value = el.value.replace(/[^0-9]/g, '').slice(0, 1);
-      if (el.value && idx < arr.length - 1) {
-        document.getElementById(arr[idx + 1])?.focus();
-      }
-      if (idx === arr.length - 1 && el.value) {
-        handleKioskPinConfirm();
-      }
-    });
-    el.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !el.value && idx > 0) {
-        document.getElementById(arr[idx - 1])?.focus();
-      }
-    });
+  // Einwilligungs-Ablauf (module/patienten-einwilligung.js). Baut sein Overlay
+  // selbst, braucht von hier nur den Mandanten- und Sitzungskontext.
+  mountEinwilligung({
+    supabase, showToast,
+    getOwnerId,
+    getProfile: () => currentProfile,
+    getBusinessId: () => currentBusiness?.id || null,
+    getSessionUserId: () => currentSession?.user?.id || null,
   });
-}
-
-async function handleKioskStart() {
-  const pin = currentProfile?.tablet_kiosk_pin;
-  if (!pin) {
-    // İlk kez — PIN kur
-    document.getElementById('kioskSetupPin').value = '';
-    document.getElementById('kioskSetupPinConfirm').value = '';
-    document.getElementById('kioskSetupError').textContent = '';
-    document.getElementById('kioskPinSetupModal').hidden = false;
-  } else {
-    enterKioskMode();
-  }
-}
-
-async function handleKioskPinSetup() {
-  const pin = document.getElementById('kioskSetupPin').value;
-  const confirm2 = document.getElementById('kioskSetupPinConfirm').value;
-  const errEl = document.getElementById('kioskSetupError');
-
-  if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'PIN muss genau 4 Ziffern haben.'; return; }
-  if (pin !== confirm2) { errEl.textContent = 'PINs stimmen nicht überein.'; return; }
-
-  const { error } = await supabase.from('profiles').update({ tablet_kiosk_pin: pin }).eq('id', currentSession.user.id);
-  if (error) { errEl.textContent = 'Fehler: ' + error.message; return; }
-
-  currentProfile.tablet_kiosk_pin = pin;
-  document.getElementById('kioskPinSetupModal').hidden = true;
-  enterKioskMode();
-}
-
-function enterKioskMode() {
-  const overlay = document.getElementById('kioskOverlay');
-  if (!overlay) return;
-
-  // Anamnese formunu kiosk overlay'e kopyala (event'lerin çalışması için clone yerine taşıyoruz)
-  const formContent = document.getElementById('kioskFormContent');
-  const originalForm = document.querySelector('#panel-anamnese .card');
-
-  if (formContent && originalForm) {
-    formContent.innerHTML = '';
-    const anamPanel = document.getElementById('panel-anamnese');
-    if (anamPanel) {
-      // kioskStartBtn'ı gizle
-      const startBtn = document.getElementById('kioskStartBtn');
-      if (startBtn) startBtn.style.display = 'none';
-
-      formContent.appendChild(anamPanel);
-      anamPanel.classList.add('active');
-    }
-  }
-
-  overlay.hidden = false;
-  document.body.style.overflow = 'hidden';
-  // Fullscreen iste
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen().catch(() => {});
-  }
-}
-
-function exitKioskMode() {
-  const overlay = document.getElementById('kioskOverlay');
-  if (overlay) overlay.hidden = true;
-  document.body.style.overflow = '';
-  if (document.fullscreenElement) {
-    document.exitFullscreen().catch(() => {});
-  }
-
-  const anamPanel = document.getElementById('panel-anamnese');
-  const mainArea = document.getElementById('mainArea');
-  if (anamPanel && mainArea) {
-    const startBtn = document.getElementById('kioskStartBtn');
-    if (startBtn) startBtn.style.display = '';
-
-    mainArea.appendChild(anamPanel);
-  }
-}
-
-function showKioskPinModal(mode) {
-  _kioskPinMode = mode;
-  ['kioskPin1','kioskPin2','kioskPin3','kioskPin4'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  document.getElementById('kioskPinError').textContent = '';
-  document.getElementById('kioskPinTitle').textContent = 'PIN eingeben';
-  document.getElementById('kioskPinSubtitle').textContent = 'Geben Sie Ihren 4-stelligen PIN ein, um den Kiosk-Modus zu beenden.';
-  document.getElementById('kioskPinModal').hidden = false;
-  document.getElementById('kioskPin1')?.focus();
-}
-
-function hideKioskPinModal() {
-  document.getElementById('kioskPinModal').hidden = true;
-}
-
-function handleKioskPinConfirm() {
-  const entered = ['kioskPin1','kioskPin2','kioskPin3','kioskPin4']
-    .map(id => document.getElementById(id)?.value || '').join('');
-
-  if (entered.length < 4) {
-    document.getElementById('kioskPinError').textContent = 'Bitte alle 4 Stellen eingeben.';
-    return;
-  }
-
-  const storedPin = currentProfile?.tablet_kiosk_pin;
-  if (!storedPin || entered === storedPin) {
-    hideKioskPinModal();
-    exitKioskMode();
-  } else {
-    document.getElementById('kioskPinError').textContent = 'Falscher PIN. Bitte erneut versuchen.';
-    ['kioskPin1','kioskPin2','kioskPin3','kioskPin4'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    document.getElementById('kioskPin1')?.focus();
-  }
-}
-
-function handleKioskPinForgot() {
-  hideKioskPinModal();
-  exitKioskMode();
-  showToast('Kiosk-Modus beendet. Bitte neuen PIN in den Einstellungen festlegen.', 'error');
-  // Eski PIN'i sil → bir sonraki kiosk başlatmada yeniden kurulum gerekir
-  supabase.from('profiles').update({ tablet_kiosk_pin: null }).eq('id', currentSession.user.id).then(() => {
-    if (currentProfile) currentProfile.tablet_kiosk_pin = null;
-  });
+  window.openEinwilligungFlow = openEinwilligungFlow;   // inline onclick aus ES-Modul
 }
 
 // Init çağrıları — DOMContentLoaded'dan sonra
@@ -22961,7 +22670,7 @@ if (document.readyState === 'loading') {
     initCompactMode();
     initWlModal();
     initDruckeinstellungen();
-    initKioskMode();
+    initKioskModeWired();
     populateFrequenzSelects();
   });
 } else {
@@ -22969,7 +22678,7 @@ if (document.readyState === 'loading') {
   initCompactMode();
   initWlModal();
   initDruckeinstellungen();
-  initKioskMode();
+  initKioskModeWired();
   populateFrequenzSelects();
 }
 
@@ -24241,7 +23950,8 @@ async function loadPodologieBilling() {
     .from('verordnungen')
     .select('*')
     .eq('owner_id', ownerId)
-    .in('status', ['aktiv', 'abrechenbar'])
+    // Abgesetzte gehören in die Arbeitsliste — sonst bleibt ausgefallenes Geld unsichtbar.
+    .in('status', ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'])
     .order('created_at', { ascending: false });
 
   if (error) { el.innerHTML = `<p style="color:var(--danger)">Fehler: ${escapeHtml(error.message)}</p>`; return; }
@@ -24265,6 +23975,8 @@ async function loadPodologieBilling() {
         alerts.push({ type: 'danger', msg: `Behandlungsfrist abgelaufen (${frist}-Tage-Regel)` });
       }
     }
+    // Absetzungsgrund = Arbeitsanweisung für die Korrektur, gehört an die Zeile.
+    if (v.absetzung_grund) alerts.push({ type: 'danger', msg: `Kasse: ${v.absetzung_grund.split('\n')[0]}` });
     return alerts;
   }
 
@@ -24297,13 +24009,13 @@ async function loadPodologieBilling() {
               )}</span>
               ${_hmRozet}
               ${!_isGkv ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${escapeHtml(v.rezeptart)}</span>` : ''}
-              ${v.status === 'abrechenbar' ? '<span style="font-size:11px;background:#16a34a;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abrechenbar</span>' : ''}
-              ${v.status === 'abgerechnet' ? '<span style="font-size:11px;background:#2563eb;color:#fff;padding:2px 7px;border-radius:12px;font-weight:600;">Abgerechnet</span>' : ''}
-              ${v.status === 'archiviert' ? '<span style="font-size:11px;background:#6b7280;color:#fff;padding:2px 7px;border-radius:12px;">Archiviert</span>' : ''}
+              ${v.status && v.status !== 'aktiv' ? abrStatusBadge(v.status) : ''}
+              ${v.absetzung_betrag ? `<span style="font-size:11px;color:#c2410c;font-weight:600;">−${Number(v.absetzung_betrag).toFixed(2).replace('.', ',')} €</span>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
               <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
               <button class="pod-vord-edit" data-edit-id="${v.id}" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;cursor:pointer;white-space:nowrap;">${t('pod_edit')}</button>
+              <button class="pod-vord-status" data-status-id="${v.id}" title="Abrechnungsstatus ändern" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;cursor:pointer;white-space:nowrap;">Status</button>
             </div>
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
@@ -25079,7 +24791,9 @@ async function loadPodologieBilling() {
     if (row) delete row.dataset.auto;
   });
 
-  document.getElementById('podVordList')?.addEventListener('click', e => {
+  document.getElementById('podVordList')?.addEventListener('click', async e => {
+    const stBtn = e.target.closest('.pod-vord-status');   // Abrechnungsstatus-Dialog, siehe module/abrechnungsstatus.js
+    if (stBtn) { e.stopPropagation(); return oeffneStatusDialogFuer(stBtn.dataset.statusId, { supabase, onFertig: loadPodologieBilling }); }
     // Edit-Schaltfläche: Zeile NICHT als Behandlungsauswahl markieren
     const editBtn = e.target.closest('.pod-vord-edit');
     if (editBtn) {
@@ -25246,7 +24960,9 @@ async function loadPodologieBilling() {
       if (count != null && count >= vord.behandlungseinheiten) {
         await supabase.from('verordnungen')
           .update({ status: 'abrechenbar' })
-          .eq('id', _podState.selectedVordId);
+          // Nur aus 'aktiv' heraus: sonst holt eine nachgetragene Behandlung eine
+          // bereits eingereichte oder stornierte Verordnung zurück in die Abrechnung.
+          .eq('id', _podState.selectedVordId).eq('status', 'aktiv');
         showToast('Alle Einheiten aufgebraucht — Verordnung bereit zur Abrechnung ✓', 'info');
       } else {
         showToast('Behandlung gespeichert ✓');
@@ -25272,919 +24988,28 @@ const WAGNER_LEVELS = [
 
 const FUSS_BEFUNDE = ['Hyperkeratose','Nagelveränderungen','Durchblutungsstörungen','Sensibilitätsstörungen','Ödem'];
 
-let currentFbpId = null;
-let fbpMarkierungen = [];
-let fbpSelectedMarkerType = 'x';
-let fbpSelectedMarkerColor = '#ef4444';
-let fbpPatientsMap = {};
-let fbpPatientsList = [];
-
-function fbpRenderPatientDropdown(query) {
-  const dropdown = document.getElementById('fbpPatientDropdown');
-  if (!dropdown) return;
-
-  const matches = (fbpPatientsList || []).filter(p => patientMatchesQuery(p, query));
-  if (!matches.length) {
-    dropdown.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--text-muted);font-style:italic;">Keine Patienten gefunden</div>';
-    dropdown.style.display = 'block';
-    return;
-  }
-
-  dropdown.innerHTML = matches.slice(0, 50).map(p => {
-    const nameBirth = displayNameWithBirth(p);
-    const phone = p.phone || p.metadata?.phone || p.phone_normalized || '';
-    const phoneStr = phone ? ` · Tel: ${escapeHtml(phone)}` : '';
-    return `
-      <div class="fbp-patient-item" data-id="${escapeHtml(p.id)}" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);color:var(--text-main);" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
-        <strong>${escapeHtml(nameBirth)}</strong><span style="font-size:11px;color:var(--text-muted);">${phoneStr}</span>
-      </div>
-    `;
-  }).join('');
-  dropdown.style.display = 'block';
-}
-
-function fbpFormatDate(str) {
-  if (!str) return '—';
-  try {
-    const d = new Date(str);
-    if (isNaN(d.getTime())) return str;
-    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch (e) {
-    return str;
-  }
-}
-
-function fbpAutofillStammdaten(patientId) {
-  const box = document.getElementById('fbpStammdatenBox');
-  if (!box) return;
-
-  if (!patientId) {
-    box.innerHTML = '<div style="color:var(--text-muted);font-style:italic;padding:12px;background:var(--bg-card);border-radius:8px;border:1px dashed var(--border);text-align:center;">Bitte Patient auswählen</div>';
-    return;
-  }
-
-  const p = fbpPatientsMap[patientId];
-  if (!p) {
-    box.innerHTML = '<div style="color:var(--text-muted);font-style:italic;padding:12px;">Patientendaten werden geladen…</div>';
-    return;
-  }
-
-  const name = displayName(p) || [p.last_name, p.first_name].filter(Boolean).join(', ') || '—';
-  const bd = leadBirthDate(p);
-  const geb = bd ? fbpFormatDate(bd) : '—';
-  const kk = p.krankenkasse || p.metadata?.krankenkasse || '—';
-  const phone = p.phone || p.metadata?.phone || p.phone_normalized || '—';
-  const plz = p.plz || p.metadata?.plz || '—';
-  const vnr = p.versichertennummer || p.metadata?.versichertennummer || '—';
-
-  box.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;background:var(--bg-card);padding:10px;border-radius:8px;border:1px solid var(--border);">
-      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Name, Vorname</span><strong>${escapeHtml(name)}</strong></div>
-      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Geburtsdatum</span><strong>${escapeHtml(geb)}</strong></div>
-      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Krankenkasse</span><strong>${escapeHtml(kk)}</strong></div>
-      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Telefon</span><strong>${escapeHtml(phone)}</strong></div>
-      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">PLZ</span><strong>${escapeHtml(plz)}</strong></div>
-      <div><span style="color:var(--text-muted);display:block;font-size:11px;font-weight:600;">Versichertennr.</span><strong>${escapeHtml(vnr)}</strong></div>
-    </div>
-  `;
-}
-
-function fbpRenderMarkers() {
-  document.querySelectorAll('.fbp-diagram-container').forEach(container => {
-    const layer = container.querySelector('.fbp-marker-layer');
-    if (!layer) return;
-    layer.innerHTML = '';
-    const view = container.dataset.view;
-    const foot = container.dataset.foot;
-
-    fbpMarkierungen.forEach((m, idx) => {
-      if (m.view !== view || m.foot !== foot) return;
-      const markerDiv = document.createElement('div');
-      markerDiv.className = 'fbp-marker-item';
-      markerDiv.dataset.index = idx;
-      markerDiv.style.position = 'absolute';
-      markerDiv.style.left = (m.x * 100) + '%';
-      markerDiv.style.top = (m.y * 100) + '%';
-      markerDiv.style.transform = 'translate(-50%, -50%)';
-      markerDiv.style.color = m.color || '#ef4444';
-      markerDiv.style.fontWeight = 'bold';
-      markerDiv.style.fontSize = '16px';
-      markerDiv.style.lineHeight = '1';
-      markerDiv.style.userSelect = 'none';
-      markerDiv.style.cursor = 'pointer';
-      markerDiv.title = 'Klicken zum Löschen';
-
-      let symbol = '✕';
-      if (m.type === 'circle') symbol = '◯';
-      if (m.type === 'dot') symbol = '●';
-
-      markerDiv.innerHTML = `<span style="text-shadow: 0 0 2px var(--bg-card-solid,#fff), 0 0 4px var(--bg-card-solid,#fff);">${symbol}</span>`;
-      layer.appendChild(markerDiv);
-    });
-  });
-}
-
-function fbpResetCard() {
-  currentFbpId = null;
-  fbpMarkierungen = [];
-
-  const patHidden = document.getElementById('fbpPatient');
-  if (patHidden) patHidden.value = '';
-  const patSearch = document.getElementById('fbpPatientSearch');
-  if (patSearch) patSearch.value = '';
-  const dropdown = document.getElementById('fbpPatientDropdown');
-  if (dropdown) dropdown.style.display = 'none';
-
-  fbpAutofillStammdaten('');
-
-  const datumInp = document.getElementById('fbpDatum');
-  if (datumInp) datumInp.value = new Date().toISOString().slice(0, 10);
-
-  const setCb = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-  ['senkfuss','spreizfuss','knickfuss_innen','knickfuss_aussen','hohlfuss','plattfuss','andere','fussschwellungen'].forEach(k => {
-    setCb(`fbp_def_${k}_l`, false);
-    setCb(`fbp_def_${k}_r`, false);
-  });
-  setCb('fbp_ein_konfektion', false);
-  setCb('fbp_ein_nach_mass', false);
-  setCb('fbp_kramp_ober_l', false);
-  setCb('fbp_kramp_ober_r', false);
-  setCb('fbp_kramp_unter_l', false);
-  setCb('fbp_kramp_unter_r', false);
-  ['diabetes','allergien','infektionskrankheiten','gerinnungshemmer'].forEach(k => {
-    setCb(`fbp_risk_${k}`, false);
-  });
-  ['hornhaut','hallux_valgus','warzen','hautpilz'].forEach(k => {
-    setCb(`fbp_haut_${k}`, false);
-  });
-  const freitextEl = document.getElementById('fbpHautFreitext');
-  if (freitextEl) freitextEl.value = '';
-
-  document.querySelectorAll('.fbp-toe-btn').forEach(b => b.classList.remove('active'));
-
-  const notizEl = document.getElementById('fbpNotiz');
-  if (notizEl) notizEl.value = '';
-
-  fbpRenderMarkers();
-}
-
-function fbpCollectBefund() {
-  const getCb = id => document.getElementById(id)?.checked || false;
-  const collectToe = key => ({
-    l: Array.from(document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="l"].active`)).map(b => parseInt(b.dataset.toe)),
-    r: Array.from(document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="r"].active`)).map(b => parseInt(b.dataset.toe))
-  });
-
+// ============================================================================
+// FUSSBEFUND (Podologie) → module/fussbefund.js
+// ----------------------------------------------------------------------------
+// Der ~910-Zeilen-Block ist am 14.08.2026 in das Modul umgezogen (Konsey
+// 2026-08-13: „angefasst heisst umgezogen"). Hier bleibt nur die Verdrahtung.
+// ============================================================================
+function fussbefundCtx() {
   return {
-    deformitaeten: {
-      senkfuss:         { l: getCb('fbp_def_senkfuss_l'), r: getCb('fbp_def_senkfuss_r') },
-      spreizfuss:       { l: getCb('fbp_def_spreizfuss_l'), r: getCb('fbp_def_spreizfuss_r') },
-      knickfuss_innen:  { l: getCb('fbp_def_knickfuss_innen_l'), r: getCb('fbp_def_knickfuss_innen_r') },
-      knickfuss_aussen: { l: getCb('fbp_def_knickfuss_aussen_l'), r: getCb('fbp_def_knickfuss_aussen_r') },
-      hohlfuss:         { l: getCb('fbp_def_hohlfuss_l'), r: getCb('fbp_def_hohlfuss_r') },
-      plattfuss:        { l: getCb('fbp_def_plattfuss_l'), r: getCb('fbp_def_plattfuss_r') },
-      andere:           { l: getCb('fbp_def_andere_l'), r: getCb('fbp_def_andere_r') },
-      fussschwellungen: { l: getCb('fbp_def_fussschwellungen_l'), r: getCb('fbp_def_fussschwellungen_r') }
-    },
-    einlagen: {
-      konfektion: getCb('fbp_ein_konfektion'),
-      nach_mass:  getCb('fbp_ein_nach_mass')
-    },
-    krampfadern: {
-      oberschenkel:  { l: getCb('fbp_kramp_ober_l'), r: getCb('fbp_kramp_ober_r') },
-      unterschenkel: { l: getCb('fbp_kramp_unter_l'), r: getCb('fbp_kramp_unter_r') }
-    },
-    risiken: {
-      diabetes:              getCb('fbp_risk_diabetes'),
-      allergien:             getCb('fbp_risk_allergien'),
-      infektionskrankheiten: getCb('fbp_risk_infektionskrankheiten'),
-      gerinnungshemmer:      getCb('fbp_risk_gerinnungshemmer')
-    },
-    haut: {
-      hornhaut:      getCb('fbp_haut_hornhaut'),
-      hallux_valgus: getCb('fbp_haut_hallux_valgus'),
-      warzen:        getCb('fbp_haut_warzen'),
-      hautpilz:      getCb('fbp_haut_hautpilz'),
-      freitext:      document.getElementById('fbpHautFreitext')?.value || ''
-    },
-    zehen_naegel: {
-      huehneraugen_auf: collectToe('huehneraugen_auf'),
-      huehneraugen_zw:  collectToe('huehneraugen_zw'),
-      hammerzehen:      collectToe('hammerzehen'),
-      nagelpilz:        collectToe('nagelpilz'),
-      eingewachsen:     collectToe('eingewachsen'),
-      zustand_naegel:   collectToe('zustand_naegel')
-    }
+    supabase,
+    ownerId: getOwnerId,
+    userId: () => (typeof currentSession !== 'undefined' && currentSession?.user?.id) || null,
+    profile: currentProfile,
+    bizScope,
+    showToast,
+    showConfirmModal,
+    displayName,
+    displayNameWithBirth,
+    leadBirthDate,
+    patientMatchesQuery,
+    sector: getSector, switchPanel, closePanel: closeBkActionPanel,
   };
 }
-
-async function fbpSave() {
-  const patientId = document.getElementById('fbpPatient')?.value;
-  const datumVal = document.getElementById('fbpDatum')?.value;
-
-  if (!patientId || !datumVal) {
-    showToast('Bitte Patient und Befund-Datum wählen.', 'error');
-    return;
-  }
-
-  const saveBtn = document.getElementById('fbpSaveBtn');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Speichert…'; }
-
-  const payload = {
-    owner_id: getOwnerId(),
-    lead_id: patientId,
-    erstellt_am: new Date(datumVal).toISOString(),
-    befund: fbpCollectBefund(),
-    markierungen: fbpMarkierungen,
-    notiz: document.getElementById('fbpNotiz')?.value?.trim() || '',
-    erfasst_von: (typeof currentSession !== 'undefined' && currentSession?.user?.id) ? currentSession.user.id : null
-  };
-
-  let error = null;
-  if (currentFbpId) {
-    const res = await supabase.from('pat_fussbefund').update({
-      erstellt_am: payload.erstellt_am,
-      befund: payload.befund,
-      markierungen: payload.markierungen,
-      notiz: payload.notiz
-    }).eq('id', currentFbpId);
-    error = res.error;
-  } else {
-    const res = await supabase.from('pat_fussbefund').insert([payload]).select('id').single();
-    error = res.error;
-    if (res.data) currentFbpId = res.data.id;
-  }
-
-  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Speichern'; }
-
-  if (error) {
-    showToast('Fehler beim Speichern: ' + error.message, 'error');
-    return;
-  }
-
-  showToast('Befund gespeichert ✓');
-  await fbpRefreshTable();
-}
-
-function fbpFormatKurzBefund(row) {
-  const parts = [];
-  const mCount = Array.isArray(row.markierungen) ? row.markierungen.length : 0;
-  if (mCount > 0) parts.push(`${mCount} Marker`);
-
-  const b = row.befund || {};
-  const risk = b.risiken || {};
-  if (risk.diabetes) parts.push('Diabetes');
-  if (risk.allergien) parts.push('Allergie');
-  if (risk.gerinnungshemmer) parts.push('Gerinnungshemmer');
-
-  const def = b.deformitaeten || {};
-  const defLabels = {
-    senkfuss: 'Senkfuß', spreizfuss: 'Spreizfuß', knickfuss_innen: 'Knickfuß i.',
-    knickfuss_aussen: 'Knickfuß a.', hohlfuss: 'Hohlfuß', plattfuss: 'Plattfuß',
-    andere: 'Deformität', fussschwellungen: 'Schwellung'
-  };
-  Object.keys(defLabels).forEach(k => {
-    if (def[k]?.l || def[k]?.r) {
-      parts.push(defLabels[k]);
-    }
-  });
-
-  const haut = b.haut || {};
-  if (haut.hornhaut) parts.push('Hornhaut');
-  if (haut.hallux_valgus) parts.push('Hallux Valgus');
-  if (haut.warzen) parts.push('Warzen');
-  if (haut.hautpilz) parts.push('Hautpilz');
-
-  return parts.length ? parts.join(' · ') : 'Keine Besonderheiten';
-}
-
-async function fbpRefreshTable() {
-  const container = document.getElementById('fbpTableContainer');
-  if (!container) return;
-
-  container.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade Befunde…</span>';
-
-  const { data, error } = await supabase
-    .from('pat_fussbefund')
-    .select('id, erstellt_am, befund, markierungen, notiz, lead_id, leads:lead_id(first_name, last_name, geburtsdatum, metadata)')
-    .eq('owner_id', getOwnerId())
-    .order('erstellt_am', { ascending: false })
-    .limit(30);
-
-  if (error) {
-    container.innerHTML = `<span style="font-size:12px;color:#ef4444;">Fehler beim Laden: ${escapeHtml(error.message)}</span>`;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    container.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:12px 0;text-align:center;">Noch keine gespeicherten Befunde vorhanden.</div>';
-    return;
-  }
-
-  container.innerHTML = `
-    <div style="overflow-x:auto;">
-      <table class="data-table" style="width:100%;font-size:12px;">
-        <thead>
-          <tr>
-            <th>Patient</th>
-            <th>Geb.</th>
-            <th>Datum</th>
-            <th>Kurz-Befund</th>
-            <th style="text-align:right;">Aktion</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map(row => {
-            const p = row.leads || {};
-            const pName = displayName(p) || [p.last_name, p.first_name].filter(Boolean).join(', ') || 'Unbekannt';
-            const bd = leadBirthDate(p);
-            const pGeb = bd ? fbpFormatDate(bd) : '—';
-            const bDatum = fbpFormatDate(row.erstellt_am);
-            const kurzBefund = fbpFormatKurzBefund(row);
-
-            return `
-              <tr>
-                <td><strong>${escapeHtml(pName)}</strong></td>
-                <td>${escapeHtml(pGeb)}</td>
-                <td>${escapeHtml(bDatum)}</td>
-                <td style="max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(kurzBefund)}">${escapeHtml(kurzBefund)}</td>
-                <td style="text-align:right;white-space:nowrap;">
-                  <button type="button" class="btn-sm fbp-btn-open" data-id="${row.id}" title="Öffnen" style="padding:3px 7px;">↗</button>
-                  <button type="button" class="btn-sm btn-danger fbp-btn-del" data-id="${row.id}" title="Löschen" style="padding:3px 7px;">✕</button>
-                </td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  container.querySelectorAll('.fbp-btn-open').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      const row = data.find(r => r.id === id);
-      if (row) fbpLoadRecord(row);
-    });
-  });
-
-  container.querySelectorAll('.fbp-btn-del').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      const ok = await showConfirmModal({
-        title: 'Fußbefund löschen',
-        message: 'Möchten Sie diesen Fußbefund wirklich löschen?',
-        confirmText: 'Löschen',
-        cancelText: 'Abbrechen',
-        variant: 'danger'
-      });
-      if (!ok) return;
-
-      const { error: delErr } = await supabase.from('pat_fussbefund').delete().eq('id', id);
-      if (delErr) {
-        showToast('Fehler beim Löschen: ' + delErr.message, 'error');
-        return;
-      }
-      showToast('Befund gelöscht ✓');
-      if (currentFbpId === id) {
-        fbpResetCard();
-      }
-      fbpRefreshTable();
-    });
-  });
-}
-
-function fbpLoadRecord(row) {
-  currentFbpId = row.id;
-
-  const patHidden = document.getElementById('fbpPatient');
-  if (patHidden) patHidden.value = row.lead_id || '';
-
-  const patSearch = document.getElementById('fbpPatientSearch');
-  if (patSearch) {
-    const p = fbpPatientsMap[row.lead_id];
-    if (p) {
-      patSearch.value = displayNameWithBirth(p);
-    } else if (row.leads) {
-      patSearch.value = displayNameWithBirth(row.leads);
-    } else {
-      patSearch.value = '';
-    }
-  }
-
-  const dropdown = document.getElementById('fbpPatientDropdown');
-  if (dropdown) dropdown.style.display = 'none';
-
-  fbpAutofillStammdaten(row.lead_id);
-
-  const datumInp = document.getElementById('fbpDatum');
-  if (datumInp && row.erstellt_am) {
-    datumInp.value = new Date(row.erstellt_am).toISOString().slice(0, 10);
-  }
-
-  const setCb = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-  const b = row.befund || {};
-  const def = b.deformitaeten || {};
-  ['senkfuss','spreizfuss','knickfuss_innen','knickfuss_aussen','hohlfuss','plattfuss','andere','fussschwellungen'].forEach(k => {
-    setCb(`fbp_def_${k}_l`, def[k]?.l);
-    setCb(`fbp_def_${k}_r`, def[k]?.r);
-  });
-  const ein = b.einlagen || {};
-  setCb('fbp_ein_konfektion', ein.konfektion);
-  setCb('fbp_ein_nach_mass', ein.nach_mass);
-  const kr = b.krampfadern || {};
-  setCb('fbp_kramp_ober_l', kr.oberschenkel?.l);
-  setCb('fbp_kramp_ober_r', kr.oberschenkel?.r);
-  setCb('fbp_kramp_unter_l', kr.unterschenkel?.l);
-  setCb('fbp_kramp_unter_r', kr.unterschenkel?.r);
-  const risk = b.risiken || {};
-  ['diabetes','allergien','infektionskrankheiten','gerinnungshemmer'].forEach(k => {
-    setCb(`fbp_risk_${k}`, risk[k]);
-  });
-  const haut = b.haut || {};
-  ['hornhaut','hallux_valgus','warzen','hautpilz'].forEach(k => {
-    setCb(`fbp_haut_${k}`, haut[k]);
-  });
-  const freitextEl = document.getElementById('fbpHautFreitext');
-  if (freitextEl) freitextEl.value = haut.freitext || '';
-
-  const zn = b.zehen_naegel || {};
-  ['huehneraugen_auf','huehneraugen_zw','hammerzehen','nagelpilz','eingewachsen','zustand_naegel'].forEach(key => {
-    const listL = Array.isArray(zn[key]?.l) ? zn[key].l : [];
-    const listR = Array.isArray(zn[key]?.r) ? zn[key].r : [];
-    document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="l"]`).forEach(btn => {
-      btn.classList.toggle('active', listL.includes(parseInt(btn.dataset.toe)));
-    });
-    document.querySelectorAll(`.fbp-toe-btn[data-key="${key}"][data-foot="r"]`).forEach(btn => {
-      btn.classList.toggle('active', listR.includes(parseInt(btn.dataset.toe)));
-    });
-  });
-
-  const notizEl = document.getElementById('fbpNotiz');
-  if (notizEl) notizEl.value = row.notiz || b.bemerkungen || '';
-
-  fbpMarkierungen = Array.isArray(row.markierungen) ? JSON.parse(JSON.stringify(row.markierungen)) : [];
-  fbpRenderMarkers();
-}
-
-async function loadFussstatus() {
-  const el = document.getElementById('fussstatusContent');
-  if (!el) return;
-  el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Lade Fußbefund-Karte…</span>';
-
-  const ownerId = getOwnerId();
-  // bizScope ist Pflicht: ohne sie zeigte die Fußbefund-Karte Patienten ALLER
-  // Standorte — und wich damit von der Patientenliste/Verordnung ab.
-  const { data: patienten, error: patErr } = await bizScope(supabase
-    .from('leads')
-    .select('id, first_name, last_name, geburtsdatum, metadata, krankenkasse, phone, phone_normalized, plz, versichertennummer')
-    .eq('owner_id', ownerId)
-    .order('last_name', { ascending: true }), 'patients');
-
-  if (patErr) {
-    console.error('Fehler beim Laden der Patienten:', patErr);
-  }
-
-  fbpPatientsMap = {};
-  fbpPatientsList = patienten || [];
-  fbpPatientsList.forEach(p => {
-    fbpPatientsMap[p.id] = p;
-  });
-
-  const todayStr = new Date().toISOString().split('T')[0];
-
-  const toeKeys = [
-    { key: 'huehneraugen_auf', label: 'Hühneraugen auf Zehen' },
-    { key: 'huehneraugen_zw',  label: 'Hühneraugen zw. Zehen' },
-    { key: 'hammerzehen',      label: 'Hammerzehen' },
-    { key: 'nagelpilz',        label: 'Nagelpilz' },
-    { key: 'eingewachsen',     label: 'Eingewachsene Nägel' },
-    { key: 'zustand_naegel',   label: 'Zustand der Nägel' }
-  ];
-
-  const toeRowsHtml = toeKeys.map(item => `
-    <tr>
-      <td>${escapeHtml(item.label)}</td>
-      <td style="text-align:center;">
-        <div class="fbp-toe-group" style="justify-content:center;">
-          ${[1,2,3,4,5].map(num => `<button type="button" class="fbp-toe-btn" data-key="${item.key}" data-foot="l" data-toe="${num}">${num}</button>`).join('')}
-        </div>
-      </td>
-      <td style="text-align:center;">
-        <div class="fbp-toe-group" style="justify-content:center;">
-          ${[1,2,3,4,5].map(num => `<button type="button" class="fbp-toe-btn" data-key="${item.key}" data-foot="r" data-toe="${num}">${num}</button>`).join('')}
-        </div>
-      </td>
-    </tr>
-  `).join('');
-
-  el.innerHTML = `
-    <!-- Defs SVG -->
-    <svg width="0" height="0" style="position:absolute"><defs>
-      <linearGradient id="fbpSole" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf3ec"/><stop offset="1" stop-color="#f4dccb"/></linearGradient>
-      <linearGradient id="fbpTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fdf1e8"/><stop offset="1" stop-color="#efcfb8"/></linearGradient>
-      
-      <g id="fbpDorsal">
-        <path class="fbp-skin2" d="M90 372 C64 372 50 352 48 322 C46 296 50 268 54 244 C57 224 55 206 60 186 C64 168 72 150 88 140 C92 138 96 138 100 140 C116 150 122 168 126 186 C131 206 129 224 132 244 C136 268 140 296 138 322 C136 352 116 372 90 372 Z"/>
-        <path class="fbp-skin2" d="M70 150 C60 150 54 132 56 116 C58 102 66 96 74 98 C82 100 86 112 86 128 C86 140 80 150 70 150 Z"/>
-        <path class="fbp-skin2" d="M92 140 C84 140 80 122 81 106 C82 94 89 90 96 92 C103 94 106 106 105 122 C104 134 100 140 92 140 Z"/>
-        <path class="fbp-skin2" d="M112 144 C104 144 101 128 102 114 C103 103 109 99 115 101 C121 103 123 114 122 128 C121 139 118 144 112 144 Z"/>
-        <path class="fbp-skin2" d="M128 152 C121 152 118 138 119 126 C120 116 125 113 130 115 C135 117 137 126 136 138 C135 148 132 152 128 152 Z"/>
-        <path class="fbp-skin2" d="M142 162 C136 162 133 150 134 140 C135 131 139 128 143 130 C148 132 149 140 148 150 C147 158 145 162 142 162 Z"/>
-        <ellipse class="fbp-nail" cx="70" cy="112" rx="7" ry="8.5"/>
-        <ellipse class="fbp-nail" cx="92" cy="104" rx="6" ry="7.5"/>
-        <ellipse class="fbp-nail" cx="112" cy="112" rx="5.3" ry="6.7"/>
-        <ellipse class="fbp-nail" cx="128" cy="122" rx="4.6" ry="5.8"/>
-        <ellipse class="fbp-nail" cx="142" cy="137" rx="4" ry="5"/>
-        <path class="fbp-cline" d="M78 168 C82 210 84 260 86 320"/>
-        <path class="fbp-cline" d="M100 165 C102 210 102 260 100 320"/>
-        <path class="fbp-cline" d="M120 170 C118 215 116 262 114 320"/>
-      </g>
-
-      <g id="fbpSoleFoot">
-        <path class="fbp-skin" d="M92 372 C70 372 56 352 54 326 C52 306 58 292 62 276 C66 262 60 250 58 236 C56 220 62 206 74 196 C84 188 96 188 106 194 C120 202 126 218 128 236 C130 254 126 270 128 288 C130 306 130 320 126 336 C121 358 112 372 92 372 Z"/>
-        <ellipse class="fbp-skin" cx="70" cy="150" rx="13" ry="17" transform="rotate(-8 70 150)"/>
-        <ellipse class="fbp-skin" cx="92" cy="140" rx="9" ry="13"/>
-        <ellipse class="fbp-skin" cx="110" cy="146" rx="8" ry="12"/>
-        <ellipse class="fbp-skin" cx="125" cy="156" rx="6.6" ry="10"/>
-        <ellipse class="fbp-skin" cx="137" cy="168" rx="5.6" ry="8.5"/>
-        <ellipse class="fbp-cline" cx="92" cy="330" rx="30" ry="34"/>
-        <path class="fbp-cline" d="M64 196 C82 186 104 188 120 200"/>
-      </g>
-
-      <g id="fbpLateralFoot">
-        <path class="fbp-skin2" d="M300 46 C312 60 312 84 300 96 C292 104 286 112 280 122 C274 132 262 136 250 134 C236 132 232 120 232 108 C216 112 150 116 96 116 C70 116 42 114 22 110 C10 108 6 98 12 90 C18 82 30 80 44 80 C40 72 44 64 54 62 C70 58 96 62 112 70 C150 74 210 70 244 58 C262 52 268 42 274 34 C280 26 292 30 300 46 Z"/>
-        <path class="fbp-cline" d="M96 116 C96 100 100 86 112 78"/>
-        <path class="fbp-cline" d="M150 114 C150 98 152 86 160 78"/>
-        <ellipse class="fbp-nail" cx="24" cy="96" rx="6" ry="8"/>
-      </g>
-    </defs></svg>
-
-    <!-- Steuerzeile -->
-    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px;flex-wrap:wrap;">
-      <div style="position:relative;flex:1;min-width:240px;">
-        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:600;">Patient</label>
-        <input type="text" id="fbpPatientSearch" placeholder="Patient suchen (Name, Geb.-Datum oder Telefon)…" autocomplete="off" class="input-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:14px;">
-        <input type="hidden" id="fbpPatient" value="">
-        <div id="fbpPatientDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:100;margin-top:2px;"></div>
-      </div>
-
-      <div style="width:160px;">
-        <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;font-weight:600;">Befund-Datum</label>
-        <input type="date" id="fbpDatum" value="${todayStr}" class="input-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:14px;">
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:auto;">
-        <button type="button" id="fbpNewBtn" class="btn" style="height:38px;padding:0 14px;">+ Neuer Befund</button>
-        <button type="button" id="fbpSaveBtn" class="btn-primary" style="height:38px;padding:0 18px;">Speichern</button>
-      </div>
-    </div>
-
-    <!-- Hauptbereich (Zwei Spalten) -->
-    <div class="fbp-card-container">
-      
-      <!-- Linke Spalte = Die Karte -->
-      <div class="fbp-paper-card">
-        
-        <!-- 1. Stammdaten-Kopf -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Patienten-Stammdaten (aus Akte)
-          </div>
-          <div id="fbpStammdatenBox">
-            <div style="color:var(--text-muted);font-style:italic;padding:12px;background:var(--bg-card);border-radius:8px;border:1px dashed var(--border);text-align:center;">Bitte Patient auswählen</div>
-          </div>
-        </div>
-
-        <!-- 2. Fußdeformitäten -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Fußdeformitäten</div>
-          <table class="fbp-grid-table">
-            <thead>
-              <tr>
-                <th>Befund</th>
-                <th style="width:65px;text-align:center;">Links</th>
-                <th style="width:65px;text-align:center;">Rechts</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Senkfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_senkfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_senkfuss_r"></td></tr>
-              <tr><td>Spreizfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_spreizfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_spreizfuss_r"></td></tr>
-              <tr><td>Knickfuß nach innen</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_innen_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_innen_r"></td></tr>
-              <tr><td>Knickfuß nach außen</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_aussen_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_knickfuss_aussen_r"></td></tr>
-              <tr><td>Hohlfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_hohlfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_hohlfuss_r"></td></tr>
-              <tr><td>Plattfuß</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_plattfuss_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_plattfuss_r"></td></tr>
-              <tr><td>Andere Fußdeformitäten</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_andere_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_andere_r"></td></tr>
-              <tr><td>Fußschwellungen</td><td style="text-align:center;"><input type="checkbox" id="fbp_def_fussschwellungen_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_def_fussschwellungen_r"></td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 3. Einlagen -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Einlagen</div>
-          <div style="display:flex;gap:24px;font-size:13px;">
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_ein_konfektion"> Konfektion
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_ein_nach_mass"> Nach Maß
-            </label>
-          </div>
-        </div>
-
-        <!-- 4. Krampfadern -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Krampfadern</div>
-          <table class="fbp-grid-table">
-            <thead>
-              <tr>
-                <th>Bereich</th>
-                <th style="width:65px;text-align:center;">Links</th>
-                <th style="width:65px;text-align:center;">Rechts</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Oberschenkel</td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_ober_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_ober_r"></td></tr>
-              <tr><td>Unterschenkel</td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_unter_l"></td><td style="text-align:center;"><input type="checkbox" id="fbp_kramp_unter_r"></td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 5. Risiken -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Risiken</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;">
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_risk_diabetes"> Diabetes
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_risk_allergien"> Allergien
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_risk_infektionskrankheiten"> Infektionskrankheiten
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_risk_gerinnungshemmer"> Gerinnungshemmer
-            </label>
-          </div>
-        </div>
-
-        <!-- 6. Haut-Befund -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Haut-Befund</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;font-size:13px;margin-bottom:12px;">
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_haut_hornhaut"> Hornhaut
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_haut_hallux_valgus"> Hallux Valgus
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_haut_warzen"> Warzen
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
-              <input type="checkbox" id="fbp_haut_hautpilz"> Hautpilz
-            </label>
-          </div>
-          <input type="text" id="fbpHautFreitext" class="input-control" placeholder="Freitext / Ergänzungen zum Hautbefund…" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:13px;">
-        </div>
-
-        <!-- 7. Zehen & Nägel -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Zehen &amp; Nägel</div>
-          <table class="fbp-grid-table">
-            <thead>
-              <tr>
-                <th>Befund</th>
-                <th style="width:150px;text-align:center;">Links (Zehe 1–5)</th>
-                <th style="width:150px;text-align:center;">Rechts (Zehe 1–5)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${toeRowsHtml}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 8. Fußdiagramme -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Fußdiagramme (Interaktive Befund-Markierung)</div>
-
-          <!-- Toolbar -->
-          <div class="fbp-toolbar" id="fbpToolBar">
-            <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Werkzeug:</span>
-            <button type="button" class="fbp-tool-btn active" data-type="x">✕ Cross</button>
-            <button type="button" class="fbp-tool-btn" data-type="circle">◯ Kreis</button>
-            <button type="button" class="fbp-tool-btn" data-type="dot">● Punkt</button>
-
-            <span style="font-size:12px;color:var(--text-muted);font-weight:600;margin-left:12px;">Farbe:</span>
-            <button type="button" class="fbp-color-btn active" data-color="#ef4444" style="color:#ef4444;font-weight:bold;">● Rot</button>
-            <button type="button" class="fbp-color-btn" data-color="#3b82f6" style="color:#3b82f6;font-weight:bold;">● Blau</button>
-            <button type="button" class="fbp-color-btn" data-color="var(--text-main)" style="color:var(--text-main);font-weight:bold;">● Schwarz</button>
-
-            <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">Klick setzt Marker, Klick auf Marker löscht ihn.</span>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:20px;align-items:start;">
-
-            <!-- Plantar (Sohle) -->
-            <div style="background:#f7f7f5;border-radius:10px;padding:12px 14px;">
-              <div style="font-weight:700;font-size:13px;color:#3a3a3a;margin-bottom:10px;text-align:center;">Plantar (Sohle)</div>
-              <div style="display:flex;gap:6px;justify-content:center;align-items:flex-start;">
-                <div class="fbp-diagram-container" data-view="plantar" data-foot="r" style="position:relative;flex:1;max-width:165px;">
-                  <img src="/assets/img/foot/plantar-right.png" alt="Plantar" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                </div>
-                <div class="fbp-diagram-container" data-view="plantar" data-foot="l" style="position:relative;flex:1;max-width:165px;">
-                  <img src="/assets/img/foot/plantar-left.png" alt="Plantar" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Dorsal (Rücken) -->
-            <div style="background:#f7f7f5;border-radius:10px;padding:12px 14px;">
-              <div style="font-weight:700;font-size:13px;color:#3a3a3a;margin-bottom:10px;text-align:center;">Dorsal (Rücken)</div>
-              <div style="display:flex;gap:6px;justify-content:center;align-items:flex-start;">
-                <div class="fbp-diagram-container" data-view="dorsal" data-foot="l" style="position:relative;flex:1;max-width:165px;">
-                  <img src="/assets/img/foot/dorsal-left.png" alt="Dorsal" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                </div>
-                <div class="fbp-diagram-container" data-view="dorsal" data-foot="r" style="position:relative;flex:1;max-width:165px;">
-                  <img src="/assets/img/foot/dorsal-right.png" alt="Dorsal" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Lateral (Seitenansicht) -->
-            <div style="background:#f7f7f5;border-radius:10px;padding:12px 14px;">
-              <div style="font-weight:700;font-size:13px;color:#3a3a3a;margin-bottom:10px;text-align:center;">Lateral</div>
-              <div style="display:flex;gap:8px;justify-content:center;align-items:center;">
-                <div class="fbp-diagram-container" data-view="lateral" data-foot="l" style="position:relative;flex:1;max-width:210px;">
-                  <img src="/assets/img/foot/lateral-left.png" alt="Lateral" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                </div>
-                <div class="fbp-diagram-container" data-view="lateral" data-foot="r" style="position:relative;flex:1;max-width:210px;">
-                  <img src="/assets/img/foot/lateral-right.png" alt="Lateral" style="width:100%;height:auto;display:block;pointer-events:none;user-select:none;" draggable="false">
-                  <div class="fbp-marker-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:2;"></div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- 9. Bemerkungen -->
-        <div class="fbp-section">
-          <div class="fbp-section-title">Bemerkungen</div>
-          <textarea id="fbpNotiz" rows="3" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card-solid);color:var(--text-main);font-size:13px;resize:vertical;" placeholder="Therapieempfehlungen, Folgetermin-Notizen..."></textarea>
-        </div>
-
-      </div>
-
-      <!-- Rechte Spalte = Gespeicherte Befunde -->
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));position:sticky;top:20px;">
-        <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;display:flex;align-items:center;justify-content:space-between;">
-          <span>Gespeicherte Befunde</span>
-          <span style="font-size:12px;font-weight:normal;color:var(--text-muted);">Max. 30</span>
-        </h4>
-        <div id="fbpTableContainer">
-          <span style="color:var(--text-muted);font-size:13px;">Lade Befunde…</span>
-        </div>
-      </div>
-
-    </div>
-  `;
-
-  // Attach Listeners
-  const searchInput = document.getElementById('fbpPatientSearch');
-  const dropdown = document.getElementById('fbpPatientDropdown');
-  const hiddenInput = document.getElementById('fbpPatient');
-
-  if (searchInput && dropdown) {
-    searchInput.addEventListener('input', (e) => {
-      const q = e.target.value;
-      if (!q.trim()) {
-        if (hiddenInput) hiddenInput.value = '';
-        fbpAutofillStammdaten('');
-      }
-      fbpRenderPatientDropdown(q);
-    });
-
-    searchInput.addEventListener('focus', () => {
-      fbpRenderPatientDropdown(searchInput.value);
-    });
-
-    dropdown.addEventListener('click', (e) => {
-      const item = e.target.closest('.fbp-patient-item');
-      if (item) {
-        const id = item.dataset.id;
-        const p = fbpPatientsMap[id];
-        if (p) {
-          if (hiddenInput) hiddenInput.value = id;
-          searchInput.value = displayNameWithBirth(p);
-          dropdown.style.display = 'none';
-          fbpAutofillStammdaten(id);
-        }
-      }
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-        dropdown.style.display = 'none';
-      }
-    });
-  }
-
-  const newBtn = document.getElementById('fbpNewBtn');
-  if (newBtn) {
-    newBtn.addEventListener('click', () => {
-      fbpResetCard();
-    });
-  }
-
-  const saveBtn = document.getElementById('fbpSaveBtn');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
-      fbpSave();
-    });
-  }
-
-  // Toe buttons click delegated
-  el.querySelectorAll('.fbp-toe-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      btn.classList.toggle('active');
-    });
-  });
-
-  // Tool / Color buttons
-  const toolBar = document.getElementById('fbpToolBar');
-  if (toolBar) {
-    toolBar.addEventListener('click', (e) => {
-      const toolBtn = e.target.closest('.fbp-tool-btn');
-      if (toolBtn) {
-        e.preventDefault();
-        toolBar.querySelectorAll('.fbp-tool-btn').forEach(b => b.classList.remove('active'));
-        toolBtn.classList.add('active');
-        fbpSelectedMarkerType = toolBtn.dataset.type || 'x';
-        return;
-      }
-      const colorBtn = e.target.closest('.fbp-color-btn');
-      if (colorBtn) {
-        e.preventDefault();
-        toolBar.querySelectorAll('.fbp-color-btn').forEach(b => b.classList.remove('active'));
-        colorBtn.classList.add('active');
-        fbpSelectedMarkerColor = colorBtn.dataset.color || '#ef4444';
-        return;
-      }
-    });
-  }
-
-  // Diagram Marker Layers
-  el.querySelectorAll('.fbp-diagram-container').forEach(container => {
-    const layer = container.querySelector('.fbp-marker-layer');
-    if (!layer) return;
-    const view = container.dataset.view;
-    const foot = container.dataset.foot;
-
-    layer.addEventListener('click', (e) => {
-      const item = e.target.closest('.fbp-marker-item');
-      if (item) {
-        e.stopPropagation();
-        const idx = parseInt(item.dataset.index);
-        if (!isNaN(idx) && idx >= 0 && idx < fbpMarkierungen.length) {
-          fbpMarkierungen.splice(idx, 1);
-          fbpRenderMarkers();
-        }
-        return;
-      }
-
-      const rect = layer.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      const x = Math.round(((e.clientX - rect.left) / rect.width) * 10000) / 10000;
-      const y = Math.round(((e.clientY - rect.top) / rect.height) * 10000) / 10000;
-
-      fbpMarkierungen.push({
-        view,
-        foot,
-        x,
-        y,
-        type: fbpSelectedMarkerType,
-        color: fbpSelectedMarkerColor,
-        label: ''
-      });
-      fbpRenderMarkers();
-    });
-  });
-
-  fbpResetCard();
-  await fbpRefreshTable();
-}
-
 // ============================================================================
 // ANWESENHEIT (Devam Takibi) — Owner rapor paneli
 // ============================================================================

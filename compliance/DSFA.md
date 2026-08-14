@@ -7,8 +7,8 @@ Eine DSFA ist erforderlich, weil InfinityMade besondere Kategorien personenbezog
 | | |
 |---|---|
 | Verantwortlicher | InfinityMade |
-| Stand | 2026-05-23, Version 1.0 |
-| Bezug | VVT.md Verarbeitung 2 + 3 |
+| Stand | 2026-08-14, Version 1.1 |
+| Bezug | VVT.md Verarbeitung 2 + 3 + 5 |
 
 ---
 
@@ -58,6 +58,7 @@ Eine SaaS-Plattform für Praxen (Physiotherapie, Heilmittelerbringer) zur:
 | R10 | Drittländer-Übermittlung über Sub-Prozessor | 2 | 3 | 6 | mitigiert (Azure EU, Stripe SCC) |
 | R11 | Mitarbeiter-Konto behält Zugriff nach Kündigung | 2 | 3 | 6 | mitigiert (Owner-Deaktivierungsflow) |
 | R12 | Klartext-Diagnose in DB-Spalte → Datenbankleck enthüllt Gesundheitsdaten | 3 | 5 | 15 | **offen → P1 (Column-Encryption pgcrypto)** |
+| R13 | Unterschriftenerfassung auf einem an Patient*innen übergebenen Gerät — Einblick in andere Patientendaten über den Kiosk-Modus hinweg | 2 | 4 | 8 | **teilmitigiert → siehe Maßnahmen R13** |
 
 Score-Skala: 1-4 niedrig · 5-9 mittel · 10-14 hoch · 15-25 sehr hoch.
 
@@ -68,6 +69,9 @@ Score-Skala: 1-4 niedrig · 5-9 mittel · 10-14 hoch · 15-25 sehr hoch.
 - **R7 / Datenpannen-Runbook**: Erstellung `compliance/DATAPANNE_RUNBOOK.md` mit Eskalations-Flowchart, Meldetemplate Aufsichtsbehörde, Kommunikationsvorlage Auftraggeber.
 - **R9 / Log-Filter**: Custom Logger der bekannte PII-Felder (KVNR-Regex, ICD-10) durch `[REDACTED]` ersetzt — bereits in `api-backend/_log.js` einplanen.
 - **R12 / Column-Encryption**: `pgp_sym_encrypt` auf `prescriptions.icd10`, `prescriptions.diagnosetext`, `patients.kvnr`. Schlüssel über Supabase Vault. P1 vor Go-Live.
+- **R13 / Kiosk-Modus und Einwilligung** (neu 14.08.2026, Konsey-Beschluss `konsey/tutanak/2026-08-14-patienten-uebergabe-einwilligung.md`): PIN serverseitig als scrypt-Hash mit Rate Limit und Sperre; „PIN vergessen“ beendet die Sitzung statt den Kiosk; Vollbild-Wächter; Abmeldung des Termin-Realtime-Kanals; Protokollierung von Ein- und Austritt in `data_access_log` (vorher gab es **keine**). Einwilligungsnachweise unveränderlich per DB-Trigger, Unterschriften nur über Signed URLs (300 s), **keine IP-Adresse**, **keine Signaturdynamik**. Details: TOM.md § 1.6 und § 1.7.
+  **Verbleibendes Risiko, bewusst akzeptiert:** der Kiosk-Modus ist eine Irrtumssperre, keine Sicherheitsgrenze — die Sitzung der Therapeut*in bleibt auf dem Gerät offen. Der Gegenentwurf (sitzungslose Seite mit Einmal-Token) wäre ein zweiter Code- und Deployment-Pfad und wurde vertagt. Organisatorische Kompensation: das Gerät wird nicht unbeaufsichtigt überlassen.
+  **Art. 33 DSGVO:** Aus dem bis 14.08.2026 bestehenden Zustand ergibt sich **keine Meldepflicht** — es liegt kein Nachweis eines tatsächlichen unbefugten Zugriffs vor, nur ein Risiko (siehe `compliance/LEGAL_DECISIONS.md`, 2026-08-14).
 
 ---
 
@@ -86,7 +90,7 @@ Die Verarbeitung ist nach Umsetzung aller offenen P0/P1-Maßnahmen aus TODO.md �
 
 Eine erneute DSFA ist erforderlich, wenn:
 - KI-Modelle ausgetauscht werden (z. B. Anbieterwechsel von Azure auf US-only Provider)
-- Neue Datenkategorien eingeführt werden (z. B. genetische Daten, biometrische Auth)
+- Neue Datenkategorien eingeführt werden (z. B. genetische Daten, biometrische Auth, Signaturdynamik statt Rasterbild)
 - Geschäftsmodell sich grundlegend ändert (z. B. Anbindung an gesetzliche Krankenkassen direkt)
 
 | Verantwortlicher | Unterschrift | Datum |

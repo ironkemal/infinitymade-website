@@ -7,7 +7,7 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 | | |
 |---|---|
 | Anbieter | InfinityMade |
-| Stand | 2026-05-23, Version 1.0 |
+| Stand | 2026-08-14, Version 1.1 |
 | Geltungsbereich | Alle Verarbeitungen gemäß VVT.md |
 
 ---
@@ -45,6 +45,46 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
   - KVNR, Geburtsdatum werden nicht an externe KI-Modelle gesendet
   - Nur strukturelle Verordnungsdaten (Diagnose, Heilmittel, Frequenz) gehen an das Modell
 - Marketing-Telemetrie nutzt Pseudonyme (`anonymize_ip` in GA)
+
+
+### 1.6 Kiosk-/Tablet-Modus („Tablet an Patient übergeben")
+
+Wird das Praxis-Tablet zur Anamnese oder zur Unterschrift an Patient*innen gereicht,
+sperrt ein Kiosk-Modus die Oberfläche auf den vorgesehenen Inhalt.
+
+- Kiosk-PIN wird als **scrypt-Hash serverseitig** gespeichert (Tabelle `kiosk_pins`).
+  Die Tabelle hat **keine RLS-Policy** — nur die `service_role` des Backends erreicht sie;
+  der Hash verlässt den Server nie.
+- Die PIN-Prüfung läuft ausschließlich serverseitig (`POST /api/kiosk/pin/verify`),
+  **rate-limited** (20 Versuche / 10 Minuten) und mit **Sperre nach 5 Fehlversuchen** (5 Minuten).
+  Ohne hinterlegte PIN startet der Kiosk-Modus nicht.
+- „PIN vergessen“ beendet die **Sitzung** (Abmeldung), es verlässt nicht den Kiosk-Modus.
+- Verlassen des Vollbildmodus (ESC/F11) wird erkannt; das Vollbild wird erneut angefordert,
+  andernfalls wird die PIN-Abfrage erzwungen.
+- Der Realtime-Kanal für Termine wird während des Kiosk-Modus abgemeldet, damit keine
+  Termindaten anderer Patient*innen eingeblendet werden.
+- **Ein- und Austritt werden protokolliert** (`data_access_log`, Ressource `kiosk`), ebenso
+  fehlgeschlagene PIN-Versuche. Bis 14.08.2026 fehlte diese Protokollierung vollständig.
+
+**Ehrliche Einordnung der Schutzwirkung.** Der Kiosk-Modus ist eine **Irrtumssperre, keine
+Sicherheitsgrenze**: die angemeldete Sitzung der Therapeut*in bleibt auf dem Gerät bestehen
+(gleicher Origin, gleiches Token). Gegen einen entschlossenen Angreifer mit physischem Zugriff
+auf das entsperrte Gerät schirmt er nicht vollständig ab; Bildschirmfotos werden nicht
+verhindert. Organisatorisch gilt daher: **das Tablet wird Patient*innen nicht unbeaufsichtigt
+überlassen.** Diese Grenze ist bewusst dokumentiert statt überzeichnet — eine zu weit
+gefasste TOM-Zusage wäre eine Verletzung des AVV.
+
+### 1.7 Einwilligungsnachweise
+
+- Unterschriften liegen als Rasterbild im **privaten** Bucket `patient-documents`;
+  Zugriff ausschließlich über zeitlich befristete Signed URLs (300 Sekunden).
+- Einwilligungsnachweise sind **unveränderlich**: ein DB-Trigger
+  (`trg_patient_consents_immutable`) blockiert Änderungen an Text, Unterschrift und
+  Zeitstempel sowie das Löschen innerhalb der 10-Jahres-Frist (§ 630f Abs. 3 BGB).
+  Änderbar sind nur die Widerrufsfelder.
+- Es werden **keine IP-Adressen** und **keine Signaturdynamik** erhoben (Art. 5 Abs. 1 lit. c;
+  Vermeidung eines biometrischen Datums nach Art. 4 Nr. 14).
+
 
 ---
 

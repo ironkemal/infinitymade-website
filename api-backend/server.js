@@ -2824,6 +2824,259 @@ app.post('/api/admin/recover-checkout', async (req, res) => {
 });
 
 // ============================================================================
+// KIOSK-MODUS — PIN (Konsey 2026-08-14, Paket P1)
+// ============================================================================
+// Vorher lag der PIN im Klartext in profiles.tablet_kiosk_pin und wurde im
+// Browser verglichen (dashboard.js). Beides ist weg:
+//   - Hash (scrypt) liegt in `kiosk_pins`, Tabelle OHNE RLS-Policy -> nur
+//     service_role, also nur dieser Prozess, kommt heran.
+//   - Der Vergleich passiert ausschliesslich hier, mit Rate Limit und Sperre.
+// Migration: supabase/migrations/20260814090000_kiosk_pin_hardening.sql
+//
+// Bewusst KEINE neue Abhaengigkeit (kein bcrypt/argon2): Node-eigenes scrypt
+// reicht und haelt die On-Prem-Migration billig (G8).
+
+const KIOSK_SCRYPT_N = 16384;   // 2^14 — auf 2 vCPU ~50-80 ms, fuer 4 Ziffern ok
+const KIOSK_SCRYPT_R = 8;
+const KIOSK_SCRYPT_P = 1;
+const KIOSK_KEYLEN   = 32;
+const KIOSK_MAX_FAILS = 5;
+const KIOSK_LOCK_MINUTES = 5;
+
+// Vorhersehbare PINs. Bei 4 Ziffern ist der Suchraum ohnehin winzig — diese
+// Handvoll deckt einen unverhaeltnismaessig grossen Teil realer Eingaben ab.
+const KIOSK_WEAK_PINS = new Set([
+  '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999',
+  '1234', '2345', '3456', '4567', '5678', '6789', '0123',
+  '4321', '9876', '1122', '1212', '2580', '1379', '0852',
+]);
+
+function kioskScrypt(pin, salt) {
+  return new Promise((resolve, reject) => {
+    crypto.scrypt(
+      pin, salt, KIOSK_KEYLEN,
+      { N: KIOSK_SCRYPT_N, r: KIOSK_SCRYPT_R, p: KIOSK_SCRYPT_P },
+      (err, dk) => (err ? reject(err) : resolve(dk))
+    );
+  });
+}
+
+async function kioskHashPin(pin) {
+  const salt = crypto.randomBytes(16);
+  const dk = await kioskScrypt(pin, salt);
+  return `scrypt$${KIOSK_SCRYPT_N}$${salt.toString('hex')}$${dk.toString('hex')}`;
+}
+
+async function kioskVerifyPin(pin, stored) {
+  try {
+    const [scheme, , saltHex, hashHex] = String(stored || '').split('$');
+    if (scheme !== 'scrypt' || !saltHex || !hashHex) return false;
+    const expected = Buffer.from(hashHex, 'hex');
+    const actual = await kioskScrypt(pin, Buffer.from(saltHex, 'hex'));
+    // timingSafeEqual wirft bei ungleicher Laenge — vorher pruefen, nicht fangen.
+    if (expected.length !== actual.length) return false;
+    return crypto.timingSafeEqual(expected, actual);
+  } catch {
+    return false;
+  }
+}
+
+const kioskPinVerifyLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele PIN-Versuche. Bitte warten Sie 10 Minuten.' },
+});
+
+const kioskPinSetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Zu viele Änderungen. Bitte warten Sie eine Stunde.' },
+});
+
+// Kiosk-Audit. Bis heute wurde Kiosk-Ein-/Austritt gar nicht protokolliert —
+// laut legal-de war genau das der eigentliche Art.-32-Mangel: ein Zugriff waere
+// nicht nachweisbar gewesen. Schreibt in data_access_log (kein neues Log-Silo).
+function kioskAudit(req, action, metadata) {
+  const a = req.auth || {};
+  logAccess(supabase, {
+    userId: a.userId || null,
+    ownerId: a.tenantId || a.userId || null,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+    method: req.method,
+    path: req.path,
+    resource: 'kiosk',
+    resourceId: a.userId || null,
+    action,
+    metadata: metadata || null,
+  });
+}
+
+// GET /api/kiosk/pin/status -> { pinSet, lockedUntil }
+app.get('/api/kiosk/pin/status', requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { data, error } = await supabase
+      .from('kiosk_pins')
+      .select('locked_until')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+
+    const locked = data?.locked_until && new Date(data.locked_until) > new Date()
+      ? data.locked_until
+      : null;
+    return res.json({ pinSet: !!data, lockedUntil: locked });
+  } catch (err) {
+    console.error('[kiosk/pin/status]', err.message);
+    return res.status(500).json({ error: 'Status konnte nicht geladen werden.' });
+  }
+});
+
+// POST /api/kiosk/pin/set  Body: { pin, currentPin? }
+// Ist bereits ein PIN gesetzt, muss currentPin stimmen — sonst waere das
+// Setzen selbst der Bypass, den wir gerade schliessen.
+app.post('/api/kiosk/pin/set', kioskPinSetLimiter, requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { pin, currentPin } = req.body || {};
+
+    if (!/^\d{4}$/.test(String(pin || ''))) {
+      return res.status(400).json({ error: 'Die PIN muss aus genau 4 Ziffern bestehen.' });
+    }
+    if (KIOSK_WEAK_PINS.has(String(pin))) {
+      return res.status(400).json({ error: 'PIN zu einfach. Bitte eine weniger vorhersehbare Kombination wählen.' });
+    }
+
+    const { data: existing, error: exErr } = await supabase
+      .from('kiosk_pins')
+      .select('pin_hash')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (exErr) throw exErr;
+
+    if (existing) {
+      const ok = /^\d{4}$/.test(String(currentPin || ''))
+        && await kioskVerifyPin(String(currentPin), existing.pin_hash);
+      if (!ok) {
+        kioskAudit(req, 'kiosk_pin_change_denied');
+        return res.status(401).json({ error: 'Aktuelle PIN ist falsch.' });
+      }
+    }
+
+    const pin_hash = await kioskHashPin(String(pin));
+    const { error: upErr } = await supabase
+      .from('kiosk_pins')
+      .upsert({
+        user_id: userId,
+        pin_hash,
+        failed_attempts: 0,
+        locked_until: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+    if (upErr) throw upErr;
+
+    const { error: pErr } = await supabase
+      .from('profiles')
+      .update({ tablet_kiosk_pin_set: true })
+      .eq('id', userId);
+    if (pErr) console.error('[kiosk/pin/set] profiles flag:', pErr.message);
+
+    kioskAudit(req, 'kiosk_pin_set');
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[kiosk/pin/set]', err.message);
+    return res.status(500).json({ error: 'PIN konnte nicht gespeichert werden.' });
+  }
+});
+
+// POST /api/kiosk/pin/verify  Body: { pin } -> { ok:true } | 401 | 423
+// Fail-closed: ohne hinterlegte PIN gibt es KEIN ok:true. Genau der Kurzschluss
+// (`!storedPin || entered === storedPin`) war der zweite Bypass im alten Code.
+app.post('/api/kiosk/pin/verify', kioskPinVerifyLimiter, requireAuthAI, async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    const { pin } = req.body || {};
+
+    const { data: row, error } = await supabase
+      .from('kiosk_pins')
+      .select('pin_hash, failed_attempts, locked_until')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+
+    if (!row) {
+      kioskAudit(req, 'kiosk_pin_fail', { reason: 'no_pin_set' });
+      return res.status(401).json({ ok: false, error: 'Es ist keine Kiosk-PIN hinterlegt.' });
+    }
+
+    if (row.locked_until && new Date(row.locked_until) > new Date()) {
+      return res.status(423).json({ ok: false, error: 'Zu viele Fehlversuche.', lockedUntil: row.locked_until });
+    }
+
+    const ok = /^\d{4}$/.test(String(pin || ''))
+      && await kioskVerifyPin(String(pin), row.pin_hash);
+
+    if (!ok) {
+      const fails = (row.failed_attempts || 0) + 1;
+      const lock = fails >= KIOSK_MAX_FAILS;
+      await supabase.from('kiosk_pins').update({
+        failed_attempts: lock ? 0 : fails,
+        locked_until: lock ? new Date(Date.now() + KIOSK_LOCK_MINUTES * 60000).toISOString() : null,
+        updated_at: new Date().toISOString(),
+      }).eq('user_id', userId);
+
+      kioskAudit(req, 'kiosk_pin_fail', { attempt: fails, locked: lock });
+
+      if (lock) {
+        return res.status(423).json({
+          ok: false,
+          error: `Zu viele Fehlversuche. Gesperrt für ${KIOSK_LOCK_MINUTES} Minuten.`,
+          lockedUntil: new Date(Date.now() + KIOSK_LOCK_MINUTES * 60000).toISOString(),
+        });
+      }
+      return res.status(401).json({
+        ok: false,
+        error: 'Falsche PIN.',
+        remainingAttempts: Math.max(0, KIOSK_MAX_FAILS - fails),
+      });
+    }
+
+    if (row.failed_attempts || row.locked_until) {
+      await supabase.from('kiosk_pins')
+        .update({ failed_attempts: 0, locked_until: null, updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+    }
+
+    kioskAudit(req, 'kiosk_pin_ok');
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[kiosk/pin/verify]', err.message);
+    return res.status(500).json({ ok: false, error: 'PIN-Prüfung fehlgeschlagen.' });
+  }
+});
+
+// POST /api/kiosk/audit  Body: { event, deviceLabel }
+const KIOSK_EVENTS = new Set(['enter', 'exit', 'forgot_signout']);
+app.post('/api/kiosk/audit', requireAuthAI, async (req, res) => {
+  try {
+    const { event, deviceLabel } = req.body || {};
+    if (!KIOSK_EVENTS.has(String(event))) {
+      return res.status(400).json({ error: 'Unbekanntes Ereignis.' });
+    }
+    kioskAudit(req, `kiosk_${event}`, deviceLabel ? { deviceLabel: String(deviceLabel).slice(0, 120) } : null);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[kiosk/audit]', err.message);
+    return res.status(500).json({ error: 'Protokollierung fehlgeschlagen.' });
+  }
+});
+
+// ============================================================================
 // ATTENDANCE (Anwesenheit / Devam Takibi)
 // ============================================================================
 

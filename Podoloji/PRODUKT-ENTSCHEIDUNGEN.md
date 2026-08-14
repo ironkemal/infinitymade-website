@@ -76,3 +76,41 @@
   istemediği kasa bazlıdır. BG/DGUV'nin istediği alanlar (Unfalltag, Aktenzeichen) DGUV
   sözleşmesinden doğrulanmadı — BG şimdilik yarım kova.
 - **Tutanak:** `konsey/tutanak/2026-08-10-privat-selbstzahler-akisi.md`
+
+---
+
+### Onam imzası kiosk'ta alınır — onam anı karşılamadır, anamnez değil
+- **Karar:** Dijital Einwilligung, var olan Kiosk-Modus'un ("Tablet an Patient übergeben")
+  içine bindirilir. Podoloji akışındaki sırası: **karşılama → onam imzası → anamnez podologla
+  birlikte.** Tablet hasta gelmeden hazırlanır. Onam **tek akış, iki ekran, iki imza**:
+  ekran 1 `Behandlungsvertrag + Ausfallgebühr`, ekran 2 `Datenschutz-Einwilligung`, tek "Weiter".
+- **Neden:** Podolog eldivenli/ıslak elle çalışıyor — tedavi sırasında tablete dönmesi gereken
+  bir tasarım yanlıştır; onam zaten hasta ayakkabısını çıkarırken, podolog eldiven takmadan
+  önce alınır. Kilit+PIN günde ~20 kez +2 tık ekliyor ve podolog zaten hastanın 1 metre yanında
+  — kilit **kaza önleyicidir, güvenlik sınırı değildir.**
+- **Kaç imza:** 2 tolere edilir, 3 edilmez. Ausfallgebühr sözleşmenin ticari şartıdır,
+  §630d tarafına (ekran 1) aittir. Tek pakette tek imza **yapılamaz** — `legal-de` şartı:
+  §630d Behandlungs-Einwilligung ile Art. 7 DSGVO rızasının birleştirilmesi Koppelungsverbot
+  riski (bkz. `compliance/LEGAL_DECISIONS.md`, 2026-08-14).
+- **Kâğıdın gerçekten bitmesi için iki şart:** (a) hastaya kopya — PDF indir + istenirse yazdır,
+  (b) hasta dosyasından belge tipi + tarihle geriye dönük bulunabilirlik. İkisi yoksa podolog
+  yine kâğıt basar, iş amacına ulaşmaz.
+- **Yaşlı/diyabetik hasta uyarlaması:** ≥18px, uzun kaydırma yerine kısa bloklar, imza alanı
+  ekran genişliğinde, tablet masaya **düz** konur, büyük özet + tam metin altta.
+- **Kör nokta (ayrı ürün sorusu):** Kiosk bugün hastaya **Anamnese formunu** uzatıyor. Podolojide
+  anamnez ilk seansta **podologla birlikte** doldurulur — diyabet, Marcumar, Durchblutung
+  soruları hasta tarafından yanlış anlaşılıyor. Hastanın tek başına doldurması riskli bir
+  varsayım; kiosk'un doğru içeriği onamdır.
+- **Belge listesi:** *Her hastada:* Behandlungsvertrag, Datenschutz-Einwilligung, Ausfallgebühr.
+  *Sık:* Foto-Einwilligung (Fußbefund görseli), Selbstzahler/Eigenanteil (Nagelspange, kozmetik
+  seans), Schweigepflichtentbindung (DFS'te Hausarzt'a Therapiebericht — diyabetiklerde nadir
+  değil). *Nadir:* Hausbesuch. **Yeni Verordnung'da baştan imzalatma yok** — sadece süresi
+  dolan/değişen belge tetiklenir; anamnez için "değişiklik var mı?" tek soru yeter.
+- **Tarih:** 2026-08-14
+- **Etkilenen:** `dashboard.html:1943` + `:5747-5805` (kiosk), `dashboard.js:22783-22960`,
+  yeni `module/patienten-einwilligung.js`, yeni `patient_consents` tablosu,
+  `patient-documents` bucket, i18n sözlüğü (de/en/tr — kiosk metinleri bugün sözlükte hiç yok)
+- **Doğrulanmadı:** Yaşlı/diyabetik hastanın tablette imza deneyimi — gerçek beta hastasıyla
+  tek denemede görülür. Kabul testi: DF-b tanılı 74 yaş diyabetik, ilk randevu, 78030 + 78001
+  sağ ayak; ikinci senaryo Nagelspange (Selbstzahler onamı) + Foto-Einwilligung.
+- **Tutanak:** `konsey/tutanak/2026-08-14-patienten-uebergabe-einwilligung.md`

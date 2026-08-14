@@ -29,6 +29,8 @@
 
 'use strict';
 
+import { on, off } from './module/signal.js?v=20260813';
+
 function escHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -170,6 +172,28 @@ export function attachPatientSearch(inputEl, cfg = {}) {
     if (e.target === inputEl) return;
     close();
   });
+
+  // ── Selbstaktualisierung ──────────────────────────────────────────────────
+  // Ohne das hier war der häufigste Fehlerbericht des Produkts hier zu Hause:
+  // ein neu angelegter Patient tauchte in der Verordnungsmaske erst nach einem
+  // Seiten-Reload auf. Grund war nicht der Server, sondern `loaded = true` oben —
+  // die Liste wurde einmal geholt und nie wieder hinterfragt, und jede
+  // schreibende Stelle hätte von sich aus `refresh()` rufen müssen. Das ist die
+  // Lücke, die in einem Framework der State-Layer schliesst; hier schliesst sie
+  // der Signalbus (Konsey 2026-08-13, S2 — dies ist sein erster Verbraucher).
+  //
+  // Bewusst LAZY: die Meldung wirft den Zwischenspeicher nur weg. Neu geladen
+  // wird beim nächsten Öffnen. Ein sofortiges Nachladen würde bei jedem
+  // gespeicherten Patienten so viele Abfragen auslösen, wie Sucheingaben
+  // gerade im Dokument hängen — die meisten davon unsichtbar.
+  const onLeadsChanged = () => {
+    // Eingabefelder verschwinden mit neu gezeichneten Masken. Ohne diese
+    // Prüfung sammelt der Bus Zuhörer für längst entfernte Felder.
+    if (!inputEl.isConnected) { off('leads:changed', onLeadsChanged); return; }
+    loaded = false;
+    if (!list.hidden) api.refresh();   // offene Liste sofort, sonst beim Öffnen
+  };
+  on('leads:changed', onLeadsChanged);
 
   const api = {
     /** Re-read the leads (after creating a patient, or switching Standort). */

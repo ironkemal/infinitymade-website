@@ -12,6 +12,7 @@ import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { renderAusfallrechnung } from '../pdf/ausfallrechnung.template.js';
 import { pruefeAusfallFrist, uebersteuerungsNotiz } from '../ausfall/frist.js';
+import { standortFuerName, standortFuerZuordnung } from '../ausfall/standort.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -56,7 +57,18 @@ async function loadPraxisProfile(profile, tenantId) {
   return profile;
 }
 
-function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient, vorlage }) {
+// `standort` ist NICHT dasselbe wie `business`:
+//   business  — der Datensatz für Hinweistext und Zuordnung (immer vorhanden)
+//   standort  — nur gesetzt, wenn der Name wirklich vom Standort kommen soll
+//
+// Der Praxisname auf der Rechnung gehört dem Inhaberprofil: dort ändert ihn die
+// Praxis in den Einstellungen (Owner-Ebene, siehe CLAUDE.md „Owner seviyesindeki
+// ayarlar profiles'a yazılır"). Vorher gewann immer `businesses.business_name`.
+// Bei einer Einzelpraxis ist das der beim Onboarding angelegte Eintrag — er
+// wandert beim Umbenennen nicht mit, und die Ausfallrechnung trug deshalb noch
+// den alten Ladennamen (Nausad, 12.08.2026). Nur bei mehreren Standorten ist der
+// Standortname die richtige Antwort; das entscheidet der Aufrufer.
+function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort = null, patient, vorlage }) {
   const strasse = [praxisProfile.street, praxisProfile.house_number].filter(Boolean).join(' ');
   const plz_ort = [praxisProfile.zip || praxisProfile.plz, praxisProfile.city].filter(Boolean).join(' ').trim();
 
@@ -74,10 +86,10 @@ function renderInvoiceHtml({ praxisProfile, userEmail, row, business, patient, v
 
   return renderAusfallrechnung({
     praxis: {
-      name: business?.business_name || praxisProfile.business_name || 'Praxis',
+      name: standort?.business_name || praxisProfile.business_name || 'Praxis',
       strasse,
       plz_ort,
-      telefon: business?.phone || praxisProfile.phone || '',
+      telefon: standort?.phone || praxisProfile.phone || '',
       steuernummer: praxisProfile.steuernummer || '',
       email: praxisProfile.email || userEmail || '',
     },
@@ -214,25 +226,16 @@ router.post('/ausfall/create', async (req, res) => {
       return res.status(409).json({ error: 'Für diesen Termin existiert bereits eine Ausfallrechnung.' });
     }
 
-    // 3. Business (for name/phone + custom hinweis) — booking's business or default
-    let business = null;
-    if (booking.business_id) {
-      const { data: b } = await supabase
-        .from('businesses')
-        .select('id, business_name, phone, ausfall_hinweis')
-        .eq('id', booking.business_id)
-        .maybeSingle();
-      business = b;
-    }
-    if (!business) {
-      const { data: b } = await supabase
-        .from('businesses')
-        .select('id, business_name, phone, ausfall_hinweis')
-        .eq('owner_id', tenantId)
-        .eq('is_default', true)
-        .maybeSingle();
-      business = b;
-    }
+    // 3. Standorte des Inhabers — in EINER Abfrage, weil zwei Dinge daraus
+    //    folgen: welcher Datensatz gilt (Hinweistext, Zuordnung) und ob der
+    //    Standortname überhaupt zählt. Siehe Kommentar an renderInvoiceHtml.
+    const { data: alleStandorte } = await supabase
+      .from('businesses')
+      .select('id, business_name, phone, ausfall_hinweis, is_default')
+      .eq('owner_id', tenantId);
+    const standorte = alleStandorte || [];
+    const business = standortFuerZuordnung(standorte, booking.business_id);
+    const standortName = standortFuerName(standorte, booking.business_id);
 
     // 4. Insert (rechnung_nr auto-assigned via DB trigger)
     // Übersteuerung und fehlende Ausfallvereinbarung werden in notes festgehalten,
@@ -271,6 +274,7 @@ router.post('/ausfall/create', async (req, res) => {
       userEmail: user.email,
       row,
       business,
+      standort: standortName,
       patient: patientFromBooking(booking),
       vorlage: vorlageJson,
     });
@@ -385,11 +389,27 @@ router.get('/ausfall/:id/print', async (req, res) => {
         }
       : patientFromBooking({ customer_name: row.bookings?.customer_name || '' });
 
+    // Gleiche Regel wie beim Erstellen: der Standortname zählt nur bei mehreren
+    // Standorten. Beim Nachdrucken einer alten Rechnung erscheint damit der
+    // heutige Praxisname — die Rechnung wird ohnehin bei jedem Aufruf neu
+    // gerendert, es gibt keinen eingefrorenen Beleg (GoBD-Frage dazu offen,
+    // siehe Ops-Dashboard).
+    const { data: alleStandorte } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('owner_id', tenantId);
+    // row.businesses ist der Join über row.business_id — die Entscheidung
+    // braucht nur noch zu wissen, ob es mehrere Standorte gibt.
+    const standortName = standortFuerName(alleStandorte || [], row.business_id)
+      ? (row.businesses || null)
+      : null;
+
     const html = renderInvoiceHtml({
       praxisProfile,
       userEmail: user.email,
       row,
       business: row.businesses || null,
+      standort: standortName,
       patient,
       vorlage: vorlageJson,
     });

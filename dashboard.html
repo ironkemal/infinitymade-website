@@ -321,12 +321,14 @@
           </div>
 
           <div class="filter-bar">
+            <!-- Abrechnungsweg statt Vertriebstrichter — der angezeigte Wert wird
+                 aus den Verordnungen des Patienten abgeleitet (module/abrechnungsstatus.js). -->
             <button class="filter-btn active" data-status="all" data-i18n="lf_all">Alle</button>
-            <button class="filter-btn" data-status="new" data-i18n="lf_new">Neu</button>
-            <button class="filter-btn" data-status="contacted" data-i18n="lf_contacted">Kontaktiert</button>
-            <button class="filter-btn" data-status="booked" data-i18n="lf_booked">Termin</button>
-            <button class="filter-btn" data-status="won" data-i18n="lf_won">Gewonnen</button>
-            <button class="filter-btn" data-status="lost" data-i18n="lf_lost">Verloren</button>
+            <button class="filter-btn" data-status="abrechenbar" data-i18n="lf_abrechenbar">Bereit zur Abrechnung</button>
+            <button class="filter-btn" data-status="abgerechnet" data-i18n="lf_abgerechnet">Abgerechnet</button>
+            <button class="filter-btn" data-status="teilabsetzung" data-i18n="lf_teilabsetzung">Teilabsetzung</button>
+            <button class="filter-btn" data-status="abgesetzt" data-i18n="lf_abgesetzt">Absetzung</button>
+            <button class="filter-btn" data-status="storniert" data-i18n="lf_storniert">Storniert</button>
             <input class="search-input" id="leadSearch" type="text" placeholder="Suchen..." />
           </div>
 
@@ -1938,8 +1940,8 @@
               <p class="panel-sub" data-i18n="anamnese_sub">Digitales Anamnese-Formular</p>
             </div>
             <div class="panel-actions">
-              <button class="btn-primary" id="kioskStartBtn" title="Tablet an Patient übergeben">
-                📋 An Patient übergeben
+              <button class="btn-primary" id="kioskStartBtn" data-i18n="kiosk_start_btn" title="Tablet an Patient übergeben">
+                An Patient übergeben
               </button>
             </div>
           </div>
@@ -2440,6 +2442,24 @@
                     <div class="form-hint" style="font-size:12px;margin-bottom:12px;">⚠ Nur wirksam mit vom Patienten unterschriebener Ausfallvereinbarung. Das Ausfallhonorar ist Schadensersatz (umsatzsteuerfrei) und kann nicht über die Krankenkasse abgerechnet werden.</div>
                   </div>
                   <button class="btn-primary" id="setAusfallSaveBtn" type="button">Speichern</button>
+                </div>
+              </div>
+
+              <!-- Legende der Fußgrafik (Podologie) — Owner-Einstellung -->
+              <div class="settings-section" id="settingsLegendeSection" hidden>
+                <div class="settings-section-title">Legende der Fußgrafik</div>
+                <div class="settings-section-body">
+                  <p class="form-hint" style="margin-bottom:12px;">
+                    Sie entscheiden, welches Zeichen im Fußbefund welchen Befund bedeutet.
+                    Bereits gesetzte Markierungen behalten ihre ursprüngliche Bedeutung —
+                    eine Umbenennung ändert keinen bestehenden Befund.
+                  </p>
+                  <div id="setLegendeList" style="margin-bottom:12px;"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn" id="setLegendeAddBtn" type="button">＋ Eintrag</button>
+                    <button class="btn" id="setLegendeResetBtn" type="button">Standard wiederherstellen</button>
+                    <button class="btn-primary" id="setLegendeSaveBtn" type="button">Speichern</button>
+                  </div>
                 </div>
               </div>
 
@@ -3892,6 +3912,9 @@
         <div class="pd-tabs">
           <button class="pd-tab active" data-tab="notes">Notizen</button>
           <button class="pd-tab" data-tab="anamnese">Anamnese</button>
+          <!-- Einwilligungen: Konsey 2026-08-14. Wiederfinden gehört zum v1-Umfang —
+               ohne Liste und Kopie druckt die Praxis weiter Papier. -->
+          <button class="pd-tab" data-tab="einwilligung">Einwilligungen</button>
           <button class="pd-tab" data-tab="ueberweisung">Überweisung</button>
           <button class="pd-tab" data-tab="rezepte" id="pdTabRezepte" style="display:none;">Rezepte</button>
           <button class="pd-tab" data-tab="messreihen" id="pdTabMessreihen" style="display:none;">Messreihen</button>
@@ -3912,6 +3935,9 @@
               <div class="spinner-sm"></div>
             </div>
             <div id="pdAnamContent"></div>
+          </div>
+          <div class="pd-panel" id="pdPanelEinwilligung">
+            <div id="pdEinwilligungContent" style="padding:12px 20px;"></div>
           </div>
           <div class="pd-panel" id="pdPanelUeberweisung">
             <div style="padding:12px 20px;border-bottom:1px solid var(--border);">
@@ -4597,42 +4623,6 @@
     </div>
   </div>
 
-  <!-- ===== MODAL: ZUZAHLUNGS-BEFREIUNG ===== -->
-  <div class="modal-overlay" id="befreiungModal" hidden>
-    <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title">Zuzahlungs-Befreiung erfassen</span>
-        <button class="modal-close" data-modal="befreiungModal">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Jahr</label>
-            <input class="form-input" id="befJahr" type="number" min="2020" max="2099" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Befreit ab</label>
-            <input class="form-input" id="befAb" type="date" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Befreit bis (optional)</label>
-            <input class="form-input" id="befBis" type="date" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Bescheinigung (PDF/Bild, optional)</label>
-          <input class="form-input" id="befFile" type="file" accept="image/*,application/pdf" />
-          <div class="form-hint">Lokal auf Supabase Storage gespeichert, nur für Sie und Ihre Mitarbeiter sichtbar.</div>
-        </div>
-        <div id="befErr" style="color:#b91c1c;font-size:13px;margin-top:6px;"></div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
-          <button class="btn-primary" id="befSaveBtn">Speichern</button>
-          <button class="btn-ghost" data-modal="befreiungModal">Abbrechen</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ===== MODAL: LEAD ===== -->
   <div class="modal-overlay" id="leadModal" hidden>
     <div class="modal modal-lg">
@@ -4653,13 +4643,33 @@
           </div>
         </div>
         <div class="form-row">
+          <!-- Getrennt, weil viele Patienten beides haben und die Nummern nicht
+               dasselbe leisten: Terminabsage → Handy, Rückfrage → Festnetz. -->
           <div class="form-group">
-            <label class="form-label" data-i18n="lead_phone">Telefon</label>
+            <label class="form-label" data-i18n="lead_festnetz">Festnetz</label>
             <input class="form-input" id="lead-phone" type="text" />
           </div>
           <div class="form-group">
+            <label class="form-label" data-i18n="lead_handy">Handy</label>
+            <input class="form-input" id="lead-handy" type="text" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
             <label class="form-label" data-i18n="lead_email">E-Mail</label>
             <input class="form-input" id="lead-email" type="email" />
+          </div>
+          <div class="form-group">
+            <!-- Geschlecht ist in der §302-Datei ein Pflichtfeld. Es stand bisher
+                 nur in der Patientenakte, wurde aber bei der Anlage nie gefragt —
+                 also blieb es leer und fehlte in der Abrechnung. -->
+            <label class="form-label" data-i18n="lead_geschlecht">Geschlecht</label>
+            <select class="form-select" id="lead-geschlecht">
+              <option value="">— bitte wählen —</option>
+              <option value="m">männlich</option>
+              <option value="f">weiblich</option>
+              <option value="d">divers</option>
+            </select>
           </div>
         </div>
         <div class="form-row">
@@ -4672,18 +4682,11 @@
             <input class="form-input" id="lead-city" type="text" />
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" data-i18n="lead_status">Status</label>
-            <select class="form-select" id="lead-status">
-              <option value="new" data-i18n="lf_new">Neu</option>
-              <option value="contacted" data-i18n="lf_contacted">Kontaktiert</option>
-              <option value="booked" data-i18n="lf_booked">Termin</option>
-              <option value="won" data-i18n="lf_won">Gewonnen</option>
-              <option value="lost" data-i18n="lf_lost">Verloren</option>
-            </select>
-          </div>
-        </div>
+        <!-- Der frühere CRM-Status (Neu/Kontaktiert/Termin/Gewonnen/Verloren) stand
+             hier als Auswahlfeld. In einer Praxis wird kein Patient „gewonnen".
+             Der Status, der zählt, ist der Abrechnungsweg der Verordnung — er wird
+             nicht am Patienten gepflegt, sondern aus seinen Verordnungen abgeleitet
+             (module/abrechnungsstatus.js). Nausad, Beta-Gespräch 12.08.2026. -->
 
         <!-- Sector-specific fields -->
         <div id="lead-sector-fields" style="display:none;">
@@ -4709,8 +4712,12 @@
               <datalist id="leadKkDatalist"></datalist>
             </div>
             <div class="form-group">
-              <label class="form-label">Krankenkassennummer</label>
-              <input class="form-input" id="lead-krankenkassennummer" type="text" placeholder="z.B. 123456789" />
+              <label class="form-label">Versichertennummer</label>
+              <!-- Platzhalter war „123456789" — ohne Buchstaben und mit neun statt
+                   zehn Stellen, also ein Muster, das die Kasse absetzen würde.
+                   Prüfung: module/kvnr.js (Hinweis, keine Sperre). -->
+              <input class="form-input" id="lead-krankenkassennummer" type="text"
+                     maxlength="10" placeholder="z. B. A123456780" />
             </div>
             <div class="form-group">
               <label class="form-label">Versichertenstatus</label>
@@ -5212,6 +5219,11 @@
           </button>
           <div id="bkActionFolgeterminHint" style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:center;"></div>
         </div>
+
+        <!-- Fußbefund: nur Podologie, nur bei Termin mit Patientenakte.
+             Sichtbarkeit + Beschriftung setzt module/fussbefund.js. -->
+        <button class="btn-ghost" id="bkActionFussbefundBtn" type="button" hidden
+                style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);margin-bottom:8px;">🦶 Fußbefund</button>
 
         <div class="form-group" style="display:flex;gap:8px;margin-bottom:8px;">
           <button class="btn-ghost" id="bkActionEditBtn" style="flex:1;justify-content:center;font-size:13px;">
@@ -5748,66 +5760,82 @@
     </div>
   </div>
 
-<!-- Kiosk Mode Overlay (madde 4) -->
-<div id="kioskOverlay" hidden style="position:fixed;inset:0;z-index:99999;background:var(--bg-main,#111827);display:flex;flex-direction:column;overflow:auto;">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-card-solid,#1f2937);">
+<!-- ===================================================================
+     Kiosk-Modus — „Tablet an Patient übergeben"
+     Gehärtet am 14.08.2026 (Konsey). Texte liegen ab jetzt im i18n-Wörterbuch
+     (dashboard.js, T.de/en/tr, Präfix kiosk_) statt fest im Markup.
+     Farben: nur Theme-Variablen. Die alten Fallbacks (#111827/#1f2937/#f87171)
+     waren Dark-Mode-Werte und haben im hellen Theme falsch gerendert.
+     Schriftgrößen und Tippziele sind angehoben (≥14px / ≥44px) — das Tablet
+     landet bei älteren, oft diabetischen Patienten.
+     Logik: module/kiosk.js
+     =================================================================== -->
+<div id="kioskOverlay" hidden style="position:fixed;inset:0;z-index:99999;background:var(--bg-main);display:flex;flex-direction:column;overflow:auto;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-card-solid);">
     <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:20px;">📋</span>
+      <span style="font-size:20px;" aria-hidden="true">&#128203;</span>
       <div>
-        <div style="font-size:16px;font-weight:700;color:var(--text-main);">Anamnese-Formular</div>
-        <div style="font-size:12px;color:var(--text-muted);">Bitte alle Felder ausfüllen</div>
+        <div data-i18n="kiosk_overlay_title" style="font-size:16px;font-weight:700;color:var(--text-main);">Anamnese-Formular</div>
+        <div data-i18n="kiosk_overlay_sub" style="font-size:13px;color:var(--text-muted);">Bitte f&uuml;llen Sie alle Felder aus</div>
       </div>
     </div>
-    <button id="kioskExitBtn" style="padding:8px 16px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#f87171;cursor:pointer;font-size:13px;font-weight:600;">
-      🔒 Beenden (PIN)
+    <button id="kioskExitBtn" data-i18n="kiosk_exit_btn" style="padding:10px 18px;min-height:44px;background:var(--danger-dim);border:1px solid var(--danger);border-radius:8px;color:var(--danger);cursor:pointer;font-size:14px;font-weight:600;">
+      Beenden (PIN)
     </button>
   </div>
   <div id="kioskFormContent" style="flex:1;padding:20px;max-width:700px;margin:0 auto;width:100%;box-sizing:border-box;">
-    <!-- Anamnese form content will be cloned here -->
+    <!-- #panel-anamnese wird hier hineinverschoben (module/kiosk.js) -->
   </div>
 </div>
 
-<!-- Kiosk PIN Entry Modal -->
+<!-- Kiosk: PIN-Eingabe (Verlassen) -->
 <div id="kioskPinModal" hidden style="position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:320px;text-align:center;">
-    <div style="font-size:32px;margin-bottom:12px;">🔐</div>
-    <h3 id="kioskPinTitle" style="margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text-main);">PIN eingeben</h3>
-    <p id="kioskPinSubtitle" style="margin:0 0 20px;font-size:13px;color:var(--text-muted);">Geben Sie Ihren 4-stelligen PIN ein</p>
+  <div style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:340px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:12px;" aria-hidden="true">&#128274;</div>
+    <h3 id="kioskPinTitle" data-i18n="kiosk_pin_title" style="margin:0 0 8px;font-size:19px;font-weight:700;color:var(--text-main);">PIN eingeben</h3>
+    <p id="kioskPinSubtitle" data-i18n="kiosk_pin_subtitle" style="margin:0 0 20px;font-size:14px;color:var(--text-muted);">Bitte geben Sie Ihre 4-stellige PIN ein, um den Kiosk-Modus zu beenden.</p>
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;">
-      <input type="password" id="kioskPin1" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
-      <input type="password" id="kioskPin2" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
-      <input type="password" id="kioskPin3" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
-      <input type="password" id="kioskPin4" maxlength="1" inputmode="numeric" pattern="[0-9]" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input,#111827);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+      <input type="password" id="kioskPin1" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="PIN 1" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+      <input type="password" id="kioskPin2" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="PIN 2" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+      <input type="password" id="kioskPin3" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="PIN 3" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
+      <input type="password" id="kioskPin4" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="PIN 4" style="width:48px;height:56px;text-align:center;font-size:24px;background:var(--bg-input);border:2px solid var(--border);border-radius:10px;color:var(--text-main);outline:none;">
     </div>
-    <div id="kioskPinError" style="color:#f87171;font-size:13px;margin-bottom:12px;min-height:18px;"></div>
+    <div id="kioskPinError" role="alert" style="color:var(--danger);font-size:14px;margin-bottom:12px;min-height:20px;"></div>
     <div style="display:flex;gap:8px;">
-      <button id="kioskPinCancelBtn" style="flex:1;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;">Abbrechen</button>
-      <button id="kioskPinConfirmBtn" style="flex:1;padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Bestätigen</button>
+      <button id="kioskPinCancelBtn" data-i18n="kiosk_pin_cancel" style="flex:1;padding:12px;min-height:44px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:14px;">Abbrechen</button>
+      <button id="kioskPinConfirmBtn" data-i18n="kiosk_pin_confirm" style="flex:1;padding:12px;min-height:44px;background:var(--primary);border:none;border-radius:8px;color:var(--bg-card-solid);cursor:pointer;font-size:14px;font-weight:600;">Best&auml;tigen</button>
     </div>
-    <button id="kioskPinForgotBtn" style="margin-top:12px;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;">PIN vergessen?</button>
+    <!-- „PIN vergessen?" verlässt den Kiosk NICHT mehr, es beendet die Sitzung. -->
+    <button id="kioskPinForgotBtn" data-i18n="kiosk_pin_forgot" style="margin-top:12px;background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;text-decoration:underline;">PIN vergessen?</button>
   </div>
 </div>
 
-<!-- Kiosk PIN Setup Modal (erstmaliger PIN) -->
+<!-- Kiosk: PIN einrichten / ändern -->
 <div id="kioskPinSetupModal" hidden style="position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:340px;text-align:center;">
-    <div style="font-size:32px;margin-bottom:12px;">🔑</div>
-    <h3 style="margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text-main);">PIN festlegen</h3>
-    <p style="margin:0 0 20px;font-size:13px;color:var(--text-muted);">Legen Sie einen 4-stelligen PIN fest, um den Kiosk-Modus zu beenden.</p>
+  <div style="background:var(--bg-card-solid);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:360px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:12px;" aria-hidden="true">&#128273;</div>
+    <h3 data-i18n="kiosk_setup_title" style="margin:0 0 8px;font-size:19px;font-weight:700;color:var(--text-main);">PIN festlegen</h3>
+    <p data-i18n="kiosk_setup_sub" style="margin:0 0 20px;font-size:14px;color:var(--text-muted);">Legen Sie eine 4-stellige PIN fest. Ohne PIN startet der Kiosk-Modus nicht.</p>
+    <!-- Nur beim ÄNDERN sichtbar: ohne aktuelle PIN wäre das Setzen selbst der Bypass. -->
+    <div id="kioskSetupCurrentPinRow" hidden style="margin-bottom:16px;">
+      <label for="kioskSetupCurrentPin" data-i18n="kiosk_setup_current_label" style="display:block;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:left;">Aktuelle PIN</label>
+      <input type="password" id="kioskSetupCurrentPin" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="off" placeholder="&bull;&bull;&bull;&bull;"
+        style="width:100%;padding:12px;text-align:center;font-size:20px;letter-spacing:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);box-sizing:border-box;outline:none;">
+    </div>
     <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:left;">PIN (4 Ziffern)</label>
-      <input type="password" id="kioskSetupPin" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="0000"
-        style="width:100%;padding:10px;text-align:center;font-size:20px;letter-spacing:8px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);box-sizing:border-box;outline:none;">
+      <label for="kioskSetupPin" data-i18n="kiosk_setup_pin_label" style="display:block;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:left;">Neue PIN (4 Ziffern)</label>
+      <input type="password" id="kioskSetupPin" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="new-password" placeholder="&bull;&bull;&bull;&bull;"
+        style="width:100%;padding:12px;text-align:center;font-size:20px;letter-spacing:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);box-sizing:border-box;outline:none;">
     </div>
     <div style="margin-bottom:20px;">
-      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:left;">PIN wiederholen</label>
-      <input type="password" id="kioskSetupPinConfirm" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" placeholder="0000"
-        style="width:100%;padding:10px;text-align:center;font-size:20px;letter-spacing:8px;background:var(--bg-input,#111827);border:1px solid var(--border);border-radius:8px;color:var(--text-main);box-sizing:border-box;outline:none;">
+      <label for="kioskSetupPinConfirm" data-i18n="kiosk_setup_confirm_label" style="display:block;font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-align:left;">PIN wiederholen</label>
+      <input type="password" id="kioskSetupPinConfirm" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="new-password" placeholder="&bull;&bull;&bull;&bull;"
+        style="width:100%;padding:12px;text-align:center;font-size:20px;letter-spacing:8px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-main);box-sizing:border-box;outline:none;">
     </div>
-    <div id="kioskSetupError" style="color:#f87171;font-size:13px;margin-bottom:12px;min-height:18px;"></div>
+    <div id="kioskSetupError" role="alert" style="color:var(--danger);font-size:14px;margin-bottom:12px;min-height:20px;"></div>
     <div style="display:flex;gap:8px;">
-      <button id="kioskSetupCancelBtn" style="flex:1;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:13px;">Abbrechen</button>
-      <button id="kioskSetupSaveBtn" style="flex:1;padding:10px;background:var(--accent,#b1891b);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">PIN speichern & starten</button>
+      <button id="kioskSetupCancelBtn" data-i18n="kiosk_pin_cancel" style="flex:1;padding:12px;min-height:44px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:14px;">Abbrechen</button>
+      <button id="kioskSetupSaveBtn" data-i18n="kiosk_setup_save" style="flex:1;padding:12px;min-height:44px;background:var(--primary);border:none;border-radius:8px;color:var(--bg-card-solid);cursor:pointer;font-size:14px;font-weight:600;">Speichern</button>
     </div>
   </div>
 </div>
@@ -5856,7 +5884,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260812f"></script>
+  <script type="module" src="dashboard.js?v=20260814f"></script>
 </body>
 
 </html>

@@ -8,8 +8,8 @@
 | **Inhaber / DSB** | Yavuz Kemal Demir, ironkemal5@gmail.com |
 | **Adresse** | Industriestraße 33, 53721 Siegburg, Deutschland |
 | **Aufsichtsbehörde** | Landesbeauftragter für Datenschutz NRW |
-| **Letzte Aktualisierung** | 2026-05-23 |
-| **Version** | 1.0 |
+| **Letzte Aktualisierung** | 2026-08-14 |
+| **Version** | 1.1 |
 
 InfinityMade tritt **doppelt** in Erscheinung:
 - als **Verantwortlicher** für eigene Geschäftskunden-Daten (B2B-Stammdaten, Login, Abrechnung)
@@ -76,6 +76,24 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | **Datenkategorien** | IP, User-Agent, User-ID, Endpunkt, Zeitstempel, HTTP-Status |
 | **Betroffene** | Alle Systemnutzer |
 | **Speicherdauer** | Server-Access-Logs 14 Tage; Audit-Trail Patient-Zugriff 12 Monate; AI-Aufrufprotokoll 24 Monate |
+
+## Verarbeitung 5 — Einwilligungserfassung (digitale Patienten-Einwilligung)
+
+| Feld | Inhalt |
+|---|---|
+| **Bezeichnung** | Erfassung und Nachweis von Patienten-Einwilligungen mit elektronischer Unterschrift |
+| **Rolle** | Auftragsverarbeiter (im Auftrag der Praxis) |
+| **Zwecke** | Nachweis der Behandlungs-Einwilligung (§ 630d BGB) und der datenschutzrechtlichen Einwilligung (Art. 7 Abs. 1 DSGVO Nachweispflicht) |
+| **Rechtsgrundlage** | Behandlungsteil: Art. 6 Abs. 1 lit. b i. V. m. Art. 9 Abs. 2 lit. h DSGVO, § 630d BGB. Datenschutzteil: Art. 6 Abs. 1 lit. a i. V. m. Art. 9 Abs. 2 lit. a DSGVO. Nachweisspeicherung: Art. 7 Abs. 1 DSGVO, § 630f BGB |
+| **Datenkategorien** | Patienten-ID, unterschriebener Name, Unterschrift als **Rasterbild (PNG)**, Volltext-Snapshot der Erklärung, Textversion, SHA-256-Prüfsumme, Zeitstempel, erfassender Nutzer, grobe Gerätebezeichnung (Plattform + Bildschirmauflösung), ggf. Widerrufszeitpunkt und -grund |
+| **Ausdrücklich NICHT erhoben** | **IP-Adresse** — bei einer Unterschrift von Angesicht zu Angesicht auf dem Praxis-Tablet ist die IP der Praxisrouter; der Beweiswert ist null, die Erhebung daher ein Verstoß gegen Art. 5 Abs. 1 lit. c (Datenminimierung). Das Muster aus `consent_log` wird bewusst nicht übernommen. — **Signaturdynamik** (Druck, Geschwindigkeit, Strichzeiten): nicht erhoben, damit das Rasterbild kein biometrisches Datum i. S. v. Art. 4 Nr. 14 DSGVO wird |
+| **Betroffene** | Patient*innen der angeschlossenen Praxen |
+| **Empfänger** | Keine externen Empfänger. Speicherung Supabase Frankfurt (Tabelle `patient_consents`, privater Storage-Bucket `patient-documents`) |
+| **Drittland-Übermittlung** | Keine |
+| **Speicherdauer** | 10 Jahre ab Unterschrift (§ 630f Abs. 3 BGB, zusammen mit der Behandlungsdokumentation) |
+| **Löschkonzept** | Löschung vor Fristablauf ist per DB-Trigger `trg_patient_consents_immutable` blockiert; derselbe Trigger verhindert nachträgliche Änderungen am Nachweis. Nach Fristablauf Löschung zusammen mit der Patientenakte |
+| **Widerruf** | Art. 7 Abs. 3 DSGVO: die Datenschutz-Einwilligung ist jederzeit formlos widerruflich, der Widerrufsweg steht im unterschriebenen Text. Ein Widerruf **löscht den Nachweis nicht**, er markiert ihn (`revoked_at`). Die Behandlungs-Einwilligung nach § 630d BGB ist davon getrennt erfasst — Kopplung beider Wäre ein Verstoß gegen das Koppelungsverbot |
+| **TOM-Verweis** | siehe TOM.md § 1.2, § 1.3, § 2.1 |
 
 ---
 
