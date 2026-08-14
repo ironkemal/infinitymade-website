@@ -13,7 +13,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 
 test('on + emit — Zuhörer bekommt die Meldung samt detail', async () => {
   _reset();
-  const gesehen = [];
+  /** @type {any[]} */ const gesehen = [];
   on('bookings:changed', (d) => gesehen.push(d));
 
   emit('bookings:changed', { id: 7 });
@@ -103,7 +103,7 @@ test('ein defekter Zuhörer reißt die anderen NICHT mit', async () => {
   const fehlerLog = console.error;
   console.error = () => {};              // erwarteter Fehler, Ausgabe unterdrücken
   try {
-    const gelaufen = [];
+    /** @type {any[]} */ const gelaufen = [];
     on('patients:changed', () => { gelaufen.push('vorher'); });
     on('patients:changed', () => { throw new Error('Panel kaputt'); });
     on('patients:changed', () => { gelaufen.push('nachher'); });
@@ -138,13 +138,14 @@ test('Meldung ohne Zuhörer ist harmlos', async () => {
 test('ungültige Argumente werden früh abgelehnt', () => {
   _reset();
   assert.throws(() => on('', () => {}), TypeError);
+  // @ts-expect-error — absichtlich falscher Typ: genau das soll zur Laufzeit fliegen.
   assert.throws(() => on('x:changed', 'kein handler'), TypeError);
   assert.throws(() => emit(''), TypeError);
 });
 
 test('während der Zustellung darf man sich abmelden', async () => {
   _reset();
-  const gelaufen = [];
+  /** @type {any[]} */ const gelaufen = [];
   const stop = on('bookings:changed', () => { gelaufen.push('a'); stop(); });
   on('bookings:changed', () => gelaufen.push('b'));
 

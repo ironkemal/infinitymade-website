@@ -152,6 +152,10 @@ function flush() {
  * sorgen, dass alle anderen Panels veraltet stehen bleiben — also genau
  * der Fehler, den diese Datei verhindern soll.
  */
+/**
+ * @param {string} topic
+ * @param {any} [detail]
+ */
 function deliver(topic, detail) {
   const set = listeners.get(topic);
   if (!set || !set.size) {
@@ -163,8 +167,10 @@ function deliver(topic, detail) {
       handler(detail);
     } catch (err) {
       console.error(`[signal] Zuhörer für "${topic}" ist gescheitert:`, err);
-      if (typeof window !== 'undefined' && window.Sentry?.captureException) {
-        window.Sentry.captureException(err, { tags: { signal_topic: topic } });
+      // Sentry wird per CDN-Loader gesetzt, ist also nicht typisiert.
+      const sentry = /** @type {any} */ (globalThis).Sentry;
+      if (sentry?.captureException) {
+        sentry.captureException(err, { tags: { signal_topic: topic } });
       }
     }
   }
@@ -184,6 +190,7 @@ export function _reset() {
  * @returns {Record<string, number>}
  */
 export function _inspect() {
+  /** @type {Record<string, number>} */
   const out = {};
   for (const [topic, set] of listeners) out[topic] = set.size;
   return out;

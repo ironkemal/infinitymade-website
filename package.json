@@ -7,14 +7,17 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test \"module/**/*.test.js\""
+    "test": "node --test \"module/**/*.test.js\"",
+    "typecheck": "tsc -p jsconfig.json"
   },
   "dependencies": {
     "nodemailer": "^6.9.14"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.112.3",
+    "@types/node": "^26.2.0",
     "esbuild": "^0.28.2",
-    "node-forge": "^1.3.1"
+    "node-forge": "^1.3.1",
+    "typescript": "^7.0.2"
   }
 }
