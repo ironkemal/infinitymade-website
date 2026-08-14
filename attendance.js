@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from './vendor/supabase-js.js?v=20260814';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '/supabase-config.js';
 
 const API_BASE = 'https://n8n.infinitymade.de/api';

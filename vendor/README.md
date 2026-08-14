@@ -24,8 +24,19 @@ Ihrem Server" iddiası UWG §5 ve §434 BGB açar.
 
 | Dosya | Kaynak | Nerede kullanılıyor |
 |---|---|---|
-| `supabase-js.js` | `@supabase/supabase-js@2.112.3` | 13 sayfa/modül (`createClient`) |
+| `supabase-js.js` | `@supabase/supabase-js@2.112.3` | 14 sayfa/modül (`createClient`) |
 | `node-forge.js` | `node-forge@1.3.1` | `dashboard.js` → `loadForge()`, §302 PKCS#7 imzalama (tembel yüklenir) |
+| `fullcalendar/index.global.min.js` | `fullcalendar-scheduler@6.1.11` | `kalender.html` |
+| `fullcalendar/locales-all.global.min.js` | `@fullcalendar/core@6.1.11` | `kalender.html` |
+
+FullCalendar dosyaları global (UMD) script'tir, ESM değil — paketlemeye gerek
+yok, jsDelivr'deki dosyanın birebir kopyasıdır. Dış referans içermedikleri
+doğrulandı.
+
+> ⚠️ **`esm.sh` aramak yetmez.** `attendance.js` Supabase'i
+> `cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm` üzerinden çekiyordu ve ilk
+> taramada bu yüzden kaçtı. Yeni bir CDN aramasında **host adı değil kalıp**
+> aranır: `grep -rnE "https?://[a-z0-9.-]+/.*\.(js|mjs)"`.
 
 `ops/vendor/supabase-js.js` bunun kopyasıdır — Ops-Dashboard **ayrı bir Vercel
 projesi** olduğu için `../vendor` yolunu göremez.
@@ -76,7 +87,15 @@ gelene kadar). Bu, on-prem release checklist'inin zorunlu maddesidir.
 
 ## Kapsam dışı kalanlar
 
-Bu turda **yalnızca esm.sh** kapatıldı. Hâlâ dışarıdan gelen ve ayrı kartları
-olanlar: FullCalendar (`kalender.html`, jsDelivr) · Sentry loader
-(`js-de.sentry-cdn.com`) · Google Fonts · Wistia · Stripe.
-Stripe ödeme için zorunludur ve yerelleştirilemez.
+Kapatılanlar: **esm.sh** (supabase-js, node-forge) ve **jsDelivr**
+(FullCalendar, `attendance.js`'in Supabase'i).
+
+Hâlâ dışarıdan gelenler — ayrı kartları var:
+
+| Ne | Nerede | Not |
+|---|---|---|
+| **Cropper.js** | `dashboard.html:26-27` (cdnjs) | Sıradaki. `dashboard.html` başka çalışmanın altındaydı, ertelendi |
+| **Sentry loader** | her sayfa (`js-de.sentry-cdn.com`) | On-prem'de yerelleştirme değil **kapatma** doğru olabilir — ayrı karar |
+| **Google Fonts** | `fonts.googleapis.com` / `gstatic` | Aynı hukuki gerekçe (LG München I), aynı sweep'te kapatılabilir |
+| **Wistia** | pazarlama sayfaları | Hasta verisi bağlamı değil, önceliği düşük |
+| **Stripe** | ödeme | **Yerelleştirilemez ve gerekmez** — PCI gereği Stripe'ın kendi alanından yüklenmek zorunda |
