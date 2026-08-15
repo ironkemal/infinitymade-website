@@ -151,48 +151,110 @@ function zeigeHinweise(zeilen) {
 // (`api-backend/ai/tasks/rezept-ocr.js:28-30`, `leitsymptomatik_boxes`) —
 // kein zweites Schema.
 //
-// Eingetragen wird nur, solange das Feld leer ist oder zuletzt von uns
-// gefüllt wurde (`data-auto="1"`). Sobald der Anwender selbst tippt, fassen
-// wir das Feld nicht mehr an: auf dem Papier steht, was der Arzt verordnet
-// hat, und das gewinnt immer gegen unsere Ableitung.
+// Das Feld FOLGT den Ankreuzfeldern, solange es uns gehört: umgehakt heisst
+// neuer Text, abgehakt heisst leer. Sobald der Anwender selbst tippt, geben
+// wir das Feld ab und fassen es nicht mehr an — auf dem Papier steht, was der
+// Arzt verordnet hat, und das gewinnt immer gegen unsere Ableitung. Zurück
+// bekommen wir es erst, wenn er es wieder leert.
 
 function gewaehlteLeitsymptome() {
   return ['a', 'b', 'c'].filter(b => $(`rzLs${b.toUpperCase()}`)?.checked);
 }
 
+/**
+ * Schreibt in ein Feld, ohne dass der eigene input-Wächter das als Handeingabe
+ * missversteht. Ohne diese Klammer löschte der Wächter die `auto`-Markierung
+ * beim ersten eigenen Schreibvorgang — das Feld galt sofort als „vom Anwender
+ * angefasst" und die Automatik war nach einem einzigen Treffer tot.
+ */
+function schreibe(el, wert) {
+  el.dataset.podSchreibt = '1';
+  el.value = wert;
+  if (wert) el.dataset.auto = '1'; else delete el.dataset.auto;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  delete el.dataset.podSchreibt;
+}
+
+/**
+ * @returns {{farbe?:string,text:string}|null} Meldung, falls die Ankreuzung
+ *          nicht zum Katalog der gewählten Diagnosegruppe passt.
+ */
 function leitsymptomatikAnwenden() {
   const hm = $('rzHm');
-  if (!hm || !istPodo()) return;
+  if (!hm || !istPodo()) return null;
 
   const root = dgRoot($('rzDg')?.value);
   const katalog = POD_KATALOG[root];
   const gewaehlt = gewaehlteLeitsymptome();
 
-  // Ohne Diagnosegruppe wissen wir nicht, aus welchem Katalog wir schöpfen;
-  // ohne Ankreuzung gibt es nichts abzuleiten. Beides ist kein Fehler.
-  if (!katalog || gewaehlt.length === 0) return;
+  // Das Feld gehört uns nur, wenn es leer ist oder zuletzt von uns kam.
+  const unser = !hm.value.trim() || hm.dataset.auto === '1';
+
+  // Nichts angekreuzt → unser Eintrag verschwindet wieder. Genau das ist
+  // gemeint mit „nochmal auf c drücken und es ist weg".
+  if (gewaehlt.length === 0) {
+    if (unser && hm.value) schreibe(hm, '');
+    return null;
+  }
+
+  // Ohne Diagnosegruppe wissen wir nicht, aus welchem Katalog wir schöpfen.
+  if (!katalog) return null;
+
+  // [Q1] UI 1 und UI 2 kennen nur eine Leitsymptomatik a). b) oder c) gibt es
+  // dort nicht — das ist keine stille Nicht-Ableitung, sondern ein Fehler auf
+  // der Verordnung, der zur Absetzung führt.
+  const fremd = gewaehlt.filter(b => !katalog[b]);
+  if (fremd.length && !katalog.c) {
+    if (unser && hm.value) schreibe(hm, '');
+    return {
+      farbe: 'var(--danger,#ef4444)',
+      text: `${root} kennt nur die Leitsymptomatik a) — ${fremd.map(b => b + ')').join(' und ')} `
+          + 'gibt es in dieser Diagnosegruppe nicht.',
+    };
+  }
 
   // Mehrfachankreuzung: In DF/NF/QF ist „a und b" genau das, was der Katalog
   // als c) „Hyperkeratose und pathologisches Nagelwachstum" führt — also die
-  // Komplexbehandlung. Andere Kombinationen leiten wir nicht ab.
+  // Komplexbehandlung.
   let buchstabe = gewaehlt[0];
-  if (gewaehlt.includes('c')) buchstabe = 'c';
-  else if (gewaehlt.includes('a') && gewaehlt.includes('b') && katalog.c) buchstabe = 'c';
-  else if (gewaehlt.length > 1) return;
+  let meldung = null;
+  if (gewaehlt.includes('c')) {
+    buchstabe = 'c';
+    // c) deckt a) und b) bereits ab; zusätzlich angekreuzt ist es redundant.
+    if (gewaehlt.length > 1) {
+      meldung = { text: 'c) umfasst a) und b) bereits — die zusätzlichen Kreuze ändern nichts.' };
+    }
+  } else if (gewaehlt.length > 1) {
+    if (katalog.c) {
+      buchstabe = 'c';   // a + b = Komplexbehandlung
+    } else {
+      if (unser && hm.value) schreibe(hm, '');
+      return {
+        farbe: 'var(--danger,#ef4444)',
+        text: `Mehrere Leitsymptomatiken angekreuzt — ${root} hat dafür kein eigenes Heilmittel.`,
+      };
+    }
+  }
 
   const text = katalog[buchstabe];
-  if (!text) return;
+  if (!text) return meldung;
 
-  const unberuehrt = !hm.value.trim() || hm.dataset.auto === '1';
-  if (!unberuehrt) return;
+  // Handeingabe gewinnt: nicht überschreiben, aber sagen, dass wir etwas
+  // anderes abgeleitet hätten — sonst merkt niemand den Widerspruch.
+  if (!unser) {
+    return hm.value.trim() === text ? meldung : {
+      text: `Aus der Leitsymptomatik ${buchstabe}) folgt „${text}" — das Heilmittelfeld wurde von Hand geändert.`,
+    };
+  }
 
-  hm.value = text;
-  hm.dataset.auto = '1';
-  // Positionsnummer nicht raten: die hängt am Katalog-Suchmodul. Ein leeres
-  // Feld ist besser als eine falsche Nummer (die landet im DTA).
-  const pos = $('rzHmPosition');
-  if (pos && pos.dataset.auto === '1') pos.value = '';
-  hm.dispatchEvent(new Event('input', { bubbles: true }));
+  if (hm.value !== text) {
+    schreibe(hm, text);
+    // Positionsnummer nicht raten: die hängt am Katalog-Suchmodul. Ein leeres
+    // Feld ist besser als eine falsche Nummer (die landet im DTA).
+    const pos = $('rzHmPosition');
+    if (pos) pos.value = '';
+  }
+  return meldung;
 }
 
 // ─── 2. IK des Leistungserbringers ─────────────────────────────────────────
@@ -283,11 +345,7 @@ async function dgAuswahlEingrenzen(supabase) {
   const passt = !aktuell || erlaubt.includes(aktuell);
 
   // Genau eine Möglichkeit und noch nichts gewählt → übernehmen.
-  if (!aktuell && erlaubt.length === 1) {
-    dgFeld.value = erlaubt[0];
-    dgFeld.dataset.auto = '1';
-    dgFeld.dispatchEvent(new Event('input', { bubbles: true }));
-  }
+  if (!aktuell && erlaubt.length === 1) schreibe(dgFeld, erlaubt[0]);
 
   return { erlaubt, passt, aktuell, regeln };
 }
@@ -385,9 +443,9 @@ async function aktualisieren(supabase, ctx) {
 
   await ikVorbelegen(supabase, ctx);
   const dgLage = await dgAuswahlEingrenzen(supabase);
-  leitsymptomatikAnwenden();
+  const lsMeldung = leitsymptomatikAnwenden();
 
-  const zeilen = [];
+  const zeilen = [lsMeldung];
 
   if (dgLage && dgLage.erlaubt.length) {
     if (!dgLage.passt) {
@@ -442,17 +500,27 @@ export function mountVerordnungPodo(supabase, ctx = {}) {
     aktualisieren(supabase, ctx).catch(e => console.warn('[verordnung-podo]', e));
   };
 
-  // Handeingaben lösen die Automatik-Markierung, damit wir nichts überschreiben.
+  // Handeingaben lösen die Automatik-Markierung, damit wir nichts
+  // überschreiben. `podSchreibt` klammert die eigenen Schreibvorgänge aus —
+  // ohne diese Prüfung hob sich die Automatik beim ersten Treffer selbst auf.
   modal.addEventListener('input', (e) => {
     const el = e.target;
-    if (el?.dataset?.auto === '1' && el.dataset.podSchreibt !== '1') delete el.dataset.auto;
+    if (el?.dataset?.podSchreibt === '1') return;
+    if (el?.dataset?.auto === '1') delete el.dataset.auto;
   }, true);
 
+  const AUSLOESER = ['rzLsA', 'rzLsB', 'rzLsC', 'rzLsD', 'rzDg', 'rzIcd',
+                     'rzAnzahl', 'rzAusstDate', 'rzDringend'];
   ['change', 'input'].forEach(ev => modal.addEventListener(ev, (e) => {
-    const id = e.target?.id || '';
-    if (['rzLsA', 'rzLsB', 'rzLsC', 'rzLsD', 'rzDg', 'rzIcd', 'rzAnzahl',
-         'rzAusstDate', 'rzDringend'].includes(id)) lauf();
+    if (AUSLOESER.includes(e.target?.id || '')) lauf();
   }, true));
+
+  // Leert der Anwender das Heilmittelfeld von Hand, gehört es wieder uns —
+  // sonst müsste er die Maske schliessen, um die Automatik zurückzuholen.
+  $('rzHm')?.addEventListener('input', (e) => {
+    if (e.target.dataset.podSchreibt === '1') return;
+    if (!e.target.value.trim()) setTimeout(lauf, 0);
+  });
 
   // Der Fachbereich wird per Klick auf die Ankreuzfelder gesetzt
   // (`setM13Therapy`), nicht über ein change-Ereignis.
