@@ -6,12 +6,13 @@
 
 | Datei | Inhalt |
 |---|---|
-| `SCHEMA.sql` | 78 Tabellen, alle Spalten, Constraints, Views |
-| `SCHEMA-RLS.sql` | 153 RLS-Policies, 52 Funktionen, 58 Trigger, 271 Indizes |
+| `SCHEMA.sql` | 80 Tabellen, alle Spalten, Constraints, Views |
+| `SCHEMA-RLS.sql` | 156 RLS-Policies, 53 Funktionen, 59 Trigger, 281 Indizes |
 | `README.md` | dieses Dokument — Orientierung + Auffrischungsregel |
 
-**Stand:** 2026-08-11 · letzte Migration `20260810142703_verordnungen_privat_selbstzahler_flow`
-(danach lief am 11.08. `sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql` über den SQL-Editor —
+**Stand:** 2026-08-14 · letzte Migration `20260814101707_patient_consents`
+(davor `20260814101624_kiosk_pin_hardening`, `20260814083941_fussbefund_termin_legende`.
+Am 11.08. lief zusätzlich `sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql` über den SQL-Editor —
 steht in keiner Migrationszeile, ist in der DB aber drin und im Dump enthalten)
 **Projekt:** Supabase `njvuclullotbksskpwgk` (Produkt).
 Das Ops-Dashboard liegt in einem **anderen** Projekt (`farkaejociddtgqkusvm`) — nicht verwechseln.
@@ -43,7 +44,7 @@ und Gesundheitsdaten haben in keinem Repo etwas verloren.
 
 ---
 
-## Die sechs Fallen
+## Die sieben Fallen
 
 ### 1. `leads` ist die Patiententabelle — nicht `patients`
 
@@ -106,6 +107,27 @@ RLS-Policy. Korrektur läuft **ausschließlich** über einen neuen Beleg mit
 `type = 'storno'`. Gleiches Prinzip bei den Nummernkreisen
 (`beleg_nr`, `mahnung_nr`, `rechnung_nr`): lückenlos je Inhaber, per Trigger vergeben,
 nie im Code selbst hochzählen.
+
+### 7. `patient_consents` blockiert das Löschen von Patient und Inhaber
+
+Seit 2026-08-14. `patient_id -> leads(id)` und `owner_id -> profiles(id)` sind beide
+`ON DELETE RESTRICT`, dazu blockt `trg_patient_consents_immutable` jedes `DELETE`
+innerhalb von **10 Jahren** ab `consented_at` (§ 630f Abs. 3 BGB) und lässt beim
+`UPDATE` nur `revoked_at` / `revoke_reason` durch.
+
+Praktisch heißt das: **sobald ein Patient einmal unterschrieben hat, ist er nicht
+mehr löschbar — und der Praxisinhaber auch nicht.** Wer einen Lösch- oder
+Offboarding-Flow baut (DSGVO Art. 17, Kontoschließung, Testdaten aufräumen), läuft
+sonst in einen nackten FK-Fehler.
+
+Richtig ist **nicht**, das RESTRICT zu lockern — die Aufbewahrungspflicht schlägt
+das Löschverlangen. Richtig ist Anonymisierung: personenbezogene Felder in `leads`
+leeren, die Einwilligungszeile stehen lassen (sie ist der Nachweis, nicht die
+Patientenakte). Und: `patient_consents` ist **nicht** `consent_log` — letzteres
+gehört dem Praxisinhaber (B2B, AVV/AGB), andere betroffene Person, andere Frist.
+
+Hintergrund: `konsey/tutanak/2026-08-14-patienten-uebergabe-einwilligung.md`,
+`compliance/LEGAL_DECISIONS.md` (2026-08-14).
 
 ---
 

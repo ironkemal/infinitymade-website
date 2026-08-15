@@ -3107,7 +3107,7 @@ const attendanceLimiter = rateLimit({
 // Body: { business_id, lat, lng }
 app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.auth.userId;
     const { business_id, lat, lng } = req.body;
 
     if (!business_id || lat == null || lng == null) {
@@ -3213,7 +3213,7 @@ app.post('/api/attendance/check-in', attendanceLimiter, requireAuthAI, async (re
 // Body: {} — sadece user token yeterli
 app.post('/api/attendance/check-out', attendanceLimiter, requireAuthAI, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.auth.userId;
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
 
     const { data: record, error: findErr } = await supabase
@@ -3246,7 +3246,7 @@ app.post('/api/attendance/check-out', attendanceLimiter, requireAuthAI, async (r
 // GET /api/attendance/today — çalışanın bugünkü durumu
 app.get('/api/attendance/today', requireAuthAI, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.auth.userId;
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TZ }).format(new Date());
 
     const { data, error } = await supabase
@@ -3267,7 +3267,7 @@ app.get('/api/attendance/today', requireAuthAI, async (req, res) => {
 // Owner: kendi ekibinin devam raporu
 app.get('/api/attendance/report', requireAuthAI, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.auth.userId;
     const { business_id, date_from, date_to } = req.query;
 
     if (!date_from || !date_to) {
@@ -3301,7 +3301,7 @@ app.get('/api/attendance/report', requireAuthAI, async (req, res) => {
 // PATCH /api/attendance/:id/note — owner manuel not ekler
 app.patch('/api/attendance/:id/note', requireAuthAI, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.auth.userId;
     const { id } = req.params;
     const { note, status } = req.body;
 
