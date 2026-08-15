@@ -813,10 +813,10 @@ function exportEuerCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Anlage_EUER_Kemal_Einzelunternehmen_${selectedYear}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `euer_preparation_export_Kemal_${selectedYear}_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('EÜR CSV-Export für Elster & Steuerberater erfolgreich generiert');
+  toast('EÜR CSV-Export (Steuervorbereitung) erfolgreich generiert');
 }
 
 function exportEuerJSON() {
@@ -853,10 +853,10 @@ function exportEuerJSON() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Anlage_EUER_Kemal_${selectedYear}_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `tax_preparation_json_Kemal_${selectedYear}_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('EÜR JSON-Export erfolgreich generiert');
+  toast('Tax-Preparation JSON-Export erfolgreich generiert');
 }
 
 export function mountFinance() {
