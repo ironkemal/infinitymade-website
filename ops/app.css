@@ -741,3 +741,20 @@ a { color: var(--blue); }
   border-color: var(--line);
   color: var(--text-dim);
 }
+
+.f-country-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text-mute);
+  letter-spacing: .02em;
+}
+
+.f-row.is-private-row {
+  opacity: .72;
+  background: rgba(239, 68, 68, .04);
+}

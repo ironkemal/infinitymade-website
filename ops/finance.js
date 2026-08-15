@@ -1,4 +1,5 @@
-// Praxura Ops-Dashboard — Finanzen & Anlage EÜR Modul
+// Praxura Ops-Dashboard — Finanzen, Anlage EÜR & GoBD Modul
+// Rechtsträger: Einzelunternehmen Yavuz Kemal Demir (EÜR nach § 4 Abs. 3 EStG)
 import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, confirmDialog, memberById } from './app.js?v=20260811a';
 import { INVOICE_FOLDER_URL } from './config.js?v=20260811a';
 
@@ -7,26 +8,45 @@ let query = '';
 let selectedYear = new Date().getFullYear().toString();
 let selectedCategory = 'all';
 let selectedStatus = 'all';
-let selectedPaidBy = 'all';
+let selectedPayer = 'all';
+let selectedVatFilter = 'all';
 let onlyRecurring = false;
 let channel = null;
 
 export const EUER_CATEGORIES = {
-  'software_cloud': { label: 'Software & Cloud-Dienste', icon: '☁️', desc: 'SaaS, Hosting, Vercel, Supabase, Domains, AI Tools, APIs' },
-  'telecom_internet': { label: 'Telekommunikation & Internet', icon: '📱', desc: 'Mobilfunk, Telefon, Internetanschluss' },
-  'office_supplies': { label: 'Büromaterial & Arbeitsmittel', icon: '📎', desc: 'Schreibwaren, Druckerpapier, Kleinmaterial' },
-  'gwg_assets': { label: 'GWG (Geringwertige Wirtschaftsgüter)', icon: '💻', desc: 'Hardware & Geräte netto ≤ 800 € (Tastatur, Monitor, Headset)' },
-  'travel_mobility': { label: 'Reise- & Fahrtkosten', icon: '🚆', desc: 'ÖPNV, Deutsche Bahn, Fahrtkosten' },
-  'education_training': { label: 'Fortbildung & Fachliteratur', icon: '📚', desc: 'Fachbücher, Kurse, Zertifikate' },
-  'marketing_sales': { label: 'Marketing & Vertrieb', icon: '📣', desc: 'Online-Ads (Google/Meta), Werbung, Branding' },
-  'bank_fees': { label: 'Bank- & Nebenkosten des Geldverkehrs', icon: '💳', desc: 'Kontoführung, Transaktionsgebühren, Zahlungsdienstleister' },
-  'other_operational': { label: 'Sonstige Betriebsausgaben', icon: '📦', desc: 'Sonstige abzugsfähige Betriebsausgaben' }
+  'software_cloud': { label: 'Software & Cloud-Dienste', icon: '☁️', desc: 'SaaS, Hosting, Vercel, Supabase, Domains, AI Tools, APIs', deductible: true },
+  'telecom_internet': { label: 'Telekommunikation & Internet', icon: '📱', desc: 'Mobilfunk, Telefon, Internetanschluss', deductible: true },
+  'office_supplies': { label: 'Büromaterial & Arbeitsmittel', icon: '📎', desc: 'Schreibwaren, Druckerpapier, Kleinmaterial', deductible: true },
+  'gwg_assets': { label: 'GWG (Geringwertige Wirtschaftsgüter)', icon: '💻', desc: 'Hardware & Geräte netto ≤ 800 € (Tastatur, Monitor, Headset)', deductible: true },
+  'digital_assets_afa': { label: 'Digitale Wirtschaftsgüter (Sofort-AfA)', icon: '🖥️', desc: 'Computer, Laptops, Peripherie (1 Jahr ND per BMF)', deductible: true },
+  'travel_mobility': { label: 'Reise- & Fahrtkosten', icon: '🚆', desc: 'ÖPNV, Deutsche Bahn, Fahrtkosten', deductible: true },
+  'education_training': { label: 'Fortbildung & Fachliteratur', icon: '📚', desc: 'Fachbücher, Kurse, Zertifikate', deductible: true },
+  'marketing_sales': { label: 'Marketing & Vertrieb', icon: '📣', desc: 'Online-Ads (Google/Meta), Werbung, Branding', deductible: true },
+  'bank_fees': { label: 'Bank- & Nebenkosten des Geldverkehrs', icon: '💳', desc: 'Kontoführung, Transaktionsgebühren, Zahlungsdienstleister', deductible: true },
+  'rent_lease': { label: 'Miete & Raumkosten', icon: '🏢', desc: 'Büromiete, Coworking, Lagerräume', deductible: true },
+  'insurance': { label: 'Betriebliche Versicherungen', icon: '🛡️', desc: 'Berufshaftpflicht, Elektronikversicherung', deductible: true },
+  'professional_services': { label: 'Fremdleistungen & Dienstleister', icon: '🤝', desc: 'Freelancer, Entwicklungs- & Design-Dienstleistungen', deductible: true },
+  'legal_tax_advisory': { label: 'Rechts- & Steuerberatung', icon: '⚖️', desc: 'Steuerberater, Elster-Tools, Rechtsberatung', deductible: true },
+  'repairs_maintenance': { label: 'Reparaturen & Instandhaltung', icon: '🔧', desc: 'Wartung und Reparatur von Betriebsgeräten', deductible: true },
+  'business_meals': { label: 'Geschäftliche Bewirtung', icon: '🍽️', desc: 'Bewirtungsaufwendungen (70 % abzugsfähig per § 4 Abs. 5 EStG)', deductible: true },
+  'post_shipping': { label: 'Porto & Versand', icon: '📦', desc: 'Briefe, DHL, Kurierdienste', deductible: true },
+  'other_operational': { label: 'Sonstige Betriebsausgaben', icon: '🏷️', desc: 'Sonstige betrieblich veranlasste Ausgaben', deductible: true },
+  'private_expense': { label: 'Private Ausgabe (Nicht in EÜR)', icon: '🚫', desc: 'Private Ausgaben (z.B. Melih privat) — kein Betriebsausgabenabzug', deductible: false }
 };
 
-export const PAID_BY_OPTIONS = {
-  'kemal': { label: 'Kemal', icon: '👤', cls: 'pill-kemal' },
-  'melih': { label: 'Melih', icon: '👤', cls: 'pill-melih' },
-  'gemeinsam': { label: 'Ortak / Gemeinsam', icon: '👥', cls: 'pill-joint' }
+export const PAYER_TYPES = {
+  'business_account': { label: 'Geschäftskonto (Kemal)', icon: '🏢', cls: 'pill-kemal' },
+  'kemal_private': { label: 'Privatkonto Kemal (Einlage)', icon: '👤', cls: 'pill-joint' },
+  'melih_private': { label: 'Melih privat (Nicht in EÜR)', icon: '🚫', cls: 'pill-melih' },
+  'other': { label: 'Sonstige', icon: '💳', cls: 'pill-once' }
+};
+
+export const VAT_TREATMENTS = {
+  'standard': { label: '19 % Regelsteuer', rate: 19 },
+  'reduced': { label: '7 % Ermäßigt', rate: 7 },
+  'reverse_charge_13b': { label: '§ 13b Reverse Charge (EU)', rate: 0 },
+  'third_country': { label: '§ 13b Drittland (USA/Non-EU)', rate: 0 },
+  'exempt': { label: '0 % Steuerfrei / § 19', rate: 0 }
 };
 
 export const PAYMENT_METHODS = {
@@ -37,7 +57,7 @@ export const PAYMENT_METHODS = {
 };
 
 export const STATUS_LABELS = {
-  'processed': { label: 'Verarbeitet', cls: 'st-ok' },
+  'processed': { label: 'Verarbeitet (OK)', cls: 'st-ok' },
   'review_needed': { label: 'Prüfung nötig', cls: 'st-warn' },
   'archived': { label: 'Archiviert', cls: 'st-mute' }
 };
@@ -61,23 +81,37 @@ async function loadExpenses() {
 function getFilteredExpenses() {
   const q = query.trim().toLowerCase();
   return expenses.filter(item => {
-    // Year filter
+    // Year filter (based on payment_date if present, else invoice_date per § 11 EStG)
+    const effectiveDate = item.payment_date || item.invoice_date || '';
     if (selectedYear !== 'all') {
-      const itemYear = item.invoice_date ? item.invoice_date.slice(0, 4) : '';
+      const itemYear = effectiveDate ? effectiveDate.slice(0, 4) : '';
       if (itemYear !== selectedYear) return false;
     }
     // Category filter
-    if (selectedCategory !== 'all' && item.euer_category !== selectedCategory) {
-      return false;
+    if (selectedCategory !== 'all') {
+      const cat = item.tax_category || item.euer_category;
+      if (cat !== selectedCategory) return false;
     }
     // Status filter
     if (selectedStatus !== 'all' && item.status !== selectedStatus) {
       return false;
     }
-    // Paid By filter
-    if (selectedPaidBy !== 'all') {
-      const paid = item.paid_by || 'gemeinsam';
-      if (paid !== selectedPaidBy) return false;
+    // Payer filter
+    if (selectedPayer !== 'all') {
+      if (selectedPayer === 'euer_only' && (item.is_deductible === false || item.payer_type === 'melih_private')) {
+        return false;
+      }
+      if (selectedPayer === 'melih_private' && item.payer_type !== 'melih_private') {
+        return false;
+      }
+      if (selectedPayer === 'kemal_business' && item.payer_type !== 'business_account') {
+        return false;
+      }
+    }
+    // VAT / Reverse Charge filter
+    if (selectedVatFilter !== 'all') {
+      if (selectedVatFilter === 'reverse_charge' && !item.reverse_charge) return false;
+      if (selectedVatFilter === 'standard' && item.reverse_charge) return false;
     }
     // Recurring filter
     if (onlyRecurring && !item.is_recurring) {
@@ -88,64 +122,75 @@ function getFilteredExpenses() {
       const matchVendor = (item.vendor_name || '').toLowerCase().includes(q);
       const matchNumber = (item.invoice_number || '').toLowerCase().includes(q);
       const matchDesc = (item.description || '').toLowerCase().includes(q);
-      const matchSender = (item.email_sender || '').toLowerCase().includes(q);
-      const matchPaid = (item.paid_by || '').toLowerCase().includes(q);
-      if (!matchVendor && !matchNumber && !matchDesc && !matchSender && !matchPaid) return false;
+      const matchCountry = (item.vendor_country || '').toLowerCase().includes(q);
+      const matchVatId = (item.vendor_vat_id || '').toLowerCase().includes(q);
+      if (!matchVendor && !matchNumber && !matchDesc && !matchCountry && !matchVatId) return false;
     }
     return true;
   });
 }
 
 function renderKPIs(list) {
-  const totalGross = list.reduce((sum, item) => sum + (Number(item.gross_amount) || 0), 0);
-  const totalNet = list.reduce((sum, item) => sum + (Number(item.net_amount) || 0), 0);
-  const totalVat = list.reduce((sum, item) => sum + (Number(item.vat_amount) || 0), 0);
+  // EÜR Cash-Basis: Only include deductible business expenses for Kemal's Einzelunternehmen
+  const deductibleList = list.filter(i => i.is_deductible !== false && i.payer_type !== 'melih_private');
+  
+  const euerNet = deductibleList.reduce((sum, item) => sum + (Number(item.net_amount) || 0), 0);
+  const euerGross = deductibleList.reduce((sum, item) => sum + (Number(item.gross_amount) || 0), 0);
+  const totalVat = deductibleList.filter(i => i.input_vat_eligible !== false && !i.reverse_charge).reduce((sum, item) => sum + (Number(item.vat_amount) || 0), 0);
 
-  // Active monthly subscriptions (calculated across all active recurring items)
-  const recurringItems = expenses.filter(i => i.is_recurring && i.status !== 'archived');
+  // Reverse-Charge § 13b Total
+  const rcList = deductibleList.filter(i => i.reverse_charge);
+  const totalRcNet = rcList.reduce((sum, item) => sum + (Number(item.net_amount) || 0), 0);
+
+  // Active monthly recurring SaaS / subscriptions
+  const recurringItems = deductibleList.filter(i => i.is_recurring && i.status !== 'archived');
   const monthlyRecurringEst = recurringItems.reduce((sum, item) => {
     const gross = Number(item.gross_amount) || 0;
     if (item.recurring_interval === 'yearly') return sum + (gross / 12);
     if (item.recurring_interval === 'quarterly') return sum + (gross / 3);
-    return sum + gross; // default monthly
+    return sum + gross;
   }, 0);
 
-  // Partner spend totals (filtered list)
-  const totalKemal = list.filter(i => i.paid_by === 'kemal').reduce((sum, i) => sum + (Number(i.gross_amount) || 0), 0);
-  const totalMelih = list.filter(i => i.paid_by === 'melih').reduce((sum, i) => sum + (Number(i.gross_amount) || 0), 0);
-  const totalJoint = list.filter(i => (!i.paid_by || i.paid_by === 'gemeinsam')).reduce((sum, i) => sum + (Number(i.gross_amount) || 0), 0);
+  // Plausibility Check Metrics
+  const missingHash = list.filter(i => !i.original_file_hash).length;
+  const missingPaymentDate = list.filter(i => !i.payment_date && i.status !== 'archived').length;
+  const reviewNeeded = list.filter(i => i.status === 'review_needed' || i.needs_review).length;
 
   const kpiContainer = $('#financeKPIs');
   if (!kpiContainer) return;
 
   kpiContainer.innerHTML = `
     <div class="f-kpi-card">
-      <span class="f-kpi-title">Ausgaben (Brutto)</span>
-      <span class="f-kpi-val">${fmtEuro(totalGross)}</span>
-      <span class="f-kpi-sub">${list.length} Buchungen im Filter</span>
+      <span class="f-kpi-title">EÜR Betriebsausgaben (Netto)</span>
+      <span class="f-kpi-val">${fmtEuro(euerNet)}</span>
+      <span class="f-kpi-sub">Brutto: ${fmtEuro(euerGross)} (${deductibleList.length} EÜR-Belege)</span>
     </div>
     <div class="f-kpi-card">
-      <span class="f-kpi-title">Ausgaben (Netto)</span>
-      <span class="f-kpi-val">${fmtEuro(totalNet)}</span>
-      <span class="f-kpi-sub">EÜR Betriebsausgaben</span>
-    </div>
-    <div class="f-kpi-card">
-      <span class="f-kpi-title">Vorsteuer (USt.)</span>
+      <span class="f-kpi-title">Abziehbare Vorsteuer (§ 15)</span>
       <span class="f-kpi-val">${fmtEuro(totalVat)}</span>
-      <span class="f-kpi-sub">Erstattungsfähige USt.</span>
+      <span class="f-kpi-sub">USt.-Erstattung Inland</span>
     </div>
     <div class="f-kpi-card">
-      <span class="f-kpi-title">Laufende Abos / Fix</span>
+      <span class="f-kpi-title">§ 13b Reverse Charge (B2B)</span>
+      <span class="f-kpi-val">${fmtEuro(totalRcNet)}</span>
+      <span class="f-kpi-sub">${rcList.length} Ausland-SaaS Belege (EU/USA)</span>
+    </div>
+    <div class="f-kpi-card">
+      <span class="f-kpi-title">Laufende Fixkosten / Abos</span>
       <span class="f-kpi-val">${recurringItems.length} <small style="font-size:14px;color:var(--text-dim)">(~${fmtEuro(monthlyRecurringEst)}/Mo)</small></span>
-      <span class="f-kpi-sub">SaaS & Monatliche Kosten</span>
+      <span class="f-kpi-sub">SaaS & Monatliche Dienste</span>
     </div>
     <div class="f-kpi-card f-kpi-partner-card">
-      <span class="f-kpi-title">Ortaklar Dağılımı (Brutto)</span>
+      <span class="f-kpi-title">GoBD & Plausibilitäts-Status</span>
       <div class="f-partner-pills">
-        <span class="pill pill-kemal" title="Kemal harcamaları">👤 Kemal: <strong>${fmtEuro(totalKemal)}</strong></span>
-        <span class="pill pill-melih" title="Melih harcamaları">👤 Melih: <strong>${fmtEuro(totalMelih)}</strong></span>
+        <span class="pill ${reviewNeeded === 0 ? 'st-ok' : 'st-warn'}">
+          ${reviewNeeded === 0 ? '✓ Alle Belege plausibel' : `⚠️ ${reviewNeeded} Beleg(e) in Prüfung`}
+        </span>
+        <span class="pill ${missingPaymentDate === 0 ? 'st-ok' : 'pill-once'}">
+          ${missingPaymentDate === 0 ? '✓ Zahlungsdaten (§11 EStG) erfasst' : `ℹ️ ${missingPaymentDate} ohne Zahlungsdatum`}
+        </span>
       </div>
-      <span class="f-kpi-sub">👥 Ortak: ${fmtEuro(totalJoint)}</span>
+      <span class="f-kpi-sub">Rechtsträger: Einzelunternehmen Kemal</span>
     </div>
   `;
 }
@@ -154,41 +199,44 @@ function renderCategoryBreakdown(list) {
   const breakdownEl = $('#financeBreakdown');
   if (!breakdownEl) return;
 
-  const totalGross = list.reduce((sum, item) => sum + (Number(item.gross_amount) || 0), 0);
+  const deductibleList = list.filter(i => i.is_deductible !== false && i.payer_type !== 'melih_private');
+  const totalNet = deductibleList.reduce((sum, item) => sum + (Number(item.net_amount) || 0), 0);
   
   const catSums = {};
   for (const key of Object.keys(EUER_CATEGORIES)) {
-    catSums[key] = { gross: 0, count: 0 };
+    if (EUER_CATEGORIES[key].deductible) {
+      catSums[key] = { net: 0, count: 0 };
+    }
   }
 
-  for (const item of list) {
-    const cat = item.euer_category || 'other_operational';
-    if (!catSums[cat]) catSums[cat] = { gross: 0, count: 0 };
-    catSums[cat].gross += Number(item.gross_amount) || 0;
+  for (const item of deductibleList) {
+    const cat = item.tax_category || item.euer_category || 'other_operational';
+    if (!catSums[cat]) catSums[cat] = { net: 0, count: 0 };
+    catSums[cat].net += Number(item.net_amount) || 0;
     catSums[cat].count += 1;
   }
 
   const sortedCats = Object.entries(catSums)
-    .filter(([_, data]) => data.gross > 0 || selectedCategory === 'all')
-    .sort((a, b) => b[1].gross - a[1].gross);
+    .filter(([_, data]) => data.net > 0 || selectedCategory === 'all')
+    .sort((a, b) => b[1].net - a[1].net);
 
   breakdownEl.innerHTML = `
     <div class="f-breakdown-card">
       <div class="f-breakdown-head">
-        <h3>Anlage EÜR Kostenverteilung</h3>
-        <span class="hint">Aufteilung nach deutschen Steuerkategorien</span>
+        <h3>Anlage EÜR Kostenverteilung (Netto)</h3>
+        <span class="hint">Aufteilung nach deutschen Steuerkategorien für Einzelunternehmen Yavuz Kemal Demir</span>
       </div>
       <div class="f-breakdown-list">
         ${sortedCats.map(([catKey, data]) => {
           const info = EUER_CATEGORIES[catKey] || { label: catKey, icon: '🏷️' };
-          const pct = totalGross > 0 ? Math.round((data.gross / totalGross) * 100) : 0;
+          const pct = totalNet > 0 ? Math.round((data.net / totalNet) * 100) : 0;
           return `
             <div class="f-cat-row" data-cat="${esc(catKey)}">
               <div class="f-cat-info">
                 <span class="f-cat-icon">${info.icon}</span>
                 <span class="f-cat-name">${esc(info.label)}</span>
                 <span class="f-cat-count">${data.count} Belege</span>
-                <span class="f-cat-amount">${fmtEuro(data.gross)}</span>
+                <span class="f-cat-amount">${fmtEuro(data.net)}</span>
                 <span class="f-cat-pct">${pct}%</span>
               </div>
               <div class="f-cat-bar">
@@ -229,14 +277,13 @@ function renderList(list) {
       <table class="f-table">
         <thead>
           <tr>
-            <th>Status</th>
-            <th>Datum</th>
-            <th>Lieferant & Art</th>
-            <th>Kime Ait / Ortak</th>
-            <th>EÜR Kategorie</th>
-            <th>Zahlung</th>
+            <th>Status & GoBD</th>
+            <th>Datum / Zahlung</th>
+            <th>Lieferant & Land</th>
+            <th>Kategorie & Steuer</th>
+            <th>Zahlungskonto</th>
             <th style="text-align:right">Netto</th>
-            <th style="text-align:right">USt.</th>
+            <th style="text-align:right">USt. / § 13b</th>
             <th style="text-align:right">Brutto</th>
             <th style="text-align:center">Beleg</th>
             <th style="text-align:right">Aktionen</th>
@@ -244,50 +291,58 @@ function renderList(list) {
         </thead>
         <tbody>
           ${list.map(item => {
-            const catInfo = EUER_CATEGORIES[item.euer_category] || { label: item.euer_category, icon: '🏷️' };
+            const catKey = item.tax_category || item.euer_category || 'other_operational';
+            const catInfo = EUER_CATEGORIES[catKey] || { label: catKey, icon: '🏷️' };
             const statusInfo = STATUS_LABELS[item.status] || { label: item.status, cls: 'st-mute' };
-            const paidKey = item.paid_by || 'gemeinsam';
-            const paidInfo = PAID_BY_OPTIONS[paidKey] || PAID_BY_OPTIONS['gemeinsam'];
-            const payLabel = PAYMENT_METHODS[item.payment_method] || item.payment_method || '—';
+            const payerKey = item.payer_type || (item.paid_by === 'melih' ? 'melih_private' : 'business_account');
+            const payerInfo = PAYER_TYPES[payerKey] || PAYER_TYPES['business_account'];
+            const isNonDeductible = item.is_deductible === false || payerKey === 'melih_private';
             
             return `
-              <tr data-id="${item.id}" class="f-row ${item.status === 'review_needed' ? 'is-warning' : ''}">
+              <tr data-id="${item.id}" class="f-row ${item.status === 'review_needed' || item.needs_review ? 'is-warning' : ''} ${isNonDeductible ? 'is-private-row' : ''}">
                 <td>
-                  <span class="pill ${statusInfo.cls}">${esc(statusInfo.label)}</span>
+                  <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
+                    <span class="pill ${statusInfo.cls}">${esc(statusInfo.label)}</span>
+                    ${item.original_file_hash ? `<span class="f-subtext" style="color:var(--text-dim)" title="SHA-256: ${esc(item.original_file_hash)}">🔒 Hash OK</span>` : ''}
+                  </div>
                 </td>
                 <td>
                   <div style="font-weight:500">${esc(fmtDate(item.invoice_date))}</div>
-                  ${item.due_date ? `<div class="f-subtext">Fällig: ${esc(fmtDate(item.due_date))}</div>` : ''}
+                  ${item.payment_date 
+                    ? `<div class="f-subtext" style="color:var(--gold)" title="Zahlungsdatum per § 11 EStG">Bezahlt: ${esc(fmtDate(item.payment_date))}</div>` 
+                    : `<div class="f-subtext" style="color:var(--text-mute)">Zahlung offen</div>`}
                 </td>
                 <td>
                   <div class="f-vendor-cell">
                     <span class="f-vendor-name">${esc(item.vendor_name)}</span>
-                    ${item.is_recurring 
-                      ? `<span class="pill pill-abo" title="Wiederkehrendes Abo (${esc(item.recurring_interval)})">🔄 Abo (${esc(item.recurring_interval)})</span>` 
-                      : `<span class="pill pill-once" title="Einmalige Ausgabe">Einmalig</span>`}
+                    <span class="f-country-tag" title="Land">${esc(item.vendor_country || 'DE')}</span>
+                    ${item.is_recurring ? `<span class="pill pill-abo" title="Wiederkehrendes Abo">🔄 Abo</span>` : ''}
                   </div>
                   ${item.invoice_number ? `<div class="f-subtext">Nr. ${esc(item.invoice_number)}</div>` : ''}
+                  ${item.vendor_vat_id ? `<div class="f-subtext">USt-ID: ${esc(item.vendor_vat_id)}</div>` : ''}
                   ${item.description ? `<div class="f-desc" title="${esc(item.description)}">${esc(item.description)}</div>` : ''}
                 </td>
                 <td>
-                  <span class="pill ${paidInfo.cls}">
-                    ${paidInfo.icon} ${esc(paidInfo.label)}
-                  </span>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <span class="f-cat-badge" title="${esc(catInfo.desc || '')}">
+                      <span>${catInfo.icon}</span> ${esc(catInfo.label)}
+                    </span>
+                    ${item.reverse_charge ? `<span class="pill pill-abo" style="font-size:10.5px" title="${esc(item.reverse_charge_reason || '§ 13b UStG')}">⚡ § 13b RC</span>` : ''}
+                    ${isNonDeductible ? `<span class="pill pill-melih" style="font-size:10px">🚫 Nicht in EÜR</span>` : ''}
+                  </div>
                 </td>
                 <td>
-                  <span class="f-cat-badge" title="${esc(catInfo.desc || '')}">
-                    <span>${catInfo.icon}</span> ${esc(catInfo.label)}
+                  <span class="pill ${payerInfo.cls}">
+                    ${payerInfo.icon} ${esc(payerInfo.label)}
                   </span>
-                </td>
-                <td>
-                  <span class="f-subtext">${esc(payLabel)}</span>
                 </td>
                 <td style="text-align:right" class="f-num">
                   ${fmtEuro(item.net_amount)}
                 </td>
                 <td style="text-align:right" class="f-num">
-                  <div>${fmtEuro(item.vat_amount)}</div>
-                  <div class="f-subtext">${Number(item.vat_rate) || 0}%</div>
+                  ${item.reverse_charge 
+                    ? `<div style="color:var(--gold)" title="§ 13b Steuerschuld / Vorsteuer">${fmtEuro(item.net_amount * 0.19)} <small>(19% RC)</small></div>`
+                    : `<div>${fmtEuro(item.vat_amount)}</div><div class="f-subtext">${Number(item.vat_rate) || 0}%</div>`}
                 </td>
                 <td style="text-align:right" class="f-num f-gross">
                   <strong>${fmtEuro(item.gross_amount)}</strong>
@@ -297,11 +352,7 @@ function renderList(list) {
                     <a href="${esc(item.drive_web_view_link)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm f-beleg-btn" title="PDF in Google Drive öffnen">
                       📄 PDF ↗
                     </a>
-                  ` : (item.drive_file_id ? `
-                    <a href="https://drive.google.com/file/d/${esc(item.drive_file_id)}/view" target="_blank" rel="noopener" class="btn btn-ghost btn-sm f-beleg-btn" title="PDF in Google Drive öffnen">
-                      📄 Drive ↗
-                    </a>
-                  ` : `<span class="f-subtext">—</span>`)}
+                  ` : `<span class="f-subtext">—</span>`}
                 </td>
                 <td style="text-align:right">
                   <div class="f-actions">
@@ -324,7 +375,7 @@ function render() {
   // Populate Year options if needed
   const yearSelect = $('#fYearFilter');
   if (yearSelect && yearSelect.options.length <= 1) {
-    const years = [...new Set(expenses.map(i => i.invoice_date ? i.invoice_date.slice(0, 4) : null).filter(Boolean))];
+    const years = [...new Set(expenses.map(i => (i.payment_date || i.invoice_date || '').slice(0, 4)).filter(Boolean))];
     const currentYear = new Date().getFullYear().toString();
     if (!years.includes(currentYear)) years.push(currentYear);
     years.sort().reverse();
@@ -346,15 +397,17 @@ function formExpense(it = null) {
   const currentNet = it ? Number(it.net_amount) || '' : '';
   const currentVatRate = it ? Number(it.vat_rate) || 19 : 19;
   const currentVatAmount = it ? Number(it.vat_amount) || '' : '';
-  const currentPaidBy = it?.paid_by || 'gemeinsam';
+  const currentPayer = it?.payer_type || (it?.paid_by === 'melih' ? 'melih_private' : 'business_account');
+  const currentCountry = it?.vendor_country || 'DE';
+  const currentCat = it?.tax_category || it?.euer_category || 'software_cloud';
 
   openModal({
-    title: isEdit ? 'Ausgabe / Beleg bearbeiten' : 'Neue Ausgabe erfassen',
+    title: isEdit ? 'Ausgabe / Steuerbeleg bearbeiten' : 'Neue Betriebsausgabe erfassen',
     bodyHTML: `
       <div class="row-2">
         <label class="fld">
           <span>Lieferant / Dienstleister *</span>
-          <input id="f_vendor" value="${esc(it?.vendor_name || '')}" placeholder="z. B. Adobe, Supabase, Telekom, OpenAI" required autofocus>
+          <input id="f_vendor" value="${esc(it?.vendor_name || '')}" placeholder="z. B. Adobe, Supabase, OpenAI, Telekom" required autofocus>
         </label>
         <label class="fld">
           <span>Rechnungsnummer</span>
@@ -362,14 +415,18 @@ function formExpense(it = null) {
         </label>
       </div>
 
-      <div class="row-2">
+      <div class="row-2" style="grid-template-columns: 1.2fr 1fr 1fr">
         <label class="fld">
           <span>Rechnungsdatum *</span>
           <input type="date" id="f_date" value="${esc(it?.invoice_date || today)}" required>
         </label>
         <label class="fld">
-          <span>Fälligkeitsdatum</span>
-          <input type="date" id="f_due" value="${esc(it?.due_date || '')}">
+          <span>Zahlungsdatum (§ 11 EStG)</span>
+          <input type="date" id="f_payment_date" value="${esc(it?.payment_date || it?.invoice_date || today)}" title="Für EÜR maßgebliches Abflussdatum">
+        </label>
+        <label class="fld">
+          <span>Leistungsdatum</span>
+          <input type="date" id="f_service_date" value="${esc(it?.service_date || '')}">
         </label>
       </div>
 
@@ -383,8 +440,7 @@ function formExpense(it = null) {
           <select id="f_vat_rate">
             <option value="19" ${currentVatRate === 19 ? 'selected' : ''}>19 % (Regel)</option>
             <option value="7" ${currentVatRate === 7 ? 'selected' : ''}>7 % (Ermäßigt)</option>
-            <option value="0" ${currentVatRate === 0 ? 'selected' : ''}>0 % (Steuerfrei / §19 / Reverse)</option>
-            <option value="custom" ${![0, 7, 19].includes(currentVatRate) ? 'selected' : ''}>Benutzerdefiniert</option>
+            <option value="0" ${currentVatRate === 0 ? 'selected' : ''}>0 % (Reverse Charge / Drittland / §19)</option>
           </select>
         </label>
         <label class="fld">
@@ -397,52 +453,47 @@ function formExpense(it = null) {
         </label>
       </div>
 
-      <div class="row-2">
+      <div class="row-2" style="grid-template-columns: 1.4fr 1fr">
         <label class="fld">
-          <span>Anlage EÜR Steuerkategorie *</span>
+          <span>Steuerkategorie (Anlage EÜR) *</span>
           <select id="f_category" required>
             ${Object.entries(EUER_CATEGORIES).map(([key, info]) => `
-              <option value="${esc(key)}" ${(it?.euer_category === key || (!it && key === 'software_cloud')) ? 'selected' : ''}>
+              <option value="${esc(key)}" ${currentCat === key ? 'selected' : ''}>
                 ${info.icon} ${esc(info.label)}
               </option>
             `).join('')}
           </select>
         </label>
         <label class="fld">
-          <span>Kime Ait / Ortak (Zugehörigkeit) *</span>
-          <select id="f_paid_by" required>
-            <option value="gemeinsam" ${currentPaidBy === 'gemeinsam' ? 'selected' : ''}>👥 Ortak / Gemeinsam</option>
-            <option value="kemal" ${currentPaidBy === 'kemal' ? 'selected' : ''}>👤 Kemal</option>
-            <option value="melih" ${currentPaidBy === 'melih' ? 'selected' : ''}>👤 Melih</option>
+          <span>Zahlungskonto / Kostenträger *</span>
+          <select id="f_payer_type" required>
+            <option value="business_account" ${currentPayer === 'business_account' ? 'selected' : ''}>🏢 Geschäftskonto (Kemal)</option>
+            <option value="kemal_private" ${currentPayer === 'kemal_private' ? 'selected' : ''}>👤 Privatkonto Kemal (Einlage)</option>
+            <option value="melih_private" ${currentPayer === 'melih_private' ? 'selected' : ''}>🚫 Melih privat (Nicht in EÜR)</option>
+            <option value="other" ${currentPayer === 'other' ? 'selected' : ''}>Sonstige</option>
           </select>
         </label>
       </div>
 
-      <div class="row-2">
+      <div class="row-2" style="grid-template-columns: 1fr 1fr 1.2fr">
         <label class="fld">
-          <span>Zahlungsart</span>
-          <select id="f_payment">
-            ${Object.entries(PAYMENT_METHODS).map(([key, label]) => `
-              <option value="${esc(key)}" ${it?.payment_method === key ? 'selected' : ''}>
-                ${esc(label)}
-              </option>
-            `).join('')}
-          </select>
+          <span>Lieferantenland (ISO-Code)</span>
+          <input id="f_vendor_country" value="${esc(currentCountry)}" placeholder="DE, IE, US" maxlength="5">
         </label>
         <label class="fld">
-          <span>Status</span>
-          <select id="f_status">
-            <option value="processed" ${(!it || it.status === 'processed') ? 'selected' : ''}>Verarbeitet (OK)</option>
-            <option value="review_needed" ${it?.status === 'review_needed' ? 'selected' : ''}>Prüfung nötig</option>
-            <option value="archived" ${it?.status === 'archived' ? 'selected' : ''}>Archiviert</option>
-          </select>
+          <span>Lieferanten USt-IdNr.</span>
+          <input id="f_vendor_vat_id" value="${esc(it?.vendor_vat_id || '')}" placeholder="z. B. IE9671888X">
+        </label>
+        <label class="chk-inline" style="padding-top:22px">
+          <input type="checkbox" id="f_reverse_charge" ${it?.reverse_charge ? 'checked' : ''}>
+          <span>§ 13b Reverse Charge (B2B Ausland)</span>
         </label>
       </div>
 
-      <div class="row-2" style="grid-template-columns: 1fr 1.2fr; align-items: center; padding: 6px 0;">
+      <div class="row-2" style="grid-template-columns: 1fr 1.2fr; align-items: center; padding: 4px 0;">
         <label class="chk-inline">
           <input type="checkbox" id="f_recurring" ${it?.is_recurring ? 'checked' : ''}>
-          <span>Wiederkehrende Ausgabe (Abo / Fixkosten)</span>
+          <span>Wiederkehrendes Abo (Monatlich/Jährlich)</span>
         </label>
         <label class="fld" id="f_interval_wrap" ${!it?.is_recurring ? 'style="display:none"' : ''}>
           <span>Intervall</span>
@@ -455,14 +506,22 @@ function formExpense(it = null) {
       </div>
 
       <label class="fld">
-        <span>Beschreibung / Notiz</span>
-        <textarea id="f_desc" style="min-height:70px" placeholder="z. B. ChatGPT Plus Abo für Kemal, Server-Hosting für Praxura">${esc(it?.description || '')}</textarea>
+        <span>Beschreibung / Betrieblicher Verwendungszweck</span>
+        <textarea id="f_desc" style="min-height:60px" placeholder="z. B. Cloud-Hosting Server für Praxura">${esc(it?.description || '')}</textarea>
       </label>
 
       <div class="row-2">
         <label class="fld">
           <span>Google Drive Beleglink (URL)</span>
           <input type="url" id="f_drive_link" value="${esc(it?.drive_web_view_link || '')}" placeholder="https://drive.google.com/file/d/...">
+        </label>
+        <label class="fld">
+          <span>Prüfstatus</span>
+          <select id="f_status">
+            <option value="processed" ${(!it || it.status === 'processed') ? 'selected' : ''}>Verarbeitet (OK)</option>
+            <option value="review_needed" ${it?.status === 'review_needed' ? 'selected' : ''}>Prüfung nötig</option>
+            <option value="archived" ${it?.status === 'archived' ? 'selected' : ''}>Archiviert</option>
+          </select>
         </label>
       </div>
     `,
@@ -473,6 +532,7 @@ function formExpense(it = null) {
       const netIn = $('#f_net', body);
       const recChk = $('#f_recurring', body);
       const intervalWrap = $('#f_interval_wrap', body);
+      const rcChk = $('#f_reverse_charge', body);
 
       const recalculateAmounts = () => {
         const gross = parseFloat(grossIn.value);
@@ -481,7 +541,7 @@ function formExpense(it = null) {
         let rate = parseFloat(vatRateSel.value);
         if (isNaN(rate)) rate = 0;
 
-        if (rate === 0) {
+        if (rate === 0 || rcChk.checked) {
           vatAmountIn.value = '0.00';
           netIn.value = gross.toFixed(2);
         } else {
@@ -494,6 +554,10 @@ function formExpense(it = null) {
 
       grossIn.oninput = recalculateAmounts;
       vatRateSel.onchange = recalculateAmounts;
+      rcChk.onchange = () => {
+        if (rcChk.checked) vatRateSel.value = '0';
+        recalculateAmounts();
+      };
 
       recChk.onchange = () => {
         intervalWrap.style.display = recChk.checked ? 'grid' : 'none';
@@ -507,6 +571,7 @@ function formExpense(it = null) {
         onClick: async () => {
           const vendor = $('#f_vendor').value.trim();
           const invoiceDate = $('#f_date').value;
+          const paymentDate = $('#f_payment_date').value || invoiceDate;
           const grossVal = parseFloat($('#f_gross').value);
 
           if (!vendor) { toast('Lieferant fehlt', true); return false; }
@@ -522,23 +587,34 @@ function formExpense(it = null) {
 
           const isRec = $('#f_recurring').checked;
           const recInterval = isRec ? $('#f_interval').value : 'none';
-          const paidBy = $('#f_paid_by').value;
+          const payerType = $('#f_payer_type').value;
+          const isRc = $('#f_reverse_charge').checked;
+          const taxCat = $('#f_category').value;
+          const isDeductible = payerType !== 'melih_private' && taxCat !== 'private_expense';
 
           const row = {
             vendor_name: vendor,
+            vendor_country: $('#f_vendor_country').value.trim().toUpperCase() || 'DE',
+            vendor_vat_id: $('#f_vendor_vat_id').value.trim() || null,
             invoice_number: $('#f_number').value.trim() || null,
             invoice_date: invoiceDate,
-            due_date: $('#f_due').value || null,
+            payment_date: paymentDate,
+            service_date: $('#f_service_date').value || null,
             gross_amount: grossVal,
             net_amount: netVal,
             vat_rate: vatRateVal,
             vat_amount: vatAmountVal,
             currency: 'EUR',
-            euer_category: $('#f_category').value,
-            paid_by: paidBy,
+            tax_category: taxCat,
+            euer_category: taxCat,
+            reverse_charge: isRc,
+            reverse_charge_reason: isRc ? '§ 13b UStG / B2B Ausland' : null,
+            input_vat_eligible: !isRc && isDeductible,
+            is_deductible: isDeductible,
+            payer_type: payerType,
+            paid_by: payerType === 'melih_private' ? 'melih' : 'kemal',
             is_recurring: isRec,
             recurring_interval: recInterval,
-            payment_method: $('#f_payment').value,
             description: $('#f_desc').value.trim() || null,
             drive_web_view_link: $('#f_drive_link').value.trim() || null,
             status: $('#f_status').value
@@ -561,45 +637,49 @@ function formExpense(it = null) {
 }
 
 function exportEuerCSV() {
-  const list = getFilteredExpenses();
-  if (!list.length) {
-    toast('Keine Daten für den Export vorhanden', true);
+  const deductibleList = getFilteredExpenses().filter(i => i.is_deductible !== false && i.payer_type !== 'melih_private');
+  if (!deductibleList.length) {
+    toast('Keine abzugsfähigen EÜR-Daten für den Export vorhanden', true);
     return;
   }
 
   const header = [
-    'Datum',
+    'Zahlungsdatum (§11 EStG)',
+    'Rechnungsdatum',
     'Rechnungsnummer',
     'Lieferant',
-    'Zugehörigkeit / Person',
+    'Land',
+    'USt-IdNr.',
     'Anlage EÜR Kategorie',
     'Netto (€)',
     'USt.-Satz (%)',
-    'USt.-Betrag (€)',
+    'Vorsteuer (€)',
+    '§ 13b Reverse Charge',
     'Brutto (€)',
-    'Zahlungsart',
-    'Abo / Wiederkehrend',
-    'Intervall',
-    'Status',
+    'Zahlungskonto',
+    'Abo',
     'Beschreibung',
-    'Drive Link'
+    'GoBD Hash',
+    'Drive Beleglink'
   ];
 
-  const rows = list.map(item => [
+  const rows = deductibleList.map(item => [
+    item.payment_date || item.invoice_date || '',
     item.invoice_date || '',
     item.invoice_number ? `"${item.invoice_number.replace(/"/g, '""')}"` : '',
     `"${(item.vendor_name || '').replace(/"/g, '""')}"`,
-    PAID_BY_OPTIONS[item.paid_by]?.label || item.paid_by || 'Gemeinsam',
-    `"${(EUER_CATEGORIES[item.euer_category]?.label || item.euer_category || '').replace(/"/g, '""')}"`,
+    item.vendor_country || 'DE',
+    item.vendor_vat_id || '',
+    `"${(EUER_CATEGORIES[item.tax_category || item.euer_category]?.label || item.tax_category || '').replace(/"/g, '""')}"`,
     (Number(item.net_amount) || 0).toFixed(2).replace('.', ','),
     (Number(item.vat_rate) || 0).toFixed(2).replace('.', ','),
-    (Number(item.vat_amount) || 0).toFixed(2).replace('.', ','),
+    item.reverse_charge ? '0,00' : (Number(item.vat_amount) || 0).toFixed(2).replace('.', ','),
+    item.reverse_charge ? 'Ja (§13b)' : 'Nein',
     (Number(item.gross_amount) || 0).toFixed(2).replace('.', ','),
-    PAYMENT_METHODS[item.payment_method] || item.payment_method || '',
+    PAYER_TYPES[item.payer_type]?.label || item.payer_type || 'Geschäftskonto',
     item.is_recurring ? 'Ja' : 'Nein',
-    item.recurring_interval || '',
-    item.status || '',
     `"${(item.description || '').replace(/"/g, '""')}"`,
+    item.original_file_hash || '',
     item.drive_web_view_link || ''
   ]);
 
@@ -608,41 +688,43 @@ function exportEuerCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Anlage_EUER_Export_${selectedYear}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `Anlage_EUER_Kemal_${selectedYear}_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('EÜR CSV-Export erfolgreich generiert');
+  toast('EÜR CSV-Export für Elster erfolgreich generiert');
 }
 
 function exportEuerJSON() {
-  const list = getFilteredExpenses();
-  if (!list.length) {
+  const deductibleList = getFilteredExpenses().filter(i => i.is_deductible !== false && i.payer_type !== 'melih_private');
+  if (!deductibleList.length) {
     toast('Keine Daten für den Export vorhanden', true);
     return;
   }
 
   const exportData = {
-    business_owner: 'Yavuz Kemal Demir',
-    tax_type: 'Einnahmen-Überschuss-Rechnung (EÜR)',
+    taxpayer: {
+      name: 'Yavuz Kemal Demir',
+      legal_entity: 'Einzelunternehmen',
+      country: 'Deutschland',
+      accounting_method: 'Einnahmen-Überschuss-Rechnung (§ 4 Abs. 3 EStG)'
+    },
     export_year: selectedYear,
     generated_at: new Date().toISOString(),
-    total_records: list.length,
+    total_deductible_records: deductibleList.length,
     summary: {
-      total_gross: list.reduce((s, i) => s + (Number(i.gross_amount) || 0), 0),
-      total_net: list.reduce((s, i) => s + (Number(i.net_amount) || 0), 0),
-      total_vat: list.reduce((s, i) => s + (Number(i.vat_amount) || 0), 0),
-      kemal_gross: list.filter(i => i.paid_by === 'kemal').reduce((s, i) => s + (Number(i.gross_amount) || 0), 0),
-      melih_gross: list.filter(i => i.paid_by === 'melih').reduce((s, i) => s + (Number(i.gross_amount) || 0), 0),
-      gemeinsam_gross: list.filter(i => (!i.paid_by || i.paid_by === 'gemeinsam')).reduce((s, i) => s + (Number(i.gross_amount) || 0), 0)
+      euer_operating_expenses_net: deductibleList.reduce((s, i) => s + (Number(i.net_amount) || 0), 0),
+      euer_operating_expenses_gross: deductibleList.reduce((s, i) => s + (Number(i.gross_amount) || 0), 0),
+      deductible_input_vat: deductibleList.filter(i => !i.reverse_charge).reduce((s, i) => s + (Number(i.vat_amount) || 0), 0),
+      reverse_charge_13b_tax_base: deductibleList.filter(i => i.reverse_charge).reduce((s, i) => s + (Number(i.net_amount) || 0), 0)
     },
-    expenses: list
+    expenses: deductibleList
   };
 
   const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Anlage_EUER_Export_${selectedYear}_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `Anlage_EUER_Kemal_${selectedYear}_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
   toast('EÜR JSON-Export erfolgreich generiert');
@@ -680,10 +762,18 @@ export function mountFinance() {
     render();
   };
 
-  const paidByFilter = $('#fPaidByFilter');
-  if (paidByFilter) {
-    paidByFilter.onchange = (e) => {
-      selectedPaidBy = e.target.value;
+  const payerFilter = $('#fPaidByFilter');
+  if (payerFilter) {
+    payerFilter.onchange = (e) => {
+      selectedPayer = e.target.value;
+      render();
+    };
+  }
+
+  const vatFilter = $('#fVatFilter');
+  if (vatFilter) {
+    vatFilter.onchange = (e) => {
+      selectedVatFilter = e.target.value;
       render();
     };
   }

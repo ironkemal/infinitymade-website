@@ -115,37 +115,51 @@
         <select class="search f-filter-select" id="fYearFilter" style="max-width:130px">
           <option value="all">Alle Jahre</option>
         </select>
-        <select class="search f-filter-select" id="fCatFilter" style="max-width:200px">
-          <option value="all">Alle Kategorien</option>
-          <option value="software_cloud">Software & Cloud</option>
-          <option value="telecom_internet">Telekommunikation</option>
-          <option value="office_supplies">Büromaterial</option>
-          <option value="gwg_assets">GWG (≤ 800 €)</option>
-          <option value="travel_mobility">Reise & Fahrt</option>
-          <option value="education_training">Fortbildung</option>
-          <option value="marketing_sales">Marketing & Ads</option>
-          <option value="bank_fees">Bank & Gebühren</option>
-          <option value="other_operational">Sonstige</option>
+        <select class="search f-filter-select" id="fCatFilter" style="max-width:210px">
+          <option value="all">Alle Steuerkategorien</option>
+          <option value="software_cloud">☁️ Software & Cloud</option>
+          <option value="telecom_internet">📱 Telekom & Internet</option>
+          <option value="office_supplies">📎 Büromaterial</option>
+          <option value="gwg_assets">💻 GWG (≤ 800 €)</option>
+          <option value="digital_assets_afa">🖥️ Digital (Sofort-AfA)</option>
+          <option value="travel_mobility">🚆 Reise- & Fahrtkosten</option>
+          <option value="education_training">📚 Fortbildung</option>
+          <option value="marketing_sales">📣 Marketing & Ads</option>
+          <option value="bank_fees">💳 Bankgebühren</option>
+          <option value="rent_lease">🏢 Miete & Raumkosten</option>
+          <option value="insurance">🛡️ Versicherungen</option>
+          <option value="professional_services">🤝 Fremdleistungen</option>
+          <option value="legal_tax_advisory">⚖️ Rechts- & Steuerberatung</option>
+          <option value="repairs_maintenance">🔧 Reparaturen</option>
+          <option value="business_meals">🍽️ Bewirtung</option>
+          <option value="post_shipping">📦 Porto & Versand</option>
+          <option value="other_operational">🏷️ Sonstige Betriebsausgaben</option>
+          <option value="private_expense">🚫 Privat (Nicht in EÜR)</option>
         </select>
-        <select class="search f-filter-select" id="fStatusFilter" style="max-width:140px">
+        <select class="search f-filter-select" id="fPaidByFilter" style="max-width:170px">
+          <option value="all">Alle Zahlungskonten</option>
+          <option value="euer_only">Nur EÜR-Ausgaben (Kemal)</option>
+          <option value="kemal_business">Geschäftskonto Kemal</option>
+          <option value="melih_private">Melih privat (Nicht in EÜR)</option>
+        </select>
+        <select class="search f-filter-select" id="fVatFilter" style="max-width:160px">
+          <option value="all">Alle USt-Arten</option>
+          <option value="standard">Nur Inland (§15 Vorsteuer)</option>
+          <option value="reverse_charge">Nur § 13b Reverse Charge</option>
+        </select>
+        <select class="search f-filter-select" id="fStatusFilter" style="max-width:130px">
           <option value="all">Alle Status</option>
           <option value="processed">Verarbeitet</option>
           <option value="review_needed">Prüfung nötig</option>
           <option value="archived">Archiviert</option>
         </select>
-        <select class="search f-filter-select" id="fPaidByFilter" style="max-width:150px">
-          <option value="all">Alle (Kemal / Melih / Ortak)</option>
-          <option value="kemal">Kemal</option>
-          <option value="melih">Melih</option>
-          <option value="gemeinsam">Ortak / Gemeinsam</option>
-        </select>
         <label class="chk-inline">
           <input type="checkbox" id="fOnlyRecurring">
           <span>Nur Abos</span>
         </label>
-        <input class="search" id="financeSearch" type="search" placeholder="Suchen … (Lieferant, Nr., Text)">
+        <input class="search" id="financeSearch" type="search" placeholder="Suchen … (Lieferant, Land, USt-ID, Text)">
         <div class="spacer"></div>
-        <button class="btn btn-ghost" id="exportCsvBtn" title="Anlage EÜR CSV exportieren">📊 EÜR CSV</button>
+        <button class="btn btn-ghost" id="exportCsvBtn" title="Anlage EÜR CSV für Elster exportieren">📊 EÜR CSV</button>
         <button class="btn btn-ghost" id="exportJsonBtn" title="Anlage EÜR JSON exportieren">JSON</button>
         <a class="btn btn-ghost" id="financeDriveLink" target="_blank" rel="noopener" hidden>Belegordner ↗</a>
       </div>
