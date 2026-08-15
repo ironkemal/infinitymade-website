@@ -60,3 +60,55 @@ export function leereTerminAuswahl() {
   const info = document.getElementById('invPatientInfo');
   if (info) info.textContent = '';
 }
+
+/**
+ * Baut eine Tabellenzeile für den Rechnungseditor.
+ *
+ * Umzug aus dashboard.js (buildInvLineRow) — Konsey 2026-08-13: was angefasst
+ * wird, zieht um. Der Picker (rechnung-leistung-picker.js) ersetzt das Anlegen
+ * leerer Zeilen; diese Funktion rendert Zeilen, die bereits einen Titel tragen.
+ *
+ * @param {object} line          {title, quantity, unit_price}
+ * @param {number} idx           Zeilenindex in invLines
+ * @param {object} deps
+ * @param {Array}  deps.ownerServices
+ * @param {Function} deps.escapeHtml
+ * @param {Function} deps.formatEur
+ * @returns {string} HTML-String für ein <tr>
+ */
+export function baueLeistungszeile(line, idx, { ownerServices, escapeHtml, formatEur }) {
+  return `<tr data-idx="${idx}">
+    <td><select class="form-select inv-line-svc" style="min-width:180px;font-size:13px;">${leistungOptionen(ownerServices, line.title || '', escapeHtml)}</select></td>
+    <td><input type="number" class="form-input inv-line-qty" value="${line.quantity || 1}" min="0" style="width:72px;text-align:center;" /></td>
+    <td><input type="number" class="form-input inv-line-price" value="${line.unit_price || 0}" min="0" step="0.01" style="width:100px;text-align:right;" /></td>
+    <td style="text-align:right;font-weight:600;">${formatEur((line.quantity || 1) * (line.unit_price || 0))}</td>
+    <td><button class="btn-icon inv-del-line" type="button" title="Entfernen">🗑</button></td>
+  </tr>`;
+}
+
+/**
+ * Fasst Rechnungszeilen mit gleichem Titel und gleichem Einzelpreis zusammen.
+ * Zeilen gleichen Titels aber unterschiedlicher Preise bleiben getrennt.
+ *
+ * Umzug aus dashboard.js — wird von rechnung-druck.js als übergebene
+ * Abhängigkeit genutzt und muss daher exportiert sein.
+ *
+ * @param {Array} lines  [{title, quantity, unit_price}]
+ * @returns {Array}
+ */
+export function aggregateInvLines(lines) {
+  const groups = new Map();
+  const order = [];
+  for (const l of lines || []) {
+    const title = (l.title || '').trim();
+    const price = parseFloat(l.unit_price) || 0;
+    const qty = parseFloat(l.quantity) || 1;
+    const key = `${title}::${price.toFixed(2)}`;
+    if (!groups.has(key)) {
+      groups.set(key, { title, unit_price: price, quantity: 0 });
+      order.push(key);
+    }
+    groups.get(key).quantity += qty;
+  }
+  return order.map(k => groups.get(k));
+}

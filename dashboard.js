@@ -19,7 +19,8 @@ import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260815';
-import { leistungOptionen, leereTerminAuswahl } from './module/rechnung-editor.js?v=20260815';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines } from './module/rechnung-editor.js?v=20260815b';
+import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
@@ -15994,20 +15995,10 @@ async function loadPatientBookings(patientId) {
   return (data || []).filter(b => (seen.has(b.id) ? false : (seen.add(b.id), true)));
 }
 
-function buildInvLineRow(line, idx) {
-  return `<tr data-idx="${idx}">
-    <td><select class="form-select inv-line-svc" style="min-width:180px;font-size:13px;">${leistungOptionen(ownerServices, line.title || '', escapeHtml)}</select></td>
-    <td><input type="number" class="form-input inv-line-qty" value="${line.quantity || 1}" min="0" style="width:72px;text-align:center;" /></td>
-    <td><input type="number" class="form-input inv-line-price" value="${line.unit_price || 0}" min="0" step="0.01" style="width:100px;text-align:right;" /></td>
-    <td style="text-align:right;font-weight:600;">${formatEur((line.quantity || 1) * (line.unit_price || 0))}</td>
-    <td><button class="btn-icon inv-del-line" type="button" title="Entfernen">🗑</button></td>
-  </tr>`;
-}
-
 function renderInvLines() {
   const tbody = document.getElementById('invLineBody');
   if (!tbody) return;
-  tbody.innerHTML = invLines.map((l, i) => buildInvLineRow(l, i)).join('');
+  tbody.innerHTML = invLines.map((l, i) => baueLeistungszeile(l, i, { ownerServices, escapeHtml, formatEur })).join('');
   tbody.querySelectorAll('.inv-line-svc').forEach((sel, i) => {
     sel.onchange = () => {
       const opt = sel.options[sel.selectedIndex];
@@ -16141,26 +16132,6 @@ function closeInvEditor() {
   document.getElementById('invEditor').hidden = true;
   document.getElementById('invListWrap').hidden = false;
   document.getElementById('invNewBtn').hidden = false;
-}
-
-// Collapses repeated lines (same title + same unit price) into single rows
-// with summed quantity. Keeps lines with the same title but different prices
-// as separate entries (different durations / tariffs).
-function aggregateInvLines(lines) {
-  const groups = new Map();
-  const order = [];
-  for (const l of lines || []) {
-    const title = (l.title || '').trim();
-    const price = parseFloat(l.unit_price) || 0;
-    const qty = parseFloat(l.quantity) || 1;
-    const key = `${title}::${price.toFixed(2)}`;
-    if (!groups.has(key)) {
-      groups.set(key, { title, unit_price: price, quantity: 0 });
-      order.push(key);
-    }
-    groups.get(key).quantity += qty;
-  }
-  return order.map(k => groups.get(k));
 }
 
 async function saveInvoice() {
@@ -16816,8 +16787,10 @@ function bindInvEvents() {
     document.getElementById('invView').hidden = true;
     openInvEditor(id);
   });
-  document.getElementById('invAddLineBtn').onclick = () => {
-    invLines.push({ title: '', quantity: 1, unit_price: 0 });
+  document.getElementById('invAddLineBtn').onclick = async () => {
+    const zeile = await waehleLeistung(ownerServices, { escapeHtml, formatEur, preisFuer: (s) => (invPatientInsuranceType === 'gkv' && s.gkv_position_nr && GKV_PRICES[s.gkv_position_nr]) || parseFloat(s.price) || 0 });
+    if (!zeile) return;
+    invLines.push(zeile);
     renderInvLines(); calcInvTotals();
   };
   let invBookingCache = [];
