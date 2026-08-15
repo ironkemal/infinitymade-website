@@ -12,10 +12,11 @@ import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenka
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260814';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260814';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf } from './module/fussbefund.js?v=20260814a';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin } from './module/fussbefund.js?v=20260814a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
+import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260815';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
@@ -15904,22 +15905,9 @@ async function openInvView(invoiceId) {
     document.getElementById('invvRxBlock').hidden = true;
   }
 
-  // Aggregate just for display in case the row has stale duplicates
-  const lines = aggregateInvLines(inv.line_items || []);
-  document.getElementById('invvLineBody').innerHTML = lines.map((l, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${escapeHtml(l.title || '')}</td>
-      <td class="num">${l.quantity || 1}×</td>
-      <td class="num">${formatEur(l.unit_price || 0)}</td>
-      <td class="num">${formatEur((l.quantity || 1) * (l.unit_price || 0))}</td>
-    </tr>`).join('');
-
-  document.getElementById('invvSubtotal').textContent = formatEur(inv.subtotal || 0);
-  document.getElementById('invvEigenPct').textContent = inv.eigenanteil_pct || 0;
-  document.getElementById('invvEigenEur').textContent = formatEur(inv.eigenanteil_eur || 0);
-  document.getElementById('invvKasse').textContent = formatEur(inv.kassenzuzahlung || 0);
-  document.getElementById('invvTotal').textContent = formatEur(inv.total_patient || 0);
+  // Positionen + Summen: Kassenanteil bleibt vom Patientenbeleg fern.
+  // Regel und Begründung in module/rechnung-druck.js.
+  fuelleBelegPositionen(inv, { formatEur, escapeHtml, aggregateInvLines });
 
   if (inv.notes) {
     document.getElementById('invvNotesWrap').hidden = false;
@@ -16035,7 +16023,14 @@ async function loadPatientBookings(patientId) {
     .select('first_name,last_name,title,phone,email,phone_normalized')
     .eq('id', patientId)
     .maybeSingle();
-  const orParts = [];
+  // Der direkte Weg zuerst: seit die Terminbuchung den Patienten verknüpft,
+  // steht die Zuordnung als `bookings.lead_id` in der Zeile. Ohne diese Zeile
+  // suchte die Rechnungsmaske den Termin nur über den Rezeptbezug oder über
+  // Textvergleiche auf Name/Telefon/E-Mail — und fand nichts, sobald der
+  // Termin unter „Nachname, Vorname", mit Titel oder ohne Telefonnummer
+  // angelegt war. Von 222 verknüpften Terminen waren 83 auf diese Weise
+  // unsichtbar; die Leistungsauswahl blieb dann leer (Kemal, 15.08.2026).
+  const orParts = [`lead_id.eq.${patientId}`];
   const names = new Set();
   if (lead?.title) names.add(lead.title);
   const composed = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ');

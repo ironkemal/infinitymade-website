@@ -1160,16 +1160,16 @@
                 <div class="invoice-print-section-title">Leistungen</div>
                 <table class="invoice-print-table">
                   <thead>
-                    <tr><th>Pos.</th><th>Leistung</th><th class="num">Anz.</th><th class="num">Einzelpreis</th><th class="num">Gesamt</th></tr>
+                    <tr><th>Pos.</th><th>Leistung</th><th class="num">Anz.</th><th class="num" id="invvThEinzel">Einzelpreis</th><th class="num" id="invvThGesamt">Gesamt</th></tr>
                   </thead>
                   <tbody id="invvLineBody"></tbody>
                 </table>
               </div>
 
               <div class="invoice-print-totals">
-                <div class="invoice-print-total-row"><span>Zwischensumme</span><span id="invvSubtotal">—</span></div>
-                <div class="invoice-print-total-row"><span>Eigenanteil (<span id="invvEigenPct">0</span>%)</span><span id="invvEigenEur">—</span></div>
-                <div class="invoice-print-total-row"><span>Kassenzuzahlung</span><span id="invvKasse">—</span></div>
+                <div class="invoice-print-total-row" id="invvSubtotalRow"><span>Zwischensumme</span><span id="invvSubtotal">—</span></div>
+                <div class="invoice-print-total-row" id="invvEigenRow"><span>Eigenanteil (<span id="invvEigenPct">0</span>%)</span><span id="invvEigenEur">—</span></div>
+                <div class="invoice-print-total-row" id="invvKasseRow"><span>Kassenzuzahlung</span><span id="invvKasse">—</span></div>
                 <div class="invoice-print-total-row invoice-print-grand"><span>Zu zahlen (Patient)</span><span id="invvTotal">—</span></div>
               </div>
 
@@ -5899,7 +5899,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260815a"></script>
+  <script type="module" src="dashboard.js?v=20260815b"></script>
 </body>
 
 </html>
