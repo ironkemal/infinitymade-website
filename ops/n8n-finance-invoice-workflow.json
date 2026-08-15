@@ -1,0 +1,242 @@
+{
+  "name": "Praxura Ops - E-Mail Fatura & Beleg Otomasyonu",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "has:attachment filename:pdf"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "node-gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0vQAwFOJNYOnYXEK",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $binary.attachment_0 ? $binary.attachment_0.fileExtension : '' }}",
+              "operation": "equal",
+              "value2": "pdf"
+            }
+          ]
+        }
+      },
+      "id": "node-if-pdf",
+      "name": "PDF Eki Var mı?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "upload",
+        "name": "={{ $json.from?.value?.[0]?.name || $json.from?.name || 'Beleg' }}_{{ $now.format('yyyy-MM-dd_HHmm') }}.pdf",
+        "parents": [
+          "1WaSt_q7X7cfD8YL7u5D1mQJ_YyljBwxO"
+        ],
+        "binaryData": true,
+        "binaryPropertyName": "attachment_0",
+        "options": {
+          "fields": [
+            "id",
+            "name",
+            "webViewLink",
+            "webContentLink"
+          ]
+        }
+      },
+      "id": "node-drive",
+      "name": "Google Drive Yükle",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        680,
+        280
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wbsqG233FfN5PAM1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Du bist ein hochpräziser deutscher Buchhaltungs- und EÜR-Assistent für ein deutsches Kleingewerbe (Einnahmen-Überschuss-Rechnung).\n\nAnalysiere die E-Mail-Metadaten und den Rechnungstext und antworte AUSSCHLIESSLICH mit einem validen JSON-Objekt (ohne Markdown, ohne Code-Fences):\n\n{\n  \"vendor_name\": \"Name des Lieferanten / Dienstleisters\",\n  \"invoice_number\": \"Rechnungsnummer falls auffindbar\",\n  \"invoice_date\": \"YYYY-MM-DD\",\n  \"due_date\": null,\n  \"gross_amount\": 0.00,\n  \"net_amount\": 0.00,\n  \"vat_rate\": 19.00,\n  \"vat_amount\": 0.00,\n  \"currency\": \"EUR\",\n  \"euer_category\": \"software_cloud\",\n  \"is_recurring\": false,\n  \"recurring_interval\": \"none\",\n  \"paid_by\": \"gemeinsam\",\n  \"payment_method\": \"bank_transfer\",\n  \"description_summary\": \"Kurze präzise Beschreibung des Kaufs auf Deutsch\",\n  \"needs_manual_review\": false\n}\n\nRegeln:\n1. EÜR-Kategorien: software_cloud, telecom_internet, office_supplies, gwg_assets, travel_mobility, education_training, marketing_sales, bank_fees, other_operational.\n2. Abo / Fixkosten: Falls Wörter wie 'Subscription', 'Abo', 'Monthly', 'Recurring', 'Monatlich' vorkommen oder es ein bekannter SaaS-Dienst ist (ChatGPT, Adobe, Google, Supabase, Vercel), setze 'is_recurring': true und 'recurring_interval': 'monthly' (oder 'yearly').\n3. Zugehörigkeit (paid_by): Falls in der Rechnung/E-Mail der Name 'Kemal' bzw. 'Yavuz Kemal' steht -> 'kemal'. Falls 'Melih' steht -> 'melih'. Ansonsten -> 'gemeinsam'.\n\nE-Mail Betreff: {{ $json.subject }}\nAbsender: {{ $json.from?.text || $json.from?.value?.[0]?.address || $json.from }}\nE-Mail Textauszug: {{ ($json.text || $json.snippet || '').slice(0, 3000) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-gemini",
+      "name": "Gemini AI Beleg-OCR",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        280
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "mc4ec6EnNvsIEivD",
+          "name": "Google Gemini account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const driveData = $('Google Drive Yükle').first().json;\nconst emailData = $('Gmail Trigger').first().json;\nconst geminiRaw = $('Gemini AI Beleg-OCR').first().json;\n\nlet raw = '';\nif (geminiRaw.choices && geminiRaw.choices[0] && geminiRaw.choices[0].message) {\n  raw = geminiRaw.choices[0].message.content || '';\n} else if (geminiRaw.content && geminiRaw.content.parts && geminiRaw.content.parts[0]) {\n  raw = geminiRaw.content.parts[0].text || '';\n} else if (geminiRaw.text) {\n  raw = geminiRaw.text;\n} else if (typeof geminiRaw === 'string') {\n  raw = geminiRaw;\n} else {\n  raw = JSON.stringify(geminiRaw);\n}\n\nlet jsonStr = String(raw)\n  .replace(/^\\`\\`\\`(?:json)?\\s*/i, '')\n  .replace(/\\`\\`\\`\\s*$/, '')\n  .trim();\n\nlet aiData = {};\ntry {\n  aiData = JSON.parse(jsonStr);\n} catch (e) {\n  const m = jsonStr.match(/\\{[\\s\\S]*\\}/);\n  if (m) {\n    try { aiData = JSON.parse(m[0]); } catch (e2) { aiData = {}; }\n  }\n}\n\nconst gross = parseFloat(aiData.gross_amount) || 0;\nconst vatRate = parseFloat(aiData.vat_rate) || (gross > 0 ? 19 : 0);\nlet net = parseFloat(aiData.net_amount);\nlet vatAmount = parseFloat(aiData.vat_amount);\n\nif (isNaN(net) || net <= 0) {\n  net = vatRate > 0 ? (gross / (1 + (vatRate / 100))) : gross;\n}\nif (isNaN(vatAmount)) {\n  vatAmount = gross - net;\n}\n\nconst sender = emailData.from?.text || emailData.from?.value?.[0]?.address || emailData.from?.name || 'Unbekannt';\nconst vendor = aiData.vendor_name || emailData.from?.value?.[0]?.name || emailData.from?.name || 'Unbekannter Lieferant';\nconst rawEmailText = `${emailData.subject || ''} ${emailData.text || ''} ${emailData.snippet || ''}`.toLowerCase();\n\n// Subscription heuristic\nlet isRecurring = Boolean(aiData.is_recurring);\nlet recurringInterval = aiData.recurring_interval || (isRecurring ? 'monthly' : 'none');\nif (!isRecurring && /subscription|abo|monthly|recurring|wiederkehrend|erneuerung|monatlich/i.test(rawEmailText)) {\n  isRecurring = true;\n  recurringInterval = 'monthly';\n}\n\n// Partner heuristic\nlet paidBy = aiData.paid_by || 'gemeinsam';\nif (paidBy !== 'kemal' && paidBy !== 'melih') {\n  if (/kemal|yavuz/i.test(rawEmailText)) paidBy = 'kemal';\n  else if (/melih/i.test(rawEmailText)) paidBy = 'melih';\n  else paidBy = 'gemeinsam';\n}\n\nreturn [{\n  json: {\n    invoice_date: aiData.invoice_date || new Date().toISOString().slice(0, 10),\n    due_date: aiData.due_date || null,\n    vendor_name: vendor,\n    invoice_number: aiData.invoice_number || null,\n    description: aiData.description_summary || emailData.subject || null,\n    currency: aiData.currency || 'EUR',\n    gross_amount: Math.round(gross * 100) / 100,\n    net_amount: Math.round(net * 100) / 100,\n    vat_rate: vatRate,\n    vat_amount: Math.round(vatAmount * 100) / 100,\n    euer_category: aiData.euer_category || 'software_cloud',\n    paid_by: paidBy,\n    is_recurring: isRecurring,\n    recurring_interval: recurringInterval,\n    payment_method: aiData.payment_method || 'bank_transfer',\n    drive_file_id: driveData.id || null,\n    drive_web_view_link: driveData.webViewLink || null,\n    email_sender: typeof sender === 'object' ? JSON.stringify(sender) : String(sender),\n    email_subject: emailData.subject || null,\n    raw_ai_extraction: aiData,\n    status: (aiData.needs_manual_review || gross <= 0) ? 'review_needed' : 'processed'\n  }\n}];"
+      },
+      "id": "node-normalize",
+      "name": "Daten normalisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://farkaejociddtgqkusvm.supabase.co/rest/v1/ops_finance_expenses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_0GMmZtNiJvThgIGgsBHA7Q_hV7ZVwg6"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_0GMmZtNiJvThgIGgsBHA7Q_hV7ZVwg6"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "node-supabase",
+      "name": "Supabase'e Kaydet",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "PDF Eki Var mı?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF Eki Var mı?": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Yükle",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini AI Beleg-OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Yükle": {
+      "main": [
+        [
+          {
+            "node": "Daten normalisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Beleg-OCR": {
+      "main": [
+        [
+          {
+            "node": "Daten normalisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daten normalisieren": {
+      "main": [
+        [
+          {
+            "node": "Supabase'e Kaydet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

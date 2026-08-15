@@ -49,6 +49,7 @@
       <button class="tab" data-view="wissen">Wissensbank</button>
       <button class="tab" data-view="decisions">Entscheidungen</button>
       <button class="tab" data-view="meetings">Meetings</button>
+      <button class="tab" data-view="ausgaben">Ausgaben</button>
       <button class="tab" data-view="files">Dateien</button>
     </nav>
     <div class="top-right">
@@ -105,6 +106,62 @@
         <span class="hint">Notiz einfügen → Claude macht Aufgaben daraus</span>
       </div>
       <div class="cards" id="meetingList"></div>
+    </section>
+
+    <!-- ── Ausgaben (Finanzen & EÜR) ──────────────────────────────────── -->
+    <section class="view" id="view-ausgaben" hidden>
+      <div class="view-bar">
+        <button class="btn btn-primary" id="addExpenseBtn">+ Ausgabe</button>
+        <select class="search f-filter-select" id="fYearFilter" style="max-width:130px">
+          <option value="all">Alle Jahre</option>
+        </select>
+        <select class="search f-filter-select" id="fCatFilter" style="max-width:200px">
+          <option value="all">Alle Kategorien</option>
+          <option value="software_cloud">Software & Cloud</option>
+          <option value="telecom_internet">Telekommunikation</option>
+          <option value="office_supplies">Büromaterial</option>
+          <option value="gwg_assets">GWG (≤ 800 €)</option>
+          <option value="travel_mobility">Reise & Fahrt</option>
+          <option value="education_training">Fortbildung</option>
+          <option value="marketing_sales">Marketing & Ads</option>
+          <option value="bank_fees">Bank & Gebühren</option>
+          <option value="other_operational">Sonstige</option>
+        </select>
+        <select class="search f-filter-select" id="fStatusFilter" style="max-width:140px">
+          <option value="all">Alle Status</option>
+          <option value="processed">Verarbeitet</option>
+          <option value="review_needed">Prüfung nötig</option>
+          <option value="archived">Archiviert</option>
+        </select>
+        <select class="search f-filter-select" id="fPaidByFilter" style="max-width:150px">
+          <option value="all">Alle (Kemal / Melih / Ortak)</option>
+          <option value="kemal">Kemal</option>
+          <option value="melih">Melih</option>
+          <option value="gemeinsam">Ortak / Gemeinsam</option>
+        </select>
+        <label class="chk-inline">
+          <input type="checkbox" id="fOnlyRecurring">
+          <span>Nur Abos</span>
+        </label>
+        <input class="search" id="financeSearch" type="search" placeholder="Suchen … (Lieferant, Nr., Text)">
+        <div class="spacer"></div>
+        <button class="btn btn-ghost" id="exportCsvBtn" title="Anlage EÜR CSV exportieren">📊 EÜR CSV</button>
+        <button class="btn btn-ghost" id="exportJsonBtn" title="Anlage EÜR JSON exportieren">JSON</button>
+        <a class="btn btn-ghost" id="financeDriveLink" target="_blank" rel="noopener" hidden>Belegordner ↗</a>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="f-kpi-grid" id="financeKPIs"></div>
+
+      <!-- EÜR Tax Category Breakdown -->
+      <div id="financeBreakdown"></div>
+
+      <!-- Expense Invoices Table & Summary -->
+      <div class="f-list-head">
+        <h3 style="margin:0;font-size:15px">Belege & Betriebsausgaben</h3>
+        <span class="hint" id="financeCount"></span>
+      </div>
+      <div id="financeList"></div>
     </section>
 
     <!-- ── Dateien ──────────────────────────────────────────────────── -->

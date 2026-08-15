@@ -8203,6 +8203,15 @@ function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird w
   return patientPasstZurSuche(lead, q, { nameMitGeburt: displayNameWithBirth, geburtsdatum: leadBirthDate });
 }
 
+// `leadsCache` wurde bisher NUR gefüllt, wenn jemand das Patienten-Panel öffnete.
+// Wer direkt in die Podologie-Abrechnung ging, bekam eine leere Patientensuche
+// ("Keine Treffer"), tippte den Namen — und die Verordnung wurde ohne `lead_id`
+// gespeichert, also unabrechenbar. Der Anwender hat ausgewählt; es gab nur nichts.
+async function ensureLeadsCache() {
+  if (!leadsCache.length) { try { await loadLeads(); } catch (e) { console.error('[leads] Cache:', e); } }
+  return leadsCache;
+}
+
 async function loadLeads() {
   const ownerId = getOwnerId();
   let q = supabase.from('leads').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
@@ -24020,8 +24029,7 @@ async function loadPodologieBilling() {
           <div style="display:grid;gap:10px;">
             <div>
               <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:4px;">${t('pod_patient')}</label>
-              <input type="text" id="podNewPatient" list="podPatientList" placeholder="Name suchen oder eingeben…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
-              <datalist id="podPatientList"></datalist>
+              <input type="text" id="podNewPatient" placeholder="Name suchen oder eingeben…" autocomplete="off" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:14px;">
               <input type="hidden" id="podNewLeadId">
             </div>
             <div>
@@ -24565,7 +24573,7 @@ async function loadPodologieBilling() {
   const podPatientInput = document.getElementById('podNewPatient');
   if (podPatientInput) {
     attachPatientSearch(podPatientInput, {
-      loadLeads: () => leadsCache,
+      loadLeads: ensureLeadsCache,   // lädt selbst nach, statt auf das Patienten-Panel zu warten
       matches:   patientMatchesQuery,
       labelOf:   displayNameWithBirth,
       onSelect:  lead => {

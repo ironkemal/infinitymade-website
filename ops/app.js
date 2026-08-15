@@ -183,6 +183,7 @@ const views = {};   // name → { mount(), mounted }
 export function registerView(name, mount) { views[name] = { mount, mounted: false }; }
 
 export function showView(name) {
+  if (name === 'finance') name = 'ausgaben';
   if (!views[name]) name = 'todo';
   $$('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.view === name));
   $$('.view').forEach(v => { v.hidden = v.id !== `view-${name}`; });
@@ -271,6 +272,7 @@ async function showApp() {
     ['wissen',    './wissen.js?v=20260811a',    'mountWissen'],
     ['decisions', './decisions.js?v=20260811a', 'mountDecisions'],
     ['meetings',  './meetings.js?v=20260811a',  'mountMeetings'],
+    ['ausgaben',  './finance.js?v=20260815b',   'mountFinance'],
     ['files',     './files.js?v=20260811a',     'mountFiles']
   ];
 

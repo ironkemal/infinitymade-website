@@ -21,5 +21,9 @@ export const GITHUB_BRANCH = 'main';
 //  — kod ve .git ASLA buraya konmaz.)
 export const SHARED_FOLDER_URL = 'https://drive.google.com/drive/folders/1aGnc4WWXHeT2UxD_D4mCgzJCDzU7dHnm';
 
+// Finans & Fatura belgelerinin saklandığı Google Drive klasörü
+export const INVOICE_FOLDER_URL = 'https://drive.google.com/drive/folders/1WaSt_q7X7cfD8YL7u5D1mQJ_YyljBwxO';
+
 // Bitmiş görevler kaç gün sonra arşive gizlensin
 export const DONE_ARCHIVE_DAYS = 7;
+
