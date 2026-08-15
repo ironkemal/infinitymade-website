@@ -19,6 +19,7 @@ import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260815';
+import { leistungOptionen, leereTerminAuswahl } from './module/rechnung-editor.js?v=20260815';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
@@ -15984,16 +15985,9 @@ async function loadPatientBookings(patientId) {
   return (data || []).filter(b => (seen.has(b.id) ? false : (seen.add(b.id), true)));
 }
 
-function buildSvcOptions(selectedTitle) {
-  const opts = ownerServices.map(s =>
-    `<option value="${escapeHtml(s.title || '')}" data-price="${parseFloat(s.price) || 0}" ${(s.title || '') === selectedTitle ? 'selected' : ''}>${escapeHtml(s.title || '')}</option>`
-  ).join('');
-  return `<option value="" data-price="0">-- Leistung wählen --</option>` + opts;
-}
-
 function buildInvLineRow(line, idx) {
   return `<tr data-idx="${idx}">
-    <td><select class="form-select inv-line-svc" style="min-width:180px;font-size:13px;">${buildSvcOptions(line.title || '')}</select></td>
+    <td><select class="form-select inv-line-svc" style="min-width:180px;font-size:13px;">${leistungOptionen(ownerServices, line.title || '', escapeHtml)}</select></td>
     <td><input type="number" class="form-input inv-line-qty" value="${line.quantity || 1}" min="0" style="width:72px;text-align:center;" /></td>
     <td><input type="number" class="form-input inv-line-price" value="${line.unit_price || 0}" min="0" step="0.01" style="width:100px;text-align:right;" /></td>
     <td style="text-align:right;font-weight:600;">${formatEur((line.quantity || 1) * (line.unit_price || 0))}</td>
@@ -16094,8 +16088,8 @@ function resetInvEditor() {
   invPatientId = null;
   invPrescriptionId = null;
   document.getElementById('invPatientSelect').value = '';
-  document.getElementById('invPatientInfo').textContent = '';
   document.getElementById('invLineBody').innerHTML = '';
+  leereTerminAuswahl();
   document.getElementById('invEigenPct').value = 10;
   document.getElementById('invKasse').value = 10;
   document.getElementById('invNotes').value = '';
