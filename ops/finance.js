@@ -665,12 +665,16 @@ function formExpense(it = null) {
           const isDeductible = fundingSource !== 'melih_private' && taxCat !== 'private_expense';
           const dedPct = parseFloat($('#f_deductible_pct').value) || 100;
 
-          // Determine economic classification
           let econClass = 'business_expense';
+          let capitalMove = 'none';
+          let econPurpose = 'business';
+
           if (fundingSource === 'melih_private' || taxCat === 'private_expense') {
             econClass = 'private_expense';
+            econPurpose = 'private';
           } else if (fundingSource === 'kemal_private') {
-            econClass = 'private_contribution'; // Privateinlage
+            capitalMove = 'private_contribution'; // Privateinlage
+            econPurpose = 'business';
           }
 
           const row = {
@@ -700,7 +704,8 @@ function formExpense(it = null) {
             euer_category: taxCat,
             funding_source: fundingSource,
             payer_type: fundingSource,
-            economic_purpose: isDeductible ? 'business' : 'private',
+            economic_purpose: econPurpose,
+            capital_movement: capitalMove,
             economic_classification: econClass,
             is_deductible: isDeductible,
             deductible_percentage: dedPct,
