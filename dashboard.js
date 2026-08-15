@@ -10,7 +10,7 @@ import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260815';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260815';
-import { renderPatientenliste } from './module/patientenliste.js?v=20260815';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815b';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin } from './module/fussbefund.js?v=20260814a';
@@ -8218,31 +8218,9 @@ function displayNameWithBirth(lead) {
   return bd ? `${name} · ${bd}` : name;
 }
 // Zentrale Patientensuche: Name, Geburtsdatum (ISO + dt. Format) und Telefonnummer
-function patientMatchesQuery(lead, q) {
-  const query = (q || '').trim().toLowerCase();
-  if (!query) return true;
-  if (displayNameWithBirth(lead).toLowerCase().includes(query)) return true;
-  if ((lead.title || '').toLowerCase().includes(query)) return true;
-  const bd = leadBirthDate(lead);
-  if (bd) {
-    const m = String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (m) {
-      const de = `${m[3]}.${m[2]}.${m[1]}`;           // 12.03.1985
-      const deShort = `${+m[3]}.${+m[2]}.${m[1]}`;    // 12.3.1985
-      if (de.includes(query) || deShort.includes(query)) return true;
-    }
-  }
-  const qDigits = query.replace(/\D/g, '');
-  if (qDigits.length >= 3) {
-    // Handy zählt mit: wer eine Nummer sucht, weiss nicht in welchem Feld sie steht.
-    const pDigits = [lead.phone, lead.handy].map(v => String(v || '').replace(/\D/g, '')).join(' ');
-    const pNorm = [lead.phone_normalized, lead.handy_normalized].map(v => String(v || '').replace(/\D/g, '')).join(' ');
-    if (pDigits.includes(qDigits) || pNorm.includes(qDigits)) return true;
-    // 0170… ↔ +49170…: führende 0 gegen Ländervorwahl tauschen
-    const qAlt = qDigits.startsWith('0') ? '49' + qDigits.slice(1) : null;
-    if (qAlt && (pDigits.includes(qAlt) || pNorm.includes(qAlt))) return true;
-  }
-  return false;
+// Patientensuche → module/patientenliste.js (Name · Geburtsdatum · beide Rufnummern)
+function patientMatchesQuery(lead, q) {   // Deklaration, nicht const: es wird weiter oben aufgerufen
+  return patientPasstZurSuche(lead, q, { nameMitGeburt: displayNameWithBirth, geburtsdatum: leadBirthDate });
 }
 
 async function loadLeads() {
@@ -8264,7 +8242,10 @@ async function loadLeads() {
       leadsMeta[b.customer_phone_normalized].bookings.push(b);
     });
   }
-  leadAbrStatus = await ladeStatusJePatient(supabase, ownerId);
+  // Beiwerk der Zeile, keine Voraussetzung für sie: schlug das fehl, blieb sonst
+  // die ganze Kartei leer — ein Schmuckfeld hätte die Patientenliste verdeckt.
+  try { leadAbrStatus = await ladeStatusJePatient(supabase, ownerId); }
+  catch (e) { console.error('[leads] Abrechnungsstatus nicht ladbar:', e); leadAbrStatus = new Map(); }
   renderLeads();
 }
 
@@ -8281,16 +8262,20 @@ function normalize_phone_js(p) {
 
 function renderLeads() {
   renderPatientenliste({
-    daten: () => ({
-      rows: leadsCache, meta: leadsMeta, statusJePatient: leadAbrStatus,
-      filter: leadFilter, suche: leadSearchVal, businesses: myBusinesses,
-    }),
+    daten: () => ({ rows: leadsCache, meta: leadsMeta, statusJePatient: leadAbrStatus,
+                    filter: leadFilter, suche: leadSearchVal, businesses: myBusinesses }),
     helfer: { displayName, geburtsdatum: leadBirthDate, passtZurSuche: patientMatchesQuery, escapeHtml, icons: ICON },
     aktionen: {
       oeffneKarte: (id) => { const l = leadsCache.find(x => x.id === id); if (l) openPatientDetailModal(l); },
       bearbeite:   (id) => { const l = leadsCache.find(x => x.id === id); if (l) openLeadModal(l); },
       aendereStatus: (vordId) => oeffneStatusDialogFuer(vordId, { supabase, onFertig: loadLeads })
         .catch(err => showToast(err.message || 'Status konnte nicht geöffnet werden', 'error')),
+      filterZuruecksetzen: () => {
+        leadFilter = 'all'; leadSearchVal = '';
+        const sf = document.getElementById('leadSearch'); if (sf) sf.value = '';
+        document.querySelectorAll('#panel-kunden .filter-btn').forEach(b => b.classList.toggle('active', b.dataset.status === 'all'));
+        renderLeads();
+      },
     },
   });
 }

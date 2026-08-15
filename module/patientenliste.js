@@ -60,7 +60,27 @@ export function renderPatientenliste(ctx) {
   const standortTh = document.getElementById('leadStandortTh');
   if (standortTh) standortTh.style.display = multiBiz ? '' : 'none';
 
-  if (rows.length === 0) { tbody.innerHTML = ''; if (emptyEl) emptyEl.hidden = false; return; }
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    // Eine leere Liste hat zwei sehr verschiedene Bedeutungen: „diese Praxis hat
+    // keine Patienten" oder „ein Filter steht noch". Ohne Unterscheidung sieht
+    // das zweite wie Datenverlust aus — genau so wurde es am 15.08. gemeldet.
+    // Also sagen, dass gefiltert wird, und den Ausweg gleich danebenlegen.
+    if (emptyEl) {
+      const gefiltert = filter !== 'all' || !!suche;
+      emptyEl.hidden = false;
+      if (gefiltert) {
+        emptyEl.innerHTML = `${alle.length} Patient${alle.length === 1 ? '' : 'en'} vorhanden, `
+          + `aber keiner passt zur aktuellen Auswahl. `
+          + `<button type="button" id="leadFilterReset" class="btn-ghost btn-sm">Filter zurücksetzen</button>`;
+        emptyEl.querySelector('#leadFilterReset')
+          ?.addEventListener('click', () => ctx.aktionen.filterZuruecksetzen?.());
+      } else {
+        emptyEl.textContent = 'Noch keine Patienten.';
+      }
+    }
+    return;
+  }
   if (emptyEl) emptyEl.hidden = true;
 
   const bizNameById = new Map((businesses || []).map(b => [b.id, b.business_name]));
@@ -117,4 +137,43 @@ export function renderPatientenliste(ctx) {
       ctx.aktionen.bearbeite(btn.dataset.leadId);
     });
   });
+}
+
+/**
+ * Trifft die Suchanfrage diesen Patienten?
+ *
+ * Eine Praxis sucht auf drei Wegen, und alle drei müssen dasselbe Feld bedienen:
+ * Name, Geburtsdatum (auch deutsch getippt: 12.3.1985) und Telefonnummer.
+ *
+ * Bei der Nummer zählen Festnetz UND Handy: wer eine Nummer im Kopf hat, weiss
+ * nicht, in welchem der beiden Felder sie steht. Und `0170…` muss `+49170…`
+ * finden — dieselbe Nummer, zwei Schreibweisen.
+ *
+ * @param {object} lead
+ * @param {string} q
+ * @param {{nameMitGeburt:Function, geburtsdatum:Function}} helfer
+ */
+export function patientPasstZurSuche(lead, q, helfer) {
+  const query = (q || '').trim().toLowerCase();
+  if (!query) return true;
+  if (helfer.nameMitGeburt(lead).toLowerCase().includes(query)) return true;
+  if ((lead.title || '').toLowerCase().includes(query)) return true;
+
+  const bd = helfer.geburtsdatum(lead);
+  const m = bd ? String(bd).match(/^(\d{4})-(\d{2})-(\d{2})/) : null;
+  if (m) {
+    const de = `${m[3]}.${m[2]}.${m[1]}`;          // 12.03.1985
+    const deKurz = `${+m[3]}.${+m[2]}.${m[1]}`;    // 12.3.1985
+    if (de.includes(query) || deKurz.includes(query)) return true;
+  }
+
+  const ziffern = query.replace(/\D/g, '');
+  if (ziffern.length >= 3) {
+    const roh  = [lead.phone, lead.handy].map(v => String(v || '').replace(/\D/g, '')).join(' ');
+    const norm = [lead.phone_normalized, lead.handy_normalized].map(v => String(v || '').replace(/\D/g, '')).join(' ');
+    if (roh.includes(ziffern) || norm.includes(ziffern)) return true;
+    const mitVorwahl = ziffern.startsWith('0') ? '49' + ziffern.slice(1) : null;
+    if (mitVorwahl && (roh.includes(mitVorwahl) || norm.includes(mitVorwahl))) return true;
+  }
+  return false;
 }
