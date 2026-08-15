@@ -56,6 +56,18 @@
  */
 
 /**
+ * Die Regel allein — ohne Datenbank, damit sie prüfbar bleibt.
+ *
+ * @param {{offen:number, erbracht:number, einheiten:number|null}} stand
+ */
+export function istFertigBehandelt({ offen, erbracht, einheiten }) {
+  if ((offen || 0) > 0) return false;
+  // Ohne verordnete Einheitenzahl (Altbestand, Blanko) bleibt nur „nichts mehr offen".
+  if (!einheiten) return true;
+  return (erbracht || 0) >= einheiten;
+}
+
+/**
  * Prüft den Fortschritt einer Verordnung und hebt ihren Status, wenn fällig.
  *
  * Schreibt nur nach oben und nur, wenn kein Mensch bereits eingegriffen hat:
@@ -84,7 +96,7 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
   const offen     = offenRes.count || 0;
   const erbracht  = erbrachtRes.count || 0;
   const einheiten = rxRes.data?.anzahl_einheiten ?? null;
-  const fertig    = offen === 0 && (!einheiten || erbracht >= einheiten);
+  const fertig    = istFertigBehandelt({ offen, erbracht, einheiten });
 
   if (fertig) {
     await supabase.from('prescriptions')
