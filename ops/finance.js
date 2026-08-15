@@ -668,10 +668,20 @@ function formExpense(it = null) {
           let econClass = 'business_expense';
           let capitalMove = 'none';
           let econPurpose = 'business';
+          let needsRev = $('#f_status').value === 'review_needed';
+          const revCodes = [];
 
-          if (fundingSource === 'melih_private' || taxCat === 'private_expense') {
-            econClass = 'private_expense';
-            econPurpose = 'private';
+          if (fundingSource === 'melih_private') {
+            if (taxCat === 'private_expense') {
+              econClass = 'private_expense';
+              econPurpose = 'private';
+            } else {
+              // Rule 2: Melih pays business expense -> Safety brake!
+              econPurpose = 'business';
+              econClass = 'business_expense';
+              needsRev = true;
+              revCodes.push('MELIH_BUSINESS_PAYMENT_NEEDS_REVIEW');
+            }
           } else if (fundingSource === 'kemal_private') {
             capitalMove = 'private_contribution'; // Privateinlage
             econPurpose = 'business';
@@ -714,7 +724,10 @@ function formExpense(it = null) {
             recurring_interval: $('#f_recurring').checked ? $('#f_interval').value : 'none',
             description: $('#f_desc').value.trim() || null,
             drive_web_view_link: $('#f_drive_link').value.trim() || null,
-            status: $('#f_status').value
+            needs_review: needsRev,
+            review_codes: revCodes,
+            record_mode: it?.record_mode || 'production',
+            status: needsRev ? 'review_needed' : $('#f_status').value
           };
 
           if (isEdit) {
