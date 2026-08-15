@@ -20,8 +20,7 @@ import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=2026081
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260815';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl } from './module/rechnung-verordnung.js?v=20260815a';
-
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260815b';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
@@ -15940,7 +15939,6 @@ async function loadInvPatients() {
     }).join('');
 }
 
-
 function renderInvLines() {
   const tbody = document.getElementById('invLineBody');
   if (!tbody) return;
@@ -16111,7 +16109,6 @@ async function saveInvoice() {
     invoice_number: invoiceNumber,
     prescription_id: invPrescriptionId || verordnungAuswahl().prescriptionId || null,
     notes: [document.getElementById('invNotes').value || null, verordnungAuswahl().notizZeile].filter(Boolean).join('\n') || null,
-
     invoice_type: invPatientInsuranceType || null
   };
   const { data: inserted, error } = await supabase.from('invoices').insert(payload).select('id').maybeSingle();
@@ -16800,8 +16797,10 @@ function bindInvEvents() {
         },
       });
     } else {
+      // Leere Liste durchreichen statt nur das DOM zu leeren — sonst bliebe die
+      // Verordnung des vorigen Patienten als Modulzustand stehen.
+      verordnungenRendern(vordList, [], { escapeHtml, formatEur, onAuswahl: null });
       vordWrap.hidden = true;
-      if (vordList) vordList.innerHTML = '';
     }
 
     // ── Termine laden (Selbstzahler-Weg, zweite Ebene im <details>) ──────────
@@ -16831,9 +16830,8 @@ function bindInvEvents() {
       }).join('');
       checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.onchange = () => {
-          // Termin gewählt → Verordnungsauswahl abräumen
-          verordnungenRendern(vordList, [], { escapeHtml, formatEur, onAuswahl: null });
-          if (vordWrap) vordWrap.hidden = true;
+          // Termin gewählt → Verordnungsauswahl leeren (Liste bleibt sichtbar)
+          verordnungAuswahlLeeren();
           syncInvLinesFromChecks();
         };
       });
@@ -16846,9 +16844,10 @@ function bindInvEvents() {
     const infoEl = document.getElementById('invPatientInfo');
     if (infoEl) {
       if (vords.length > 0 || bookings.length > 0) {
-        const vTeil = vords.length > 0 ? `${vords.length} Verordnung(en)` : '';
-        const bTeil = bookings.length > 0 ? `${bookings.length} Termin(e) gefunden.` : '';
-        infoEl.textContent = [vTeil, bTeil].filter(Boolean).join(', ');
+        const teile = [];
+        if (vords.length > 0) teile.push(`${vords.length} Verordnung(en)`);
+        if (bookings.length > 0) teile.push(`${bookings.length} Termin(e)`);
+        infoEl.textContent = teile.join(', ') + ' gefunden.';
       } else {
         infoEl.textContent = 'Keine Verordnung — bitte Termine wählen.';
       }

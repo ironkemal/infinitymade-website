@@ -5,6 +5,8 @@
  * Hier landen die Teile, die beim Live-Test vom 15.08.2026 aufgefallen sind.
  */
 
+import { verordnungenZuruecksetzen } from './rechnung-verordnung.js?v=20260815b';
+
 /**
  * Lädt die Termine eines Patienten für die Einzeltermin-Auswahl (Selbstzahler).
  *
@@ -136,7 +138,9 @@ export function leereTerminAuswahl() {
   const wrap = document.getElementById('invBookingWrap');
   if (wrap) wrap.hidden = true;
   // Verordnungsblock (neu): ebenfalls leeren, damit der vorige Patient
-  // nicht in der Auswahl der nächsten Rechnung erscheint.
+  // nicht in der Auswahl der nächsten Rechnung erscheint. Das DOM allein
+  // reicht dafür nicht — die Auswahl lebt als Modulzustand weiter.
+  verordnungenZuruecksetzen();
   const vordList = document.getElementById('invVordList');
   if (vordList) vordList.innerHTML = '';
   const vordWrap = document.getElementById('invVordWrap');

@@ -35,12 +35,26 @@
  *     „Verordnung vom 12.08.2026 (ID: 6f3a…-…)".
  *
  * Exporte: verordnungenLaden · verordnungenRendern · verordnungAuswahl
+ *          verordnungAuswahlLeeren
  */
 
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
-let _liste = [];       // normalisierte Verordnungsliste aus verordnungenLaden
-let _zustand = [];     // [{ vordId, behandlungIds: Set }] — welche Beh. gehakt
+let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
 let _onAuswahl = null; // Callback bei Änderung
+
+// Zustand je Verordnung:
+//   aktiv        — ob der Nutzer diese Verordnung explizit ausgewählt hat.
+//                  Startwert: false. Nur true nach Benutzerinteraktion.
+//   behandlungIds — Set der derzeit gehakten Behandlungs-IDs (Voreinstellung:
+//                  alle Behandlungen). Die gesetzten Unterhaken sind eine
+//                  Voreinstellung, keine Auswahl. Erst `aktiv = true` macht
+//                  daraus eine echte Auswahl — damit verhindert man, dass eine
+//                  Rechnung Behandlungen fremder Verordnungen mitnimmt, die
+//                  niemand angeklickt hat.
+//   vordCb       — Referenz auf das Verordnungs-Checkbox-Element (für Reset).
+//   subCbs       — Referenzen auf alle Behandlungs-Checkboxen (für Reset).
+//   allBehIds    — Snapshot aller Behandlungs-IDs beim Zeichnen (für Reset).
+let _zustand = [];
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
@@ -49,23 +63,6 @@ function _datumDE(isoStr) {
   try {
     return new Date(isoStr).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch { return isoStr; }
-}
-
-/** Baut den Verordnungstitel aus heilmittel_items (Podologie) oder heilmittel-Feld (Physio). */
-function _vordTitel(vord, katalogPodo) {
-  if (vord.quelle === 'podologie') {
-    const items = vord._heilmittelItems || [];
-    if (items.length && katalogPodo) {
-      const titel = items.map(it => {
-        const entry = katalogPodo.find(k => k.code === String(it.code || it));
-        return entry ? entry.title : null;
-      }).filter(Boolean);
-      if (titel.length) return titel.join(' · ');
-    }
-    return vord._diagnosegruppe || 'Verordnung';
-  }
-  // Physio / Ergo / Logo
-  return vord._heilmittel || vord._diagnosegruppe || 'Behandlung';
 }
 
 /**
@@ -193,7 +190,6 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
         einheiten: v.behandlungseinheiten || 0,
         behandlungen,
         gesamt,
-        // Interna für _vordTitel (nicht Teil des öffentlichen Vertrags)
         _heilmittelItems: heilmittelItems,
         _diagnosegruppe: v.diagnosegruppe,
       };
@@ -278,9 +274,14 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
  * Zeichnet die Auswahlliste in `container`.
  *
  * Zustandslogik:
- *  - Verordnungszeile startet UNGEHAKT, Behandlungen starten GEHAKT.
- *  - Verordnung abhaken → alle Behandlungen mit.
- *  - Einzelne Behandlung ändern → Verordnungshaken wird checked / indeterminate.
+ *  - Verordnungszeile startet UNGEHAKT (aktiv = false), Behandlungen starten GEHAKT.
+ *  - Die gesetzten Unterhaken sind eine Voreinstellung, keine Auswahl. Erst
+ *    `aktiv = true` (durch Haken der Verordnungszeile oder einer Behandlung)
+ *    macht daraus eine echte Auswahl. So wird verhindert, dass verordnungAuswahl()
+ *    Behandlungen aller Verordnungen zurückgibt, bevor der Nutzer irgendetwas
+ *    angeklickt hat.
+ *  - Verordnung abhaken → alle Behandlungen mit; aktiv = false.
+ *  - Einzelne Behandlung ändern → aktiv = (mindestens eine Beh. gehakt).
  *  - Verordnung ohne Behandlungen → disabled mit Hinweis.
  *
  * @param {HTMLElement} container   Ziel-Element (wird geleert und befüllt)
@@ -302,14 +303,6 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
     return;
   }
 
-  // Startzustand: alle Behandlungen gehakt, Verordnung selbst ungehakt
-  for (const vord of liste) {
-    _zustand.push({
-      vordId: vord.id,
-      behandlungIds: new Set(vord.behandlungen.map(b => b.id)),
-    });
-  }
-
   container.innerHTML = '';
 
   for (let vi = 0; vi < liste.length; vi++) {
@@ -317,6 +310,18 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
     const hasBeh = vord.behandlungen.length > 0;
     const anzahl = vord.behandlungen.length;
     const einheiten = vord.einheiten || 0;
+
+    // Startzustand: Verordnung inaktiv (noch keine Auswahl), alle Behandlungen
+    // als Voreinstellung in der Menge — aber aktiv erst nach Benutzerinteraktion.
+    const zst = {
+      vordId: vord.id,
+      aktiv: false,
+      behandlungIds: new Set(vord.behandlungen.map(b => b.id)),
+      allBehIds: vord.behandlungen.map(b => b.id),
+      vordCb: null,  // wird unten gesetzt
+      subCbs: [],    // wird unten befüllt
+    };
+    _zustand.push(zst);
 
     // ── Verordnungs-Kopfzeile ───────────────────────────────────────────────
     const vordRow = document.createElement('div');
@@ -346,6 +351,7 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
     vordCb.checked = false;
     vordCb.disabled = !hasBeh;
     vordCb.style.cssText = 'flex-shrink:0;cursor:' + (hasBeh ? 'pointer' : 'default');
+    zst.vordCb = vordCb; // Referenz für verordnungAuswahlLeeren
 
     // Beschriftung
     const label = document.createElement('label');
@@ -389,7 +395,6 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
       'border-left:2px solid var(--border)', 'padding-left:8px',
     ].join(';');
 
-    const subCbs = [];
     for (let bi = 0; bi < vord.behandlungen.length; bi++) {
       const beh = vord.behandlungen[bi];
       const subRow = document.createElement('label');
@@ -404,10 +409,10 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
 
       const subCb = document.createElement('input');
       subCb.type = 'checkbox';
-      subCb.checked = true; // alle Behandlungen starten gehakt
+      subCb.checked = true; // Voreinstellung: alle Behandlungen gehakt
       subCb.dataset.vordIdx = vi;
       subCb.dataset.behId = beh.id;
-      subCbs.push(subCb);
+      zst.subCbs.push(subCb); // Referenz für verordnungAuswahlLeeren
 
       const datumSpan = document.createElement('span');
       datumSpan.style.cssText = 'color:var(--text-muted);flex-shrink:0;';
@@ -423,7 +428,9 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
       if (beh.hinweis) {
         const hw = document.createElement('span');
         hw.style.cssText = 'color:var(--text-muted);font-style:italic;';
-        hw.textContent = escapeHtml(beh.hinweis);
+        // textContent maskiert bereits — escapeHtml hier nicht nötig
+        // (der Hinweis kommt aus eigenem Code, kein Freitext-Datenbankfeld).
+        hw.textContent = beh.hinweis;
         subRow.appendChild(hw);
       }
 
@@ -432,13 +439,16 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
 
       // Behandlungs-Checkbox-Handler
       subCb.addEventListener('change', () => {
-        const zst = _zustand[vi];
         if (subCb.checked) {
           zst.behandlungIds.add(beh.id);
         } else {
           zst.behandlungIds.delete(beh.id);
         }
-        // Verordnungshaken aktualisieren
+        // Jede Interaktion mit einer Unterzeile aktiviert diese Verordnung.
+        // Damit gilt: aufklappen + eine Behandlung entfernen = bewusste Auswahl
+        // dieser Verordnung, nur ohne diese eine Behandlung.
+        zst.aktiv = zst.behandlungIds.size > 0;
+        // Verordnungshaken aus Mengengrösse ableiten
         const total = vord.behandlungen.length;
         const checked = zst.behandlungIds.size;
         if (checked === 0) {
@@ -457,16 +467,16 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
 
     // Verordnungs-Checkbox-Handler
     vordCb.addEventListener('change', () => {
-      const zst = _zustand[vi];
+      zst.aktiv = vordCb.checked;
       if (vordCb.checked) {
         // Alle Behandlungen haken
         for (const b of vord.behandlungen) zst.behandlungIds.add(b.id);
-        for (const sc of subCbs) sc.checked = true;
+        for (const sc of zst.subCbs) sc.checked = true;
         vordCb.indeterminate = false;
       } else {
         // Alle Behandlungen abhaken
         zst.behandlungIds.clear();
-        for (const sc of subCbs) sc.checked = false;
+        for (const sc of zst.subCbs) sc.checked = false;
         vordCb.indeterminate = false;
       }
       if (_onAuswahl) _onAuswahl();
@@ -495,26 +505,69 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
 }
 
 /**
+ * Wirft Liste und Auswahl weg — für den Patientenwechsel.
+ *
+ * Das DOM zu leeren genügt nicht: `_liste` und `_zustand` sind Modulzustand und
+ * überleben jedes `innerHTML = ''`. Ohne diesen Aufruf liefert
+ * `verordnungAuswahl()` beim nächsten Speichern noch die Verordnung des
+ * vorigen Patienten — dieselbe Klasse Fehler, die `leereTerminAuswahl()` für
+ * die Termine bereits behebt (Kemal, 15.08.2026).
+ */
+export function verordnungenZuruecksetzen() {
+  _liste = [];
+  _zustand = [];
+  _onAuswahl = null;
+}
+
+/**
+ * Hebt die Auswahl auf, ohne die gezeichnete Liste anzufassen.
+ *
+ * Setzt bei allen Einträgen aktiv = false, stellt die Voreinstellung wieder
+ * her (alle Behandlungen in der Menge, alle Unterhaken gesetzt) und setzt
+ * alle Verordnungshaken auf checked = false, indeterminate = false.
+ * Ergebnis: identischer Zustand wie direkt nach verordnungenRendern.
+ *
+ * Wird aufgerufen, wenn der Nutzer stattdessen einen Termin hakt — dann soll
+ * die Verordnungsliste sichtbar bleiben, aber keine Auswahl enthalten.
+ */
+export function verordnungAuswahlLeeren() {
+  for (const zst of _zustand) {
+    zst.aktiv = false;
+    // Voreinstellung: alle Behandlungen wieder in die Menge
+    zst.behandlungIds = new Set(zst.allBehIds);
+    // Alle Unterhaken zurücksetzen
+    for (const sc of zst.subCbs) sc.checked = true;
+    // Verordnungshaken zurücksetzen
+    if (zst.vordCb) {
+      zst.vordCb.checked = false;
+      zst.vordCb.indeterminate = false;
+    }
+  }
+}
+
+/**
  * Gibt den aktuellen Auswahlstand zurück.
  *
  * @returns {{
- *   zeilen: Array,           // {title, quantity, unit_price} — für invLines
- *   prescriptionId: string|null,  // nur wenn genau eine Physio-Verordnung gewählt
+ *   zeilen: Array,                // {title, quantity, unit_price} — für invLines
+ *   prescriptionId: string|null,  // nur wenn genau eine Physio-Verordnung aktiv
  *   notizZeile: string|null,      // Podologie-Bezug für invoices.notes
  *   anzahl: number                // Anzahl gewählter Behandlungen
  * }}
  */
 export function verordnungAuswahl() {
   const zeilen = [];
-  let physioIds = [];  // gewählte prescriptions.id aus Physio-Topf
+  const physioIds = [];
   const notizTeile = [];
 
   for (let vi = 0; vi < _liste.length; vi++) {
     const vord = _liste[vi];
     const zst = _zustand[vi];
-    if (!zst || zst.behandlungIds.size === 0) continue;
+    // Überspringe Verordnungen, die nicht aktiv oder leer sind.
+    // aktiv = false bedeutet: die gesetzten Unterhaken sind nur Voreinstellung,
+    // noch keine Auswahl durch den Nutzer.
+    if (!zst || !zst.aktiv || zst.behandlungIds.size === 0) continue;
 
-    // Behandlungen, die gehakt sind
     for (const beh of vord.behandlungen) {
       if (!zst.behandlungIds.has(beh.id)) continue;
       zeilen.push(...beh.zeilen);
