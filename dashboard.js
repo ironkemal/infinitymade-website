@@ -5,7 +5,7 @@ import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmit
 import { attachArztSearch, arztMetaText } from './arzt-suche.js?v=20260810f';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
 import { attachPatientSearch } from './patient-suche.js?v=20260814';
-import { emit } from './module/signal.js?v=20260813';
+import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260814';
@@ -1810,6 +1810,10 @@ async function refreshBookingViews() {
     try { await renderDayView(toISODate(dayViewDate)); } catch (e) {}
   }
 }
+// Wer Termine schreibt, meldet `bookings:changed` — und muss nicht mehr wissen,
+// welche Ansicht gerade offen ist. Mehrfachmeldungen in einem Tick verdichtet
+// signal.js zu EINEM Refresh (siehe module/signal.js).
+on('bookings:changed', () => { refreshBookingViews().catch(() => {}); });
 
 function formatActivityTimestamp(iso) {
   try {
@@ -18592,9 +18596,9 @@ async function init() {
         schema: 'public',
         table: 'bookings',
         filter: `owner_id=eq.${ownerId}`
-      }, async (payload) => {
+      }, (payload) => {
         console.log('[realtime] new booking detected:', payload.new?.id);
-        await refreshBookingViews();
+        emit('bookings:changed', { id: payload.new?.id, quelle: 'realtime' });
       })
       .subscribe();
 
