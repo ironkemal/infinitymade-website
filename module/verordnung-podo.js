@@ -37,6 +37,7 @@
  */
 
 import { parseIcdList, dgsAcceptingIcd } from '../icd-dg-match.js?v=20260810e';
+import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fristen.js?v=20260814';
 
 // ─── [Q1] Heilmittelkatalog Podologische Therapie ────────────────────────────
 //
@@ -70,17 +71,15 @@ const POD_HOECHSTMENGE = { DF: 6, NF: 6, QF: 6, UI1: 8, UI2: 4 };
 // [Q1] Nur ein Hinweistext für die orientierende Menge, keine harte Grenze.
 const POD_ORIENTIEREND = { UI1: 8, UI2: 8 };
 
-// [Q2] Abschnitt 3 e): „Ist das Feld dringlicher Behandlungsbedarf
-// angekreuzt, muss die Behandlung innerhalb von 14 Kalendertagen beginnen.
-// In allen anderen Fällen muss die Behandlung innerhalb von 28 Kalendertagen
-// nach dem Verordnungsdatum begonnen werden."
+// Die 14/28-Tage-Frist ist NICHT podologiespezifisch: [Q2] Abschnitt 3 e)
+// wiederholt nur HeilM-RL § 15, der im allgemeinen Teil steht. Sie wohnt
+// deshalb in `heilmittel-fristen.js` und gilt für alle Fachbereiche.
 //
 // ⚠ Begriffsschärfung gegenüber der Ops-Karte: Das sind keine
 // Gültigkeitsfristen der Verordnung, sondern Fristen für den
 // BEHANDLUNGSBEGINN. Wird die Frist versäumt, verliert die Verordnung ihre
 // Gültigkeit — das Ergebnis ist dasselbe, die Beschriftung im Formular muss
 // aber ehrlich sein, sonst dokumentieren wir eine Frist, die es nicht gibt.
-const POD_BEGINN_FRIST_TAGE = { dringend: 14, normal: 28 };
 
 // [Q3] Anlage 1a Teil 2 Nr. 4.2, „Besonderheiten": Die podologische
 // Befundung (78030) erfolgt „bei Massnahmen der Podologie in den
@@ -118,27 +117,6 @@ function dgRoot(raw) {
  */
 function istPodo() {
   return ($('rzTherapieBereich')?.value || '') === 'podo';
-}
-
-/**
- * Frist für den Behandlungsbeginn. Wird auch vom Speicherpfad in
- * dashboard.js benutzt, damit Anzeige und gespeicherter Wert nicht
- * auseinanderlaufen.
- *
- * Gibt `null` zurück, wenn der Bereich nicht Podologie ist — dann bleibt die
- * bisherige Berechnung von `gueltig_bis` unangetastet. Die Fristen anderer
- * Fachbereiche stehen in deren eigenen Anlagen 3 und sind hier nicht belegt.
- *
- * @param {string} ausstellungsdatum  ISO-Datum "YYYY-MM-DD"
- * @param {boolean} istDringend
- * @returns {string|null} ISO-Datum des spätesten Behandlungsbeginns
- */
-export function podBehandlungsbeginnFrist(ausstellungsdatum, istDringend) {
-  if (!ausstellungsdatum || !istPodo()) return null;
-  const d = new Date(ausstellungsdatum);
-  if (Number.isNaN(d.getTime())) return null;
-  d.setDate(d.getDate() + (istDringend ? POD_BEGINN_FRIST_TAGE.dringend : POD_BEGINN_FRIST_TAGE.normal));
-  return d.toISOString().split('T')[0];
 }
 
 // ─── Anzeigezeile unter dem Formular ────────────────────────────────────────
@@ -362,9 +340,9 @@ function fristHinweis() {
   const ausst = $('rzAusstDate')?.value;
   if (!ausst) return null;
   const dringend = !!$('rzDringend')?.checked;
-  const frist = podBehandlungsbeginnFrist(ausst, dringend);
+  const frist = behandlungsbeginnFrist(ausst, dringend);
   if (!frist) return null;
-  const tage = dringend ? POD_BEGINN_FRIST_TAGE.dringend : POD_BEGINN_FRIST_TAGE.normal;
+  const tage = dringend ? BEHANDLUNGSBEGINN_TAGE.dringend : BEHANDLUNGSBEGINN_TAGE.normal;
   return {
     farbe: dringend ? 'var(--warning,#f59e0b)' : 'var(--text-muted)',
     text: `Behandlungsbeginn spätestens am ${new Date(frist).toLocaleDateString('de-DE')} `
