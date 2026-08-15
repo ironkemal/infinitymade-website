@@ -19,7 +19,9 @@ import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260815';
-import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines } from './module/rechnung-editor.js?v=20260815b';
+import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl } from './module/rechnung-verordnung.js?v=20260815a';
+
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
@@ -15938,62 +15940,6 @@ async function loadInvPatients() {
     }).join('');
 }
 
-async function loadPatientBookings(patientId) {
-  if (!patientId) return [];
-  const ownerId = getOwnerId();
-
-  // 1. Bookings linked through prescription_sessions for this patient
-  const { data: linkedRows } = await supabase
-    .from('prescription_sessions')
-    .select('booking_id, prescriptions!inner(patient_id)')
-    .eq('prescriptions.patient_id', patientId)
-    .not('booking_id', 'is', null);
-  const linkedIds = (linkedRows || []).map(r => r.booking_id).filter(Boolean);
-
-  // 2. Bookings matched by customer identifiers (legacy/non-physio path)
-  const { data: lead } = await supabase
-    .from('leads')
-    .select('first_name,last_name,title,phone,email,phone_normalized')
-    .eq('id', patientId)
-    .maybeSingle();
-  // Der direkte Weg zuerst: seit die Terminbuchung den Patienten verknüpft,
-  // steht die Zuordnung als `bookings.lead_id` in der Zeile. Ohne diese Zeile
-  // suchte die Rechnungsmaske den Termin nur über den Rezeptbezug oder über
-  // Textvergleiche auf Name/Telefon/E-Mail — und fand nichts, sobald der
-  // Termin unter „Nachname, Vorname", mit Titel oder ohne Telefonnummer
-  // angelegt war. Von 222 verknüpften Terminen waren 83 auf diese Weise
-  // unsichtbar; die Leistungsauswahl blieb dann leer (Kemal, 15.08.2026).
-  const orParts = [`lead_id.eq.${patientId}`];
-  const names = new Set();
-  if (lead?.title) names.add(lead.title);
-  const composed = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ');
-  if (composed) names.add(composed);
-  names.forEach(n => orParts.push(`customer_name.eq.${n}`));
-  if (lead?.phone) orParts.push(`customer_phone.eq.${lead.phone}`);
-  if (lead?.phone_normalized) orParts.push(`customer_phone_normalized.eq.${lead.phone_normalized}`);
-  if (lead?.email) orParts.push(`customer_email.eq.${lead.email}`);
-
-  let query = supabase.from('bookings')
-    .select('id,start_time,end_time,status,customer_name,service_id, services(title,price,duration_minutes,price_config)')
-    .eq('owner_id', ownerId)
-    .order('start_time', { ascending: false });
-
-  if (linkedIds.length && orParts.length) {
-    query = query.or(`id.in.(${linkedIds.join(',')}),${orParts.join(',')}`);
-  } else if (linkedIds.length) {
-    query = query.in('id', linkedIds);
-  } else if (orParts.length) {
-    query = query.or(orParts.join(','));
-  } else {
-    return [];
-  }
-
-  const { data, error } = await query;
-  if (error) { console.error('[bookings]', error); return []; }
-  // Dedupe just in case the OR overlapped with linked ids
-  const seen = new Set();
-  return (data || []).filter(b => (seen.has(b.id) ? false : (seen.add(b.id), true)));
-}
 
 function renderInvLines() {
   const tbody = document.getElementById('invLineBody');
@@ -16163,8 +16109,9 @@ async function saveInvoice() {
     total_patient: total,
     status: 'draft',
     invoice_number: invoiceNumber,
-    prescription_id: invPrescriptionId || null,
-    notes: document.getElementById('invNotes').value || null,
+    prescription_id: invPrescriptionId || verordnungAuswahl().prescriptionId || null,
+    notes: [document.getElementById('invNotes').value || null, verordnungAuswahl().notizZeile].filter(Boolean).join('\n') || null,
+
     invoice_type: invPatientInsuranceType || null
   };
   const { data: inserted, error } = await supabase.from('invoices').insert(payload).select('id').maybeSingle();
@@ -16822,18 +16769,49 @@ function bindInvEvents() {
     updateInvForInsuranceType();
     const bookingWrap = document.getElementById('invBookingWrap');
     const checksWrap = document.getElementById('invBookingChecks');
+    const vordWrap = document.getElementById('invVordWrap');
+    const vordList = document.getElementById('invVordList');
     if (!invPatientId) {
-      document.getElementById('invPatientInfo').textContent = '';
-      bookingWrap.hidden = true;
+      leereTerminAuswahl(); // leert auch invVordWrap / invVordList
       invBookingCache = [];
       invLines = [];
       renderInvLines(); calcInvTotals();
       return;
     }
-    const bookings = await loadPatientBookings(invPatientId);
+
+    // ── Verordnungen laden (primärer Weg: Verordnung = Abrechnungseinheit) ───
+    // Verordnung und Termine überschreiben invLines vollständig — das ist
+    // gewollt (zwei Wege, einer gewinnt). Kommentar hier, damit es niemand
+    // für einen Fehler hält: wer eine Verordnung anhakt, dessen Terminhäkchen
+    // werden abgeräumt, und umgekehrt.
+    const vords = await verordnungenLaden(supabase, {
+      ownerId: getOwnerId(), leadId: invPatientId,
+      sector: getSector(), katalogPodo: GKV_LEISTUNGSKATALOG.podologie,
+    });
+    if (vords.length > 0) {
+      vordWrap.hidden = false;
+      verordnungenRendern(vordList, vords, {
+        escapeHtml, formatEur,
+        onAuswahl: () => {
+          // Verordnung gewählt → Termine abräumen
+          checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+          invLines = verordnungAuswahl().zeilen;
+          renderInvLines(); calcInvTotals();
+        },
+      });
+    } else {
+      vordWrap.hidden = true;
+      if (vordList) vordList.innerHTML = '';
+    }
+
+    // ── Termine laden (Selbstzahler-Weg, zweite Ebene im <details>) ──────────
+    const bookings = await terminAuswahlLaden(supabase, { ownerId: getOwnerId(), leadId: invPatientId });
     invBookingCache = bookings;
     if (bookings.length > 0) {
       bookingWrap.hidden = false;
+      // <details> ist zu, wenn Verordnungen da sind — Selbstzahler-Weg tritt zurück.
+      // Ohne Verordnungen wird es aufgeklappt, weil es dann der einzige Weg ist.
+      if (vords.length === 0) bookingWrap.open = true;
       checksWrap.innerHTML = bookings.map(b => {
         const dt = new Date(b.start_time).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         const svc = b.services?.title || 'Leistung';
@@ -16852,13 +16830,28 @@ function bindInvEvents() {
         </label>`;
       }).join('');
       checksWrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.onchange = syncInvLinesFromChecks;
+        cb.onchange = () => {
+          // Termin gewählt → Verordnungsauswahl abräumen
+          verordnungenRendern(vordList, [], { escapeHtml, formatEur, onAuswahl: null });
+          if (vordWrap) vordWrap.hidden = true;
+          syncInvLinesFromChecks();
+        };
       });
-      document.getElementById('invPatientInfo').textContent = `${bookings.length} Termin(e) gefunden.`;
     } else {
       bookingWrap.hidden = true;
       checksWrap.innerHTML = '';
-      document.getElementById('invPatientInfo').textContent = 'Keine Termine gefunden.';
+    }
+
+    // Info-Zeile
+    const infoEl = document.getElementById('invPatientInfo');
+    if (infoEl) {
+      if (vords.length > 0 || bookings.length > 0) {
+        const vTeil = vords.length > 0 ? `${vords.length} Verordnung(en)` : '';
+        const bTeil = bookings.length > 0 ? `${bookings.length} Termin(e) gefunden.` : '';
+        infoEl.textContent = [vTeil, bTeil].filter(Boolean).join(', ');
+      } else {
+        infoEl.textContent = 'Keine Verordnung — bitte Termine wählen.';
+      }
     }
     invLines = [];
     renderInvLines(); calcInvTotals();
