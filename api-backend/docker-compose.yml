@@ -68,6 +68,15 @@ services:
       # 404 antwortete und im Browser wie ein CORS-Fehler aussah).
       # Eine neue Route in server.js darf nicht davon abhängen, dass jemand
       # daran denkt, hier nachzuziehen.
+      #
+      # ⚠️ DIESE DATEI IST NUR DIE REPO-KOPIE. Watchtower erneuert das IMAGE,
+      # niemals die Compose-Datei oder diese Labels. Der Fix von 2026-08-11 stand
+      # vier Tage hier drin und war auf dem VPS nie aktiv — deshalb lief am
+      # 2026-08-15 der Kiosk-Modus ins Leere (/api/kiosk fehlte in der alten
+      # Positivliste) und /api/attendance war weiterhin tot. Wer diese Regel
+      # ändert, muss sie in /opt/calendar-api/docker-compose.yml nachziehen und
+      # `docker compose up -d calendar-api` laufen lassen.
+      # Auf dem VPS angewandt: 2026-08-15. Details: INFRASTRUCTURE.md §4.
       - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`) && !PathPrefix(`/api/v1`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls=true"
