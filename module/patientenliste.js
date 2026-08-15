@@ -97,11 +97,15 @@ export function renderPatientenliste(ctx) {
           : 'background:rgba(177,137,27,0.15);color:#b1891b;'}">${r.insurance_type.toUpperCase()}</span>`
       : '';
 
+    // Ohne Verordnung gibt es keinen Abrechnungsstatus — und nichts anzuklicken.
+    // Ein blosser Strich sah aber aus, als wäre die Schaltfläche kaputt. Also
+    // sagt die Zelle, woran es liegt.
     const st = statusJePatient.get(r.id);
     const statusZelle = st?.verordnungId
       ? `<button class="lead-status-btn" data-vord-id="${st.verordnungId}" title="Abrechnungsstatus ändern"
            style="background:none;border:0;padding:0;cursor:pointer;">${statusBadge(st.status, { kurz: true })}</button>`
-      : statusBadge(null);
+      : `<span title="Der Status gehört zur Verordnung. Sobald dieser Patient eine Verordnung hat, steht er hier."
+           style="color:var(--text-muted);font-size:11px;">keine Verordnung</span>`;
 
     return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
       <td style="color:var(--text-muted);font-size:12px;font-variant-numeric:tabular-nums;">${r.patientennummer ?? '—'}</td>

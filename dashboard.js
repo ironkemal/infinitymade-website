@@ -10,7 +10,8 @@ import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260815';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260815';
-import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815b';
+import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260815';
+import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin } from './module/fussbefund.js?v=20260814a';
@@ -7575,31 +7576,9 @@ async function markPrescriptionSession(bookingId, status, notes) {
       .select('prescription_id').maybeSingle();
     if (error) { console.warn('[session update]', error); return; }
     if (!sess?.prescription_id) return;
-
-    // If all sessions are done, promote prescription to 'completed'
-    const { count: openCount } = await supabase
-      .from('prescription_sessions')
-      .select('id', { count: 'exact', head: true })
-      .eq('prescription_id', sess.prescription_id)
-      .neq('status', 'done');
-    if ((openCount || 0) === 0) {
-      await supabase.from('prescriptions')
-        .update({ status: 'completed' }).eq('id', sess.prescription_id)
-        .in('status', ['parsed', 'confirmed', 'in_therapy']);
-      // §302 GKV flip: mark prescription "abrechnungsbereit" so it appears on
-      // the Kassenabrechnung page. Only when the Krankenkasse is known AND
-      // no abrechnung_status was already set (manual override wins).
-      await supabase.from('prescriptions')
-        .update({ abrechnung_status: 'bereit' })
-        .eq('id', sess.prescription_id)
-        .is('abrechnung_status', null)
-        .not('kostentraeger_ik', 'is', null);
-    } else {
-      // Otherwise ensure 'in_therapy' once treatment has begun
-      await supabase.from('prescriptions')
-        .update({ status: 'in_therapy' }).eq('id', sess.prescription_id)
-        .in('status', ['parsed', 'confirmed']);
-    }
+    // Fortschritt + §302-Weiche: module/sitzungsfortschritt.js (Warum dort: leere
+    // Platzhalter-Sitzungen hielten das Rezept sonst ewig von 'bereit' fern).
+    await pruefeVerordnungsfortschritt(supabase, sess.prescription_id);
   } catch (e) {
     console.warn('[markPrescriptionSession]', e);
   }
@@ -8242,8 +8221,7 @@ async function loadLeads() {
       leadsMeta[b.customer_phone_normalized].bookings.push(b);
     });
   }
-  // Beiwerk der Zeile, keine Voraussetzung für sie: schlug das fehl, blieb sonst
-  // die ganze Kartei leer — ein Schmuckfeld hätte die Patientenliste verdeckt.
+  // Beiwerk der Zeile, keine Voraussetzung: sonst verdeckt ein Schmuckfeld die Kartei.
   try { leadAbrStatus = await ladeStatusJePatient(supabase, ownerId); }
   catch (e) { console.error('[leads] Abrechnungsstatus nicht ladbar:', e); leadAbrStatus = new Map(); }
   renderLeads();
@@ -8282,24 +8260,18 @@ function renderLeads() {
 
 // Kopf der Patientenakte (Stammdaten + Verlauf) → module/patientenkarte.js
 // Klick auf eine Verlaufszeile: Karte schliessen, zuständiges Panel öffnen.
-// Panel-Namen gegen nav-registry.js geprüft — 'calendar', nicht 'kalender';
-// die Podologie heisst 'podologie-billing', der Fussbefund 'fussstatus'.
+// Panel-Namen gegen nav-registry.js geprüft: 'calendar' (nicht 'kalender'), 'podologie-billing', 'fussstatus'.
 const PD_SPRUNGZIEL = { kalender: 'calendar', podologie: 'podologie-billing', verordnungen: 'verordnungen', fussbefund: 'fussstatus' };
 async function pdSpringeZu(ziel, id, extra = {}) {
   const panel = PD_SPRUNGZIEL[ziel];
   if (!panel) return;
   closeModal('patientDetailModal');
   window._pdSprungId = id;
-
-  // Der Sprung soll den Anwender fertig absetzen, nicht nur die Seite wechseln.
-  // Wer im Verlauf auf einen Fußbefund klickt, will diesen Patienten sehen und
-  // nicht dort erneut nach ihm suchen.
-  if (ziel === 'fussbefund' && extra.leadId) {
-    return oeffneFussbefundFuerTermin(fussbefundCtx(), { lead_id: extra.leadId, id: null });
-  }
+  // Fertig absetzen, nicht nur die Seite wechseln: wer auf einen Fußbefund klickt,
+  // will diesen Patienten sehen und ihn dort nicht erneut suchen müssen.
+  if (ziel === 'fussbefund' && extra.leadId) return oeffneFussbefundFuerTermin(fussbefundCtx(), { lead_id: extra.leadId, id: null });
   if (ziel === 'podologie') _podState.selectedVordId = id;         // Verordnung vorgewählt
   if (ziel === 'kalender' && extra.datum) dayViewDate = new Date(extra.datum);
-
   await switchPanel(panel);
 }
 
@@ -23873,18 +23845,12 @@ let _podKkCache = [];
 const POD_GKV_REZEPTART = 'kassen';
 const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
 
-// Klicks der Verordnungsliste — EINMAL an `document`, nicht bei jedem Rendern
-// an `#podVordList`.
-//
-// Vorher hing das am Ende von loadPodologieBilling(): die Liste wurde gezeichnet,
-// danach lief noch reichlich Code (Kassenliste, Heilmittel-Selects, Kataloge),
-// und erst ganz zuletzt kam addEventListener. Wirft irgendetwas dazwischen, sind
-// die Schaltflächen sichtbar, aber tot — genau das Bild, das gemeldet wurde:
-// „Status-Knopf ist da, lässt sich aber nicht klicken."
-// Am document hängt der Zuhörer unabhängig davon, wie weit das Rendern kommt.
+// Klicks der Verordnungsliste — EINMAL an `document`. Vorher hing der Zuhörer am
+// Ende von loadPodologieBilling(), nach Kassenliste/Heilmittel/Katalogen: warf
+// etwas dazwischen, waren die Knöpfe sichtbar aber tot ("Status lässt sich nicht
+// klicken"). Am document ist er unabhängig davon, wie weit das Rendern kommt.
 document.addEventListener('click', (e) => {
   if (!e.target.closest?.('#podVordList')) return;
-
   const stBtn = e.target.closest('.pod-vord-status');
   if (stBtn) {
     e.stopPropagation();
@@ -24289,8 +24255,23 @@ async function loadPodologieBilling() {
 
     const wagnerRaw = document.getElementById('podNewWagner')?.value;
     const wagnerGrad = (wagnerRaw !== '' && wagnerRaw != null) ? parseInt(wagnerRaw) : null;
-    const leadId     = document.getElementById('podNewLeadId')?.value || null;
+    let leadId       = document.getElementById('podNewLeadId')?.value || null;
     const vsnr       = document.getElementById('podNewVsnr')?.value.trim() || null;
+
+    // Ohne Patientenakte ist die Verordnung nicht abrechenbar: die §302-Erzeugung
+    // weist sie zurück ("kein Patient aus der Kartei verknüpft"). `lead_id` wurde
+    // nur beim Klick in der Vorschlagsliste gesetzt und beim Speichern sagte das
+    // niemand — alle drei bisher angelegten Verordnungen haben deshalb keins.
+    // Erst nachbinden (eindeutiger Name = vergessener Klick), dann sperren.
+    if (!leadId && patient) {
+      const treffer = leadsCache.filter(l => displayName(l).trim().toLowerCase() === patient.trim().toLowerCase());
+      if (treffer.length === 1) leadId = treffer[0].id;
+    }
+    if (!leadId && istGkv) {
+      showToast('Bitte den Patienten aus der Liste auswählen — ohne Patientenakte lässt sich die Verordnung später nicht abrechnen.', 'error');
+      document.getElementById('podNewPatient')?.focus();
+      return;
+    }
 
     // Arzt ins Register übernehmen — auch wenn er noch nicht in der Liste
     // stand. Ohne diesen Schritt sammelte die Podologie gar keine Ärzte.
