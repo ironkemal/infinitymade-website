@@ -3,15 +3,16 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260814a';
 import { attachArztSearch, arztMetaText } from './arzt-suche.js?v=20260810f';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260714';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260815';
 import { attachPatientSearch } from './patient-suche.js?v=20260814';
 import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
-import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260814';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260814';
+import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260815';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260815';
+import { renderPatientenliste } from './module/patientenliste.js?v=20260815';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260814';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin } from './module/fussbefund.js?v=20260814a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
@@ -57,6 +58,7 @@ const T = {
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
     lead_title: 'Name', lead_city: 'Stadt', lead_phone: 'Telefon', lead_rating: 'Bewertung', lead_standort: 'Standort',
+    lead_festnetz: 'Festnetz', lead_handy: 'Handy', lead_geschlecht: 'Geschlecht', lead_geburtsdatum: 'Geburtsdatum', lead_patientennr: 'Nr.',
     lead_status: 'Status', lead_notes: 'Notizen', lead_email: 'E-Mail', lead_website: 'Website',
     lead_country_code: 'Land', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategorie',
     leads_empty: 'Noch keine Leads.', lead_modal_new: 'Neuer Lead', lead_modal_edit: 'Lead bearbeiten',
@@ -265,6 +267,7 @@ const T = {
     apify_label: 'Google Maps Scraper:', apify_run: 'Search',
     lf_all: 'All', lf_abrechenbar: 'Ready to bill', lf_abgerechnet: 'Billed', lf_teilabsetzung: 'Partial rejection', lf_abgesetzt: 'Rejected', lf_storniert: 'Cancelled',
     lead_title: 'Name', lead_city: 'City', lead_phone: 'Phone', lead_rating: 'Rating', lead_standort: 'Practice',
+    lead_festnetz: 'Landline', lead_handy: 'Mobile', lead_geschlecht: 'Gender', lead_geburtsdatum: 'Date of birth', lead_patientennr: 'No.',
     lead_status: 'Status', lead_notes: 'Notes', lead_email: 'Email', lead_website: 'Website',
     lead_country_code: 'Country', lead_google_url: 'Google Maps URL', lead_category_name: 'Category',
     leads_empty: 'No leads yet.', lead_modal_new: 'New lead', lead_modal_edit: 'Edit lead',
@@ -453,6 +456,7 @@ const T = {
     apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
     lf_all: 'Tümü', lf_abrechenbar: 'Faturaya hazır', lf_abgerechnet: 'Fatura edildi', lf_teilabsetzung: 'Kısmi kesinti', lf_abgesetzt: 'Kesinti', lf_storniert: 'İptal edildi',
     lead_title: 'Ad', lead_city: 'Şehir', lead_phone: 'Telefon', lead_rating: 'Puan', lead_standort: 'Şube',
+    lead_festnetz: 'Sabit hat', lead_handy: 'Cep', lead_geschlecht: 'Cinsiyet', lead_geburtsdatum: 'Doğum tarihi', lead_patientennr: 'No.',
     lead_status: 'Durum', lead_notes: 'Notlar', lead_email: 'E-posta', lead_website: 'Website',
     lead_country_code: 'Ülke', lead_google_url: 'Google Maps URL', lead_category_name: 'Kategori',
     leads_empty: 'Henüz lead yok.', lead_modal_new: 'Yeni Lead', lead_modal_edit: 'Lead düzenle',
@@ -8276,67 +8280,18 @@ function normalize_phone_js(p) {
 }
 
 function renderLeads() {
-  const tbody = document.getElementById('leadTableBody');
-  const emptyEl = document.getElementById('leadEmpty');
-  let rows = leadsCache;
-  if (leadFilter !== 'all') rows = rows.filter(r => (leadAbrStatus.get(r.id)?.status) === leadFilter);
-  if (leadSearchVal) {
-    const q = leadSearchVal.toLowerCase();
-    rows = rows.filter(r => patientMatchesQuery(r, q) || (r.city || '').toLowerCase().includes(q));
-  }
-  // Standort-Spalte nur, wenn es überhaupt mehrere Standorte gibt. In der
-  // Einzelpraxis sagt sie in jeder Zeile dasselbe und kostet nur Breite.
-  // `hidden` reicht bei <th> nicht zuverlässig (Autoren-CSS überschreibt es) → display.
-  const multiBiz = (myBusinesses || []).length > 1;
-  const standortTh = document.getElementById('leadStandortTh');
-  if (standortTh) standortTh.style.display = multiBiz ? '' : 'none';
-
-  if (rows.length === 0) { tbody.innerHTML = ''; emptyEl.hidden = false; return; }
-  emptyEl.hidden = true;
-  // Standort lookup: lead.business_id → business_name
-  const bizNameById = new Map((myBusinesses || []).map(b => [b.id, b.business_name]));
-  tbody.innerHTML = rows.map(r => {
-    const meta = leadsMeta[r.phone_normalized] || {};
-    const bkCount = meta.bookings?.length || 0;
-    const hasWa = !!meta.wa;
-    const bd = leadBirthDate(r);
-    const sessionLabel = bkCount > 0 ? `Seans ${bkCount + 1}` : '';
-    const standort = bizNameById.get(r.business_id) || '—';
-    const insBadge = r.insurance_type
-      ? `<span style="font-size:10px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:5px;${r.insurance_type==='gkv' ? 'background:rgba(59,130,246,0.15);color:#60a5fa;' : 'background:rgba(177,137,27,0.15);color:#b1891b;'}">${r.insurance_type.toUpperCase()}</span>`
-      : '';
-    // Patienten-Nr. bleibt vorerst leer: sie entsteht erst mit der praxistauglichen
-    // Belegnummer (Ops-Karte 74e45d6e). Die Spalte steht schon, damit die Reihenfolge
-    // sich später nicht noch einmal verschiebt.
-    return `<tr class="lead-row" data-lead-id="${r.id}" style="cursor:pointer;">
-      <td>${escapeHtml(r.last_name || '')}${insBadge}</td>
-      <td>${escapeHtml(r.first_name || '')}</td>
-      <td>${bd ? new Date(bd).toLocaleDateString('de-DE') : '—'}</td>
-      <td style="color:var(--text-muted);">${escapeHtml(r.patientennummer || '—')}</td>
-      <td>${escapeHtml(r.street || '—')}</td>
-      <td>${escapeHtml(r.plz || '—')}</td>
-      <td>${escapeHtml(r.city || '—')}</td>
-      ${multiBiz ? `<td>${escapeHtml(standort)}</td>` : ''}
-      <td>
-        ${sessionLabel ? `<span class="badge badge-blue">${sessionLabel}</span> ` : ''}${hasWa ? `<span class="badge badge-green" title="WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;vertical-align:middle;"><span class="svg-icon" style="width:11px;height:11px;display:inline-flex;">${ICON.whatsapp}</span></span> ` : ''}
-        ${abrStatusBadge(leadAbrStatus.get(r.id)?.status, { kurz: true })}
-      </td>
-      <td><button class="btn-icon" data-lead-id="${r.id}" data-action="edit" title="Bearbeiten" style="display:inline-flex;align-items:center;justify-content:center;"><span class="svg-icon" style="width:14px;height:14px;display:inline-flex;">${ICON.edit}</span></button></td>
-    </tr>`;
-  }).join('');
-  tbody.querySelectorAll('.lead-row').forEach(row => {
-    row.addEventListener('click', (e) => {
-      if (e.target.closest('button')) return;
-      const lead = leadsCache.find(l => l.id === row.dataset.leadId);
-      if (lead) openPatientDetailModal(lead);
-    });
-  });
-  tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const lead = leadsCache.find(l => l.id === btn.dataset.leadId);
-      if (lead) openLeadModal(lead);
-    });
+  renderPatientenliste({
+    daten: () => ({
+      rows: leadsCache, meta: leadsMeta, statusJePatient: leadAbrStatus,
+      filter: leadFilter, suche: leadSearchVal, businesses: myBusinesses,
+    }),
+    helfer: { displayName, geburtsdatum: leadBirthDate, passtZurSuche: patientMatchesQuery, escapeHtml, icons: ICON },
+    aktionen: {
+      oeffneKarte: (id) => { const l = leadsCache.find(x => x.id === id); if (l) openPatientDetailModal(l); },
+      bearbeite:   (id) => { const l = leadsCache.find(x => x.id === id); if (l) openLeadModal(l); },
+      aendereStatus: (vordId) => oeffneStatusDialogFuer(vordId, { supabase, onFertig: loadLeads })
+        .catch(err => showToast(err.message || 'Status konnte nicht geöffnet werden', 'error')),
+    },
   });
 }
 
@@ -8345,12 +8300,22 @@ function renderLeads() {
 // Panel-Namen gegen nav-registry.js geprüft — 'calendar', nicht 'kalender';
 // die Podologie heisst 'podologie-billing', der Fussbefund 'fussstatus'.
 const PD_SPRUNGZIEL = { kalender: 'calendar', podologie: 'podologie-billing', verordnungen: 'verordnungen', fussbefund: 'fussstatus' };
-function pdSpringeZu(ziel, id) {
+async function pdSpringeZu(ziel, id, extra = {}) {
   const panel = PD_SPRUNGZIEL[ziel];
   if (!panel) return;
   closeModal('patientDetailModal');
-  window._pdSprungId = id;   // das Zielpanel darf den Datensatz vorwählen
-  switchPanel(panel);
+  window._pdSprungId = id;
+
+  // Der Sprung soll den Anwender fertig absetzen, nicht nur die Seite wechseln.
+  // Wer im Verlauf auf einen Fußbefund klickt, will diesen Patienten sehen und
+  // nicht dort erneut nach ihm suchen.
+  if (ziel === 'fussbefund' && extra.leadId) {
+    return oeffneFussbefundFuerTermin(fussbefundCtx(), { lead_id: extra.leadId, id: null });
+  }
+  if (ziel === 'podologie') _podState.selectedVordId = id;         // Verordnung vorgewählt
+  if (ziel === 'kalender' && extra.datum) dayViewDate = new Date(extra.datum);
+
+  await switchPanel(panel);
 }
 
 async function openPatientDetailModal(lead) {
@@ -23923,6 +23888,39 @@ let _podKkCache = [];
 const POD_GKV_REZEPTART = 'kassen';
 const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
 
+// Klicks der Verordnungsliste — EINMAL an `document`, nicht bei jedem Rendern
+// an `#podVordList`.
+//
+// Vorher hing das am Ende von loadPodologieBilling(): die Liste wurde gezeichnet,
+// danach lief noch reichlich Code (Kassenliste, Heilmittel-Selects, Kataloge),
+// und erst ganz zuletzt kam addEventListener. Wirft irgendetwas dazwischen, sind
+// die Schaltflächen sichtbar, aber tot — genau das Bild, das gemeldet wurde:
+// „Status-Knopf ist da, lässt sich aber nicht klicken."
+// Am document hängt der Zuhörer unabhängig davon, wie weit das Rendern kommt.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest?.('#podVordList')) return;
+
+  const stBtn = e.target.closest('.pod-vord-status');
+  if (stBtn) {
+    e.stopPropagation();
+    oeffneStatusDialogFuer(stBtn.dataset.statusId, { supabase, onFertig: loadPodologieBilling })
+      .catch(err => { console.error('[pod-status]', err); showToast(err.message || 'Status konnte nicht geöffnet werden', 'error'); });
+    return;
+  }
+  // Edit-Schaltfläche: Zeile NICHT als Behandlungsauswahl markieren
+  const editBtn = e.target.closest('.pod-vord-edit');
+  if (editBtn) {
+    e.stopPropagation();
+    _podState.editVordId = editBtn.dataset.editId;
+    loadPodologieBilling();
+    return;
+  }
+  const row = e.target.closest('[data-vord-id]');
+  if (!row) return;
+  _podState.selectedVordId = row.dataset.vordId === _podState.selectedVordId ? null : row.dataset.vordId;
+  loadPodologieBilling();
+});
+
 async function loadPodologieBilling() {
   const el = document.getElementById('podBillingContent');
   if (!el) return;
@@ -24781,23 +24779,6 @@ async function loadPodologieBilling() {
   document.getElementById('podHeilmittelItems')?.addEventListener('change', e => {
     const row = e.target.closest('.pod-hm-row');
     if (row) delete row.dataset.auto;
-  });
-
-  document.getElementById('podVordList')?.addEventListener('click', async e => {
-    const stBtn = e.target.closest('.pod-vord-status');   // Abrechnungsstatus-Dialog, siehe module/abrechnungsstatus.js
-    if (stBtn) { e.stopPropagation(); return oeffneStatusDialogFuer(stBtn.dataset.statusId, { supabase, onFertig: loadPodologieBilling }); }
-    // Edit-Schaltfläche: Zeile NICHT als Behandlungsauswahl markieren
-    const editBtn = e.target.closest('.pod-vord-edit');
-    if (editBtn) {
-      e.stopPropagation();
-      _podState.editVordId = editBtn.dataset.editId;
-      loadPodologieBilling();
-      return;
-    }
-    const row = e.target.closest('[data-vord-id]');
-    if (!row) return;
-    _podState.selectedVordId = row.dataset.vordId === _podState.selectedVordId ? null : row.dataset.vordId;
-    loadPodologieBilling();
   });
 
   document.getElementById('podCancelEditBtn')?.addEventListener('click', () => {

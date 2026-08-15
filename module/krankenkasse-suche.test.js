@@ -51,6 +51,13 @@ test('ohne eigene Patienten bleibt es alphabetisch — nichts zu bevorzugen', ()
 });
 
 test('Trefferzahl wird begrenzt', () => {
-  const viele = Array.from({ length: 200 }, (_, i) => ({ name: `BKK ${i}`, kurz: null, ik: null, anzahl: 0 }));
+  const viele = Array.from({ length: 400 }, (_, i) => ({ name: `BKK ${i}`, kurz: null, ik: null, anzahl: 0 }));
   assert.equal(sucheKassen(viele, '', 30).length, 30);
+});
+
+test('Vorgabe zeigt den ganzen Kassenbestand — 94 Zeilen, nicht 30', () => {
+  // Regression: die Vorgabe war 30 und schnitt die alphabetische Liste mitten
+  // im „B" ab. Der Anwender sah ein Fuenftel und hielt die Quelle fuer falsch.
+  const bestand = Array.from({ length: 94 }, (_, i) => ({ name: `Kasse ${i}`, kurz: null, ik: null, anzahl: 0 }));
+  assert.equal(sucheKassen(bestand, '').length, 94);
 });

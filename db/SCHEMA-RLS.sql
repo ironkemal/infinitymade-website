@@ -2,7 +2,8 @@
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
 -- ERZEUGT AM:        2026-08-14
--- LETZTE MIGRATION:  20260814200147_leads_handy_getrennt
+-- LETZTE MIGRATION:  20260815085338_leads_patientennummer
+--                    davor: 20260814200147_leads_handy_getrennt
 --                    davor: 20260814101707_patient_consents
 --                    davor: 20260814101624_kiosk_pin_hardening
 --                    davor: 20260814083941_fussbefund_termin_legende
@@ -11,7 +12,7 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            156 RLS-Policies · 281 Indizes · 59 Trigger · 53 Funktionen
+-- UMFANG:            156 RLS-Policies · 283 Indizes · 60 Trigger · 54 Funktionen
 -- Tabellen/Spalten:  db/SCHEMA.sql · Orientierung: db/README.md
 --
 -- ⚠️  MOMENTAUFNAHME. Nach jeder Migration neu erzeugen.
@@ -352,7 +353,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (53 eigene; PostGIS-Funktionen ausgelassen)
+-- 3. FUNKTIONEN (54 eigene; PostGIS-Funktionen ausgelassen)
 -- =====================================================================
 
 -- --- Berechtigung / Mandant --------------------------------------------
@@ -461,6 +462,10 @@ $function$;
 -- fn_befreiung_backfill_prescriptions() -> trigger  (Nachtrag bei Befreiungsänderung)
 -- set_next_beleg_nr() · set_next_mahnung_nr() · set_next_ausfallrechnung_nr()
 --   Lückenlose Nummernkreise je Inhaber.
+-- vergebe_patientennummer() -> trigger                    [SECURITY DEFINER]
+--   Fortlaufende Patientennummer je Praxis, ab 1 (leads.patientennummer).
+--   pg_advisory_xact_lock je owner_id: legen zwei Mitarbeiter gleichzeitig an,
+--   laesen sonst beide dasselbe Maximum und die Nummer waere doppelt vergeben.
 -- prevent_belegliste_mod() -> trigger   GoBD: blockt UPDATE/DELETE auf belegliste.
 
 
@@ -515,7 +520,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (59)
+-- 4. TRIGGER (60)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -529,6 +534,7 @@ $function$;
 --   bookings              trg_check_booking_closed_day   BEFORE INSERT/UPDATE OF start_time, business_id
 --                         trg_normalize_booking_phone    BEFORE INSERT/UPDATE
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
+--                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng
 --   profiles              trg_sync_profiles_clinic_location BEFORE INSERT/UPDATE OF clinic_lat, clinic_lng
 --   businesses            trg_seed_default_groups        AFTER INSERT
@@ -648,6 +654,7 @@ CREATE INDEX idx_kostentraeger_active ON public.kostentraeger USING btree (activ
 CREATE INDEX idx_kostentraeger_das ON public.kostentraeger USING btree (das_ik) WHERE (das_ik IS NOT NULL);
 CREATE INDEX idx_leads_business ON public.leads USING btree (business_id);
 CREATE INDEX idx_leads_handy_normalized ON public.leads USING btree (owner_id, handy_normalized) WHERE (handy_normalized IS NOT NULL);
+CREATE UNIQUE INDEX leads_patientennummer_uniq ON public.leads USING btree (owner_id, patientennummer) WHERE (patientennummer IS NOT NULL);
 CREATE INDEX idx_leads_insurance_type ON public.leads USING btree (insurance_type) WHERE (insurance_type IS NOT NULL);
 CREATE INDEX idx_leads_location ON public.leads USING gist (location);
 CREATE INDEX idx_leads_name_dob ON public.leads USING btree (owner_id, lower(COALESCE(first_name, ''::text)), lower(COALESCE(last_name, ''::text)), geburtsdatum);

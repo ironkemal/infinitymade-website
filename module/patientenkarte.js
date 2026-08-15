@@ -178,7 +178,9 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
         .filter(Boolean).join(' · ') || 'Verordnung',
     })),
     ...behandlungen.map(b => ({
-      datum: b.behandlungsdatum, art: 'Behandlung', ziel: 'podologie', id: b.id,
+      // Sprungziel ist die VERORDNUNG, nicht die Behandlung: die Podologie-Liste
+      // wählt über `selectedVordId` aus, mit einer Behandlungs-ID träfe sie nichts.
+      datum: b.behandlungsdatum, art: 'Behandlung', ziel: 'podologie', id: b.verordnung_id,
       text: (b.hpnr_codes || []).join(', ') || 'Behandlung',
     })),
     ...rezepte.map(r => ({
@@ -192,6 +194,7 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
   ].filter(z => z.datum);
 
   zeilen.sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
+  for (const z of zeilen) z.leadId = leadId;
   return zeilen;
 }
 
@@ -217,6 +220,7 @@ export function renderVerlauf(el, zeilen, onSprung) {
 
   el.innerHTML = zeilen.map(z => `
     <button type="button" class="pk-verlauf-zeile" data-ziel="${esc(z.ziel)}" data-id="${esc(z.id)}"
+      data-lead="${esc(z.leadId || '')}" data-datum="${esc(z.datum || '')}"
       style="display:grid;grid-template-columns:92px 108px 1fr;gap:10px;align-items:baseline;width:100%;
              text-align:left;padding:8px 10px;border:0;border-bottom:1px solid var(--border);
              background:transparent;color:var(--text-main);font-size:13px;cursor:pointer;">
@@ -226,7 +230,12 @@ export function renderVerlauf(el, zeilen, onSprung) {
     </button>`).join('');
 
   el.querySelectorAll('.pk-verlauf-zeile').forEach(b => {
-    b.addEventListener('click', () => onSprung?.(b.dataset.ziel, b.dataset.id));
+    // Datum und Patient wandern mit: das Zielpanel soll nicht nur aufgehen,
+    // sondern den Patienten schon ausgewählt haben — sonst muss der Anwender
+    // ihn dort ein zweites Mal suchen und der Sprung hat nichts gespart.
+    b.addEventListener('click', () => onSprung?.(b.dataset.ziel, b.dataset.id, {
+      leadId: b.dataset.lead, datum: b.dataset.datum,
+    }));
   });
 }
 

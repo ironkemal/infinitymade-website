@@ -93,7 +93,12 @@ function normalisiere(s) {
  * Treffer suchen. Praxiseigene Kassen zuerst (nach Häufigkeit), danach der Rest
  * alphabetisch.
  */
-export function sucheKassen(kassen, query, limit = 30) {
+// Grenze grosszuegig: es gibt 94 Kassen in der Tabelle, und die Liste ist
+// alphabetisch. Mit einer Obergrenze von 30 brach sie mitten im „B" ab — der
+// Anwender sah ein Fuenftel des Bestandes und hielt die Datenquelle fuer falsch.
+// Das Dropdown scrollt ohnehin (max-height in dashboard.css), also kostet die
+// vollstaendige Liste nichts ausser ein paar Zeilen DOM.
+export function sucheKassen(kassen, query, limit = 300) {
   const q = normalisiere(query);
   const passt = q
     ? kassen.filter(k => normalisiere(k.name).includes(q) || normalisiere(k.kurz).includes(q))

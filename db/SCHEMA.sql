@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-14
--- LETZTE MIGRATION:  20260814200147_leads_handy_getrennt
+-- ERZEUGT AM:        2026-08-15
+-- LETZTE MIGRATION:  20260815085338_leads_patientennummer
+--                    davor: 20260814200147_leads_handy_getrennt
 --                    davor: 20260814101707_patient_consents
 --                    davor: 20260814101624_kiosk_pin_hardening
 --                    davor: 20260814083941_fussbefund_termin_legende
@@ -918,6 +919,7 @@ CREATE TABLE leads (
   phone_normalized text
   handy text
   handy_normalized text
+  patientennummer integer
   first_name text
   last_name text
   metadata jsonb DEFAULT '{}'::jsonb
@@ -956,6 +958,10 @@ CREATE TABLE leads (
 --      steht an der Verordnung (verordnungen.status).
 --   ⚠️ `phone` = Festnetz/Hauptnummer — der Buchungsabgleich hängt an
 --      phone_normalized. `handy` ist die Zweitnummer (seit 14.08.2026).
+--   ⚠️ `patientennummer` vergibt der Trigger vergebe_patientennummer() BEFORE
+--      INSERT — je owner_id fortlaufend ab 1, mit Advisory Lock gegen doppelte
+--      Vergabe bei gleichzeitigem Anlegen. NICHT im Client setzen.
+--      UNIQUE (owner_id, patientennummer)
 --   ★ DIES IST DIE HAUPT-PATIENTENTABELLE, trotz des Namens "leads".
 --     Historisch als Akquise-Tabelle entstanden (title, google_url,
 --     reviews_count stammen daher), heute die reale Patientenakte.

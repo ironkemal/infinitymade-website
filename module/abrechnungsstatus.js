@@ -124,11 +124,24 @@ export function statusBadge(key, { kurz = false } = {}) {
  * @returns {string|null} null, wenn der Patient keine Verordnung hat
  */
 export function aggregierterStatus(verordnungen) {
+  return massgebendeVerordnung(verordnungen)?.status ?? null;
+}
+
+/**
+ * Die Verordnung, die den Status der Zeile bestimmt — also die dringlichste.
+ *
+ * Sie wird gebraucht, sobald der Anwender den Status aus der Patientenliste
+ * heraus ändern will: geändert wird nie „der Status des Patienten" (den gibt es
+ * nicht), sondern genau diese eine Verordnung.
+ *
+ * @param {Array<{id?:string, status?:string}>} verordnungen
+ */
+export function massgebendeVerordnung(verordnungen) {
   let best = null;
   for (const v of (verordnungen || [])) {
     const k = v?.status || 'aktiv';
     if (!RANG.has(k)) continue;
-    if (best === null || RANG.get(k) < RANG.get(best)) best = k;
+    if (best === null || RANG.get(k) < RANG.get(best.status || 'aktiv')) best = { ...v, status: k };
   }
   return best;
 }
@@ -149,7 +162,7 @@ export async function ladeStatusJePatient(supabase, ownerId) {
 
   const { data, error } = await supabase
     .from('verordnungen')
-    .select('lead_id, status')
+    .select('id, lead_id, status')
     .eq('owner_id', ownerId)
     .not('lead_id', 'is', null);
 
@@ -164,8 +177,11 @@ export async function ladeStatusJePatient(supabase, ownerId) {
     gruppen.get(row.lead_id).push(row);
   }
   for (const [leadId, rows] of gruppen) {
+    const massgebend = massgebendeVerordnung(rows);
     karte.set(leadId, {
-      status: aggregierterStatus(rows),
+      status: massgebend?.status ?? null,
+      // Für die Änderung aus der Liste heraus: DIESE Verordnung ist gemeint.
+      verordnungId: massgebend?.id ?? null,
       anzahl: rows.length,
       // „offen" = macht noch Arbeit. Archiviert und storniert zählen nicht mit.
       offen:  rows.filter(r => !['archiviert', 'storniert'].includes(r.status)).length,
