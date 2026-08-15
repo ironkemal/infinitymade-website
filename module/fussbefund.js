@@ -55,7 +55,7 @@
  * sonst Vorbefund übernehmen) macht weiterhin nur `terminGewaehlt()`.
  */
 
-import { resolveSector } from '../nav-registry.js?v=20260714';
+import { resolveSector } from '../nav-registry.js?v=20260815';
 
 // ── Legende ────────────────────────────────────────────────────────────────
 

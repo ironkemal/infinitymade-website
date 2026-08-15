@@ -65,6 +65,7 @@ export const NAV_REGISTRY = {
     { id: 'calendar',          key: 'nav_calendar',          label: 'Terminkalender',       roles: ['owner', 'employee'], group: 'termine' },
     { id: 'anfragen',          key: 'nav_anfragen',          label: 'Termin-Anfragen',      roles: ['owner'],             group: 'termine' },
     { id: 'kunden',            key: 'nav_kunden',            label: 'Patienten',            roles: ['owner', 'employee'], group: 'patienten' },
+    { id: 'anamnese',          key: 'nav_anamnese',          label: 'Anamnese',             roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'notizen',           key: 'nav_notizen',           label: 'Notizen',              roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'warteliste',        key: 'nav_warteliste',        label: 'Warteliste',           roles: ['owner'],             group: 'patienten' },
     { id: 'services',          key: 'nav_services',          label: 'Leistungen',           roles: ['owner', 'employee'], group: 'team' },
