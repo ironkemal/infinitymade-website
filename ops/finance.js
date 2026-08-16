@@ -10,8 +10,29 @@ let selectedCategory = 'all';
 let selectedStatus = 'all';
 let selectedPayer = 'all';
 let selectedVatFilter = 'all';
+let selectedVendor = 'all';
 let onlyRecurring = false;
 let channel = null;
+
+export function normalizeVendor(rawName) {
+  const s = String(rawName || '').trim();
+  if (/godaddy/i.test(s)) return { key: 'godaddy', name: 'GoDaddy', icon: '🌐', color: '#00a4a6' };
+  if (/anthropic/i.test(s)) return { key: 'anthropic', name: 'Anthropic (Claude)', icon: '🤖', color: '#d97706' };
+  if (/openrouter/i.test(s)) return { key: 'openrouter', name: 'OpenRouter', icon: '⚡', color: '#2563eb' };
+  if (/microsoft|azure/i.test(s)) return { key: 'microsoft', name: 'Microsoft Azure', icon: '☁️', color: '#0284c7' };
+  if (/hetzner/i.test(s)) return { key: 'hetzner', name: 'Hetzner Online', icon: '🖥️', color: '#dc2626' };
+  if (/exafunction|codeium/i.test(s)) return { key: 'codeium', name: 'Codeium (Exafunction)', icon: '💻', color: '#059669' };
+  if (/stripe/i.test(s)) return { key: 'stripe', name: 'Stripe Payments', icon: '💳', color: '#7c3aed' };
+  if (/google/i.test(s)) return { key: 'google', name: 'Google Workspace / Cloud', icon: '🔍', color: '#ea4335' };
+  if (/openai/i.test(s)) return { key: 'openai', name: 'OpenAI', icon: '🧠', color: '#10a37f' };
+  if (/supabase/i.test(s)) return { key: 'supabase', name: 'Supabase', icon: '⚡', color: '#3ecf8e' };
+  if (/vercel/i.test(s)) return { key: 'vercel', name: 'Vercel', icon: '▲', color: '#ffffff' };
+  if (/github/i.test(s)) return { key: 'github', name: 'GitHub', icon: '🐙', color: '#24292f' };
+  if (/adobe/i.test(s)) return { key: 'adobe', name: 'Adobe', icon: '🎨', color: '#ff0000' };
+
+  const clean = s || 'Unbekannt';
+  return { key: clean.toLowerCase().replace(/[^a-z0-9]+/g, '_'), name: clean, icon: '🏢', color: '#64748b' };
+}
 
 export const EUER_CATEGORIES = {
   'software_cloud': { label: 'Software & Cloud-Dienste', icon: '☁️', desc: 'SaaS, Hosting, Vercel, Supabase, OpenAI, GitHub, Domains', isAsset: false },
@@ -131,6 +152,11 @@ function getFilteredExpenses() {
     if (onlyRecurring && !item.is_recurring) {
       return false;
     }
+    // Vendor filter
+    if (selectedVendor !== 'all') {
+      const norm = normalizeVendor(item.vendor_name);
+      if (norm.key !== selectedVendor) return false;
+    }
     // Search query
     if (q) {
       const matchVendor = (item.vendor_name || '').toLowerCase().includes(q);
@@ -142,6 +168,129 @@ function getFilteredExpenses() {
     }
     return true;
   });
+}
+
+function renderVendorPortfolio(allList, currentFiltered) {
+  const container = $('#financeVendorPortfolio');
+  if (!container) return;
+
+  // Aggregate all vendors from current year/filter context
+  const vendorMap = new Map();
+
+  for (const item of allList) {
+    const norm = normalizeVendor(item.vendor_name);
+    if (!vendorMap.has(norm.key)) {
+      vendorMap.set(norm.key, {
+        key: norm.key,
+        name: norm.name,
+        icon: norm.icon,
+        color: norm.color,
+        country: item.vendor_country || 'DE',
+        totalGross: 0,
+        totalNet: 0,
+        count: 0,
+        latestDate: '',
+        isRecurring: false,
+        taxCategories: new Set(),
+        hasReverseCharge: false
+      });
+    }
+
+    const v = vendorMap.get(norm.key);
+    v.totalGross += Number(item.gross_amount) || 0;
+    v.totalNet += Number(item.net_amount) || 0;
+    v.count += 1;
+    if (item.is_recurring) v.isRecurring = true;
+    if (item.reverse_charge) v.hasReverseCharge = true;
+    if (item.tax_category) v.taxCategories.add(item.tax_category);
+    const dateStr = item.payment_date || item.invoice_date || '';
+    if (!v.latestDate || dateStr > v.latestDate) {
+      v.latestDate = dateStr;
+    }
+  }
+
+  // Sort vendors: High total spend & high frequency first!
+  const sortedVendors = Array.from(vendorMap.values()).sort((a, b) => {
+    if (b.totalGross !== a.totalGross) {
+      return b.totalGross - a.totalGross;
+    }
+    return b.count - a.count;
+  });
+
+  const totalAllSpend = sortedVendors.reduce((sum, v) => sum + v.totalGross, 0);
+
+  container.innerHTML = `
+    <div class="f-vendor-section">
+      <div class="f-vendor-head">
+        <div class="f-vendor-title-group">
+          <h3 class="f-vendor-title">🏢 Anbieter-Portfolio & Ausgabenanalyse</h3>
+          <span class="hint">Klicken Sie auf einen Anbieter, um dessen Rechnungen chronologisch zu filtern (Sortiert nach Gesamtausgaben)</span>
+        </div>
+        ${selectedVendor !== 'all' ? `
+          <button class="btn btn-ghost btn-sm f-vendor-reset-btn" id="resetVendorFilterBtn">
+            ✕ Filter zurücksetzen (Alle ${expenses.length} Belege)
+          </button>
+        ` : ''}
+      </div>
+
+      <div class="f-vendor-grid">
+        <!-- Master "Alle Anbieter" Card -->
+        <div class="f-vendor-card f-vendor-master-card ${selectedVendor === 'all' ? 'is-active' : ''}" data-vendor="all">
+          <div class="f-vc-top">
+            <div class="f-vc-icon" style="background:rgba(255,255,255,0.06);color:var(--text)">🌐</div>
+            <div class="f-vc-head-text">
+              <span class="f-vc-name">Alle Anbieter</span>
+              <span class="f-vc-count">${allList.length} Rechnungen</span>
+            </div>
+          </div>
+          <div class="f-vc-amount">${fmtEuro(totalAllSpend)}</div>
+          <div class="f-vc-meta">
+            <span class="f-vc-badge">${sortedVendors.length} aktive Dienste</span>
+            <span class="f-vc-sub">Gesamtes Portfolio</span>
+          </div>
+        </div>
+
+        ${sortedVendors.map(v => {
+          const isActive = selectedVendor === v.key;
+          return `
+            <div class="f-vendor-card ${isActive ? 'is-active' : ''}" data-vendor="${esc(v.key)}">
+              <div class="f-vc-top">
+                <div class="f-vc-icon" style="background:${v.color}22;color:${v.color}">${v.icon}</div>
+                <div class="f-vc-head-text">
+                  <span class="f-vc-name" title="${esc(v.name)}">${esc(v.name)}</span>
+                  <span class="f-vc-count">${v.count} ${v.count === 1 ? 'Beleg' : 'Belege'}</span>
+                </div>
+                <span class="f-country-tag" style="margin-left:auto">${esc(v.country)}</span>
+              </div>
+              <div class="f-vc-amount">${fmtEuro(v.totalGross)}</div>
+              <div class="f-vc-meta">
+                ${v.isRecurring ? `<span class="pill pill-abo" style="font-size:10px;padding:2px 6px">🔄 Abo</span>` : `<span class="f-subtext" style="font-size:10.5px">Einmalig</span>`}
+                ${v.hasReverseCharge ? `<span class="f-subtext" style="color:var(--gold);font-size:10.5px">§ 13b RC</span>` : `<span class="f-subtext" style="font-size:10.5px">Inland USt</span>`}
+                ${v.latestDate ? `<span class="f-subtext" style="margin-left:auto;font-size:10.5px">${esc(fmtDate(v.latestDate))}</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  // Bind click events
+  $$('.f-vendor-card', container).forEach(card => {
+    card.onclick = () => {
+      const vKey = card.dataset.vendor;
+      selectedVendor = (selectedVendor === vKey) ? 'all' : vKey;
+      render();
+    };
+  });
+
+  const resetBtn = $('#resetVendorFilterBtn');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      selectedVendor = 'all';
+      render();
+    };
+  }
 }
 
 function renderKPIs(list) {
@@ -292,11 +441,52 @@ function renderList(list) {
   if (!tableEl) return;
 
   if (!list.length) {
-    tableEl.innerHTML = '<p class="empty">Keine Buchungen für die gewählten Filter gefunden.</p>';
+    tableEl.innerHTML = `
+      ${selectedVendor !== 'all' ? `
+        <div class="f-active-vendor-banner">
+          <div class="f-avb-left">
+            <span style="font-size:20px">🔍</span>
+            <div class="f-avb-text">
+              <div class="f-avb-title">Keine Belege für diesen Anbieter im gewählten Zeitraum gefunden.</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="clearVendorBannerBtn">✕ Filter aufheben</button>
+        </div>
+      ` : ''}
+      <p class="empty">Keine Buchungen für die gewählten Filter gefunden.</p>
+    `;
+    const clearBtn = $('#clearVendorBannerBtn');
+    if (clearBtn) clearBtn.onclick = () => { selectedVendor = 'all'; render(); };
     return;
   }
 
+  const activeVendorInfo = selectedVendor !== 'all' ? normalizeVendor(selectedVendor) : null;
+  const vendorTotalGross = list.reduce((sum, it) => sum + (Number(it.gross_amount) || 0), 0);
+  const vendorTotalNet = list.reduce((sum, it) => sum + (Number(it.net_amount) || 0), 0);
+
   tableEl.innerHTML = `
+    ${activeVendorInfo ? `
+      <div class="f-active-vendor-banner">
+        <div class="f-avb-left">
+          <div class="f-avb-icon" style="background:${activeVendorInfo.color}22;color:${activeVendorInfo.color}">
+            ${activeVendorInfo.icon}
+          </div>
+          <div class="f-avb-text">
+            <div class="f-avb-title">
+              <strong>${esc(activeVendorInfo.name)}</strong>
+              <span class="f-avb-pill">${list.length} ${list.length === 1 ? 'Rechnung' : 'Rechnungen'} (Chronologisch)</span>
+            </div>
+            <div class="f-avb-stats">
+              <span>Gesamtausgaben: <strong style="color:var(--text-bright)">${fmtEuro(vendorTotalGross)}</strong></span>
+              <span>• Netto: ${fmtEuro(vendorTotalNet)}</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="clearVendorBannerBtn">
+          ✕ Filter aufheben
+        </button>
+      </div>
+    ` : ''}
     <div class="f-table-wrap">
       <table class="f-table">
         <thead>
@@ -406,6 +596,14 @@ function renderList(list) {
       </table>
     </div>
   `;
+
+  const clearBtn = $('#clearVendorBannerBtn');
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      selectedVendor = 'all';
+      render();
+    };
+  }
 }
 
 function render() {
@@ -424,6 +622,7 @@ function render() {
   }
 
   renderKPIs(filtered);
+  renderVendorPortfolio(expenses, filtered);
   renderCategoryBreakdown(filtered);
   renderList(filtered);
 }
