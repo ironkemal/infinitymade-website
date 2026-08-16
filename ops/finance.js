@@ -1093,27 +1093,101 @@ function exportEuerJSON() {
     return;
   }
 
+  const isStandardTaxation = true; // Einzelunternehmen Yavuz Kemal Demir (Regelbesteuerung nach § 16/18 UStG mit USt-IdNr DE366103215)
+  const isInputVatEligible = isStandardTaxation;
+
+  const totalNet = deductibleList.reduce((s, i) => {
+    const eff = getEffectiveAmount(i);
+    const pct = Number(i.deductible_percentage) || 100;
+    return s + (eff.net * (pct / 100));
+  }, 0);
+
+  const totalGross = deductibleList.reduce((s, i) => s + getEffectiveAmount(i).gross, 0);
+  const totalInputVat15 = deductibleList.filter(i => !i.reverse_charge).reduce((s, i) => s + getEffectiveAmount(i).vat, 0);
+
+  const rcList = deductibleList.filter(i => i.reverse_charge);
+  const totalRcTaxBase = rcList.reduce((s, i) => s + getEffectiveAmount(i).net, 0);
+  const totalRcOutputVat = rcList.reduce((s, i) => s + (getEffectiveAmount(i).net * 0.19), 0);
+  const totalRcInputVat = isInputVatEligible ? totalRcOutputVat : 0;
+
   const exportData = {
     taxpayer: {
       name: 'Yavuz Kemal Demir',
       legal_entity: 'Einzelunternehmen',
-      country: 'Deutschland',
-      jurisdiction: 'NRW',
-      accounting_method: 'Einnahmen-Überschuss-Rechnung (§ 4 Abs. 3 EStG)'
+      vat_id: 'DE366103215',
+      taxpayer_vat_regime: isStandardTaxation ? 'standard_taxation' : 'small_business',
+      input_vat_deduction_eligible: isInputVatEligible,
+      accounting_method: 'Einnahmen-Überschuss-Rechnung (§ 4 Abs. 3 EStG)',
+      cash_basis_legal_reference: '§ 11 EStG (Zufluss-Abfluss-Prinzip)',
+      jurisdiction: 'Finanzamt Deutschland / NRW'
     },
     export_year: selectedYear,
     generated_at: new Date().toISOString(),
-    verfahrensdokumentation_version: '2.0',
+    verfahrensdokumentation_version: '2.1',
     total_deductible_records: deductibleList.length,
     summary: {
-      euer_operating_expenses_net: deductibleList.reduce((s, i) => s + ((Number(i.net_amount) || 0) * ((Number(i.deductible_percentage) || 100) / 100)), 0),
-      euer_operating_expenses_gross: deductibleList.reduce((s, i) => s + (Number(i.gross_amount) || 0), 0),
-      deductible_input_vat_15: deductibleList.filter(i => !i.reverse_charge).reduce((s, i) => s + (Number(i.vat_amount || i.invoice_vat_amount) || 0), 0),
-      reverse_charge_13b_tax_base: deductibleList.filter(i => i.reverse_charge).reduce((s, i) => s + (Number(i.net_amount) || 0), 0),
-      reverse_charge_13b_tax_liability: deductibleList.filter(i => i.reverse_charge).reduce((s, i) => s + (Number(i.reverse_charge_tax_amount) || (Number(i.net_amount) * 0.19) || 0), 0),
-      private_contributions_kemal: deductibleList.filter(i => (i.funding_source || i.payer_type) === 'kemal_private').reduce((s, i) => s + (Number(i.gross_amount) || 0), 0)
+      euer_operating_expenses_net: Math.round(totalNet * 100) / 100,
+      euer_operating_expenses_gross: Math.round(totalGross * 100) / 100,
+      deductible_input_vat_15: Math.round(totalInputVat15 * 100) / 100,
+      reverse_charge_tax_base: Math.round(totalRcTaxBase * 100) / 100,
+      reverse_charge_output_vat: Math.round(totalRcOutputVat * 100) / 100,
+      reverse_charge_input_vat: Math.round(totalRcInputVat * 100) / 100,
+      private_contributions_kemal: Math.round(deductibleList.filter(i => (i.funding_source || i.payer_type) === 'kemal_private').reduce((s, i) => s + getEffectiveAmount(i).gross, 0) * 100) / 100
     },
-    expenses: deductibleList
+    expenses: deductibleList.map(item => {
+      const eff = getEffectiveAmount(item);
+      const isRc = Boolean(item.reverse_charge);
+      const rcBase = isRc ? eff.net : 0;
+      const rcOutputVat = isRc ? Math.round(rcBase * 0.19 * 100) / 100 : 0;
+      const rcInputVat = isRc && isInputVatEligible ? rcOutputVat : 0;
+      const invoiceDate = item.invoice_date || item.payment_date || new Date().toISOString().slice(0, 10);
+
+      return {
+        id: item.id,
+        document_id: item.document_id || `DOC-${item.id?.slice(0, 8)}`,
+        document_type: item.document_type || 'invoice',
+        vendor_name: item.vendor_name,
+        vendor_country: item.vendor_country || 'DE',
+        vendor_vat_id: item.vendor_vat_id || null,
+        invoice_number: item.invoice_number || null,
+        invoice_date: item.invoice_date,
+        payment_date: item.payment_date || item.invoice_date,
+        cash_flow_date: item.payment_date || item.invoice_date,
+        currency: item.currency || 'EUR',
+        original_amount: Number(item.original_amount) || Math.abs(eff.gross),
+        original_currency: item.original_currency || 'EUR',
+        exchange_rate: Number(item.exchange_rate) || 1.0,
+        exchange_rate_date: item.exchange_rate_date || invoiceDate,
+        exchange_rate_source: item.exchange_rate_source || (item.original_currency && item.original_currency !== 'EUR' ? 'EZB-Referenzkurs (ECB)' : 'Parity'),
+        net_amount: eff.net,
+        gross_amount: eff.gross,
+        invoice_vat_rate: Number(item.invoice_vat_rate ?? item.vat_rate) || 0,
+        invoice_vat_amount: isRc ? 0 : eff.vat,
+        reverse_charge: isRc,
+        reverse_charge_tax_base: rcBase,
+        reverse_charge_tax_rate: isRc ? 19.00 : 0,
+        reverse_charge_output_vat: rcOutputVat,
+        reverse_charge_input_vat: rcInputVat,
+        reverse_charge_reason: isRc ? (item.reverse_charge_reason || (item.vendor_country === 'US' ? '§ 13b Abs. 2 Nr. 1 UStG / Drittland B2B Leistung' : '§ 13b Abs. 1 UStG / B2B EU-Dienstleistung')) : null,
+        input_vat_eligible: isInputVatEligible && !isRc && eff.vat > 0,
+        tax_category: item.tax_category || item.euer_category || 'other_operational',
+        funding_source: item.funding_source || item.payer_type || 'business_account',
+        paid_by: (item.funding_source || item.payer_type) === 'melih_private' ? 'melih' : 'kemal',
+        economic_purpose: item.economic_purpose || 'business',
+        economic_classification: item.economic_classification || 'business_expense',
+        capital_movement: item.capital_movement || ((item.funding_source || item.payer_type) === 'kemal_private' ? 'private_contribution' : 'none'),
+        is_deductible: item.is_deductible !== false,
+        deductible_percentage: Number(item.deductible_percentage) || 100,
+        is_recurring: Boolean(item.is_recurring),
+        recurring_interval: item.recurring_interval || 'none',
+        description: item.description || null,
+        email_sender: item.email_sender || null,
+        drive_web_view_link: item.drive_web_view_link || null,
+        original_file_hash: item.original_file_hash || null,
+        status: item.status || 'processed',
+        needs_review: Boolean(item.needs_review)
+      };
+    })
   };
 
   const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
