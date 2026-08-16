@@ -158,7 +158,10 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "neverError": true
+        }
       },
       "id": "node-supabase",
       "name": "Supabase'e Kaydet",
