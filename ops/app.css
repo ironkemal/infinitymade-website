@@ -758,3 +758,143 @@ a { color: var(--blue); }
   opacity: .72;
   background: rgba(239, 68, 68, .04);
 }
+
+/* ── Fahrtenbuch Modul ─────────────────────────────────────────────── */
+.fb-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.fb-vehicle-select-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fb-vehicle-select-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.fb-sub-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-1);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.fb-sub-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.fb-sub-tab-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, .04);
+}
+
+.fb-sub-tab-btn.active {
+  color: var(--text-bright);
+  background: var(--bg-3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  font-weight: 600;
+}
+
+.fb-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: var(--bg-1);
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.fb-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.fb-filter-count {
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+.fb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.fb-badge-biz {
+  background: rgba(16, 185, 129, .12);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, .3);
+}
+
+.fb-badge-commute {
+  background: rgba(245, 158, 11, .12);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, .3);
+}
+
+.fb-badge-private {
+  background: rgba(239, 68, 68, .12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, .3);
+}
+
+.fb-badge-cost {
+  background: rgba(99, 102, 241, .12);
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, .3);
+  text-transform: uppercase;
+}
+
+.fb-odometer {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  background: var(--bg-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+}
+
+.fb-plate-tag {
+  display: inline-block;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 8px;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 4px;
+  border: 2px solid #000000;
+  letter-spacing: .05em;
+}
+

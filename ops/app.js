@@ -273,6 +273,7 @@ async function showApp() {
     ['decisions', './decisions.js?v=20260811a', 'mountDecisions'],
     ['meetings',  './meetings.js?v=20260811a',  'mountMeetings'],
     ['ausgaben',  './finance.js?v=20260815b',   'mountFinance'],
+    ['fahrtenbuch', './fahrtenbuch.js?v=20260816a', 'mountFahrtenbuch'],
     ['files',     './files.js?v=20260811a',     'mountFiles']
   ];
 
