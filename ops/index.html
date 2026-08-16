@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Praxura Ops</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗂️</text></svg>">
-<link rel="stylesheet" href="app.css?v=20260816d">
+<link rel="stylesheet" href="app.css?v=20260816j">
 </head>
 <body>
 
@@ -49,7 +49,7 @@
       <button class="tab" data-view="wissen">Wissensbank</button>
       <button class="tab" data-view="decisions">Entscheidungen</button>
       <button class="tab" data-view="meetings">Meetings</button>
-      <button class="tab" data-view="ausgaben">Ausgaben</button>
+      <button class="tab" data-view="ausgaben">Finanzen 💶</button>
       <button class="tab" data-view="fahrtenbuch">Fahrtenbuch</button>
       <button class="tab" data-view="files">Dateien</button>
     </nav>
@@ -168,6 +168,12 @@
       <!-- KPI Summary Cards -->
       <div class="f-kpi-grid" id="financeKPIs"></div>
 
+      <!-- Interactive Fixcost & Recurring Subscriptions Breakdown Panel -->
+      <div id="financeFixcostDetail" hidden></div>
+
+      <!-- AI Finance Copilot & Assistant Chatbot -->
+      <div id="financeAICopilot"></div>
+
       <!-- Vendor Portfolio & Spend Breakdown (Firma Firma Label & Filter) -->
       <div id="financeVendorPortfolio"></div>
 
@@ -176,7 +182,7 @@
 
       <!-- Expense Invoices Table & Summary -->
       <div class="f-list-head">
-        <h3 style="margin:0;font-size:15px">Belege & Betriebsausgaben</h3>
+        <h3 style="margin:0;font-size:15px">Buchungen & Belege (Finanzen)</h3>
         <span class="hint" id="financeCount"></span>
       </div>
       <div id="financeList"></div>
@@ -217,6 +223,6 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script type="module" src="app.js?v=20260816i"></script>
+<script type="module" src="app.js?v=20260816j"></script>
 </body>
 </html>

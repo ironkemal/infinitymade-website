@@ -1101,6 +1101,209 @@ a { color: var(--blue); }
   width: fit-content;
 }
 
+/* ── Interactive KPI Clickable Cards ────────────────────────────────────── */
+.f-kpi-clickable {
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.f-kpi-clickable:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201, 162, 39, .5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+}
+
+.f-kpi-clickable.is-active {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(201, 162, 39, .15), rgba(201, 162, 39, .05));
+  box-shadow: 0 0 16px rgba(201, 162, 39, .25);
+}
+
+/* ── Fixcost Breakdown Panel ────────────────────────────────────────────── */
+.f-fixcost-box {
+  background: linear-gradient(180deg, rgba(30, 41, 59, .7), rgba(15, 23, 42, .8));
+  border: 1px solid rgba(59, 130, 246, .35);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: fadeIn .2s ease;
+}
+
+.f-fb-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.f-fb-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.f-fb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.f-fb-card {
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.f-fb-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.f-fb-vendor {
+  font-weight: 600;
+  color: var(--text-bright);
+  font-size: 13px;
+}
+
+.f-fb-math {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.f-fb-calc {
+  color: var(--text-dim);
+  font-family: monospace;
+}
+
+.f-fb-arrow {
+  color: var(--gold);
+}
+
+.f-fb-mo {
+  color: #10b981;
+}
+
+/* ── AI Finance Copilot Chatbot ─────────────────────────────────────────── */
+.f-copilot-card {
+  background: linear-gradient(135deg, rgba(26, 31, 46, .85), rgba(15, 23, 42, .95));
+  border: 1px solid rgba(201, 162, 39, .3);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .25);
+  animation: fadeIn .2s ease;
+}
+
+.f-cp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.f-cp-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.f-cp-avatar {
+  font-size: 22px;
+  background: rgba(201, 162, 39, .15);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(201, 162, 39, .3);
+}
+
+.f-cp-body {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.f-cp-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.f-pill-btn {
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11.5px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.f-pill-btn:hover {
+  background: rgba(201, 162, 39, .2);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.f-cp-chatbox {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(0, 0, 0, .25);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .05);
+}
+
+.f-msg {
+  display: flex;
+  max-width: 85%;
+}
+
+.f-msg-assistant {
+  align-self: flex-start;
+}
+
+.f-msg-user {
+  align-self: flex-end;
+}
+
+.f-msg-content {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.f-msg-assistant .f-msg-content {
+  background: rgba(255, 255, 255, .07);
+  color: var(--text-bright);
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.f-msg-user .f-msg-content {
+  background: var(--gold);
+  color: #0b0f19;
+  font-weight: 600;
+}
+
+.f-cp-input-row {
+  display: flex;
+  gap: 8px;
+}
+
 .f-email-tag code {
   font-family: var(--font-mono, monospace);
   font-size: 10.5px;

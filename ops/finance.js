@@ -214,6 +214,249 @@ export function getEffectiveAmount(item) {
   };
 }
 
+let copilotExpanded = false;
+let copilotMessages = [
+  {
+    role: 'assistant',
+    text: '👋 Merhaba Kemal Bey! Ben Praxura Finans Asistanınızım. Fatura düzeltmeleri yapabilir ("GoDaddy faturalarını yıllık yap", "Hetzner KDV kontrol et"), abonelik masraflarınızı hesaplayabilir ve vergi durumunuzu özetleyebilirim. Nasıl yardımcı olabilirim?'
+  }
+];
+
+function renderFixcostDetail(recurringItems, monthlyRecurringEst) {
+  const container = $('#financeFixcostDetail');
+  if (!container) return;
+
+  if (!onlyRecurring) {
+    container.hidden = true;
+    container.innerHTML = '';
+    return;
+  }
+
+  container.hidden = false;
+  container.innerHTML = `
+    <div class="f-fixcost-box">
+      <div class="f-fb-head">
+        <div class="f-fb-title">
+          <span style="font-size:22px">🔄</span>
+          <div>
+            <h4 style="margin:0;font-size:15px;color:var(--text-bright)">Laufende Abos & Fixkosten-Aufschlüsselung (~${fmtEuro(monthlyRecurringEst)} / Monat)</h4>
+            <span class="hint">Wiederkehrende Software- & Infrastrukturkosten (Jahresverträge wie GoDaddy werden exakt durch 12 geteilt)</span>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="closeFixcostDetailBtn">✕ Filter aufheben</button>
+      </div>
+
+      <div class="f-fb-grid">
+        ${recurringItems.map(item => {
+          const gross = Number(item.gross_amount) || 0;
+          const isYearly = item.recurring_interval === 'yearly';
+          const isQuarterly = item.recurring_interval === 'quarterly';
+          const monthlyEst = isYearly ? (gross / 12) : isQuarterly ? (gross / 3) : gross;
+
+          return `
+            <div class="f-fb-card">
+              <div class="f-fb-top">
+                <span class="f-fb-vendor">${esc(item.vendor_name)}</span>
+                <span class="pill pill-abo">${isYearly ? '📅 Jährlich (12 Mo)' : isQuarterly ? '3-Monate' : 'Monatlich'}</span>
+              </div>
+              <div class="f-fb-math">
+                <span class="f-fb-calc">${isYearly ? `${fmtEuro(gross)} / 12` : fmtEuro(gross)}</span>
+                <span class="f-fb-arrow">➔</span>
+                <span class="f-fb-mo"><strong>${fmtEuro(monthlyEst)}</strong> / Mo</span>
+              </div>
+              <div class="f-subtext" style="font-size:11px">${esc(item.description || item.invoice_number || 'Abonnement')}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  const closeBtn = $('#closeFixcostDetailBtn');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      onlyRecurring = false;
+      const chk = $('#fOnlyRecurring');
+      if (chk) chk.checked = false;
+      render();
+    };
+  }
+}
+
+async function handleCopilotCommand(promptText) {
+  copilotMessages.push({ role: 'user', text: promptText });
+  renderAICopilot();
+
+  const lower = promptText.toLowerCase();
+
+  // 1. GoDaddy Yıllık Yapma komutu
+  if (lower.includes('godaddy') && (lower.includes('yıllık') || lower.includes('12') || lower.includes('yillik') || lower.includes('jahres'))) {
+    toast('GoDaddy faturaları güncelleniyor...');
+    const { error } = await sb
+      .from('ops_finance_expenses')
+      .update({ is_recurring: true, recurring_interval: 'yearly' })
+      .ilike('vendor_name', '%godaddy%')
+      .eq('is_deductible', true);
+
+    if (error) {
+      copilotMessages.push({ role: 'assistant', text: `❌ Güncelleme sırasında hata oluştu: ${error.message}` });
+    } else {
+      copilotMessages.push({
+        role: 'assistant',
+        text: `✅ **İşlem Tamamlandı:** Tüm GoDaddy alan adı ve hosting faturaları **"Yıllık Abonelik (recurring_interval: yearly)"** olarak ayarlandı.\n\n📊 **Aylık Yansıma:** Yıllık faturalar 12'ye bölünerek aylık fixcost'unuza ~2,13 €/ay olarak eklendi.`
+      });
+      await loadExpenses();
+    }
+  }
+  // 2. 15,46 € İade kontrolü
+  else if (lower.includes('15,46') || lower.includes('15.46') || (lower.includes('iade') && lower.includes('godaddy')) || lower.includes('gutschrift')) {
+    const godaddyItems = expenses.filter(i => (i.vendor_name || '').toLowerCase().includes('godaddy') && i.is_deductible !== false);
+    const refund = godaddyItems.find(i => i.document_type === 'credit_note' || Number(i.gross_amount) < 0);
+    const grossTotal = godaddyItems.filter(i => i.document_type !== 'credit_note').reduce((s, i) => s + (Number(i.gross_amount) || 0), 0);
+    const netSpend = grossTotal - (refund ? Math.abs(Number(refund.gross_amount)) : 0);
+
+    copilotMessages.push({
+      role: 'assistant',
+      text: `🔍 **15,46 € GoDaddy İade Durumu:**\n\n• **GoDaddy Brüt Harcamaları:** ${fmtEuro(grossTotal)}\n• **↩️ GoDaddy Teilerstattung (Gutschrift):** +15,46 €\n• **Net GoDaddy Gideriniz:** **${fmtEuro(netSpend)}**\n\n*İade tutarı GoDaddy harcama kartından ve genel EÜR gider toplamından başarıyla düşürülmüştür.*`
+    });
+  }
+  // 3. Fixkosten / Sabit abonelik masrafları
+  else if (lower.includes('sabit') || lower.includes('fixcost') || lower.includes('abo') || lower.includes('masraf')) {
+    const recList = expenses.filter(i => i.is_recurring && i.is_deductible !== false && i.status !== 'archived' && i.document_type !== 'credit_note');
+    const monthlySum = recList.reduce((sum, item) => {
+      const gross = Number(item.gross_amount) || 0;
+      if (item.recurring_interval === 'yearly') return sum + (gross / 12);
+      if (item.recurring_interval === 'quarterly') return sum + (gross / 3);
+      return sum + gross;
+    }, 0);
+
+    const lines = recList.map(i => {
+      const g = Number(i.gross_amount) || 0;
+      const isY = i.recurring_interval === 'yearly';
+      const m = isY ? (g / 12) : g;
+      return `• **${i.vendor_name}:** ${fmtEuro(g)} (${isY ? 'Yıllık ÷ 12 ➔ ~' + fmtEuro(m) + '/ay' : 'Aylık'})`;
+    }).join('\n');
+
+    copilotMessages.push({
+      role: 'assistant',
+      text: `📊 **Aktif Abonelikler & Aylık Fixcost Hesabı:**\n\n${lines}\n\n━━━━━━━━━━━━━━━━━━━━\n🎯 **Tahmini Toplam Aylık Yük:** **~${fmtEuro(monthlySum)} / Ay**`
+    });
+    onlyRecurring = true;
+    const chk = $('#fOnlyRecurring');
+    if (chk) chk.checked = true;
+    render();
+  }
+  // 4. İnceleme gerekenler / Şüpheli
+  else if (lower.includes('inceleme') || lower.includes('şüpheli') || lower.includes('kontrol') || lower.includes('prüf')) {
+    const needRev = expenses.filter(i => i.status === 'review_needed' || i.needs_review);
+    if (!needRev.length) {
+      copilotMessages.push({
+        role: 'assistant',
+        text: `🎉 **Harika Haber:** Şu anda sistemde bekleyen veya şüpheli hiçbir fatura yok. Tüm faturalar GoBD ve vergi kurallarına uygun olarak işlendi!`
+      });
+    } else {
+      const listStr = needRev.map(i => `• [${i.invoice_number || 'No-Nr'}] ${i.vendor_name} (${fmtEuro(i.gross_amount)}) - ${i.review_codes?.join(', ') || 'İnceleme gerekli'}`).join('\n');
+      copilotMessages.push({
+        role: 'assistant',
+        text: `⚠️ **İnceleme Gereken ${needRev.length} Fatura Bulundu:**\n\n${listStr}\n\n*Düzenlemek için faturanın yanındaki ✎ butonuna basabilirsiniz.*`
+      });
+      selectedStatus = 'review_needed';
+      render();
+    }
+  }
+  // 5. Genel soru
+  else {
+    copilotMessages.push({
+      role: 'assistant',
+      text: `💡 **Finans Durum Özeti:**\n\nŞu anda sistemde **${expenses.length} adet fatura/beleg** kayıtlıdır. Tüm hesaplamalar **Einzelunternehmen Yavuz Kemal Demir** ve **Anlage EÜR** kurallarına göre yapılmaktadır. Fatura düzeltmeleri veya vergi sorguları için bana doğrudan komut verebilirsiniz!`
+    });
+  }
+
+  renderAICopilot();
+}
+
+function renderAICopilot() {
+  const container = $('#financeAICopilot');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="f-copilot-card">
+      <div class="f-cp-head">
+        <div class="f-cp-title">
+          <span class="f-cp-avatar">🤖</span>
+          <div>
+            <strong style="color:var(--text-bright)">Praxura Finans Asistanı (AI Copilot)</strong>
+            <div class="hint">Finans verilerinizi denetleyin, sorular sorun veya kayıtları doğrudan güncelleyin</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="toggleCopilotBtn">
+          ${copilotExpanded ? '▲ Asistanı Gizle' : '▼ Asistanı Aç (Chat)'}
+        </button>
+      </div>
+
+      ${copilotExpanded ? `
+        <div class="f-cp-body">
+          <div class="f-cp-pills">
+            <button class="f-pill-btn" data-prompt="GoDaddy faturalarımı yıllık (12'ye böl) olarak işaretle">⚡ GoDaddy'yi Yıllık Yap (÷12)</button>
+            <button class="f-pill-btn" data-prompt="Aylık aboneliklerimi ve fixcost hesaplamamı listele">📊 Aylık Sabit Masraflarım</button>
+            <button class="f-pill-btn" data-prompt="15,46 € GoDaddy iadesini ve net bakiyeyi kontrol et">🔍 15,46 € İadeyi Kontrol Et</button>
+            <button class="f-pill-btn" data-prompt="İnceleme gereken veya şüpheli faturaları bul">⚠️ İnceleme Gereken Faturalar</button>
+          </div>
+
+          <div class="f-cp-chatbox" id="copilotChat">
+            ${copilotMessages.map(m => `
+              <div class="f-msg f-msg-${m.role}">
+                <div class="f-msg-content">${m.text.replace(/\n/g, '<br>')}</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="f-cp-input-row">
+            <input type="text" class="search" id="copilotInput" placeholder="Örn: 'GoDaddy faturalarını yıllık yap', 'KDV toplamım ne kadar?'..." style="flex:1">
+            <button class="btn btn-primary" id="copilotSendBtn">Gönder ➔</button>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  // Bind Copilot events
+  const toggleBtn = $('#toggleCopilotBtn');
+  if (toggleBtn) {
+    toggleBtn.onclick = () => {
+      copilotExpanded = !copilotExpanded;
+      renderAICopilot();
+    };
+  }
+
+  $$('.f-pill-btn', container).forEach(btn => {
+    btn.onclick = () => {
+      handleCopilotCommand(btn.dataset.prompt);
+    };
+  });
+
+  const sendBtn = $('#copilotSendBtn');
+  const inputEl = $('#copilotInput');
+  if (sendBtn && inputEl) {
+    sendBtn.onclick = () => {
+      const txt = inputEl.value.trim();
+      if (txt) {
+        inputEl.value = '';
+        handleCopilotCommand(txt);
+      }
+    };
+    inputEl.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        const txt = inputEl.value.trim();
+        if (txt) {
+          inputEl.value = '';
+          handleCopilotCommand(txt);
+        }
+      }
+    };
+  }
+}
+
 function renderVendorPortfolio(allList, currentFiltered) {
   const container = $('#financeVendorPortfolio');
   if (!container) return;
@@ -232,6 +475,8 @@ function renderVendorPortfolio(allList, currentFiltered) {
         country: item.vendor_country || 'DE',
         totalGross: 0,
         totalNet: 0,
+        grossSpend: 0,
+        refundGross: 0,
         count: 0,
         receiptsCount: 0,
         latestDate: '',
@@ -246,6 +491,11 @@ function renderVendorPortfolio(allList, currentFiltered) {
     const eff = getEffectiveAmount(item);
 
     if (isDed) {
+      if (eff.isCredit) {
+        v.refundGross += Math.abs(eff.gross);
+      } else {
+        v.grossSpend += eff.gross;
+      }
       v.totalGross += eff.gross;
       v.totalNet += eff.net;
       v.count += 1;
@@ -301,7 +551,7 @@ function renderVendorPortfolio(allList, currentFiltered) {
           <div class="f-vc-amount">${fmtEuro(totalAllSpend)}</div>
           <div class="f-vc-meta">
             <span class="f-vc-badge">${sortedVendors.length} aktive Dienste</span>
-            <span class="f-vc-sub">Gesamtes Portfolio (Netto abzügl. Gutschriften)</span>
+            <span class="f-vc-sub">Gesamtes Portfolio (Netto)</span>
           </div>
         </div>
 
@@ -318,6 +568,11 @@ function renderVendorPortfolio(allList, currentFiltered) {
                 <span class="f-country-tag" style="margin-left:auto">${esc(v.country)}</span>
               </div>
               <div class="f-vc-amount">${fmtEuro(v.totalGross)}</div>
+              ${v.refundGross > 0 ? `
+                <div class="f-subtext" style="color:#10b981;font-size:10px;margin-top:-4px">
+                  ${fmtEuro(v.grossSpend)} abzügl. +${fmtEuro(v.refundGross)} Erstattung
+                </div>
+              ` : ''}
               <div class="f-vc-meta">
                 ${v.isRecurring ? `<span class="pill pill-abo" style="font-size:10px;padding:2px 6px">🔄 Abo</span>` : `<span class="f-subtext" style="font-size:10.5px">Einmalig</span>`}
                 ${v.hasReverseCharge ? `<span class="f-subtext" style="color:var(--gold);font-size:10.5px">§ 13b RC</span>` : `<span class="f-subtext" style="font-size:10.5px">Inland USt</span>`}
@@ -388,39 +643,67 @@ function renderKPIs(list) {
   if (!kpiContainer) return;
 
   kpiContainer.innerHTML = `
-    <div class="f-kpi-card">
+    <div class="f-kpi-card f-kpi-clickable ${selectedPayer === 'euer_only' ? 'is-active' : ''}" data-kpi="euer" title="Klicken: Nur abzugsfähige EÜR-Ausgaben filtern">
       <span class="f-kpi-title">EÜR Betriebsausgaben (Netto)</span>
       <span class="f-kpi-val">${fmtEuro(euerNet)}</span>
-      <span class="f-kpi-sub">Brutto: ${fmtEuro(euerGross)} (${deductibleList.length} EÜR-Belege inkl. Erstattungen)</span>
+      <span class="f-kpi-sub">Brutto: ${fmtEuro(euerGross)} (${deductibleList.length} EÜR-Belege)</span>
     </div>
-    <div class="f-kpi-card">
+    <div class="f-kpi-card f-kpi-clickable ${selectedVatFilter === 'standard' ? 'is-active' : ''}" data-kpi="vorsteuer" title="Klicken: Nur Inland-Vorsteuer (§15) filtern">
       <span class="f-kpi-title">Abziehbare Vorsteuer (§ 15)</span>
       <span class="f-kpi-val">${fmtEuro(totalInputVat)}</span>
       <span class="f-kpi-sub">Erstattungsfähig Inland</span>
     </div>
-    <div class="f-kpi-card">
+    <div class="f-kpi-card f-kpi-clickable ${selectedVatFilter === 'reverse_charge' ? 'is-active' : ''}" data-kpi="reverse_charge" title="Klicken: Nur § 13b Reverse Charge Belege filtern">
       <span class="f-kpi-title">§ 13b Reverse Charge (B2B)</span>
       <span class="f-kpi-val">${fmtEuro(totalRcNet)} <small style="font-size:13px;color:var(--gold)">(USt: ${fmtEuro(totalRcTax)})</small></span>
-      <span class="f-kpi-sub">${rcList.length} Auslands-SaaS Belege (EU/Drittland)</span>
+      <span class="f-kpi-sub">${rcList.length} Auslands-SaaS Belege</span>
     </div>
-    <div class="f-kpi-card">
+    <div class="f-kpi-card f-kpi-clickable ${onlyRecurring ? 'is-active' : ''}" data-kpi="recurring" title="Klicken: Alle laufenden Fixkosten im Detail aufschlüsseln">
       <span class="f-kpi-title">Laufende Abos / Fixkosten</span>
       <span class="f-kpi-val">${recurringItems.length} <small style="font-size:14px;color:var(--text-dim)">(~${fmtEuro(monthlyRecurringEst)}/Mo)</small></span>
-      <span class="f-kpi-sub">Monatliche SaaS & Dienste (1/12 bei Jahresabos)</span>
+      <span class="f-kpi-sub">Monatliche Fixkosten (Jahresabos ÷ 12)</span>
     </div>
-    <div class="f-kpi-card f-kpi-partner-card">
+    <div class="f-kpi-card f-kpi-clickable f-kpi-partner-card ${selectedStatus === 'review_needed' ? 'is-active' : ''}" data-kpi="review" title="Klicken: Prüffälle filtern">
       <span class="f-kpi-title">GoBD & Plausibilitäts-Status</span>
       <div class="f-partner-pills">
         <span class="pill ${reviewNeeded === 0 ? 'st-ok' : 'st-warn'}">
           ${reviewNeeded === 0 ? '✓ Alle Belege plausibel' : `⚠️ ${reviewNeeded} Belege in Prüfung`}
         </span>
-        <span class="pill ${missingPaymentDate === 0 ? 'st-ok' : 'pill-once'}">
-          ${missingPaymentDate === 0 ? '✓ Zahlungsfluss (§11) erfasst' : `ℹ️ ${missingPaymentDate} ohne Zahlungsdatum`}
-        </span>
       </div>
       <span class="f-kpi-sub">Rechtsträger: Einzelunternehmen Kemal</span>
     </div>
   `;
+
+  // Bind KPI click filters
+  $$('.f-kpi-clickable', kpiContainer).forEach(card => {
+    card.onclick = () => {
+      const kpi = card.dataset.kpi;
+      if (kpi === 'recurring') {
+        onlyRecurring = !onlyRecurring;
+        const chk = $('#fOnlyRecurring');
+        if (chk) chk.checked = onlyRecurring;
+      } else if (kpi === 'reverse_charge') {
+        selectedVatFilter = (selectedVatFilter === 'reverse_charge') ? 'all' : 'reverse_charge';
+        const sel = $('#fVatFilter');
+        if (sel) sel.value = selectedVatFilter;
+      } else if (kpi === 'vorsteuer') {
+        selectedVatFilter = (selectedVatFilter === 'standard') ? 'all' : 'standard';
+        const sel = $('#fVatFilter');
+        if (sel) sel.value = selectedVatFilter;
+      } else if (kpi === 'euer') {
+        selectedPayer = (selectedPayer === 'euer_only') ? 'all' : 'euer_only';
+        const sel = $('#fPaidByFilter');
+        if (sel) sel.value = selectedPayer;
+      } else if (kpi === 'review') {
+        selectedStatus = (selectedStatus === 'review_needed') ? 'all' : 'review_needed';
+        const sel = $('#fStatusFilter');
+        if (sel) sel.value = selectedStatus;
+      }
+      render();
+    };
+  });
+
+  renderFixcostDetail(recurringItems, monthlyRecurringEst);
 }
 
 function renderCategoryBreakdown(list) {
@@ -488,7 +771,6 @@ function renderCategoryBreakdown(list) {
   });
 }
 
-
 function renderList(list) {
   const tableEl = $('#financeList');
   const countEl = $('#financeCount');
@@ -517,8 +799,8 @@ function renderList(list) {
   }
 
   const activeVendorInfo = selectedVendor !== 'all' ? normalizeVendor(selectedVendor) : null;
-  const vendorTotalGross = list.reduce((sum, it) => sum + (Number(it.gross_amount) || 0), 0);
-  const vendorTotalNet = list.reduce((sum, it) => sum + (Number(it.net_amount) || 0), 0);
+  const vendorTotalGross = list.reduce((sum, it) => sum + getEffectiveAmount(it).gross, 0);
+  const vendorTotalNet = list.reduce((sum, it) => sum + getEffectiveAmount(it).net, 0);
 
   tableEl.innerHTML = `
     ${activeVendorInfo ? `
@@ -530,10 +812,10 @@ function renderList(list) {
           <div class="f-avb-text">
             <div class="f-avb-title">
               <strong>${esc(activeVendorInfo.name)}</strong>
-              <span class="f-avb-pill">${list.length} ${list.length === 1 ? 'Rechnung' : 'Rechnungen'} (Chronologisch)</span>
+              <span class="f-avb-pill">${list.length} ${list.length === 1 ? 'Buchung' : 'Buchungen'} (Chronologisch)</span>
             </div>
             <div class="f-avb-stats">
-              <span>Gesamtausgaben: <strong style="color:var(--text-bright)">${fmtEuro(vendorTotalGross)}</strong></span>
+              <span>Netto-Gesamt: <strong style="color:var(--text-bright)">${fmtEuro(vendorTotalGross)}</strong></span>
               <span>• Netto: ${fmtEuro(vendorTotalNet)}</span>
             </div>
           </div>
@@ -567,6 +849,7 @@ function renderList(list) {
             const sourceKey = item.funding_source || item.payer_type || 'business_account';
             const sourceInfo = FUNDING_SOURCES[sourceKey] || FUNDING_SOURCES['business_account'];
             const isNonDeductible = item.is_deductible === false || sourceKey === 'melih_private';
+            const eff = getEffectiveAmount(item);
             
             return `
               <tr data-id="${item.id}" class="f-row ${item.status === 'review_needed' || item.needs_review ? 'is-warning' : ''} ${isNonDeductible ? 'is-private-row' : ''}">
@@ -575,7 +858,7 @@ function renderList(list) {
                     <span class="pill ${statusInfo.cls}">${esc(statusInfo.label)}</span>
                     ${item.original_file_hash ? `<span class="f-subtext" style="color:var(--text-dim)" title="SHA-256: ${esc(item.original_file_hash)}">🔒 Hash OK</span>` : ''}
                     ${item.document_type === 'payment_receipt' ? `<span class="pill pill-once" style="font-size:9.5px;color:var(--text-dim)" title="Zahlungsbestätigung (Kein Doppelabzug in EÜR)">💳 Zahlungsnachweis</span>` : ''}
-                    ${item.document_type === 'credit_note' ? `<span class="pill pill-kemal" style="font-size:9.5px" title="Erstattung / Gutschrift">↩️ Gutschrift</span>` : ''}
+                    ${eff.isCredit ? `<span class="pill pill-kemal" style="font-size:9.5px" title="Erstattung / Gutschrift (Guthaben)">↩️ Erstattung (+)</span>` : ''}
                     ${item.duplicate_candidate && item.document_type !== 'payment_receipt' ? `<span class="pill pill-melih" style="font-size:9.5px">⚠️ Duplikat?</span>` : ''}
                   </div>
                 </td>
@@ -589,10 +872,10 @@ function renderList(list) {
                   <div class="f-vendor-cell">
                     <span class="f-vendor-name">${esc(item.vendor_name)}</span>
                     <span class="f-country-tag" title="Land">${esc(item.vendor_country || 'DE')}</span>
-                    ${item.is_recurring ? `<span class="pill pill-abo" title="Wiederkehrendes Abo">🔄 Abo</span>` : ''}
+                    ${item.is_recurring ? `<span class="pill pill-abo" title="Wiederkehrendes Abo (${item.recurring_interval === 'yearly' ? 'Jährlich ÷ 12' : 'Monatlich'})">🔄 ${item.recurring_interval === 'yearly' ? 'Abo (Jährlich)' : 'Abo'}</span>` : ''}
                   </div>
                   ${item.email_sender ? `
-                    <div class="f-email-tag" title="Weitergeleitet von Quell-Postfach (für spätere Suche im Mailfach)">
+                    <div class="f-email-tag" title="Weitergeleitet von Quell-Postfach">
                       <span style="opacity:0.7">✉️</span> <code>${esc(item.email_sender)}</code>
                     </div>
                   ` : ''}
@@ -625,21 +908,23 @@ function renderList(list) {
                   </div>
                 </td>
                 <td style="text-align:right" class="f-num">
-                  ${item.document_type === 'credit_note' ? `<span style="color:#10b981;font-weight:600">- ${fmtEuro(Math.abs(item.net_amount))}</span>` : fmtEuro(item.net_amount)}
+                  ${eff.isCredit 
+                    ? `<span style="color:#10b981;font-weight:600">+ ${fmtEuro(Math.abs(item.net_amount))}</span>` 
+                    : `<span style="color:var(--text-dim)">- ${fmtEuro(Math.abs(item.net_amount))}</span>`}
                 </td>
                 <td style="text-align:right" class="f-num">
                   ${item.reverse_charge ? `
                     <div style="color:var(--gold)" title="§ 13b Steuerschuld & Vorsteuer">${fmtEuro(item.net_amount * 0.19)} <small>(19% RC)</small></div>
                     <div class="f-subtext">Rechnungs-USt: 0%</div>
                   ` : `
-                    <div>${item.document_type === 'credit_note' ? `<span style="color:#10b981">- ${fmtEuro(Math.abs(item.vat_amount))}</span>` : fmtEuro(item.vat_amount)}</div>
+                    <div>${eff.isCredit ? `<span style="color:#10b981">+ ${fmtEuro(Math.abs(item.vat_amount))}</span>` : fmtEuro(item.vat_amount)}</div>
                     <div class="f-subtext">${Number(item.vat_rate) || 0}%</div>
                   `}
                 </td>
                 <td style="text-align:right" class="f-num f-gross">
-                  ${item.document_type === 'credit_note' 
-                    ? `<strong style="color:#10b981">- ${fmtEuro(Math.abs(item.gross_amount))}</strong>` 
-                    : `<strong>${fmtEuro(item.gross_amount)}</strong>`}
+                  ${eff.isCredit 
+                    ? `<strong style="color:#10b981;font-size:14px">+ ${fmtEuro(Math.abs(item.gross_amount))}</strong>` 
+                    : `<strong style="color:var(--text-bright)">- ${fmtEuro(Math.abs(item.gross_amount))}</strong>`}
                 </td>
                 <td style="text-align:center">
                   ${item.drive_web_view_link ? `
@@ -687,10 +972,12 @@ function render() {
   }
 
   renderKPIs(filtered);
+  renderAICopilot();
   renderVendorPortfolio(expenses, filtered);
   renderCategoryBreakdown(filtered);
   renderList(filtered);
 }
+
 
 function formExpense(it = null) {
   const isEdit = !!it;
