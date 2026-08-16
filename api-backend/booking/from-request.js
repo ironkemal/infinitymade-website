@@ -24,7 +24,9 @@ export function createBookingsFromRequestFactory({
   // Die DB-Sperre allein reicht nicht: ein laut Sperre "freier" Slot kann trotzdem
   // ein Feiertag, ein Urlaubstag oder ausserhalb der Arbeitszeiten liegen.
   async function slotIstFrei(empId, dateStr, timeStr, duration, serviceId) {
-    const avail = await getAvailableSlots(empId, dateStr, duration, null, 0, 30, serviceId || null);
+    // `undefined` = Standard-Raster aus getAvailableSlots (SLOT_STEP_MINUTES).
+    // Mit dem alten festen 30er-Raster galt eine Wunschzeit wie 09:45 faelschlich als belegt.
+    const avail = await getAvailableSlots(empId, dateStr, duration, null, 0, undefined, serviceId || null);
     if (avail.reason) return false;
     const slotTimes = (avail.slots || []).map(s => (typeof s === 'string' ? s : s.time || s.start || '').substring(0, 5));
     return slotTimes.includes(timeStr.substring(0, 5));

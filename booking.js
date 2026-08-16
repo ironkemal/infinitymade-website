@@ -11,7 +11,7 @@ const serviceFilter = (params.get('s') || 'erst').trim().toLowerCase();
 const state = {
   ownerId: null, companyName: null,
   employeeId: null, employeeName: null,
-  serviceId: null, serviceTitle: null, durationMinutes: null, bufferMinutes: 0,
+  serviceId: null, serviceTitle: null, durationMinutes: null,
   selectedDate: null, selectedTime: null
 };
 
@@ -216,9 +216,9 @@ async function loadServices(empId) {
     const dur = s.duration_minutes || 30;
     const price = s.price || '';
     return `<div class="srv-item-wrapper">
-      <button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${dur}" data-price="${price}" data-buf="${s.buffer_time || 0}">
+      <button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${dur}" data-price="${price}">
         <div class="list-btn-title">${s.title}</div>
-        <div class="list-btn-sub">${dur} Min${s.buffer_time ? ' + ' + s.buffer_time + ' Min Puffer' : ''}${price ? ' · ' + price + ' €' : ''}</div>
+        <div class="list-btn-sub">${dur} Min${price ? ' · ' + price + ' €' : ''}</div>
       </button>
       <div class="srv-duration-row" id="dur-row-${s.id}" style="display:none;">
         <span class="srv-duration-label">Dauer wählen:</span>
@@ -256,7 +256,6 @@ async function loadServices(empId) {
 
       state.serviceId = srvId;
       state.serviceTitle = btn.dataset.title;
-      state.bufferMinutes = parseInt(btn.dataset.buf) || 0;
       state.durationMinutes = parseInt(btn.dataset.dur) || 30;
       state.selectedDate = null;
       state.selectedTime = null;
@@ -323,9 +322,7 @@ async function loadBookingSlots(date) {
         userId: state.employeeId,
         businessId: state.businessId || null,
         date: dStr,
-        duration: state.durationMinutes,
-        buffer: state.bufferMinutes,
-        step: 30
+        duration: state.durationMinutes
       })
     });
     const data = await res.json();

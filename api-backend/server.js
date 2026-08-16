@@ -499,8 +499,15 @@ app.post('/api/apify/search', requireAuthAI, async (req, res) => {
   }
 });
 
+// Slot-Raster: alle 15 Minuten. Vorher 30 — dadurch fiel nach einem 35-Min-Termin
+// (09:00-09:35) der 09:30-Kandidat aus der Ueberlappungspruefung und der naechste
+// Vorschlag war erst 10:00, also 25 Minuten Leerlauf pro Patient.
+// Einzige Quelle fuer das Raster: Frontend sendet bewusst kein `step` mehr.
+// Konsey-Karar 2026-08-16 (P1), konsey/tutanak/2026-08-16-podoloji-slot-suresi.md
+const SLOT_STEP_MINUTES = 15;
+
 // Helper to calculate available slots for a user and date
-async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = 30, serviceId = null) {
+async function getAvailableSlots(userId, date, duration, businessId, buffer = 0, step = SLOT_STEP_MINUTES, serviceId = null) {
   const dayOfWeek = berlinDayOfWeek(date);
   const { start: dayStart, end: dayEnd } = berlinDayBoundsUTC(date);
 
@@ -772,7 +779,7 @@ app.post('/api/booking/get-slots', slotsLookupLimiter, async (req, res) => {
 
   try {
     const buffer = parseInt(req.body.buffer) || 0;
-    const step   = parseInt(req.body.step)   || 30;
+    const step   = parseInt(req.body.step)   || SLOT_STEP_MINUTES;
     const result = await getAvailableSlots(userId, date, duration, businessId, buffer, step, serviceId);
     if (result.reason) {
       return res.json({ slots: [], reason: result.reason });
@@ -808,7 +815,7 @@ app.post('/api/booking/create', publicBookingLimiter, async (req, res) => {
       service.duration_minutes,
       businessId,
       parseInt(req.body.buffer) || 0,
-      parseInt(req.body.step) || 30,
+      parseInt(req.body.step) || SLOT_STEP_MINUTES,
       serviceId
     );
     if (slotValidation.reason === 'business_closed_day') {
@@ -1518,7 +1525,7 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
     // 5) Compute target dates from recurrence rules
     const targetMin = preferredTime ? timeToMinsLocal(preferredTime) : null;
     const tod = preferences.timeOfDay; // morning|afternoon|any
-    const step = 30;
+    const step = SLOT_STEP_MINUTES;
     const anchor = startDate || today;
     const anchorWd = berlinDayOfWeek(anchor);
     // Respect user's weekday selection exactly. Only fall back to anchor weekday if none chosen.

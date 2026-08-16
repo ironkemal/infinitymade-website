@@ -9,6 +9,58 @@
 
 ---
 
+### Randevu slotu = Regelleistungszeit (35/50) — asıl kusur ızgara adımıydı
+- **Karar:** Podoloji randevu slotu **Regelleistungszeit** kadar bloke eder: 78010 → 35 dk,
+  78020 → 50 dk. `GKV_LEISTUNGSKATALOG.podologie`'deki `duration` değerleri **değişmiyor**,
+  `therapiezeit` (20/35) yalnızca kart etiketi olarak kalıyor ("davon X Min am Patienten").
+- **Neden:** Anlage 1a Teil 1 Nr. 4 (i.d.F. 17.06.2024; aynı cümle Anlage 1c 01.07.2025):
+  *"Die notwendige Vor- und Nachbereitung … ist in der Regelleistungszeit enthalten und mit
+  der Vergütung abgegolten. Sie darf … nicht innerhalb der Therapiezeit durchgeführt werden."*
+  Yani hazırlık/dokümantasyon tanım gereği tedavi süresinin **dışında** — slotu Therapiezeit'e
+  indirmek bu ayrımı takvimden siliyor ve solo podologda gün ortasında birikmiş gecikme üretiyor.
+- **Asıl bulgu — sorulan soru yanlış soruymuş:** Podoloji takviminin kapasite kaybı slot
+  süresinden değil **ızgara çözünürlüğünden** geliyor. `step=30` her yerde sabit ve hiçbir
+  çağıran başka değer göndermiyor; 35 dk'lık randevu 09:00–09:35 olunca 09:30 adayı çakışma
+  testinde eleniyor, sıradaki teklif 10:00 → **her hastada 25 dk boşa gidiyor.**
+  Yapılacak iş `step` 30→15, süreye dokunmak değil.
+- **Tarih:** 2026-08-16
+- **Etkilenen:** `api-backend/server.js` (`getAvailableSlots` step, `503/749-760/775/810/1521`),
+  `dashboard.js:2428`, `booking.js:328`, `api-backend/booking/from-request.js:27`;
+  P2 için `booking.js:219/221/327`
+- **Reddedilen alternatifler:**
+  - *Slot = Therapiezeit + ayrı buffer alanı (B):* `services.buffer_time` kolonu **yok**,
+    `booking.js` olmayan kolonu okuyor (daima 0), backend `buffer` parametresi hiç beslenmiyor.
+    Buffer bloğun içindeyse zaten Regelleistungszeit'tir; dışındaysa `no_overlapping_bookings`
+    EXCLUDE GIST korumasının dışına düşer ve sıradaki hasta dokümantasyon zamanına randevu alır.
+  - *Slot = Therapiezeit, buffer yok (C):* yukarıdaki sözleşme cümlesine aykırı.
+  - *Serbest süre girişi:* 50 müşteride 50 farklı takvim = destek yükü. Yerine preset (P3).
+  - *Takvimde 20+15 taralı görsel ayrımı:* `podoloji` gürültü buldu; mevcut alt metin yeterli.
+- **Bilinçli kabul edilen risk:** Süre chip'i `locked: true` kalıyor. `podoloji`'nin
+  *"hastam 50 dk sürüyor, sistem 35 diyor — ilk gün şikayet konusu olur"* uyarısı biliniyor;
+  şikayet gelirse P3 tetiklenir ve elimizde talep kanıtı olur.
+- **Kalıcı kural (`gkv-302` şartı):** Slot uzunluğu 78010 ↔ 78020 seçimini **asla** belirlemez.
+  Kod seçimi terapistin belirlediği Therapiezeit'e bağlıdır (*"Die Therapiezeit wird … vom
+  Leistungserbringer ermittelt"*, Podologie-FAK 2023 Nr. 24). Slot 50 dk diye otomatik 78020
+  seçilirse **üretilmiş Therapiezeit iddiası** doğar. Bugün zaten sağlanıyor: `therapiezeit`
+  yalnız etiket, seçim elle checkbox (`dashboard.js:24628`).
+- **Yan teyit (FAK 2023 Nr. 25):** klein/groß ayrımı yalnız Komplexbehandlung'da geçerli;
+  salt Nagel- veya Hornhautbearbeitung her zaman 78010 + 78030 — kodda doğru
+  (`dashboard.js:23689-23694`).
+- **Test senaryosu:** DF-b hastası, 78010 + 78030, sağ ayak, 09:00 randevu → ikinci hasta için
+  ilk teklif **09:45** olmalı (bugün 10:00). Aynı gün ikinci 78010 randevusu 35 dk sonra
+  çakışmasız kurulabilmeli.
+- **Doğrulanmadı:** Regelleistungszeit'in altına düşmenin denetimde (Plausibilitätsprüfung)
+  nasıl karşılandığı — §125 Rahmenvertrag'da yaptırım hükmü bulunamadı. Takvim süresi §302
+  dosyasına girmiyor (SLLA:B yalnız `Datum der Leistungserbringung` taşır, Anlage 1 TP5 V21
+  §5.5.3.3), yani doğrudan Absetzung riski yok; Verlaufsdokumentation ise delildir.
+- **Beta sorusu (kurucunun işi):** *"Takviminde bir 78010 hastası için kaç dakika ayırıyorsun —
+  ve bu süre temizlik/belgelemeyi kapsıyor mu?"* · *"Hangi hasta tipinde bu süre yetmiyor?"* ·
+  *"Vor-/Nachbereitung'u sen mi yapıyorsun, asistan mı?"* — üçüncüsü praxis genelinde sabit
+  cevaplı kadro sorusudur, P3 preset'ini belirler.
+- **Tutanak:** `konsey/tutanak/2026-08-16-podoloji-slot-suresi.md`
+
+---
+
 ### Podologie Blankoverordnung desteklenmeyecek — net ret mesajı verilecek
 - **Karar:** Blanko motoruna Podologie desteği eklenmeyecek. Bunun yerine podoloji rezepti
   Blanko akışına düştüğünde **tek ve anlaşılır** bir mesajla reddedilecek:
