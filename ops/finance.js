@@ -562,6 +562,11 @@ function renderList(list) {
                     <span class="f-country-tag" title="Land">${esc(item.vendor_country || 'DE')}</span>
                     ${item.is_recurring ? `<span class="pill pill-abo" title="Wiederkehrendes Abo">🔄 Abo</span>` : ''}
                   </div>
+                  ${item.email_sender ? `
+                    <div class="f-email-tag" title="Weitergeleitet von Quell-Postfach (für spätere Suche im Mailfach)">
+                      <span style="opacity:0.7">✉️</span> <code>${esc(item.email_sender)}</code>
+                    </div>
+                  ` : ''}
                   ${item.invoice_number ? `<div class="f-subtext">Nr. ${esc(item.invoice_number)}</div>` : ''}
                   ${item.vendor_vat_id ? `<div class="f-subtext">USt-ID: ${esc(item.vendor_vat_id)}</div>` : ''}
                   ${item.description ? `<div class="f-desc" title="${esc(item.description)}">${esc(item.description)}</div>` : ''}
@@ -819,6 +824,10 @@ function formExpense(it = null) {
 
       <div class="row-2">
         <label class="fld">
+          <span>Weiterleitendes Postfach (Gelen Mail / E-Mail-Adresse)</span>
+          <input type="email" id="f_email_sender" value="${esc(it?.email_sender || '')}" placeholder="z. B. ironkemal1@gmail.com">
+        </label>
+        <label class="fld">
           <span>Google Drive Beleglink (URL)</span>
           <input type="url" id="f_drive_link" value="${esc(it?.drive_web_view_link || '')}" placeholder="https://drive.google.com/file/d/...">
         </label>
@@ -962,6 +971,7 @@ function formExpense(it = null) {
             is_recurring: isRecurring,
             recurring_interval: recInterval,
             description: $('#f_desc')?.value?.trim() || null,
+            email_sender: $('#f_email_sender')?.value?.trim() || null,
             drive_web_view_link: $('#f_drive_link')?.value?.trim() || null,
             needs_review: needsRev,
             review_codes: revCodes,
