@@ -1,6 +1,6 @@
 // Praxura Ops-Dashboard — Fahrtenbuch & Kfz-Kosten Modul (GoBD & EÜR)
 // Rechtsträger: Einzelunternehmen Yavuz Kemal Demir
-import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, confirmDialog } from './app.js?v=20260811a';
+import { sb, state, $, $$, esc, toast, fail, fmtDate, openModal, closeModal, confirmDialog } from './app.js?v=20260811a';
 
 let vehicles = [];
 let entries = [];
@@ -33,10 +33,10 @@ export async function renderFahrtenbuch(root) {
     <div class="fb-controls-row">
       <div class="fb-vehicle-select-group">
         <label for="fb_vehicle_select">Fahrzeug:</label>
-        <select id="fb_vehicle_select" class="f-select">
+        <select id="fb_vehicle_select" class="f-select" style="min-width: 260px;">
           <option value="">Lade Fahrzeuge...</option>
         </select>
-        <button id="fb_add_vehicle_btn" class="f-btn-icon" title="Fahrzeug hinzufügen/bearbeiten">⚙️</button>
+        <button id="fb_add_vehicle_btn" class="btn btn-ghost" title="Fahrzeug bearbeiten / hinzufügen" style="padding: 6px 10px;">⚙️ Fahrzeug verwalten</button>
       </div>
 
       <div class="fb-sub-tabs">
@@ -71,43 +71,40 @@ export async function renderFahrtenbuch(root) {
     </div>
 
     <!-- Main Content Container based on Active Tab -->
-    <div id="fb_main_content">
-      <!-- Injected by renderSubTabContent() -->
-    </div>
+    <div id="fb_main_content"></div>
   `;
 
-  bindTopLevelEvents(root);
+  bindEvents(root);
   await loadVehicles();
   await loadEntriesAndCosts();
 }
 
-function bindTopLevelEvents(root) {
-  const yearSelect = root.querySelector('#fb_year_filter');
-  yearSelect?.addEventListener('change', async (e) => {
+function bindEvents(root) {
+  // Year filter
+  root.querySelector('#fb_year_filter')?.addEventListener('change', async (e) => {
     selectedYear = e.target.value;
     await loadEntriesAndCosts();
   });
 
-  const vehicleSelect = root.querySelector('#fb_vehicle_select');
-  vehicleSelect?.addEventListener('change', async (e) => {
+  // Vehicle select
+  root.querySelector('#fb_vehicle_select')?.addEventListener('change', (e) => {
     selectedVehicleId = e.target.value;
     renderSubTabContent();
     updateKPIs();
   });
 
-  const addTripBtn = root.querySelector('#fb_add_trip_btn');
-  addTripBtn?.addEventListener('click', () => openTripModal(null));
+  // Top Buttons
+  root.querySelector('#fb_add_trip_btn')?.addEventListener('click', () => openTripModal(null));
+  root.querySelector('#fb_add_vehicle_btn')?.addEventListener('click', () => {
+    const curVeh = vehicles.find(v => v.id === selectedVehicleId);
+    openVehicleModal(curVeh || null);
+  });
+  root.querySelector('#fb_export_btn')?.addEventListener('click', exportFahrtenbuchData);
 
-  const addVehicleBtn = root.querySelector('#fb_add_vehicle_btn');
-  addVehicleBtn?.addEventListener('click', () => openVehicleModal(null));
-
-  const exportBtn = root.querySelector('#fb_export_btn');
-  exportBtn?.addEventListener('click', exportFahrtenbuchData);
-
-  const subTabBtns = root.querySelectorAll('.fb-sub-tab-btn');
-  subTabBtns.forEach(btn => {
+  // Sub-tabs
+  root.querySelectorAll('.fb-sub-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      subTabBtns.forEach(b => b.classList.remove('active'));
+      root.querySelectorAll('.fb-sub-tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeSubTab = btn.dataset.tab;
       renderSubTabContent();
@@ -125,13 +122,13 @@ async function loadVehicles() {
     if (error) throw error;
     vehicles = data || [];
 
-    // If no vehicle exists, seed a default private vehicle for Kemal
+    // If no vehicle exists, seed default vehicle
     if (vehicles.length === 0) {
       const { data: seeded, error: seedErr } = await sb
         .from('ops_fahrtenbuch_vehicles')
         .insert([{
           license_plate: 'K-KD 2026',
-          make_model: 'Kemal PKW (Privat genutzt)',
+          make_model: 'Kemal PKW (Privatfahrzeug)',
           year: 2024,
           fuel_type: 'benzin',
           ownership_type: 'privat_genutzt',
@@ -148,7 +145,7 @@ async function loadVehicles() {
     if (select) {
       select.innerHTML = vehicles.map(v => `
         <option value="${v.id}" ${v.id === selectedVehicleId ? 'selected' : ''}>
-          ${esc(v.license_plate)} — ${esc(v.make_model)} (${v.ownership_type === 'privat_genutzt' ? 'Privat-Kfz' : 'Firmenwagen'})
+          ${esc(v.license_plate)} — ${esc(v.make_model)} (${v.ownership_type === 'privat_genutzt' ? 'Privat-Kfz (0,30 €/km)' : 'Firmenwagen'})
         </option>
       `).join('');
 
@@ -164,7 +161,6 @@ async function loadVehicles() {
 
 async function loadEntriesAndCosts() {
   try {
-    // Load Trips
     const { data: tripData, error: tripErr } = await sb
       .from('ops_fahrtenbuch_entries')
       .select('*')
@@ -174,7 +170,6 @@ async function loadEntriesAndCosts() {
     if (tripErr) throw tripErr;
     entries = tripData || [];
 
-    // Load Costs
     const { data: costData, error: costErr } = await sb
       .from('ops_fahrtenbuch_costs')
       .select('*')
@@ -231,7 +226,6 @@ function updateKPIs() {
   const businessPct = totalKm > 0 ? Math.round((businessKm / totalKm) * 100) : 0;
   const commutePct = totalKm > 0 ? Math.round((commuteKm / totalKm) * 100) : 0;
 
-  // Selected vehicle ownership type
   const vehicle = vehicles.find(v => v.id === selectedVehicleId);
   const isPrivate = !vehicle || vehicle.ownership_type === 'privat_genutzt';
 
@@ -239,11 +233,9 @@ function updateKPIs() {
   let basisText = '';
 
   if (isPrivate) {
-    // Privat-Kfz: 0.30 € per business km (Pauschale nach § 9 EStG / BMF)
     euerDeduction = businessKm * 0.30;
     basisText = `Kilometersatz (0,30 € × ${businessKm.toFixed(1)} km)`;
   } else {
-    // Firmenwagen: Real cost share
     const totalCostAmount = filteredCosts.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
     euerDeduction = (totalCostAmount * (businessPct / 100));
     basisText = `Kostenanteil (${businessPct}% von ${totalCostAmount.toFixed(2)} €)`;
@@ -338,9 +330,9 @@ function renderTripsTab(container) {
         <tbody>
           ${filtered.length === 0 ? `
             <tr>
-              <td colspan="7" class="f-empty-state">
+              <td colspan="7" class="f-empty-state" style="text-align: center; padding: 32px 16px; color: var(--text-dim);">
                 Keine Fahrten für diesen Filterzeitraum gefunden.<br>
-                Klicke auf <strong>+ Neue Fahrt</strong>, um deine erste Fahrt zu erfassen.
+                Klicke oben auf <strong>+ Neue Fahrt</strong>, um eine Fahrt einzutragen.
               </td>
             </tr>
           ` : filtered.map(t => {
@@ -374,8 +366,8 @@ function renderTripsTab(container) {
                   ${km.toLocaleString('de-DE', { maximumFractionDigits: 1 })} km
                 </td>
                 <td style="text-align: center;">
-                  <button class="f-action-btn edit-trip-btn" data-id="${t.id}" title="Bearbeiten">✎</button>
-                  <button class="f-action-btn delete-trip-btn" data-id="${t.id}" title="Löschen" style="color: #ef4444;">✕</button>
+                  <button class="btn btn-ghost edit-trip-btn" data-id="${t.id}" title="Bearbeiten" style="padding: 3px 7px;">✎</button>
+                  <button class="btn btn-ghost delete-trip-btn" data-id="${t.id}" title="Löschen" style="padding: 3px 7px; color: #ef4444;">✕</button>
                 </td>
               </tr>
             `;
@@ -385,7 +377,7 @@ function renderTripsTab(container) {
     </div>
   `;
 
-  // Bind filter events
+  // Filters
   container.querySelector('#fb_month_filter')?.addEventListener('change', (e) => {
     selectedMonth = e.target.value;
     renderTripsTab(container);
@@ -400,27 +392,27 @@ function renderTripsTab(container) {
 
   // Action buttons
   container.querySelectorAll('.edit-trip-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       const trip = entries.find(t => t.id === btn.dataset.id);
       if (trip) openTripModal(trip);
-    });
+    };
   });
 
   container.querySelectorAll('.delete-trip-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.onclick = () => {
       const trip = entries.find(t => t.id === btn.dataset.id);
       if (!trip) return;
-      const ok = await confirmDialog(`Fahrt vom ${fmtDate(trip.trip_date)} (${trip.start_location} ➔ ${trip.end_location}) wirklich löschen?`);
-      if (ok) {
+      confirmDialog('Fahrt löschen', `Fahrt vom ${fmtDate(trip.trip_date)} (${trip.start_location} ➔ ${trip.end_location}) wirklich löschen?`, async () => {
         const { error } = await sb.from('ops_fahrtenbuch_entries').delete().eq('id', trip.id);
         if (error) {
-          toast('Fehler beim Löschen: ' + error.message, 'error');
-        } else {
-          toast('Fahrt erfolgreich gelöscht', 'success');
-          await loadEntriesAndCosts();
+          toast('Fehler beim Löschen: ' + error.message, true);
+          return false;
         }
-      }
-    });
+        toast('Fahrt erfolgreich gelöscht');
+        await loadEntriesAndCosts();
+        return true;
+      });
+    };
   });
 }
 
@@ -452,7 +444,7 @@ function renderCostsTab(container) {
         <tbody>
           ${filtered.length === 0 ? `
             <tr>
-              <td colspan="5" class="f-empty-state">
+              <td colspan="5" class="f-empty-state" style="text-align: center; padding: 32px 16px; color: var(--text-dim);">
                 Keine Fahrzeugkosten für ${selectedYear} erfasst.<br>
                 Erfasse Tankbelege, Kfz-Versicherung, Steuer oder Reparaturen.
               </td>
@@ -466,7 +458,7 @@ function renderCostsTab(container) {
                 ${(parseFloat(c.amount) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €
               </td>
               <td style="text-align: center;">
-                <button class="f-action-btn delete-cost-btn" data-id="${c.id}" style="color: #ef4444;">✕</button>
+                <button class="btn btn-ghost delete-cost-btn" data-id="${c.id}" style="padding: 3px 7px; color: #ef4444;">✕</button>
               </td>
             </tr>
           `).join('')}
@@ -477,16 +469,16 @@ function renderCostsTab(container) {
 
   container.querySelector('#fb_add_cost_btn')?.addEventListener('click', () => openCostModal());
   container.querySelectorAll('.delete-cost-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.onclick = () => {
       const cost = costs.find(c => c.id === btn.dataset.id);
       if (!cost) return;
-      const ok = await confirmDialog(`Kostenposition (${cost.cost_type} - ${cost.amount} €) löschen?`);
-      if (ok) {
+      confirmDialog('Kostenposition löschen', `Kostenposition (${cost.cost_type} - ${cost.amount} €) löschen?`, async () => {
         await sb.from('ops_fahrtenbuch_costs').delete().eq('id', cost.id);
-        toast('Ausgabe gelöscht', 'success');
+        toast('Ausgabe gelöscht');
         await loadEntriesAndCosts();
-      }
-    });
+        return true;
+      });
+    };
   });
 }
 
@@ -524,7 +516,7 @@ function renderVehiclesTab(container) {
               <td>${(v.initial_odometer || 0).toLocaleString('de-DE')} km</td>
               <td>${v.is_active ? '🟢 Aktiv' : '⚪ Inaktiv'}</td>
               <td style="text-align: center;">
-                <button class="f-action-btn edit-veh-btn" data-id="${v.id}">✎</button>
+                <button class="btn btn-ghost edit-veh-btn" data-id="${v.id}" style="padding: 3px 7px;">✎</button>
               </td>
             </tr>
           `).join('')}
@@ -535,17 +527,16 @@ function renderVehiclesTab(container) {
 
   container.querySelector('#fb_new_vehicle_btn')?.addEventListener('click', () => openVehicleModal(null));
   container.querySelectorAll('.edit-veh-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
       const veh = vehicles.find(v => v.id === btn.dataset.id);
       if (veh) openVehicleModal(veh);
-    });
+    };
   });
 }
 
 function openTripModal(trip = null) {
   const isEdit = !!trip;
   
-  // Find highest current odometer to prefill start odometer
   let nextOdoStart = 0;
   if (!isEdit && entries.length > 0) {
     const vehicleEntries = entries.filter(e => e.vehicle_id === selectedVehicleId);
@@ -554,165 +545,166 @@ function openTripModal(trip = null) {
     }
   }
 
-  const modalHtml = `
-    <div class="f-modal-header">
-      <h3>${isEdit ? 'Fahrt bearbeiten' : 'Neue Fahrt erfassen'}</h3>
-      <button class="f-modal-close" onclick="window.closeModal()">✕</button>
-    </div>
-    <form id="fb_trip_form" class="f-modal-body">
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Datum *</label>
-          <input type="date" id="t_date" class="f-input" value="${trip?.trip_date || new Date().toISOString().slice(0, 10)}" required>
-        </div>
-        <div class="f-form-group">
-          <label>Fahrtart *</label>
-          <select id="t_type" class="f-select" required>
+  openModal({
+    title: isEdit ? 'Fahrt bearbeiten' : 'Neue Fahrt erfassen',
+    bodyHTML: `
+      <div class="form-grid">
+        <label class="fld">
+          <span>Datum *</span>
+          <input type="date" id="t_date" value="${trip?.trip_date || new Date().toISOString().slice(0, 10)}" required>
+        </label>
+        <label class="fld">
+          <span>Fahrtart *</span>
+          <select id="t_type" required>
             <option value="geschaeftlich" ${trip?.trip_type === 'geschaeftlich' ? 'selected' : ''}>🟢 Geschäftlich (Betriebsausgabe)</option>
             <option value="arbeitsweg" ${trip?.trip_type === 'arbeitsweg' ? 'selected' : ''}>🟡 Arbeitsweg (Wohnung ↔ Betrieb)</option>
             <option value="privat" ${trip?.trip_type === 'privat' ? 'selected' : ''}>🔴 Privatfahrt</option>
           </select>
-        </div>
+        </label>
       </div>
 
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Abfahrtzeit</label>
-          <input type="time" id="t_dep_time" class="f-input" value="${trip?.departure_time?.slice(0, 5) || ''}">
-        </div>
-        <div class="f-form-group">
-          <label>Ankunftzeit</label>
-          <input type="time" id="t_arr_time" class="f-input" value="${trip?.arrival_time?.slice(0, 5) || ''}">
-        </div>
+      <div class="form-grid">
+        <label class="fld">
+          <span>Abfahrtzeit</span>
+          <input type="time" id="t_dep_time" value="${trip?.departure_time?.slice(0, 5) || ''}">
+        </label>
+        <label class="fld">
+          <span>Ankunftzeit</span>
+          <input type="time" id="t_arr_time" value="${trip?.arrival_time?.slice(0, 5) || ''}">
+        </label>
       </div>
 
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Startort *</label>
-          <input type="text" id="t_start" class="f-input" placeholder="z. B. Köln Büro / Zuhause" value="${trip?.start_location || ''}" required>
-        </div>
-        <div class="f-form-group">
-          <label>Zielort *</label>
-          <input type="text" id="t_end" class="f-input" placeholder="z. B. Kunde Düsseldorf / Meeting" value="${trip?.end_location || ''}" required>
-        </div>
+      <div class="form-grid">
+        <label class="fld">
+          <span>Startort *</span>
+          <input type="text" id="t_start" placeholder="z. B. Köln Büro / Zuhause" value="${trip?.start_location || ''}" required>
+        </label>
+        <label class="fld">
+          <span>Zielort *</span>
+          <input type="text" id="t_end" placeholder="z. B. Kunde Düsseldorf / Meeting" value="${trip?.end_location || ''}" required>
+        </label>
       </div>
 
-      <div class="f-form-group">
-        <label>Reiseroute / Zwischenstopps</label>
-        <input type="text" id="t_route" class="f-input" placeholder="z. B. über A3, Zwischenstopp Essen" value="${trip?.route_description || ''}">
+      <label class="fld">
+        <span>Reiseroute / Zwischenstopps</span>
+        <input type="text" id="t_route" placeholder="z. B. über A3, Zwischenstopp Essen" value="${trip?.route_description || ''}">
+      </label>
+
+      <div class="form-grid-3">
+        <label class="fld">
+          <span>Tachostand Beginn (km) *</span>
+          <input type="number" id="t_odo_start" value="${isEdit ? trip.odometer_start : nextOdoStart}" required>
+        </label>
+        <label class="fld">
+          <span>Tachostand Ende (km) *</span>
+          <input type="number" id="t_odo_end" value="${trip?.odometer_end || ''}" required>
+        </label>
+        <label class="fld">
+          <span>Strecke (km)</span>
+          <input type="text" id="t_dist_display" value="${trip?.distance_km || 0} km" readonly style="font-weight: bold; color: #10b981;">
+        </label>
       </div>
 
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Tachostand Beginn (km) *</label>
-          <input type="number" id="t_odo_start" class="f-input" value="${isEdit ? trip.odometer_start : nextOdoStart}" required>
-        </div>
-        <div class="f-form-group">
-          <label>Tachostand Ende (km) *</label>
-          <input type="number" id="t_odo_end" class="f-input" value="${trip?.odometer_end || ''}" required>
-        </div>
-        <div class="f-form-group" style="max-width: 120px;">
-          <label>Strecke (km)</label>
-          <input type="text" id="t_dist_display" class="f-input" value="${trip?.distance_km || 0}" readonly style="background: rgba(255,255,255,0.05); font-weight: bold; color: #10b981;">
-        </div>
+      <div class="form-grid">
+        <label class="fld">
+          <span>Reisezweck / Anlass (bei Geschäftsfahrten)</span>
+          <input type="text" id="t_reason" placeholder="z. B. Erstberatung, Server-Wartung, Notartermin" value="${trip?.business_reason || ''}">
+        </label>
+        <label class="fld">
+          <span>Kunde / Partner</span>
+          <input type="text" id="t_client" placeholder="z. B. Fa. Müller GmbH" value="${trip?.client_name || ''}">
+        </label>
       </div>
+    `,
+    onOpen: (body) => {
+      const startInp = $('#t_odo_start', body);
+      const endInp = $('#t_odo_end', body);
+      const distDisp = $('#t_dist_display', body);
 
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Reisezweck / Anlass (bei Geschäftsfahrten)</label>
-          <input type="text" id="t_reason" class="f-input" placeholder="z. B. Erstberatung, Server-Wartung, Notartermin" value="${trip?.business_reason || ''}">
-        </div>
-        <div class="f-form-group">
-          <label>Aufgesuchter Geschäftspartner / Kunde</label>
-          <input type="text" id="t_client" class="f-input" placeholder="z. B. Fa. Müller GmbH" value="${trip?.client_name || ''}">
-        </div>
-      </div>
+      const calcDist = () => {
+        const s = parseFloat(startInp.value) || 0;
+        const e = parseFloat(endInp.value) || 0;
+        const diff = Math.max(0, e - s);
+        distDisp.value = diff.toFixed(1) + ' km';
+      };
 
-      <div class="f-modal-footer">
-        <button type="button" class="f-btn f-btn-secondary" onclick="window.closeModal()">Abbrechen</button>
-        <button type="submit" class="f-btn f-btn-primary">${isEdit ? 'Speichern' : 'Fahrt eintragen'}</button>
-      </div>
-    </form>
-  `;
+      startInp.oninput = calcDist;
+      endInp.oninput = calcDist;
+      calcDist();
+    },
+    actions: [
+      { label: 'Abbrechen', onClick: () => true },
+      {
+        label: isEdit ? 'Speichern' : 'Fahrt eintragen',
+        kind: 'primary',
+        onClick: async () => {
+          const startInp = document.getElementById('t_odo_start');
+          const endInp = document.getElementById('t_odo_end');
+          const odoStart = parseInt(startInp.value, 10);
+          const odoEnd = parseInt(endInp.value, 10);
 
-  openModal(modalHtml);
+          if (isNaN(odoStart) || isNaN(odoEnd) || odoEnd <= odoStart) {
+            toast('Tachostand Ende muss größer als Tachostand Beginn sein!', true);
+            return false;
+          }
 
-  // Dynamic distance calculation
-  const startInp = document.getElementById('t_odo_start');
-  const endInp = document.getElementById('t_odo_end');
-  const distDisp = document.getElementById('t_dist_display');
+          const startLoc = document.getElementById('t_start').value.trim();
+          const endLoc = document.getElementById('t_end').value.trim();
+          if (!startLoc || !endLoc) {
+            toast('Start- und Zielort müssen ausgefüllt sein!', true);
+            return false;
+          }
 
-  function calcDist() {
-    const s = parseFloat(startInp.value) || 0;
-    const e = parseFloat(endInp.value) || 0;
-    const diff = Math.max(0, e - s);
-    distDisp.value = diff.toFixed(1) + ' km';
-  }
+          const payload = {
+            vehicle_id: selectedVehicleId,
+            trip_date: document.getElementById('t_date').value,
+            trip_type: document.getElementById('t_type').value,
+            departure_time: document.getElementById('t_dep_time').value || null,
+            arrival_time: document.getElementById('t_arr_time').value || null,
+            start_location: startLoc,
+            end_location: endLoc,
+            route_description: document.getElementById('t_route').value.trim() || null,
+            odometer_start: odoStart,
+            odometer_end: odoEnd,
+            business_reason: document.getElementById('t_reason').value.trim() || null,
+            client_name: document.getElementById('t_client').value.trim() || null,
+            driver: 'kemal'
+          };
 
-  startInp?.addEventListener('input', calcDist);
-  endInp?.addEventListener('input', calcDist);
-
-  // Submit Handler
-  document.getElementById('fb_trip_form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const odoStart = parseInt(startInp.value, 10);
-    const odoEnd = parseInt(endInp.value, 10);
-
-    if (odoEnd <= odoStart) {
-      toast('Tachostand Ende muss größer als Tachostand Beginn sein!', 'error');
-      return;
-    }
-
-    const payload = {
-      vehicle_id: selectedVehicleId,
-      trip_date: document.getElementById('t_date').value,
-      trip_type: document.getElementById('t_type').value,
-      departure_time: document.getElementById('t_dep_time').value || null,
-      arrival_time: document.getElementById('t_arr_time').value || null,
-      start_location: document.getElementById('t_start').value.trim(),
-      end_location: document.getElementById('t_end').value.trim(),
-      route_description: document.getElementById('t_route').value.trim() || null,
-      odometer_start: odoStart,
-      odometer_end: odoEnd,
-      business_reason: document.getElementById('t_reason').value.trim() || null,
-      client_name: document.getElementById('t_client').value.trim() || null,
-      driver: 'kemal'
-    };
-
-    try {
-      if (isEdit) {
-        const { error } = await sb.from('ops_fahrtenbuch_entries').update(payload).eq('id', trip.id);
-        if (error) throw error;
-        toast('Fahrt erfolgreich aktualisiert', 'success');
-      } else {
-        const { error } = await sb.from('ops_fahrtenbuch_entries').insert([payload]);
-        if (error) throw error;
-        toast('Fahrt erfolgreich eingetragen', 'success');
+          try {
+            if (isEdit) {
+              const { error } = await sb.from('ops_fahrtenbuch_entries').update(payload).eq('id', trip.id);
+              if (error) throw error;
+              toast('Fahrt erfolgreich aktualisiert');
+            } else {
+              const { error } = await sb.from('ops_fahrtenbuch_entries').insert([payload]);
+              if (error) throw error;
+              toast('Fahrt erfolgreich eingetragen');
+            }
+            await loadEntriesAndCosts();
+            return true;
+          } catch (err) {
+            toast('Fehler beim Speichern: ' + err.message, true);
+            return false;
+          }
+        }
       }
-
-      window.closeModal();
-      await loadEntriesAndCosts();
-    } catch (err) {
-      toast('Fehler beim Speichern: ' + err.message, 'error');
-    }
+    ]
   });
 }
 
 function openCostModal() {
-  const modalHtml = `
-    <div class="f-modal-header">
-      <h3>Kfz-Kosten erfassen</h3>
-      <button class="f-modal-close" onclick="window.closeModal()">✕</button>
-    </div>
-    <form id="fb_cost_form" class="f-modal-body">
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Datum *</label>
-          <input type="date" id="c_date" class="f-input" value="${new Date().toISOString().slice(0, 10)}" required>
-        </div>
-        <div class="f-form-group">
-          <label>Kostenart *</label>
-          <select id="c_type" class="f-select" required>
+  openModal({
+    title: 'Kfz-Kosten erfassen',
+    bodyHTML: `
+      <div class="form-grid">
+        <label class="fld">
+          <span>Datum *</span>
+          <input type="date" id="c_date" value="${new Date().toISOString().slice(0, 10)}" required>
+        </label>
+        <label class="fld">
+          <span>Kostenart *</span>
+          <select id="c_type" required>
             <option value="kraftstoff">⛽ Kraftstoff / Tanken / Laden</option>
             <option value="versicherung">🛡️ Kfz-Versicherung (Haftpflicht/Kasko)</option>
             <option value="steuer">🏛️ Kfz-Steuer</option>
@@ -722,146 +714,154 @@ function openCostModal() {
             <option value="parkgebuehr">🅿️ Parkgebühren / Maut</option>
             <option value="sonstiges">📦 Sonstige Fahrzeugkosten</option>
           </select>
-        </div>
+        </label>
       </div>
 
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Bruttobetrag (€) *</label>
-          <input type="number" step="0.01" id="c_amount" class="f-input" placeholder="0.00" required>
-        </div>
-        <div class="f-form-group">
-          <label>Darin enthaltene USt (€)</label>
-          <input type="number" step="0.01" id="c_vat" class="f-input" placeholder="0.00">
-        </div>
+      <div class="form-grid">
+        <label class="fld">
+          <span>Bruttobetrag (€) *</span>
+          <input type="number" step="0.01" id="c_amount" placeholder="0.00" required>
+        </label>
+        <label class="fld">
+          <span>Darin enthaltene USt (€)</span>
+          <input type="number" step="0.01" id="c_vat" placeholder="0.00">
+        </label>
       </div>
 
-      <div class="f-form-group">
-        <label>Beschreibung / Belegnotiz</label>
-        <input type="text" id="c_desc" class="f-input" placeholder="z. B. Aral Tankstelle Köln">
-      </div>
+      <label class="fld">
+        <span>Beschreibung / Belegnotiz</span>
+        <input type="text" id="c_desc" placeholder="z. B. Aral Tankstelle Köln">
+      </label>
+    `,
+    actions: [
+      { label: 'Abbrechen', onClick: () => true },
+      {
+        label: 'Kosten speichern',
+        kind: 'primary',
+        onClick: async () => {
+          const amt = parseFloat(document.getElementById('c_amount').value) || 0;
+          if (amt <= 0) {
+            toast('Bitte einen gültigen Betrag eingeben!', true);
+            return false;
+          }
 
-      <div class="f-modal-footer">
-        <button type="button" class="f-btn f-btn-secondary" onclick="window.closeModal()">Abbrechen</button>
-        <button type="submit" class="f-btn f-btn-primary">Kosten speichern</button>
-      </div>
-    </form>
-  `;
+          const payload = {
+            vehicle_id: selectedVehicleId,
+            cost_date: document.getElementById('c_date').value,
+            cost_type: document.getElementById('c_type').value,
+            amount: amt,
+            vat_amount: parseFloat(document.getElementById('c_vat').value) || 0,
+            description: document.getElementById('c_desc').value.trim() || null
+          };
 
-  openModal(modalHtml);
-
-  document.getElementById('fb_cost_form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const payload = {
-      vehicle_id: selectedVehicleId,
-      cost_date: document.getElementById('c_date').value,
-      cost_type: document.getElementById('c_type').value,
-      amount: parseFloat(document.getElementById('c_amount').value) || 0,
-      vat_amount: parseFloat(document.getElementById('c_vat').value) || 0,
-      description: document.getElementById('c_desc').value.trim() || null
-    };
-
-    try {
-      const { error } = await sb.from('ops_fahrtenbuch_costs').insert([payload]);
-      if (error) throw error;
-      toast('Kosten erfolgreich gespeichert', 'success');
-      window.closeModal();
-      await loadEntriesAndCosts();
-    } catch (err) {
-      toast('Fehler beim Speichern: ' + err.message, 'error');
-    }
+          try {
+            const { error } = await sb.from('ops_fahrtenbuch_costs').insert([payload]);
+            if (error) throw error;
+            toast('Kosten erfolgreich gespeichert');
+            await loadEntriesAndCosts();
+            return true;
+          } catch (err) {
+            toast('Fehler beim Speichern: ' + err.message, true);
+            return false;
+          }
+        }
+      }
+    ]
   });
 }
 
 function openVehicleModal(vehicle = null) {
   const isEdit = !!vehicle;
-  const modalHtml = `
-    <div class="f-modal-header">
-      <h3>${isEdit ? 'Fahrzeug bearbeiten' : 'Neues Fahrzeug anlegen'}</h3>
-      <button class="f-modal-close" onclick="window.closeModal()">✕</button>
-    </div>
-    <form id="fb_veh_form" class="f-modal-body">
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Amtliches Kennzeichen *</label>
-          <input type="text" id="v_plate" class="f-input" placeholder="z. B. K-KD 2026" value="${vehicle?.license_plate || ''}" required>
-        </div>
-        <div class="f-form-group">
-          <label>Hersteller / Modell *</label>
-          <input type="text" id="v_model" class="f-input" placeholder="z. B. VW Golf 8 / Tesla Model 3" value="${vehicle?.make_model || ''}" required>
-        </div>
+
+  openModal({
+    title: isEdit ? 'Fahrzeug bearbeiten' : 'Neues Fahrzeug anlegen',
+    bodyHTML: `
+      <div class="form-grid">
+        <label class="fld">
+          <span>Amtliches Kennzeichen *</span>
+          <input type="text" id="v_plate" placeholder="z. B. K-KD 2026" value="${vehicle?.license_plate || ''}" required>
+        </label>
+        <label class="fld">
+          <span>Hersteller / Modell *</span>
+          <input type="text" id="v_model" placeholder="z. B. VW Golf 8 / Tesla Model 3" value="${vehicle?.make_model || ''}" required>
+        </label>
       </div>
 
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Nutzungsart / Zuordnung *</label>
-          <select id="v_owner" class="f-select" required>
-            <option value="privat_genutzt" ${vehicle?.ownership_type === 'privat_genutzt' ? 'selected' : ''}>Privat-Kfz betrieblich genutzt (0,30 €/km)</option>
+      <div class="form-grid">
+        <label class="fld">
+          <span>Nutzungsart / Zuordnung *</span>
+          <select id="v_owner" required>
+            <option value="privat_genutzt" ${(!vehicle || vehicle.ownership_type === 'privat_genutzt') ? 'selected' : ''}>Privat-Kfz betrieblich genutzt (0,30 €/km)</option>
             <option value="eigentum" ${vehicle?.ownership_type === 'eigentum' ? 'selected' : ''}>Betriebsvermögen (Firmenwagen - Kauf)</option>
             <option value="leasing" ${vehicle?.ownership_type === 'leasing' ? 'selected' : ''}>Betriebsvermögen (Firmenwagen - Leasing)</option>
           </select>
-        </div>
-        <div class="f-form-group">
-          <label>Antriebsart</label>
-          <select id="v_fuel" class="f-select">
-            <option value="benzin" ${vehicle?.fuel_type === 'benzin' ? 'selected' : ''}>Benzin</option>
+        </label>
+        <label class="fld">
+          <span>Antriebsart</span>
+          <select id="v_fuel">
+            <option value="benzin" ${(!vehicle || vehicle.fuel_type === 'benzin') ? 'selected' : ''}>Benzin</option>
             <option value="diesel" ${vehicle?.fuel_type === 'diesel' ? 'selected' : ''}>Diesel</option>
             <option value="elektro" ${vehicle?.fuel_type === 'elektro' ? 'selected' : ''}>Elektro (BEV)</option>
             <option value="hybrid" ${vehicle?.fuel_type === 'hybrid' ? 'selected' : ''}>Plug-In-Hybrid</option>
           </select>
-        </div>
+        </label>
       </div>
 
-      <div class="f-form-row">
-        <div class="f-form-group">
-          <label>Anfangs-Kilometerstand (km)</label>
-          <input type="number" id="v_odo" class="f-input" value="${vehicle?.initial_odometer || 0}">
-        </div>
-        <div class="f-form-group">
-          <label>Brutto-Listenpreis (€) (für 1%-Regel)</label>
-          <input type="number" step="0.01" id="v_price" class="f-input" value="${vehicle?.list_price_gross || 0}">
-        </div>
+      <div class="form-grid">
+        <label class="fld">
+          <span>Anfangs-Kilometerstand (km)</span>
+          <input type="number" id="v_odo" value="${vehicle?.initial_odometer || 0}">
+        </label>
+        <label class="fld">
+          <span>Brutto-Listenpreis (€) (für 1%-Regel)</span>
+          <input type="number" step="0.01" id="v_price" value="${vehicle?.list_price_gross || 0}">
+        </label>
       </div>
+    `,
+    actions: [
+      { label: 'Abbrechen', onClick: () => true },
+      {
+        label: isEdit ? 'Aktualisieren' : 'Fahrzeug anlegen',
+        kind: 'primary',
+        onClick: async () => {
+          const plate = document.getElementById('v_plate').value.trim().toUpperCase();
+          const model = document.getElementById('v_model').value.trim();
+          if (!plate || !model) {
+            toast('Bitte Kennzeichen und Modell eingeben!', true);
+            return false;
+          }
 
-      <div class="f-modal-footer">
-        <button type="button" class="f-btn f-btn-secondary" onclick="window.closeModal()">Abbrechen</button>
-        <button type="submit" class="f-btn f-btn-primary">Speichern</button>
-      </div>
-    </form>
-  `;
+          const payload = {
+            license_plate: plate,
+            make_model: model,
+            ownership_type: document.getElementById('v_owner').value,
+            fuel_type: document.getElementById('v_fuel').value,
+            initial_odometer: parseInt(document.getElementById('v_odo').value, 10) || 0,
+            list_price_gross: parseFloat(document.getElementById('v_price').value) || 0,
+            is_active: true
+          };
 
-  openModal(modalHtml);
-
-  document.getElementById('fb_veh_form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const payload = {
-      license_plate: document.getElementById('v_plate').value.trim().toUpperCase(),
-      make_model: document.getElementById('v_model').value.trim(),
-      ownership_type: document.getElementById('v_owner').value,
-      fuel_type: document.getElementById('v_fuel').value,
-      initial_odometer: parseInt(document.getElementById('v_odo').value, 10) || 0,
-      list_price_gross: parseFloat(document.getElementById('v_price').value) || 0,
-      is_active: true
-    };
-
-    try {
-      if (isEdit) {
-        await sb.from('ops_fahrtenbuch_vehicles').update(payload).eq('id', vehicle.id);
-        toast('Fahrzeug aktualisiert', 'success');
-      } else {
-        const { data: created, error } = await sb.from('ops_fahrtenbuch_vehicles').insert([payload]).select();
-        if (error) throw error;
-        if (created && created[0]) selectedVehicleId = created[0].id;
-        toast('Fahrzeug angelegt', 'success');
+          try {
+            if (isEdit) {
+              await sb.from('ops_fahrtenbuch_vehicles').update(payload).eq('id', vehicle.id);
+              toast('Fahrzeug aktualisiert');
+            } else {
+              const { data: created, error } = await sb.from('ops_fahrtenbuch_vehicles').insert([payload]).select();
+              if (error) throw error;
+              if (created && created[0]) selectedVehicleId = created[0].id;
+              toast('Fahrzeug angelegt');
+            }
+            await loadVehicles();
+            renderSubTabContent();
+            updateKPIs();
+            return true;
+          } catch (err) {
+            toast('Fehler: ' + err.message, true);
+            return false;
+          }
+        }
       }
-
-      window.closeModal();
-      await loadVehicles();
-      renderSubTabContent();
-      updateKPIs();
-    } catch (err) {
-      toast('Fehler: ' + err.message, 'error');
-    }
+    ]
   });
 }
 
@@ -870,7 +870,7 @@ function exportFahrtenbuchData() {
   const filteredCosts = getFilteredCosts();
 
   if (filtered.length === 0) {
-    toast('Keine Fahrten im ausgewählten Jahr zum Exportieren vorhanden.', 'warning');
+    toast('Keine Fahrten im ausgewählten Jahr zum Exportieren vorhanden.', true);
     return;
   }
 
@@ -891,7 +891,6 @@ function exportFahrtenbuchData() {
   const vehicle = vehicles.find(v => v.id === selectedVehicleId);
   const vehicleName = vehicle ? `${vehicle.license_plate} - ${vehicle.make_model}` : 'Fahrzeug';
 
-  // Build CSV conforming to German Tax Audit (GoBD)
   const headers = [
     'Datum',
     'Abfahrt',
@@ -945,7 +944,7 @@ function exportFahrtenbuchData() {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 
-  toast(`Fahrtenbuch für ${selectedYear} erfolgreich exportiert!`, 'success');
+  toast(`Fahrtenbuch für ${selectedYear} erfolgreich exportiert!`);
 }
 
 export function mountFahrtenbuch() {
