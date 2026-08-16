@@ -170,6 +170,21 @@ function getFilteredExpenses() {
   });
 }
 
+export function getEffectiveAmount(item) {
+  const isCredit = item.document_type === 'credit_note' || Number(item.gross_amount) < 0;
+  const rawGross = Math.abs(Number(item.gross_amount) || 0);
+  const rawNet = Math.abs(Number(item.net_amount) || 0);
+  const rawVat = Math.abs(Number(item.vat_amount || item.invoice_vat_amount) || 0);
+  
+  const sign = isCredit ? -1 : 1;
+  return {
+    gross: rawGross * sign,
+    net: rawNet * sign,
+    vat: rawVat * sign,
+    isCredit
+  };
+}
+
 function renderVendorPortfolio(allList, currentFiltered) {
   const container = $('#financeVendorPortfolio');
   if (!container) return;
@@ -199,10 +214,11 @@ function renderVendorPortfolio(allList, currentFiltered) {
 
     const v = vendorMap.get(norm.key);
     const isDed = item.is_deductible !== false && (item.funding_source || item.payer_type) !== 'melih_private' && item.status !== 'archived';
-    
+    const eff = getEffectiveAmount(item);
+
     if (isDed) {
-      v.totalGross += Number(item.gross_amount) || 0;
-      v.totalNet += Number(item.net_amount) || 0;
+      v.totalGross += eff.gross;
+      v.totalNet += eff.net;
       v.count += 1;
     } else {
       v.receiptsCount += 1;
@@ -219,7 +235,7 @@ function renderVendorPortfolio(allList, currentFiltered) {
 
   // Sort vendors: High total spend & high frequency first!
   const sortedVendors = Array.from(vendorMap.values())
-    .filter(v => v.totalGross > 0 || v.count > 0 || v.receiptsCount > 0)
+    .filter(v => v.totalGross !== 0 || v.count > 0 || v.receiptsCount > 0)
     .sort((a, b) => {
       if (b.totalGross !== a.totalGross) {
         return b.totalGross - a.totalGross;
@@ -234,7 +250,7 @@ function renderVendorPortfolio(allList, currentFiltered) {
       <div class="f-vendor-head">
         <div class="f-vendor-title-group">
           <h3 class="f-vendor-title">🏢 Anbieter-Portfolio & Ausgabenanalyse</h3>
-          <span class="hint">Klicken Sie auf einen Anbieter, um dessen Rechnungen chronologisch zu filtern (Sortiert nach Gesamtausgaben)</span>
+          <span class="hint">Klicken Sie auf einen Anbieter, um dessen Rechnungen chronologisch zu filtern (Gutschriften/Erstattungen werden korrekt gegengerechnet)</span>
         </div>
         ${selectedVendor !== 'all' ? `
           <button class="btn btn-ghost btn-sm f-vendor-reset-btn" id="resetVendorFilterBtn">
@@ -256,7 +272,7 @@ function renderVendorPortfolio(allList, currentFiltered) {
           <div class="f-vc-amount">${fmtEuro(totalAllSpend)}</div>
           <div class="f-vc-meta">
             <span class="f-vc-badge">${sortedVendors.length} aktive Dienste</span>
-            <span class="f-vc-sub">Gesamtes Portfolio</span>
+            <span class="f-vc-sub">Gesamtes Portfolio (Netto abzügl. Gutschriften)</span>
           </div>
         </div>
 
@@ -307,27 +323,27 @@ function renderKPIs(list) {
   // Deductible business expenses for Kemal's Einzelunternehmen
   const deductibleList = list.filter(i => i.is_deductible !== false && (i.funding_source || i.payer_type) !== 'melih_private');
   
-  // Calculate deductible Net amount considering deductible_percentage (e.g. 70% for Bewirtung)
+  // Calculate deductible Net amount considering Gutschriften / Credit notes
   const euerNet = deductibleList.reduce((sum, item) => {
-    const net = Number(item.net_amount) || 0;
+    const eff = getEffectiveAmount(item);
     const pct = Number(item.deductible_percentage) || 100;
-    return sum + (net * (pct / 100));
+    return sum + (eff.net * (pct / 100));
   }, 0);
 
-  const euerGross = deductibleList.reduce((sum, item) => sum + (Number(item.gross_amount) || 0), 0);
+  const euerGross = deductibleList.reduce((sum, item) => sum + getEffectiveAmount(item).gross, 0);
   
   // Normal Domestic Input VAT (§ 15 UStG)
   const totalInputVat = deductibleList
     .filter(i => i.input_vat_eligible !== false && !i.reverse_charge)
-    .reduce((sum, item) => sum + (Number(item.vat_amount || item.invoice_vat_amount) || 0), 0);
+    .reduce((sum, item) => sum + getEffectiveAmount(item).vat, 0);
 
   // Reverse-Charge § 13b (Tax Base & 19% Tax Liability/Credit)
   const rcList = deductibleList.filter(i => i.reverse_charge);
-  const totalRcNet = rcList.reduce((sum, item) => sum + (Number(item.net_amount) || 0), 0);
-  const totalRcTax = rcList.reduce((sum, item) => sum + (Number(item.reverse_charge_tax_amount) || (Number(item.net_amount) * 0.19) || 0), 0);
+  const totalRcNet = rcList.reduce((sum, item) => sum + getEffectiveAmount(item).net, 0);
+  const totalRcTax = rcList.reduce((sum, item) => sum + (getEffectiveAmount(item).net * 0.19), 0);
 
   // Active recurring SaaS subscriptions
-  const recurringItems = deductibleList.filter(i => i.is_recurring && i.status !== 'archived');
+  const recurringItems = deductibleList.filter(i => i.is_recurring && i.status !== 'archived' && i.document_type !== 'credit_note');
   const monthlyRecurringEst = recurringItems.reduce((sum, item) => {
     const gross = Number(item.gross_amount) || 0;
     if (item.recurring_interval === 'yearly') return sum + (gross / 12);
@@ -346,7 +362,7 @@ function renderKPIs(list) {
     <div class="f-kpi-card">
       <span class="f-kpi-title">EÜR Betriebsausgaben (Netto)</span>
       <span class="f-kpi-val">${fmtEuro(euerNet)}</span>
-      <span class="f-kpi-sub">Brutto: ${fmtEuro(euerGross)} (${deductibleList.length} EÜR-Belege)</span>
+      <span class="f-kpi-sub">Brutto: ${fmtEuro(euerGross)} (${deductibleList.length} EÜR-Belege inkl. Erstattungen)</span>
     </div>
     <div class="f-kpi-card">
       <span class="f-kpi-title">Abziehbare Vorsteuer (§ 15)</span>
@@ -361,7 +377,7 @@ function renderKPIs(list) {
     <div class="f-kpi-card">
       <span class="f-kpi-title">Laufende Abos / Fixkosten</span>
       <span class="f-kpi-val">${recurringItems.length} <small style="font-size:14px;color:var(--text-dim)">(~${fmtEuro(monthlyRecurringEst)}/Mo)</small></span>
-      <span class="f-kpi-sub">Monatliche SaaS & Dienste</span>
+      <span class="f-kpi-sub">Monatliche SaaS & Dienste (1/12 bei Jahresabos)</span>
     </div>
     <div class="f-kpi-card f-kpi-partner-card">
       <span class="f-kpi-title">GoBD & Plausibilitäts-Status</span>
@@ -383,7 +399,7 @@ function renderCategoryBreakdown(list) {
   if (!breakdownEl) return;
 
   const deductibleList = list.filter(i => i.is_deductible !== false && (i.funding_source || i.payer_type) !== 'melih_private');
-  const totalNet = deductibleList.reduce((sum, item) => sum + (Number(item.net_amount) || 0), 0);
+  const totalNet = deductibleList.reduce((sum, item) => sum + getEffectiveAmount(item).net, 0);
   
   const catSums = {};
   for (const key of Object.keys(EUER_CATEGORIES)) {
@@ -395,12 +411,12 @@ function renderCategoryBreakdown(list) {
   for (const item of deductibleList) {
     const cat = item.tax_category || item.euer_category || 'other_operational';
     if (!catSums[cat]) catSums[cat] = { net: 0, count: 0 };
-    catSums[cat].net += Number(item.net_amount) || 0;
+    catSums[cat].net += getEffectiveAmount(item).net;
     catSums[cat].count += 1;
   }
 
   const sortedCats = Object.entries(catSums)
-    .filter(([_, data]) => data.net > 0 || selectedCategory === 'all')
+    .filter(([_, data]) => data.net !== 0 || selectedCategory === 'all')
     .sort((a, b) => b[1].net - a[1].net);
 
   breakdownEl.innerHTML = `
@@ -412,7 +428,7 @@ function renderCategoryBreakdown(list) {
       <div class="f-breakdown-list">
         ${sortedCats.map(([catKey, data]) => {
           const info = EUER_CATEGORIES[catKey] || { label: catKey, icon: '🏷️' };
-          const pct = totalNet > 0 ? Math.round((data.net / totalNet) * 100) : 0;
+          const pct = totalNet > 0 ? Math.round((Math.max(0, data.net) / totalNet) * 100) : 0;
           return `
             <div class="f-cat-row" data-cat="${esc(catKey)}">
               <div class="f-cat-info">
@@ -442,6 +458,7 @@ function renderCategoryBreakdown(list) {
     };
   });
 }
+
 
 function renderList(list) {
   const tableEl = $('#financeList');
@@ -574,19 +591,21 @@ function renderList(list) {
                   </div>
                 </td>
                 <td style="text-align:right" class="f-num">
-                  ${fmtEuro(item.net_amount)}
+                  ${item.document_type === 'credit_note' ? `<span style="color:#10b981;font-weight:600">- ${fmtEuro(Math.abs(item.net_amount))}</span>` : fmtEuro(item.net_amount)}
                 </td>
                 <td style="text-align:right" class="f-num">
                   ${item.reverse_charge ? `
                     <div style="color:var(--gold)" title="§ 13b Steuerschuld & Vorsteuer">${fmtEuro(item.net_amount * 0.19)} <small>(19% RC)</small></div>
                     <div class="f-subtext">Rechnungs-USt: 0%</div>
                   ` : `
-                    <div>${fmtEuro(item.vat_amount)}</div>
+                    <div>${item.document_type === 'credit_note' ? `<span style="color:#10b981">- ${fmtEuro(Math.abs(item.vat_amount))}</span>` : fmtEuro(item.vat_amount)}</div>
                     <div class="f-subtext">${Number(item.vat_rate) || 0}%</div>
                   `}
                 </td>
                 <td style="text-align:right" class="f-num f-gross">
-                  <strong>${fmtEuro(item.gross_amount)}</strong>
+                  ${item.document_type === 'credit_note' 
+                    ? `<strong style="color:#10b981">- ${fmtEuro(Math.abs(item.gross_amount))}</strong>` 
+                    : `<strong>${fmtEuro(item.gross_amount)}</strong>`}
                 </td>
                 <td style="text-align:center">
                   ${item.drive_web_view_link ? `
