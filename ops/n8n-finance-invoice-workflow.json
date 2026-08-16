@@ -12,7 +12,7 @@
         },
         "simple": false,
         "filters": {
-          "q": "has:attachment filename:pdf"
+          "q": ""
         },
         "options": {
           "downloadAttachments": true
@@ -35,20 +35,13 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "string": [
-            {
-              "value1": "={{ $binary.attachment_0 ? $binary.attachment_0.fileExtension : '' }}",
-              "operation": "equal",
-              "value2": "pdf"
-            }
-          ]
-        }
+        "language": "javaScript",
+        "jsCode": "const item = $input.first();\nconst json = item.json;\nlet binary = item.binary || {};\n\n// Check if a PDF attachment already exists\nlet pdfKey = null;\nfor (const key of Object.keys(binary)) {\n  if (binary[key] && (binary[key].fileExtension === 'pdf' || binary[key].mimeType === 'application/pdf')) {\n    pdfKey = key;\n    break;\n  }\n}\n\nif (pdfKey && pdfKey !== 'attachment_0') {\n  binary.attachment_0 = binary[pdfKey];\n}\n\n// If NO PDF attachment exists (e.g. HTML receipt from Apple, Uber, GitHub, PayPal, Stripe):\n// Generate a clean, printable GoBD-compliant HTML receipt document and store in attachment_0\nif (!pdfKey) {\n  const subject = json.subject || 'E-Mail Beleg';\n  const from = json.from?.text || json.from?.value?.[0]?.address || json.from?.name || 'Unbekannter Absender';\n  const date = json.date || new Date().toISOString();\n  const bodyContent = json.html || json.text || json.snippet || 'Keine Textdetails vorhanden';\n  \n  const receiptHtml = `<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n  <meta charset=\"utf-8\">\n  <title>${subject}</title>\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; margin: 30px; color: #111827; background: #ffffff; line-height: 1.5; }\n    .doc-header { border-bottom: 2px solid #3b82f6; padding-bottom: 14px; margin-bottom: 20px; }\n    .brand { font-size: 13px; font-weight: 700; color: #2563eb; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }\n    .title { font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 10px 0; }\n    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #475569; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; margin-bottom: 20px; }\n    .content-area { font-size: 14px; padding: 10px 0; }\n    .gobd-footer { margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8; }\n  </style>\n</head>\n<body>\n  <div class=\"doc-header\">\n    <div class=\"brand\">GoBD E-Mail Belegnachweis — Einzelunternehmen Yavuz Kemal Demir</div>\n    <h1 class=\"title\">${subject}</h1>\n    <div class=\"meta-box\">\n      <div><strong>Absender:</strong> ${from}</div>\n      <div><strong>Empfangsdatum:</strong> ${date}</div>\n      <div><strong>Belegart:</strong> Elektronische E-Mail-Rechnung / Quittung</div>\n    </div>\n  </div>\n  <div class=\"content-area\">\n    ${bodyContent}\n  </div>\n  <div class=\"gobd-footer\">\n    🔒 Unveränderbarer Belegnachweis für EÜR & Finanzamt. Originaldatei im Google Drive Belegarchiv gesichert.\n  </div>\n</body>\n</html>`;\n\n  const buffer = Buffer.from(receiptHtml, 'utf8');\n  const safeVendor = (json.from?.value?.[0]?.name || json.from?.name || 'Beleg').replace(/[^a-zA-Z0-9_-]/g, '_');\n  const fileName = `E-Mail_Beleg_${safeVendor}_${new Date().toISOString().slice(0, 10)}.html`;\n\n  binary.attachment_0 = {\n    data: buffer.toString('base64'),\n    mimeType: 'text/html',\n    fileName: fileName,\n    fileExtension: 'html'\n  };\n}\n\nreturn [{\n  json: {\n    ...json,\n    has_original_pdf: !!pdfKey\n  },\n  binary: binary\n}];"
       },
-      "id": "node-if-pdf",
-      "name": "PDF Eki Var mı?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "id": "node-prepare-receipt",
+      "name": "Beleg vorbereiten (PDF / HTML)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         440,
         300
@@ -60,7 +53,7 @@
         "resource": "file",
         "operation": "upload",
         "inputDataFieldName": "attachment_0",
-        "name": "={{ $json.from?.value?.[0]?.name || $json.from?.name || 'Beleg' }}_{{ $now.format('yyyy-MM-dd_HHmm') }}.pdf",
+        "name": "={{ ($binary.attachment_0 && $binary.attachment_0.fileName) ? $binary.attachment_0.fileName : (($json.from?.value?.[0]?.name || $json.from?.name || 'Beleg') + '_' + $now.format('yyyy-MM-dd_HHmm') + '.pdf') }}",
         "driveId": {
           "__rl": true,
           "mode": "list",
@@ -179,14 +172,14 @@
       "main": [
         [
           {
-            "node": "PDF Eki Var mı?",
+            "node": "Beleg vorbereiten (PDF / HTML)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PDF Eki Var mı?": {
+    "Beleg vorbereiten (PDF / HTML)": {
       "main": [
         [
           {
