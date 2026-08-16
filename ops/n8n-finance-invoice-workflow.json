@@ -99,6 +99,9 @@
         },
         "options": {}
       },
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 3000,
       "id": "node-gemini",
       "name": "Gemini AI Beleg-OCR",
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
