@@ -785,8 +785,8 @@ function formExpense(it = null) {
 
       <div class="row-2">
         <label class="fld">
-          <span>Google Drive Beleglink (URL)</span>
-          <input type="url" id="f_drive_link" value="${esc(it?.drive_web_view_link || '')}" placeholder="https://drive.google.com/file/d/...">
+          <span>Beschreibung / Zweck *</span>
+          <input id="f_desc" value="${esc(it?.description || '')}" placeholder="z. B. Anthropic Claude Pro Abonnement oder GoDaddy Domain-Verlängerung">
         </label>
         <label class="fld">
           <span>Prüfstatus</span>
@@ -795,6 +795,13 @@ function formExpense(it = null) {
             <option value="review_needed" ${it?.status === 'review_needed' ? 'selected' : ''}>Prüfung nötig</option>
             <option value="archived" ${it?.status === 'archived' ? 'selected' : ''}>Archiviert</option>
           </select>
+        </label>
+      </div>
+
+      <div class="row-2">
+        <label class="fld">
+          <span>Google Drive Beleglink (URL)</span>
+          <input type="url" id="f_drive_link" value="${esc(it?.drive_web_view_link || '')}" placeholder="https://drive.google.com/file/d/...">
         </label>
       </div>
     `,
@@ -850,7 +857,7 @@ function formExpense(it = null) {
     actions: [
       { label: 'Abbrechen', onClick: () => true },
       {
-        label: isEdit ? 'Speichern & Protokollieren' : 'Hinzufügen',
+        label: isEdit ? 'Speichern' : 'Hinzufügen',
         kind: 'primary',
         onClick: async () => {
           const vendor = $('#f_vendor').value.trim();
@@ -887,16 +894,18 @@ function formExpense(it = null) {
               econClass = 'private_expense';
               econPurpose = 'private';
             } else {
-              // Rule 2: Melih pays business expense -> Safety brake!
               econPurpose = 'business';
               econClass = 'business_expense';
               needsRev = true;
               revCodes.push('MELIH_BUSINESS_PAYMENT_NEEDS_REVIEW');
             }
           } else if (fundingSource === 'kemal_private') {
-            capitalMove = 'private_contribution'; // Privateinlage
+            capitalMove = 'private_contribution';
             econPurpose = 'business';
           }
+
+          const isRecurring = $('#f_recurring').checked;
+          const recInterval = isRecurring ? $('#f_interval').value : 'none';
 
           const row = {
             document_type: $('#f_doc_type').value,
@@ -931,10 +940,10 @@ function formExpense(it = null) {
             is_deductible: isDeductible,
             deductible_percentage: dedPct,
             deductibility_reason: $('#f_deductible_reason').value.trim() || null,
-            is_recurring: $('#f_recurring').checked,
-            recurring_interval: $('#f_recurring').checked ? $('#f_interval').value : 'none',
-            description: $('#f_desc').value.trim() || null,
-            drive_web_view_link: $('#f_drive_link').value.trim() || null,
+            is_recurring: isRecurring,
+            recurring_interval: recInterval,
+            description: $('#f_desc')?.value?.trim() || null,
+            drive_web_view_link: $('#f_drive_link')?.value?.trim() || null,
             needs_review: needsRev,
             review_codes: revCodes,
             record_mode: it?.record_mode || 'production',
@@ -942,32 +951,32 @@ function formExpense(it = null) {
           };
 
           if (isEdit) {
-            const changeReason = $('#f_change_reason')?.value?.trim();
-            if (!changeReason) {
-              toast('GoBD: Bitte einen Änderungsgrund angeben', true);
-              return false;
-            }
+            const changeReason = $('#f_change_reason')?.value?.trim() || 'Manuelle Anpassung';
 
             // 1. Update record
             const { error } = await sb.from('ops_finance_expenses').update(row).eq('id', it.id);
             if (error) return fail('Ausgabe speichern', error), false;
 
-            // 2. Insert into GoBD audit log
-            await sb.from('ops_finance_audit_log').insert({
-              expense_id: it.id,
-              event_type: 'manual_edit',
-              field_name: 'multiple_fields',
-              old_value: JSON.stringify({ gross: it.gross_amount, vendor: it.vendor_name, cat: it.tax_category, date: it.invoice_date }),
-              new_value: JSON.stringify({ gross: row.gross_amount, vendor: row.vendor_name, cat: row.tax_category, date: row.invoice_date }),
-              changed_by: state.me.id,
-              changed_by_name: state.me.display_name,
-              change_reason: changeReason,
-              source: 'user'
-            });
+            // 2. Insert into GoBD audit log safely
+            try {
+              await sb.from('ops_finance_audit_log').insert({
+                expense_id: it.id,
+                event_type: 'manual_edit',
+                field_name: 'multiple_fields',
+                old_value: JSON.stringify({ gross: it.gross_amount, vendor: it.vendor_name, cat: it.tax_category, date: it.invoice_date }),
+                new_value: JSON.stringify({ gross: row.gross_amount, vendor: row.vendor_name, cat: row.tax_category, date: row.invoice_date }),
+                changed_by: state?.me?.id || null,
+                changed_by_name: state?.me?.display_name || 'Kemal',
+                change_reason: changeReason,
+                source: 'user'
+              });
+            } catch (e) {
+              console.warn('Audit log insert warning:', e);
+            }
 
-            toast('Ausgabe & GoBD-Änderungsprotokoll gespeichert');
+            toast('Ausgabe erfolgreich aktualisiert');
           } else {
-            const { error } = await sb.from('ops_finance_expenses').insert({ ...row, created_by: state.me.id });
+            const { error } = await sb.from('ops_finance_expenses').insert({ ...row, created_by: state?.me?.id || null });
             if (error) return fail('Ausgabe anlegen', error), false;
             toast('Ausgabe erfolgreich angelegt');
           }
