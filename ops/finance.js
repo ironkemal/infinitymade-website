@@ -189,6 +189,7 @@ function renderVendorPortfolio(allList, currentFiltered) {
         totalGross: 0,
         totalNet: 0,
         count: 0,
+        receiptsCount: 0,
         latestDate: '',
         isRecurring: false,
         taxCategories: new Set(),
@@ -197,9 +198,16 @@ function renderVendorPortfolio(allList, currentFiltered) {
     }
 
     const v = vendorMap.get(norm.key);
-    v.totalGross += Number(item.gross_amount) || 0;
-    v.totalNet += Number(item.net_amount) || 0;
-    v.count += 1;
+    const isDed = item.is_deductible !== false && (item.funding_source || item.payer_type) !== 'melih_private' && item.status !== 'archived';
+    
+    if (isDed) {
+      v.totalGross += Number(item.gross_amount) || 0;
+      v.totalNet += Number(item.net_amount) || 0;
+      v.count += 1;
+    } else {
+      v.receiptsCount += 1;
+    }
+
     if (item.is_recurring) v.isRecurring = true;
     if (item.reverse_charge) v.hasReverseCharge = true;
     if (item.tax_category) v.taxCategories.add(item.tax_category);
@@ -210,12 +218,14 @@ function renderVendorPortfolio(allList, currentFiltered) {
   }
 
   // Sort vendors: High total spend & high frequency first!
-  const sortedVendors = Array.from(vendorMap.values()).sort((a, b) => {
-    if (b.totalGross !== a.totalGross) {
-      return b.totalGross - a.totalGross;
-    }
-    return b.count - a.count;
-  });
+  const sortedVendors = Array.from(vendorMap.values())
+    .filter(v => v.totalGross > 0 || v.count > 0 || v.receiptsCount > 0)
+    .sort((a, b) => {
+      if (b.totalGross !== a.totalGross) {
+        return b.totalGross - a.totalGross;
+      }
+      return b.count - a.count;
+    });
 
   const totalAllSpend = sortedVendors.reduce((sum, v) => sum + v.totalGross, 0);
 
@@ -518,7 +528,9 @@ function renderList(list) {
                   <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
                     <span class="pill ${statusInfo.cls}">${esc(statusInfo.label)}</span>
                     ${item.original_file_hash ? `<span class="f-subtext" style="color:var(--text-dim)" title="SHA-256: ${esc(item.original_file_hash)}">🔒 Hash OK</span>` : ''}
-                    ${item.duplicate_candidate ? `<span class="pill pill-melih" style="font-size:9.5px">⚠️ Duplikat?</span>` : ''}
+                    ${item.document_type === 'payment_receipt' ? `<span class="pill pill-once" style="font-size:9.5px;color:var(--text-dim)" title="Zahlungsbestätigung (Kein Doppelabzug in EÜR)">💳 Zahlungsnachweis</span>` : ''}
+                    ${item.document_type === 'credit_note' ? `<span class="pill pill-kemal" style="font-size:9.5px" title="Erstattung / Gutschrift">↩️ Gutschrift</span>` : ''}
+                    ${item.duplicate_candidate && item.document_type !== 'payment_receipt' ? `<span class="pill pill-melih" style="font-size:9.5px">⚠️ Duplikat?</span>` : ''}
                   </div>
                 </td>
                 <td>
@@ -550,7 +562,7 @@ function renderList(list) {
                     ${Number(item.deductible_percentage) < 100 && !isNonDeductible ? `
                       <span class="f-subtext" style="color:var(--gold)">${item.deductible_percentage}% abzugsfähig</span>
                     ` : ''}
-                    ${isNonDeductible ? `<span class="pill pill-melih" style="font-size:10px">🚫 Nicht in EÜR</span>` : ''}
+                    ${isNonDeductible ? `<span class="pill pill-melih" style="font-size:10px">🚫 Kein Doppelabzug</span>` : ''}
                   </div>
                 </td>
                 <td>
