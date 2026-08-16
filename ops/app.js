@@ -327,7 +327,7 @@ $('#tabs').addEventListener('click', (e) => {
 });
 
 $('#modalClose').addEventListener('click', closeModal);
-$('#modalBack').addEventListener('click', (e) => { if (e.target.id === 'modalBack') closeModal(); });
+// Backdrop-Klick zum Schließen absichtlich deaktiviert, um versehentlichen Datenverlust bei Formulareingaben zu verhindern
 window.addEventListener('hashchange', () => showView(location.hash.replace('#', '')));
 
 // ── Oturum dayanıklılığı ───────────────────────────────────────────────
