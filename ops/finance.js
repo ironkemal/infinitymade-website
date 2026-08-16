@@ -170,6 +170,35 @@ function getFilteredExpenses() {
   });
 }
 
+export function validateVatConsistency(item) {
+  const gross = Number(item.gross_amount) || 0;
+  const net = Number(item.net_amount) || 0;
+  const vat = Number(item.vat_amount || item.invoice_vat_amount) || 0;
+  const vatRate = Number(item.invoice_vat_rate ?? item.vat_rate) || 0;
+  const isRc = Boolean(item.reverse_charge);
+  const issues = [];
+
+  // Check 1: Gross = Net + (isRc ? 0 : VAT)
+  const diffGross = Math.abs(gross - (net + (isRc ? 0 : vat)));
+  if (diffGross > 0.02) {
+    issues.push(`Bruttobetrag (${gross.toFixed(2)} €) weicht von Netto (${net.toFixed(2)} €) + USt (${vat.toFixed(2)} €) ab.`);
+  }
+
+  // Check 2: Domestic VAT calculation
+  if (!isRc && vatRate > 0 && net > 0) {
+    const expectedVat = Math.round(net * (vatRate / 100) * 100) / 100;
+    const diffVat = Math.abs(expectedVat - vat);
+    if (diffVat > 0.02) {
+      issues.push(`USt-Betrag (${vat.toFixed(2)} €) weicht vom errechneten ${vatRate}%-Satz (${expectedVat.toFixed(2)} €) ab.`);
+    }
+  }
+
+  return {
+    isValid: issues.length === 0,
+    issues
+  };
+}
+
 export function getEffectiveAmount(item) {
   const isCredit = item.document_type === 'credit_note' || Number(item.gross_amount) < 0;
   const rawGross = Math.abs(Number(item.gross_amount) || 0);
