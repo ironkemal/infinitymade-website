@@ -66,6 +66,21 @@ function _datumDE(isoStr) {
 }
 
 /**
+ * Anzeigenummer einer Verordnung für die Auswahlliste.
+ *
+ * Die eingefrorene `belegnummer` (<Patienten-Nr.>-<Verordnungs-Nr.>) hat Vorrang.
+ * Ist noch keine vergeben — das ist bei jeder nicht abgerechneten Verordnung der
+ * Fall — reicht hier die Verordnungsnummer, weil die Liste ohnehin nur die
+ * Verordnungen EINES Patienten zeigt. Ohne Nummer stand hier bisher nur das
+ * Datum: zwei Verordnungen desselben Tages waren nicht auseinanderzuhalten.
+ */
+function _nummerAnzeige(row) {
+  if (row.belegnummer) return row.belegnummer;
+  if (row.verordnungsnummer) return '#' + row.verordnungsnummer;
+  return '';
+}
+
+/**
  * Löst HPNR-Codes einer Podologie-Behandlung gegen den Katalog auf.
  * Gibt Rechnungszeilen zurück. Unbekannte Codes werden als Hinweis-Zeile gemeldet.
  * Ist hpnr_codes leer, fällt die Funktion auf betrag_gkv zurück.
@@ -130,7 +145,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
   if (sector === 'podologie') {
     const { data: vords, error: vErr } = await sb
       .from('verordnungen')
-      .select('id, ausstellungsdatum, diagnosegruppe, heilmittel_items, behandlungseinheiten, status, rezeptart')
+      .select('id, ausstellungsdatum, diagnosegruppe, heilmittel_items, behandlungseinheiten, status, rezeptart, belegnummer, verordnungsnummer')
       .eq('owner_id', ownerId)
       .eq('lead_id', leadId)
       .order('ausstellungsdatum', { ascending: false });
@@ -187,6 +202,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
         quelle: 'podologie',
         datum: v.ausstellungsdatum,
         titel: vordTitelStr,
+        nummer: _nummerAnzeige(v),
         einheiten: v.behandlungseinheiten || 0,
         behandlungen,
         gesamt,
@@ -199,7 +215,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
   // ── Physio / Ergo / Logopädie-Weg ─────────────────────────────────────────
   const { data: rxs, error: rErr } = await sb
     .from('prescriptions')
-    .select('id, ausstellungsdatum, diagnosegruppe, heilmittel, anzahl_einheiten, status, prescription_sessions(id, booking_id, status, done_at)')
+    .select('id, ausstellungsdatum, diagnosegruppe, heilmittel, anzahl_einheiten, status, belegnummer, verordnungsnummer, prescription_sessions(id, booking_id, status, done_at)')
     .eq('owner_id', ownerId)
     .eq('patient_id', leadId)
     .order('ausstellungsdatum', { ascending: false });
@@ -261,6 +277,7 @@ export async function verordnungenLaden(sb, { ownerId, leadId, sector, katalogPo
       quelle: 'physio',
       datum: rx.ausstellungsdatum,
       titel: rxTitel,
+      nummer: _nummerAnzeige(rx),
       einheiten: rx.anzahl_einheiten || 0,
       behandlungen,
       gesamt,
@@ -363,7 +380,15 @@ export function verordnungenRendern(container, liste, { escapeHtml, formatEur, o
 
     const titelSpan = document.createElement('span');
     titelSpan.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-main);';
-    titelSpan.textContent = _datumDE(vord.datum) + ' · ' + vord.titel;
+    if (vord.nummer) {
+      const nrSpan = document.createElement('span');
+      nrSpan.style.cssText = 'font-family:monospace;color:var(--text-muted);margin-right:6px;';
+      nrSpan.textContent = vord.nummer;
+      titelSpan.appendChild(nrSpan);
+    }
+    titelSpan.appendChild(
+      document.createTextNode(_datumDE(vord.datum) + ' · ' + vord.titel)
+    );
 
     const metaSpan = document.createElement('span');
     metaSpan.style.cssText = 'font-size:11px;color:var(--text-muted);';

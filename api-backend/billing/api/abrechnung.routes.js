@@ -1329,11 +1329,13 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
     const cj = vorlage?.content_json || {};
 
     // ---- Fetch Prescription + Patient + Arzt + Sessions ----
+    // `patientennummer` gehoert zur Belegnummer auf dem Urbeleg (Richtlinien-Text
+    // 20.11.2006 § 4 Abs. 1: die Nummer des Datensatzes muss auf dem Beleg stehen).
     const { data: rx, error: rxErr } = await supabase
       .from('prescriptions')
       .select(`
         *,
-        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city),
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, krankenkasse, street, plz, city, patientennummer),
         aerzte:arzt_id (arzt_name),
         prescription_sessions (id, session_number, status, done_at)
       `)
@@ -1377,7 +1379,8 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       plz: rx.leads?.plz || '',
       ort: rx.leads?.city || '',
       geburtsdatum: rx.leads?.geburtsdatum || '',
-      kvnr: rx.leads?.versichertennummer || ''
+      kvnr: rx.leads?.versichertennummer || '',
+      patientennummer: rx.leads?.patientennummer ?? null
     };
     const verordnungData = {
       ausstellungsdatum: rx.ausstellungsdatum,
@@ -1385,7 +1388,16 @@ router.get('/prescription/:id/rechnung', async (req, res) => {
       arzt: rx.aerzte?.arzt_name || 'Hausarzt',
       icd10: rx.icd10 || '',
       heilmittel: rx.heilmittel || '',
-      frequenz: rx.frequenz || ''
+      frequenz: rx.frequenz || '',
+      // Eingefrorene Nummer hat Vorrang; ist noch keine vergeben (Rezept noch
+      // nicht abgerechnet), wird sie aus den beiden Zaehlern gebildet. Der
+      // UUID-Fallback aus buildBelegnummer() gehoert bewusst NICHT aufs Papier —
+      // eine Nummer, die in keiner DTA-Datei steht, wuerde den Anwender in die
+      // Irre fuehren.
+      belegnummer: rx.belegnummer
+        || (rx.leads?.patientennummer && rx.verordnungsnummer
+          ? `${rx.leads.patientennummer}-${rx.verordnungsnummer}`
+          : '')
     };
     const logoUrl = praxisProfil.praxis_logo_url || '';
     const invoiceFooterText = cj.fusszeile || praxisProfil.invoice_footer_text || '';

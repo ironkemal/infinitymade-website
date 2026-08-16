@@ -185,9 +185,14 @@ function renderPatientDropdown(query) {
     const nameBirth = ctx.displayNameWithBirth(p);
     const phone = p.phone || p.metadata?.phone || p.phone_normalized || '';
     const phoneStr = phone ? ` · Tel: ${escapeHtml(phone)}` : '';
+    // Patienten-Nr. vorangestellt: dieselbe Nummer steht in der Patientenliste
+    // und bildet den ersten Teil der Belegnummer.
+    const nrStr = p.patientennummer != null
+      ? `<span style="font-family:monospace;color:var(--text-muted);margin-right:6px;">${escapeHtml(String(p.patientennummer))}</span>`
+      : '';
     return `
       <div class="fbp-patient-item" data-id="${escapeHtml(p.id)}" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);color:var(--text-main);" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
-        <strong>${escapeHtml(nameBirth)}</strong><span style="font-size:11px;color:var(--text-muted);">${phoneStr}</span>
+        ${nrStr}<strong>${escapeHtml(nameBirth)}</strong><span style="font-size:11px;color:var(--text-muted);">${phoneStr}</span>
       </div>`;
   }).join('');
   dropdown.style.display = 'block';
@@ -1146,7 +1151,7 @@ export async function mountFussbefund(deps, preset) {
   const [patRes, legendeGeladen] = await Promise.all([
     ctx.bizScope(ctx.supabase
       .from('leads')
-      .select('id, first_name, last_name, geburtsdatum, metadata, krankenkasse, phone, phone_normalized, plz, versichertennummer')
+      .select('id, first_name, last_name, geburtsdatum, metadata, krankenkasse, phone, phone_normalized, plz, versichertennummer, patientennummer')
       .eq('owner_id', ownerId)
       .order('last_name', { ascending: true }), 'patients'),
     ladeLegende(ctx.supabase, ownerId),

@@ -47,7 +47,7 @@ Schema:
     "first_name": string|null,
     "last_name": string|null,
     "geburtsdatum": "YYYY-MM-DD"|null,
-    "geschlecht": "m"|"w"|"d"|null,
+    "geschlecht": "m"|"f"|"d"|null,   // f = weiblich (NICHT "w" — die Spalte hat einen CHECK auf m/f/d)
     "adresse": string|null,                // Straße + PLZ + Ort, einzeilig
     "krankenkasse": string|null,
     "versichertennummer": string|null

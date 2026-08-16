@@ -1,8 +1,12 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-16
--- LETZTE MIGRATION:  20260815233848_verordnungsnummer_belegnummer
+-- ERZEUGT AM:        2026-08-16 (abends — Geschlecht-Kodierung vereinheitlicht)
+-- LETZTE MIGRATION:  leads_geschlecht_kodierung_dokumentieren
+--                    davor: invoice_nummer_backfill_altbestand
+--                    davor: invoices_ust_nummernkreis_gobd
+--                    davor: invoices_verordnung_id
+--                    davor: 20260815233848_verordnungsnummer_belegnummer
 --                    davor: 20260815085338_leads_patientennummer
 --                    davor: 20260814200147_leads_handy_getrennt
 --                    davor: 20260814101707_patient_consents
@@ -462,7 +466,21 @@ $function$;
 -- fn_prescriptions_set_befreit()        -> trigger  (setzt prescriptions.zuzahlung_befreit)
 -- fn_befreiung_backfill_prescriptions() -> trigger  (Nachtrag bei Befreiungsänderung)
 -- set_next_beleg_nr() · set_next_mahnung_nr() · set_next_ausfallrechnung_nr()
---   Lückenlose Nummernkreise je Inhaber.
+--   Lückenlose Nummernkreise je Inhaber. Zählen per MAX+1 im Trigger — bei
+--   zwei gleichzeitigen Inserts kann dieselbe Nummer fallen, der UNIQUE-Index
+--   fängt es dann als Fehler. Für Rechnungen wurde das ersetzt:
+-- naechste_nummer(p_owner, p_kreis, p_jahr) -> bigint      [SECURITY DEFINER]
+--   Zählt über die Tabelle `nummernkreise` per
+--   INSERT .. ON CONFLICT DO UPDATE .. RETURNING — die Zeile ist damit gesperrt,
+--   zwei gleichzeitige Aufrufe bekommen verschiedene Nummern.
+-- set_invoice_nummer() -> trigger                          [SECURITY DEFINER]
+--   Vergibt invoices.rechnung_nr + invoice_number ('INV-<Jahr>-<4-stellig>')
+--   beim INSERT und schreibt sie beim UPDATE unveränderlich fort
+--   (§ 14 Abs. 4 Nr. 4 UStG: einmalig vergebene fortlaufende Nummer).
+--   Das Frontend zählt seit 16.08.2026 NICHT mehr selbst hoch.
+-- invoice_festschreibung() -> trigger
+--   Ab status <> 'draft' sind die inhaltlichen Felder der Rechnung gesperrt
+--   (§ 146 Abs. 4 AO). Offen bleiben status, payment_*, paid_at, notes.
 -- vergebe_patientennummer() -> trigger                    [SECURITY DEFINER]
 --   Fortlaufende Patientennummer je Praxis, ab 1 (leads.patientennummer).
 --   pg_advisory_xact_lock je owner_id: legen zwei Mitarbeiter gleichzeitig an,
@@ -557,6 +575,12 @@ $function$;
 --                         trg_set_beleg_nr               BEFORE INSERT WHEN beleg_nr IS NULL OR 0
 --   mahnungen             trg_set_mahnung_nr             BEFORE INSERT (analog)
 --   ausfallrechnungen     trg_set_ausfallrechnung_nr     BEFORE INSERT
+--   invoices              trg_invoice_nummer             BEFORE INSERT/UPDATE
+--                         → set_invoice_nummer(): Nummer vergeben, dann einfrieren
+--                         trg_invoice_festschreibung     BEFORE UPDATE          (GoBD)
+--                         → invoice_festschreibung(): ab status <> 'draft' sind
+--                           line_items, Summen, tax_summary, patient_id,
+--                           issued_at und steuerhinweis_text gesperrt.
 --   prescriptions         trg_prescriptions_set_befreit  BEFORE INSERT/UPDATE OF patient_id, ausstellungsdatum
 --   zuzahlung_befreiung   trg_befreiung_backfill_prescriptions AFTER INSERT/UPDATE/DELETE
 --   feedbacks             trg_feedback_telegram          AFTER INSERT

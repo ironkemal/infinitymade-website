@@ -8,7 +8,7 @@ import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260815';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260815';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260816';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260815';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
@@ -17,14 +17,24 @@ import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffn
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
-import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260815';
+import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260815b';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
+import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
+import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
-import { rendereVeroKarten, waehleVerordnung, pruefeFrequenz, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816';
-import { druckeTerminzettel } from './module/termin-druck.js?v=20260816';
+import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816b';
+import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
+import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
+import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
+import { DV_SLOT_MIN, DV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260816';
+import {
+  BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
+  setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
+  verteileOffeneSitzungen,
+} from './module/termin-aktionen.js?v=20260816';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260816';
@@ -138,7 +148,8 @@ const T = {
     pod_dringend: 'Dringend (14-Tage-Frist)',
     pod_hausbesuch: 'Hausbesuch',
     pod_save: 'Speichern',
-    pod_edit: 'Bearbeiten',
+    pod_edit: 'Bearbeiten', pod_rechnung: 'Rechnung',
+    inv_art_label: 'Art der Leistung', inv_art_med: 'Medizinisch (Heilbehandlung)', inv_art_kosm: 'Kosmetisch',
     pod_edit_vord: 'Verordnung bearbeiten',
     pod_update: 'Aktualisieren',
     pod_cancel_edit: 'Abbrechen',
@@ -340,7 +351,8 @@ const T = {
     pod_ausstelldatum: 'Issue Date', pod_diagnosegruppe: 'Diagnosis Group',
     pod_einheiten: 'Treatment Units', pod_frequenz: 'Therapy Frequency',
     pod_dringend: 'Urgent (14-day deadline)', pod_hausbesuch: 'Home Visit',
-    pod_save: 'Save', pod_edit: 'Edit', pod_edit_vord: 'Edit prescription', pod_update: 'Update', pod_cancel_edit: 'Cancel',
+    inv_art_label: 'Type of service', inv_art_med: 'Medical (therapeutic)', inv_art_kosm: 'Cosmetic',
+    pod_save: 'Save', pod_edit: 'Edit', pod_rechnung: 'Invoice', pod_edit_vord: 'Edit prescription', pod_update: 'Update', pod_cancel_edit: 'Cancel',
     pod_no_vord: 'No active prescriptions.',
     pod_behandlungsdatum: 'Treatment Date', pod_hpnr: 'HPNR Codes',
     pod_lokalisation: 'Location (toe)', pod_notizen: 'Notes',
@@ -529,7 +541,8 @@ const T = {
     pod_ausstelldatum: 'Düzenleme Tarihi', pod_diagnosegruppe: 'Tanı Grubu',
     pod_einheiten: 'Tedavi Birimi', pod_frequenz: 'Terapi Sıklığı',
     pod_dringend: 'Acil (14 gün)', pod_hausbesuch: 'Ev Ziyareti',
-    pod_save: 'Kaydet', pod_edit: 'Düzenle', pod_edit_vord: 'Reçeteyi düzenle', pod_update: 'Güncelle', pod_cancel_edit: 'İptal',
+    inv_art_label: 'Hizmet türü', inv_art_med: 'Tıbbi (tedavi)', inv_art_kosm: 'Kozmetik',
+    pod_save: 'Kaydet', pod_edit: 'Düzenle', pod_rechnung: 'Fatura', pod_edit_vord: 'Reçeteyi düzenle', pod_update: 'Güncelle', pod_cancel_edit: 'İptal',
     pod_no_vord: 'Aktif reçete yok.',
     pod_behandlungsdatum: 'Tedavi Tarihi', pod_hpnr: 'HPNR Kodları',
     pod_lokalisation: 'Lokalizasyon (parmak)', pod_notizen: 'Notlar',
@@ -759,10 +772,15 @@ let invLines = [];
 let invPatientId = null;
 let invPatientInsuranceType = null;
 let invPrescriptionId = null;
+let invVerordnungId = null;      // Podologie-Topf — Gegenstück zu invPrescriptionId
+let invBehandlungIds = [];       // von der Brücke übergeben, nach dem Speichern verknüpft
 let invListCache = [];
 let prefillNotesPatientId = null;
 let prefillAnamnesePatientId = null;
 let bkActionBookingCache = null;
+// Der Patient zum offenen Termin. Gebraucht ausserhalb des Panelaufbaus,
+// z. B. fuer die Anrede auf dem Terminzettel.
+let bkActionLeadCache = null;
 let bkActionTimer = null;
 let pdCurrentLeadId = null;
 let pdCurrentLeadName = '';
@@ -2082,6 +2100,7 @@ function renderBookingSlotInner(b, childBookings = []) {
     
     return `<div style="height:100%;${hmBorder}">
       <div class="dv-booking-name" style="font-weight:700;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+        ${terminZeitLabel(b)}
         <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(b.services?.title || 'Gruppe')}</span>
         ${badge}
       </div>
@@ -2119,8 +2138,9 @@ function renderBookingSlotInner(b, childBookings = []) {
   ].filter(Boolean).join(' · ');
 
   return `<div style="height:100%;${hmBorder}">
-    <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${b.status === 'no_show' ? 'text-decoration:line-through;opacity:0.6;' : ''}">
-      ${escapeHtml(displayName)}
+    <div class="dv-booking-name" style="font-weight:600;font-size:12px;line-height:1.2;display:flex;align-items:baseline;gap:5px;overflow:hidden;white-space:nowrap;${b.status === 'no_show' ? 'text-decoration:line-through;opacity:0.6;' : ''}">
+      ${terminZeitLabel(b)}
+      <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(displayName)}</span>
       ${isReadyBadge}
     </div>
     ${subtitle || counter
@@ -2699,9 +2719,12 @@ async function renderDayView(dateStr) {
         const timeStr = `${dateStr}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         slot.dataset.time = timeStr;
         slot.dataset.empId = emp.id;
-        slot.addEventListener('click', async () => {
+        slot.addEventListener('click', async (ev) => {
           if (moveBooking) {
-            placeGhost(slot, emp.id, moveBooking.customer_name || (moveBooking.services?.title) || 'Termin');
+            // Beim Verschieben zählt die Klickhöhe im Feld, nicht nur das Feld:
+            // ein 30-Minuten-Raster zwingt jeden Termin auf :00 oder :30,
+            // obwohl die Praxis auf 5 Minuten genau plant.
+            placeGhost(slot, emp.id, moveBooking.customer_name || (moveBooking.services?.title) || 'Termin', ev);
             return;
           }
           await prefillBookingModal(timeStr);
@@ -2895,7 +2918,11 @@ async function renderWeekView(dateStr) {
       const block = document.createElement('div');
       block.style.cssText = `position:absolute;top:${topPx}px;left:2px;right:2px;height:${heightPx}px;background:${color}22;border-left:3px solid ${color};border-radius:4px;padding:2px 4px;font-size:10px;overflow:hidden;cursor:pointer;`;
       block.title = `${b.services?.title || 'Termin'} – ${b.customer_name || ''}`;
-      block.textContent = b.services?.title || 'Termin';
+      // Auch in der Wochenansicht: ohne Uhrzeit muss man den Block gegen die
+      // Zeitleiste am Rand halten.
+      const wvZeit = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      block.innerHTML = `<span style="font-variant-numeric:tabular-nums;opacity:0.85;">${escapeHtml(wvZeit)}</span> `
+        + escapeHtml(b.services?.title || 'Termin');
       inner.appendChild(block);
     });
 
@@ -3288,13 +3315,13 @@ function updateNoShowButton(startTime) {
   if (hint) hint.hidden = true;
 }
 
-async function openBookingActionModal(booking) {
+async function openBookingActionModal(booking, opts = {}) {
+  // Der Seitenbereich geht auch aus dem Tagesplan auf, nicht nur aus dem
+  // Kalender — die Patientensuche im Kopf muss dann trotzdem verdrahtet sein.
+  if (!window._calRpInited) { window._calRpInited = true; initCalRightPanel(); }
   bkActionBookingCache = booking;
   verdrahteFussbefundKnopf(fussbefundCtx(), booking);
-  // Hinweis vom vorherigen Termin zurücksetzen — sonst steht bei einem Termin
-  // ohne Verordnung noch der Reststand des zuletzt geöffneten da.
-  const _ftHint = document.getElementById('bkActionFolgeterminHint');
-  if (_ftHint) { _ftHint.textContent = ''; _ftHint.style.color = 'var(--text-muted)'; }
+  setzeTerminAuswahlLabel(booking);
   if (booking.status === 'confirmed') {
     const endTime = new Date(booking.end_time || (new Date(booking.start_time).getTime() + 30*60000));
     if (endTime < new Date()) {
@@ -3314,7 +3341,7 @@ async function openBookingActionModal(booking) {
   const patientName = dotMatch ? dotMatch[1].trim() : (rawName || booking.services?.title || 'Termin');
   const parsedDob = dotMatch ? dotMatch[2] : null;
   const patientPhone = booking.customer_phone || '';
-  document.getElementById('bkActionPatient').textContent = patientName;
+  setzeAktionsKopf({ patientName, dob: parsedDob });
 
   const ownerId = getOwnerId();
 
@@ -3349,29 +3376,33 @@ async function openBookingActionModal(booking) {
   if (rxCard) rxCard.hidden = true;
   if (sitzungCard) sitzungCard.hidden = true;
   const ps = Array.isArray(booking.prescription_sessions) ? booking.prescription_sessions[0] : null;
-  const rx = ps?.prescriptions;
+  // Ein Patient kann mehrere Verordnungen gleichzeitig laufen haben. Bis
+  // hierher zeigte das Panel stumm die des angeklickten Termins; die anderen
+  // waren von hier aus unsichtbar. Jetzt blättert man mit ‹ › durch: der Pfeil
+  // ruft diese Funktion mit `opts.rxId` erneut auf, das Panel baut sich neu auf.
+  const rxWahl = await waehleVerordnungFuerPanel({
+    supabase, booking, verknuepfteSession: ps, gewuenschteRxId: opts.rxId || null,
+  });
+  const rx = rxWahl.rx;
   if (rxCard && rx && rx.anzahl_einheiten) {
     const total = rx.anzahl_einheiten;
-    const current = ps.session_number || 1;
+    // ?? statt ||: bei einer durchgeblätterten Verordnung sind 0 erbrachte
+    // Sitzungen ein gültiger Stand und dürfen nicht zu 1 werden.
+    const current = rxWahl.aktuelleSitzung ?? 1;
     const remaining = Math.max(0, total - current);
     const pct = Math.round((current / total) * 100);
     document.getElementById('bkRxRemainingFill').style.width = pct + '%';
-    document.getElementById('bkRxRemainingText').textContent = `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`;
+    document.getElementById('bkRxRemainingText').textContent = remaining > 0
+      ? `${current} von ${total} Behandlungen erbracht — noch ${remaining} offen`
+      : `${current} von ${total} Behandlungen erbracht — Verordnung aufgebraucht, Folgeverordnung nötig`;
 
-    // Hinweis unter "Folgetermin buchen": wie viele Sitzungen die Verordnung
-    // noch hergibt — und ob sie aufgebraucht ist.
-    const ftHint = document.getElementById('bkActionFolgeterminHint');
-    const ftBtn  = document.getElementById('bkActionFolgeterminBtn');
-    if (ftHint) {
-      if (remaining > 0) {
-        ftHint.textContent = `noch ${remaining} Behandlung${remaining === 1 ? '' : 'en'} auf dieser Verordnung`;
-        ftHint.style.color = 'var(--text-muted)';
-      } else {
-        ftHint.textContent = 'Verordnung aufgebraucht — Folgeverordnung nötig';
-        ftHint.style.color = 'var(--warning, #f59e0b)';
-      }
-    }
-    if (ftBtn) ftBtn.disabled = false;
+    // Blätter-Pfeile + „Verordnung übernehmen" in die Kopfzeile der Rezeptinfo.
+    rendereVerordnungsNavigation({
+      liste: rxWahl.liste,
+      aktuelleRxId: rx.id,
+      aufWechsel: (neueRxId) => openBookingActionModal(booking, { rxId: neueRxId }),
+      aufUebernehmen: () => uebernimmVerordnungAlsVorlage(rx),
+    });
 
     // Rezeptinfo structured fields
     const shortId = rx.id ? rx.id.slice(-4).toUpperCase() : '—';
@@ -3548,67 +3579,9 @@ async function openBookingActionModal(booking) {
     }
   }
 
-  // --- Son randevular (hasta geçmişi) ---
-  const historyList = document.getElementById('bkHistoryList');
-  if (historyList && patientName) {
-    historyList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Lade…</div>';
-    let q = supabase.from('bookings')
-      .select('id,start_time,status,services(title)')
-      .eq('owner_id', ownerId)
-      .eq('customer_name', patientName)
-      .order('start_time', { ascending: false })
-      .limit(8);
-    if (patientPhone) q = q.eq('customer_phone', patientPhone);
-    const { data: hist } = await q;
-    if (hist && hist.length > 0) {
-      const statusIcon = { confirmed: '🟢', completed: '✅', no_show: '🔴', cancelled: '⛔' };
-      historyList.innerHTML = hist.map(b => {
-        const d = new Date(b.start_time);
-        const dStr = d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' });
-        const tStr = d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
-        const icon = statusIcon[b.status] || '⬜';
-        const isCurrent = b.id === booking.id;
-        // Anklickbar: springt auf den Termin im Seitenbereich. Vorher war die
-        // Liste reine Anzeige — man sah einen Vortermin, kam aber nicht hin.
-        const tag = isCurrent ? 'div' : 'button';
-        const extra = isCurrent
-          ? 'background:rgba(177,137,27,0.15);'
-          : 'width:100%;text-align:left;background:transparent;border:0;cursor:pointer;font:inherit;';
-        return `<${tag} ${isCurrent ? '' : `type="button" data-hist-id="${escapeHtml(b.id)}"`}
-          style="display:flex;align-items:center;gap:6px;font-size:12px;padding:3px 6px;border-radius:4px;${extra}">
-          <span>${icon}</span>
-          <span style="color:var(--text-muted);width:40px;flex-shrink:0;">${dStr}</span>
-          <span style="color:var(--text-muted);width:34px;flex-shrink:0;">${tStr}</span>
-          <span style="color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.services?.title || '—'}</span>
-        </${tag}>`;
-      }).join('');
-
-      if (!historyList.dataset.histWired) {
-        historyList.dataset.histWired = '1';
-        historyList.addEventListener('click', async (ev) => {
-          const btn = ev.target.closest('[data-hist-id]');
-          if (!btn) return;
-          // Die History-Zeilen tragen nur id/Zeit/Status — für das Panel muss
-          // der vollständige Datensatz nachgeladen werden.
-          const { data: full } = await supabase.from('bookings')
-            .select('*, services(title,color,code)')
-            .eq('id', btn.dataset.histId).maybeSingle();
-          if (full) openBookingActionModal(full);
-          else showToast('Termin nicht gefunden.', 'error');
-        });
-      }
-      window._bkHistCache = hist;
-    } else {
-      historyList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Keine Vortermine.</div>';
-    }
-  }
-
-  const sessionInfo = await calculateSessionInfo(patientName, patientPhone, booking.id, ownerId);
-  if (sessionInfo) {
-    document.getElementById('bkActionSession').textContent = `Seans ${sessionInfo.current} / ${sessionInfo.total}`;
-  } else {
-    document.getElementById('bkActionSession').textContent = '';
-  }
+  // Der Terminverlauf wird nicht mehr im Panel ausgebreitet — er steckt hinter
+  // dem Knopf "Verlauf" in der Patientenkarte und oeffnet die Patientenakte.
+  // Verdrahtet wird der Knopf weiter unten, sobald der Lead bekannt ist.
 
   const isOwn = booking.user_id === currentSession.user.id;
   document.getElementById('bkActionNoShowBtn').hidden = !isOwn;
@@ -3620,7 +3593,9 @@ async function openBookingActionModal(booking) {
   }
 
   // Load prescription sessions panel (Unvergebene Heilmittel)
-  loadRxSessionsPanel(booking).catch(e => console.error('[loadRxSessionsPanel]', e));
+  // Die gewaehlte Verordnung steuert auch den Block "Aktive Verordnung" unten:
+  // blaettert man oben weiter, wechseln unten die unvergebenen Einheiten mit.
+  loadRxSessionsPanel(booking, rx?.id || null).catch(e => console.error('[loadRxSessionsPanel]', e));
 
   // Fahrtenbuch: Hausbesuch state machine UI
   await renderBkActionFahrtState(booking, isOwn);
@@ -3649,27 +3624,16 @@ async function openBookingActionModal(booking) {
     }
   }
   const patientCard = document.getElementById('bkPatientCard');
-  const patientInfo = document.getElementById('bkPatientInfo');
   if (patientCard) patientCard.hidden = true;
+  // Zuruecksetzen, sonst traegt der naechste Termin die Anrede des vorigen
+  // Patienten auf seinen Terminzettel.
+  bkActionLeadCache = null;
 
-  // Lead bulunamasa bile booking'deki bilgileri göster
-  if (!leadId && patientCard && patientInfo) {
-    const row = (label, val) => val && val !== '—' ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val))}</div></div>` : '';
-    const dobStr = parsedDob ? new Date(parsedDob).toLocaleDateString('de-DE') : null;
-    const telRowFb = (label, phone) => phone ? `<div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div><div style="color:var(--text-main);font-weight:500;"><a href="tel:${escapeHtml(phone)}" style="color:var(--accent,#b1891b);text-decoration:none;">${escapeHtml(phone)}</a></div></div>` : '';
-    const rows = [
-      row('Geburtsdatum', dobStr),
-      telRowFb('Telefon', patientPhone),
-      row('Name', patientName),
-    ].filter(Boolean);
-    if (rows.length) {
-      patientInfo.innerHTML = rows.join('');
-      const openBtn = document.getElementById('bkOpenPatientBtn');
-      if (openBtn) openBtn.style.display = 'none';
-      const zbBadge = document.getElementById('bkZuzahlungBadge');
-      if (zbBadge) zbBadge.hidden = true;
-      patientCard.hidden = false;
-    }
+  // Termin ohne Patientenakte (Altbestand, Fremdbuchung): die Karte zeigt sich
+  // trotzdem — aber ohne Knöpfe, denn es gibt keine Akte zu öffnen.
+  if (!leadId && patientCard) {
+    setzePatientenKarte({ lead: null, booking, oeffneAkte: null });
+    patientCard.hidden = false;
   }
 
   if (leadId) {
@@ -3703,40 +3667,11 @@ async function openBookingActionModal(booking) {
         .maybeSingle()
     ]);
 
+    bkActionLeadCache = lead || null;
     if (lead && patientCard) {
-      const md = lead.metadata || {};
-      const dob = lead.geburtsdatum || md.geburtsdatum || '';
-      const dobStr = dob ? new Date(dob).toLocaleDateString('de-DE') : '—';
-      const krankenkasse = lead.krankenkasse || md.krankenkasse || '—';
-      const vNr = lead.versichertennummer || md.krankenkassennummer || '—';
-      const addrParts = [lead.street, [lead.plz, lead.city].filter(Boolean).join(' ')].filter(Boolean);
-      const addr = addrParts.length ? addrParts.join(', ') : '—';
-      const sex = md.geschlecht || lead.geschlecht || '—';
-
-      const row = (label, val) => `
-        <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
-        <div style="color:var(--text-main);font-weight:500;">${escapeHtml(String(val||'—'))}</div></div>`;
-      const telRow = (label, phone) => `
-        <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
-        <div style="color:var(--text-main);font-weight:500;">${phone ? `<a href="tel:${escapeHtml(phone)}" style="color:var(--accent,#b1891b);text-decoration:none;">${escapeHtml(phone)}</a>` : '—'}</div></div>`;
-      const mailRow = (label, email) => `
-        <div><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;">${label}</div>
-        <div style="color:var(--text-main);font-weight:500;">${email ? `<a href="mailto:${escapeHtml(email)}" style="color:var(--accent,#b1891b);text-decoration:none;">${escapeHtml(email)}</a>` : '—'}</div></div>`;
-
-      patientInfo.innerHTML = [
-        row('Geburtsdatum', dobStr),
-        row('Geschlecht', sex),
-        telRow('Telefon', lead.phone),
-        mailRow('E-Mail', lead.email || ''),
-        row('Krankenkasse', krankenkasse),
-        row('Versicherten-Nr.', vNr),
-        row('Adresse', addr),
-        row('Status', lead.status || '—'),
-      ].join('');
-
-      // "Vollständiges Profil" button
-      const openBtn = document.getElementById('bkOpenPatientBtn');
-      if (openBtn) { openBtn.style.display = ''; openBtn.onclick = () => openPatientDetailModal(lead); }
+      // Stammdaten stehen nicht mehr im Panel — beide Knöpfe öffnen die
+      // Patientenakte, die sie vollständig zeigt. Siehe module/termin-aktionen.js.
+      setzePatientenKarte({ lead, booking, oeffneAkte: () => openPatientDetailModal(lead) });
 
       // Zuzahlungsbefreiung badge + management
       const zbBadge = document.getElementById('bkZuzahlungBadge');
@@ -3879,18 +3814,49 @@ async function openBookingActionModal(booking) {
 
   const bkModal = document.getElementById('bkActionModal');
   if (bkModal) { bkModal.hidden = false; bkModal.style.display = 'flex'; }
-  document.getElementById('mainArea')?.style.setProperty('padding-right', '396px');
+  // Panelbreite (440 px, dashboard.html) + 16 px Luft. Ändert sich die Breite
+  // dort, muss dieser Wert mit — sonst liegt der Inhalt unter dem Panel.
+  document.getElementById('mainArea')?.style.setProperty('padding-right', BK_PANEL_OFFSET);
   // Wenn Kalender-Panel offen, calMainWrap ebenfalls nach links verschieben
   const calWrap = document.getElementById('calMainWrap');
   if (calWrap && document.getElementById('panel-calendar')?.classList.contains('active')) {
-    calWrap.style.paddingRight = '396px';
+    calWrap.style.paddingRight = BK_PANEL_OFFSET;
   }
 }
 
 // ===== Calendar Right Panel (madde 13) =====
 
 function initCalRightPanel() {
-  // Unified with bkActionModal
+  // Patientensuche im Kopf des Seitenbereichs — Einzelheiten in
+  // module/termin-aktionen.js.
+  verdrahteAktionsPatientensuche({
+    supabase,
+    attachPatientSearch,
+    ladePatienten: async () => {
+      // bizScope ist Pflicht: ohne ihn stünden hier Patienten aller Standorte.
+      const { data } = await bizScope(supabase.from('leads')
+        .select('id,title,first_name,last_name,phone,geburtsdatum,metadata')
+        .eq('owner_id', getOwnerId())
+        .order('last_name', { ascending: true }), 'patients');
+      return data || [];
+    },
+    oeffneTermin: (b) => openBookingActionModal(b),
+    // Patient ohne kommenden Termin: es gibt nichts anzuzeigen, aber sehr wohl
+    // etwas zu tun — genau dafür wurde die Suche gebaut. Direkt in die
+    // Terminanlage mit vorausgewähltem Patienten; die Verordnungskarten laden
+    // sich dort mit, also lässt sich die Sitzung sofort zuordnen.
+    onOhneTermin: async (lead) => {
+      closeBkActionPanel();
+      const jetzt = new Date();
+      jetzt.setMinutes(jetzt.getMinutes() + 30 - (jetzt.getMinutes() % 30), 0, 0);
+      const iso = new Date(jetzt.getTime() - jetzt.getTimezoneOffset() * 60000)
+        .toISOString().substring(0, 16);
+      await prefillBookingModal(iso);
+      if (typeof window._bkApplyLead === 'function') window._bkApplyLead(lead.id);
+      showToast('Kein kommender Termin — neuer Termin für diesen Patienten.', 'info');
+    },
+    toast: showToast,
+  });
 }
 
 function openCalRightPanel(booking) {
@@ -3906,11 +3872,50 @@ function closeCalRightPanel() {
   if (calWrap) calWrap.style.paddingRight = '';
 }
 
+// „⧉ übernehmen" in der Rezeptinfo: Folgeverordnung mit denselben Angaben.
+// Der Ablauf steht in module/termin-aktionen.js; hier wird nur der Zugriff auf
+// die Muster-13-Maske durchgereicht.
+function uebernimmVerordnungAlsVorlage(rx) {
+  closeBkActionPanel();
+  return uebernimmVerordnung(rx, {
+    oeffneRezeptMaske: openRezeptModal,
+    lsApply,
+    setTherapiebereich: setM13Therapy,
+    setHausbesuch: setM13Hausbesuch,
+    setFrequenz: setFreqValue,
+    toast: showToast,
+  }).catch(e => { console.error('[verordnung-uebernehmen]', e); showToast('Übernehmen fehlgeschlagen.', 'error'); });
+}
+
 function selectVerordnung(rx, sessions) {
   // Zeichnen und Auswaehlen liegt in module/termin-verordnung.js. Hier bleibt
   // nur, was dashboard.js kennt: die Leistung aus der Verordnung ableiten.
   window._bkGewaehlteRx = rx;
   waehleVerordnung(rx, sessions, { aufDienstleistung: uebernehmeDienstleistungAusRx });
+  uebernimmSerienfrequenzAusRx(rx);
+}
+
+// Die Serienplanung kannte die Verordnung bisher nicht: `frequenzToSeries()`
+// gibt für alles ausser „täglich" und „alle N Wochen" sieben Tage zurück. Bei
+// „3x pro Woche" musste die Praxis die Wochentage von Hand ankreuzen — tat sie
+// es nicht, entstand eine wöchentliche Serie, die der Verordnung widerspricht
+// und die unsere eigene Frequenzprüfung anschliessend zu Recht beanstandet.
+// Jetzt schlägt die Verordnung die Wochentage vor. Vorschlag, kein Zwang: die
+// Haken bleiben bedienbar.
+function uebernimmSerienfrequenzAusRx(rx) {
+  if (!rx?.frequenz) return;
+  setFreqValue('bkSeriesRecurrence', rx.frequenz);
+
+  const proWoche = sitzungenProWoche(rx.frequenz);
+  const boxen = document.querySelectorAll('#bkSeriesWeekdays input');
+  if (!proWoche || !boxen.length) return;
+
+  const startV = document.getElementById('bkStart')?.value;
+  const startTag = startV
+    ? new Date(startV.substring(0, 10) + 'T12:00:00Z').getUTCDay()
+    : new Date().getDay();
+  const tage = new Set(verteileWochentage(startTag, proWoche));
+  boxen.forEach(cb => { cb.checked = tage.has(parseInt(cb.value)); });
 }
 
 // Die Verordnung enthaelt die Leistung bereits — die Praxis soll sie nicht ein
@@ -4567,9 +4572,10 @@ async function handleTerminStarten() {
     markPrescriptionSession(b.id, 'done', sessionNote || undefined);
   }
 
-  const sessionText = document.getElementById('bkActionSession').textContent;
-  const match = sessionText.match(/Seans\s+(\d+)\s*\/\s*(\d+)/);
-  const sessionNum = match ? parseInt(match[1]) : 1;
+  // Erste Sitzung → Anamnese, sonst Notizen. Die Zahl kam bis hierher aus dem
+  // Text eines Anzeigefeldes im Panel; das Feld gibt es nicht mehr, gerechnet
+  // wird jetzt direkt.
+  const sessionNum = (await calculateSessionInfo(patientName, patientPhone, b.id, ownerId))?.current || 1;
 
   let leadId = null;
   if (patientName) {
@@ -5303,7 +5309,8 @@ async function openBookingModal(b) {
         sb.textContent = 'Besondere Wünsche: ' + lead.besondere_wuensche;
         sb.hidden = false;
       }
-      if (lead?.besondere_wuensche?.toLowerCase().includes('frau') || lead?.geschlecht === 'weiblich') {
+      // Hier stand `=== 'weiblich'` — ein Wert, den die Spalte (m/f/d) nie trägt: der Hinweis blieb stumm.
+      if (lead?.besondere_wuensche?.toLowerCase().includes('frau') || normalisiereGeschlecht(lead?.geschlecht) === 'f') {
         const dh = document.getElementById('bkDocAssignHint');
         dh.textContent = 'Patient wünscht weiblichen Therapeuten.';
         dh.hidden = false;
@@ -5409,7 +5416,7 @@ async function initBkCustomerAutocomplete() {
     setTimeout(() => sfVorname?.focus(), 80);
   }
 
-  // Von außen aufrufbar machen, damit "Folgetermin buchen" im Seitenbereich den
+  // Von außen aufrufbar machen, damit die Patientensuche im Seitenbereich den
   // Patienten setzen kann — inklusive Hausbesuch-Panel und Verordnungskarten.
   window._bkApplyLead = applyLeadById;
 
@@ -5605,26 +5612,30 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && moveBooking) cancelMoveBooking();
 });
 
-function placeGhost(slotEl, empId, text) {
+function placeGhost(slotEl, empId, text, ev) {
   if (moveGhostEl) moveGhostEl.remove();
   // Farbe immer ueber teamMembers bestimmen — genau wie Tages-, Wochen- und
   // Monatsansicht. Sonst bekaeme die Vorschau eine andere Farbe als die Spalte.
   const idx = teamMembers.findIndex(e => e.id === empId);
   const color = EMP_COLORS[idx % EMP_COLORS.length] || 'var(--primary)';
+  const versatzMin = moveVersatzMinuten(slotEl, ev);
+  const zielZeit = zeitPlusMinuten(slotEl.dataset.time, versatzMin);
   const ghost = document.createElement('div');
   ghost.className = 'dv-ghost';
   ghost.style.background = color + '25';
   ghost.style.borderColor = color;
   ghost.style.color = 'var(--text-main)';
-  ghost.style.top = slotEl.offsetTop + 'px';
+  ghost.style.top = (slotEl.offsetTop + (versatzMin / DV_SLOT_MIN) * DV_SLOT_PX) + 'px';
   const s = new Date(moveBooking.start_time);
   const e = new Date(moveBooking.end_time);
   const durMin = (e - s) / 60000;
-  ghost.style.height = Math.max((durMin / 30) * 56, 28) + 'px';
-  ghost.textContent = text;
-  ghost.addEventListener('click', (ev) => {
-    ev.stopPropagation();
-    doMoveBooking(slotEl.dataset.time, empId);
+  ghost.style.height = Math.max((durMin / DV_SLOT_MIN) * DV_SLOT_PX, 28) + 'px';
+  // Die Zielzeit gehoert in die Vorschau: bei 5-Minuten-Schritten sieht man
+  // an der Position allein nicht, ob es 09:15 oder 09:20 wird.
+  ghost.textContent = `${zielZeit.substring(11)} · ${text}`;
+  ghost.addEventListener('click', (evt) => {
+    evt.stopPropagation();
+    doMoveBooking(zielZeit, empId);
   });
   slotEl.parentElement.appendChild(ghost);
   moveGhostEl = ghost;
@@ -6115,10 +6126,20 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   // Frequenz der Verordnung: warnen, NICHT blockieren. Nachholtermine, Urlaub
   // und Krankheit sind Alltag — die Vorgabe ist ärztlich, kein Abrechnungs-
   // verbot (Nausad, 12.08.2026: „wenn man weitermachen möchte, weiter drücken,
-  // dann soll der Termin gebaut werden"). Regelwerk: module/termin-verordnung.js.
+  // dann soll der Termin gebaut werden"). Regelwerk und Quelle der Schwellen:
+  // module/frequenz-pruefung.js.
   {
-    const gewaehlteRx = window._bkGewaehlteRx;
-    if (gewaehlteRx?.id && document.getElementById('bkSelectedRxId')?.value === gewaehlteRx.id) {
+    // Massgeblich ist das versteckte Feld, nicht der zuletzt angeklickte
+    // Datensatz: beim Ziehen einer Sitzung auf den Kalender und beim Bearbeiten
+    // eines bestehenden Termins ist `_bkGewaehlteRx` leer, das Feld aber gesetzt.
+    const rxId = document.getElementById('bkSelectedRxId')?.value || '';
+    let gewaehlteRx = window._bkGewaehlteRx?.id === rxId ? window._bkGewaehlteRx : null;
+    if (rxId && !gewaehlteRx) {
+      const { data } = await supabase.from('prescriptions')
+        .select('id,frequenz').eq('id', rxId).maybeSingle();
+      gewaehlteRx = data || null;
+    }
+    if (gewaehlteRx?.id) {
       const pruef = await pruefeFrequenz({
         supabase, rx: gewaehlteRx, neuesDatum: startDate, ausserBookingId: id || null,
       });
@@ -6399,25 +6420,48 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   showToast(t('saved'));
 });
 
-async function loadRxSessionsPanel(booking) {
+// "Offene Einheiten als Serie verteilen" — Ablauf in module/termin-aktionen.js.
+// Hier wird nur durchgereicht, was dashboard.js kennt.
+function verteileOffeneEinheiten({ rx, offen, booking }) {
+  return verteileOffeneSitzungen({
+    rx, offen, booking,
+    patientId: bkActionLeadCache?.id || booking?.lead_id || null,
+    schliessePanel: closeBkActionPanel,
+    starteSerienplanung: openBookingFromRxPreset,
+    toast: showToast,
+  });
+}
+
+/**
+ * Der Block "Aktive Verordnung" ganz unten im Seitenbereich.
+ *
+ * @param {object} booking
+ * @param {string|null} rxId  Welche Verordnung? Wird oben mit den Blaetter-
+ *   Pfeilen gewaehlt. Ohne Angabe die zum Termin verknuepfte — sonst zeigte
+ *   der Block eine andere Verordnung als die Rezeptinfo darueber.
+ */
+async function loadRxSessionsPanel(booking, rxId = null) {
   const panel = document.getElementById('bkRxSessionsPanel');
   if (!panel) return;
   panel.hidden = true;
 
-  if (!booking?.id) return;
+  if (!booking?.id && !rxId) return;
 
-  // Find prescription session linked to this booking
-  const { data: linkedSession } = await supabase
-    .from('prescription_sessions')
-    .select('prescription_id')
-    .eq('booking_id', booking.id)
-    .maybeSingle();
-
-  if (!linkedSession?.prescription_id) return;
+  let prescriptionId = rxId;
+  if (!prescriptionId) {
+    const { data: linkedSession } = await supabase
+      .from('prescription_sessions')
+      .select('prescription_id')
+      .eq('booking_id', booking.id)
+      .maybeSingle();
+    prescriptionId = linkedSession?.prescription_id || null;
+  }
+  if (!prescriptionId) return;
+  const linkedSession = { prescription_id: prescriptionId };
 
   const { data: rx } = await supabase.from('prescriptions')
-    .select('id,heilmittel,heilmittel_items,anzahl_einheiten,status,rezept_typ')
-    .eq('id', linkedSession.prescription_id)
+    .select('id,heilmittel,heilmittel_items,heilmittel_position,anzahl_einheiten,status,rezept_typ,frequenz')
+    .eq('id', prescriptionId)
     .maybeSingle();
   if (!rx) return;
 
@@ -6451,6 +6495,15 @@ async function loadRxSessionsPanel(booking) {
 
   const badge = document.getElementById('bkRxSessionsBadge');
   if (badge) badge.textContent = `${unvergebene.length} offen / ${allSessions.length} ges.`;
+
+  // Serienknopf: nur sinnvoll, wenn mindestens zwei Einheiten offen sind —
+  // für eine einzelne zieht man schneller, als der KI-Ablauf dauert.
+  const serieBtn = document.getElementById('bkRxSerieBtn');
+  if (serieBtn) {
+    serieBtn.hidden = unvergebene.length < 2;
+    serieBtn.textContent = `🗓 ${unvergebene.length} offene Einheiten als Serie verteilen`;
+    serieBtn.onclick = () => verteileOffeneEinheiten({ rx, offen: unvergebene.length, booking });
+  }
 
   const unvList = document.getElementById('bkRxUnvergebeneList');
   if (unvList) {
@@ -6602,58 +6655,43 @@ function showSeriterminConfirmDialog({ patientName, createdCount, conflictCount,
   });
 }
 
+// Serienbestätigung — dieselbe Vorlage wie der A5-Zettel, nur auf A4 und mit
+// anderer Überschrift. Vorher stand hier ein zweiter, vollständig eigener
+// HTML-Bauplan; zwei Druckstrecken für dieselbe Sache heisst, dass jede
+// Verbesserung (Anrede, Öffnungszeiten, Bankverbindung) nur in einer davon
+// ankommt. Siehe module/termin-druck.js.
 function printSeriterminConfirmation({ patientName, appointments, serviceTitle }) {
-  const hasEmp = (appointments || []).some(a => a.employee_name);
-  const apptRows = (appointments || []).map(a => {
-    const dt = a.start_time ? new Date(a.start_time).toLocaleString('de-DE', {
-      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    }) : '';
-    const empCell = hasEmp ? `<td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(a.employee_name || '—')}</td>` : '';
-    return `<tr><td style="padding:6px 12px;border-bottom:1px solid #eee;">${dt} Uhr</td>${empCell}</tr>`;
-  }).join('');
+  const ok = druckeTerminzettel({
+    ...terminzettelPraxis(),
+    patientName,
+    titel: 'Terminbestätigung',
+    format: 'A4',
+    logoUrl: currentProfile?.praxis_logo_url || '',
+    hinweis: currentProfile?.invoice_footer_text
+      || 'Bitte bringen Sie dieses Dokument zu Ihrem nächsten Termin mit.',
+    termine: (appointments || []).map(a => ({
+      start: a.start_time,
+      ende: a.end_time,
+      leistung: serviceTitle || '',
+      therapeut: a.employee_name || '',
+    })),
+  });
+  if (!ok) showToast('Popup-Blocker verhindert das Drucken.', 'error');
+}
 
-  const logoUrl = currentProfile?.praxis_logo_url || '';
-  const footerText = currentProfile?.invoice_footer_text || '';
-  const bizName = currentProfile?.business_name || '';
-  const logoHtml = logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height:60px;max-width:200px;margin-bottom:16px;display:block;" />` : '';
-  const headerName = bizName ? `<div style="font-size:13px;color:#555;margin-bottom:4px;">${escapeHtml(bizName)}</div>` : '';
-  const footerHtml = footerText
-    ? escapeHtml(footerText).replace(/\n/g, '<br>')
-    : 'Bitte bringen Sie dieses Dokument zu Ihrem nächsten Termin mit.<br>Bei Fragen wenden Sie sich an uns.';
-
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Terminbestätigung</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; color: #222; }
-    h1 { font-size: 20px; margin-bottom: 4px; }
-    p { margin: 6px 0; font-size: 14px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th { text-align: left; padding: 8px 12px; background: #f5f5f5; font-size: 13px; font-weight: 600; }
-    td { font-size: 13px; }
-    .footer { margin-top: 40px; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 16px; }
-    @media print { body { margin: 20px; } }
-  </style>
-  </head><body>
-  ${logoHtml}${headerName}
-  <h1>Terminbestätigung</h1>
-  <p>Patient: <strong>${escapeHtml(patientName || '—')}</strong></p>
-  ${serviceTitle ? `<p>Behandlung: <strong>${escapeHtml(serviceTitle)}</strong></p>` : ''}
-  <p>Ausgestellt am: ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-  <table>
-    <thead><tr><th>Termin</th>${hasEmp ? '<th>Therapeut</th>' : ''}</tr></thead>
-    <tbody>${apptRows}</tbody>
-  </table>
-  <div class="footer">${footerHtml}</div>
-  </body></html>`;
-
-  const w = window.open('', '_blank', 'width=700,height=600');
-  if (w) {
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 400);
-  } else {
-    showToast('Popup-Blocker verhindert das Drucken.', 'error');
-  }
+// Briefkopf der Praxis — einmal gebaut, von beiden Druckwegen benutzt.
+function terminzettelPraxis() {
+  return {
+    praxis: {
+      name: currentProfile?.business_name || '',
+      strasse: [currentProfile?.street, currentProfile?.house_number].filter(Boolean).join(' '),
+      ort: [currentProfile?.zip, currentProfile?.city].filter(Boolean).join(' '),
+      telefon: currentProfile?.phone || currentProfile?.whatsapp_number || '',
+      iban: currentProfile?.iban || '',
+      bic: currentProfile?.bic || '',
+      bank: currentProfile?.bank_name || '',
+    },
+  };
 }
 
 // ============================================================
@@ -8032,8 +8070,12 @@ document.getElementById('bkActionTerminzettelBtn')?.addEventListener('click', as
   if (!bk) return;
   const patientName = (bk.customer_name || '').split('·')[0].trim();
 
+  // `employee_name` stand hier in der Spaltenliste — die Spalte gibt es in
+  // `bookings` nicht (siehe db/SCHEMA.sql). PostgREST antwortete mit 400 und
+  // der Knopf meldete nur „Termine konnten nicht geladen werden". Der
+  // Therapeut kommt aus `user_id` über die Teamliste.
   let q = supabase.from('bookings')
-    .select('start_time,end_time,hausbesuch,employee_name,services(title)')
+    .select('start_time,end_time,hausbesuch,user_id,services(title)')
     .eq('owner_id', getOwnerId())
     .gte('start_time', new Date(Date.now() - 3600000).toISOString())
     .in('status', ['confirmed', 'pending'])
@@ -8041,22 +8083,31 @@ document.getElementById('bkActionTerminzettelBtn')?.addEventListener('click', as
     .limit(30);
   // lead_id ist der verlässliche Schlüssel; ältere Termine haben nur den Namen.
   q = bk.lead_id ? q.eq('lead_id', bk.lead_id) : q.eq('customer_name', bk.customer_name);
-  const { data: termine, error } = await q;
+
+  // Öffnungszeiten der Praxis für den Fuß des Zettels — der häufigste Grund,
+  // warum der Patient danach anruft.
+  const [{ data: termine, error }, { data: zeiten }] = await Promise.all([
+    q,
+    supabase.from('working_hours')
+      .select('day_of_week,start_time,end_time,is_active')
+      .eq('user_id', getOwnerId()),
+  ]);
 
   if (error) { showToast('Termine konnten nicht geladen werden.', 'error'); return; }
   if (!termine?.length) { showToast('Keine kommenden Termine zum Drucken.', 'warning'); return; }
 
+  const therapeutName = (userId) =>
+    teamMembers.find(m => m.id === userId)?.business_name || '';
+
   const ok = druckeTerminzettel({
-    praxis: {
-      name: currentProfile?.business_name || '',
-      strasse: [currentProfile?.street, currentProfile?.house_number].filter(Boolean).join(' '),
-      ort: [currentProfile?.zip, currentProfile?.city].filter(Boolean).join(' '),
-      telefon: currentProfile?.whatsapp_number || '',
-    },
+    ...terminzettelPraxis(),
+    logoUrl: currentProfile?.praxis_logo_url || '',
     patientName,
+    anrede: anredeAusGeschlecht(bkActionLeadCache),
+    oeffnungszeiten: zeiten || [],
     termine: termine.map(t => ({
       start: t.start_time, ende: t.end_time,
-      leistung: t.services?.title || '', therapeut: t.employee_name || '',
+      leistung: t.services?.title || '', therapeut: therapeutName(t.user_id),
       hausbesuch: t.hausbesuch,
     })),
   });
@@ -8106,54 +8157,17 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
   if (bkActionBookingCache) await openBookingActionModal(bkActionBookingCache);
 });
 
-/**
- * Folgetermin buchen — öffnet den Termin-Dialog mit demselben Patienten,
- * derselben Leistung und demselben Therapeuten, standardmäßig eine Woche
- * später zur selben Uhrzeit (der übliche Therapierhythmus). Datum bleibt
- * änderbar; die Verordnungskarten laden sich mit, damit die nächste Sitzung
- * direkt auf dieselbe Verordnung gebucht werden kann.
- */
-document.getElementById('bkActionFolgeterminBtn')?.addEventListener('click', async () => {
-  const b = bkActionBookingCache;
-  if (!b) return;
+// "Folgetermin buchen" ist entfallen (siehe dashboard.html). Der Knopf oeffnete
+// die Terminmaske eine Woche spaeter; dasselbe erledigen die unvergebenen
+// Einheiten per Ziehen und "Serientermine verteilen" — beide mit Bezug zur
+// Verordnung, den der Folgetermin nie hatte.
 
-  const base = b.start_time ? new Date(b.start_time) : new Date();
-  const next = new Date(base.getTime() + 7 * 24 * 60 * 60 * 1000);
-  // Falls der Vorschlag in der Vergangenheit läge (alter Termin): auf die
-  // nächste künftige Woche desselben Wochentags schieben.
-  const now = new Date();
-  while (next < now) next.setDate(next.getDate() + 7);
-  const localIso = new Date(next.getTime() - next.getTimezoneOffset() * 60000)
-    .toISOString().substring(0, 16);
-
-  closeBkActionPanel();
-  await prefillBookingModal(localIso);
-
-  // Leistung + Therapeut übernehmen
-  const srvSel = document.getElementById('bkService');
-  if (srvSel && b.service_id) {
-    srvSel.value = b.service_id;
-    srvSel.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-  const empSel = document.getElementById('bkEmployee');
-  if (empSel && b.user_id) empSel.value = b.user_id;
-
-  // Patient setzen (füllt Telefon, Hausbesuch-Panel und Verordnungskarten)
-  if (b.lead_id && typeof window._bkApplyLead === 'function') {
-    window._bkApplyLead(b.lead_id);
-  } else if (b.customer_name) {
-    const nameEl = document.getElementById('bkCustomer');
-    const searchEl = document.getElementById('bkCustomerSearch');
-    if (nameEl) nameEl.value = b.customer_name;
-    if (searchEl) searchEl.value = b.customer_name;
-  }
-
-  if (b.hausbesuch) {
-    const hb = document.getElementById('bkHausbesuch');
-    if (hb && !hb.checked) { hb.checked = true; hb.dispatchEvent(new Event('change', { bubbles: true })); }
-  }
+// Verschieben: derselbe Geistermodus wie im Termin-Dialog (startMoveBooking).
+// Er fehlte im Seitenbereich, obwohl man den Termin genau dort offen hat.
+document.getElementById('bkActionMoveBtn')?.addEventListener('click', () => {
+  if (!bkActionBookingCache) return;
+  startMoveBooking(bkActionBookingCache);
 });
-
 document.getElementById('bkActionDeleteBtn').addEventListener('click', async () => {
   const b = bkActionBookingCache;
   if (!b) return;
@@ -9754,7 +9768,7 @@ async function openLeadModal(lead) {
   document.getElementById('lead-last-name').value = lead?.last_name || '';
   document.getElementById('lead-phone').value = lead?.phone || '';
   document.getElementById('lead-handy').value = lead?.handy || '';
-  document.getElementById('lead-geschlecht').value = lead?.geschlecht || '';
+  document.getElementById('lead-geschlecht').value = normalisiereGeschlecht(lead?.geschlecht) || '';
   document.getElementById('lead-email').value = lead?.email || '';
   document.getElementById('lead-city').value = lead?.city || '';
   document.getElementById('lead-notes').value = lead?.notes || '';
@@ -9970,7 +9984,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     phone: document.getElementById('lead-phone').value.trim() || null,
     handy: document.getElementById('lead-handy').value.trim() || null,
     handy_normalized: normalize_phone_js(document.getElementById('lead-handy').value.trim()),
-    geschlecht: document.getElementById('lead-geschlecht').value || null,
+    geschlecht: normalisiereGeschlecht(document.getElementById('lead-geschlecht').value),
     email: document.getElementById('lead-email').value.trim() || null,
     street,
     plz,
@@ -13063,68 +13077,6 @@ const SECTOR_LABELS = {
   praxis: 'Allgemeine Praxis',
 };
 
-const TAX_EXEMPT_OPTIONS = {
-  '§4nr14a': 'Gemäß § 4 Nr. 14a UStG sind diese Leistungen von der Umsatzsteuer befreit.',
-  '§4nr14b': 'Gemäß § 4 Nr. 14b UStG sind diese Leistungen von der Umsatzsteuer befreit.',
-  '§19':     'Kein Ausweis der Umsatzsteuer gemäß § 19 Abs. 1 UStG (Kleinunternehmer).',
-  '19pct':   '',
-};
-
-const TAX_EXEMPT_HINTS = {
-  '§4nr14a': 'Für Physio-, Logo-, Ergo- und Podologiepraxen — heilkundliche Leistungen.',
-  '§4nr14b': 'Für Kliniken und stationäre Einrichtungen.',
-  '§19':     'Gilt, wenn Jahresumsatz unter 22.000 € (Vorjahr) liegt.',
-  '19pct':   'Auf der Rechnung erscheint kein Steuerhinweis.',
-  'custom':  'Freitext — genau so auf der Rechnung gedruckt.',
-};
-
-function initTaxExemptDropdown(savedValue) {
-  const sel = document.getElementById('setTaxExemptSelect');
-  const inp = document.getElementById('setTaxExempt');
-  const hint = document.getElementById('setTaxExemptHint');
-  if (!sel || !inp || !hint) return;
-
-  const applyOption = (key) => {
-    hint.textContent = TAX_EXEMPT_HINTS[key] || '';
-    if (key === 'custom') {
-      inp.style.display = '';
-      inp.focus();
-    } else {
-      inp.style.display = 'none';
-      inp.value = TAX_EXEMPT_OPTIONS[key] ?? '';
-    }
-  };
-
-  // Determine which option matches the saved value
-  let matchedKey = 'custom';
-  if (!savedValue || savedValue === '') {
-    matchedKey = '§4nr14a'; // sensible default for Praxis
-  } else {
-    for (const [k, v] of Object.entries(TAX_EXEMPT_OPTIONS)) {
-      if (v === savedValue) { matchedKey = k; break; }
-    }
-  }
-  sel.value = matchedKey;
-  if (matchedKey === 'custom') {
-    inp.value = savedValue || '';
-    inp.style.display = '';
-  } else {
-    inp.value = TAX_EXEMPT_OPTIONS[matchedKey];
-    inp.style.display = 'none';
-  }
-  hint.textContent = TAX_EXEMPT_HINTS[matchedKey] || '';
-
-  sel.addEventListener('change', () => applyOption(sel.value));
-}
-
-function getTaxExemptValue() {
-  const sel = document.getElementById('setTaxExemptSelect');
-  const inp = document.getElementById('setTaxExempt');
-  if (!sel) return '';
-  if (sel.value === 'custom') return (inp?.value || '').trim();
-  if (sel.value === '19pct') return '';
-  return TAX_EXEMPT_OPTIONS[sel.value] || '';
-}
 
 async function loadSettings() {
   document.getElementById('setBiz').value = currentProfile.business_name || '';
@@ -15808,17 +15760,21 @@ async function openInvView(invoiceId) {
   const statusMap = { draft: 'Entwurf', sent: 'Gesendet', paid: 'Bezahlt', cancelled: 'Storniert' };
   document.getElementById('invvStatus').textContent = statusMap[inv.status] || inv.status || '—';
 
-  // Leistungszeitraum from linked session bookings (min..max start_time)
-  const bookingDates = (bookingsRes.data || []).map(r => r.bookings?.start_time).filter(Boolean).map(s => new Date(s));
-  if (bookingDates.length) {
-    bookingDates.sort((a, b) => a - b);
-    const fmt = d => d.toLocaleDateString('de-DE');
-    const a = bookingDates[0], b = bookingDates[bookingDates.length - 1];
-    document.getElementById('invvLeistungszeitraumRow').hidden = false;
+  // Leistungszeitraum (§ 14 Abs. 4 Nr. 6 UStG). Zuerst das eingefrorene Feld
+  // der Rechnung, sonst die Zeilen, erst zuletzt die verknüpften Termine.
+  // Die alte Reihenfolge kannte nur die Termine — und weil die am Podologie-Topf
+  // gar nicht hängen, blieb die Zeile dort immer leer.
+  const zr = leistungszeitraum(inv.line_items || []);
+  const fmt = d => new Date(d).toLocaleDateString('de-DE');
+  let von = inv.leistung_von || zr.von, bis = inv.leistung_bis || zr.bis;
+  if (!von) {
+    const bd = (bookingsRes.data || []).map(r => r.bookings?.start_time).filter(Boolean).sort();
+    if (bd.length) { von = bd[0]; bis = bd[bd.length - 1]; }
+  }
+  document.getElementById('invvLeistungszeitraumRow').hidden = !von;
+  if (von) {
     document.getElementById('invvLeistungszeitraum').textContent =
-      a.toDateString() === b.toDateString() ? fmt(a) : `${fmt(a)} – ${fmt(b)}`;
-  } else {
-    document.getElementById('invvLeistungszeitraumRow').hidden = true;
+      (!bis || fmt(von) === fmt(bis)) ? fmt(von) : `${fmt(von)} – ${fmt(bis)}`;
   }
 
   // Recipient (DIN 5008)
@@ -15874,14 +15830,14 @@ async function openInvView(invoiceId) {
     document.getElementById('invvNotesWrap').hidden = true;
   }
 
-  // Tax exempt note (e.g. § 4 Nr. 14 UStG)
+  // Steuerhinweis (§ 14 Abs. 4 Nr. 8 UStG). Der mit der Rechnung eingefrorene
+  // Wortlaut hat Vorrang vor dem Profil: wer den Text in den Einstellungen
+  // ändert, darf damit keine Rechnung aus dem Vorjahr rückwirkend anders
+  // drucken (§ 146 Abs. 4 AO). Für Altrechnungen bleibt das Profil der Fallback.
   const taxNoteEl = document.getElementById('invvTaxExemptNote');
-  if (currentProfile.tax_exempt_note) {
-    taxNoteEl.textContent = currentProfile.tax_exempt_note;
-    taxNoteEl.style.display = '';
-  } else {
-    taxNoteEl.style.display = 'none';
-  }
+  const hinweis = inv.steuerhinweis_text ?? currentProfile.tax_exempt_note;
+  taxNoteEl.textContent = hinweis || '';
+  taxNoteEl.style.display = hinweis ? '' : 'none';
 
   // Footer: contact / bank / tax IDs
   const contact = [
@@ -15899,9 +15855,13 @@ async function openInvView(invoiceId) {
   ].filter(Boolean).join('\n');
   document.getElementById('invvFooterBank').textContent = bank || '—';
 
+  // Ebenfalls Snapshot mit Profil-Fallback: die Steuernummer der Praxis kann
+  // sich ändern, die einmal gedruckte Rechnung nicht (§ 14 Abs. 4 Nr. 2 UStG).
+  const stNr  = inv.steuernummer_snapshot ?? currentProfile.steuernummer;
+  const ustId = inv.ust_id_snapshot ?? currentProfile.ust_id;
   const tax = [
-    currentProfile.steuernummer ? 'Steuernr.: ' + currentProfile.steuernummer : '',
-    currentProfile.ust_id ? 'USt-IdNr.: ' + currentProfile.ust_id : '',
+    stNr ? 'Steuernr.: ' + stNr : '',
+    ustId ? 'USt-IdNr.: ' + ustId : '',
     currentProfile.ik_number ? 'IK: ' + currentProfile.ik_number : ''
   ].filter(Boolean).join('\n');
   document.getElementById('invvFooterTax').textContent = tax || '—';
@@ -15997,11 +15957,23 @@ function renderInvLines() {
 
 function updateInvForInsuranceType() {
   const isGkv = invPatientInsuranceType === 'gkv';
-  const isPrivat = invPatientInsuranceType === 'privat';
+  const isPrivat = invPatientInsuranceType === 'privat' || invPatientInsuranceType === 'selbstzahler';
 
   // Zuzahlung section: visible for GKV, hidden for Privat
   const zuzRow = document.getElementById('invZuzahlungRow');
   if (zuzRow) zuzRow.style.display = (isPrivat) ? 'none' : '';
+
+  // USt-Wahl nur ausserhalb der GKV: eine Kassenzuzahlung wirft die Frage nicht auf.
+  const artWrap = document.getElementById('invLeistungsartWrap');
+  if (artWrap) artWrap.hidden = isGkv;
+  if (!isGkv) {
+    mountLeistungsart({
+      profile: currentProfile,
+      vorschlag: leistungsartVorschlag({ verordnung: invVerordnungId ? { id: invVerordnungId } : null }),
+      getLines: () => invLines,
+      onChange: (zeilen) => { invLines = zeilen; },
+    });
+  }
 
   // Invoice type badge/label
   const typeBadge = document.getElementById('invTypeBadge');
@@ -16034,27 +16006,13 @@ function calcInvTotals() {
   document.getElementById('invTotalPatient').textContent = formatEur(total);
 }
 
-async function generateInvNumber() {
-  const year = new Date().getFullYear();
-  const ownerId = getOwnerId();
-  const { data } = await supabase.from('invoices')
-    .select('invoice_number')
-    .eq('owner_id', ownerId)
-    .ilike('invoice_number', `INV-${year}-%`)
-    .order('invoice_number', { ascending: false })
-    .limit(1);
-  let next = 1;
-  if (data && data.length > 0 && data[0].invoice_number) {
-    const m = data[0].invoice_number.match(/-(\d+)$/);
-    if (m) next = parseInt(m[1], 10) + 1;
-  }
-  return `INV-${year}-${String(next).padStart(4, '0')}`;
-}
 
 function resetInvEditor() {
   invLines = [];
   invPatientId = null;
   invPrescriptionId = null;
+  invVerordnungId = null;
+  invBehandlungIds = [];
   document.getElementById('invPatientSelect').value = '';
   document.getElementById('invLineBody').innerHTML = '';
   leereTerminAuswahl();
@@ -16079,6 +16037,7 @@ async function openInvEditor(invoiceId) {
     if (!inv) return;
     invPatientId = inv.patient_id;
     invPrescriptionId = inv.prescription_id || null;
+    invVerordnungId = inv.verordnung_id || null;
     document.getElementById('invPatientSelect').value = inv.patient_id || '';
     invLines = (inv.line_items || []).map(l => ({ ...l }));
     document.getElementById('invEigenPct').value = inv.eigenanteil_pct || 0;
@@ -16118,7 +16077,12 @@ async function saveInvoice() {
   const total = enforceNoZuzahlung ? subtotal : (eigenEur + kasse);
   const ownerId = getOwnerId();
   const patientName = patientSel.options[patientSel.selectedIndex].text;
-  const invoiceNumber = await generateInvNumber();
+  // Nummer NICHT hier vergeben: das macht der Trigger set_invoice_nummer()
+  // lückenlos je Inhaber (db/README.md Falle 6). Bis 16.08.2026 zählte diese
+  // Funktion selbst hoch und vergab bei jedem Speichern eine neue Nummer.
+  const steuerStatus = steuerStatusVon(currentProfile);
+  const st = berechneSteuer(invLines, steuerStatus);
+  const zeitraum = leistungszeitraum(invLines);
   const payload = {
     owner_id: ownerId,
     patient_id: patientId,
@@ -16130,18 +16094,46 @@ async function saveInvoice() {
     kassenzuzahlung: kasse,
     total_patient: total,
     status: 'draft',
-    invoice_number: invoiceNumber,
     prescription_id: invPrescriptionId || verordnungAuswahl().prescriptionId || null,
+    verordnung_id: invVerordnungId || null,
     notes: [document.getElementById('invNotes').value || null, verordnungAuswahl().notizZeile].filter(Boolean).join('\n') || null,
-    invoice_type: invPatientInsuranceType || null
+    invoice_type: invPatientInsuranceType || null,
+    // Steuer: eingefroren, nicht zur Druckzeit aus dem Profil gelesen —
+    // sonst druckt dieselbe Rechnung nach einer Einstellungsänderung anders
+    // (§ 146 Abs. 4 AO). Begründung in module/rechnung-steuer.js.
+    steuer_status: steuerStatus,
+    tax_summary: st.tax_summary,
+    netto_gesamt: st.netto,
+    steuer_gesamt: st.steuer,
+    brutto_gesamt: st.brutto,
+    steuerhinweis_text: steuerhinweisText(currentProfile, st.tax_summary),
+    steuernummer_snapshot: currentProfile.steuernummer || null,
+    ust_id_snapshot: currentProfile.ust_id || null,
+    leistung_von: zeitraum.von,
+    leistung_bis: zeitraum.bis,
   };
-  const { data: inserted, error } = await supabase.from('invoices').insert(payload).select('id').maybeSingle();
+  // Eine offene Rechnung wird fortgeschrieben, nicht neu angelegt: sonst steht
+  // dieselbe Leistung zweimal mit zwei Nummern in der Tabelle (§ 14c UStG,
+  // sobald USt ausgewiesen wird). Festgeschriebene Rechnungen sperrt der
+  // Trigger invoice_festschreibung() ohnehin.
+  const bearbeitet = window._currentInvoiceId;
+  const { data: inserted, error } = bearbeitet
+    ? await supabase.from('invoices').update(payload).eq('id', bearbeitet).select('id, invoice_number').maybeSingle()
+    : await supabase.from('invoices').insert(payload).select('id, invoice_number').maybeSingle();
   if (error) { console.error('[invoice save]', error); showToast('Fehler beim Speichern: ' + error.message, 'error'); return; }
-  showToast('Rechnung ' + invoiceNumber + ' erstellt.');
+  const invoiceNumber = inserted?.invoice_number || '';
+  showToast('Rechnung ' + invoiceNumber + (bearbeitet ? ' aktualisiert.' : ' erstellt.'));
   document.getElementById('invPrintBtn').disabled = false;
   const dmrzBtn = document.getElementById('invDmrzBtn');
   if (dmrzBtn) dmrzBtn.disabled = false;
   window._currentInvoiceId = inserted?.id || null;
+
+  // Erst nach erfolgreichem Speichern markieren: schlägt das Speichern fehl,
+  // darf keine Sitzung als abgerechnet gelten.
+  if (inserted?.id && invBehandlungIds.length) {
+    await behandlungenVerknuepfen(supabase, { invoiceId: inserted.id, behandlungIds: invBehandlungIds });
+    invBehandlungIds = [];
+  }
 
   // Zahlungsstatus — hängt an der Rechnung ein Rezept mit offener Zuzahlung,
   // übernimmt der Kassieren-Ablauf und es wird nicht zweimal gefragt.
@@ -17766,15 +17758,11 @@ async function saveRezept() {
 
     if (rxErr) throw rxErr;
 
-    // 5. Create prescription_sessions
-    if (anzahl && anzahl > 0) {
-      const sessions = Array.from({ length: anzahl }, (_, i) => ({
-        prescription_id: rx.id,
-        session_number: i + 1,
-        status: 'planned'
-      }));
-      await supabase.from('prescription_sessions').insert(sessions);
-    }
+    // 5. Sitzungszeilen anlegen — über dieselbe Stelle wie überall sonst.
+    // Vorher stand hier ein eigenes .insert() mit derselben Regel; zwei
+    // Umsetzungen derselben Regel heisst, dass eine Korrektur zweimal gemacht
+    // werden muss und einmal vergessen wird. Siehe module/sitzung-abgleich.js.
+    await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl });
 
     // 6. Fehlende Patientenstammdaten zurückschreiben (nur leere Felder, nie überschreiben)
     try {
@@ -18576,20 +18564,6 @@ function setFreqValue(id, value) {
   sel.value = v;
 }
 
-function parseFrequenzWoche(freq) {
-  // "2x pro Woche" / "2 x / Woche" / "2x wöchentlich" → 2
-  if (!freq) return null;
-  // "1x alle 2 Wochen", "monatlich", "täglich" → haftalık sayı değil, seri planlama manuel
-  if (/alle\s*\d+\s*Wochen|pro\s*Monat|monatlich|t[äa]gl/i.test(freq)) return null;
-  const rangeMatch = freq.match(/(\d+)\s*[-–]\s*(\d+)\s*x?/i);
-  if (rangeMatch && rangeMatch[2]) {
-    return parseInt(rangeMatch[2], 10);
-  }
-  const m = freq.match(/(\d+)\s*x?\s*(?:pro|\/)?\s*Woche|w[öo]ch/i);
-  if (m && m[1]) return parseInt(m[1], 10);
-  const n = freq.match(/^\s*(\d+)/);
-  return n ? parseInt(n[1], 10) : null;
-}
 
 // Heilmittel-Position (X-Code) oder 5-stelliger Abrechnungscode → einheitliches X-Format.
 // "20507" → "X0507", "X0507" → "X0507".
@@ -18770,6 +18744,16 @@ async function openBookingFromRxPreset(preset) {
       document.getElementById('bkService')?.focus();
     }
 
+    // Start = next Monday 09:00 by default (user can change).
+    // Steht bewusst VOR der Serienplanung: die Wochentagverteilung braucht den
+    // Starttag, sonst verteilt sie ab dem heutigen Wochentag.
+    const today = new Date();
+    const dow = today.getDay();
+    const daysToMon = (8 - dow) % 7 || 7;
+    const start = new Date(today.getTime() + daysToMon * 86400000);
+    const iso = start.toISOString().slice(0, 10) + 'T09:00';
+    document.getElementById('bkStart').value = iso;
+
     // Series
     if (preset.anzahl && preset.anzahl > 1) {
       const toggle = document.getElementById('bkSeriesToggle');
@@ -18778,23 +18762,13 @@ async function openBookingFromRxPreset(preset) {
       const fields = document.getElementById('bkSeriesFields');
       if (fields) fields.hidden = false;
       document.getElementById('bkSeriesCount').value = preset.anzahl;
-      const perWeek = parseFrequenzWoche(preset.frequenz);
-      const recSel = document.getElementById('bkSeriesRecurrence');
-      if (recSel) {
-        setFreqValue('bkSeriesRecurrence', preset.frequenz || '1x pro Woche');
-        recSel.dispatchEvent(new Event('change'));
-      }
-      // Hint via toast — user picks specific weekdays in AI prefs
-      if (perWeek) showToast(`Serie: ${preset.anzahl} × · ${perWeek}× pro Woche — bitte Wochentage wählen.`, 'info');
+      // Dieselbe Frequenzlogik wie bei der Verordnungsauswahl. Vorher stand hier
+      // `parseFrequenzWoche`, das „4-6 wöchig“ (alle 4-6 WOCHEN — die typische
+      // Podologie-Frequenz) als „6× pro Woche“ las und der Praxis genau das
+      // als Hinweis anzeigte.
+      uebernimmSerienfrequenzAusRx(preset);
+      document.getElementById('bkSeriesRecurrence')?.dispatchEvent(new Event('change'));
     }
-
-    // Start = next Monday 09:00 by default (user can change)
-    const today = new Date();
-    const dow = today.getDay();
-    const daysToMon = (8 - dow) % 7 || 7;
-    const start = new Date(today.getTime() + daysToMon * 86400000);
-    const iso = start.toISOString().slice(0, 10) + 'T09:00';
-    document.getElementById('bkStart').value = iso;
 
     // Auto-trigger AI suggest if we have employee + service + customer
     setTimeout(() => {
@@ -19409,7 +19383,7 @@ async function submitConfirm() {
         kostentraeger_ik: document.getElementById('rxcKasseIk').value.trim() || null,
         email: document.getElementById('rxcEmail').value.trim() || null,
         phone: document.getElementById('rxcPhone').value.trim() || null,
-        geschlecht: rxLastUpload.parsed?.patient?.geschlecht || null,
+        geschlecht: normalisiereGeschlecht(rxLastUpload.parsed?.patient?.geschlecht),
         adresse: rxLastUpload.parsed?.patient?.adresse || null,
         // Strukturlu adres alanları (Fahrtenbuch)
         street: street || null,
@@ -22371,7 +22345,7 @@ function initSchnellerfassung() {
     }
     const geburt = document.getElementById('sfGeburt')?.value || null;
     const telefon = (document.getElementById('sfTelefon')?.value || '').trim() || null;
-    const geschlecht = document.getElementById('sfGeschlecht')?.value || null;
+    const geschlecht = normalisiereGeschlecht(document.getElementById('sfGeschlecht')?.value);
 
     if (!checkPlanActive()) return;
     saveBtn.disabled = true;
@@ -22529,6 +22503,7 @@ if (document.readyState === 'loading') {
   initDruckeinstellungen();
   initKioskModeWired();
   populateFrequenzSelects();
+  fuelleGeschlechtSelects();   // beide Geschlechtsfelder aus module/geschlecht.js
 }
 
 // =====================================================================
@@ -23780,6 +23755,23 @@ let _podKkCache = [];
 const POD_GKV_REZEPTART = 'kassen';
 const POD_ANLASS_DEFAULT = 'Podologische Komplexbehandlung';
 
+/** Brücke Verordnung → Rechnung — Ablauf in module/rechnung-bruecke.js. */
+function rechnungAusVerordnung(vordId) {
+  return starteRechnungAusVerordnung({
+    sb: supabase, ownerId: getOwnerId(),
+    verordnung: _podState.verordnungen.find(v => v.id === vordId),
+    services: ownerServices, katalogPodo: GKV_LEISTUNGSKATALOG?.podologie || [],
+    switchPanel, openInvEditor, toast: showToast,
+    setzeEntwurf: ({ patientId, zeilen, verordnungId, behandlungIds, zahlertyp }) => {
+      const sel = document.getElementById('invPatientSelect');
+      if (sel) { sel.value = patientId; sel.dispatchEvent(new Event('change')); }
+      invLines = zeilen; invVerordnungId = verordnungId;
+      invBehandlungIds = behandlungIds; invPatientInsuranceType = zahlertyp;
+      renderInvLines(); updateInvForInsuranceType(); calcInvTotals();
+    },
+  });
+}
+
 // Klicks der Verordnungsliste — EINMAL an `document`. Vorher hing der Zuhörer am
 // Ende von loadPodologieBilling(), nach Kassenliste/Heilmittel/Katalogen: warf
 // etwas dazwischen, waren die Knöpfe sichtbar aber tot ("Status lässt sich nicht
@@ -23791,6 +23783,13 @@ document.addEventListener('click', (e) => {
     e.stopPropagation();
     oeffneStatusDialogFuer(stBtn.dataset.statusId, { supabase, onFertig: loadPodologieBilling })
       .catch(err => { console.error('[pod-status]', err); showToast(err.message || 'Status konnte nicht geöffnet werden', 'error'); });
+    return;
+  }
+  const reBtn = e.target.closest('.pod-vord-rechnung');
+  if (reBtn) {
+    e.stopPropagation();
+    rechnungAusVerordnung(reBtn.dataset.rechnungVordId)
+      .catch(err => { console.error('[pod-rechnung]', err); showToast(err.message || 'Rechnung konnte nicht vorbereitet werden', 'error'); });
     return;
   }
   // Edit-Schaltfläche: Zeile NICHT als Behandlungsauswahl markieren
@@ -23892,6 +23891,7 @@ async function loadPodologieBilling() {
               <span style="font-size:12px;color:var(--text-muted);">${v.ausstellungsdatum ? new Date(v.ausstellungsdatum).toLocaleDateString('de-DE') : '—'}</span>
               <button class="pod-vord-edit" data-edit-id="${v.id}" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;cursor:pointer;white-space:nowrap;">${t('pod_edit')}</button>
               <button class="pod-vord-status" data-status-id="${v.id}" title="Abrechnungsstatus ändern" style="padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-solid,#1f2937);color:var(--text-main);font-size:12px;cursor:pointer;white-space:nowrap;">Status</button>
+              ${rechnungButtonHtml(v, { label: t('pod_rechnung') })}
             </div>
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">

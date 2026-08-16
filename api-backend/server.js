@@ -27,6 +27,7 @@ import { logAccess, accessLogger } from './_lib/access-log.js';
 import crypto from 'crypto';
 import { encryptPHI, encryptionAvailable } from './lib/phi-encrypt.js';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
+import { normalisiereGeschlecht } from './lib/geschlecht.js';
 import nodemailer from 'nodemailer';
 
 dotenv.config();
@@ -2276,7 +2277,10 @@ app.post('/api/rezept/confirm', requireAuthAI, async (req, res) => {
           last_name: ln || null,
           title: fullName,
           geburtsdatum: dob,
-          geschlecht: patient.geschlecht || null,
+          // Die OCR liefert gelegentlich "w" statt "f" — leads.geschlecht hat
+          // aber einen CHECK auf ('m','f','d'), und der kippte bisher die
+          // gesamte Patientenanlage. Unbekanntes wird zu null statt zum Fehler.
+          geschlecht: normalisiereGeschlecht(patient.geschlecht),
           versichertennummer: patient.versichertennummer || null,
           krankenkasse: patient.krankenkasse || null,
           email: patient.email || null,

@@ -16,142 +16,20 @@
  *   2. Welche Sitzung dieser Verordnung bekommt der Termin?
  *   3. Passt das gewählte Datum zur verordneten Frequenz?
  *
- * Frage 3 ist neu. Bis hierher konnte man bei „alle vier Wochen" die zweite
- * Sitzung auf den Folgetag legen; niemand hat widersprochen. Jetzt widerspricht
- * die Oberfläche — aber sie BLOCKIERT NICHT. Das ist eine ausdrückliche
- * Produktentscheidung (Nausad, 12.08.2026: „wenn man weitermachen möchte,
- * weiter drücken, dann soll der Termin gebaut werden"). Gründe für ein
- * Abweichen gibt es reichlich (Urlaub, Krankheit, Nachholtermin), und die
- * Verordnungsfrequenz ist eine ärztliche Vorgabe, kein Abrechnungsverbot.
- *
- * Die Toleranzen in `frequenzMindestabstand()` sind Produkt-Vorgabe, nicht
- * aus der Heilmittel-Richtlinie abgeleitet — sie sind bewusst grosszügig, weil
- * eine zu enge Regel den Warnhinweis zum täglichen Wegklicken degradiert und
- * damit wertlos macht. Vor einer Verschärfung `gkv-302` fragen.
+ * Frage 3 beantwortet `module/frequenz-pruefung.js` — mit Zahlen aus dem
+ * Fragen-Antworten-Katalog Podologie, nicht mit geschätzten.
  *
  * Konsey 2026-08-13: neuer Code kommt in ein eigenes Modul, `dashboard.js`
  * wächst nicht mehr.
  */
 
-// ── Frequenz ───────────────────────────────────────────────────────────────
+// ── Frequenz ─────────────────────────────────────────────────────────────
 
-/**
- * Liest den Freitext aus `prescriptions.frequenz` und leitet daraus den
- * Mindestabstand zweier Sitzungen in Tagen ab.
- *
- * Rückgabe: { tage, label } oder null, wenn der Text nichts Verwertbares
- * hergibt. null heisst ausdrücklich „keine Prüfung" — lieber gar nicht warnen
- * als bei jedem zweiten Termin falsch warnen.
- */
-export function frequenzMindestabstand(frequenzText) {
-  const txt = String(frequenzText || '').toLowerCase().trim();
-  if (!txt) return null;
-
-  // „alle 4 Wochen", „alle zwei Wochen", „4-wöchentlich", „14-tägig"
-  const alleWochen = txt.match(/alle\s+(\d+|zwei|drei|vier|fünf|sechs)\s*wochen/)
-    || txt.match(/(\d+)\s*-?\s*wöchentlich/);
-  if (alleWochen) {
-    const wochen = zahlAusWort(alleWochen[1]);
-    if (wochen > 1) {
-      // 20 % Toleranz: bei „alle 4 Wochen" schlägt erst ein Abstand unter
-      // 22 Tagen an. Eine Woche früher ist Praxisalltag, kein Fehler.
-      return { tage: Math.round(wochen * 7 * 0.8), label: `alle ${wochen} Wochen` };
-    }
-  }
-  if (/14\s*-?\s*tägig|zweiwöchentlich/.test(txt)) {
-    return { tage: 11, label: '14-tägig' };
-  }
-
-  // „2x wöchentlich", „1-2x pro Woche", „3x wöchentl."
-  const proWoche = txt.match(/(\d+)\s*(?:\s*-\s*(\d+))?\s*x?\s*(?:mal)?\s*(?:pro\s+woche|wöchentl)/);
-  if (proWoche) {
-    // Bei einer Spanne („1-2x") gilt der HÖHERE Wert: er erlaubt den engeren
-    // Abstand, und die Warnung soll nur den klar unplausiblen Fall treffen.
-    const n = Math.max(Number(proWoche[1]) || 1, Number(proWoche[2]) || 0);
-    if (n > 0) {
-      const tage = Math.max(1, Math.floor(7 / n) - 1);
-      return { tage, label: `${n}× wöchentlich` };
-    }
-  }
-
-  // „2x monatlich"
-  const proMonat = txt.match(/(\d+)\s*(?:\s*-\s*(\d+))?\s*x?\s*(?:mal)?\s*(?:pro\s+monat|monatl)/);
-  if (proMonat) {
-    const n = Math.max(Number(proMonat[1]) || 1, Number(proMonat[2]) || 0);
-    if (n > 0) return { tage: Math.max(1, Math.floor(30 / n) - 2), label: `${n}× monatlich` };
-  }
-
-  // Tägliche Frequenzen haben keinen sinnvollen Mindestabstand.
-  return null;
-}
-
-function zahlAusWort(w) {
-  const worte = { zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6 };
-  return worte[String(w)] ?? (Number(w) || 0);
-}
-
-/**
- * Prüft, ob `neuesDatum` zur Frequenz der Verordnung passt.
- *
- * Verglichen wird gegen den NÄCHSTGELEGENEN bereits terminierten Termin
- * derselben Verordnung — in beide Richtungen, denn man kann einen Termin auch
- * VOR einen bestehenden legen.
- *
- * Rückgabe: { ok: true } oder { ok: false, titel, meldung }.
- * Der Aufrufer entscheidet, was er damit macht — hier wird nichts blockiert.
- */
-export async function pruefeFrequenz({ supabase, rx, neuesDatum, ausserBookingId = null }) {
-  const regel = frequenzMindestabstand(rx?.frequenz);
-  if (!regel || !rx?.id || !neuesDatum) return { ok: true };
-
-  const { data: sessions, error } = await supabase
-    .from('prescription_sessions')
-    .select('id,session_number,booking_id,bookings(start_time,status)')
-    .eq('prescription_id', rx.id)
-    .not('booking_id', 'is', null);
-  // Bei einem Lesefehler NICHT warnen: eine Warnung ohne Datengrundlage ist
-  // schlimmer als keine, weil der Nutzer sie zu Recht ignoriert.
-  if (error || !sessions?.length) return { ok: true };
-
-  const neu = new Date(neuesDatum);
-  if (Number.isNaN(neu.getTime())) return { ok: true };
-
-  let naechster = null;
-  for (const s of sessions) {
-    if (ausserBookingId && s.booking_id === ausserBookingId) continue;
-    const bk = s.bookings;
-    if (!bk?.start_time) continue;
-    if (bk.status === 'cancelled') continue;
-    const d = new Date(bk.start_time);
-    if (Number.isNaN(d.getTime())) continue;
-    const abstand = Math.abs(tageZwischen(d, neu));
-    if (!naechster || abstand < naechster.abstand) {
-      naechster = { abstand, datum: d, nummer: s.session_number };
-    }
-  }
-
-  if (!naechster || naechster.abstand >= regel.tage) return { ok: true };
-
-  const datumStr = naechster.datum.toLocaleDateString('de-DE', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-  });
-  return {
-    ok: false,
-    titel: 'Frequenz der Verordnung',
-    meldung:
-      `Die Verordnung sieht „${regel.label}" vor.\n\n`
-      + `Sitzung ${naechster.nummer ?? ''} liegt am ${datumStr} — das sind nur `
-      + `${naechster.abstand} Tag${naechster.abstand === 1 ? '' : 'e'} Abstand `
-      + `(erwartet: mindestens ${regel.tage}).\n\n`
-      + `Der Termin kann trotzdem angelegt werden.`,
-  };
-}
-
-function tageZwischen(a, b) {
-  const tagA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-  const tagB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-  return Math.round((tagB - tagA) / 86400000);
-}
+// Die Frequenzprüfung ist nach module/frequenz-pruefung.js umgezogen. Der erste
+// Anlauf hier rechnete mit selbst ausgedachten Toleranzen (80 % des Intervalls);
+// der Fragen-Antworten-Katalog Podologie Nr. 11 nennt statt dessen 2 WERKTAGE
+// und eine 12-Wochen-Grenze für die Unterbrechung. Erfundene Zahlen haben in
+// einer Abrechnungswarnung nichts verloren — siehe dort.
 
 // ── Verordnungskarten ──────────────────────────────────────────────────────
 

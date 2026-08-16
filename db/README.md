@@ -10,7 +10,10 @@
 | `SCHEMA-RLS.sql` | 156 RLS-Policies, 53 Funktionen, 59 Trigger, 281 Indizes |
 | `README.md` | dieses Dokument — Orientierung + Auffrischungsregel |
 
-**Stand:** 2026-08-16 · letzte Migration `20260815233848_verordnungsnummer_belegnummer`
+**Stand:** 2026-08-16 (abends) · letzte Migration `leads_geschlecht_kodierung_dokumentieren`
+(davor `invoice_nummer_backfill_altbestand`)
+(davor `invoices_ust_nummernkreis_gobd`, `invoices_verordnung_id` — Rechnungskette Faz 3;
+davor `20260815233848_verordnungsnummer_belegnummer`)
 (davor `20260815085338_leads_patientennummer`, `20260814200147_leads_handy_getrennt`,
 `20260814101707_patient_consents`, `20260814101624_kiosk_pin_hardening`,
 `20260814083941_fussbefund_termin_legende`.
@@ -109,6 +112,20 @@ RLS-Policy. Korrektur läuft **ausschließlich** über einen neuen Beleg mit
 `type = 'storno'`. Gleiches Prinzip bei den Nummernkreisen
 (`beleg_nr`, `mahnung_nr`, `rechnung_nr`): lückenlos je Inhaber, per Trigger vergeben,
 nie im Code selbst hochzählen.
+
+Seit 16.08.2026 gilt das auch für **`invoices`** — die einzige Rechnungstabelle, die
+bis dahin daran vorbeilief und im Frontend mit `MAX+1` hochzählte. Neu:
+
+- `invoices.rechnung_nr` + `invoice_number` kommen vom Trigger `set_invoice_nummer()`,
+  gezählt über die Tabelle **`nummernkreise`** (`naechste_nummer(owner, kreis, jahr)`,
+  `INSERT .. ON CONFLICT DO UPDATE .. RETURNING` — echte Sperre, keine Race).
+- Einmal vergeben ändert sich die Nummer nie wieder, auch nicht beim `UPDATE`.
+- `invoice_festschreibung()` sperrt ab `status <> 'draft'` die inhaltlichen Felder.
+  Offen bleiben `status`, `payment_*`, `paid_at`, `notes` — daran hängt das Kassieren.
+  Korrektur einer festgeschriebenen Rechnung = **Storno + Neuausstellung**.
+
+Wer eine Rechnung speichert, setzt also **weder** `invoice_number` **noch**
+`rechnung_nr` selbst.
 
 ### 7. `patient_consents` blockiert das Löschen von Patient und Inhaber
 

@@ -87,6 +87,7 @@ export function renderRezeptvorderseite(opts) {
   <!-- Patient -->
   <div class="section-title">Versichertendaten</div>
   <dl class="grid2">
+    <dt>Patienten-Nr.</dt><dd>${patient.patientennummer != null ? escapeHtml(String(patient.patientennummer)) : '—'}</dd>
     <dt>Name</dt><dd>${escapeHtml(patient.vorname || '')} ${escapeHtml(patient.nachname || '')}</dd>
     <dt>Geburtsdatum</dt><dd>${fmtDate(patient.geburtsdatum)}</dd>
     <dt>KVNR</dt><dd>${escapeHtml(patient.kvnr || '—')}</dd>
@@ -98,6 +99,10 @@ export function renderRezeptvorderseite(opts) {
   <!-- Verordnung -->
   <div class="section-title">Verordnungsdaten</div>
   <dl class="grid2">
+    <!-- Belegnummer zuerst: § 4 Abs. 1 des Richtlinien-Textes verlangt, dass die
+         Nummer aus dem Datensatz auf dem Urbeleg steht. Vorher stand sie nirgends
+         auf Papier. -->
+    <dt>Belegnummer</dt><dd><strong style="font-family:monospace;">${escapeHtml(verordnung.belegnummer || '—')}</strong></dd>
     <dt>Verordnungsdatum</dt><dd>${fmtDate(verordnung.ausstellungsdatum)}</dd>
     <dt>Verordnender Arzt</dt><dd>${escapeHtml(verordnung.arzt || '—')}</dd>
     <dt>Heilmittel</dt><dd>${escapeHtml(verordnung.heilmittel || '—')}</dd>

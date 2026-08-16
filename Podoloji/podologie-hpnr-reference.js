@@ -336,12 +336,20 @@ export const VERORDNUNG_REGELN = {
     dringend_tage: 14,      // Bei dringlichem Behandlungsbedarf
     zaehlweise: 'Tag der Ausstellung = Tag 0, nächster Tag = Tag 1',
   },
+  // ⛔ NICHT AUTORITATIV — die lebende Regel steht in
+  //    `module/frequenz-pruefung.js` (TOLERANZ_WERKTAGE / UNTERBRECHUNG_TAGE).
+  //    Die Werte hier sind eine Merkhilfe und werden von nichts importiert.
+  //    Bei Abweichung gilt das Modul.
   frequenzabweichung: {
-    erlaubte_werktage: 2,   // ±2 Werktage ohne Rücksprache mit Arzt erlaubt (FAQ #22)
+    erlaubte_werktage: 2,   // ±2 Werktage ohne Rücksprache mit Arzt erlaubt
+    quelle: 'FAK Podologie 24.05.2023, Nr. 11',
+    // Vorher stand hier „FAQ #22" — Nr. 22 ist im Katalog aber „entfallen".
+    // Die Aussage stammt aus Nr. 11 (Frequenzabweichung bei Krankheit/Urlaub).
   },
   unterbrechung: {
     max_wochen_ohne_ungueltig: 12,  // Unterbrechungen <12 Wochen lassen Rezept gültig
-    notiz: 'Bei >12 Wochen Unterbrechung wird Verordnung ungültig (FAQ)',
+    notiz: 'Bei >12 Wochen Unterbrechung wird Verordnung ungültig',
+    quelle: '§ 16 Abs. 4 Satz 5 Heilmittel-Richtlinie, zitiert in FAK Nr. 11',
   },
   pflichtfelder: [
     { feld: 'personalienfeld', pflicht: true, beschreibung: 'Name, GdB, Versicherungsnummer, KK, LANR, BSNR, Datum' },

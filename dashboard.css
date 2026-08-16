@@ -6215,24 +6215,9 @@ textarea {
   }
 }
 
-.bk-action-header {
-  text-align: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.bk-action-patient {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.bk-action-session {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
+/* .bk-action-header / -patient / -session sind entfallen: der Patientenname
+   stand mitten im Seitenbereich ein zweites Mal. Er steht jetzt einmal oben
+   im Suchfeld (#bkActPatSearch). */
 
 .bk-action-hint {
   font-size: 11px;
@@ -7570,9 +7555,9 @@ body.compact-mode .patient-row {
 
 
 /* ── Termin-Seitenbereich (#bkActionModal) ──────────────────────────────────
-   Feste 380 px sind auf dem Telefon breiter als der Bildschirm; zusätzlich
-   bekam #mainArea ein padding-right:380px, wodurch der Inhalt aus dem Bild
-   geschoben wurde. Auf schmalen Geräten läuft das Panel deshalb als Vollbild-
+   Feste 440 px sind auf dem Telefon breiter als der Bildschirm; zusätzlich
+   bekam #mainArea ein padding-right in derselben Größe, wodurch der Inhalt aus
+   dem Bild geschoben wurde. Auf schmalen Geräten läuft das Panel deshalb als Vollbild-
    Sheet und der Inhalt dahinter bekommt keinen Versatz mehr. */
 @media (max-width: 768px) {
   #bkActionModal {

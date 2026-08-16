@@ -30,6 +30,8 @@
 
 'use strict';
 
+import { geschlechtLabel } from './geschlecht.js?v=20260816';
+
 const DE = (iso) => {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -67,14 +69,21 @@ export function renderStammdaten(grid, lead, deps = {}) {
     lead.handy ? `${esc(lead.handy)} <span style="color:var(--text-muted);font-size:11px;">Handy</span>` : null,
   ].filter(Boolean).join('<br>') || '—';
 
-  const GESCHLECHT = { m: 'männlich', f: 'weiblich', d: 'divers' };
-  const sex = GESCHLECHT[lead.geschlecht || md.geschlecht] || '—';
+  // Beschriftung kommt aus module/geschlecht.js — die eine Stelle, an der die
+  // Kodierung m/f/d festgelegt ist. Vorher stand hier eine eigene Tabelle.
+  const sex = geschlechtLabel(lead.geschlecht || md.geschlecht);
 
   // Reihenfolge = Häufigkeit im Gebrauch. Die frühere Karte zeigte
   // Entfernung, Fahrzeit und den CRM-Status gleichrangig neben dem Namen;
   // die ersten beiden gehören zur Fahrtenplanung, der dritte existiert nicht
   // mehr (siehe module/abrechnungsstatus.js).
   const felder = [
+    // Patienten-Nr. steht ganz oben, weil die Belegnummer der Verordnungen
+    // (<Patienten-Nr.>-<Verordnungs-Nr.>) darauf aufbaut — wer eine Kassen-
+    // rueckmeldung "12-3" in der Hand hat, sucht hier die 12.
+    ['Patienten-Nr.', lead.patientennummer != null
+      ? `<span style="font-family:monospace;font-weight:600;">${esc(lead.patientennummer)}</span>`
+      : '—'],
     ['Name', esc(name) || '—'],
     ['Geburtsdatum', geburt ? `${DE(geburt)}${alter ? ` <span style="color:var(--text-muted);font-size:11px;">${alter} J.</span>` : ''}` : '—'],
     ['Geschlecht', esc(sex)],

@@ -251,6 +251,25 @@ tek seferde kapsayamaz, okur ve *makul ama eksik* cevap verir.
 - Yeni bir fonksiyon yazmadan önce `fonksiyon-ustasi` ajanına sorulur — **elimizde olanı
   sıfırdan yazmıyoruz, modifiye ediyoruz.** Ortak taban + üstüne binen alan modifikasyonu
   bu projenin mimarisidir (bkz. `funktionen/README.md`).
+
+#### 🔁 `fonksiyon-ustasi` iki yönlü çalışır — sor **ve** bildir (2026-08-16)
+
+Ajan çağırmak için genel eşik "%90-95 eminsen sormadan çağır"dır. **`fonksiyon-ustasi` bu
+eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
+
+1. **Yazmadan ÖNCE — sor.** Tek cümle: "şunu yapacağım, böyle bir şey var mı?"
+2. **Yazdıktan SONRA — bildir.** Yeni fonksiyon/modül/eklenti çıktığında ajana **kısaca**
+   (uzatmadan) şu ikisi söylenir:
+   - **niye** yazıldı,
+   - **nerede kullanılması amaçlandı** / ilk nerede kullanıldı.
+
+   *Ne olduğunu* ajan zaten haritadan görür; göremediği **niyettir**. Böylece o fonksiyona
+   sonradan bakıldığında "şu tarihte şu niyetle yazılmış, ilk şurada kullanılmış" cevabı
+   verilebilir.
+
+> **"harita güncelle" bunun yerine geçmez.** Harita *ne* olduğunu tutar, *niye*'yi tutmaz.
+> Gerekçe: soru ucuz (birkaç token, "var" / "yok, benzeri şurada"), **sormamak pahalı** —
+> elimizdeki fonksiyon ikinci kez sıfırdan yazılır. Maliyet asimetrisi tek yönlü.
 - Kopya adayları `funktionen/INDEX.md`'de; **karar kullanıcınındır**, sessizce birleştirilmez.
 
 ### 📚 Belge arşivi protokolü (2026-08-04)

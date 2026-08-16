@@ -1,8 +1,12 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-16
--- LETZTE MIGRATION:  20260815233848_verordnungsnummer_belegnummer
+-- ERZEUGT AM:        2026-08-16 (abends — Geschlecht-Kodierung vereinheitlicht)
+-- LETZTE MIGRATION:  leads_geschlecht_kodierung_dokumentieren
+--                    davor: invoice_nummer_backfill_altbestand
+--                    davor: invoices_ust_nummernkreis_gobd
+--                    davor: invoices_verordnung_id
+--                    davor: 20260815233848_verordnungsnummer_belegnummer
 --                    davor: 20260815085338_leads_patientennummer
 --                    davor: 20260814200147_leads_handy_getrennt
 --                    davor: 20260814101707_patient_consents
@@ -12,8 +16,8 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            80 Tabellen · 1171 Spalten · 156 RLS-Policies
---                    281 Indizes · 59 Trigger · 53 Funktionen · 4 Views
+-- UMFANG:            81 Tabellen · 1188 Spalten · 156 RLS-Policies
+--                    288 Indizes · 58 Trigger · 60 Funktionen · 4 Views
 -- QUELLE:            Direkt aus der Live-DB introspiziert (kein Handentwurf)
 --
 -- ⚠️  DIES IST EINE MOMENTAUFNAHME, KEINE LIVE-VERBINDUNG.
@@ -846,13 +850,47 @@ CREATE TABLE invoices (
   paid_at timestamptz
   lead_id uuid
   invoice_type text
+  verordnung_id uuid
+  steuer_status text
+  tax_summary jsonb NOT NULL DEFAULT '[]'::jsonb
+  netto_gesamt numeric(10,2)
+  steuer_gesamt numeric(10,2)
+  brutto_gesamt numeric(10,2)
+  steuerhinweis_text text
+  steuernummer_snapshot text
+  ust_id_snapshot text
+  leistung_von date
+  leistung_bis date
+  rechnung_nr bigint
 );
 --   CHECK status IN (draft, sent, paid, cancelled)
 --   CHECK payment_status IN (pending, paid, partial)
 --   CHECK payment_method IN (bar, karte, lastschrift, ueberweisung, sonstiges)
---   CHECK invoice_type IN (gkv, privat)
+--   CHECK invoice_type IN (gkv, privat, selbstzahler)
+--   CHECK steuer_status IN (regel, kleinunternehmer)
+--   CHECK invoices_ein_verordnungsbezug: prescription_id IS NULL OR verordnung_id IS NULL
 --   FK patient_id -> leads(id) · lead_id -> leads(id) · prescription_id -> prescriptions(id)
+--   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL
 --   PK (id) · UNIQUE (owner_id, invoice_number)
+--   ★ ZWEI Verordnungsbezüge, weil es zwei Verordnungstöpfe gibt (Falle 2):
+--      prescription_id → Physio/Ergo/Logo · verordnung_id → Podologie.
+--      Höchstens einer ist gesetzt. Nicht zusammenlegen.
+--   ★ USt: der Steuersatz sitzt PRO ZEILE in line_items
+--      ({title, quantity, unit_price(brutto), ust_satz, ust_grund, leistungsdatum}),
+--      weil § 14 Abs. 4 Nr. 7 UStG das nach Steuersätzen aufgeschlüsselte Entgelt
+--      verlangt und eine Sitzung medizinische und kosmetische Positionen mischen
+--      kann. `tax_summary` ist die eingefrorene Gruppensumme dazu.
+--      Rechenlogik: module/rechnung-steuer.js (+ .test.js).
+--   ⚠️ steuerhinweis_text / steuernummer_snapshot / ust_id_snapshot sind
+--      SNAPSHOTS aus profiles zum Zeitpunkt der Rechnungsstellung. Beim Druck
+--      NICHT wieder aus profiles lesen — sonst druckt dieselbe Rechnung nach
+--      einer Einstellungsänderung anders (§ 146 Abs. 4 AO, GoBD Rz. 107 ff.).
+--   ⚠️ GoBD: TRIGGER invoice_festschreibung() sperrt ab status <> 'draft' alle
+--      inhaltlichen Felder. Offen bleiben status, payment_*, paid_at, notes
+--      (daran hängt der Kassieren-Ablauf). Korrektur = Storno + Neuausstellung.
+--   ⚠️ rechnung_nr/invoice_number kommen vom TRIGGER set_invoice_nummer(), das
+--      Frontend zählt NICHT mehr selbst hoch. Einmal vergeben, nie geändert
+--      (§ 14 Abs. 4 Nr. 4 UStG).
 
 CREATE TABLE kostentraeger (
   ik text NOT NULL
@@ -927,7 +965,7 @@ CREATE TABLE leads (
   hausbesuch boolean DEFAULT false
   besondere_wuensche text
   arzt_id uuid
-  geschlecht text
+  geschlecht text                       -- m | f | d  (NULL = keine Angabe); NIE 'w'
   geburtsdatum date
   versichertennummer text
   krankenkasse text
@@ -951,6 +989,13 @@ CREATE TABLE leads (
   ausfallvereinbarung_am date
 );
 --   CHECK geschlecht IN (m, f, d) · insurance_type IN (gkv, privat)
+--   ★ `geschlecht`: m = männlich, f = weiblich, d = divers (§ 22 Abs. 3 PStG),
+--      NULL = keine Angabe (der Normalfall). **Nicht `w`** — der CHECK weist es ab
+--      und der INSERT scheitert. Bis 16.08.2026 schrieben zwei Pfade genau das:
+--      die Schnellanlage ausgeschrieben („weiblich“) und die Rezept-OCR „w“.
+--      Schreibpfade gehen jetzt durch module/geschlecht.js bzw.
+--      api-backend/lib/geschlecht.js. Die Spalte trägt denselben Hinweis als
+--      COMMENT in der DB.
 --   CHECK status IN (new, contacted, booked, won, lost)
 --   FK arzt_id -> aerzte(id) · PK (id)
 --   ⚠️ `status` ist der ALTE CRM-Trichter und wird im Praxisablauf seit dem
@@ -1021,6 +1066,24 @@ CREATE TABLE module_visibility (
 );
 --   CHECK role IN (owner, employee) · PK (module_id, sector, role)
 --   Gegenstück zu nav-registry.js. Schreiben nur is_admin().
+
+CREATE TABLE nummernkreise (
+  owner_id uuid NOT NULL
+  kreis text NOT NULL
+  jahr int NOT NULL
+  last_nr bigint NOT NULL DEFAULT 0
+);
+--   FK owner_id -> profiles(id) ON DELETE CASCADE
+--   PK (owner_id, kreis, jahr)
+--   ★ Zählerzeile für lückenlose Rechnungsnummern. Vergabe ausschliesslich über
+--     naechste_nummer(owner, kreis, jahr) — INSERT .. ON CONFLICT DO UPDATE ..
+--     RETURNING sperrt die Zeile, zwei gleichzeitige Speicherungen bekommen
+--     verschiedene Nummern (Konsey 2026-08-12 Kova 2).
+--   ⚠️ RLS aktiv, absichtlich OHNE Policy: kein Client fasst den Zähler direkt
+--     an, die Funktion läuft als SECURITY DEFINER.
+--   Kreis heute: 'rechnung' (invoices). Die älteren Nummernkreise
+--     (beleg_nr, mahnung_nr, ausfallrechnung_nr) zählen weiterhin per MAX+1
+--     in ihren eigenen Triggern — bewusst nicht mitmigriert.
 
 CREATE TABLE pat_fussbefund (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1160,9 +1223,14 @@ CREATE TABLE podologie_behandlungen (
   notizen text
   betrag_gkv numeric(8,2)
   created_at timestamptz DEFAULT now()
+  invoice_id uuid
 );
 --   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL · PK (id)
+--   FK invoice_id -> invoices(id) ON DELETE SET NULL
 --   ★ Podologie-Behandlungstopf (Gegenstück zu prescription_sessions).
+--   ★ invoice_id ist gesetzt, sobald die Sitzung auf einer Rechnung steht.
+--     Ohne dieses Feld war „ist diese Behandlung schon abgerechnet?" nicht
+--     beantwortbar und dieselbe Sitzung konnte zweimal berechnet werden.
 
 CREATE TABLE prescription_documents (
   id bigint NOT NULL
