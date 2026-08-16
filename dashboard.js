@@ -2,7 +2,6 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260814a';
-import { attachArztSearch, arztMetaText } from './arzt-suche.js?v=20260810f';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260815';
 import { attachPatientSearch } from './patient-suche.js?v=20260814';
 import { emit, on } from './module/signal.js?v=20260815';
@@ -24,7 +23,11 @@ import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAu
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
+import { rendereVeroKarten, waehleVerordnung, pruefeFrequenz, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816';
+import { druckeTerminzettel } from './module/termin-druck.js?v=20260816';
+import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
+import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260816';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -96,7 +99,7 @@ const T = {
     copied: 'Kopiert!', csv_imported: 'Importiert: ', csv_error: 'CSV-Fehler: ',
     apify_error: 'Apify-Fehler: ', apify_done: 'Importiert: ', me: '(Sie)',
     nav_doctors: 'Ärzte', nav_notizen: 'Notizen', nav_fahrtenbuch: 'Fahrtenbuch', nav_beispielmodus: 'Demo-Modus', nav_anamnese: 'Anamnese',
-    doctors_sub: 'Ärzte in der Nähe finden', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
+    doctors_sub: 'Verordnende Ärzte und ihre Zuweisungen', notizen_sub: 'Patientennotizen & Berichte', b2c_sub: 'Kundenmailings & KI-Assistent',
     beispielmodus_sub: 'Anatomiekarten für Patientengespräche', anamnese_sub: 'Digitales Anamnese-Formular',
     lbl_doctor_notes: 'Arztnotizen', lbl_therapist_notes: 'Therapeutennotizen',
     lbl_ai_summary: 'AI-Bericht', lbl_send_patient: 'An Patient senden',
@@ -304,7 +307,7 @@ const T = {
     copied: 'Copied!', csv_imported: 'Imported: ', csv_error: 'CSV error: ',
     apify_error: 'Apify error: ', apify_done: 'Imported: ', me: '(You)',
     nav_doctors: 'Doctors', nav_notizen: 'Notes', nav_fahrtenbuch: 'Travel Log', nav_beispielmodus: 'Demo Mode', nav_anamnese: 'Intake',
-    doctors_sub: 'Find nearby doctors', notizen_sub: 'Patient notes & reports', b2c_sub: 'Customer mailings & AI assistant',
+    doctors_sub: 'Referring doctors and their referrals', notizen_sub: 'Patient notes & reports', b2c_sub: 'Customer mailings & AI assistant',
     beispielmodus_sub: 'Anatomy maps for patient consultations', anamnese_sub: 'Digital intake form',
     lbl_doctor_notes: 'Doctor notes', lbl_therapist_notes: 'Therapist notes',
     lbl_ai_summary: 'AI Report', lbl_send_patient: 'Send to patient',
@@ -493,7 +496,7 @@ const T = {
     copied: 'Kopyalandı!', csv_imported: 'İçe aktarıldı: ', csv_error: 'CSV hatası: ',
     apify_error: 'Apify hatası: ', apify_done: 'İçe aktarıldı: ', me: '(Siz)',
     nav_doctors: 'Doktorlar', nav_notizen: 'Notlar', nav_fahrtenbuch: 'Sürüş Defteri', nav_beispielmodus: 'Demo Modu', nav_anamnese: 'Anamnez',
-    doctors_sub: 'Yakındaki doktorları bul', notizen_sub: 'Hasta notları ve raporlar', b2c_sub: 'Müşteri maileri ve AI asistanı',
+    doctors_sub: 'Sevk eden doktorlar ve yönlendirmeleri', notizen_sub: 'Hasta notları ve raporlar', b2c_sub: 'Müşteri maileri ve AI asistanı',
     beispielmodus_sub: 'Hasta görüşmeleri için anatomi haritaları', anamnese_sub: 'Dijital anamnez formu',
     lbl_doctor_notes: 'Doktor notları', lbl_therapist_notes: 'Terapist notları',
     lbl_ai_summary: 'AI Raporu', lbl_send_patient: 'Hastaya gönder',
@@ -1091,7 +1094,7 @@ async function switchPanel(id) {
   if (id === 'b2c') { loadB2C(); checkB2cSetup(); }
   if (id === 'vorlagen') { loadVorlagenPanel(); }
   if (id === 'settings') { loadSettings(); }
-  if (id === 'doctors') loadDoctors();
+  if (id === 'doctors') { mountArztPanel(); loadAerzte(); loadDoctors(); }
   if (id === 'notizen') loadNotizen();
   if (id === 'beispielmodus') loadBeispielmodus();
   if (id === 'verordnungen') loadVerordnungen();
@@ -1650,7 +1653,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -1823,6 +1826,18 @@ async function refreshBookingViews() {
 // welche Ansicht gerade offen ist. Mehrfachmeldungen in einem Tick verdichtet
 // signal.js zu EINEM Refresh (siehe module/signal.js).
 on('bookings:changed', () => { refreshBookingViews().catch(() => {}); });
+
+// Sitzungen einer Verordnung haben sich verschoben. Steht der Seitenbereich
+// offen, zeigt er den Stand VOR dem Schreiben — er wird deshalb mit frischen
+// Daten neu aufgebaut, statt den Nutzer die Seite neu laden zu lassen.
+on('verordnungen:changed', async () => {
+  const panel = document.getElementById('bkActionModal');
+  if (!panel || panel.hidden || !bkActionBookingCache?.id) return;
+  const { data: frisch } = await supabase.from('bookings')
+    .select('*, services(title,color,code), prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .eq('id', bkActionBookingCache.id).maybeSingle();
+  if (frisch) openBookingActionModal(frisch).catch(() => {});
+});
 
 function formatActivityTimestamp(iso) {
   try {
@@ -2424,8 +2439,7 @@ async function loadSlots(dateStr, durationMinutes, serviceId, serviceTitle) {
         userId: selectedEmployeeId,
         date: dateStr,
         duration: durationMinutes,
-        buffer: 0,
-        step: 30
+        buffer: 0
       })
     });
     const data = await res.json();
@@ -2652,7 +2666,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -3154,6 +3168,8 @@ async function prefillBookingModal(startStr) {
   if (_bkVeroSection) _bkVeroSection.hidden = true;
   const _bkPickerBlock = document.getElementById('bkSessionPickerBlock');
   if (_bkPickerBlock) _bkPickerBlock.hidden = true;
+  window._bkGewaehlteRx = null;
+  zeigeDienstleistungsfeld(true);
 
   populateEmpSelects();
   await populateSrvSelect();
@@ -3177,6 +3193,8 @@ async function prefillBookingModal(startStr) {
       const isSelbstEl2 = document.getElementById('bkIsSelbstzahler');
       if (isSelbstEl2) isSelbstEl2.value = '1';
       window._pendingRxSession = null;
+      window._bkGewaehlteRx = null;
+      zeigeDienstleistungsfeld(true);
       const pb = document.getElementById('bkSessionPickerBlock');
       if (pb) pb.hidden = true;
     });
@@ -3192,6 +3210,8 @@ async function prefillBookingModal(startStr) {
       const sessEl2 = document.getElementById('bkSelectedSessionId');
       if (sessEl2) sessEl2.value = '';
       window._pendingRxSession = null;
+      window._bkGewaehlteRx = null;
+      zeigeDienstleistungsfeld(true);
       const pb2 = document.getElementById('bkSessionPickerBlock');
       if (pb2) pb2.hidden = true;
     });
@@ -3372,6 +3392,17 @@ async function openBookingActionModal(booking) {
     const mandantEl = document.getElementById('bkRxMandant');
     if (mandantEl) mandantEl.textContent = empName || '—';
 
+    // Das Feld gab es schon, gefüllt wurde es nie — im Seitenbereich stand
+    // deshalb immer „Arzt: leer", obwohl in der Verordnung ein Arzt hinterlegt
+    // war (Nausad, 12.08.2026). Quelle ist `prescriptions.arzt_id` → `aerzte`.
+    const arztEl = document.getElementById('bkRxArzt');
+    if (arztEl) {
+      const arzt = rx.aerzte;
+      arztEl.textContent = arzt
+        ? arzt.arzt_name + (arzt.fachrichtung ? ` · ${arzt.fachrichtung}` : '')
+        : '—';
+    }
+
     const statusBadge = document.getElementById('bkRxStatusBadge');
     if (statusBadge) {
       const statusMap = {
@@ -3408,8 +3439,15 @@ async function openBookingActionModal(booking) {
         rzgWarnEl.style.borderColor = gruen ? 'var(--success)' : 'var(--warning)';
         rzgWarnEl.style.color = gruen ? 'var(--success)' : 'var(--warning-text)';
 
+        // Das Euro-Zeichen druckt den Beleg sofort — für Kasse wie Privat
+        // derselbe Knopf (Nausad, 12.08.2026: „bei privat genauso, dann brauche
+        // ich nicht extra in diese Vorlage reinzugehen").
+        const druckKnopf =
+          ` <button type="button" data-zuzahl="drucken" title="Beleg drucken"
+             style="margin-left:6px;background:none;border:0;color:inherit;cursor:pointer;font-size:13px;font-family:inherit;">€&nbsp;🖨</button>`;
+
         if (befreit) {
-          rzgWarnEl.innerHTML = escapeHtml(t('kass_befreit'));
+          rzgWarnEl.innerHTML = escapeHtml(t('kass_befreit')) + druckKnopf;
         } else if (bezahlt) {
           const am = new Date(rx.zuzahlung_kassiert_am)
             .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -3417,11 +3455,13 @@ async function openBookingActionModal(booking) {
           rzgWarnEl.innerHTML =
             `${escapeHtml(t('kass_bezahlt'))}: ${escapeHtml(fmtEur(betrag))} · ${escapeHtml(am)}${escapeHtml(art)}`
             + ` <button type="button" data-zuzahl="rechnung" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_rechnung'))}</button>`
-            + ` <button type="button" data-zuzahl="undo" style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_undo'))}</button>`;
+            + ` <button type="button" data-zuzahl="undo" style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_undo'))}</button>`
+            + druckKnopf;
         } else {
           rzgWarnEl.innerHTML =
             `${escapeHtml(t('kass_offen'))}: ${escapeHtml(fmtEur(betrag))}`
-            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:var(--warning-dim);border:1px solid var(--warning);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">${escapeHtml(t('kass_btn'))}</button>`;
+            + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:var(--warning-dim);border:1px solid var(--warning);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">${escapeHtml(t('kass_btn'))}</button>`
+            + druckKnopf;
         }
       } else {
         rzgWarnEl.hidden = true;
@@ -3639,7 +3679,7 @@ async function openBookingActionModal(booking) {
         .select('id,first_name,last_name,title,phone,email,geburtsdatum,geschlecht,street,plz,city,krankenkasse,versichertennummer,distance_km,metadata,status,insurance_type')
         .eq('id', leadId).maybeSingle(),
       supabase.from('prescriptions')
-        .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,prescription_sessions(id,session_number,status,booking_id)')
+        .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id)')
         .eq('patient_id', leadId)
         .not('status', 'in', '("completed","billed","cancelled")')
         .order('created_at', { ascending: false })
@@ -3808,32 +3848,8 @@ async function openBookingActionModal(booking) {
     // bkRezepteWrap (eski read-only bölge) gizle — artık bkVeroCards kullanıyoruz
     if (rezWrap) rezWrap.hidden = true;
 
-    if (veroSection && veroCards && aktiveRxs && aktiveRxs.length > 0) {
-      veroCards.innerHTML = '';
-      aktiveRxs.forEach(rx => {
-        const sessions = rx.prescription_sessions || [];
-        const done = sessions.filter(s => s.status === 'done' || s.status === 'completed').length;
-        const planned = sessions.filter(s => s.booking_id && s.status !== 'done' && s.status !== 'completed').length;
-        const total = rx.anzahl_einheiten || sessions.length || 0;
-        const issued = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.dataset.rxId = rx.id;
-        card.className = 'bk-vero-card';
-        card.style.cssText = 'width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid var(--border);background:transparent;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
-        card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-            <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</div>
-            <span style="font-size:11px;font-weight:700;color:var(--accent,#b1891b);background:rgba(177,137,27,0.12);padding:1px 7px;border-radius:10px;">${done}/${total}</span>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted);">${rx.icd10 ? rx.icd10 + (rx.diagnosegruppe ? ' · ' + rx.diagnosegruppe : '') : rx.diagnosegruppe || ''} · ${issued}</div>`;
-        card.addEventListener('click', () => selectVerordnung(rx, sessions));
-        veroCards.appendChild(card);
-      });
-      veroSection.hidden = false;
-    } else if (veroSection) {
-      // Verordnung yok → sadece selbstzahler
-      if (veroCards) veroCards.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0 8px;">Keine aktive Verordnung vorhanden.</div>';
+    if (veroSection && veroCards) {
+      rendereVeroKarten({ container: veroCards, rxs: aktiveRxs, escapeHtml, onSelect: selectVerordnung });
       veroSection.hidden = false;
     }
   }
@@ -3891,90 +3907,33 @@ function closeCalRightPanel() {
 }
 
 function selectVerordnung(rx, sessions) {
-  // Kartları reset et
-  document.querySelectorAll('.bk-vero-card').forEach(c => {
-    c.style.borderColor = 'var(--border)';
-    c.style.background = 'transparent';
-  });
-  // Seçili kartı highlight et
-  const activeCard = document.querySelector(`.bk-vero-card[data-rx-id="${rx.id}"]`);
-  if (activeCard) {
-    activeCard.style.borderColor = 'var(--accent,#b1891b)';
-    activeCard.style.background = 'rgba(177,137,27,0.08)';
+  // Zeichnen und Auswaehlen liegt in module/termin-verordnung.js. Hier bleibt
+  // nur, was dashboard.js kennt: die Leistung aus der Verordnung ableiten.
+  window._bkGewaehlteRx = rx;
+  waehleVerordnung(rx, sessions, { aufDienstleistung: uebernehmeDienstleistungAusRx });
+}
+
+// Die Verordnung enthaelt die Leistung bereits — die Praxis soll sie nicht ein
+// zweites Mal auswaehlen muessen (Nausad, 12.08.2026). Das Feld wird deshalb
+// ausgeblendet, aber WEITER GEFUELLT: bookings.service_id bleibt Pflicht.
+async function uebernehmeDienstleistungAusRx(rx) {
+  const srvSel = document.getElementById('bkService');
+  if (!srvSel) return;
+  const heilmittel = rx.heilmittel || rx.heilmittel_position || '';
+  const srvId = heilmittel ? await findMatchingServiceId(heilmittel) : null;
+  if (srvId) {
+    if (!srvSel.querySelector(`option[value="${srvId}"]`)) await populateSrvSelect(srvId);
+    srvSel.value = srvId;
+    await updateBkDuration(srvId);
   }
-
-  // Selbstzahler'ı reset et
-  const selbstBtn = document.getElementById('bkSelbstzahlerBtn');
-  if (selbstBtn) { selbstBtn.style.borderColor = 'var(--border)'; selbstBtn.style.color = 'var(--text-muted)'; }
-  const isSelbstEl = document.getElementById('bkIsSelbstzahler');
-  if (isSelbstEl) isSelbstEl.value = '';
-
-  // Hidden inputs
-  const rxIdEl = document.getElementById('bkSelectedRxId');
-  if (rxIdEl) rxIdEl.value = rx.id;
-
-  // Seans picker göster
-  const pickerBlock = document.getElementById('bkSessionPickerBlock');
-  const dotsEl      = document.getElementById('bkSessionDots');
-  const titleEl     = document.getElementById('bkSessionPickerTitle');
-  const infoEl      = document.getElementById('bkSessionPickerInfo');
-  if (!pickerBlock || !dotsEl) return;
-
-  const total = rx.anzahl_einheiten || sessions.length || 0;
-  if (titleEl) titleEl.textContent = `${rx.heilmittel || '—'}${rx.icd10 ? ' · ' + rx.icd10 : ''} · ${total} Einh.`;
-
-  // Pending sessions (booking_id yok veya status pending/planned)
-  const pendingSessions = sessions
-    .filter(s => !s.booking_id || s.status === 'planned')
-    .sort((a,b) => a.session_number - b.session_number);
-  const nextSession = pendingSessions[0] || null;
-
-  // Noktaları çiz
-  dotsEl.innerHTML = sessions.map(s => {
-    const isDone = s.status === 'done' || s.status === 'completed';
-    const isPlanned = s.booking_id && !isDone;
-    const isPending = !s.booking_id;
-    let color = isDone ? '#4ade80' : isPlanned ? 'var(--accent,#b1891b)' : 'var(--border)';
-    let title = isDone ? `Sitzung ${s.session_number}: Erledigt` : isPlanned ? `Sitzung ${s.session_number}: Geplant` : `Sitzung ${s.session_number}: Offen`;
-    return `<button type="button" class="bk-sess-dot" data-sess-id="${s.id}" data-sess-num="${s.session_number}" data-pending="${isPending || isPlanned ? '1' : '0'}"
-      title="${title}"
-      style="width:28px;height:28px;border-radius:50%;border:2px solid ${color};background:${isDone ? color : 'transparent'};cursor:${isPending ? 'pointer' : 'default'};font-size:11px;font-weight:600;color:${isDone ? '#0f172a' : color};display:flex;align-items:center;justify-content:center;">
-      ${s.session_number}
-    </button>`;
-  }).join('');
-
-  // Nokta tıklama — sadece pending/planned seanslar seçilebilir
-  dotsEl.querySelectorAll('.bk-sess-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      if (dot.dataset.pending !== '1') return;
-      dotsEl.querySelectorAll('.bk-sess-dot').forEach(d => d.style.outline = 'none');
-      dot.style.outline = '2px solid var(--accent,#b1891b)';
-      dot.style.outlineOffset = '2px';
-      const sessId = dot.dataset.sessId;
-      const sessIdEl = document.getElementById('bkSelectedSessionId');
-      if (sessIdEl) sessIdEl.value = sessId;
-      window._pendingRxSession = { sessionId: sessId };
-      if (infoEl) infoEl.textContent = `Sitzung ${dot.dataset.sessNum} von ${total} ausgewählt`;
-    });
-  });
-
-  // Default: sıradaki pending session seç
-  if (nextSession) {
-    const sessIdEl = document.getElementById('bkSelectedSessionId');
-    if (sessIdEl) sessIdEl.value = nextSession.id;
-    window._pendingRxSession = { sessionId: nextSession.id };
-    if (infoEl) infoEl.textContent = `Nächste: Sitzung ${nextSession.session_number} von ${total}`;
-    // Ilgili nokta outline
-    const defaultDot = dotsEl.querySelector(`.bk-sess-dot[data-sess-id="${nextSession.id}"]`);
-    if (defaultDot) { defaultDot.style.outline = '2px solid var(--accent,#b1891b)'; defaultDot.style.outlineOffset = '2px'; }
-  } else {
-    if (infoEl) infoEl.textContent = 'Alle Sitzungen bereits vergeben.';
-    const sessIdEl = document.getElementById('bkSelectedSessionId');
-    if (sessIdEl) sessIdEl.value = '';
-    window._pendingRxSession = null;
+  const hinweis = document.getElementById('bkServiceAusVerordnung');
+  if (hinweis) {
+    const gewaehlt = srvSel.options[srvSel.selectedIndex];
+    hinweis.textContent = `Leistung aus der Verordnung: ${gewaehlt?.textContent || heilmittel || '—'}`;
   }
-
-  pickerBlock.hidden = false;
+  // Ohne passende Leistung im Katalog bleibt das Feld sichtbar — sonst
+  // scheitert das Speichern an einer Pflichtangabe, die niemand sehen kann.
+  zeigeDienstleistungsfeld(!srvId);
 }
 
 async function loadCalRpRezeptInfo(leadId) {
@@ -5327,6 +5286,8 @@ async function openBookingModal(b) {
   if (_omVeroSection) _omVeroSection.hidden = true;
   const _omPickerBlock = document.getElementById('bkSessionPickerBlock');
   if (_omPickerBlock) _omPickerBlock.hidden = true;
+  window._bkGewaehlteRx = null;
+  zeigeDienstleistungsfeld(true);
   window._pendingRxSession = null;
   document.getElementById('bkDocAssignHint').hidden = true;
   if (typeof refreshBkHausbesuchPanel === 'function') refreshBkHausbesuchPanel();
@@ -5480,47 +5441,19 @@ async function initBkCustomerAutocomplete() {
 
     const { data: rxs } = await supabase
       .from('prescriptions')
-      .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,prescription_sessions(id,session_number,status,booking_id)')
+      .select('id,heilmittel,heilmittel_position,icd10,anzahl_einheiten,ausstellungsdatum,status,diagnosegruppe,gueltig_bis,is_dringend,frequenz,prescription_sessions(id,session_number,status,booking_id)')
       .eq('patient_id', leadId)
       .not('status', 'in', '("completed","billed","cancelled")')
       .order('created_at', { ascending: false })
       .limit(5);
 
-    veroCards.innerHTML = '';
-    if (rxs && rxs.length > 0) {
-      rxs.forEach(rx => {
-        const sessions = rx.prescription_sessions || [];
-        const done  = sessions.filter(s => s.status === 'done' || s.status === 'completed').length;
-        const total = rx.anzahl_einheiten || sessions.length || 0;
-        const issued = rx.ausstellungsdatum
-          ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'})
-          : '—';
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.dataset.rxId = rx.id;
-        card.className = 'bk-vero-card';
-        card.style.cssText = 'width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid var(--border);background:transparent;cursor:pointer;transition:border-color 0.15s,background 0.15s;';
-        card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-            <div style="font-size:13px;font-weight:600;color:var(--text-main);">${escapeHtml(rx.heilmittel || rx.heilmittel_position || '—')}</div>
-            <span style="font-size:11px;font-weight:700;color:var(--accent,#b1891b);background:rgba(177,137,27,0.12);padding:1px 7px;border-radius:10px;">${done}/${total}</span>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted);">${rx.icd10 ? rx.icd10 + (rx.diagnosegruppe ? ' · ' + rx.diagnosegruppe : '') : rx.diagnosegruppe || ''} · ${issued}</div>`;
-        card.addEventListener('click', () => selectVerordnung(rx, sessions));
-        veroCards.appendChild(card);
-      });
-    } else {
-      veroCards.innerHTML = `
-        <div style="font-size:12px;color:var(--text-muted);padding:4px 0 6px;">Keine aktive Verordnung vorhanden.</div>
-        <button type="button" id="bkAddVerordnungBtn"
-          style="width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:2px dashed var(--accent,#b1891b);background:rgba(177,137,27,0.05);cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--accent,#b1891b);font-size:13px;font-weight:600;">
-          <span style="font-size:18px;">＋</span> Neue Verordnung anlegen
-        </button>`;
-      document.getElementById('bkAddVerordnungBtn')?.addEventListener('click', () => {
+    rendereVeroKarten({
+      container: veroCards, rxs, escapeHtml, onSelect: selectVerordnung,
+      onAnlegen: () => {
         closeModal('bookingModal');
         if (typeof openRezeptModal === 'function') openRezeptModal(null, leadId);
-      });
-    }
+      },
+    });
     veroSection.hidden = false;
   }
 
@@ -6178,6 +6111,30 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
 
   const startDate = new Date(startV);
+
+  // Frequenz der Verordnung: warnen, NICHT blockieren. Nachholtermine, Urlaub
+  // und Krankheit sind Alltag — die Vorgabe ist ärztlich, kein Abrechnungs-
+  // verbot (Nausad, 12.08.2026: „wenn man weitermachen möchte, weiter drücken,
+  // dann soll der Termin gebaut werden"). Regelwerk: module/termin-verordnung.js.
+  {
+    const gewaehlteRx = window._bkGewaehlteRx;
+    if (gewaehlteRx?.id && document.getElementById('bkSelectedRxId')?.value === gewaehlteRx.id) {
+      const pruef = await pruefeFrequenz({
+        supabase, rx: gewaehlteRx, neuesDatum: startDate, ausserBookingId: id || null,
+      });
+      if (!pruef.ok) {
+        const weiter = await showConfirmModal({
+          title: pruef.titel,
+          message: pruef.meldung,
+          confirmText: 'Weiter',
+          cancelText: 'Abbrechen',
+          variant: 'warning',
+        });
+        if (!weiter) return;
+      }
+    }
+  }
+
   const now = new Date();
   if (startDate < now) {
     const proceedPast = await showConfirmModal({
@@ -6429,6 +6386,10 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         .update({ booking_id: savedBookingId, status: 'planned' })
         .in('id', _pendIds);
       if (linkErr) console.error('[rx session link]', linkErr);
+      // Ohne diese Meldung blieb der Zähler der aktiven Verordnung stehen, bis
+      // jemand die Seite neu lud (Nausad, 12.08.2026). Wer schreibt, meldet —
+      // siehe module/signal.js.
+      if (!linkErr) emit('verordnungen:changed');
       window._pendingRxSession = null;
     }
   }
@@ -6454,19 +6415,32 @@ async function loadRxSessionsPanel(booking) {
 
   if (!linkedSession?.prescription_id) return;
 
-  // Fetch prescription + all its sessions
-  const [{ data: rx }, { data: allSessions }] = await Promise.all([
-    supabase.from('prescriptions')
-      .select('id,heilmittel,heilmittel_items,anzahl_einheiten,status,rezept_typ')
-      .eq('id', linkedSession.prescription_id)
-      .maybeSingle(),
-    supabase.from('prescription_sessions')
-      .select('id,session_number,heilmittel_index,status,booking_id,bookings(start_time)')
-      .eq('prescription_id', linkedSession.prescription_id)
-      .order('session_number')
-  ]);
+  const { data: rx } = await supabase.from('prescriptions')
+    .select('id,heilmittel,heilmittel_items,anzahl_einheiten,status,rezept_typ')
+    .eq('id', linkedSession.prescription_id)
+    .maybeSingle();
+  if (!rx) return;
 
-  if (!rx || !allSessions) return;
+  // Fehlende Sitzungszeilen ergänzen, BEVOR gelesen wird — sonst zeigt der
+  // Seitenbereich weniger Einheiten an, als verordnet sind, und die fehlenden
+  // lassen sich nicht auf den Kalender ziehen. Begründung und Fundstelle:
+  // module/sitzung-abgleich.js.
+  const abgleich = await gleicheSitzungenAb({
+    supabase, prescriptionId: rx.id, anzahlEinheiten: rx.anzahl_einheiten, status: rx.status,
+  });
+  if (abgleich.fehler) console.warn('[sitzung-abgleich]', abgleich.fehler);
+  // Wurden Zeilen ergänzt, zeigen die übrigen Bereiche (Sitzungsübersicht,
+  // Verordnungskarten) noch den alten Stand — einmal melden genügt, der
+  // Seitenbereich baut sich neu auf. Beim zweiten Durchlauf fehlt nichts mehr,
+  // also meldet auch niemand mehr: keine Schleife.
+  if (abgleich.ergaenzt > 0) emit('verordnungen:changed');
+
+  const { data: allSessions } = await supabase.from('prescription_sessions')
+    .select('id,session_number,heilmittel_index,status,booking_id,bookings(start_time)')
+    .eq('prescription_id', linkedSession.prescription_id)
+    .order('session_number');
+
+  if (!allSessions) return;
 
   const heilmittelItems = rx.heilmittel_items || [];
   const getHmName = (idx) => heilmittelItems[idx]?.name || heilmittelItems[idx]?.kuerzel || rx.heilmittel || '—';
@@ -7275,10 +7249,12 @@ function zahlartLabel(key) {
 // Geld bereits gebucht ist. Der Ausdruck erfolgt im geöffneten Tab.
 //
 // Gibt true zurück, wenn das Fenster aufging.
-async function openZuzahlungsrechnung(rxId, { stillBeiFehler = false } = {}) {
+async function openZuzahlungsrechnung(rxId, { stillBeiFehler = false, drucken = false } = {}) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    const url = `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${session?.access_token || ''}`;
+    // drucken=true → der Beleg öffnet sich MIT Druckdialog (Backend hängt das
+    // print()-Skript an). Ein Klick statt Umweg über die Vorlagen.
+    const url = `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${session?.access_token || ''}${drucken ? '&print=1' : ''}`;
     const w = window.open(url, '_blank');
     if (w) return true;
   } catch (e) {
@@ -7610,9 +7586,18 @@ async function linkBookingsToPrescriptionSessions(prescriptionId, created) {
     // Fetch prescription cap
     const { data: rx } = await supabase
       .from('prescriptions')
-      .select('anzahl_einheiten, heilmittel')
+      .select('anzahl_einheiten, heilmittel, status')
       .eq('id', prescriptionId)
       .maybeSingle();
+
+    // Erst die Sollzeilen herstellen, dann füllen. Ohne das legte genau dieser
+    // Pfad eine Zeile je *Termin* an — und die Verordnung hatte am Ende so
+    // viele Sitzungen, wie zufällig gebucht wurden, statt so viele wie
+    // verordnet (Fund vom 16.08.2026, module/sitzung-abgleich.js).
+    const _abgl = await gleicheSitzungenAb({
+      supabase, prescriptionId, anzahlEinheiten: rx?.anzahl_einheiten, status: rx?.status,
+    });
+    if (_abgl.fehler) console.warn('[sitzung-abgleich/link]', _abgl.fehler);
 
     // Count only filled sessions (booking_id IS NOT NULL) for capacity check
     const { count: existingCount } = await supabase
@@ -8040,6 +8025,44 @@ document.getElementById('bkActionEditBtn').addEventListener('click', () => {
   openBookingModal(bkActionBookingCache);
 });
 
+// Terminzettel A5: alle kommenden Termine dieses Patienten auf einen Zettel
+// zum Mitgeben. Vorlage und Druck liegen in module/termin-druck.js.
+document.getElementById('bkActionTerminzettelBtn')?.addEventListener('click', async () => {
+  const bk = bkActionBookingCache;
+  if (!bk) return;
+  const patientName = (bk.customer_name || '').split('·')[0].trim();
+
+  let q = supabase.from('bookings')
+    .select('start_time,end_time,hausbesuch,employee_name,services(title)')
+    .eq('owner_id', getOwnerId())
+    .gte('start_time', new Date(Date.now() - 3600000).toISOString())
+    .in('status', ['confirmed', 'pending'])
+    .order('start_time', { ascending: true })
+    .limit(30);
+  // lead_id ist der verlässliche Schlüssel; ältere Termine haben nur den Namen.
+  q = bk.lead_id ? q.eq('lead_id', bk.lead_id) : q.eq('customer_name', bk.customer_name);
+  const { data: termine, error } = await q;
+
+  if (error) { showToast('Termine konnten nicht geladen werden.', 'error'); return; }
+  if (!termine?.length) { showToast('Keine kommenden Termine zum Drucken.', 'warning'); return; }
+
+  const ok = druckeTerminzettel({
+    praxis: {
+      name: currentProfile?.business_name || '',
+      strasse: [currentProfile?.street, currentProfile?.house_number].filter(Boolean).join(' '),
+      ort: [currentProfile?.zip, currentProfile?.city].filter(Boolean).join(' '),
+      telefon: currentProfile?.whatsapp_number || '',
+    },
+    patientName,
+    termine: termine.map(t => ({
+      start: t.start_time, ende: t.end_time,
+      leistung: t.services?.title || '', therapeut: t.employee_name || '',
+      hausbesuch: t.hausbesuch,
+    })),
+  });
+  if (!ok) showToast(t('kass_popup'), 'error');
+});
+
 // Zuzahlung kassieren / stornieren / Rechnung öffnen — einmal je Verordnung.
 // Der eigentliche Ablauf liegt in kassiereZuzahlung(); hier wird nur der Klick
 // eingesammelt und danach das Panel neu aufgebaut.
@@ -8052,6 +8075,7 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
 
   const aktion = btn.dataset.zuzahl;
   if (aktion === 'rechnung') { await openZuzahlungsrechnung(rxId); return; }
+  if (aktion === 'drucken') { await openZuzahlungsrechnung(rxId, { drucken: true }); return; }
 
   const args = {
     rxId,
@@ -16680,7 +16704,10 @@ function bindAnamneseEvents() {
 
   // anamArztNummer ist mit "Telefon / Fax" beschriftet: bevorzugt die Telefon-
   // nummer aus dem Register, LANR nur als Rückfall (so war es vorher immer).
-  wireArztFeld({ name: 'anamArztName', tel: 'anamArztNummer' });
+  // Ohne „+": die Anamnese hält fest, was der Patient erzählt hat. Ein hier
+  // angelegter Arzt hätte weder LANR noch BSNR — genau die Halbdatensätze, die
+  // das Register später an der falschen Stelle wiederfindet.
+  wireArztFeld({ name: 'anamArztName', tel: 'anamArztNummer', plus: false });
 
   const slider = document.getElementById('anamSchmerzSkala');
   const skalaVal = document.getElementById('anamSkalaVal');
@@ -16926,64 +16953,18 @@ async function ensureAerzteLoaded() {
   return aerzteCache || [];
 }
 
-/**
- * Ein Arzt-Feld an den gemeinsamen Picker hängen (arzt-suche.js).
- *
- * Die Nummernfelder werden bei einer Auswahl bewusst ÜBERSCHRIEBEN: wer einen
- * Arzt anklickt, meint diesen Arzt. Die alte "nur füllen, wenn leer"-Regel ließ
- * beim Wechsel die LANR des vorigen Arztes stehen — eine falsche LANR ist ein
- * Absetzungsgrund, ein leeres Feld nicht.
- *
- * @param {object} f  {name, lanr, bsnr, tel, id, hint} — Element-IDs, alle optional außer name
- */
-function wireArztFeld(f) {
-  const nameEl = document.getElementById(f.name);
-  const lanrEl = f.lanr ? document.getElementById(f.lanr) : null;
-  const bsnrEl = f.bsnr ? document.getElementById(f.bsnr) : null;
-  const telEl  = f.tel  ? document.getElementById(f.tel)  : null;
-  const idEl   = f.id   ? document.getElementById(f.id)   : null;
-  const hintEl = f.hint ? document.getElementById(f.hint) : null;
-
-  const uebernehmen = (a) => {
-    if (!a) return;
-    if (lanrEl) lanrEl.value = a.lanr || '';
-    if (bsnrEl) bsnrEl.value = a.bsnr || '';
-    if (telEl)  telEl.value  = a.telefon || a.fax || a.lanr || '';
-    if (idEl)   idEl.value   = a.id || '';
-    if (hintEl) {
-      const meta = arztMetaText(a);
-      hintEl.textContent = meta ? `Bekannter Arzt · ${meta}` : 'Bekannter Arzt';
-      hintEl.style.display = 'block';
-    }
-  };
-
-  // Panels wie die Podologie-Verordnung rendern per innerHTML neu; sollte ein
-  // Feld doch einmal überleben, darf es keinen zweiten Listener bekommen.
-  if (nameEl && nameEl.dataset.arztWired !== '1') {
-    nameEl.dataset.arztWired = '1';
-    attachArztSearch(nameEl, { loadAerzte: ensureAerzteLoaded, onSelect: uebernehmen });
-    // Freitext ohne Auswahl: Bindung lösen, damit beim Speichern ein neuer Arzt
-    // entsteht statt den zuletzt gewählten zu überschreiben.
-    nameEl.addEventListener('input', () => {
-      const val = nameEl.value.trim();
-      const treffer = (aerzteCache || []).find(a => a.arzt_name === val);
-      if (treffer) return;                       // onSelect hat schon gefüllt
-      if (idEl) idEl.value = '';
-      if (hintEl) {
-        hintEl.textContent = val ? 'Neuer Arzt — wird beim Speichern ins Ärzte-Register aufgenommen.' : '';
-        hintEl.style.display = val ? 'block' : 'none';
-      }
-    });
-  }
-  // Stefans Weg: die ersten Ziffern der LANR tippen, Namen anklicken.
-  if (lanrEl) {
-    attachArztSearch(lanrEl, {
-      loadAerzte: ensureAerzteLoaded,
-      writes: 'lanr',
-      onSelect: (a) => { if (nameEl) nameEl.value = a.arzt_name || ''; uebernehmen(a); },
-    });
-  }
-}
+// `wireArztFeld` ist nach `module/arzt-register.js` ausgewandert — dort sitzt
+// auch das „+" für die Schnellanlage, das an genau diesem Feld hängt.
+initArztRegister({
+  supabase, escapeHtml, showToast, openModal, closeModal,
+  getOwnerId:  () => getOwnerId(),
+  ladeAerzte:  ensureAerzteLoaded,
+  aerzte:      () => aerzteCache,
+  resolveArzt: (input, quelle) => resolveArzt(input, quelle),
+  bearbeiten:  (id) => editAerzte(id),
+  loeschen:    (id) => deleteAerzte(id),
+  patientName: (lead) => displayName(lead),
+});
 
 function populateLeadArztSelect() {
   const arztSelect = document.getElementById('lead-arzt');
@@ -17005,28 +16986,14 @@ async function loadAerzte() {
   aerzteCache = data || [];
 
   populateLeadArztSelect();
+  zeichneArztRegister();
+}
 
-  const list = document.getElementById('aerzteList');
-  if (!list) return;
-  if (!aerzteCache.length) { list.innerHTML = '<p class="text-muted">Keine Ärzte.</p>'; return; }
-  list.innerHTML = aerzteCache.map(a => {
-    const meta = [
-      a.lanr         ? `LANR ${escapeHtml(a.lanr)}` : null,
-      a.bsnr         ? `BSNR ${escapeHtml(a.bsnr)}` : null,
-      a.fachrichtung ? escapeHtml(a.fachrichtung)   : null,
-      a.telefon      ? escapeHtml(a.telefon)        : null
-    ].filter(Boolean).join(' · ');
-    return `
-    <div class="aerzte-row" data-id="${a.id}">
-      <span>${escapeHtml(a.arzt_name)}
-        ${meta ? `<span class="text-muted" style="font-size:12px;display:block;">${meta}</span>` : ''}
-      </span>
-      <div>
-        <button class="btn-outline" onclick="editAerzte('${a.id}')">Bearbeiten</button>
-        <button class="btn-danger" onclick="deleteAerzte('${a.id}')">Löschen</button>
-      </div>
-    </div>`;
-  }).join('');
+// Das Register steht an zwei Stellen — im Panel „Ärzte" und in den
+// Einstellungen. Ein Renderer, zwei Behälter (module/arzt-register.js).
+function zeichneArztRegister() {
+  renderArztRegister('arztRegisterList', document.getElementById('arztRegisterSuche')?.value || '');
+  renderArztRegister('aerzteList');
 }
 
 const AE_FELDER = [

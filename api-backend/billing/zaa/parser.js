@@ -61,7 +61,11 @@ const PLAIN_PATTERNS = [
   // "Fehler 101 — Belegnummer 12345 — Pos.Nr"
   /Fehler[:\s]*(\d{1,3})[^\n]*?Belegnummer[:\s]*([A-Za-z0-9\-]+)\s*[—\-:]\s*([^\n]+)/i,
   // "0001234<TAB>101<TAB>Positionsnummer unbekannt"
-  /^([A-Za-z0-9\-]{4,20})\s+(\d{1,3})\s+(.+)$/,
+  // Untergrenze 1, nicht 4: seit der Umstellung auf
+  // <Patientennummer>-<Verordnungsnummer> ist "1-1" eine gueltige Belegnummer
+  // und war mit {4,20} unsichtbar — die Absetzung waere still verlorengegangen.
+  // Die Zeile bleibt eindeutig, weil Fehlercode und Text folgen muessen.
+  /^([A-Za-z0-9\-]{1,20})\s+(\d{1,3})\s+(.+)$/,
   // "Code 101  Beleg 12345  Text"
   /Code[:\s]*(\d{1,3})[^\n]*?Beleg[:\s]*([A-Za-z0-9\-]+)\s+(.+)/i,
 ];

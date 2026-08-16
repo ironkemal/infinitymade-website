@@ -7585,3 +7585,63 @@ body.compact-mode .patient-row {
   #mainArea,
   #calMainWrap { padding-right: 0 !important; }
 }
+
+/* ── Ärzte-Register (module/arzt-register.js) ─────────────────────────────
+   Das „+" neben einem Arzt-Feld. Es sitzt in einem Flex-Wrapper, den das
+   Modul um das Eingabefeld legt — in der Muster-13-Nachbildung wäre eine
+   absolute Positionierung über den Rand des Formulars gelaufen. */
+.arzt-plus-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.arzt-plus-wrap > input {
+  flex: 1;
+  min-width: 0;
+}
+.arzt-plus-btn {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  line-height: 1;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card-solid);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+/* `--accent` ist im Blatt nicht definiert; der Rest der Datei nutzt es
+   ausschließlich mit Rückfallwert. Ohne den bliebe der Hover farblos. */
+.arzt-plus-btn:hover {
+  border-color: var(--accent, #b1891b);
+  color: var(--accent, #b1891b);
+}
+
+.arzt-register-table td.mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+.arzt-register-table tbody tr.arzt-zeile {
+  cursor: pointer;
+}
+.arzt-register-table tbody tr.arzt-zeile:hover {
+  background: var(--bg-hover, rgba(127, 127, 127, .08));
+}
+/* Die Knöpfe sollen die Zeile nicht breiter machen als nötig. */
+.arzt-register-table td.arzt-zeile-aktionen {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.arzt-detail-summe {
+  margin: 0 0 14px;
+  color: var(--text-main);
+}
+.arzt-detail-h {
+  margin: 20px 0 8px;
+  font-size: 14px;
+  color: var(--text-main);
+}

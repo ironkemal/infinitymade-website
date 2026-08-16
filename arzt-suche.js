@@ -23,7 +23,7 @@
  *   attachArztSearch(inputEl, {
  *     loadAerzte: async () => [...],   // Aufrufer besitzt die Query
  *     onSelect:   arzt => {...},
- *     writes:     'name' | 'lanr',     // was im Feld selbst landet
+ *     writes:     'name' | 'lanr' | 'bsnr',  // was im Feld selbst landet
  *   });
  */
 
@@ -87,7 +87,7 @@ export function arztMetaText(a) {
  * @param {object}   cfg
  * @param {Function} cfg.loadAerzte  async () => Array — owner-weites Register
  * @param {Function} [cfg.onSelect]  (arzt) => void
- * @param {'name'|'lanr'} [cfg.writes]  Wert, der ins Feld selbst geschrieben wird
+ * @param {'name'|'lanr'|'bsnr'} [cfg.writes]  Wert, der ins Feld selbst geschrieben wird
  * @param {number}   [cfg.limit]
  */
 export function attachArztSearch(inputEl, cfg = {}) {
@@ -107,7 +107,12 @@ export function attachArztSearch(inputEl, cfg = {}) {
       catch (e) { console.warn('[arzt-suche] load:', e); return []; }
       return rankAerzte(rows.filter(a => arztMatchesQuery(a, q)), q).slice(0, limit);
     },
-    toText: a => (writes === 'lanr' ? (a.lanr || '') : (a.arzt_name || '')),
+    // Jedes Feld bekommt seinen eigenen Wert zurück. Ohne den bsnr-Zweig
+    // landete beim Klick der Arztname im Nummernfeld — ein Wert, den §302
+    // später als BSNR wegschickt.
+    toText: a => (writes === 'lanr' ? (a.lanr || '')
+                : writes === 'bsnr' ? (a.bsnr || '')
+                : (a.arzt_name || '')),
     renderItem: a =>
       `<span class="icd-code">${esc(a.lanr || '—')}</span>` +
       `<span class="icd-title">${esc(a.arzt_name || '')}` +

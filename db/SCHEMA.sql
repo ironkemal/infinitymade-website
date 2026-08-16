@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-15
--- LETZTE MIGRATION:  20260815085338_leads_patientennummer
+-- ERZEUGT AM:        2026-08-16
+-- LETZTE MIGRATION:  20260815233848_verordnungsnummer_belegnummer
+--                    davor: 20260815085338_leads_patientennummer
 --                    davor: 20260814200147_leads_handy_getrennt
 --                    davor: 20260814101707_patient_consents
 --                    davor: 20260814101624_kiosk_pin_hardening
@@ -11,7 +12,7 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            80 Tabellen · 1164 Spalten · 156 RLS-Policies
+-- UMFANG:            80 Tabellen · 1171 Spalten · 156 RLS-Policies
 --                    281 Indizes · 59 Trigger · 53 Funktionen · 4 Views
 -- QUELLE:            Direkt aus der Live-DB introspiziert (kein Handentwurf)
 --
@@ -1270,6 +1271,8 @@ CREATE TABLE prescriptions (
   evo_access_code text
   quelle text DEFAULT 'papier'::text
   fhir_raw jsonb
+  verordnungsnummer integer
+  belegnummer text
   pat_leitsymptomatik text
   diagnose_freitext text
   ergaenzendes_heilmittel text
@@ -1295,6 +1298,9 @@ CREATE TABLE prescriptions (
 --   ★ Physio/Ergo/Logopädie-Verordnungstopf. Podologie nutzt `verordnungen`.
 --   ★ PHI-Verschlüsselung: icd10_enc, ocr_raw_enc, phi_encrypted.
 --   TRIGGER fn_prescriptions_set_befreit() setzt zuzahlung_befreit automatisch.
+--   ⚠️ `verordnungsnummer` / `belegnummer`: gleiche Regel wie in `verordnungen`
+--      (Trigger trg_prescriptions_verordnungsnummer, Zaehler ueber beide Toepfe,
+--      Belegnummer bei der DTA-Erzeugung eingefroren). Siehe dort.
 
 CREATE TABLE profiles (
   id uuid NOT NULL                      -- = auth.users.id
@@ -1636,6 +1642,8 @@ CREATE TABLE verordnungen (
   absetzung_am date
   storno_grund text
   storno_am date
+  verordnungsnummer integer
+  belegnummer text
 );
 --   CHECK status IN (aktiv, abrechenbar, abgerechnet, teilabsetzung, abgesetzt,
 --                    storniert, archiviert)
@@ -1654,6 +1662,15 @@ CREATE TABLE verordnungen (
 --     Die beiden Töpfe bestehen bewusst nebeneinander.
 --   ⚠️ icd10 ist hier text[] — in prescriptions dagegen zwei Einzelspalten
 --      (icd10, icd10_2). Beim Umschreiben von Code leicht zu verwechseln.
+--   ⚠️ `verordnungsnummer` vergibt der Trigger trg_verordnungen_verordnungsnummer
+--      BEFORE INSERT/UPDATE OF lead_id — fortlaufend JE PATIENT, ab 1. Der
+--      Zaehler laeuft ueber BEIDE Toepfe (prescriptions + verordnungen), weil
+--      beide an derselben Akte haengen und in derselben DTA-Datei landen
+--      koennen. NICHT im Client setzen. UNIQUE (owner_id, lead_id, verordnungsnummer)
+--   ⚠️ `belegnummer` = <leads.patientennummer>-<verordnungsnummer>, z. B. "12-3".
+--      Wird bei der DTA-Erzeugung EINMAL geschrieben und danach nie geaendert
+--      (Anlage 1 TP5 V21 Kap. 7.3) — sonst findet eine spaete Kassenrueckmeldung
+--      ihren Beleg nicht mehr. Leer = noch nie abgerechnet.
 
 CREATE TABLE visibility_reports (
   sector text NOT NULL

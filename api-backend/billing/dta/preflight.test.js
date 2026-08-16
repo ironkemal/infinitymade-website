@@ -10,6 +10,7 @@ import {
   isValidIcd10,
   isValidDiagnosegruppe,
   isValidTarifkennzeichen,
+  isValidBelegnummer,
   ikKlassifikation,
 } from './preflight.js';
 import assert from 'node:assert/strict';
@@ -133,6 +134,31 @@ test('catches duplicate belegnummer in same Sammel', () => {
   i.prescriptions.push(clone(i.prescriptions[0]));  // same belegnummer 0000001
   const r = preflight(i);
   assert.ok(hasErr(r, 'P:01007'));
+});
+
+test('accepts Belegnummer <Patientennummer>-<Verordnungsnummer>', () => {
+  // Das Format, das der Anwender auf dem Urbeleg wiederfindet (Nausad, 12.08.2026).
+  // §302 laesst es zu: SLLA.INV Feld 4 = ..10 AN ohne Zeichenbeschraenkung.
+  for (const bn of ['1-1', '12-3', '147-12', '999999-99', '0000001']) {
+    assert.ok(isValidBelegnummer(bn), bn);
+    const i = clone(validInput); i.prescriptions[0].patient.belegnummer = bn;
+    assert.ok(!hasErr(preflight(i), 'P:01009'), bn);
+  }
+});
+
+test('catches Belegnummer over 10 chars', () => {
+  // 11 Stellen sind ein Syntaxfehler — die Kasse weist die ganze Datei ab.
+  const i = clone(validInput); i.prescriptions[0].patient.belegnummer = '1234567-890';
+  assert.ok(hasErr(preflight(i), 'P:01009'));
+  assert.ok(!isValidBelegnummer('1234567-890'));
+});
+
+test('catches Belegnummer with stray Gliederungszeichen', () => {
+  for (const bn of ['-1-1', '1-1-', '1--1', '1 1', '1+1']) {
+    assert.ok(!isValidBelegnummer(bn), bn);
+    const i = clone(validInput); i.prescriptions[0].patient.belegnummer = bn;
+    assert.ok(hasErr(preflight(i), 'P:01009'), bn);
+  }
 });
 
 test('catches invalid ICD-10', () => {

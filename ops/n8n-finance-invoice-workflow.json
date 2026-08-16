@@ -193,11 +193,6 @@
             "node": "Google Drive Yükle",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Gemini AI Beleg-OCR",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -206,7 +201,7 @@
       "main": [
         [
           {
-            "node": "Daten normalisieren",
+            "node": "Gemini AI Beleg-OCR",
             "type": "main",
             "index": 0
           }

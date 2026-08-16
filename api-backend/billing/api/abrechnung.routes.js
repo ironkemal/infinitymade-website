@@ -179,6 +179,28 @@ function pflichtangabenHinweisHtml(fehlend) {
 </body></html>`;
 }
 
+// Belegnummer = <Patientennummer>-<Verordnungsnummer>, z. B. "12-3": die dritte
+// Verordnung des zwoelften Patienten dieser Praxis. Der Anwender findet damit
+// den Urbeleg im Ordner wieder — genau das verlangt § 4 Abs. 1 des Richtlinien-
+// textes (Nummer im Datensatz = Nummer auf dem Urbeleg). Vorher stand hier der
+// UUID-Anfang, der auf keinem Papier steht.
+//
+// § 302 laesst das zu: SLLA.INV Feld 4 ist ..10 AN M ohne Zeichenbeschraenkung
+// (Anlage 1 TP5 V21 § 5.5.3.1) — der Bindestrich ist kein EDIFACT-Trennzeichen.
+//
+// `belegnummer` aus der Zeile hat Vorrang: eine einmal eingereichte Nummer darf
+// sich nie wieder aendern (V21 Kap. 7.3 "duerfen nicht veraendert werden"),
+// sonst findet eine spaete Kassenrueckmeldung ihren Beleg nicht mehr.
+// Fallback auf den UUID-Anfang nur, wenn die Nummern fehlen (Verordnung ohne
+// Patientenakte) — dann bricht die Abrechnung ohnehin vorher ab.
+function buildBelegnummer(row, patientennummer) {
+  if (row.belegnummer) return row.belegnummer;
+  if (patientennummer && row.verordnungsnummer) {
+    return `${patientennummer}-${row.verordnungsnummer}`;
+  }
+  return row.id.slice(0, 10);
+}
+
 function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW', sector = 'physiotherapy') {
   if (!rx.kostentraeger_ik) {
     const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
@@ -266,7 +288,7 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
       nachname:           np.nachname,
       vorname:            np.vorname,
       geburtsdatum:       lead?.geburtsdatum || '',
-      belegnummer:        rx.id.slice(0, 10),
+      belegnummer:        buildBelegnummer(rx, lead?.patientennummer),
     },
     doctor: {
       lanr: rx.doctor_lanr || doctor?.lanr || '999999999',
@@ -411,6 +433,7 @@ router.post('/abrechnung/create', async (req, res) => {
       .from('prescriptions')
       .select(`
         id, owner_id, patient_id, arzt_id, kostentraeger_ik,
+        verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
@@ -419,7 +442,7 @@ router.post('/abrechnung/create', async (req, res) => {
         abrechnung_status,
         bericht_angefordert,
         bericht_status,
-        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse),
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
           id, session_number, status, done_at,
@@ -561,7 +584,11 @@ router.post('/abrechnung/create', async (req, res) => {
         return (preis_eur * (r.anzahl_einheiten || 1)).toFixed(2);
       })();
       return {
-        belegnummer:        r.id.slice(0, 10),
+        // Dieselbe Ableitung wie im DTA-Weg (mapPrescriptionToDtaShape) und
+        // dieselbe Reihenfolge — `belege` und die Datei entstehen beide aus
+        // rxRows. Die Urbelege sind in genau dieser Reihenfolge zu liefern
+        // (Richtlinien-Text 20.11.2006 § 4 Abs. 2).
+        belegnummer:        buildBelegnummer(r, r.leads?.patientennummer),
         patient_nachname:   np.nachname,
         patient_vorname:    np.vorname,
         verordnungsdatum:   r.ausstellungsdatum,
@@ -611,6 +638,18 @@ router.post('/abrechnung/create', async (req, res) => {
       status:            'billed',
     }).in('id', prescriptionIds);
     if (upRxErr) console.warn('[abrechnung] prescription link failed:', upRxErr.message);
+
+    // Belegnummer einfrieren. Ab hier liegt sie bei der Kasse und darf sich nie
+    // wieder aendern (Anlage 1 TP5 V21, Kap. 7.3) — sonst laesst sich eine
+    // spaetere Rueckmeldung (ZAA) oder eine Korrekturrechnung nicht mehr
+    // zuordnen. Nur setzen, wenn die Zeile noch keine hat.
+    for (let i = 0; i < rxRows.length; i++) {
+      if (rxRows[i].belegnummer) continue;
+      const { error: bnErr } = await supabase.from('prescriptions')
+        .update({ belegnummer: prescriptions[i].patient.belegnummer })
+        .eq('id', rxRows[i].id);
+      if (bnErr) console.warn('[abrechnung] belegnummer persist failed:', rxRows[i].id, bnErr.message);
+    }
 
     logAccess(supabase, {
       userId: req.userId || null, ownerId: tenantId, ip: req.ip,
@@ -781,24 +820,33 @@ router.post('/abrechnung/:id/upload-zaa', async (req, res) => {
     if (ab.owner_id !== tenantId) return res.status(403).json({ error: 'Forbidden' });
 
     // Pull all prescriptions linked to this abrechnung to map belegnummer → prescription_id.
+    // Die Zuordnung laeuft ueber die eingefrorene `belegnummer` der Zeile.
+    // Der UUID-Anfang bleibt als zweiter Schluessel bestehen: Dateien, die vor
+    // der Umstellung auf <Patientennummer>-<Verordnungsnummer> rausgingen,
+    // tragen ihn noch, und eine Kassenrueckmeldung kann Monate spaeter kommen.
+    // Faende sie ihren Beleg nicht, bliebe die Absetzung unsichtbar — kein
+    // Fehler auf dem Bildschirm, nur fehlendes Geld.
     const { data: rxRows } = await supabase
       .from('prescriptions')
-      .select('id')
+      .select('id, belegnummer')
       .eq('abrechnung_id', req.params.id);
-    const belegToRxId = new Map(
-      (rxRows || []).map(r => [r.id.slice(0, 10), r.id])
-    );
+    const belegToRxId = new Map();
+    for (const r of (rxRows || [])) {
+      if (r.belegnummer) belegToRxId.set(r.belegnummer, r.id);
+      belegToRxId.set(r.id.slice(0, 10), r.id);
+    }
 
     // Dasselbe fuer den Podologie-Topf. Beide Toepfe koennen in derselben
-    // DTA-Datei stecken; die Belegnummer entsteht in beiden Faellen als
-    // id.slice(0,10) (siehe mapVerordnungToDtaShape und den Physio-Pfad).
+    // DTA-Datei stecken.
     const { data: vordRows } = await supabase
       .from('verordnungen')
-      .select('id')
+      .select('id, belegnummer')
       .eq('abrechnung_id', req.params.id);
-    const belegToVordId = new Map(
-      (vordRows || []).map(v => [v.id.slice(0, 10), v.id])
-    );
+    const belegToVordId = new Map();
+    for (const v of (vordRows || [])) {
+      if (v.belegnummer) belegToVordId.set(v.belegnummer, v.id);
+      belegToVordId.set(v.id.slice(0, 10), v.id);
+    }
 
     const parsed = parseZaaFile(buf);
 
@@ -1199,6 +1247,15 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     });
 
     res.set('Content-Type', 'text/html; charset=utf-8');
+    // ?print=1 → der Druckdialog geht von selbst auf. Aus dem Seitenbereich des
+    // Terminkalenders soll ein Klick auf das Euro-Zeichen direkt drucken, statt
+    // den Umweg über die Vorlagen zu nehmen (Nausad, 12.08.2026).
+    if (req.query.print === '1') {
+      return res.send(html.replace(
+        '</body>',
+        '<script>window.addEventListener("load",function(){window.print();});<\/script></body>'
+      ));
+    }
     return res.send(html);
   } catch (e) {
     console.error('[zuzahlungsrechnung/print]', e);
@@ -1760,6 +1817,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
       .from('prescriptions')
       .select(`
         id, owner_id, patient_id, arzt_id, kostentraeger_ik,
+        verordnungsnummer, belegnummer,
         ausstellungsdatum, behandlungsbeginn, icd10, diagnosegruppe,
         heilmittel, heilmittel_position, anzahl_einheiten, frequenz,
         is_dringend, hausbesuch, is_blanko, is_lhb_bvb,
@@ -1768,7 +1826,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
         abrechnung_status,
         bericht_angefordert,
         bericht_status,
-        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse),
+        leads:patient_id (first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, krankenkasse, patientennummer),
         aerzte:arzt_id   (lanr, bsnr, arzt_name),
         prescription_sessions (
           id, session_number, status, done_at,
@@ -1892,7 +1950,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
       nachname:           np.nachname,
       vorname:            np.vorname,
       geburtsdatum:       lead?.geburtsdatum || '',
-      belegnummer:        vord.id.slice(0, 10),
+      belegnummer:        buildBelegnummer(vord, lead?.patientennummer),
     },
     doctor: {
       // NICHT auf arzt_nummer zurückfallen: das Altfeld enthielt Telefonnummern
@@ -1973,7 +2031,7 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .from('verordnungen')
       .select(`
         *,
-        leads:lead_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus),
+        leads:lead_id (id, first_name, last_name, geburtsdatum, versichertennummer, versichertenstatus, patientennummer),
         aerzte:arzt_id (id, arzt_name, lanr, bsnr)
       `)
       .eq('owner_id', tenantId)
@@ -2152,6 +2210,15 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     await supabase.from('verordnungen')
       .update({ status: 'abgerechnet', abrechnung_id: ab.id })
       .in('id', verordnungIds);
+
+    // Belegnummer einfrieren — siehe /abrechnung/create, gleiche Begruendung.
+    for (let i = 0; i < (vords || []).length; i++) {
+      if (vords[i].belegnummer) continue;
+      const { error: bnErr } = await supabase.from('verordnungen')
+        .update({ belegnummer: prescriptions[i].patient.belegnummer })
+        .eq('id', vords[i].id);
+      if (bnErr) console.warn('[abrechnung-podo] belegnummer persist failed:', vords[i].id, bnErr.message);
+    }
 
     return res.json({
       ok: true,

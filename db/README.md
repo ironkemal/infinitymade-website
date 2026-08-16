@@ -10,8 +10,10 @@
 | `SCHEMA-RLS.sql` | 156 RLS-Policies, 53 Funktionen, 59 Trigger, 281 Indizes |
 | `README.md` | dieses Dokument — Orientierung + Auffrischungsregel |
 
-**Stand:** 2026-08-14 · letzte Migration `20260814101707_patient_consents`
-(davor `20260814101624_kiosk_pin_hardening`, `20260814083941_fussbefund_termin_legende`.
+**Stand:** 2026-08-16 · letzte Migration `20260815233848_verordnungsnummer_belegnummer`
+(davor `20260815085338_leads_patientennummer`, `20260814200147_leads_handy_getrennt`,
+`20260814101707_patient_consents`, `20260814101624_kiosk_pin_hardening`,
+`20260814083941_fussbefund_termin_legende`.
 Am 11.08. lief zusätzlich `sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql` über den SQL-Editor —
 steht in keiner Migrationszeile, ist in der DB aber drin und im Dump enthalten)
 **Projekt:** Supabase `njvuclullotbksskpwgk` (Produkt).

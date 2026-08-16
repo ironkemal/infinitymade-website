@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260810c" />
+  <link rel="stylesheet" href="dashboard.css?v=20260816a" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -1904,9 +1904,34 @@
           <div class="panel-header">
             <div>
               <h2 data-i18n="nav_doctors">Ärzte</h2>
-              <p class="panel-sub" data-i18n="doctors_sub">Ärzte in der Nähe finden</p>
+              <p class="panel-sub" data-i18n="doctors_sub">Verordnende Ärzte und ihre Zuweisungen</p>
             </div>
           </div>
+
+          <div class="tabs" style="margin-bottom:16px;display:flex;gap:8px;border-bottom:1px solid var(--border);">
+            <!-- Ohne Inline-Styles: `.tab-btn` / `.tab-btn.active` in dashboard.css
+                 zeichnen den Unterstrich schon. Inline gesetzt würde er die
+                 aktive Regel überstimmen und das Umschalten bliebe unsichtbar. -->
+            <button class="tab-btn active" data-arzt-tab="register">Register</button>
+            <button class="tab-btn" data-arzt-tab="suche">In der Nähe finden</button>
+          </div>
+
+          <!-- TAB: Register — die Ärzte, die tatsächlich verordnen -->
+          <div id="arztTabRegister">
+            <div class="filter-bar" style="margin-bottom:12px;">
+              <input class="form-input" id="arztRegisterSuche" type="text"
+                placeholder="Name, Arzt-Nr. oder Betriebs-Nr. …" style="flex:1;" />
+            </div>
+            <p class="text-muted" style="font-size:12px;margin:0 0 10px;">
+              Ärzte werden beim Erfassen einer Verordnung automatisch aufgenommen und an
+              der LANR wiedererkannt. Eine Zeile anklicken zeigt, wie viele Patienten
+              dieser Arzt je Jahr geschickt hat.
+            </p>
+            <div id="arztRegisterList"></div>
+          </div>
+
+          <!-- TAB: Lead-Suche über Google Maps (B2B-Akquise, unverändert) -->
+          <div id="arztTabSuche" hidden>
           <div class="apify-bar" style="margin-bottom:12px;">
             <span class="apify-label">Fachrichtung:</span>
             <input class="form-input" id="docQuery" type="text" placeholder="z.B. Orthopäde" style="flex:2;" />
@@ -1942,6 +1967,7 @@
             </table>
             <div id="docEmpty" class="table-empty" hidden>Noch keine Ärzte gesucht.</div>
           </div>
+          </div><!-- /arztTabSuche -->
         </section>
 
         <!-- ===== PANEL: ANAMNESE ===== -->
@@ -2881,10 +2907,14 @@
           <label class="form-label" data-i18n="lbl_manual_emp">Mitarbeiter</label>
           <select class="form-select" id="bkEmployee"></select>
         </div>
-        <div class="form-group">
+        <!-- Wird ausgeblendet, sobald eine Verordnung gewählt ist — die enthält
+             die Leistung bereits. Der Wert bleibt gesetzt (Pflichtfeld). -->
+        <div class="form-group" id="bkServiceGroup">
           <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
           <select class="form-select" id="bkService"></select>
         </div>
+        <div id="bkServiceAusVerordnung" hidden
+          style="font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:6px 10px;border-left:2px solid var(--accent,#b1891b);"></div>
         <!-- Gruppentermin UI -->
         <div class="form-group" id="bkGroupBlock" style="margin-top:12px;padding:12px;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.06);border:1px solid var(--border);border-radius:12px;display:none;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -5244,6 +5274,11 @@
         <button class="btn-ghost" id="bkActionFussbefundBtn" type="button" hidden
                 style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);margin-bottom:8px;">🦶 Fußbefund</button>
 
+        <!-- Terminzettel A5: die kommenden Termine dieses Patienten zum
+             Mitgeben. Druckvorlage in module/termin-druck.js. -->
+        <button class="btn-ghost" id="bkActionTerminzettelBtn" type="button"
+                style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);margin-bottom:8px;">🖨 Termine drucken (A5)</button>
+
         <div class="form-group" style="display:flex;gap:8px;margin-bottom:8px;">
           <button class="btn-ghost" id="bkActionEditBtn" style="flex:1;justify-content:center;font-size:13px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Bearbeiten
@@ -5485,6 +5520,62 @@
       <div class="modal-footer">
         <button class="btn-ghost" id="confirmModalCancel">Abbrechen</button>
         <button class="btn-primary" id="confirmModalOk">Bestätigen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ARZT-SCHNELLANLAGE (aus der Verordnung heraus) =====
+       Absichtlich klein: sie unterbricht das Rezept-Erfassen und soll es nach
+       zwei Zahlen wieder freigeben. Alles Weitere (Telefon, Adresse, E-Mail)
+       steht im Register unter „Ärzte" und wird dort nachgetragen. -->
+  <div class="modal-overlay" id="arztQuickModal" hidden>
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-header">
+        <span class="modal-title">Arzt anlegen</span>
+        <button class="modal-close" data-modal="arztQuickModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="arztQuickName">Name</label>
+          <input class="form-input" id="arztQuickName" type="text" placeholder="z. B. Dr. med. Anna Müller" autocomplete="off" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="arztQuickBsnr">Betriebsstätten-Nr. (BSNR)</label>
+            <input class="form-input" id="arztQuickBsnr" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="arztQuickLanr">Arzt-Nr. (LANR)</label>
+            <input class="form-input" id="arztQuickLanr" type="text" inputmode="numeric" maxlength="9" placeholder="9-stellig" autocomplete="off" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="arztQuickFach">Fachgebiet <span class="text-muted">(optional)</span></label>
+          <input class="form-input" id="arztQuickFach" type="text" placeholder="z. B. Orthopädie" autocomplete="off" />
+        </div>
+        <p class="form-hint">Der Arzt landet im Register und steht danach in jeder Verordnung zur Auswahl.</p>
+        <p id="arztQuickError" style="margin:8px 0 0;color:var(--danger,#dc2626);font-size:13px;" hidden></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" id="arztQuickCancel">Abbrechen</button>
+        <button class="btn-primary" id="arztQuickOk">Übernehmen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ARZT-DETAIL: Zuweiser-Statistik (liest nur) ===== -->
+  <div class="modal-overlay" id="arztDetailModal" hidden>
+    <div class="modal" style="max-width:760px;">
+      <div class="modal-header">
+        <span class="modal-title" id="arztDetailTitel">Arzt</span>
+        <button class="modal-close" data-modal="arztDetailModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted" id="arztDetailMeta" style="margin:0 0 14px;font-size:13px;"></p>
+        <div id="arztDetailBody"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="arztDetailModal">Schließen</button>
       </div>
     </div>
   </div>
@@ -5903,7 +5994,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260815h"></script>
+  <script type="module" src="dashboard.js?v=20260816"></script>
 </body>
 
 </html>

@@ -43,6 +43,15 @@ ok(r2.errors.length === 3, 'extracts 3 plain-text rows');
 ok(r2.errors[0].code === '101' && r2.errors[0].belegnummer === '0001234', 'plain row 1');
 ok(r2.errors[2].code === '401', 'plain row 3 via Code/Beleg pattern');
 
+// 3b. Kurze Belegnummer im neuen Format <Patientennummer>-<Verordnungsnummer>.
+// Mit der alten Untergrenze {4,20} war "1-1" unsichtbar: die Absetzung des
+// ersten Rezepts des ersten Patienten waere still verlorengegangen.
+const kurzSample = `Bericht ZAA\n1-1\t101\tPositionsnummer unbekannt\n147-12\t15\tKVNR fehlt`;
+const r2b = parseZaaFile(kurzSample);
+ok(r2b.errors.length === 2, 'kurze Belegnummern werden erkannt');
+ok(r2b.errors[0].belegnummer === '1-1', 'Belegnummer 1-1 erkannt');
+ok(r2b.errors[1].belegnummer === '147-12', 'Belegnummer 147-12 erkannt');
+
 // 4. Empty
 const r3 = parseZaaFile('no errors here\nblob blob');
 ok(r3.format === 'empty', 'empty format when nothing matches');

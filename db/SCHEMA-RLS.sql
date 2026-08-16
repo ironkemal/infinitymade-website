@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-14
--- LETZTE MIGRATION:  20260815085338_leads_patientennummer
+-- ERZEUGT AM:        2026-08-16
+-- LETZTE MIGRATION:  20260815233848_verordnungsnummer_belegnummer
+--                    davor: 20260815085338_leads_patientennummer
 --                    davor: 20260814200147_leads_handy_getrennt
 --                    davor: 20260814101707_patient_consents
 --                    davor: 20260814101624_kiosk_pin_hardening
@@ -466,6 +467,14 @@ $function$;
 --   Fortlaufende Patientennummer je Praxis, ab 1 (leads.patientennummer).
 --   pg_advisory_xact_lock je owner_id: legen zwei Mitarbeiter gleichzeitig an,
 --   laesen sonst beide dasselbe Maximum und die Nummer waere doppelt vergeben.
+-- naechste_verordnungsnummer(p_owner, p_lead) -> integer  [SECURITY DEFINER]
+--   Fortlaufende Verordnungsnummer JE PATIENT, ab 1. Zaehlt ueber BEIDE Toepfe
+--   (prescriptions + verordnungen) — derselbe Patient darf nicht zweimal die 3
+--   bekommen, sonst steht dieselbe Belegnummer zweimal in derselben DTA-Datei
+--   (preflight P:01007). Sperre wie oben, je (owner_id, lead_id).
+-- vergebe_verordnungsnummer_rx() / _vo() -> trigger        [SECURITY DEFINER]
+--   Rufen sie auf. Wechselt die Verordnung den Patienten, wird die Nummer
+--   verworfen und neu vergeben; die eingereichte `belegnummer` bleibt stehen.
 -- prevent_belegliste_mod() -> trigger   GoBD: blockt UPDATE/DELETE auf belegliste.
 
 
@@ -535,6 +544,8 @@ $function$;
 --                         trg_normalize_booking_phone    BEFORE INSERT/UPDATE
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
+--   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
+--   verordnungen          trg_verordnungen_verordnungsnummer  BEFORE INSERT/UPDATE OF lead_id
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng
 --   profiles              trg_sync_profiles_clinic_location BEFORE INSERT/UPDATE OF clinic_lat, clinic_lng
 --   businesses            trg_seed_default_groups        AFTER INSERT
@@ -655,6 +666,8 @@ CREATE INDEX idx_kostentraeger_das ON public.kostentraeger USING btree (das_ik) 
 CREATE INDEX idx_leads_business ON public.leads USING btree (business_id);
 CREATE INDEX idx_leads_handy_normalized ON public.leads USING btree (owner_id, handy_normalized) WHERE (handy_normalized IS NOT NULL);
 CREATE UNIQUE INDEX leads_patientennummer_uniq ON public.leads USING btree (owner_id, patientennummer) WHERE (patientennummer IS NOT NULL);
+CREATE UNIQUE INDEX prescriptions_verordnungsnummer_uniq ON public.prescriptions USING btree (owner_id, patient_id, verordnungsnummer) WHERE (verordnungsnummer IS NOT NULL);
+CREATE UNIQUE INDEX verordnungen_verordnungsnummer_uniq ON public.verordnungen USING btree (owner_id, lead_id, verordnungsnummer) WHERE (verordnungsnummer IS NOT NULL);
 CREATE INDEX idx_leads_insurance_type ON public.leads USING btree (insurance_type) WHERE (insurance_type IS NOT NULL);
 CREATE INDEX idx_leads_location ON public.leads USING gist (location);
 CREATE INDEX idx_leads_name_dob ON public.leads USING btree (owner_id, lower(COALESCE(first_name, ''::text)), lower(COALESCE(last_name, ''::text)), geburtsdatum);

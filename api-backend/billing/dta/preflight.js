@@ -118,6 +118,27 @@ export function isValidPlz(plz) {
   return /^\d{5}$/.test(plz || '');
 }
 
+// Belegnummer (SLLA.INV, Feld 4): ..10 AN M — hoechstens 10 Stellen,
+// alphanumerisch (Anlage 1 TP5 V21 § 5.5.3.1, S. 45).
+//
+// Zeichen: die Spezifikation schreibt fuer dieses Feld keine Beschraenkung vor
+// (wo sie eine will, sagt sie es — vgl. Diagnosegruppe "nur 0-9 und Buchstaben").
+// Der Bindestrich ist kein EDIFACT-Trennzeichen (: + , ? '), also unkritisch.
+// Uebernommen wird hier freiwillig die Gliederungszeichen-Regel der Rechnungs-
+// nummer (V21 § 5.5.2): nicht am Anfang/Ende, nicht doppelt — so passt die
+// Nummer auch durch die strengste Pruefstufe einer Datenannahmestelle.
+//
+// Die Laengengrenze war bisher ungeprueft, weil id.slice(0,10) sie nie reissen
+// konnte. Mit <Patientennummer>-<Verordnungsnummer> ist sie erreichbar
+// (7-stellige Patientennummer + "-" + 3-stellige Verordnungsnummer = 11) und
+// eine Ueberlaenge ist ein Syntaxfehler: die Kasse weist die GANZE Datei ab.
+export function isValidBelegnummer(bn) {
+  const s = String(bn || '');
+  if (s.length === 0 || s.length > 10) return false;
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9]|[-/](?=[A-Za-z0-9]))*$/.test(s)) return false;
+  return true;
+}
+
 // Datum: YYYY-MM-DD or Date object; must be a real, parseable date.
 function parseDate(v) {
   if (!v) return null;
@@ -198,6 +219,11 @@ export function preflight(input) {
     else if (seenBelegnummern.has(p.patient.belegnummer))
       E(errors, 'P:01007', `${at}.patient.belegnummer`, `Belegnummer "${p.patient.belegnummer}" doppelt im selben Sammel`);
     else seenBelegnummern.add(p.patient.belegnummer);
+
+    if (p.patient?.belegnummer && !isValidBelegnummer(p.patient.belegnummer))
+      E(errors, 'P:01009', `${at}.patient.belegnummer`,
+        `Belegnummer "${p.patient.belegnummer}" ungültig: höchstens 10 Stellen, nur Buchstaben und Ziffern, ` +
+        `Bindestrich nur zwischen zwei Zeichen (Anlage 1 TP5 V21 § 5.5.3.1)`);
 
     if (p.patient?.plz && !isValidPlz(p.patient.plz))
       W(warnings, 'P:01008', `${at}.patient.plz`, 'PLZ ist nicht 5-stellig (nur bei DE Pflicht)');
