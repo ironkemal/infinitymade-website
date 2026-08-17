@@ -87,6 +87,8 @@ export function attachPatientSearch(inputEl, cfg = {}) {
   let leads = [];
   let activeIndex = -1;
   let loaded = false;
+  let markierungOffen  = false;   // focus hat gerade den ganzen Namen markiert
+  let geradeFokussiert = false;   // trennt den Fokus-Klick vom zweiten Klick
 
   async function ensureLoaded(force = false) {
     if (loaded && !force) return;
@@ -147,8 +149,43 @@ export function attachPatientSearch(inputEl, cfg = {}) {
   inputEl.setAttribute('autocomplete', 'off');
   inputEl.removeAttribute('list');   // a stale <datalist> would open a 2nd popup
 
-  inputEl.addEventListener('focus', async () => { await ensureLoaded(); render(inputEl.value); });
+  // Klick in ein Feld, in dem schon ein Patient steht.
+  //
+  // Vorher wurde beim Fokus mit dem VOLLEN Feldinhalt gefiltert — also mit
+  // "Max Mustermann · 01.01.1990". Übrig blieb dann höchstens der ohnehin schon
+  // gewählte Patient; wer einen anderen wollte, musste den Namen erst Zeichen
+  // für Zeichen löschen. Jetzt zeigt der Klick die Liste (leere Abfrage) und
+  // markiert den alten Wert: der erste Tastendruck ersetzt ihn.
+  async function oeffneListe() {
+    await ensureLoaded();
+    render('');
+  }
+
+  inputEl.addEventListener('focus', async () => {
+    geradeFokussiert = true;
+    setTimeout(() => { geradeFokussiert = false; }, 400);
+    if (inputEl.value) {
+      markierungOffen = true;
+      try { inputEl.select(); } catch { /* select() gibt es nicht auf jedem Feldtyp */ }
+    }
+    await oeffneListe();
+  });
   inputEl.addEventListener('input', async () => { await ensureLoaded(); render(inputEl.value); });
+
+  // Der Klick, der den Fokus setzt, würde die Markierung sofort aufheben.
+  inputEl.addEventListener('mouseup', (e) => {
+    if (!markierungOffen) return;
+    markierungOffen = false;
+    e.preventDefault();
+  });
+
+  // Zweiter Klick ins bereits fokussierte Feld (oder nach Escape): wieder auf.
+  inputEl.addEventListener('click', () => {
+    if (geradeFokussiert || !list.hidden) return;
+    oeffneListe();
+  });
+
+  inputEl.addEventListener('blur', () => { markierungOffen = false; });
 
   inputEl.addEventListener('keydown', (e) => {
     const els = items();

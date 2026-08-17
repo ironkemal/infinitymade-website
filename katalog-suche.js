@@ -156,6 +156,52 @@ export function attachAutocomplete(inputEl, cfg) {
   }
 
   let activeIndex = -1, currentItems = [], debounceTimer = null, requestSeq = 0;
+  // Zustände für das erneute Öffnen eines bereits gefüllten Feldes (siehe unten).
+  let ignoriereEingabe = false;   // input-Ereignis, das selectItem selbst auslöst
+  let markierungOffen  = false;   // focus hat gerade den ganzen Wert markiert
+  let geradeFokussiert = false;   // trennt den Fokus-Klick vom zweiten Klick
+
+  /**
+   * Der Kode-Teil eines bereits übernommenen Wertes:
+   * "L60.0 – Unguis incarnatus" → "L60.0".
+   * Rückfall für Felder, deren leere Abfrage nichts liefert (ICD): dort zeigt
+   * der Klick dann die Nachbarn des gewählten Kodes statt eines leeren Menüs.
+   */
+  function codeTeil(wert) {
+    const s = String(wert || '').trim();
+    if (!s) return '';
+    return (s.split(/\s[–—-]\s/)[0] || '').trim() || s;
+  }
+
+  /**
+   * Klick in ein Feld, in dem schon etwas steht.
+   *
+   * Vorher wurde mit dem VOLLEN Feldinhalt gesucht ("L60.0 – Unguis incarnatus"),
+   * und danach suchte niemand — das Dropdown blieb wortlos zu. Man musste den
+   * gewählten Wert erst von Hand löschen, um überhaupt wieder eine Liste zu
+   * sehen. Genau das entfällt hier: der Klick zeigt die Auswahlliste, das
+   * Tippen filtert sie, und der alte Wert ist markiert, wird also vom ersten
+   * Tastendruck ersetzt.
+   */
+  async function oeffneAuswahl() {
+    const seq = ++requestSeq;
+    const abholen = async (q) => {
+      const r = await fetchItems(q);
+      return Array.isArray(r) ? { items: r, note: '' } : { items: r?.items || [], note: r?.note || '' };
+    };
+    let res;
+    try { res = await abholen(''); }
+    catch (e) { console.warn('[katalog-suche] Auswahl:', e); return; }
+    if (seq !== requestSeq) return;
+
+    const rest = codeTeil(inputEl.value);
+    if (!res.items.length && !res.note && rest) {
+      try { res = await abholen(rest); }
+      catch (e) { console.warn('[katalog-suche] Auswahl (Rückfall):', e); return; }
+      if (seq !== requestSeq) return;
+    }
+    renderItems(res.items, res.note);
+  }
 
   function closeDropdown() {
     dropdown.innerHTML = '';
@@ -184,8 +230,12 @@ export function attachAutocomplete(inputEl, cfg) {
       inputEl.value = text;
     }
     closeDropdown();
+    // Das eigene input-Ereignis darf die Suche nicht erneut anwerfen — sonst
+    // stünde 180 ms nach der Auswahl wieder ein Dropdown offen.
+    ignoriereEingabe = true;
     inputEl.dispatchEvent(new Event('input',  { bubbles: true }));
     inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+    ignoriereEingabe = false;
     if (onSelect) { try { onSelect(item); } catch (e) { console.warn('[katalog-suche] onSelect:', e); } }
   }
 
@@ -253,13 +303,42 @@ export function attachAutocomplete(inputEl, cfg) {
   inputEl.removeAttribute('list');
 
   inputEl.addEventListener('input', () => {
+    if (ignoriereEingabe) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => search(inputEl.value), 180);
   });
+
   // minChars: 0 heisst "Klick genuegt" — dann auch bei leerem Feld suchen.
+  // Steht schon ein Wert im Feld, öffnet der Klick die Auswahl (oeffneAuswahl)
+  // statt nach dem fertigen Text zu suchen, und markiert ihn zugleich.
   inputEl.addEventListener('focus', () => {
-    if (inputEl.value.trim() || minChars === 0) search(inputEl.value);
+    geradeFokussiert = true;
+    setTimeout(() => { geradeFokussiert = false; }, 400);
+    if (multi) {
+      if (inputEl.value.trim() || minChars === 0) search(inputEl.value);
+      return;
+    }
+    if (inputEl.value) {
+      markierungOffen = true;
+      try { inputEl.select(); } catch { /* select() gibt es nicht auf jedem Feldtyp */ }
+    }
+    if (inputEl.value.trim() || minChars === 0) oeffneAuswahl();
   });
+
+  // Der Klick, der den Fokus setzt, würde die Markierung sofort wieder aufheben.
+  inputEl.addEventListener('mouseup', e => {
+    if (!markierungOffen) return;
+    markierungOffen = false;
+    e.preventDefault();
+  });
+
+  // Zweiter Klick ins bereits fokussierte Feld (oder nach Escape): erneut öffnen.
+  inputEl.addEventListener('click', () => {
+    if (geradeFokussiert || dropdown.style.display === 'block') return;
+    if (multi) search(inputEl.value);
+    else if (inputEl.value.trim() || minChars === 0) oeffneAuswahl();
+  });
+
   inputEl.addEventListener('keydown', e => {
     if (!dropdown.querySelectorAll('.icd10-dropdown-item').length) return;
     if (e.key === 'ArrowDown')      { e.preventDefault(); setActive(Math.min(activeIndex + 1, currentItems.length - 1)); }
@@ -267,7 +346,7 @@ export function attachAutocomplete(inputEl, cfg) {
     else if (e.key === 'Enter')     { if (activeIndex >= 0 && currentItems[activeIndex]) { e.preventDefault(); selectItem(currentItems[activeIndex]); } }
     else if (e.key === 'Escape')    { closeDropdown(); }
   });
-  inputEl.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+  inputEl.addEventListener('blur', () => { markierungOffen = false; setTimeout(closeDropdown, 150); });
   window.addEventListener('scroll', () => {
     if (dropdown.style.display === 'block') positionDropdown();
   }, true);

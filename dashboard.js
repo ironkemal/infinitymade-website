@@ -1,25 +1,28 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
-import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260814a';
+import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
 import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260815';
-import { attachPatientSearch } from './patient-suche.js?v=20260814';
+import { attachPatientSearch } from './patient-suche.js?v=20260817';
 import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
-import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260815';
+import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260817';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260816';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260815';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
-import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin } from './module/fussbefund.js?v=20260814a';
+import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin } from './module/fussbefund.js?v=20260817';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
+import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260817';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260817';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
-import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260815b';
+import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
@@ -28,13 +31,14 @@ import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
+import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
 import { DV_SLOT_MIN, DV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260816';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
   verteileOffeneSitzungen,
-} from './module/termin-aktionen.js?v=20260816';
+} from './module/termin-aktionen.js?v=20260817';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260816';
@@ -3082,6 +3086,16 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
     prescriptionId: sessionData.prescriptionId,
   };
 
+  // Die Frequenzprüfung beim Speichern liest `bkSelectedRxId` — und
+  // `prefillBookingModal()` hat es zwei Zeilen vorher geleert. Wer eine Sitzung
+  // aus dem Seitenbereich auf den Kalender zieht (der häufigste Weg zum
+  // Folgetermin), bekam deshalb NIE eine Warnung, während derselbe Termin über
+  // die Verordnungskarte geprüft wurde. `_pendingRxSession` allein genügt
+  // nicht: es verknüpft nur die Sitzungszeile und wird von der Prüfung nicht
+  // gelesen.
+  const rxIdEl = document.getElementById('bkSelectedRxId');
+  if (rxIdEl) rxIdEl.value = sessionData.prescriptionId || '';
+
   // Patient übernehmen
   const custIdEl = document.getElementById('bkCustomerId');
   const custEl2 = document.getElementById('bkCustomer');
@@ -3110,6 +3124,16 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
     srvSel.value = primarySrvId;
     await updateBkDuration(primarySrvId);
   }
+
+  // Gleiche Regel wie bei der Verordnungskarte: steht die Leistung durch die
+  // Verordnung fest, wird nicht noch einmal danach gefragt. Ohne Treffer im
+  // Katalog bleibt das Feld sichtbar — `service_id` ist Pflicht, und eine
+  // versteckte Pflichtangabe lässt sich nicht ausfüllen.
+  const srvHinweis = document.getElementById('bkServiceAusVerordnung');
+  if (srvHinweis && primarySrvId && srvSel) {
+    srvHinweis.textContent = `Leistung aus der Verordnung: ${srvSel.options[srvSel.selectedIndex]?.textContent || '—'}`;
+  }
+  zeigeDienstleistungsfeld(!primarySrvId);
 
   // Kombi-Termin: Dauer = Summe der Dauern aller gematchten Dienstleistungen
   if (sessions.length > 1) {
@@ -3372,9 +3396,7 @@ async function openBookingActionModal(booking, opts = {}) {
 
   // --- Heilmittel / Rezept kalan seans (prescription_sessions join'den) ---
   const rxCard = document.getElementById('bkRxInfoCard');
-  const sitzungCard = document.getElementById('bkSitzungCard');
   if (rxCard) rxCard.hidden = true;
-  if (sitzungCard) sitzungCard.hidden = true;
   const ps = Array.isArray(booking.prescription_sessions) ? booking.prescription_sessions[0] : null;
   // Ein Patient kann mehrere Verordnungen gleichzeitig laufen haben. Bis
   // hierher zeigte das Panel stumm die des angeklickten Termins; die anderen
@@ -3508,75 +3530,12 @@ async function openBookingActionModal(booking, opts = {}) {
       }
     }
 
-    // Sitzungsübersicht table
-    if (sitzungCard && rx.id) {
-      const rxId = rx.id;
-      sitzungCard.hidden = false;
-      const sitzungBody = document.getElementById('bkSitzungBody');
-      const sitzungCount = document.getElementById('bkSitzungCount');
-      if (sitzungBody) sitzungBody.innerHTML = '<tr><td colspan="7" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Lade…</td></tr>';
-      supabase.from('prescription_sessions')
-        .select('id,prescription_id,session_number,status,done_at,notes,booking_id,bookings(id,start_time,end_time,employee_name,status)')
-        .eq('prescription_id', rxId)
-        .order('session_number', { ascending: true })
-        .then(({ data: sessions }) => {
-          if (!sessions || !sitzungBody) return;
-          const done = sessions.filter(s => s.status === 'completed' || s.status === 'no_show').length;
-          if (sitzungCount) sitzungCount.textContent = `${done} / ${total} erledigt`;
-          const hmKurz = (rx.heilmittel || '—').split(/[,;]/)[0].trim().slice(0, 20);
-          sitzungBody.innerHTML = sessions.map(s => {
-            const bk = s.bookings;
-            const isCurrent = s.booking_id === booking.id;
-            const statusIcon = s.status === 'completed' ? '✓' : s.status === 'no_show' ? '✗' : '○';
-            const statusColor = s.status === 'completed' ? '#4ade80' : s.status === 'no_show' ? '#f87171' : 'var(--text-muted)';
-            const dateStr = bk?.start_time
-              ? new Date(bk.start_time).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'2-digit'})
-                + ' ' + new Date(bk.start_time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
-              : '—';
-            const empI = (bk?.employee_name || '').split(/\s+/).map(w => w[0]||'').join('').toUpperCase().slice(0,3) || '—';
-            const rowBg = isCurrent ? 'background:rgba(177,137,27,0.12);' : '';
-            const noteTip = s.notes ? ` title="${escapeHtml(s.notes)}"` : '';
-            const undoBtn = s.status === 'done'
-              ? `<button class="sess-undo-btn" data-sid="${escapeHtml(s.id)}" data-prescription="${escapeHtml(s.prescription_id)}" style="font-size:10px;padding:2px 7px;border:1px solid var(--border,#2d3348);border-radius:5px;background:transparent;color:var(--text-muted);cursor:pointer;" title="Sitzung als 'nicht erledigt' markieren">↩</button>`
-              : '';
-            return `<tr style="border-bottom:1px solid var(--border,#374151);${rowBg}">
-              <td style="padding:5px 8px;text-align:center;color:var(--text-muted);">${s.session_number}</td>
-              <td style="padding:5px 6px;text-align:center;font-weight:700;color:${statusColor};">${statusIcon}</td>
-              <td style="padding:5px 6px;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;max-width:90px;white-space:nowrap;">${escapeHtml(hmKurz)}</td>
-              <td style="padding:5px 6px;text-align:center;color:var(--text-muted);font-size:11px;">${escapeHtml(empI)}</td>
-              <td style="padding:5px 8px;text-align:right;color:var(--text-muted);white-space:nowrap;font-size:11px;">${escapeHtml(dateStr)}</td>
-              <td style="padding:5px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--text-muted);"${noteTip}>${s.notes ? escapeHtml(s.notes.slice(0,40)) + (s.notes.length > 40 ? '…' : '') : ''}</td>
-              <td style="padding:5px 4px;">${undoBtn}</td>
-            </tr>`;
-          }).join('') || '<tr><td colspan="7" style="padding:8px 12px;color:var(--text-muted);font-size:12px;">Keine Sitzungsdaten.</td></tr>';
-          sitzungBody.querySelectorAll('.sess-undo-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-              e.stopPropagation();
-              const confirmed = await showConfirmModal({
-                title: 'Sitzung zurücksetzen?',
-                message: 'Die Sitzung wird auf "geplant" zurückgesetzt. Die gespeicherte Notiz bleibt erhalten.',
-                confirmText: 'Zurücksetzen',
-                cancelText: 'Abbrechen',
-                variant: 'warning',
-              });
-              if (!confirmed) return;
-              const { error } = await supabase
-                .from('prescription_sessions')
-                .update({ status: 'planned', done_at: null })
-                .eq('id', btn.dataset.sid);
-              if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
-              await supabase.from('prescriptions')
-                .update({ status: 'in_therapy' })
-                .eq('id', btn.dataset.prescription)
-                .eq('status', 'completed');
-              showToast('Sitzung zurückgesetzt ✓');
-              btn.closest('tr').querySelector('td:nth-child(2)').textContent = '○';
-              btn.closest('tr').querySelector('td:nth-child(2)').style.color = 'var(--text-muted)';
-              btn.remove();
-            });
-          });
-        });
-    }
+    // Die „Sitzungsübersicht" stand hier als eigene Tabelle und lud dafür alle
+    // Sitzungen der Verordnung ein zweites Mal nach. Entfallen: der Block
+    // „Aktive Verordnung" unten im Panel führt dieselbe Liste bereits, und
+    // zwar die bedienbare. Der Rückgängig-Knopf in der alten Tabelle hing an
+    // status === 'done' — ein Wert, den diese Spalte nie trägt ('completed' /
+    // 'no_show' / 'planned'); er war seit jeher unsichtbar.
   }
 
   // Der Terminverlauf wird nicht mehr im Panel ausgebreitet — er steckt hinter
@@ -5364,31 +5323,10 @@ async function initBkCustomerAutocomplete() {
     window.bkAllLeads = data || [];
   }
   await loadBkLeads();
-
-  let activeIndex = -1;
-
-  function renderList(filter) {
-    const q = (filter || '').trim().toLowerCase();
-    const filtered = !q
-      ? (window.bkAllLeads || [])
-      : (window.bkAllLeads || []).filter(l => patientMatchesQuery(l, q));
-    let html = '<li class="cust-new-item" data-action="new">+ Neuer Kunde…</li>';
-    if (filtered.length === 0) {
-      html += '<li class="empty-item">Keine Treffer</li>';
-    } else {
-      const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const rx = q ? new RegExp(`(${esc})`, 'gi') : null;
-      html += filtered.map(l => {
-        const name = displayNameWithBirth(l);
-        const safe = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const hl = rx ? safe.replace(rx, '<span class="match-hl">$1</span>') : safe;
-        return `<li data-id="${l.id}">${hl}</li>`;
-      }).join('');
-    }
-    list.innerHTML = html;
-    list.hidden = false;
-    activeIndex = -1;
-  }
+  // `window.bkAllLeads` wird dabei neu zugewiesen; das Modul hält seinen eigenen
+  // Bestand fest. Ohne diesen Anstoss zeigte das Feld beim zweiten Öffnen des
+  // Dialogs noch die Kartei von vorhin.
+  input._patientSearchApi?.refresh();
 
   function openNewLeadFlow() {
     // Schnellerfassung: Booking modalı kapatmadan küçük mini-modal aç
@@ -5428,7 +5366,6 @@ async function initBkCustomerAutocomplete() {
     idH.value = lead.id;
     if (phoneInput) phoneInput.value = lead.phone || '';
     list.hidden = true;
-    activeIndex = -1;
     refreshBkHausbesuchPanel();
     loadBkVerordnungen(lead.id);
   }
@@ -5466,48 +5403,23 @@ async function initBkCustomerAutocomplete() {
 
   if (!input.dataset.bkAutoBound) {
     input.dataset.bkAutoBound = '1';
+    // Dieses Feld war die Vorlage für patient-suche.js, blieb aber als einzige
+    // Stelle beim Nachbau — inklusive des Fehlers, dass ein Klick ins gefüllte
+    // Feld nach dem fertigen Namen suchte und man ihn erst löschen musste.
+    // Jetzt hängt es am gemeinsamen Modul: eine Suche, ein Fix für alle Masken.
     input.addEventListener('input', () => {
       nameH.value = '';
       idH.value = '';
       if (phoneInput) phoneInput.value = '';
-      renderList(input.value);
     });
-    input.addEventListener('focus', () => renderList(input.value));
-    input.addEventListener('keydown', (e) => {
-      const items = list.querySelectorAll('li[data-id], li[data-action="new"]');
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        activeIndex = Math.min(activeIndex + 1, items.length - 1);
-        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
-        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        activeIndex = Math.max(activeIndex - 1, 0);
-        items.forEach((it, i) => it.classList.toggle('active', i === activeIndex));
-        if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (activeIndex >= 0 && items[activeIndex]) {
-          const it = items[activeIndex];
-          if (it.dataset.action === 'new') openNewLeadFlow();
-          else applyLeadById(it.dataset.id);
-        }
-      } else if (e.key === 'Escape') {
-        list.hidden = true;
-        activeIndex = -1;
-      }
-    });
-    list.addEventListener('mousedown', (e) => {
-      const it = e.target.closest('li');
-      if (!it) return;
-      e.preventDefault();
-      if (it.dataset.action === 'new') openNewLeadFlow();
-      else if (it.dataset.id) applyLeadById(it.dataset.id);
-    });
-    document.addEventListener('mousedown', (e) => {
-      if (!document.getElementById('bkCustomerWrap')?.contains(e.target)) {
-        list.hidden = true;
-      }
+    attachPatientSearch(input, {
+      listEl:      list,
+      containerEl: document.getElementById('bkCustomerWrap'),
+      loadLeads:   () => window.bkAllLeads || [],
+      matches:     patientMatchesQuery,
+      labelOf:     displayNameWithBirth,
+      onSelect:    lead => applyLeadById(lead.id),
+      onNew:       () => openNewLeadFlow(),
     });
 
     const schnellBtn = document.getElementById('bkAddCustomerSchnell');
@@ -6235,6 +6147,10 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       weekdays: checked.length ? checked : [new Date(dateStr + 'T12:00:00Z').getDay()],
       count: count,
       customerName: cust,
+      // Ohne `leadId` legte die Serie jeden Termin ohne Patientenbezug an —
+      // der Fußbefund-Knopf blieb dann unsichtbar und der Terminzettel fand
+      // die Geschwistertermine nicht (17.08.2026).
+      leadId: custId || null,
       customerPhone: phone || null,
       notes: notes || null,
       duration: durMin,
@@ -6473,8 +6389,8 @@ async function loadRxSessionsPanel(booking, rxId = null) {
     supabase, prescriptionId: rx.id, anzahlEinheiten: rx.anzahl_einheiten, status: rx.status,
   });
   if (abgleich.fehler) console.warn('[sitzung-abgleich]', abgleich.fehler);
-  // Wurden Zeilen ergänzt, zeigen die übrigen Bereiche (Sitzungsübersicht,
-  // Verordnungskarten) noch den alten Stand — einmal melden genügt, der
+  // Wurden Zeilen ergänzt, zeigen die übrigen Bereiche (Verordnungskarten,
+  // Rezeptinfo) noch den alten Stand — einmal melden genügt, der
   // Seitenbereich baut sich neu auf. Beim zweiten Durchlauf fehlt nichts mehr,
   // also meldet auch niemand mehr: keine Schleife.
   if (abgleich.ergaenzt > 0) emit('verordnungen:changed');
@@ -7064,6 +6980,10 @@ document.getElementById('aiSuggestConfirm').addEventListener('click', async () =
     duration: service?.duration,
     slots: selected,
     customerName: cust,
+    // Der Patientenbezug wurde bis 17.08.2026 erst NACH dem Anlegen ermittelt
+    // (unten, für die Bestätigungsmail) — die Terminzeilen selbst blieben ohne
+    // `lead_id`. Beim Rezept-Weg steht der Patient in `_physioFlow`.
+    leadId: custIdAtConfirm || window._physioFlow?.patient_id || null,
     customerPhone: phone || null,
     notes: notes || null,
     hausbesuch
@@ -8068,29 +7988,20 @@ document.getElementById('bkActionEditBtn').addEventListener('click', () => {
 document.getElementById('bkActionTerminzettelBtn')?.addEventListener('click', async () => {
   const bk = bkActionBookingCache;
   if (!bk) return;
-  const patientName = (bk.customer_name || '').split('·')[0].trim();
+  const ownerId = getOwnerId();
+  const { name: patientName } = parseNameMitGeburt(bk.customer_name);
 
-  // `employee_name` stand hier in der Spaltenliste — die Spalte gibt es in
-  // `bookings` nicht (siehe db/SCHEMA.sql). PostgREST antwortete mit 400 und
-  // der Knopf meldete nur „Termine konnten nicht geladen werden". Der
-  // Therapeut kommt aus `user_id` über die Teamliste.
-  let q = supabase.from('bookings')
-    .select('start_time,end_time,hausbesuch,user_id,services(title)')
-    .eq('owner_id', getOwnerId())
-    .gte('start_time', new Date(Date.now() - 3600000).toISOString())
-    .in('status', ['confirmed', 'pending'])
-    .order('start_time', { ascending: true })
-    .limit(30);
-  // lead_id ist der verlässliche Schlüssel; ältere Termine haben nur den Namen.
-  q = bk.lead_id ? q.eq('lead_id', bk.lead_id) : q.eq('customer_name', bk.customer_name);
-
-  // Öffnungszeiten der Praxis für den Fuß des Zettels — der häufigste Grund,
-  // warum der Patient danach anruft.
-  const [{ data: termine, error }, { data: zeiten }] = await Promise.all([
-    q,
+  // Der Zettel gehört dem PATIENTEN, nicht dem angeklickten Termin: es kommen
+  // alle seine kommenden Termine darauf. Der Textvergleich auf `customer_name`,
+  // der vorher hier stand, fand bei „Klaus Fischer · 1972-07-23" gegen „Klaus
+  // Fischer" nichts — dann druckte der Zettel genau eine Zeile.
+  // Öffnungszeiten für den Fuß: der häufigste Grund, warum der Patient anruft.
+  const leadId = await findeLeadIdZuTermin(supabase, bk, ownerId, { leads: leadsCache });
+  const [{ termine, error }, { data: zeiten }] = await Promise.all([
+    ladeKommendeTermineDesPatienten(supabase, { ownerId, leadId, booking: bk }),
     supabase.from('working_hours')
       .select('day_of_week,start_time,end_time,is_active')
-      .eq('user_id', getOwnerId()),
+      .eq('user_id', ownerId),
   ]);
 
   if (error) { showToast('Termine konnten nicht geladen werden.', 'error'); return; }
@@ -17593,55 +17504,13 @@ async function openRezeptModal(phone, leadId) {
   if (leadId) await fillRzPatientFromLead(leadId);
 }
 
+// Liste und Detailansicht liegen in module/verordnung-liste.js — dort kamen die
+// Belegnummer neben dem Namen und der Klick auf die Zeile dazu.
 async function loadVerordnungen() {
-  const ownerId = getOwnerId();
-  const tbody = document.getElementById('vordTbody');
-  const empty = document.getElementById('vordListEmpty');
-  if (!tbody) return;
-
-  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">Lädt…</td></tr>';
-
-  const btn = document.getElementById('vordNeueBtn');
-  if (btn) btn.onclick = () => openRezeptModal(null, null);
-
-  const { data, error } = await supabase
-    .from('prescriptions')
-    .select('id, patient_id, ausstellungsdatum, icd10, heilmittel, anzahl_einheiten, status, gueltig_bis, leads(first_name, last_name)')
-    .eq('owner_id', ownerId)
-    .order('ausstellungsdatum', { ascending: false })
-    .limit(200);
-
-  if (error) { console.error('[loadVerordnungen]', error); tbody.innerHTML = ''; return; }
-
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '';
-    if (empty) empty.hidden = false;
-    return;
-  }
-  if (empty) empty.hidden = true;
-
-  const STATUS_LABEL = { parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie', completed: 'Abgeschlossen', billed: 'Abgerechnet', cancelled: 'Storniert' };
-  const STATUS_COLOR = { parsed: '#f59e0b', confirmed: '#22c55e', in_therapy: '#38bdf8', completed: '#64748b', billed: '#3b82f6', cancelled: '#ef4444' };
-
-  tbody.innerHTML = data.map(rx => {
-    const patName = escapeHtml(
-      `${rx.leads?.first_name || ''} ${rx.leads?.last_name || ''}`.trim() || '—'
-    );
-    const date = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
-    const gueltig = rx.gueltig_bis ? new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : '—';
-    const st = rx.status || 'parsed';
-    const stLabel = STATUS_LABEL[st] || st;
-    const stColor = STATUS_COLOR[st] || '#94a3b8';
-    return `<tr>
-      <td>${patName}</td>
-      <td style="white-space:nowrap">${date}</td>
-      <td><code style="font-size:12px">${escapeHtml(rx.icd10 || '—')}</code></td>
-      <td>${escapeHtml(rx.heilmittel || '—')}</td>
-      <td style="text-align:center">${rx.anzahl_einheiten ?? '—'}</td>
-      <td style="white-space:nowrap">${gueltig}</td>
-      <td><span style="font-size:11px;font-weight:600;color:${stColor}">${escapeHtml(stLabel)}</span></td>
-    </tr>`;
-  }).join('');
+  return verordnungenListeLaden({
+    supabase, ownerId: getOwnerId(), escapeHtml,
+    onNeu: () => openRezeptModal(null, null)
+  });
 }
 
 async function saveRezept() {
@@ -23251,8 +23120,8 @@ async function loadPatRxTable() {
   const { data, error } = await supabase
     .from('prescriptions')
     .select(`
-      id, ausstellungsdatum, status, created_at,
-      leads!patient_id ( id, first_name, last_name ),
+      id, ausstellungsdatum, status, created_at, belegnummer, verordnungsnummer,
+      leads!patient_id ( id, first_name, last_name, patientennummer ),
       aerzte!arzt_id ( name:arzt_name )
     `)
     .eq('owner_id', ownerId)
@@ -23283,7 +23152,10 @@ async function loadPatRxTable() {
     const lastName = rx.leads?.last_name || '—';
     const firstName = rx.leads?.first_name || '—';
     const arztName = rx.aerzte?.name || '—';
-    const rxNr = rx.id.slice(0, 8).toUpperCase();
+    // Früher der Anfang der UUID — auf keinem Papier zu finden. Jetzt
+    // <Patientennummer>-<Verordnungsnummer>, dieselbe Nummer wie auf Rechnung
+    // und Abrechnungsdatei (module/belegnummer.js).
+    const rxNr = belegnummerText(rx, { patientennummer: rx.leads?.patientennummer }) || '—';
 
     return `<tr class="pat-rx-row" data-rx-id="${rx.id}" data-lead-id="${rx.leads?.id || ''}" style="cursor:pointer;">
       <td style="font-weight:600;color:var(--text-main);">${escapeHtml(lastName)}</td>
@@ -23303,46 +23175,16 @@ async function loadPatRxTable() {
   });
 }
 
+// Zeigte früher zehn Felder aus einer eigenen Abfrage. Die vollständige
+// Ansicht steht jetzt in module/verordnung-detail.js und wird von der
+// Verordnungsliste ebenfalls benutzt — eine Feldliste, nicht zwei.
 async function openPatRxDetail(rxId, leadId) {
-  const panel = document.getElementById('patRxDetailPanel');
-  const content = document.getElementById('patRxDetailContent');
-  const title = document.getElementById('patRxDetailName');
-  if (!panel || !content) return;
-
-  panel.hidden = false;
-  content.innerHTML = 'Lade…';
-
-  const { data: rx } = await supabase
-    .from('prescriptions')
-    .select('*, leads!patient_id(*), aerzte!arzt_id(name:arzt_name)')
-    .eq('id', rxId)
-    .maybeSingle();
-
-  if (!rx) { content.innerHTML = 'Fehler beim Laden.'; return; }
-
-  const p = rx.leads || {};
-  const fullName = [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
-  title.textContent = fullName;
-
-  const fmt = d => d ? new Date(d).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
-
-  content.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Patient</div><div style="color:var(--text-main);font-weight:600;">${escapeHtml(fullName)}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Geburtsdatum</div><div style="color:var(--text-main);">${fmt(p.geburtsdatum)}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Versichertennummer</div><div style="color:var(--text-main);font-family:monospace;">${escapeHtml(p.versichertennummer || '—')}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Krankenkasse</div><div style="color:var(--text-main);">${escapeHtml(p.krankenkasse || '—')}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Rezept-Typ</div><div style="color:var(--text-main);">${escapeHtml(rx.rezept_typ || '—')}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Heilmittel</div><div style="color:var(--text-main);">${escapeHtml(rx.heilmittel || '—')}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Ausstellungsdatum</div><div style="color:var(--text-main);">${fmt(rx.ausstellungsdatum)}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Gültig bis</div><div style="color:var(--text-main);">${fmt(rx.gueltig_bis)}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">Arzt</div><div style="color:var(--text-main);">${escapeHtml(rx.aerzte?.name || '—')}</div></div>
-      <div><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px;">ICD-10</div><div style="color:var(--text-main);font-family:monospace;">${escapeHtml(rx.icd10 || '—')}</div></div>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn-primary btn-sm" onclick="switchPanel('kunden');openPatientDetail('${leadId}')">Patient öffnen →</button>
-    </div>
-  `;
+  return zeigeVerordnungDetail({
+    supabase, rxId, leadId, escapeHtml,
+    panel:  document.getElementById('patRxDetailPanel'),
+    titel:  document.getElementById('patRxDetailName'),
+    inhalt: document.getElementById('patRxDetailContent')
+  });
 }
 
 // ===== Überblick Hub (madde 15) =====
@@ -23823,7 +23665,9 @@ async function loadPodologieBilling() {
   const ownerId = getOwnerId();
   const { data: vords, error } = await supabase
     .from('verordnungen')
-    .select('*')
+    // leads(patientennummer) nur für die Nummer neben dem Namen — `belegnummer`
+    // ist bis zur Abrechnung leer, sie muss zusammengesetzt werden.
+    .select('*, leads!lead_id(patientennummer)')
     .eq('owner_id', ownerId)
     // Abgesetzte gehören in die Arbeitsliste — sonst bleibt ausgefallenes Geld unsichtbar.
     .in('status', ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'])
@@ -23876,7 +23720,7 @@ async function loadPodologieBilling() {
           margin-bottom:8px;transition:border-color .15s;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
-              <span style="font-weight:600;color:var(--text-main);">${escapeHtml(v.patient_name || '—')}</span>
+              <span style="font-weight:600;color:var(--text-main);">${escapeHtml(v.patient_name || '—')}</span>${belegnummerRosette(v, { patientennummer: v.leads?.patientennummer, escapeHtml, titel: 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei' })}
               <span style="font-size:12px;background:var(--bg-card-solid,#1f2937);padding:2px 8px;border-radius:12px;color:var(--text-main);">${escapeHtml(
                 _isGkv
                   ? (v.diagnosegruppe || '—')

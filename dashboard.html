@@ -1375,6 +1375,14 @@
               </table>
             </div>
             <div id="vordListEmpty" class="table-empty" hidden>Keine Verordnungen vorhanden.</div>
+            <!-- Detailansicht: öffnet sich beim Klick auf eine Zeile (module/verordnung-detail.js) -->
+            <div id="vordDetailPanel" hidden style="margin-top:12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:18px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                <h3 id="vordDetailName" style="margin:0;font-size:16px;font-weight:700;color:var(--text-main);">—</h3>
+                <button id="vordDetailClose" class="btn-ghost btn-sm">✕ Schließen</button>
+              </div>
+              <div id="vordDetailContent" style="font-size:13px;color:var(--text-muted);">Laden…</div>
+            </div>
           </div>
         </section>
 
@@ -5156,15 +5164,16 @@
           <!-- Die Stammdaten (Geburtsdatum, Kasse, Adresse, Status …) standen
                hier als achtzeiliges Raster. Sie waren beim Behandeln fast nie
                die Frage und haben den Platz gekostet, den der Block „Aktive
-               Verordnung" ganz unten braucht. Jetzt zwei Knöpfe: Daten und
-               Verlauf — beide öffnen die Patientenakte, die diese Angaben
-               ohnehin vollständiger zeigt. -->
+               Verordnung" ganz unten braucht. Jetzt ein Knopf, der die
+               Patientenakte öffnet — dort stehen dieselben Angaben
+               vollständiger. Daneben stand einmal ein zweiter Knopf
+               („Verlauf"), der auf dieselbe Akte zeigte; zwei Knöpfe mit
+               demselben Ziel sind kein Angebot, sondern eine Frage. -->
           <div style="padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
             <button id="bkOpenPatientBtn" class="btn-ghost btn-sm" type="button" style="font-size:12px;">Patientendaten →</button>
-            <button id="bkVerlaufBtn" class="btn-ghost btn-sm" type="button" style="font-size:12px;">Verlauf (gekommen / nicht gekommen) →</button>
-            <!-- Die No-Show-Warnung gehört neben den Verlauf-Knopf: sie ist der
-                 Grund, ihn zu drücken. Vorher stand sie an einer ganz anderen
-                 Stelle im Panel. -->
+            <!-- Die No-Show-Warnung steht in der Patientenkarte, weil sie zum
+                 Patienten gehört und nicht zum einzelnen Termin. Vorher stand
+                 sie an einer ganz anderen Stelle im Panel. -->
             <div id="bkActionNoShowWarning" hidden
               style="width:100%;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#f87171;"></div>
           </div>
@@ -5226,27 +5235,12 @@
           </div>
         </div>
 
-        <!-- Sitzungsübersicht -->
-        <div id="bkSitzungCard" hidden style="border:1px solid var(--border,#374151);border-radius:8px;margin-bottom:12px;overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);">
-            <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Sitzungsübersicht</div>
-            <span id="bkSitzungCount" style="font-size:11px;color:var(--text-muted);"></span>
-          </div>
-          <div style="overflow-x:auto;">
-            <table id="bkSitzungTable" style="width:100%;border-collapse:collapse;font-size:12px;">
-              <thead>
-                <tr style="border-bottom:1px solid var(--border,#374151);">
-                  <th style="padding:5px 8px;text-align:center;color:var(--text-muted);font-weight:500;width:28px;">#</th>
-                  <th style="padding:5px 6px;text-align:center;color:var(--text-muted);font-weight:500;width:24px;">St.</th>
-                  <th style="padding:5px 6px;text-align:left;color:var(--text-muted);font-weight:500;">Leistung</th>
-                  <th style="padding:5px 6px;text-align:center;color:var(--text-muted);font-weight:500;width:34px;">Ther.</th>
-                  <th style="padding:5px 8px;text-align:right;color:var(--text-muted);font-weight:500;white-space:nowrap;">Datum &amp; Zeit</th>
-                </tr>
-              </thead>
-              <tbody id="bkSitzungBody"></tbody>
-            </table>
-          </div>
-        </div>
+        <!-- Der Block „Sitzungsübersicht" stand hier: eine Tabelle aller
+             Sitzungen der laufenden Verordnung. Er ist entfallen, weil der
+             Block „Aktive Verordnung" ganz unten dieselbe Liste ohnehin führt
+             — und zwar die, mit der man arbeitet (Einheiten vergeben, auf den
+             Kalender ziehen). Zwei Listen derselben Sitzungen im selben Panel
+             widersprechen sich früher oder später. -->
 
         <!-- Anamnese Özeti -->
         <div id="bkAnamneseCard" hidden style="border:1px solid var(--border,#374151);border-radius:8px;margin-bottom:12px;overflow:hidden;">
@@ -5340,11 +5334,6 @@
         <button class="btn-ghost" id="bkActionFussbefundBtn" type="button" hidden
                 style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);margin-bottom:8px;">🦶 Fußbefund</button>
 
-        <!-- Terminzettel A5: die kommenden Termine dieses Patienten zum
-             Mitgeben. Druckvorlage in module/termin-druck.js. -->
-        <button class="btn-ghost" id="bkActionTerminzettelBtn" type="button"
-                style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);margin-bottom:8px;">🖨 Termine drucken (A5)</button>
-
         <!-- „Bearbeiten" und „Löschen" nannten ihr Ziel nicht. Bei einem
              Patienten mit sechs Terminen sieht man dem Knopf nicht an, welchen
              er trifft — deshalb steht der gewählte Termin darüber.
@@ -5372,8 +5361,24 @@
           <button class="btn-secondary" id="bkActionAusfallBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;" hidden>💶 Ausfallrechnung erstellen</button>
         </div>
 
+        <!-- Terminzettel A5: alle kommenden Termine dieses Patienten zum
+             Mitgeben. Druckvorlage in module/termin-druck.js.
+
+             Der Knopf stand vorher oben zwischen „Fußbefund" und
+             „Verschieben / Bearbeiten / Löschen" und ging dort unter. Er
+             gehört zu den Terminen, also steht er jetzt direkt über der
+             Verordnungs-/Termineliste (Kemal, 17.08.2026).
+
+             Bewusst ÜBER `#bkRxSessionsPanel` und nicht darin: das Panel ist
+             ausgeblendet, solange keine Verordnung am Termin hängt — im Panel
+             wäre der Knopf beim Selbstzahler spurlos verschwunden. -->
+        <div style="margin-top:16px;border-top:2px solid var(--border);padding-top:14px;">
+          <button class="btn-ghost" id="bkActionTerminzettelBtn" type="button"
+                  style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);">🖨 Termine drucken (A5)</button>
+        </div>
+
         <!-- ===== VERORDNUNG SESSIONS PANEL ===== -->
-        <div id="bkRxSessionsPanel" hidden style="margin-top:16px;border-top:2px solid var(--border);padding-top:14px;">
+        <div id="bkRxSessionsPanel" hidden style="margin-top:14px;border-top:2px solid var(--border);padding-top:14px;">
           <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
             <span>Aktive Verordnung</span>
             <span id="bkRxSessionsBadge" style="font-size:11px;background:var(--primary);color:#fff;border-radius:20px;padding:1px 8px;font-weight:600;"></span>
@@ -6083,7 +6088,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260816c"></script>
+  <script type="module" src="dashboard.js?v=20260817d"></script>
 </body>
 
 </html>

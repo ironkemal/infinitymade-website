@@ -1139,9 +1139,31 @@ app.get('/api/team', requireAuthAI, async (req, res) => {
   }
 });
 
+/**
+ * Patientenbezug aus dem Request-Body prüfen.
+ *
+ * Die Serientermin-Endpunkte legten ihre Zeilen bis 17.08.2026 ganz ohne
+ * `lead_id` an — die Spalte stand in keinem der drei Insert-Payloads. Folge:
+ * jeder per Serie angelegte Termin war von der Patientenakte abgeschnitten
+ * (50 von 274 Terminen), der Fußbefund-Knopf blieb unsichtbar und der
+ * Terminzettel fand die Geschwistertermine nicht.
+ *
+ * Die ID kommt aus dem Body, also wird sie gegen den Mandanten geprüft: ohne
+ * diese Zeile könnte ein manipulierter Aufruf Termine an eine fremde
+ * Patientenakte hängen. `null` heisst „kein Bezug" — nie ein Fehler, denn
+ * Termine ohne Patientenkartei (Selbstzahler ohne Akte) sind zulässig.
+ */
+async function pruefeLeadId(leadId, ownerId) {
+  if (!leadId || !ownerId) return null;
+  const { data } = await supabase
+    .from('leads').select('id').eq('id', leadId).eq('owner_id', ownerId).maybeSingle();
+  return data?.id || null;
+}
+
 app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
-  const { userId, serviceId, startDate, time, recurrence, intervalDays, weekdays, count, customerName, customerPhone, notes, duration } = req.body;
+  const { userId, serviceId, startDate, time, recurrence, intervalDays, weekdays, count, customerName, customerPhone, notes, duration, leadId } = req.body;
   const ownerId = req.auth.tenantId; // never trust body — always from JWT
+  const bezugLeadId = await pruefeLeadId(leadId, ownerId);
 
   if (!userId || !ownerId || !startDate || !time || !count || count < 1 || count > 52) {
     return res.status(400).json({ error: 'Missing or invalid params' });
@@ -1227,7 +1249,8 @@ app.post('/api/booking/batch-create', requireAuthAI, async (req, res) => {
         customer_email: 'manual@booking.com',
         notes: notes || null,
         hausbesuch: req.body.hausbesuch || false,
-        status: 'confirmed'
+        status: 'confirmed',
+        lead_id: bezugLeadId
       }).select().single();
 
       if (dbErr) {
@@ -1913,11 +1936,13 @@ app.post('/api/booking/ai-suggest-series', requireAuthAI, async (req, res) => {
 
 // 5c. Batch-create with explicit slots (used after AI confirmation)
 app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) => {
-  const { serviceId, slots, customerName, customerPhone, notes, hausbesuch, duration } = req.body;
+  const { serviceId, slots, customerName, customerPhone, notes, hausbesuch, duration, leadId } = req.body;
   const ownerId = req.auth.tenantId; // never trust body — always from JWT
   if (!ownerId || !Array.isArray(slots) || slots.length === 0) {
     return res.status(400).json({ error: 'ownerId and slots[] required' });
   }
+  // Einmal je Request geprüft, nicht je Slot — siehe pruefeLeadId().
+  const bezugLeadId = await pruefeLeadId(leadId, ownerId);
   let dur = parseInt(duration, 10);
   if (!dur || dur <= 0) {
     if (serviceId) {
@@ -1954,7 +1979,8 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
         customer_email: 'manual@booking.com',
         notes: notes || null,
         hausbesuch: !!hausbesuch,
-        status: 'confirmed'
+        status: 'confirmed',
+        lead_id: bezugLeadId
       }).select().single();
       if (error) {
         conflicts.push({ slot: s, reason: error.code === '23P01' ? 'Slot bereits belegt' : 'Datenbankfehler' });
@@ -1971,7 +1997,7 @@ app.post('/api/booking/batch-create-explicit', requireAuthAI, async (req, res) =
 // 6. Manual Booking (From Admin Panel)
 app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
   try {
-    const { employeeId, title, start_time, end_time, customerName, customerPhone } = req.body;
+    const { employeeId, title, start_time, end_time, customerName, customerPhone, leadId } = req.body;
     const ownerId = req.auth.tenantId; // never trust body — always from JWT
 
     const { data, error } = await supabase.from('bookings').insert({
@@ -1982,7 +2008,11 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
       start_time: start_time,
       end_time: end_time,
       customer_email: 'manual@booking.com',
-      status: 'confirmed'
+      status: 'confirmed',
+      // Der einzige Aufrufer (kalender.js) hat noch keine Patientenauswahl, er
+      // tippt den Namen. Der Endpunkt nimmt den Bezug trotzdem entgegen, damit
+      // dieser Weg nicht die nächste Quelle beziehungsloser Termine wird.
+      lead_id: await pruefeLeadId(leadId, ownerId)
     }).select().single();
 
     if (error) {

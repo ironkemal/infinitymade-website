@@ -1044,7 +1044,29 @@ function verdrahte(wurzel) {
       }
       renderPatientDropdown(e.target.value);
     });
-    searchInput.addEventListener('focus', () => renderPatientDropdown(searchInput.value));
+    // Klick in ein Feld, in dem schon ein Patient steht: ganze Liste zeigen und
+    // den alten Namen markieren, statt nach dem fertigen Text zu filtern.
+    // Vorher blieb dabei nur der ohnehin gewählte Patient übrig — man musste
+    // den Namen erst löschen, um einen anderen wählen zu können.
+    let markierungOffen = false;
+    searchInput.addEventListener('focus', () => {
+      if (searchInput.value) {
+        markierungOffen = true;
+        try { searchInput.select(); } catch { /* nicht jeder Feldtyp kann das */ }
+      }
+      renderPatientDropdown('');
+    });
+    // Der Klick, der den Fokus setzt, würde die Markierung sofort aufheben.
+    searchInput.addEventListener('mouseup', e => {
+      if (!markierungOffen) return;
+      markierungOffen = false;
+      e.preventDefault();
+    });
+    searchInput.addEventListener('blur', () => { markierungOffen = false; });
+    // Zweiter Klick ins bereits fokussierte Feld: wieder aufklappen.
+    searchInput.addEventListener('click', () => {
+      if (dropdown.style.display === 'none') renderPatientDropdown('');
+    });
 
     dropdown.addEventListener('click', async e => {
       const item = e.target.closest('.fbp-patient-item');

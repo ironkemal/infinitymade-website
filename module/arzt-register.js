@@ -58,7 +58,7 @@
 
 // Dieselbe Version wie in `dashboard.js` — eine abweichende Query-Zeichenkette
 // wäre für den Browser ein zweites Modul.
-import { attachArztSearch, arztMetaText } from '../arzt-suche.js?v=20260816a';
+import { attachArztSearch, arztMetaText } from '../arzt-suche.js?v=20260817';
 
 /** @type {object|null} Von `initArztRegister` gesetzter Zugang zur Dashboard-Umgebung. */
 let ctx = null;

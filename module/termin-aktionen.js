@@ -152,22 +152,19 @@ export function verdrahteAktionsPatientensuche(deps) {
  */
 export function setzePatientenKarte({ lead, booking, oeffneAkte }) {
   const datenBtn = document.getElementById('bkOpenPatientBtn');
-  const verlaufBtn = document.getElementById('bkVerlaufBtn');
   const adrWrap = document.getElementById('bkPatientAdresse');
   const adrText = document.getElementById('bkPatientAdresseText');
 
   // Ohne Patientenakte gibt es nichts zu öffnen — Knöpfe, die nichts tun,
   // sind schlimmer als fehlende Knöpfe.
+  //
+  // Es gab hier einen zweiten Knopf „Verlauf", der dieselbe Akte öffnete —
+  // die Akte startet ohnehin auf dem Reiter „Verlauf" (gekommen / nicht
+  // gekommen). Ein Ziel, ein Knopf.
   const hatAkte = !!(lead && oeffneAkte);
   if (datenBtn) {
     datenBtn.style.display = hatAkte ? '' : 'none';
     datenBtn.onclick = hatAkte ? oeffneAkte : null;
-  }
-  if (verlaufBtn) {
-    verlaufBtn.style.display = hatAkte ? '' : 'none';
-    // Die Patientenakte öffnet von sich aus auf dem Reiter „Verlauf" — genau
-    // die Liste „gekommen / nicht gekommen", die vorher im Panel stand.
-    verlaufBtn.onclick = hatAkte ? oeffneAkte : null;
   }
 
   // Adresse: nur wenn dieser Termin ein Hausbesuch ist. In der Praxis fährt

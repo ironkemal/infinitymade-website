@@ -38,6 +38,8 @@
  *          verordnungAuswahlLeeren
  */
 
+import { belegnummerText } from './belegnummer.js?v=20260817';
+
 // ─── Modulzustand (wird bei jedem verordnungenRendern zurückgesetzt) ──────────
 let _liste = [];    // normalisierte Verordnungsliste aus verordnungenLaden
 let _onAuswahl = null; // Callback bei Änderung
@@ -75,9 +77,9 @@ function _datumDE(isoStr) {
  * Datum: zwei Verordnungen desselben Tages waren nicht auseinanderzuhalten.
  */
 function _nummerAnzeige(row) {
-  if (row.belegnummer) return row.belegnummer;
-  if (row.verordnungsnummer) return '#' + row.verordnungsnummer;
-  return '';
+  // Ohne `patientennummer` liefert belegnummerText genau das: eingefrorene
+  // Belegnummer, sonst `#<Verordnungsnummer>`, sonst leer.
+  return belegnummerText(row);
 }
 
 /**
