@@ -39,6 +39,7 @@ import { renderMonat } from './module/kalender-monat.js?v=20260825';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260825';
 import { mountFarbwahl } from './module/leistung-farbwahl.js?v=20260825';
 import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260825';
+import { renderLeistungenListe } from './module/leistungen-liste.js?v=20260825';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260822';
 import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260822';
 import {
@@ -2512,6 +2513,7 @@ async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, s
   window._pendingRxSession = null;
   document.getElementById('bkSeriesToggle').checked = false;
   document.getElementById('bkSeriesFields').hidden = true;
+  if (document.getElementById('bkAnzahl')) document.getElementById('bkAnzahl').value = '1';
   populateEmpSelects(empId);
   await populateSrvSelect(serviceId);
   openModal('bookingModal');
@@ -5864,6 +5866,26 @@ function setzeBlockerModus(an, knopf = null) {
   document.querySelectorAll('.bk-blocker-btn[data-blocker]').forEach(b =>
     b.classList.toggle('bk-blocker-btn--aktiv', b === knopf));
 }
+// "3x Podologie": das Feld steuert die vorhandene Serienlogik, statt einen
+// zweiten Weg zu bauen. Bei 1 bleibt alles wie vorher.
+document.getElementById('bkAnzahl')?.addEventListener('input', () => {
+  const n = Math.max(1, parseInt(document.getElementById('bkAnzahl').value, 10) || 1);
+  const toggle = document.getElementById('bkSeriesToggle');
+  const hinweis = document.getElementById('bkAnzahlHinweis');
+  if (!toggle) return;
+  toggle.checked = n > 1;
+  if (n > 1) document.getElementById('bkSeriesCount').value = String(n);
+  // Der vorhandene Zuhoerer am Ankreuzfeld blendet die Serienfelder ein und
+  // baut die Vorschau — deshalb melden statt nachbauen.
+  toggle.dispatchEvent(new Event('change', { bubbles: true }));
+  if (hinweis) {
+    hinweis.hidden = n <= 1;
+    hinweis.textContent = n > 1
+      ? `${n} Termine — Wiederholung und Wochentage stehen unter „Mehr Optionen".`
+      : '';
+  }
+});
+
 document.getElementById('bkBlockerZeile')?.addEventListener('click', async (ev) => {
   const zurueck = ev.target.closest('#bkBlockerZurueck');
   if (zurueck) {
@@ -10467,86 +10489,34 @@ document.getElementById('gkvFormSave').addEventListener('click', async () => {
   await loadServices();
 });
 
+// Die Leistungsuebersicht steht in module/leistungen-liste.js — Tabelle statt
+// Kachelwand, gruppiert nach Kostentraegertyp. Hier bleibt die Bruecke.
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
   // Ohne Guard riss ein fehlendes Grid die ganze loadServices()-Kette mit —
   // inklusive der Aufrufer, die nur die Daten und gar kein Rendering brauchen.
   if (!grid) return;
-  const addCard = `<div class="service-card add-service-card" id="addServiceCard">
-      <div class="add-service-icon">+</div>
-      <div class="add-service-label">Neue Dienstleistung</div>
-    </div>`;
-  if (!servicesCache.length) { grid.innerHTML = addCard; bindAddServiceCard(); return; }
-  grid.innerHTML = servicesCache.map(s => {
-    const empNames = (s.employee_services || []).map(es => {
-      const m = teamMembers.find(tm => tm.id === es.employee_id);
-      return m ? (m.business_name || m.email?.split('@')[0]) : null;
-    }).filter(Boolean).join(', ');
-
-    // Build duration chips from price_config or fall back to legacy duration_minutes
-    let durChips = '';
-    const cfg = s.price_config?.durations;
-    if (cfg) {
-      const active = Object.entries(cfg)
-        .filter(([_, v]) => v && v.active)
-        .map(([k, v]) => ({ min: parseInt(k), price: v.price }))
-        .sort((a, b) => a.min - b.min);
-      durChips = active.length
-        ? active.map(d => `<span class="srv-chip">${d.min} Min${d.price != null ? ' · ' + formatEur(d.price) : ''}</span>`).join('')
-        : '<span class="srv-chip srv-chip-warn">Keine aktive Dauer</span>';
-    } else {
-      const pr = s.price != null ? ' · ' + formatEur(s.price) : '';
-      durChips = `<span class="srv-chip">${s.duration_minutes || '–'} Min${pr}</span>`;
-    }
-
-    const codeTag = s.code ? `<span class="srv-code-badge">${escapeHtml(s.code)}</span>` : '';
-    const gkvPrice = s.gkv_position_nr ? GKV_PRICES[s.gkv_position_nr] : null;
-    const privatPrice = s.price != null ? parseFloat(s.price) : null;
-    const priceInfo = gkvPrice
-      ? `<span style="font-size:11px;color:var(--text-muted);">GKV: <b style="color:#60a5fa;">€${gkvPrice.toFixed(2).replace('.',',')} </b> | Privat: <b style="color:var(--accent,#b1891b);">€${privatPrice != null ? privatPrice.toFixed(2).replace('.',',') : '—'}</b></span>`
-      : privatPrice != null
-        ? `<span style="font-size:11px;color:var(--text-muted);">Privat: <b style="color:var(--accent,#b1891b);">€${privatPrice.toFixed(2).replace('.',',')}</b></span>`
-        : '';
-    return `<div class="service-card" data-srv-id="${s.id}">
-      <div class="service-card-head">
-        <div class="service-title"><span class="srv-farbpunkt" style="background:${escapeHtml(s.color || '#22c55e')}"></span>${escapeHtml(s.title)} ${codeTag}</div>
-        <button class="srv-del-btn" data-srv-del="${s.id}" title="Löschen" aria-label="Löschen">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-      </div>
-      <div class="srv-chip-row">${durChips}</div>
-      ${priceInfo ? `<div class="service-meta" style="margin-top:4px;">${priceInfo}</div>` : ''}
-      <div class="service-meta service-emps">${empNames ? '<span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">' + ICON.users + '</span>' + escapeHtml(empNames) : '— Alle Mitarbeiter'}</div>
-    </div>`;
-  }).join('') + addCard;
-  grid.querySelectorAll('.service-card[data-srv-id]').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('[data-srv-del]')) return;
-      openServiceEdit(card.dataset.srvId);
-    });
-  });
-  grid.querySelectorAll('[data-srv-del]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
+  renderLeistungenListe({
+    container: grid,
+    leistungen: servicesCache,
+    teamMembers,
+    formatEur,
+    onNeu: () => {
+      resetServiceForm();
+      const form = document.getElementById('addServiceForm');
+      form.hidden = false;
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    onBearbeiten: (id) => openServiceEdit(id),
+    onLoeschen: async (id) => {
       const ok = await showConfirmModal({ title: 'Dienstleistung löschen', message: t('alert_service_delete'), confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
       if (!ok) return;
-      await supabase.from('services').delete().eq('id', btn.dataset.srvDel);
+      await supabase.from('services').delete().eq('id', id);
       await loadServices();
-    });
+    },
   });
-  bindAddServiceCard();
 }
 
-function bindAddServiceCard() {
-  const card = document.getElementById('addServiceCard');
-  if (!card) return;
-  card.addEventListener('click', () => {
-    resetServiceForm();
-    const form = document.getElementById('addServiceForm');
-    form.hidden = false;
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-}
 
 function resetServiceForm() {
   const form = document.getElementById('addServiceForm');
@@ -10556,6 +10526,8 @@ function resetServiceForm() {
   document.getElementById('srvTitle').value = '';
   document.getElementById('srvCode').value = '';
   document.getElementById('srvGkvPosition').value = '';
+  document.getElementById('srvKostentraegerTyp').value = '';
+  document.getElementById('srvKostentraegerRow').hidden = !spalteKostentraegerDa();
   document.getElementById('srvDur').value = '30';
   document.getElementById('srvPrice').value = '0';
   document.getElementById('srvEmpAll').checked = true;
@@ -10566,6 +10538,10 @@ function resetServiceForm() {
   document.getElementById('srvPhysioFields').hidden = false;
   srvFarbwahl().setze('#22c55e');
   renderPhysioServiceCards();
+}
+
+function spalteKostentraegerDa() {
+  return servicesCache.some(s => Object.prototype.hasOwnProperty.call(s, 'kostentraeger_typ'));
 }
 
 // Die Farbfelder werden einmal gebaut und danach nur noch gesetzt.
@@ -10592,6 +10568,7 @@ function openServiceEdit(id) {
   document.getElementById('srvTitle').value = s.title;
   document.getElementById('srvCode').value = s.code || '';
   srvFarbwahl().setze(s.color);
+  document.getElementById('srvKostentraegerTyp').value = s.kostentraeger_typ || '';
 
   // If price_config exists, use it. Otherwise build one from legacy duration_minutes+price.
   let durations = s.price_config?.durations;
@@ -10715,6 +10692,13 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     price: activeDurs[0].price,
     color: document.getElementById('srvColor').value || '#22c55e'
   };
+  // Die Spalte kommt erst mit sql-melih/2026-08-25-kostentraeger-typ.sql. Vorher
+  // wuerde PostgREST das ganze INSERT/UPDATE abweisen und das Speichern einer
+  // Leistung waere kaputt. loadServices() liest mit select('*') — kennt der
+  // geladene Datensatz den Schluessel, gibt es die Spalte.
+  if (spalteKostentraegerDa()) {
+    payload.kostentraeger_typ = document.getElementById('srvKostentraegerTyp').value || null;
+  }
 
   if (mode === 'edit') {
     const editId = document.getElementById('srvEditId').value;

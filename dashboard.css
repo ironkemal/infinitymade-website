@@ -7897,3 +7897,143 @@ body.compact-mode .patient-row {
 #bookingModal .form-label {
   margin-bottom: 3px;
 }
+
+/* ── Leistungsübersicht als Tabelle ────────────────────────────────────────
+   module/leistungen-liste.js. Ersetzt die Kachelwand; gruppiert nach
+   Kostenträgertyp (GKV · Privat · Selbstzahler · BG · Intern). */
+.srv-liste-kopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.srv-liste-anzahl {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+
+.srv-leer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.srv-gruppe {
+  margin-bottom: 22px;
+}
+
+.srv-gruppe-kopf {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.srv-gruppe-kopf h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.srv-gruppe-hinweis {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+
+.srv-gruppe-zahl {
+  font-size: 11px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+/* Die Tabelle darf schmal werden, ohne die Seite waagerecht zu schieben —
+   sie scrollt in ihrem eigenen Kasten. */
+.srv-gruppe {
+  overflow-x: auto;
+}
+
+.srv-tabelle {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.srv-tabelle th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.srv-tabelle td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.srv-tabelle tbody tr {
+  cursor: pointer;
+}
+
+.srv-tabelle tbody tr:hover,
+.srv-tabelle tbody tr:focus-visible {
+  background: var(--bg-card-solid);
+  outline: none;
+}
+
+.srv-td-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.srv-td-emp {
+  color: var(--text-muted);
+  max-width: 220px;
+}
+
+.srv-td-akt {
+  width: 1%;
+  text-align: right;
+}
+
+/* „Alle" statt leer: eine leere Zelle liest sich wie „niemand darf das". */
+.srv-alle {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* Nur für Vorlesesoftware sichtbar. */
+.srv-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Hinweis unter dem Anzahl-Feld der Terminmaske. */
+.bk-anzahl-hinweis {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: -4px 0 8px;
+}
