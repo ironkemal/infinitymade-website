@@ -2,7 +2,7 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260815';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260825';
 import { attachPatientSearch } from './patient-suche.js?v=20260817';
 import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
@@ -81,7 +81,7 @@ const T = {
     status_active: '✓ Aktiv', status_inactive: '✗ Inaktiv',
     today_bookings: 'Heutige Termine', upcoming_empty: 'Heute keine Termine.', features_title: 'Paketinhalt',
     calendar_sub: 'Termine verwalten & buchen',
-    btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin',
+    btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin', btn_copy_booking_link: 'Buchungslink',
     kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
@@ -291,7 +291,7 @@ const T = {
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
     status_active: '✓ Active', status_inactive: '✗ Inactive',
     today_bookings: "Today's Appointments", upcoming_empty: 'No appointments today.', features_title: "Plan contents",
-    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_add_booking: '+ Appointment',
+    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_copy_booking_link: 'Booking link', btn_add_booking: '+ Appointment',
     kunden_sub: 'Leads & customer info', leads_import: 'Import CSV', leads_add: '+ New lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Search',
     lf_all: 'All', lf_abrechenbar: 'Ready to bill', lf_abgerechnet: 'Billed', lf_teilabsetzung: 'Partial rejection', lf_abgesetzt: 'Rejected', lf_storniert: 'Cancelled',
@@ -481,7 +481,7 @@ const T = {
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
     status_active: '✓ Aktif', status_inactive: '✗ Pasif',
     today_bookings: 'Bugünkü randevularınız', upcoming_empty: 'Bugün randevu yok.', features_title: 'Paket içeriği',
-    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_add_booking: '+ Randevu',
+    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_copy_booking_link: 'Randevu bağlantısı', btn_add_booking: '+ Randevu',
     kunden_sub: 'Lead & müşteri bilgileri', leads_import: 'CSV içe aktar', leads_add: '+ Yeni Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
     lf_all: 'Tümü', lf_abrechenbar: 'Faturaya hazır', lf_abgerechnet: 'Fatura edildi', lf_teilabsetzung: 'Kısmi kesinti', lf_abgesetzt: 'Kesinti', lf_storniert: 'İptal edildi',
@@ -1065,6 +1065,7 @@ function showMyBookingLink() {
   if (!wrap || !currentProfile) return;
   const link = buildBookingUrl(currentProfile);
   urlEl.textContent = link;
+  wrap.title = link;
   btn.onclick = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(link);
@@ -10717,7 +10718,6 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
 
   if (mode === 'edit') {
     const editId = document.getElementById('srvEditId').value;
-    console.log('[srvSave] editing service', editId, payload);
     const { error } = await supabase.from('services').update(payload).eq('id', editId);
     if (error) { console.error('[srvSave] update error:', error); showToast(t('err_generic'), 'error'); return; }
     await supabase.from('employee_services').delete().eq('service_id', editId);
@@ -10728,7 +10728,6 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   } else {
     const ownerId = getOwnerId();
     const userId = currentSession.user.id;
-    console.log('[srvSave] creating new service', { owner_id: ownerId, user_id: userId, ...payload });
     const insertPayload = { owner_id: ownerId, user_id: userId, ...payload };
     if (currentBusiness?.id) insertPayload.business_id = currentBusiness.id;
     const { data: srv, error } = await supabase.from('services').insert(insertPayload).select().single();

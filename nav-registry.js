@@ -13,7 +13,7 @@
 // roles: kod-default'u. Gerçek görünürlük module_visibility
 // tablosundaki toggle'dan gelir; DB satırı yoksa buraya düşülür.
 
-export const REGISTRY_VERSION = '20260714';
+export const REGISTRY_VERSION = '20260825';
 
 export const NAV_REGISTRY = {
   default: [
@@ -22,7 +22,7 @@ export const NAV_REGISTRY = {
     { id: 'calendar',      key: 'nav_calendar',      label: 'Terminkalender',  roles: ['owner', 'employee'], group: 'termine' },
     { id: 'anfragen',      key: 'nav_anfragen',      label: 'Termin-Anfragen', roles: ['owner'],             group: 'termine' },
     { id: 'kunden',        key: 'nav_kunden',        label: 'Patienten',       roles: ['owner', 'employee'], group: 'patienten' },
-    { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'team' },
+    { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'hours',         key: 'nav_hours',         label: 'Verfügbarkeit',   roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',          key: 'nav_team',          label: 'Team',            roles: ['owner', 'employee'], group: 'team' },
     { id: 'rechnungen',    key: 'nav_rechnungen',    label: 'Rechnungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
@@ -42,7 +42,7 @@ export const NAV_REGISTRY = {
     { id: 'fahrtenbuch',   key: 'nav_fahrtenbuch',   label: 'Fahrtenbuch',     roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'anamnese',      key: 'nav_anamnese',      label: 'Anamnese',        roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'warteliste',    key: 'nav_warteliste',    label: 'Warteliste',      roles: ['owner'],             group: 'patienten' },
-    { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'team' },
+    { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'hours',         key: 'nav_hours',         label: 'Verfügbarkeit',   roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',          key: 'nav_team',          label: 'Team',            roles: ['owner', 'employee'], group: 'team' },
     { id: 'doctors',       key: 'nav_doctors',       label: 'Ärzte',           roles: ['owner', 'employee'], group: 'rezepte' },
@@ -68,7 +68,7 @@ export const NAV_REGISTRY = {
     { id: 'anamnese',          key: 'nav_anamnese',          label: 'Anamnese',             roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'notizen',           key: 'nav_notizen',           label: 'Notizen',              roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'warteliste',        key: 'nav_warteliste',        label: 'Warteliste',           roles: ['owner'],             group: 'patienten' },
-    { id: 'services',          key: 'nav_services',          label: 'Leistungen',           roles: ['owner', 'employee'], group: 'team' },
+    { id: 'services',          key: 'nav_services',          label: 'Leistungen',           roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'hours',             key: 'nav_hours',             label: 'Verfügbarkeit',        roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',              key: 'nav_team',              label: 'Team',                 roles: ['owner', 'employee'], group: 'team' },
     { id: 'verordnungen',      key: 'nav_verordnungen',      label: 'Verordnungen',         roles: ['owner', 'employee'], group: 'abrechnung' },
@@ -93,7 +93,7 @@ export const NAV_REGISTRY = {
     { id: 'kunden',        key: 'nav_kunden',        label: 'Patienten',       roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'notizen',       key: 'nav_notizen',       label: 'Notizen',         roles: ['owner', 'employee'], group: 'patienten' },
     { id: 'warteliste',    key: 'nav_warteliste',    label: 'Warteliste',      roles: ['owner'],             group: 'patienten' },
-    { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'team' },
+    { id: 'services',      key: 'nav_services',      label: 'Leistungen',      roles: ['owner', 'employee'], group: 'abrechnung' },
     { id: 'hours',         key: 'nav_hours',         label: 'Verfügbarkeit',   roles: ['owner', 'employee'], group: 'team' },
     { id: 'team',          key: 'nav_team',          label: 'Team',            roles: ['owner', 'employee'], group: 'team' },
     { id: 'doctors',       key: 'nav_doctors',       label: 'Ärzte',           roles: ['owner', 'employee'], group: 'rezepte' },

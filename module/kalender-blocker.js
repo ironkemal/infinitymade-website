@@ -39,13 +39,20 @@
  */
 
 /**
- * Die zwei Blocker. Grautöne, damit ein zugeklebter Tag nicht nach Umsatz
- * aussieht.
+ * Die Blocker. Grautöne, damit ein zugeklebter Tag nicht nach Umsatz aussieht.
  */
 export const BLOCKER_DEFS = [
   { schluessel: 'pause', titel: 'Pause', code: 'BLOCK_PAUSE', farbe: '#94a3b8', symbol: '⏸' },
   { schluessel: 'privat', titel: 'Privat', code: 'BLOCK_PRIV', farbe: '#64748b', symbol: '🔒' },
+  { schluessel: 'fortbildung', titel: 'Fortbildung', code: 'BLOCK_FORTB', farbe: '#78716c', symbol: '🎓' },
 ];
+
+/**
+ * Urlaub steht bewusst NICHT in dieser Liste. Dafür gibt es „Abwesenheit
+ * eintragen" (`time_offs`) — das ist tageweise und blockt den ganzen Kalender,
+ * nicht einzelne Stunden. Zwei Wege für dieselbe Sache wären der nächste
+ * Fehlerbericht: einer davon wäre immer der falsche, und niemand wüsste, welcher.
+ */
 
 /** Erkennt einen Blocker an der Leistung — für Anzeige und Prüfungen. */
 export function istBlockerLeistung(leistung) {
@@ -54,7 +61,7 @@ export function istBlockerLeistung(leistung) {
 }
 
 /**
- * Legt die beiden internen Leistungen bei Bedarf an und gibt sie zurück.
+ * Legt die internen Leistungen bei Bedarf an und gibt sie zurück.
  *
  * Gesucht wird über `code`, nicht über den Titel: der Titel ist Anzeige und
  * könnte umbenannt werden, der Code ist der Schlüssel.

@@ -1412,13 +1412,26 @@ textarea {
   padding: 18px;
 }
 
+.cal-emp-leiste {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cal-emp-leiste > #calAddLeaveBtn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .cal-emp-chips {
   display: flex;
   gap: 10px;
   overflow-x: auto;
   padding: 6px 2px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--border);
+  flex: 1;
+  min-width: 0;
   scrollbar-width: none;
 }
 .cal-emp-chips::-webkit-scrollbar {
@@ -1725,7 +1738,10 @@ textarea {
 .cal-view-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Vorher space-between: die Pfeile klebten links, die Tabs rechts, quer ueber
+     die volle Panelbreite. Dazwischen lag der Mausweg, den die Praxis gemeldet
+     hat. */
+  justify-content: flex-start;
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
@@ -3476,14 +3492,10 @@ textarea {
 }
 
 .my-booking-link {
-  display: none;
+  display: none;   /* showMyBookingLink() setzt flex */
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin: 0 24px 16px;
+  gap: 6px;
+  margin-left: auto;
 }
 
 .my-booking-label {
@@ -7870,4 +7882,18 @@ body.compact-mode .patient-row {
 .bk-blocker-modus #bkVerordnungSection,
 .bk-blocker-modus #bkGroupBlock {
   display: none !important;
+}
+
+/* Kompaktere Abstände in der Grundmaske des Termindialogs. Bewusst nur dort und
+   nicht an .form-group global — sonst ändert sich jede Maske im Produkt. */
+#bookingModal .modal-body > .form-group {
+  margin-bottom: 10px;
+}
+
+#bookingModal .modal-body > .form-row {
+  margin-bottom: 10px;
+}
+
+#bookingModal .form-label {
+  margin-bottom: 3px;
 }

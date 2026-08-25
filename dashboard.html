@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260822" />
+  <link rel="stylesheet" href="dashboard.css?v=20260825" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -255,15 +255,11 @@
               <p class="panel-sub" data-i18n="calendar_sub">Klicken Sie auf einen Tag für Slots</p>
             </div>
             <div class="panel-actions">
-              <button class="btn-ghost" id="calAddLeaveBtn" data-i18n="btn_add_leave">Abwesenheit eintragen</button>
-              <button class="btn-primary" id="calAddBookingBtn" data-i18n="btn_add_booking">+ Termin</button>
+              <!-- "Abwesenheit eintragen" steht jetzt bei den Mitarbeiter-Chips, wo es
+                   inhaltlich hingehoert. "+ Termin" bleibt als Einstieg ohne Vorwissen,
+                   aber unauffaellig — der schnelle Weg ist der Doppelklick. -->
+              <button class="btn-ghost" id="calAddBookingBtn" data-i18n="btn_add_booking">+ Termin</button>
             </div>
-          </div>
-
-          <div class="my-booking-link" id="myBookingLink" style="display:none;">
-            <span class="my-booking-label">Ihr persönlicher Buchungslink:</span>
-            <span class="my-booking-url" id="myBookingUrl"></span>
-            <button class="btn-icon" id="myBookingCopy" title="Link kopieren"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
           </div>
 
           <div class="cal-view-toolbar" id="calViewToolbar">
@@ -277,8 +273,24 @@
               <button class="cal-view-btn" data-view="week">Woche</button>
               <button class="cal-view-btn" data-view="month">Monat</button>
             </div>
+            <!-- Die ausgeschriebene URL nahm eine eigene Zeile ueber dem Kalender ein.
+                 Sie steht jetzt nur noch im Tooltip; die Ids bleiben, damit
+                 showMyBookingLink() unveraendert weiterarbeitet. -->
+            <div class="my-booking-link" id="myBookingLink" style="display:none;">
+              <button class="btn-ghost btn-sm" id="myBookingCopy" title="Buchungslink kopieren">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span data-i18n="btn_copy_booking_link">Buchungslink</span>
+              </button>
+              <span class="my-booking-url" id="myBookingUrl" hidden></span>
+            </div>
           </div>
-          <div class="cal-emp-chips" id="calEmpChips"></div>
+
+          <!-- Mitarbeiterfilter und Abwesenheit auf einer Ebene. Der Knopf sitzt
+               AUSSERHALB des Chip-Behaelters, weil der waagerecht scrollt. -->
+          <div class="cal-emp-leiste">
+            <div class="cal-emp-chips" id="calEmpChips"></div>
+            <button class="btn-ghost btn-sm" id="calAddLeaveBtn" data-i18n="btn_add_leave">Abwesenheit eintragen</button>
+          </div>
 
           <div class="cal-move-banner" id="calMoveBanner" hidden>
             <span id="calMoveBannerText" data-i18n="move_banner">Zielzeit anklicken, dann den Vorschlag bestätigen.</span>
@@ -2965,6 +2977,7 @@
         <div class="form-group bk-blocker-zeile" id="bkBlockerZeile">
           <button type="button" class="bk-blocker-btn" data-blocker="pause">⏸ Pause</button>
           <button type="button" class="bk-blocker-btn" data-blocker="privat">🔒 Privat</button>
+          <button type="button" class="bk-blocker-btn" data-blocker="fortbildung">🎓 Fortbildung</button>
           <button type="button" class="bk-blocker-btn bk-blocker-btn--zurueck" id="bkBlockerZurueck" hidden>↩ Patiententermin</button>
         </div>
         <div class="form-group" id="bkServiceGroup">
@@ -6109,7 +6122,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260822"></script>
+  <script type="module" src="dashboard.js?v=20260825"></script>
 </body>
 
 </html>
