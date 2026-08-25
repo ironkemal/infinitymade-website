@@ -43,6 +43,24 @@ keine Bestätigung** — schreib hin, was du siehst, auch wenn es langweilig ist
 5. Wenn etwas nicht geht wie beschrieben: **weitermachen** und es notieren.
    Nicht abbrechen.
 
+## Was schon maschinell geprüft ist — hier bitte nur kurz hinschauen
+
+Vor diesem Durchgang lief `npm run probe` (drei Prüfungen im echten Browser,
+`tools/browser-probe/`). Folgendes ist damit **gemessen** und braucht von dir
+keine gründliche Prüfung mehr, nur einen Blick, ob es auch mit echten Daten so
+aussieht:
+
+- **A** — Wochenraster: Zeitleiste und Tagesspalten enden auf derselben Höhe,
+  Rasterfeld 28 px, Tagesansicht 56 px, Termin sitzt exakt auf seiner Linie.
+- **E13** — das Rechtsklick-Menü geht auf und enthält die fünf Einträge.
+- Alle Module laden ohne Konsolenfehler.
+- Die Tabellen in **O** entstehen richtig gruppiert.
+
+**Deine Zeit gehört den Abschnitten, die ein Mensch mit echten Daten braucht:**
+**M** (Blocker, schreibt Daten) · **P** (Anzahl und Feldreihenfolge) ·
+**O70/O71** (Abrechnungsart, Speichern) · **K** (Farben wirklich gespeichert) ·
+**Q** (Sprachen) · **H** (dunkel, schmal, Tablet).
+
 ## Vorbereitung
 
 Öffne die Entwicklerkonsole (F12 → Reiter „Console") und lass sie offen.
@@ -312,23 +330,41 @@ sind jetzt Tabellen.
     drei wieder löschen und mir sagen, dass du es getan hast.
 77. **Abbrechen**, falls du 80 nicht gemacht hast.
 
+## Q — Die drei Sprachen
+
+Die Anwendung kann Deutsch, Englisch und Türkisch. Neue Texte werden dabei gern
+vergessen — dann steht statt des Textes der Schlüssel da, z. B.
+`btn_copy_booking_link` mitten in der Oberfläche.
+
+78. Stell die Sprache auf **Englisch**. Geh in den Kalender und schau die
+    Kopfzeile an. Steht dort irgendwo ein Wort mit Unterstrichen
+    (`btn_...`, `nav_...`, `lbl_...`)? Screenshot, falls ja.
+79. Öffne den Termin-Dialog und die Seite **Leistungen**. Dasselbe: fällt ein
+    Schlüssel statt eines Textes auf?
+80. Was ist auf Englisch **noch deutsch**? Eine kurze Liste genügt — z. B. die
+    Einträge im Rechtsklick-Menü, die Gruppenüberschriften der Leistungen, die
+    Blocker-Knöpfe. Das ist ein bekannter Zustand und **kein Fehler**, ich will
+    nur wissen, wie viel es ist.
+81. Dasselbe kurz auf **Türkisch**.
+82. **Stell die Sprache wieder auf Deutsch zurück.**
+
 ## H — Dunkles Design und schmaler Bildschirm
 
-78. Stell das Design auf **dunkel** (Schalter in den Einstellungen oder oben).
+83. Stell das Design auf **dunkel** (Schalter in den Einstellungen oder oben).
     Wiederhole kurz **A** (Wochenansicht), **E13** (Rechtsklick-Menü), **J32**
     (Kopfleiste) und **M51** (Blocker-Knöpfe). Ist alles lesbar? Gibt es weiße
     Kästen im dunklen Design oder Text, der fast unsichtbar ist? Screenshots vom
     Menü und von der Kopfleiste im dunklen Design.
-79. Mach das Browserfenster **schmal** (Tablet-Breite, ca. 900 px). Prüf zwei
+84. Mach das Browserfenster **schmal** (Tablet-Breite, ca. 900 px). Prüf zwei
     Dinge: bricht die neue **Kopfleiste** um und schiebt den Kalender nach
     unten? Und überlappt in der **Wochenansicht** etwas oder läuft seitlich aus
     dem Bild?
-80. Auf einem **Tablet** (falls vorhanden): funktioniert **langes Drücken** auf
+85. Auf einem **Tablet** (falls vorhanden): funktioniert **langes Drücken** auf
     eine freie Fläche (= Termin anlegen) und auf einen Termin (= Kontextmenü)?
 
 ## I — Konsole
 
-81. Schau in die Konsole. Gab es während der ganzen Prüfung **rote Fehler**?
+86. Schau in die Konsole. Gab es während der ganzen Prüfung **rote Fehler**?
     Gib sie im Wortlaut wieder (die Zeile mit `Uncaught`, `TypeError`,
     `RangeError` o. ä.).
 
@@ -353,6 +389,7 @@ M  Blocker .................. OK / FEHLER  (55 Doppelbuchung: Meldung im Wortlau
 N  Menüstruktur ............. OK / FEHLER
 O  Leistungstabelle ......... OK / FEHLER  (70: Feld "Abrechnungsart" da? ja/nein)
 P  Anzahl / Reihenfolge ..... OK / FEHLER  (73: Reihenfolge der Felder!)
+Q  Sprachen ................. keine rohen Schlüssel / gefunden: ...
 H  Dunkel + schmal + Tablet . OK / FEHLER
 I  Konsolenfehler ........... keine / Wortlaut
 ```
