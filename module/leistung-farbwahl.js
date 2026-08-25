@@ -73,3 +73,19 @@ export function mountFarbwahl({ behaelter, eingabe, farben = [] }) {
     },
   };
 }
+
+/**
+ * Dieselbe Farbwahl gibt es zweimal auf der Leistungsseite: einmal für eigene
+ * Leistungen, einmal für GKV-Leistungen. Beide dürfen nur einmal aufgebaut
+ * werden — sonst hängen nach dem zweiten Öffnen zwei Zuhörer an denselben
+ * Feldern und jeder Klick zählt doppelt.
+ *
+ * Der Zwischenspeicher liegt deshalb hier und nicht als zwei fast gleiche
+ * Hilfsfunktionen im Dashboard.
+ */
+const _gebaut = new Map();
+
+export function farbwahlFuer(schluessel, optionen) {
+  if (!_gebaut.has(schluessel)) _gebaut.set(schluessel, mountFarbwahl(optionen));
+  return _gebaut.get(schluessel);
+}

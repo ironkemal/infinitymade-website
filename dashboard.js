@@ -37,7 +37,7 @@ import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinute
 import { renderWoche } from './module/kalender-woche.js?v=20260825';
 import { renderMonat } from './module/kalender-monat.js?v=20260825';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260825';
-import { mountFarbwahl } from './module/leistung-farbwahl.js?v=20260825';
+import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260825b';
 import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260825';
 import { renderLeistungenListe, renderGkvKatalog } from './module/leistungen-liste.js?v=20260825b';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260822';
@@ -2512,8 +2512,8 @@ async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, s
   if (banner) { banner.hidden = true; banner.textContent = ''; }
   window._pendingRxSession = null;
   document.getElementById('bkSeriesToggle').checked = false;
+  resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
-  if (document.getElementById('bkAnzahl')) document.getElementById('bkAnzahl').value = '1';
   populateEmpSelects(empId);
   await populateSrvSelect(serviceId);
   openModal('bookingModal');
@@ -3068,6 +3068,7 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bkNotes').value = '';
   document.getElementById('bkHausbesuch').checked = false;
   document.getElementById('bkSeriesToggle').checked = false;
+  resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   document.getElementById('bkDocAssignHint').hidden = true;
@@ -5116,6 +5117,7 @@ async function openBookingModal(b) {
   document.getElementById('bkNotes').value = b.notes || '';
   document.getElementById('bkHausbesuch').checked = b.hausbesuch || false;
   document.getElementById('bkSeriesToggle').checked = false;
+  resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   const pmEl2 = document.getElementById('bkPaymentMethod');
@@ -5860,6 +5862,15 @@ window._resetRezeptartUI = function() {};
 // Blocker: Zeit ohne Patient. Die beiden internen Leistungen entstehen beim
 // ersten Klick und bleiben dann bestehen (module/kalender-blocker.js).
 let _blockerDienste = null;
+// Wird an jedem Einstieg in die Terminmaske gerufen. Ohne das bliebe eine
+// vorher eingetippte 3 stehen und der naechste Termin waere still eine Serie.
+function resetBkAnzahl() {
+  const feld = document.getElementById('bkAnzahl');
+  if (feld) feld.value = '1';
+  const hinweis = document.getElementById('bkAnzahlHinweis');
+  if (hinweis) { hinweis.hidden = true; hinweis.textContent = ''; }
+}
+
 function setzeBlockerModus(an, knopf = null) {
   document.getElementById('bookingModal')?.classList.toggle('bk-blocker-modus', !!an);
   document.getElementById('bkBlockerZurueck').hidden = !an;
@@ -10458,34 +10469,14 @@ function resetServiceForm() {
   renderPhysioServiceCards();
 }
 
-let _gkvFarbwahl = null;
-function gkvFarbwahl() {
-  if (!_gkvFarbwahl) {
-    _gkvFarbwahl = mountFarbwahl({
-      behaelter: document.getElementById('gkvFarbfelder'),
-      eingabe: document.getElementById('gkvFormColor'),
-      farben: LEISTUNG_FARBEN,
-    });
-  }
-  return _gkvFarbwahl;
-}
+const gkvFarbwahl = () => farbwahlFuer('gkv', { behaelter: document.getElementById('gkvFarbfelder'), eingabe: document.getElementById('gkvFormColor'), farben: LEISTUNG_FARBEN });
 
 function spalteKostentraegerDa() {
   return servicesCache.some(s => Object.prototype.hasOwnProperty.call(s, 'kostentraeger_typ'));
 }
 
 // Die Farbfelder werden einmal gebaut und danach nur noch gesetzt.
-let _srvFarbwahl = null;
-function srvFarbwahl() {
-  if (!_srvFarbwahl) {
-    _srvFarbwahl = mountFarbwahl({
-      behaelter: document.getElementById('srvFarbfelder'),
-      eingabe: document.getElementById('srvColor'),
-      farben: LEISTUNG_FARBEN,
-    });
-  }
-  return _srvFarbwahl;
-}
+const srvFarbwahl = () => farbwahlFuer('srv', { behaelter: document.getElementById('srvFarbfelder'), eingabe: document.getElementById('srvColor'), farben: LEISTUNG_FARBEN });
 
 function openServiceEdit(id) {
   const s = servicesCache.find(x => x.id === id);
