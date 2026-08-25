@@ -1,4 +1,4 @@
-# Prompt für Claude in Chrome — Kalender-Prüfung
+# Prompt für Claude in Chrome — Praxura-Prüfung (Kalender, Leistungen, Menü)
 
 > Alles ab der Trennlinie kopieren und in Chrome an Claude geben.
 > **Vorher sicherstellen:** die Seite zeigt den NEUEN Code (Preview-Deployment,
@@ -24,6 +24,8 @@ keine Bestätigung** — schreib hin, was du siehst, auch wenn es langweilig ist
    anlegst, um etwas zu testen: brich den Dialog mit „Abbrechen" ab. Speichere
    nur, wenn ein Test es ausdrücklich verlangt — und sag mir dann, was
    entstanden ist, damit ich es entfernen kann.
+   **Genau ein Abschnitt verlangt es: M (Blocker).** Dort steht auch, wie du
+   hinterher aufräumst.
 4. **Einstellungen unverändert lassen**, mit einer Ausnahme (Test G), und die
    danach zurückstellen.
 5. Wenn etwas nicht geht wie beschrieben: **weitermachen** und es notieren.
@@ -143,18 +145,122 @@ Mach das in **allen drei** Ansichten: Tag, Woche, Monat.
 30. Schau auch in die **Woche**. Gleicher Effekt?
 31. **Schalte den Kompaktmodus wieder auf den ursprünglichen Stand zurück.**
 
+## J — Kopfleiste des Kalenders (neu umgebaut)
+
+Der Kopfbereich hatte drei Ebenen übereinander, jetzt sind es zwei.
+
+32. Schau dir den Bereich über dem Kalender an. Erwartung:
+    - **Eine Leiste**: links die Pfeile ‹ › mit dem Datum, direkt daneben die
+      Tabs Tag/Woche/Monat, ganz rechts ein Knopf **„Buchungslink"** mit
+      Kopier-Symbol.
+    - **Darunter eine zweite Leiste**: die Mitarbeiter-Auswahl und rechts
+      **„Abwesenheit eintragen"**.
+    - Oben rechts nur noch **„+ Termin"**, unauffällig statt farbig.
+    Screenshot der ganzen Kopfzeile.
+33. Sind Datum/Pfeile und die Tabs **nebeneinander** oder immer noch an den
+    gegenüberliegenden Rändern auseinandergezogen?
+34. Gibt es **irgendwo noch die ausgeschriebene URL** `https://app.praxura.de/...`
+    als eigene Zeile? Die soll weg sein.
+35. Fahr mit der Maus über den Knopf „Buchungslink": erscheint die vollständige
+    URL als Tooltip? Klick ihn an — kommt die Meldung „Kopiert"? Füge den
+    Inhalt der Zwischenablage irgendwo ein und prüfe, ob es ein Link ist.
+36. Hat die Praxis **mehrere Mitarbeiter**? Dann: scroll die Mitarbeiter-Leiste
+    waagerecht. Erwartung: der Knopf „Abwesenheit eintragen" bleibt rechts
+    stehen und **scrollt nicht mit**.
+37. Klick „Abwesenheit eintragen" — geht der Dialog auf wie vorher? Abbrechen.
+
+## K — Farben nach Leistung (neu)
+
+Bisher hatten alle Termine die Farbe des Mitarbeiters. Jetzt gilt:
+**Fläche = Leistung, linker Rand = Mitarbeiter.**
+
+38. Geh ins Menü auf **Leistungen** (steht jetzt unter „Abrechnung", siehe N).
+    Öffne eine Leistung zum Bearbeiten. Erwartung: ein Feld **„Farbe im
+    Kalender"** mit acht Farbfeldern und einem Farbwähler daneben.
+    Screenshot.
+39. Wähle eine deutlich andere Farbe (z. B. Rot) und **speichere**.
+    Erwartung: in der Leistungsübersicht hat die Kachel jetzt einen farbigen
+    Punkt vor dem Namen.
+40. Öffne dieselbe Leistung erneut. Erwartung: die gewählte Farbe ist markiert —
+    sie wurde also wirklich gespeichert und nicht nur angezeigt.
+41. Geh in den Kalender. Ein Termin mit dieser Leistung soll jetzt in der neuen
+    Farbe erscheinen — in **Tages-, Wochen- und Monatsansicht**, und auch im
+    Tagesplan auf der Startseite. Screenshots von mindestens zwei Ansichten.
+42. Hat der Terminblock zusätzlich einen **andersfarbigen linken Rand**
+    (die Mitarbeiterfarbe)? Bei nur einem Mitarbeiter kann er gleich aussehen —
+    dann notier das einfach.
+43. Gibt es Termine, deren Fläche **gar keine Farbe** hat oder die unsichtbar
+    wirken? Das wäre ein Fehler.
+44. Setz die Farbe wieder auf den ursprünglichen Wert zurück, wenn du magst.
+
+## L — Terminmaske (verschlankt)
+
+45. Öffne den Termin-Dialog (Doppelklick auf freie Fläche). Erwartung: er ist
+    **kürzer als früher**. Notizen und Serientermin stecken unten hinter einem
+    aufklappbaren **„Mehr Optionen"**. Screenshot.
+46. Klapp „Mehr Optionen" auf und wieder zu — geht das, auch mit der Tastatur
+    (Tab bis dorthin, dann Enter/Leertaste)?
+47. Hat die Praxis **nur einen Mitarbeiter**? Dann soll das Feld „Mitarbeiter"
+    **gar nicht mehr erscheinen**. Bei mehreren muss es da sein.
+48. Wirken die Abstände enger als vorher, oder klebt jetzt etwas aneinander?
+49. Abbrechen.
+
+## M — Blocker: Pause, Privat, Fortbildung (neu — SCHREIBT DATEN)
+
+⚠️ **Dieser Abschnitt legt echte Daten an.** Bitte genau so vorgehen:
+
+50. Öffne den Termin-Dialog per Doppelklick auf eine freie Fläche **weit in der
+    Zukunft** (z. B. in drei Monaten), damit nichts im laufenden Betrieb stört.
+51. Ganz oben im Dialog sollen drei Knöpfe stehen: **⏸ Pause · 🔒 Privat ·
+    🎓 Fortbildung**. Screenshot.
+52. Klick **„Pause"**. Erwartung:
+    - Der Knopf wird hervorgehoben.
+    - Die Felder **Kunde**, **Telefon** und der Verordnungsbereich
+      **verschwinden**.
+    - Rechts erscheint ein Knopf **„↩ Patiententermin"**.
+53. Klick **„↩ Patiententermin"** — kommen die Felder zurück? Dann wieder auf
+    „Pause".
+54. **Speichern.** Erwartung: der Blocker erscheint im Kalender, **grau und
+    schraffiert**, ohne Patientennamen. Screenshot.
+55. **Wichtigster Test:** versuch jetzt, über dieselbe Zeit einen **normalen
+    Termin** zu legen. Erwartung: das wird **abgelehnt**, mit einer
+    verständlichen deutschen Meldung — nicht mit einer Datenbank-Fehlermeldung
+    wie `23P01` oder englischem Text. Was steht genau da? Screenshot.
+56. **Aufräumen — Ausnahme zur Regel 2:** den selbst angelegten Blocker darfst
+    und sollst du wieder löschen (Rechtsklick → Absagen, oder im Seitenbereich).
+    Er ist kein Patiententermin. Bestätige, dass er verschwunden ist.
+57. Zur Information, kein Test: durch diesen Ablauf sind in der Leistungsliste
+    drei neue interne Einträge entstanden (Pause, Privat, Fortbildung). Das ist
+    so gewollt. Schau kurz nach, ob sie dort auftauchen — sie sollen in der
+    Auswahl für **Patiententermine** aber **nicht** erscheinen. Prüf das: neuen
+    Termin öffnen, Dienstleistungs-Liste aufklappen — steht „Pause" darin?
+    (Sie soll **nicht** drinstehen.)
+
+## N — Menüstruktur
+
+58. Schau in die linke Seitenleiste. Erwartung: **„Leistungen"** steht jetzt in
+    der Gruppe **„Abrechnung"** und **nicht mehr** unter „Team".
+    Screenshot der aufgeklappten Seitenleiste.
+59. Klick darauf — öffnet sich die Leistungsübersicht wie erwartet?
+
+
 ## H — Dunkles Design und schmaler Bildschirm
 
-32. Stell das Design auf **dunkel** (Schalter in den Einstellungen oder oben).
-    Wiederhole kurz **A** (Wochenansicht) und **E13** (Rechtsklick-Menü):
-    Ist alles lesbar? Gibt es weiße Kästen im dunklen Design oder Text, der
-    fast unsichtbar ist? Screenshot vom Menü im dunklen Design.
-33. Mach das Browserfenster **schmal** (Tablet-Breite, ca. 900 px). Schau die
-    Wochenansicht an: überlappt etwas, läuft etwas seitlich aus dem Bild?
+60. Stell das Design auf **dunkel** (Schalter in den Einstellungen oder oben).
+    Wiederhole kurz **A** (Wochenansicht), **E13** (Rechtsklick-Menü), **J32**
+    (Kopfleiste) und **M51** (Blocker-Knöpfe). Ist alles lesbar? Gibt es weiße
+    Kästen im dunklen Design oder Text, der fast unsichtbar ist? Screenshots vom
+    Menü und von der Kopfleiste im dunklen Design.
+61. Mach das Browserfenster **schmal** (Tablet-Breite, ca. 900 px). Prüf zwei
+    Dinge: bricht die neue **Kopfleiste** um und schiebt den Kalender nach
+    unten? Und überlappt in der **Wochenansicht** etwas oder läuft seitlich aus
+    dem Bild?
+62. Auf einem **Tablet** (falls vorhanden): funktioniert **langes Drücken** auf
+    eine freie Fläche (= Termin anlegen) und auf einen Termin (= Kontextmenü)?
 
 ## I — Konsole
 
-34. Schau in die Konsole. Gab es während der ganzen Prüfung **rote Fehler**?
+63. Schau in die Konsole. Gab es während der ganzen Prüfung **rote Fehler**?
     Gib sie im Wortlaut wieder (die Zeile mit `Uncaught`, `TypeError`,
     `RangeError` o. ä.).
 
@@ -172,7 +278,12 @@ D  Monatsansicht ............ OK / FEHLER
 E  Rechtsklick-Menü ......... OK / FEHLER (je Unterpunkt 13–24)
 F  Verschieben in Woche ..... OK / FEHLER
 G  Kompaktmodus ............. bestätigt / nicht bestätigt
-H  Dunkel + schmal .......... OK / FEHLER
+J  Kopfleiste ............... OK / FEHLER
+K  Leistungsfarben .......... OK / FEHLER
+L  Terminmaske .............. OK / FEHLER
+M  Blocker .................. OK / FEHLER  (55 Doppelbuchung: Meldung im Wortlaut)
+N  Menüstruktur ............. OK / FEHLER
+H  Dunkel + schmal + Tablet . OK / FEHLER
 I  Konsolenfehler ........... keine / Wortlaut
 ```
 
