@@ -34,8 +34,11 @@ import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.j
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260822';
-import { renderWoche } from './module/kalender-woche.js?v=20260822';
-import { aufLangenDruck } from './module/langer-druck.js?v=20260822';
+import { renderWoche } from './module/kalender-woche.js?v=20260825';
+import { renderMonat } from './module/kalender-monat.js?v=20260825';
+import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260825';
+import { mountFarbwahl } from './module/leistung-farbwahl.js?v=20260825';
+import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260825';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260822';
 import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260822';
 import {
@@ -769,8 +772,6 @@ let calendarView = 'day';
 let dayViewDate = new Date();
 let monthViewYear = new Date().getFullYear();
 let monthViewMonth = new Date().getMonth();
-// Verzoegerter Sprung Monat -> Tag; ein Doppelklick loescht ihn wieder.
-let monatSprungTimer = null;
 let moveBooking = null;
 let moveGhostEl = null;
 const EMP_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#ec4899'];
@@ -1800,8 +1801,12 @@ async function loadScheduleBookings(date) {
       block.className = 'dv-booking-block';
       block.style.top = topPx + 'px';
       block.style.height = Math.max(hPx, 24) + 'px';
-      block.style.background = color + '25';
-      block.style.borderColor = color;
+      const farben = terminFarben(b, { teamMembers, empFarben: EMP_COLORS });
+      block.style.background = mitDeckkraft(farben.flaeche, '25', '15%');
+      block.style.borderColor = farben.flaeche;
+      // Linker Rand = Mitarbeiter. Hier Redundanz (die Spalten trennen schon),
+      // aber alle Ansichten sprechen so dieselbe Sprache.
+      block.style.borderLeft = `3px solid ${farben.rand}`;
       block.style.color = 'var(--text-main)';
 
       const durationMin = eMin - sMin;
@@ -2803,11 +2808,16 @@ async function renderDayView(dateStr) {
       const block = document.createElement('div');
       block.className = 'dv-booking-block';
       block._termin = b;
+      if (istBlockerLeistung(b.services)) block.classList.add('dv-booking-block--blocker');
       if (moveBooking && moveBooking.id === b.id) block.classList.add('dv-move-source');
       block.style.top = topPx + 'px';
       block.style.height = Math.max(hPx, 28) + 'px';
-      block.style.background = color + '25';
-      block.style.borderColor = color;
+      const farben = terminFarben(b, { teamMembers, empFarben: EMP_COLORS });
+      block.style.background = mitDeckkraft(farben.flaeche, '25', '15%');
+      block.style.borderColor = farben.flaeche;
+      // Linker Rand = Mitarbeiter. Hier Redundanz (die Spalten trennen schon),
+      // aber alle Ansichten sprechen so dieselbe Sprache.
+      block.style.borderLeft = `3px solid ${farben.rand}`;
       block.style.color = 'var(--text-main)';
 
       const durationMin = eMin - sMin;
@@ -2858,12 +2868,7 @@ async function renderWeekView(dateStr) {
     teamMembers,
     calEmpFilter,
     moveAktiv: !!moveBooking,
-    // Heute nach Mitarbeiter; Punkt 1.2 liefert hier Flaeche = Leistung.
-    farbeFuer: (b) => {
-      const idx = teamMembers.findIndex(e => e.id === b.user_id);
-      const farbe = EMP_COLORS[idx % EMP_COLORS.length] || 'var(--primary)';
-      return { flaeche: farbe, rand: farbe };
-    },
+    farbeFuer: (b) => terminFarben(b, { teamMembers, empFarben: EMP_COLORS }),
     setzeDatumsLabel: (txt) => { document.getElementById('dayViewDateLabel').textContent = txt; },
     onSlotDoppelklick: async ({ timeStr, empId }) => {
       await prefillBookingModal(timeStr);
@@ -2882,128 +2887,22 @@ async function renderWeekView(dateStr) {
 }
 
 
+// Die Monatsansicht steht in module/kalender-monat.js. Hier bleibt die Bruecke.
 async function renderMonthView(year, month) {
-  const header = document.getElementById('monthGridHeader');
-  const grid = document.getElementById('monthGrid');
-  if (!header || !grid) return;
-
-  const DAY_HEADERS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-  header.innerHTML = DAY_HEADERS.map(d => `<div>${d}</div>`).join('');
-
-  // Tablet-Weg zum Doppelklick. Das Raster wird neu gebaut, der Behaelter
-  // bleibt — also nur einmal verdrahten.
-  if (!grid.dataset.langdruck) {
-    grid.dataset.langdruck = '1';
-    aufLangenDruck(grid, '.month-cell', (zelle, ev) => {
-      if (ev.target?.closest?.('.month-event-pill')) return;   // dort: Kontextmenue
-      if (monatSprungTimer) { clearTimeout(monatSprungTimer); monatSprungTimer = null; }
-      if (zelle.dataset.datum) prefillBookingModal(`${zelle.dataset.datum}T09:00`);
-    });
-  }
-
-  // First day of month
-  const firstDay = new Date(year, month, 1);
-  // Monday-first: 0=Mon..6=Sun
-  let startDow = firstDay.getDay(); // 0=Sun
-  startDow = startDow === 0 ? 6 : startDow - 1; // Convert to Mon=0
-
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const prevMonthDays = new Date(year, month, 0).getDate();
-  const today = toISODate(new Date());
-
-  // Build cell dates
-  const cells = [];
-  for (let i = 0; i < startDow; i++) {
-    cells.push({ date: new Date(year, month - 1, prevMonthDays - startDow + i + 1), otherMonth: true });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ date: new Date(year, month, d), otherMonth: false });
-  }
-  while (cells.length % 7 !== 0) {
-    cells.push({ date: new Date(year, month + 1, cells.length - daysInMonth - startDow + 1), otherMonth: true });
-  }
-
-  // Fetch bookings for this month
-  const ownerId = getOwnerId();
-  const mStart = new Date(year, month, 1).toISOString();
-  const mEnd = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
-  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
-  const empIds = emps.map(e => e.id);
-
-  const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,start_time,customer_name,status,is_group,group_parent_id,services(title)')
-    .eq('owner_id', ownerId)
-    .gte('start_time', mStart)
-    .lte('start_time', mEnd)
-    // Leere Liste wuerde zu einem ungueltigen in.() werden — wie in der Wochenansicht
-    // absichern.
-    .in('user_id', empIds.length ? empIds : ['none'])
-    .neq('status', 'cancelled');
-
-  // Update date label
-  const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  document.getElementById('dayViewDateLabel').textContent = `${MONTHS_DE[month]} ${year}`;
-
-  grid.innerHTML = '';
-  cells.forEach(({ date, otherMonth }) => {
-    const ds = toISODate(date);
-    const cell = document.createElement('div');
-    cell.className = 'month-cell' + (otherMonth ? ' month-cell--other-month' : '') + (ds === today ? ' month-cell--today' : '');
-    cell.dataset.datum = ds;
-
-    const dayLabel = document.createElement('div');
-    dayLabel.className = 'month-cell-day';
-    dayLabel.textContent = date.getDate();
-    cell.appendChild(dayLabel);
-
-    const evWrap = document.createElement('div');
-    evWrap.className = 'month-cell-events';
-
-    const dayBks = (bookings || []).filter(b => b.start_time && b.start_time.startsWith(ds));
-    dayBks.slice(0, 3).forEach(b => {
-      const empIdx = teamMembers.findIndex(e => e.id === b.user_id);
-      const color = EMP_COLORS[empIdx % EMP_COLORS.length] || 'var(--primary)';
-      const pill = document.createElement('div');
-      pill.className = 'month-event-pill';
-      pill._termin = b;
-      pill.style.backgroundColor = color;
-      pill.textContent = b.services?.title || b.customer_name || 'Termin';
-      // Die Pille zeigt einen konkreten Termin — dann soll sie ihn auch oeffnen
-      // statt nur in den Tag zu springen.
-      pill.addEventListener('click', async (ev) => { ev.stopPropagation(); openCalRightPanel(await ladeTerminVollstaendig(supabase, b)); });
-      pill.addEventListener('dblclick', (ev) => ev.stopPropagation());
-      evWrap.appendChild(pill);
-    });
-    if (dayBks.length > 3) {
-      const more = document.createElement('div');
-      more.style.cssText = 'font-size:10px;color:var(--text-muted);';
-      more.textContent = `+${dayBks.length - 3}`;
-      evWrap.appendChild(more);
-    }
-
-    cell.appendChild(evWrap);
-    // Zwei Gesten auf derselben Zelle: Einfachklick springt in den Tag (so war
-    // es immer), Doppelklick legt einen Termin an. Der Sprung wartet deshalb
-    // kurz — sonst waere die Monatsansicht beim Doppelklick schon weg, bevor
-    // der zweite Klick ankommt.
-    cell.addEventListener('click', () => {
-      if (monatSprungTimer) clearTimeout(monatSprungTimer);
-      monatSprungTimer = setTimeout(() => {
-        monatSprungTimer = null;
-        dayViewDate = date;
-        setCalendarView('day');
-      }, 250);
-    });
-    cell.addEventListener('dblclick', async () => {
-      if (monatSprungTimer) { clearTimeout(monatSprungTimer); monatSprungTimer = null; }
-      // Der Monat kennt keine Uhrzeit. 09:00 ist ein sichtbarer Startwert, den
-      // man aendert — nicht geraten, sondern gesetzt.
-      dayViewDate = date;
-      await prefillBookingModal(`${ds}T09:00`);
-    });
-    grid.appendChild(cell);
+  await renderMonat({
+    supabase,
+    year, month,
+    ownerId: getOwnerId(),
+    teamMembers,
+    calEmpFilter,
+    farbeFuer: (b) => terminFarben(b, { teamMembers, empFarben: EMP_COLORS }),
+    setzeDatumsLabel: (txt) => { document.getElementById('dayViewDateLabel').textContent = txt; },
+    onTagEinfachklick: (date) => { dayViewDate = date; setCalendarView('day'); },
+    onTagDoppelklick: ({ dateStr, date }) => { dayViewDate = date; prefillBookingModal(`${dateStr}T09:00`); },
+    onTerminKlick: async (b) => openCalRightPanel(await ladeTerminVollstaendig(supabase, b)),
   });
 }
+
 
 // Vor und zurueck blaettern — beide Knoepfe waren dieselbe Verzweigung, gespiegelt.
 function kalenderBlaettern(richtung) {
@@ -3194,8 +3093,13 @@ async function prefillBookingModal(startStr) {
   if (_bkPickerBlock) _bkPickerBlock.hidden = true;
   window._bkGewaehlteRx = null;
   zeigeDienstleistungsfeld(true);
+  setzeBlockerModus(false);
 
   populateEmpSelects();
+  // Einzelpraxen haben genau einen Mitarbeiter — das Feld ist dort ein toter
+  // Klick und stand trotzdem als erstes in der Maske.
+  const _empGrp = document.getElementById('bkEmployeeGroup');
+  if (_empGrp) _empGrp.hidden = (teamMembers || []).length <= 1;
   await populateSrvSelect();
   openModal('bookingModal');
   await initBkCustomerAutocomplete();
@@ -5950,6 +5854,41 @@ document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () 
 window._collectHeilmittelItems = function() { return []; };
 window._resetRezeptartUI = function() {};
 
+// Blocker: Zeit ohne Patient. Die beiden internen Leistungen entstehen beim
+// ersten Klick und bleiben dann bestehen (module/kalender-blocker.js).
+let _blockerDienste = null;
+function setzeBlockerModus(an, knopf = null) {
+  document.getElementById('bookingModal')?.classList.toggle('bk-blocker-modus', !!an);
+  document.getElementById('bkBlockerZurueck').hidden = !an;
+  document.querySelectorAll('.bk-blocker-btn[data-blocker]').forEach(b =>
+    b.classList.toggle('bk-blocker-btn--aktiv', b === knopf));
+}
+document.getElementById('bkBlockerZeile')?.addEventListener('click', async (ev) => {
+  const zurueck = ev.target.closest('#bkBlockerZurueck');
+  if (zurueck) {
+    setzeBlockerModus(false);
+    document.getElementById('bkCustomerSearch').value = '';
+    document.getElementById('bkCustomer').value = '';
+    await populateSrvSelect();
+    return;
+  }
+  const knopf = ev.target.closest('.bk-blocker-btn[data-blocker]');
+  if (!knopf) return;
+  if (!_blockerDienste) {
+    _blockerDienste = await ensureBlockerServices(supabase, getOwnerId(), currentSession?.user?.id);
+    await loadServices();
+  }
+  const dienst = _blockerDienste.get(knopf.dataset.blocker);
+  if (!dienst) { showToast('Blocker konnte nicht angelegt werden.', 'error'); return; }
+  // populateSrvSelect blendet interne Leistungen aus — ausser der gewaehlten.
+  await populateSrvSelect(dienst.id);
+  document.getElementById('bkService').value = dienst.id;
+  document.getElementById('bkCustomer').value = dienst.title;
+  document.getElementById('bkCustomerId').value = '';
+  document.getElementById('bkCustomerSearch').value = dienst.title;
+  setzeBlockerModus(true, knopf);
+});
+
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!checkPlanActive()) return;
   const id = document.getElementById('bk-id').value;
@@ -6007,7 +5946,11 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
-  if (!isGroup) {
+  const istBlocker = istBlockerLeistung(servicesCache.find(s => s.id === srvId));
+  if (istBlocker) {
+    cust = cust || servicesCache.find(s => s.id === srvId)?.title || 'Blocker';
+    custId = '';
+  } else if (!isGroup) {
     if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
   }
 
@@ -10565,7 +10508,7 @@ function renderServices() {
         : '';
     return `<div class="service-card" data-srv-id="${s.id}">
       <div class="service-card-head">
-        <div class="service-title">${escapeHtml(s.title)} ${codeTag}</div>
+        <div class="service-title"><span class="srv-farbpunkt" style="background:${escapeHtml(s.color || '#22c55e')}"></span>${escapeHtml(s.title)} ${codeTag}</div>
         <button class="srv-del-btn" data-srv-del="${s.id}" title="Löschen" aria-label="Löschen">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
         </button>
@@ -10620,8 +10563,21 @@ function resetServiceForm() {
   // Unified: always use duration cards for every sector
   document.getElementById('srvStandardFields').hidden = true;
   document.getElementById('srvPhysioFields').hidden = false;
-  document.getElementById('srvStandardColorRow').hidden = true;
+  srvFarbwahl().setze('#22c55e');
   renderPhysioServiceCards();
+}
+
+// Die Farbfelder werden einmal gebaut und danach nur noch gesetzt.
+let _srvFarbwahl = null;
+function srvFarbwahl() {
+  if (!_srvFarbwahl) {
+    _srvFarbwahl = mountFarbwahl({
+      behaelter: document.getElementById('srvFarbfelder'),
+      eingabe: document.getElementById('srvColor'),
+      farben: LEISTUNG_FARBEN,
+    });
+  }
+  return _srvFarbwahl;
 }
 
 function openServiceEdit(id) {
@@ -10634,6 +10590,7 @@ function openServiceEdit(id) {
   document.getElementById('srvEditId').value = s.id;
   document.getElementById('srvTitle').value = s.title;
   document.getElementById('srvCode').value = s.code || '';
+  srvFarbwahl().setze(s.color);
 
   // If price_config exists, use it. Otherwise build one from legacy duration_minutes+price.
   let durations = s.price_config?.durations;
@@ -10754,7 +10711,8 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     gkv_position_nr: document.getElementById('srvGkvPosition').value || null,
     price_config: { durations },
     duration_minutes: activeDurs[0].minutes,
-    price: activeDurs[0].price
+    price: activeDurs[0].price,
+    color: document.getElementById('srvColor').value || '#22c55e'
   };
 
   if (mode === 'edit') {

@@ -32,6 +32,8 @@
 
 import { WV_SLOT_PX } from './kalender-raster.js?v=20260822';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
+import { mitDeckkraft } from './kalender-farben.js?v=20260825';
+import { istBlockerLeistung } from './kalender-blocker.js?v=20260825';
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -41,21 +43,6 @@ const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({
 const START_STUNDE = 8;
 const END_STUNDE = 20;
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-
-/**
- * Farbe mit Deckkraft für die Blockfläche.
- *
- * Nicht einfach `farbe + '22'`: die Mitarbeiterfarbe fällt auf
- * `var(--primary)` zurück, sobald ein Termin zu niemandem aus `teamMembers`
- * gehört (ausgeschiedener Mitarbeiter, mehr Mitarbeiter als Farben). Aus
- * `var(--primary)22` wird kein Farbwert — der Block hätte gar keine Fläche
- * mehr und wäre nur noch am linken Rand zu erkennen.
- */
-export function mitDeckkraft(farbe, hexSuffix = '22', anteil = '13%') {
-  return /^#[0-9a-fA-F]{6}$/.test(farbe)
-    ? farbe + hexSuffix
-    : `color-mix(in srgb, ${farbe} ${anteil}, transparent)`;
-}
 
 const zwei = (n) => String(n).padStart(2, '0');
 
@@ -189,7 +176,7 @@ export async function renderWoche({
   const empIds = mitarbeiter.map(e => e.id);
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,status,is_group,group_parent_id,services(title,color)')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,status,is_group,group_parent_id,services(title,color,code,is_internal)')
     .eq('owner_id', ownerId)
     .gte('start_time', vonDatum.toISOString())
     .lte('start_time', bisDatum.toISOString())
@@ -273,6 +260,7 @@ export async function renderWoche({
 
       const block = document.createElement('div');
       block.className = 'wv-booking-block';
+      if (istBlockerLeistung(b.services)) block.classList.add('wv-booking-block--blocker');
       // Das Kontextmenü (module/kalender-kontextmenue.js) liest den Termin vom
       // Element. Über eine Id müsste es ihn erst wieder suchen — die Liste
       // steht aber nur hier, im Rumpf dieses Zeichenlaufs.

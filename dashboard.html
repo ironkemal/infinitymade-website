@@ -564,8 +564,14 @@
               </div>
               <div class="srv-duration-grid" id="srvPhysioCards"></div>
             </div>
-            <div id="srvStandardColorRow" class="form-group" hidden>
-              <input type="hidden" id="srvColor" value="#22c55e" />
+            <div id="srvStandardColorRow" class="form-group">
+              <label class="form-label">Farbe im Kalender
+                <span style="font-size:11px;color:var(--text-muted);">— so erscheint die Leistung in Tages-, Wochen- und Monatsansicht</span>
+              </label>
+              <div class="srv-farbwahl">
+                <div class="srv-farbfelder" id="srvFarbfelder"></div>
+                <input type="color" id="srvColor" value="#22c55e" class="srv-farbe-eigen" title="Eigene Farbe" aria-label="Eigene Farbe" />
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_srv_emps">Mitarbeiter</label>
@@ -2948,12 +2954,19 @@
       </div>
       <div class="modal-body">
         <input type="hidden" id="bk-id" />
-        <div class="form-group">
+        <div class="form-group" id="bkEmployeeGroup">
           <label class="form-label" data-i18n="lbl_manual_emp">Mitarbeiter</label>
           <select class="form-select" id="bkEmployee"></select>
         </div>
         <!-- Wird ausgeblendet, sobald eine Verordnung gewählt ist — die enthält
              die Leistung bereits. Der Wert bleibt gesetzt (Pflichtfeld). -->
+        <!-- Blocker: Zeit ohne Patient. Setzt die interne Leistung und blendet
+             Kunde, Telefon und Verordnung aus (module/kalender-blocker.js). -->
+        <div class="form-group bk-blocker-zeile" id="bkBlockerZeile">
+          <button type="button" class="bk-blocker-btn" data-blocker="pause">⏸ Pause</button>
+          <button type="button" class="bk-blocker-btn" data-blocker="privat">🔒 Privat</button>
+          <button type="button" class="bk-blocker-btn bk-blocker-btn--zurueck" id="bkBlockerZurueck" hidden>↩ Patiententermin</button>
+        </div>
         <div class="form-group" id="bkServiceGroup">
           <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
           <select class="form-select" id="bkService"></select>
@@ -3106,6 +3119,8 @@
             </div>
           </div>
         </div>
+        <details class="bk-mehr">
+          <summary class="bk-mehr-titel">Mehr Optionen</summary>
         <div class="form-group">
           <label class="form-label" data-i18n="lead_notes">Notizen</label>
           <textarea class="form-textarea" id="bkNotes"></textarea>
@@ -3159,6 +3174,7 @@
             </button>
           </div>
         </div>
+        </details>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" id="bkWlMatchBtn" style="gap:6px;display:inline-flex;align-items:center;margin-right:auto;" hidden>🔍 Warteliste</button>

@@ -7719,3 +7719,155 @@ body.compact-mode .patient-row {
   margin: 4px 2px;
   background: var(--border);
 }
+
+/* ── Farbwahl in der Leistungsmaske ────────────────────────────────────────
+   Gehört zu module/leistung-farbwahl.js. Die acht Vorschläge sind Datenfarben
+   (sie landen in services.color), deshalb hier bewusst keine Theme-Variablen —
+   Rahmen und Fokus dagegen schon. */
+.srv-farbwahl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.srv-farbfelder {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.srv-farbfeld {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.srv-farbfeld:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Der Rahmen sitzt aussen, damit die Farbe selbst nicht kleiner wird. */
+.srv-farbfeld--aktiv {
+  border-color: var(--text-main);
+  box-shadow: 0 0 0 2px var(--bg-card-solid) inset;
+}
+
+.srv-farbe-eigen {
+  width: 42px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card-solid);
+  cursor: pointer;
+}
+
+/* Zeigt in der Leistungsübersicht, welche Farbe die Leistung im Kalender hat.
+   Ohne das müsste man jede Leistung öffnen, um die Farbe zu sehen. */
+.srv-farbpunkt {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: baseline;
+  flex-shrink: 0;
+}
+
+/* ── "Mehr Optionen" in der Terminmaske ────────────────────────────────────
+   Notizen, Serientermin und Hausbesuch waren immer sichtbar. Für den häufigen
+   Fall — Patient, Leistung, Zeit — war die Maske dadurch dreimal so lang wie
+   nötig. <details> statt eigener Klapp-Logik: Tastatur und Vorlesesoftware
+   können das von Haus aus. */
+.bk-mehr {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.bk-mehr-titel {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 6px 2px;
+  list-style: none;
+  user-select: none;
+}
+
+.bk-mehr-titel::-webkit-details-marker {
+  display: none;
+}
+
+.bk-mehr-titel::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.15s ease;
+}
+
+.bk-mehr[open] > .bk-mehr-titel::before {
+  transform: rotate(90deg);
+}
+
+.bk-mehr-titel:hover {
+  color: var(--text-main);
+}
+
+/* ── Blocker-Schnellwahl in der Terminmaske ────────────────────────────────
+   module/kalender-blocker.js. Bewusst unauffällig: der Normalfall ist der
+   Patiententermin, nicht die Pause. */
+.bk-blocker-zeile {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bk-blocker-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card-solid);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bk-blocker-btn:hover {
+  color: var(--text-main);
+}
+
+.bk-blocker-btn--aktiv {
+  color: var(--text-main);
+  border-color: var(--text-muted);
+}
+
+.bk-blocker-btn--zurueck {
+  margin-left: auto;
+}
+
+/* Blocker im Kalender: schraffiert, damit ein zugeklebter Tag nicht nach
+   Umsatz aussieht. */
+.dv-booking-block--blocker,
+.wv-booking-block--blocker {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 6px,
+    rgba(148, 163, 184, 0.25) 6px 12px
+  );
+}
+
+/* Im Blockermodus sind Patient, Telefon, Verordnung und Gruppe gegenstandslos.
+   Über eine Klasse statt einzelner hidden-Flags — sonst müsste man sich beim
+   Zurückschalten merken, was vorher schon verborgen war. */
+.bk-blocker-modus #bkCustomerGroup,
+.bk-blocker-modus #bkPhoneGroup,
+.bk-blocker-modus #bkVerordnungSection,
+.bk-blocker-modus #bkGroupBlock {
+  display: none !important;
+}

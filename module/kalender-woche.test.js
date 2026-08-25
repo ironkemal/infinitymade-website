@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { montagDerWoche, wochenTage, pixelFuerMinute, mitDeckkraft } from './kalender-woche.js';
+import { montagDerWoche, wochenTage, pixelFuerMinute } from './kalender-woche.js';
+import { mitDeckkraft } from './kalender-farben.js';
 import { WV_SLOT_PX } from './kalender-raster.js';
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
