@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+  Nur zum Messen. Baut die Kalenderstruktur nach und laedt dashboard.css,
+  damit die Geometrie ohne Login pruefbar ist. Wird nach der Messung geloescht.
+-->
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Layout-Probe</title>
+</head>
+<body>
+  <!-- ── Wochenansicht ────────────────────────────────────────────────── -->
+  <div class="week-view-grid" id="weekViewGrid" style="display:flex;">
+    <div class="dv-time-col" id="wvTimeCol"></div>
+    <div class="dv-cols-wrap" id="wvColsWrap"></div>
+  </div>
+
+  <!-- ── Tagesansicht ─────────────────────────────────────────────────── -->
+  <div class="day-view-grid" id="dayViewGrid" style="display:flex;">
+    <div class="dv-time-col" id="dvTimeCol"></div>
+    <div class="dv-cols-wrap" id="dvColsWrap"></div>
+  </div>
+
+  <!-- ── Leistungsliste ───────────────────────────────────────────────── -->
+  <div id="servicesGrid">
+    <section class="srv-gruppe"><table class="srv-tabelle"><tbody><tr><td>x</td></tr></tbody></table></section>
+    <section class="srv-gruppe"><table class="srv-tabelle"><tbody><tr><td>y</td></tr></tbody></table></section>
+  </div>
+
+  <!-- ── Kontextmenue ─────────────────────────────────────────────────── -->
+  <div class="kal-kontextmenue" id="probeMenue" style="left:10px;top:10px;">
+    <button class="kal-kontextmenue-eintrag">Eintrag</button>
+    <div class="kal-kontextmenue-trenner"></div>
+    <button class="kal-kontextmenue-eintrag kal-kontextmenue-eintrag--gefahr">Absagen</button>
+  </div>
+
+  <script>
+    const SLOTS = 24;                       // 08:00–20:00 in halben Stunden
+    function fuelle(spalteId, wrapId, kopf) {
+      const zeit = document.getElementById(spalteId);
+      const wrap = document.getElementById(wrapId);
+      for (let i = 0; i < SLOTS; i++) {
+        const f = document.createElement('div');
+        f.className = 'dv-slot';
+        const l = document.createElement('div');
+        l.className = 'dv-time-label';
+        l.textContent = '08:00';
+        f.appendChild(l);
+        zeit.appendChild(f);
+      }
+      const col = document.createElement('div');
+      col.className = 'dv-col';
+      const h = document.createElement('div');
+      h.className = 'dv-col-header';
+      h.textContent = kopf;
+      col.appendChild(h);
+      const inner = document.createElement('div');
+      inner.className = 'wv-col-slots';
+      for (let i = 0; i < SLOTS; i++) {
+        const f = document.createElement('div');
+        f.className = 'dv-slot';
+        f.dataset.i = String(i);
+        inner.appendChild(f);
+      }
+      col.appendChild(inner);
+      wrap.appendChild(col);
+    }
+    fuelle('wvTimeCol', 'wvColsWrap', 'Mo 25.8.');
+    fuelle('dvTimeCol', 'dvColsWrap', 'Melih');
+  </script>
+</body>
+</html>

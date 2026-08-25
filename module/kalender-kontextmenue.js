@@ -70,6 +70,21 @@ export function eintraegeFuer(termin) {
 
 let menueEl = null;
 let offenerTermin = null;
+/**
+ * Zeitpunkt des Öffnens. Scroll-Ereignisse in den ersten Millisekunden danach
+ * schliessen das Menü NICHT.
+ *
+ * Grund (gemessen am 25.08.2026): der Browser holt das angeklickte Element vor
+ * dem Klick ins Bild. Dieses Scroll-Ereignis wird erst nach `contextmenu`
+ * zugestellt — das Menü ging auf und im selben Wimpernschlag wieder zu, sobald
+ * die Seite überhaupt gescrollt war. Im Alltag ist es dasselbe Bild: auf dem
+ * Trackpad läuft der Schwung noch nach, während man schon rechtsklickt.
+ *
+ * Danach bleibt Schliessen-bei-Scroll richtig — scrollt die Praxis weiter,
+ * steht das Menü sonst über einem fremden Termin.
+ */
+let offenSeit = 0;
+const SCROLL_SCHONFRIST_MS = 350;
 /** Die Zuhörer an `document` und `window` dürfen sich nicht vervielfachen. */
 let globalVerdrahtet = false;
 
@@ -135,18 +150,30 @@ function oeffne(termin, x, y, aktionen) {
     menue.appendChild(knopf);
   }
 
+  // Erst die Klickposition setzen, DANN einhängen. Ohne das steht das Menü für
+  // einen Moment am Seitenanfang — und der Aufruf von focus() weiter unten
+  // scrollt die Seite dorthin. Dieser Scroll löste den eigenen
+  // „bei Scroll schliessen"-Zuhörer aus: das Menü ging auf und sofort wieder zu,
+  // sobald die Seite überhaupt gescrollt war (gemessen am 25.08.2026:
+  // scrollY 1026 → 0, Menü weg).
+  menue.style.left = x + 'px';
+  menue.style.top = y + 'px';
+  menue.style.visibility = 'hidden';
   document.body.appendChild(menue);
   menueEl = menue;
 
+  // Jetzt ist die Größe bekannt: am Bildschirmrand nach innen klappen.
   const kasten = menue.getBoundingClientRect();
   const rand = 8;
-  const links = Math.max(rand, Math.min(x, window.innerWidth - kasten.width - rand));
-  const oben = Math.max(rand, Math.min(y, window.innerHeight - kasten.height - rand));
-  menue.style.left = links + 'px';
-  menue.style.top = oben + 'px';
+  menue.style.left = Math.max(rand, Math.min(x, window.innerWidth - kasten.width - rand)) + 'px';
+  menue.style.top = Math.max(rand, Math.min(y, window.innerHeight - kasten.height - rand)) + 'px';
+  menue.style.visibility = '';
+  offenSeit = performance.now();
 
+  // preventScroll, weil das Menü fixiert ist: die Seite muss sich dafür nicht
+  // bewegen — und jede Bewegung würde es wieder schliessen.
   const erster = eintraegeElemente()[0];
-  (erster || menue).focus();
+  (erster || menue).focus({ preventScroll: true });
 }
 
 function fuehreAus(id, termin, aktionen) {
@@ -214,7 +241,9 @@ export function verdrahteKontextmenue(aktionen) {
   window.addEventListener('resize', schliesse);
   window.addEventListener('blur', schliesse);
   // Beim Scrollen wandert der Termin weg, das Menü bliebe stehen.
-  window.addEventListener('scroll', schliesse, true);
+  window.addEventListener('scroll', () => {
+    if (menueEl && performance.now() - offenSeit > SCROLL_SCHONFRIST_MS) schliesse();
+  }, true);
 
   document.addEventListener('keydown', (ev) => {
     if (!menueEl) return;

@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Modul-Probe</title></head><body>
+<div id="wvTimeCol"></div><div id="wvColsWrap"></div><div id="monthGridHeader"></div><div id="monthGrid"></div><div id="dvColsWrap"></div>
+<script type="module">
+const ergebnis = [];
+const pfade = ["../../module/abrechnungsstatus.js?v=20260815", "../../module/arzt-register.js?v=20260816", "../../module/belegnummer.js?v=20260817", "../../module/frequenz-pruefung.js?v=20260816a", "../../module/fussbefund.js?v=20260817", "../../module/geschlecht.js?v=20260816", "../../module/heilmittel-fristen.js?v=20260814", "../../module/kalender-blocker.js?v=20260825", "../../module/kalender-farben.js?v=20260825", "../../module/kalender-kontextmenue.js?v=20260822", "../../module/kalender-monat.js?v=20260825", "../../module/kalender-raster.js?v=20260822", "../../module/kalender-woche.js?v=20260825", "../../module/kiosk.js?v=20260814", "../../module/krankenkasse-suche.js?v=20260817", "../../module/kvnr.js?v=20260814", "../../module/leistung-farbwahl.js?v=20260825b", "../../module/leistungen-liste.js?v=20260825b", "../../module/patienten-einwilligung.js?v=20260814", "../../module/patientenkarte.js?v=20260816", "../../module/patientenliste.js?v=20260815c", "../../module/plz.js?v=20260814", "../../module/rechnung-bruecke.js?v=20260816", "../../module/rechnung-druck.js?v=20260816", "../../module/rechnung-editor.js?v=20260815c", "../../module/rechnung-leistung-picker.js?v=20260815b", "../../module/rechnung-steuer.js?v=20260816", "../../module/rechnung-verordnung.js?v=20260817", "../../module/rechnung-zahlung.js?v=20260814", "../../module/signal.js?v=20260815", "../../module/sitzung-abgleich.js?v=20260816", "../../module/sitzungsfortschritt.js?v=20260815", "../../module/termin-aktionen.js?v=20260817", "../../module/termin-druck.js?v=20260816b", "../../module/termin-laden.js?v=20260822", "../../module/termin-patient-bezug.js?v=20260817", "../../module/termin-verordnung.js?v=20260816b", "../../module/verordnung-detail.js?v=20260817", "../../module/verordnung-liste.js?v=20260817", "../../module/verordnung-podo.js?v=20260815a", "../../module/zuzahlung-befreiung.js?v=20260814"];
+for (const p of pfade) {
+  try { const m = await import(p); ergebnis.push({p, ok:true, exporte:Object.keys(m).length}); }
+  catch (e) { ergebnis.push({p, ok:false, fehler:String(e).slice(0,160)}); }
+}
+window.__probe = ergebnis;
+document.title = "fertig";
+</script></body></html>
