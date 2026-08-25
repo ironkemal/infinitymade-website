@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260816b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260822" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -5354,10 +5354,15 @@
         </div>
 
         <div class="form-group" style="margin-bottom:0;">
-          <button class="btn-danger" id="bkActionNoShowBtn" style="width:100%;justify-content:center;" disabled>
+          <!-- Kein `disabled` mehr: der Countdown ("ab 3 Min. nach Terminbeginn") ist
+               entfallen, updateNoShowButton() schaltet den Knopf ohnehin immer frei.
+               Das Attribut blieb als Rest liegen und liess die Handlung aus dem
+               Kontextmenue wortlos ins Leere laufen, solange der Seitenbereich in
+               dieser Sitzung noch nie offen war. -->
+          <button class="btn-danger" id="bkActionNoShowBtn" style="width:100%;justify-content:center;">
             <span>✕</span> Patient nicht erschienen
           </button>
-          <div class="bk-action-hint" id="bkActionNoShowHint">Verfügbar ab 3 Min. nach Terminbeginn</div>
+          <div class="bk-action-hint" id="bkActionNoShowHint" hidden>Verfügbar ab 3 Min. nach Terminbeginn</div>
           <button class="btn-secondary" id="bkActionAusfallBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;" hidden>💶 Ausfallrechnung erstellen</button>
         </div>
 
@@ -6088,7 +6093,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260817d"></script>
+  <script type="module" src="dashboard.js?v=20260822"></script>
 </body>
 
 </html>

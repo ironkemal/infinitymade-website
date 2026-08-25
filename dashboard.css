@@ -1782,6 +1782,38 @@ textarea {
   overflow-x: auto;
 }
 
+/* Die Wochenansicht teilt sich `.dv-slot` mit der Tagesansicht, rechnet aber
+   mit der halben Zeilenhöhe (sieben Spalten statt einer je Mitarbeiter).
+   Ohne diese Regel ist die Zeitleiste links doppelt so lang wie ihr Inhalt und
+   die angezeigte Uhrzeit gehört zu keinem Terminblock.
+   Gegenstück: WV_SLOT_PX in module/kalender-raster.js — beide Zahlen wandern
+   nur gemeinsam. */
+.week-view-grid .dv-slot {
+  height: 28px;
+  /* Ohne das markiert der Doppelklick auf ein Rasterfeld die Uhrzeit daneben. */
+  user-select: none;
+}
+
+/* Träger der Rasterfelder einer Tagesspalte. Die Felder liegen im normalen
+   Fluss und geben die Höhe vor, die Terminblöcke schweben absolut darüber. */
+.wv-col-slots {
+  position: relative;
+}
+
+.wv-booking-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border-left: 3px solid var(--primary);
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--text-main);
+  overflow: hidden;
+  cursor: pointer;
+}
+
 .dv-time-col {
   width: 56px;
   flex-shrink: 0;
@@ -7294,6 +7326,9 @@ body.compact-mode .patient-row {
   transition: background 0.1s;
   background: var(--bg-card-solid);
   border: 1px solid transparent;
+  /* Der Doppelklick legt hier einen Termin an — ohne das markiert er die
+     Tageszahl. */
+  user-select: none;
 }
 .month-cell:hover { border-color: var(--border); }
 .month-cell--today { border-color: var(--primary) !important; }
@@ -7629,4 +7664,58 @@ body.compact-mode .patient-row {
   margin: 20px 0 8px;
   font-size: 14px;
   color: var(--text-main);
+}
+
+/* ── Kontextmenü auf Terminen ──────────────────────────────────────────────
+   Gehört zu module/kalender-kontextmenue.js. Hängt an <body> und nicht im
+   Kalender, sonst schneidet dessen `overflow: hidden` es ab.
+   z-index bewusst unter 1000 (.modal-overlay): das Menü schliesst, bevor ein
+   Dialog aufgeht — es soll nie über einem liegen. */
+.kal-kontextmenue {
+  position: fixed;
+  z-index: 900;
+  min-width: 214px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+.kal-kontextmenue-eintrag {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  text-align: left;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.kal-kontextmenue-eintrag:hover:not(:disabled),
+.kal-kontextmenue-eintrag:focus-visible {
+  background: var(--bg-card);
+  outline: none;
+}
+
+/* Nicht ausblenden, nur abblenden: ein Menü, dessen Einträge je nach Termin
+   die Plätze tauschen, trifft man nicht mehr blind. */
+.kal-kontextmenue-eintrag:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.kal-kontextmenue-eintrag--gefahr {
+  color: var(--danger);
+}
+
+.kal-kontextmenue-trenner {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
 }

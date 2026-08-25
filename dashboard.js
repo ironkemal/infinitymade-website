@@ -33,7 +33,11 @@ import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
-import { DV_SLOT_MIN, DV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260816';
+import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260822';
+import { renderWoche } from './module/kalender-woche.js?v=20260822';
+import { aufLangenDruck } from './module/langer-druck.js?v=20260822';
+import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260822';
+import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260822';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
@@ -765,6 +769,8 @@ let calendarView = 'day';
 let dayViewDate = new Date();
 let monthViewYear = new Date().getFullYear();
 let monthViewMonth = new Date().getMonth();
+// Verzoegerter Sprung Monat -> Tag; ein Doppelklick loescht ihn wieder.
+let monatSprungTimer = null;
 let moveBooking = null;
 let moveGhostEl = null;
 const EMP_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#ef4444', '#14b8a6', '#ec4899'];
@@ -1840,8 +1846,8 @@ async function refreshBookingViews() {
   // Übersicht-Tagesplan auffrischen (den aktuell gezeigten Tag beibehalten)
   try { await loadScheduleBookings(scheduleDate instanceof Date ? scheduleDate : new Date()); } catch (e) {}
   loadActivityFeed().catch(() => {});
-  if (activePanel === 'calendar' && calendarView === 'day') {
-    try { await renderDayView(toISODate(dayViewDate)); } catch (e) {}
+  if (activePanel === 'calendar') {
+    try { await renderCalendarView(); } catch (e) {}
   }
 }
 // Wer Termine schreibt, meldet `bookings:changed` — und muss nicht mehr wissen,
@@ -2422,9 +2428,7 @@ function renderCalEmpChips() {
     btn.addEventListener('click', () => {
       calEmpFilter = c.id;
       renderCalEmpChips();
-      if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-      else if (calendarView === 'week') renderWeekView(toISODate(dayViewDate));
-      else if (calendarView === 'month') renderMonthView(monthViewYear, monthViewMonth);
+      renderCalendarView();
     });
     container.appendChild(btn);
   });
@@ -2644,6 +2648,15 @@ function formatDateDE(d) {
   return d.toLocaleDateString('de-DE', opts);
 }
 
+// Zeichnet die GERADE offene Ansicht neu. Vorher stand diese Dreifach-Abfrage
+// an einem halben Dutzend Stellen — und an den meisten nur der Tages-Zweig.
+// Wer heute einen Termin in der Woche aenderte, sah die Aenderung nicht.
+function renderCalendarView() {
+  if (calendarView === 'week') return renderWeekView(toISODate(dayViewDate));
+  if (calendarView === 'month') return renderMonthView(monthViewYear, monthViewMonth);
+  return renderDayView(toISODate(dayViewDate));
+}
+
 function setCalendarView(view) {
   calendarView = view;
   document.getElementById('monthViewWrap').style.display = view === 'month' ? '' : 'none';
@@ -2652,9 +2665,7 @@ function setCalendarView(view) {
   document.querySelectorAll('.cal-view-toggle .cal-view-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.view === view);
   });
-  if (view === 'day') renderDayView(toISODate(dayViewDate));
-  else if (view === 'week') renderWeekView(toISODate(dayViewDate));
-  else if (view === 'month') renderMonthView(monthViewYear, monthViewMonth);
+  renderCalendarView();
 }
 
 async function renderDayView(dateStr) {
@@ -2690,7 +2701,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .select(TERMIN_SELECT)
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2791,6 +2802,7 @@ async function renderDayView(dateStr) {
 
       const block = document.createElement('div');
       block.className = 'dv-booking-block';
+      block._termin = b;
       if (moveBooking && moveBooking.id === b.id) block.classList.add('dv-move-source');
       block.style.top = topPx + 'px';
       block.style.height = Math.max(hPx, 28) + 'px';
@@ -2836,104 +2848,39 @@ async function renderDayView(dateStr) {
   });
 }
 
+// Die Wochenansicht steht in module/kalender-woche.js. Hier bleibt nur die
+// Bruecke: Zustand des Kalenders hinein, Handlungen heraus.
 async function renderWeekView(dateStr) {
-  const base = new Date(dateStr + 'T12:00:00');
-  const dow = base.getDay(); // 0=Sun
-  const mondayOffset = dow === 0 ? -6 : 1 - dow;
-  const monday = new Date(base);
-  monday.setDate(base.getDate() + mondayOffset);
-
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    days.push(d);
-  }
-
-  const fmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-  document.getElementById('dayViewDateLabel').textContent = `${fmt(days[0])} – ${fmt(days[6])}`;
-
-  const timeCol = document.getElementById('wvTimeCol');
-  const colsWrap = document.getElementById('wvColsWrap');
-  timeCol.innerHTML = '';
-  colsWrap.innerHTML = '';
-
-  for (let h = 8; h < 20; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const slot = document.createElement('div');
-      slot.className = 'dv-slot';
-      const label = document.createElement('div');
-      label.className = 'dv-time-label';
-      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      slot.appendChild(label);
-      timeCol.appendChild(slot);
-    }
-  }
-
-  const ownerId = getOwnerId();
-  const dStart = new Date(days[0]);
-  dStart.setHours(0, 0, 0, 0);
-  const dEnd = new Date(days[6]);
-  dEnd.setHours(23, 59, 59, 999);
-
-  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
-  const empIds = emps.map(e => e.id);
-
-  const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,status,services(title)')
-    .eq('owner_id', ownerId)
-    .gte('start_time', dStart.toISOString())
-    .lte('start_time', dEnd.toISOString())
-    .in('user_id', empIds.length ? empIds : ['none'])
-    .neq('status', 'cancelled');
-
-  const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-  const startHour = 8;
-  const totalSlots = (20 - 8) * 2;
-
-  days.forEach(d => {
-    const col = document.createElement('div');
-    col.className = 'dv-col';
-    col.style.minWidth = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'dv-col-header';
-    const isToday = toISODate(d) === toISODate(new Date());
-    header.style.cssText = `padding:6px 4px;text-align:center;font-size:12px;font-weight:${isToday ? '700' : '500'};color:${isToday ? 'var(--primary)' : 'var(--text-muted)'};border-bottom:1px solid var(--border);`;
-    header.textContent = `${DAY_NAMES[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`;
-    col.appendChild(header);
-
-    const inner = document.createElement('div');
-    inner.style.cssText = `position:relative;height:${totalSlots * 28}px;`;
-
-    const dayISO = toISODate(d);
-    const dayBookings = (bookings || []).filter(b => b.start_time && b.start_time.startsWith(dayISO));
-
-    dayBookings.forEach(b => {
-      const start = new Date(b.start_time);
-      const end = new Date(b.end_time || b.start_time);
-      const startMin = start.getHours() * 60 + start.getMinutes();
-      const endMin = end.getHours() * 60 + end.getMinutes();
-      const topPx = ((startMin - startHour * 60) / 30) * 28;
-      const heightPx = Math.max(((endMin - startMin) / 30) * 28, 28);
-      const empIdx = teamMembers.findIndex(e => e.id === b.user_id);
-      const color = EMP_COLORS[empIdx % EMP_COLORS.length] || 'var(--primary)';
-
-      const block = document.createElement('div');
-      block.style.cssText = `position:absolute;top:${topPx}px;left:2px;right:2px;height:${heightPx}px;background:${color}22;border-left:3px solid ${color};border-radius:4px;padding:2px 4px;font-size:10px;overflow:hidden;cursor:pointer;`;
-      block.title = `${b.services?.title || 'Termin'} – ${b.customer_name || ''}`;
-      // Auch in der Wochenansicht: ohne Uhrzeit muss man den Block gegen die
-      // Zeitleiste am Rand halten.
-      const wvZeit = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      block.innerHTML = `<span style="font-variant-numeric:tabular-nums;opacity:0.85;">${escapeHtml(wvZeit)}</span> `
-        + escapeHtml(b.services?.title || 'Termin');
-      inner.appendChild(block);
-    });
-
-    col.appendChild(inner);
-    colsWrap.appendChild(col);
+  await renderWoche({
+    supabase,
+    dateStr,
+    ownerId: getOwnerId(),
+    teamMembers,
+    calEmpFilter,
+    moveAktiv: !!moveBooking,
+    // Heute nach Mitarbeiter; Punkt 1.2 liefert hier Flaeche = Leistung.
+    farbeFuer: (b) => {
+      const idx = teamMembers.findIndex(e => e.id === b.user_id);
+      const farbe = EMP_COLORS[idx % EMP_COLORS.length] || 'var(--primary)';
+      return { flaeche: farbe, rand: farbe };
+    },
+    setzeDatumsLabel: (txt) => { document.getElementById('dayViewDateLabel').textContent = txt; },
+    onSlotDoppelklick: async ({ timeStr, empId }) => {
+      await prefillBookingModal(timeStr);
+      const bkEmp = document.getElementById('bkEmployee');
+      // Ohne eindeutigen Mitarbeiter bleibt das Feld leer und die Maske
+      // verlangt eine Auswahl (bkSaveBtn prueft).
+      if (bkEmp) bkEmp.value = empId || '';
+    },
+    onSlotKlick: ({ empId, slotEl, ev }) => {
+      if (!moveBooking) return;
+      placeGhost(slotEl, empId || moveBooking.user_id,
+        moveBooking.customer_name || moveBooking.services?.title || 'Termin', ev, WV_SLOT_PX);
+    },
+    onTerminKlick: async (b) => openCalRightPanel(await ladeTerminVollstaendig(supabase, b)),
   });
 }
+
 
 async function renderMonthView(year, month) {
   const header = document.getElementById('monthGridHeader');
@@ -2942,6 +2889,17 @@ async function renderMonthView(year, month) {
 
   const DAY_HEADERS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
   header.innerHTML = DAY_HEADERS.map(d => `<div>${d}</div>`).join('');
+
+  // Tablet-Weg zum Doppelklick. Das Raster wird neu gebaut, der Behaelter
+  // bleibt — also nur einmal verdrahten.
+  if (!grid.dataset.langdruck) {
+    grid.dataset.langdruck = '1';
+    aufLangenDruck(grid, '.month-cell', (zelle, ev) => {
+      if (ev.target?.closest?.('.month-event-pill')) return;   // dort: Kontextmenue
+      if (monatSprungTimer) { clearTimeout(monatSprungTimer); monatSprungTimer = null; }
+      if (zelle.dataset.datum) prefillBookingModal(`${zelle.dataset.datum}T09:00`);
+    });
+  }
 
   // First day of month
   const firstDay = new Date(year, month, 1);
@@ -2973,7 +2931,7 @@ async function renderMonthView(year, month) {
   const empIds = emps.map(e => e.id);
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,start_time,customer_name,services(title)')
+    .select('id,user_id,start_time,customer_name,status,is_group,group_parent_id,services(title)')
     .eq('owner_id', ownerId)
     .gte('start_time', mStart)
     .lte('start_time', mEnd)
@@ -2991,6 +2949,7 @@ async function renderMonthView(year, month) {
     const ds = toISODate(date);
     const cell = document.createElement('div');
     cell.className = 'month-cell' + (otherMonth ? ' month-cell--other-month' : '') + (ds === today ? ' month-cell--today' : '');
+    cell.dataset.datum = ds;
 
     const dayLabel = document.createElement('div');
     dayLabel.className = 'month-cell-day';
@@ -3006,8 +2965,13 @@ async function renderMonthView(year, month) {
       const color = EMP_COLORS[empIdx % EMP_COLORS.length] || 'var(--primary)';
       const pill = document.createElement('div');
       pill.className = 'month-event-pill';
+      pill._termin = b;
       pill.style.backgroundColor = color;
       pill.textContent = b.services?.title || b.customer_name || 'Termin';
+      // Die Pille zeigt einen konkreten Termin — dann soll sie ihn auch oeffnen
+      // statt nur in den Tag zu springen.
+      pill.addEventListener('click', async (ev) => { ev.stopPropagation(); openCalRightPanel(await ladeTerminVollstaendig(supabase, b)); });
+      pill.addEventListener('dblclick', (ev) => ev.stopPropagation());
       evWrap.appendChild(pill);
     });
     if (dayBks.length > 3) {
@@ -3018,44 +2982,53 @@ async function renderMonthView(year, month) {
     }
 
     cell.appendChild(evWrap);
-    // Click: switch to day view for that date
+    // Zwei Gesten auf derselben Zelle: Einfachklick springt in den Tag (so war
+    // es immer), Doppelklick legt einen Termin an. Der Sprung wartet deshalb
+    // kurz — sonst waere die Monatsansicht beim Doppelklick schon weg, bevor
+    // der zweite Klick ankommt.
     cell.addEventListener('click', () => {
+      if (monatSprungTimer) clearTimeout(monatSprungTimer);
+      monatSprungTimer = setTimeout(() => {
+        monatSprungTimer = null;
+        dayViewDate = date;
+        setCalendarView('day');
+      }, 250);
+    });
+    cell.addEventListener('dblclick', async () => {
+      if (monatSprungTimer) { clearTimeout(monatSprungTimer); monatSprungTimer = null; }
+      // Der Monat kennt keine Uhrzeit. 09:00 ist ein sichtbarer Startwert, den
+      // man aendert — nicht geraten, sondern gesetzt.
       dayViewDate = date;
-      setCalendarView('day');
+      await prefillBookingModal(`${ds}T09:00`);
     });
     grid.appendChild(cell);
   });
 }
 
-document.getElementById('dayViewPrev').addEventListener('click', () => {
-  if (calendarView === 'week') {
-    dayViewDate = new Date(dayViewDate);
-    dayViewDate.setDate(dayViewDate.getDate() - 7);
-    renderWeekView(toISODate(dayViewDate));
-  } else if (calendarView === 'month') {
-    monthViewMonth--;
+// Vor und zurueck blaettern — beide Knoepfe waren dieselbe Verzweigung, gespiegelt.
+function kalenderBlaettern(richtung) {
+  if (calendarView === 'month') {
+    monthViewMonth += richtung;
     if (monthViewMonth < 0) { monthViewMonth = 11; monthViewYear--; }
-    renderMonthView(monthViewYear, monthViewMonth);
-  } else {
-    dayViewDate.setDate(dayViewDate.getDate() - 1);
-    if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-    else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
-  }
-});
-document.getElementById('dayViewNext').addEventListener('click', () => {
-  if (calendarView === 'week') {
-    dayViewDate = new Date(dayViewDate);
-    dayViewDate.setDate(dayViewDate.getDate() + 7);
-    renderWeekView(toISODate(dayViewDate));
-  } else if (calendarView === 'month') {
-    monthViewMonth++;
     if (monthViewMonth > 11) { monthViewMonth = 0; monthViewYear++; }
-    renderMonthView(monthViewYear, monthViewMonth);
   } else {
-    dayViewDate.setDate(dayViewDate.getDate() + 1);
-    if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-    else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+    dayViewDate = new Date(dayViewDate);
+    dayViewDate.setDate(dayViewDate.getDate() + (calendarView === 'week' ? 7 : 1) * richtung);
   }
+  renderCalendarView();
+}
+document.getElementById('dayViewPrev').addEventListener('click', () => kalenderBlaettern(-1));
+document.getElementById('dayViewNext').addEventListener('click', () => kalenderBlaettern(1));
+
+// Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.
+// Woche/Monat laden weniger Spalten: erst vollstaendig laden (module/termin-laden.js).
+const mitTermin = (fn) => async (b) => fn(await ladeTerminVollstaendig(supabase, b));
+verdrahteKontextmenue({
+  wahrgenommen: mitTermin((b) => { bkActionBookingCache = b; handleTerminStarten(); }),
+  nichtErschienen: mitTermin((b) => { bkActionBookingCache = b; handlePatientNichtErschienen(); }),
+  verschieben: mitTermin((b) => startMoveBooking(b)),
+  absagen: mitTermin((b) => absageTerminMitGrund(b)),
+  oeffnen: mitTermin((b) => openCalRightPanel(b)),
 });
 
 // Tagesansicht "lebt": jede Minute die Jetzt-Linie verschieben & vergangene Stunden ausblenden
@@ -4620,8 +4593,8 @@ async function handlePatientNichtErschienen() {
     if (activePanel === 'overview') {
       await loadTodayBookings();
     }
-    if (activePanel === 'calendar' && calendarView === 'day') {
-      await renderDayView(toISODate(dayViewDate));
+    if (activePanel === 'calendar') {
+      await renderCalendarView();
     }
 
     // Ausfallgebühr aktiv? — Rechnung anbieten
@@ -5054,7 +5027,7 @@ async function loadGroupParticipants(parentId, maxCapacity) {
         showToast('Teilnehmer entfernt.');
         await loadGroupParticipants(parentId, maxCapacity);
         if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
-        if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+        if (activePanel === 'calendar') await renderCalendarView();
       }
     });
   });
@@ -5188,7 +5161,7 @@ async function initBkGroupPatientAutocomplete() {
             showToast('Patient hinzugefügt.');
             await loadGroupParticipants(parent.id, parent.group_capacity);
             if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
-            if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+            if (activePanel === 'calendar') await renderCalendarView();
           }
         } else {
           // Creating a new booking -> add to local array!
@@ -5486,9 +5459,11 @@ async function startMoveBooking(b) {
   closeModal('bookingModal');
   // Der Termin laesst sich auch aus dem Tagesplan heraus oeffnen. Ohne den Wechsel
   // in den Kalender waere der Verschieben-Modus aktiv, aber unsichtbar.
+  // Die Woche hat seit 22.08.2026 ein eigenes Zeitraster und kann selbst Ziel
+  // sein; nur der Monat hat keine Uhrzeit und schickt weiter in den Tag.
   if (activePanel !== 'calendar') await switchPanel('calendar');
-  else if (calendarView !== 'day') setCalendarView('day');
-  else await renderDayView(toISODate(dayViewDate));
+  else if (calendarView === 'month') setCalendarView('day');
+  else await renderCalendarView();
   updateMoveBanner();
 }
 
@@ -5500,7 +5475,7 @@ function cancelMoveBooking() {
   moveBooking = null;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   updateMoveBanner();
-  if (activePanel === 'calendar' && calendarView === 'day') renderDayView(toISODate(dayViewDate));
+  if (activePanel === 'calendar') renderCalendarView();
 }
 
 function updateMoveBanner() {
@@ -5524,7 +5499,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && moveBooking) cancelMoveBooking();
 });
 
-function placeGhost(slotEl, empId, text, ev) {
+// `slotPx` ist die Zeilenhoehe des Rasters, in dem geklickt wurde: 56 in der
+// Tagesansicht, 28 in der Woche. Ohne den Wert waere die Vorschau in der Woche
+// doppelt so hoch wie der Termin, den sie zeigt.
+function placeGhost(slotEl, empId, text, ev, slotPx = DV_SLOT_PX) {
   if (moveGhostEl) moveGhostEl.remove();
   // Farbe immer ueber teamMembers bestimmen — genau wie Tages-, Wochen- und
   // Monatsansicht. Sonst bekaeme die Vorschau eine andere Farbe als die Spalte.
@@ -5537,11 +5515,11 @@ function placeGhost(slotEl, empId, text, ev) {
   ghost.style.background = color + '25';
   ghost.style.borderColor = color;
   ghost.style.color = 'var(--text-main)';
-  ghost.style.top = (slotEl.offsetTop + (versatzMin / DV_SLOT_MIN) * DV_SLOT_PX) + 'px';
+  ghost.style.top = (slotEl.offsetTop + (versatzMin / DV_SLOT_MIN) * slotPx) + 'px';
   const s = new Date(moveBooking.start_time);
   const e = new Date(moveBooking.end_time);
   const durMin = (e - s) / 60000;
-  ghost.style.height = Math.max((durMin / DV_SLOT_MIN) * DV_SLOT_PX, 28) + 'px';
+  ghost.style.height = Math.max((durMin / DV_SLOT_MIN) * slotPx, 28) + 'px';
   // Die Zielzeit gehoert in die Vorschau: bei 5-Minuten-Schritten sieht man
   // an der Position allein nicht, ob es 09:15 oder 09:20 wird.
   ghost.textContent = `${zielZeit.substring(11)} · ${text}`;
@@ -5578,7 +5556,7 @@ async function doMoveBooking(startStr, empId) {
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   updateMoveBanner();
   showToast(tl.move_done);
-  await renderDayView(toISODate(dayViewDate));
+  await renderCalendarView();
   if (typeof scheduleDate !== 'undefined' && toISODate(dayViewDate) === toISODate(scheduleDate)) {
     loadScheduleBookings(scheduleDate);
   }
@@ -8079,8 +8057,8 @@ document.getElementById('bkActionMoveBtn')?.addEventListener('click', () => {
   if (!bkActionBookingCache) return;
   startMoveBooking(bkActionBookingCache);
 });
-document.getElementById('bkActionDeleteBtn').addEventListener('click', async () => {
-  const b = bkActionBookingCache;
+// Absagen aus Seitenbereich UND Kontextmenue — ein Weg, nicht zwei.
+async function absageTerminMitGrund(b) {
   if (!b) return;
   const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin löschen' });
   if (reason === null) return;
@@ -8104,9 +8082,12 @@ document.getElementById('bkActionDeleteBtn').addEventListener('click', async () 
   if (modal) { modal.style.display = 'none'; }
   document.getElementById('mainArea')?.style.removeProperty('padding-right');
   showToast('Termin gelöscht.', 'success');
-  if (typeof renderDayView === 'function') renderDayView();
-  else if (typeof refreshBookingViews === 'function') refreshBookingViews();
-});
+  // Vorher: `renderDayView()` OHNE Datum -> Label "Invalid Date", danach
+  // RangeError im toISOString(); der Kalender blieb nach dem Absagen leer.
+  refreshBookingViews().catch(() => {});
+}
+document.getElementById('bkActionDeleteBtn')
+  .addEventListener('click', () => absageTerminMitGrund(bkActionBookingCache));
 
 document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const empId = document.getElementById('leaveEmployee').value;
@@ -11285,9 +11266,7 @@ async function loadTeam() {
   if (activePanel === 'calendar') {
     renderCalEmpList();
     renderCalEmpChips();
-    if (calendarView === 'day') {
-      try { await renderDayView(toISODate(dayViewDate)); } catch (e) {}
-    }
+    try { await renderCalendarView(); } catch (e) {}
   }
 
   // Hide owner-only elements for employees
