@@ -8037,3 +8037,27 @@ body.compact-mode .patient-row {
   color: var(--text-muted);
   margin: -4px 0 8px;
 }
+
+/* GKV-Katalog als Tabelle (module/leistungen-liste.js). Der Hinweis steht in
+   einer eigenen Zeile darunter statt in der Karte — er trägt Abrechnungsregeln
+   und bleibt deshalb auch nach dem Einrichten sichtbar. */
+.gkv-hinweis-zeile td {
+  padding-top: 0;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.gkv-zeile--aktiv .srv-td-name::after {
+  content: '✓';
+  margin-left: 8px;
+  color: var(--success, #22c55e);
+  font-weight: 700;
+}
+
+/* Bundeseinheitlich festgelegte Dauer — nicht verhandelbar, also nicht wie ein
+   frei wählbarer Wert aussehen lassen. */
+.gkv-td-fix {
+  color: var(--text-muted);
+}

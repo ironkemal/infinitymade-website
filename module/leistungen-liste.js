@@ -206,3 +206,103 @@ export function renderLeistungenListe({
     });
   });
 }
+
+/**
+ * Der GKV-Standardkatalog — die Liste, aus der man Leistungen einrichtet.
+ *
+ * Das war bis zum 25.08.2026 die zweite Kachelwand auf dieser Seite: eine Karte
+ * je Katalogeintrag, bei Podologie und Physio jeweils ein Bildschirm voll. Jetzt
+ * eine Tabelle mit derselben Information, nur lesbar in einer Zeile.
+ *
+ * Der Hinweistext (`hinweis`) bleibt sichtbar, auch nach dem Einrichten: er
+ * trägt Abrechnungsregeln — Höchstmengen, Ausschlüsse —, die dauerhaft gelten.
+ * Ihn nach dem Einrichten auszublenden wäre der bequemere, aber falsche Weg.
+ *
+ * @param {object} o
+ * @param {Element}  o.container
+ * @param {Element}  [o.dividerEl]  Trenner vor den eigenen Leistungen
+ * @param {Array}    o.katalog      GKV_LEISTUNGSKATALOG[sector]
+ * @param {Array}    o.leistungen   servicesCache
+ * @param {function} o.formatEur
+ * @param {function} o.onEinrichten (katalogCode) => void
+ */
+export function renderGkvKatalog({
+  container,
+  dividerEl,
+  katalog = [],
+  leistungen = [],
+  formatEur = (v) => String(v),
+  onEinrichten,
+}) {
+  if (!container) return;
+
+  if (!katalog.length) {
+    container.style.display = 'none';
+    if (dividerEl) dividerEl.hidden = true;
+    return;
+  }
+  container.style.display = '';
+
+  const zeilen = katalog.map(k => {
+    const vorhanden = leistungen.find(l => l.gkv_position_nr === k.code);
+    const eingerichtet = !!vorhanden;
+    const spanne = k.price_min !== k.price_max;
+
+    // Bei Podologie ist die Regelleistungszeit nicht die Zeit am Patienten.
+    // Beides zu zeigen verhindert, dass jemand den Terminslot zu lang plant.
+    const dauer = k.duration == null
+      ? '—'
+      : (k.duration_label || k.duration) + ' Min'
+        + (k.therapiezeit ? ` · davon ${k.therapiezeit} Min am Patienten` : '');
+
+    const preis = eingerichtet
+      ? formatEur(parseFloat(vorhanden.price || k.price))
+      : formatEur(k.price) + (spanne ? ` (${formatEur(k.price_min)}–${formatEur(k.price_max)})` : '');
+
+    return `
+      <tr class="${eingerichtet ? 'gkv-zeile--aktiv' : ''}">
+        <td class="srv-td-name">${escapeHtml(k.title)}</td>
+        <td><span class="gkv-pos-badge">${escapeHtml(k.code)}</span></td>
+        <td><span class="srv-code-badge">${escapeHtml(k.kuerzel)}</span></td>
+        <td class="${k.locked ? 'gkv-td-fix' : ''}">${escapeHtml(dauer)}</td>
+        <td>${escapeHtml(preis)}</td>
+        <td class="srv-td-akt">
+          <button type="button" class="${eingerichtet ? 'btn-gkv-edit' : 'btn-gkv-setup'}" data-gkv="${escapeHtml(k.code)}">
+            ${eingerichtet ? 'Bearbeiten' : '+ Einrichten'}
+          </button>
+        </td>
+      </tr>
+      ${k.hinweis ? `<tr class="gkv-hinweis-zeile"><td colspan="6">${escapeHtml(k.hinweis)}</td></tr>` : ''}
+    `;
+  }).join('');
+
+  const anzahlAktiv = katalog.filter(k => leistungen.some(l => l.gkv_position_nr === k.code)).length;
+
+  container.innerHTML = `
+    <div class="srv-gruppe-kopf">
+      <h4>GKV-Standardleistungen</h4>
+      <span class="srv-gruppe-hinweis">§125 SGB V · bundeseinheitliche Vergütung 2026</span>
+      <span class="srv-gruppe-zahl">${anzahlAktiv} von ${katalog.length} eingerichtet</span>
+    </div>
+    <div class="srv-gruppe">
+      <table class="srv-tabelle">
+        <thead>
+          <tr>
+            <th>Leistung</th><th>Position</th><th>Kürzel</th>
+            <th>Dauer</th><th>Vergütung</th><th><span class="srv-sr">Aktion</span></th>
+          </tr>
+        </thead>
+        <tbody>${zeilen}</tbody>
+      </table>
+    </div>
+  `;
+
+  container.querySelectorAll('[data-gkv]').forEach(knopf => {
+    knopf.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (onEinrichten) onEinrichten(knopf.dataset.gkv);
+    });
+  });
+
+  if (dividerEl) dividerEl.hidden = false;
+}

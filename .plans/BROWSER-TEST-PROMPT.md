@@ -1,8 +1,20 @@
 # Prompt für Claude in Chrome — Praxura-Prüfung (Kalender, Leistungen, Menü)
 
 > Alles ab der Trennlinie kopieren und in Chrome an Claude geben.
-> **Vorher sicherstellen:** die Seite zeigt den NEUEN Code (Preview-Deployment,
-> nicht `app.praxura.de`). Sonst wird die alte Fassung geprüft.
+>
+> **Vorher sicherstellen: die Seite zeigt den NEUEN Code.** Auf `app.praxura.de`
+> läuft der alte Stand — dort prüft man nichts von dem hier Beschriebenen.
+>
+> Zwei Wege zum neuen Stand:
+> 1. **Lokal** (kein Fremdzugang nötig): `.env.local` anlegen mit
+>    `NEXT_PUBLIC_SUPABASE_URL` und `NEXT_PUBLIC_SUPABASE_ANON_KEY` — beide Werte
+>    stehen im Browser unter `https://app.praxura.de/api/config`. Dann
+>    `node dev_server.cjs` und `http://localhost:8081/login.html` öffnen.
+> 2. **Vercel-Preview** des Branches `kalender-ux`.
+>
+> **Gegenprobe, dass es der neue Stand ist:** Kalender → Woche. Die Uhrzeit-Leiste
+> links muss genauso weit nach unten laufen wie die Tagesspalten. Läuft sie weit
+> darüber hinaus, ist es der alte Code.
 
 ---
 
@@ -244,23 +256,79 @@ Bisher hatten alle Termine die Farbe des Mitarbeiters. Jetzt gilt:
 59. Klick darauf — öffnet sich die Leistungsübersicht wie erwartet?
 
 
+## O — Leistungsübersicht als Tabelle (neu)
+
+Die Seite **Leistungen** (jetzt unter „Abrechnung") war eine Kachelwand — an
+zwei Stellen: der GKV-Katalog oben und die eigenen Leistungen darunter. Beides
+sind jetzt Tabellen.
+
+60. Öffne **Leistungen**. Erwartung: **keine Kacheln mehr**, sondern Tabellen mit
+    Kopfzeile. Screenshot der ganzen Seite.
+61. Oben der **GKV-Standardkatalog**: eine Tabelle mit Leistung · Position ·
+    Kürzel · Dauer · Vergütung und rechts je Zeile „+ Einrichten" oder
+    „Bearbeiten". Bereits eingerichtete Zeilen haben ein **✓** hinter dem Namen.
+    Stimmt das?
+62. Stehen unter einzelnen Katalogzeilen **Hinweistexte** (Abrechnungsregeln)?
+    Die sollen auch bei bereits eingerichteten Leistungen sichtbar bleiben.
+63. Darunter die **eigenen Leistungen**, gruppiert. Welche Gruppen siehst du?
+    Erwartet sind je nach Praxis: GKV · Privat · Selbstzahler · BG · Intern.
+    **Leere Gruppen sollen gar nicht erscheinen.**
+64. Steht die Gruppe **Intern** da, und enthält sie Pause/Privat/Fortbildung
+    (falls du Abschnitt M schon gemacht hast)?
+65. Klick auf eine **Tabellenzeile** (nicht auf das ✕) — öffnet sich die
+    Bearbeitung darunter?
+66. Geht das auch **mit der Tastatur**? Tab bis zur Zeile, dann Enter.
+67. Klick auf das **✕** am Zeilenende — kommt die Rückfrage „Dienstleistung
+    löschen"? **Brich sie ab, lösche nichts.**
+68. Mach das Fenster **schmal**. Erwartung: die Tabelle scrollt in ihrem eigenen
+    Kasten waagerecht — die ganze Seite darf **nicht** seitlich verrutschen.
+69. Öffne eine **GKV-Leistung** zum Bearbeiten. Erwartung: auch dort gibt es
+    jetzt ein Feld **„Farbe im Kalender"**.
+70. Gibt es in der Leistungsmaske ein Feld **„Abrechnungsart"**?
+    - **Erscheint es nicht**, ist das **kein Fehler**: die zugehörige
+      Datenbankspalte ist noch nicht angelegt, und das Feld blendet sich dann
+      absichtlich aus. Schreib mir einfach, ob es da war oder nicht.
+    - Erscheint es: stell eine Leistung auf **Selbstzahler**, speichere, und
+      prüfe, ob sie danach in der Gruppe „Selbstzahler" steht.
+71. **Wichtig, unabhängig davon:** ändere an einer beliebigen Leistung etwas
+    Kleines (z. B. den Namen) und **speichere**. Erwartung: es wird gespeichert,
+    ohne Fehlermeldung. Screenshot bei Fehler.
+
+## P — Mehrere Termine auf einmal („Anzahl")
+
+72. Öffne den Termin-Dialog. Erwartung: neben **„Von"** steht ein kleines Feld
+    **„Anzahl"** mit dem Wert 1.
+73. Schau dir die **Reihenfolge der Felder** an. Erwartung: **Patient zuerst**,
+    danach Leistung, dann Zeit. Ist etwas durcheinandergeraten, überlappt etwas,
+    fehlt ein Feld? Screenshot des ganzen Dialogs — das ist hier der wichtigste
+    Punkt.
+74. Setz **Anzahl auf 3**. Erwartung: unter dem Feld erscheint ein Hinweis
+    („3 Termine — …"), und unter **„Mehr Optionen"** ist der Serientermin jetzt
+    angehakt mit Anzahl 3.
+75. Setz es zurück auf **1** — verschwindet der Hinweis, ist der Serientermin
+    wieder abgewählt?
+76. Optional, **legt Daten an**: mit Anzahl 3 und einem Testpatienten weit in der
+    Zukunft speichern. Erwartung: **drei** Termine im Kalender. Danach bitte alle
+    drei wieder löschen und mir sagen, dass du es getan hast.
+77. **Abbrechen**, falls du 80 nicht gemacht hast.
+
 ## H — Dunkles Design und schmaler Bildschirm
 
-60. Stell das Design auf **dunkel** (Schalter in den Einstellungen oder oben).
+78. Stell das Design auf **dunkel** (Schalter in den Einstellungen oder oben).
     Wiederhole kurz **A** (Wochenansicht), **E13** (Rechtsklick-Menü), **J32**
     (Kopfleiste) und **M51** (Blocker-Knöpfe). Ist alles lesbar? Gibt es weiße
     Kästen im dunklen Design oder Text, der fast unsichtbar ist? Screenshots vom
     Menü und von der Kopfleiste im dunklen Design.
-61. Mach das Browserfenster **schmal** (Tablet-Breite, ca. 900 px). Prüf zwei
+79. Mach das Browserfenster **schmal** (Tablet-Breite, ca. 900 px). Prüf zwei
     Dinge: bricht die neue **Kopfleiste** um und schiebt den Kalender nach
     unten? Und überlappt in der **Wochenansicht** etwas oder läuft seitlich aus
     dem Bild?
-62. Auf einem **Tablet** (falls vorhanden): funktioniert **langes Drücken** auf
+80. Auf einem **Tablet** (falls vorhanden): funktioniert **langes Drücken** auf
     eine freie Fläche (= Termin anlegen) und auf einen Termin (= Kontextmenü)?
 
 ## I — Konsole
 
-63. Schau in die Konsole. Gab es während der ganzen Prüfung **rote Fehler**?
+81. Schau in die Konsole. Gab es während der ganzen Prüfung **rote Fehler**?
     Gib sie im Wortlaut wieder (die Zeile mit `Uncaught`, `TypeError`,
     `RangeError` o. ä.).
 
@@ -283,6 +351,8 @@ K  Leistungsfarben .......... OK / FEHLER
 L  Terminmaske .............. OK / FEHLER
 M  Blocker .................. OK / FEHLER  (55 Doppelbuchung: Meldung im Wortlaut)
 N  Menüstruktur ............. OK / FEHLER
+O  Leistungstabelle ......... OK / FEHLER  (70: Feld "Abrechnungsart" da? ja/nein)
+P  Anzahl / Reihenfolge ..... OK / FEHLER  (73: Reihenfolge der Felder!)
 H  Dunkel + schmal + Tablet . OK / FEHLER
 I  Konsolenfehler ........... keine / Wortlaut
 ```

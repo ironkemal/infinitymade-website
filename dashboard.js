@@ -39,7 +39,7 @@ import { renderMonat } from './module/kalender-monat.js?v=20260825';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260825';
 import { mountFarbwahl } from './module/leistung-farbwahl.js?v=20260825';
 import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260825';
-import { renderLeistungenListe } from './module/leistungen-liste.js?v=20260825';
+import { renderLeistungenListe, renderGkvKatalog } from './module/leistungen-liste.js?v=20260825b';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260822';
 import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260822';
 import {
@@ -10259,103 +10259,18 @@ async function migratePodologieLegacyServices() {
   }
 }
 
+// Der GKV-Katalog steht in module/leistungen-liste.js — Tabelle statt Kachelwand.
 function renderGkvCatalog() {
-  const section = document.getElementById('gkvCatalogSection');
-  const divider = document.getElementById('privatSrvDivider');
-  if (!section) return;
-
-  const sector = getSector();
-  const catalog = GKV_LEISTUNGSKATALOG[sector];
-  if (!catalog || !catalog.length) {
-    section.style.display = 'none';
-    if (divider) divider.hidden = true;
-    return;
-  }
-
-  const lockSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:-1px;opacity:0.6;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
-  const infoSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-  const checkSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>`;
-
-  section.style.display = '';
-  section.innerHTML = `
-    <div class="gkv-catalog-header">
-      <div>
-        <span class="gkv-catalog-title">GKV-Standardleistungen</span>
-        <span class="gkv-catalog-law">§125 SGB V &middot; Bundeseinheitliche Vergütung 2026</span>
-      </div>
-      <span class="gkv-catalog-badge" title="Vergütungssätze gemäß §125 SGB V. Klicken Sie Einrichten um eine Leistung in Ihrer Praxis zu aktivieren.">ℹ Vergütungsvertrag</span>
-    </div>
-    <div class="services-grid">
-      ${catalog.map(s => {
-        const existing = servicesCache.find(x => x.gkv_position_nr === s.code);
-        const configured = !!existing;
-        const hasRange = s.price_min !== s.price_max;
-
-        // Bei Podologie ist die Regelleistungszeit nicht die Zeit am Patienten.
-        // Beides zu zeigen verhindert, dass jemand den Terminslot zu lang plant.
-        const durLabel = s.duration == null
-          ? '—'
-          : (s.duration_label || s.duration) + ' Min'
-            + (s.therapiezeit ? ` · davon ${s.therapiezeit} Min am Patienten` : '');
-        const durChip = s.locked
-          ? `<span class="srv-chip srv-chip-locked">${lockSvg}${escapeHtml(durLabel)}</span>`
-          : `<span class="srv-chip srv-chip-flex">${escapeHtml(durLabel)}</span>`;
-
-        const displayPrice = configured ? parseFloat(existing.price || s.price) : s.price;
-        const priceChip = configured
-          ? `<span class="srv-chip srv-chip-gkv">${checkSvg}${formatEur(displayPrice)}</span>`
-          : `<span class="srv-chip srv-chip-gkv">GKV ${formatEur(s.price)}${hasRange ? ` (${formatEur(s.price_min)}–${formatEur(s.price_max)})` : ''}</span>`;
-
-        const empNames = configured
-          ? (existing.employee_services || []).map(es => {
-              const m = teamMembers.find(tm => tm.id === es.employee_id);
-              return m ? (m.business_name || m.email?.split('@')[0]) : null;
-            }).filter(Boolean).join(', ')
-          : null;
-
-        const empRow = configured
-          ? `<div class="service-meta service-emps" style="margin-top:0;padding-top:6px;border-top:1px dashed var(--border);">
-               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px;color:var(--text-muted);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-               ${escapeHtml(empNames || '— Alle Mitarbeiter')}
-             </div>`
-          : '';
-
-        // Auch nach dem Einrichten sichtbar: die Hinweise tragen Abrechnungs-
-        // regeln (Höchstmengen, Ausschlüsse), die dauerhaft gelten.
-        const hinweis = s.hinweis
-          ? `<div class="gkv-hinweis">${infoSvg}${escapeHtml(s.hinweis)}</div>`
-          : '';
-
-        const actionBtn = configured
-          ? `<button class="btn-gkv-edit" data-gkv="${escapeHtml(s.code)}">Bearbeiten</button>`
-          : `<button class="btn-gkv-setup" data-gkv="${escapeHtml(s.code)}">+ Einrichten</button>`;
-
-        return `
-          <div class="service-card gkv-catalog-card${configured ? ' gkv-configured' : ''}">
-            <div class="service-card-head">
-              <div class="service-title">${escapeHtml(s.title)}</div>
-              <span class="gkv-pos-badge">${escapeHtml(s.code)}</span>
-            </div>
-            <div class="gkv-kuerzel">${escapeHtml(s.kuerzel)}</div>
-            <div class="srv-chip-row">${durChip}${priceChip}</div>
-            ${empRow}
-            ${hinweis}
-            <div class="gkv-card-action">${actionBtn}</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-
-  section.querySelectorAll('[data-gkv]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      openGkvEditForm(btn.dataset.gkv);
-    });
+  renderGkvKatalog({
+    container: document.getElementById('gkvCatalogSection'),
+    dividerEl: document.getElementById('privatSrvDivider'),
+    katalog: GKV_LEISTUNGSKATALOG[getSector()] || [],
+    leistungen: servicesCache,
+    formatEur,
+    onEinrichten: (code) => openGkvEditForm(code),
   });
-
-  if (divider) divider.hidden = false;
 }
+
 
 function renderGkvEmpCheckboxes() {
   const container = document.getElementById('gkvEmpCheckboxes');
@@ -10386,6 +10301,8 @@ function openGkvEditForm(catalogCode) {
   document.getElementById('gkvFormCode').textContent = entry.code;
   document.getElementById('gkvFormKuerzel').textContent = entry.kuerzel;
   document.getElementById('gkvFormDur').textContent = entry.duration != null ? (entry.duration_label || entry.duration) + ' Min' : '—';
+
+  gkvFarbwahl().setze(existing?.color);
 
   const priceInput = document.getElementById('gkvFormPrice');
   const priceHint = document.getElementById('gkvPriceRange');
@@ -10468,6 +10385,7 @@ document.getElementById('gkvFormSave').addEventListener('click', async () => {
     price: price.toString(),
     price_config: null,
     is_internal: false,
+    color: document.getElementById('gkvFormColor').value || '#22c55e',
   };
 
   if (serviceId) {
@@ -10538,6 +10456,18 @@ function resetServiceForm() {
   document.getElementById('srvPhysioFields').hidden = false;
   srvFarbwahl().setze('#22c55e');
   renderPhysioServiceCards();
+}
+
+let _gkvFarbwahl = null;
+function gkvFarbwahl() {
+  if (!_gkvFarbwahl) {
+    _gkvFarbwahl = mountFarbwahl({
+      behaelter: document.getElementById('gkvFarbfelder'),
+      eingabe: document.getElementById('gkvFormColor'),
+      farben: LEISTUNG_FARBEN,
+    });
+  }
+  return _gkvFarbwahl;
 }
 
 function spalteKostentraegerDa() {
