@@ -22262,36 +22262,6 @@ function initSchnellerfassung() {
   });
 }
 
-// =====================================================================
-// COMPACT MODE — Yoğun Görünüm
-// =====================================================================
-function initCompactMode() {
-  const toggle = document.getElementById('compactModeToggle');
-  if (!toggle) return;
-
-  const STORAGE_KEY = 'infinitymade_compact_mode';
-
-  function applyCompact(enabled) {
-    if (enabled) {
-      document.body.classList.add('compact-mode');
-    } else {
-      document.body.classList.remove('compact-mode');
-    }
-  }
-
-  // Kaydedilmiş tercihi yükle
-  const saved = localStorage.getItem(STORAGE_KEY) === 'true';
-  toggle.checked = saved;
-  applyCompact(saved);
-
-  toggle.addEventListener('change', () => {
-    const enabled = toggle.checked;
-    localStorage.setItem(STORAGE_KEY, enabled);
-    applyCompact(enabled);
-    showToast(enabled ? 'Kompakter Modus aktiviert' : 'Kompakter Modus deaktiviert');
-  });
-}
-
 // Kiosk-Modus lebt in module/kiosk.js (Konsey 2026-08-13/14). Hier nur die
 // Verdrahtung: die Abhängigkeiten, die das Modul nicht selbst kennt.
 function initKioskModeWired() {
@@ -22315,7 +22285,6 @@ function initKioskModeWired() {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     initSchnellerfassung();
-    initCompactMode();
     initWlModal();
     initDruckeinstellungen();
     initKioskModeWired();
@@ -22323,7 +22292,6 @@ if (document.readyState === 'loading') {
   });
 } else {
   initSchnellerfassung();
-  initCompactMode();
   initWlModal();
   initDruckeinstellungen();
   initKioskModeWired();

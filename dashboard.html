@@ -2432,19 +2432,6 @@
               <div class="settings-group-label">Allgemein</div>
 
               <div class="settings-section">
-                <div class="settings-section-title">Ansicht</div>
-                <div class="settings-section-body">
-                  <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
-                    <div>
-                      <div style="font-weight:500;font-size:14px;">Kompakter Modus</div>
-                      <div class="form-hint">Reduziert Zeilenhöhe auf 32 px — ideal für Schreibtischarbeit.</div>
-                    </div>
-                    <input type="checkbox" id="compactModeToggle" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;" />
-                  </label>
-                </div>
-              </div>
-
-              <div class="settings-section">
                 <div class="settings-section-title" data-i18n="set_profile">Profil</div>
                 <div class="settings-section-body">
                   <div class="form-group">
@@ -2723,9 +2710,9 @@
                     <input class="form-input" id="setBrandingLogo" type="url" placeholder="https://…/logo.png" style="margin-top:8px;" />
                   </details>
                   <div class="form-group">
-                    <label class="form-label">Fußzeile auf Rechnungen</label>
-                    <textarea class="form-input" id="setBrandingFooter" rows="3" placeholder="z. B. Ihre Physiotherapiepraxis · Praxisinhaber: Max Mustermann · Steuernummer: 220/5070/0815&#10;Bankverbindung: IBAN DE89 3704 0044 0532 0130 00 · BIC: COBADEFFXXX"></textarea>
-                    <div class="form-hint">Erscheint im unteren Bereich auf Rechnungen, Quittungen und §302-Dokumenten.</div>
+                    <label class="form-label">Fußzeile — freier Text</label>
+                    <textarea class="form-input" id="setBrandingFooter" rows="3" placeholder="z. B. Vielen Dank für Ihr Vertrauen! · Öffnungszeiten: Mo–Fr 8–18 Uhr"></textarea>
+                    <div class="form-hint">Nur für Grußtext o. Ä. — Steuernummer, USt-IdNr. und Bankverbindung stehen bereits automatisch auf jeder Rechnung, hier nicht wiederholen.</div>
                   </div>
                   <button class="btn-primary" id="brandingSaveBtn">Branding speichern</button>
                 </div>
