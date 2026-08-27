@@ -46,3 +46,38 @@ sadece durum değişirse veya yeni bir bulgu bunları ağırlaştırırsa değin
 - MDR eşiği: mevcut KI özellikleri (rezept-validate, rezept-ocr) klinik karar desteği sayılır mı
 - Onam şablonunda `praxis_kontakt` + `datenschutzbeauftragter` alanları praxis'ten beslenmiyor
   (Art. 13 Abs. 1 lit. a/b) → `compliance/legal-reviews/2026-08-14-einwilligungstexte-wortlaut.md`
+
+## 2026-08-27 — Beta-Kunden-Klarnamen im öffentlichen Repository
+
+**Sachverhalt.** Das Repository ist öffentlich. In 34 Dateien (Quellcode-Kommentare,
+Fortschrittsnotizen, Billing-Vorlagen, eine Migration) sowie in **4 Commit-Nachrichten**
+standen die Klarnamen zweier Beta-Kunden mit Berufsangabe und Gesprächsdatum.
+Keine Patientendaten, keine Gesundheitsdaten.
+
+**Einordnung (legal-de).** Personenbezogene Daten nach Art. 4 Nr. 1 DSGVO.
+**Art. 9 nicht einschlägig** — „Podologe" ist Berufsangabe, kein Gesundheitsdatum.
+**§ 203 StGB nicht einschlägig** — geschützt ist das Patientengeheimnis, nicht der Name
+der Praxisinhaber. Art. 6 Abs. 1 lit. f trägt die *interne* Dokumentation, **nicht die
+öffentliche Veröffentlichung**: die Erforderlichkeit entfällt, weil ein Pseudonym
+denselben Zweck erfüllt. Namentliche öffentliche Nennung wäre zudem Referenzwerbung
+und bräuchte eine Einwilligung.
+
+**Meldung.** Es handelt sich um eine unbefugte Offenlegung i. S. d. Art. 33.
+Risikobewertung: keine Gesundheitsdaten, zwei betroffene Personen, die ohnehin eine
+öffentlich auftretende Praxis führen → **voraussichtlich kein Risiko**, daher
+**keine Meldung an die LDI NRW** (Ausnahme Art. 33 Abs. 1) und **keine Benachrichtigung**
+der Betroffenen nach Art. 34. **Art. 33 Abs. 5: interne Dokumentation ist Pflicht** —
+dieser Eintrag erfüllt sie.
+
+**Entschieden.** Vollständige Entfernung aus Arbeitsbaum, Historie und Commit-Nachrichten;
+Pseudonyme (B1/B2) ab sofort, Zitat und Datum bleiben erhalten; Zuordnung nur im
+Drive-Ordner `meetings/`. Repository bleibt vorerst öffentlich (Vercel-Bruch vom
+2026-06-10 ungelöst). Zusätzlich wird von beiden Kunden eine **schriftliche
+Referenz-Einwilligung** eingeholt — liegt sie vor, entfällt die Rechtsfrage vollständig.
+
+**Kein Vertragsbruch feststellbar:** unter `vertraege/` liegt keine
+Vertraulichkeitsvereinbarung mit den Beta-Kunden (nur zwei Dokumente mit dem
+Mitgründer). Das Fehlen einer schriftlichen Vereinbarung mit Beta-Kunden ist
+separat zu prüfen.
+
+Tutanak: `konsey/tutanak/2026-08-27-klarnamen-public-repo.md`
