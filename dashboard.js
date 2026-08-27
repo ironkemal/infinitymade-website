@@ -36,6 +36,7 @@ import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.j
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
 import { DV_SLOT_MIN, DV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260816';
+import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260827';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
@@ -2402,44 +2403,19 @@ function renderCalEmpList() {
 }
 
 function renderCalEmpChips() {
-  const container = document.getElementById('calEmpChips');
-  if (!container) return;
-  container.innerHTML = '';
-
-  const chips = [{ id: 'all', name: t('cal_emp_all'), color: 'var(--primary)' }];
-  teamMembers.forEach((emp, idx) => {
-    chips.push({
-      id: emp.id,
-      name: emp.business_name || emp.email?.split('@')[0] || '—',
-      color: EMP_COLORS[idx % EMP_COLORS.length]
-    });
-  });
-
-  chips.forEach(c => {
-    const btn = document.createElement('button');
-    const isActive = calEmpFilter === c.id;
-    btn.className = `cal-emp-chip ${isActive ? 'active' : ''}`;
-    
-    if (isActive && c.id !== 'all') {
-      btn.style.borderColor = c.color;
-      btn.style.backgroundColor = c.color + '20';
-    }
-
-    const dot = document.createElement('span');
-    dot.className = 'cal-emp-chip-dot';
-    dot.style.backgroundColor = c.color;
-    
-    btn.appendChild(dot);
-    btn.appendChild(document.createTextNode(c.name));
-    
-    btn.addEventListener('click', () => {
-      calEmpFilter = c.id;
+  renderEmpChips({
+    container: document.getElementById('calEmpChips'),
+    members: teamMembers,
+    activeId: calEmpFilter,
+    colors: EMP_COLORS,
+    allLabel: t('cal_emp_all'),
+    onPick: (id) => {
+      calEmpFilter = id;
       renderCalEmpChips();
       if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
       else if (calendarView === 'week') renderWeekView(toISODate(dayViewDate));
       else if (calendarView === 'month') renderMonthView(monthViewYear, monthViewMonth);
-    });
-    container.appendChild(btn);
+    },
   });
 }
 
@@ -2674,11 +2650,14 @@ async function renderDayView(dateStr) {
   document.getElementById('dayViewDateLabel').textContent = formatDateDE(new Date(dateStr + 'T12:00:00'));
   const timeCol = document.getElementById('dvTimeCol');
   const colsWrap = document.getElementById('dvColsWrap');
-  timeCol.innerHTML = '';
-  colsWrap.innerHTML = '';
+  // Erst am Ende einhaengen: waehrend der Abfragen unten kann ein zweiter
+  // Aufbau starten (Signal, Realtime, Panelwechsel) — frueher haengten dann
+  // beide Laeufe ihre Spalten in denselben Container (siehe kalender-team.js).
+  const timeFrag = document.createDocumentFragment();
+  const colFrag = document.createDocumentFragment();
 
   const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
-  if (!emps.length) return;
+  if (!emps.length) { timeCol.replaceChildren(); colsWrap.replaceChildren(); return; }
 
   // Heute: vergangene Stunden ausblenden + Live-"Jetzt"-Linie
   const _now = new Date();
@@ -2694,7 +2673,7 @@ async function renderDayView(dateStr) {
       label.className = 'dv-time-label';
       label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       slot.appendChild(label);
-      timeCol.appendChild(slot);
+      timeFrag.appendChild(slot);
     }
   }
 
@@ -2845,8 +2824,11 @@ async function renderDayView(dateStr) {
     }
 
     col.appendChild(slotWrap);
-    colsWrap.appendChild(col);
+    colFrag.appendChild(col);
   });
+
+  timeCol.replaceChildren(timeFrag);
+  colsWrap.replaceChildren(colFrag);
 }
 
 async function renderWeekView(dateStr) {
@@ -8112,8 +8094,7 @@ document.getElementById('bkActionDeleteBtn').addEventListener('click', async () 
   if (modal) { modal.style.display = 'none'; }
   document.getElementById('mainArea')?.style.removeProperty('padding-right');
   showToast('Termin gelöscht.', 'success');
-  if (typeof renderDayView === 'function') renderDayView();
-  else if (typeof refreshBookingViews === 'function') refreshBookingViews();
+  refreshBookingViews();
 });
 
 document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
@@ -11282,7 +11263,7 @@ async function loadTeam() {
       role: currentProfile.role,
     }];
   }
-  teamMembers = data;
+  teamMembers = teamReihenfolge(data, currentSession?.user?.id);
 
   if (activePanel === 'calendar') {
     renderCalEmpList();
