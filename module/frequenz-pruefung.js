@@ -43,7 +43,7 @@
  * abweicht. Bis dahin ist die Vertikalen-Reihenfolge aus CLAUDE.md ohnehin
  * Podologie.
  *
- * Blockiert wird NIE. Nausad hat das am 12.08.2026 ausdrücklich so gewollt,
+ * Blockiert wird NIE. Beta-2 hat das am 12.08.2026 ausdrücklich so gewollt,
  * und es ist sachlich richtig: Nachholtermine, Urlaub und Krankheit sind
  * Alltag, und die Abweichung ist mit ärztlichem Einvernehmen zulässig. Die
  * Oberfläche widerspricht, die Praxis entscheidet.

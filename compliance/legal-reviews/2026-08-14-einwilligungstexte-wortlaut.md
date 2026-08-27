@@ -6,7 +6,7 @@ Rechtsstand doğrulandı: kısmen (BGB/DSGVO/BDSG paragrafları emin; sunucu bö
 ## Özet
 
 Mekanizma (iki ekran/iki imza, snapshot+hash, IP yok, raster PNG) 2026-08-14 şartlarına **uygun
-uygulanmış** — o taraf temiz. Metinlerin kendisi ise **bu haliyle Nausad'ın hastalarına
+uygulanmış** — o taraf temiz. Metinlerin kendisi ise **bu haliyle Beta-2'nin hastalarına
 imzalatılamaz.** İki blocker var: (1) Ekran 1 hastaya, henüz gerçekleşmemiş bir sözlü
 Aufklärung'u geçmiş zamanda onaylatıyor — podoloji akışında imza *karşılamada*, Aufklärung
 *anamnezde* alınıyor; (2) Ausfallhonorar maddesinde § 309 Nr. 5 lit. b BGB'nin zorunlu
@@ -75,7 +75,7 @@ tahsil edemez. § 309 Nr. 5 lit. a: pauschal, olağan akışta beklenen zararı 
 
 **Risk:** Abmahnung değil, **doğrudan tahsilat kaybı** — hasta itiraz ederse madde düşer.
 Bir de podoloji hastası tipik olarak Zuzahlung düzeyinde tutarlarda tartışır, mahkemeye gitmez;
-ama Nausad'ın kâğıt sürümünden daha kötü bir hukuki konuma düşmesi anlamsız. Ucuz düzeltme.
+ama Beta-2'nin kâğıt sürümünden daha kötü bir hukuki konuma düşmesi anlamsız. Ucuz düzeltme.
 
 **Tavsiye:** Aşağıdaki metin + owner ayar ekranına "tam seans ücretinin %100'ü aşılmamalı,
 ersparte Aufwendungen düşülmeli" uyarısı (UI notu, 🟢).
@@ -127,7 +127,7 @@ gesonderten Einwilligung" yaz.
 "spaetestens", "Loeschung", "Ausfallgebuehr". Dosya UTF-8, komşu modül
 (`patienten-einwilligung.js`) umlaut kullanıyor — teknik engel yok. Hastanın tablette okuduğu
 ve `text_snapshot` olarak 10 yıl saklanan/basılan belge budur. Hukuki geçersizlik sebebi değil
-ama Transparenzgebot tartışmasında gereksiz yem, ve Nausad'ın hastasına verdiği ilk izlenim.
+ama Transparenzgebot tartışmasında gereksiz yem, ve Beta-2'nin hastasına verdiği ilk izlenim.
 **Tüm dosya umlaut'lu yazılmalı** (kod yorumları serbest).
 
 ---
@@ -435,7 +435,7 @@ erforderlich sind.
 
 ## Yapılacaklar
 
-**Go-Live için minimum (Nausad hastaya uzatmadan önce) — hepsi 🟢, tahmini 2–3 saat**
+**Go-Live için minimum (Beta-2 hastaya uzatmadan önce) — hepsi 🟢, tahmini 2–3 saat**
 - [ ] builder — E1–E15 metin değişiklikleri + tüm dosyanın umlaut'lanması
 - [ ] builder — `renderEinwilligungText()` snapshot'ına `Kurzfassung` bloğu ekle (Bulgu 8)
 - [ ] builder — `ersetze()` opsiyonel yer tutucular (`datenschutzbeauftragter`, `praxis_kontakt`)

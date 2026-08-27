@@ -8,7 +8,7 @@ Tarih: 2026-08-27 · Oturan üyeler: legal-de, muhalif, deger-mi, fonksiyon-usta
 
 ## KARAR
 
-İki beta müşterisinin tam adları (bundan sonra **B1** — Podologe, ve **B2**) depodan
+İki beta müşterisinin tam adları (bundan sonra **Beta-1** — Podologe, ve **Beta-2**) depodan
 **tamamen kaldırılır: hem çalışma ağacından hem git geçmişinden hem commit mesajlarından.**
 Sıra şudur ve bölünmez: (1) bugün ileriye dönük rumuz kuralı + pre-commit isim kapısı —
 kanama durur; (2) HEAD temizliği, 34 dosyada ad→rumuz, alıntı ve tarih **aynen korunur**;
@@ -70,7 +70,7 @@ kalmadı.
 
 ## Uygulama — builder'a
 
-- [ ] İleriye dönük kural: ad yerine rumuz (`B1 (Podologe)`, `B2`); alıntı + tarih korunur — karmaşıklık: K0
+- [ ] İleriye dönük kural: ad yerine rumuz (`Beta-1 (Podologe)`, `Beta-2`); alıntı + tarih korunur — karmaşıklık: K0
 - [ ] `.githooks` pre-commit: isim listesi grep'i, eşleşirse commit reddedilir (`check-dashboard-size.sh` kalıbı) — karmaşıklık: K1
 - [ ] Değiştirilecek dizgilerin **elle listesi**; `Stefan W.` demo hastası ve `plz-orte.json` yer adı listeden **hariç** — karmaşıklık: K1
 - [ ] HEAD temizliği: 34 dosya, ad→rumuz, alıntı/tarih aynen — karmaşıklık: K2

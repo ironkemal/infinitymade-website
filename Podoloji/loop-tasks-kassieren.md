@@ -70,7 +70,7 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Die Basis reichte nicht: es gab nur Umsatz (also ausschliesslich Bezahltes) und keine
       Offen-Reihe.
 
-- [x] 7. Ausfallrechnung-Vorlage selbst entwerfen (Stefans Muster liegt nicht vor)
+- [x] 7. Ausfallrechnung-Vorlage selbst entwerfen (Beta-1s Muster liegt nicht vor)
       Geändert: `Podoloji/AUSFALLRECHNUNG-ENTWURF.md` (neu)
       Befund: die Ausfallrechnung existiert bereits fast vollständig (Tabelle, Einstellungen
       auf `profiles`, vier Routen, Vorlage, 18 Tests, UI-Dialog) und ist fachlich richtig
@@ -78,9 +78,9 @@ angehen, wenn die genannte Nummer `[x]` ist.
       Sollzustand fest und benennt vier echte Lücken für Aufgabe 8: fehlende serverseitige
       Fristprüfung, kein Nachweis der Ausfallvereinbarung, Zeitzonenfehler beim Termindatum,
       `.single()` statt `.maybeSingle()`. Drei Rechtsfragen sind bewusst offen gemeldet.
-      ✅ Freigegeben (Entscheidung Melih, 10.08.2026): nicht mehr auf Stefan warten —
+      ✅ Freigegeben (Entscheidung Melih, 10.08.2026): nicht mehr auf Beta-1 warten —
       der builder-Agent baut eine korrekte Ausfallrechnung selbst, nach üblicher Praxis
-      für Ausfallhonorar in Heilmittelpraxen (siehe Hinweise im Loop-Prompt). Wenn Stefans
+      für Ausfallhonorar in Heilmittelpraxen (siehe Hinweise im Loop-Prompt). Wenn Beta-1s
       Muster später doch noch kommt: gegen diesen Entwurf abgleichen statt neu zu bauen.
 
 - [x] 8. Ausfallrechnung-Vorlage fertigstellen

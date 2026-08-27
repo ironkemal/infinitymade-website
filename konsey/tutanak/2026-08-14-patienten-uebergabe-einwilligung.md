@@ -3,7 +3,7 @@ Tarih: 2026-08-14 · Oturan üyeler: legal-de, muhalif, deger-mi, podoloji, fonk
 
 ## Tetikleyen
 
-Ops-Dashboard kartı (Gemeinsam · Bereich: Patienten · Anamnese). Beta müşterisi Nausad kâğıt
+Ops-Dashboard kartı (Gemeinsam · Bereich: Patienten · Anamnese). Beta müşterisi Beta-2 kâğıt
 onam arşivinden şikâyetçi — *"ich habe so einen Stapel Papier"* (transkript 444-451). İstenen:
 tablet hastaya uzatılır, ekran kilitlenir, hasta kendi onam metnini imzalar, terapist PIN ile
 geri alır.

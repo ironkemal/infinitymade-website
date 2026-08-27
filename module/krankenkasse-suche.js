@@ -12,7 +12,7 @@
  *      fremdes Menü.
  *   2. Alphabetisch heisst: „AOK Bayern" steht in der Nähe von „actimonda",
  *      und die fünf Kassen, aus denen fast alle Patienten dieser Praxis kommen,
- *      sind über die ganze Liste verteilt. Nausad im Beta-Gespräch (12.08.2026):
+ *      sind über die ganze Liste verteilt. Beta-2 im Beta-Gespräch (12.08.2026):
  *      seine Patienten sind ganz überwiegend AOK Bayern, Barmer, SBK, TK, HEK
  *      und ein paar BKKs.
  *

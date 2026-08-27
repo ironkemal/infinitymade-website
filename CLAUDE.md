@@ -362,6 +362,40 @@ Model: `profiles.role` → `owner` | `employee` · `profiles.owner_id` → çal�
 - **İki ayrı veri havuzu var, birleştirme:** Physio/Logo/Ergo → `prescriptions` +
   `prescription_sessions` · Podologie → `verordnungen` + `podologie_behandlungen`
 
+### 🕶️ Kişi adı yazma — depo PUBLIC (Konsey 2026-08-27)
+
+**Beta müşterisinin adı depoya yazılmaz.** Ne kod yorumuna, ne `fortschritte/`'ye, ne
+commit mesajına. Yerine rumuz:
+
+| Rumuz | Kim |
+|---|---|
+| `Beta-1` | Podologe — 08.08.2026 görüşmeleri |
+| `Beta-2` | 12.08.2026 görüşmeleri |
+
+**Alıntı ve tarih AYNEN kalır** — kararın gerekçesini onlar taşır, kopması gereken tek
+şey kimlik:
+
+```js
+✗  // <Kundenname>, 12.08.2026: „wir sind die meiste Zeit dort"
+✓  // Beta-2, 12.08.2026: „wir sind die meiste Zeit dort"
+```
+
+- Rumuz→kişi eşlemesi **yalnızca depo dışında**: `I:\My Drive\Ops Praxura gitnogo\meetings\`
+  ve `ops_meetings` kaydı. Tarih + rumuz ikilisi oradan kişiye tek adımda gider.
+- Kapı: `tools/check-namen.sh` (pre-commit). Yasak isimler **hash olarak** tutulur
+  (`tools/.namen-hashes`) — düz metin liste, kapatmaya çalıştığımız sızıntının aynısı olurdu.
+- İstisna: `SKIP_NAME_GATE=1 git commit …`
+- ⚠️ `Beta-1`/`Beta-2` seçildi çünkü **`B1`/`B2` GKV Schlüsselwert'i** (`Anlage_3_TP5_V21`:
+  "B1 = Leistungserbringer von Modellvorhaben", "B2 = Genehmigung gem. § 8 Abs. 3").
+  §302 kod tabanında karışırdı.
+- Kurucular (`Kemal`, `Melih`) bu kapsamda **değil** — kendi projeleri.
+- Demo verisindeki uydurma adlar da kapsam dışı: `Stefan Wolff` (demo hastası,
+  `demo-dashboard.html` + `capture_flows.py`), `Dr. med. Stefan Hoffmann`
+  (`VIDEO_DEMO_DATEN.md`). Bunlara **dokunma** — `capture_flows.py` aynı dizgiye bağlı.
+
+Gerekçe: `konsey/tutanak/2026-08-27-klarnamen-public-repo.md` ·
+hukuki kayıt: `compliance/LEGAL_DECISIONS.md`
+
 ### Genel
 
 - API anahtarını ASLA hardcode etme — env var

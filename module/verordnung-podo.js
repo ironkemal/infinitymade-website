@@ -4,7 +4,7 @@
  * Herkunft
  * ────────
  * Ops-Karte „Verordnung: vier Felder automatisch füllen + Eingaben prüfen"
- * (Bildschirmfreigabe Nausad, 12.08.2026). Neuer Code kommt in eine neue
+ * (Bildschirmfreigabe Beta-2, 12.08.2026). Neuer Code kommt in eine neue
  * Datei — `dashboard.js` wächst nicht mehr (Konsey 2026-08-13).
  *
  * Geltungsbereich
@@ -46,7 +46,7 @@ import { behandlungsbeginnFrist, BEHANDLUNGSBEGINN_TAGE } from './heilmittel-fri
 // wortgleich. UI 1 und UI 2 haben nur eine Leitsymptomatik a) und als
 // vorrangiges Heilmittel die Nagelspangenbehandlung.
 //
-// ⚠ Nausad sagte „C ist die podologische Behandlung gross". Das ist die
+// ⚠ Beta-2 sagte „C ist die podologische Behandlung gross". Das ist die
 // ABRECHNUNGSSEITE und gilt nur eingeschränkt: verordnet wird
 // „Podologische Komplexbehandlung"; als 78020 („gross") ist sie nur bei
 // Therapiezeit über 20 Minuten abrechenbar, sonst 78010 zzgl. 78030
@@ -86,7 +86,7 @@ const POD_ORIENTIEREND = { UI1: 8, UI2: 8 };
 // Diagnosegruppen DF, NF und QF im Vorfeld JEDER Behandlung" (Ausnahme:
 // Eingangsbefundung 78040).
 //
-// Daraus folgt der Umgang mit Nausads Wunsch „Befund kommt immer mit":
+// Daraus folgt der Umgang mit Beta-2s Wunsch „Befund kommt immer mit":
 // Der Befund ist KEIN vom Arzt verordnetes Heilmittel und steht nicht auf
 // Muster 13 — er ist eine Leistung, die wir erbringen und abrechnen. In das
 // Feld „verordnetes Heilmittel" gehört er deshalb nicht; dort würde er die
@@ -414,7 +414,7 @@ function fristHinweis() {
 // In der Podologie kommt das ergänzende Heilmittel praktisch nicht vor; das
 // Feld kostet in jeder Erfassung Aufmerksamkeit. Es wird deshalb NUR
 // ausgeblendet — Wert und Rechenweg bleiben, weil das ergänzende Heilmittel
-// in die Zuzahlung eingeht und Nausad ausdrücklich verlangt hat, dass am Ende
+// in die Zuzahlung eingeht und Beta-2 ausdrücklich verlangt hat, dass am Ende
 // der richtige Betrag herauskommt. Ausgeblendet und leer verhält sich die
 // Zuzahlung exakt wie vorher; entfernt man die Logik, tut sie es nicht mehr.
 

@@ -66,7 +66,7 @@ async function loadPraxisProfile(profile, tenantId) {
 // ayarlar profiles'a yazılır"). Vorher gewann immer `businesses.business_name`.
 // Bei einer Einzelpraxis ist das der beim Onboarding angelegte Eintrag — er
 // wandert beim Umbenennen nicht mit, und die Ausfallrechnung trug deshalb noch
-// den alten Ladennamen (Nausad, 12.08.2026). Nur bei mehreren Standorten ist der
+// den alten Ladennamen (Beta-2, 12.08.2026). Nur bei mehreren Standorten ist der
 // Standortname die richtige Antwort; das entscheidet der Aufrufer.
 function renderInvoiceHtml({ praxisProfile, userEmail, row, business, standort = null, patient, vorlage }) {
   const strasse = [praxisProfile.street, praxisProfile.house_number].filter(Boolean).join(' ');

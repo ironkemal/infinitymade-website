@@ -124,7 +124,7 @@
   haftada ≥5 Privatrechnung. `insurance_type`'a `selbstzahler` değeri Faz 2 —
   Selbstzahler payı %5'in üstünde çıkarsa.
 - **Doğrulanmadı:** Podoloji praxisinde PKV/Selbstzahler hasta oranı (`podoloji` ajanı
-  varsayımı, Stefan'a sorulacak). PKV kasalarının Erstattung için Diagnose satırı isteyip
+  varsayımı, Beta-1'e sorulacak). PKV kasalarının Erstattung için Diagnose satırı isteyip
   istemediği kasa bazlıdır. BG/DGUV'nin istediği alanlar (Unfalltag, Aktenzeichen) DGUV
   sözleşmesinden doğrulanmadı — BG şimdilik yarım kova.
 - **Tutanak:** `konsey/tutanak/2026-08-10-privat-selbstzahler-akisi.md`

@@ -1,7 +1,7 @@
 /**
  * rechnung-zahlung.js — „Wurde bereits bezahlt?" nur noch EINMAL fragen.
  *
- * Das Problem (Nausad, 12.08.2026)
+ * Das Problem (Beta-2, 12.08.2026)
  * ────────────────────────────────
  *     „bei der Rechnung wird gefragt: bezahlt oder nicht bezahlt — das ist
  *      alles doppelt … wenn bezahlt ist, dann braucht er gar nicht ins

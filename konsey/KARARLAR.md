@@ -32,7 +32,7 @@ Kleingewerbe-fatura modeli **Ekim 2026'da ayrı konsey** konusudur.
 adımdan gelen ortalama private hizmet sayısı **0** ise adım tamamen kaldırılır (Seçenek A).
 
 **Yeniden değerlendirme tetiği (Privat/Selbstzahler):** Faz 2 (`insurance_type`'a `selbstzahler`,
-otomatik ön seçim) ancak Stefan Faz 1'i kullanmaya başladıktan **ve** verisinde Selbstzahler payı
+otomatik ön seçim) ancak Beta-1 Faz 1'i kullanmaya başladıktan **ve** verisinde Selbstzahler payı
 %5'in üstünde çıktıktan sonra açılır. Faz 3 (Behandlung→Rechnung köprüsü, KDV seçimi) tetiği:
 Faz 1 canlıda **ve** haftada ≥5 Privatrechnung.
 

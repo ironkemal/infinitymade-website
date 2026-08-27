@@ -4,7 +4,7 @@
  * Warum es das gibt
  * ─────────────────
  * Der Terminkalender ist der Bildschirm, auf dem die Praxis den Tag verbringt
- * (Nausad, 12.08.2026: „wir sind die meiste Zeit dort"). Die Auswahl der
+ * (Beta-2, 12.08.2026: „wir sind die meiste Zeit dort"). Die Auswahl der
  * Verordnung im Termin-Fenster stand bis hierher zweimal wortgleich in
  * `dashboard.js` — einmal im Seitenbereich, einmal im Neu-Termin-Fenster.
  * Zwei Kopien heisst: jede Korrektur muss man zweimal machen und vergisst es
@@ -88,7 +88,7 @@ export function rendereVeroKarten({ container, rxs, onSelect, onAnlegen = null, 
  *
  * Vorher war „offen" auf `var(--border)` gesetzt — im dunklen Wie im hellen
  * Thema praktisch unsichtbar, und genau darüber ist die Praxis gestolpert
- * (Nausad, 12.08.2026: die 1/2/3-Anzeige „fällt nicht auf"). Jetzt trägt jeder
+ * (Beta-2, 12.08.2026: die 1/2/3-Anzeige „fällt nicht auf"). Jetzt trägt jeder
  * Zustand eine eigene, im Thema definierte Farbe UND eine eigene Randart, so
  * dass die Unterscheidung auch ohne Farbwahrnehmung trägt.
  * Feste Hex-Werte sind hier verboten (CLAUDE.md, Dark Theme).
@@ -181,7 +181,7 @@ export function waehleVerordnung(rx, sessions, deps = {}) {
 
   // Die Verordnung enthält die Leistung bereits — danach noch einmal zu fragen
   // ist ein Klick, den die Praxis dutzendfach am Tag machen müsste
-  // (Nausad, 12.08.2026: „das werde ich jetzt entfernen").
+  // (Beta-2, 12.08.2026: „das werde ich jetzt entfernen").
   if (typeof aufDienstleistung === 'function') aufDienstleistung(rx);
 }
 

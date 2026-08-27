@@ -137,7 +137,7 @@ test('catches duplicate belegnummer in same Sammel', () => {
 });
 
 test('accepts Belegnummer <Patientennummer>-<Verordnungsnummer>', () => {
-  // Das Format, das der Anwender auf dem Urbeleg wiederfindet (Nausad, 12.08.2026).
+  // Das Format, das der Anwender auf dem Urbeleg wiederfindet (Beta-2, 12.08.2026).
   // §302 laesst es zu: SLLA.INV Feld 4 = ..10 AN ohne Zeichenbeschraenkung.
   for (const bn of ['1-1', '12-3', '147-12', '999999-99', '0000001']) {
     assert.ok(isValidBelegnummer(bn), bn);

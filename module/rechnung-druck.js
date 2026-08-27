@@ -13,7 +13,7 @@
  * Zahlt die Kasse einen Teil, sieht der Patient auf seinem Beleg nur, was er
  * selbst zahlt. „Zwischensumme" und „Kassenzuzahlung" nebeneinander verraten
  * den Kassenanteil unmittelbar; die Einzelpreise der Leistungen ebenso.
- * (Nausad, 12.08.2026: „nicht sehen, was die Kasse zahlt.")
+ * (Beta-2, 12.08.2026: „nicht sehen, was die Kasse zahlt.")
  *
  * Bei Privat- und Selbstzahlerrechnungen — also ohne Kassenanteil — bleibt
  * alles stehen: dort IST der Rechnungsbetrag das, was der Patient zahlt, und

@@ -70,7 +70,7 @@ der Betroffenen nach Art. 34. **Art. 33 Abs. 5: interne Dokumentation ist Pflich
 dieser Eintrag erfüllt sie.
 
 **Entschieden.** Vollständige Entfernung aus Arbeitsbaum, Historie und Commit-Nachrichten;
-Pseudonyme (B1/B2) ab sofort, Zitat und Datum bleiben erhalten; Zuordnung nur im
+Pseudonyme (Beta-1/Beta-2) ab sofort, Zitat und Datum bleiben erhalten; Zuordnung nur im
 Drive-Ordner `meetings/`. Repository bleibt vorerst öffentlich (Vercel-Bruch vom
 2026-06-10 ungelöst). Zusätzlich wird von beiden Kunden eine **schriftliche
 Referenz-Einwilligung** eingeholt — liegt sie vor, entfällt die Rechtsfrage vollständig.

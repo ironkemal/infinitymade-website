@@ -5,7 +5,7 @@ import {
 } from './verordnung-uebersicht.js';
 
 // Warum es diese Datei gibt:
-// Der Anlass war Stefan Suleiman (Beta-Podologe, 08.08.2026): Nagelspange (UI2)
+// Der Anlass war Beta-1 (Beta-Podologe, 08.08.2026): Nagelspange (UI2)
 // und Komplexbehandlung (DF/NF/QF) laufen beim selben Patienten gleichzeitig,
 // und weil die Akte sie nicht nebeneinander zeigte, legte die Praxis für einen
 // Patienten zwei Akten an. Der Test, der das festnagelt, ist der letzte hier:

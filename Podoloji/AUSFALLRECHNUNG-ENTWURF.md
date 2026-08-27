@@ -1,8 +1,8 @@
 # Ausfallrechnung — Entwurf und Sollzustand
 
 **Stand:** 10.08.2026 · **Anlass:** Loop-Liste "Kassieren", Aufgabe 7
-**Entscheidung Melih, 10.08.2026:** nicht länger auf Stefans Muster warten — Entwurf selbst
-erstellen. Kommt Stefans Muster später doch, wird es **gegen dieses Dokument abgeglichen**,
+**Entscheidung Melih, 10.08.2026:** nicht länger auf Beta-1s Muster warten — Entwurf selbst
+erstellen. Kommt Beta-1s Muster später doch, wird es **gegen dieses Dokument abgeglichen**,
 nicht neu gebaut.
 
 ---
@@ -121,11 +121,11 @@ Punkte sind echte Rechtsfragen und werden **nicht** vom Entwickler beantwortet:
 
 ---
 
-## 5. Abgleich mit Stefans Muster (wenn es kommt)
+## 5. Abgleich mit Beta-1s Muster (wenn es kommt)
 
 Checkliste für den Vergleich, damit nicht neu gebaut wird:
 
-- [ ] Nennt Stefans Muster Positionen/Beträge anders als "Ausfallhonorar"?
+- [ ] Nennt Beta-1s Muster Positionen/Beträge anders als "Ausfallhonorar"?
 - [ ] Wird die Ausfallvereinbarung mit Datum zitiert?
 - [ ] Steht eine Umsatzsteuerzeile drauf — und wenn ja, mit welcher Begründung?
 - [ ] Welches Zahlungsziel ist gesetzt (wir: 14 Tage)?

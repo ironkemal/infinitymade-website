@@ -1,6 +1,6 @@
 // Welcher Praxisname steht auf der Ausfallrechnung?
 //
-// Nausad, 12.08.2026: „obwohl wir den Namen vom Laden geändert haben, stand auf
+// Beta-2, 12.08.2026: „obwohl wir den Namen vom Laden geändert haben, stand auf
 // der Ausfallrechnung immer noch der vorherige gespeicherte Name."
 //
 // Ursache: der Name kam aus `businesses.business_name`. Eine Einzelpraxis hat

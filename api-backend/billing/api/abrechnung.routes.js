@@ -1311,7 +1311,7 @@ router.get('/prescription/:id/zuzahlungsrechnung', async (req, res) => {
     res.set('Content-Type', 'text/html; charset=utf-8');
     // ?print=1 → der Druckdialog geht von selbst auf. Aus dem Seitenbereich des
     // Terminkalenders soll ein Klick auf das Euro-Zeichen direkt drucken, statt
-    // den Umweg über die Vorlagen zu nehmen (Nausad, 12.08.2026).
+    // den Umweg über die Vorlagen zu nehmen (Beta-2, 12.08.2026).
     if (req.query.print === '1') {
       return res.send(html.replace(
         '</body>',

@@ -2,7 +2,7 @@
  * patienten-einwilligung.js — digitale Einwilligung mit Unterschrift
  *
  * Konsey 2026-08-14 · konsey/tutanak/2026-08-14-patienten-uebergabe-einwilligung.md
- * Auslöser: Beta-Kunde Nausad — „ich habe so einen Stapel Papier".
+ * Auslöser: Beta-Kunde Beta-2 — „ich habe so einen Stapel Papier".
  *
  * Der Ablauf, wie ihn `podoloji` beschrieben hat
  * ──────────────────────────────────────────────

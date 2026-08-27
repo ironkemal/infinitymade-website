@@ -11,7 +11,7 @@
 --    kopiert wurde, sie verändert nichts an der Kopie.
 --
 -- 3) profiles.fussbefund_legende — Was ✕, ◯, ● auf der Fußgrafik bedeuten,
---    entscheidet die Praxis, nicht wir (Nausad, 12.08.2026). Owner-Ebene, also
+--    entscheidet die Praxis, nicht wir (Beta-2, 12.08.2026). Owner-Ebene, also
 --    profiles und nicht businesses (Einzelstandort-Owner haben dort keine Zeile).
 
 alter table public.pat_fussbefund

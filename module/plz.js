@@ -3,7 +3,7 @@
  *
  * Warum es das gibt
  * ─────────────────
- * Im Beta-Gespräch (12.08.2026) fragte Nausad, ob der Ort nicht automatisch
+ * Im Beta-Gespräch (12.08.2026) fragte Beta-2, ob der Ort nicht automatisch
  * kommen kann, wenn er die Postleitzahl tippt — sowohl in der Patienten- als
  * auch in der Arztmaske. Bei jedem Neupatienten sind das zwei Felder statt
  * eines, und der Ort ist die Angabe, die am häufigsten falsch geschrieben in

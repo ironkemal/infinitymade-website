@@ -4,7 +4,7 @@
  * Warum es das gibt
  * ─────────────────
  * Nach dem Vergeben einer Terminserie fragt der Patient nach einem Zettel.
- * Bis hierher gab es keinen (Nausad, 12.08.2026: „ob ich das ausdrucken kann,
+ * Bis hierher gab es keinen (Beta-2, 12.08.2026: „ob ich das ausdrucken kann,
  * auch in DIN A5, und dem Patienten geben kann?"). Die Praxis half sich mit
  * handschriftlichen Karten — und jeder abgeschriebene Termin ist ein Termin,
  * der falsch abgeschrieben werden kann.

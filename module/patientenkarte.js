@@ -8,7 +8,7 @@
  *   Kemal: „Patientenkarte ist immer noch vom alten geblieben, wir müssen
  *           mit neuen … würde ich nicht alles zeigen, sondern nur Datum und
  *           was du gemacht hast."
- *   Nausad: „Genau, und wenn ich anklicke, dass automatisch die Maske,
+ *   Beta-2: „Genau, und wenn ich anklicke, dass automatisch die Maske,
  *            dass ich dorthin gehe."
  *
  * Der Kopf zeigte zwölf gleich gewichtete Felder — darunter „Entfernung",

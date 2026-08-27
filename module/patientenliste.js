@@ -10,7 +10,7 @@
  *     Nr. · Nachname · Vorname · Geburtsdatum · Straße · PLZ · Ort
  *
  * Vorher standen dort Name, Stadt, Telefon, E-Mail und der alte CRM-Status.
- * Nausad: „Dieses ist besser so, weil dann hast du einen Überblick" — die
+ * Beta-2: „Dieses ist besser so, weil dann hast du einen Überblick" — die
  * Angaben, für die man bisher jede Zeile aufklappen musste, stehen jetzt
  * nebeneinander. Telefon und E-Mail sind dafür gewichen: beim Überfliegen einer
  * Patientenliste braucht sie niemand, in der Patientenkarte stehen sie weiter.

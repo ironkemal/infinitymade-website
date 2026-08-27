@@ -9,7 +9,7 @@
  * kein einziger dieser Werte eine Entsprechung — ein Patient wird nicht
  * „gewonnen".
  *
- * Was der Anwender an dieser Stelle wirklich wissen muss (Nausad, 12.08.2026):
+ * Was der Anwender an dieser Stelle wirklich wissen muss (Beta-2, 12.08.2026):
  *
  *     Bereit zur Abrechnung · Abgerechnet · Teilabsetzung · Absetzung · Storniert
  *

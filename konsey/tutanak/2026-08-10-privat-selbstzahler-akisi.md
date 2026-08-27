@@ -1,6 +1,6 @@
 # Konsey Kararı — Podoloji: Privat/Selbstzahler akışının GKV alanlarından ayrılması
 Tarih: 2026-08-10 · Oturan üyeler: `gkv-302`, `legal-de`, `podoloji`, `muhalif`, `deger-mi`
-Tetikleyen: Beta müşteri Stefan Suleiman (Podologe), 08.08.2026 toplantısı §1.6
+Tetikleyen: Beta müşteri Beta-1 (Podologe), 08.08.2026 toplantısı §1.6
 
 ## KARAR
 
@@ -34,7 +34,7 @@ azaltmak yerine üretir. `gkv-302`'nin sunucu guard şartı koda karşı doğrul
 
 ## Ödün verilenler
 
-- **Müşteri talebi tam karşılanmıyor.** Stefan "hiç görünmesin" dedi; biz "varsayılan kapalı,
+- **Müşteri talebi tam karşılanmıyor.** Beta-1 "hiç görünmesin" dedi; biz "varsayılan kapalı,
   1 tıkla açılır" veriyoruz. Bitti-sayılır ölçütü ("formda ICD/DG alanı hiç görünmüyor")
   harfiyen değil, ruhen karşılanıyor — bu bilinçli.
 - **§1.6 bu turda kapanmıyor.** "Doğrudan Rechnung üretimine git" maddesi Faz 3'e kalıyor;
@@ -93,7 +93,7 @@ azaltmak yerine üretir. `gkv-302`'nin sunucu guard şartı koda karşı doğrul
 
 **Faz 1 — şimdi (~yarım gün)**
 
-- [ ] Ön koşul: Stefan'ın verisinde `SELECT rezeptart, count(*) FROM verordnungen GROUP BY 1`
+- [ ] Ön koşul: Beta-1'in verisinde `SELECT rezeptart, count(*) FROM verordnungen GROUP BY 1`
       çalıştır. Selbstzahler payı %5 altındaysa Faz 2'yi hiç açma. — K0
 - [ ] `dashboard.js:23990-24067` — `rezeptart` değişiminde KK / Diagnosegruppe / ICD-10 /
       Zuzahlung-Befreiung alanlarını varsayılan **kapalı** `GKV-Angaben` bölümüne al
@@ -111,7 +111,7 @@ azaltmak yerine üretir. `gkv-302`'nin sunucu guard şartı koda karşı doğrul
       ihlalleri say — varsa constraint `NOT VALID` ile ekle — K2
 - [ ] Dark theme + i18n (de/en/tr) kuralları: yeni etiketler üç dilde — K0
 
-**Faz 2 — Stefan Faz 1'i onayladıktan sonra**
+**Faz 2 — Beta-1 Faz 1'i onayladıktan sonra**
 
 - [ ] `leads.insurance_type`'a üçüncü değer `selbstzahler`; `gkv|privat` varsayan tüm okuma
       noktalarını tara (`zuzahlung/calculator.js:80`, `standardRules.js:130`,
@@ -122,7 +122,7 @@ azaltmak yerine üretir. `gkv-302`'nin sunucu guard şartı koda karşı doğrul
 
 **Faz 3 — ayrı iş, ertelendi**
 
-- [ ] Behandlung → Rechnung köprüsü. Tetikleyici: Faz 1 canlıda **ve** Stefan haftada ≥5
+- [ ] Behandlung → Rechnung köprüsü. Tetikleyici: Faz 1 canlıda **ve** Beta-1 haftada ≥5
       Privatrechnung yazıyor. İçermesi gerekenler: §14 Abs. 4 UStG zorunlu alanları
       (fortlaufende Rechnungsnummer, Menge, Leistungsdatum, Entgelt), varsayılan tek satır +
       **açılabilir kalem listesi**, KDV seçimi (Selbstzahler → varsayılan %19; PKV →
@@ -134,7 +134,7 @@ azaltmak yerine üretir. `gkv-302`'nin sunucu guard şartı koda karşı doğrul
 - BG/DGUV dördüncü kovası: Unfalltag, Aktenzeichen, DGUV Vertragswesen alanları
   (`gkv-302`: DGUV sözleşmesinden doğrulanmalı, elde belge yok)
 - PKV faturasında Diagnose satırının Erstattung için ne kadar zorunlu olduğu kasa bazlıdır —
-  Stefan'a sorulacak olgusal soru, ürün kararı değil
+  Beta-1'e sorulacak olgusal soru, ürün kararı değil
 - Podoloji Preisliste yönetimi (kalem bazlı fiyat kataloğu) — Faz 3'ün ön koşulu olabilir
 
 ## Sert veto varsa
@@ -145,6 +145,6 @@ zorunlu Indikation alanının **konmaması**).
 
 ## Yeniden değerlendirme tetiği
 
-- Faz 2: Stefan Faz 1'i kullanmaya başlar **ve** Selbstzahler payı %5'in üstünde çıkarsa
+- Faz 2: Beta-1 Faz 1'i kullanmaya başlar **ve** Selbstzahler payı %5'in üstünde çıkarsa
 - Faz 3: Faz 1 canlıda **ve** haftada ≥5 Privatrechnung
 - Bütün karar: Podologie için bir Preisvereinbarung/Vertragswesen değişikliği yayımlanırsa

@@ -8,7 +8,7 @@
  * Einkreisungsschritt — angefasst, also umgezogen. Zurück nach dashboard.js
  * wandert hier nichts.
  *
- * Was sich am 14.08.2026 geändert hat (Besprechung 12.08.2026, Nausad)
+ * Was sich am 14.08.2026 geändert hat (Besprechung 12.08.2026, Beta-2)
  * ───────────────────────────────────────────────────────────────────
  *
  * 1. Die Legende gehört der Praxis.

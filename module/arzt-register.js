@@ -17,14 +17,14 @@
  *    Einstellungen öffnen, Arzt anlegen, Verordnung neu beginnen. Das „+"
  *    öffnet eine kleine Maske über der Verordnung; danach steht der Arzt im
  *    Formular und die Eingabe geht weiter.
- *      Nausad: „du könntest zum Beispiel hier ein Pluszeichen machen, daneben
+ *      Beta-2: „du könntest zum Beispiel hier ein Pluszeichen machen, daneben
  *      kommt eine neue Maske auf, und dann gebe ich Betriebsstättennummer und
  *      Arztnummer ein."
  *
  * 2. Suche über Name ODER Nummer steckt in `arzt-suche.js` (reine Ziffern
  *    treffen nur Nummernfelder, Präfixtreffer nach oben). Hier wird sie nur
  *    zusätzlich an das BSNR-Feld gehängt — die LANR hing schon dran.
- *      Nausad: „auf der Verordnung sind meistens bei den Ärzten viele Namen,
+ *      Beta-2: „auf der Verordnung sind meistens bei den Ärzten viele Namen,
  *      und dann gebe ich einfach die Nummer ein, z.B. 338"
  *
  * 3. Die Liste zeigt Nachname · Vorname · Arzt-Nr. · Betriebs-Nr. · Fachgebiet.
@@ -33,7 +33,7 @@
  *
  * 4. Klick auf eine Zeile → Zuweiser-Statistik: je Jahr, wie viele Patienten
  *    dieser Arzt geschickt hat, darunter die Patienten selbst.
- *      Nausad: „im Jahre 22 hat er 24 Patienten geschickt, 24 waren schon 70
+ *      Beta-2: „im Jahre 22 hat er 24 Patienten geschickt, 24 waren schon 70
  *      Patienten, diese Ärztin"
  *    Das ist eine Auswertung — sie liest ausschließlich und schreibt nichts.
  *
@@ -185,7 +185,7 @@ export function wireArztFeld(f) {
     });
   }
 
-  // Stefans Weg: die ersten Ziffern der LANR tippen, Namen anklicken.
+  // Beta-1s Weg: die ersten Ziffern der LANR tippen, Namen anklicken.
   // Dieselbe Sucheingabe hängt an der BSNR — auf dem Rezept steht die
   // Betriebsstättennummer oben, und wer sie abliest, will nicht erst zum
   // Namensfeld zurückspringen.
@@ -261,7 +261,7 @@ export function oeffneArztSchnellanlage(opt = {}) {
 
     nameF.value = v.name || '';
     // Reihenfolge im Formular = Reihenfolge auf dem Rezept: BSNR steht links
-    // von der LANR. Nausad liest von links nach rechts ab.
+    // von der LANR. Beta-2 liest von links nach rechts ab.
     bsnrF.value = v.bsnr || '';
     lanrF.value = v.lanr || '';
     fachF.value = '';

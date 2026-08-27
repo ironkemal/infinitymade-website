@@ -44,7 +44,7 @@ export function renderZuzahlungsrechnung(opts) {
   // Bewusst OHNE Bruttospalte: der Patient soll auf diesem Beleg nur seinen
   // eigenen Anteil sehen. Aus Brutto minus Zuzahlung liesse sich der
   // Kassenanteil ausrechnen — genau das darf hier nicht ablesbar sein
-  // (Nausad, 12.08.2026: "nicht sehen, was die Kasse zahlt").
+  // (Beta-2, 12.08.2026: "nicht sehen, was die Kasse zahlt").
   // Rechtlich unbedenklich: geschuldet ist ausschliesslich die Zuzahlung, und
   // nur der geschuldete Betrag ist Pflichtangabe (§ 14 Abs. 4 Nr. 7 UStG).
   const sessionRows = sessions.map(s => `

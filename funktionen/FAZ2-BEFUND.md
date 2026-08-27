@@ -4,7 +4,7 @@
 **Kaynak:** `funktionen/INDEX.json` (erzeugt 2026-08-12, son commit 8113ff4 ile aynı gün) +
 kod okuması (`dashboard.js`, `api-backend/server.js`, `api-backend/billing/api/abrechnung.routes.js`,
 `db/SCHEMA.sql`, `db/SCHEMA-RLS.sql`).
-**Tetikleyen:** Beta müşteri Nausad — "faturada çift kayıt oluşuyor".
+**Tetikleyen:** Beta müşteri Beta-2 — "faturada çift kayıt oluşuyor".
 
 > Bu belgede kod değiştirilmedi. Canlı doğrulama (Faz 3) yapılmadı — aşağıdaki
 > "canlıda görülmesi gereken" satırları `canli-test`'e devredilecek iddialardır.
@@ -32,7 +32,7 @@ kod okuması (`dashboard.js`, `api-backend/server.js`, `api-backend/billing/api/
 
 ### KART 1 — Aynı randevu §302 faturasına iki kez düşebiliyor (seans satırı çoğalması)
 
-> Nausad'ın "faturada çift kayıt" şikâyetinin en olası kaynağı budur.
+> Beta-2'nin "faturada çift kayıt" şikâyetinin en olası kaynağı budur.
 
 **Yol 1 · Verordnung elle girilir**
 Sidebar → **Verordnungen** → "Neue Verordnung" → kaydet

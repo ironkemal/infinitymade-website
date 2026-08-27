@@ -5,7 +5,7 @@
  * ────────────────────────────────
  * Kemal: „im Terminaktion, rechtes Portal, 'Befreiungsnachweis eintragen' —
  * diese Funktion ist unterschiedlich als bei Patienten."
- * Nausad: „das sind die alten Daten, die musst du nur verknüpfen."
+ * Beta-2: „das sind die alten Daten, die musst du nur verknüpfen."
  *
  * Es gab drei Stellen, die in dieselbe Tabelle (`zuzahlung_befreiung`)
  * schrieben, mit jeweils anderen Feldern und anderen Vorbelegungen:
@@ -37,7 +37,7 @@
  *     UPDATE prescriptions SET zuzahlung_befreit = true, zuzahlung_eur = 0
  *     WHERE patient_id = … AND ausstellungsdatum BETWEEN 'JJJJ-01-01' AND 'JJJJ-12-31'
  *
- * Das ignorierte `befreit_ab` vollständig. Genau der Fall, den Nausad genannt
+ * Das ignorierte `befreit_ab` vollständig. Genau der Fall, den Beta-2 genannt
  * hat — „das ganze Jahr keine Befreiung und vielleicht ab September" — wurde
  * damit falsch: die Rezepte von Januar bis August verloren ihre Zuzahlung,
  * also bares Geld, und zwar auch bereits abgerechnete. Übrig bleibt hier nur

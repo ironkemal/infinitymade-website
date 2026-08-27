@@ -35,7 +35,7 @@ test('shows session table rows', () => {
 });
 test('includes Pauschale 10€', () => assert.ok(zhr.includes('Verordnungspauschale (10 €)')));
 // Der Patient darf auf seinem Beleg weder den Behandlungsbetrag noch den
-// Kassenanteil sehen (Nausad, 12.08.2026). Beides liesse sich aus der
+// Kassenanteil sehen (Beta-2, 12.08.2026). Beides liesse sich aus der
 // Bruttospalte ablesen — deshalb ist sie weg und bleibt weg.
 test('zeigt KEINEN Brutto-/Kassenbetrag', () => {
   assert.ok(!zhr.includes('Bruttosumme'), 'Bruttosumme darf nicht erscheinen');

@@ -2,7 +2,7 @@
 
 Diesen Text im Claude Code Terminal (im Projektordner) einfach einfügen und senden.
 Aktualisierte Version: Aufgabe 2 (Preise) ist freigegeben, Aufgabe 7 (Ausfallrechnung)
-wird jetzt selbst entworfen statt auf Stefan zu warten, und es gibt eine neue Regel für
+wird jetzt selbst entworfen statt auf Beta-1 zu warten, und es gibt eine neue Regel für
 externe Quellen (Preis-PDF), damit die nicht unbemerkt veraltet.
 
 ---
@@ -89,7 +89,7 @@ For each unchecked `[ ]` item that has no unresolved "Zuerst:" dependency:
 
 ## Task 7 specifically — designing the Ausfallrechnung yourself
 
-There is no example from the practice partner (Stefan) available yet, and I've decided
+There is no example from the practice partner (Beta-1) available yet, and I've decided
 not to wait for it. Design a correct Ausfallrechnung (no-show/cancellation fee invoice)
 yourself, following standard German practice for Heilmittel praxes:
 
@@ -111,7 +111,7 @@ yourself, following standard German practice for Heilmittel praxes:
   is billing-adjacent even though it's not GKV billing. If anything here feels like a
   real legal judgment call (e.g. whether a specific notice-period wording is compliant),
   don't guess — flag it clearly instead of deciding it yourself.
-- Once built, this becomes the baseline for task 8. If a real example from Stefan shows
+- Once built, this becomes the baseline for task 8. If a real example from Beta-1 shows
   up later, it gets compared against this draft, not built from scratch again.
 
 ## Task tracking

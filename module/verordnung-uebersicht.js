@@ -4,7 +4,7 @@
  *
  * Warum es das gibt
  * ─────────────────
- * Stefan Suleiman (Beta, Podologe · 08.08.2026):
+ * Beta-1 (Beta, Podologe · 08.08.2026):
  *
  *   „Wir machen für den einen Patienten zwei Akten auf — einmal die
  *    Nagelspange, einmal die Komplexbehandlung."

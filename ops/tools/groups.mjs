@@ -1,3 +1,10 @@
+// ACHTUNG: Klarnamen wurden hier am 27.08.2026 durch Pseudonyme ersetzt
+// (Beta-1/Beta-2, Konsey-Beschluss - das Repository ist oeffentlich).
+// Die `match`-Strings spiegeln Kartentitel, die in der SEPARATEN Ops-Supabase
+// noch den alten Wortlaut tragen; diese beiden Eintraege greifen dort also
+// nicht mehr. Bewusst hingenommen - die Karten sind laengst eingelesen.
+// Wer neu abgleicht, passt den Kartentitel in der Ops-DB an, nicht den Namen hier.
+//
 // Board-Gliederung — welche Themen es gibt, in welcher Reihenfolge sie sinnvoll
 // abgearbeitet werden und welche Aufgabe auf welche wartet.
 //
@@ -93,9 +100,9 @@ export const GROUPS = [
       { match: 'Zuzahlung ekranını sadeleştir' },
       { match: 'Kassiert sonrası faturaya kalıcı bağlantı', after: ['Kassieren akışını yeniden kurgula'] },
       { match: 'Aylık genel bakış ve ödeme durumu' },
-      { match: 'Stefan’dan örnek Ausfallrechnung', alt: "Stefan'dan örnek Ausfallrechnung" },
-      { match: 'Ausfallrechnung şablonunu Stefan', after: ['örnek Ausfallrechnung'] },
-      { match: 'Mahnung (ihtar) şablonu', after: ['Ausfallrechnung şablonunu Stefan'] },
+      { match: 'Beta-1’den örnek Ausfallrechnung', alt: "Beta-1'den örnek Ausfallrechnung" },
+      { match: 'Ausfallrechnung şablonunu Beta-1', after: ['örnek Ausfallrechnung'] },
+      { match: 'Mahnung (ihtar) şablonu', after: ['Ausfallrechnung şablonunu Beta-1'] },
       { match: 'Hasta adı düzeltilince' }
     ]
   },
@@ -120,7 +127,7 @@ export const GROUPS = [
     notes: 'Gerçek para akışının ön koşulları: resmî fiyat kaynağı, IK/ITSG hesabı, gerçek Kostenträgerdatei, GoBD izi. ITSG hesabı açılmadan gerçek Kostenträgerdatei alınamaz, o alınmadan DMRZ üzerinden gerçek dosya gönderilemez.',
     items: [
       { match: 'Resmî GKV fiyat listesi kaynağını' },
-      { match: 'Stefan’ın kardeşinden GKV Leistung', alt: "Stefan'ın kardeşinden GKV Leistung" },
+      { match: 'Beta-1’in kardeşinden GKV Leistung', alt: "Beta-1'in kardeşinden GKV Leistung" },
       { match: 'IK-Nummer + ITSG portalına' },
       { match: 'Gerçek Kostenträgerdatei', after: ['IK-Nummer + ITSG portalına'] },
       { match: 'GoBD audit trail' },

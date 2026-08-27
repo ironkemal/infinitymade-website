@@ -3442,7 +3442,7 @@ async function openBookingActionModal(booking, opts = {}) {
 
     // Das Feld gab es schon, gefüllt wurde es nie — im Seitenbereich stand
     // deshalb immer „Arzt: leer", obwohl in der Verordnung ein Arzt hinterlegt
-    // war (Nausad, 12.08.2026). Quelle ist `prescriptions.arzt_id` → `aerzte`.
+    // war (Beta-2, 12.08.2026). Quelle ist `prescriptions.arzt_id` → `aerzte`.
     const arztEl = document.getElementById('bkRxArzt');
     if (arztEl) {
       const arzt = rx.aerzte;
@@ -3488,7 +3488,7 @@ async function openBookingActionModal(booking, opts = {}) {
         rzgWarnEl.style.color = gruen ? 'var(--success)' : 'var(--warning-text)';
 
         // Das Euro-Zeichen druckt den Beleg sofort — für Kasse wie Privat
-        // derselbe Knopf (Nausad, 12.08.2026: „bei privat genauso, dann brauche
+        // derselbe Knopf (Beta-2, 12.08.2026: „bei privat genauso, dann brauche
         // ich nicht extra in diese Vorlage reinzugehen").
         const druckKnopf =
           ` <button type="button" data-zuzahl="drucken" title="Beleg drucken"
@@ -3873,7 +3873,7 @@ function uebernimmSerienfrequenzAusRx(rx) {
 }
 
 // Die Verordnung enthaelt die Leistung bereits — die Praxis soll sie nicht ein
-// zweites Mal auswaehlen muessen (Nausad, 12.08.2026). Das Feld wird deshalb
+// zweites Mal auswaehlen muessen (Beta-2, 12.08.2026). Das Feld wird deshalb
 // ausgeblendet, aber WEITER GEFUELLT: bookings.service_id bleibt Pflicht.
 async function uebernehmeDienstleistungAusRx(rx) {
   const srvSel = document.getElementById('bkService');
@@ -6034,7 +6034,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
 
   // Frequenz der Verordnung: warnen, NICHT blockieren. Nachholtermine, Urlaub
   // und Krankheit sind Alltag — die Vorgabe ist ärztlich, kein Abrechnungs-
-  // verbot (Nausad, 12.08.2026: „wenn man weitermachen möchte, weiter drücken,
+  // verbot (Beta-2, 12.08.2026: „wenn man weitermachen möchte, weiter drücken,
   // dann soll der Termin gebaut werden"). Regelwerk und Quelle der Schwellen:
   // module/frequenz-pruefung.js.
   {
@@ -6321,7 +6321,7 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         .in('id', _pendIds);
       if (linkErr) console.error('[rx session link]', linkErr);
       // Ohne diese Meldung blieb der Zähler der aktiven Verordnung stehen, bis
-      // jemand die Seite neu lud (Nausad, 12.08.2026). Wer schreibt, meldet —
+      // jemand die Seite neu lud (Beta-2, 12.08.2026). Wer schreibt, meldet —
       // siehe module/signal.js.
       if (!linkErr) emit('verordnungen:changed');
       window._pendingRxSession = null;
