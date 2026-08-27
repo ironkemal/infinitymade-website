@@ -153,8 +153,17 @@ export const TARIFBEREICH = Object.freeze({
   '25': 'Bundeseinheitlicher Tarif (Ost)',
 });
 
-// Bundesland → tarifbereich code mapping (most common, gesetzlich)
-// (Use for tarif lookup; physiotherapy tariffs are negotiated per Bundesland.)
+// ⛔ NICHT für Heilmittel-LEGS verwenden.
+//
+// Diese Tabelle hat einmal das Tarifkennzeichen der §302-Datei gespeist. Das
+// war falsch: alle vier §125-Heilmittelverträge sind bundeseinheitlich, der
+// Tarifbereich ist dort immer '00'. Aus der PLZ abgeleitete Werte wie '08000'
+// ergaben LEGS, die in keinem Vertrag stehen (z. B. '7108000' statt '7100501').
+// Der richtige Weg steht in codes/legs.js.
+//
+// Die Tabelle bleibt, weil die Tarifbereich-Schlüssel als solche korrekt sind
+// (Anlage 3 V21 §8.1.5.2) und andere Leistungsbereiche als Heilmittel sie
+// brauchen können. Für Heilmittel: Finger weg.
 export const BUNDESLAND_TO_TARIFBEREICH = Object.freeze({
   'BW': '01', 'BY': '02', 'BE': '23', 'BB': '12', 'HB': '04',
   'HH': '05', 'HE': '06', 'MV': '15', 'NI': '07', 'NW': '08',
@@ -185,6 +194,8 @@ export function validateZuzahlungskennzeichen(value) {
   }
 }
 
+// ⛔ NICHT für Heilmittel. Siehe Hinweis bei BUNDESLAND_TO_TARIFBEREICH und
+// codes/legs.js. Für Heilmittel liefert legsFuer() den vollständigen Schlüssel.
 export function buildTarifkennzeichen(bundesland, sondertarif = '000') {
   const t = BUNDESLAND_TO_TARIFBEREICH[bundesland];
   if (!t) throw new Error(`Unknown Bundesland: ${bundesland}`);

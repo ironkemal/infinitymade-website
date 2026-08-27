@@ -27,7 +27,10 @@ import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
 import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
-import { buildTarifkennzeichen } from '../codes/anlage3_v22.js';
+import {
+  legsFuer, LEGS_BY_FACHBEREICH,
+  abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
+} from '../codes/legs.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -115,11 +118,25 @@ function frequenzToDigit(freq) {
 // Zusatzfelder, die jedes Druck-Route-Profil braucht.
 const PRAXIS_DRUCK_FELDER = 'steuernummer, ust_id, iban, bic, bank_name';
 
+// Fachbereich der Praxis → LEGS (Leistungserbringergruppenschlüssel).
+//
+// Der LEGS trägt Abrechnungscode UND Tarifkennzeichen und kommt aus dem
+// §125-Vertrag, nicht aus der Geografie — siehe Kopf von codes/legs.js.
+// Beide Teile müssen aus derselben Quelle stammen; sie vorher getrennt zu
+// bestimmen (Code hier, Tarifkennzeichen aus der PLZ) war genau der Fehler.
+//
+// `sector` ist der Wert aus profiles.sector. Unbekannte Werte werden wie
+// Physio behandelt — das war schon vorher so und ist der häufigste Fall.
+function legsFuerSector(sector) {
+  const bereich = LEGS_BY_FACHBEREICH[sector] ? sector : 'physiotherapy';
+  return legsFuer(bereich);
+}
+
 // Abrechnungscode je Leistungsbereich (Anlage 3: 71 = Podologe, 22 = Physio).
 // Vorher an drei Stellen als '22' fest kodiert — in der Podologie zog das
 // stillschweigend den falschen Katalogausschnitt und damit den falschen Preis.
 function abrechnungscodeFuer(sector) {
-  return sector === 'podologie' ? '71' : '22';
+  return abrechnungscodeAusLegs(legsFuerSector(sector));
 }
 
 const BEREICH_TEXTE = {
@@ -215,7 +232,11 @@ function buildBelegnummer(row, patientennummer) {
   return row.id.slice(0, 10);
 }
 
-function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], bundesland = 'NW', sector = 'physiotherapy') {
+// `bundesland` war hier einmal Parameter — es speiste das Tarifkennzeichen.
+// Das war falsch (LEGS kommt aus dem Vertrag, nicht aus der PLZ) und ist
+// entfernt. Für die Preisermittlung wird das Bundesland weiterhin gebraucht,
+// aber dort, wo die Tarife geladen werden, nicht hier.
+function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tariffs = [], sector = 'physiotherapy') {
   if (!rx.kostentraeger_ik) {
     const err = new Error('Privat-Patienten können nicht über §302 DTA abgerechnet werden.');
     err.status = 422;
@@ -331,7 +352,8 @@ function mapPrescriptionToDtaShape(rx, lead, doctor, therapistCerts = null, tari
     },
     tarif: {
       abrechnungscode,
-      tarifkennzeichen: buildTarifkennzeichen(bundesland),
+      // Aus demselben LEGS wie der Abrechnungscode — nicht aus der PLZ.
+      tarifkennzeichen: tarifkennzeichenAusLegs(legsFuerSector(sector)),
     },
     sessions,
   };
@@ -523,7 +545,7 @@ router.post('/abrechnung/create', async (req, res) => {
       .eq('bundesland', bundesland);
 
     // ---- map prescriptions ----
-    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland, tenantSector));
+    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], tenantSector));
 
     // ---- build DTA (preflight runs first; rejects file if DMRZ would reject) ----
     let dta;
@@ -1937,7 +1959,7 @@ router.post('/abrechnung/preflight', async (req, res) => {
       .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
       .eq('bundesland', bundesland);
 
-    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], bundesland, tenantSector));
+    const prescriptions = rxRows.map(r => mapPrescriptionToDtaShape(r, r.leads, r.aerzte, therapistCerts, tariffs || [], tenantSector));
     const { preflight: runPreflight } = await import('../dta/preflight.js');
 
     const results = runPreflight({
@@ -1982,7 +2004,10 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
     e.status = 422; throw e;
   }
 
-  const abrechnungscode = '71'; // ZL-Podologe prefix
+  // ZL-Podologe. Abrechnungscode und Tarifkennzeichen kommen aus einem Stück,
+  // damit sie nicht wieder auseinanderlaufen können.
+  const podoLegs = legsFuer('podologie');
+  const abrechnungscode = abrechnungscodeAusLegs(podoLegs);
 
   // Flatten: each behandlung × each hpnr_code = one session entry
   const sessions = [];
@@ -2053,7 +2078,7 @@ function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'N
     },
     tarif: {
       abrechnungscode,
-      tarifkennzeichen: buildTarifkennzeichen(bundesland),
+      tarifkennzeichen: tarifkennzeichenAusLegs(podoLegs),
     },
     sessions,
   };

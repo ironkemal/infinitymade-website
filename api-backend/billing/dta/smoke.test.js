@@ -95,7 +95,7 @@ const result = buildDtaFile({
       kostentraegerIk: '101000000',
       krankenkasseIk:  '101000000',
     },
-    tarif: { abrechnungscode: '22', tarifkennzeichen: '01001' },
+    tarif: { abrechnungscode: '22', tarifkennzeichen: '00501' },
     sessions: ['2026-05-05','2026-05-07','2026-05-12','2026-05-14','2026-05-19','2026-05-21']
       .map(d => ({
         positionsnummer: '10210',
@@ -141,7 +141,10 @@ test('SLLA NAD — 7 fields, no geschlecht', () => {
   assert.ok(result.content.includes("NAD+Müller+Hans+19720413+Königsallee 1+40213+Düsseldorf'"));
 });
 test('SLLA EHE — Leistungserbringergruppe + positionsnummer + anzahl + preis + datum', () => {
-  assert.ok(result.content.includes("EHE+22:01001+10210+1,00+22,50+20260505+2,25'"), 'first EHE');
+  // 22:00501 = LEGS 2200501 (Physiotherapeut, ZL) aus dem §125-Vertrag.
+  // Stand vorher 22:01001 — ein aus der PLZ abgeleiteter Tarifbereich, den
+  // kein Heilmittelvertrag kennt. Siehe billing/codes/legs.js.
+  assert.ok(result.content.includes("EHE+22:00501+10210+1,00+22,50+20260505+2,25'"), 'first EHE');
 });
 test('SLLA ZHE — 17 fields, Verordnungsart, Leitsymptomatik, Therapiefrequenz', () => {
   // BSNR, LANR, VerordnungsDatum, ZuzahlungsKZ, DiagnoseGruppe, VerordnungsartHeilmittel,
@@ -172,7 +175,7 @@ test('validator rejects invalid VKZ', () => {
     absender: { ik: '123456789' },
     empfaenger: { ik: '987654321' },
     rechnung: { sammelRechnungsnummer: 'X', datum: '2026-05-18', datennummer: 1 },
-    prescriptions: [{ patient:{kvnr:'A1',belegnummer:'1'}, verordnung:{verordnungsart:'03',zuzahlungskennzeichen:'3',kostentraegerIk:'1'}, tarif:{tarifkennzeichen:'01001'}, sessions:[] }],
+    prescriptions: [{ patient:{kvnr:'A1',belegnummer:'1'}, verordnung:{verordnungsart:'03',zuzahlungskennzeichen:'3',kostentraegerIk:'1'}, tarif:{tarifkennzeichen:'00501'}, sessions:[] }],
     vkz: '99',
     preflight: false,
   }), /Invalid VKZ/);

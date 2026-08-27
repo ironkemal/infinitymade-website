@@ -20,6 +20,7 @@ import {
   TARIFBEREICH,
   ABRECHNUNGSCODE,
 } from '../codes/anlage3_v22.js';
+import { istGueltigerLegs, GUELTIGE_LEGS } from '../codes/legs.js';
 
 // ---------------------------------------------------------------------------
 // Atomic field validators
@@ -289,6 +290,22 @@ export function preflight(input) {
       E(errors, 'T:01002', `${at}.tarif.abrechnungscode`, `Abrechnungscode "${ac}" nicht Leistungsbereich B (Heilmittel)`);
     if (!isValidTarifkennzeichen(t.tarifkennzeichen))
       E(errors, 'T:01003', `${at}.tarif.tarifkennzeichen`, `Tarifkennzeichen "${t.tarifkennzeichen}" ungültig (5 Zeichen, gültiger Tarifbereich)`);
+
+    // Abrechnungscode und Tarifkennzeichen ergeben zusammen den LEGS. Beide
+    // Teile können für sich formal gültig sein und trotzdem eine Kombination
+    // bilden, die in keinem §125-Vertrag steht — genau so entstand '7108000'
+    // (Tarifbereich aus der PLZ abgeleitet). Die Kasse ordnet darüber die
+    // Vergütungsvereinbarung zu; findet sie keine, setzt sie ab.
+    // Deshalb hier gegen die Vertragsliste prüfen, nicht nur gegen die Form.
+    // Nur für Heilmittel (Leistungsbereich B) — GUELTIGE_LEGS ist die
+    // Heilmittel-Vertragsliste. Andere Leistungsbereiche haben eigene
+    // Verträge und dürfen hier nicht dagegen geprüft werden.
+    else if (ABRECHNUNGSCODE[ac]?.leistungsbereich === 'B'
+             && !istGueltigerLegs(ac + t.tarifkennzeichen)) {
+      E(errors, 'T:01004', `${at}.tarif`,
+        `LEGS "${ac}${t.tarifkennzeichen}" steht in keinem §125-Vertrag. ` +
+        `Zulässig: ${GUELTIGE_LEGS.join(', ')}`);
+    }
 
     // Sessions
     if (!Array.isArray(p.sessions) || p.sessions.length === 0) {

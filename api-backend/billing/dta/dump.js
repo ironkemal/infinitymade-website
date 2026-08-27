@@ -52,7 +52,7 @@ const result = buildDtaFile({
       kostentraegerIk: '108310400',
       krankenkasseIk:  '108310400',
     },
-    tarif: { abrechnungscode: '22', tarifkennzeichen: '02001' },
+    tarif: { abrechnungscode: '22', tarifkennzeichen: '00501' },
     sessions: ['2026-05-05','2026-05-07','2026-05-12','2026-05-14','2026-05-19','2026-05-21']
       .map(d => ({
         positionsnummer: '10210',
