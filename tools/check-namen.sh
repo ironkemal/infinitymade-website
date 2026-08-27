@@ -18,6 +18,11 @@
 #
 # Tam gerekçe: konsey/tutanak/2026-08-27-klarnamen-public-repo.md
 
+
+# Cok baytlÄ± girdide `sort` yerel ayara takÄ±lÄ±p hata veriyordu; kapÄ± o durumda
+# yakalamayÄ± kaÃ§Ä±rabilir. Byte olarak karÅÄ±laÅtÄ±r.
+LC_ALL=C
+export LC_ALL
 set -e
 
 repo_root=$(git rev-parse --show-toplevel)
