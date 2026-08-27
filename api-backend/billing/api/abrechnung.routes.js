@@ -153,6 +153,19 @@ function fehlendePflichtangaben(profile) {
   return fehlend;
 }
 
+// Rückfallebene, kein Bedienweg.
+//
+// Diese Seite ist das Letzte, was ein Anwender sehen soll: sie öffnet sich in
+// einem fremden Tab auf einer fremden Domain, kann nicht ins Dashboard
+// navigieren und nichts nachtragen. Die Prüfung findet seit 27.08.2026 vor dem
+// window.open() im Dashboard statt (`module/beleg-druck.js`), mit einem Knopf
+// direkt in die Rechnungsdaten. Hierher kommt nur noch, wer den Beleg-Link
+// direkt aufruft oder dessen Profil das Dashboard nicht lesen konnte.
+//
+// Der Riegel bleibt trotzdem serverseitig — er ist die einzige Stelle, die ein
+// Client nicht umgehen kann. Regel und Text müssen mit
+// `module/beleg-druck.js` übereinstimmen; die alte Wegbeschreibung
+// („Einstellungen → Praxisdaten") nannte einen Menüpunkt, den es nicht gibt.
 function pflichtangabenHinweisHtml(fehlend) {
   return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">
 <title>Angaben unvollständig</title>
@@ -172,7 +185,8 @@ function pflichtangabenHinweisHtml(fehlend) {
     <p>Für eine Rechnung sind folgende Angaben gesetzlich vorgeschrieben (§ 14 Abs. 4 UStG),
        fehlen aber in Ihrem Praxisprofil:</p>
     <ul>${fehlend.map(f => `<li>${f}</li>`).join('')}</ul>
-    <p>Bitte tragen Sie die Angaben unter <strong>Einstellungen → Praxisdaten</strong> nach
+    <p>Bitte tragen Sie die Angaben im Dashboard unter
+       <strong>Einstellungen → Finanzen → Rechnungsdaten</strong> nach
        und öffnen Sie den Druck danach erneut.</p>
     <p class="hint">Quittungen ohne Rechnungscharakter sind davon nicht betroffen.</p>
   </div>

@@ -22,6 +22,7 @@ import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260817'
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260817';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
+import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
 import { verordnungenLaden, verordnungenRendern, verordnungAuswahl, verordnungAuswahlLeeren } from './module/rechnung-verordnung.js?v=20260817';
 import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b';
@@ -1067,6 +1068,17 @@ function showMyBookingLink() {
   wrap.style.display = 'flex';
 }
 
+// Springt in die Einstellungen und direkt auf den Abschnitt, um den es geht.
+// Ein Hinweis „bitte unter Einstellungen → … nachtragen" ist eine Wegbeschreibung;
+// ein Knopf, der dorthin springt, ist der Weg. Fokus statt nur Scroll, damit der
+// Cursor im richtigen Feld steht.
+async function gehZuEinstellung(sectionId, focusId) {
+  await switchPanel('settings');
+  document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (focusId) setTimeout(() => document.getElementById(focusId)?.focus(), 400);
+}
+window.gehZuEinstellung = gehZuEinstellung;
+
 async function switchPanel(id) {
   window.switchPanel = switchPanel;
   const panelId = id;
@@ -1432,7 +1444,7 @@ async function renderOverview() {
     el.innerHTML = `
       <div style="margin:8px 0;padding:12px 14px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.28);font-size:13px;line-height:1.5;color:var(--text-main);">
         <strong>IK-Nummer fehlt</strong> — §302 GKV-Abrechnung ist nicht möglich.
-        <a href="#" onclick="switchPanel('settings').then(()=>{const el=document.getElementById('settingsAbrechnungSection');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});return false;" style="color:var(--accent,#b1891b);margin-left:6px;">Jetzt eintragen →</a>
+        <a href="#" onclick="gehZuEinstellung('settingsAbrechnungSection');return false;" style="color:var(--accent,#b1891b);margin-left:6px;">Jetzt eintragen →</a>
       </div>`;
     el.hidden = false;
   })();
@@ -4673,14 +4685,16 @@ async function handleDirectAusfallrechnung() {
       if (ownerId) {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('iban, steuernummer, street, zip, plz, city')
+          .select('iban, steuernummer, ust_id, street, zip, plz, city')
           .eq('id', ownerId)
           .maybeSingle();
 
-        if (!error && profile) {
-          if (!profile.iban || !profile.steuernummer) {
-            showToast("Hinweis: IBAN/Steuernummer im Profil unvollständig — bitte in den Abrechnungs-Einstellungen ergänzen.", "warning");
-          }
+        // Dieselbe Regel wie in `module/beleg-druck.js` und im Backend:
+        // Steuernummer ODER USt-IdNr. genügt (§ 14 Abs. 4 UStG). Vorher wurde
+        // hier `steuernummer` allein verlangt — eine Praxis, die nur die
+        // USt-IdNr. führt, bekam eine Warnung ohne Anlass.
+        if (!error && profile && fehlendePflichtangaben(profile).length > 0) {
+          showToast("Hinweis: IBAN/Steuernummer im Profil unvollständig — bitte in den Rechnungsdaten ergänzen.", "warning");
         }
       }
     } catch (e) {
@@ -7197,30 +7211,23 @@ function zahlartLabel(key) {
   return z ? t(z.i18n) : (key || '—');
 }
 
+// Die Abhängigkeiten, die `module/beleg-druck.js` braucht. Als Funktion, weil
+// `ownerId` erst nach dem Login feststeht und sich beim Wechsel ändern kann.
+function belegDruckDeps() {
+  return {
+    supabase, api: API, ownerId: getOwnerId(),
+    showHtmlModal, showToast, gehZuEinstellung,
+    popupFehlerText: t('kass_popup'),
+  };
+}
+
 // Öffnet die Zuzahlungsrechnung in einem neuen Tab.
 // Der Link ist dauerhaft gültig: die Rechnung wird bei jedem Aufruf frisch aus
 // dem Rezept erzeugt, es gibt keinen gespeicherten Rechnungsdatensatz.
-//
-// Der Druck wird NICHT von hier aus ausgelöst. Die Rechnung liegt auf einer
-// anderen Domain (n8n.infinitymade.de); ein Zugriff auf das fremde Fenster —
-// auch nur das Setzen von onload — kann einen SecurityError werfen. Genau das
-// darf beim Kassieren nicht passieren, sonst bricht der Ablauf ab, nachdem das
-// Geld bereits gebucht ist. Der Ausdruck erfolgt im geöffneten Tab.
-//
-// Gibt true zurück, wenn das Fenster aufging.
+// Vorprüfung, Fenster und Popup-Meldung liegen in `module/beleg-druck.js` —
+// hier steht nur noch die Belegart. Gibt true zurück, wenn das Fenster aufging.
 async function openZuzahlungsrechnung(rxId, { stillBeiFehler = false, drucken = false } = {}) {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    // drucken=true → der Beleg öffnet sich MIT Druckdialog (Backend hängt das
-    // print()-Skript an). Ein Klick statt Umweg über die Vorlagen.
-    const url = `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${session?.access_token || ''}${drucken ? '&print=1' : ''}`;
-    const w = window.open(url, '_blank');
-    if (w) return true;
-  } catch (e) {
-    console.error('[zuzahlungsrechnung]', e);
-  }
-  if (!stillBeiFehler) showToast(t('kass_popup'), 'error');
-  return false;
+  return oeffneBelegDruck({ rxId, typ: 'quittung_zuzahlung', drucken, stillBeiFehler }, belegDruckDeps());
 }
 
 // Ein Klick pro Zahlart: der Zahlart-Knopf ist gleichzeitig der Bestätigen-Knopf.
@@ -8638,17 +8645,7 @@ async function loadPatientDetailRezepte(leadId) {
       const rxId = wrap.dataset.id;
       const type = item.dataset.type;
       wrap.querySelector('.rx-drucken-menu').style.display = 'none';
-      const { data: { session: s } } = await supabase.auth.getSession();
-      const url = type === 'quittung_zuzahlung'
-        ? `${API}/billing/prescription/${rxId}/zuzahlungsrechnung?token=${s.access_token}`
-        : `${API}/billing/prescription/${rxId}/rechnung?type=${type}&token=${s.access_token}`;
-      // Kein Zugriff auf das geöffnete Fenster: das Dokument liegt auf einer
-      // anderen Domain, schon das Setzen von onload kann einen SecurityError
-      // werfen. Gedruckt wird im geöffneten Tab.
-      const printWindow = window.open(url, '_blank');
-      if (!printWindow) {
-        showToast(t('kass_popup'), 'error');
-      }
+      await oeffneBelegDruck({ rxId, typ: type }, belegDruckDeps());
     });
     // hover effect
     item.addEventListener('mouseenter', () => { item.style.background = 'var(--bg-hover,rgba(255,255,255,0.07))'; });
@@ -14135,6 +14132,7 @@ document.getElementById('billingSaveBtn')?.addEventListener('click', async () =>
   const { error } = await supabase.from('profiles').update(patch).eq('id', currentSession.user.id);
   if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
   Object.assign(currentProfile, patch);
+  abrechnungsprofilCacheLeeren();   // sonst blockiert der Druck weiter mit dem alten Stand
   showToast('Rechnungsdaten gespeichert ✓');
 });
 
