@@ -3,7 +3,7 @@
 > Üretim: 2026-08-27 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**1691 fonksiyon** · 156 dosya · 39 sidebar modülü
+**1689 fonksiyon** · 156 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -94,7 +94,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `saveAusfallSettings()` — [dashboard.js:17790](dashboard.js#L17790-L17832) · 43 satır · profiles:update
 
 **Yol 7 — `initAnfragenPanel()`** · Ekran: Sidebar → §302-Abrechnung (physiotherapy/praxis) · Sidebar → Termin-Anfragen · Sidebar → Patienten · Sidebar → Team
-- `initAnfragenPanel()` — [dashboard.js:25292](dashboard.js#L25292-L25349) · 58 satır · profiles:update
+- `initAnfragenPanel()` — [dashboard.js:25260](dashboard.js#L25260-L25317) · 58 satır · profiles:update
 
 **Yol 8 — `saveStepProgress()`** · Ekran: _UI yolu çözülemedi_
 - `saveStepProgress()` — [onboarding.js:257](onboarding.js#L257-L261) · 5 satır · profiles:update
@@ -136,7 +136,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `deleteBusiness()` — [dashboard.js:18105](dashboard.js#L18105-L18122) · 18 satır · businesses:delete
 
 **Yol 4 — `ensureBusinessCoords()`** · Ekran: Sidebar → §302-Abrechnung (physiotherapy/praxis) · Sidebar → Patienten · Sidebar → Team
-- `ensureBusinessCoords()` — [dashboard.js:24724](dashboard.js#L24724-L24753) · 30 satır · businesses:update
+- `ensureBusinessCoords()` — [dashboard.js:24692](dashboard.js#L24692-L24721) · 30 satır · businesses:update
 
 **Yol 5 — `bindBusiness()`** · Ekran: _UI yolu çözülemedi_
 - `bindBusiness()` — [onboarding.js:364](onboarding.js#L364-L426) · 63 satır · businesses:update, businesses:insert
@@ -355,18 +355,18 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 ## Aynı ada sahip birden fazla tanım
 
-- `fmt` — dashboard.js:2848 · dashboard.js:3915 · dashboard.js:8690 · dashboard.js:11170 · dashboard.js:11461 · dashboard.js:11539 · dashboard.js:15256 · dashboard.js:15663 · dashboard.js:23103 · dashboard.js:23189 · dashboard.js:23267 · dashboard.js:23299 · dashboard.js:23359 · module/kalender-raster.js:52
+- `fmt` — dashboard.js:2848 · dashboard.js:3915 · dashboard.js:8690 · dashboard.js:11170 · dashboard.js:11461 · dashboard.js:11539 · dashboard.js:15256 · dashboard.js:15663 · dashboard.js:23071 · dashboard.js:23157 · dashboard.js:23235 · dashboard.js:23267 · dashboard.js:23327 · module/kalender-raster.js:52
 - `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:8 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:817 · module/abrechnungsstatus.js:390 · module/fussbefund.js:121 · module/kalender-raster.js:24 · module/termin-aktionen.js:37 · module/termin-druck.js:27
 - `esc` — api-backend/billing/pdf/mahnung.template.js:4 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-freigabe.js:112 · module/arzt-register.js:125 · module/krankenkasse-suche.js:160 · module/patienten-einwilligung.js:58 · module/patientenkarte.js:42 · module/verordnung-uebersicht.js:91 · module/zuzahlung-befreiung.js:261 · ops/app.js:51
 - `fmtDate` — api-backend/billing/dta/encoding.js:47 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:13 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:1323 · ops/app.js:84
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:12 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · dashboard.js:19807 · dashboard.js:21725 · dashboard.js:21866 · dashboard.js:21944
-- `render` — calendar-widget.js:127 · dashboard.js:14616 · dashboard.js:22919 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:110
+- `render` — calendar-widget.js:127 · dashboard.js:14616 · dashboard.js:22887 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:110
 - `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:262 · api-backend/server.js:1203 · dashboard.js:3278
 - `init` — attendance.js:297 · booking-request.js:1220 · booking.js:60 · cookie-consent.js:52 · dashboard.js:18247 · kalender.js:140 · onboarding.js:77
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:70 · api-backend/ai/tasks/b2c-draft.js:59 · api-backend/ai/tasks/rezept-normalize.js:113 · api-backend/ai/tasks/rezept-ocr.js:166 · api-backend/ai/tasks/rezept-validate.js:9
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:26 · api-backend/billing/api/mahnwesen.routes.js:22 · api-backend/billing/api/statistik.routes.js:18 · api-backend/billing/api/verordnung-status.routes.js:32 · api-backend/billing/api/warteliste.routes.js:21
 - `$` — attendance.js:10 · employee-signup.js:10 · module/kiosk.js:59 · module/verordnung-podo.js:105 · ops/app.js:48
-- `cleanup` — dashboard.js:7049 · dashboard.js:7078 · dashboard.js:7154 · dashboard.js:7258 · dashboard.js:24897
+- `cleanup` — dashboard.js:7049 · dashboard.js:7078 · dashboard.js:7154 · dashboard.js:7258 · dashboard.js:24865
 - `g` — dashboard.js:16990 · dashboard.js:17003 · dashboard.js:17345 · dashboard.js:17411 · module/termin-aktionen.js:336
 - `showMsg` — admin-login.js:15 · attendance.js:68 · employee-signup.js:130 · login.js:163
 - `mockResponse` — api-backend/ai/tasks/appointment-confirm-draft.js:56 · api-backend/ai/tasks/b2c-draft.js:47 · api-backend/ai/tasks/rezept-normalize.js:45 · api-backend/ai/tasks/rezept-ocr.js:95
