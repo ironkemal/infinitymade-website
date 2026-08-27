@@ -7,6 +7,8 @@
   <link rel="alternate icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <title>Analysegespräch buchen · Praxura</title>
+  <!-- TERMINBUCHUNG VORUEBERGEHEND AUSGEBLENDET (2026-08-27) — Zeile unten entfernen, um die Buchung wieder freizugeben -->
+  <meta name="robots" content="noindex,nofollow">
   <!-- Schriften selbst gehostet (DSGVO): keine Verbindung des Besucher-Browsers
        zu Google. Fraunces, Plus Jakarta Sans und JetBrains Mono liegen in /fonts. -->
   <link rel="stylesheet" href="fonts/system-fonts.css">
@@ -112,6 +114,9 @@
     }
 
     /* ── Main Layout ── */
+    /* TERMINBUCHUNG VORUEBERGEHEND AUSGEBLENDET (2026-08-27) */
+    [hidden] { display: none !important; }
+
     .page-wrap {
       max-width: 1020px;
       margin: 0 auto;
@@ -816,8 +821,40 @@
   </a>
 </nav>
 
+<!-- TERMINBUCHUNG VORUEBERGEHEND AUSGEBLENDET (2026-08-27) — Block + Script unten entfernen, um die Buchung wieder freizugeben -->
+<div class="page-wrap" id="bookingPausedNotice" hidden
+     style="max-width:640px;margin:0 auto;padding:64px 20px;text-align:center">
+  <div class="page-title">
+    <h1>Terminbuchung vorübergehend pausiert</h1>
+    <p>Wegen der aktuell hohen Nachfrage vergeben wir gerade keine Online-Termine für das
+       Analysegespräch. Schreiben Sie uns kurz — wir melden uns bei Ihnen, sobald wieder
+       Termine frei sind.</p>
+  </div>
+  <p style="margin-top:28px">
+    <a href="/kontakt.html" style="display:inline-block;padding:0.8rem 1.6rem;border-radius:999px;background:var(--ink);color:var(--bg);font-family:var(--sans);font-weight:500;font-size:0.92rem;text-decoration:none">
+      Nachricht schreiben
+    </a>
+  </p>
+  <p style="margin-top:18px;font-size:.9rem;opacity:.75">
+    Oder direkt per E-Mail: <a href="mailto:kontakt@praxura.de">kontakt@praxura.de</a>
+  </p>
+</div>
+<script>
+  // Bestehende Termine bleiben verschiebbar (?reschedule=...), nur Neubuchung ist pausiert.
+  (function () {
+    if (new URLSearchParams(location.search).get('reschedule')) return;
+    document.documentElement.setAttribute('data-booking-paused', '1');
+    document.addEventListener('DOMContentLoaded', function () {
+      var notice = document.getElementById('bookingPausedNotice');
+      var app = document.getElementById('bookingApp');
+      if (app) app.hidden = true;
+      if (notice) notice.hidden = false;
+    });
+  })();
+</script>
+
 <!-- Page Content -->
-<div class="page-wrap">
+<div class="page-wrap" id="bookingApp">
   <div class="page-title">
     <h1>Kostenloses Analysegespräch buchen</h1>
     <p>Lernen Sie Praxura kennen und erfahren Sie, wie wir Ihre Praxis digitalisieren können.</p>
