@@ -80,6 +80,17 @@
   </script>
 
   <!-- ===== Structured Data: SoftwareApplication ===== -->
+  <!--
+    PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17).
+    Zum Wiederherstellen diesen Block wieder in das JSON unten (nach "publisher") einfügen:
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "EUR",
+        "price": "29.00",
+        "description": "Monatliche Lizenzgebühr ab 29 Euro"
+      },
+    Hinweis: In JSON-LD sind HTML-Kommentare nicht erlaubt — deshalb steht die Sicherung hier außerhalb.
+  -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -92,12 +103,6 @@
     "url": "https://praxura.de/",
     "description": "All-in-One Praxissoftware für Heilmittelerbringer (Physiotherapie, Ergotherapie, Logopädie, Podologie). Online-Terminbuchung, KI-gestützte Rezeptprüfung, DTA-Abrechnung nach §302 SGB V, elektronisches Fahrtenbuch.",
     "publisher": { "@id": "https://praxura.de/#organization" },
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "EUR",
-      "price": "29.00",
-      "description": "Monatliche Lizenzgebühr ab 29 Euro"
-    },
     "featureList": [
       "Online-Terminbuchung mit Kalendersync",
       "KI-Rezeptprüfung mit OCR",
@@ -127,11 +132,6 @@
       },
       {
         "@type": "Question",
-        "name": "Was kostet Praxura?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Praxura startet bei 29 €/Monat (Starter), Professional 49 €, Klinik 99 €. Transparente Festpreise ohne Einrichtungsgebühr, ohne Provision und ohne versteckte Kosten. Monatlich kündbar und 14 Tage kostenlos testbar." }
-      },
-      {
-        "@type": "Question",
         "name": "Wie hilft die KI-Rezeptprüfung gegen Absetzungen?",
         "acceptedAnswer": { "@type": "Answer", "text": "Sie fotografieren die Heilmittelverordnung mit dem Smartphone ab. Die OCR-gestützte KI liest Diagnose, Heilmittel-Position und Verordnungsmenge aus, gleicht sie mit dem Heilmittelkatalog ab und markiert Fehler oder Absetzungsrisiken sofort." }
       },
@@ -148,7 +148,7 @@
       {
         "@type": "Question",
         "name": "Kann ich Praxura kostenlos testen?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Sie testen alle Tarife 14 Tage kostenlos und unverbindlich. Ihre Zahlungsdaten werden bei der Einrichtung hinterlegt, aber erst nach Ablauf der 14 Tage belastet. Kündigen Sie innerhalb der Testphase, entstehen keine Kosten. Monatlich kündbar." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Ja. Sie können Praxura unverbindlich und kostenlos testen. Sprechen Sie uns an — wir richten Ihnen einen Testzugang ein und begleiten Sie beim Start." }
       }
     ]
   }
@@ -1070,7 +1070,7 @@
   <a href="/" class="nav-brand">Prax<em>ura</em></a>
   <a href="#funktionen" class="nav-link">Funktionen</a>
   <a href="#zielgruppe" class="nav-link">Zielgruppe</a>
-  <a href="#preise" class="nav-link">Preise</a>
+  <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <a href="#preise" class="nav-link">Preise</a> -->
   <a href="/praxis.html" class="nav-link">Details</a>
   <a href="/blog/" class="nav-link">Insights</a>
   <a href="/kontakt.html" class="nav-link">Kontakt</a>
@@ -1088,7 +1088,7 @@
   <button class="nav-mobile-close" id="navMobileClose" aria-label="Menü schließen">✕</button>
   <a href="#funktionen">Funktionen</a>
   <a href="#zielgruppe">Zielgruppe</a>
-  <a href="#preise">Preise</a>
+  <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <a href="#preise">Preise</a> -->
   <a href="/praxis.html">Details</a>
   <a href="/blog/">Insights</a>
   <a href="/kontakt.html">Kontakt</a>
@@ -1677,8 +1677,30 @@
   </div>
 </section>
 
-<!-- ────────────── 03 · Preise ────────────── -->
-<section class="block" id="preise" data-reveal>
+<!-- ────────────── 03 · Zusatzmodul ────────────── -->
+<section class="block" id="zusatzmodul" data-reveal>
+
+<!--
+  ============================================================================
+  PREISE VORÜBERGEHEND AUSGEBLENDET — 2026-08-17
+
+  Grund: Es wurde noch kein Verkauf getätigt; im Rahmen des Startup-Programms
+  soll die Seite vorerst nicht wie ein laufender Vertrieb wirken. Ausserdem
+  werden die Preise überarbeitet.
+
+  WIEDERHERSTELLEN:
+   1. Die Kommentarklammern um diesen Block entfernen (Anfang direkt über
+      dieser Zeile, Ende am Schluss des Blocks).
+   2. Den Opener oben zurücksetzen auf Banner '03 · Preise' und
+        <section class="block" id="preise" data-reveal>
+      (Ersatz für den aktuellen Opener 03 · Zusatzmodul / id="zusatzmodul")
+   3. Die eckigen Klammern-Label unten ([Transparenz-Streifen] usw.) waren
+      HTML-Kommentare — optional zurückwandeln.
+   4. Nav, Mobile-Menü, Footer und die Preis-FAQ wieder einkommentieren
+      (alle mit demselben Marker 'PREISE VORÜBERGEHEND AUSGEBLENDET' markiert).
+   5. Offer-Block im JSON-LD (SoftwareApplication, oben im <head>) zurücklegen.
+  ============================================================================
+
   <div class="section-head">
     <div>
       <div class="section-eyebrow">03 · Tarife</div>
@@ -1691,7 +1713,7 @@
     </div>
   </div>
 
-  <!-- Transparenz-Streifen -->
+  [Transparenz-Streifen]
   <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.7rem; margin-top:2rem;">
     <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine Einrichtungsgebühr</span>
     <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine Provision auf Ihre Abrechnung</span>
@@ -1699,7 +1721,7 @@
     <span style="font-family:var(--mono); font-size:0.72rem; letter-spacing:0.04em; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0.5rem 1rem;">✓ Keine versteckten Kosten</span>
   </div>
 
-  <!-- Billing interval toggle -->
+  [Billing interval toggle]
   <div style="display:flex; justify-content:center; margin-top:2.5rem;">
     <div class="px-billing-toggle">
       <button type="button" class="px-billing-btn active" data-interval="month">Monatlich</button>
@@ -1708,7 +1730,7 @@
   </div>
 
   <div class="px-pricing-grid">
-    <!-- Plan 1: Starter -->
+    [Plan 1: Starter]
     <article class="px-pricing-card">
       <div class="px-pricing-tag">Für Einzelpraxen</div>
       <h3 class="px-pricing-title">Starter</h3>
@@ -1744,7 +1766,7 @@
       <a href="/vorregistrierung.html" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
     </article>
 
-    <!-- Plan 2: Professional -->
+    [Plan 2: Professional]
     <article class="px-pricing-card">
       <div class="px-pricing-tag">Für Praxen mit Team</div>
       <h3 class="px-pricing-title">Professional</h3>
@@ -1781,7 +1803,7 @@
       <a href="/vorregistrierung.html" class="btn btn-secondary px-pricing-btn">14 Tage kostenlos testen</a>
     </article>
 
-    <!-- Plan 3: Klinik (Standout) -->
+    [Plan 3: Klinik (Standout)]
     <article class="px-pricing-card featured">
       <div class="px-pricing-tag featured-tag">Beliebteste Wahl</div>
       <h3 class="px-pricing-title">Klinik</h3>
@@ -1821,7 +1843,7 @@
       </a>
     </article>
 
-    <!-- Plan 4: Enterprise -->
+    [Plan 4: Enterprise]
     <article class="px-pricing-card">
       <div class="px-pricing-tag">Mehrere Standorte</div>
       <h3 class="px-pricing-title">Enterprise</h3>
@@ -1856,6 +1878,7 @@
     </article>
 
   </div>
+-->
 
   <!-- §302 Klarstellung: kein Abrechnungsdienstleister -->
   <div style="max-width:60rem; margin:2.4rem auto 0; padding:1.4rem 1.6rem; border:1px solid var(--line); border-radius:14px; background:rgba(107,85,56,0.04);">
@@ -1940,10 +1963,9 @@
       <summary>Kann ich mit Praxura selbst nach §302 SGB V abrechnen — ohne Abrechnungszentrum?</summary>
       <p>Ja. Praxura erstellt aus Ihren Behandlungsdaten die fertigen, verschlüsselten DTA-Dateien für die Abrechnung nach §302 SGB V. Die Signatur mit Ihrem eigenen ITSG-Zertifikat und die Einreichung beim Kostenträger nehmen Sie selbst vor — kommissionsfrei und ohne Abrechnungszentrum. Sie zahlen keine Provision von 2–5 % auf Ihren Umsatz.</p>
     </details>
-    <details class="px-faq-item">
-      <summary>Was kostet Praxura?</summary>
-      <p>Praxura startet bei 29 € pro Monat (Starter), Professional 49 € und Klinik 99 €. Transparente Festpreise ohne Einrichtungsgebühr, ohne Provision und ohne versteckte Kosten. Monatlich kündbar und 14 Tage kostenlos testbar — Zahlungsdaten werden hinterlegt, aber erst nach Ablauf der Testphase belastet.</p>
-    </details>
+    <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — FAQ "Was kostet Praxura?" entfernt.
+         Wiederherstellen: details-Block mit Text "Praxura startet bei 29 EUR pro Monat (Starter),
+         Professional 49 EUR und Klinik 99 EUR ..." hier wieder einsetzen. -->
     <details class="px-faq-item">
       <summary>Wie hilft die KI-Rezeptprüfung gegen Absetzungen?</summary>
       <p>Sie fotografieren die Heilmittelverordnung mit dem Smartphone ab. Die OCR-gestützte KI liest Diagnose, Heilmittel-Position und Verordnungsmenge aus, gleicht sie mit dem Heilmittelkatalog ab und markiert Fehler oder Absetzungsrisiken sofort — bevor Sie behandeln und abrechnen.</p>
@@ -1958,7 +1980,7 @@
     </details>
     <details class="px-faq-item">
       <summary>Kann ich Praxura kostenlos testen?</summary>
-      <p>Ja. Sie testen alle Tarife 14 Tage kostenlos und unverbindlich. Ihre Zahlungsdaten werden bei der Einrichtung hinterlegt, aber erst nach Ablauf der 14 Tage belastet — kündigen Sie innerhalb der Testphase, entstehen Ihnen keine Kosten. Monatlich kündbar.</p>
+      <p>Ja. Sie können Praxura unverbindlich und kostenlos testen. Sprechen Sie uns an — wir richten Ihnen einen Testzugang ein und begleiten Sie persönlich beim Start.</p>
     </details>
   </div>
 </section>
@@ -1976,7 +1998,7 @@
       <h4>Produkt</h4>
       <ul>
         <li><a href="#funktionen">Funktionen</a></li>
-        <li><a href="#preise">Preise</a></li>
+        <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <li><a href="#preise">Preise</a></li> -->
         <li><a href="/praxis.html">Alle Details</a></li>
         <li><a href="/heilmittelabrechnung-software.html">§302-Abrechnung &amp; Provisionsfrei</a></li>
         <li><a href="/ti-anbindung-heilmittel.html">TI-Anbindung</a></li>
@@ -2079,7 +2101,7 @@
 <!-- Chatbot Widget -->
 <script>
 (function(){
-  var DATA = {"botName":"Praxura","welcomeMessage":"Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.","noMatchMessage":"Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de","tone":"formal","brandColor":"#b1891b","language":"de","typeMessage":"Nachricht schreiben...","errTooShort":"Bitte schreiben Sie eine längere Nachricht.","errTooLong":"Ihre Nachricht ist zu lang (max. 500 Zeichen).","errCooldown":"Bitte warten Sie einen Moment...","errNetwork":"Verbindungsproblem. Bitte später erneut versuchen.","sessionEnded":"Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.","sessionLimit":"Das Nachrichtenlimit dieser Sitzung wurde erreicht.","chatWebhookUrl":"https://n8n.infinitymade.de/webhook/chat","limits":{"minLen":2,"maxLen":500,"maxMessagesPerSession":30,"maxOffTopicStrikes":3,"cooldownMs":1500},"extraKnowledge":"Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Juni 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Direktabrechnung nach §302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: InfinityMade (Siegburg, NRW) · Website: praxura.de · App: app.praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde (Enterprise). Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, automatische Erinnerungen, Teamkalender ab Professional. 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 KI-Rezeptprüfung (OCR): Heilmittelverordnung fotografieren, KI liest Diagnose und Menge aus, gleicht mit Heilmittelkatalog ab, markiert Absetzungsrisiken sofort. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: GPS-Routing, GoBD-konform, ab Professional. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei Enterprise. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, Pflicht ab 01.10.2027, netto 0 € durch GKV-Förderpauschale (Physio 221,74 €/Monat 2026). 4. Preise: Starter 29 €/Monat (25 € jährlich) — 1 Therapeut, Einzelpraxis. Professional 49 €/Monat (42 € jährlich) — bis 5 Therapeut:innen, KI-Rezeptprüfung, Fahrtenbuch. Klinik 99 €/Monat (84 € jährlich) — unbegrenzte Therapeut:innen, §302-Abrechnung, persönlicher Account Manager. Enterprise: individuell, mehrere Standorte, SLA. Alle Preise zzgl. MwSt., monatlich kündbar, 14 Tage kostenlos (Zahlungsdaten werden hinterlegt, erst nach Ablauf der Testphase belastet). 5. Onboarding: 14 Tage Testzugang, kein Vertrag, Datenmigration auf Anfrage, kostenloses Einrichtungsgespräch. 6. DSGVO: ISO-27001-Rechenzentrum Frankfurt, AVV nach Art.28, TLS-Verschlüsselung, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de (alle Tarife), Telefon ab Professional, Account Manager ab Klinik, SLA bei Enterprise. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? 14 Tage, Zahlungsdaten hinterlegt, erst danach belastet. TI-Anbindung? Ja, netto 0 €. DSGVO-konform? Ja, Frankfurt. Smartphone? Ja, vollständig responsiv. Kündigung? Monatlich, keine Mindestlaufzeit.","qaPairs":[{"question":"Was ist Praxura?","answer":"Praxura ist eine moderne All-in-One Praxissoftware für Heilmittelerbringer wie Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, KI-Rezeptprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch.","keywords":"praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"},{"question":"Kann ich mit Praxura direkt nach §302 SGB V abrechnen?","answer":"Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.","keywords":"abrechnung, §302, dta, kassenabrechnung, provision, einsparung"},{"question":"Was kostet Praxura?","answer":"Praxura bietet drei transparente Tarife: Starter 29 €/Monat, Professional 49 €/Monat und Klinik 99 €/Monat (zzgl. MwSt.). Alle Tarife sind monatlich kündbar und 14 Tage kostenlos testbar.","keywords":"preise, kosten, tarife, starter, professional, klinik"},{"question":"Wie funktioniert die KI-Rezeptprüfung?","answer":"Sie fotografieren die Heilmittelverordnung ab. Die OCR-gestützte KI liest Diagnose, Heilmittel und Menge aus, gleicht sie mit dem Heilmittelkatalog ab und warnt Sie sofort vor Absetzungsrisiken — bevor Sie behandeln.","keywords":"rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"},{"question":"Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?","answer":"Ja, vollständig DSGVO-konform. Alle Daten werden ausschließlich in zertifizierten deutschen Rechenzentren (ISO 27001) in Frankfurt am Main gespeichert. Ein AVV nach Art. 28 DSGVO wird standardmäßig bereitgestellt.","keywords":"datenschutz, dsgvo, frankfurt, hosting, avv, sicherheit"},{"question":"Kann ich Praxura kostenlos testen?","answer":"Ja, alle Tarife sind 14 Tage lang kostenlos und unverbindlich testbar. Ihre Zahlungsdaten werden bei der Einrichtung hinterlegt, aber erst nach Ablauf der 14 Tage belastet — bei Kündigung innerhalb der Testphase entstehen keine Kosten. Monatlich kündbar.","keywords":"testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"},{"question":"Bietet Praxura eine TI-Anbindung?","answer":"Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten werden über die GKV-Förderpauschale vollständig refinanziert — netto 0 € für Ihre Praxis.","keywords":"ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"},{"question":"Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?","answer":"Sie können ein kostenfreies 30-minütiges Analysegespräch direkt unter praxura.de/demo-booking.html buchen oder uns per E-Mail an kontakt@praxura.de erreichen.","keywords":"kontakt, e-mail, beratung, support, termin, demo"}]};
+  var DATA = {"botName": "Praxura", "welcomeMessage": "Herzlich willkommen bei Praxura! Ich helfe Ihnen gerne bei Fragen zu unserer All-in-One Praxissoftware für Therapeuten.", "noMatchMessage": "Dazu kann ich leider keine Auskunft geben. Bei weiteren Fragen wenden Sie sich bitte direkt an kontakt@praxura.de", "tone": "formal", "brandColor": "#b1891b", "language": "de", "typeMessage": "Nachricht schreiben...", "errTooShort": "Bitte schreiben Sie eine längere Nachricht.", "errTooLong": "Ihre Nachricht ist zu lang (max. 500 Zeichen).", "errCooldown": "Bitte warten Sie einen Moment...", "errNetwork": "Verbindungsproblem. Bitte später erneut versuchen.", "sessionEnded": "Diese Unterhaltung wurde beendet. Bei weiteren Fragen kontaktieren Sie uns bitte direkt.", "sessionLimit": "Das Nachrichtenlimit dieser Sitzung wurde erreicht.", "chatWebhookUrl": "https://n8n.infinitymade.de/webhook/chat", "limits": {"minLen": 2, "maxLen": 500, "maxMessagesPerSession": 30, "maxOffTopicStrikes": 3, "cooldownMs": 1500}, "extraKnowledge": "Praxura Wissensdatei für KI-Assistenten & Support-Chatbot Dieses Dokument enthält alle relevanten Informationen über Praxura — Produkt, Funktionen, Preise, Abrechnung, Datenschutz und häufige Fragen. Es dient als Wissensbasis für den KI-Chatbot auf praxura.de. Stand: Juni 2026 · Kontakt: kontakt@praxura.de · Website: praxura.de 1. Was ist Praxura? Praxura ist eine moderne All-in-One-Praxissoftware speziell für Heilmittelerbringer in Deutschland — Physiotherapie, Ergotherapie, Logopädie und Podologie. Die Software deckt die gesamte Praxisverwaltung ab: von der Terminplanung über die digitale Patientenakte bis hin zur GKV-Direktabrechnung nach §302 SGB V. Praxura ist ein Software-Werkzeug zur Vorbereitung der Abrechnung — kein Abrechnungszentrum und kein Abrechnungsdienstleister. Genau deshalb fallen keine Provisionen auf den Umsatz an. Hersteller: InfinityMade (Siegburg, NRW) · Website: praxura.de · App: app.praxura.de 2. Zielgruppe Praxura richtet sich ausschließlich an: Physiotherapeut:innen, Ergotherapeut:innen, Logopäd:innen, Podolog:innen, interdisziplinäre Heilmittelpraxen und Praxisverbünde. Nicht geeignet für: Arztpraxen, Zahnarztpraxen, Kosmetiksalons oder andere Branchen außerhalb der Heilmittelversorgung. 3. Kernfunktionen 3.1 Terminverwaltung & Kalender: Tages-, Wochen- und Monatsansicht, Farbcodierung, Termin in unter 10 Sekunden anlegen, Wartelisten-Verwaltung, automatische Erinnerungen, Teamkalender. 3.2 Digitale Patientenakte: Behandlungsdokumentation, Rezeptverwaltung mit Laufzeitkontrolle, Anamnese und Therapieberichte, GKV/Privat/Selbstzahler, PDF-Export. 3.3 KI-Rezeptprüfung (OCR): Heilmittelverordnung fotografieren, KI liest Diagnose und Menge aus, gleicht mit Heilmittelkatalog ab, markiert Absetzungsrisiken sofort. 3.4 §302 GKV-Abrechnung: ITSG-konforme DTA-Dateien, 93 Krankenkassen, Zuzahlung-Nachweise, GoBD-Belegliste, ohne Provision. 3.5 Elektronisches Fahrtenbuch: GPS-Routing, GoBD-konform. 3.6 B2B & Lead-Management: Zuweiser, Kooperationspartner, Interessenten verwalten. 3.7 Statistiken: Umsatz- und Auslastungsstatistiken, standortübergreifend bei mehreren Standorten. 3.8 Rollen & Rechte: Inhaber, Therapeut, Rezeptionist. 3.9 TI-Anbindung: optionales Zusatzmodul, Pflicht ab 01.10.2027, netto 0 € durch GKV-Förderpauschale (Physio 221,74 €/Monat 2026). 4. Preise: Die Preisgestaltung wird derzeit überarbeitet und ist vorübergehend nicht veröffentlicht. Auf Preisfragen bitte antworten: Preise auf Anfrage — Kontakt kontakt@praxura.de. Keine Beträge, Tarifnamen oder Rabatte nennen. 5. Onboarding: unverbindlicher Testzugang, kein Vertrag, Datenmigration auf Anfrage, kostenloses Einrichtungsgespräch. 6. DSGVO: ISO-27001-Rechenzentrum Frankfurt, AVV nach Art.28, TLS-Verschlüsselung, Recht auf Löschung, kein Training auf Kundendaten. 7. Support: E-Mail kontakt@praxura.de, Telefon-Support, persönliche Betreuung und SLA je nach Praxisgröße — Details auf Anfrage. 8. FAQ: Für wen? Nur Heilmittelerbringer. §302 ohne Abrechnungszentrum? Ja, ohne Provision. Kostenlos testen? Ja, unverbindlicher Testzugang auf Anfrage. TI-Anbindung? Ja, netto 0 €. DSGVO-konform? Ja, Frankfurt. Smartphone? Ja, vollständig responsiv. Kündigung? Keine Mindestlaufzeit.", "qaPairs": [{"question": "Was ist Praxura?", "answer": "Praxura ist eine moderne All-in-One Praxissoftware für Heilmittelerbringer wie Physiotherapie, Ergotherapie, Logopädie und Podologie. Sie bündelt Terminverwaltung, KI-Rezeptprüfung, §302-Abrechnungsvorbereitung und ein elektronisches Fahrtenbuch.", "keywords": "praxissoftware, physiotherapie, ergotherapie, logopädie, podologie, funktionen"}, {"question": "Kann ich mit Praxura direkt nach §302 SGB V abrechnen?", "answer": "Ja, Praxura erstellt aus Ihren Behandlungsdaten fertige, verschlüsselte DTA-Dateien für die Abrechnung nach §302 SGB V. Die Einreichung nehmen Sie selbst vor — somit zahlen Sie 0 % Provision auf Ihren Umsatz.", "keywords": "abrechnung, §302, dta, kassenabrechnung, provision, einsparung"}, {"question": "Was kostet Praxura?", "answer": "Die Preisgestaltung wird derzeit überarbeitet, daher sind aktuell keine Preise veröffentlicht. Schreiben Sie uns gerne an kontakt@praxura.de — wir melden uns mit einem passenden Vorschlag für Ihre Praxis.", "keywords": "preise, kosten, tarife, starter, professional, klinik"}, {"question": "Wie funktioniert die KI-Rezeptprüfung?", "answer": "Sie fotografieren die Heilmittelverordnung ab. Die OCR-gestützte KI liest Diagnose, Heilmittel und Menge aus, gleicht sie mit dem Heilmittelkatalog ab und warnt Sie sofort vor Absetzungsrisiken — bevor Sie behandeln.", "keywords": "rezeptprüfung, ki, ocr, scan, absetzung, heilmittelverordnung"}, {"question": "Ist Praxura DSGVO-konform und wo werden die Daten gespeichert?", "answer": "Ja, vollständig DSGVO-konform. Alle Daten werden ausschließlich in zertifizierten deutschen Rechenzentren (ISO 27001) in Frankfurt am Main gespeichert. Ein AVV nach Art. 28 DSGVO wird standardmäßig bereitgestellt.", "keywords": "datenschutz, dsgvo, frankfurt, hosting, avv, sicherheit"}, {"question": "Kann ich Praxura kostenlos testen?", "answer": "Ja. Sie können Praxura unverbindlich und kostenlos testen. Schreiben Sie uns an kontakt@praxura.de — wir richten Ihnen einen Testzugang ein und begleiten Sie beim Start.", "keywords": "testphase, kostenlos testen, gratis, ausprobieren, unverbindlich"}, {"question": "Bietet Praxura eine TI-Anbindung?", "answer": "Ja, als optionales Zusatzmodul. Die TI-Anschlusspflicht gilt ab 01.10.2027. Die Kosten werden über die GKV-Förderpauschale vollständig refinanziert — netto 0 € für Ihre Praxis.", "keywords": "ti-anbindung, telematikinfrastruktur, gkv, förderung, refinanzierung"}, {"question": "Wie kann ich Kontakt aufnehmen oder ein Gespräch buchen?", "answer": "Sie können ein kostenfreies 30-minütiges Analysegespräch direkt unter praxura.de/demo-booking.html buchen oder uns per E-Mail an kontakt@praxura.de erreichen.", "keywords": "kontakt, e-mail, beratung, support, termin, demo"}]};
 
   var brand = DATA.brandColor;
 

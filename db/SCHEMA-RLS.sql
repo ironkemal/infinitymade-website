@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-16 (abends — Geschlecht-Kodierung vereinheitlicht)
--- LETZTE MIGRATION:  leads_geschlecht_kodierung_dokumentieren
+-- ERZEUGT AM:        2026-08-17 (Sperre gegen doppelte Sitzungszeilen)
+-- LETZTE MIGRATION:  prescription_sessions_booking_unique
+--                    davor: leads_geschlecht_kodierung_dokumentieren
 --                    davor: invoice_nummer_backfill_altbestand
 --                    davor: invoices_ust_nummernkreis_gobd
 --                    davor: invoices_verordnung_id
@@ -17,7 +18,7 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            156 RLS-Policies · 283 Indizes · 60 Trigger · 54 Funktionen
+-- UMFANG:            156 RLS-Policies · 289 Indizes · 60 Trigger · 54 Funktionen
 -- Tabellen/Spalten:  db/SCHEMA.sql · Orientierung: db/README.md
 --
 -- ⚠️  MOMENTAUFNAHME. Nach jeder Migration neu erzeugen.
@@ -716,6 +717,11 @@ CREATE INDEX idx_patient_notes_lead ON public.patient_notes USING btree (lead_id
 CREATE INDEX prescription_documents_owner_idx ON public.prescription_documents USING btree (owner_id, created_at DESC);
 CREATE INDEX prescription_documents_rx_idx ON public.prescription_documents USING btree (prescription_id);
 CREATE INDEX idx_prescription_sessions_prescription ON public.prescription_sessions USING btree (prescription_id, session_number);
+-- Ein Termin = eine Sitzungszeile je Verordnung. Zweite Verteidigungslinie gegen
+-- doppelte Abrechnungspositionen (Befund 12.08.2026): der Code füllt seit 16.08.
+-- die leeren Sitzungszeilen per UPDATE, statt je Termin eine neue anzuhängen.
+-- Partiell, weil leere Zeilen (booking_id IS NULL) Absicht sind — sie warten auf Termine.
+CREATE UNIQUE INDEX uniq_prescription_sessions_booking ON public.prescription_sessions USING btree (prescription_id, booking_id) WHERE (booking_id IS NOT NULL);
 CREATE INDEX idx_prescription_validations_prescription ON public.prescription_validations USING btree (prescription_id, created_at DESC);
 CREATE INDEX idx_prescriptions_abrechnung ON public.prescriptions USING btree (abrechnung_id) WHERE (abrechnung_id IS NOT NULL);
 CREATE INDEX idx_prescriptions_arzt ON public.prescriptions USING btree (owner_id, arzt_id) WHERE (arzt_id IS NOT NULL);

@@ -31,6 +31,7 @@
 'use strict';
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
+import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260826';
 
 const DE = (iso) => {
   if (!iso) return '—';
@@ -255,6 +256,16 @@ export async function renderPatientenkarte(lead, deps = {}) {
   const verlaufEl = document.getElementById('pdVerlaufContent');
   if (!verlaufEl || !deps.sb || !deps.ownerId) return;
   verlaufEl.innerHTML = '<div class="pd-empty">Laden…</div>';
+
+  // Die laufenden Verordnungen im Reiter „Rezepte" hängen mit an dieser Stelle,
+  // weil die Akte hier ohnehin einmal geöffnet wird und `dashboard.js` nicht
+  // wachsen darf (Konsey 2026-08-13). Sie laufen parallel zum Verlauf — der
+  // Verlauf soll nicht darauf warten.
+  const uebersicht = zeigeVerordnungsUebersicht(document.getElementById('pdVeroUebersicht'), {
+    sb: deps.sb, ownerId: deps.ownerId, leadId: lead.id, onSprung: deps.onSprung,
+  });
+
   const zeilen = await ladeVerlauf(deps.sb, deps.ownerId, lead.id);
   renderVerlauf(verlaufEl, zeilen, deps.onSprung);
+  await uebersicht;
 }

@@ -359,7 +359,9 @@ router.post('/abrechnung/create', async (req, res) => {
     const tenantSector = praxisProfil.sector || 'physiotherapy';
 
     // ---- input ----
-    const { ownerId, kostentraegerIk, prescriptionIds } = req.body || {};
+    const { ownerId, kostentraegerIk, prescriptionIds, berichtIgnoriert, berichtGrund } = req.body || {};
+    // Bewusst übersteuerte Therapiebericht-Hinweise (Rezept-IDs).
+    const berichtUebersteuert = new Set(Array.isArray(berichtIgnoriert) ? berichtIgnoriert : []);
     if (!kostentraegerIk || !Array.isArray(prescriptionIds) || !prescriptionIds.length) {
       return res.status(400).json({ error: 'kostentraegerIk and prescriptionIds required' });
     }
@@ -466,8 +468,23 @@ router.post('/abrechnung/create', async (req, res) => {
       if (r.abrechnung_status && r.abrechnung_status !== 'bereit') {
         return res.status(409).json({ error: `Rezept ${r.id.slice(0,8)} ist bereits in einer Abrechnung (${r.abrechnung_status}).` });
       }
-      if (r.bericht_angefordert && r.bericht_status !== 'erledigt') {
-        return res.status(400).json({ error: `Abrechnung blockiert: Das Rezept ${r.id.slice(0,8)} erfordert einen ausgefüllten Therapiebericht, der noch nicht 'erledigt' ist.` });
+      // Therapiebericht: Hinweis, kein Riegel. Das Kreuz auf der Verordnung sagt
+      // nur, dass der Verordner einen Bericht wollte — sehr oft ist es schlicht
+      // stehen geblieben (HeilM-RL § 16 Abs. 7: der Verordner „kann" anfordern;
+      // Podologie §125 Anlage 3 d): fehlt das Kreuz, ist der Bericht nicht
+      // erforderlich). Übersteuern darf die Praxis, aber bewusst und nachweisbar.
+      //
+      // ⚠️ Das ZHE-Kennzeichen „Therapiebericht angefordert" bleibt davon
+      // unberührt und geht weiterhin als „1" in die DTA (Anlage 1 TP5 V21
+      // §5.5.3.3 S. 70). Es trägt das Kreuz der Verordnung, nicht die Frage, ob
+      // ein Bericht geschrieben wurde. Würde es hier mitgelöscht, widerspräche
+      // die Datei dem Urbeleg — genau der Fall, den die Kasse nach §7.4.3 absetzt.
+      if (r.bericht_angefordert && r.bericht_status !== 'erledigt' && !berichtUebersteuert.has(r.id)) {
+        return res.status(400).json({
+          error: `Abrechnung blockiert: Das Rezept ${r.id.slice(0,8)} erfordert einen ausgefüllten Therapiebericht, der noch nicht 'erledigt' ist.`,
+          code: 'THERAPIEBERICHT_FEHLT',
+          prescriptionId: r.id,
+        });
       }
     }
 
@@ -557,6 +574,37 @@ router.post('/abrechnung/create', async (req, res) => {
       .select('id')
       .single();
     if (abErr) return res.status(500).json({ error: 'abrechnung insert failed: ' + abErr.message });
+
+    // ---- Nachweis der bewussten Übersteuerung (GoBD) ----
+    // Wer hat wann bei welchem Rezept trotz fehlendem Therapiebericht
+    // abgerechnet. Erst hier, nicht schon bei der Prüfung: protokolliert wird
+    // die Entscheidung, die tatsächlich zu einer Abrechnung geführt hat.
+    // Gleiche Ablage wie die Rezeptprüfung (server.js → /rezept/confirm),
+    // damit es EINEN Prüfpfad für Übersteuerungen gibt.
+    const uebersteuert = rxRows.filter(r =>
+      r.bericht_angefordert && r.bericht_status !== 'erledigt' && berichtUebersteuert.has(r.id));
+    if (uebersteuert.length) {
+      const { error: protErr } = await supabase.from('prescription_validations').insert(
+        uebersteuert.map(r => ({
+          prescription_id:  r.id,
+          engine:           'abrechnung-freigabe',
+          input_snapshot:   { bericht_angefordert: r.bericht_angefordert, bericht_status: r.bericht_status },
+          result:           { abrechnung_id: ab.id, kostentraeger_ik: kostentraegerIk },
+          ok:               false,
+          warnings_count:   0,
+          blockers_count:   1,
+          proceeded_anyway: true,
+          overridden_rules: ['THERAPIEBERICHT_FEHLT'],
+          proceed_reason:   (typeof berichtGrund === 'string' && berichtGrund.trim())
+                              ? berichtGrund.trim().slice(0, 500)
+                              : 'Ohne Angabe übersteuert',
+          validated_by:     u.user.id,
+        }))
+      );
+      // Der Nachweis darf die Abrechnung nicht scheitern lassen — aber er darf
+      // auch nicht lautlos verschwinden.
+      if (protErr) console.error('[abrechnung/create] Freigabe-Protokoll fehlgeschlagen', protErr);
+    }
 
     // ---- upload DTA + Begleitzettel ----
     const datePath = `${year}/${String(now.getMonth()+1).padStart(2,'0')}`;

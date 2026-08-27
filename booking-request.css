@@ -505,6 +505,11 @@ html, body {
   .br-scheduler {
     grid-template-columns: 1fr;
   }
+  /* Einspaltig steht die Zeitliste unter dem Kalender — hier waere ein
+     420px hoher Block schon fast ein ganzer Bildschirm. */
+  .br-slots {
+    max-height: 300px;
+  }
 }
 
 .br-scheduler-col h3 {
@@ -669,6 +674,19 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  /* Seit das Raster auf 15 Minuten steht, kommen ~40 Knoepfe statt ~16.
+     Ohne Deckel waechst die Spalte ueber die Kalenderhoehe hinaus und die
+     Seite wird auf dem Telefon sehr lang. Gleiche Loesung wie .cal-right
+     (booking.html) und .cw-side (calendar-widget.js). */
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.br-slots::-webkit-scrollbar { width: 3px; }
+.br-slots::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
 }
 
 .br-slot {

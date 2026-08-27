@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-16 (abends — Geschlecht-Kodierung vereinheitlicht)
--- LETZTE MIGRATION:  leads_geschlecht_kodierung_dokumentieren
+-- ERZEUGT AM:        2026-08-17 (Sperre gegen doppelte Sitzungszeilen)
+-- LETZTE MIGRATION:  prescription_sessions_booking_unique
+--                    davor: leads_geschlecht_kodierung_dokumentieren
 --                    davor: invoice_nummer_backfill_altbestand
 --                    davor: invoices_ust_nummernkreis_gobd
 --                    davor: invoices_verordnung_id
@@ -17,7 +18,7 @@
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
 -- UMFANG:            81 Tabellen · 1188 Spalten · 156 RLS-Policies
---                    288 Indizes · 58 Trigger · 60 Funktionen · 4 Views
+--                    289 Indizes · 58 Trigger · 60 Funktionen · 4 Views
 -- QUELLE:            Direkt aus der Live-DB introspiziert (kein Handentwurf)
 --
 -- ⚠️  DIES IST EINE MOMENTAUFNAHME, KEINE LIVE-VERBINDUNG.
@@ -1264,6 +1265,9 @@ CREATE TABLE prescription_sessions (
 );
 --   CHECK status IN (planned, done, cancelled, no_show)
 --   PK (id) · UNIQUE (prescription_id, session_number)
+--   UNIQUE (prescription_id, booking_id) WHERE booking_id IS NOT NULL — ein Termin
+--     hat je Verordnung genau eine Sitzungszeile. Leere Zeilen (booking_id NULL)
+--     sind Absicht und bleiben mehrfach erlaubt: sie warten auf Termine.
 
 CREATE TABLE prescription_validations (
   id uuid NOT NULL DEFAULT gen_random_uuid()

@@ -7,11 +7,11 @@
 | Datei | Inhalt |
 |---|---|
 | `SCHEMA.sql` | 80 Tabellen, alle Spalten, Constraints, Views |
-| `SCHEMA-RLS.sql` | 156 RLS-Policies, 53 Funktionen, 59 Trigger, 281 Indizes |
+| `SCHEMA-RLS.sql` | 156 RLS-Policies, 53 Funktionen, 59 Trigger, 289 Indizes |
 | `README.md` | dieses Dokument — Orientierung + Auffrischungsregel |
 
-**Stand:** 2026-08-16 (abends) · letzte Migration `leads_geschlecht_kodierung_dokumentieren`
-(davor `invoice_nummer_backfill_altbestand`)
+**Stand:** 2026-08-17 · letzte Migration `prescription_sessions_booking_unique`
+(davor `leads_geschlecht_kodierung_dokumentieren`, `invoice_nummer_backfill_altbestand`)
 (davor `invoices_ust_nummernkreis_gobd`, `invoices_verordnung_id` — Rechnungskette Faz 3;
 davor `20260815233848_verordnungsnummer_belegnummer`)
 (davor `20260815085338_leads_patientennummer`, `20260814200147_leads_handy_getrennt`,

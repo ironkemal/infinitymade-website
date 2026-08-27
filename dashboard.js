@@ -8,8 +8,9 @@ import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
 import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260817';
-import { renderPatientenkarte } from './module/patientenkarte.js?v=20260816';
-import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260815';
+import { renderPatientenkarte } from './module/patientenkarte.js?v=20260826';
+import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260826';
+import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
@@ -8673,9 +8674,13 @@ async function flipAbrechnungStatus(rxId, newStatus, leadId) {
         .single();
       if (getErr) throw getErr;
 
-      if (rx && rx.bericht_angefordert && rx.bericht_status !== 'erledigt') {
-        showToast('Abgelehnt: Therapiebericht fehlt!', 'error');
-        return;
+      // Hinweis statt Riegel. Vorher war dieser Weg strenger als der
+      // automatische (pruefeVerordnungsfortschritt setzt „bereit", ohne den
+      // Bericht überhaupt anzusehen) — von Hand ging also weniger als von
+      // selbst. Der belastbare Nachweis entsteht ohnehin erst beim Abrechnen.
+      if (istBerichtOffen(rx)) {
+        const ok = await frageBerichtFreigabe([{ id: rxId, name: 'Dieses Rezept', status: rx.bericht_status }]);
+        if (!ok) return;
       }
     }
 
@@ -19891,7 +19896,9 @@ function runPreflightCheck() {
 
     const issues = checkPrescriptionCompliance(rx, _abState.therapistCertsMap);
     if (issues.isReportMissing) {
-      rxErrors.push(`Therapiebericht erforderlich, aber ausstehend (${rx.bericht_status || 'offen'}).`);
+      // Hinweis, kein Fehler: das Kreuz auf der Verordnung bleibt oft schlicht
+      // stehen. Beim Abrechnen wird gefragt und die Entscheidung protokolliert.
+      rxWarnings.push(`Therapiebericht angefordert, aber ausstehend (${rx.bericht_status || 'offen'}). Abrechnen ist möglich — die Entscheidung wird protokolliert.`);
     }
     if (issues.missingCert) {
       rxErrors.push(`Zertifikats-Fehler: Der Therapeut für die Sitzung am ${issues.missingCertDate} besitzt nicht das erforderliche Zertifikat '${issues.missingCertName}'.`);
@@ -20235,56 +20242,9 @@ async function loadAbrechnung() {
   }
 }
 
-function checkPrescriptionCompliance(rx, therapistCertsMap) {
-  const issues = {
-    has14DayGap: false,
-    gapDays: 0,
-    gapDates: '',
-    missingCert: false,
-    missingCertName: '',
-    missingCertDate: '',
-    isReportMissing: !!(rx.bericht_angefordert && rx.bericht_status !== 'erledigt'),
-  };
-
-  const doneSessions = (rx.prescription_sessions || [])
-    .filter(s => s.status === 'done');
-
-  // Check 14-day gap
-  if (doneSessions.length > 1) {
-    const sorted = [...doneSessions].sort((a, b) => new Date(a.done_at) - new Date(b.done_at));
-    for (let k = 1; k < sorted.length; k++) {
-      const prevD = new Date(sorted[k - 1].done_at);
-      const currD = new Date(sorted[k].done_at);
-      const diffTime = currD - prevD;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 14) {
-        issues.has14DayGap = true;
-        issues.gapDays = diffDays;
-        issues.gapDates = `${new Date(sorted[k - 1].done_at).toLocaleDateString('de-DE')} - ${new Date(sorted[k].done_at).toLocaleDateString('de-DE')}`;
-        break; // Show first gap
-      }
-    }
-  }
-
-  // Check therapist certificates
-  for (const s of doneSessions) {
-    const booking = s.bookings || s.booking_id || {};
-    const service = booking.services || booking.service_id || booking.service || {};
-    const requiredCert = service.required_certificate;
-    if (requiredCert) {
-      const therapistId = booking.user_id;
-      const certSet = therapistCertsMap ? therapistCertsMap.get(therapistId) : null;
-      if (!therapistId || !certSet || !certSet.has(requiredCert)) {
-        issues.missingCert = true;
-        issues.missingCertName = requiredCert;
-        issues.missingCertDate = s.done_at ? new Date(s.done_at).toLocaleDateString('de-DE') : '';
-        break;
-      }
-    }
-  }
-
-  return issues;
-}
+// checkPrescriptionCompliance() ist nach module/abrechnung-freigabe.js gezogen —
+// zusammen mit der Übersteuerung des Therapiebericht-Hinweises, die dieselbe
+// Frage beantwortet.
 
 function renderAbrechnungReady() {
   const container = document.getElementById('abReadyGroups');
@@ -20393,7 +20353,9 @@ function renderAbrechnungReady() {
                 : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
               
               const issues = checkPrescriptionCompliance(rx, _abState.therapistCertsMap);
-              const isBlocked = issues.isReportMissing || issues.missingCert || issues.has14DayGap;
+              // Der fehlende Bericht sperrt die Zeile nicht mehr. Er wird beim
+              // Abrechnen abgefragt und protokolliert (siehe createAbrechnung).
+              const isBlocked = istHarterRiegel(issues);
               const checkboxHtml = isBlocked
                 ? `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" disabled style="opacity:0.5;" />`
                 : `<input type="checkbox" class="ab-rx-check" data-ik="${escapeHtml(ik)}" data-id="${escapeHtml(rx.id)}" checked />`;
@@ -20932,6 +20894,19 @@ async function createAbrechnung(kostentraegerIk) {
     return;
   }
 
+  // Fehlender Therapiebericht hält die Abrechnung nicht auf, verlangt aber eine
+  // bewusste Entscheidung. Der Server verlangt dieselbe Liste noch einmal und
+  // schreibt sie als Nachweis fort (GoBD) — hier wird sie nur eingeholt.
+  const offeneBerichte = _abState.ready
+    .filter(rx => prescriptionIds.includes(rx.id) && istBerichtOffen(rx))
+    .map(rx => ({
+      id: rx.id,
+      name: [rx.leads?.first_name, rx.leads?.last_name].filter(Boolean).join(' ') || rx.id.slice(0, 8),
+      status: rx.bericht_status,
+    }));
+  const freigabe = await frageBerichtFreigabe(offeneBerichte);
+  if (!freigabe) return;   // abgebrochen
+
   const btn = document.getElementById('abGenerateDtaBtn');
   if (btn) { btn.disabled = true; btn.textContent = t('ab_creating'); }
   _abState.busy = true;
@@ -20949,7 +20924,9 @@ async function createAbrechnung(kostentraegerIk) {
       body: JSON.stringify({
         ownerId: getOwnerId(),
         kostentraegerIk,
-        prescriptionIds
+        prescriptionIds,
+        berichtIgnoriert: freigabe.ids,
+        berichtGrund: freigabe.grund
       })
     });
     const json = await res.json().catch(() => ({}));

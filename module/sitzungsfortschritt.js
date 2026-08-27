@@ -73,7 +73,7 @@ export function istFertigBehandelt({ offen, erbracht, einheiten }) {
  * Schreibt nur nach oben und nur, wenn kein Mensch bereits eingegriffen hat:
  * `status` wird ausschliesslich aus `parsed|confirmed|in_therapy` gehoben, und
  * `abrechnung_status` nur gesetzt, solange er `null` ist (manuelle Wahl
- * gewinnt) und die Kasse überhaupt bekannt ist.
+ * gewinnt).
  *
  * @param supabase         aktiver Supabase-Client
  * @param {string} prescriptionId
@@ -103,10 +103,13 @@ export async function pruefeVerordnungsfortschritt(supabase, prescriptionId) {
       .update({ status: 'completed' }).eq('id', prescriptionId)
       .in('status', ['parsed', 'confirmed', 'in_therapy']);
     // §302-Weiche: erst hier taucht das Rezept in der Kassenabrechnung auf.
+    // Bewusst OHNE Bedingung an `kostentraeger_ik`: fehlt die Kasse, landet das
+    // Rezept in der Gruppe „Kostenträger fehlt“ und wird dort zugewiesen.
+    // Mit der alten Bedingung war diese Gruppe unerreichbar — fertig behandelte
+    // Rezepte ohne IK verschwanden lautlos aus der Abrechnung.
     await supabase.from('prescriptions')
       .update({ abrechnung_status: 'bereit' }).eq('id', prescriptionId)
-      .is('abrechnung_status', null)
-      .not('kostentraeger_ik', 'is', null);
+      .is('abrechnung_status', null);
   } else {
     await supabase.from('prescriptions')
       .update({ status: 'in_therapy' }).eq('id', prescriptionId)

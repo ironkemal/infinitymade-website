@@ -4042,6 +4042,13 @@
             </div>
           </div>
           <div class="pd-panel" id="pdPanelRezepte">
+            <!-- Laufende Verordnungen, beide Töpfe, jede mit eigenem Zähler
+                 (module/verordnung-uebersicht.js). Steht VOR der Rezeptliste,
+                 weil die Frage in der Behandlung „was läuft gerade und wie
+                 viele Einheiten sind noch offen?" ist — nicht „welche Rezepte
+                 gab es je". Gefüllt aus module/patientenkarte.js, damit
+                 dashboard.js nicht wächst (Konsey 2026-08-13). -->
+            <div id="pdVeroUebersicht" hidden style="padding:14px 20px;border-bottom:1px solid var(--border);"></div>
             <div class="pd-loading" id="pdRezLoading">
               <div class="spinner-sm"></div>
             </div>
@@ -6088,7 +6095,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260817d"></script>
+  <script type="module" src="dashboard.js?v=20260826a"></script>
 </body>
 
 </html>

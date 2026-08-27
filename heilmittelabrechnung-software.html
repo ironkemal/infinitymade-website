@@ -70,6 +70,17 @@
   </script>
 
   <!-- ===== Structured Data: SoftwareApplication ===== -->
+  <!--
+    PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17).
+    Zum Wiederherstellen diesen Block wieder in das JSON unten (nach "publisher") einfügen:
+      "offers": {
+      "@type": "Offer",
+      "priceCurrency": "EUR",
+      "price": "29.00",
+      "description": "Monatliche Lizenzgebühr ab 29 Euro"
+      },
+    Hinweis: In JSON-LD sind HTML-Kommentare nicht erlaubt.
+  -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -82,12 +93,6 @@
     "url": "https://praxura.de/heilmittelabrechnung-software.html",
     "description": "All-in-One Praxissoftware für Physiotherapie, Ergotherapie and Logopädie. Bereitet DTA-Abrechnungsdateien nach §302 SGB V zur Direktabrechnung ohne Abrechnungszentrum vor.",
     "publisher": { "@id": "https://praxura.de/#organization" },
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "EUR",
-      "price": "29.00",
-      "description": "Monatliche Lizenzgebühr ab 29 Euro"
-    },
     "featureList": [
       "Vorbereitung DTA-Abrechnungsdatei nach §302 SGB V",
       "KI-Rezeptprüfung zur Vermeidung von Absetzungen",
@@ -130,7 +135,7 @@
         "name": "Was kostet Praxura — gibt es Provision?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Praxura ist vollkommen provisionsfrei (kommissionsfrei). Sie zahlen lediglich eine transparente monatliche Gebühr ab 29 Euro für die Software-Nutzung. Es fallen keine prozentualen Abzüge (üblicherweise 2–5 % bei Abrechnungszentren) auf Ihren Umsatz an."
+          "text": "Praxura ist vollkommen provisionsfrei (kommissionsfrei). Sie zahlen lediglich eine transparente monatliche Gebühr für die Software-Nutzung. Es fallen keine prozentualen Abzüge (üblicherweise 2–5 % bei Abrechnungszentren) auf Ihren Umsatz an."
         }
       },
       {
@@ -644,7 +649,7 @@
         <ul class="px-compare-list">
           <li class="px-compare-item active-solution">
             <div class="px-compare-h" style="color: var(--bronze);">100 % provisionsfrei</div>
-            <div class="px-compare-p">Keine prozentualen Abzüge. Praxura bietet transparente Festpreise ab 29 € im Monat — unabhängig von Ihrem Umsatz.</div>
+            <div class="px-compare-p">Keine prozentualen Abzüge. Praxura bietet einen transparenten monatlichen Festpreis — unabhängig von Ihrem Umsatz.</div>
           </li>
           <li class="px-compare-item active-solution">
             <div class="px-compare-h" style="color: var(--bronze);">KI-Frühwarnsystem vor Ort</div>
@@ -747,7 +752,7 @@
         <span class="px-faq-toggle" aria-hidden="true">+</span>
       </summary>
       <div class="px-faq-body">
-        Nein, bei Praxura gibt es keine prozentuale Provision auf Ihren Umsatz. Wir berechnen eine transparente monatliche Festgebühr für die Software-Nutzung ab 29 Euro. Egal wie viel Umsatz Sie machen: Ihre Abrechnung bleibt provisionsfrei.
+        Nein, bei Praxura gibt es keine prozentuale Provision auf Ihren Umsatz. Wir berechnen eine transparente monatliche Festgebühr für die Software-Nutzung. Egal wie viel Umsatz Sie machen: Ihre Abrechnung bleibt provisionsfrei.
       </div>
     </details>
     <details>
@@ -786,8 +791,8 @@
   <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; font-size: 0.9rem;">
     <a href="/praxis.html" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Alle Funktionen</a>
     <span style="color: var(--line);">·</span>
-    <a href="/#preise" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Preise &amp; Pakete</a>
-    <span style="color: var(--line);">·</span>
+    <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <a href="/#preise" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Preise &amp; Pakete</a> -->
+    <!-- PREISE VORÜBERGEHEND AUSGEBLENDET (2026-08-17) — <span style="color: var(--line);">·</span> -->
     <a href="/ti-anbindung-heilmittel.html" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">TI-Anbindung</a>
     <span style="color: var(--line);">·</span>
     <a href="/praxissoftware-physiotherapie.html" style="color: var(--bronze); text-decoration: none; border-bottom: 1px solid var(--line);">Physiotherapie</a>
