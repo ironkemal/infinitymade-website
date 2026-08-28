@@ -1226,6 +1226,16 @@ async function wendePresetAn(preset) {
 
   await patientGewaehlt(p.id);
 
+  // Einstieg aus dem Archiv in der Patientenkarte: dort wird eine konkrete
+  // Zeile angeklickt, also soll genau dieser Befund offen sein — nicht der
+  // zuletzt angelegte, den `patientGewaehlt()` vorwaehlt.
+  if (preset.befundId) {
+    const row = befundeDesPatienten.find(b => b.id === preset.befundId);
+    if (row) { oeffneBefund(row); return; }
+    ctx.showToast('Dieser Befund wurde nicht gefunden — vielleicht inzwischen geloescht.', 'error');
+    return;
+  }
+
   if (!preset.bookingId) return;
   const sel = el('fbpTermin');
   if (!sel) return;
@@ -1239,6 +1249,30 @@ async function wendePresetAn(preset) {
 
   sel.value = preset.bookingId;
   terminGewaehlt();
+}
+
+/**
+ * Aus dem Archiv in der Patientenkarte einen bestimmten Befund oeffnen.
+ *
+ * Warum es das gibt (27.08.2026): in der Patientenkarte stand bis dahin ein
+ * ZWEITES, eigenes Fussbefund-Formular. Es schrieb in dieselbe Tabelle, aber
+ * ohne `booking_id` und ohne `uebernommen_von` — ein dort gespeicherter Befund
+ * tauchte hier als „Ohne Termin" auf und der Termin bekam kein „✓ Befund".
+ * Zwei Formulare fuer dieselbe Sache, eins davon stiller kaputt. Das Formular
+ * ist jetzt weg; die Patientenkarte zeigt nur noch ein Archiv und springt
+ * hierher. Erfasst und geaendert wird ausschliesslich an dieser Stelle.
+ */
+export async function oeffneFussbefundEintrag(deps, { leadId, befundId }) {
+  if (!leadId) return;
+
+  ausstehenderPreset = { leadId, befundId: befundId || null };
+  deps.closePanel?.();
+
+  if (typeof deps.switchPanel === 'function') await deps.switchPanel('fussstatus');
+
+  // Gleiches Sicherheitsnetz wie beim Termin-Einstieg: hat der Panelwechsel
+  // den Aufbau nicht ausgeloest, liegt der Preset noch da.
+  if (ausstehenderPreset) await mountFussbefund(deps);
 }
 
 /**
