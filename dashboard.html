@@ -23,8 +23,14 @@
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="dashboard.css?v=20260816b" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
+       Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
+       Patientendaten im DOM stehen; ein Drittanbieter-Skript hat dort Ausfuehrungsrecht
+       (Lieferketten-Risiko) und die Praxis-IP ging an Cloudflare, das in keiner
+       Datenschutzerklaerung genannt ist. Gleiches Vorgehen wie beim esm.sh/jsDelivr-Sweep
+       am 14.08. — siehe vendor/README.md. -->
+  <link rel="stylesheet" href="vendor/cropperjs/cropper.min.css?v=20260827" />
+  <script src="vendor/cropperjs/cropper.min.js?v=20260827"></script>
 </head>
 
 <body>
@@ -3286,9 +3292,13 @@
         <!-- Patient auswählen (Kopf — füllt das Formular automatisch) -->
         <div class="m13-picker">
           <label class="m13-picker-lbl" for="rzPatientSearch">Patient auswählen</label>
-          <input class="form-input" id="rzPatientSearch" list="rzPatientDatalist" autocomplete="off"
+          <!-- Kein <datalist> (CLAUDE.md → Frontend): die Suche haengt an
+               patient-suche.js (dashboard.js:17297). Das alte Element stand hier
+               noch aus der Zeit davor; patient-suche.js entfernte das list=
+               Attribut zur Laufzeit, damit kein zweites Menue aufgeht. Jetzt ist
+               es auch im Markup weg. -->
+          <input class="form-input" id="rzPatientSearch" autocomplete="off"
                  placeholder="Name, Geburtsdatum oder Telefon eingeben…">
-          <datalist id="rzPatientDatalist"></datalist>
           <span class="m13-picker-hint" id="rzPatientHint"></span>
         </div>
 

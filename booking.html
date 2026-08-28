@@ -2,17 +2,16 @@
 <html lang="de">
 
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9HFT4S0LTX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-9HFT4S0LTX', {
-      'anonymize_ip': true,
-      'cookie_flags': 'SameSite=None;Secure'
-    });
-  </script>
+  <!-- Kein Drittanbieter-Tracking auf dieser Seite. Bewusste Entscheidung, 27.08.2026.
+       Hier bucht ein PATIENT einen Therapietermin: wir sind auf dieser Seite
+       Auftragsverarbeiter fuer die Praxis. Eine eigene Messung waere ein eigener
+       Zweck (Art. 28 Abs. 10 DSGVO) und die URL traegt den Praxis-Slug, ein
+       Therapietermin ist damit ein Gesundheitsdatum (Art. 9).
+       Bis hierher stand an dieser Stelle GA4 (G-9HFT4S0LTX) ohne Consent. Die CSP
+       in vercel.json hat es blockiert, geladen wurde es also nie — aber im
+       On-Prem-Image gibt es diese CSP nicht, dort waere es losgegangen.
+       Auch Umami gehoert hier NICHT hin, cookie-frei hin oder her.
+       Reichweite wird serverseitig ueber booking/create gezaehlt. -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Sentry error tracking -->
