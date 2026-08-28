@@ -58,7 +58,8 @@ archive/
 ├── *.md                          kök dizinden taşınan 28 dosya
 ├── competitor-research-optica/   Optica rakip analizi derinlemesine notları (4)
 ├── marketing-notebooklm/         NotebookLM pazarlama materyalleri (5)
-└── ai-chatbot-proje/             terk edilmiş chatbot projesi (2)
+├── ai-chatbot-proje/             terk edilmiş chatbot projesi (2)
+└── lib-orphan/                   kök `lib/`'in içeriği (3) — 28.08.2026
 
 > ⚠️ Bu taşıma **yarım kaldı**: yalnız belgeler (`CLAUDE.md` + `kur.md`) arşive geldi.
 > Kodun kendisi hâlâ kökte: `ai chatbot proje/index.html` (92 KB). 27.08.2026'da
@@ -68,3 +69,42 @@ archive/
 **Not:** `ai-chatbot-proje/CLAUDE.md` içinde 2026-08-05'e kadar açık bir Fal AI anahtarı vardı.
 Değer çalışma ağacından kaldırıldı ama **git geçmişinde duruyor** — anahtarın iptali
 `TODO_MANUEL.md` §0.1'de takip ediliyor.
+
+
+## `lib-orphan/` — kök `lib/` klasörü (28.08.2026)
+
+`business.js` · `plan.js` · `supabase.js`. Buraya taşındılar çünkü **hiçbir yerden
+import edilmiyorlardı** — sadece birbirlerini çağırıyorlardı. `admin.js` dahil
+kontrol edildi (o yalnız `vendor/supabase-js.js`, `supabase-config.js` ve
+`nav-registry.js` yüklüyor).
+
+Neden sadece "kullanılmıyor" değil, **taşınması gerekiyordu:**
+
+- `supabase.js` kendi başlığında *"Single source of truth for Supabase connections"*
+  diyordu. Değildi — gerçek istemci `supabase-config.js` + `vendor/supabase-js.js`.
+  Okuyan yanlış yola sapıyordu.
+- Fonksiyon haritasına **20 hayalet fonksiyon** katıyordu (`getSupabaseAdmin`,
+  `getOwnerId`, `hasFeature`, `getPatientDetails`, `withBusinessFilter` …). "Böyle bir
+  şey zaten var mı?" sorusu ölü koda işaret edebiliyordu.
+- `plan.js` **eskimiş iş kuralı** taşıyordu: §302'yi yalnız `klinik` + `enterprise`
+  paketlerine veriyordu, oysa §302 artık **Professional**'a dahil; ayrıca 08.06.2026'da
+  kaldırılan DTA-Pro'dan bahsediyordu. Bağlansaydı Professional müşterilerinin §302'si
+  sessizce kapanırdı.
+- Depo public: dosya 27.08.2026'ya kadar `praxura.de/lib/supabase.js` adresinden
+  indirilebiliyordu.
+
+⚠️ **`api-backend/lib/` ile karıştırma** — o canlı ve dokunulmadı
+(`phi-encrypt.js`, `arzt-registry.js`, `geschlecht.js`).
+
+**Buradan ne kurtarılabilir:** Konsey 2026-08-13 "veri katmanı" (S5) kararını
+ertelemişti ve aynı tutanağın kör noktalar bölümünde *"`lib/supabase.js` ölü — veri
+katmanı bir kez yazılıp terk edilmiş, S5'te üçüncü kopya yazılmaz"* yazıyor. S5
+geldiğinde bu dosyalar **örnek** olarak okunabilir, ama **kopyalanamaz**: `.single()`
+kullanımı ev kuralına aykırı, `TABLES` haritası DROP edilmiş tablolara atıf yapıyor,
+ve `supabase` proxy nesnesi hata durumunda sessizce `{data:null}` dönüyor.
+
+**Açık kalan gerçek soru:** paket bazlı özellik kilidi **hiç yok**. `dashboard.js:663`
+`PLAN_FEATURES` sadece "paketiniz şunları içerir" metnini basıyor (tek kullanım:
+`dashboard.js:13040`), hiçbir şeyi kilitlemiyor. `plan.js` bunu yapmak için yazılmış
+ama hiç bağlanmamış. Yani bugün her müşteri paketinden bağımsız her özelliği görüyor.
+Bu bir karar konusu, `lib/` taşımasıyla kapanmadı → Ops-Dashboard.

@@ -8,12 +8,15 @@
  * `dashboard.js` wächst nicht mehr, und was angefasst wird, zieht um. Die
  * Podologie war als zusammenhängender Block der erste Kandidat.
  *
- * ⚠ An Aussehen und Verhalten wurde NICHTS geändert. Auch bekannte Fehler
- * sind mitgezogen worden, statt sie unterwegs zu reparieren — ein Umzug, bei
- * dem gleichzeitig repariert wird, lässt sich hinterher nicht mehr prüfen.
- * Bekannt und absichtlich unangetastet: der Zuhörer auf `#podBillingContent`
- * (§302-Knöpfe) hängt sich bei jedem Rendern erneut an ein statisches Element
- * und sammelt sich dadurch an. Dafür gibt es eine eigene Karte.
+ * ⚠ An Aussehen und Verhalten wurde beim Umzug NICHTS geändert. Auch bekannte
+ * Fehler sind mitgezogen worden, statt sie unterwegs zu reparieren — ein Umzug,
+ * bei dem gleichzeitig repariert wird, lässt sich hinterher nicht mehr prüfen.
+ *
+ * Nachgereicht am 28.08.2026: der Zuhörer der §302-Knöpfe hängte sich bei jedem
+ * Rendern erneut an das statische `#podBillingContent` und sammelte sich an —
+ * ein Klick löste nach N Renderungen N Anfragen aus. Er sitzt jetzt wie der
+ * Listen-Zuhörer EINMAL auf Modulebene (siehe dort). Gegenstück im Backend:
+ * bereits abgerechnete Verordnungen werden mit 409 abgewiesen.
  *
  * Was NICHT mitgekommen ist
  * ─────────────────────────
@@ -193,6 +196,56 @@ document.addEventListener('click', (e) => {
   if (!row) return;
   _podState.selectedVordId = row.dataset.vordId === _podState.selectedVordId ? null : row.dataset.vordId;
   loadPodologieBilling();
+});
+
+// §302-Knopf — ebenfalls EINMAL, aus demselben Grund und noch einem zweiten.
+//
+// Der Zuhoerer hing bis 28.08.2026 am Ende von loadPodologieBilling() an
+// `#podBillingContent`. Dieses Element steht aber statisch in dashboard.html:1637;
+// loadPodologieBilling() tauscht nur sein innerHTML aus, nie das Element selbst.
+// Jedes Neuzeichnen (Zeile waehlen, Bearbeiten oeffnen, speichern — alle rufen
+// loadPodologieBilling()) hat also einen weiteren Zuhoerer angehaengt. Nach dem
+// N-ten Zeichnen loeste ein Klick auf „§302 erstellen" N Anfragen aus.
+//
+// Das war nicht nur Netzlast: create-podologie erzeugt pro Aufruf eine eigene
+// `abrechnung`-Zeile samt DTA-Datei. Mehrfache Abrechnungsfaelle fuer dieselbe
+// Verordnung waeren die Folge gewesen. Die zweite Haelfte der Absicherung sitzt
+// im Backend (abrechnung.routes.js: bereits abgerechnete Verordnungen → 409).
+document.addEventListener('click', async (e) => {
+  if (!e.target.closest?.('#podBillingContent')) return;
+  const btn = e.target.closest('.pod-abr-btn');
+  if (!btn || btn.disabled) return;
+  const kkIk     = btn.dataset.kkIk;
+  const vordIds  = JSON.parse(btn.dataset.vordIds || '[]');
+  const errEl    = document.getElementById('podAbrError');
+  if (!kkIk || !vordIds.length) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Wird erstellt…';
+  if (errEl) errEl.style.display = 'none';
+
+  try {
+    const { data: { session } } = await ctx.supabase.auth.getSession();
+    const res = await fetch('https://n8n.infinitymade.de/api/billing/abrechnung/create-podologie', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({ kostentraegerIk: kkIk, verordnungIds: vordIds }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      if (errEl) { errEl.textContent = json.error || 'Fehler beim Erstellen.'; errEl.style.display = 'block'; }
+      btn.disabled = false; btn.textContent = '§302 erstellen';
+      return;
+    }
+    ctx.showToast(`§302 DTA erstellt: ${json.rechnungsnummer} · ${json.sessionCount} Positionen ✓`);
+    loadPodologieBilling();
+  } catch (err) {
+    if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+    btn.disabled = false; btn.textContent = '§302 erstellen';
+  }
 });
 
 async function loadPodologieBilling() {
@@ -1075,43 +1128,6 @@ async function loadPodologieBilling() {
   document.getElementById('podCancelEditBtn')?.addEventListener('click', () => {
     _podState.editVordId = null;
     loadPodologieBilling();
-  });
-
-  // Wire up: §302 Abrechnung erstellen buttons (event delegation on whole billing panel)
-  document.getElementById('podBillingContent')?.addEventListener('click', async e => {
-    const btn = e.target.closest('.pod-abr-btn');
-    if (!btn) return;
-    const kkIk     = btn.dataset.kkIk;
-    const vordIds  = JSON.parse(btn.dataset.vordIds || '[]');
-    const errEl    = document.getElementById('podAbrError');
-    if (!kkIk || !vordIds.length) return;
-
-    btn.disabled = true;
-    btn.textContent = 'Wird erstellt…';
-    if (errEl) errEl.style.display = 'none';
-
-    try {
-      const { data: { session } } = await ctx.supabase.auth.getSession();
-      const res = await fetch('https://n8n.infinitymade.de/api/billing/abrechnung/create-podologie', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ kostentraegerIk: kkIk, verordnungIds: vordIds }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        if (errEl) { errEl.textContent = json.error || 'Fehler beim Erstellen.'; errEl.style.display = 'block'; }
-        btn.disabled = false; btn.textContent = '§302 erstellen';
-        return;
-      }
-      ctx.showToast(`§302 DTA erstellt: ${json.rechnungsnummer} · ${json.sessionCount} Positionen ✓`);
-      loadPodologieBilling();
-    } catch (err) {
-      if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
-      btn.disabled = false; btn.textContent = '§302 erstellen';
-    }
   });
 
   document.getElementById('podSaveBehBtn')?.addEventListener('click', async () => {

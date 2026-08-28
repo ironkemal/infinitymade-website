@@ -67,7 +67,7 @@ script.js
 chatbot.js
 pakete/
 ai chatbot proje/
-lib/
+# lib/ — 28.08.2026 nach archive/lib-orphan/ verschoben, Regel nicht mehr noetig
 
 # Fachdokumente (GKV/Heilmittel). Werden im Code nur als QUELLE zitiert,
 # nie zur Laufzeit geladen — geprueft 2026-08-27. Zusaetzlich fraglich, ob
