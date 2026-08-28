@@ -103,8 +103,25 @@ geldiğinde bu dosyalar **örnek** olarak okunabilir, ama **kopyalanamaz**: `.si
 kullanımı ev kuralına aykırı, `TABLES` haritası DROP edilmiş tablolara atıf yapıyor,
 ve `supabase` proxy nesnesi hata durumunda sessizce `{data:null}` dönüyor.
 
-**Açık kalan gerçek soru:** paket bazlı özellik kilidi **hiç yok**. `dashboard.js:663`
-`PLAN_FEATURES` sadece "paketiniz şunları içerir" metnini basıyor (tek kullanım:
-`dashboard.js:13040`), hiçbir şeyi kilitlemiyor. `plan.js` bunu yapmak için yazılmış
-ama hiç bağlanmamış. Yani bugün her müşteri paketinden bağımsız her özelliği görüyor.
-Bu bir karar konusu, `lib/` taşımasıyla kapanmadı → Ops-Dashboard.
+**⚠️ Düzeltme (28.08.2026, aynı gün):** Bu bölümde önce "paket bazlı özellik kilidi
+hiç yok, her müşteri her özelliği görüyor" yazıyordu. **Yanlıştı.** Arama kalıbım
+(`plan === 'starter'` gibi doğrudan karşılaştırmalar) `Set.has()` ve
+`Array.includes()` biçimlerini kaçırdı. Kilit çalışıyor, beş yerde:
+
+| Nerede | Ne yapıyor |
+|---|---|
+| `has302Access()` `dashboard.js:844` | `['professional','klinik','enterprise'].includes(plan)` → §302 Abrechnung modülünü Starter'da sidebar'dan gizler (`:983`, gerekçe `'plan'`) |
+| `isEnterprise()` `dashboard.js:17281` | Çok-Standort anahtarı; `:17678` "Mehrere Standorte sind nur im Enterprise-Paket verfügbar." |
+| `checkPlanActive()` `dashboard.js:4570` | `canceled`/`expired` durumunda yeni randevu, hasta ve abrechnung'u durdurur |
+| `showPlanWall()` `dashboard.js:22235` | Tam ekran paket duvarı (29/49/99) |
+| `PLAN_EMPLOYEE_LIMITS` `dashboard.js:66` → `:14574` | "Plan-Limit erreicht: max. N Mitarbeiter" |
+
+Kaybolan bir şey **yok**. `lib/plan.js`'teki `hasFeature()`/`isPlanActive()` ise
+doğuştan öksüz: 22.05.2026'da (`9bc0afb`) yazıldı ve **hiçbir commit'te hiçbir
+yerden import edilmedi**. Yani ikinci, hiç açılmamış bir kapı taşıyordu — üstelik
+§302'yi yalnız `klinik`+`enterprise`'a veren **eskimiş** kuralla. Çalışan kapı
+(`has302Access`) §302'yi doğru biçimde Professional'dan itibaren açıyor. İkisi
+bağlansaydı çelişirlerdi; arşivlenmesi bu yüzden ayrıca doğru oldu.
+
+`PLAN_FEATURES` (`dashboard.js:664` → tek kullanım `:12656`) gerçekten kilit değil,
+sadece "paketiniz şunları içerir" metin listesi — o kısım doğruydu.

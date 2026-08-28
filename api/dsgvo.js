@@ -21,7 +21,10 @@ const USER_TABLES = [
 //    eine falsche Verknüpfung würde FREMDE Daten in die Auskunft holen,
 //    und das wäre schlimmer als eine unvollständige.
 //    Vorgemerkt für den Sicherheitsdurchlauf; braucht legal-de + DB-Blick.
-  { table: 'business_services',            filter: 'owner_id'  },  // -> business_id -> businesses.owner_id
+  // 28.08.2026: `business_id` traegt hier ab sofort nur noch eine Nutzer-id
+  //   (der Pfad, der eine businesses.id schrieb, ist raus). Damit ist die
+  //   Auskunft wieder korrekt filterbar. Die Tabelle selbst wird noch gedroppt.
+  { table: 'business_services',            filter: 'business_id' },
   { table: 'employee_services',            filter: 'employee_id' },
   { table: 'working_hours',                filter: 'user_id'   },
   { table: 'breaks',                       filter: 'user_id'   },

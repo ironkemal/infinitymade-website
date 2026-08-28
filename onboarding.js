@@ -587,7 +587,7 @@ async function syncServices(items) {
   // ---- Bestand lesen ----
   const { data: exBs, error: exBsErr } = await supabase
     .from('business_services').select('id,name').eq('business_id', userId);
-  if (exBsErr) throw exBsErr;
+  if (exBsErr) console.warn('[onboarding] business_services lesen (Spiegel, nicht blockierend):', exBsErr.message);
 
   const { data: exPrivSvc, error: exPrivErr } = await supabase
     .from('services').select('id,title').eq('owner_id', userId).is('gkv_position_nr', null);
@@ -688,6 +688,18 @@ async function syncServices(items) {
   // Verknüpfungen gelöschter Leistungen räumt der CASCADE-Fremdschlüssel selbst ab.
 
   // ---- 4. business_services spiegeln ----
+  // ── `business_services` ist nur noch ein Spiegel und darf niemanden aufhalten ──
+  // Bis 28.08.2026 warf jeder Fehler hier `throw` und der Nutzer blieb im
+  // Dienstleistungs-Schritt stehen (`onboarding.js` faengt weiter unten ab und
+  // zeigt nur `showError`). Zwei Gruende, warum das scharf ist:
+  //   1. Der Payload enthaelt `code` — diese Spalte gibt es in `business_services`
+  //      nicht (db/SCHEMA.sql), PostgREST antwortet PGRST204.
+  //   2. Der FK lautet `business_id -> businesses(id)`, hier steht aber `userId`.
+  // Ob beides in der laufenden Datenbank wirklich so ist, konnte ohne DB-Zugang
+  // nicht geprueft werden. Genau deshalb blockiert es jetzt nicht mehr: die
+  // eigentliche Leistung steht laengst in `services`, dieser Spiegel wird von
+  // niemandem gelesen und die Tabelle soll ohnehin verschwinden. Scheitert er,
+  // wird das protokolliert und der Nutzer kommt weiter.
   const bsById = new Map((exBs || []).map(b => [b.id, b]));
   const bsByName = new Map((exBs || []).map(b => [normName(b.name), b]));
   const usedBsIds = new Set();
@@ -705,18 +717,18 @@ async function syncServices(items) {
       usedBsIds.add(target.id);
       const { error } = await supabase.from('business_services')
         .update(fields).eq('id', target.id).eq('business_id', userId);
-      if (error) throw error;
+      if (error) console.warn('[onboarding] business_services update (Spiegel, nicht blockierend):', error.message);
     } else {
       const { error } = await supabase.from('business_services')
         .insert({ business_id: userId, ...fields });
-      if (error) throw error;
+      if (error) console.warn('[onboarding] business_services insert (Spiegel, nicht blockierend):', error.message);
     }
   }
   const staleBs = (exBs || []).filter(b => !usedBsIds.has(b.id)).map(b => b.id);
   if (staleBs.length) {
     const { error } = await supabase.from('business_services')
       .delete().in('id', staleBs).eq('business_id', userId);
-    if (error) throw error;
+    if (error) console.warn('[onboarding] business_services delete (Spiegel, nicht blockierend):', error.message);
   }
 }
 

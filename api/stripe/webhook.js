@@ -282,15 +282,17 @@ export default async function handler(req, res) {
           if (inserted?.length) {
             const empRows = inserted.map(s => ({ employee_id: userId, service_id: s.id }));
             await adminFetch('/employee_services', { method: 'POST', body: JSON.stringify(empRows) });
-            const bsInserts = od.services.map((s, i) => ({
-              business_id: businessId,
-              name: s.name,
-              duration_minutes: s.duration_minutes || 30,
-              price_eur: s.price_eur || null,
-              is_active: s.is_active !== false,
-              display_order: i,
-            }));
-            await adminFetch('/business_services', { method: 'POST', body: JSON.stringify(bsInserts) });
+            // Spiegelschreiben nach `business_services` entfernt (28.08.2026, Konsey).
+            // Niemand las diese Zeilen: `services` ist die aktive Tabelle, alle Leser haengen
+            // dort (`/api/services/public`, dashboard, booking, kalender), und `bookings`,
+            // `booking_requests`, `warteliste`, `employee_services` zeigen mit `service_id`
+            // ebenfalls auf `services(id)`. Kein FK zeigt auf `business_services(id)`.
+            // Wichtiger: dieser Pfad schrieb eine echte `businesses.id` in `business_id`,
+            // waehrend `onboarding.js` dort eine Nutzer-id ablegt. Dieselbe Spalte trug also
+            // zwei Bedeutungen, und weil die RLS-Policy `auth.uid() = business_id` lautet,
+            // waren genau die hier erzeugten Zeilen fuer die Praxis unsichtbar.
+            // Mit dem Wegfall hat die Spalte nur noch eine Bedeutung.
+            // Der DROP der Tabelle folgt, sobald ein DB-Zugang da ist.
           }
         }
 
