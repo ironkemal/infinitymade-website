@@ -59,6 +59,10 @@ archive/
 ├── competitor-research-optica/   Optica rakip analizi derinlemesine notları (4)
 ├── marketing-notebooklm/         NotebookLM pazarlama materyalleri (5)
 └── ai-chatbot-proje/             terk edilmiş chatbot projesi (2)
+
+> ⚠️ Bu taşıma **yarım kaldı**: yalnız belgeler (`CLAUDE.md` + `kur.md`) arşive geldi.
+> Kodun kendisi hâlâ kökte: `ai chatbot proje/index.html` (92 KB). 27.08.2026'da
+> `.vercelignore`'a alındı, artık praxura.de'den erişilemiyor — ama taşıma hâlâ açık.
 ```
 
 **Not:** `ai-chatbot-proje/CLAUDE.md` içinde 2026-08-05'e kadar açık bir Fal AI anahtarı vardı.

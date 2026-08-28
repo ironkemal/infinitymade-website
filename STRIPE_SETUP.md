@@ -4,8 +4,11 @@
 > gerçek ödeme alınıyor. Aşağıdaki env var **adları** hâlâ geçerli, ama değerler ve
 > price ID'leri LIVE karşılıklarıyla değiştirilmiş olmalı.
 >
-> **LIVE ürün/fiyat oluşturma scripti:** `stripe-live-setup.js`
-> (`node stripe-live-setup.js sk_live_XXXXX`)
+> **LIVE ürün/fiyat oluşturma scripti:** `stripe-live-setup.cjs` (⚠️ `.js` sürümü çalışmaz, bkz. altta)
+> (`node stripe-live-setup.cjs sk_live_XXXXX`)
+>
+> ⚠️ `node stripe-live-setup.js` **hata verir** — `package.json`'da `"type": "module"`
+> tanımlı, dosya ise CommonJS `require()` kullanıyor. Çalışan sürüm `.cjs` olandır.
 >
 > **Geçerli fiyatlar (2026-08-05'te üç kaynaktan doğrulandı — `index.html`,
 > chatbot bilgi tabanı, `stripe-live-setup.js`):**

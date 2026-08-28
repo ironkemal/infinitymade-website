@@ -1,4 +1,4 @@
--- database_v33_diagnosegruppen_icd_rules.sql
+-- database_v36_diagnosegruppen_icd_rules.sql
 --
 -- Warum icd_prefixes entfernt wird
 -- ---------------------------------

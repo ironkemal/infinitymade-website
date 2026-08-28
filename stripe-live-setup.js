@@ -1,3 +1,8 @@
+// ⚠️ BU DOSYA ÇALIŞMAZ — `stripe-live-setup.cjs` kullanın.
+// package.json'da "type": "module" var, bu dosya ise require() kullanıyor:
+//   ReferenceError: require is not defined in ES module scope
+// İki dosya tek kelime farkla aynı (hata mesajı DE/TR). Belgeler artık .cjs'i gösteriyor.
+// Silinmesi kopya-birleştirme kararıdır ve kullanıcıya aittir (CLAUDE.md → Fonksiyon haritası).
 /**
  * Praxura — Stripe Live Setup Script
  * Calistirir: node stripe-live-setup.js sk_live_XXXXX

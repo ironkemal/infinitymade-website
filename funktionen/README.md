@@ -5,7 +5,7 @@ var, nerede kullanılıyor, neyle besleniyor"**u tutar.
 
 ## Neden var
 
-`dashboard.js` 26.000+ satır; projede 1300'den fazla fonksiyon var. "Böyle bir şey zaten var
+`dashboard.js` 24.000+ satır; projede 1700'den fazla fonksiyon var. "Böyle bir şey zaten var
 mı" sorusu okuyarak cevaplanamaz — hiçbir model bu hacmi tek seferde kapsayamaz, okur ve
 **makul ama eksik** bir cevap üretir. Bu klasör o soruyu okumaya değil **saymaya** çevirir.
 

@@ -28,6 +28,22 @@ Ihrem Server" iddiası UWG §5 ve §434 BGB açar.
 | `node-forge.js` | `node-forge@1.3.1` | `dashboard.js` → `loadForge()`, §302 PKCS#7 imzalama (tembel yüklenir) |
 | `fullcalendar/index.global.min.js` | `fullcalendar-scheduler@6.1.11` | `kalender.html` |
 | `fullcalendar/locales-all.global.min.js` | `@fullcalendar/core@6.1.11` | `kalender.html` |
+| `cropperjs/cropper.min.js` + `.css` | `cropperjs@1.6.1` (cdnjs → 27.08.2026) | `dashboard.html:26-27` → Logo/Profilbild zuschneiden (`dashboard.js:11935`, `13141`) |
+
+Cropper.js de global (UMD) script'tir. cdnjs'ten indirilen iki dosyanın
+sha256'sı **bağımsız ikinci bir kaynakla** (unpkg, yani npm artefaktının kendisi)
+karşılaştırıldı ve birebir aynı çıktı — indirilen şeyin gerçekten yayınlanmış
+sürüm olduğu böyle doğrulandı, "indirdim, çalışıyor" ile değil:
+
+```
+sha256  cropper.min.js   b20765dff4a5c832a07a5e86d2f46d429ba60024b2c8a0a746d7f5ef5eaad33c
+sha256  cropper.min.css  f7f61b6cc4219716618f8295502eadf36f9612f4a4a8fadfce9d165bd58dbac4
+```
+
+MIT lisans başlığı iki dosyada da **korundu** — silinmesi UrhG/MIT NOTICE
+yükümlülüğünü ihlal ederdi. Aynı işlemde `cdnjs.cloudflare.com`
+`vercel.json`'daki CSP'nin **hem `script-src` hem `style-src`** yönergesinden
+çıkarıldı; yoksa kapı açık kalır ve yerelleştirme yalnız kâğıt üzerinde olurdu.
 
 FullCalendar dosyaları global (UMD) script'tir, ESM değil — paketlemeye gerek
 yok, jsDelivr'deki dosyanın birebir kopyasıdır. Dış referans içermedikleri
@@ -122,8 +138,7 @@ Hâlâ dışarıdan gelenler — ayrı kartları var:
 
 | Ne | Nerede | Not |
 |---|---|---|
-| **Cropper.js** | `dashboard.html:26-27` (cdnjs) | Sıradaki. `dashboard.html` başka çalışmanın altındaydı, ertelendi |
 | **Sentry loader** | her sayfa (`js-de.sentry-cdn.com`) | On-prem'de yerelleştirme değil **kapatma** doğru olabilir — ayrı karar |
-| **Google Fonts** | `fonts.googleapis.com` / `gstatic` | Aynı hukuki gerekçe (LG München I), aynı sweep'te kapatılabilir |
-| **Wistia** | pazarlama sayfaları | Hasta verisi bağlamı değil, önceliği düşük |
+| ~~**Google Fonts**~~ | — | ✅ **KAPANDI.** Fontlar `fonts/system-fonts.css` ile self-hosted; 27.08.2026'da CSP'den de çıkarıldı (`style-src`/`font-src`). Kodda tek referans kalmadı — tarandı. |
+| **Wistia** | `index.html:1202/1211/1220` | ⛔ **Önceliği yükseldi.** `legal-de` 27.08.2026: Wistia player boot'ta **localStorage okuyor** → § 25 Abs. 1 TDDDG Einwilligung gerektiriyor (cookie olmaması kurtarmıyor). Ayrıca `datenschutz.html`'de hiç adı geçmiyor (Art. 13 lit. e) ve `cookie-consent.js` banner'ı "cookie-frei, keine personenbezogenen Daten" diyor — Wistia yüklenince bu beyan yanlış olur (UWG § 5). Fix: Zwei-Klick-Lösung ya da videoyu kendi alanımızdan servis et. |
 | **Stripe** | ödeme | **Yerelleştirilemez ve gerekmez** — PCI gereği Stripe'ın kendi alanından yüklenmek zorunda |

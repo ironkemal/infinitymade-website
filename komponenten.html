@@ -545,10 +545,11 @@ search_heilmittel(
       { at:'dashboard.js:7548', what:'Patientenliste — Suchfeld über der Tabelle' },
       { at:'dashboard.js (7×)',  what:'Terminvergabe, Rezept-Kopf, Serientermine' },
     ],
-    warn:'Die <strong>Eingabefelder</strong> sind noch dreifach gebaut: Patientenliste nutzt diese Funktion, '
-       + 'Rezept-Kopf (<code>rzPatientDatalist</code>, dashboard.js:16423) und Podologie '
-       + '(<code>podPatientList</code>, dashboard.js:22987) nutzen je ein eigenes '
-       + '<code>&lt;datalist&gt;</code> ohne Telefon-/Datumssuche. Kandidat für die nächste Zusammenführung.',
+    warn:'<strong>Erledigt (27.08.2026).</strong> Die Eingabefelder waren dreifach gebaut — '
+       + 'Rezept-Kopf und Podologie hingen je an einem eigenen <code>&lt;datalist&gt;</code> '
+       + 'ohne Telefon-/Datumssuche. Beide laufen jetzt über <code>patient-suche.js</code> '
+       + '(<code>dashboard.js:17297</code> bzw. <code>module/podologie-abrechnung.js:898</code>); '
+       + 'das tote <code>&lt;datalist&gt;</code> ist aus <code>dashboard.html</code> entfernt.',
   });
 }
 
@@ -896,8 +897,11 @@ block({
     },
     sources:[{ label:'dashboard.js — getOwnerId', load:() => codeOf('./dashboard.js', ['getOwnerId']) }],
     usedIn:[{ at:'dashboard.js (127×)', what:'nahezu jede Supabase-Abfrage' }],
-    note:'Zweite, <em>asynchrone</em> Variante im Backend: <code>lib/supabase.js:264</code> '
-       + '<code>getOwnerId(userId)</code>. Anderer Zweck, keine Dublette.',
+    note:'⚠️ Es gibt eine zweite, <em>asynchrone</em> Fassung in <code>lib/supabase.js:264</code>. '
+       + 'Sie liegt aber im <strong>toten</strong> Ordner <code>lib/</code> — nichts importiert ihn '
+       + '(nur <code>lib/business.js</code> zieht <code>lib/supabase.js</code>, beide unbenutzt). '
+       + 'Nicht mit <code>api-backend/lib/</code> verwechseln, das ist der lebende Backend-Ordner. '
+       + 'Offene Entscheidung: <code>lib/</code> löschen oder wiederbeleben.',
   });
 }
 

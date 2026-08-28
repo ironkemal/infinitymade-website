@@ -234,7 +234,7 @@ datenseitig nichts mehr zu tun, es fehlt nur der Schalter im Frontend.
 
 ## Migrationen
 
-Im Repo liegen unter `supabase/migrations/` nur **5** Dateien; die Datenbank
+Im Repo liegen unter `supabase/migrations/` nur **10** Dateien; die Datenbank
 kennt **195**. Der Rest wurde direkt über MCP oder den SQL-Editor angewendet.
 `supabase/migrations/` ist deshalb **keine** verlässliche Quelle für den
 Schemastand — diese Dateien hier sind es.
