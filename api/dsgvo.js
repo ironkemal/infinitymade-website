@@ -1,5 +1,40 @@
 // GET  /api/dsgvo?action=export  — DSGVO Art. 15 Datenauskunft
 // POST /api/dsgvo?action=delete  — DSGVO Art. 17 Recht auf Löschung
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// STAND 28.08.2026 — was hier geprüft ist und was offen bleibt
+// ─────────────────────────────────────────────────────────────────────────────
+// Die Löschkette wurde gegen die laufende Datenbank durchgespielt: dieselbe
+// Reihenfolge, dieselbe Spaltenwahl wie unten, in einer Transaktion, die am
+// Ende zurückgerollt wurde. Kein Datensatz wurde dabei verändert.
+//
+// ✅ Läuft durch: Einzelpraxis ohne festgeschriebene Rechnung. Die Probe kam bis
+//    `DELETE FROM profiles` und hätte das Profil entfernt. Übersprungen wurden
+//    nur die fünf Tabellen ohne `owner_id`/`user_id`, die ihre Eltern per
+//    CASCADE ohnehin mitnehmen.
+//
+// ⛔ ZWEI SPERREN BLEIBEN — beide sind Rechtsfragen, keine Programmierfehler,
+//    und beide sind bewusst NICHT hier gelöst:
+//
+//    1. Festgeschriebene Rechnung (GoBD). Der Trigger `invoice_festschreibung()`
+//       weist die Anonymisierung oben mit 23514 ab („Festgeschriebene Rechnung
+//       … kann inhaltlich nicht geändert werden"). Weil `invoices.patient_id`
+//       dadurch stehen bleibt und der Fremdschlüssel `invoices_patient_id_fkey`
+//       NO ACTION ist, lässt sich anschließend die Patiententabelle `leads` gar
+//       nicht löschen (23503). Für jede Praxis, die je eine Rechnung
+//       festgeschrieben hat, scheitert die Löschung also an der Patientenakte.
+//       Auflösung erfordert eine Abwägung Art. 17 Abs. 3 lit. b gegen § 147 AO /
+//       § 14b UStG: darf der Trigger das Nullen reiner Personenfelder zulassen,
+//       wenn die buchhalterischen Beträge unangetastet bleiben? → legal-de.
+//
+//    2. Mitarbeiter. `profiles.owner_id` zeigt mit NO ACTION auf `profiles`;
+//       solange Angestellte am Inhaber hängen, lässt sich dessen Profil nicht
+//       löschen. Was mit den Konten der Angestellten geschehen soll, wenn die
+//       Praxis gelöscht wird, ist eine Produkt- und Rechtsfrage. → legal-de.
+//
+// Bis dahin gilt: der Endpunkt sagt ehrlich, dass er nicht fertig geworden ist
+// (siehe Antwort unten), statt wie bisher bedingungslos `success: true` zu
+// melden. Eine Löschung, die man für erledigt hält, wird nie nachgefasst.
 
 import { getAuthedUser, adminFetch, adminAuthFetch, json } from './_lib/auth.js';
 import { stripeRequest } from './_lib/stripe.js';
@@ -12,15 +47,14 @@ const USER_TABLES = [
   { table: 'businesses',                   filter: 'owner_id'  },
   { table: 'calendar_integrations',        filter: 'user_id'   },
   { table: 'services',                     filter: 'owner_id'  },
-  // ⚠️ OFFEN — 27.08.2026: die folgenden vier Tabellen haben WEDER `owner_id`
-//    NOCH `user_id`. Der Filter unten trifft eine Spalte, die es nicht gibt;
-//    PostgREST antwortet 400 und die Tabelle fehlt in der Art.-15-Auskunft.
-//    Ein Einzeiler reicht hier NICHT — die Zuordnung zum Nutzer läuft über
-//    eine zweite Tabelle (businesses bzw. prescriptions), also braucht es
-//    eine eingebettete Abfrage. Bewusst nicht auf Verdacht geändert:
-//    eine falsche Verknüpfung würde FREMDE Daten in die Auskunft holen,
-//    und das wäre schlimmer als eine unvollständige.
-//    Vorgemerkt für den Sicherheitsdurchlauf; braucht legal-de + DB-Blick.
+  // ✅ 28.08.2026 GELÖST (DB-Zugang). Am 27.08. stand hier „vier Tabellen ohne
+  //    owner_id/user_id, braucht eine eingebettete Abfrage". Gegen die laufende
+  //    DB nachgesehen: es sind DREI, nicht vier — `employee_services` und
+  //    `employee_business_assignments` haben sehr wohl `employee_id` und
+  //    funktionierten die ganze Zeit. Die drei echten sind unten mit `select`
+  //    eingebettet. Die Verknüpfung ist bei allen dreien eindeutig (genau ein
+  //    Fremdschlüssel auf die Elterntabelle), es kann also keine fremde Zeile
+  //    hereinrutschen — das war die Sorge, die den Fix im August aufhielt.
   // `business_services` ist am 28.08.2026 gedroppt worden (Konsey, Option B).
   //   Die Auskunft verliert dadurch nichts: die Tabelle war ein Spiegel von
   //   `services` (Zeile darueber), enthielt keine Patientendaten, sondern nur
@@ -35,8 +69,13 @@ const USER_TABLES = [
   { table: 'patient_notes',                filter: 'owner_id'  },
   { table: 'anamnese',                     filter: 'owner_id'  },
   { table: 'prescriptions',                filter: 'owner_id'  },
-  { table: 'prescription_sessions',        filter: 'owner_id'  },  // -> prescription_id -> prescriptions.owner_id
-  { table: 'prescription_validations',     filter: 'owner_id'  },  // -> prescription_id -> prescriptions.owner_id
+  // `prescription_sessions`/`prescription_validations` haben kein `owner_id`.
+  // Zuordnung über `prescription_id`; `!inner` sorgt dafür, dass nur Zeilen
+  // durchkommen, deren Verordnung dem anfragenden Nutzer gehört.
+  { table: 'prescription_sessions',        filter: 'prescriptions.owner_id',
+    select: '*,prescriptions!inner(owner_id)' },
+  { table: 'prescription_validations',     filter: 'prescriptions.owner_id',
+    select: '*,prescriptions!inner(owner_id)' },
   { table: 'invoices',                     filter: 'owner_id'  },
   { table: 'abrechnung',                   filter: 'owner_id'  },
   { table: 'zuzahlung_befreiung',          filter: 'owner_id'  },
@@ -52,9 +91,53 @@ const USER_TABLES = [
   { table: 'ueberweisungen',               filter: 'owner_id'  },
   { table: 'referral_drafts',              filter: 'owner_id'  },
   { table: 'terapeut_zertifikat',          filter: 'owner_id'  },
-  { table: 'employee_groups',              filter: 'owner_id'  },  // -> business_id -> businesses.owner_id
+  // `employee_groups` hat kein `owner_id`, nur `business_id`.
+  { table: 'employee_groups',              filter: 'businesses.owner_id',
+    select: '*,businesses!inner(owner_id)' },
   { table: 'employee_business_assignments',filter: 'employee_id' },
   { table: 'consent_log',                  filter: 'user_id'   },
+
+  // ── 28.08.2026 ergänzt: alles unten fehlte in der Auskunft ──────────────
+  // Gefunden durch einen Abgleich der Live-DB gegen diese Liste: jede Tabelle
+  // in `public` mit `owner_id` oder `user_id`, die hier nicht vorkam. Der
+  // Schwerpunkt der Lücke lag ausgerechnet auf der Podologie — also genau der
+  // Fachrichtung, die gerade zuerst fertiggestellt wird, und auf der
+  // vollständigen Patientenakte (Verordnungen, Behandlungen, Fußbefunde).
+  // Eine Art.-15-Auskunft ohne diese Tabellen war schlicht unvollständig.
+  { table: 'verordnungen',                 filter: 'owner_id'  },
+  { table: 'podologie_behandlungen',       filter: 'owner_id'  },
+  { table: 'fußstatus',                    filter: 'owner_id'  },
+  { table: 'pat_fussbefund',               filter: 'owner_id'  },
+  { table: 'messreihen',                   filter: 'owner_id'  },
+  { table: 'patients',                     filter: 'owner_id'  },
+  { table: 'patient_consents',             filter: 'owner_id'  },
+  { table: 'prescription_documents',       filter: 'owner_id'  },
+  { table: 'booking_requests',             filter: 'owner_id'  },
+  { table: 'warteliste',                   filter: 'owner_id'  },
+  { table: 'ausfallrechnungen',            filter: 'owner_id'  },
+  { table: 'mahnungen',                    filter: 'owner_id'  },
+  { table: 'belegliste',                   filter: 'owner_id'  },
+  { table: 'nummernkreise',                filter: 'owner_id'  },
+  { table: 'attendance',                   filter: 'owner_id'  },
+  { table: 'document_vorlagen',            filter: 'owner_id'  },
+  { table: 'data_sharing_settings',        filter: 'owner_id'  },
+  // ⚠️ Namensfalle: `therapist_certificates` und `terapeut_zertifikat` sind
+  //    ZWEI verschiedene Tabellen, beide existieren, beide werden benutzt.
+  //    Bisher stand nur die zweite in dieser Liste.
+  { table: 'therapist_certificates',       filter: 'owner_id'  },
+
+  // Bewusst NICHT in der Auskunft, jeweils mit Grund:
+  //   `kiosk_pins`        — Zugangsgeheimnis (PIN). Ein Hash in einer
+  //                         herunterladbaren Datei bringt dem Betroffenen
+  //                         nichts und vergrößert nur die Angriffsfläche.
+  //   `data_access_log`   — Protokoll der Zugriffe, zugleich die Beweiskette
+  //                         für genau diese Auskunft. Ob es hineingehört, ist
+  //                         eine Frage an legal-de, keine Wegwerf-Entscheidung.
+  //   `admin_users`       — unsere eigene Betreiber-Rolle, nicht die Daten des
+  //                         Betroffenen.
+  //   `scraper_data`      — Akquise-Rest aus der InfinityMade-Zeit.
+  //   `accommodations`, `applications`, `trip_history`, `trip_plans`,
+  //   `user_credits`      — Tabellen aus einem anderen Projekt, alle leer.
 ];
 
 async function handleExport(req, res) {
@@ -67,8 +150,10 @@ async function handleExport(req, res) {
   const data = {};
   const errors = {};
 
-  for (const { table, filter } of USER_TABLES) {
-    const url = `/${table}?${filter}=eq.${encodeURIComponent(userId)}&select=*`;
+  for (const { table, filter, select } of USER_TABLES) {
+    // `select` ist nur bei den drei eingebetteten Abfragen gesetzt; sonst `*`.
+    const url = `/${encodeURIComponent(table)}?${filter}=eq.${encodeURIComponent(userId)}`
+      + `&select=${encodeURIComponent(select || '*')}`;
     const { ok, data: rows, status } = await adminFetch(url);
     if (ok) {
       data[table] = rows || [];
@@ -111,14 +196,55 @@ const ANONYMIZE_TABLES = [
   { table: 'invoices', filter: 'owner_id', nullify: ['patient_name', 'patient_id', 'notes'] },
 ];
 
+// Reihenfolge ist hier keine Kosmetik: Kinder vor Eltern, sonst blockiert ein
+// Fremdschlüssel das Löschen und der Schritt scheitert still.
+//
+// ⚠️ 28.08.2026 gegen die Live-DB geprüft — die Liste war an zwei Stellen falsch:
+//   1. Fünf Einträge (`employee_services`, `employee_groups`,
+//      `employee_business_assignments`, `prescription_sessions`,
+//      `prescription_validations`) haben WEDER `owner_id` noch `user_id`. Die
+//      Schleife unten probiert genau diese zwei Spalten, bekam also 400 und
+//      übersprang sie wortlos. Drei davon räumt der CASCADE-Fremdschlüssel
+//      ohnehin ab; sie bleiben als Absicherung stehen, scheitern aber jetzt
+//      hörbar statt still.
+//   2. Ein ganzer Block patientennaher Fachtabellen fehlte — und weil mehrere
+//      davon mit NO ACTION auf `profiles` zeigen, ist das Löschen des Profils
+//      am Ende dieser Kette für jede echte Praxis fehlgeschlagen. Der Endpunkt
+//      meldete trotzdem `success: true`. Das ist der ernsteste Teil des Befunds.
 const DELETE_TABLES = [
+  // Patientennahe Fachdaten zuerst: `verordnungen`, `podologie_behandlungen`,
+  // `fußstatus`, `messreihen` und `booking_requests` zeigen mit NO ACTION auf
+  // `profiles` und blockieren sonst das Löschen des Profils.
+  'prescription_documents', 'mahnungen', 'ausfallrechnungen',
+  'podologie_behandlungen', 'verordnungen',
+  'messreihen', 'pat_fussbefund', 'fußstatus',
+  'warteliste', 'booking_requests',
+
   'consent_log', 'ai_audit_log', 'chatbot_usage', 'feedbacks', 'email_logs',
   'patient_notes', 'anamnese', 'prescription_validations', 'prescription_sessions',
   'prescriptions', 'zuzahlung_befreiung', 'referral_drafts', 'ueberweisungen',
   'aerzte', 'b2b_contacts', 'leads', 'fahrten', 'vehicles', 'terapeut_zertifikat',
   'bookings', 'time_offs', 'breaks', 'custom_days', 'working_hours',
   'employee_services', 'services', 'calendar_integrations',
+
+  // `booking_requests` oben muss vor `patients` weg (NO ACTION auf patients).
+  'patients', 'therapist_certificates', 'kiosk_pins', 'nummernkreise',
+  'document_vorlagen', 'data_sharing_settings', 'attendance',
+
   'employee_business_assignments', 'employee_groups', 'businesses', 'user_preferences',
+
+  // ⛔ BEWUSST NICHT HIER, weil es eine Rechtsfrage ist und keine technische:
+  //   `belegliste`      — Fremdschlüssel auf `profiles` ist RESTRICT, also
+  //                       ausdrücklich als Sperre gebaut. GoBD/§ 147 AO.
+  //   `patient_consents`— ebenfalls RESTRICT, und zusätzlich RESTRICT auf
+  //                       `leads`: solange Einwilligungen stehen, lässt sich
+  //                       nicht einmal die Patientenakte löschen. Das ist die
+  //                       Nachweiskette der Einwilligung selbst.
+  //   `abrechnung`      — § 302 SGB V / § 304 SGB V Aufbewahrung.
+  //   `invoices`        — wird oben anonymisiert statt gelöscht (Absicht).
+  // Art. 17 Abs. 3 lit. b lässt Aufbewahrungspflichten vorgehen, aber welche
+  // dieser vier gelöscht, anonymisiert oder behalten werden muss, entscheidet
+  // legal-de — nicht dieser Endpunkt und nicht nebenbei.
 ];
 
 async function handleDelete(req, res) {
@@ -179,15 +305,44 @@ async function handleDelete(req, res) {
     log.steps.push({ step: `anonymize:${table}`, ok, status });
   }
 
+  // Bis 28.08.2026 verschwand ein Fehlschlag hier spurlos: griff weder
+  // `owner_id` noch `user_id`, lief die innere Schleife durch und es wurde
+  // NICHTS protokolliert. Eine Löschung, die die Hälfte stehen lässt, sah
+  // deshalb aus wie eine vollständige.
+  const uebersprungen = [];
   for (const table of DELETE_TABLES) {
+    let erledigt = false;
+    let letzter = null;
     for (const filter of ['owner_id', 'user_id']) {
-      const { ok, status } = await adminFetch(`/${table}?${filter}=eq.${encodeURIComponent(userId)}`, { method: 'DELETE' });
-      if (ok && status !== 404) { log.steps.push({ step: `delete:${table}:${filter}`, ok, status }); break; }
+      const { ok, status, data: fehler } = await adminFetch(
+        `/${encodeURIComponent(table)}?${filter}=eq.${encodeURIComponent(userId)}`,
+        { method: 'DELETE' }
+      );
+      letzter = { status, fehler };
+      if (ok && status !== 404) {
+        log.steps.push({ step: `delete:${table}:${filter}`, ok, status });
+        erledigt = true;
+        break;
+      }
+    }
+    if (!erledigt) {
+      uebersprungen.push(table);
+      log.steps.push({
+        step: `delete:${table}`,
+        ok: false,
+        status: letzter?.status ?? null,
+        note: 'weder owner_id noch user_id griff — Zeilen können stehengeblieben sein',
+        detail: letzter?.fehler ?? null,
+      });
+      console.error(`[dsgvo] Löschung unvollständig: ${table} -> ${letzter?.status}`);
     }
   }
 
   const { ok: pOk, status: pStatus } = await adminFetch(`/profiles?id=eq.${encodeURIComponent(userId)}`, { method: 'DELETE' });
   log.steps.push({ step: 'delete:profiles', ok: pOk, status: pStatus });
+  if (!pOk) {
+    console.error(`[dsgvo] Profilzeile NICHT gelöscht (${pStatus}) — Fremdschlüssel blockiert.`);
+  }
 
   const { ok: aOk, status: aStatus } = await adminAuthFetch(`/admin/users/${encodeURIComponent(userId)}`, { method: 'DELETE' });
   log.steps.push({ step: 'delete:auth_user', ok: aOk, status: aStatus });
@@ -203,9 +358,25 @@ async function handleDelete(req, res) {
     }),
   });
 
-  return json(res, 200, {
-    success: true,
-    message: 'Ihre Daten wurden gelöscht. Abrechnungsdaten bleiben anonymisiert aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) gespeichert.',
+  // Vorher stand hier bedingungslos `success: true` — auch dann, wenn die
+  // Profilzeile gar nicht gelöscht werden konnte. Jemandem zu sagen, seine
+  // Daten seien weg, während sie noch da sind, ist der schlimmere Fehler von
+  // beiden: er merkt es nicht und fragt nicht nach.
+  const vollstaendig = pOk && uebersprungen.length === 0;
+  if (vollstaendig) {
+    return json(res, 200, {
+      success: true,
+      message: 'Ihre Daten wurden gelöscht. Abrechnungsdaten bleiben anonymisiert aus gesetzlicher Aufbewahrungspflicht (§ 147 AO, § 304 SGB V) gespeichert.',
+      log,
+    });
+  }
+  return json(res, 500, {
+    success: false,
+    message: 'Die Löschung ist nur teilweise durchgelaufen. Ihr Antrag ist protokolliert und '
+      + 'wird manuell zu Ende geführt; bitte wenden Sie sich an support@praxura.de. '
+      + 'Es wurde nichts unternommen, was Ihren Antrag zurücknimmt.',
+    profil_geloescht: pOk,
+    nicht_geloescht: uebersprungen,
     log,
   });
 }
