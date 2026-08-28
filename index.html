@@ -34,7 +34,9 @@
 
   <!-- ===== DNS / preconnect ===== -->
   <link rel="preconnect" href="https://js-de.sentry-cdn.com" crossorigin />
-  <link rel="dns-prefetch" href="https://fast.wistia.net" />
+  <!-- dns-prefetch zu Wistia entfernt (27.08.2026): das Video laedt jetzt erst
+       auf Klick, ein Vorab-DNS-Lookup bringt nichts mehr und verraet dem Resolver
+       trotzdem, dass Wistia im Spiel ist. -->
 
   <!-- ===== Typography ===== -->
   <link rel="stylesheet" href="fonts/system-fonts.css" />
@@ -1184,6 +1186,34 @@
     .px-video-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
     .px-video-embed { position: relative; padding-bottom: 56.25%; height: 0; }
     .px-video-embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+    /* Zwei-Klick-Loesung (27.08.2026). Vorher stand hier direkt das Wistia-<iframe>.
+       Der Wistia-Player liest beim Start den lokalen Speicher des Endgeraets aus;
+       das ist nach § 25 Abs. 1 TDDDG einwilligungspflichtig, unabhaengig davon ob
+       ein Cookie gesetzt wird. `loading="lazy"` half nicht — es verschiebt das
+       Laden nur bis zum Scrollen, es fragt niemanden. Jetzt laedt das <iframe>
+       erst nach einem echten Klick, und der Klick ist die Einwilligung.
+       Bewusst OHNE Vorschaubild von Wistia: ein Thumbnail von deren Servern
+       waere genau der Abruf, den wir vermeiden wollen. Kachel ist reines CSS. */
+    .px-video-ph { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; cursor: pointer;
+                   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .7rem;
+                   padding: 1.2rem; text-align: center; font: inherit;
+                   background: linear-gradient(145deg, #2a2a2e 0%, #1b1b1f 100%); color: #f3f1ec; }
+    .px-video-ph:hover .px-video-ph-play,
+    .px-video-ph:focus-visible .px-video-ph-play { transform: scale(1.08); background: var(--bronze, #b1891b); }
+    .px-video-ph-play { width: 54px; height: 54px; border-radius: 50%; flex: none;
+                        background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center;
+                        transition: transform .18s ease, background .18s ease; }
+    .px-video-ph-play::after { content: ''; width: 0; height: 0; margin-left: 4px;
+                               border-left: 16px solid currentColor; border-top: 10px solid transparent; border-bottom: 10px solid transparent; }
+    .px-video-ph-label { font-size: .95rem; font-weight: 600; }
+    .px-video-ph-text { font-size: .82rem; line-height: 1.5; opacity: .86; max-width: 34ch; }
+    /* Der Rechtshinweis muss da sein, aber er ist nicht die Botschaft der Kachel.
+       Erste Fassung („IP-Adresse und Geraetedaten werden uebertragen") las sich wie
+       eine Warnung vor der eigenen Seite — auf einer Marketingseite schreckt das ab,
+       ohne rechtlich mehr zu leisten. Fuer die Einwilligung reicht: was passiert
+       (Video laedt ueber Wistia) und wo es ausfuehrlich steht (Link). */
+    .px-video-ph-note { font-size: .72rem; line-height: 1.45; opacity: .6; max-width: 32ch; }
+    .px-video-ph-note a { color: inherit; text-decoration: underline; }
     .px-video-info { padding: 1rem 1.1rem 1.2rem; }
     .px-video-tag { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--bronze); margin-bottom: .35rem; }
     .px-video-name { font-size: .98rem; font-weight: 600; color: var(--ink); line-height: 1.4; }
@@ -1199,7 +1229,12 @@
     <div class="px-videos-grid">
       <div class="px-video-card">
         <div class="px-video-embed">
-          <iframe src="https://fast.wistia.net/embed/iframe/k3pot7dbe1" title="KI-Rezeptscanner Demo" allow="autoplay; fullscreen" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" allowfullscreen loading="lazy"></iframe>
+          <button type="button" class="px-video-ph" data-wistia="k3pot7dbe1" aria-label="Video ansehen: KI-Rezeptscan">
+            <span class="px-video-ph-play" aria-hidden="true"></span>
+            <span class="px-video-ph-label">KI-Rezeptscan ansehen</span>
+            <span class="px-video-ph-text">Verordnung abfotografieren, Diagnose und Menge werden ausgelesen, Termin entsteht automatisch.</span>
+            <span class="px-video-ph-note">Zum Abspielen tippen · Video l&auml;dt &uuml;ber <a href="/datenschutz.html#wistia">Wistia</a></span>
+          </button>
         </div>
         <div class="px-video-info">
           <p class="px-video-tag">KI · Rezept</p>
@@ -1208,7 +1243,12 @@
       </div>
       <div class="px-video-card">
         <div class="px-video-embed">
-          <iframe src="https://fast.wistia.net/embed/iframe/y7ho9jh8qd" title="B2B/B2C Mail System Demo" allow="autoplay; fullscreen" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" allowfullscreen loading="lazy"></iframe>
+          <button type="button" class="px-video-ph" data-wistia="y7ho9jh8qd" aria-label="Video ansehen: E-Mails">
+            <span class="px-video-ph-play" aria-hidden="true"></span>
+            <span class="px-video-ph-label">E-Mails ansehen</span>
+            <span class="px-video-ph-text">Automatische Nachrichten an Patient:innen und Zuweiser — ohne Tippen.</span>
+            <span class="px-video-ph-note">Zum Abspielen tippen · Video l&auml;dt &uuml;ber <a href="/datenschutz.html#wistia">Wistia</a></span>
+          </button>
         </div>
         <div class="px-video-info">
           <p class="px-video-tag">Kommunikation · Mail</p>
@@ -1217,7 +1257,12 @@
       </div>
       <div class="px-video-card">
         <div class="px-video-embed">
-          <iframe src="https://fast.wistia.net/embed/iframe/8qc1rgyne0" title="Hausbesuch Fahrtenbuch Demo" allow="autoplay; fullscreen" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" allowfullscreen loading="lazy"></iframe>
+          <button type="button" class="px-video-ph" data-wistia="8qc1rgyne0" aria-label="Video ansehen: Fahrtenbuch">
+            <span class="px-video-ph-play" aria-hidden="true"></span>
+            <span class="px-video-ph-label">Fahrtenbuch ansehen</span>
+            <span class="px-video-ph-text">Hausbesuchsfahrten werden Finanzamt-konform von selbst erfasst.</span>
+            <span class="px-video-ph-note">Zum Abspielen tippen · Video l&auml;dt &uuml;ber <a href="/datenschutz.html#wistia">Wistia</a></span>
+          </button>
         </div>
         <div class="px-video-info">
           <p class="px-video-tag">Hausbesuch · Fahrtenbuch</p>
@@ -1226,6 +1271,28 @@
       </div>
     </div>
   </div>
+  <script>
+    /* Zwei-Klick-Loesung: der Platzhalter wird erst beim Klick durch das echte
+       <iframe> ersetzt. Vorher geht kein Byte an Wistia. autoplay=1, damit der
+       Klick nicht zweimal noetig ist — der Nutzer hat ja schon auf "abspielen"
+       gedrueckt. Kein Consent-Speicher: jede Kachel fragt fuer sich, das ist
+       die ehrlichere und die einfachere Variante. */
+    document.querySelectorAll('.px-video-ph').forEach(function (ph) {
+      ph.addEventListener('click', function () {
+        var id = ph.dataset.wistia;
+        if (!id) return;
+        var f = document.createElement('iframe');
+        f.src = 'https://fast.wistia.net/embed/iframe/' + id + '?autoPlay=1';
+        f.title = ph.getAttribute('aria-label') || 'Video';
+        f.className = 'wistia_embed';
+        f.setAttribute('allow', 'autoplay; fullscreen');
+        f.setAttribute('allowfullscreen', '');
+        f.setAttribute('frameborder', '0');
+        f.setAttribute('scrolling', 'no');
+        ph.replaceWith(f);
+      });
+    });
+  </script>
 </section>
 
 <!-- TERMINBUCHUNG VORUEBERGEHEND AUSGEBLENDET (2026-08-27) (mid-CTA 1)
