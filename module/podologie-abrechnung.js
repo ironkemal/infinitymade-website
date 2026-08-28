@@ -275,10 +275,17 @@ async function loadPodologieBilling() {
     .from('verordnungen')
     // leads(patientennummer) nur für die Nummer neben dem Namen — `belegnummer`
     // ist bis zur Abrechnung leer, sie muss zusammengesetzt werden.
-    // leads(business_id) traegt den Standort, siehe podStandortZuschnitt().
+    // leads(business_id) traegt den Standort, siehe standort-zuschnitt.js.
     .select('*, leads!lead_id(patientennummer, business_id)')
     .eq('owner_id', ownerId)
     // Abgesetzte gehören in die Arbeitsliste — sonst bleibt ausgefallenes Geld unsichtbar.
+    //
+    // ⚠️ SPIEGEL von `VERORDNUNG_EINREICHBAR` in
+    // `api-backend/billing/utils/einreichbar.js`. Dieselbe Liste, zwei Deploys
+    // (Vercel hier, Docker dort) — ein gemeinsamer Import ginge nur ueber einen
+    // Build-Schritt, den es nicht gibt. Wer eine der beiden aendert, aendert
+    // BEIDE: sonst zeigt die Arbeitsliste eine Verordnung an, die das Backend
+    // beim Abrechnen mit 409 zurueckweist. (fonksiyon-ustasi, 28.08.2026)
     .in('status', ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'])
     .order('created_at', { ascending: false });
 

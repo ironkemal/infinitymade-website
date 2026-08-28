@@ -31,6 +31,13 @@
  * abrechnen.
  *
  * 'storniert' und 'archiviert' sind abgeschlossen.
+ *
+ * ⚠️ SPIEGEL: dieselbe Liste steht im Frontend in
+ * `module/podologie-abrechnung.js` (`loadPodologieBilling`, `.in('status', …)`).
+ * Zwei Deploys — Vercel dort, Docker hier —, ein gemeinsamer Import ginge nur
+ * ueber einen Build-Schritt, den es nicht gibt. Wer eine aendert, aendert
+ * BEIDE: sonst zeigt die Arbeitsliste eine Verordnung an, die hier beim
+ * Abrechnen mit 409 zurueckgewiesen wird. (fonksiyon-ustasi, 28.08.2026)
  */
 export const VERORDNUNG_EINREICHBAR = ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'];
 
