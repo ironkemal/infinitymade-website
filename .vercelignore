@@ -1,5 +1,23 @@
 # --- Security: keep non-web content out of the public Vercel build ---
 # (audit 2026-06-03 — these were all reachable with HTTP 200 on praxura.de)
+#
+# Nachtrag 2026-08-27: Der Durchlauf von 2026-06-03 hat Datei-ENDUNGEN gesperrt
+# (*.md, *.sql, *.py) und die damals bekannten Ordner. Alles, was danach dazukam,
+# ist durch dieselbe Luecke gerutscht. Stichprobe live, alle HTTP 200:
+#   praxura.de/ui-audit/after/booking__iphone-se.png
+#   praxura.de/verordnung%20rezept/heilmittel-diagnoseliste.txt
+#   praxura.de/onprem/supabase-docker/docker-compose.yml
+#   praxura.de/tools/.namen-hashes
+#   praxura.de/ai%20chatbot%20proje/index.html
+#   praxura.de/funktionen/INDEX.json      (990 KB Funktionskarte der ganzen App)
+#   praxura.de/module/kvnr.test.js
+#   praxura.de/dashboard.js.bak
+# Deshalb ist diese Liste jetzt ordnerweise gefuehrt, nicht nur endungsweise.
+#
+# REGEL BEIM AUFRAEUMEN: bevor ein Ordner hier landet, pruefen ob eine
+# ausgelieferte HTML/CSS/JS ihn zur LAUFZEIT laedt. Quellenverweise in
+# Kommentaren (z. B. "siehe Handbuecher/SPEC-RULES.md") zaehlen NICHT —
+# die stehen im Repo, nicht im Browser.
 
 # Docs, plans, internal notes
 *.md
@@ -7,10 +25,19 @@
 .planning/
 compliance/
 competitor-research/
+konsey/
+fortschritte/
+db/
+funktionen/
+archive/
+demo slayt/
 
 # Database schema & scripts (full DB blueprint — do not publish)
 *.sql
 *.py
+supabase/
+sql-melih/
+onprem/
 
 # VPS backend (deployed separately, not via Vercel)
 api-backend/
@@ -19,6 +46,35 @@ api-backend/
 .roo/
 .agents/
 .claude/
+.githooks/
+.github/
+.editorconfig
+.gitattributes
+jsconfig.json
+
+# Build-/Schutz-Werkzeuge — gehoeren nicht ins Web (u. a. tools/.namen-hashes)
+tools/
+
+# Tests und Typ-Stubs: laufen in CI, nicht im Browser
+module/*.test.js
+module/typen/
+module/globals.d.ts
+
+# Tote Sicherungskopien und Altbestand aus der Studio-Zeit
+*.bak
+index-old.html
+script.js
+chatbot.js
+pakete/
+ai chatbot proje/
+lib/
+
+# Fachdokumente (GKV/Heilmittel). Werden im Code nur als QUELLE zitiert,
+# nie zur Laufzeit geladen — geprueft 2026-08-27. Zusaetzlich fraglich, ob
+# ICD-10-GM- und GKV-Lesefassungen ueberhaupt weiterverbreitet werden duerfen.
+Handbücher/
+Podoloji/
+verordnung rezept/
 
 # Captured browser traffic (contained live auth tokens) & junk screenshots
 *.har
@@ -30,3 +86,19 @@ dashboard_logged_in.png
 gobd_kassenbuch_screenshot.png
 landing_page.png
 zuzahlung_button_rendered.png
+verify_1_before.png
+verify_1_banner.png
+verify_1_after_accept.png
+verify_2_onboarding.png
+
+# QA-/Audit-Beweisbilder — reproduzierbar, ~205 MB, kein Web-Asset
+ui-audit/
+mobile-audit/
+funktionen-shots/
+
+# Medien-Rohmaterial aus der Videoproduktion
+demo rezept/
+voice demo/
+
+# Markenquelldateien — die ausgelieferten Logos/Favicons liegen im Wurzelverzeichnis
+Logo/
