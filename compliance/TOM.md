@@ -29,7 +29,13 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
 ### 1.3 Zugriffskontrolle (Datenzugriff)
 - **PostgreSQL Row Level Security (RLS)** auf jeder Tabelle mit Patientendaten
   - Auftraggeber A kann nie auf Daten von Auftraggeber B zugreifen, technisch erzwungen
-  - Filter `auth.uid() = owner_id` bzw. Multi-Business via `business_id`
+  - Filter `auth.uid() = owner_id` — die **Mandantentrennung** (Auftraggeber gegen
+    Auftraggeber) ist damit auf Datenbankebene erzwungen
+  - ⚠️ **Trennung mehrerer Standorte EINES Auftraggebers ist keine RLS-Zusicherung**,
+    sondern eine Einstellung des Verantwortlichen (`data_sharing_settings`), die in der
+    Anwendungsschicht über `business_id` umgesetzt wird. Sie greift nur dort, wo die
+    Tabelle diese Spalte führt; der Podologie-Verordnungstopf leitet den Standort
+    stattdessen über den Patienten ab (Konsey 2026-08-28, siehe LEGAL_DECISIONS.md)
 - Role-Based Access Control: `owner` / `employee` mit Modul-Berechtigungen (Faz Multi-Business)
 - Audit-Log jedes Patient-Datenzugriffs (Tabelle `data_access_log`, ≥ 12 Monate)
 - AI-Aufrufe protokolliert in `ai_audit_log` mit User-ID, Modell, Tokens, Kosten

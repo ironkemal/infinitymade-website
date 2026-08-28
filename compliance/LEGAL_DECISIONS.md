@@ -28,7 +28,7 @@ sadece durum değişirse veya yeni bir bulgu bunları ağırlaştırırsa değin
 
 | Tarih | Risk | Neden şimdilik kabul | Gözden geçirme |
 |---|---|---|---|
-| — | *(henüz kayıt yok)* | | |
+| 2026-08-28 | **Standort ayrımı podolojide veritabanı seviyesinde değil, uygulama seviyesinde.** `verordnungen`, `podologie_behandlungen`, `prescription_sessions`, `pat_fussbefund` tablolarında `business_id` kolonu yok; Standort hastadan türetiliyor (`lead_id → leads.business_id`) ve zuschnitt istemci tarafında yapılıyor. RLS yalnız **Mandantentrennung**'u (Auftraggeber A ≠ B) zorluyor — o duruyor. | İhlal riski bizde değil sorumluda doğar (Art. 32 Abs. 4: praxis içi erişim düzeni Verantwortlicher'ın organizasyon kararı; §203 StGB kapsamaz, aynı praxis çalışanı „berufsmäßig tätiger Gehilfe"). Bizim kusurumuz Art. 28 Abs. 3 lit. c olurdu — sorumluya kendi kararını uygulayacak tekniği vermemek — ve **o kapatıldı**: inhaber `data_sharing_settings.patients`'ı „ayrı" yaparsa liste artık ayrılıyor. Bugün çok-Standort'lu müşteri **yok** → Art. 33 bildirim yükümlülüğü doğmadı. Migration'ın 2–4 günlük Katman-4 maliyeti mevcut riskle orantısız. | **İlk çok-Standort'lu podoloji müşterisi sözleşme imzaladığında, onboarding'inden ÖNCE.** O anda dört tablo + 12 owner-geniş çağrı yeri + IK/LEGS Standort ekseni **tek parça** ele alınır. Karar ve kapsam: `konsey/tutanak/2026-08-28-podologie-standort-zuschnitt.md` |
 
 ---
 

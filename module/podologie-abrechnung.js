@@ -55,6 +55,7 @@ import { rechnungButtonHtml } from './rechnung-bruecke.js?v=20260816';
 import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { wireArztFeld } from './arzt-register.js?v=20260816';
 import { loadDgIcdRules, podDiagOptionsHtml } from './diagnosegruppen-regeln.js?v=20260827';
+import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -248,6 +249,13 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+/** Zeile ohne Standortzuordnung — sie steht bewusst in jeder Filiale. */
+function podPraxisweitMarke(v) {
+  return istPraxisweit(v)
+    ? `<span title="Ohne Standortzuordnung — in jeder Filiale sichtbar" style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">Praxisweit</span>`
+    : '';
+}
+
 async function loadPodologieBilling() {
   const el = document.getElementById('podBillingContent');
   if (!el) return;
@@ -267,14 +275,22 @@ async function loadPodologieBilling() {
     .from('verordnungen')
     // leads(patientennummer) nur für die Nummer neben dem Namen — `belegnummer`
     // ist bis zur Abrechnung leer, sie muss zusammengesetzt werden.
-    .select('*, leads!lead_id(patientennummer)')
+    // leads(business_id) traegt den Standort, siehe podStandortZuschnitt().
+    .select('*, leads!lead_id(patientennummer, business_id)')
     .eq('owner_id', ownerId)
     // Abgesetzte gehören in die Arbeitsliste — sonst bleibt ausgefallenes Geld unsichtbar.
     .in('status', ['aktiv', 'abrechenbar', 'abgesetzt', 'teilabsetzung'])
     .order('created_at', { ascending: false });
 
   if (error) { el.innerHTML = `<p style="color:var(--danger)">Fehler: ${ctx.escapeHtml(error.message)}</p>`; return; }
-  _podState.verordnungen = vords || [];
+  // Standort-Zuschnitt: Regel und Begruendung stehen in standort-zuschnitt.js,
+  // dort liegt sie neben ihrem Test. Kurz: `verordnungen` hat keine Spalte
+  // `business_id`, deshalb kein `bizScope`; Vorgabe ist praxisweit, gefiltert
+  // wird nur auf ausdruecklichen Wunsch des Inhabers, und Zeilen ohne
+  // Standortzuordnung verschwinden nie.
+  const zuschnitt = standortZuschnitt(vords || [], ctx.aktiverStandort?.());
+  _podState.verordnungen = zuschnitt.zeilen;
+  const zeigeHerkunft = zuschnitt.zeigeHerkunft;
 
   const today = new Date(); today.setHours(0,0,0,0);
 
@@ -327,6 +343,7 @@ async function loadPodologieBilling() {
                   : (v.behandlungsanlass || POD_ANLASS_DEFAULT)
               )}</span>
               ${_hmRozet}
+              ${zeigeHerkunft ? podPraxisweitMarke(v) : ''}
               ${!_isGkv ? `<span style="font-size:11px;background:var(--bg-card-solid,#1f2937);border:1px solid var(--border);padding:2px 7px;border-radius:12px;color:var(--text-muted);">${ctx.escapeHtml(v.rezeptart)}</span>` : ''}
               ${v.status && v.status !== 'aktiv' ? abrStatusBadge(v.status) : ''}
               ${v.absetzung_betrag ? `<span style="font-size:11px;color:#c2410c;font-weight:600;">−${Number(v.absetzung_betrag).toFixed(2).replace('.', ',')} €</span>` : ''}

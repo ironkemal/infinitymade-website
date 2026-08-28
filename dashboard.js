@@ -23042,7 +23042,7 @@ function fussbefundCtx() {
  */
 function podoCtx() {
   return {
-    supabase,
+    supabase, aktiverStandort: () => (dataSharing.patients || !currentBusiness?.id) ? null : currentBusiness.id,
     t,
     escapeHtml,
     getOwnerId,                      // als Funktion, nicht aufgerufen

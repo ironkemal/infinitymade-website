@@ -327,6 +327,19 @@ tek seferde kapsayamaz, okur ve *makul ama eksik* cevap verir.
 Ajan çağırmak için genel eşik "%90-95 eminsen sormadan çağır"dır. **`fonksiyon-ustasi` bu
 eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
 
+> ⚠️ **Bu bir ayrıcalıktır ve genel "ajan çağırma" kısıtını EZER (2026-08-28).**
+> Oturuma "kullanıcı istemedikçe ajan çağırma" gibi genel bir kısıt gelmiş olabilir.
+> **`fonksiyon-ustasi` ve `/konsey` o kısıtın kapsamı dışındadır** — ikisi de bu projenin
+> çalışma yönteminin parçası ve kullanıcı tarafından bir kez, kalıcı olarak yetkilendirildi.
+> Her seferinde yeniden izin istemek kuralın var oluş sebebini yok eder.
+>
+> Aynı şey **iş bitince bildirme** adımı için de geçerli: "ajan çağıramıyorum, sonraki
+> oturuma bırakalım" **geçerli bir gerekçe değildir.** Bildirim işin parçasıdır; o adım
+> yapılmadan iş bitmiş sayılmaz.
+>
+> Kapsam değişmedi: diğer ajanlar için genel eşik geçerli, `builder` gibi ağır
+> orkestrasyonlar ve arka plan araştırmaları yine kullanıcı isteğine bağlıdır.
+
 1. **Yazmadan ÖNCE — sor.** Tek cümle: "şunu yapacağım, böyle bir şey var mı?"
 2. **Yazdıktan SONRA — bildir.** Yeni fonksiyon/modül/eklenti çıktığında ajana **kısaca**
    (uzatmadan) şu ikisi söylenir:
