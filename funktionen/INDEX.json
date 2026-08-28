@@ -51052,8 +51052,8 @@
    "name": "stripe",
    "kind": "function",
    "file": "stripe-live-setup.js",
-   "start": 16,
-   "end": 49,
+   "start": 21,
+   "end": 54,
    "lines": 34,
    "tables": [],
    "rpcs": [],
@@ -51075,8 +51075,8 @@
    "name": "main",
    "kind": "function",
    "file": "stripe-live-setup.js",
-   "start": 75,
-   "end": 135,
+   "start": 80,
+   "end": 140,
    "lines": 61,
    "tables": [],
    "rpcs": [],
@@ -53564,7 +53564,7 @@
    "orte": [
     "api-backend/check_diagnosegruppen_icd.js:94",
     "api-backend/sync_heilmittel_katalog.js:109",
-    "stripe-live-setup.js:75"
+    "stripe-live-setup.js:80"
    ]
   },
   {

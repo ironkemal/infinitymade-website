@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // FUNKTIONSKARTE — projedeki her fonksiyonun haritasını üretir.
 //
-// Neden var: dashboard.js 26.000+ satır. "Bu fonksiyon var mı, nerede kullanılıyor,
+// Neden var: dashboard.js 24.000+ satır. "Bu fonksiyon var mı, nerede kullanılıyor,
 // neyle besleniyor" sorusunun cevabı okuyarak değil SAYARAK bulunur. Bir model
-// 26.000 satırı okuyamaz, örnekler; bu script okumaz, sayar — o yüzden eksiksizdir.
+// 24.000 satırı okuyamaz, örnekler; bu script okumaz, sayar — o yüzden eksiksizdir.
 //
 // Üretir:
 //   funktionen/INDEX.json  — makine okuru (fonksiyon-ustasi ajanı buradan cevap verir)
@@ -318,7 +318,7 @@ const index = {
   doppelteNamen,
 };
 
-writeFileSync(join(OUT_DIR, 'INDEX.json'), JSON.stringify(index, null, 1) + '\n');
+const jsonOut = JSON.stringify(index, null, 1) + '\n';
 
 // İnsan okuru
 const topTables = [...tableWriters.entries()]
@@ -352,7 +352,47 @@ if (doppelteNamen.length) {
   for (const d of doppelteNamen.slice(0, 40)) md.push(`- \`${d.name}\` — ${d.orte.join(' · ')}`);
   md.push('');
 }
-writeFileSync(join(OUT_DIR, 'INDEX.md'), md.join('\n'));
+const mdOut = md.join('\n');
+
+// -- Yazma ya da kontrol --------------------------------------------------
+// --check hicbir sey YAZMAZ. Uretilen ciktiyi diskle karsilastirir, fark
+// varsa 1 ile cikar. 27.08.2026'ya kadar bu bayrak BELGELIYDI ama
+// UYGULANMAMISTI: script her kosulda yaziyor, her kosulda 0 donuyordu.
+// Yani "harita taze mi" diye soran herkes, soruyu sorarken cevabi bozuyor
+// ve her zaman "taze" cevabini aliyordu. Bir kapinin en kotu hali,
+// kapaliyken acik gorunmesidir.
+//
+// Tarih satiri karsilastirmadan cikarilir: `erzeugt` her gun degisir, ama
+// haritanin icerigi ayniysa bu bir drift degildir.
+const stripDatum = (txt) => txt
+  .replace(/"erzeugt": "\d{4}-\d{2}-\d{2}"/, '"erzeugt": "-"')
+  .replace(/^> Uretim: \d{4}-\d{2}-\d{2} /m, '> Uretim: - ')
+  .replace(/^> Üretim: \d{4}-\d{2}-\d{2} /m, '> Uretim: - ');
+
+const jsonPfad = join(OUT_DIR, 'INDEX.json');
+const mdPfad   = join(OUT_DIR, 'INDEX.md');
+
+if (process.argv.includes('--check')) {
+  const lies = (f) => { try { return readFileSync(f, 'utf8'); } catch { return null; } };
+  const abweichungen = [];
+  for (const [pfad, neu] of [[jsonPfad, jsonOut], [mdPfad, mdOut]]) {
+    const alt = lies(pfad);
+    if (alt === null) abweichungen.push(rel(pfad) + ' -- dosya yok');
+    else if (stripDatum(alt) !== stripDatum(neu)) abweichungen.push(rel(pfad) + ' -- icerik farkli');
+  }
+  if (abweichungen.length) {
+    console.error('X Harita eskimis -- ' + abweichungen.join(' . '));
+    console.error('  Tazele: node tools/funktionskarte.mjs');
+    console.error('  (diskte ' + index.funktionen + ' fonksiyon / ' + index.dateien + ' dosya bekleniyordu)');
+    process.exit(1);
+  }
+  console.log('OK Harita taze -- ' + index.funktionen + ' fonksiyon / ' + index.dateien + ' dosya');
+  process.exit(0);
+}
+
+writeFileSync(jsonPfad, jsonOut);
+writeFileSync(mdPfad, mdOut);
+
 
 console.log(`✓ ${index.funktionen} fonksiyon / ${index.dateien} dosya`);
 console.log(`✓ ${clusters.length} kopya adayı kümesi`);

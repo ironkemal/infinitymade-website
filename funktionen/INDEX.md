@@ -379,7 +379,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:192
 - `showToast` — admin.js:22 · dashboard.js:1273 · module/kiosk.js:46
-- `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/sync_heilmittel_katalog.js:109 · stripe-live-setup.js:75
+- `main` — api-backend/check_diagnosegruppen_icd.js:94 · api-backend/sync_heilmittel_katalog.js:109 · stripe-live-setup.js:80
 - `q` — booking-request.js:84 · dashboard.js:21216 · script.js:751
 - `loadTeam` — booking-request.js:517 · dashboard.js:11209 · kalender.js:194
 - `initCalendar` — booking-request.js:566 · dashboard.js:2502 · kalender.js:244

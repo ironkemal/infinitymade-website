@@ -40,16 +40,37 @@ added=$(git diff --cached --unified=0 --no-color \
 [ -z "$added" ] && exit 0
 
 # Kelimelere böl, 4 harften kısa olanları ele, küçült, hash'le, listeyle karşılaştır.
-hits=$(printf '%s' "$added" \
-  | tr -c 'A-Za-z\304\326\334\344\366\374\337' '\n' \
-  | awk 'length($0) >= 4' \
-  | tr 'A-Z' 'a-z' \
-  | sort -u \
-  | while read -r w; do
-      [ -z "$w" ] && continue
-      h=$(printf '%s' "$w" | sha256sum | cut -d' ' -f1)
-      grep -qx "$h" "$hash_file" && printf '%s\n' "$w"
-    done || true)
+#
+# Neden node ve neden tek süreç (27.08.2026):
+# Buradaki döngü her benzersiz kelime için AYRI bir `sha256sum` süreci açıyordu.
+# Orta boy bir commit'te bu 800+ süreç demek; Windows'ta ölçüldü, iki dakikadan
+# uzun sürüyordu. O kadar yavaş bir kapı denetlemez — insanı `SKIP_NAME_GATE=1`
+# yazmaya iter, yani tam da engellemesi gereken şeyi kolaylaştırır. Aynı iş tek
+# node sürecinde saniyenin altında bitiyor. (`funktionskarte.mjs` ve `npm test`
+# zaten node istiyor, yeni bir bağımlılık değil.)
+#
+# Kelime ayırma kuralı shell sürümüyle birebir aynı: harf olmayan her şey ayraç,
+# 4 harften kısa olanlar elenir, küçültülür. Alman harfleri (ÄÖÜäöüß) harf sayılır.
+hits=$(printf '%s' "$added" | node -e '
+  const { createHash } = require("node:crypto");
+  const fs = require("node:fs");
+  const hashes = new Set(
+    fs.readFileSync(process.argv[1], "utf8")
+      .split(/\r?\n/).map(l => l.trim().split(/\s+/)[0]).filter(Boolean)
+  );
+  let ein = "";
+  process.stdin.setEncoding("utf8");
+  process.stdin.on("data", d => ein += d);
+  process.stdin.on("end", () => {
+    const treffer = new Set();
+    for (const w of new Set(
+      ein.split(/[^A-Za-zÄÖÜäöüß]+/).filter(x => x.length >= 4).map(x => x.toLowerCase())
+    )) {
+      if (hashes.has(createHash("sha256").update(w, "utf8").digest("hex"))) treffer.add(w);
+    }
+    if (treffer.size) process.stdout.write([...treffer].join("\n") + "\n");
+  });
+' "$hash_file" || true)
 
 if [ -n "$hits" ]; then
   n=$(printf '%s\n' "$hits" | grep -c . || true)
