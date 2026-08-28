@@ -27,6 +27,7 @@ import { renderRezeptvorderseite } from '../pdf/rezeptvorderseite.template.js';
 import { calcAbrechnungsfallZuzahlung } from '../zuzahlung/calculator.js';
 import { resolvePreis } from '../preise/resolver.js';
 import { validateBelegEntry, generateCsvString } from '../belegliste/helper.js';
+import { istEinreichbar, einreichbarFilter } from '../utils/einreichbar.js';
 import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
@@ -2137,6 +2138,17 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       .in('id', verordnungIds);
     if (vErr) return res.status(500).json({ error: vErr.message });
 
+    // Fehlt eine angeforderte Id (geloescht, fremder Mandant), darf der Rest
+    // nicht stillschweigend durchlaufen — sonst enthaelt die DTA-Datei weniger
+    // Verordnungen als die Praxis abgeschickt hat, ohne dass es jemand sieht.
+    if ((vords || []).length !== verordnungIds.length) {
+      const gefunden = new Set((vords || []).map(v => v.id));
+      const fehlend  = verordnungIds.filter(id => !gefunden.has(id));
+      return res.status(404).json({
+        error: `Verordnung(en) nicht gefunden: ${fehlend.map(id => String(id).slice(0,8)).join(', ')}`,
+      });
+    }
+
     // ---- validate each verordnung ----
     for (const v of (vords || [])) {
       // §302 SGB V gilt nur für Leistungen zulasten der GKV. Privat-, Selbst-
@@ -2157,6 +2169,22 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
       }
       if (!v.versichertennummer && !v.leads?.versichertennummer) {
         return res.status(422).json({ error: `Verordnung ${v.id.slice(0,8)} (${v.patient_name}): Versichertennummer fehlt.` });
+      }
+      // Schon eingereicht? Dann nicht ein zweites Mal.
+      //
+      // Bis 28.08.2026 pruefte das niemand: derselbe Aufruf mit denselben Ids
+      // erzeugte eine zweite `abrechnung`-Zeile samt zweiter DTA-Datei — ein
+      // doppelter Abrechnungsfall bei der Kasse. Ausgeloest wurde das real vom
+      // Zuhoerer-Fehler im Frontend (podologie-abrechnung.js), der pro Neu-
+      // zeichnung einen weiteren Klick-Zuhoerer anhaengte.
+      //
+      // 'abgesetzt' und 'teilabsetzung' stehen bewusst NICHT hier: das ist der
+      // Korrekturweg nach einer Kassenrueckmeldung, den die Arbeitsliste im
+      // Frontend absichtlich anbietet.
+      if (!istEinreichbar(v.status)) {
+        return res.status(409).json({
+          error: `Verordnung ${v.id.slice(0,8)} (${v.patient_name}) ist bereits eingereicht (Status „${v.status}") und kann nicht erneut abgerechnet werden.`,
+        });
       }
     }
 
@@ -2306,9 +2334,43 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     // abrechnung_id ist die Ruecktrasse: ohne sie laesst sich eine spaetere
     // Kassenrueckmeldung (ZAA) nicht der Verordnung zuordnen und die Absetzung
     // bliebe unsichtbar.
-    await supabase.from('verordnungen')
+    //
+    // Bedingt, nicht blind: der Statusfilter macht das Setzen zum atomaren
+    // Anspruch. Laufen zwei Anfragen gleichzeitig (Doppelklick, haengende
+    // Leitung, Wiederholung), gewinnt genau eine — die zweite bekommt weniger
+    // Zeilen zurueck als sie angefordert hat und raeumt ihre eigene Abrechnung
+    // wieder ab. Eine reine Vorabpruefung reichte dafuer nicht: beide Anfragen
+    // lesen den alten Zustand, bevor eine von beiden schreibt.
+    const { data: uebernommen, error: updErr } = await supabase.from('verordnungen')
       .update({ status: 'abgerechnet', abrechnung_id: ab.id })
-      .in('id', verordnungIds);
+      .in('id', verordnungIds)
+      .or(einreichbarFilter())
+      .select('id');
+    if (updErr || (uebernommen || []).length !== verordnungIds.length) {
+      // Zuerst die Zeilen zurueckdrehen, die WIR uns geholt haben. Eine
+      // Verordnung, die 'abgerechnet' heisst, ohne dass eine Datei existiert,
+      // faellt aus der Arbeitsliste und das Geld wird nie geholt — genau der
+      // stille Einnahmeverlust, vor dem verordnung-status.routes.js warnt.
+      const vorher = new Map((vords || []).map(v => [v.id, v]));
+      for (const row of (uebernommen || [])) {
+        const v = vorher.get(row.id);
+        const { error: rbErr } = await supabase.from('verordnungen')
+          .update({
+            status:        v ? (v.status ?? null) : 'abrechenbar',
+            abrechnung_id: v ? (v.abrechnung_id ?? null) : null,
+          })
+          .eq('id', row.id);
+        if (rbErr) console.error('[abrechnung-podo] Ruecknahme fehlgeschlagen:', row.id, rbErr.message);
+      }
+      // Danach die eigene Spur — die Datei ist noch von niemandem referenziert.
+      await supabase.storage.from('abrechnungen').remove([dtaPath]);
+      await supabase.from('abrechnung').delete().eq('id', ab.id);
+      return res.status(409).json({
+        error: updErr
+          ? 'Verordnungen konnten nicht als abgerechnet markiert werden: ' + updErr.message
+          : 'Diese Verordnungen wurden soeben von einer anderen Anfrage abgerechnet. Aus dieser Anfrage wurde nichts eingereicht — bitte die Liste neu laden.',
+      });
+    }
 
     // Belegnummer einfrieren — siehe /abrechnung/create, gleiche Begruendung.
     for (let i = 0; i < (vords || []).length; i++) {

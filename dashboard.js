@@ -16,7 +16,7 @@ import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260827';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260827';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260827';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260828';
 import { loadDgIcdRules, getDgIcdRules } from './module/diagnosegruppen-regeln.js?v=20260827';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
