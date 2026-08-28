@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-17 (Sperre gegen doppelte Sitzungszeilen)
--- LETZTE MIGRATION:  prescription_sessions_booking_unique
+-- ERZEUGT AM:        2026-08-28 (Spiegeltabelle business_services entfernt)
+-- LETZTE MIGRATION:  business_services_droppen_spiegeltabelle
+--                    davor: prescription_sessions_booking_unique
 --                    davor: leads_geschlecht_kodierung_dokumentieren
 --                    davor: invoice_nummer_backfill_altbestand
 --                    davor: invoices_ust_nummernkreis_gobd
@@ -17,8 +18,16 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            81 Tabellen · 1188 Spalten · 156 RLS-Policies
---                    289 Indizes · 58 Trigger · 60 Funktionen · 4 Views
+-- UMFANG:            80 Tabellen · 1177 Spalten · 152 RLS-Policies
+--                    286 Indizes · 57 Trigger · 60 Funktionen · 4 Views
+-- ZÄHLWEISE:         Tabellen = BASE TABLE in `public` · Spalten =
+--                    information_schema.columns in `public` (Views
+--                    eingeschlossen) · Funktionen und Indizes OHNE die
+--                    von Erweiterungen (postgis/pg_net) mitgebrachten ·
+--                    Trigger ohne interne (FK-)Trigger.
+--                    Am 28.08.2026 festgehalten, weil die Kopfzeilen
+--                    dieser Datei und von SCHEMA-RLS.sql sich vorher bei
+--                    Triggern und Funktionen widersprachen.
 -- QUELLE:            Direkt aus der Live-DB introspiziert (kein Handentwurf)
 --
 -- ⚠️  DIES IST EINE MOMENTAUFNAHME, KEINE LIVE-VERBINDUNG.
@@ -376,24 +385,15 @@ CREATE TABLE breaks (
 --   CHECK day_of_week BETWEEN 0 AND 6 · FK user_id -> profiles(id) · PK (id)
 --   ⚠️ start_time/end_time sind text, nicht time (im Gegensatz zu working_hours).
 
-CREATE TABLE business_services (
-  id uuid NOT NULL DEFAULT gen_random_uuid()
-  business_id uuid NOT NULL
-  name text NOT NULL
-  description text
-  duration_minutes integer NOT NULL DEFAULT 30
-  price_eur numeric(10,2)
-  follow_up_days integer DEFAULT 30
-  display_order integer DEFAULT 0
-  is_active boolean DEFAULT true
-  created_at timestamptz DEFAULT now()
-  updated_at timestamptz DEFAULT now()
-);
---   FK business_id -> businesses(id) ON DELETE CASCADE · PK (id)
---   ⚠️ NICHT die aktive Leistungstabelle (die App nutzt `services`), aber sehr wohl
---      BESCHRIEBEN: onboarding.js + Stripe-Webhook + api-backend schreiben hinein.
---      `business_id` trägt dabei zwei Bedeutungen — siehe SCHEMA-RLS.sql.
---      Zusätzlich sind die RLS-Policies fehlerhaft (auth.uid() = business_id).
+-- CREATE TABLE business_services — am 28.08.2026 gedroppt.
+--   Spiegel von `services`, den niemand las. Kein Fremdschlüssel zeigte
+--   darauf, keine View hing daran, und weil die Policies `auth.uid() =
+--   business_id` prüften, während in der Spalte eine `businesses.id`
+--   stand, war keine ihrer 26 Zeilen für die jeweilige Praxis sichtbar.
+--   Inhalt vor dem DROP außerhalb des Repos gesichert (Ops-Drive,
+--   infra/db-sicherung/). Beschluss: konsey/tutanak/2026-08-28-business-services.md
+--   Dieser Hinweis steht hier, damit niemand die Tabelle aus altem Code
+--   oder aus onprem/schema/live_schema_2026-07-06.sql zurückschließt.
 
 CREATE TABLE businesses (
   id uuid NOT NULL DEFAULT gen_random_uuid()
@@ -1546,7 +1546,8 @@ CREATE TABLE services (
   gkv_position_nr text
 );
 --   CHECK required_certificate IN (MT, MLD, KGG) · PK (id)
---   ★ Aktive Leistungstabelle (nicht business_services).
+--   ★ Die Leistungstabelle. Bis 28.08.2026 gab es daneben `business_services`;
+--     jene Spiegeltabelle ist gedroppt, `services` ist seither die einzige.
 --   ⚠️ Policy "Public read services" erlaubt SELECT für alle (Booking-Seite).
 --   ⚠️ price ist text, nicht numeric. Struktur steckt in price_config jsonb.
 

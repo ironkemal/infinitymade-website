@@ -21,10 +21,11 @@ const USER_TABLES = [
 //    eine falsche Verknüpfung würde FREMDE Daten in die Auskunft holen,
 //    und das wäre schlimmer als eine unvollständige.
 //    Vorgemerkt für den Sicherheitsdurchlauf; braucht legal-de + DB-Blick.
-  // 28.08.2026: `business_id` traegt hier ab sofort nur noch eine Nutzer-id
-  //   (der Pfad, der eine businesses.id schrieb, ist raus). Damit ist die
-  //   Auskunft wieder korrekt filterbar. Die Tabelle selbst wird noch gedroppt.
-  { table: 'business_services',            filter: 'business_id' },
+  // `business_services` ist am 28.08.2026 gedroppt worden (Konsey, Option B).
+  //   Die Auskunft verliert dadurch nichts: die Tabelle war ein Spiegel von
+  //   `services` (Zeile darueber), enthielt keine Patientendaten, sondern nur
+  //   Leistungsnamen und Preise der Praxis - und ihre Zeilen waren wegen der
+  //   Policy `auth.uid() = business_id` fuer die Praxis ohnehin unsichtbar.
   { table: 'employee_services',            filter: 'employee_id' },
   { table: 'working_hours',                filter: 'user_id'   },
   { table: 'breaks',                       filter: 'user_id'   },
@@ -116,7 +117,7 @@ const DELETE_TABLES = [
   'prescriptions', 'zuzahlung_befreiung', 'referral_drafts', 'ueberweisungen',
   'aerzte', 'b2b_contacts', 'leads', 'fahrten', 'vehicles', 'terapeut_zertifikat',
   'bookings', 'time_offs', 'breaks', 'custom_days', 'working_hours',
-  'employee_services', 'business_services', 'services', 'calendar_integrations',
+  'employee_services', 'services', 'calendar_integrations',
   'employee_business_assignments', 'employee_groups', 'businesses', 'user_preferences',
 ];
 

@@ -7,11 +7,12 @@
 | Datei | Inhalt |
 |---|---|
 | `SCHEMA.sql` | 80 Tabellen, alle Spalten, Constraints, Views |
-| `SCHEMA-RLS.sql` | 156 RLS-Policies, 53 Funktionen, 59 Trigger, 289 Indizes |
+| `SCHEMA-RLS.sql` | 152 RLS-Policies, 60 Funktionen, 57 Trigger, 286 Indizes |
 | `README.md` | dieses Dokument — Orientierung + Auffrischungsregel |
 
-**Stand:** 2026-08-17 · letzte Migration `prescription_sessions_booking_unique`
-(davor `leads_geschlecht_kodierung_dokumentieren`, `invoice_nummer_backfill_altbestand`)
+**Stand:** 2026-08-28 · letzte Migration `business_services_droppen_spiegeltabelle`
+(davor `prescription_sessions_booking_unique`,
+`leads_geschlecht_kodierung_dokumentieren`, `invoice_nummer_backfill_altbestand`)
 (davor `invoices_ust_nummernkreis_gobd`, `invoices_verordnung_id` — Rechnungskette Faz 3;
 davor `20260815233848_verordnungsnummer_belegnummer`)
 (davor `20260815085338_leads_patientennummer`, `20260814200147_leads_handy_getrennt`,
@@ -176,7 +177,6 @@ nur bei gesetztem `booking_slug` und `auth.uid() IS NULL`.
 
 Bekannte Schwachstellen, dokumentiert statt stillschweigend gepatcht:
 - `employee_services` und `time_offs`: jeder eingeloggte Nutzer darf schreiben (`auth.role() = 'authenticated'`), mandantenübergreifend.
-- `business_services`: Policies vergleichen `auth.uid()` mit `business_id` — greifen nie. Tabelle ist ungenutzt, die App nutzt `services`.
 - Fünf Tabellen ohne Team-Zugriff (nur Inhaber sieht sie): `verordnungen`, `podologie_behandlungen`, `fußstatus`, `patient_notes`, `warteliste`. Ob angestellte Therapeuten das sehen sollen, ist eine offene **Produktfrage** — nicht nebenbei „korrigieren".
 
 ---

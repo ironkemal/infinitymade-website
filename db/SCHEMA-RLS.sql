@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-17 (Sperre gegen doppelte Sitzungszeilen)
--- LETZTE MIGRATION:  prescription_sessions_booking_unique
+-- ERZEUGT AM:        2026-08-28 (Spiegeltabelle business_services entfernt)
+-- LETZTE MIGRATION:  business_services_droppen_spiegeltabelle
+--                    davor: prescription_sessions_booking_unique
 --                    davor: leads_geschlecht_kodierung_dokumentieren
 --                    davor: invoice_nummer_backfill_altbestand
 --                    davor: invoices_ust_nummernkreis_gobd
@@ -18,7 +19,11 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            156 RLS-Policies · 289 Indizes · 60 Trigger · 54 Funktionen
+-- UMFANG:            152 RLS-Policies · 286 Indizes · 57 Trigger · 60 Funktionen
+--                    (Zählweise siehe Kopf von db/SCHEMA.sql. Die alten
+--                     Werte „60 Trigger · 54 Funktionen" widersprachen dort
+--                     „58 Trigger · 60 Funktionen" — am 28.08.2026 gegen die
+--                     Live-DB vereinheitlicht.)
 -- Tabellen/Spalten:  db/SCHEMA.sql · Orientierung: db/README.md
 --
 -- ⚠️  MOMENTAUFNAHME. Nach jeder Migration neu erzeugen.
@@ -132,18 +137,10 @@
 --   Users can manage own breaks [ALL] USING (user_id = auth.uid())
 --   Employees can see owner breaks [SELECT] user_id = auth.uid() OR EXISTS(... p.owner_id = breaks.user_id)
 
--- business_services
---   Owner can view/insert/update/delete services — USING (auth.uid() = business_id)
---   ⚠️ FEHLERHAFT und die Tabelle ist NICHT ungenutzt (korrigiert 27.08.2026 —
---      hier stand vorher „Tabelle ist ohnehin ungenutzt", das war falsch):
---      `onboarding.js:589/706/710/717` liest und schreibt sie, `api/stripe/webhook.js:293`
---      und `api-backend/server.js:2840` schreiben sie mit service_role.
---      Der eigentliche Fehler ist nicht die Policy, sondern dass `business_id`
---      ZWEI Bedeutungen hat: onboarding.js schreibt dort eine NUTZER-id (deshalb
---      greift die Policy dort und alles funktioniert), webhook/backend schreiben
---      eine echte businesses-id (service_role, RLS wird übersprungen). Zeilen aus
---      dem zweiten Weg sind für den Nutzer unter RLS unsichtbar und nicht änderbar.
---      Offen: Spalte auf EINE Bedeutung bringen, oder Tabelle in `services` auflösen.
+-- business_services — Tabelle am 28.08.2026 gedroppt, damit auch ihre vier
+--   Policies. Sie prüften `auth.uid() = business_id`, während in der Spalte
+--   eine `businesses.id` stand; keine Zeile war je für eine Praxis sichtbar.
+--   `services` ist die einzige Leistungstabelle.
 
 -- businesses
 --   businesses_select_owner_or_employee [SELECT] owner + Team
@@ -595,7 +592,7 @@ $function$;
 --   feedbacks             trg_feedback_telegram          AFTER INSERT
 --   referral_drafts       trigger_notify_new_referral_draft AFTER INSERT
 --
--- Reine updated_at-Trigger auf: abrechnung, aerzte, attendance, business_services,
+-- Reine updated_at-Trigger auf: abrechnung, aerzte, attendance,
 --   businesses, kostentraeger, prescriptions, profiles, referral_drafts,
 --   terapeut_zertifikat, vehicles, warteliste.
 
@@ -635,8 +632,6 @@ CREATE INDEX idx_bookings_user ON public.bookings USING btree (user_id);
 CREATE INDEX idx_bookings_user_start ON public.bookings USING btree (user_id, start_time);
 CREATE INDEX idx_breaks_business ON public.breaks USING btree (business_id);
 CREATE INDEX idx_breaks_user ON public.breaks USING btree (user_id);
-CREATE INDEX idx_business_services_active ON public.business_services USING btree (business_id, is_active) WHERE (is_active = true);
-CREATE INDEX idx_business_services_business_id ON public.business_services USING btree (business_id);
 CREATE INDEX idx_businesses_owner ON public.businesses USING btree (owner_id);
 CREATE INDEX idx_businesses_slug ON public.businesses USING btree (booking_slug);
 CREATE UNIQUE INDEX uniq_businesses_default_per_owner ON public.businesses USING btree (owner_id) WHERE (is_default = true);

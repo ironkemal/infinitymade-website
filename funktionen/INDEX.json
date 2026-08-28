@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-08-28",
  "dateien": 159,
- "funktionen": 1685,
+ "funktionen": 1686,
  "module": [
   "abrechnung",
   "anamnese",
@@ -9408,8 +9408,8 @@
    "name": "handleExport",
    "kind": "function",
    "file": "api/dsgvo.js",
-   "start": 59,
-   "end": 105,
+   "start": 60,
+   "end": 106,
    "lines": 47,
    "tables": [],
    "rpcs": [],
@@ -9430,8 +9430,8 @@
    "name": "handleDelete",
    "kind": "function",
    "file": "api/dsgvo.js",
-   "start": 123,
-   "end": 210,
+   "start": 124,
+   "end": 211,
    "lines": 88,
    "tables": [],
    "rpcs": [],
@@ -19198,6 +19198,7 @@
     "getSector"
    ],
    "calledBy": [
+    "loadProfile",
     "loadServices",
     "normName"
    ],
@@ -43776,11 +43777,11 @@
    "kind": "function",
    "file": "onboarding.js",
    "start": 115,
-   "end": 149,
-   "lines": 35,
+   "end": 173,
+   "lines": 59,
    "tables": [
     "profiles",
-    "business_services"
+    "services"
    ],
    "rpcs": [],
    "writes": [
@@ -43789,6 +43790,8 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "alsZahl",
+    "autoSeedGkvServices",
     "prefillForms",
     "showError"
    ],
@@ -43801,11 +43804,31 @@
    "uiPfad": []
   },
   {
+   "name": "alsZahl",
+   "kind": "arrow",
+   "file": "onboarding.js",
+   "start": 160,
+   "end": 163,
+   "lines": 4,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "loadProfile"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "loadSessionProfile",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 151,
-   "end": 156,
+   "start": 175,
+   "end": 180,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -43824,8 +43847,8 @@
    "name": "saveSessionProfile",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 158,
-   "end": 161,
+   "start": 182,
+   "end": 185,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -43850,8 +43873,8 @@
    "name": "prefillForms",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 163,
-   "end": 190,
+   "start": 187,
+   "end": 214,
    "lines": 28,
    "tables": [],
    "rpcs": [],
@@ -43870,8 +43893,8 @@
    "name": "isStepApplicable",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 193,
-   "end": 198,
+   "start": 217,
+   "end": 222,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -43890,8 +43913,8 @@
    "name": "goToStep",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 200,
-   "end": 255,
+   "start": 224,
+   "end": 279,
    "lines": 56,
    "tables": [],
    "rpcs": [],
@@ -43922,8 +43945,8 @@
    "name": "saveStepProgress",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 257,
-   "end": 261,
+   "start": 281,
+   "end": 285,
    "lines": 5,
    "tables": [
     "profiles"
@@ -43948,8 +43971,8 @@
    "name": "bindAccount",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 276,
-   "end": 361,
+   "start": 300,
+   "end": 385,
    "lines": 86,
    "tables": [],
    "rpcs": [],
@@ -43976,8 +43999,8 @@
    "name": "bindBusiness",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 364,
-   "end": 426,
+   "start": 388,
+   "end": 450,
    "lines": 63,
    "tables": [
     "profiles",
@@ -44009,8 +44032,8 @@
    "name": "bindBilling",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 429,
-   "end": 489,
+   "start": 453,
+   "end": 513,
    "lines": 61,
    "tables": [
     "profiles"
@@ -44039,8 +44062,8 @@
    "name": "handleSave",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 433,
-   "end": 479,
+   "start": 457,
+   "end": 503,
    "lines": 47,
    "tables": [
     "profiles"
@@ -44068,8 +44091,8 @@
    "name": "bindOwner",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 492,
-   "end": 518,
+   "start": 516,
+   "end": 542,
    "lines": 27,
    "tables": [
     "profiles"
@@ -44097,9 +44120,9 @@
    "name": "renderServices",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 521,
-   "end": 548,
-   "lines": 28,
+   "start": 553,
+   "end": 581,
+   "lines": 29,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -44130,8 +44153,8 @@
    "name": "createServiceRow",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 550,
-   "end": 550,
+   "start": 583,
+   "end": 583,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -44161,11 +44184,10 @@
    "name": "normName",
    "kind": "arrow",
    "file": "onboarding.js",
-   "start": 566,
-   "end": 733,
-   "lines": 168,
+   "start": 599,
+   "end": 728,
+   "lines": 130,
    "tables": [
-    "business_services",
     "services",
     "employee_services"
    ],
@@ -44174,10 +44196,7 @@
     "services:update",
     "services:insert",
     "services:delete",
-    "employee_services:insert",
-    "business_services:update",
-    "business_services:insert",
-    "business_services:delete"
+    "employee_services:insert"
    ],
    "endpoints": [],
    "storage": [],
@@ -44197,11 +44216,10 @@
    "name": "syncServices",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 584,
-   "end": 733,
-   "lines": 150,
+   "start": 618,
+   "end": 728,
+   "lines": 111,
    "tables": [
-    "business_services",
     "services",
     "employee_services"
    ],
@@ -44210,10 +44228,7 @@
     "services:update",
     "services:insert",
     "services:delete",
-    "employee_services:insert",
-    "business_services:update",
-    "business_services:insert",
-    "business_services:delete"
+    "employee_services:insert"
    ],
    "endpoints": [],
    "storage": [],
@@ -44233,9 +44248,9 @@
    "name": "bindServices",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 735,
-   "end": 779,
-   "lines": 45,
+   "start": 730,
+   "end": 781,
+   "lines": 52,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -44260,8 +44275,8 @@
    "name": "renderHours",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 782,
-   "end": 809,
+   "start": 784,
+   "end": 811,
    "lines": 28,
    "tables": [],
    "rpcs": [],
@@ -44280,8 +44295,8 @@
    "name": "bindHours",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 811,
-   "end": 856,
+   "start": 813,
+   "end": 858,
    "lines": 46,
    "tables": [
     "working_hours",
@@ -44312,8 +44327,8 @@
    "name": "cleanBookingSlug",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 858,
-   "end": 865,
+   "start": 860,
+   "end": 867,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -44334,8 +44349,8 @@
    "name": "bindPlan",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 868,
-   "end": 1013,
+   "start": 870,
+   "end": 1015,
    "lines": 146,
    "tables": [
     "profiles"
@@ -44365,8 +44380,8 @@
    "name": "logout",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 1016,
-   "end": 1019,
+   "start": 1018,
+   "end": 1021,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -44383,8 +44398,8 @@
    "name": "showError",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 1021,
-   "end": 1026,
+   "start": 1023,
+   "end": 1028,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -44412,8 +44427,8 @@
    "name": "escapeAttr",
    "kind": "function",
    "file": "onboarding.js",
-   "start": 1028,
-   "end": 1030,
+   "start": 1030,
+   "end": 1032,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -51008,8 +51023,8 @@
        "name": "loadProfile",
        "file": "onboarding.js",
        "start": 115,
-       "end": 149,
-       "lines": 35,
+       "end": 173,
+       "lines": 59,
        "writes": [
         "profiles:insert"
        ],
@@ -51019,8 +51034,8 @@
       {
        "name": "bindBusiness",
        "file": "onboarding.js",
-       "start": 364,
-       "end": 426,
+       "start": 388,
+       "end": 450,
        "lines": 63,
        "writes": [
         "profiles:update"
@@ -51031,8 +51046,8 @@
       {
        "name": "bindBilling",
        "file": "onboarding.js",
-       "start": 429,
-       "end": 489,
+       "start": 453,
+       "end": 513,
        "lines": 61,
        "writes": [
         "profiles:update"
@@ -51043,8 +51058,8 @@
       {
        "name": "handleSave",
        "file": "onboarding.js",
-       "start": 433,
-       "end": 479,
+       "start": 457,
+       "end": 503,
        "lines": 47,
        "writes": [
         "profiles:update"
@@ -51055,8 +51070,8 @@
       {
        "name": "bindOwner",
        "file": "onboarding.js",
-       "start": 492,
-       "end": 518,
+       "start": 516,
+       "end": 542,
        "lines": 27,
        "writes": [
         "profiles:update"
@@ -51067,8 +51082,8 @@
       {
        "name": "bindHours",
        "file": "onboarding.js",
-       "start": 811,
-       "end": 856,
+       "start": 813,
+       "end": 858,
        "lines": 46,
        "writes": [
         "profiles:update"
@@ -51079,8 +51094,8 @@
       {
        "name": "bindPlan",
        "file": "onboarding.js",
-       "start": 868,
-       "end": 1013,
+       "start": 870,
+       "end": 1015,
        "lines": 146,
        "writes": [
         "profiles:update"
@@ -51157,8 +51172,8 @@
       {
        "name": "saveStepProgress",
        "file": "onboarding.js",
-       "start": 257,
-       "end": 261,
+       "start": 281,
+       "end": 285,
        "lines": 5,
        "writes": [
         "profiles:update"
@@ -51487,8 +51502,8 @@
       {
        "name": "bindBusiness",
        "file": "onboarding.js",
-       "start": 364,
-       "end": 426,
+       "start": 388,
+       "end": 450,
        "lines": 63,
        "writes": [
         "businesses:update",
@@ -51551,9 +51566,9 @@
       {
        "name": "normName",
        "file": "onboarding.js",
-       "start": 566,
-       "end": 733,
-       "lines": 168,
+       "start": 599,
+       "end": 728,
+       "lines": 130,
        "writes": [
         "services:update",
         "services:insert",
@@ -51565,9 +51580,9 @@
       {
        "name": "syncServices",
        "file": "onboarding.js",
-       "start": 584,
-       "end": 733,
-       "lines": 150,
+       "start": 618,
+       "end": 728,
+       "lines": 111,
        "writes": [
         "services:update",
         "services:insert",
@@ -52169,9 +52184,9 @@
       {
        "name": "normName",
        "file": "onboarding.js",
-       "start": 566,
-       "end": 733,
-       "lines": 168,
+       "start": 599,
+       "end": 728,
+       "lines": 130,
        "writes": [
         "employee_services:insert"
        ],
@@ -52181,9 +52196,9 @@
       {
        "name": "syncServices",
        "file": "onboarding.js",
-       "start": 584,
-       "end": 733,
-       "lines": 150,
+       "start": 618,
+       "end": 728,
+       "lines": 111,
        "writes": [
         "employee_services:insert"
        ],
@@ -52549,8 +52564,8 @@
       {
        "name": "bindHours",
        "file": "onboarding.js",
-       "start": 811,
-       "end": 856,
+       "start": 813,
+       "end": 858,
        "lines": 46,
        "writes": [
         "working_hours:delete",
@@ -53156,7 +53171,7 @@
    "name": "showError",
    "orte": [
     "booking.js:23",
-    "onboarding.js:1021"
+    "onboarding.js:1023"
    ]
   },
   {
@@ -53191,7 +53206,7 @@
    "name": "renderServices",
    "orte": [
     "dashboard.js:10146",
-    "onboarding.js:521"
+    "onboarding.js:553"
    ]
   },
   {
@@ -53205,7 +53220,7 @@
    "name": "cleanBookingSlug",
    "orte": [
     "dashboard.js:13859",
-    "onboarding.js:858"
+    "onboarding.js:860"
    ]
   },
   {
@@ -53261,7 +53276,7 @@
    "name": "escapeAttr",
    "orte": [
     "module/abrechnungsstatus.js:394",
-    "onboarding.js:1028"
+    "onboarding.js:1030"
    ]
   },
   {

@@ -138,12 +138,36 @@ async function loadProfile() {
     profile = created;
   }
 
+  // 28.08.2026: liest aus `services`, nicht mehr aus `business_services`.
+  // Der alte Pfad lieferte konstant eine leere Liste: die RLS-Policy der
+  // Spiegeltabelle lautete `auth.uid() = business_id`, dort stand aber immer eine
+  // `businesses.id`. Wer das Onboarding erneut oeffnete, sah deshalb nie die
+  // bereits angelegten Leistungen, sondern nur die Branchen-Vorlage - und weiter
+  // unten haengt die Loeschlogik an genau dieser Liste, war also ebenfalls tot.
+  // Nur Selbstzahler-Leistungen: GKV-Positionen gehoeren `autoSeedGkvServices()`
+  // im Dashboard und werden hier weder gezeigt noch angefasst.
   const { data: svcs } = await supabase
-    .from('business_services')
-    .select('*')
-    .eq('business_id', userId)
-    .order('display_order');
-  services = svcs || [];
+    .from('services')
+    .select('id,title,duration_minutes,price,code')
+    .eq('owner_id', userId)
+    .is('gkv_position_nr', null)
+    .order('created_at');
+  // `services.price` ist text, kein numeric. Heute stehen dort ausschliesslich
+  // schlichte Zahlen ("40", "55.00"), aber das Feld im Formular ist ein
+  // Zahlenfeld: kaeme je ein Komma oder ein Euro-Zeichen an, bliebe es leer, und
+  // beim Speichern wuerde `parseFloat` daraus `null` machen - der Preis waere
+  // stillschweigend geloescht. Deshalb hier normalisieren statt dort zu hoffen.
+  const alsZahl = (v) => {
+    const n = parseFloat(String(v ?? '').replace(',', '.').replace(/[^0-9.\-]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  };
+  services = (svcs || []).map(s => ({
+    id: s.id,
+    name: s.title,
+    duration_minutes: s.duration_minutes,
+    price_eur: alsZahl(s.price),
+    code: s.code,
+  }));
 
   prefillForms();
 }
@@ -518,12 +542,20 @@ function bindOwner() {
 }
 
 // ---- Step 4: Services ----
+// Welche `services.id` das Formular beim Aufbau tatsaechlich angezeigt hat.
+// Nur diese duerfen beim Speichern geloescht werden. Eine Leistung, die das
+// Onboarding nie zu Gesicht bekam (z. B. spaeter im Dashboard angelegt), kann so
+// gar nicht verschwinden - frueher uebernahm `business_services` diese Rolle als
+// Merkliste, aber jene Tabelle war fuer die Nutzerin unsichtbar und damit immer
+// leer, weshalb das Entfernen einer Zeile in Wahrheit nie etwas geloescht hat.
+let vorbelegteServiceIds = new Set();
+
 function renderServices() {
   const list = document.getElementById('servicesList');
   list.innerHTML = '';
 
   const tpl = SERVICE_TEMPLATES[profile?.sector] || SERVICE_TEMPLATES.other;
-  const existingNames = new Set((services || []).map(s => s.name.toLowerCase()));
+  const existingNames = new Set((services || []).map(s => (s.name || '').toLowerCase()));
   const rows = [
     ...(services || []).map(s => ({
       checked: s.is_active !== false,
@@ -544,6 +576,7 @@ function renderServices() {
 
   if (rows.length === 0) rows.push({ checked: true, name: '', duration: 30, price: '', code: null });
 
+  vorbelegteServiceIds = new Set(rows.map(r => r.id).filter(Boolean));
   rows.forEach(r => list.appendChild(createServiceRow(r)));
 }
 
@@ -578,17 +611,12 @@ const normName = (s) => (s || '').trim().toLowerCase();
  *    entwertet dort still vorhandene Daten. Deshalb: nur referenzfreie Zeilen werden gelöscht.
  *  - `services` hat KEINE Spalte `is_active`; ein Soft-Deaktivieren ist nicht möglich.
  *    Referenzierte Zeilen bleiben daher unverändert stehen (ohne Fehlermeldung).
- *  - `row.dataset.svcId` ist eine `business_services.id`, KEINE `services.id`.
- *    Beide Tabellen lassen sich nur über den Namen verbinden.
+ *  - `row.dataset.svcId` ist seit 28.08.2026 eine echte `services.id` (vorher eine
+ *    `business_services.id`). Die Zuordnung läuft deshalb über die id und nur
+ *    ersatzweise über den Namen - Umbenennen verliert die Zeile nicht mehr.
  */
 async function syncServices(items) {
-  const formNames = new Set(items.map(i => normName(i.name)));
-
   // ---- Bestand lesen ----
-  const { data: exBs, error: exBsErr } = await supabase
-    .from('business_services').select('id,name').eq('business_id', userId);
-  if (exBsErr) console.warn('[onboarding] business_services lesen (Spiegel, nicht blockierend):', exBsErr.message);
-
   const { data: exPrivSvc, error: exPrivErr } = await supabase
     .from('services').select('id,title').eq('owner_id', userId).is('gkv_position_nr', null);
   if (exPrivErr) throw exPrivErr;
@@ -599,12 +627,15 @@ async function syncServices(items) {
 
   const gkvTitles = new Set((exGkvSvc || []).map(s => normName(s.title)));
   const privByName = new Map((exPrivSvc || []).map(s => [normName(s.title), s]));
+  const privById = new Map((exPrivSvc || []).map(s => [s.id, s]));
 
   // ---- 1. services: vorhandene aktualisieren, neue anlegen ----
   const insertPayloads = [];
   for (const it of items) {
     const key = normName(it.name);
-    const match = privByName.get(key);
+    // id zuerst: so überlebt eine Leistung das Umbenennen. Der Name ist nur noch
+    // der Rückfallpfad für Zeilen aus der Branchen-Vorlage.
+    const match = (it.id && privById.get(it.id)) || privByName.get(key);
     if (match) {
       const { error } = await supabase.from('services').update({
         title: it.name,
@@ -641,13 +672,14 @@ async function syncServices(items) {
   }
 
   // ---- 2. services: entfernte Zeilen löschen, aber nur referenzfreie ----
-  // Löschbar ist ausschließlich, was das Onboarding selbst verwaltet: ein Name, der in
-  // `business_services` stand und den die Nutzerin jetzt aus dem Formular entfernt hat.
-  // Im Dashboard angelegte Privatleistungen tauchen hier gar nicht auf und bleiben unberührt.
-  const bsNames = new Set((exBs || []).map(b => normName(b.name)));
-  const candIds = (exPrivSvc || [])
-    .filter(s => bsNames.has(normName(s.title)) && !formNames.has(normName(s.title)))
-    .map(s => s.id);
+  // Löschbar ist ausschließlich, was dieses Formular vorher selbst angezeigt hat und
+  // was die Nutzerin daraus entfernt (oder abgewählt) hat. Diese Merkliste war bis
+  // 28.08.2026 `business_services` - eine Tabelle, die die Nutzerin wegen ihrer
+  // RLS-Policy nie sehen konnte, weshalb sie immer leer war und hier faktisch nie
+  // etwas gelöscht wurde. Jetzt sind es die ids aus der Vorbelegung: eine Leistung,
+  // die das Onboarding gar nicht gezeigt hat, kann so grundsätzlich nicht wegfallen.
+  const submittedIds = new Set(items.map(i => i.id).filter(Boolean));
+  const candIds = [...vorbelegteServiceIds].filter(id => !submittedIds.has(id));
   if (candIds.length) {
     const blocked = new Set();
     for (const tbl of ['bookings', 'booking_requests', 'warteliste']) {
@@ -687,49 +719,12 @@ async function syncServices(items) {
   }
   // Verknüpfungen gelöschter Leistungen räumt der CASCADE-Fremdschlüssel selbst ab.
 
-  // ---- 4. business_services spiegeln ----
-  // ── `business_services` ist nur noch ein Spiegel und darf niemanden aufhalten ──
-  // Bis 28.08.2026 warf jeder Fehler hier `throw` und der Nutzer blieb im
-  // Dienstleistungs-Schritt stehen (`onboarding.js` faengt weiter unten ab und
-  // zeigt nur `showError`). Zwei Gruende, warum das scharf ist:
-  //   1. Der Payload enthaelt `code` — diese Spalte gibt es in `business_services`
-  //      nicht (db/SCHEMA.sql), PostgREST antwortet PGRST204.
-  //   2. Der FK lautet `business_id -> businesses(id)`, hier steht aber `userId`.
-  // Ob beides in der laufenden Datenbank wirklich so ist, konnte ohne DB-Zugang
-  // nicht geprueft werden. Genau deshalb blockiert es jetzt nicht mehr: die
-  // eigentliche Leistung steht laengst in `services`, dieser Spiegel wird von
-  // niemandem gelesen und die Tabelle soll ohnehin verschwinden. Scheitert er,
-  // wird das protokolliert und der Nutzer kommt weiter.
-  const bsById = new Map((exBs || []).map(b => [b.id, b]));
-  const bsByName = new Map((exBs || []).map(b => [normName(b.name), b]));
-  const usedBsIds = new Set();
-  for (const it of items) {
-    const fields = {
-      name: it.name,
-      duration_minutes: it.duration_minutes,
-      price_eur: it.price_eur,
-      is_active: it.is_active,
-      display_order: it.display_order,
-      code: it.code || null,
-    };
-    const target = (it.id && bsById.get(it.id)) || bsByName.get(normName(it.name));
-    if (target) {
-      usedBsIds.add(target.id);
-      const { error } = await supabase.from('business_services')
-        .update(fields).eq('id', target.id).eq('business_id', userId);
-      if (error) console.warn('[onboarding] business_services update (Spiegel, nicht blockierend):', error.message);
-    } else {
-      const { error } = await supabase.from('business_services')
-        .insert({ business_id: userId, ...fields });
-      if (error) console.warn('[onboarding] business_services insert (Spiegel, nicht blockierend):', error.message);
-    }
-  }
-  const staleBs = (exBs || []).filter(b => !usedBsIds.has(b.id)).map(b => b.id);
-  if (staleBs.length) {
-    const { error } = await supabase.from('business_services')
-      .delete().in('id', staleBs).eq('business_id', userId);
-    if (error) console.warn('[onboarding] business_services delete (Spiegel, nicht blockierend):', error.message);
-  }
+  // ---- 4. ----
+  // Hier stand bis 28.08.2026 ein Spiegelschreiben nach `business_services`.
+  // Die Tabelle ist am selben Tag gedroppt worden (Konsey-Beschluss, Option B):
+  // niemand las sie, kein Fremdschlüssel zeigte auf sie, und ihre 26 Zeilen waren
+  // wegen der Policy `auth.uid() = business_id` für jede Praxis unsichtbar.
+  // `services` ist die einzige Leistungstabelle.
 }
 
 function bindServices() {
@@ -749,16 +744,23 @@ function bindServices() {
   document.getElementById('servicesForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const rows = [...document.querySelectorAll('#servicesList .ob-service-row')];
-    const items = rows.map((row, i) => ({
-      id: row.dataset.svcId || undefined,
-      business_id: userId,
-      name: row.querySelector('.svc-name').value.trim(),
-      duration_minutes: parseInt(row.querySelector('.svc-duration').value, 10) || 30,
-      price_eur: parseFloat(String(row.querySelector('.svc-price').value).replace(',', '.')) || null,
-      is_active: row.querySelector('.svc-active').checked,
-      display_order: i,
-      code: row.dataset.code || null,
-    })).filter(s => s.name);
+    // Das Häkchen bedeutet ab 28.08.2026 wirklich etwas: abgewählte Zeilen werden
+    // nicht angelegt. Vorher landete es ausschließlich in `business_services` und
+    // blieb damit folgenlos - jede neue Praxis bekam alle zehn Vorschläge der
+    // Branchen-Vorlage angelegt, auch die, die sie ausdrücklich abgewählt hatte.
+    // `display_order` wird nicht mehr mitgeführt: `services` kennt keine solche
+    // Spalte, die Reihenfolge ergibt sich aus `created_at`. Ob Leistungen sortier-
+    // und deaktivierbar sein sollen, ist eine offene Produktfrage (Ops-Dashboard).
+    const items = rows
+      .filter(row => row.querySelector('.svc-active').checked)
+      .map(row => ({
+        id: row.dataset.svcId || undefined,
+        name: row.querySelector('.svc-name').value.trim(),
+        duration_minutes: parseInt(row.querySelector('.svc-duration').value, 10) || 30,
+        price_eur: parseFloat(String(row.querySelector('.svc-price').value).replace(',', '.')) || null,
+        code: row.dataset.code || null,
+      }))
+      .filter(s => s.name);
 
     // Eine leere Liste ist gültig — dieser Schritt ist optional (nur Selbstzahler-Leistungen).
 
@@ -961,12 +963,12 @@ function bindPlan() {
           tax_exempt_note: profile.tax_exempt_note || null,
           working_hours: profile.working_hours || null,
           working_hours_rows: profile.working_hours_rows || null,
+          // `is_active`/`display_order` sind hier entfallen: der Webhook legt aus
+          // diesem Blob `services`-Zeilen an, und dort gibt es beide Spalten nicht.
           services: services.map(s => ({
             name: s.name,
             duration_minutes: s.duration_minutes,
             price_eur: s.price_eur,
-            is_active: s.is_active,
-            display_order: s.display_order,
             code: s.code || null
           })),
           plan: planSlug,

@@ -3,7 +3,7 @@
 > Üretim: 2026-08-28 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**1685 fonksiyon** · 159 dosya · 39 sidebar modülü
+**1686 fonksiyon** · 159 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -79,13 +79,13 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `ensureBookingSlug()` — [dashboard.js:13868](dashboard.js#L13868-L13881) · 14 satır · profiles:update
 - `init()` — [kalender.js:140](kalender.js#L140-L191) · 52 satır · profiles:update
 - `renderLegendeSettings()` — [module/fussbefund.js:1381](module/fussbefund.js#L1381-L1445) · 65 satır · profiles:update
-- `loadProfile()` — [onboarding.js:115](onboarding.js#L115-L149) · 35 satır · profiles:insert
-- `bindBusiness()` — [onboarding.js:364](onboarding.js#L364-L426) · 63 satır · profiles:update
-- `bindBilling()` — [onboarding.js:429](onboarding.js#L429-L489) · 61 satır · profiles:update
-- `handleSave()` — [onboarding.js:433](onboarding.js#L433-L479) · 47 satır · profiles:update
-- `bindOwner()` — [onboarding.js:492](onboarding.js#L492-L518) · 27 satır · profiles:update
-- `bindHours()` — [onboarding.js:811](onboarding.js#L811-L856) · 46 satır · profiles:update
-- `bindPlan()` — [onboarding.js:868](onboarding.js#L868-L1013) · 146 satır · profiles:update
+- `loadProfile()` — [onboarding.js:115](onboarding.js#L115-L173) · 59 satır · profiles:insert
+- `bindBusiness()` — [onboarding.js:388](onboarding.js#L388-L450) · 63 satır · profiles:update
+- `bindBilling()` — [onboarding.js:453](onboarding.js#L453-L513) · 61 satır · profiles:update
+- `handleSave()` — [onboarding.js:457](onboarding.js#L457-L503) · 47 satır · profiles:update
+- `bindOwner()` — [onboarding.js:516](onboarding.js#L516-L542) · 27 satır · profiles:update
+- `bindHours()` — [onboarding.js:813](onboarding.js#L813-L858) · 46 satır · profiles:update
+- `bindPlan()` — [onboarding.js:870](onboarding.js#L870-L1015) · 146 satır · profiles:update
 
 **Yol 5 — `saveEmployee()`** · Ekran: _UI yolu çözülemedi_
 - `saveEmployee()` — [dashboard.js:14560](dashboard.js#L14560-L14623) · 64 satır · profiles:insert
@@ -97,7 +97,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `initAnfragenPanel()` — [dashboard.js:23673](dashboard.js#L23673-L23730) · 58 satır · profiles:update
 
 **Yol 8 — `saveStepProgress()`** · Ekran: _UI yolu çözülemedi_
-- `saveStepProgress()` — [onboarding.js:257](onboarding.js#L257-L261) · 5 satır · profiles:update
+- `saveStepProgress()` — [onboarding.js:281](onboarding.js#L281-L285) · 5 satır · profiles:update
 
 ### `document_vorlagen` — 7 bağımsız yazma yolu
 
@@ -139,7 +139,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `ensureBusinessCoords()` — [dashboard.js:23105](dashboard.js#L23105-L23134) · 30 satır · businesses:update
 
 **Yol 5 — `bindBusiness()`** · Ekran: _UI yolu çözülemedi_
-- `bindBusiness()` — [onboarding.js:364](onboarding.js#L364-L426) · 63 satır · businesses:update, businesses:insert
+- `bindBusiness()` — [onboarding.js:388](onboarding.js#L388-L450) · 63 satır · businesses:update, businesses:insert
 
 ### `services` — 5 bağımsız yazma yolu
 
@@ -148,8 +148,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 **Yol 2 — `normName()`** · Ekran: _UI yolu çözülemedi_
 - `autoSeedGkvServices()` — [dashboard.js:9683](dashboard.js#L9683-L9710) · 28 satır · services:insert
-- `normName()` — [onboarding.js:566](onboarding.js#L566-L733) · 168 satır · services:update, services:insert, services:delete
-- `syncServices()` — [onboarding.js:584](onboarding.js#L584-L733) · 150 satır · services:update, services:insert, services:delete
+- `normName()` — [onboarding.js:599](onboarding.js#L599-L728) · 130 satır · services:update, services:insert, services:delete
+- `syncServices()` — [onboarding.js:618](onboarding.js#L618-L728) · 111 satır · services:update, services:insert, services:delete
 
 **Yol 3 — `migratePodologieLegacyServices()`** · Ekran: Sidebar → §302-Abrechnung (physiotherapy/praxis) · Sidebar → Patienten · Sidebar → Leistungen · Sidebar → Team
 - `migratePodologieLegacyServices()` — [dashboard.js:9879](dashboard.js#L9879-L9914) · 36 satır · services:update
@@ -241,8 +241,8 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadEmpServices()` — [dashboard.js:11872](dashboard.js#L11872-L11956) · 85 satır · employee_services:insert, employee_services:delete
 
 **Yol 2 — `normName()`** · Ekran: _UI yolu çözülemedi_
-- `normName()` — [onboarding.js:566](onboarding.js#L566-L733) · 168 satır · employee_services:insert
-- `syncServices()` — [onboarding.js:584](onboarding.js#L584-L733) · 150 satır · employee_services:insert
+- `normName()` — [onboarding.js:599](onboarding.js#L599-L728) · 130 satır · employee_services:insert
+- `syncServices()` — [onboarding.js:618](onboarding.js#L618-L728) · 111 satır · employee_services:insert
 
 ### `fahrten` — 2 bağımsız yazma yolu
 
@@ -307,7 +307,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadEmpHours()` — [dashboard.js:11780](dashboard.js#L11780-L11870) · 91 satır · working_hours:upsert
 
 **Yol 2 — `bindHours()`** · Ekran: _UI yolu çözülemedi_
-- `bindHours()` — [onboarding.js:811](onboarding.js#L811-L856) · 46 satır · working_hours:delete, working_hours:insert
+- `bindHours()` — [onboarding.js:813](onboarding.js#L813-L858) · 46 satır · working_hours:delete, working_hours:insert
 
 ### `zuzahlung_befreiung` — 2 bağımsız yazma yolu
 
