@@ -390,7 +390,9 @@ CREATE TABLE business_services (
   updated_at timestamptz DEFAULT now()
 );
 --   FK business_id -> businesses(id) ON DELETE CASCADE · PK (id)
---   ⚠️ NICHT die aktive Leistungstabelle — die App nutzt `services`.
+--   ⚠️ NICHT die aktive Leistungstabelle (die App nutzt `services`), aber sehr wohl
+--      BESCHRIEBEN: onboarding.js + Stripe-Webhook + api-backend schreiben hinein.
+--      `business_id` trägt dabei zwei Bedeutungen — siehe SCHEMA-RLS.sql.
 --      Zusätzlich sind die RLS-Policies fehlerhaft (auth.uid() = business_id).
 
 CREATE TABLE businesses (

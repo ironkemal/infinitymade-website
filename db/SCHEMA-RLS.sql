@@ -134,8 +134,16 @@
 
 -- business_services
 --   Owner can view/insert/update/delete services — USING (auth.uid() = business_id)
---   ⚠️ FEHLERHAFT: vergleicht auth.uid() mit business_id (einer businesses-UUID).
---      Trifft praktisch nie zu. Tabelle ist ohnehin ungenutzt — die App nutzt `services`.
+--   ⚠️ FEHLERHAFT und die Tabelle ist NICHT ungenutzt (korrigiert 27.08.2026 —
+--      hier stand vorher „Tabelle ist ohnehin ungenutzt", das war falsch):
+--      `onboarding.js:589/706/710/717` liest und schreibt sie, `api/stripe/webhook.js:293`
+--      und `api-backend/server.js:2840` schreiben sie mit service_role.
+--      Der eigentliche Fehler ist nicht die Policy, sondern dass `business_id`
+--      ZWEI Bedeutungen hat: onboarding.js schreibt dort eine NUTZER-id (deshalb
+--      greift die Policy dort und alles funktioniert), webhook/backend schreiben
+--      eine echte businesses-id (service_role, RLS wird übersprungen). Zeilen aus
+--      dem zweiten Weg sind für den Nutzer unter RLS unsichtbar und nicht änderbar.
+--      Offen: Spalte auf EINE Bedeutung bringen, oder Tabelle in `services` auflösen.
 
 -- businesses
 --   businesses_select_owner_or_employee [SELECT] owner + Team
