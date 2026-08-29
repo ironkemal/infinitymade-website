@@ -1,0 +1,6988 @@
+{
+ "erzeugt": "2026-08-29",
+ "quellen": {
+  "schema": "db/SCHEMA.sql (Stand 2026-08-28)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-08-29)",
+  "register": "db/REGISTER.md"
+ },
+ "anzahl": 80,
+ "tabellen": [
+  {
+   "name": "abrechnung",
+   "spalten": 22,
+   "fkRaus": [
+    "businesses",
+    "kostentraeger",
+    "auth.users"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/_lib/access-log.js",
+    "api/dsgvo.js",
+    "nav-registry.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der Abrechnungslauf als Ganzes: eine Sammelrechnung an einen Kostenträger, mit DTA-Datei, Signaturzustand, Upload- und Zahlungsdatum. Ohne diesen Kopfsatz gäbe es keinen Bezugspunkt für Absetzungen.",
+   "seit": "spätestens 18.05.2026 · `v11_billing_a2_tables` (Storage-Pfade `v15`/`v17`)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadAbrechnung",
+     "file": "dashboard.js",
+     "start": 19731,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "openDasGuideModal",
+     "file": "dashboard.js",
+     "start": 13590,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderExportStep",
+     "file": "dashboard.js",
+     "start": 19661,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "downloadAbrechnungFile",
+     "file": "dashboard.js",
+     "start": 20303,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/statistik.routes.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 9,
+   "codeStumm": false
+  },
+  {
+   "name": "accommodations",
+   "spalten": 7,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "fremd",
+   "warum": "Fremdprojekt (Unterkünfte). Nie Teil von Praxura.",
+   "seit": "älter als die auffindbare Historie · erste Erwähnung `create_core_tables_safe` (18.06.2026)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": true
+  },
+  {
+   "name": "admin_users",
+   "spalten": 3,
+   "fkRaus": [
+    "auth.users"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Trennt das interne Admin-Panel (`admin.praxura.de`) von den Kundenrollen. Ein Kunde soll nie durch Setzen eines Feldes in `profiles` Admin werden können.",
+   "seit": "17.05.2026 · `create_admin_users_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "init",
+     "file": "dashboard.js",
+     "start": 17865,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "isAdmin",
+     "file": "admin-login.js",
+     "start": 18,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "isAdmin",
+     "file": "login.js",
+     "start": 192,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "isAdminUser",
+     "file": "admin.js",
+     "start": 11,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "admin-login.js",
+    "admin.js",
+    "api/_lib/auth.js",
+    "dashboard.js",
+    "login.js"
+   ],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "aerzte",
+   "spalten": 17,
+   "fkRaus": [
+    "businesses",
+    "auth.users"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Arztregister je Inhaber. Wird beim Erfassen einer Verordnung automatisch befüllt: LANR-Treffer reichert den vorhandenen Datensatz an, sonst wird neu angelegt. Grundlage der Auswertung „welcher Arzt überweist wie viel\".",
+   "seit": "13.05.2026 · `add_aerzte_and_physio_fields` (Register-Ausbau: `v32_aerzte_register`, 10.08.2026)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "downloadDmrzForInvoice",
+     "file": "dashboard.js",
+     "start": 15733,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "fillRzPatientFromLead",
+     "file": "dashboard.js",
+     "start": 16962,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+     ]
+    },
+    {
+     "name": "loadAerzte",
+     "file": "dashboard.js",
+     "start": 16482,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "doctors",
+      "kunden",
+      "podologie-billing",
+      "settings",
+      "team"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 7 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadPodologieBilling",
+     "file": "module/podologie-abrechnung.js",
+     "start": 259,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "podologie-billing",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Podologie-Abrechnung (podologie)",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "podFillEditForm",
+     "file": "module/podologie-abrechnung.js",
+     "start": 1007,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "podologie-billing",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Podologie-Abrechnung (podologie)",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "deleteAerzte",
+     "file": "dashboard.js",
+     "start": 16541,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "editAerzte",
+     "file": "dashboard.js",
+     "start": 16550,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/lib/arzt-registry.js",
+    "api-backend/server.js",
+    "dashboard.js",
+    "module/podologie-abrechnung.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "doctors",
+    "kunden",
+    "podologie-billing",
+    "settings",
+    "team",
+    "verordnungen"
+   ],
+   "sqlTreffer": 8,
+   "codeStumm": false
+  },
+  {
+   "name": "ai_audit_log",
+   "spalten": 15,
+   "fkRaus": [
+    "auth.users"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Protokoll jedes KI-Aufrufs (Rezept-OCR, Entwürfe): Modell, Kosten, Ergebnis. Nachweis gegenüber dem EU AI Act und Kostenkontrolle.",
+   "seit": "16.05.2026 · `v9_ai_audit_log`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/ai/audit.js",
+    "api/admin/data.js"
+   ],
+   "module": [],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "anamnese",
+   "spalten": 28,
+   "fkRaus": [
+    "leads",
+    "businesses"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "dashboard.html",
+    "index.html",
+    "nav-registry.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Erstaufnahme und Vorgeschichte. Eigene Tabelle, weil sie versioniert entsteht und nicht bei jedem Termin neu geschrieben wird.",
+   "seit": "13.05.2026 · `create_anamnese_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "fillAnamneseForm",
+     "file": "dashboard.js",
+     "start": 15964,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Anamnese (physiotherapy/podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatientDetailAnamnese",
+     "file": "dashboard.js",
+     "start": 9008,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "printAnamnese",
+     "file": "dashboard.js",
+     "start": 16076,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "printAnamneseInline",
+     "file": "dashboard.js",
+     "start": 16024,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "saveAnamnese",
+     "file": "dashboard.js",
+     "start": 16148,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "applications",
+   "spalten": 6,
+   "fkRaus": [
+    "auth.users"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "fremd",
+   "warum": "Fremdprojekt (Bewerbungen). Nie Teil von Praxura.",
+   "seit": "älter als die auffindbare Historie · erste Erwähnung `cleanup_test_users_keep_fizyo6` (08.06.2026)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": true
+  },
+  {
+   "name": "attendance",
+   "spalten": 12,
+   "fkRaus": [
+    "businesses"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Kommen/Gehen der Mitarbeiter (Arbeitszeiterfassung), getrennt von der Sollarbeitszeit in `working_hours`.",
+   "seit": "19.06.2026 · `create_attendance_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "fetchHistory",
+     "file": "attendance.js",
+     "start": 94,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/server.js",
+    "attendance.js"
+   ],
+   "module": [],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "ausfallrechnungen",
+   "spalten": 15,
+   "fkRaus": [
+    "bookings",
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Ausfallhonorar bei No-Show oder kurzfristiger Absage. Rechtlich **Schadensersatz**, damit umsatzsteuerfrei und keine GKV-Leistung — deshalb keine Zeile in `invoices`.",
+   "seit": "12.07.2026 · `ausfallgebuehr`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/ausfall.routes.js",
+    "api-backend/billing/api/mahnwesen.routes.js",
+    "api-backend/billing/api/statistik.routes.js"
+   ],
+   "module": [],
+   "sqlTreffer": 4,
+   "codeStumm": false
+  },
+  {
+   "name": "b2b_contacts",
+   "spalten": 16,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv (Randmodul)",
+   "warum": "B2B-Akquise: Ärzte und Partner anschreiben, um Zuweisungen zu bekommen. Aus der Zeit, als Praxura noch selbst Kunden für die Praxis gewinnen wollte.",
+   "seit": "10.05.2026 · `create_b2b_contacts_and_fix_services`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadB2B",
+     "file": "dashboard.js",
+     "start": 12032,
+     "module": [
+      "abrechnung",
+      "b2b",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Zuweiser",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "renderB2B",
+     "file": "dashboard.js",
+     "start": 12039,
+     "module": [
+      "abrechnung",
+      "b2b",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Zuweiser",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "b2b",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 4,
+   "codeStumm": false
+  },
+  {
+   "name": "belegliste",
+   "spalten": 13,
+   "fkRaus": [
+    "profiles",
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "nav-registry.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "GoBD-Belegjournal: jeder Geldvorgang lückenlos und unveränderlich.",
+   "seit": "spätestens 08.06.2026 · `security_hardening_handles_bookings_search_path`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadPatientDetailRezepte",
+     "file": "dashboard.js",
+     "start": 8334,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/ausfall.routes.js",
+    "api-backend/billing/api/mahnwesen.routes.js",
+    "api-backend/billing/api/statistik.routes.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 4,
+   "codeStumm": false
+  },
+  {
+   "name": "booking_requests",
+   "spalten": 37,
+   "fkRaus": [
+    "patients"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "onboarding.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Termin-**Anfrage** statt Sofortbuchung: der Patient bittet um einen Termin, der Inhaber bestätigt oder lehnt ab. Ein bestätigter Antrag wird zu einem `bookings`-Eintrag.",
+   "seit": "28.06.2026 · `booking_request_system`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/server.js"
+   ],
+   "module": [],
+   "sqlTreffer": 1,
+   "codeStumm": false
+  },
+  {
+   "name": "bookings",
+   "spalten": 32,
+   "fkRaus": [
+    "bookings",
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/booking/from-request.test.js",
+    "api/dsgvo.js",
+    "onboarding.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der Termin selbst. Alles andere im Kalender hängt daran.",
+   "seit": "spätestens 10.05.2026 · `phone_normalization_and_merge`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "calculateSessionInfo",
+     "file": "dashboard.js",
+     "start": 3319,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "frag",
+     "file": "module/patientenkarte.js",
+     "start": 140,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "initCalendar",
+     "file": "dashboard.js",
+     "start": 2506,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "initCalendar",
+     "file": "kalender.js",
+     "start": 244,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladePatientenkontext",
+     "file": "module/fussbefund.js",
+     "start": 422,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fußbefund (podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "ladeVerlauf",
+     "file": "module/patientenkarte.js",
+     "start": 139,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadActivityFeed",
+     "file": "dashboard.js",
+     "start": 1915,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadEmpDaySchedule",
+     "file": "dashboard.js",
+     "start": 11720,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadLeads",
+     "file": "dashboard.js",
+     "start": 8161,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatientDetailTermine",
+     "file": "dashboard.js",
+     "start": 9172,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadScheduleBookings",
+     "file": "dashboard.js",
+     "start": 1678,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadUeberblickNoShows",
+     "file": "dashboard.js",
+     "start": 22868,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "ueberblick"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Überblick"
+     ]
+    },
+    {
+     "name": "renderBookingCalendar",
+     "file": "booking.js",
+     "start": 370,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderDayView",
+     "file": "dashboard.js",
+     "start": 2655,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderGaps",
+     "file": "dashboard.js",
+     "start": 1522,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderGapsForDate",
+     "file": "dashboard.js",
+     "start": 1602,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderMonthView",
+     "file": "dashboard.js",
+     "start": 2939,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderOverviewMonthly",
+     "file": "dashboard.js",
+     "start": 14933,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderOverviewWeekly",
+     "file": "dashboard.js",
+     "start": 14838,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderWeekView",
+     "file": "dashboard.js",
+     "start": 2840,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "verdrahteAktionsPatientensuche",
+     "file": "module/termin-aktionen.js",
+     "start": 77,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "doMoveBooking",
+     "file": "dashboard.js",
+     "start": 5559,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "handlePatientNichtErschienen",
+     "file": "dashboard.js",
+     "start": 4585,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "handleSessionDrop",
+     "file": "dashboard.js",
+     "start": 3994,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "handleTerminStarten",
+     "file": "dashboard.js",
+     "start": 4495,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "initBkGroupPatientAutocomplete",
+     "file": "dashboard.js",
+     "start": 5102,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "loadGroupParticipants",
+     "file": "dashboard.js",
+     "start": 5000,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "markArrivedHandler",
+     "file": "dashboard.js",
+     "start": 4357,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "saveFahrtEndHandler",
+     "file": "dashboard.js",
+     "start": 4401,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "saveFahrtStartHandler",
+     "file": "dashboard.js",
+     "start": 4274,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/ausfall.routes.js",
+    "api-backend/billing/api/statistik.routes.js",
+    "api-backend/billing/api/warteliste.routes.js",
+    "api-backend/booking/from-request.js",
+    "api-backend/server.js",
+    "api/admin/data.js",
+    "booking.js",
+    "dashboard.js",
+    "kalender.js",
+    "module/fussbefund.js",
+    "module/patientenkarte.js",
+    "module/rechnung-editor.js",
+    "module/rechnung-verordnung.js",
+    "module/signal.js",
+    "module/termin-aktionen.js",
+    "module/termin-patient-bezug.js"
+   ],
+   "module": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "services",
+    "team",
+    "ueberblick"
+   ],
+   "sqlTreffer": 17,
+   "codeStumm": false
+  },
+  {
+   "name": "breaks",
+   "spalten": 7,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Pausen sind keine Arbeitszeit und keine Abwesenheit — sie wiederholen sich täglich und müssen Slots blockieren.",
+   "seit": "12.05.2026 · `add_breaks_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadEmpHours",
+     "file": "dashboard.js",
+     "start": 11780,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "renderHoursGrid",
+     "file": "dashboard.js",
+     "start": 10524,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "hours",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 7,
+   "codeStumm": false
+  },
+  {
+   "name": "businesses",
+   "spalten": 26,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Zweiter Standort und aufwärts. Ohne Standortbegriff ließen sich Öffnungszeiten, Team und Leistungen nicht trennen, sobald eine Praxis mehr als eine Adresse hat.",
+   "seit": "22.05.2026 · `v24_multi_business_foundation`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "bootBusinessSwitcher",
+     "file": "dashboard.js",
+     "start": 17287,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "fetchBusinesses",
+     "file": "attendance.js",
+     "start": 114,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "init",
+     "file": "booking.js",
+     "start": 60,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderBookingCalendar",
+     "file": "booking.js",
+     "start": 370,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "bindBusiness",
+     "file": "onboarding.js",
+     "start": 388,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "deleteBusiness",
+     "file": "dashboard.js",
+     "start": 17723,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "ensureBusinessCoords",
+     "file": "dashboard.js",
+     "start": 23105,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "toggleStandortDay",
+     "file": "dashboard.js",
+     "start": 10500,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "wireBusinessModal",
+     "file": "dashboard.js",
+     "start": 17640,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/ausfall.routes.js",
+    "api-backend/server.js",
+    "api/stripe/webhook.js",
+    "attendance.js",
+    "booking.js",
+    "confirm.html",
+    "dashboard.js",
+    "onboarding.js"
+   ],
+   "module": [
+    "abrechnung",
+    "hours",
+    "kunden",
+    "services",
+    "team"
+   ],
+   "sqlTreffer": 13,
+   "codeStumm": false
+  },
+  {
+   "name": "calendar_integrations",
+   "spalten": 9,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Google-Kalender-Anbindung je Nutzer: Tokens, Kalender-ID, Synchronisationszustand.",
+   "seit": "spätestens 22.05.2026 · `v24_multi_business_foundation`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "openEmpDetail",
+     "file": "dashboard.js",
+     "start": 11489,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadIntegrations",
+     "file": "kalender.js",
+     "start": 609,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "loadSettings",
+     "file": "dashboard.js",
+     "start": 12593,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "settings",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Einstellungen",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "api/admin/data.js",
+    "dashboard.js",
+    "kalender.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "settings",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "chatbot_usage",
+   "spalten": 15,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "verdächtig",
+   "warum": "Token- und Kostenprotokoll des Website-Chatbots.",
+   "seit": "18.05.2026 · `chatbot_usage_log`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api/admin/data.js"
+   ],
+   "module": [],
+   "sqlTreffer": 4,
+   "codeStumm": false
+  },
+  {
+   "name": "consent_log",
+   "spalten": 9,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Nachweis der Einwilligung des **Praxisinhabers** (AVV, AGB, Datenschutz, Cookies) — DSGVO/TTDSG. Ohne Protokoll ist die Zustimmung nicht belegbar.",
+   "seit": "23.05.2026 · `v25_avv_consent_log`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api/onboarding/pending.js"
+   ],
+   "module": [],
+   "sqlTreffer": 4,
+   "codeStumm": false
+  },
+  {
+   "name": "custom_days",
+   "spalten": 9,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der Einzelfall, der vom Wochenraster abweicht — verkürzter Freitag, Sondertermin am Samstag.",
+   "seit": "12.05.2026 · `create_custom_days_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadBookingSlots",
+     "file": "booking.js",
+     "start": 289,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderBookingCalendar",
+     "file": "booking.js",
+     "start": 370,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderHoursMiniCal",
+     "file": "dashboard.js",
+     "start": 10617,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "saveSpecialDays",
+     "file": "dashboard.js",
+     "start": 10722,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "booking.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "hours",
+    "kunden",
+    "services",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "data_access_log",
+   "spalten": 15,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Zugriffsprotokoll nach DSGVO Art. 32 — wer hat wann welche Patientendaten gesehen. Aufbewahrung 12 Monate.",
+   "seit": "22.05.2026 · `v26_data_access_log`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "logAccess",
+     "file": "api-backend/_lib/access-log.js",
+     "start": 72,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/_lib/access-log.js",
+    "api/dsgvo.js"
+   ],
+   "module": [],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "data_sharing_settings",
+   "spalten": 8,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Ein Inhaber mit mehreren Standorten muss je Datenkategorie entscheiden: gemeinsam oder getrennt. Fehlende Zeile = alles getrennt (bewusst als sichere Vorgabe).",
+   "seit": "01.06.2026 · `data_sharing_settings`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadDataSharing",
+     "file": "dashboard.js",
+     "start": 17844,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "saveDataSharing",
+     "file": "dashboard.js",
+     "start": 17486,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [],
+   "sqlTreffer": 1,
+   "codeStumm": false
+  },
+  {
+   "name": "demo_bookings",
+   "spalten": 11,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Demo-Termine von der Marketing-Seite. Die dürfen die echte Terminverwaltung nicht anfassen.",
+   "seit": "09.06.2026 · `create_demo_bookings_table`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api/demo-booking.js"
+   ],
+   "module": [],
+   "sqlTreffer": 6,
+   "codeStumm": false
+  },
+  {
+   "name": "diagnosegruppen",
+   "spalten": 20,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Referenz)",
+   "warum": "Diagnosegruppen der Heilmittel-Richtlinie samt ICD-Regeln — die Brücke zwischen Diagnose und zulässigem Heilmittel.",
+   "seit": "13.06.2026 · `create_diagnosegruppen` (ICD-Regeln: `v33`, Präfix-Bereinigung: `v36`)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadDgIcdRules",
+     "file": "module/diagnosegruppen-regeln.js",
+     "start": 43,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "podologie-billing",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Podologie-Abrechnung (podologie)",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "podRegelnLaden",
+     "file": "module/verordnung-podo.js",
+     "start": 304,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "main",
+     "file": "api-backend/check_diagnosegruppen_icd.js",
+     "start": 94,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/check_diagnosegruppen_icd.js",
+    "module/diagnosegruppen-regeln.js",
+    "module/verordnung-podo.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "podologie-billing",
+    "team"
+   ],
+   "sqlTreffer": 7,
+   "codeStumm": false
+  },
+  {
+   "name": "document_vorlagen",
+   "spalten": 9,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Druckvorlagen je Inhaber (Rechnung, Mahnung, Bericht) als JSON. Sonst müsste jede Layoutänderung deployt werden.",
+   "seit": "11.06.2026 · `v29_dashboard_features_kat0`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadVorlagenPanel",
+     "file": "dashboard.js",
+     "start": 12883,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ]
+    },
+    {
+     "name": "openVorlagenEdit",
+     "file": "dashboard.js",
+     "start": 13324,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "_enterAnsichtEditMode",
+     "file": "dashboard.js",
+     "start": 13242,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "commit",
+     "file": "dashboard.js",
+     "start": 13474,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "deleteVorlage",
+     "file": "dashboard.js",
+     "start": 13442,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "duplicateVorlage",
+     "file": "dashboard.js",
+     "start": 13451,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "openVorlagenAnsicht",
+     "file": "dashboard.js",
+     "start": 13152,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "saveVorlage",
+     "file": "dashboard.js",
+     "start": 13412,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "seedDefaultVorlagen",
+     "file": "dashboard.js",
+     "start": 13510,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "seedMissingVorlagen",
+     "file": "dashboard.js",
+     "start": 13516,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "startVorlagenInlineRename",
+     "file": "dashboard.js",
+     "start": 13467,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "vorlagen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Vorlagen"
+     ],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/ausfall.routes.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team",
+    "vorlagen"
+   ],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "dta_schluessel",
+   "spalten": 10,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "Referenz, im Code ungenutzt",
+   "warum": "Schlüsselverzeichnisse aus Anlage 3 TP5 (Kennzeichen, Gruppen, Codes) als Datenbestand.",
+   "seit": "18.05.2026 · `v12_billing_codes_anlage3_v22`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 4,
+   "codeStumm": true
+  },
+  {
+   "name": "email_logs",
+   "spalten": 11,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Welche Mail ging wann an wen raus. Bei Terminbestätigungen ist „ist die Mail angekommen?\" die häufigste Rückfrage.",
+   "seit": "10.05.2026 · `email_logs_table`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "loadPatientDetailMails",
+     "file": "dashboard.js",
+     "start": 9072,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api/admin/data.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "employee_business_assignments",
+   "spalten": 5,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Ein Angestellter kann an mehreren Standorten arbeiten. Die Zuordnung passt weder in `profiles` (1:n) noch in `businesses`.",
+   "seit": "spätestens 22.05.2026 · `v25_rbac_employee_groups`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "bootBusinessSwitcher",
+     "file": "dashboard.js",
+     "start": 17287,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "init",
+     "file": "booking.js",
+     "start": 60,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadEmpPermissions",
+     "file": "dashboard.js",
+     "start": 11293,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadTeam",
+     "file": "dashboard.js",
+     "start": 10825,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "renderEmpStandortList",
+     "file": "dashboard.js",
+     "start": 11335,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete",
+      "upsert"
+     ]
+    },
+    {
+     "name": "renderOtherStandortEmps",
+     "file": "dashboard.js",
+     "start": 11188,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "saveEmpPermissions",
+     "file": "dashboard.js",
+     "start": 11436,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "booking.js",
+    "confirm.html",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "employee_groups",
+   "spalten": 5,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Rollen oberhalb von „Inhaber/Angestellter\" — Rezeption, Therapeut, Leitung. Wird beim Anlegen eines Standorts automatisch vorbefüllt.",
+   "seit": "22.05.2026 · `v25_rbac_employee_groups`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadEmpPermissions",
+     "file": "dashboard.js",
+     "start": 11293,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderEmpStandortList",
+     "file": "dashboard.js",
+     "start": 11335,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderOtherStandortEmps",
+     "file": "dashboard.js",
+     "start": 11188,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "confirm.html",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "employee_scope_overrides",
+   "spalten": 5,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Ausnahme für eine einzelne Person, ohne dafür eine neue Gruppe zu erfinden („die eine Rezeptionskraft darf zusätzlich Rechnungen sehen\").",
+   "seit": "spätestens 22.05.2026 · `v25_rbac_employee_groups`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "renderEmpPermGrid",
+     "file": "dashboard.js",
+     "start": 11402,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "saveEmpPermissions",
+     "file": "dashboard.js",
+     "start": 11436,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "employee_services",
+   "spalten": 4,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Nicht jeder Therapeut macht jede Leistung. Ohne diese Zuordnung bietet die Buchungsseite Termine bei Leuten an, die sie nicht durchführen dürfen.",
+   "seit": "spätestens 13.05.2026 · `add_performance_indexes`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadServices",
+     "file": "booking.js",
+     "start": 195,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "openBookingFromRxPreset",
+     "file": "dashboard.js",
+     "start": 18141,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadEmpServices",
+     "file": "dashboard.js",
+     "start": 11872,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "normName",
+     "file": "onboarding.js",
+     "start": 599,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "syncServices",
+     "file": "onboarding.js",
+     "start": 618,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "api/stripe/webhook.js",
+    "booking.js",
+    "dashboard.js",
+    "kalender.js",
+    "onboarding.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "services",
+    "team"
+   ],
+   "sqlTreffer": 7,
+   "codeStumm": false
+  },
+  {
+   "name": "fahrten",
+   "spalten": 21,
+   "fkRaus": [
+    "bookings"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "dashboard.html",
+    "demo-dashboard.html"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Fahrtenbuch für Hausbesuche, finanzamtstauglich (Zweck, Start-/Zielort, Kilometer).",
+   "seit": "22.05.2026 · `v21_fahrtenbuch` (Finanzamtsfelder: 10.06.2026)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadActivityFeed",
+     "file": "dashboard.js",
+     "start": 1915,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadFbFahrten",
+     "file": "dashboard.js",
+     "start": 20674,
+     "module": [
+      "abrechnung",
+      "fahrtenbuch",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fahrtenbuch (physiotherapy)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "saveFahrtEndHandler",
+     "file": "dashboard.js",
+     "start": 4401,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "saveFahrtStartHandler",
+     "file": "dashboard.js",
+     "start": 4274,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "fahrtenbuch",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 8,
+   "codeStumm": false
+  },
+  {
+   "name": "feedbacks",
+   "spalten": 12,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "admin.html",
+    "admin.js",
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Rückmeldung aus dem Produkt heraus. Ein Trigger schickt jeden neuen Eintrag per Telegram — sonst liest sie niemand rechtzeitig.",
+   "seit": "12.05.2026 · `create_feedbacks_table` (Telegram-Trigger: 17.06.2026)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadFeedbacks",
+     "file": "dashboard.js",
+     "start": 15107,
+     "module": [
+      "abrechnung",
+      "feedback",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Bewertungen",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api/admin/feedbacks.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "feedback",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "fußstatus",
+   "spalten": 11,
+   "fkRaus": [
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "veraltet",
+   "warum": "Der **alte** Fußbefund aus dem ersten Podologie-Wurf.",
+   "seit": "13.06.2026 · `create_fussestatus`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": true
+  },
+  {
+   "name": "group_scopes",
+   "spalten": 4,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Was eine Gruppe darf. Trennt die Rechtematrix von der Gruppendefinition, damit Rechte änderbar sind ohne Gruppen anzufassen.",
+   "seit": "spätestens 22.05.2026 · `v25_rbac_employee_groups`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "renderEmpPermGrid",
+     "file": "dashboard.js",
+     "start": 11402,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "saveEmpPermissions",
+     "file": "dashboard.js",
+     "start": 11436,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "heilmittel_catalog",
+   "spalten": 10,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "veraltet",
+   "warum": "Erster Podologie-Katalog (nur HPNR 78xxx), aus der Zeit vor der Vereinheitlichung.",
+   "seit": "13.06.2026 · `create_heilmittel_catalog`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": true
+  },
+  {
+   "name": "heilmittel_katalog",
+   "spalten": 20,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Referenz)",
+   "warum": "Der **aktive**, vereinheitlichte und zeitversionierte Heilmittelkatalog aller vier Fachbereiche. Löste die beiden Vorgänger ab, weil abgelöste Positionen sonst als unbegrenzt gültig erschienen.",
+   "seit": "26.07.2026 · `heilmittel_katalog_unified`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "main",
+     "file": "api-backend/sync_heilmittel_katalog.js",
+     "start": 109,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete",
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/sync_heilmittel_katalog.js"
+   ],
+   "module": [],
+   "sqlTreffer": 7,
+   "codeStumm": false
+  },
+  {
+   "name": "heilmittel_position",
+   "spalten": 19,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "veraltet",
+   "warum": "§302-Abrechnungspositionen mit Preisen und Zuzahlung, Physio-Seed aus der A2-Phase.",
+   "seit": "18.05.2026 · `v13_physio_positions_seed`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 4,
+   "codeStumm": true
+  },
+  {
+   "name": "heilmittel_tarif",
+   "spalten": 10,
+   "fkRaus": [
+    "kostentraeger"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/billing/preise/resolver.js",
+    "api-backend/billing/preise/resolver.test.js"
+   ],
+   "register": true,
+   "status": "aktiv (Referenz)",
+   "warum": "Preise je Kostenträger und Stichtag — die Tarifseite zum Katalog. 928 Zeilen.",
+   "seit": "spätestens 18.05.2026 · `v11_billing_a2_tables`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "seed",
+     "file": "api-backend/seed_tarifs.js",
+     "start": 33,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/seed_tarifs.js"
+   ],
+   "module": [],
+   "sqlTreffer": 4,
+   "codeStumm": false
+  },
+  {
+   "name": "icd10_titles",
+   "spalten": 7,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Referenz)",
+   "warum": "ICD-10-GM 2026, 16.905 Kodes. Der Anwender soll suchen können, ohne den Code zu kennen.",
+   "seit": "01.07.2026 · `icd10_titles_ddl`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 7,
+   "codeStumm": true
+  },
+  {
+   "name": "icd_sector_ranges",
+   "spalten": 5,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Referenz)",
+   "warum": "Welcher ICD-Bereich zu welchem Fachbereich gehört. Grundlage des `strict`-Filters, der fachfremde Diagnosen ganz aus der Auswahl nimmt.",
+   "seit": "25.07.2026 · `icd_diagnose_search_schema`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 3,
+   "codeStumm": true
+  },
+  {
+   "name": "invoices",
+   "spalten": 34,
+   "fkRaus": [
+    "leads",
+    "verordnungen"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": true,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "index.html"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Die Rechnung an Privatzahler und Selbstzahler (GKV läuft über `abrechnung`).",
+   "seit": "13.05.2026 · `create_invoices_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "downloadDmrzForInvoice",
+     "file": "dashboard.js",
+     "start": 15733,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadActivityFeed",
+     "file": "dashboard.js",
+     "start": 1915,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatientDetailRechnungen",
+     "file": "dashboard.js",
+     "start": 9132,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadRechnungen",
+     "file": "dashboard.js",
+     "start": 15179,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "rechnungen",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Rechnungen",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "markiereRechnungBezahlt",
+     "file": "module/rechnung-zahlung.js",
+     "start": 49,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "saveInvoice",
+     "file": "dashboard.js",
+     "start": 15577,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js",
+    "module/rechnung-zahlung.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "rechnungen",
+    "team"
+   ],
+   "sqlTreffer": 9,
+   "codeStumm": false
+  },
+  {
+   "name": "kiosk_pins",
+   "spalten": 6,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der Kiosk-Modus (Tablet im Wartezimmer) braucht eine Anmeldung, die kein Passwort ist. Die PIN liegt als scrypt-Hash, geprüft wird ausschließlich im Backend.",
+   "seit": "14.08.2026 · `kiosk_pin_hardening`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/server.js"
+   ],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "kostentraeger",
+   "spalten": 9,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/billing/dta/preflight.js",
+    "api-backend/billing/dta/preflight.test.js"
+   ],
+   "register": true,
+   "status": "aktiv, aber **Mock-Daten**",
+   "warum": "Die §302-Seite der Kassen: IK-Nummern, Annahmestellen, Datenannahme-Wege. Das ist etwas anderes als die Kassenliste in der Oberfläche.",
+   "seit": "18.05.2026 · `v11_billing_a2_tables` (Seed: `v14_kostentraeger_mock_seed`)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadAbrechnung",
+     "file": "dashboard.js",
+     "start": 19731,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/server.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "krankenkassen",
+   "spalten": 6,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Referenz)",
+   "warum": "Die Kassenliste für das Auswahlfeld in der Oberfläche. 93 GKV-Kassen, gesetzt am 02.06.2026.",
+   "seit": "**in keiner Migration** — direkt im SQL-Editor angelegt. Das ist der einzige Fall im Projekt, in dem sich das Entstehungsdatum aus der Datenbank nicht rekonstruieren lässt.",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladeKassen",
+     "file": "module/krankenkasse-suche.js",
+     "start": 48,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadKkList",
+     "file": "dashboard.js",
+     "start": 18980,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "podologie-billing",
+      "team",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 5 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/server.js",
+    "booking-request.js",
+    "dashboard.js",
+    "module/krankenkasse-suche.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "podologie-billing",
+    "team",
+    "verordnungen"
+   ],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "leads",
+   "spalten": 51,
+   "fkRaus": [
+    "aerzte"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "**Das ist die Patientenakte.** Der Name stammt aus der Akquise-Zeit (daher `title`, `google_url`, `reviews_count`) und ist geblieben, weil ein Umbenennen jede Abfrage im Projekt anfasst.",
+   "seit": "spätestens 10.05.2026 · `phone_normalization_and_merge`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ausfallVereinbarungDatum",
+     "file": "dashboard.js",
+     "start": 4810,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "downloadDmrzForInvoice",
+     "file": "dashboard.js",
+     "start": 15733,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "fillRzPatientFromLead",
+     "file": "dashboard.js",
+     "start": 16962,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+     ]
+    },
+    {
+     "name": "handleSessionDrop",
+     "file": "dashboard.js",
+     "start": 3994,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "handleTerminStarten",
+     "file": "dashboard.js",
+     "start": 4495,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "initBkCustomerAutocomplete",
+     "file": "dashboard.js",
+     "start": 5309,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "initBkGroupPatientAutocomplete",
+     "file": "dashboard.js",
+     "start": 5102,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "initCalRightPanel",
+     "file": "dashboard.js",
+     "start": 3789,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "initWlPatientAutocomplete",
+     "file": "dashboard.js",
+     "start": 22064,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeKassen",
+     "file": "module/krankenkasse-suche.js",
+     "start": 48,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladePatienten",
+     "file": "module/arzt-register.js",
+     "start": 482,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "doctors",
+      "kunden",
+      "podologie-billing",
+      "settings",
+      "team"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 7 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadActivityFeed",
+     "file": "dashboard.js",
+     "start": 1915,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadAnamnese",
+     "file": "dashboard.js",
+     "start": 15814,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Anamnese (physiotherapy/podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadB2C",
+     "file": "dashboard.js",
+     "start": 12122,
+     "module": [
+      "abrechnung",
+      "b2c",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patientenpost",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadBkLeads",
+     "file": "dashboard.js",
+     "start": 5319,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadInvPatients",
+     "file": "dashboard.js",
+     "start": 15425,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadLeads",
+     "file": "dashboard.js",
+     "start": 8161,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadNotizen",
+     "file": "dashboard.js",
+     "start": 14301,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "notizen",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Notizen (physiotherapy/podologie/praxis)",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatientDetailMails",
+     "file": "dashboard.js",
+     "start": 9072,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadUeberblickBirthdays",
+     "file": "dashboard.js",
+     "start": 22820,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "ueberblick"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Überblick"
+     ]
+    },
+    {
+     "name": "mountFussbefund",
+     "file": "module/fussbefund.js",
+     "start": 1158,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fußbefund (podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "openBookingModal",
+     "file": "dashboard.js",
+     "start": 5225,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "openInvView",
+     "file": "dashboard.js",
+     "start": 15227,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "rechnungen",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Rechnungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "openRezeptModal",
+     "file": "dashboard.js",
+     "start": 17027,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+     ]
+    },
+    {
+     "name": "pruefeLeadId",
+     "file": "api-backend/server.js",
+     "start": 1156,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderBkActionFahrtState",
+     "file": "dashboard.js",
+     "start": 4093,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "saveFahrtEndHandler",
+     "file": "dashboard.js",
+     "start": 4401,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "saveFahrtStartHandler",
+     "file": "dashboard.js",
+     "start": 4274,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "showZaaErrors",
+     "file": "dashboard.js",
+     "start": 20246,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "handleDirectAusfallrechnung",
+     "file": "dashboard.js",
+     "start": 4635,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "initSchnellerfassung",
+     "file": "dashboard.js",
+     "start": 21758,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "saveRezept",
+     "file": "dashboard.js",
+     "start": 17118,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/statistik.routes.js",
+    "api-backend/server.js",
+    "dashboard.js",
+    "module/arzt-register.js",
+    "module/fussbefund.js",
+    "module/krankenkasse-suche.js",
+    "module/patienten-einwilligung.js",
+    "module/rechnung-editor.js",
+    "module/termin-patient-bezug.js",
+    "module/verordnung-uebersicht.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "b2c",
+    "doctors",
+    "fussstatus",
+    "kunden",
+    "notizen",
+    "podologie-billing",
+    "rechnungen",
+    "settings",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "sqlTreffer": 16,
+   "codeStumm": false
+  },
+  {
+   "name": "mahnungen",
+   "spalten": 13,
+   "fkRaus": [
+    "ausfallrechnungen"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Mahnstufen zu offenen Rechnungen, mit eigenem Nummernkreis.",
+   "seit": "25.05.2026 · `v28_mahnwesen`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/mahnwesen.routes.js",
+    "api-backend/billing/api/statistik.routes.js"
+   ],
+   "module": [],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "messreihen",
+   "spalten": 12,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "dashboard.html"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Messwerte im Verlauf (Blankoverordnung: der Therapeut muss den Behandlungserfolg belegen).",
+   "seit": "19.06.2026 · `v31_messreihen_blanko`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "refreshMessreihen",
+     "file": "dashboard.js",
+     "start": 8797,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "saveMessung",
+     "file": "dashboard.js",
+     "start": 8921,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "module_visibility",
+   "spalten": 6,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "komponenten.html"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Nicht jede Praxis braucht jedes Sidebar-Modul. Der Schalter je Inhaber und Modul liegt hier; die Modulliste selbst steht im Code (`nav-registry.js`).",
+   "seit": "14.07.2026 · `module_visibility_matrix`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadVisibilityMatrix",
+     "file": "dashboard.js",
+     "start": 886,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadVisibility",
+     "file": "admin.js",
+     "start": 288,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "saveVisToggle",
+     "file": "admin.js",
+     "start": 387,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "admin.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 1,
+   "codeStumm": false
+  },
+  {
+   "name": "nummernkreise",
+   "spalten": 4,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Lückenlose, race-freie Nummernvergabe je Inhaber und Jahr (`rechnung_nr`, `beleg_nr`, `mahnung_nr`). Vorher zählte das Frontend mit `MAX+1` hoch — bei zwei gleichzeitigen Nutzern gibt das dieselbe Nummer zweimal.",
+   "seit": "16.08.2026 · `invoices_ust_nummernkreis_gobd`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 1,
+   "codeStumm": true
+  },
+  {
+   "name": "pat_fussbefund",
+   "spalten": 11,
+   "fkRaus": [
+    "leads",
+    "bookings",
+    "pat_fussbefund"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der aktuelle podologische Fußbefund samt Fußkarte. Ersetzt fachlich `fußstatus`.",
+   "seit": "22.07.2026 · `pat_fussbefund` (Patientenbezug nachgezogen: `pat_fussbefund_lead_fk`, 24.07.)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladePatientenkontext",
+     "file": "module/fussbefund.js",
+     "start": 422,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fußbefund (podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "ladeVerlauf",
+     "file": "module/patientenkarte.js",
+     "start": 139,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderFussbefundArchiv",
+     "file": "module/fussbefund-archiv.js",
+     "start": 92,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "verdrahteFussbefundKnopf",
+     "file": "module/fussbefund.js",
+     "start": 1301,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "renderBefundListe",
+     "file": "module/fussbefund.js",
+     "start": 695,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fußbefund (podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "speichern",
+     "file": "module/fussbefund.js",
+     "start": 577,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "module/fussbefund-archiv.js",
+    "module/fussbefund.js",
+    "module/patientenkarte.js"
+   ],
+   "module": [
+    "abrechnung",
+    "fussstatus",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 4,
+   "codeStumm": false
+  },
+  {
+   "name": "patient_consents",
+   "spalten": 16,
+   "fkRaus": [
+    "leads",
+    "businesses",
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Digitale Einwilligung des Patienten mit einfacher elektronischer Signatur. Vorher gab es dafür nur Papier, und der Nachweis fehlte bei Praxisübergabe.",
+   "seit": "14.08.2026 · `patient_consents`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "kopieOeffnen",
+     "file": "module/patienten-einwilligung.js",
+     "start": 559,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderEinwilligungListe",
+     "file": "module/patienten-einwilligung.js",
+     "start": 445,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "speichereEinwilligung",
+     "file": "module/patienten-einwilligung.js",
+     "start": 295,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "widerrufen",
+     "file": "module/patienten-einwilligung.js",
+     "start": 535,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "module/patienten-einwilligung.js"
+   ],
+   "module": [],
+   "sqlTreffer": 6,
+   "codeStumm": false
+  },
+  {
+   "name": "patient_notes",
+   "spalten": 10,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Freitext-Notizen zum Patienten, die weder Anamnese noch Behandlungsdokumentation sind.",
+   "seit": "spätestens 13.05.2026 · `add_performance_indexes`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadActivityFeed",
+     "file": "dashboard.js",
+     "start": 1915,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadNotizen",
+     "file": "dashboard.js",
+     "start": 14301,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "notizen",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Notizen (physiotherapy/podologie/praxis)",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatientDetailNotes",
+     "file": "dashboard.js",
+     "start": 8983,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatientNotes",
+     "file": "dashboard.js",
+     "start": 14365,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "notizen",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Notizen (physiotherapy/podologie/praxis)",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "notizen",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "patients",
+   "spalten": 8,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "dashboard.js",
+    "index.html",
+    "module/fussbefund.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der Anfragende ist noch kein Patient der Praxis. Er darf nicht in die echte Akte (`leads`) geschrieben werden, bevor jemand die Anfrage angenommen hat.",
+   "seit": "28.06.2026 · `booking_request_system`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/server.js"
+   ],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "pending_employee_registrations",
+   "spalten": 7,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Dasselbe für Angestellte: der Inhaber gibt einen 6-stelligen `company_code` heraus, der Angestellte registriert sich, der Inhaber bestätigt. Zwischen Registrierung und Bestätigung liegt der Datensatz hier.",
+   "seit": "08.06.2026 · `create_pending_employee_registrations`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "confirm.html",
+    "employee-signup.js"
+   ],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "pending_signups",
+   "spalten": 6,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Zwischen „Formular ausgefüllt\" und „bezahlt\" existiert der Account noch nicht. Die Anmeldedaten müssen solange irgendwo liegen — inklusive Passwort, und das darf nicht im Klartext stehen.",
+   "seit": "12.05.2026 · `create_pending_signups`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/server.js",
+    "api/stripe/create-checkout-session.js",
+    "api/stripe/webhook.js"
+   ],
+   "module": [],
+   "sqlTreffer": 0,
+   "codeStumm": false
+  },
+  {
+   "name": "podologie_behandlungen",
+   "spalten": 11,
+   "fkRaus": [
+    "verordnungen",
+    "invoices"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions` im anderen Topf.",
+   "seit": "13.06.2026 · `create_podologie_behandlungen`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladeVerlauf",
+     "file": "module/patientenkarte.js",
+     "start": 139,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadPodologieBilling",
+     "file": "module/podologie-abrechnung.js",
+     "start": 259,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "podologie-billing",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Podologie-Abrechnung (podologie)",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/verordnung-status.routes.js",
+    "module/patientenkarte.js",
+    "module/podologie-abrechnung.js",
+    "module/rechnung-bruecke.js",
+    "module/rechnung-verordnung.js",
+    "module/verordnung-uebersicht.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "podologie-billing",
+    "team"
+   ],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "prescription_documents",
+   "spalten": 13,
+   "fkRaus": [
+    "prescriptions"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Nachweise und Anhänge zu einer Verordnung — Befreiungsausweis, LHB-Genehmigung, korrigierte Verordnung, Therapiebericht. Als Spalten in `prescriptions` wären es beliebig viele.",
+   "seit": "25.07.2026 · `create_prescription_documents`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [
+    {
+     "name": "uploadRxNachweise",
+     "file": "dashboard.js",
+     "start": 18711,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "prescription_sessions",
+   "spalten": 9,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Die einzelne Behandlungseinheit auf der Verordnung. Ohne sie ließe sich nicht sagen, wie viele der verordneten Einheiten schon geleistet sind.",
+   "seit": "spätestens 16.05.2026 · `v10_prescriptions`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "decorateBookingTitleWithSession",
+     "file": "dashboard.js",
+     "start": 7520,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadCalRpUnverga",
+     "file": "dashboard.js",
+     "start": 3941,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadRxSessionsPanel",
+     "file": "dashboard.js",
+     "start": 6362,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "openInvView",
+     "file": "dashboard.js",
+     "start": 15227,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "rechnungen",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Rechnungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "pruefeVerordnungsfortschritt",
+     "file": "module/sitzungsfortschritt.js",
+     "start": 82,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "zaehler",
+     "file": "module/sitzungsfortschritt.js",
+     "start": 85,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "handlePatientNichtErschienen",
+     "file": "dashboard.js",
+     "start": 4585,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "handleSessionDrop",
+     "file": "dashboard.js",
+     "start": 3994,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "linkBookingsToPrescriptionSessions",
+     "file": "dashboard.js",
+     "start": 7533,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "markPrescriptionSession",
+     "file": "dashboard.js",
+     "start": 7500,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/statistik.routes.js",
+    "api-backend/server.js",
+    "dashboard.js",
+    "module/frequenz-pruefung.js",
+    "module/rechnung-editor.js",
+    "module/sitzung-abgleich.js",
+    "module/sitzungsfortschritt.js",
+    "module/termin-aktionen.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "rechnungen",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "prescription_validations",
+   "spalten": 13,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Prüfergebnis der Rezeptvalidierung samt Übersteuerung. Getrennt von `prescriptions`, weil es ein Protokoll ist: wer hat wann welche Warnung überstimmt.",
+   "seit": "spätestens 16.05.2026 · `v10_prescriptions`, Übersteuerungs-Audit seit 15.06.2026 · `prescription_validations_override_audit`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/server.js"
+   ],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "prescriptions",
+   "spalten": 71,
+   "fkRaus": [
+    "leads",
+    "kostentraeger"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/billing/dta/preflight.js",
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Die Verordnung (Muster 13) für Physio/Ergo/Logopädie: Diagnose, Heilmittel, Frequenz, Genehmigung — die Grundlage jeder GKV-Abrechnung.",
+   "seit": "16.05.2026 · `v10_prescriptions`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "initBkCustomerAutocomplete",
+     "file": "dashboard.js",
+     "start": 5309,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "ladeVerlauf",
+     "file": "module/patientenkarte.js",
+     "start": 139,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeZuweisungen",
+     "file": "module/arzt-register.js",
+     "start": 457,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "doctors",
+      "kunden",
+      "podologie-billing",
+      "settings",
+      "team"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 7 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "linkBookingsToPrescriptionSessions",
+     "file": "dashboard.js",
+     "start": 7533,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadAbrechnung",
+     "file": "dashboard.js",
+     "start": 19731,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadAnamneseRxContext",
+     "file": "dashboard.js",
+     "start": 15909,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Anamnese (physiotherapy/podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadBkVerordnungen",
+     "file": "dashboard.js",
+     "start": 5376,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadCalRpRezeptInfo",
+     "file": "dashboard.js",
+     "start": 3904,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadPatientDetailRezepte",
+     "file": "dashboard.js",
+     "start": 8334,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatRxTable",
+     "file": "dashboard.js",
+     "start": 22653,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPhysioRezKpis",
+     "file": "dashboard.js",
+     "start": 2214,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadRxSessionsPanel",
+     "file": "dashboard.js",
+     "start": 6362,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadUeberblickDeadlines",
+     "file": "dashboard.js",
+     "start": 22755,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "ueberblick"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Überblick"
+     ]
+    },
+    {
+     "name": "openInvView",
+     "file": "dashboard.js",
+     "start": 15227,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "rechnungen",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Rechnungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "showZaaErrors",
+     "file": "dashboard.js",
+     "start": 20246,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "verordnungenListeLaden",
+     "file": "module/verordnung-liste.js",
+     "start": 48,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+     ]
+    },
+    {
+     "name": "zeigeVerordnungDetail",
+     "file": "module/verordnung-detail.js",
+     "start": 241,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "betragNullsetzen",
+     "file": "module/zuzahlung-befreiung.js",
+     "start": 249,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "downloadDmrzForInvoice",
+     "file": "dashboard.js",
+     "start": 15733,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "flipAbrechnungStatus",
+     "file": "dashboard.js",
+     "start": 8651,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "pruefeVerordnungsfortschritt",
+     "file": "module/sitzungsfortschritt.js",
+     "start": 82,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "renderAbrechnungHistory",
+     "file": "dashboard.js",
+     "start": 20079,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "renderAbrechnungReady",
+     "file": "dashboard.js",
+     "start": 19846,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "saveRezept",
+     "file": "dashboard.js",
+     "start": 17118,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "triggerStorno",
+     "file": "dashboard.js",
+     "start": 21183,
+     "module": [
+      "abrechnung",
+      "belegliste",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Kassenbuch (physiotherapy/podologie/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/mahnwesen.routes.js",
+    "api-backend/billing/api/statistik.routes.js",
+    "api-backend/server.js",
+    "dashboard.js",
+    "module/arzt-register.js",
+    "module/patientenkarte.js",
+    "module/rechnung-verordnung.js",
+    "module/rechnung-zahlung.js",
+    "module/sitzungsfortschritt.js",
+    "module/termin-aktionen.js",
+    "module/verordnung-detail.js",
+    "module/verordnung-liste.js",
+    "module/verordnung-uebersicht.js",
+    "module/zuzahlung-befreiung.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "belegliste",
+    "doctors",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "settings",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "sqlTreffer": 21,
+   "codeStumm": false
+  },
+  {
+   "name": "profiles",
+   "spalten": 82,
+   "fkRaus": [
+    "auth.users"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Der Dreh- und Angelpunkt der Mandantentrennung. Jeder Account — Inhaber wie Angestellter — hat genau eine Zeile; `role` und `owner_id` entscheiden, wer wessen Daten sieht. Weil Einzelstandort-Inhaber gar keinen `businesses`-Datensatz haben, liegen **Inhaber-Einstellungen hier**, nicht in `businesses`.",
+   "seit": "spätestens 06.05.2026 · `extend_profiles_for_multi_tenant` (die Tabelle ist älter als die Migrationshistorie; `create_core_tables_safe` vom 18.06. ist nur ein `IF NOT EXISTS`-Netz)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "approveAnfrage",
+     "file": "dashboard.js",
+     "start": 23454,
+     "module": [
+      "abrechnung",
+      "anfragen",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Termin-Anfragen",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "fetchBusinesses",
+     "file": "attendance.js",
+     "start": 114,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "gehoertZurPraxis",
+     "file": "api-backend/server.js",
+     "start": 3518,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "handleDirectAusfallrechnung",
+     "file": "dashboard.js",
+     "start": 4635,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeLegende",
+     "file": "module/fussbefund.js",
+     "start": 155,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fußbefund (podologie)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadAusfallConfig",
+     "file": "dashboard.js",
+     "start": 807,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadEmpUrlaubSection",
+     "file": "dashboard.js",
+     "start": 11037,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadFahrtenbuchPanel",
+     "file": "dashboard.js",
+     "start": 20614,
+     "module": [
+      "abrechnung",
+      "fahrtenbuch",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fahrtenbuch (physiotherapy)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadFbFahrten",
+     "file": "dashboard.js",
+     "start": 20674,
+     "module": [
+      "abrechnung",
+      "fahrtenbuch",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fahrtenbuch (physiotherapy)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadFbReports",
+     "file": "dashboard.js",
+     "start": 20996,
+     "module": [
+      "abrechnung",
+      "fahrtenbuch",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Fahrtenbuch (physiotherapy)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadHoursPanel",
+     "file": "dashboard.js",
+     "start": 10415,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPatientDetailAnamnese",
+     "file": "dashboard.js",
+     "start": 9008,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadPraxisProfile",
+     "file": "api-backend/billing/api/ausfall.routes.js",
+     "start": 48,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadTeam",
+     "file": "dashboard.js",
+     "start": 10825,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadUeberblickVacations",
+     "file": "dashboard.js",
+     "start": 22894,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "ueberblick"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Überblick"
+     ]
+    },
+    {
+     "name": "proceedToOwnerCheck",
+     "file": "dashboard.js",
+     "start": 4668,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderOtherStandortEmps",
+     "file": "dashboard.js",
+     "start": 11188,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderSidebar",
+     "file": "dashboard.js",
+     "start": 954,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "requireAuth",
+     "file": "api-backend/ai/auth.js",
+     "start": 15,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "resolveAuth",
+     "file": "api-backend/billing/api/ausfall.routes.js",
+     "start": 26,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "resolveAuth",
+     "file": "api-backend/billing/api/mahnwesen.routes.js",
+     "start": 22,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "resolveAuth",
+     "file": "api-backend/billing/api/statistik.routes.js",
+     "start": 18,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "resolveAuth",
+     "file": "api-backend/billing/api/verordnung-status.routes.js",
+     "start": 32,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "resolveAuth",
+     "file": "api-backend/billing/api/warteliste.routes.js",
+     "start": 21,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "bindBilling",
+     "file": "onboarding.js",
+     "start": 453,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "bindBusiness",
+     "file": "onboarding.js",
+     "start": 388,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "bindHours",
+     "file": "onboarding.js",
+     "start": 813,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "bindOwner",
+     "file": "onboarding.js",
+     "start": 516,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "bindPlan",
+     "file": "onboarding.js",
+     "start": 870,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "ensureBookingSlug",
+     "file": "dashboard.js",
+     "start": 13868,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "ensureClinicLocation",
+     "file": "dashboard.js",
+     "start": 5882,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "ensureCompanyCode",
+     "file": "dashboard.js",
+     "start": 13851,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "handleSave",
+     "file": "onboarding.js",
+     "start": 457,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "init",
+     "file": "kalender.js",
+     "start": 140,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "initAnfragenPanel",
+     "file": "dashboard.js",
+     "start": 23673,
+     "module": [
+      "abrechnung",
+      "anfragen",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Termin-Anfragen",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "loadProfile",
+     "file": "onboarding.js",
+     "start": 115,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "openEmpDetail",
+     "file": "dashboard.js",
+     "start": 11489,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "openStripePortal",
+     "file": "dashboard.js",
+     "start": 2277,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "renderLegendeSettings",
+     "file": "module/fussbefund.js",
+     "start": 1381,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "saveAusfallSettings",
+     "file": "dashboard.js",
+     "start": 17408,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "saveEmployee",
+     "file": "dashboard.js",
+     "start": 14560,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "saveStepProgress",
+     "file": "onboarding.js",
+     "start": 281,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/ai/auth.js",
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/ausfall.routes.js",
+    "api-backend/billing/api/mahnwesen.routes.js",
+    "api-backend/billing/api/statistik.routes.js",
+    "api-backend/billing/api/verordnung-status.routes.js",
+    "api-backend/billing/api/warteliste.routes.js",
+    "api-backend/fix_db.js",
+    "api-backend/server.js",
+    "api-backend/test_schema.js",
+    "api/admin/data.js",
+    "api/dsgvo.js",
+    "api/onboarding/check-email.js",
+    "api/stripe/create-checkout-session.js",
+    "api/stripe/portal-session.js",
+    "api/stripe/webhook.js",
+    "attendance.js",
+    "confirm.html",
+    "dashboard.js",
+    "kalender.js",
+    "module/beleg-druck.js",
+    "module/fussbefund.js",
+    "onboarding.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anfragen",
+    "fahrtenbuch",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "team",
+    "ueberblick"
+   ],
+   "sqlTreffer": 33,
+   "codeStumm": false
+  },
+  {
+   "name": "referral_drafts",
+   "spalten": 21,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "verdächtig",
+   "warum": "Erster Rezept-Fluss: Foto einer Verordnung → KI-Auszug (`raw_ai_data`, `seans_sayisi`, `tedavi_turu`) → Bestätigung → Terminserie (`booking_series_id`). Der Vorläufer von `prescriptions` + `/booking/ai-suggest-series`.",
+   "seit": "spätestens 22.05.2026 · `v24_multi_business_foundation`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 9,
+   "codeStumm": true
+  },
+  {
+   "name": "scraper_data",
+   "spalten": 14,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv (Randmodul)",
+   "warum": "Ergebnisse der Apify-Suche (Google-Maps-Praxen) als Akquiseliste — die Zulieferung für `b2b_contacts`.",
+   "seit": "11.05.2026 · `create_scraper_data_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadDoctors",
+     "file": "dashboard.js",
+     "start": 13931,
+     "module": [
+      "abrechnung",
+      "doctors",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Ärzte (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "doctors",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "services",
+   "spalten": 18,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api-backend/booking/from-request.test.js",
+    "api/dsgvo.js",
+    "booking.js",
+    "dashboard.html",
+    "index-old.html",
+    "index.html",
+    "nav-registry.js",
+    "onboarding.html"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Was die Praxis anbietet, mit Dauer und Preis. Grundlage für Slot-Berechnung und Abrechnung.",
+   "seit": "spätestens 06.05.2026 · `extend_profiles_for_multi_tenant`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "baseQuery",
+     "file": "dashboard.js",
+     "start": 19250,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "findMatchingServiceId",
+     "file": "dashboard.js",
+     "start": 3975,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "initCalendar",
+     "file": "dashboard.js",
+     "start": 2506,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadEmpServices",
+     "file": "dashboard.js",
+     "start": 11872,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadProfile",
+     "file": "onboarding.js",
+     "start": 115,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadServices",
+     "file": "dashboard.js",
+     "start": 9663,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadServices",
+     "file": "kalender.js",
+     "start": 497,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "populateRxcServiceSelect",
+     "file": "dashboard.js",
+     "start": 19226,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "updateBkDuration",
+     "file": "dashboard.js",
+     "start": 5650,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "autoSeedGkvServices",
+     "file": "dashboard.js",
+     "start": 9683,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "ensureBlankoBonusServices",
+     "file": "dashboard.js",
+     "start": 7722,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "migratePodologieLegacyServices",
+     "file": "dashboard.js",
+     "start": 9879,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "normName",
+     "file": "onboarding.js",
+     "start": 599,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete",
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "renderServices",
+     "file": "dashboard.js",
+     "start": 10146,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "syncServices",
+     "file": "onboarding.js",
+     "start": 618,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete",
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "wireBusinessModal",
+     "file": "dashboard.js",
+     "start": 17640,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/booking/from-request.js",
+    "api-backend/check_db.js",
+    "api-backend/server.js",
+    "api/stripe/webhook.js",
+    "dashboard.js",
+    "kalender.js",
+    "onboarding.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "services",
+    "team"
+   ],
+   "sqlTreffer": 11,
+   "codeStumm": false
+  },
+  {
+   "name": "spatial_ref_sys",
+   "spalten": 5,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "System",
+   "warum": "Systemtabelle der PostGIS-Erweiterung (Koordinatensysteme). Kam mit `enable_postgis` für die Geocodierung im Fahrtenbuch.",
+   "seit": "18.06.2026 · `enable_postgis`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 1,
+   "codeStumm": true
+  },
+  {
+   "name": "terapeut_zertifikat",
+   "spalten": 10,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Das **Signaturzertifikat** für die §302-Einreichung (PKCS#7). Ohne gültiges Zertifikat lässt sich keine DTA-Datei signieren.",
+   "seit": "spätestens 18.05.2026 · `v11_billing_a2_tables`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ikVorbelegen",
+     "file": "module/verordnung-podo.js",
+     "start": 268,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadSettings",
+     "file": "dashboard.js",
+     "start": 12593,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "settings",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Einstellungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderOverview",
+     "file": "dashboard.js",
+     "start": 1341,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "dashboard.js",
+    "module/verordnung-podo.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "settings",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "therapist_certificates",
+   "spalten": 5,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Fachliche Qualifikationen des Therapeuten (MT, MLD, KGG). Bestimmte Leistungen darf nur abrechnen, wer die Qualifikation nachweist.",
+   "seit": "spätestens 08.06.2026 · `cleanup_test_users_keep_fizyo6`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadAbrechnung",
+     "file": "dashboard.js",
+     "start": 19731,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadEmpServices",
+     "file": "dashboard.js",
+     "start": 11872,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadEmpCertificates",
+     "file": "dashboard.js",
+     "start": 11958,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 1,
+   "codeStumm": false
+  },
+  {
+   "name": "time_offs",
+   "spalten": 12,
+   "fkRaus": [
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Urlaub, Krankheit, Fortbildung. Anders als `custom_days` personenbezogen und mehrtägig.",
+   "seit": "spätestens 13.05.2026 · `add_performance_indexes`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "initCalendar",
+     "file": "kalender.js",
+     "start": 244,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadEmpDaySchedule",
+     "file": "dashboard.js",
+     "start": 11720,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadEmpUrlaubSection",
+     "file": "dashboard.js",
+     "start": 11037,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "loadUeberblickVacations",
+     "file": "dashboard.js",
+     "start": 22894,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "ueberblick"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Überblick"
+     ]
+    },
+    {
+     "name": "loadUrlaubListe",
+     "file": "dashboard.js",
+     "start": 11138,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderDayView",
+     "file": "dashboard.js",
+     "start": 2655,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "deleteEmpTimeOff",
+     "file": "dashboard.js",
+     "start": 11093,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "deleteUrlaub",
+     "file": "dashboard.js",
+     "start": 11167,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "loadTeam",
+     "file": "dashboard.js",
+     "start": 10825,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "openEmpDetail",
+     "file": "dashboard.js",
+     "start": 11489,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "saveUrlaub",
+     "file": "dashboard.js",
+     "start": 11109,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "dashboard.js",
+    "kalender.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team",
+    "ueberblick"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "trip_history",
+   "spalten": 8,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "fremd",
+   "warum": "Fremdprojekt, Gegenstück zu `trip_plans`.",
+   "seit": "18.06.2026 · `add_trip_history`",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 1,
+   "codeStumm": true
+  },
+  {
+   "name": "trip_plans",
+   "spalten": 15,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "fremd",
+   "warum": "Fremdprojekt (Reiseplanung). Nicht mit dem Fahrtenbuch (`fahrten`) verwechseln — das ist unseres.",
+   "seit": "älter als die auffindbare Historie · erste Erwähnung `create_core_tables_safe` (18.06.2026)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 1,
+   "codeStumm": true
+  },
+  {
+   "name": "ueberweisungen",
+   "spalten": 9,
+   "fkRaus": [
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Überweisung an einen anderen Behandler, dokumentiert an der Akte.",
+   "seit": "13.05.2026 · `ueberweisungen_table`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadPatientDetailUeberweisung",
+     "file": "dashboard.js",
+     "start": 9110,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 5,
+   "codeStumm": false
+  },
+  {
+   "name": "user_credits",
+   "spalten": 6,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "fremd",
+   "warum": "Fremdprojekt (Guthabenmodell). Praxura rechnet über Stripe ab, nicht über Credits.",
+   "seit": "älter als die auffindbare Historie · erste Erwähnung `cleanup_test_users_keep_fizyo6` (08.06.2026)",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 2,
+   "codeStumm": true
+  },
+  {
+   "name": "user_preferences",
+   "spalten": 5,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Pro Nutzer merkbare Oberflächen-Zustände (gewählter Standort, Kalenderansicht, Mitarbeiterfilter) gehören nicht in `profiles` — das ist die fachliche Stammdatentabelle.",
+   "seit": "spätestens 22.05.2026 · `v24_multi_business_foundation`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "bootBusinessSwitcher",
+     "file": "dashboard.js",
+     "start": 17287,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "bootScheduleViewToggle",
+     "file": "dashboard.js",
+     "start": 14707,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "saveUserPref",
+     "file": "dashboard.js",
+     "start": 14786,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "switchBusiness",
+     "file": "dashboard.js",
+     "start": 17802,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "api/stripe/webhook.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "hours",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 2,
+   "codeStumm": false
+  },
+  {
+   "name": "vehicles",
+   "spalten": 11,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "dashboard.html"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Fahrzeugstamm zum Fahrtenbuch; Kilometerstände und Kennzeichen gehören nicht an die einzelne Fahrt.",
+   "seit": "22.05.2026 · `v21_fahrtenbuch`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadVehiclesForPicker",
+     "file": "dashboard.js",
+     "start": 4202,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "q",
+     "file": "dashboard.js",
+     "start": 20832,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "saveFahrtEndHandler",
+     "file": "dashboard.js",
+     "start": 4401,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "saveFahrtStartHandler",
+     "file": "dashboard.js",
+     "start": 4274,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadFbVehicles",
+     "file": "dashboard.js",
+     "start": 20858,
+     "module": [
+      "abrechnung",
+      "fahrtenbuch",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 5 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
+    {
+     "name": "saveQuickVehicleHandler",
+     "file": "dashboard.js",
+     "start": 4251,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "saveVehicleEdit",
+     "file": "dashboard.js",
+     "start": 20961,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "fahrtenbuch",
+    "kunden",
+    "services",
+    "team"
+   ],
+   "sqlTreffer": 9,
+   "codeStumm": false
+  },
+  {
+   "name": "verordnungen",
+   "spalten": 35,
+   "fkRaus": [
+    "diagnosegruppen"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "dashboard.js",
+    "module/verordnung-uebersicht.test.js",
+    "nav-registry.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Die podologische Verordnung. Eigener Topf, weil Podologie andere Pflichtfelder hat (Wagner-Armstrong-Grad, Fußstatus-Bezug) und die Abrechnung über HPNR 78xxx läuft.",
+   "seit": "13.06.2026 · `create_verordnungen`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "ladeStatusJePatient",
+     "file": "module/abrechnungsstatus.js",
+     "start": 159,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "ladeVerlauf",
+     "file": "module/patientenkarte.js",
+     "start": 139,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeZuweisungen",
+     "file": "module/arzt-register.js",
+     "start": 457,
+     "module": [
+      "abrechnung",
+      "anamnese",
+      "doctors",
+      "kunden",
+      "podologie-billing",
+      "settings",
+      "team"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 7 modülden çağrılıyor"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "loadPodologieBilling",
+     "file": "module/podologie-abrechnung.js",
+     "start": 259,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "podologie-billing",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Podologie-Abrechnung (podologie)",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "api-backend/billing/api/statistik.routes.js",
+    "api-backend/billing/api/verordnung-status.routes.js",
+    "module/abrechnungsstatus.js",
+    "module/arzt-register.js",
+    "module/patientenkarte.js",
+    "module/podologie-abrechnung.js",
+    "module/rechnung-verordnung.js",
+    "module/verordnung-uebersicht.js"
+   ],
+   "module": [
+    "abrechnung",
+    "anamnese",
+    "doctors",
+    "kunden",
+    "podologie-billing",
+    "settings",
+    "team"
+   ],
+   "sqlTreffer": 10,
+   "codeStumm": false
+  },
+  {
+   "name": "visibility_reports",
+   "spalten": 8,
+   "fkRaus": [],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Telemetrie zur Modulmatrix: welcher Kunde sieht tatsächlich welche Module. Ohne diese Rückmeldung wäre die Matrix eine Behauptung.",
+   "seit": "14.07.2026 · `module_visibility_matrix`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadVisibility",
+     "file": "admin.js",
+     "start": 288,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "reportSidebarVisibility",
+     "file": "dashboard.js",
+     "start": 906,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "saveVisToggle",
+     "file": "admin.js",
+     "start": 387,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete"
+     ]
+    }
+   ],
+   "dateien": [
+    "admin.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 1,
+   "codeStumm": false
+  },
+  {
+   "name": "warteliste",
+   "spalten": 14,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js",
+    "nav-registry.js",
+    "onboarding.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Wenn nichts frei ist, soll der Wunsch nicht verlorengehen. Wird beim Freiwerden eines Slots gegen die Wunschzeiten gematcht.",
+   "seit": "spätestens 08.06.2026 · `security_hardening_handles_bookings_search_path`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadWarteliste",
+     "file": "dashboard.js",
+     "start": 21923,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team",
+      "warteliste"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team",
+      "Sidebar → Warteliste (physiotherapy/podologie/praxis)"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "initWlModal",
+     "file": "dashboard.js",
+     "start": 22094,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete",
+      "insert",
+      "update"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/billing/api/warteliste.routes.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team",
+    "warteliste"
+   ],
+   "sqlTreffer": 6,
+   "codeStumm": false
+  },
+  {
+   "name": "working_hours",
+   "spalten": 9,
+   "fkRaus": [],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Regelarbeitszeit je Mitarbeiter und Standort — die Grundlage jeder Slot-Berechnung.",
+   "seit": "spätestens 06.05.2026 · `extend_profiles_for_multi_tenant`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "fetchOwnerHoursMap",
+     "file": "employee-signup.js",
+     "start": 156,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "getAvailableSlots",
+     "file": "api-backend/server.js",
+     "start": 511,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "getEmployeeWorkingHours",
+     "file": "dashboard.js",
+     "start": 2428,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "initWorkingHours",
+     "file": "employee-signup.js",
+     "start": 79,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "loadHours",
+     "file": "kalender.js",
+     "start": 574,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderBookingCalendar",
+     "file": "booking.js",
+     "start": 370,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderGaps",
+     "file": "dashboard.js",
+     "start": 1522,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "renderGapsForDate",
+     "file": "dashboard.js",
+     "start": 1602,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderHoursGrid",
+     "file": "dashboard.js",
+     "start": 10524,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    },
+    {
+     "name": "renderHoursMiniCal",
+     "file": "dashboard.js",
+     "start": 10617,
+     "module": [
+      "abrechnung",
+      "hours",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Verfügbarkeit",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "bindHours",
+     "file": "onboarding.js",
+     "start": 813,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "loadEmpHours",
+     "file": "dashboard.js",
+     "start": 11780,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
+   "dateien": [
+    "api-backend/server.js",
+    "api/stripe/webhook.js",
+    "booking.js",
+    "confirm.html",
+    "dashboard.js",
+    "employee-signup.js",
+    "kalender.js",
+    "onboarding.js"
+   ],
+   "module": [
+    "abrechnung",
+    "hours",
+    "kunden",
+    "services",
+    "team"
+   ],
+   "sqlTreffer": 6,
+   "codeStumm": false
+  },
+  {
+   "name": "zaa_fehler",
+   "spalten": 10,
+   "fkRaus": [
+    "abrechnung"
+   ],
+   "dsgvoAuskunft": false,
+   "dsgvoLoeschung": false,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Absetzungen und Fehlermeldungen der Kasse aus der ZAA-Rückmeldung, samt Übersetzung und Lösungshinweis. Roh sind die Codes für einen Therapeuten unlesbar.",
+   "seit": "spätestens 18.05.2026 · `v11_billing_a2_tables`",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "showZaaErrors",
+     "file": "dashboard.js",
+     "start": 20246,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [],
+   "dateien": [
+    "api-backend/billing/api/abrechnung.routes.js",
+    "dashboard.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 3,
+   "codeStumm": false
+  },
+  {
+   "name": "zuzahlung_befreiung",
+   "spalten": 11,
+   "fkRaus": [
+    "leads"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Befreiungsausweise. Ob ein Patient zuzahlungsfrei ist, entscheidet über den abrechenbaren Betrag und darf nicht als Häkchen an der Verordnung hängen — es gilt zeitraumbezogen.",
+   "seit": "spätestens 18.05.2026 · `v11_billing_a2_tables` (Auto-Flag: `v19_befreiung_auto_flag`)",
+   "ungeklaert": false,
+   "leser": [
+    {
+     "name": "loadPatientDetailRezepte",
+     "file": "dashboard.js",
+     "start": 8334,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ]
+    }
+   ],
+   "schreiber": [
+    {
+     "name": "uploadRxNachweise",
+     "file": "dashboard.js",
+     "start": 18711,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "wireBefreiungCard",
+     "file": "dashboard.js",
+     "start": 8724,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Team"
+     ],
+     "ops": [
+      "delete"
+     ]
+    }
+   ],
+   "dateien": [
+    "dashboard.js",
+    "module/zuzahlung-befreiung.js"
+   ],
+   "module": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "sqlTreffer": 6,
+   "codeStumm": false
+  }
+ ],
+ "ohneRegister": [],
+ "ungeklaert": [],
+ "registerVerwaist": [],
+ "codeStumm": [
+  {
+   "name": "accommodations",
+   "sql": 2,
+   "status": "fremd"
+  },
+  {
+   "name": "applications",
+   "sql": 2,
+   "status": "fremd"
+  },
+  {
+   "name": "dta_schluessel",
+   "sql": 4,
+   "status": "Referenz, im Code ungenutzt"
+  },
+  {
+   "name": "fußstatus",
+   "sql": 2,
+   "status": "veraltet"
+  },
+  {
+   "name": "heilmittel_catalog",
+   "sql": 2,
+   "status": "veraltet"
+  },
+  {
+   "name": "heilmittel_position",
+   "sql": 4,
+   "status": "veraltet"
+  },
+  {
+   "name": "icd10_titles",
+   "sql": 7,
+   "status": "aktiv (Referenz)"
+  },
+  {
+   "name": "icd_sector_ranges",
+   "sql": 3,
+   "status": "aktiv (Referenz)"
+  },
+  {
+   "name": "nummernkreise",
+   "sql": 1,
+   "status": "aktiv"
+  },
+  {
+   "name": "referral_drafts",
+   "sql": 9,
+   "status": "verdächtig"
+  },
+  {
+   "name": "spatial_ref_sys",
+   "sql": 1,
+   "status": "System"
+  },
+  {
+   "name": "trip_history",
+   "sql": 1,
+   "status": "fremd"
+  },
+  {
+   "name": "trip_plans",
+   "sql": 1,
+   "status": "fremd"
+  },
+  {
+   "name": "user_credits",
+   "sql": 2,
+   "status": "fremd"
+  }
+ ],
+ "dsgvo": {
+  "auskunft": [
+   "abrechnung",
+   "aerzte",
+   "ai_audit_log",
+   "anamnese",
+   "attendance",
+   "ausfallrechnungen",
+   "b2b_contacts",
+   "belegliste",
+   "booking_requests",
+   "bookings",
+   "breaks",
+   "businesses",
+   "calendar_integrations",
+   "chatbot_usage",
+   "consent_log",
+   "custom_days",
+   "data_sharing_settings",
+   "document_vorlagen",
+   "email_logs",
+   "employee_business_assignments",
+   "employee_groups",
+   "employee_services",
+   "fahrten",
+   "feedbacks",
+   "fußstatus",
+   "invoices",
+   "leads",
+   "mahnungen",
+   "messreihen",
+   "nummernkreise",
+   "pat_fussbefund",
+   "patient_consents",
+   "patient_notes",
+   "patients",
+   "podologie_behandlungen",
+   "prescription_documents",
+   "prescription_sessions",
+   "prescription_validations",
+   "prescriptions",
+   "profiles",
+   "referral_drafts",
+   "services",
+   "terapeut_zertifikat",
+   "therapist_certificates",
+   "time_offs",
+   "ueberweisungen",
+   "user_preferences",
+   "vehicles",
+   "verordnungen",
+   "warteliste",
+   "working_hours",
+   "zuzahlung_befreiung"
+  ],
+  "loeschung": [
+   "aerzte",
+   "ai_audit_log",
+   "anamnese",
+   "attendance",
+   "ausfallrechnungen",
+   "b2b_contacts",
+   "booking_requests",
+   "bookings",
+   "breaks",
+   "businesses",
+   "calendar_integrations",
+   "chatbot_usage",
+   "consent_log",
+   "custom_days",
+   "data_sharing_settings",
+   "document_vorlagen",
+   "email_logs",
+   "employee_business_assignments",
+   "employee_groups",
+   "employee_services",
+   "fahrten",
+   "feedbacks",
+   "fußstatus",
+   "kiosk_pins",
+   "leads",
+   "mahnungen",
+   "messreihen",
+   "nummernkreise",
+   "pat_fussbefund",
+   "patient_notes",
+   "patients",
+   "podologie_behandlungen",
+   "prescription_documents",
+   "prescription_sessions",
+   "prescription_validations",
+   "prescriptions",
+   "referral_drafts",
+   "services",
+   "terapeut_zertifikat",
+   "therapist_certificates",
+   "time_offs",
+   "ueberweisungen",
+   "user_preferences",
+   "vehicles",
+   "verordnungen",
+   "warteliste",
+   "working_hours",
+   "zuzahlung_befreiung"
+  ],
+  "anonymisiert": [
+   "invoices"
+  ],
+  "verdaechtigeLuecke": [
+   "accommodations",
+   "admin_users",
+   "applications"
+  ]
+ }
+}

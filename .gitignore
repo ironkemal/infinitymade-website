@@ -25,6 +25,10 @@ azure-credentials.local.txt
 SECURITY_AUDIT_*.md
 AUDIT_SECURITY.md
 AUDIT_*.md
+
+# Sicherheits-Register: offene Schwachstellen MIT Angriffsweg. In einem oeffentlichen
+# Repo waere das eine Anleitung. Weitergabe nur ueber Google Drive (wie INFRASTRUCTURE.md).
+guvenlik/
 .vercel
 .env*
 api-backend/.env.poc

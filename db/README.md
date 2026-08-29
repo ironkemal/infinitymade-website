@@ -4,11 +4,16 @@
 > nicht errät. Wer sie nicht kennt, schreibt Code gegen Tabellen, die es so
 > nicht gibt — oder gegen die falsche von zwei fast gleich heißenden.
 
-| Datei | Inhalt |
-|---|---|
-| `SCHEMA.sql` | 80 Tabellen, alle Spalten, Constraints, Views |
-| `SCHEMA-RLS.sql` | 152 RLS-Policies, 60 Funktionen, 57 Trigger, 286 Indizes |
-| `README.md` | dieses Dokument — Orientierung + Auffrischungsregel |
+| Datei | Inhalt | Beantwortet |
+|---|---|---|
+| `SCHEMA.sql` | 80 Tabellen, alle Spalten, Constraints, Views | **was** |
+| `SCHEMA-RLS.sql` | 152 RLS-Policies, 60 Funktionen, 57 Trigger, 286 Indizes | **wer darf** |
+| `REGISTER.md` | warum jede Tabelle angelegt wurde, seit wann, ob noch gebraucht | **warum** |
+| `NUTZUNG.json` / `.md` | wer liest und schreibt (erzeugt: `node tools/tabellenkarte.mjs`) | **wer nutzt** |
+| `README.md` | dieses Dokument — Orientierung + Auffrischungsregel | |
+
+> **Neue Tabelle → Eintrag in `REGISTER.md`, im selben Commit.** Der pre-commit-Hook
+> (`tools/check-tabellen-register.sh`) bricht sonst ab. Gepflegt vom Agenten `db-ustasi`.
 
 **Stand:** 2026-08-28 · letzte Migration `business_services_droppen_spiegeltabelle`
 (davor `prescription_sessions_booking_unique`,

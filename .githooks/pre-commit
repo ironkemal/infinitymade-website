@@ -6,5 +6,6 @@ repo_root=$(git rev-parse --show-toplevel)
 
 sh "$repo_root/tools/check-dashboard-size.sh" || exit 1
 sh "$repo_root/tools/check-namen.sh" || exit 1
+sh "$repo_root/tools/check-tabellen-register.sh" || exit 1
 
 exit 0

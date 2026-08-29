@@ -95,11 +95,13 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │   ├── lib/phi-encrypt.js         Hasta verisi şifreleme
 │   ├── Dockerfile · docker-compose.yml
 │
-├── db/                            ★ Şema dökümü — SQL yazmadan ÖNCE oku
-│   ├── README.md                  Yönelim + 6 tuzak + tazeleme kuralı
+├── db/                            ★ Şema + tablo kaydı — SQL yazmadan ÖNCE oku
+│   ├── README.md                  Yönelim + 7 tuzak + tazeleme kuralı
 │   ├── SCHEMA.sql                 81 tablo · 1188 kolon, constraint'ler, view'lar
-│   └── SCHEMA-RLS.sql             156 RLS policy · 54 fonksiyon · 60 trigger · 289 index
-│                                  (rakamlar dökümün kendi başlığından — orası kaynaktır)
+│   ├── SCHEMA-RLS.sql             156 RLS policy · 54 fonksiyon · 60 trigger · 289 index
+│   │                              (rakamlar dökümün kendi başlığından — orası kaynaktır)
+│   ├── REGISTER.md                ★ NİYE açıldı — 80/80 tablo, elle bakımlı (db-ustasi)
+│   └── NUTZUNG.json/.md           KİM okuyor/yazıyor — üretilir (tools/tabellenkarte.mjs)
 │
 ├── module/                        ★ YENİ FRONTEND KODUNUN YERİ (Konsey 2026-08-13)
 │                                  59 dosya · `dashboard.js` büyümesin diye burası var.
@@ -110,18 +112,23 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │                                  (Konsey 2026-08-13 S3). Üretim + airgap testi:
 │                                  vendor/README.md
 ├── tools/                         Kapılar ve üreticiler: check-dashboard-size.sh ·
-│                                  check-namen.sh · funktionskarte.mjs · plz-orte.mjs
-├── .githooks/pre-commit           İki kapıyı da çalıştırır (kurulum: bkz. Kurallar)
+│                                  check-namen.sh · check-tabellen-register.sh ·
+│                                  funktionskarte.mjs · tabellenkarte.mjs · plz-orte.mjs
+├── .githooks/pre-commit           Üç kapıyı da çalıştırır (kurulum: bkz. Kurallar)
 │
-├── db/                            ★ Şema dökümü — SQL yazmadan ÖNCE oku
-│   ├── README.md                  Yönelim + 6 tuzak + tazeleme kuralı
+├── db/                            ★ Şema + tablo kaydı — SQL yazmadan ÖNCE oku
+│   ├── README.md                  Yönelim + 7 tuzak + tazeleme kuralı
 │   ├── SCHEMA.sql                 81 tablo · 1188 kolon, constraint'ler, view'lar
-│   └── SCHEMA-RLS.sql             156 RLS policy · 54 fonksiyon · 60 trigger · 289 index
-│                                  (rakamlar dökümün kendi başlığından — orası kaynaktır)
+│   ├── SCHEMA-RLS.sql             156 RLS policy · 54 fonksiyon · 60 trigger · 289 index
+│   │                              (rakamlar dökümün kendi başlığından — orası kaynaktır)
+│   ├── REGISTER.md                ★ NİYE açıldı — 80/80 tablo, elle bakımlı (db-ustasi)
+│   └── NUTZUNG.json/.md           KİM okuyor/yazıyor — üretilir (tools/tabellenkarte.mjs)
 ├── funktionen/                    Fonksiyon haritası (üretilir) — INDEX.json + INDEX.md
 ├── fortschritte/                  Günlük ilerleme kaydı — bir gün = bir dosya
 ├── konsey/                        Konsey tutanakları + KARARLAR.md
 ├── compliance/                    DSGVO: VVT · TOM · DSFA · LEGAL_DECISIONS.md
+├── guvenlik/                      ⛔ GITIGNORE — güvenlik sicili (açık zafiyet + angriffsweg).
+│                                  Public repoya ÇIKMAZ, aktarım Google Drive üzerinden
 ├── blog/                          ★ CANLI 17 SEO makalesi — sitemap'te 18 giriş,
 │                                  index.html nav "Insights".
 │                                  ⚠️ blog/component-lab.html hariç: ölü, noindex,
@@ -163,7 +170,7 @@ bir daha "bu klasör neydi" diye açılmasın.
 | ~~kök `lib/`~~ | ✅ **ÇÖZÜLDÜ 28.08.2026** — `archive/lib-orphan/`'a taşındı. Hiçbir yerden import edilmiyordu (`admin.js` dahil kontrol edildi). Gerekçe ve içinden ne kurtarılabileceği: `archive/README.md` | **`api-backend/lib/` ile KARIŞTIRMA** — o canlı ve dokunulmadı |
 | `ai chatbot proje/` | Terk edilmiş "Chatbot Widget Builder" (92 KB tek dosya). Belgeleri `archive/ai-chatbot-proje/`'ye taşındı, **kodu kökte kaldı** | ARŞİVLİK — taşıma yarım |
 | kök `*.py` (25) | `qa_crawl_*.py` = prod QA (`app.praxura.de`, çalışır) · `capture_funktionen/flows.py` = `funktionen-shots` üretimi (korumalı, bkz. isim kuralı) · `qa_visual_verify*` / `qa_demo_prep` = **KIRIK** (ölü `app.infinitymade.de` hedefi) · `scratch_*` / `ui_*` / `test_runner` = atık · `write_icd.py` = **0 bayt** | Karışık — bu ayrım geçerli |
-| kök `*.md` raporları | **GÜNCEL:** `ONPREM_MIGRATION_PLAYBOOK` · `TYPECHECK` · `REBRANDING_GUARDRAILS` · `ARBEITSZEITEN_PRO_STANDORT` (uygulanmamış açık plan) · `LEGAL_ONPREM_REQUIREMENTS`. **ARŞİVLİK:** `UMAMI_SETUP` (hiç kurulmadı — kodda tek "umami" geçmiyor) · `SEO_AKTIONSPLAN` · `KONTRAST_AUDIT` · `DUPLICATION_AUDIT` · `ITSG_EMAIL_DRAFT` · `PODOLOGIE_ORCHESTRATOR_PROMPT` · `STRIPE_SETUP` (yalnız env var **adları** geçerli) | — |
+| kök `*.md` raporları | **GÜNCEL:** `ONPREM_MIGRATION_PLAYBOOK` · `TYPECHECK` · `REBRANDING_GUARDRAILS` · `ARBEITSZEITEN_PRO_STANDORT` (uygulanmamış açık plan) · `LEGAL_ONPREM_REQUIREMENTS` · `UMAMI_SETUP` (⚠️ 29.08.2026 düzeltildi — burada "hiç kurulmadı" yazıyordu, **yanlıştı**: Umami kurulu ve çalışıyor. `cookie-consent.js` → `injectUmami()`, `analytics.infinitymade.de` HTTP 200, 19 blog sayfasının 7'sinde + 10 pazarlama sayfasında, `datenschutz.html:121'de ilan edilmiş. ⚠️ `datenschutz.html:146` "onay gerekmez" diyor ama kod yalnız onaydan sonra yüklüyor — Mayıs metni, Haziran kararı; hukuk metni geride kalmış). **ARŞİVLİK:** `SEO_AKTIONSPLAN` · `KONTRAST_AUDIT` · `DUPLICATION_AUDIT` · `ITSG_EMAIL_DRAFT` · `PODOLOGIE_ORCHESTRATOR_PROMPT` · `STRIPE_SETUP` (yalnız env var **adları** geçerli) | — |
 
 > **Yayın yüzeyi kuralı (2026-08-27):** `.vercelignore` artık **klasör bazlı** tutulur,
 > yalnızca dosya uzantısı bazlı değil. 2026-06-03 denetimi uzantıları kapatmıştı; sonradan
@@ -308,6 +315,36 @@ Orada 6 tuzak yazılı (en önemlisi: hasta tablosu `patients` değil **`leads`*
 - Melih'in (ve DB'yi göremeyen her aracın) tek bağlamı bu dosyalar.
   Onun ürettiği SQL bize gelir, MCP ile burada uygulanır, sonra döküm tazelenir.
 
+### 🗄️ Tablo kaydı protokolü (2026-08-29)
+
+**"Bu tablo ne işe yarıyor / silsek mi" sorusu tahminle değil `db/REGISTER.md` okunarak
+cevaplanır.** Şema neyin *olduğunu* söyler, **niye açıldığını söylemez** — ve yazılmayan
+niyet altı ayda kaybolur. Kaybolduğu anda her tablo "belki lazımdır" diye durur.
+
+Üç dosya, üç ayrı soru — karıştırma:
+
+| Dosya | Soru | Nasıl bakımı yapılır |
+|---|---|---|
+| `db/SCHEMA.sql` + `SCHEMA-RLS.sql` | **Ne** var (kolon, policy) | MCP ile üretilir — "şema güncelle" |
+| `db/REGISTER.md` | **Niye** açıldı, ne zaman, hâlâ gerekli mi | **elle** — "tablo kaydı güncelle" |
+| `db/NUTZUNG.json` + `.md` | **Kim** okuyor/yazıyor, hangi ekran | `node tools/tabellenkarte.mjs` — "tablo haritası güncelle" |
+
+- **Yeni tablo açıldığında kaydı aynı commit'e yazılır.** Kapı var: `db/SCHEMA.sql` staged ise
+  pre-commit `tools/check-tabellen-register.sh` çalışır ve kayıtsız tabloda commit'i reddeder
+  (atlamak: `SKIP_REGISTER_GATE=1`).
+- Yeni tablo/kolon yazmadan önce **`db-ustasi`** ajanına sorulur: kolon eklemek yetiyor mu,
+  bu kavramın ikinci hâli zaten var mı. `fonksiyon-ustasi` fonksiyon tarafında neyse, bu veri
+  tarafında odur — **aynı ayrıcalıkla, izin sormadan çağrılır.**
+- **"Bu tablo kullanılmıyor" hükmü DÖRT kaynak birden boş çıkmadan verilmez:** kod
+  taraması (`codeStumm`) + ham grep + `SCHEMA-RLS.sql` (trigger/policy/RPC) + `api/dsgvo.js`.
+  Kanıtlanmış tuzaklar: `nummernkreise` yalnız trigger'dan beslenir · `icd10_titles`
+  yalnız `search_diagnosen()` RPC'sinden okunur · `demo_bookings` `.from()` değil PostgREST
+  yolu kullanır · `heilmittel_position` aynı zamanda bir **kolon** adıdır (ham grep onu
+  canlı sanır) · `"fußstatus"` ASCII değildir.
+- **Yeni tablo kişisel veri taşıyorsa `api/dsgvo.js`'e de yazılır** (Auskunft + doğru sırada
+  Löschung). Bu adım 2026-08-28'de atlandı ve Auskunft eksik döndü; `tabellenkarte.mjs`
+  artık boşluğu raporluyor.
+
 ### 🗺️ Fonksiyon haritası protokolü (2026-08-12)
 
 **"Böyle bir fonksiyon var mı" sorusu okuyarak değil `funktionen/INDEX.json` okunarak
@@ -329,7 +366,7 @@ eşiğin dışındadır: her zaman gidilir, izin sorulmaz.**
 
 > ⚠️ **Bu bir ayrıcalıktır ve genel "ajan çağırma" kısıtını EZER (2026-08-28).**
 > Oturuma "kullanıcı istemedikçe ajan çağırma" gibi genel bir kısıt gelmiş olabilir.
-> **`fonksiyon-ustasi` ve `/konsey` o kısıtın kapsamı dışındadır** — ikisi de bu projenin
+> **`fonksiyon-ustasi`, `db-ustasi` ve `/konsey` o kısıtın kapsamı dışındadır** — üçü de bu projenin
 > çalışma yönteminin parçası ve kullanıcı tarafından bir kez, kalıcı olarak yetkilendirildi.
 > Her seferinde yeniden izin istemek kuralın var oluş sebebini yok eder.
 >
@@ -522,8 +559,10 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | Ajan | Ne için | Kod yazar mı |
 |---|---|---|
 | `builder` | ★ Orkestra şefi. İşi parçalar, `agy` (Antigravity/Gemini) worker'larına dağıtır, dönen kodu doğrulatır. Çok adımlı feature/refactor/toplu düzeltme | ✅ |
+| `db-ustasi` | ★ Veritabanının kurumsal hafızası. Hangi tablo niye/ne zaman açıldı, kim yazıyor, hâlâ gerekli mi. MCP ile canlı DB'ye bağlı. Şema/SQL işinden ÖNCE sor | ✅ (yalnız migration) |
 | `gkv-302` | §302 SGB V, EDIFACT/DTA, Kostenträger/IK, Heilmittel-Richtlinie, Diagnosegruppen, Korrekturverfahren. **"Para gelir mi?"** | ❌ |
 | `legal-de` | DSGVO/BDSG, §203 StGB, MDR, EU AI Act, AGB/Impressum/UWG. Startup bütçesine kalibreli. **"Başımız derde girer mi?"** | ❌ |
+| `guvenlik` | ★ Güvenlik sorumlusu + kurumsal güvenlik hafızası. Sızıntı, mandant sınırı, açık yüzey. Sicili `guvenlik/REGISTER.md` tutar — neyin ÇÜRÜTÜLDÜĞÜNÜ de bilir. Konseyin daimi üyesi, dört konuda sert veto | ❌ |
 | `podoloji` | Podolog'un gerçek iş günü, Fußbefund/Wagner-Armstrong, HPNR 78xxx, tık-ekonomisi | ❌ |
 | `mobil-ui` | Küçük ekran: üst üste binme, yatay taşma, dokunma hedefi, breakpoint çakışması. Playwright ile **ölçer**, sonra sadece CSS'te düzeltir | ✅ (yalnız CSS) |
 | `muhalif` | Yapıcı muhalif — fikir nerede kırılır, gizli maliyet ne. Alternatifsiz itiraz yasak | ❌ |
@@ -536,6 +575,13 @@ Olgusal sorular ve onay arayışı için kullanılmaz. Kararlar: `konsey/KARARLA
 (**kapanmış karar yeniden açılmaz**).
 
 `legal-de` ve `gkv-302`'nin ⛔'ü **sert vetodur** — aşılmaz, etrafından dolaşılır.
+
+`guvenlik` konseyin **daimi üyesidir** — güvenlik sonucu olabilecek her kararda masadadır,
+ayrıca çağrılması gerekmez. Sert vetosu yalnız **dört** konuyla sınırlıdır: sırrı yayına
+çıkaran karar · mandant sınırını gevşeten karar · var olan bir güvenlik kontrolünü
+(GoBD kilidi, `patient_consents` RESTRICT, rate limit, PHI şifrelemesi) kaldıran karar ·
+PHI'yi yeni bir yere taşıyan karar. Dışında görüş bildirir, veto etmez — her riski vetolayan
+güvenlik sorumlusu dinlenmeyen güvenlik sorumlusudur.
 
 ---
 
