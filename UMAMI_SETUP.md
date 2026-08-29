@@ -1,6 +1,19 @@
 # Umami Analytics — Self-Host Kurulum
 
-DSGVO-dostu, cookie-free analytics. Cookie banner gerektirmez.
+> ⚠️ **29.08.2026 — bu belge kurulum için geçerli, hukuki değerlendirmesi için DEĞİL.**
+> Aşağıdaki "Cookie banner gerektirmez" cümlesi **yanlıştır** ve düzeltildi.
+> `legal-de` değerlendirmesi (29.08.2026): § 25 Abs. 1 TDDDG teknoloji-nötrdür ve yalnız
+> çerezleri değil, uç cihazda **zaten kayıtlı bilgiye erişimi** de kapsar. Umami script'i
+> `screen`, `navigator.language` ve `document.referrer` alanlarını aktif olarak okur, yani
+> kapsama girer. § 25 Abs. 2 Nr. 2 istisnası uymuyor: reichweitenmessung sayfanın
+> sunulması için zorunlu değil, ve Almanya'da ayrı bir ölçüm istisnası yok.
+> **En önemlisi:** § 25, kişisel veri işlenip işlenmediğinden **bağımsız** çalışır — yani
+> "cookie-free" ve "anonim" olması muafiyet sağlamaz.
+>
+> Bu yüzden Umami **onay kapısının arkasındadır** (`cookie-consent.js`) ve öyle kalacaktır.
+> Karar: `compliance/LEGAL_DECISIONS.md`, 29.08.2026.
+
+DSGVO-dostu, cookie-free analytics — **ama einwilligungspflichtig** (yukarıya bakınız).
 
 ## VPS'te yapılacaklar (SSH ile n8n.infinitymade.de'ye bağlan)
 

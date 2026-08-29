@@ -3,7 +3,7 @@
 > Üretim: 2026-08-29 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**1685 fonksiyon** · 159 dosya · 39 sidebar modülü
+**1688 fonksiyon** · 159 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -349,10 +349,11 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `fmtEur` — api-backend/billing/pdf/ausfallrechnung.template.js:15 · api-backend/billing/pdf/begleitzettel.template.js:12 · api-backend/billing/pdf/mahnung.template.js:5 · api-backend/billing/pdf/rechnung.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:10 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:13 · dashboard.js:19425 · dashboard.js:21343 · dashboard.js:21484 · dashboard.js:21562
 - `render` — calendar-widget.js:127 · dashboard.js:14234 · dashboard.js:22505 · ops/board.js:206 · ops/decisions.js:14 · ops/files.js:52 · ops/finance.js:959 · ops/meetings.js:23 · ops/wissen.js:66 · patient-suche.js:110
 - `addDays` — api-backend/ai/validators/blankoRules.js:29 · api-backend/ai/validators/lhbBvbRules.js:24 · api-backend/ai/validators/standardRules.js:42 · api-backend/billing/api/mahnwesen.routes.js:45 · api-backend/server.js:262 · api-backend/server.js:1203 · dashboard.js:3284
-- `init` — attendance.js:297 · booking-request.js:1220 · booking.js:60 · cookie-consent.js:52 · dashboard.js:17865 · kalender.js:140 · onboarding.js:77
+- `init` — attendance.js:297 · booking-request.js:1220 · booking.js:60 · cookie-consent.js:139 · dashboard.js:17865 · kalender.js:140 · onboarding.js:77
 - `run` — api-backend/ai/tasks/appointment-confirm-draft.js:70 · api-backend/ai/tasks/b2c-draft.js:59 · api-backend/ai/tasks/rezept-normalize.js:113 · api-backend/ai/tasks/rezept-ocr.js:166 · api-backend/ai/tasks/rezept-validate.js:9
 - `resolveAuth` — api-backend/billing/api/ausfall.routes.js:26 · api-backend/billing/api/mahnwesen.routes.js:22 · api-backend/billing/api/statistik.routes.js:18 · api-backend/billing/api/verordnung-status.routes.js:32 · api-backend/billing/api/warteliste.routes.js:21
 - `$` — attendance.js:10 · employee-signup.js:10 · module/kiosk.js:59 · module/verordnung-podo.js:105 · ops/app.js:48
+- `schliessen` — cookie-consent.js:76 · module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:319 · module/arzt-register.js:276 · module/zuzahlung-befreiung.js:150
 - `cleanup` — dashboard.js:7055 · dashboard.js:7084 · dashboard.js:7160 · dashboard.js:7264 · dashboard.js:23278
 - `g` — dashboard.js:16608 · dashboard.js:16621 · dashboard.js:16963 · dashboard.js:17029 · module/termin-aktionen.js:336
 - `showMsg` — admin-login.js:15 · attendance.js:68 · employee-signup.js:130 · login.js:163
@@ -362,7 +363,6 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadServices` — booking-request.js:419 · booking.js:195 · dashboard.js:9663 · kalender.js:497
 - `closeModal` — dashboard.js:1263 · dashboard.js:12770 · dashboard.js:13189 · ops/app.js:162
 - `v` — dashboard.js:13694 · dashboard.js:13719 · dashboard.js:13739 · dashboard.js:17651
-- `schliessen` — module/abrechnung-freigabe.js:165 · module/abrechnungsstatus.js:319 · module/arzt-register.js:276 · module/zuzahlung-befreiung.js:150
 - `load` — ops/board.js:111 · ops/decisions.js:7 · ops/meetings.js:7 · ops/wissen.js:49
 - `isAdmin` — admin-login.js:18 · api/_lib/auth.js:90 · login.js:192
 - `showToast` — admin.js:22 · dashboard.js:1277 · module/kiosk.js:46
@@ -370,6 +370,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `q` — booking-request.js:84 · dashboard.js:20832 · script.js:751
 - `loadTeam` — booking-request.js:517 · dashboard.js:10825 · kalender.js:194
 - `initCalendar` — booking-request.js:566 · dashboard.js:2506 · kalender.js:244
+- `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:577
 - `onEsc` — dashboard.js:7271 · module/rechnung-leistung-picker.js:42 · module/zuzahlung-befreiung.js:155
 - `norm` — dashboard.js:18031 · module/arzt-register.js:470 · ops/tools/regroup.mjs:59
 - `reload` — ops/board.js:840 · ops/finance.js:1602 · ops/wissen.js:170
@@ -381,4 +382,3 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `normalizeIcd` — api-backend/ai/validators/icdDgRules.js:41 · icd-dg-match.js:40
 - `parseIcdList` — api-backend/ai/validators/icdDgRules.js:59 · icd-dg-match.js:62
 - `matchIcdToDg` — api-backend/ai/validators/icdDgRules.js:84 · icd-dg-match.js:78
-- `dgsAcceptingIcd` — api-backend/ai/validators/icdDgRules.js:157 · icd-dg-match.js:129

@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-08-29",
  "dateien": 159,
- "funktionen": 1685,
+ "funktionen": 1688,
  "module": [
   "abrechnung",
   "anamnese",
@@ -12081,9 +12081,9 @@
    "name": "injectUmami",
    "kind": "function",
    "file": "cookie-consent.js",
-   "start": 6,
-   "end": 12,
-   "lines": 7,
+   "start": 44,
+   "end": 52,
+   "lines": 9,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -12092,19 +12092,19 @@
    "calls": [],
    "calledBy": [
     "init",
-    "showBanner"
+    "zeigeBanner"
    ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
   },
   {
-   "name": "hideBanner",
+   "name": "lesen",
    "kind": "function",
    "file": "cookie-consent.js",
-   "start": 14,
-   "end": 16,
-   "lines": 3,
+   "start": 56,
+   "end": 67,
+   "lines": 12,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -12112,27 +12112,117 @@
    "storage": [],
    "calls": [],
    "calledBy": [
-    "showBanner"
+    "init",
+    "loadPodologieBilling",
+    "podFillEditForm"
+   ],
+   "modules": [
+    "abrechnung",
+    "kunden",
+    "podologie-billing",
+    "team"
+   ],
+   "gemeinsam": false,
+   "uiPfad": [
+    "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+    "Sidebar → Patienten",
+    "Sidebar → Podologie-Abrechnung (podologie)",
+    "Sidebar → Team"
+   ]
+  },
+  {
+   "name": "speichern",
+   "kind": "function",
+   "file": "cookie-consent.js",
+   "start": 69,
+   "end": 74,
+   "lines": 6,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "taste",
+    "zeigeBanner"
    ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
   },
   {
-   "name": "showBanner",
+   "name": "schliessen",
    "kind": "function",
    "file": "cookie-consent.js",
-   "start": 18,
-   "end": 50,
-   "lines": 33,
+   "start": 76,
+   "end": 79,
+   "lines": 4,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "beiTaste",
+    "bestaetigen",
+    "frageBerichtFreigabe",
+    "globalEsc",
+    "onEsc",
+    "speichern",
+    "taste",
+    "zeigeBanner"
+   ],
+   "modules": [
+    "abrechnung",
+    "kunden",
+    "team"
+   ],
+   "gemeinsam": false,
+   "uiPfad": [
+    "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+    "Sidebar → Patienten",
+    "Sidebar → Team"
+   ]
+  },
+  {
+   "name": "knopf",
+   "kind": "function",
+   "file": "cookie-consent.js",
+   "start": 81,
+   "end": 91,
+   "lines": 11,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "zeigeBanner"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "zeigeBanner",
+   "kind": "function",
+   "file": "cookie-consent.js",
+   "start": 93,
+   "end": 137,
+   "lines": 45,
    "tables": [],
    "rpcs": [],
    "writes": [],
    "endpoints": [],
    "storage": [],
    "calls": [
-    "hideBanner",
-    "injectUmami"
+    "injectUmami",
+    "knopf",
+    "schliessen",
+    "speichern"
    ],
    "calledBy": [
     "init"
@@ -12145,9 +12235,9 @@
    "name": "init",
    "kind": "function",
    "file": "cookie-consent.js",
-   "start": 52,
-   "end": 59,
-   "lines": 8,
+   "start": 139,
+   "end": 160,
+   "lines": 22,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -12155,7 +12245,8 @@
    "storage": [],
    "calls": [
     "injectUmami",
-    "showBanner"
+    "lesen",
+    "zeigeBanner"
    ],
    "calledBy": [],
    "modules": [],
@@ -32691,7 +32782,8 @@
     "globalEsc",
     "onEsc",
     "speichern",
-    "taste"
+    "taste",
+    "zeigeBanner"
    ],
    "modules": [
     "abrechnung",
@@ -33006,7 +33098,8 @@
     "globalEsc",
     "onEsc",
     "speichern",
-    "taste"
+    "taste",
+    "zeigeBanner"
    ],
    "modules": [
     "abrechnung",
@@ -33661,7 +33754,8 @@
     "globalEsc",
     "onEsc",
     "speichern",
-    "taste"
+    "taste",
+    "zeigeBanner"
    ],
    "modules": [
     "abrechnung",
@@ -33714,7 +33808,8 @@
     "showToast"
    ],
    "calledBy": [
-    "taste"
+    "taste",
+    "zeigeBanner"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -36284,7 +36379,8 @@
     "zeigeUebernahme"
    ],
    "calledBy": [
-    "taste"
+    "taste",
+    "zeigeBanner"
    ],
    "modules": [],
    "gemeinsam": false,
@@ -39727,6 +39823,7 @@
     "heilmittelOptionsHtml",
     "hpnrLabel",
     "laden",
+    "lesen",
     "loadDgIcdRules",
     "loadKkList",
     "matchIcdToDg",
@@ -40018,6 +40115,7 @@
     "computeBeginHint",
     "getOwnerId",
     "laden",
+    "lesen",
     "podApplyHeilmittel",
     "podApplyRezeptart",
     "podDiagRoot",
@@ -43546,7 +43644,8 @@
     "globalEsc",
     "onEsc",
     "speichern",
-    "taste"
+    "taste",
+    "zeigeBanner"
    ],
    "modules": [
     "abrechnung",
@@ -52729,7 +52828,7 @@
     "attendance.js:297",
     "booking-request.js:1220",
     "booking.js:60",
-    "cookie-consent.js:52",
+    "cookie-consent.js:139",
     "dashboard.js:17865",
     "kalender.js:140",
     "onboarding.js:77"
@@ -52763,6 +52862,16 @@
     "module/kiosk.js:59",
     "module/verordnung-podo.js:105",
     "ops/app.js:48"
+   ]
+  },
+  {
+   "name": "schliessen",
+   "orte": [
+    "cookie-consent.js:76",
+    "module/abrechnung-freigabe.js:165",
+    "module/abrechnungsstatus.js:319",
+    "module/arzt-register.js:276",
+    "module/zuzahlung-befreiung.js:150"
    ]
   },
   {
@@ -52849,15 +52958,6 @@
    ]
   },
   {
-   "name": "schliessen",
-   "orte": [
-    "module/abrechnung-freigabe.js:165",
-    "module/abrechnungsstatus.js:319",
-    "module/arzt-register.js:276",
-    "module/zuzahlung-befreiung.js:150"
-   ]
-  },
-  {
    "name": "load",
    "orte": [
     "ops/board.js:111",
@@ -52912,6 +53012,14 @@
     "booking-request.js:566",
     "dashboard.js:2506",
     "kalender.js:244"
+   ]
+  },
+  {
+   "name": "speichern",
+   "orte": [
+    "cookie-consent.js:69",
+    "module/arzt-register.js:292",
+    "module/fussbefund.js:577"
    ]
   },
   {
@@ -53266,13 +53374,6 @@
    "orte": [
     "module/arzt-register.js:251",
     "module/fussbefund.js:149"
-   ]
-  },
-  {
-   "name": "speichern",
-   "orte": [
-    "module/arzt-register.js:292",
-    "module/fussbefund.js:577"
    ]
   },
   {

@@ -117,9 +117,13 @@
       <h3>Microsoft Azure (AI Foundry)</h3>
       <p>KI-Verarbeitung in der EU-Region Sweden Central für Texterkennung, Dokumentenanalyse und Sprachmodelle. Daten verlassen den EU-Wirtschaftsraum nicht. <a href="https://www.microsoft.com/de-de/trust-center/privacy" target="_blank" rel="noopener">Datenschutz</a></p>
     </div>
-    <div class="ds-card">
+    <div class="ds-card" id="reichweitenmessung">
       <h3>Umami Analytics (self-hosted)</h3>
-      <p>Anonyme Reichweitenmessung — <strong>cookie-frei</strong>, IP-Adressen werden gehasht und nicht gespeichert. Daten verbleiben auf eigenen Servern in Deutschland.</p>
+      <p>Reichweitenmessung auf eigenen Servern in Deutschland, <strong>cookie-frei</strong>.
+         Aus IP-Adresse und Browserkennung wird ein <strong>täglich wechselnder
+         Pseudonym-Hash</strong> gebildet; die IP-Adresse selbst wird nicht gespeichert.
+         Eine Weitergabe an Dritte findet nicht statt.
+         Das Skript lädt <strong>erst nach Ihrer Einwilligung</strong>.</p>
     </div>
     <div class="ds-card" id="wistia">
       <h3>Wistia (Video-Hosting)</h3>
@@ -143,7 +147,13 @@
   <p>Wir verwenden ein Consent-Management, bei dem Sie Cookies gezielt akzeptieren oder ablehnen können:</p>
   <ul>
     <li><strong>Notwendig (immer aktiv):</strong> Session-Cookies für Login, Sprache, CSRF-Schutz. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.</li>
-    <li><strong>Reichweitenmessung:</strong> Wir nutzen Umami (selbst gehostet) — vollständig <strong>cookie-frei</strong>. Keine Einwilligung erforderlich, da keine personenbezogenen Daten verarbeitet werden.</li>
+    <li><strong>Reichweitenmessung (mit Einwilligung):</strong> Wir nutzen Umami (selbst
+        gehostet auf eigenen Servern in Deutschland) — <strong>cookie-frei</strong>. Das
+        Messskript wird <strong>erst nach Ihrer ausdrücklichen Einwilligung</strong> geladen
+        (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG). Lehnen Sie ab oder treffen Sie keine
+        Auswahl, findet keine Messung statt. Ihre Einwilligung können Sie jederzeit mit
+        Wirkung für die Zukunft widerrufen:
+        <a href="#cookie-einstellungen" data-cookie-einstellungen>Cookie-Einstellungen ändern</a>.</li>
     <li><strong>Marketing (mit Einwilligung):</strong> Aktuell keine Marketing-Cookies eingesetzt. Eingebettete Videos (Wistia) laden erst auf Klick — siehe Abschnitt 6.</li>
   </ul>
 
