@@ -9,6 +9,7 @@ import {
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
 } from './legs.js';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -125,6 +126,57 @@ test('13 vertragliche LEGS insgesamt', () => {
   // Physio 2 ZL + 3 (511) · Ergo 1 + 3 (531) · Logo 3 · Podo 2 + 2 (541)
   // 2700511/2800511/2900511, 2700531/2800531/2900531, 2700541/2800541
   assert.equal(GUELTIGE_LEGS.length, 16);
+});
+
+// ── Bauart: bewacht den PRODUKTIONSPFAD, nicht nur die Tabelle ────────────
+//
+// Die Tests oben prüfen legs.js gegen die Verträge. Sie bleiben aber auch
+// dann grün, wenn abrechnung.routes.js den LEGS wieder aus der PLZ ableitet —
+// genau das war der Fehler. Der Smoke-Test hilft hier nicht: er übergibt
+// `tarif` als hartkodiertes Fixture und rührt den Produktionspfad nicht an.
+// Deshalb hier ein Quelltext-Test auf die eine Eigenschaft, deren Verlust
+// wieder ungültige Dateien erzeugen würde. (29.08.2026)
+
+const routesQuelle = readFileSync(
+  new URL('../api/abrechnung.routes.js', import.meta.url), 'utf8');
+
+test('BAUART: routes leitet das Tarifkennzeichen aus dem LEGS ab', () => {
+  const treffer = routesQuelle.match(/tarifkennzeichen:\s*([^\n,]+)/g) || [];
+  assert.ok(treffer.length >= 2, `Erwartet mindestens 2 tarif-Bloecke, gefunden ${treffer.length}`);
+  for (const t of treffer) {
+    assert.match(t, /tarifkennzeichenAusLegs\(/,
+      `"${t.trim()}" — Tarifkennzeichen muss aus legsFuer()/tarifkennzeichenAusLegs() kommen, ` +
+      'nicht aus einer zweiten Quelle. Beide Haelften des LEGS aus einem Stueck.');
+  }
+});
+
+test('BAUART: routes leitet nichts mehr aus dem Bundesland ins Tarifkennzeichen', () => {
+  assert.equal(/buildTarifkennzeichen/.test(routesQuelle), false,
+    'buildTarifkennzeichen ist entfernt — sie erzeugte den ungueltigen LEGS "7108000".');
+});
+
+test('BAUART: getBundeslandFromPlz speist NUR die Preisabfrage', () => {
+  // Die Funktion darf leben — Verguetungen sind regional, der LEGS ist es nicht.
+  // Jede Verwendung muss aber in einer heilmittel_tarif-Abfrage landen.
+  const zeilen = routesQuelle.split('\n');
+  const treffer = zeilen
+    .map((z, i) => ({ z, i }))
+    .filter(({ z, i }) => z.includes('getBundeslandFromPlz(') && !zeilen[i].includes('function getBundeslandFromPlz'));
+
+  assert.ok(treffer.length > 0, 'Erwartet Aufrufe fuer die Preisabfrage');
+  for (const { z, i } of treffer) {
+    assert.match(z, /const\s+bundesland\s*=/,
+      `Zeile ${i + 1}: Ergebnis muss in "bundesland" fuer die Tarifabfrage laufen, ` +
+      'nicht in den LEGS.');
+  }
+});
+
+test('BAUART: buildTarifkennzeichen ist nirgends mehr exportiert', () => {
+  const anlage3 = readFileSync(new URL('./anlage3_v22.js', import.meta.url), 'utf8');
+  assert.equal(/export function buildTarifkennzeichen/.test(anlage3), false,
+    'Als Export ist sie eine geladene Waffe: der Naechste findet sie und der Fehler ist zurueck.');
+  assert.equal(/BUNDESLAND_TO_TARIFBEREICH\s*=/.test(anlage3), false,
+    'Die Tabelle war die einzige Quelle von buildTarifkennzeichen und faellt mit ihr.');
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

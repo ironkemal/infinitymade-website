@@ -153,22 +153,19 @@ export const TARIFBEREICH = Object.freeze({
   '25': 'Bundeseinheitlicher Tarif (Ost)',
 });
 
-// ⛔ NICHT für Heilmittel-LEGS verwenden.
+// Hier stand einmal BUNDESLAND_TO_TARIFBEREICH samt buildTarifkennzeichen().
+// Beide sind entfernt (29.08.2026), weil sie den ungültigen LEGS '7108000'
+// erzeugt haben: sie leiteten das Tarifkennzeichen aus der Postleitzahl ab.
+// Alle vier §125-Heilmittelverträge sind bundeseinheitlich — der Tarifbereich
+// ist dort immer '00', variabel ist der Status des Leistungserbringers.
 //
-// Diese Tabelle hat einmal das Tarifkennzeichen der §302-Datei gespeist. Das
-// war falsch: alle vier §125-Heilmittelverträge sind bundeseinheitlich, der
-// Tarifbereich ist dort immer '00'. Aus der PLZ abgeleitete Werte wie '08000'
-// ergaben LEGS, die in keinem Vertrag stehen (z. B. '7108000' statt '7100501').
-// Der richtige Weg steht in codes/legs.js.
+// Ein auskommentierter oder als @deprecated markierter Export hätte nicht
+// gereicht: der Nächste, der ein Tarifkennzeichen braucht, findet ihn und der
+// Fehler ist zurück. Für Heilmittel liefert legsFuer() aus codes/legs.js den
+// vollständigen Schlüssel, Abrechnungscode und Tarifkennzeichen in einem Stück.
 //
-// Die Tabelle bleibt, weil die Tarifbereich-Schlüssel als solche korrekt sind
-// (Anlage 3 V21 §8.1.5.2) und andere Leistungsbereiche als Heilmittel sie
-// brauchen können. Für Heilmittel: Finger weg.
-export const BUNDESLAND_TO_TARIFBEREICH = Object.freeze({
-  'BW': '01', 'BY': '02', 'BE': '23', 'BB': '12', 'HB': '04',
-  'HH': '05', 'HE': '06', 'MV': '15', 'NI': '07', 'NW': '08',
-  'RP': '09', 'SL': '10', 'SN': '13', 'ST': '14', 'SH': '11', 'TH': '16',
-});
+// TARIFBEREICH (oben) bleibt: preflight.js prüft damit die Form des Feldes,
+// und die Schlüssel als solche sind korrekt (Anlage 3 V21 §8.1.5.2).
 
 // Validation helpers ---------------------------------------------------------
 
@@ -194,13 +191,3 @@ export function validateZuzahlungskennzeichen(value) {
   }
 }
 
-// ⛔ NICHT für Heilmittel. Siehe Hinweis bei BUNDESLAND_TO_TARIFBEREICH und
-// codes/legs.js. Für Heilmittel liefert legsFuer() den vollständigen Schlüssel.
-export function buildTarifkennzeichen(bundesland, sondertarif = '000') {
-  const t = BUNDESLAND_TO_TARIFBEREICH[bundesland];
-  if (!t) throw new Error(`Unknown Bundesland: ${bundesland}`);
-  if (!/^[A-Z0-9]{3}$/.test(sondertarif)) {
-    throw new Error(`Sondertarif must be 3 chars, got "${sondertarif}"`);
-  }
-  return t + sondertarif;
-}

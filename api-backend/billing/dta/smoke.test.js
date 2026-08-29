@@ -2,9 +2,11 @@
 //   node api-backend/billing/dta/smoke.test.js
 
 import { buildDtaFile } from './builder.js';
+import { preflight } from './preflight.js';
 import { escapeEdifact, fmtAmount, fmtDate, UNA_HEADER, buildSegment } from './encoding.js';
 import { buildDtaFilename } from './filename.js';
 import { buildUNB, buildUNH, buildUNT, buildUNZ } from './envelope.js';
+import { legsFuer, abrechnungscodeAusLegs, tarifkennzeichenAusLegs } from '../codes/legs.js';
 import assert from 'node:assert/strict';
 
 let pass = 0, fail = 0;
@@ -203,6 +205,122 @@ test('throws when no prescriptions', () => {
     preflight: false,
   }));
 });
+
+// ── Podologie ─────────────────────────────────────────────────────────────
+//
+// Bis 29.08.2026 deckte dieser Smoke-Test nur Physio ab. Podologie ist aber
+// der Bereich, in dem der LEGS-Fehler entstand (Abrechnungscode 71 statt 22),
+// und der Sondertarif unterscheidet sich je Fachbereich.
+//
+// Der `tarif`-Block wird hier NICHT hartkodiert, sondern aus legsFuer()
+// abgeleitet — sonst prüft der Test seine eigene Fixture statt der Verträge.
+console.log('podologie');
+
+const podoLegs = legsFuer('podologie');
+const podoResult = buildDtaFile({
+  preflight: false,  // wie oben: synthetische IKs, Preflight hat eigene Tests
+  absender:   { ik: '123456789', name: 'Podologie am Markt' },
+  empfaenger: { ik: '987654321', name: 'AOK DAS' },
+  rechnung: {
+    sammelRechnungsnummer: 'R2026-W35-002',
+    einzelRechnungsnummer: '0',
+    datum: '2026-08-28',
+    datennummer: 24,
+    rechnungsart: '1',
+  },
+  kind: 'echt',
+  vkz: '01',
+  prescriptions: [{
+    patient: {
+      kvnr: 'B987654321',
+      versichertenstatus: '10000',
+      nachname: 'Schulz',
+      vorname: 'Erika',
+      geburtsdatum: '1955-09-30',
+      strasse: 'Marktplatz 3',
+      plz: '53721',
+      ort: 'Siegburg',
+      belegnummer: '0000002',
+    },
+    verordnung: {
+      arztLanr: '999999999',
+      arztBsnr: '888888888',
+      ausstellungsdatum: '2026-08-20',
+      icd10: 'E11.40',
+      diagnosegruppe: 'DF',
+      verordnungsart: '03',
+      leitsymptomatik: '1010',
+      dringend: false,
+      hausbesuch: false,
+      heilmittelBereich: '5',       // Podologie
+      therapiefrequenz: '1',
+      zuzahlungskennzeichen: '3',
+      kostentraegerIk: '101000000',
+      krankenkasseIk:  '101000000',
+    },
+    tarif: {
+      abrechnungscode:  abrechnungscodeAusLegs(podoLegs),
+      tarifkennzeichen: tarifkennzeichenAusLegs(podoLegs),
+    },
+    sessions: [{
+      positionsnummer: '78010',      // Podologische Komplexbehandlung, beide Füße
+      datumLeistung: '2026-08-28',
+      anzahl: 1,
+      einzelbetrag: 28.90,
+      zuzahlungProPos: 2.89,
+    }],
+  }],
+});
+
+test('Podologie EHE trägt 71:00501, nicht den Physio-Code', () => {
+  assert.ok(podoResult.content.includes("EHE+71:00501+78010+1,00+28,90+20260828+2,89'"),
+    'EHE-Zeile:\n' + (podoResult.content.match(/EHE\+[^']*'/g) || []).join('\n'));
+});
+
+test('Podologie kommt durch den Preflight', () => {
+  // buildDtaFile validiert selbst; ein ungültiger LEGS würde hier werfen.
+  assert.equal(podoResult.messageCount, 2);
+});
+
+test('REGRESSION: der aus der PLZ abgeleitete LEGS wird abgewiesen', () => {
+  // Direkt gegen preflight(), nicht ueber buildDtaFile: dort faellt der Fall
+  // schon an den synthetischen IKs, und dann bewiese ein "wirft" nichts ueber
+  // den LEGS. Hier werden beide Haelften geprueft — der ungueltige muss
+  // abgewiesen, der vertragliche durchgelassen werden.
+  //
+  // '08' ist ein formal gueltiger Tarifbereich (NRW). Genau deshalb kam
+  // '7108000' vorher durch: geprueft wurde die Form, nicht die Kombination.
+  const fall = (tarifkennzeichen) => ({
+    leistungserbringer: {
+      ik: '123456789', name: 'Podologie am Markt',
+      plz: '53721', ort: 'Siegburg', strasse: 'Marktplatz 3',
+    },
+    prescriptions: [{
+      patient: {
+        kvnr: 'B987654321', versichertenstatus: '10000',
+        nachname: 'Schulz', vorname: 'Erika', geburtsdatum: '19550930',
+        belegnummer: '0000003',
+      },
+      verordnung: {
+        verordnungsart: '01', arztLanr: '999999999', arztBsnr: '888888888',
+        ausstellungsdatum: '20260820', diagnosegruppe: 'DF', icd10: 'E11.40',
+        heilmittelBereich: '5', therapiefrequenz: '1',
+        zuzahlungskennzeichen: '3', kostentraegerIk: '101575519',
+      },
+      tarif: { abrechnungscode: '71', tarifkennzeichen },
+      sessions: [{ datum: '20260828', positionsnummer: '78010', anzahl: 1, einzelbetrag: 28.90 }],
+    }],
+  });
+
+  const legsFehler = (tk) =>
+    (preflight(fall(tk)).errors || []).find((e) => e.code === 'T:01004');
+
+  assert.ok(legsFehler('08000'),
+    'LEGS 7108000 steht in keinem §125-Vertrag und darf die Datei nicht verlassen.');
+  assert.equal(legsFehler('00501'), undefined,
+    'Der vertragliche LEGS 7100501 muss durchgehen — sonst bremst die Pruefung echte Abrechnungen aus.');
+});
+
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);
