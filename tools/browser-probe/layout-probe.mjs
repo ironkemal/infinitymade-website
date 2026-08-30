@@ -74,11 +74,17 @@ pruef('Leistungsliste ist kein CSS-Grid', normal.gridAnzeige !== 'grid', 'displa
 pruef('Leistungstabellen stehen untereinander', normal.tabellenNebeneinander === false);
 pruef('Kontextmenü ist fixed positioniert', normal.menue.position === 'fixed', 'z-index ' + normal.menue.zIndex);
 
-console.log('\n══ KOMPAKTMODUS (bekannter Fehler — soll sich bestätigen)');
-zeile('Woche · Slot Zeitleiste', kompakt.wocheZeitSlot + ' px');
+// Der Kompaktmodus wurde auf `main` entfernt (Commit 1b4055d). Bis dahin setzte
+// er `.dv-slot` auf 32 px !important, waehrend das JavaScript mit 56 bzw. 28
+// rechnete — jeder Termin sass unter seiner Uhrzeit. Die Pruefung bleibt als
+// Wache stehen: kaeme die Klasse zurueck, darf sie das Raster nicht mehr
+// verstellen.
+console.log('\n══ KOMPAKTMODUS (entfernt — darf das Raster nicht mehr verstellen)');
 zeile('Woche · Slot Tagesspalte', kompakt.wocheSpaltenSlot + ' px');
 zeile('Tag   · Slot Spalte', kompakt.tagSpaltenSlot + ' px');
-pruef('Kompaktmodus bricht das Tagesraster (32 statt 56)', kompakt.tagSpaltenSlot === 32,
-  'JS rechnet weiter mit 56');
-pruef('Kompaktmodus bricht auch die Woche (32 statt 28)', kompakt.wocheSpaltenSlot === 32,
-  'JS rechnet weiter mit 28');
+pruef('body.compact-mode verstellt die Tagesansicht nicht',
+  kompakt.tagSpaltenSlot === normal.tagSpaltenSlot,
+  `${kompakt.tagSpaltenSlot} vs ${normal.tagSpaltenSlot}`);
+pruef('body.compact-mode verstellt die Woche nicht',
+  kompakt.wocheSpaltenSlot === normal.wocheSpaltenSlot,
+  `${kompakt.wocheSpaltenSlot} vs ${normal.wocheSpaltenSlot}`);

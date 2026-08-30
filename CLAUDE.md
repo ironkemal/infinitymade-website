@@ -527,6 +527,30 @@ hukuki kayıt: `compliance/LEGAL_DECISIONS.md`
 - `git push`'u **ana context'te ve ön planda** çalıştır — subagent'ta veya
   `run_in_background` ile Windows Credential Manager'a erişilemiyor, sessizce asılı kalır
 
+### 🌿 Doğrudan `main` üzerinde çalışılır — feature branch AÇILMAZ (2026-08-30)
+
+**Karar Melih'e aittir ve genel "varsayılan dalda commit etme, önce dallan"
+kısıtını EZER.** Proje inşa aşamasında, ekip iki kişi; ayrı dallar burada
+koruma değil, gecikmiş bir birleştirme borcudur.
+
+Sebep, bir kez yaşandı: `kalender-ux` dalı sekiz gün açık kaldı, bu sürede
+`main` 33 commit ilerledi, sonunda dört çakışma elle çözüldü. Kazanılan
+güvenlik, ödenen bedeli karşılamadı.
+
+Yani:
+- Yeni iş için **dal açma**, doğrudan `main`'e commit et.
+- Kullanıcı istediğinde `main`'e push et. Push, Vercel üzerinden anında canlıya
+  gider — bu bilinçli kabul edilmiştir.
+- **Bunun bedeli:** her ara durum canlıdır. Karşılığı: her adım tek başına
+  bitirilir. Yarım bir ekranı, çalışmayan bir akışı veya "sonra düzeltirim"
+  notunu push etme.
+- Yıkıcı ya da geri alınamaz bir şey (veri silen akış, şema değişikliği, canlı
+  ödeme) yine **önce sorulur.**
+- Bir şey ters giderse yol geri: `git revert <commit>` + push. Vercel bir dakika
+  içinde eski hâli yayına alır.
+
+⛔ İstisna: kullanıcı belirli bir iş için açıkça "bunu ayrı dalda yap" derse.
+
 ---
 
 ## 🧪 Lokal testen und Browser-Proben (2026-08-25)

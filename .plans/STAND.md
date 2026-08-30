@@ -1,4 +1,4 @@
-# Stand — Beta-Rückmeldung Praxis, Branch `kalender-ux`
+# Stand — Beta-Rückmeldung Praxis
 
 **Letzte Aktualisierung: 30.08.2026.** Diese Datei ist die Übergabe. Wenn oben
 ein altes Datum steht und seither gearbeitet wurde, dem Inhalt nicht trauen —
@@ -157,8 +157,12 @@ fd00aa8  feat(kalender): Kopfleiste, Fortbildungs-Blocker, Leistungen ins Menü
 6feb73f  feat(kalender): Terminanlage in Woche/Monat + Rechtsklick-Kontextmenü
 ```
 
-**Merge nach `main` erst nach dem Testdurchgang.** Der Blocker schreibt Daten,
-und das ist der erste Punkt in dieser Reihe, der das tut.
+**Am 30.08.2026 nach `main` gemerged und veröffentlicht.** Der Branch
+`kalender-ux` ist damit erledigt. Ab jetzt wird direkt auf `main` gearbeitet
+(Entscheidung Melih, festgehalten in `CLAUDE.md` → Kurallar → Genel).
+
+⚠️ Der Testdurchgang steht weiterhin aus. Er ist damit kein Tor mehr vor der
+Veröffentlichung, sondern eine Nachprüfung an der laufenden Anwendung.
 
 ---
 
