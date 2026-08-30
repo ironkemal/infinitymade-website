@@ -21,7 +21,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="dashboard.css?v=20260816b" />
+  <link rel="stylesheet" href="dashboard.css?v=20260830" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
   <!-- Cropper.js lokal statt cdnjs (27.08.2026) — gleiche Datei, gleiche Version,
        Pruefsumme gegen unpkg verglichen. Grund: dies ist die eingeloggte App, in der
@@ -265,15 +265,11 @@
               <p class="panel-sub" data-i18n="calendar_sub">Klicken Sie auf einen Tag für Slots</p>
             </div>
             <div class="panel-actions">
-              <button class="btn-ghost" id="calAddLeaveBtn" data-i18n="btn_add_leave">Abwesenheit eintragen</button>
-              <button class="btn-primary" id="calAddBookingBtn" data-i18n="btn_add_booking">+ Termin</button>
+              <!-- "Abwesenheit eintragen" steht jetzt bei den Mitarbeiter-Chips, wo es
+                   inhaltlich hingehoert. "+ Termin" bleibt als Einstieg ohne Vorwissen,
+                   aber unauffaellig — der schnelle Weg ist der Doppelklick. -->
+              <button class="btn-ghost" id="calAddBookingBtn" data-i18n="btn_add_booking">+ Termin</button>
             </div>
-          </div>
-
-          <div class="my-booking-link" id="myBookingLink" style="display:none;">
-            <span class="my-booking-label">Ihr persönlicher Buchungslink:</span>
-            <span class="my-booking-url" id="myBookingUrl"></span>
-            <button class="btn-icon" id="myBookingCopy" title="Link kopieren"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
           </div>
 
           <div class="cal-view-toolbar" id="calViewToolbar">
@@ -287,8 +283,24 @@
               <button class="cal-view-btn" data-view="week">Woche</button>
               <button class="cal-view-btn" data-view="month">Monat</button>
             </div>
+            <!-- Die ausgeschriebene URL nahm eine eigene Zeile ueber dem Kalender ein.
+                 Sie steht jetzt nur noch im Tooltip; die Ids bleiben, damit
+                 showMyBookingLink() unveraendert weiterarbeitet. -->
+            <div class="my-booking-link" id="myBookingLink" style="display:none;">
+              <button class="btn-ghost btn-sm" id="myBookingCopy" title="Buchungslink kopieren">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span data-i18n="btn_copy_booking_link">Buchungslink</span>
+              </button>
+              <span class="my-booking-url" id="myBookingUrl" hidden></span>
+            </div>
           </div>
-          <div class="cal-emp-chips" id="calEmpChips"></div>
+
+          <!-- Mitarbeiterfilter und Abwesenheit auf einer Ebene. Der Knopf sitzt
+               AUSSERHALB des Chip-Behaelters, weil der waagerecht scrollt. -->
+          <div class="cal-emp-leiste">
+            <div class="cal-emp-chips" id="calEmpChips"></div>
+            <button class="btn-ghost btn-sm" id="calAddLeaveBtn" data-i18n="btn_add_leave">Abwesenheit eintragen</button>
+          </div>
 
           <div class="cal-move-banner" id="calMoveBanner" hidden>
             <span id="calMoveBannerText" data-i18n="move_banner">Zielzeit anklicken, dann den Vorschlag bestätigen.</span>
@@ -425,6 +437,13 @@
               <input class="form-input" id="gkvFormPrice" type="number" step="0.01" style="max-width:180px;" />
             </div>
             <div class="form-group">
+              <label class="form-label">Farbe im Kalender</label>
+              <div class="srv-farbwahl">
+                <div class="srv-farbfelder" id="gkvFarbfelder"></div>
+                <input type="color" id="gkvFormColor" value="#22c55e" class="srv-farbe-eigen" title="Eigene Farbe" aria-label="Eigene Farbe" />
+              </div>
+            </div>
+            <div class="form-group">
               <label class="form-label">Mitarbeiter-Zuweisung</label>
               <label class="emp-checkbox-item" style="margin-bottom:8px;">
                 <input type="checkbox" id="gkvEmpAll" checked>
@@ -444,7 +463,10 @@
             <span></span>
           </div>
 
-          <div id="servicesGrid" class="services-grid"></div>
+          <!-- Traegt seit 25.08.2026 die Tabellen aus module/leistungen-liste.js.
+               Die Klasse services-grid ist bewusst weg: sie ist ein CSS-Grid mit
+               260-px-Spalten und haette die Gruppen nebeneinander gequetscht. -->
+          <div id="servicesGrid"></div>
 
           <div class="add-service-form" id="addServiceForm" hidden data-mode="add">
             <h3 id="srvFormTitle" data-i18n="lbl_add_service">Neue Dienstleistung</h3>
@@ -468,6 +490,18 @@
                   <input class="form-input" id="srvPrice" type="number" value="0" min="0" step="0.5" />
                 </div>
               </div>
+            </div>
+            <div class="form-group" id="srvKostentraegerRow">
+              <label class="form-label">Abrechnungsart
+                <span style="font-size:11px;color:var(--text-muted);">— bestimmt, in welcher Gruppe die Leistung steht</span>
+              </label>
+              <select class="form-select" id="srvKostentraegerTyp">
+                <option value="">— automatisch (GKV, wenn Positionsnummer gesetzt) —</option>
+                <option value="gkv">GKV — bundeseinheitliche Vergütung</option>
+                <option value="privat">Privat</option>
+                <option value="selbstzahler">Selbstzahler</option>
+                <option value="bg">BG — Berufsgenossenschaft</option>
+              </select>
             </div>
             <div class="form-row" id="srvGkvRow">
               <div class="form-group">
@@ -574,8 +608,14 @@
               </div>
               <div class="srv-duration-grid" id="srvPhysioCards"></div>
             </div>
-            <div id="srvStandardColorRow" class="form-group" hidden>
-              <input type="hidden" id="srvColor" value="#22c55e" />
+            <div id="srvStandardColorRow" class="form-group">
+              <label class="form-label">Farbe im Kalender
+                <span style="font-size:11px;color:var(--text-muted);">— so erscheint die Leistung in Tages-, Wochen- und Monatsansicht</span>
+              </label>
+              <div class="srv-farbwahl">
+                <div class="srv-farbfelder" id="srvFarbfelder"></div>
+                <input type="color" id="srvColor" value="#22c55e" class="srv-farbe-eigen" title="Eigene Farbe" aria-label="Eigene Farbe" />
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label" data-i18n="lbl_srv_emps">Mitarbeiter</label>
@@ -2938,62 +2978,24 @@
       </div>
       <div class="modal-body">
         <input type="hidden" id="bk-id" />
-        <div class="form-group">
+        <div class="form-group" id="bkEmployeeGroup">
           <label class="form-label" data-i18n="lbl_manual_emp">Mitarbeiter</label>
           <select class="form-select" id="bkEmployee"></select>
         </div>
         <!-- Wird ausgeblendet, sobald eine Verordnung gewählt ist — die enthält
              die Leistung bereits. Der Wert bleibt gesetzt (Pflichtfeld). -->
-        <div class="form-group" id="bkServiceGroup">
-          <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
-          <select class="form-select" id="bkService"></select>
+        <!-- Blocker: Zeit ohne Patient. Setzt die interne Leistung und blendet
+             Kunde, Telefon und Verordnung aus (module/kalender-blocker.js). -->
+        <div class="form-group bk-blocker-zeile" id="bkBlockerZeile">
+          <button type="button" class="bk-blocker-btn" data-blocker="pause">⏸ Pause</button>
+          <button type="button" class="bk-blocker-btn" data-blocker="privat">🔒 Privat</button>
+          <button type="button" class="bk-blocker-btn" data-blocker="fortbildung">🎓 Fortbildung</button>
+          <button type="button" class="bk-blocker-btn bk-blocker-btn--zurueck" id="bkBlockerZurueck" hidden>↩ Patiententermin</button>
         </div>
-        <div id="bkServiceAusVerordnung" hidden
-          style="font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:6px 10px;border-left:2px solid var(--accent,#b1891b);"></div>
-        <!-- Gruppentermin UI -->
-        <div class="form-group" id="bkGroupBlock" style="margin-top:12px;padding:12px;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.06);border:1px solid var(--border);border-radius:12px;display:none;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600;">
-              <input type="checkbox" id="bkIsGroup" style="width:16px;height:16px;accent-color:var(--primary);" /> 👥 Gruppentermin
-            </label>
-            <div id="bkGroupCapacityWrap" style="display:none;align-items:center;gap:8px;">
-              <span style="font-size:12px;color:var(--text-muted);">Max. Kapazität:</span>
-              <input type="number" id="bkGroupCapacity" class="form-input" value="5" min="2" max="20" style="width:70px;padding:4px 8px;font-size:13px;text-align:center;" />
-            </div>
-          </div>
-          
-          <!-- Participants List -->
-          <div id="bkGroupParticipantsSection" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">
-            <div style="font-weight:600;font-size:12px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
-              <span>Teilnehmer (<span id="bkGroupCount">0</span>/<span id="bkGroupMaxDisplay">5</span>)</span>
-            </div>
-            <ul id="bkGroupParticipantsList" style="list-style:none;padding:0;margin:0 0 10px 0;display:flex;flex-direction:column;gap:6px;">
-              <!-- Dynamically populated participants -->
-            </ul>
-            
-            <!-- Add Participant search input -->
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="font-size:11px;">Teilnehmer hinzufügen</label>
-              <div class="patient-search-wrap" id="bkGroupPatientSearchWrap">
-                <input class="form-input" id="bkGroupPatientSearch" type="text" autocomplete="off" placeholder="Nach Patient suchen…" style="padding:6px 10px;font-size:13px;" />
-                <ul class="patient-search-list" id="bkGroupPatientList" hidden style="max-height:150px;overflow-y:auto;z-index:100;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;"></ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="form-group" id="bkDurationGroup" hidden>
-          <label class="form-label">Dauer wählen</label>
-          <div id="bkDurationOptions" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" data-i18n="lbl_manual_start">Von</label>
-            <input class="form-input" id="bkStart" type="datetime-local" />
-          </div>
-        </div>
-        <div id="bkSpecialBanner" class="bk-special-banner" hidden></div>
-        <div id="bkDocAssignHint" class="bk-doc-hint" hidden></div>
-        <div class="form-group" id="bkCustomerGroup">
+        <!-- Reihenfolge nach Eingabefluss: die Praxis nennt zuerst den Patienten,
+             dann die Leistung, dann die Zeit. Vorher stand die Leistung oben.
+             Der Verordnungsteil zieht mit, er gehoert zum Patienten. -->
+<div class="form-group" id="bkCustomerGroup">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;width:100%;">
             <label class="form-label" data-i18n="lbl_manual_cust" style="margin:0;">Kunde</label>
             <div style="display:flex;gap:6px;">
@@ -3047,6 +3049,64 @@
           <div id="bkSessionDots" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
           <div id="bkSessionPickerInfo" style="font-size:11px;color:var(--text-muted);"></div>
         </div>
+        <div class="form-group" id="bkServiceGroup">
+          <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
+          <select class="form-select" id="bkService"></select>
+        </div>
+        <div id="bkServiceAusVerordnung" hidden
+          style="font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:6px 10px;border-left:2px solid var(--accent,#b1891b);"></div>
+        <!-- Gruppentermin UI -->
+        <div class="form-group" id="bkGroupBlock" style="margin-top:12px;padding:12px;background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.06);border:1px solid var(--border);border-radius:12px;display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;font-weight:600;">
+              <input type="checkbox" id="bkIsGroup" style="width:16px;height:16px;accent-color:var(--primary);" /> 👥 Gruppentermin
+            </label>
+            <div id="bkGroupCapacityWrap" style="display:none;align-items:center;gap:8px;">
+              <span style="font-size:12px;color:var(--text-muted);">Max. Kapazität:</span>
+              <input type="number" id="bkGroupCapacity" class="form-input" value="5" min="2" max="20" style="width:70px;padding:4px 8px;font-size:13px;text-align:center;" />
+            </div>
+          </div>
+          
+          <!-- Participants List -->
+          <div id="bkGroupParticipantsSection" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);">
+            <div style="font-weight:600;font-size:12px;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+              <span>Teilnehmer (<span id="bkGroupCount">0</span>/<span id="bkGroupMaxDisplay">5</span>)</span>
+            </div>
+            <ul id="bkGroupParticipantsList" style="list-style:none;padding:0;margin:0 0 10px 0;display:flex;flex-direction:column;gap:6px;">
+              <!-- Dynamically populated participants -->
+            </ul>
+            
+            <!-- Add Participant search input -->
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:11px;">Teilnehmer hinzufügen</label>
+              <div class="patient-search-wrap" id="bkGroupPatientSearchWrap">
+                <input class="form-input" id="bkGroupPatientSearch" type="text" autocomplete="off" placeholder="Nach Patient suchen…" style="padding:6px 10px;font-size:13px;" />
+                <ul class="patient-search-list" id="bkGroupPatientList" hidden style="max-height:150px;overflow-y:auto;z-index:100;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:8px;"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" id="bkDurationGroup" hidden>
+          <label class="form-label">Dauer wählen</label>
+          <div id="bkDurationOptions" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_manual_start">Von</label>
+            <input class="form-input" id="bkStart" type="datetime-local" />
+          </div>
+          <!-- Mehrfachanlage direkt in der Grundmaske: "3x Podologie" war eine
+               ausdrueckliche Rueckmeldung. Der Wert steuert die vorhandene
+               Serienlogik (bkSeriesToggle / bkSeriesCount), es entsteht kein
+               zweiter Weg. -->
+          <div class="form-group" style="max-width:110px;">
+            <label class="form-label" for="bkAnzahl">Anzahl</label>
+            <input class="form-input" id="bkAnzahl" type="number" min="1" max="52" value="1" />
+          </div>
+        </div>
+        <div id="bkAnzahlHinweis" class="bk-anzahl-hinweis" hidden></div>
+        <div id="bkSpecialBanner" class="bk-special-banner" hidden></div>
+        <div id="bkDocAssignHint" class="bk-doc-hint" hidden></div>
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
             <input type="checkbox" id="bkHausbesuch" /> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;display:inline-block;flex-shrink:0;"><path d="M3 13h18l-2-7H5l-2 7z"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg> Hausbesuch
@@ -3096,6 +3156,8 @@
             </div>
           </div>
         </div>
+        <details class="bk-mehr">
+          <summary class="bk-mehr-titel">Mehr Optionen</summary>
         <div class="form-group">
           <label class="form-label" data-i18n="lead_notes">Notizen</label>
           <textarea class="form-textarea" id="bkNotes"></textarea>
@@ -3149,6 +3211,7 @@
             </button>
           </div>
         </div>
+        </details>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" id="bkWlMatchBtn" style="gap:6px;display:inline-flex;align-items:center;margin-right:auto;" hidden>🔍 Warteliste</button>
@@ -4898,10 +4961,15 @@
         </div>
 
         <div class="form-group" style="margin-bottom:0;">
-          <button class="btn-danger" id="bkActionNoShowBtn" style="width:100%;justify-content:center;" disabled>
+          <!-- Kein `disabled` mehr: der Countdown ("ab 3 Min. nach Terminbeginn") ist
+               entfallen, updateNoShowButton() schaltet den Knopf ohnehin immer frei.
+               Das Attribut blieb als Rest liegen und liess die Handlung aus dem
+               Kontextmenue wortlos ins Leere laufen, solange der Seitenbereich in
+               dieser Sitzung noch nie offen war. -->
+          <button class="btn-danger" id="bkActionNoShowBtn" style="width:100%;justify-content:center;">
             <span>✕</span> Patient nicht erschienen
           </button>
-          <div class="bk-action-hint" id="bkActionNoShowHint">Verfügbar ab 3 Min. nach Terminbeginn</div>
+          <div class="bk-action-hint" id="bkActionNoShowHint" hidden>Verfügbar ab 3 Min. nach Terminbeginn</div>
           <button class="btn-secondary" id="bkActionAusfallBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;" hidden>💶 Ausfallrechnung erstellen</button>
         </div>
 
@@ -5632,7 +5700,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260827d"></script>
+  <script type="module" src="dashboard.js?v=20260830"></script>
 </body>
 
 </html>

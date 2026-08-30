@@ -30,6 +30,25 @@ export const DV_SLOT_MIN = 30;
 export const DV_SLOT_PX = 56;
 
 /**
+ * Dasselbe Rasterfeld in der Wochenansicht — halb so hoch.
+ *
+ * Die Wochenansicht zeigt sieben Spalten nebeneinander statt einer je
+ * Mitarbeiter. Mit 56 Pixeln je halber Stunde wäre ein Arbeitstag von 08 bis 20
+ * Uhr 1344 Pixel lang und man sähe nie eine ganze Woche am Stück.
+ *
+ * ⚠️ Dieser Wert steht an zwei Orten und beide müssen zusammen wandern:
+ * hier und in `dashboard.css` (`.week-view-grid .dv-slot`). Bis zum 22.08.2026
+ * war er nur an einem gesetzt — die Wochenspalten rechneten mit 28, die
+ * Zeitleiste am linken Rand erbte aber die 56 der Tagesansicht. Die Uhrzeit
+ * links passte dadurch zu keinem einzigen Terminblock.
+ *
+ * Die Kopfzeile braucht keine eigene Zahl: `.dv-col-header` hat feste
+ * `height: 44px`, die Wochenspalte trägt dieselbe Klasse, und
+ * `.dv-time-col { padding-top: 44px }` passt damit in beiden Ansichten.
+ */
+export const WV_SLOT_PX = 28;
+
+/**
  * Feinheit beim Verschieben. Bewusst 5 und nicht 1: eine Minute genau trifft
  * niemand mit der Maus, und die Vorschau würde bei jedem Wackeln springen.
  */

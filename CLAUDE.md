@@ -529,6 +529,30 @@ hukuki kayıt: `compliance/LEGAL_DECISIONS.md`
 
 ---
 
+## 🧪 Lokal testen und Browser-Proben (2026-08-25)
+
+**`node dev_server.cjs` → http://localhost:8081** — der Entwicklungsserver
+beantwortet seit 25.08.2026 auch `/api/config` (aus `.env.local` oder
+Umgebungsvariablen). Vorher scheiterte der Login lokal immer, weil
+`supabase-config.js` die Schlüssel über diese Route holt und ein reiner
+Dateiserver 404 lieferte. Die zwei Werte stehen unter
+`https://app.praxura.de/api/config` und sind kein Geheimnis (Anon-Key, Schutz
+kommt von RLS).
+
+**`npm run probe`** — drei Prüfungen im echten Browser, **ohne Login**
+(`tools/browser-probe/`, Playwright). Sie messen Kalendergeometrie, laden alle
+in `dashboard.js` importierten Module und zeichnen die Renderer mit erfundenen
+Daten. Sie schliessen die Lücke zwischen `node --test module/*.test.js` (kein
+DOM) und einem Klickdurchgang (braucht Login). Beim ersten Lauf haben sie
+sofort einen Fehler gefunden, der sonst ausgeliefert worden wäre.
+
+Einmalige Einrichtung: `npm i -D playwright && npx playwright install chromium --only-shell`.
+
+⚠️ `npm install` läuft in diesem Konto in ein Rechteproblem im npm-Cache.
+Umgehung: `--cache /tmp/npm-cache-praxura`.
+
+---
+
 ## 🚀 Deployment
 
 **Frontend:** `git push` → Vercel auto-deploy (main branch)

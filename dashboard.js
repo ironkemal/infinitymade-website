@@ -2,7 +2,7 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260815';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260825';
 import { attachPatientSearch } from './patient-suche.js?v=20260817';
 import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
@@ -38,8 +38,16 @@ import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
-import { DV_SLOT_MIN, DV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260816';
-import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260827';
+import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260830';
+import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
+import { renderWoche } from './module/kalender-woche.js?v=20260830';
+import { renderMonat } from './module/kalender-monat.js?v=20260830';
+import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
+import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
+import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260830';
+import { renderLeistungenListe, renderGkvKatalog } from './module/leistungen-liste.js?v=20260830';
+import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
+import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260830';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
@@ -80,7 +88,7 @@ const T = {
     status_active: '✓ Aktiv', status_inactive: '✗ Inaktiv',
     today_bookings: 'Heutige Termine', upcoming_empty: 'Heute keine Termine.', features_title: 'Paketinhalt',
     calendar_sub: 'Termine verwalten & buchen',
-    btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin',
+    btn_add_leave: 'Abwesenheit eintragen', btn_add_booking: '+ Termin', btn_copy_booking_link: 'Buchungslink',
     kunden_sub: 'Leads & Kundeninformationen', leads_import: 'CSV importieren', leads_add: '+ Neuer Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Suchen',
     lf_all: 'Alle', lf_abrechenbar: 'Bereit zur Abrechnung', lf_abgerechnet: 'Abgerechnet', lf_teilabsetzung: 'Teilabsetzung', lf_abgesetzt: 'Absetzung', lf_storniert: 'Storniert',
@@ -290,7 +298,7 @@ const T = {
     kpi_plan: 'Plan', kpi_status: 'Status', kpi_today_bookings: 'Today', kpi_today_sub: 'Appointments', kpi_support: 'Support',
     status_active: '✓ Active', status_inactive: '✗ Inactive',
     today_bookings: "Today's Appointments", upcoming_empty: 'No appointments today.', features_title: "Plan contents",
-    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_add_booking: '+ Appointment',
+    calendar_sub: 'Manage & book appointments', btn_add_leave: 'Add time off', btn_copy_booking_link: 'Booking link', btn_add_booking: '+ Appointment',
     kunden_sub: 'Leads & customer info', leads_import: 'Import CSV', leads_add: '+ New lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Search',
     lf_all: 'All', lf_abrechenbar: 'Ready to bill', lf_abgerechnet: 'Billed', lf_teilabsetzung: 'Partial rejection', lf_abgesetzt: 'Rejected', lf_storniert: 'Cancelled',
@@ -480,7 +488,7 @@ const T = {
     kpi_plan: 'Paket', kpi_status: 'Durum', kpi_today_bookings: 'Bugün', kpi_today_sub: 'Randevu', kpi_support: 'Destek',
     status_active: '✓ Aktif', status_inactive: '✗ Pasif',
     today_bookings: 'Bugünkü randevularınız', upcoming_empty: 'Bugün randevu yok.', features_title: 'Paket içeriği',
-    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_add_booking: '+ Randevu',
+    calendar_sub: 'Randevu yönetimi', btn_add_leave: 'İzin ekle', btn_copy_booking_link: 'Randevu bağlantısı', btn_add_booking: '+ Randevu',
     kunden_sub: 'Lead & müşteri bilgileri', leads_import: 'CSV içe aktar', leads_add: '+ Yeni Lead',
     apify_label: 'Google Maps Scraper:', apify_run: 'Ara',
     lf_all: 'Tümü', lf_abrechenbar: 'Faturaya hazır', lf_abgerechnet: 'Fatura edildi', lf_teilabsetzung: 'Kısmi kesinti', lf_abgesetzt: 'Kesinti', lf_storniert: 'İptal edildi',
@@ -1066,6 +1074,7 @@ function showMyBookingLink() {
   if (!wrap || !currentProfile) return;
   const link = buildBookingUrl(currentProfile);
   urlEl.textContent = link;
+  wrap.title = link;
   btn.onclick = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(link);
@@ -1814,8 +1823,12 @@ async function loadScheduleBookings(date) {
       block.className = 'dv-booking-block';
       block.style.top = topPx + 'px';
       block.style.height = Math.max(hPx, 24) + 'px';
-      block.style.background = color + '25';
-      block.style.borderColor = color;
+      const farben = terminFarben(b, { teamMembers, empFarben: EMP_COLORS });
+      block.style.background = mitDeckkraft(farben.flaeche, '25', '15%');
+      block.style.borderColor = farben.flaeche;
+      // Linker Rand = Mitarbeiter. Hier Redundanz (die Spalten trennen schon),
+      // aber alle Ansichten sprechen so dieselbe Sprache.
+      block.style.borderLeft = `3px solid ${farben.rand}`;
       block.style.color = 'var(--text-main)';
 
       const durationMin = eMin - sMin;
@@ -1860,8 +1873,8 @@ async function refreshBookingViews() {
   // Übersicht-Tagesplan auffrischen (den aktuell gezeigten Tag beibehalten)
   try { await loadScheduleBookings(scheduleDate instanceof Date ? scheduleDate : new Date()); } catch (e) {}
   loadActivityFeed().catch(() => {});
-  if (activePanel === 'calendar' && calendarView === 'day') {
-    try { await renderDayView(toISODate(dayViewDate)); } catch (e) {}
+  if (activePanel === 'calendar') {
+    try { await renderCalendarView(); } catch (e) {}
   }
 }
 // Wer Termine schreibt, meldet `bookings:changed` — und muss nicht mehr wissen,
@@ -2418,9 +2431,7 @@ function renderCalEmpChips() {
     onPick: (id) => {
       calEmpFilter = id;
       renderCalEmpChips();
-      if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-      else if (calendarView === 'week') renderWeekView(toISODate(dayViewDate));
-      else if (calendarView === 'month') renderMonthView(monthViewYear, monthViewMonth);
+      renderCalendarView();
     },
   });
 }
@@ -2496,6 +2507,7 @@ async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, s
   if (banner) { banner.hidden = true; banner.textContent = ''; }
   window._pendingRxSession = null;
   document.getElementById('bkSeriesToggle').checked = false;
+  resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
   populateEmpSelects(empId);
   await populateSrvSelect(serviceId);
@@ -2639,6 +2651,15 @@ function formatDateDE(d) {
   return d.toLocaleDateString('de-DE', opts);
 }
 
+// Zeichnet die GERADE offene Ansicht neu. Vorher stand diese Dreifach-Abfrage
+// an einem halben Dutzend Stellen — und an den meisten nur der Tages-Zweig.
+// Wer heute einen Termin in der Woche aenderte, sah die Aenderung nicht.
+function renderCalendarView() {
+  if (calendarView === 'week') return renderWeekView(toISODate(dayViewDate));
+  if (calendarView === 'month') return renderMonthView(monthViewYear, monthViewMonth);
+  return renderDayView(toISODate(dayViewDate));
+}
+
 function setCalendarView(view) {
   calendarView = view;
   document.getElementById('monthViewWrap').style.display = view === 'month' ? '' : 'none';
@@ -2647,9 +2668,7 @@ function setCalendarView(view) {
   document.querySelectorAll('.cal-view-toggle .cal-view-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.view === view);
   });
-  if (view === 'day') renderDayView(toISODate(dayViewDate));
-  else if (view === 'week') renderWeekView(toISODate(dayViewDate));
-  else if (view === 'month') renderMonthView(monthViewYear, monthViewMonth);
+  renderCalendarView();
 }
 
 async function renderDayView(dateStr) {
@@ -2688,7 +2707,7 @@ async function renderDayView(dateStr) {
   const dEnd = new Date(dateStr + 'T23:59:59').toISOString();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .select(TERMIN_SELECT)
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2789,11 +2808,17 @@ async function renderDayView(dateStr) {
 
       const block = document.createElement('div');
       block.className = 'dv-booking-block';
+      block._termin = b;
+      if (istBlockerLeistung(b.services)) block.classList.add('dv-booking-block--blocker');
       if (moveBooking && moveBooking.id === b.id) block.classList.add('dv-move-source');
       block.style.top = topPx + 'px';
       block.style.height = Math.max(hPx, 28) + 'px';
-      block.style.background = color + '25';
-      block.style.borderColor = color;
+      const farben = terminFarben(b, { teamMembers, empFarben: EMP_COLORS });
+      block.style.background = mitDeckkraft(farben.flaeche, '25', '15%');
+      block.style.borderColor = farben.flaeche;
+      // Linker Rand = Mitarbeiter. Hier Redundanz (die Spalten trennen schon),
+      // aber alle Ansichten sprechen so dieselbe Sprache.
+      block.style.borderLeft = `3px solid ${farben.rand}`;
       block.style.color = 'var(--text-main)';
 
       const durationMin = eMin - sMin;
@@ -2837,226 +2862,76 @@ async function renderDayView(dateStr) {
   colsWrap.replaceChildren(colFrag);
 }
 
+// Die Wochenansicht steht in module/kalender-woche.js. Hier bleibt nur die
+// Bruecke: Zustand des Kalenders hinein, Handlungen heraus.
 async function renderWeekView(dateStr) {
-  const base = new Date(dateStr + 'T12:00:00');
-  const dow = base.getDay(); // 0=Sun
-  const mondayOffset = dow === 0 ? -6 : 1 - dow;
-  const monday = new Date(base);
-  monday.setDate(base.getDate() + mondayOffset);
-
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    days.push(d);
-  }
-
-  const fmt = d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-  document.getElementById('dayViewDateLabel').textContent = `${fmt(days[0])} – ${fmt(days[6])}`;
-
-  const timeCol = document.getElementById('wvTimeCol');
-  const colsWrap = document.getElementById('wvColsWrap');
-  timeCol.innerHTML = '';
-  colsWrap.innerHTML = '';
-
-  for (let h = 8; h < 20; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const slot = document.createElement('div');
-      slot.className = 'dv-slot';
-      const label = document.createElement('div');
-      label.className = 'dv-time-label';
-      label.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      slot.appendChild(label);
-      timeCol.appendChild(slot);
-    }
-  }
-
-  const ownerId = getOwnerId();
-  const dStart = new Date(days[0]);
-  dStart.setHours(0, 0, 0, 0);
-  const dEnd = new Date(days[6]);
-  dEnd.setHours(23, 59, 59, 999);
-
-  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
-  const empIds = emps.map(e => e.id);
-
-  const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,status,services(title)')
-    .eq('owner_id', ownerId)
-    .gte('start_time', dStart.toISOString())
-    .lte('start_time', dEnd.toISOString())
-    .in('user_id', empIds.length ? empIds : ['none'])
-    .neq('status', 'cancelled');
-
-  const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-  const startHour = 8;
-  const totalSlots = (20 - 8) * 2;
-
-  days.forEach(d => {
-    const col = document.createElement('div');
-    col.className = 'dv-col';
-    col.style.minWidth = '100px';
-
-    const header = document.createElement('div');
-    header.className = 'dv-col-header';
-    const isToday = toISODate(d) === toISODate(new Date());
-    header.style.cssText = `padding:6px 4px;text-align:center;font-size:12px;font-weight:${isToday ? '700' : '500'};color:${isToday ? 'var(--primary)' : 'var(--text-muted)'};border-bottom:1px solid var(--border);`;
-    header.textContent = `${DAY_NAMES[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`;
-    col.appendChild(header);
-
-    const inner = document.createElement('div');
-    inner.style.cssText = `position:relative;height:${totalSlots * 28}px;`;
-
-    const dayISO = toISODate(d);
-    const dayBookings = (bookings || []).filter(b => b.start_time && b.start_time.startsWith(dayISO));
-
-    dayBookings.forEach(b => {
-      const start = new Date(b.start_time);
-      const end = new Date(b.end_time || b.start_time);
-      const startMin = start.getHours() * 60 + start.getMinutes();
-      const endMin = end.getHours() * 60 + end.getMinutes();
-      const topPx = ((startMin - startHour * 60) / 30) * 28;
-      const heightPx = Math.max(((endMin - startMin) / 30) * 28, 28);
-      const empIdx = teamMembers.findIndex(e => e.id === b.user_id);
-      const color = EMP_COLORS[empIdx % EMP_COLORS.length] || 'var(--primary)';
-
-      const block = document.createElement('div');
-      block.style.cssText = `position:absolute;top:${topPx}px;left:2px;right:2px;height:${heightPx}px;background:${color}22;border-left:3px solid ${color};border-radius:4px;padding:2px 4px;font-size:10px;overflow:hidden;cursor:pointer;`;
-      block.title = `${b.services?.title || 'Termin'} – ${b.customer_name || ''}`;
-      // Auch in der Wochenansicht: ohne Uhrzeit muss man den Block gegen die
-      // Zeitleiste am Rand halten.
-      const wvZeit = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      block.innerHTML = `<span style="font-variant-numeric:tabular-nums;opacity:0.85;">${escapeHtml(wvZeit)}</span> `
-        + escapeHtml(b.services?.title || 'Termin');
-      inner.appendChild(block);
-    });
-
-    col.appendChild(inner);
-    colsWrap.appendChild(col);
+  await renderWoche({
+    supabase,
+    dateStr,
+    ownerId: getOwnerId(),
+    teamMembers,
+    calEmpFilter,
+    moveAktiv: !!moveBooking,
+    farbeFuer: (b) => terminFarben(b, { teamMembers, empFarben: EMP_COLORS }),
+    setzeDatumsLabel: (txt) => { document.getElementById('dayViewDateLabel').textContent = txt; },
+    onSlotDoppelklick: async ({ timeStr, empId }) => {
+      await prefillBookingModal(timeStr);
+      const bkEmp = document.getElementById('bkEmployee');
+      // Ohne eindeutigen Mitarbeiter bleibt das Feld leer und die Maske
+      // verlangt eine Auswahl (bkSaveBtn prueft).
+      if (bkEmp) bkEmp.value = empId || '';
+    },
+    onSlotKlick: ({ empId, slotEl, ev }) => {
+      if (!moveBooking) return;
+      placeGhost(slotEl, empId || moveBooking.user_id,
+        moveBooking.customer_name || moveBooking.services?.title || 'Termin', ev, WV_SLOT_PX);
+    },
+    onTerminKlick: async (b) => openCalRightPanel(await ladeTerminVollstaendig(supabase, b)),
   });
 }
 
+
+// Die Monatsansicht steht in module/kalender-monat.js. Hier bleibt die Bruecke.
 async function renderMonthView(year, month) {
-  const header = document.getElementById('monthGridHeader');
-  const grid = document.getElementById('monthGrid');
-  if (!header || !grid) return;
-
-  const DAY_HEADERS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-  header.innerHTML = DAY_HEADERS.map(d => `<div>${d}</div>`).join('');
-
-  // First day of month
-  const firstDay = new Date(year, month, 1);
-  // Monday-first: 0=Mon..6=Sun
-  let startDow = firstDay.getDay(); // 0=Sun
-  startDow = startDow === 0 ? 6 : startDow - 1; // Convert to Mon=0
-
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const prevMonthDays = new Date(year, month, 0).getDate();
-  const today = toISODate(new Date());
-
-  // Build cell dates
-  const cells = [];
-  for (let i = 0; i < startDow; i++) {
-    cells.push({ date: new Date(year, month - 1, prevMonthDays - startDow + i + 1), otherMonth: true });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ date: new Date(year, month, d), otherMonth: false });
-  }
-  while (cells.length % 7 !== 0) {
-    cells.push({ date: new Date(year, month + 1, cells.length - daysInMonth - startDow + 1), otherMonth: true });
-  }
-
-  // Fetch bookings for this month
-  const ownerId = getOwnerId();
-  const mStart = new Date(year, month, 1).toISOString();
-  const mEnd = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
-  const emps = calEmpFilter === 'all' ? teamMembers : teamMembers.filter(e => e.id === calEmpFilter);
-  const empIds = emps.map(e => e.id);
-
-  const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,start_time,customer_name,services(title)')
-    .eq('owner_id', ownerId)
-    .gte('start_time', mStart)
-    .lte('start_time', mEnd)
-    // Leere Liste wuerde zu einem ungueltigen in.() werden — wie in der Wochenansicht
-    // absichern.
-    .in('user_id', empIds.length ? empIds : ['none'])
-    .neq('status', 'cancelled');
-
-  // Update date label
-  const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  document.getElementById('dayViewDateLabel').textContent = `${MONTHS_DE[month]} ${year}`;
-
-  grid.innerHTML = '';
-  cells.forEach(({ date, otherMonth }) => {
-    const ds = toISODate(date);
-    const cell = document.createElement('div');
-    cell.className = 'month-cell' + (otherMonth ? ' month-cell--other-month' : '') + (ds === today ? ' month-cell--today' : '');
-
-    const dayLabel = document.createElement('div');
-    dayLabel.className = 'month-cell-day';
-    dayLabel.textContent = date.getDate();
-    cell.appendChild(dayLabel);
-
-    const evWrap = document.createElement('div');
-    evWrap.className = 'month-cell-events';
-
-    const dayBks = (bookings || []).filter(b => b.start_time && b.start_time.startsWith(ds));
-    dayBks.slice(0, 3).forEach(b => {
-      const empIdx = teamMembers.findIndex(e => e.id === b.user_id);
-      const color = EMP_COLORS[empIdx % EMP_COLORS.length] || 'var(--primary)';
-      const pill = document.createElement('div');
-      pill.className = 'month-event-pill';
-      pill.style.backgroundColor = color;
-      pill.textContent = b.services?.title || b.customer_name || 'Termin';
-      evWrap.appendChild(pill);
-    });
-    if (dayBks.length > 3) {
-      const more = document.createElement('div');
-      more.style.cssText = 'font-size:10px;color:var(--text-muted);';
-      more.textContent = `+${dayBks.length - 3}`;
-      evWrap.appendChild(more);
-    }
-
-    cell.appendChild(evWrap);
-    // Click: switch to day view for that date
-    cell.addEventListener('click', () => {
-      dayViewDate = date;
-      setCalendarView('day');
-    });
-    grid.appendChild(cell);
+  await renderMonat({
+    supabase,
+    year, month,
+    ownerId: getOwnerId(),
+    teamMembers,
+    calEmpFilter,
+    farbeFuer: (b) => terminFarben(b, { teamMembers, empFarben: EMP_COLORS }),
+    setzeDatumsLabel: (txt) => { document.getElementById('dayViewDateLabel').textContent = txt; },
+    onTagEinfachklick: (date) => { dayViewDate = date; setCalendarView('day'); },
+    onTagDoppelklick: ({ dateStr, date }) => { dayViewDate = date; prefillBookingModal(`${dateStr}T09:00`); },
+    onTerminKlick: async (b) => openCalRightPanel(await ladeTerminVollstaendig(supabase, b)),
   });
 }
 
-document.getElementById('dayViewPrev').addEventListener('click', () => {
-  if (calendarView === 'week') {
-    dayViewDate = new Date(dayViewDate);
-    dayViewDate.setDate(dayViewDate.getDate() - 7);
-    renderWeekView(toISODate(dayViewDate));
-  } else if (calendarView === 'month') {
-    monthViewMonth--;
+
+// Vor und zurueck blaettern — beide Knoepfe waren dieselbe Verzweigung, gespiegelt.
+function kalenderBlaettern(richtung) {
+  if (calendarView === 'month') {
+    monthViewMonth += richtung;
     if (monthViewMonth < 0) { monthViewMonth = 11; monthViewYear--; }
-    renderMonthView(monthViewYear, monthViewMonth);
-  } else {
-    dayViewDate.setDate(dayViewDate.getDate() - 1);
-    if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-    else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
-  }
-});
-document.getElementById('dayViewNext').addEventListener('click', () => {
-  if (calendarView === 'week') {
-    dayViewDate = new Date(dayViewDate);
-    dayViewDate.setDate(dayViewDate.getDate() + 7);
-    renderWeekView(toISODate(dayViewDate));
-  } else if (calendarView === 'month') {
-    monthViewMonth++;
     if (monthViewMonth > 11) { monthViewMonth = 0; monthViewYear++; }
-    renderMonthView(monthViewYear, monthViewMonth);
   } else {
-    dayViewDate.setDate(dayViewDate.getDate() + 1);
-    if (calendarView === 'day') renderDayView(toISODate(dayViewDate));
-    else document.getElementById('dayViewDateLabel').textContent = formatDateDE(dayViewDate);
+    dayViewDate = new Date(dayViewDate);
+    dayViewDate.setDate(dayViewDate.getDate() + (calendarView === 'week' ? 7 : 1) * richtung);
   }
+  renderCalendarView();
+}
+document.getElementById('dayViewPrev').addEventListener('click', () => kalenderBlaettern(-1));
+document.getElementById('dayViewNext').addEventListener('click', () => kalenderBlaettern(1));
+
+// Rechtsklick auf einem Termin: dieselben Handlungen wie im Seitenbereich, ohne Umweg.
+// Woche/Monat laden weniger Spalten: erst vollstaendig laden (module/termin-laden.js).
+const mitTermin = (fn) => async (b) => fn(await ladeTerminVollstaendig(supabase, b));
+verdrahteKontextmenue({
+  wahrgenommen: mitTermin((b) => { bkActionBookingCache = b; handleTerminStarten(); }),
+  nichtErschienen: mitTermin((b) => { bkActionBookingCache = b; handlePatientNichtErschienen(); }),
+  verschieben: mitTermin((b) => startMoveBooking(b)),
+  absagen: mitTermin((b) => absageTerminMitGrund(b)),
+  oeffnen: mitTermin((b) => openCalRightPanel(b)),
 });
 
 // Tagesansicht "lebt": jede Minute die Jetzt-Linie verschieben & vergangene Stunden ausblenden
@@ -3194,6 +3069,7 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bkNotes').value = '';
   document.getElementById('bkHausbesuch').checked = false;
   document.getElementById('bkSeriesToggle').checked = false;
+  resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   document.getElementById('bkDocAssignHint').hidden = true;
@@ -3222,8 +3098,13 @@ async function prefillBookingModal(startStr) {
   if (_bkPickerBlock) _bkPickerBlock.hidden = true;
   window._bkGewaehlteRx = null;
   zeigeDienstleistungsfeld(true);
+  setzeBlockerModus(false);
 
   populateEmpSelects();
+  // Einzelpraxen haben genau einen Mitarbeiter — das Feld ist dort ein toter
+  // Klick und stand trotzdem als erstes in der Maske.
+  const _empGrp = document.getElementById('bkEmployeeGroup');
+  if (_empGrp) _empGrp.hidden = (teamMembers || []).length <= 1;
   await populateSrvSelect();
   openModal('bookingModal');
   await initBkCustomerAutocomplete();
@@ -4621,8 +4502,8 @@ async function handlePatientNichtErschienen() {
     if (activePanel === 'overview') {
       await loadTodayBookings();
     }
-    if (activePanel === 'calendar' && calendarView === 'day') {
-      await renderDayView(toISODate(dayViewDate));
+    if (activePanel === 'calendar') {
+      await renderCalendarView();
     }
 
     // Ausfallgebühr aktiv? — Rechnung anbieten
@@ -5057,7 +4938,7 @@ async function loadGroupParticipants(parentId, maxCapacity) {
         showToast('Teilnehmer entfernt.');
         await loadGroupParticipants(parentId, maxCapacity);
         if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
-        if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+        if (activePanel === 'calendar') await renderCalendarView();
       }
     });
   });
@@ -5191,7 +5072,7 @@ async function initBkGroupPatientAutocomplete() {
             showToast('Patient hinzugefügt.');
             await loadGroupParticipants(parent.id, parent.group_capacity);
             if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
-            if (activePanel === 'calendar' && calendarView === 'day') await renderDayView(toISODate(dayViewDate));
+            if (activePanel === 'calendar') await renderCalendarView();
           }
         } else {
           // Creating a new booking -> add to local array!
@@ -5239,6 +5120,7 @@ async function openBookingModal(b) {
   document.getElementById('bkNotes').value = b.notes || '';
   document.getElementById('bkHausbesuch').checked = b.hausbesuch || false;
   document.getElementById('bkSeriesToggle').checked = false;
+  resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   const pmEl2 = document.getElementById('bkPaymentMethod');
@@ -5489,9 +5371,11 @@ async function startMoveBooking(b) {
   closeModal('bookingModal');
   // Der Termin laesst sich auch aus dem Tagesplan heraus oeffnen. Ohne den Wechsel
   // in den Kalender waere der Verschieben-Modus aktiv, aber unsichtbar.
+  // Die Woche hat seit 22.08.2026 ein eigenes Zeitraster und kann selbst Ziel
+  // sein; nur der Monat hat keine Uhrzeit und schickt weiter in den Tag.
   if (activePanel !== 'calendar') await switchPanel('calendar');
-  else if (calendarView !== 'day') setCalendarView('day');
-  else await renderDayView(toISODate(dayViewDate));
+  else if (calendarView === 'month') setCalendarView('day');
+  else await renderCalendarView();
   updateMoveBanner();
 }
 
@@ -5503,7 +5387,7 @@ function cancelMoveBooking() {
   moveBooking = null;
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   updateMoveBanner();
-  if (activePanel === 'calendar' && calendarView === 'day') renderDayView(toISODate(dayViewDate));
+  if (activePanel === 'calendar') renderCalendarView();
 }
 
 function updateMoveBanner() {
@@ -5527,7 +5411,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && moveBooking) cancelMoveBooking();
 });
 
-function placeGhost(slotEl, empId, text, ev) {
+// `slotPx` ist die Zeilenhoehe des Rasters, in dem geklickt wurde: 56 in der
+// Tagesansicht, 28 in der Woche. Ohne den Wert waere die Vorschau in der Woche
+// doppelt so hoch wie der Termin, den sie zeigt.
+function placeGhost(slotEl, empId, text, ev, slotPx = DV_SLOT_PX) {
   if (moveGhostEl) moveGhostEl.remove();
   // Farbe immer ueber teamMembers bestimmen — genau wie Tages-, Wochen- und
   // Monatsansicht. Sonst bekaeme die Vorschau eine andere Farbe als die Spalte.
@@ -5540,11 +5427,11 @@ function placeGhost(slotEl, empId, text, ev) {
   ghost.style.background = color + '25';
   ghost.style.borderColor = color;
   ghost.style.color = 'var(--text-main)';
-  ghost.style.top = (slotEl.offsetTop + (versatzMin / DV_SLOT_MIN) * DV_SLOT_PX) + 'px';
+  ghost.style.top = (slotEl.offsetTop + (versatzMin / DV_SLOT_MIN) * slotPx) + 'px';
   const s = new Date(moveBooking.start_time);
   const e = new Date(moveBooking.end_time);
   const durMin = (e - s) / 60000;
-  ghost.style.height = Math.max((durMin / DV_SLOT_MIN) * DV_SLOT_PX, 28) + 'px';
+  ghost.style.height = Math.max((durMin / DV_SLOT_MIN) * slotPx, 28) + 'px';
   // Die Zielzeit gehoert in die Vorschau: bei 5-Minuten-Schritten sieht man
   // an der Position allein nicht, ob es 09:15 oder 09:20 wird.
   ghost.textContent = `${zielZeit.substring(11)} · ${text}`;
@@ -5581,7 +5468,7 @@ async function doMoveBooking(startStr, empId) {
   if (moveGhostEl) { moveGhostEl.remove(); moveGhostEl = null; }
   updateMoveBanner();
   showToast(tl.move_done);
-  await renderDayView(toISODate(dayViewDate));
+  await renderCalendarView();
   if (typeof scheduleDate !== 'undefined' && toISODate(dayViewDate) === toISODate(scheduleDate)) {
     loadScheduleBookings(scheduleDate);
   }
@@ -5975,6 +5862,70 @@ document.getElementById('bkHbBerechnenBtn')?.addEventListener('click', async () 
 window._collectHeilmittelItems = function() { return []; };
 window._resetRezeptartUI = function() {};
 
+// Blocker: Zeit ohne Patient. Die beiden internen Leistungen entstehen beim
+// ersten Klick und bleiben dann bestehen (module/kalender-blocker.js).
+let _blockerDienste = null;
+// Wird an jedem Einstieg in die Terminmaske gerufen. Ohne das bliebe eine
+// vorher eingetippte 3 stehen und der naechste Termin waere still eine Serie.
+function resetBkAnzahl() {
+  const feld = document.getElementById('bkAnzahl');
+  if (feld) feld.value = '1';
+  const hinweis = document.getElementById('bkAnzahlHinweis');
+  if (hinweis) { hinweis.hidden = true; hinweis.textContent = ''; }
+}
+
+function setzeBlockerModus(an, knopf = null) {
+  document.getElementById('bookingModal')?.classList.toggle('bk-blocker-modus', !!an);
+  document.getElementById('bkBlockerZurueck').hidden = !an;
+  document.querySelectorAll('.bk-blocker-btn[data-blocker]').forEach(b =>
+    b.classList.toggle('bk-blocker-btn--aktiv', b === knopf));
+}
+// "3x Podologie": das Feld steuert die vorhandene Serienlogik, statt einen
+// zweiten Weg zu bauen. Bei 1 bleibt alles wie vorher.
+document.getElementById('bkAnzahl')?.addEventListener('input', () => {
+  const n = Math.max(1, parseInt(document.getElementById('bkAnzahl').value, 10) || 1);
+  const toggle = document.getElementById('bkSeriesToggle');
+  const hinweis = document.getElementById('bkAnzahlHinweis');
+  if (!toggle) return;
+  toggle.checked = n > 1;
+  if (n > 1) document.getElementById('bkSeriesCount').value = String(n);
+  // Der vorhandene Zuhoerer am Ankreuzfeld blendet die Serienfelder ein und
+  // baut die Vorschau — deshalb melden statt nachbauen.
+  toggle.dispatchEvent(new Event('change', { bubbles: true }));
+  if (hinweis) {
+    hinweis.hidden = n <= 1;
+    hinweis.textContent = n > 1
+      ? `${n} Termine — Wiederholung und Wochentage stehen unter „Mehr Optionen".`
+      : '';
+  }
+});
+
+document.getElementById('bkBlockerZeile')?.addEventListener('click', async (ev) => {
+  const zurueck = ev.target.closest('#bkBlockerZurueck');
+  if (zurueck) {
+    setzeBlockerModus(false);
+    document.getElementById('bkCustomerSearch').value = '';
+    document.getElementById('bkCustomer').value = '';
+    await populateSrvSelect();
+    return;
+  }
+  const knopf = ev.target.closest('.bk-blocker-btn[data-blocker]');
+  if (!knopf) return;
+  if (!_blockerDienste) {
+    _blockerDienste = await ensureBlockerServices(supabase, getOwnerId(), currentSession?.user?.id);
+    await loadServices();
+  }
+  const dienst = _blockerDienste.get(knopf.dataset.blocker);
+  if (!dienst) { showToast('Blocker konnte nicht angelegt werden.', 'error'); return; }
+  // populateSrvSelect blendet interne Leistungen aus — ausser der gewaehlten.
+  await populateSrvSelect(dienst.id);
+  document.getElementById('bkService').value = dienst.id;
+  document.getElementById('bkCustomer').value = dienst.title;
+  document.getElementById('bkCustomerId').value = '';
+  document.getElementById('bkCustomerSearch').value = dienst.title;
+  setzeBlockerModus(true, knopf);
+});
+
 document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   if (!checkPlanActive()) return;
   const id = document.getElementById('bk-id').value;
@@ -6032,7 +5983,11 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
   const isGroup = document.getElementById('bkIsGroup')?.checked || false;
-  if (!isGroup) {
+  const istBlocker = istBlockerLeistung(servicesCache.find(s => s.id === srvId));
+  if (istBlocker) {
+    cust = cust || servicesCache.find(s => s.id === srvId)?.title || 'Blocker';
+    custId = '';
+  } else if (!isGroup) {
     if (!cust || !custId) { showToast('Bitte einen Kunden aus der Liste auswählen.', 'error'); return; }
   }
 
@@ -8075,8 +8030,8 @@ document.getElementById('bkActionMoveBtn')?.addEventListener('click', () => {
   if (!bkActionBookingCache) return;
   startMoveBooking(bkActionBookingCache);
 });
-document.getElementById('bkActionDeleteBtn').addEventListener('click', async () => {
-  const b = bkActionBookingCache;
+// Absagen aus Seitenbereich UND Kontextmenue — ein Weg, nicht zwei.
+async function absageTerminMitGrund(b) {
   if (!b) return;
   const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin löschen' });
   if (reason === null) return;
@@ -8100,8 +8055,12 @@ document.getElementById('bkActionDeleteBtn').addEventListener('click', async () 
   if (modal) { modal.style.display = 'none'; }
   document.getElementById('mainArea')?.style.removeProperty('padding-right');
   showToast('Termin gelöscht.', 'success');
-  refreshBookingViews();
-});
+  // Vorher: `renderDayView()` OHNE Datum -> Label "Invalid Date", danach
+  // RangeError im toISOString(); der Kalender blieb nach dem Absagen leer.
+  refreshBookingViews().catch(() => {});
+}
+document.getElementById('bkActionDeleteBtn')
+  .addEventListener('click', () => absageTerminMitGrund(bkActionBookingCache));
 
 document.getElementById('leaveSaveBtn').addEventListener('click', async () => {
   const empId = document.getElementById('leaveEmployee').value;
@@ -9913,103 +9872,18 @@ async function migratePodologieLegacyServices() {
   }
 }
 
+// Der GKV-Katalog steht in module/leistungen-liste.js — Tabelle statt Kachelwand.
 function renderGkvCatalog() {
-  const section = document.getElementById('gkvCatalogSection');
-  const divider = document.getElementById('privatSrvDivider');
-  if (!section) return;
-
-  const sector = getSector();
-  const catalog = GKV_LEISTUNGSKATALOG[sector];
-  if (!catalog || !catalog.length) {
-    section.style.display = 'none';
-    if (divider) divider.hidden = true;
-    return;
-  }
-
-  const lockSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:-1px;opacity:0.6;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
-  const infoSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-  const checkSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px;vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>`;
-
-  section.style.display = '';
-  section.innerHTML = `
-    <div class="gkv-catalog-header">
-      <div>
-        <span class="gkv-catalog-title">GKV-Standardleistungen</span>
-        <span class="gkv-catalog-law">§125 SGB V &middot; Bundeseinheitliche Vergütung 2026</span>
-      </div>
-      <span class="gkv-catalog-badge" title="Vergütungssätze gemäß §125 SGB V. Klicken Sie Einrichten um eine Leistung in Ihrer Praxis zu aktivieren.">ℹ Vergütungsvertrag</span>
-    </div>
-    <div class="services-grid">
-      ${catalog.map(s => {
-        const existing = servicesCache.find(x => x.gkv_position_nr === s.code);
-        const configured = !!existing;
-        const hasRange = s.price_min !== s.price_max;
-
-        // Bei Podologie ist die Regelleistungszeit nicht die Zeit am Patienten.
-        // Beides zu zeigen verhindert, dass jemand den Terminslot zu lang plant.
-        const durLabel = s.duration == null
-          ? '—'
-          : (s.duration_label || s.duration) + ' Min'
-            + (s.therapiezeit ? ` · davon ${s.therapiezeit} Min am Patienten` : '');
-        const durChip = s.locked
-          ? `<span class="srv-chip srv-chip-locked">${lockSvg}${escapeHtml(durLabel)}</span>`
-          : `<span class="srv-chip srv-chip-flex">${escapeHtml(durLabel)}</span>`;
-
-        const displayPrice = configured ? parseFloat(existing.price || s.price) : s.price;
-        const priceChip = configured
-          ? `<span class="srv-chip srv-chip-gkv">${checkSvg}${formatEur(displayPrice)}</span>`
-          : `<span class="srv-chip srv-chip-gkv">GKV ${formatEur(s.price)}${hasRange ? ` (${formatEur(s.price_min)}–${formatEur(s.price_max)})` : ''}</span>`;
-
-        const empNames = configured
-          ? (existing.employee_services || []).map(es => {
-              const m = teamMembers.find(tm => tm.id === es.employee_id);
-              return m ? (m.business_name || m.email?.split('@')[0]) : null;
-            }).filter(Boolean).join(', ')
-          : null;
-
-        const empRow = configured
-          ? `<div class="service-meta service-emps" style="margin-top:0;padding-top:6px;border-top:1px dashed var(--border);">
-               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px;color:var(--text-muted);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-               ${escapeHtml(empNames || '— Alle Mitarbeiter')}
-             </div>`
-          : '';
-
-        // Auch nach dem Einrichten sichtbar: die Hinweise tragen Abrechnungs-
-        // regeln (Höchstmengen, Ausschlüsse), die dauerhaft gelten.
-        const hinweis = s.hinweis
-          ? `<div class="gkv-hinweis">${infoSvg}${escapeHtml(s.hinweis)}</div>`
-          : '';
-
-        const actionBtn = configured
-          ? `<button class="btn-gkv-edit" data-gkv="${escapeHtml(s.code)}">Bearbeiten</button>`
-          : `<button class="btn-gkv-setup" data-gkv="${escapeHtml(s.code)}">+ Einrichten</button>`;
-
-        return `
-          <div class="service-card gkv-catalog-card${configured ? ' gkv-configured' : ''}">
-            <div class="service-card-head">
-              <div class="service-title">${escapeHtml(s.title)}</div>
-              <span class="gkv-pos-badge">${escapeHtml(s.code)}</span>
-            </div>
-            <div class="gkv-kuerzel">${escapeHtml(s.kuerzel)}</div>
-            <div class="srv-chip-row">${durChip}${priceChip}</div>
-            ${empRow}
-            ${hinweis}
-            <div class="gkv-card-action">${actionBtn}</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-
-  section.querySelectorAll('[data-gkv]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      openGkvEditForm(btn.dataset.gkv);
-    });
+  renderGkvKatalog({
+    container: document.getElementById('gkvCatalogSection'),
+    dividerEl: document.getElementById('privatSrvDivider'),
+    katalog: GKV_LEISTUNGSKATALOG[getSector()] || [],
+    leistungen: servicesCache,
+    formatEur,
+    onEinrichten: (code) => openGkvEditForm(code),
   });
-
-  if (divider) divider.hidden = false;
 }
+
 
 function renderGkvEmpCheckboxes() {
   const container = document.getElementById('gkvEmpCheckboxes');
@@ -10040,6 +9914,8 @@ function openGkvEditForm(catalogCode) {
   document.getElementById('gkvFormCode').textContent = entry.code;
   document.getElementById('gkvFormKuerzel').textContent = entry.kuerzel;
   document.getElementById('gkvFormDur').textContent = entry.duration != null ? (entry.duration_label || entry.duration) + ' Min' : '—';
+
+  gkvFarbwahl().setze(existing?.color);
 
   const priceInput = document.getElementById('gkvFormPrice');
   const priceHint = document.getElementById('gkvPriceRange');
@@ -10122,6 +9998,7 @@ document.getElementById('gkvFormSave').addEventListener('click', async () => {
     price: price.toString(),
     price_config: null,
     is_internal: false,
+    color: document.getElementById('gkvFormColor').value || '#22c55e',
   };
 
   if (serviceId) {
@@ -10143,86 +10020,34 @@ document.getElementById('gkvFormSave').addEventListener('click', async () => {
   await loadServices();
 });
 
+// Die Leistungsuebersicht steht in module/leistungen-liste.js — Tabelle statt
+// Kachelwand, gruppiert nach Kostentraegertyp. Hier bleibt die Bruecke.
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
   // Ohne Guard riss ein fehlendes Grid die ganze loadServices()-Kette mit —
   // inklusive der Aufrufer, die nur die Daten und gar kein Rendering brauchen.
   if (!grid) return;
-  const addCard = `<div class="service-card add-service-card" id="addServiceCard">
-      <div class="add-service-icon">+</div>
-      <div class="add-service-label">Neue Dienstleistung</div>
-    </div>`;
-  if (!servicesCache.length) { grid.innerHTML = addCard; bindAddServiceCard(); return; }
-  grid.innerHTML = servicesCache.map(s => {
-    const empNames = (s.employee_services || []).map(es => {
-      const m = teamMembers.find(tm => tm.id === es.employee_id);
-      return m ? (m.business_name || m.email?.split('@')[0]) : null;
-    }).filter(Boolean).join(', ');
-
-    // Build duration chips from price_config or fall back to legacy duration_minutes
-    let durChips = '';
-    const cfg = s.price_config?.durations;
-    if (cfg) {
-      const active = Object.entries(cfg)
-        .filter(([_, v]) => v && v.active)
-        .map(([k, v]) => ({ min: parseInt(k), price: v.price }))
-        .sort((a, b) => a.min - b.min);
-      durChips = active.length
-        ? active.map(d => `<span class="srv-chip">${d.min} Min${d.price != null ? ' · ' + formatEur(d.price) : ''}</span>`).join('')
-        : '<span class="srv-chip srv-chip-warn">Keine aktive Dauer</span>';
-    } else {
-      const pr = s.price != null ? ' · ' + formatEur(s.price) : '';
-      durChips = `<span class="srv-chip">${s.duration_minutes || '–'} Min${pr}</span>`;
-    }
-
-    const codeTag = s.code ? `<span class="srv-code-badge">${escapeHtml(s.code)}</span>` : '';
-    const gkvPrice = s.gkv_position_nr ? GKV_PRICES[s.gkv_position_nr] : null;
-    const privatPrice = s.price != null ? parseFloat(s.price) : null;
-    const priceInfo = gkvPrice
-      ? `<span style="font-size:11px;color:var(--text-muted);">GKV: <b style="color:#60a5fa;">€${gkvPrice.toFixed(2).replace('.',',')} </b> | Privat: <b style="color:var(--accent,#b1891b);">€${privatPrice != null ? privatPrice.toFixed(2).replace('.',',') : '—'}</b></span>`
-      : privatPrice != null
-        ? `<span style="font-size:11px;color:var(--text-muted);">Privat: <b style="color:var(--accent,#b1891b);">€${privatPrice.toFixed(2).replace('.',',')}</b></span>`
-        : '';
-    return `<div class="service-card" data-srv-id="${s.id}">
-      <div class="service-card-head">
-        <div class="service-title">${escapeHtml(s.title)} ${codeTag}</div>
-        <button class="srv-del-btn" data-srv-del="${s.id}" title="Löschen" aria-label="Löschen">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-      </div>
-      <div class="srv-chip-row">${durChips}</div>
-      ${priceInfo ? `<div class="service-meta" style="margin-top:4px;">${priceInfo}</div>` : ''}
-      <div class="service-meta service-emps">${empNames ? '<span class="svg-icon" style="width:13px;height:13px;display:inline-flex;vertical-align:-2px;margin-right:4px;color:var(--text-muted);">' + ICON.users + '</span>' + escapeHtml(empNames) : '— Alle Mitarbeiter'}</div>
-    </div>`;
-  }).join('') + addCard;
-  grid.querySelectorAll('.service-card[data-srv-id]').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('[data-srv-del]')) return;
-      openServiceEdit(card.dataset.srvId);
-    });
-  });
-  grid.querySelectorAll('[data-srv-del]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
+  renderLeistungenListe({
+    container: grid,
+    leistungen: servicesCache,
+    teamMembers,
+    formatEur,
+    onNeu: () => {
+      resetServiceForm();
+      const form = document.getElementById('addServiceForm');
+      form.hidden = false;
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    onBearbeiten: (id) => openServiceEdit(id),
+    onLoeschen: async (id) => {
       const ok = await showConfirmModal({ title: 'Dienstleistung löschen', message: t('alert_service_delete'), confirmText: 'Löschen', cancelText: 'Abbrechen', variant: 'danger' });
       if (!ok) return;
-      await supabase.from('services').delete().eq('id', btn.dataset.srvDel);
+      await supabase.from('services').delete().eq('id', id);
       await loadServices();
-    });
+    },
   });
-  bindAddServiceCard();
 }
 
-function bindAddServiceCard() {
-  const card = document.getElementById('addServiceCard');
-  if (!card) return;
-  card.addEventListener('click', () => {
-    resetServiceForm();
-    const form = document.getElementById('addServiceForm');
-    form.hidden = false;
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-}
 
 function resetServiceForm() {
   const form = document.getElementById('addServiceForm');
@@ -10232,6 +10057,8 @@ function resetServiceForm() {
   document.getElementById('srvTitle').value = '';
   document.getElementById('srvCode').value = '';
   document.getElementById('srvGkvPosition').value = '';
+  document.getElementById('srvKostentraegerTyp').value = '';
+  document.getElementById('srvKostentraegerRow').hidden = !spalteKostentraegerDa();
   document.getElementById('srvDur').value = '30';
   document.getElementById('srvPrice').value = '0';
   document.getElementById('srvEmpAll').checked = true;
@@ -10240,9 +10067,18 @@ function resetServiceForm() {
   // Unified: always use duration cards for every sector
   document.getElementById('srvStandardFields').hidden = true;
   document.getElementById('srvPhysioFields').hidden = false;
-  document.getElementById('srvStandardColorRow').hidden = true;
+  srvFarbwahl().setze('#22c55e');
   renderPhysioServiceCards();
 }
+
+const gkvFarbwahl = () => farbwahlFuer('gkv', { behaelter: document.getElementById('gkvFarbfelder'), eingabe: document.getElementById('gkvFormColor'), farben: LEISTUNG_FARBEN });
+
+function spalteKostentraegerDa() {
+  return servicesCache.some(s => Object.prototype.hasOwnProperty.call(s, 'kostentraeger_typ'));
+}
+
+// Die Farbfelder werden einmal gebaut und danach nur noch gesetzt.
+const srvFarbwahl = () => farbwahlFuer('srv', { behaelter: document.getElementById('srvFarbfelder'), eingabe: document.getElementById('srvColor'), farben: LEISTUNG_FARBEN });
 
 function openServiceEdit(id) {
   const s = servicesCache.find(x => x.id === id);
@@ -10254,6 +10090,8 @@ function openServiceEdit(id) {
   document.getElementById('srvEditId').value = s.id;
   document.getElementById('srvTitle').value = s.title;
   document.getElementById('srvCode').value = s.code || '';
+  srvFarbwahl().setze(s.color);
+  document.getElementById('srvKostentraegerTyp').value = s.kostentraeger_typ || '';
 
   // If price_config exists, use it. Otherwise build one from legacy duration_minutes+price.
   let durations = s.price_config?.durations;
@@ -10374,12 +10212,19 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     gkv_position_nr: document.getElementById('srvGkvPosition').value || null,
     price_config: { durations },
     duration_minutes: activeDurs[0].minutes,
-    price: activeDurs[0].price
+    price: activeDurs[0].price,
+    color: document.getElementById('srvColor').value || '#22c55e'
   };
+  // Die Spalte kommt erst mit sql-melih/2026-08-25-kostentraeger-typ.sql. Vorher
+  // wuerde PostgREST das ganze INSERT/UPDATE abweisen und das Speichern einer
+  // Leistung waere kaputt. loadServices() liest mit select('*') — kennt der
+  // geladene Datensatz den Schluessel, gibt es die Spalte.
+  if (spalteKostentraegerDa()) {
+    payload.kostentraeger_typ = document.getElementById('srvKostentraegerTyp').value || null;
+  }
 
   if (mode === 'edit') {
     const editId = document.getElementById('srvEditId').value;
-    console.log('[srvSave] editing service', editId, payload);
     const { error } = await supabase.from('services').update(payload).eq('id', editId);
     if (error) { console.error('[srvSave] update error:', error); showToast(t('err_generic'), 'error'); return; }
     await supabase.from('employee_services').delete().eq('service_id', editId);
@@ -10390,7 +10235,6 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
   } else {
     const ownerId = getOwnerId();
     const userId = currentSession.user.id;
-    console.log('[srvSave] creating new service', { owner_id: ownerId, user_id: userId, ...payload });
     const insertPayload = { owner_id: ownerId, user_id: userId, ...payload };
     if (currentBusiness?.id) insertPayload.business_id = currentBusiness.id;
     const { data: srv, error } = await supabase.from('services').insert(insertPayload).select().single();
@@ -10886,9 +10730,7 @@ async function loadTeam() {
   if (activePanel === 'calendar') {
     renderCalEmpList();
     renderCalEmpChips();
-    if (calendarView === 'day') {
-      try { await renderDayView(toISODate(dayViewDate)); } catch (e) {}
-    }
+    try { await renderCalendarView(); } catch (e) {}
   }
 
   // Hide owner-only elements for employees

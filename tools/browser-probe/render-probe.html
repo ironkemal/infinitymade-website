@@ -1,0 +1,106 @@
+<!doctype html>
+<!-- Nur zum Pruefen. Ruft die neuen Renderer mit erfundenen Daten auf, damit
+     Wochenraster, Monatskacheln und Leistungstabelle ohne Login pruefbar sind.
+     Wird nach der Messung geloescht. -->
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Render-Probe</title>
+</head>
+<body>
+  <div class="week-view-grid" id="weekViewGrid" style="display:flex;">
+    <div class="dv-time-col" id="wvTimeCol"></div>
+    <div class="dv-cols-wrap" id="wvColsWrap"></div>
+  </div>
+  <div class="month-grid-wrap"><div class="month-grid-header" id="monthGridHeader"></div><div class="month-grid" id="monthGrid"></div></div>
+  <div id="servicesGrid"></div>
+  <div id="gkvCatalogSection"></div>
+  <div id="privatSrvDivider" hidden></div>
+
+<script type="module">
+import { renderWoche } from '../../module/kalender-woche.js';
+import { renderMonat } from '../../module/kalender-monat.js';
+import { renderLeistungenListe, renderGkvKatalog } from '../../module/leistungen-liste.js';
+import { terminFarben } from '../../module/kalender-farben.js';
+import { verdrahteKontextmenue } from '../../module/kalender-kontextmenue.js';
+
+const TEAM = [{ id: 'e1', business_name: 'Anna' }, { id: 'e2', business_name: 'Bert' }];
+const EMP_COLORS = ['#22c55e', '#3b82f6'];
+const heute = new Date('2026-08-26T00:00:00');
+const tagISO = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+const TERMINE = [
+  { id: 'b1', user_id: 'e1', service_id: 's1', status: 'confirmed',
+    start_time: `${tagISO(heute)}T09:00:00`, end_time: `${tagISO(heute)}T09:30:00`,
+    customer_name: 'Testpatient', services: { title: 'Komplexbehandlung', color: '#ef4444' } },
+  { id: 'b2', user_id: 'e2', service_id: 's2', status: 'confirmed',
+    start_time: `${tagISO(heute)}T11:20:00`, end_time: `${tagISO(heute)}T12:00:00`,
+    customer_name: 'Zweiter', services: { title: 'Pause', color: '#94a3b8', code: 'BLOCK_PAUSE', is_internal: true } },
+];
+
+// Kleinster Ersatz fuer supabase: jede Kette endet bei denselben Daten.
+const fakeSupabase = { from() { return this; }, select() { return this; }, eq() { return this; },
+  gte() { return this; }, lte() { return this; }, in() { return this; },
+  neq() { return Promise.resolve({ data: TERMINE }); } };
+
+const ereignisse = [];
+
+await renderWoche({
+  supabase: fakeSupabase, dateStr: tagISO(heute), ownerId: 'o1',
+  teamMembers: TEAM, calEmpFilter: 'all',
+  farbeFuer: (b) => terminFarben(b, { teamMembers: TEAM, empFarben: EMP_COLORS }),
+  moveAktiv: false,
+  onSlotDoppelklick: (d) => ereignisse.push({ was: 'woche-dblclick', ...d }),
+  onTerminKlick: (b) => ereignisse.push({ was: 'woche-termin', id: b.id }),
+  setzeDatumsLabel: () => {},
+});
+
+await renderMonat({
+  supabase: fakeSupabase, year: 2026, month: 7, ownerId: 'o1',
+  teamMembers: TEAM, calEmpFilter: 'all',
+  farbeFuer: (b) => terminFarben(b, { teamMembers: TEAM, empFarben: EMP_COLORS }),
+  onTagEinfachklick: () => ereignisse.push({ was: 'monat-klick' }),
+  onTagDoppelklick: (d) => ereignisse.push({ was: 'monat-dblclick', ...d }),
+  onTerminKlick: (b) => ereignisse.push({ was: 'monat-termin', id: b.id }),
+  setzeDatumsLabel: () => {},
+});
+
+renderLeistungenListe({
+  container: document.getElementById('servicesGrid'),
+  leistungen: [
+    { id: 's1', title: 'Komplexbehandlung', code: 'PK', gkv_position_nr: '78010', color: '#ef4444', duration_minutes: 30, price: '38.50' },
+    { id: 's2', title: 'Pause', code: 'BLOCK_PAUSE', is_internal: true, color: '#94a3b8', duration_minutes: 30 },
+    { id: 's3', title: 'Beratung', color: '#3b82f6', duration_minutes: 20, price: '25' },
+    { id: 's4', title: 'BG-Behandlung', kostentraeger_typ: 'bg', color: '#a855f7', duration_minutes: 30, price: '40' },
+  ],
+  teamMembers: TEAM,
+  formatEur: (v) => '€' + Number(v).toFixed(2),
+  onBearbeiten: (id) => ereignisse.push({ was: 'leistung-bearbeiten', id }),
+  onLoeschen: (id) => ereignisse.push({ was: 'leistung-loeschen', id }),
+  onNeu: () => ereignisse.push({ was: 'leistung-neu' }),
+});
+
+renderGkvKatalog({
+  container: document.getElementById('gkvCatalogSection'),
+  dividerEl: document.getElementById('privatSrvDivider'),
+  katalog: [
+    { code: '78010', title: 'Podologische Behandlung', kuerzel: 'PB', duration: 30, price: 38.5, price_min: 38.5, price_max: 38.5, hinweis: 'Höchstmenge beachten' },
+    { code: '78020', title: 'Komplexbehandlung gross', kuerzel: 'PKG', duration: 45, price: 55, price_min: 50, price_max: 60 },
+  ],
+  leistungen: [{ id: 's1', gkv_position_nr: '78010', price: '38.50' }],
+  formatEur: (v) => '€' + Number(v).toFixed(2),
+  onEinrichten: (c) => ereignisse.push({ was: 'gkv-einrichten', code: c }),
+});
+
+verdrahteKontextmenue({
+  wahrgenommen: () => ereignisse.push({ was: 'menue-wahrgenommen' }),
+  nichtErschienen: () => {}, verschieben: () => {}, absagen: () => {},
+  oeffnen: () => ereignisse.push({ was: 'menue-oeffnen' }),
+});
+
+window.__ereignisse = ereignisse;
+document.title = 'fertig';
+</script>
+</body>
+</html>

@@ -1412,13 +1412,26 @@ textarea {
   padding: 18px;
 }
 
+.cal-emp-leiste {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cal-emp-leiste > #calAddLeaveBtn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .cal-emp-chips {
   display: flex;
   gap: 10px;
   overflow-x: auto;
   padding: 6px 2px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--border);
+  flex: 1;
+  min-width: 0;
   scrollbar-width: none;
 }
 .cal-emp-chips::-webkit-scrollbar {
@@ -1725,7 +1738,10 @@ textarea {
 .cal-view-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Vorher space-between: die Pfeile klebten links, die Tabs rechts, quer ueber
+     die volle Panelbreite. Dazwischen lag der Mausweg, den die Praxis gemeldet
+     hat. */
+  justify-content: flex-start;
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
@@ -1780,6 +1796,38 @@ textarea {
   border-radius: var(--radius);
   overflow: hidden;
   overflow-x: auto;
+}
+
+/* Die Wochenansicht teilt sich `.dv-slot` mit der Tagesansicht, rechnet aber
+   mit der halben Zeilenhöhe (sieben Spalten statt einer je Mitarbeiter).
+   Ohne diese Regel ist die Zeitleiste links doppelt so lang wie ihr Inhalt und
+   die angezeigte Uhrzeit gehört zu keinem Terminblock.
+   Gegenstück: WV_SLOT_PX in module/kalender-raster.js — beide Zahlen wandern
+   nur gemeinsam. */
+.week-view-grid .dv-slot {
+  height: 28px;
+  /* Ohne das markiert der Doppelklick auf ein Rasterfeld die Uhrzeit daneben. */
+  user-select: none;
+}
+
+/* Träger der Rasterfelder einer Tagesspalte. Die Felder liegen im normalen
+   Fluss und geben die Höhe vor, die Terminblöcke schweben absolut darüber. */
+.wv-col-slots {
+  position: relative;
+}
+
+.wv-booking-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border-left: 3px solid var(--primary);
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--text-main);
+  overflow: hidden;
+  cursor: pointer;
 }
 
 .dv-time-col {
@@ -3444,14 +3492,10 @@ textarea {
 }
 
 .my-booking-link {
-  display: none;
+  display: none;   /* showMyBookingLink() setzt flex */
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin: 0 24px 16px;
+  gap: 6px;
+  margin-left: auto;
 }
 
 .my-booking-label {
@@ -7258,6 +7302,9 @@ textarea:focus-visible,
   transition: background 0.1s;
   background: var(--bg-card-solid);
   border: 1px solid transparent;
+  /* Der Doppelklick legt hier einen Termin an — ohne das markiert er die
+     Tageszahl. */
+  user-select: none;
 }
 .month-cell:hover { border-color: var(--border); }
 .month-cell--today { border-color: var(--primary) !important; }
@@ -7593,4 +7640,388 @@ textarea:focus-visible,
   margin: 20px 0 8px;
   font-size: 14px;
   color: var(--text-main);
+}
+
+/* ── Kontextmenü auf Terminen ──────────────────────────────────────────────
+   Gehört zu module/kalender-kontextmenue.js. Hängt an <body> und nicht im
+   Kalender, sonst schneidet dessen `overflow: hidden` es ab.
+   z-index bewusst unter 1000 (.modal-overlay): das Menü schliesst, bevor ein
+   Dialog aufgeht — es soll nie über einem liegen. */
+.kal-kontextmenue {
+  position: fixed;
+  z-index: 900;
+  min-width: 214px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+.kal-kontextmenue-eintrag {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  text-align: left;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.kal-kontextmenue-eintrag:hover:not(:disabled),
+.kal-kontextmenue-eintrag:focus-visible {
+  background: var(--bg-card);
+  outline: none;
+}
+
+/* Nicht ausblenden, nur abblenden: ein Menü, dessen Einträge je nach Termin
+   die Plätze tauschen, trifft man nicht mehr blind. */
+.kal-kontextmenue-eintrag:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.kal-kontextmenue-eintrag--gefahr {
+  color: var(--danger);
+}
+
+.kal-kontextmenue-trenner {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+}
+
+/* ── Farbwahl in der Leistungsmaske ────────────────────────────────────────
+   Gehört zu module/leistung-farbwahl.js. Die acht Vorschläge sind Datenfarben
+   (sie landen in services.color), deshalb hier bewusst keine Theme-Variablen —
+   Rahmen und Fokus dagegen schon. */
+.srv-farbwahl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.srv-farbfelder {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.srv-farbfeld {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.srv-farbfeld:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Der Rahmen sitzt aussen, damit die Farbe selbst nicht kleiner wird. */
+.srv-farbfeld--aktiv {
+  border-color: var(--text-main);
+  box-shadow: 0 0 0 2px var(--bg-card-solid) inset;
+}
+
+.srv-farbe-eigen {
+  width: 42px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card-solid);
+  cursor: pointer;
+}
+
+/* Zeigt in der Leistungsübersicht, welche Farbe die Leistung im Kalender hat.
+   Ohne das müsste man jede Leistung öffnen, um die Farbe zu sehen. */
+.srv-farbpunkt {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: baseline;
+  flex-shrink: 0;
+}
+
+/* ── "Mehr Optionen" in der Terminmaske ────────────────────────────────────
+   Notizen, Serientermin und Hausbesuch waren immer sichtbar. Für den häufigen
+   Fall — Patient, Leistung, Zeit — war die Maske dadurch dreimal so lang wie
+   nötig. <details> statt eigener Klapp-Logik: Tastatur und Vorlesesoftware
+   können das von Haus aus. */
+.bk-mehr {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.bk-mehr-titel {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 6px 2px;
+  list-style: none;
+  user-select: none;
+}
+
+.bk-mehr-titel::-webkit-details-marker {
+  display: none;
+}
+
+.bk-mehr-titel::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.15s ease;
+}
+
+.bk-mehr[open] > .bk-mehr-titel::before {
+  transform: rotate(90deg);
+}
+
+.bk-mehr-titel:hover {
+  color: var(--text-main);
+}
+
+/* ── Blocker-Schnellwahl in der Terminmaske ────────────────────────────────
+   module/kalender-blocker.js. Bewusst unauffällig: der Normalfall ist der
+   Patiententermin, nicht die Pause. */
+.bk-blocker-zeile {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bk-blocker-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card-solid);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bk-blocker-btn:hover {
+  color: var(--text-main);
+}
+
+.bk-blocker-btn--aktiv {
+  color: var(--text-main);
+  border-color: var(--text-muted);
+}
+
+.bk-blocker-btn--zurueck {
+  margin-left: auto;
+}
+
+/* Blocker im Kalender: schraffiert, damit ein zugeklebter Tag nicht nach
+   Umsatz aussieht. */
+.dv-booking-block--blocker,
+.wv-booking-block--blocker {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 6px,
+    rgba(148, 163, 184, 0.25) 6px 12px
+  );
+}
+
+/* Im Blockermodus sind Patient, Telefon, Verordnung und Gruppe gegenstandslos.
+   Über eine Klasse statt einzelner hidden-Flags — sonst müsste man sich beim
+   Zurückschalten merken, was vorher schon verborgen war. */
+.bk-blocker-modus #bkCustomerGroup,
+.bk-blocker-modus #bkPhoneGroup,
+.bk-blocker-modus #bkVerordnungSection,
+.bk-blocker-modus #bkGroupBlock {
+  display: none !important;
+}
+
+/* Kompaktere Abstände in der Grundmaske des Termindialogs. Bewusst nur dort und
+   nicht an .form-group global — sonst ändert sich jede Maske im Produkt. */
+#bookingModal .modal-body > .form-group {
+  margin-bottom: 10px;
+}
+
+#bookingModal .modal-body > .form-row {
+  margin-bottom: 10px;
+}
+
+#bookingModal .form-label {
+  margin-bottom: 3px;
+}
+
+/* ── Leistungsübersicht als Tabelle ────────────────────────────────────────
+   module/leistungen-liste.js. Ersetzt die Kachelwand; gruppiert nach
+   Kostenträgertyp (GKV · Privat · Selbstzahler · BG · Intern). */
+.srv-liste-kopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.srv-liste-anzahl {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+
+.srv-leer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.srv-gruppe {
+  margin-bottom: 22px;
+}
+
+.srv-gruppe-kopf {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.srv-gruppe-kopf h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.srv-gruppe-hinweis {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: auto;
+}
+
+.srv-gruppe-zahl {
+  font-size: 11px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+/* Die Tabelle darf schmal werden, ohne die Seite waagerecht zu schieben —
+   sie scrollt in ihrem eigenen Kasten. */
+.srv-gruppe {
+  overflow-x: auto;
+}
+
+.srv-tabelle {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.srv-tabelle th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.srv-tabelle td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.srv-tabelle tbody tr {
+  cursor: pointer;
+}
+
+.srv-tabelle tbody tr:hover,
+.srv-tabelle tbody tr:focus-visible {
+  background: var(--bg-card-solid);
+  outline: none;
+}
+
+.srv-td-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.srv-td-emp {
+  color: var(--text-muted);
+  max-width: 220px;
+}
+
+.srv-td-akt {
+  width: 1%;
+  text-align: right;
+}
+
+/* „Alle" statt leer: eine leere Zelle liest sich wie „niemand darf das". */
+.srv-alle {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* Nur für Vorlesesoftware sichtbar. */
+.srv-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Hinweis unter dem Anzahl-Feld der Terminmaske. */
+.bk-anzahl-hinweis {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: -4px 0 8px;
+}
+
+/* GKV-Katalog als Tabelle (module/leistungen-liste.js). Der Hinweis steht in
+   einer eigenen Zeile darunter statt in der Karte — er trägt Abrechnungsregeln
+   und bleibt deshalb auch nach dem Einrichten sichtbar. */
+.gkv-hinweis-zeile td {
+  padding-top: 0;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.gkv-zeile--aktiv .srv-td-name::after {
+  content: '✓';
+  margin-left: 8px;
+  color: var(--success, #22c55e);
+  font-weight: 700;
+}
+
+/* Bundeseinheitlich festgelegte Dauer — nicht verhandelbar, also nicht wie ein
+   frei wählbarer Wert aussehen lassen. */
+.gkv-td-fix {
+  color: var(--text-muted);
 }

@@ -1,0 +1,128 @@
+[
+  {
+    "title": "Kalender: Terminanlage & Bedienung wie im Altsystem",
+    "category": "Teknik", "assignee": "Melih", "priority": "hoch",
+    "notes": "Sammelkarte aus der Beta-Rueckmeldung vom 22.08.2026. Die vier Unterpunkte sind auf Branch kalender-ux GEBAUT, aber noch nicht mit echten Daten geprueft. Erst nach dem Durchgang nach .plans/BROWSER-TEST-PROMPT.md schliessen."
+  },
+  {
+    "parent": "Kalender: Terminanlage & Bedienung wie im Altsystem",
+    "title": "Termin per Doppelklick in Wochen- und Monatsansicht anlegen",
+    "category": "Teknik", "assignee": "Melih", "priority": "hoch",
+    "notes": "GEBAUT (module/kalender-woche.js, module/kalender-monat.js).\n\nVorarbeit war ein nie gemeldeter Fehler: die Wochen-Zeitleiste erbte .dv-slot mit 56 px, die Tagesspalten rechneten mit 28 — die Uhrzeit links gehoerte zu keinem Terminblock. Behoben ueber WV_SLOT_PX und eine eigene CSS-Regel; per npm run probe gemessen (beide enden bei 717 px).\n\nNebenbefund mit erledigt: Termine in der Woche hatten cursor:pointer ohne Klick-Zuhoerer.\n\nOffen: Pruefung mit echten Daten."
+  },
+  {
+    "parent": "Kalender: Terminanlage & Bedienung wie im Altsystem",
+    "title": "Termine im Kalender nach Leistung farblich unterscheiden",
+    "category": "Teknik", "assignee": "Melih", "priority": "hoch",
+    "notes": "GEBAUT (module/kalender-farben.js). Flaeche = services.color, linker Rand = Mitarbeiterfarbe. In allen vier Terminrastern, auch im Tagesplan der Uebersicht.\n\nDie eigentliche Sperre war eine andere: services.color existierte seit jeher, aber srvColor war ein type=hidden mit festem Gruen und der Speicherpfad schrieb color gar nicht mit. Jede Leistung war gruen. Neu module/leistung-farbwahl.js mit acht Vorschlagsfarben, in beiden Leistungsmasken.\n\nOffen: pruefen, ob die Farbe nach dem Speichern wirklich erhalten bleibt (Pruefplan K)."
+  },
+  {
+    "parent": "Kalender: Terminanlage & Bedienung wie im Altsystem",
+    "title": "Rechtsklick-Kontextmenue auf Terminen fuer Statuswechsel",
+    "category": "Teknik", "assignee": "Melih", "priority": "hoch",
+    "notes": "GEBAUT (module/kalender-kontextmenue.js). Fuenf Eintraege in allen drei Ansichten, Tastatur und Langdruck auf Touch.\n\nWICHTIG fuer alle, die daran weiterbauen: \"Termin wahrgenommen\" ist NICHT bookings.status = completed. Was Geld wird, ist prescription_sessions.status = done ueber handleTerminStarten(). Ein zweiter Schreibweg erzeugt einen Kalender, der stimmt, und eine Abrechnung, die nie kommt.\n\nBeim Browsertest gefunden und behoben: das Menue ging auf und im selben Wimpernschlag wieder zu, sobald die Seite gescrollt war (das Scroll-Ereignis des Browsers kommt erst nach contextmenu an)."
+  },
+  {
+    "parent": "Kalender: Terminanlage & Bedienung wie im Altsystem",
+    "title": "Schlanker Termindialog + Schnell-Blocker (Pause, Privat, Fortbildung)",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "GEBAUT. Notizen und Serientermin unter \"Mehr Optionen\", Mitarbeiterfeld entfaellt bei Einzelpraxen, Patient steht jetzt vor der Leistung.\n\nBlocker ueber interne Leistungen (services.is_internal, Codes BLOCK_PAUSE / BLOCK_PRIV / BLOCK_FORTB). Bewusst als normaler bookings-Datensatz, damit die Doppelbuchungssperre der Datenbank automatisch greift. Urlaub NICHT dabei — dafuer gibt es \"Abwesenheit eintragen\" (time_offs, tageweise).\n\n⚠️ VORBEDINGUNG, siehe eigene Karte: die Therapeuten-Statistik im Backend filtert is_internal nicht. Der Blocker sollte nicht in Produktion, bevor das nachgezogen ist.\n\nOffen: der Blocker SCHREIBT DATEN und ist ungeprueft."
+  },
+
+  {
+    "title": "Kalender-Header: Navigation und Leisten aufraeumen",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "Sammelkarte. Alle drei Unterpunkte GEBAUT, ungeprueft."
+  },
+  {
+    "parent": "Kalender-Header: Navigation und Leisten aufraeumen",
+    "title": "Datumswahl und Vor-/Zurueck-Pfeile direkt neben die Ansichts-Tabs",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "GEBAUT. Ursache war justify-content: space-between an .cal-view-toolbar — das schob Pfeile und Tabs an die gegenueberliegenden Raender, quer ueber die Panelbreite. Jetzt flex-start."
+  },
+  {
+    "parent": "Kalender-Header: Navigation und Leisten aufraeumen",
+    "title": "Buchungslink als Icon/Button statt ausgeschriebener URL",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "GEBAUT. Die Zeile ueber dem Kalender ist weg, der Kopierknopf sitzt rechts in der Ansichtsleiste, die URL steht im Tooltip. Element-Ids unveraendert, showMyBookingLink() arbeitet weiter."
+  },
+  {
+    "parent": "Kalender-Header: Navigation und Leisten aufraeumen",
+    "title": "Mitarbeiterfilter und 'Abwesenheit eintragen' auf eine Leiste",
+    "category": "Teknik", "assignee": "Melih", "priority": "niedrig",
+    "notes": "GEBAUT. Wichtig beim Nachbauen: der Knopf sitzt AUSSERHALB von .cal-emp-chips, weil der Behaelter waagerecht scrollt — sonst wandert er beim Scrollen mit."
+  },
+
+  {
+    "title": "Heilmittelverordnung 13: mehrere Heilmittel und flexible Mengen",
+    "category": "Podoloji", "assignee": "Melih", "priority": "hoch",
+    "notes": "NICHT GEBAUT — fachlich blockiert, nicht technisch. Positives Feedback ausdruecklich festhalten: ICD-10-Vorschlag, Arztauswahl und das visuelle HMV13-Musterformular funktionieren gut und sollen beim Umbau nicht angefasst werden."
+  },
+  {
+    "parent": "Heilmittelverordnung 13: mehrere Heilmittel und flexible Mengen",
+    "title": "HMV13: '+'-Button fuer mehrere Heilmittel je Verordnung",
+    "category": "Podoloji", "assignee": "Melih", "priority": "hoch",
+    "notes": "Technisch guenstig, fachlich offen.\n\nGuenstig: heilmittel_items jsonb existiert in BEIDEN Verordnungstabellen (db/SCHEMA.sql:1337 und :1698) — keine Migration. Und die Plus-Mechanik gibt es bereits in der Podologie-Maske (Klasse .pod-hm-row in dashboard.js). Nicht neu schreiben.\n\nOFFEN vor der Umsetzung: wie viele Heilmittel darf Muster 13 je Verordnung tragen? Das Limit muss hart im UI stehen, sonst baut die Maske ungueltige Rezepte. Frage an gkv-302."
+  },
+  {
+    "parent": "Heilmittelverordnung 13: mehrere Heilmittel und flexible Mengen",
+    "title": "HMV13: verordnete Menge schnell anpassbar (Hoechstmengen pruefen)",
+    "category": "Podoloji", "assignee": "Melih", "priority": "normal",
+    "notes": "rzAnzahl und rzAnzahlErg sind number-Felder OHNE max. Es fehlt also nicht die Eingabe, sondern die Schnellwahl und die fachliche Grenze.\n\n⚠️ Die genannten Werte (Standard bis 6, Nagelspange bis 8) sind UNBESTAETIGT. In Handbuecher/ und Podoloji/ steht dazu nichts — der Heilmittelkatalog (Anlage 1 HMR) liegt nicht im Repo. Eine falsche Grenze im UI erzeugt Verordnungen, die die Kasse absetzt. Erst von gkv-302 bestaetigen lassen, dann verdrahten."
+  },
+  {
+    "parent": "Heilmittelverordnung 13: mehrere Heilmittel und flexible Mengen",
+    "title": "Bezeichnung 'Podologische Behandlung gross' klaeren",
+    "category": "Podoloji", "assignee": "Melih", "priority": "normal",
+    "notes": "Rueckfrage an die Praxis, nicht raten.\n\nLaut Handbuecher/SPEC-RULES.md Zeile 72 ist 78020 KEIN zweiter Name fuer die Komplexbehandlung, sondern der Fall Komplexbehandlung mit Therapiezeit ueber 20 Minuten; Einzelmassnahmen (Hornhautabtragung, Nagelbearbeitung) sind IMMER 78010. Der Code bildet das bereits ab: POD_HEILMITTEL_KATALOG mit Feld hpnrGross, Ankreuzfeld podHmGross.\n\nUnklar ist, was umbenannt werden soll: die Leistung, die Anzeige im Kalender oder die Bezeichnung auf der Rechnung."
+  },
+
+  {
+    "title": "Menuestruktur und Leistungsverwaltung entwirren",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "Sammelkarte. Beide Unterpunkte GEBAUT, ungeprueft."
+  },
+  {
+    "parent": "Menuestruktur und Leistungsverwaltung entwirren",
+    "title": "'Leistungen' als eigener Hauptmenuepunkt, nicht unter Team",
+    "category": "Teknik", "assignee": "Melih", "priority": "niedrig",
+    "notes": "GEBAUT. Haengt jetzt in allen vier Sektorprofilen unter group 'abrechnung' statt 'team' (nav-registry.js). Keine neue Sidebar-Gruppe noetig, kein neues Icon. REGISTRY_VERSION und Cache-Busting nachgezogen."
+  },
+  {
+    "parent": "Menuestruktur und Leistungsverwaltung entwirren",
+    "title": "Leistungsuebersicht verschlanken + Unterteilung nach Kostentraegertyp",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "GEBAUT (module/leistungen-liste.js). Beide Kachelwaende — eigene Leistungen und GKV-Katalog — sind Tabellen, gruppiert nach GKV / Privat / Selbstzahler / BG / Intern.\n\nDie Spalte services.kostentraeger_typ fehlt noch (eigene Karte). Der Code erkennt das zur Laufzeit: die Liste faellt auf die alte implizite Regel zurueck und das Auswahlfeld blendet sich aus. NICHTS ist kaputt, solange die Migration nicht laeuft — es fehlt nur die Funktion (Selbstzahler und BG sind bis dahin nicht abbildbar)."
+  },
+
+  {
+    "title": "Kompaktmodus verschiebt alle Kalender-Terminbloecke",
+    "category": "Teknik", "assignee": "Melih", "priority": "hoch",
+    "notes": "BESTAETIGT und gemessen (npm run probe, 25.08.2026). Bestand schon vorher.\n\nbody.compact-mode setzt .dv-slot auf height:32px !important (dashboard.css). Die Rasterhoehe steht damit auf 32, waehrend das JavaScript jeden Terminblock, den Verschieben-Geist und die Jetzt-Linie mit DV_SLOT_PX = 56 positioniert. Ein Termin um 09:00 wird auf 112 px gezeichnet, seine Beschriftung steht bei 64 px. Seit 22.08. betrifft es auch die Wochenansicht (dort 28).\n\nDer Modus ist erreichbar und wird gemerkt: Einstellungen, #compactModeToggle, localStorage. Wer ihn einmal einschaltet, hat den Kalender dauerhaft verschoben.\n\nZWEI WEGE — ENTSCHEIDUNG OFFEN:\n(a) klein: .dv-slot aus der Kompaktmodus-Regel nehmen. Der Kalender wird dann nicht mehr dichter, zeichnet aber richtig.\n(b) richtig: Zeilenhoehe als CSS-Variable fuehren und im JS auslesen. Achtung: beim Rendern in einer verborgenen Ansicht liefert getBoundingClientRect 0, es braucht einen Rueckfall auf die Konstante.\n\nBewusst nicht nebenbei geaendert — (a) aendert sichtbar, was der Modus tut."
+  },
+  {
+    "title": "Therapeuten-Statistik: Abfrage laeuft ins Leere und wuerde Blocker mitzaehlen",
+    "category": "Teknik", "assignee": "Melih", "priority": "hoch",
+    "notes": "Zwei Fehler in derselben Abfrage — api-backend/billing/api/statistik.routes.js, Abfrage 8 (Zeile ~147).\n\n1. Sie selektiert employee_id samt profiles-Einbettung. Diese Spalte gibt es in bookings NICHT — es ist user_id. Die Abfrage liefert einen Fehler statt Daten, die Therapeutenliste in den Auswertungen ist dauerhaft leer. Der Kommentar darueber behauptet, das sei am 12.08. behoben worden; der start_time-Teil schon, der Spaltenname nicht.\n\n2. Sie filtert is_internal nicht. Seit dem 25.08. gibt es Blocker (Pause, Privat, Fortbildung) als interne Leistungen in bookings. Sobald Fehler 1 behoben ist, zaehlen sie als geleistete Sitzungen mit.\n\nBeides gehoert in EINEN Fix, sonst repariert man die Statistik und verfaelscht sie im selben Moment. PostgREST kann auf der Einbettung filtern (services!inner mit eq auf services.is_internal = false).\n\nBackend, eigener Deploy-Weg (Docker/Watchtower), nicht ueber Vercel."
+  },
+  {
+    "title": "Migration kostentraeger_typ ausfuehren und Schema-Dump auffrischen",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "Skript liegt fertig: sql-melih/2026-08-25-kostentraeger-typ.sql. Im SQL-Editor des PRODUKT-Projekts (njvuclullotbksskpwgk) ausfuehren, nicht im Ops-Projekt.\n\nDringlichkeit gering: nichts ist kaputt, solange es nicht laeuft (siehe Karte Leistungsuebersicht).\n\nDANACH: db/SCHEMA.sql und db/SCHEMA-RLS.sql neu erzeugen, im selben Commit, samt Datum und letzter Migration im Kopf beider Dateien (Regel aus db/README.md, Tetikleyici \"Schema aktualisieren\"). Am 25.08. war der Supabase-Zugang nicht verfuegbar, deshalb offen."
+  },
+  {
+    "title": "Termin absagen loescht den Datensatz statt weich zu stornieren",
+    "category": "Teknik", "assignee": "Melih", "priority": "normal",
+    "notes": "bkActionDeleteBtn und bkDeleteBtn fragen den Absagegrund ab, schreiben cancellation_reason, bieten ggf. die Ausfallrechnung an — und fuehren dann ein echtes DELETE auf bookings aus. Danach ist nichts rueckgaengig zu machen und es gibt keinen Nachweis, dass es den Termin gab.\n\nSauberer waere status = cancelled: Zeile bleibt, Ausfallrechnung behaelt ihren Bezug, Rueckgaengig wird moeglich, und der Kalender blendet sie ohnehin aus.\n\nBei der Kalenderarbeit am 22.08. bewusst ausgeklammert (Entscheidung D), damit das Kontextmenue keinen zweiten Loeschpfad bekommt. Vor der Umstellung pruefen: Auswertungen, Warteliste (POST /warteliste/match wird beim Loeschen vorab angestossen), Ausfallrechnungen, §302."
+  },
+  {
+    "title": "Zugangsdaten im Klartext in getrackten QA-Skripten",
+    "category": "Güvenlik", "assignee": "Melih", "priority": "hoch",
+    "notes": "scratch_login.py enthaelt E-Mail und Passwort eines echten Kontos im Code. Dasselbe Muster in elf Dateien; davon von git GETRACKT mindestens qa_crawl_clinical.py, qa_crawl_financial.py, qa_crawl_prod.py, qa_demo_prep.py, qa_visual_verify.py, qa_visual_verify2.py, qa_visual_verify3.py.\n\nLaut CLAUDE.md ist dieses Repo OEFFENTLICH. Falls das stimmt, liegt das Passwort eines Kontos mit Zugriff auf Patientendaten offen im Netz — und in der git-Historie bleibt es auch nach dem Loeschen.\n\nIn dieser Reihenfolge:\n1. Passwort aendern — der einzige Schritt, der sofort wirkt.\n2. Pruefen, ob das Repo wirklich public ist und seit wann.\n3. Zugangsdaten in Umgebungsvariablen verschieben (os.environ).\n4. Erst danach ueber Historien-Bereinigung reden.\n\nFuer den Browser-Testdurchgang ohnehin ein frisches Testkonto nehmen."
+  },
+  {
+    "title": "Browser-Testdurchgang mit echten Daten",
+    "category": "Teknik", "assignee": "Melih", "priority": "hoch",
+    "notes": "Sechs Funktionsbloecke auf Branch kalender-ux sind gebaut und maschinell geprueft (npm run probe: 72 Pruefungen, 0 Fehlschlaege), aber NICHT mit echten Daten und angemeldetem Nutzer.\n\nAblauf:\n1. .env.local anlegen — die zwei Werte stehen unter https://app.praxura.de/api/config\n2. node dev_server.cjs\n3. http://localhost:8081/login.html, mit einem TESTKONTO anmelden (nicht dem aus den QA-Skripten)\n4. npm run probe (30 Sekunden, muss gruen sein)\n5. .plans/BROWSER-TEST-PROMPT.md durchgehen, 86 Schritte\n\nDie sechs wichtigsten Schritte, wenn wenig Zeit ist: M52-56 (Blocker + Doppelbuchung wird abgelehnt), P73 (Feldreihenfolge), P74-76 (Anzahl 3 ergibt drei Termine), O70/O75 (Abrechnungsart, Speichern), K39-41 (Farbe bleibt erhalten), Q78-82 (rohe i18n-Schluessel sichtbar?).\n\nMERGE NACH MAIN ERST DANACH — der Blocker schreibt Daten."
+  }
+]
