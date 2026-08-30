@@ -1,6 +1,6 @@
 # Stand — Beta-Rückmeldung Praxis, Branch `kalender-ux`
 
-**Letzte Aktualisierung: 25.08.2026.** Diese Datei ist die Übergabe. Wenn oben
+**Letzte Aktualisierung: 30.08.2026.** Diese Datei ist die Übergabe. Wenn oben
 ein altes Datum steht und seither gearbeitet wurde, dem Inhalt nicht trauen —
 dann lieber `fortschritte/` lesen.
 
@@ -59,9 +59,11 @@ Dafür: `.plans/BROWSER-TEST-PROMPT.md`, 86 Schritte.
    verdichtet er den Kalender nicht mehr). Richtig: Zeilenhöhe als CSS-Variable
    führen und im JS auslesen.
 3. **`ops/.env.ops`** mit dem Service-Role-Key des Ops-Projekts
-   (`farkaejociddtgqkusvm`) — sonst bleiben **21 Ops-Karten** in
-   `/tmp/ops-tasks-kalender.json` liegen. ⚠️ Die Datei liegt in `/tmp` und
-   überlebt keinen Neustart. Wenn sie weg ist, muss sie neu erzeugt werden.
+   (`farkaejociddtgqkusvm`) — sonst bleiben **22 Ops-Karten** liegen. Sie
+   stehen seit 30.08. in `ops/ingest/2026-08-30-kalender-feedback.json`
+   (vorher in `/tmp`, wo sie zwischenzeitlich verlorengingen). Einspielen:
+   `node ops/tools/ingest.mjs --json ops/ingest/2026-08-30-kalender-feedback.json --dry`,
+   dann ohne `--dry`.
 4. **Supabase-Zugang**, damit die Migration laufen und der Schema-Dump
    aufgefrischt werden kann.
 
