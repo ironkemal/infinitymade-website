@@ -325,11 +325,17 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Achtung:** Ohne Team-Zugriff.
 
 ### `pat_fussbefund`
-- **Warum:** Der aktuelle podologische Fußbefund samt Fußkarte. Ersetzt fachlich `fußstatus`.
-- **Seit:** 22.07.2026 · `pat_fussbefund` (Patientenbezug nachgezogen: `pat_fussbefund_lead_fk`, 24.07.)
+- **Warum:** Der podologische Fußbefund samt Fußkarte. Ersetzt fachlich `fußstatus`. Seit 30.08.2026 hält die Tabelle nicht mehr nur den *aktuellen* Befund, sondern seinen **Verlauf**.
+- **Seit:** 22.07.2026 · `pat_fussbefund` (Patientenbezug nachgezogen: `pat_fussbefund_lead_fk`, 24.07.) · Versionierung + Serienfarbe: 30.08.2026 · `pat_fussbefund_versionierung_und_serie`
 - **Status:** aktiv
-- **Wer:** `module/fussbefund.js`, `fussbefund-archiv.js`, `patientenkarte.js`.
-- **Achtung:** Es gab zwei unabhängige Schreibwege auf diese Tabelle (`saveFussbefund` ↔ `fbpSave`) — das war der Musterfall der Kopie-Jagd. Vor jeder neuen Schreibstelle `fonksiyon-ustasi` fragen.
+- **Wer:** `module/fussbefund.js` (einziger Schreibweg), `fussbefund-archiv.js` (nur lesen), `patientenkarte.js` (nur lesen), `api/dsgvo.js`.
+- **Achtung — zwei Achsen, die nie zusammenfallen dürfen:**
+  - `eintrag_id` = **Korrektur**. Derselbe Befund wurde nochmal gespeichert: neue Zeile, `version` + 1, alte Zeile `ist_aktuell = false`. Vorher lief hier ein UPDATE und der Stand von letzter Woche war weg — § 630f BGB verlangt, dass der ursprüngliche Inhalt erkennbar bleibt.
+  - `serie_id` = **Farbgruppe** über Termine hinweg, das was der Podologe als „ein Fußbefund und seine Fortschreibungen" sieht. Wird bei der Übernahme geerbt; ohne Übernahme beginnt eine neue Serie. `serie_farbe` liegt als **Kopie** in der Zeile.
+  - Ein Schlüssel für beides ginge nicht: eine spätere Sitzung setzte sonst die Dokumentation des vergangenen Termins auf `ist_aktuell = false`.
+- **Achtung — Leseregel:** jede lesende Abfragestelle braucht `.eq('ist_aktuell', true)`, sonst erscheint jede Korrektur als eigener Befund. Betrifft Archiv, Patientenkarte und den Termin-Knopf (dort lief vorher `.maybeSingle()`, das mit Versionen gebrochen wäre).
+- **Achtung — Schreibregel:** `version` und `ist_aktuell` vergibt `pat_fussbefund_versionieren_trg`, nicht der Client. Gelöscht wird nur ein Eintrag **als Ganzes** (`.eq('eintrag_id', …)`); eine einzelne Version zu entfernen verwischt eine Korrektur, die letzte zu entfernen macht still eine ältere Fassung wieder gültig.
+- **Achtung:** Es gab zwei unabhängige Schreibwege auf diese Tabelle (`saveFussbefund` ↔ `fbpSave`) — das war der Musterfall der Kopie-Jagd. Seit 27.08.2026 gibt es genau einen. Vor jeder neuen Schreibstelle `fonksiyon-ustasi` fragen: eine zweite Schreibstelle ohne `eintrag_id`-Logik zerreißt den Verlauf still.
 
 ### `fußstatus`
 - **Warum:** Der **alte** Fußbefund aus dem ersten Podologie-Wurf.

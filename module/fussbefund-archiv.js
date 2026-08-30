@@ -102,10 +102,16 @@ export async function renderFussbefundArchiv(deps, leadId, containerId = 'pdFuss
 
   // Nur die Spalten, die das Archiv zeigt. `befund` ist jsonb und kann groß
   // werden — für eine Liste reicht es, aber es wird nichts darüber hinaus geholt.
+  //
+  // `ist_aktuell` ist Pflicht (seit der Versionierung 30.08.2026): ohne den
+  // Filter erschiene jede Korrektur als eigener Befund und das Archiv zählte
+  // fünf Fußbefunde, wo es einen mit fünf Fassungen gibt. Der Verlauf gehört
+  // ins Fußbefund-Modul, das Archiv ist die Übersicht.
   const { data, error } = await deps.supabase
     .from('pat_fussbefund')
-    .select('id, erstellt_am, befund, markierungen, notiz, booking_id')
+    .select('id, erstellt_am, befund, markierungen, notiz, booking_id, serie_farbe')
     .eq('lead_id', leadId)
+    .eq('ist_aktuell', true)
     .order('erstellt_am', { ascending: false });
 
   if (error) {
@@ -141,7 +147,11 @@ export async function renderFussbefundArchiv(deps, leadId, containerId = 'pdFuss
       '<tr class="pd-fb-zeile" data-befund="' + esc(row.id) + '" tabindex="0" role="button" ' +
       '    style="cursor:pointer;border-bottom:1px solid var(--border);" ' +
       '    title="Öffnen im Fußbefund-Modul">' +
+        // Derselbe Farbpunkt wie im Fußbefund-Modul: gleiche Farbe = dieselbe
+        // Serie. Ohne ihn stünden hier zusammenhanglose Daten untereinander.
         '<td style="padding:9px 10px;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;">' +
+          '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;' +
+          'background:' + esc(row.serie_farbe || '#2563eb') + ';" title="Befundserie"></span>' +
           datumDe(row.erstellt_am) +
         '</td>' +
         '<td style="padding:9px 10px;">' +

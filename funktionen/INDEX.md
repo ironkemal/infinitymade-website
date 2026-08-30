@@ -3,7 +3,7 @@
 > Üretim: 2026-08-30 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**1737 fonksiyon** · 168 dosya · 39 sidebar modülü
+**1744 fonksiyon** · 168 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -81,7 +81,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `ensureCompanyCode()` — [dashboard.js:13693](dashboard.js#L13693-L13699) · 7 satır · profiles:update
 - `ensureBookingSlug()` — [dashboard.js:13710](dashboard.js#L13710-L13723) · 14 satır · profiles:update
 - `init()` — [kalender.js:140](kalender.js#L140-L191) · 52 satır · profiles:update
-- `renderLegendeSettings()` — [module/fussbefund.js:1381](module/fussbefund.js#L1381-L1445) · 65 satır · profiles:update
+- `renderLegendeSettings()` — [module/fussbefund.js:1633](module/fussbefund.js#L1633-L1697) · 65 satır · profiles:update
 - `loadProfile()` — [onboarding.js:115](onboarding.js#L115-L173) · 59 satır · profiles:insert
 - `bindBusiness()` — [onboarding.js:388](onboarding.js#L388-L450) · 63 satır · profiles:update
 - `bindBilling()` — [onboarding.js:453](onboarding.js#L453-L513) · 61 satır · profiles:update
@@ -348,7 +348,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 
 ## Aynı ada sahip birden fazla tanım
 
-- `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:8 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:830 · module/abrechnungsstatus.js:390 · module/diagnosegruppen-regeln.js:30 · module/fussbefund.js:121 · module/kalender-raster.js:24 · module/kalender-woche.js:38 · module/leistung-farbwahl.js:25 · module/leistungen-liste.js:28 · module/termin-aktionen.js:37 · module/termin-druck.js:27
+- `escapeHtml` — admin.js:61 · api-backend/billing/pdf/ausfallrechnung.template.js:11 · api-backend/billing/pdf/begleitzettel.template.js:8 · api-backend/billing/pdf/rechnung.template.js:6 · api-backend/billing/pdf/rezeptvorderseite.template.js:6 · api-backend/billing/pdf/rzg-quittung.template.js:6 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:9 · dashboard.js:830 · module/abrechnungsstatus.js:390 · module/diagnosegruppen-regeln.js:30 · module/fussbefund.js:179 · module/kalender-raster.js:24 · module/kalender-woche.js:38 · module/leistung-farbwahl.js:25 · module/leistungen-liste.js:28 · module/termin-aktionen.js:37 · module/termin-druck.js:27
 - `fmt` — dashboard.js:3802 · dashboard.js:8655 · dashboard.js:10632 · dashboard.js:10921 · dashboard.js:10999 · dashboard.js:14716 · dashboard.js:15123 · dashboard.js:22531 · dashboard.js:22617 · dashboard.js:22695 · dashboard.js:22727 · dashboard.js:22787 · module/kalender-raster.js:71
 - `esc` — api-backend/billing/pdf/mahnung.template.js:4 · arzt-suche.js:34 · katalog-suche.js:86 · katalog-suche.js:98 · module/abrechnung-freigabe.js:112 · module/arzt-register.js:125 · module/krankenkasse-suche.js:160 · module/patienten-einwilligung.js:58 · module/patientenkarte.js:42 · module/verordnung-uebersicht.js:91 · module/zuzahlung-befreiung.js:261 · ops/app.js:51
 - `fmtDate` — api-backend/billing/dta/encoding.js:47 · api-backend/billing/pdf/ausfallrechnung.template.js:19 · api-backend/billing/pdf/begleitzettel.template.js:13 · api-backend/billing/pdf/mahnung.template.js:6 · api-backend/billing/pdf/rechnung.template.js:11 · api-backend/billing/pdf/rezeptvorderseite.template.js:10 · api-backend/billing/pdf/rzg-quittung.template.js:11 · api-backend/billing/pdf/zuzahlungsrechnung.template.js:14 · dashboard.js:1338 · ops/app.js:84
@@ -376,7 +376,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `q` — booking-request.js:84 · dashboard.js:20674 · script.js:751
 - `loadTeam` — booking-request.js:517 · dashboard.js:10669 · kalender.js:194
 - `initCalendar` — booking-request.js:566 · dashboard.js:2518 · kalender.js:244
-- `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:577
+- `speichern` — cookie-consent.js:69 · module/arzt-register.js:292 · module/fussbefund.js:679
 - `onEsc` — dashboard.js:7226 · module/rechnung-leistung-picker.js:42 · module/zuzahlung-befreiung.js:155
 - `norm` — dashboard.js:17873 · module/arzt-register.js:470 · ops/tools/regroup.mjs:59
 - `reload` — ops/board.js:840 · ops/finance.js:1602 · ops/wissen.js:170

@@ -38,11 +38,45 @@
  *    entsteht nebenbei der Verlauf, den die Kasse bei einer Prüfung sehen will.
  *    `uebernommen_von` hält nur fest, woher kopiert wurde.
  *
+ * Was sich am 30.08.2026 geändert hat — Versionen statt Überschreiben
+ * ───────────────────────────────────────────────────────────────────
+ * Punkt 3 galt nur für den Weg „neuer Termin". Wurde dagegen ein bereits
+ * gespeicherter Befund nochmal gespeichert, lief ein UPDATE: der Stand von
+ * letzter Woche war weg. Damit ließ sich weder „so sah der Fuß vor zwei
+ * Sitzungen aus" zeigen noch einer Prüfung ein Verlauf belegen.
+ *
+ * Jetzt gibt es ZWEI Achsen — sie sehen sich ähnlich, dürfen aber nie
+ * zusammenfallen:
+ *
+ *   eintrag_id   Korrekturkette. DERSELBE Befund wurde erneut gespeichert.
+ *                Es entsteht eine neue Zeile mit `version` + 1, die alte
+ *                bekommt `ist_aktuell = false` und bleibt lesbar.
+ *   serie_id     Farbgruppe über Termine hinweg — das, was der Podologe als
+ *                „ein Fußbefund und seine Fortschreibungen" sieht. Sie wird
+ *                bei der Übernahme (Punkt 3) vom Vorbefund geerbt; ohne
+ *                Übernahme beginnt eine neue Serie mit der nächsten Farbe.
+ *
+ * Ein einziger Schlüssel für beides ginge nicht: eine spätere Sitzung würde
+ * dann die Dokumentation des vergangenen Termins auf `ist_aktuell = false`
+ * setzen, und dieser Termin hätte gar keinen gültigen Befund mehr.
+ *
+ * ⚠ `version` und `ist_aktuell` vergibt der Trigger
+ * `pat_fussbefund_versionieren_trg`, nicht dieses Modul. Was hier in diesen
+ * beiden Feldern stünde, wird verworfen — „alte Zeile abwählen + neue Zeile
+ * einfügen" kann der Client nicht atomar, ein abgebrochener INSERT ließe den
+ * Eintrag ohne gültige Version zurück.
+ *
+ * Gelöscht wird nur ein Eintrag als GANZES (alle seine Versionen). Eine
+ * einzelne Version herauszunehmen wäre das Verwischen einer Korrektur; die
+ * letzte zu löschen machte still eine ältere wieder gültig.
+ *
  * Datenlage
  * ─────────
- *   pat_fussbefund   eine Zeile je Befund, jede Zeile ein vollständiger
- *                    Schnappschuss (befund + markierungen als JSONB)
- *   booking_id       UNIQUE — ein Termin trägt höchstens einen Befund
+ *   pat_fussbefund   eine Zeile je Befund-VERSION, jede Zeile ein
+ *                    vollständiger Schnappschuss (befund + markierungen JSONB)
+ *   booking_id       UNIQUE, aber nur unter `ist_aktuell` — ein Termin trägt
+ *                    höchstens einen gültigen Befund, dessen Vorversionen
+ *                    dürfen daneben stehen
  *   profiles.fussbefund_legende   Owner-Ebene (Einzelpraxen haben keine
  *                    businesses-Zeile, dort wäre die Einstellung unsichtbar)
  *
@@ -55,7 +89,7 @@
  * sonst Vorbefund übernehmen) macht weiterhin nur `terminGewaehlt()`.
  */
 
-import { resolveSector } from '../nav-registry.js?v=20260815';
+import { resolveSector } from '../nav-registry.js?v=20260830';
 
 // ── Legende ────────────────────────────────────────────────────────────────
 
@@ -80,6 +114,26 @@ export const LEGENDE_FARBEN = [
 /** Alte Markierungen kennen nur `type`. Ohne diese Brücke verschwänden sie. */
 const TYP_SYMBOL = { x: '✕', circle: '◯', dot: '●' };
 
+// ── Serienfarben ───────────────────────────────────────────────────────────
+
+/**
+ * Die Farbe einer Befund-SERIE — nicht die einer Markierung.
+ *
+ * Bewusst eine eigene Liste und bewusst andere Werte als `LEGENDE_FARBEN`:
+ * dort bedeutet Blau „Hyperkeratose". Stünde dieselbe Blaustufe als Rahmen um
+ * einen Listeneintrag, läse ein Podologe eine klinische Aussage, wo nur eine
+ * Gruppierung gemeint ist.
+ *
+ * ⚠ Reihenfolge und Werte sind mit dem Backfill der Migration
+ * `pat_fussbefund_versionierung_und_serie` identisch. Wer hier etwas ändert,
+ * ändert die Farbe bestehender Serien nicht mit — die Farbe liegt als KOPIE in
+ * der Zeile (`serie_farbe`), genau wie die Legende in `markierungen`.
+ */
+export const SERIE_FARBEN = [
+  '#2563eb', '#dc2626', '#ca8a04', '#059669',
+  '#7c3aed', '#db2777', '#0891b2', '#ea580c',
+];
+
 function normalisiereLegende(roh) {
   if (!Array.isArray(roh)) return [];
   return roh
@@ -101,8 +155,12 @@ let legende = STANDARD_LEGENDE;
 let aktiveLegendeId = null;
 let patientsMap = {};
 let patientsList = [];
-let currentId = null;           // offener Befund; null = neue Zeile beim Speichern
+let currentId = null;           // offene Zeile
+let currentEintragId = null;    // Korrekturkette der offenen Zeile; null = neuer Eintrag
+let serieId = null;             // Farbgruppe; null = neue Serie
+let serieFarbe = null;          // deren Farbe, als Kopie
 let uebernommenVon = null;      // Herkunft der Übernahme, nur Dokumentation
+let offeneVersionen = new Set();// Einträge, deren Versionsliste aufgeklappt ist
 let termine = [];               // Termine des gewählten Patienten
 let befundeDesPatienten = [];   // dessen Befunde, für Liste + Übernahme
 let dokumentKlick = null;       // Zuhörer zum Schliessen des Patienten-Dropdowns
@@ -435,11 +493,12 @@ async function ladePatientenkontext(leadId) {
       .limit(100),
     ctx.supabase
       .from('pat_fussbefund')
-      .select('id, erstellt_am, befund, markierungen, notiz, lead_id, booking_id, uebernommen_von')
+      .select('id, erstellt_am, created_at, befund, markierungen, notiz, lead_id, booking_id, ' +
+              'uebernommen_von, eintrag_id, version, ist_aktuell, serie_id, serie_farbe')
       .eq('owner_id', ctx.ownerId())
       .eq('lead_id', leadId)
       .order('erstellt_am', { ascending: false })
-      .limit(100),
+      .limit(300),
   ]);
 
   if (terminRes.error) console.error('[fussbefund] Termine laden:', terminRes.error.message);
@@ -449,16 +508,43 @@ async function ladePatientenkontext(leadId) {
   befundeDesPatienten = befundRes.data || [];
 }
 
+/** Nur gültige Zeilen. Vorversionen sind Geschichte, keine Arbeitsgrundlage. */
+function aktuelle() {
+  return befundeDesPatienten.filter(b => b.ist_aktuell !== false);
+}
+
 function befundZuTermin(bookingId) {
-  return befundeDesPatienten.find(b => b.booking_id === bookingId) || null;
+  return aktuelle().find(b => b.booking_id === bookingId) || null;
 }
 
 /** Der jüngste Befund VOR diesem Zeitpunkt — die Vorlage für die Übernahme. */
 function vorherigerBefund(stichtag) {
   const grenze = stichtag ? new Date(stichtag).getTime() : Date.now();
-  return befundeDesPatienten
+  return aktuelle()
     .filter(b => new Date(b.erstellt_am).getTime() < grenze)
     .sort((a, b) => new Date(b.erstellt_am) - new Date(a.erstellt_am))[0] || null;
+}
+
+/**
+ * Die Serie eines vorhandenen Befunds fortsetzen — Farbe inbegriffen.
+ * `quelle = null` heisst: neue Serie, nächste Farbe.
+ */
+function setzeSerie(quelle) {
+  serieId    = quelle?.serie_id    || null;
+  serieFarbe = quelle?.serie_farbe || (quelle ? null : naechsteSerienFarbe());
+}
+
+/**
+ * Die Farbe, die eine neue Serie dieses Patienten bekommt.
+ *
+ * Gezählt wird, wie viele Serien er schon hat — die erste ist blau, die
+ * zweite rot, dann gelb. Nach acht Serien beginnt die Liste von vorn; bei
+ * einem Patienten mit neun Fußbefund-Serien ist die Farbe ohnehin nicht mehr
+ * das Unterscheidungsmerkmal, dafür steht das Datum daneben.
+ */
+function naechsteSerienFarbe() {
+  const serien = new Set(befundeDesPatienten.map(b => b.serie_id).filter(Boolean));
+  return SERIE_FARBEN[serien.size % SERIE_FARBEN.length];
 }
 
 function renderTerminAuswahl() {
@@ -500,10 +586,13 @@ function zeigeUebernahme(quelle) {
   if (!box) return;
   if (!quelle) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
+  const farbe = quelle.serie_farbe || SERIE_FARBEN[0];
   box.innerHTML = `
+    <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${escapeHtml(farbe)};
+                 margin-right:6px;vertical-align:baseline;"></span>
     <strong>Aus dem Befund vom ${escapeHtml(formatDate(quelle.erstellt_am))} übernommen.</strong>
-    Ändern Sie nur, was sich geändert hat — beim Speichern entsteht ein neuer Eintrag,
-    der Befund des vorherigen Termins bleibt unverändert.`;
+    Ändern Sie nur, was sich geändert hat — beim Speichern entsteht ein neuer Eintrag
+    <em>in derselben Serie</em>, der Befund des vorherigen Termins bleibt unverändert.`;
 }
 
 /** Herzstück: was passiert, wenn ein Termin gewählt wird. */
@@ -516,8 +605,11 @@ function terminGewaehlt() {
   if (!wert) { return; }
 
   if (wert === '__ohne__') {
+    // Freies Datum ohne Vorlage: das ist ein Neuanfang, also eine neue Serie.
     currentId = null;
+    currentEintragId = null;
     uebernommenVon = null;
+    setzeSerie(null);
     zeigeUebernahme(null);
     const d = el('fbpDatum');
     if (d && !d.value) d.value = isoDatum(new Date());
@@ -528,18 +620,24 @@ function terminGewaehlt() {
   const vorhanden = befundZuTermin(wert);
 
   if (vorhanden) {
-    // Vorhandener Befund dieses Termins → bearbeiten, nicht kopieren.
+    // Vorhandener Befund dieses Termins → bearbeiten. Speichern legt eine neue
+    // VERSION desselben Eintrags an, überschreibt also nichts.
     currentId = vorhanden.id;
+    currentEintragId = vorhanden.eintrag_id || vorhanden.id;
     uebernommenVon = vorhanden.uebernommen_von || null;
+    setzeSerie(vorhanden);
     zeigeUebernahme(null);
     schreibeBefundFelder(vorhanden);
     return;
   }
 
-  // Neuer Termin: Vorbefund als Kopie, currentId bleibt null → INSERT.
+  // Neuer Termin: Vorbefund als Kopie, ein NEUER Eintrag (currentEintragId
+  // bleibt null) — aber in derselben Serie, damit die Farbe den Verlauf hält.
   const quelle = vorherigerBefund(termin?.start_time);
   currentId = null;
+  currentEintragId = null;
   uebernommenVon = quelle ? quelle.id : null;
+  setzeSerie(quelle);
   schreibeBefundFelder(quelle);
   zeigeUebernahme(quelle);
 }
@@ -547,7 +645,11 @@ function terminGewaehlt() {
 async function patientGewaehlt(leadId) {
   autofillStammdaten(leadId);
   currentId = null;
+  currentEintragId = null;
+  serieId = null;
+  serieFarbe = null;
   uebernommenVon = null;
+  offeneVersionen = new Set();
   zeigeUebernahme(null);
   leereBefundFelder();
 
@@ -612,38 +714,49 @@ async function speichern() {
     booking_id:   bookingId,
   };
 
-  let error = null;
-  if (currentId) {
-    // Bearbeiten des offenen Befunds. Fremde Zeilen fasst das nie an.
-    ({ error } = await ctx.supabase.from('pat_fussbefund').update(felder).eq('id', currentId));
-  } else {
-    const res = await ctx.supabase
-      .from('pat_fussbefund')
-      .insert([{
-        ...felder,
-        owner_id:        ctx.ownerId(),
-        lead_id:         patientId,
-        uebernommen_von: uebernommenVon,
-        erfasst_von:     ctx.userId() || null,
-      }])
-      .select('id')
-      .single();
-    error = res.error;
-    if (res.data) currentId = res.data.id;
-  }
+  // Immer INSERT — nie UPDATE. Ein bereits geöffneter Befund wird nicht
+  // überschrieben, sondern bekommt eine neue Version desselben Eintrags
+  // (`eintrag_id`). Nur so bleibt der Stand von letzter Woche sichtbar.
+  // `version` und `ist_aktuell` setzt der Trigger, deshalb stehen sie hier nicht.
+  const warKorrektur = !!currentEintragId;
+
+  const { data, error } = await ctx.supabase
+    .from('pat_fussbefund')
+    .insert([{
+      ...felder,
+      owner_id:        ctx.ownerId(),
+      lead_id:         patientId,
+      eintrag_id:      currentEintragId,                   // null → neuer Eintrag
+      serie_id:        serieId,                            // null → neue Serie
+      serie_farbe:     serieFarbe || naechsteSerienFarbe(),
+      uebernommen_von: uebernommenVon,
+      erfasst_von:     ctx.userId() || null,
+    }])
+    .select('id, eintrag_id, version, serie_id, serie_farbe')
+    .single();
 
   if (btn) { btn.disabled = false; btn.textContent = 'Speichern'; }
 
   if (error) {
-    // 23505 = der Termin hat schon einen Befund (zweiter Tab, Doppelklick).
+    // 23505 = ein zweiter Tab hat denselben Befund parallel fortgeschrieben.
+    // Nachladen statt Erzwingen: sonst überholte die eine Version die andere.
     const msg = error.code === '23505'
-      ? 'Für diesen Termin gibt es bereits einen Befund. Bitte den Termin neu wählen — er wird dann zum Bearbeiten geladen.'
+      ? 'Dieser Befund wurde zwischenzeitlich an anderer Stelle gespeichert. Bitte den Termin neu wählen — der aktuelle Stand wird dann geladen.'
       : 'Fehler beim Speichern: ' + error.message;
     ctx.showToast(msg, 'error');
     return;
   }
 
-  ctx.showToast('Befund gespeichert ✓');
+  currentId        = data.id;
+  currentEintragId = data.eintrag_id;
+  serieId          = data.serie_id;
+  serieFarbe       = data.serie_farbe;
+
+  ctx.showToast(
+    warKorrektur && data.version > 1
+      ? `Version ${data.version} gespeichert ✓ — der vorherige Stand bleibt im Verlauf`
+      : 'Befund gespeichert ✓'
+  );
   zeigeUebernahme(null);
 
   // Kontext neu ziehen, damit „✓ Befund" am Termin steht und die Liste stimmt.
@@ -687,6 +800,123 @@ function kurzBefund(row) {
 }
 
 /**
+ * Die flachen Zeilen in die Form bringen, in der sie gelesen werden:
+ * Serie (Farbe) → Eintrag (ein Termin) → dessen Versionen (Korrekturen).
+ *
+ * Reihenfolge innerhalb eines Eintrags über `version`, NICHT über
+ * `erstellt_am`: das ist das Termin-/Befunddatum und bei allen Versionen
+ * desselben Eintrags identisch.
+ *
+ * Der Parameter dient nur dem Test (`fussbefund-verlauf.test.js`) — im Modul
+ * läuft die Funktion immer auf `befundeDesPatienten`. Reine Funktion, kein
+ * DOM: genau deshalb ist sie die Stelle, an der sich der Verlauf prüfen lässt.
+ */
+export function gruppiereBefunde(zeilen = befundeDesPatienten) {
+  const nachEintrag = new Map();
+  zeilen.forEach(row => {
+    const key = row.eintrag_id || row.id;
+    if (!nachEintrag.has(key)) nachEintrag.set(key, []);
+    nachEintrag.get(key).push(row);
+  });
+
+  const eintraege = [...nachEintrag.entries()].map(([eintragId, zeilen]) => {
+    const versionen = zeilen.slice().sort((a, b) => (b.version || 1) - (a.version || 1));
+    // Kopf ist die gültige Fassung; bei Altbestand ohne Flag die jüngste.
+    const kopf = versionen.find(z => z.ist_aktuell !== false) || versionen[0];
+    return { eintragId, kopf, versionen, zeit: new Date(kopf.erstellt_am).getTime() };
+  });
+
+  const nachSerie = new Map();
+  eintraege.forEach(e => {
+    const key = e.kopf.serie_id || e.eintragId;
+    if (!nachSerie.has(key)) {
+      nachSerie.set(key, {
+        farbe: e.kopf.serie_farbe || SERIE_FARBEN[0],
+        eintraege: [],
+      });
+    }
+    nachSerie.get(key).eintraege.push(e);
+  });
+
+  return [...nachSerie.values()].map(s => {
+    s.eintraege.sort((a, b) => b.zeit - a.zeit);
+    s.neuste = s.eintraege[0].zeit;
+    s.beginn = Math.min(...s.eintraege.map(e => e.zeit));
+    return s;
+  }).sort((a, b) => b.neuste - a.neuste);
+}
+
+/** Eine Version in der aufgeklappten Liste. `created_at` = wann geschrieben. */
+function versionHtml(v) {
+  const aktiv = v.id === currentId;
+  return `
+    <div style="display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:4px;font-size:11.5px;
+                color:var(--text-muted);${aktiv ? 'background:var(--bg-hover);' : ''}">
+      <span style="min-width:24px;font-variant-numeric:tabular-nums;">v${v.version || 1}</span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+            title="${escapeHtml(formatDateTime(v.created_at || v.erstellt_am) + ' · ' + kurzBefund(v))}">
+        ${escapeHtml(formatDateTime(v.created_at || v.erstellt_am))} · ${escapeHtml(kurzBefund(v))}
+      </span>
+      <button type="button" class="btn-sm fbp-btn-open" data-id="${escapeHtml(v.id)}"
+              title="Diese Version ansehen" style="padding:2px 6px;">👁</button>
+    </div>`;
+}
+
+function eintragHtml(e) {
+  const kurz     = kurzBefund(e.kopf);
+  const offen    = offeneVersionen.has(e.eintragId);
+  const mehrere  = e.versionen.length > 1;
+  const aktiv    = e.versionen.some(v => v.id === currentId);
+  const herkunft = e.kopf.uebernommen_von
+    ? ' <span title="Aus dem vorherigen Befund übernommen" style="color:var(--text-muted);">↩</span>'
+    : '';
+
+  return `
+    <div style="padding:5px 6px;border-radius:6px;${aktiv ? 'background:var(--bg-hover);' : ''}">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12.5px;color:var(--text-main);white-space:nowrap;">
+            ${escapeHtml(formatDate(e.kopf.erstellt_am))}${herkunft}
+          </div>
+          <div style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+               title="${escapeHtml(kurz)}">${escapeHtml(kurz)}</div>
+        </div>
+        <button type="button" class="btn-sm fbp-btn-open" data-id="${escapeHtml(e.kopf.id)}"
+                title="Befund ansehen" style="padding:3px 7px;">👁</button>
+        <button type="button" class="btn-sm btn-danger fbp-btn-del" data-eintrag="${escapeHtml(e.eintragId)}"
+                title="${mehrere ? `Befund mit allen ${e.versionen.length} Versionen löschen` : 'Löschen'}"
+                style="padding:3px 7px;">✕</button>
+      </div>
+      ${mehrere ? `
+        <button type="button" class="fbp-btn-versionen" data-eintrag="${escapeHtml(e.eintragId)}"
+                style="margin-top:3px;background:none;border:none;padding:0;cursor:pointer;
+                       font-size:11px;color:var(--text-muted);text-decoration:underline;">
+          ${offen ? '▾' : '▸'} ${e.versionen.length} Versionen
+        </button>` : ''}
+      ${mehrere && offen ? `
+        <div style="margin:4px 0 2px 8px;padding-left:8px;border-left:1px dashed var(--border);">
+          ${e.versionen.map(versionHtml).join('')}
+        </div>` : ''}
+    </div>`;
+}
+
+/**
+ * Eine Serie = eine Farbe = ein Fußbefund und seine Fortschreibungen.
+ * Die Farbe ist der Griff, an dem „vor zwei Sitzungen sah das so aus"
+ * überhaupt erst sichtbar wird.
+ */
+function serienHtml(serien) {
+  return serien.map(s => `
+    <div style="border-left:3px solid ${escapeHtml(s.farbe)};padding-left:10px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px;color:var(--text-muted);">
+        <span style="width:8px;height:8px;border-radius:50%;flex:none;background:${escapeHtml(s.farbe)};"></span>
+        Serie · seit ${escapeHtml(formatDate(new Date(s.beginn)))}${s.eintraege.length > 1 ? ` · ${s.eintraege.length} Befunde` : ''}
+      </div>
+      ${s.eintraege.map(eintragHtml).join('')}
+    </div>`).join('');
+}
+
+/**
  * Zeigt ausschliesslich die Befunde des gewählten Patienten.
  * Ohne Auswahl bleibt die Liste leer — eine Praxisliste „alle Befunde aller
  * Patienten" war der eigentliche Fehler: „dass du nicht meine Befunde siehst,
@@ -712,29 +942,7 @@ function renderBefundListe() {
     return;
   }
 
-  container.innerHTML = `
-    <div style="overflow-x:auto;">
-      <table class="data-table" style="width:100%;font-size:12px;">
-        <thead>
-          <tr><th>Datum</th><th>Kurz-Befund</th><th style="text-align:right;">Aktion</th></tr>
-        </thead>
-        <tbody>
-          ${befundeDesPatienten.map(row => {
-            const kurz = kurzBefund(row);
-            const herkunft = row.uebernommen_von ? ' <span title="Aus dem vorherigen Befund übernommen" style="color:var(--text-muted);">↩</span>' : '';
-            return `
-              <tr${row.id === currentId ? ' style="background:var(--bg-hover);"' : ''}>
-                <td style="white-space:nowrap;">${escapeHtml(formatDate(row.erstellt_am))}${herkunft}</td>
-                <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(kurz)}">${escapeHtml(kurz)}</td>
-                <td style="text-align:right;white-space:nowrap;">
-                  <button type="button" class="btn-sm fbp-btn-open" data-id="${escapeHtml(row.id)}" title="Befund ansehen" style="padding:3px 7px;">👁</button>
-                  <button type="button" class="btn-sm btn-danger fbp-btn-del" data-id="${escapeHtml(row.id)}" title="Löschen" style="padding:3px 7px;">✕</button>
-                </td>
-              </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>`;
+  container.innerHTML = serienHtml(gruppiereBefunde());
 
   container.querySelectorAll('.fbp-btn-open').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -743,23 +951,47 @@ function renderBefundListe() {
     });
   });
 
+  // Aufklappen ist reine Anzeige — der offene Befund ändert sich dadurch nicht.
+  container.querySelectorAll('.fbp-btn-versionen').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.eintrag;
+      if (offeneVersionen.has(key)) offeneVersionen.delete(key);
+      else offeneVersionen.add(key);
+      renderBefundListe();
+    });
+  });
+
   container.querySelectorAll('.fbp-btn-del').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
+      const eintragId = btn.dataset.eintrag;
+      const zeilen = befundeDesPatienten.filter(r => (r.eintrag_id || r.id) === eintragId);
+      if (!zeilen.length) return;
+
+      // Gelöscht wird der Eintrag als Ganzes. Eine einzelne Version zu
+      // entfernen hiesse, eine Korrektur unkenntlich zu machen; die letzte zu
+      // entfernen machte still eine ältere Fassung wieder gültig.
       const ok = await ctx.showConfirmModal({
         title: 'Fußbefund löschen',
-        message: 'Möchten Sie diesen Fußbefund wirklich löschen?',
+        message: zeilen.length > 1
+          ? `Dieser Befund hat ${zeilen.length} Versionen. Es werden alle ${zeilen.length} gelöscht — der Verlauf ist danach nicht wiederherstellbar.`
+          : 'Möchten Sie diesen Fußbefund wirklich löschen?',
         confirmText: 'Löschen',
         cancelText: 'Abbrechen',
         variant: 'danger',
       });
       if (!ok) return;
 
-      const { error } = await ctx.supabase.from('pat_fussbefund').delete().eq('id', id);
+      const { error } = await ctx.supabase
+        .from('pat_fussbefund').delete().eq('eintrag_id', eintragId);
       if (error) { ctx.showToast('Fehler beim Löschen: ' + error.message, 'error'); return; }
 
-      ctx.showToast('Befund gelöscht ✓');
-      if (currentId === id) { currentId = null; leereBefundFelder(); }
+      ctx.showToast(zeilen.length > 1 ? `${zeilen.length} Versionen gelöscht ✓` : 'Befund gelöscht ✓');
+      offeneVersionen.delete(eintragId);
+      if (zeilen.some(z => z.id === currentId)) {
+        currentId = null;
+        currentEintragId = null;
+        leereBefundFelder();
+      }
 
       const leadNow = el('fbpPatient')?.value;
       if (leadNow) {
@@ -773,10 +1005,18 @@ function renderBefundListe() {
   });
 }
 
-/** Einen gespeicherten Befund öffnen — inklusive seines Termins. */
+/**
+ * Einen gespeicherten Befund öffnen — inklusive seines Termins.
+ *
+ * Auch eine ALTE Version lässt sich so öffnen. Speichern schreibt sie dann als
+ * neueste Version desselben Eintrags fort — der Weg zurück zu einem früheren
+ * Stand, ohne dass dazwischen etwas verschwindet.
+ */
 function oeffneBefund(row) {
   currentId = row.id;
+  currentEintragId = row.eintrag_id || row.id;
   uebernommenVon = row.uebernommen_von || null;
+  setzeSerie(row);
   zeigeUebernahme(null);
 
   const sel = el('fbpTermin');
@@ -797,7 +1037,11 @@ function oeffneBefund(row) {
 
 function neuerBefund() {
   currentId = null;
+  currentEintragId = null;
+  serieId = null;
+  serieFarbe = null;
   uebernommenVon = null;
+  offeneVersionen = new Set();
   zeigeUebernahme(null);
 
   const patHidden = el('fbpPatient');
@@ -1189,7 +1433,11 @@ export async function mountFussbefund(deps, preset) {
   aktiveLegendeId = legende[0]?.id || null;
 
   currentId = null;
+  currentEintragId = null;
+  serieId = null;
+  serieFarbe = null;
   uebernommenVon = null;
+  offeneVersionen = new Set();
   markierungen = [];
   termine = [];
   befundeDesPatienten = [];
@@ -1314,10 +1562,14 @@ export async function verdrahteFussbefundKnopf(deps, booking) {
   btn.onclick = () => oeffneFussbefundFuerTermin(deps, booking);
 
   // Beschriftung erst, wenn feststeht, ob es schon einen Befund gibt.
+  // `ist_aktuell` ist Pflicht: seit der Versionierung (30.08.2026) liegen die
+  // Vorversionen desselben Termins daneben, ohne Filter kämen mehrere Zeilen
+  // zurück und `.maybeSingle()` liefe auf einen Fehler statt auf ein Ergebnis.
   const { data, error } = await deps.supabase
     .from('pat_fussbefund')
     .select('id')
     .eq('booking_id', booking.id)
+    .eq('ist_aktuell', true)
     .maybeSingle();
 
   // Inzwischen ein anderer Termin geöffnet → diese Antwort ist veraltet.

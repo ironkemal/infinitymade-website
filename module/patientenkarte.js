@@ -158,9 +158,13 @@ export async function ladeVerlauf(sb, ownerId, leadId) {
       .select('id, ausstellungsdatum, diagnosegruppe, status')
       .eq('owner_id', ownerId).eq('patient_id', leadId)
       .order('ausstellungsdatum', { ascending: false }).limit(50)),
+    // `ist_aktuell`: seit der Versionierung (30.08.2026) liegen Korrekturen als
+    // eigene Zeilen daneben. Ohne den Filter stünde derselbe Befund mehrfach im
+    // Verlauf — die Zeitleiste zeigt Ereignisse, nicht Schreibvorgänge.
     frag(sb.from('pat_fussbefund')
       .select('id, erstellt_am')
       .eq('owner_id', ownerId).eq('lead_id', leadId)
+      .eq('ist_aktuell', true)
       .order('erstellt_am', { ascending: false }).limit(50)),
   ]);
 

@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-28 (Spiegeltabelle business_services entfernt)
--- LETZTE MIGRATION:  business_services_droppen_spiegeltabelle
+-- ERZEUGT AM:        2026-08-30 (Fussbefund: Versionen statt Ueberschreiben)
+-- LETZTE MIGRATION:  pat_fussbefund_versionierung_und_serie
+--                    davor: business_services_droppen_spiegeltabelle
 --                    davor: prescription_sessions_booking_unique
 --                    davor: leads_geschlecht_kodierung_dokumentieren
 --                    davor: invoice_nummer_backfill_altbestand
@@ -18,8 +19,8 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            80 Tabellen · 1177 Spalten · 152 RLS-Policies
---                    286 Indizes · 57 Trigger · 60 Funktionen · 4 Views
+-- UMFANG:            80 Tabellen · 1182 Spalten · 152 RLS-Policies
+--                    288 Indizes · 58 Trigger · 61 Funktionen · 4 Views
 -- ZÄHLWEISE:         Tabellen = BASE TABLE in `public` · Spalten =
 --                    information_schema.columns in `public` (Views
 --                    eingeschlossen) · Funktionen und Indizes OHNE die
@@ -1100,17 +1101,46 @@ CREATE TABLE pat_fussbefund (
   created_at timestamptz NOT NULL DEFAULT now()
   booking_id uuid                        -- Termin, zu dem der Befund gehört
   uebernommen_von uuid                   -- Herkunft der Übernahme (nur Doku)
+  eintrag_id uuid NOT NULL               -- Korrekturkette: Versionen DESSELBEN Befunds
+  version integer NOT NULL DEFAULT 1     -- Nummer im Eintrag — vergibt der Trigger
+  ist_aktuell boolean NOT NULL DEFAULT true  -- gültige Fassung des Eintrags
+  serie_id uuid NOT NULL                 -- Farbgruppe über Termine hinweg
+  serie_farbe text                       -- deren Farbe, als KOPIE in der Zeile
 );
 --   FK lead_id -> leads(id) ON DELETE CASCADE · PK (id)
 --   FK booking_id -> bookings(id) ON DELETE SET NULL
 --   FK uebernommen_von -> pat_fussbefund(id) ON DELETE SET NULL
---   ★ UNIQUE (booking_id) WHERE booking_id IS NOT NULL
---     → ein Termin trägt höchstens einen Befund.
+--   ★ UNIQUE (booking_id) WHERE booking_id IS NOT NULL AND ist_aktuell
+--     → ein Termin trägt höchstens einen GÜLTIGEN Befund; dessen Vorversionen
+--       dürfen daneben stehen.
+--   ★ UNIQUE (eintrag_id) WHERE ist_aktuell · UNIQUE (eintrag_id, version)
+--     → genau eine gültige Fassung je Eintrag, Nummern lückenlos eindeutig.
+--       Gilt auch für Befunde OHNE Termin, die vorher gar nicht geschützt waren.
 --   ★ Aktueller Podologie-Fußbefund (markierungen = Punkte auf der Fußgrafik).
 --   ★ Jede Zeile ist ein VOLLSTÄNDIGER Schnappschuss. Ein Folgebefund wird als
 --     Kopie des vorherigen angelegt (neue Zeile), nie als Verweis — sonst
 --     änderte sich die Dokumentation eines vergangenen Termins rückwirkend.
 --     `uebernommen_von` hält nur fest, wovon kopiert wurde.
+--   ★ ZWEI ACHSEN, nicht verwechseln (30.08.2026):
+--       eintrag_id  DERSELBE Befund, nochmal gespeichert. Statt UPDATE entsteht
+--                   eine neue Zeile, version + 1, die alte wird ist_aktuell=false
+--                   und bleibt lesbar. Vorher überschrieb das Modul — der Stand
+--                   von letzter Woche war weg (§ 630f BGB: der ursprüngliche
+--                   Inhalt muss erkennbar bleiben).
+--       serie_id    Farbgruppe über Termine hinweg — was der Podologe als „ein
+--                   Fußbefund und seine Fortschreibungen" sieht. Wird bei der
+--                   Übernahme geerbt; ohne Übernahme beginnt eine neue Serie.
+--     Ein Schlüssel für beides ginge nicht: eine spätere Sitzung setzte sonst
+--     die Dokumentation des vergangenen Termins auf ist_aktuell=false, und
+--     dieser Termin hätte gar keinen gültigen Befund mehr.
+--   ⚠ version/ist_aktuell vergibt pat_fussbefund_versionieren_trg, NICHT der
+--     Client — was der schickt, wird verworfen. „Alte Zeile abwählen + neue
+--     einfügen" ist im Client nicht atomar; ein abgebrochener INSERT ließe den
+--     Eintrag ohne gültige Fassung zurück.
+--   ⚠ serie_farbe ist eine KOPIE (wie markierungen die Legende kopieren) und
+--     NICHT aus LEGENDE_FARBEN: dort bedeutet Blau „Hyperkeratose".
+--   ⚠ Lesende Abfragen brauchen `.eq('ist_aktuell', true)`, sonst erscheint
+--     jede Korrektur als eigener Befund (Archiv, Patientenkarte, Terminknopf).
 --   ⚠️ markierungen speichern symbol/color/label als KOPIE der Legende
 --     (profiles.fussbefund_legende). Umbenennen der Legende deutet alte
 --     Befunde deshalb nicht um.

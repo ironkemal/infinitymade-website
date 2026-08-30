@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-28 (Spiegeltabelle business_services entfernt)
--- LETZTE MIGRATION:  business_services_droppen_spiegeltabelle
+-- ERZEUGT AM:        2026-08-30 (Fussbefund: Versionen statt Ueberschreiben)
+-- LETZTE MIGRATION:  pat_fussbefund_versionierung_und_serie
+--                    davor: business_services_droppen_spiegeltabelle
 --                    davor: prescription_sessions_booking_unique
 --                    davor: leads_geschlecht_kodierung_dokumentieren
 --                    davor: invoice_nummer_backfill_altbestand
@@ -19,7 +20,7 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            152 RLS-Policies · 286 Indizes · 57 Trigger · 60 Funktionen
+-- UMFANG:            152 RLS-Policies · 288 Indizes · 58 Trigger · 61 Funktionen
 --                    (Zählweise siehe Kopf von db/SCHEMA.sql. Die alten
 --                     Werte „60 Trigger · 54 Funktionen" widersprachen dort
 --                     „58 Trigger · 60 Funktionen" — am 28.08.2026 gegen die
@@ -70,7 +71,7 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (156)
+-- 2. RLS-POLICIES (152)
 -- =====================================================================
 
 -- abrechnung
@@ -364,7 +365,8 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (54 eigene; PostGIS-Funktionen ausgelassen)
+-- 3. FUNKTIONEN (61 eigene = alles in `public`, was keiner Extension gehört;
+--    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
 -- --- Berechtigung / Mandant --------------------------------------------
@@ -553,7 +555,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (60)
+-- 4. TRIGGER (58)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -577,6 +579,14 @@ $function$;
 --                         → fn_patient_consents_immutable(): DELETE erst nach
 --                           10 Jahren (§630f Abs. 3 BGB), UPDATE nur auf
 --                           revoked_at/revoke_reason. Art. 7 Abs. 1 DSGVO.
+--   pat_fussbefund        pat_fussbefund_versionieren_trg BEFORE INSERT
+--                         → pat_fussbefund_versionieren(): vergibt eintrag_id,
+--                           serie_id, version und ist_aktuell und VERWIRFT, was
+--                           der Client in version/ist_aktuell schickt. Grund:
+--                           „alte Zeile abwählen + neue einfügen" ist im Client
+--                           nicht atomar — ein abgebrochener INSERT ließe den
+--                           Eintrag ohne gültige Fassung zurück. Setzt zusätzlich
+--                           serie_farbe aus der Serie nach, falls sie fehlt.
 --   belegliste            trg_prevent_belegliste_mod     BEFORE UPDATE/DELETE   (GoBD)
 --                         trg_set_beleg_nr               BEFORE INSERT WHEN beleg_nr IS NULL OR 0
 --   mahnungen             trg_set_mahnung_nr             BEFORE INSERT (analog)
@@ -711,7 +721,14 @@ CREATE INDEX idx_messreihen_lead ON public.messreihen USING btree (lead_id, geme
 CREATE INDEX idx_messreihen_owner ON public.messreihen USING btree (owner_id);
 CREATE INDEX pat_fussbefund_lead_idx ON public.pat_fussbefund USING btree (lead_id, erstellt_am DESC);
 CREATE INDEX pat_fussbefund_owner_idx ON public.pat_fussbefund USING btree (owner_id);
-CREATE UNIQUE INDEX pat_fussbefund_booking_uidx ON public.pat_fussbefund USING btree (booking_id) WHERE (booking_id IS NOT NULL);
+CREATE UNIQUE INDEX pat_fussbefund_booking_aktuell_uidx ON public.pat_fussbefund USING btree (booking_id) WHERE ((booking_id IS NOT NULL) AND ist_aktuell);
+CREATE UNIQUE INDEX pat_fussbefund_eintrag_aktuell_uidx ON public.pat_fussbefund USING btree (eintrag_id) WHERE ist_aktuell;
+CREATE UNIQUE INDEX pat_fussbefund_eintrag_version_uidx ON public.pat_fussbefund USING btree (eintrag_id, version);
+-- 30.08.2026: pat_fussbefund_booking_uidx (nur booking_id) ist ENTFALLEN — er
+-- schloss Versionen aus. Der Schutz gegen Doppelklick/zweiten Tab bleibt über
+-- den ersten Index, gilt jetzt aber nur für die gültige Fassung. Die beiden
+-- eintrag_*-Indizes sind neu und schärfer: sie greifen auch bei Befunden OHNE
+-- Termin, die vorher gar keine Eindeutigkeit hatten.
 CREATE INDEX patient_consents_patient_idx ON public.patient_consents USING btree (patient_id, consented_at DESC);
 CREATE INDEX patient_consents_owner_idx ON public.patient_consents USING btree (owner_id, consented_at DESC);
 CREATE INDEX patient_consents_type_idx ON public.patient_consents USING btree (patient_id, consent_type, consented_at DESC);
