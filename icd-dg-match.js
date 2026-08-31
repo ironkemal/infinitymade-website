@@ -174,3 +174,91 @@ export function soleIcdForDg(rule) {
   if (!/^[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*$/.test(inner)) return null;
   return normalizeIcd(inner.replace(/\\\./g, '.'));
 }
+
+/**
+ * Normalisiert ein Diagnosegruppen-Kuerzel auf seinen Wurzelkode: Grossbuchstaben,
+ * ohne Leerzeichen, ohne Untergruppen-Suffix. "df-a" → "DF".
+ * Die Untergruppen a/b/c sind Leitsymptomatik, keine eigene Gruppe — die
+ * ICD-Regeln haengen immer an der Wurzel.
+ */
+export function normDgCode(raw) {
+  return String(raw || '').replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
+}
+
+/**
+ * Welche Diagnosegruppen sind mit diesen ICD-Kodes ausgeschlossen?
+ *
+ * Gesperrt wird NUR, wo die Regel `icd_enforcement === 'hard_before_dta'` traegt
+ * (heute UI1/UI2). Das ist eine Grenze aus der Sache, nicht aus Bequemlichkeit:
+ * nach Anlage 3 k der HeilM-RL ist der ICD auf Muster 13 nicht Pflicht, und ein
+ * abweichender Kode kann medizinisch richtig sein (Nebendiagnose, Doppel-
+ * kodierung, ICD-10-GM-Revision). Wo die Regel `warn` sagt, entscheidet der
+ * Therapeut — dort wird gewarnt, nicht gesperrt. Gleiche Begruendung wie im
+ * Kopfkommentar von api-backend/ai/validators/icdDgRules.js.
+ *
+ * @returns {{ dg: string, grund: 'hart', erwartet: string|null, hints: string[] }[]}
+ *   `erwartet` ist der einzige zulaessige Kode, wenn die Regel genau einen
+ *   verankerten Literaltreffer hat (UI1/UI2 → "L60.0") — sonst null.
+ */
+export function dgSperrenFuerIcd(codes, rulesByDg) {
+  if (!codes || codes.length === 0 || !rulesByDg) return [];
+  const out = [];
+  for (const [dg, rule] of Object.entries(rulesByDg)) {
+    if (!rule || rule.icd_enforcement !== 'hard_before_dta') continue;
+    if (!rule.icd_accept || rule.icd_accept.length === 0) continue;
+    const res = matchIcdToDg(codes, rule);
+    if (res.status !== 'mismatch') continue;
+    out.push({ dg, grund: 'hart', erwartet: soleIcdForDg(rule), hints: res.hints });
+  }
+  return out;
+}
+
+/**
+ * Das vollstaendige Bild zu einer Kodemenge: was vorgeschlagen wird, was noch
+ * in Frage kommt und was ausgeschlossen ist.
+ *
+ * Zwei verschiedene Sperrgruende, absichtlich getrennt:
+ *
+ *   'hart'     — die Regel der Gruppe selbst verbietet den Kode
+ *                (icd_enforcement = hard_before_dta, s. dgSperrenFuerIcd).
+ *
+ *   'normativ' — der Kode gehoert nachweislich woanders hin. Das gilt nur,
+ *                wenn JEDER eingegebene Kode der normativ eindeutige Kode
+ *                einer Gruppe ist (soleIcdForDg — heute L60.0 → UI1/UI2).
+ *                Dann scheidet jede Gruppe ausserhalb von `kandidaten` aus,
+ *                auch eine mit `warn`.
+ *                Steht daneben noch ein freier Kode (z. B. L60.0 + E11.74 bei
+ *                einem Diabetiker mit eingewachsenem Nagel), greift das NICHT:
+ *                dann ist die Kodemenge nicht mehr eindeutig zugeordnet und
+ *                es bleibt bei der Warnung. Genau dieser Fall hat die frueher
+ *                fest verdrahtete L60.0-Sonderbehandlung falsch beschieden —
+ *                sie hat DF auch dann ausgeblendet.
+ *
+ * @returns {{ auto: string|null, kandidaten: string[],
+ *             gesperrt: {dg,grund,erwartet,hints}[], normativ: boolean }}
+ */
+export function dgVorschlag(codes, rulesByDg) {
+  const leer = { auto: null, kandidaten: [], gesperrt: [], normativ: false };
+  if (!codes || codes.length === 0 || !rulesByDg) return leer;
+
+  const kandidaten = dgsAcceptingIcd(codes, rulesByDg);
+  const gesperrt   = dgSperrenFuerIcd(codes, rulesByDg);
+
+  const soleCodes = new Set();
+  for (const rule of Object.values(rulesByDg)) {
+    const sole = soleIcdForDg(rule);
+    if (sole) soleCodes.add(sole);
+  }
+  const normativ = codes.every(c => soleCodes.has(c)) && kandidaten.length > 0;
+
+  if (normativ) {
+    const schon = new Set(gesperrt.map(g => g.dg));
+    for (const [dg, rule] of Object.entries(rulesByDg)) {
+      if (kandidaten.includes(dg) || schon.has(dg)) continue;
+      if (!rule || !rule.icd_accept || rule.icd_accept.length === 0) continue;
+      gesperrt.push({ dg, grund: 'normativ', erwartet: null, hints: matchIcdToDg(codes, rule).hints });
+    }
+  }
+
+  return { auto: autoSelectDg(codes, rulesByDg), kandidaten, gesperrt, normativ };
+}

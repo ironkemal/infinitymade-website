@@ -24,7 +24,7 @@
  * verhält sich bei leerem Wert anders.
  */
 
-import { parseIcdList, matchIcdToDg } from '../icd-dg-match.js?v=20260810e';
+import { parseIcdList, matchIcdToDg, normDgCode } from '../icd-dg-match.js?v=20260831a';
 
 /** Wortgleiche Kopie aus dashboard.js — reiner Umzug, kein anderes Verhalten. */
 function escapeHtml(str) {
@@ -105,3 +105,63 @@ function _icdMatchesDgRule(code, dg) {
 export function getDgIcdRules() { return _dgIcdRules; }
 /** Die Diagnosegruppen-Zeilen aus der Tabelle — `null`, solange nichts geladen wurde. */
 export function getPodDiagGroups() { return _podDiagGroups; }
+
+/**
+ * Sperrt im <select> der Diagnosegruppe die Optionen, die zu den eingegebenen
+ * ICD-Kodes unmoeglich sind — und schreibt an die Option, WARUM.
+ *
+ * Warum `disabled` und nicht `style.display = 'none'`:
+ * Eine ausgeblendete Option verschwindet wortlos. Der Anwender sieht eine
+ * kuerzere Liste und erfaehrt nie, dass etwas fehlte — beim naechsten Rezept
+ * sucht er dieselbe Gruppe wieder. `disabled` laesst die Zeile stehen, traegt
+ * den Grund im Text und ist ausserdem verlaesslicher: `display:none` auf
+ * <option> ignorieren mehrere Browser, die Option bleibt dann per Tastatur
+ * waehlbar. Die frueher fest verdrahtete L60.0-Behandlung in dashboard.js hat
+ * genau so ausgeblendet.
+ *
+ * Fuer Textfelder (Rezept-Formular, `rzDg`) tut dieses Verfahren nichts: dort
+ * engt `nurCodes` in katalog-suche.js die Vorschlagsliste ein, gespeist aus
+ * `data-pod-erlaubt` (module/verordnung-podo.js). Zwei Schreiber auf demselben
+ * Attribut waeren eine Quelle zu viel.
+ *
+ * @param {HTMLElement|null} dgEl      Das Diagnosegruppen-Feld
+ * @param {object|null} vorschlag      Rueckgabe von dgVorschlag(), oder null zum Zuruecksetzen
+ * @param {{codes?: string[], t?: (k:string)=>string, raeumen?: boolean}} opts
+ *        `raeumen` = eine gesperrte Auswahl wirklich leeren. Nur beim Verlassen
+ *        des Feldes true: waehrend des Tippens ist "L60" auf dem Weg zu
+ *        "L60.0" kurz ein Fehltreffer, und eine von Hand gesetzte Gruppe darf
+ *        daran nicht verlorengehen.
+ * @returns {{ gesperrt: string[], geraeumt: boolean }}
+ */
+export function dgOptionenSperren(dgEl, vorschlag, opts = {}) {
+  const leer = { gesperrt: [], geraeumt: false };
+  if (!dgEl || dgEl.tagName !== 'SELECT') return leer;
+
+  const t     = opts.t || (k => k);
+  const codes = (opts.codes || []).join(', ');
+
+  // Grundtext je Wurzelkode aufbauen (leer = alles wieder freigeben).
+  const gruende = new Map();
+  for (const g of (vorschlag && vorschlag.gesperrt) || []) {
+    const text = g.grund === 'hart' && g.erwartet
+      ? t('pod_dg_nur_mit').replace('{icd}', g.erwartet)
+      : t('pod_dg_passt_nicht').replace('{icd}', codes);
+    gruende.set(g.dg, text);
+  }
+
+  let geraeumt = false;
+  for (const opt of Array.from(dgEl.options)) {
+    if (opt.dataset.dgLabel === undefined) opt.dataset.dgLabel = opt.textContent;
+    const grund = opt.value ? gruende.get(normDgCode(opt.value)) : undefined;
+    opt.disabled    = !!grund;
+    opt.textContent = grund ? `${opt.dataset.dgLabel} — ${grund}` : opt.dataset.dgLabel;
+    // Frueher wurde hier ausgeblendet; das Attribut wird zurueckgesetzt, damit
+    // ein aus einer aelteren Sitzung stehengebliebenes display:none verschwindet.
+    opt.style.display = '';
+    if (grund && opts.raeumen && dgEl.value === opt.value) {
+      dgEl.value = '';
+      geraeumt   = true;
+    }
+  }
+  return { gesperrt: [...gruende.keys()], geraeumt };
+}

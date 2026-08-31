@@ -13,12 +13,12 @@ import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=
 import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
-import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
+import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260830';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260828';
-import { loadDgIcdRules, getDgIcdRules } from './module/diagnosegruppen-regeln.js?v=20260827';
+import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
@@ -193,6 +193,9 @@ const T = {
     pod_icd10_label: 'ICD-10 Code',
     pod_icd_mismatch: 'Code stimmt nicht mit der Diagnosegruppe überein',
     pod_icd_hard: 'Eine Korrektur ist nur mit erneuter Arztunterschrift und Datumsangabe zulässig und muss vor der Einreichung zur Abrechnung erfolgt sein.',
+    pod_dg_nur_mit: 'nur mit {icd}',
+    pod_dg_passt_nicht: 'passt nicht zu {icd}',
+    pod_dg_kandidaten: 'Passende Diagnosegruppen:',
     pod_l60_hint: 'L60.0 – bitte Stadium bestätigen (maßgeblich ist die Angabe auf der Verordnung):',
     pod_l60_ui1: 'Unguis incarnatus – Stadium 1 (UI1)',
     pod_l60_ui2: 'Stadium 2 oder 3 (UI2)',
@@ -390,6 +393,9 @@ const T = {
     pod_icd10_label: 'ICD-10 Code',
     pod_icd_mismatch: 'Code does not match the diagnosis group',
     pod_icd_hard: 'A correction is only permitted with a new physician signature and date and must be completed before submission for billing.',
+    pod_dg_nur_mit: 'only with {icd}',
+    pod_dg_passt_nicht: 'does not match {icd}',
+    pod_dg_kandidaten: 'Matching diagnosis groups:',
     pod_l60_hint: 'L60.0 – please confirm the stage (use the physician\'s notation on the prescription):',
     pod_l60_ui1: 'Unguis incarnatus – Stage 1 (UI1)',
     pod_l60_ui2: 'Stage 2 or 3 (UI2)',
@@ -580,6 +586,9 @@ const T = {
     pod_icd10_label: 'ICD-10 Kodu',
     pod_icd_mismatch: 'Kod, tanı grubuyla örtüşmüyor',
     pod_icd_hard: 'Düzeltme yalnızca yeni hekim imzası ve tarihiyle yapılabilir; faturalandırma için gönderimden önce tamamlanmalıdır.',
+    pod_dg_nur_mit: 'yalnızca {icd} ile',
+    pod_dg_passt_nicht: '{icd} ile uyuşmuyor',
+    pod_dg_kandidaten: 'Uygun tanı grupları:',
     pod_l60_hint: 'L60.0 – lütfen evresi onaylayın (reçetedeki hekim kaydı geçerlidir):',
     pod_l60_ui1: 'Unguis incarnatus – Evre 1 (UI1)',
     pod_l60_ui2: 'Evre 2 veya 3 (UI2)',
@@ -16578,12 +16587,6 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
   if (!icdEl || icdEl.dataset.dgIcdWired) return;
   icdEl.dataset.dgIcdWired = '1';
 
-  // FIX 1: Normaliserungshilfe für DG-Textwert (Großbuchstaben, Leerzeichen weg,
-  // Untergruppen-Suffix -a/-b/-c abschneiden, damit getDgIcdRules() nachgeschlagen werden kann)
-  function _normDgCode(raw) {
-    return String(raw || '').replace(/\s+/g, '').toUpperCase().replace(/-[ABC]$/, '');
-  }
-
   /**
    * Setzt die Diagnosegruppe programmatisch und löst dabei input/change aus,
    * damit abhängige Logik mitläuft. Die Marke `autoSetting` sorgt dafür, dass
@@ -16603,18 +16606,16 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     }
   }
 
-  async function onIcdChange() {
-    const rawIcd = icdEl.value;
-    const codes  = parseIcdList(rawIcd);
-    const warnEl = warnId ? document.getElementById(warnId) : null;
+  async function onIcdChange(commit) {
+    const codes   = parseIcdList(icdEl.value);
+    const warnEl  = warnId ? document.getElementById(warnId) : null;
+    const l60hint = document.getElementById('podL60Hint');
 
-    // Keine Kodes → kein Hinweis
+    // Keine Kodes → kein Hinweis, keine Sperre
     if (codes.length === 0) {
       if (warnEl) warnEl.style.display = 'none';
-      if (icdId === 'podNewIcd10') {
-        const h = document.getElementById('podL60Hint');
-        if (h) h.style.display = 'none';
-      }
+      if (l60hint) l60hint.style.display = 'none';
+      dgOptionenSperren(dgEl, null, { t });
       return;
     }
 
@@ -16627,50 +16628,40 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     const rules = getDgIcdRules() || {};
     if (!Object.keys(rules).length) return;
 
-    // Spezialfall L60.0: keine automatische Auswahl, stattdessen Rückfrage
-    const hasL60 = codes.some(c => /^L60\.0$/.test(c));
-    if (hasL60) {
-      const l60hint = document.getElementById('podL60Hint');
-      if (l60hint) l60hint.style.display = 'block';
-      if (dgEl && dgEl.tagName === 'SELECT') {
-        const cur = dgEl.value;
-        Array.from(dgEl.options).forEach(opt => {
-          opt.style.display = (!opt.value || opt.value === 'UI1' || opt.value === 'UI2') ? '' : 'none';
-        });
-        if (cur && cur !== 'UI1' && cur !== 'UI2') {
-          if (!dgEl.dataset.manualOverride) dgEl.value = '';
-        }
-      }
-      // Warnung zurücksetzen (L60.0 ist für UI1/UI2 korrekt)
-      if (warnEl) warnEl.style.display = 'none';
-      return;
-    }
-
-    // Normale Kodes: L60.0-Hint ausblenden, Optionen zurücksetzen
-    const l60hint = document.getElementById('podL60Hint');
-    if (l60hint) l60hint.style.display = 'none';
-    if (dgEl && dgEl.tagName === 'SELECT') {
-      Array.from(dgEl.options).forEach(opt => { opt.style.display = ''; });
-    }
+    // Vorschlag und Sperren in einem Zug — die Regeln stehen in der Tabelle
+    // `diagnosegruppen`, nicht mehr hier. `normativ` heisst: jeder eingegebene
+    // Kode gehoert normativ genau einer Gruppe (heute nur L60.0 → UI1/UI2),
+    // dann kommt die Rueckfrage statt einer geratenen Auswahl.
+    const v = dgVorschlag(codes, rules);
+    if (l60hint) l60hint.style.display = v.normativ ? 'block' : 'none';
+    // Unmoegliche Kombinationen sperren — mit Begruendung an der Option selbst.
+    // Geraeumt wird nur beim Verlassen des Feldes, s. dgOptionenSperren.
+    dgOptionenSperren(dgEl, v, { codes, t, raeumen: commit === true });
 
     // Eine vom Anwender gesetzte Diagnosegruppe wird nicht überschrieben — das
     // prüft _setDgProgrammatically. Hier darf NICHT abgebrochen werden, sonst
     // bliebe genau der interessante Fall ohne Hinweis: der Anwender hat die
     // Gruppe von Hand gewählt und der Kode passt nicht dazu.
 
-    // autoSelectDg: genau eine DG passt?
-    const selected = autoSelectDg(codes, rules);
-    if (selected && dgEl) {
-      // Beim <select> nur setzen, wenn es die Option wirklich gibt.
+    // Genau eine Gruppe passt → eintragen (beim <select> nur, wenn es die
+    // Option wirklich gibt).
+    if (v.auto && dgEl) {
       const optExists = dgEl.tagName !== 'SELECT'
-        || Array.from(dgEl.options).some(o => o.value === selected);
-      if (optExists) _setDgProgrammatically(selected);
+        || Array.from(dgEl.options).some(o => o.value === v.auto);
+      if (optExists) _setDgProgrammatically(v.auto);
     }
 
     // Warnhinweis
     if (!warnEl || !dgEl) return;
-    const dgRoot = _normDgCode(dgEl.value);
-    if (!dgRoot) { warnEl.style.display = 'none'; return; }
+    const dgRoot = normDgCode(dgEl.value);
+    if (!dgRoot) {
+      // Noch keine Gruppe gewaehlt: die passenden benennen statt schweigen.
+      const zeig = !v.auto && v.kandidaten.length > 1;
+      warnEl.textContent   = zeig ? `${t('pod_dg_kandidaten')} ${v.kandidaten.join(', ')}` : '';
+      warnEl.style.fontWeight = '';
+      warnEl.style.display = zeig ? 'block' : 'none';
+      return;
+    }
     const rule = rules[dgRoot];
     if (!rule || !rule.icd_accept || !rule.icd_accept.length) { warnEl.style.display = 'none'; return; }
     const result = matchIcdToDg(codes, rule);
@@ -16711,7 +16702,7 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
       if (icdEl.value.trim()) return;                // Gefülltes Feld bleibt
       if (bereich !== 'podologie') return;
       if (!getDgIcdRules() || !Object.keys(getDgIcdRules()).length) await loadDgIcdRules(supabase);
-      const rule = (getDgIcdRules() || {})[_normDgCode(dgEl.value)];
+      const rule = (getDgIcdRules() || {})[normDgCode(dgEl.value)];
       const sole = rule ? soleIcdForDg(rule) : null;
       if (!sole || icdEl.value.trim()) return;
       icdEl.value = sole;
@@ -16720,11 +16711,11 @@ function _wireDgIcdPair(icdId, dgId, dgKind, warnId, bereich) {
     });
   }
 
-  icdEl.addEventListener('input',  onIcdChange);
-  icdEl.addEventListener('change', onIcdChange);
+  icdEl.addEventListener('input',  () => onIcdChange(false));
+  icdEl.addEventListener('change', () => onIcdChange(true));
 
   // Wenn Feld bereits befüllt: sofort prüfen
-  if (icdEl.value.trim()) onIcdChange();
+  if (icdEl.value.trim()) onIcdChange(true);
 }
 
 let rzPatientCache = [];
