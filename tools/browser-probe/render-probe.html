@@ -21,6 +21,7 @@
 <script type="module">
 import { renderWoche } from '../../module/kalender-woche.js';
 import { renderMonat } from '../../module/kalender-monat.js';
+import { alsISODatum } from '../../module/datum.js';
 import { renderLeistungenListe, renderGkvKatalog } from '../../module/leistungen-liste.js';
 import { terminFarben } from '../../module/kalender-farben.js';
 import { verdrahteKontextmenue } from '../../module/kalender-kontextmenue.js';
@@ -60,7 +61,9 @@ await renderMonat({
   supabase: fakeSupabase, year: 2026, month: 7, ownerId: 'o1',
   teamMembers: TEAM, calEmpFilter: 'all',
   farbeFuer: (b) => terminFarben(b, { teamMembers: TEAM, empFarben: EMP_COLORS }),
-  onTagEinfachklick: () => ereignisse.push({ was: 'monat-klick' }),
+  // Den gemeldeten Tag mitschreiben, nicht nur dass geklickt wurde: der Fehler
+  // vom 31.08.2026 war ja gerade, dass der Klick ankam — nur mit dem Vortag.
+  onTagEinfachklick: (d) => ereignisse.push({ was: 'monat-klick', gemeldet: alsISODatum(d) }),
   onTagDoppelklick: (d) => ereignisse.push({ was: 'monat-dblclick', ...d }),
   onTerminKlick: (b) => ereignisse.push({ was: 'monat-termin', id: b.id }),
   setzeDatumsLabel: () => {},

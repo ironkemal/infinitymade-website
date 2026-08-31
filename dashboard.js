@@ -40,8 +40,9 @@ import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatiente
 import { normalisiereGeschlecht, fuelleGeschlechtSelects } from './module/geschlecht.js?v=20260816';
 import { DV_SLOT_MIN, DV_SLOT_PX, WV_SLOT_PX, terminZeitLabel, moveVersatzMinuten, zeitPlusMinuten } from './module/kalender-raster.js?v=20260830';
 import { teamReihenfolge, renderEmpChips } from './module/kalender-team.js?v=20260830';
-import { renderWoche } from './module/kalender-woche.js?v=20260830';
-import { renderMonat } from './module/kalender-monat.js?v=20260830';
+import { renderWoche } from './module/kalender-woche.js?v=20260831';
+import { renderMonat } from './module/kalender-monat.js?v=20260831';
+import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260830';
@@ -2570,8 +2571,8 @@ async function initCalendar() {
     emptyText: 'Keine freien Termine verfügbar.',
     placeholder: 'Bitte Datum wählen',
     onMonthChange: async (year, month) => {
-      const start = new Date(year, month, 1).toISOString().split('T')[0];
-      const end = new Date(year, month + 1, 0).toISOString().split('T')[0] + 'T23:59:59';
+      const start = toISODate(new Date(year, month, 1));
+      const end = toISODate(new Date(year, month + 1, 0)) + 'T23:59:59';
       let q = supabase.from('bookings').select('start_time')
         .eq('owner_id', ownerId).neq('status', 'cancelled')
         .gte('start_time', start).lte('start_time', end);
@@ -2643,8 +2644,6 @@ document.getElementById('calAddLeaveBtn').addEventListener('click', () => {
 document.querySelectorAll('.cal-view-toggle .cal-view-btn').forEach(btn => {
   btn.addEventListener('click', () => setCalendarView(btn.dataset.view));
 });
-
-function toISODate(d) { return d.toISOString().split('T')[0]; }
 
 function formatDateDE(d) {
   const opts = { day: 'numeric', month: 'long', year: 'numeric' };

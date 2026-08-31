@@ -31,6 +31,7 @@
  */
 
 import { WV_SLOT_PX } from './kalender-raster.js?v=20260822';
+import { alsISODatum } from './datum.js?v=20260831';
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
 import { mitDeckkraft } from './kalender-farben.js?v=20260825';
 import { istBlockerLeistung } from './kalender-blocker.js?v=20260825';
@@ -44,6 +45,7 @@ const START_STUNDE = 8;
 const END_STUNDE = 20;
 const DAY_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
+/** Zweistellig — fuer die Uhrzeit-Beschriftung der Rasterfelder. */
 const zwei = (n) => String(n).padStart(2, '0');
 
 /**
@@ -55,11 +57,6 @@ const zwei = (n) => String(n).padStart(2, '0');
  */
 let langdruckVerdrahtet = false;
 let letzterStand = { onSlotDoppelklick: null, moveAktiv: false };
-
-/** "2026-08-22" aus einem Date, ohne Zeitzonenumweg über toISOString(). */
-function alsISODatum(d) {
-  return `${d.getFullYear()}-${zwei(d.getMonth() + 1)}-${zwei(d.getDate())}`;
-}
 
 /**
  * Montag der Woche, in der `dateStr` liegt.

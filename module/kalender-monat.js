@@ -23,6 +23,7 @@
  */
 
 import { aufLangenDruck } from './langer-druck.js?v=20260822';
+import { alsISODatum } from './datum.js?v=20260831';
 
 const MONATE_DE = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -35,13 +36,6 @@ const MAX_PILLEN = 3;
 
 /** Wartezeit, in der ein zweiter Klick den Sprung noch abfangen kann. */
 export const SPRUNG_VERZOEGERUNG_MS = 250;
-
-const zwei = (n) => String(n).padStart(2, '0');
-
-/** "2026-08-22" aus einem Date, lokal — nicht über toISOString(). */
-function alsISODatum(d) {
-  return `${d.getFullYear()}-${zwei(d.getMonth() + 1)}-${zwei(d.getDate())}`;
-}
 
 /**
  * Die Kacheln eines Monats, Montag zuerst, vorne und hinten mit den Tagen der

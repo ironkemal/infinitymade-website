@@ -59,7 +59,7 @@ p('Trenner eingeblendet', d.dividerVersteckt === false);
 console.log('\n══ INTERAKTION');
 await page.dblclick('.wv-col-slots .dv-slot[data-time$="T14:30"]');
 await page.click('.wv-booking-block');
-await page.click('.month-cell');
+await page.click('.month-cell[data-datum="2026-08-19"]');
 await page.click('#servicesGrid tbody tr');
 await page.click('#gkvCatalogSection [data-gkv="78020"]');
 await page.click('.wv-booking-block', { button: 'right' });
@@ -74,7 +74,13 @@ const ev = await page.evaluate(() => window.__ereignisse);
 const hat = (was) => ev.some(e => e.was === was);
 p('Doppelklick Woche meldet Zeit', hat('woche-dblclick'), JSON.stringify(ev.find(e=>e.was==='woche-dblclick')||{}));
 p('Klick auf Wochentermin meldet Termin', hat('woche-termin'));
+const monatKlick = ev.find(e => e.was === 'monat-klick');
 p('Klick auf Monatszelle meldet Tag', hat('monat-klick'));
+// Ops-Karte adaf10bf: der Klick auf den 19. oeffnete den 18. Ursache war
+// toISOString() auf einer lokalen Mitternacht — Berlin liegt vor UTC.
+p('Klick auf den 19. meldet auch den 19. (kein Tagesversatz)',
+  monatKlick?.gemeldet === '2026-08-19',
+  `geklickt 2026-08-19, gemeldet ${monatKlick?.gemeldet ?? '—'}`);
 p('Klick auf Leistungszeile öffnet Bearbeitung', hat('leistung-bearbeiten'));
 p('GKV "+ Einrichten" meldet Code', hat('gkv-einrichten'));
 p('Rechtsklick öffnet Menü', menueOffen, eintraege.join(' | '));
