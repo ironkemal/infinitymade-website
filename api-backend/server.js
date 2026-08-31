@@ -3739,8 +3739,11 @@ async function anfrageKorrekturenPruefen(body, ownerId) {
       // Ohne diese Pruefung koennte ein Praxisinhaber die Leistung einer FREMDEN Praxis
       // eintragen: deren Titel landet dann in der Bestaetigungsmail und deren Dauer in
       // der Slot-Berechnung. Die Mandantengrenze haengt genau an dieser Zeile.
+      // Beide Spalten pruefen: `services.owner_id` ist nicht immer gefuellt, aeltere
+      // Leistungen haengen nur an `user_id`. Nur `owner_id` zu pruefen wuerde eigene
+      // Leistungen als "fremde Praxis" abweisen.
       const { data: svc } = await supabase.from('services')
-        .select('id').eq('id', v).eq('owner_id', ownerId).maybeSingle();
+        .select('id').eq('id', v).or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`).maybeSingle();
       if (!svc) return { fehler: 'Diese Leistung gehört nicht zu Ihrer Praxis' };
       setzen('service_id', v);
     }
@@ -3818,8 +3821,15 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     if (bookReq.patients?.email && process.env.SMTP_HOST) {
       const [{ data: ownerP }, { data: empP }] = await Promise.all([
         supabase.from('profiles').select('business_name, email').eq('id', owner_id).maybeSingle(),
-        supabase.from('profiles').select('full_name').eq('id', empId).maybeSingle(),
+        // `profiles` hat keine Spalte `full_name` — dieser Select lief mit 400 ins
+        // Leere, und die Zeile "Therapeut:" fehlte in jeder Bestaetigungsmail.
+        supabase.from('profiles')
+          // Bewusst ohne `email`: der Fallback fuer den Therapeutennamen darf keine
+          // Mitarbeiter-Adresse in die Patientenmail schreiben.
+          .select('owner_first_name, owner_last_name, business_name').eq('id', empId).maybeSingle(),
       ]);
+      const empName = [empP?.owner_first_name, empP?.owner_last_name].filter(Boolean).join(' ')
+        || empP?.business_name || '';
       const cancelToken = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY)
         .update(`${request_id}:${bookReq.patient_id}`).digest('hex').substring(0, 32);
       const t = createSMTPTransport();
@@ -3828,7 +3838,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
-        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${anfrage.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(anfrage.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${anfrage.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${anfrage.preferred_time} Uhr</p>` : ''}${empP?.full_name ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${empP.full_name}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${anfrage.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(anfrage.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${anfrage.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${anfrage.preferred_time} Uhr</p>` : ''}${empName ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${empName}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
       }).catch(e => console.error('[booking-request/approve] email', e.message));
     }
 

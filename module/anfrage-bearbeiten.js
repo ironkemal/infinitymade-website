@@ -46,7 +46,7 @@ let ctx = null;
  * @param {object} c
  *   API, escapeHtml, showToast, showHtmlModal, supabase
  *   getSession()   → Promise<{access_token}>
- *   getProfile()   → { id, full_name }   der angemeldete Inhaber
+ *   getProfile()   → profiles-Zeile des angemeldeten Inhabers
  *   onFertig()     → nach erfolgreichem Bestätigen (Liste neu laden)
  */
 export function initAnfrageBearbeiten(c) { ctx = c; }
@@ -68,15 +68,31 @@ function datumFuerFeld(wert) {
  * Beides owner-weit — der Inhaber darf beim Bestätigen jeden seiner Therapeuten
  * und jede seiner Leistungen eintragen.
  */
+// `profiles` hat KEINE Spalte `full_name` (db/SCHEMA.sql) — der Name steht in
+// owner_first_name/owner_last_name, ersatzweise in email. Ein Select auf full_name
+// laesst PostgREST die ganze Abfrage mit 400 abweisen: die Therapeutenliste waere
+// leer und nur der Inhaber stuende drin.
+function personName(p) {
+  return [p?.owner_first_name, p?.owner_last_name].filter(Boolean).join(' ')
+    || p?.business_name || p?.email || '—';
+}
+
 async function stammdatenLaden(ownerId) {
   const { supabase, getProfile } = ctx;
   const [{ data: team }, { data: leistungen }] = await Promise.all([
-    supabase.from('profiles').select('id, full_name').eq('owner_id', ownerId).eq('role', 'employee'),
-    supabase.from('services').select('id, title, duration_minutes').eq('owner_id', ownerId).order('title'),
+    supabase.from('profiles')
+      .select('id, owner_first_name, owner_last_name, business_name, email')
+      .eq('owner_id', ownerId).eq('role', 'employee'),
+    // `services.owner_id` ist nicht immer gefuellt — aeltere Leistungen haengen nur
+    // an `user_id`. Alle fuenf anderen Leser im Dashboard fragen deshalb beide
+    // Spalten ab; nur `owner_id` zu pruefen liesse Leistungen aus der Liste fallen.
+    supabase.from('services').select('id, title, duration_minutes')
+      .or(`owner_id.eq.${ownerId},user_id.eq.${ownerId}`).order('title'),
   ]);
   const profil = getProfile();
   return {
-    team: [{ id: profil.id, full_name: `${profil.full_name || 'Praxisinhaber'} (Sie)` }, ...(team || [])],
+    team: [{ id: profil.id, name: `${personName(profil)} (Sie)` },
+           ...(team || []).map(p => ({ id: p.id, name: personName(p) }))],
     leistungen: leistungen || [],
   };
 }
@@ -86,8 +102,19 @@ function formularHtml(req, team, leistungen) {
   const opt = (wert, text, gewaehlt) =>
     `<option value="${escapeHtml(String(wert))}"${String(wert) === String(gewaehlt) ? ' selected' : ''}>${escapeHtml(text)}</option>`;
 
-  const therapeuten = team.map(p => opt(p.id, p.full_name || '—', req.employee_id)).join('');
-  const dienste = leistungen.map(s =>
+  const therapeuten = team.map(p => opt(p.id, p.name, req.employee_id)).join('');
+  // Steht die Leistung der Anfrage nicht in der Liste (geloescht, oder einem anderen
+  // Standort zugeordnet), faellt das <select> auf "" zurueck. `aenderungenSammeln`
+  // haelt das fuer eine Aenderung und wuerde die Leistung beim Bestaetigen loeschen,
+  // ohne dass jemand das Feld angefasst hat. Deshalb hier ergaenzen statt verlieren —
+  // der Titel kommt aus dem Join in /booking-request/list.
+  const bekannt = leistungen.some(s => s.id === req.service_id);
+  const liste = (!bekannt && req.service_id)
+    ? [{ id: req.service_id, title: req.services?.title || 'Zugeordnete Leistung',
+         duration_minutes: req.services?.duration_minutes }, ...leistungen]
+    : leistungen;
+
+  const dienste = liste.map(s =>
     opt(s.id, s.duration_minutes ? `${s.title} (${s.duration_minutes} Min)` : s.title, req.service_id)).join('');
 
   // Sitzungszahl: `verordnung_sitzungen` steuert die Serie (siehe
