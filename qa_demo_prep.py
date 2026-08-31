@@ -10,6 +10,12 @@ import json
 import datetime
 from playwright.sync_api import sync_playwright
 
+from qa_credentials import qa_login
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
+
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -24,8 +30,8 @@ FAIL = 0
 WARN = 0
 
 LOGIN_URL = "https://app.praxura.de/login.html"
-EMAIL = "fizyo6@gmail.com"
-PASSWORD = "Yavuzkemal123."
+EMAIL = QA_EMAIL
+PASSWORD = QA_PASSWORD
 
 def ss(page, name):
     path = os.path.join(TMP, f"demo_{name}.png")

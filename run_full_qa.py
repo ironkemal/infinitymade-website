@@ -6,6 +6,12 @@ import json
 import urllib.request
 from playwright.sync_api import sync_playwright
 
+from qa_credentials import qa_login
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
+
 def is_server_running(url):
     try:
         with urllib.request.urlopen(url, timeout=2) as response:
@@ -82,9 +88,9 @@ def run_full_qa():
             page.wait_for_selector("#email", timeout=5000)
             
             # 2. Login
-            print("Filling in credentials for fizyo6@gmail.com...")
-            page.fill("#email", "fizyo6@gmail.com")
-            page.fill("#password", "Yavuzkemal123.")
+            print(f"Filling in credentials for {QA_EMAIL}...")
+            page.fill("#email", QA_EMAIL)
+            page.fill("#password", QA_PASSWORD)
             page.screenshot(path=os.path.join(scratch_dir, "01_login_filled.png"))
             
             page.click("#submitBtn")

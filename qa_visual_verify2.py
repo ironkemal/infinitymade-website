@@ -4,6 +4,12 @@ import time
 import datetime
 from playwright.sync_api import sync_playwright
 
+from qa_credentials import qa_login
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
+
 # Reconfigure stdout to use UTF-8 to handle Turkish and German characters in terminal output
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -170,8 +176,8 @@ def run_visual_verification_v2():
             page.wait_for_selector("#email", timeout=10000)
             
             print("Filling in credentials...")
-            page.fill("#email", "fizyo6@gmail.com")
-            page.fill("#password", "Yavuzkemal123.")
+            page.fill("#email", QA_EMAIL)
+            page.fill("#password", QA_PASSWORD)
             
             print("Submitting login form...")
             page.click("#submitBtn")

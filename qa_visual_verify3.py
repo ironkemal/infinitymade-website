@@ -4,6 +4,14 @@ import time
 import datetime
 from playwright.sync_api import sync_playwright
 
+from qa_credentials import qa_login, get
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
+# Optional: zweites Passwort, falls das Konto gerade umgestellt wird.
+QA_PASSWORD_FALLBACK = get("PRAXURA_QA_PASSWORD_FALLBACK")
+
 # Reconfigure stdout to use UTF-8 to handle special characters cleanly
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -131,24 +139,26 @@ def run_visual_verification_v3():
             page.goto(login_url, timeout=30000)
             page.wait_for_selector("#email", timeout=10000)
             
-            # Try Yavuzkemal123
-            print("Trying credentials Yavuzkemal123...")
-            page.fill("#email", "fizyo6@gmail.com")
-            page.fill("#password", "Yavuzkemal123")
+            # Primaeres Passwort
+            print("Trying primary credentials...")
+            page.fill("#email", QA_EMAIL)
+            page.fill("#password", QA_PASSWORD)
             page.click("#submitBtn")
             
             try:
                 page.wait_for_url("**/dashboard.html*", timeout=6000)
-                print("Logged in successfully with password: Yavuzkemal123")
+                print("Logged in with PRAXURA_QA_PASSWORD.")
             except Exception:
-                print("Could not log in with Yavuzkemal123. Trying fallback password: Yavuzkemal123.")
+                if not QA_PASSWORD_FALLBACK:
+                    raise
+                print("Primary password rejected. Trying PRAXURA_QA_PASSWORD_FALLBACK...")
                 page.goto(login_url, timeout=30000)
                 page.wait_for_selector("#email", timeout=10000)
-                page.fill("#email", "fizyo6@gmail.com")
-                page.fill("#password", "Yavuzkemal123.")
+                page.fill("#email", QA_EMAIL)
+                page.fill("#password", QA_PASSWORD_FALLBACK)
                 page.click("#submitBtn")
                 page.wait_for_url("**/dashboard.html*", timeout=20000)
-                print("Logged in successfully with password: Yavuzkemal123.")
+                print("Logged in with PRAXURA_QA_PASSWORD_FALLBACK.")
             
             # Wait for app ready
             page.wait_for_selector("#app", state="visible", timeout=20000)

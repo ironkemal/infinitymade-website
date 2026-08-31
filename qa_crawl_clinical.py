@@ -5,6 +5,12 @@ import json
 import datetime
 from playwright.sync_api import sync_playwright
 
+from qa_credentials import qa_login
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
+
 # Ensure c:\tmp exists
 tmp_dir = r"C:\tmp"
 os.makedirs(tmp_dir, exist_ok=True)
@@ -132,8 +138,8 @@ def run_clinical_qa():
                 page.goto("https://app.praxura.de/login.html", timeout=30000)
                 page.wait_for_selector("#email", timeout=15000)
                 
-                page.fill("#email", "fizyo6@gmail.com")
-                page.fill("#password", "Yavuzkemal123.")
+                page.fill("#email", QA_EMAIL)
+                page.fill("#password", QA_PASSWORD)
                 page.click("#submitBtn")
                 
                 page.wait_for_url("**/dashboard.html*", timeout=20000)

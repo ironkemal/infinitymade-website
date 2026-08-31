@@ -440,16 +440,12 @@ async function loadServices() {
       btn.className = 'br-select-card';
       btn.dataset.id = svc.id;
 
-      let priceStr = '';
-      if (svc.price != null && svc.price > 0) {
-        priceStr = `<span class="card-badge">${Number(svc.price).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</span>`;
-      }
-      let durStr = svc.duration ? `<span style="font-size:0.8rem;color:var(--text-muted);">⏱ ${svc.duration} Min.</span>` : '';
-
+      // Beta-Rueckmeldung 31.08.2026: Preis und Behandlungsdauer gehoeren nicht in die
+      // Patientenansicht. svc.duration bleibt im Datensatz — sie wird weiter unten fuer
+      // die Slot-Abfrage gebraucht, aber nicht mehr angezeigt.
       btn.innerHTML = `
         <span class="card-title">${escHtml(svc.name || 'Leistung')}</span>
         <span class="card-desc">${escHtml(svc.description || '')}</span>
-        <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.25rem;">${durStr}${priceStr}</div>
       `;
 
       btn.addEventListener('click', () => {

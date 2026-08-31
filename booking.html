@@ -496,22 +496,6 @@
       box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
     }
 
-    .gap-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .gap-card-dur {
-      background: rgba(0, 0, 0, 0.25);
-      color: #fff;
-      padding: 3px 10px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-
     .gap-card-time {
       font-size: 1rem;
       color: rgba(255, 255, 255, 0.95);
@@ -685,13 +669,6 @@
       <div class="biz-meta">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-        <span id="bizDuration">–</span>
-      </div>
-      <div class="biz-meta">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" />
           <line x1="2" y1="12" x2="22" y2="12" />
           <path d="M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
         </svg>
@@ -732,14 +709,7 @@
         <div id="srvList"></div>
       </div>
 
-      <!-- Step 3: Duration (for physio multi-duration services) -->
-      <div class="step" id="step-duration">
-        <button class="btn-back" id="backToSrvDur">&#8592; Zurück</button>
-        <div class="step-title">Sitzungsdauer wählen</div>
-        <div id="durList"></div>
-      </div>
-
-      <!-- Step 4: Schedule (dashboard-style) -->
+      <!-- Step 3: Schedule (dashboard-style) -->
       <div class="step" id="step-datetime">
         <button class="btn-back" id="backToSrv">&#8592; Zurück</button>
         <div class="step-title">Termin wählen</div>
@@ -767,7 +737,7 @@
         </div>
       </div>
 
-      <!-- Step 5: Form -->
+      <!-- Step 4: Form -->
       <div class="step" id="step-form">
         <button class="btn-back" id="backToCal">&#8592; Zurück</button>
         <div class="step-title">Ihre Kontaktdaten</div>
@@ -788,7 +758,7 @@
         </form>
       </div>
 
-      <!-- Step 6: Success -->
+      <!-- Step 5: Success -->
       <div class="step" id="step-success">
         <div class="success-wrap">
           <div class="success-icon">✅</div>
@@ -800,7 +770,7 @@
     </main>
   </div>
 
-  <script type="module" src="booking.js?v=20260816"></script>
+  <script type="module" src="booking.js?v=20260831"></script>
 <footer style="text-align:center;padding:1.5rem 1rem;font-size:0.82rem;color:#999;border-top:1px solid #f0f0f0;margin-top:2rem;">
   <a href="/impressum.html" style="color:#999;text-decoration:underline;margin:0 0.5rem;">Impressum</a> ·
   <a href="/datenschutz.html" style="color:#999;text-decoration:underline;margin:0 0.5rem;">Datenschutz</a>

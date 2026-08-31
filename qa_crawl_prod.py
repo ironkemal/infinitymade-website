@@ -4,6 +4,12 @@ import time
 import json
 from playwright.sync_api import sync_playwright
 
+from qa_credentials import qa_login
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
+
 # Module level variable for tagging events
 current_panel = "login"
 
@@ -121,8 +127,8 @@ def run_qa_crawler():
             page.wait_for_selector("#email", timeout=10000)
             
             print("Filling in credentials...")
-            page.fill("#email", "fizyo6@gmail.com")
-            page.fill("#password", "Yavuzkemal123.")
+            page.fill("#email", QA_EMAIL)
+            page.fill("#password", QA_PASSWORD)
             
             print("Submitting login form...")
             page.click("#submitBtn")

@@ -1,5 +1,11 @@
 from playwright.sync_api import sync_playwright
+
 import sys
+from qa_credentials import qa_login
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
 
 def run_persistent_browser():
     print("Starting Playwright in headed mode (headless=False)...")
@@ -17,9 +23,9 @@ def run_persistent_browser():
         # Fill in credentials
         page.wait_for_selector("#email")
         print("Filling in credentials...")
-        page.fill("#email", "fizyo6@gmail.com")
+        page.fill("#email", QA_EMAIL)
         page.wait_for_timeout(500)
-        page.fill("#password", "Yavuzkemal123.")
+        page.fill("#password", QA_PASSWORD)
         page.wait_for_timeout(500)
         
         print("Submitting login form...")

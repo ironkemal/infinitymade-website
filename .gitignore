@@ -39,3 +39,7 @@ Praxura weekly meeting/
 # macOS Finder-Muell
 .DS_Store
 **/.DS_Store
+
+# Python-Bytecode
+__pycache__/
+*.pyc

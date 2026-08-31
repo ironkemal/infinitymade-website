@@ -40,11 +40,9 @@ function updateSidebar() {
   const srvBlock = document.getElementById('selSrvBlock');
   if (state.serviceTitle) {
     srvBlock.classList.add('show');
-    document.getElementById('selSrvVal').textContent = `${state.serviceTitle} (${state.durationMinutes} Min)`;
-    document.getElementById('bizDuration').textContent = state.durationMinutes + ' Min';
+    document.getElementById('selSrvVal').textContent = state.serviceTitle;
   } else {
     srvBlock.classList.remove('show');
-    document.getElementById('bizDuration').textContent = '–';
   }
 
   const dateBlock = document.getElementById('selDateBlock');
@@ -196,7 +194,10 @@ async function loadServices(empId) {
   document.getElementById('srvList').innerHTML = '<div class="slots-empty">Laden…</div>';
   goStep('services');
 
-  const { data } = await supabase.from('employee_services').select('services(*)').eq('employee_id', empId);
+  // Preis wird in der Patientenansicht nicht gezeigt und deshalb gar nicht erst geladen.
+  // duration_minutes bleibt — sie steuert die Slot-Berechnung, nicht die Anzeige.
+  const { data } = await supabase.from('employee_services')
+    .select('services(id,title,duration_minutes)').eq('employee_id', empId);
   if (!data || !data.length) {
     document.getElementById('srvList').innerHTML = '<div class="slots-empty">Keine Dienstleistungen verfügbar.</div>';
     return;
@@ -211,50 +212,23 @@ async function loadServices(empId) {
     return;
   }
 
+  // Beta-Rueckmeldung 31.08.2026: Preis und Behandlungsdauer gehoeren nicht in die
+  // Patientenansicht. Die Dauer kommt weiter aus der Leistung (data-dur) und steuert
+  // im Hintergrund die Slot-Berechnung — der Patient waehlt sie nicht mehr aus.
   document.getElementById('srvList').innerHTML = filtered.map(d => {
     const s = d.services;
     const dur = s.duration_minutes || 30;
-    const price = s.price || '';
-    return `<div class="srv-item-wrapper">
-      <button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${dur}" data-price="${price}">
-        <div class="list-btn-title">${s.title}</div>
-        <div class="list-btn-sub">${dur} Min${price ? ' · ' + price + ' €' : ''}</div>
-      </button>
-      <div class="srv-duration-row" id="dur-row-${s.id}" style="display:none;">
-        <span class="srv-duration-label">Dauer wählen:</span>
-        <div class="srv-duration-options">
-          ${[10, 15, 20, 25, 30, 35, 40, 45, 50, 60].filter(m => m <= dur * 2).map(m => `
-            <label class="srv-duration-option">
-              <input type="radio" name="srv-dur-${s.id}" value="${m}" data-dur="${m}">
-              <span>${m} Min</span>
-            </label>
-          `).join('')}
-        </div>
-      </div>
-    </div>`;
+    return `<button class="list-btn srv-btn" data-id="${s.id}" data-title="${s.title}" data-dur="${dur}">
+      <div class="list-btn-title">${s.title}</div>
+    </button>`;
   }).join('');
 
   document.querySelectorAll('.srv-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      // Toggle duration row visibility
-      const srvId = btn.dataset.id;
-      const durRow = document.getElementById('dur-row-' + srvId);
-      const wasVisible = !durRow.hidden;
-
-      // Hide all duration rows first
-      document.querySelectorAll('.srv-duration-row').forEach(r => r.hidden = true);
       document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
-
-      if (wasVisible) {
-        // Was already open, just closed it - do nothing
-        return;
-      }
-
-      // Show this service's duration row
       btn.classList.add('active');
-      durRow.hidden = false;
 
-      state.serviceId = srvId;
+      state.serviceId = btn.dataset.id;
       state.serviceTitle = btn.dataset.title;
       state.durationMinutes = parseInt(btn.dataset.dur) || 30;
       state.selectedDate = null;
@@ -263,23 +237,6 @@ async function loadServices(empId) {
       updateSidebar();
       mountBookingCalendar();
       goStep('datetime');
-    });
-  });
-
-  // Duration radio change handlers
-  document.querySelectorAll('.srv-duration-options input[type="radio"]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      const srvId = e.target.name.replace('srv-dur-', '');
-      const btn = document.querySelector(`.srv-btn[data-id="${srvId}"]`);
-      if (btn) {
-        state.serviceId = srvId;
-        state.serviceTitle = btn.dataset.title;
-        state.durationMinutes = parseInt(e.target.value);
-        updateSidebar();
-        // Auto-proceed to datetime after duration selection
-        mountBookingCalendar();
-        goStep('datetime');
-      }
     });
   });
 }
@@ -344,9 +301,6 @@ async function loadBookingSlots(date) {
     }
     listEl.innerHTML = slots.map((slot) => {
       return `<button class="gap-card" data-time="${slot}">
-        <div class="gap-card-top">
-          <span class="gap-card-dur">${state.durationMinutes} Min</span>
-        </div>
         <div class="gap-card-time">${slot} Uhr</div>
       </button>`;
     }).join('');
@@ -480,7 +434,6 @@ async function mountBookingCalendar() {
 
 document.getElementById('backToEmp').addEventListener('click', () => goStep('employees'));
 document.getElementById('backToSrv').addEventListener('click', () => goStep('services'));
-document.getElementById('backToSrvDur')?.addEventListener('click', () => goStep('services'));
 document.getElementById('backToCal').addEventListener('click', () => goStep('datetime'));
 
 document.getElementById('bookingForm').addEventListener('submit', async e => {

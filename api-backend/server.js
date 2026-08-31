@@ -3461,7 +3461,10 @@ app.get('/api/services/public', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('services')
-      .select('id, name:title, description, duration:duration_minutes, price, price_config')
+      // Preis faellt hier bewusst weg: einziger Konsument ist die oeffentliche
+    // Terminanfrage (booking-request.js), und dort wird seit 31.08.2026 weder Preis
+    // noch Behandlungsdauer angezeigt. duration bleibt — sie steuert die Slot-Abfrage.
+    .select('id, name:title, description, duration:duration_minutes')
       .eq('owner_id', owner_id)
       .order('title');
     if (error) throw error;

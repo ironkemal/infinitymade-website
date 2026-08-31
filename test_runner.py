@@ -4,6 +4,12 @@ import time
 import json
 from playwright.sync_api import sync_playwright
 
+from qa_credentials import qa_login
+
+# Zugangsdaten aus der Umgebung (.env.local / Shell) — nie im Quelltext.
+# Fehlt ein Wert, bricht qa_login() hier sofort mit Hinweis ab.
+QA_EMAIL, QA_PASSWORD = qa_login()
+
 def run_qa_audit():
     print("==================================================")
     print("STARTING PLAYWRIGHT DASHBOARD METHODICAL QA AUDIT")
@@ -49,9 +55,9 @@ def run_qa_audit():
         page.wait_for_selector("#email", timeout=5000)
         
         # 2. Perform Login
-        print("Logging in with test account fizyo6@gmail.com...")
-        page.fill("#email", "fizyo6@gmail.com")
-        page.fill("#password", "Yavuzkemal123.")
+        print(f"Logging in with test account {QA_EMAIL}...")
+        page.fill("#email", QA_EMAIL)
+        page.fill("#password", QA_PASSWORD)
         page.screenshot(path=os.path.join(scratch_dir, "01_login_filled.png"))
         
         page.click("#submitBtn")
