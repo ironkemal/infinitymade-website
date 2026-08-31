@@ -3699,6 +3699,73 @@ app.get('/api/booking-request/list', requireAuthAI, bookingRequestApprovalLimite
   }
 });
 
+// Erlaubte Korrekturen beim Bestaetigen einer Terminanfrage.
+//
+// Bewusst nur die TERMINPLANUNG: Therapeut, Datum, Uhrzeit, Leistung, Sitzungszahl,
+// interne Notiz. Die Verordnungsfakten (ICD, Diagnosegruppe, Krankenkasse, Arzt,
+// Frequenz, Verordnungsdatum) bleiben hier unantastbar — sie stehen auf dem Rezept
+// und werden im Rezept-Modul korrigiert, nicht nebenbei beim Bestaetigen.
+//
+// `verordnung_sitzungen` ist die Ausnahme in dieser Liste: sie steuert in
+// createBookingsFromRequest, wie viele Termine der Serie entstehen. Der Patient tippt
+// sie im oeffentlichen Formular selbst ein und vertippt sich dabei.
+const ZEIT_RE = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
+const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Liefert { aenderungen } oder { fehler }. Prueft nur — schreibt nichts.
+async function anfrageKorrekturenPruefen(body, ownerId) {
+  const aenderungen = {};
+  const setzen = (feld, wert) => { aenderungen[feld] = wert; };
+
+  if (body.preferred_date !== undefined) {
+    const v = body.preferred_date;
+    if (v === null || v === '') return { fehler: 'Ein Termin braucht ein Datum' };
+    if (!DATUM_RE.test(v) || Number.isNaN(Date.parse(v))) return { fehler: 'Ungültiges Datum' };
+    setzen('preferred_date', v);
+  }
+
+  if (body.preferred_time !== undefined) {
+    const v = body.preferred_time;
+    if (v === null || v === '') return { fehler: 'Ein Termin braucht eine Uhrzeit' };
+    if (!ZEIT_RE.test(v)) return { fehler: 'Ungültige Uhrzeit' };
+    setzen('preferred_time', v.substring(0, 5));
+  }
+
+  if (body.service_id !== undefined) {
+    const v = body.service_id;
+    if (!v) {
+      setzen('service_id', null);
+    } else {
+      // Ohne diese Pruefung koennte ein Praxisinhaber die Leistung einer FREMDEN Praxis
+      // eintragen: deren Titel landet dann in der Bestaetigungsmail und deren Dauer in
+      // der Slot-Berechnung. Die Mandantengrenze haengt genau an dieser Zeile.
+      const { data: svc } = await supabase.from('services')
+        .select('id').eq('id', v).eq('owner_id', ownerId).maybeSingle();
+      if (!svc) return { fehler: 'Diese Leistung gehört nicht zu Ihrer Praxis' };
+      setzen('service_id', v);
+    }
+  }
+
+  for (const feld of ['session_count', 'verordnung_sitzungen']) {
+    if (body[feld] === undefined) continue;
+    const v = body[feld];
+    if (v === null || v === '') { setzen(feld, null); continue; }
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < 1 || n > 99) {
+      return { fehler: 'Sitzungszahl muss zwischen 1 und 99 liegen' };
+    }
+    setzen(feld, n);
+  }
+
+  if (body.notizen !== undefined) {
+    const v = body.notizen;
+    // CHECK char_length(notizen) <= 500 — ungekuerzt wirft das Update einen DB-Fehler.
+    setzen('notizen', v ? String(v).substring(0, 500) : null);
+  }
+
+  return { aenderungen };
+}
+
 // POST /api/booking-request/approve — auth required (owner)
 app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLimiter, async (req, res) => {
   const userId = req.auth.userId;
@@ -3720,8 +3787,19 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
       return res.status(400).json({ error: 'Dieser Therapeut gehört nicht zu Ihrer Praxis' });
     }
 
+    // Korrekturen des Praxisinhabers vor dem Bestaetigen. Vorher gab es nur "annehmen
+    // wie eingetragen" oder "ablehnen" — ein Zahlendreher in der Uhrzeit kostete die
+    // ganze Anfrage. Nur gesendete Felder werden angefasst (undefined = unveraendert).
+    const { aenderungen, fehler } = await anfrageKorrekturenPruefen(req.body || {}, owner_id);
+    if (fehler) return res.status(400).json({ error: fehler });
+
+    // Ab hier gilt der korrigierte Stand: er geht in die Terminanlage UND in die
+    // Bestaetigungsmail. Wuerde die Mail weiter aus bookReq lesen, bekaeme der Patient
+    // seinen alten Wunschtermin bestaetigt, waehrend im Kalender der korrigierte steht.
+    const anfrage = { ...bookReq, ...aenderungen, employee_id: empId };
+
     const patName = bookReq.patients ? `${bookReq.patients.vorname} ${bookReq.patients.nachname}` : 'Patient';
-    const result = await createBookingsFromRequest(bookReq, owner_id, empId, patName);
+    const result = await createBookingsFromRequest(anfrage, owner_id, empId, patName);
     if (result.conflict) {
       return res.status(409).json({
         error: 'Der Wunschtermin ist inzwischen belegt. Bitte einen anderen Termin mit dem Patienten vereinbaren.',
@@ -3729,7 +3807,12 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
     }
 
     await supabase.from('booking_requests')
-      .update({ status: 'approved', booking_id: result.booking_id, booking_ids: result.booking_ids })
+      .update({
+        ...aenderungen,
+        employee_id: empId,
+        status: 'approved', booking_id: result.booking_id, booking_ids: result.booking_ids,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', request_id);
 
     if (bookReq.patients?.email && process.env.SMTP_HOST) {
@@ -3745,7 +3828,7 @@ app.post('/api/booking-request/approve', requireAuthAI, bookingRequestApprovalLi
         replyTo: ownerP?.email || undefined,
         to: bookReq.patients.email,
         subject: `Ihr Termin wurde bestätigt – ${ownerP?.business_name || 'Praxura'}`,
-        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${bookReq.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(bookReq.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${bookReq.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${bookReq.preferred_time} Uhr</p>` : ''}${empP?.full_name ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${empP.full_name}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px"><h2 style="color:#b1891b">Termin bestätigt ✓</h2><p>Hallo ${bookReq.patients.vorname},</p><p>Ihr Termin wurde bestätigt.</p><div style="background:#f9f6f0;border-radius:8px;padding:16px;margin:16px 0"><p style="margin:4px 0"><strong>Praxis:</strong> ${ownerP?.business_name || 'Praxura'}</p>${anfrage.preferred_date ? `<p style="margin:4px 0"><strong>Datum:</strong> ${new Date(anfrage.preferred_date).toLocaleDateString('de-DE')}</p>` : ''}${anfrage.preferred_time ? `<p style="margin:4px 0"><strong>Uhrzeit:</strong> ${anfrage.preferred_time} Uhr</p>` : ''}${empP?.full_name ? `<p style="margin:4px 0"><strong>Therapeut:</strong> ${empP.full_name}</p>` : ''}</div><p style="font-size:13px;color:#666">Die Uhrzeit ist ein Richtwert &ndash; bitte planen Sie 5&ndash;10 Minuten Puffer ein.</p><p><a href="https://app.praxura.de/booking-request.html?cancel=${encodeURIComponent(request_id)}&token=${cancelToken}" style="color:#b1891b">Termin stornieren</a></p><hr><p style="font-size:12px;color:#888">Praxura · praxura.de</p></div>`,
       }).catch(e => console.error('[booking-request/approve] email', e.message));
     }
 

@@ -10,6 +10,7 @@ import { attachPlzOrt } from './module/plz.js?v=20260814';
 import { attachKrankenkasseSuche, verwerfeKassenCache } from './module/krankenkasse-suche.js?v=20260817';
 import { renderPatientenkarte } from './module/patientenkarte.js?v=20260830';
 import { pruefeVerordnungsfortschritt } from './module/sitzungsfortschritt.js?v=20260826';
+import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage-bearbeiten.js?v=20260831';
 import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg } from './icd-dg-match.js?v=20260810e';
@@ -16312,6 +16313,13 @@ initArztRegister({
   patientName: (lead) => displayName(lead),
 });
 
+initAnfrageBearbeiten({
+  supabase, API, escapeHtml, showToast, showHtmlModal,
+  getSession:  async () => (await supabase.auth.getSession()).data.session,
+  getProfile:  () => currentProfile,
+  onFertig:    () => loadAnfragen('pending'),
+});
+
 function populateLeadArztSelect() {
   const arztSelect = document.getElementById('lead-arzt');
   if (!arztSelect) return;
@@ -23292,68 +23300,12 @@ function showAnfrageDetail(requestId) {
   ` });
 }
 
+// Bestaetigen laeuft ueber module/anfrage-bearbeiten.js: der Inhaber sieht dort
+// Therapeut, Datum, Uhrzeit, Leistung und Sitzungszahl und kann sie korrigieren,
+// bevor der Termin entsteht. Vorher gab es nur "annehmen wie eingetragen".
 async function approveAnfrage(requestId) {
-  const ownerId = currentProfile?.id;
   const req = anfragenCurrentRequests.find(r => r.id === requestId);
-
-  // If no employee_id, ask for one first
-  if (!req?.employee_id) {
-    const { data: teamData } = await supabase.from('profiles')
-      .select('id, full_name').eq('owner_id', ownerId).eq('role', 'employee');
-    const allPeople = [{ id: currentProfile.id, full_name: currentProfile.full_name + ' (Sie)' }, ...(teamData || [])];
-    const lang = document.getElementById('langSelect')?.value || 'de';
-    const tl = T[lang] || T.de;
-
-    const empOptions = allPeople.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.full_name || '')}</option>`).join('');
-    showHtmlModal({
-      title: tl.anfragen_select_employee,
-      confirmText: tl.anfragen_confirm_approve,
-      html: `
-        <select id="approveEmpSelect" class="form-input" style="width:100%">
-          <option value="">— Therapeuten wählen —</option>
-          ${empOptions}
-        </select>`,
-      onConfirm: async () => {
-        const empId = document.getElementById('approveEmpSelect')?.value;
-        if (!empId) { showToast('Bitte einen Therapeuten wählen', 'error'); return false; }
-        await doApproveAnfrage(requestId, ownerId, empId);
-      },
-    });
-    return;
-  }
-
-  await doApproveAnfrage(requestId, ownerId, null);
-}
-
-async function doApproveAnfrage(requestId, ownerId, employeeId) {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    const body = { request_id: requestId, owner_id: ownerId };
-    if (employeeId) body.employee_id = employeeId;
-    const r = await fetch(`${API}/booking-request/approve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body)
-    });
-    const json = await r.json();
-    if (!r.ok) throw new Error(json.error || 'Fehler');
-
-    if (json.sessions_total > 1) {
-      if (json.needs_manual_scheduling) {
-        showToast(`1. Termin bestätigt ✓ — ${json.sessions_total - 1} weitere Termine bitte manuell als Serie planen (Frequenz erfordert mehrere Wochentage).`, 'info');
-      } else if (json.sessions_conflicts > 0) {
-        showToast(`${json.sessions_created} von ${json.sessions_total} Terminen angelegt — ${json.sessions_conflicts} Termin(e) waren belegt und müssen manuell geplant werden.`, 'info');
-      } else {
-        showToast(`Alle ${json.sessions_total} Termine der Serie wurden angelegt ✓`, 'success');
-      }
-    } else {
-      showToast('Termin bestätigt ✓', 'success');
-    }
-    loadAnfragen('pending');
-  } catch (e) {
-    showToast(e.message || 'Fehler beim Bestätigen', 'error');
-  }
+  if (req) await oeffneAnfrageBearbeiten(req);
 }
 
 /**
