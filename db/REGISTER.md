@@ -395,6 +395,20 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Status:** aktiv
 - **Wer:** `module/zuzahlung-befreiung.js`, `uploadRxNachweise()`.
 
+### `zuzahlung_korrekturen`
+- **Warum:** Der geforderte Zuzahlungsbetrag darf sich ändern (Patient bricht nach 3 von 6 Einheiten ab), aber nicht stillschweigend — es ist Geld und es ist GoBD. Diese Tabelle hält je Änderung fest: wer, wann, alter Wert, neuer Wert, Grund. Eine Spalte an `prescriptions` hätte bei der zweiten Korrektur die erste Begründung überschrieben, also genau das, was hier verhindert werden soll.
+- **Seit:** 01.09.2026 · `20260831120000_zuzahlung_korrektur`
+- **Status:** aktiv
+- **Wer:** `api-backend/billing/api/zuzahlung.routes.js` schreibt (nur dort), `module/zuzahlung-korrektur.js` löst aus.
+- **Achtung:** Append-only — Trigger `prevent_zuzahlung_korrekturen_mod()` blockt UPDATE/DELETE, gleiches Muster wie `belegliste`. Eine falsche Korrektur wird durch eine NEUE richtiggestellt. Der **gültige** Betrag steht weiterhin in `prescriptions.zuzahlung_eur`; diese Tabelle ist das Gedächtnis, nicht die Wahrheit. `verordnung_id` ist für die Podologie vorgesehen, aber noch ungenutzt (dort gibt es bis heute keinen gespeicherten Zuzahlungsbetrag).
+
+### `zuzahlung_guthaben`
+- **Warum:** Hat der Patient im Voraus für 6 Einheiten gezahlt und bricht nach 3 ab, liegt Geld zuviel in der Praxis. Statt es auszuzahlen, soll es auf die nächste Verordnung angerechnet werden. Das Guthaben gehört dem Patienten, nicht der Verordnung — deshalb eigene Tabelle mit `patient_id` und nicht eine Spalte am Rezept.
+- **Seit:** 01.09.2026 · `20260831120000_zuzahlung_korrektur`
+- **Status:** aktiv
+- **Wer:** `api-backend/billing/api/zuzahlung.routes.js` (anlegen + verrechnen), `module/zuzahlung-korrektur.js` zeigt an.
+- **Achtung:** Bewusst NICHT in `belegliste` gelöst: das Kassenbuch bildet Zahlungsvorgänge ab und ist unveränderlich, ein Guthaben dagegen ist ein Zustand, der sich ändert (offen → teilweise verrechnet → verrechnet). `status` setzt der Trigger `fn_zuzahlung_guthaben_status()` aus `rest_eur` — nicht von Hand schreiben. Fliesst echtes Bargeld zurück, wird weiter ganz normal ein `belegliste`-Beleg mit `type='storno'` gebucht.
+
 ### `zaa_fehler`
 - **Warum:** Absetzungen und Fehlermeldungen der Kasse aus der ZAA-Rückmeldung, samt Übersetzung und Lösungshinweis. Roh sind die Codes für einen Therapeuten unlesbar.
 - **Seit:** spätestens 18.05.2026 · `v11_billing_a2_tables`

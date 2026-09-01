@@ -25,6 +25,8 @@ import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=2
 import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260817';
 import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260817';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
+import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260831';
+import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';
 import { leistungOptionen, leereTerminAuswahl, baueLeistungszeile, aggregateInvLines, terminAuswahlLaden } from './module/rechnung-editor.js?v=20260815c';
@@ -3400,12 +3402,12 @@ async function openBookingActionModal(booking, opts = {}) {
             `${escapeHtml(t('kass_bezahlt'))}: ${escapeHtml(fmtEur(betrag))} · ${escapeHtml(am)}${escapeHtml(art)}`
             + ` <button type="button" data-zuzahl="rechnung" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_rechnung'))}</button>`
             + ` <button type="button" data-zuzahl="undo" style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_undo'))}</button>`
-            + druckKnopf;
+            + druckKnopf + KORREKTUR_KNOPF;
         } else {
           rzgWarnEl.innerHTML =
             `${escapeHtml(t('kass_offen'))}: ${escapeHtml(fmtEur(betrag))}`
             + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:var(--warning-dim);border:1px solid var(--warning);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">${escapeHtml(t('kass_btn'))}</button>`
-            + druckKnopf;
+            + druckKnopf + KORREKTUR_KNOPF;
         }
       } else {
         rzgWarnEl.hidden = true;
@@ -7997,6 +7999,13 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
 
   const aktion = btn.dataset.zuzahl;
   if (aktion === 'rechnung') { await openZuzahlungsrechnung(rxId); return; }
+  if (aktion === 'korrektur') {
+    const frischerBetrag = await korrekturAusPanel({ supabase, apiBase: API, rxId, patientName: wrap.dataset.patientName || '', toast: showToast });
+    const ps = bkActionBookingCache?.prescription_sessions?.[0];
+    if (frischerBetrag && ps?.prescriptions) Object.assign(ps.prescriptions, frischerBetrag);
+    if (frischerBetrag && bkActionBookingCache) await openBookingActionModal(bkActionBookingCache);
+    return;
+  }
   if (aktion === 'drucken') { await openZuzahlungsrechnung(rxId, { drucken: true }); return; }
 
   const args = {
@@ -19461,25 +19470,22 @@ function renderTaxierungList() {
                   : null;
               return tpl ? _abState.positions.find(p => p.x === tpl) : null;
             })();
-            const anzahl = rx.anzahl_einheiten || 1;
-            const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
-            // zuzahlung_frei kommt aus dem Katalog und heisst wirklich "0 €",
-            // nicht "unbekannt" — siehe zweite Vorschau weiter unten.
-            const zuPerEin = _posLookup?.zuzahlung_frei ? 0 : _posLookup?.zuzahlung;
-            const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
-            const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
-            const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;
+            // Zentral über module/zuzahlung-rechnen.js — vorher rechnete diese Vorschau
+            // (wie die Taxierung) mit der VERORDNETEN statt der erbrachten Menge.
+            const zz = zuzahlungFuerRezept(rx, _posLookup);
             const zu = rx.zuzahlung_befreit
               ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
-              : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
-              
+              : (_posLookup ? fmtEur(zz.gesamt) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
+            // „3 / 6" bei Abbruch statt „6": der Betrag gehört zu den erbrachten Einheiten.
+            const einheitenZelle = zz.einheiten === zz.verordnet ? String(zz.verordnet)
+              : `<span title="erbracht / verordnet">${zz.einheiten} / ${zz.verordnet}</span>`;
             return `<tr>
               <td>${escapeHtml(pname)}</td>
               <td>
                 <div style="font-weight:500;">${escapeHtml(heilmittelText)}</div>
                 ${picker}
               </td>
-              <td>${rx.anzahl_einheiten || 0}</td>
+              <td>${einheitenZelle}</td>
               <td>${zu}</td>
             </tr>`;
           }).join('')}
@@ -19775,19 +19781,13 @@ function renderAbrechnungReady() {
                     : null;
                 return tpl ? _abState.positions.find(p => p.x === tpl) : null;
               })();
-              const anzahl = rx.anzahl_einheiten || 1;
-              const brutto = _posLookup ? (_posLookup.preis || 0) * anzahl : 0;
-              // zuzahlung_frei kommt aus dem Katalog und heisst wirklich "0 €",
-              // nicht "unbekannt". Ohne diese Unterscheidung zeigte die Vorschau
-              // fuer zuzahlungsfreie Positionen 10 % an, waehrend die gedruckte
-              // Rechnung korrekt 0 € auswies.
-              const zuPerEin = _posLookup?.zuzahlung_frei ? 0 : _posLookup?.zuzahlung;
-              const zuProz = (zuPerEin != null) ? zuPerEin * anzahl : brutto * 0.10;
-              const zuPausch = Math.min(10, Math.max(0, brutto - zuProz));
-              const zuTotal = Math.round((zuProz + zuPausch) * 100) / 100;
+              // Wie oben: eine Rechnung, ein Modul. `zuzahlung_frei` heisst im
+              // Katalog wirklich „0 €" und nicht „unbekannt" — die Unterscheidung
+              // steckt jetzt in zuzahlung-rechnen.js statt zweimal hier.
+              const zz = zuzahlungFuerRezept(rx, _posLookup);
               const zu = rx.zuzahlung_befreit
                 ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
-                : (_posLookup ? fmtEur(zuTotal) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
+                : (_posLookup ? fmtEur(zz.gesamt) : '<span style="color:#b45309;" title="Position fehlt">— Position?</span>');
               
               const issues = checkPrescriptionCompliance(rx, _abState.therapistCertsMap);
               // Der fehlende Bericht sperrt die Zeile nicht mehr. Er wird beim

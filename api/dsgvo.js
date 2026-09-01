@@ -79,6 +79,8 @@ const USER_TABLES = [
   { table: 'invoices',                     filter: 'owner_id'  },
   { table: 'abrechnung',                   filter: 'owner_id'  },
   { table: 'zuzahlung_befreiung',          filter: 'owner_id'  },
+  { table: 'zuzahlung_korrekturen',        filter: 'owner_id'  },
+  { table: 'zuzahlung_guthaben',           filter: 'owner_id'  },
   { table: 'leads',                        filter: 'owner_id'  },
   { table: 'b2b_contacts',                 filter: 'owner_id'  },
   { table: 'email_logs',                   filter: 'owner_id'  },
@@ -222,7 +224,8 @@ const DELETE_TABLES = [
 
   'consent_log', 'ai_audit_log', 'chatbot_usage', 'feedbacks', 'email_logs',
   'patient_notes', 'anamnese', 'prescription_validations', 'prescription_sessions',
-  'prescriptions', 'zuzahlung_befreiung', 'referral_drafts', 'ueberweisungen',
+  'prescriptions', 'zuzahlung_befreiung', 'zuzahlung_guthaben',
+  'referral_drafts', 'ueberweisungen',
   'aerzte', 'b2b_contacts', 'leads', 'fahrten', 'vehicles', 'terapeut_zertifikat',
   'bookings', 'time_offs', 'breaks', 'custom_days', 'working_hours',
   'employee_services', 'services', 'calendar_integrations',
@@ -236,6 +239,13 @@ const DELETE_TABLES = [
   // ⛔ BEWUSST NICHT HIER, weil es eine Rechtsfrage ist und keine technische:
   //   `belegliste`      — Fremdschlüssel auf `profiles` ist RESTRICT, also
   //                       ausdrücklich als Sperre gebaut. GoBD/§ 147 AO.
+  //   `zuzahlung_korrekturen` — dasselbe Muster und derselbe Grund: das
+  //                       GoBD-Protokoll jeder Betragsänderung. `patient_id`
+  //                       steht auf SET NULL, die Zeile überlebt also
+  //                       anonymisiert statt zu verschwinden. `zuzahlung_guthaben`
+  //                       dagegen wird gelöscht (oben) — ein Guthaben ist kein
+  //                       gebuchter Zahlungsvorgang, der Beleg dazu liegt in
+  //                       `belegliste` und bleibt.
   //   `patient_consents`— ebenfalls RESTRICT, und zusätzlich RESTRICT auf
   //                       `leads`: solange Einwilligungen stehen, lässt sich
   //                       nicht einmal die Patientenakte löschen. Das ist die
