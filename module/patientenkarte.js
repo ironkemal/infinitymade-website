@@ -31,7 +31,7 @@
 'use strict';
 
 import { geschlechtLabel } from './geschlecht.js?v=20260816';
-import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260826';
+import { zeigeVerordnungsUebersicht } from './verordnung-uebersicht.js?v=20260901';
 
 const DE = (iso) => {
   if (!iso) return '—';

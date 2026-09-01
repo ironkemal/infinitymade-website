@@ -162,15 +162,15 @@ export const HPNR_PODOLOGIE = {
   '78040': {
     hpnr: '78040',
     leistungsart: 'Eingangsbefundung',
-    leistung: 'Eingangsbefundung — einmalig je Patient (Lebenszeit)',
+    leistung: 'Eingangsbefundung — einmalig bei Erstinanspruchnahme ab 01.11.2023',
     diagnosegruppen: ['DF', 'NF', 'QF'],
     kombinierbar_mit_78030: false,  // NICHT am gleichen Tag wie 78030
-    einmalig_pro_patient: true,     // Nur 1x im Leben des Patienten abrechenbar
+    einmalig_pro_patient: true,     // 1x je Patient — Bezugsgroesse Praxis vs. lebenslang NICHT belegt, s. SPEC-RULES
     gueltig_ab: '1900-01-01',
     gueltig_bis: '9999-12-31',
     grundlage: '§125 Abs. 1 SGB V',
-    quelle: 'GKV-SV',
-    notiz: 'Einmalig je Patient (Lebenszeit). Nicht zusammen mit 78030 am selben Tag.',
+    quelle: 'Anlage 1a Leistungsbeschreibung i.d.F. 17.06.2024, Teil 1 Nr. 2 + Teil 2 Ziff. 4.1',
+    notiz: 'Nur fuer Patienten, die ab dem 01.11.2023 erstmalig eine podologische Leistung in Anspruch nehmen — nicht je Verordnung. Nicht mit 78030 am selben Tag; mit 78010/78020 am selben Tag ausdruecklich erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL, zaehlt nicht gegen die verordnete Menge.',
   },
 
   // Nagelspange (neu ab 01.10.2025 — ersetzt 78210/78220/78230/78300/78400)
@@ -404,13 +404,13 @@ export const VALIDIERUNGS_REGELN = [
     beschreibung: '78040 und 78030 nicht am selben Tag',
     check: (hpnrList) => hpnrList.includes('78040') && hpnrList.includes('78030'),
     fehler: 'Eingangsbefundung (78040) und Befundpauschale (78030) nicht am gleichen Tag abrechenbar.',
-    quelle: 'GKV Podologie Vertrag §125',
+    quelle: 'Anlage 1a i.d.F. 17.06.2024, Teil 2 Ziff. 4.1 Besonderheiten',
   },
   {
-    regel: '78040_einmalig',
-    beschreibung: '78040 nur einmal pro Patient im Leben',
-    quelle: 'GKV Podologie Vertrag §125',
-    notiz: 'Backend muss prüfen ob 78040 bereits für diesen Patienten abgerechnet wurde.',
+    regel: '78040_nur_erste_behandlung',
+    beschreibung: '78040 nur am ersten Behandlungstag des Patienten, und nur einmal',
+    quelle: 'Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2 — erfolgt vor der ersten Abgabe einer podologischen Leistung',
+    notiz: 'Umgesetzt in module/podologie-abrechnung.js (Vorbehandlungspruefung). OFFEN: Patienten, die vor dem 01.11.2023 begonnen haben, erwerben den Anspruch gar nicht — dafuer fehlt eine persistierte Anamneseangabe.',
   },
   {
     regel: 'nagelspange_nur_ui2',

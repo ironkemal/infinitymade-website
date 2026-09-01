@@ -56,6 +56,11 @@ import { belegnummerRosette } from './belegnummer.js?v=20260817';
 import { wireArztFeld } from './arzt-register.js?v=20260816';
 import { loadDgIcdRules, podDiagOptionsHtml } from './diagnosegruppen-regeln.js?v=20260827';
 import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=20260828';
+import { alsISODatum } from './datum.js?v=20260901';
+// 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
+// dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
+import { darf78040, POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE }
+  from './eingangsbefundung-regel.js?v=20260901';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -132,7 +137,73 @@ const POD_HEILMITTEL_KATALOG = {
   },
 };
 const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-Katalog
-const POD_BEFUNDPAUSCHALE = '78030';             // Pflicht je Behandlungstag, außer UI1/UI2
+
+/**
+ * Darf für diesen Patienten heute noch die Eingangsbefundung (78040) gesetzt
+ * werden — und ist der gewählte Tag der richtige dafür?
+ *
+ * Die Regel steht in Anlage 1a Leistungsbeschreibung i.d.F. 17.06.2024
+ * (Vertrag § 125 Abs. 1 SGB V Podologie), Teil 1 Nr. 2 und Teil 2 Ziffer 4.1:
+ *
+ *   „Bei Patienten die ab dem 01.11.2023 erstmalig eine podologische Leistung
+ *    bei einem zugelassenen Leistungserbringer in Anspruch nehmen, ist ohne
+ *    gesonderte Verordnung … einmalig eine podologische Eingangsbefundung …
+ *    durchzuführen. Die podologische Eingangsbefundung erfolgt VOR DER ERSTEN
+ *    ABGABE einer podologischen Leistung …"
+ *
+ * Daraus folgen zwei Sperren — die zweite fehlte bis zum 31.08.2026 und war
+ * der eigentliche Absetzungsgrund: bisher wurde nur geprüft, ob 78040 schon
+ * einmal abgerechnet wurde, nicht, ob der Patient überhaupt noch am Anfang
+ * steht. Wer im dritten Termin einer laufenden Serie „die haben wir ja noch
+ * nie abgerechnet" dachte, bekam die 78040 durch — und von der Kasse zurück.
+ *
+ * ⚠️ Bezugsgröße: die Sperre läuft über `owner_id`, also je Praxis. Ob der
+ * Vertrag „einmal je Praxis" oder „einmal im Leben" meint, ist aus dem
+ * Wortlaut („bei einem zugelassenen Leistungserbringer") NICHT entscheidbar;
+ * die klärende Änderungsvereinbarung vom 20.10.2023 liegt nicht im Archiv.
+ * Praxisweit ist die vorsichtigere der beiden Lesarten — deshalb so, bis der
+ * Beleg da ist (Handbücher/SPEC-RULES.md, Doğrulama kuyruğu).
+ *
+ * ⚠️ NICHT abgedeckt: Patienten, die schon VOR dem 01.11.2023 podologisch
+ * behandelt wurden, erwerben den Anspruch nie. Diese Historie steht bei einer
+ * frisch migrierten Praxis in keiner Datenbank; dafür braucht es eine
+ * quittierte Anamneseangabe am Patienten (eigene Aufgabe, Ops-Dashboard).
+ *
+ * @param {object} vord   Zeile aus `verordnungen` (braucht lead_id ODER patient_name)
+ * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
+ * @returns {Promise<{erlaubt:boolean, grund:string, schonAm:?string, ersteAm:?string}>}
+ */
+async function podEingangsbefundungLage(vord, datum) {
+  const offen = { erlaubt: true, grund: '', schonAm: null, ersteAm: null };
+  if (!vord || !(vord.lead_id || vord.patient_name)) return offen;
+
+  // Kein Standort-Zuschnitt: die Verordnung gehoert der Praxis, nicht der
+  // Filiale (standort-zuschnitt.js) — und `verordnungen` fuehrt ohnehin kein
+  // `business_id`. Die Sperre muss praxisweit greifen, sonst umgeht ein
+  // Standortwechsel sie.
+  //
+  // ⚠️ Der `patient_name`-Zweig ist ein reiner Zeichenkettenvergleich und
+  // greift nur bei Verordnungen ohne `lead_id` (Altbestand). Zwei gleichnamige
+  // Patienten derselben Praxis sperren sich damit gegenseitig. Bewusst so
+  // gelassen: die Meldung nennt Name und Datum, der Podologe sieht den Irrtum
+  // sofort — ein faelschlich DURCHGELASSENES 78040 faellt dagegen erst als
+  // Absetzung auf, Monate spaeter.
+  let q = ctx.supabase.from('verordnungen').select('id').eq('owner_id', ctx.getOwnerId());
+  q = vord.lead_id ? q.eq('lead_id', vord.lead_id) : q.eq('patient_name', vord.patient_name);
+  const { data: allVords } = await q;
+  if (!allVords?.length) return offen;
+
+  // Eine Abfrage für beide Sperren — hpnr_codes wird hier ausgewertet, nicht
+  // per `.contains()` gefiltert, sonst bräuchte es zwei Rundreisen.
+  const { data: behs } = await ctx.supabase
+    .from('podologie_behandlungen').select('behandlungsdatum, hpnr_codes')
+    .eq('owner_id', ctx.getOwnerId())
+    .in('verordnung_id', allVords.map(v => v.id))
+    .order('behandlungsdatum', { ascending: true });
+  if (!behs?.length) return offen;
+
+  return darf78040(behs, datum);
+}
 
 /**
  * Verordnetes Heilmittel einer Verordnung als Buchstabe a|b|c, sonst ''.
@@ -375,11 +446,29 @@ async function loadPodologieBilling() {
   const selectedVord = _podState.verordnungen.find(v => v.id === _podState.selectedVordId);
   const diagRoot = selectedVord ? podDiagRoot(selectedVord.diagnosegruppe) : '';
   const isUI = diagRoot === 'UI1' || diagRoot === 'UI2';
-  const todayStr = today.toISOString().split('T')[0];
+  // `toISOString()` rechnet nach UTC — in Berlin (UTC+1/+2) ergab das um
+  // Mitternacht den VORTAG, also ein falsches Vorbelegungsdatum im Formular
+  // und eine falsche Gültigkeitsprüfung der HPNR-Liste. `alsISODatum()`
+  // liest die lokalen Feldwerte (Projektstandard, s. CLAUDE.md).
+  const todayStr = alsISODatum(today);
   // Gültige Positionen zum Behandlungsdatum — abgelöste (z. B. Ross-Fraser)
   // filtert die RPC bereits heraus.
   const hpnrRows = diagRoot ? await podLoadHpnr(diagRoot, todayStr) : [];
   _podCurrentHpnr = hpnrRows;
+
+  // Welche Befundung gehört auf DIESEN Tag? Genau eine von beiden:
+  //   • 78040 Eingangsbefundung — nur am allerersten Behandlungstag des
+  //     Patienten, und dann OHNE 78030 (die beiden schliessen sich am selben
+  //     Tag aus, Anlage 1a i.d.F. 17.06.2024 Teil 2 Ziff. 4.1).
+  //   • 78030 Befundung — an jedem anderen Behandlungstag, „im Vorfeld jeder
+  //     Behandlung" (ebd. Teil 2 Ziff. 4.2), nicht je Serie.
+  // Bei UI1/UI2 gibt es beide nicht; dort läuft die Erstbefundung 78100/78110.
+  // Vorher war 78030 pauschal angekreuzt und 78040 nie — der Podologe musste
+  // beim ersten Termin von Hand umstellen, und wer das vergass, verlor die
+  // Eingangsbefundung; wer sie zu spät nachtrug, bekam eine Absetzung.
+  const eingangsLage = (selectedVord && !isUI)
+    ? await podEingangsbefundungLage(selectedVord, todayStr)
+    : { erlaubt: false };
 
   const behandlungFormHtml = selectedVord ? `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
@@ -396,7 +485,8 @@ async function loadPodologieBilling() {
               const code = r.code;
               const isHausbesuch = selectedVord?.hausbesuch === true;
               const autoChecked =
-                (diagRoot !== 'UI1' && diagRoot !== 'UI2' && code === '78030') ? 'checked' :
+                (!isUI && code === POD_EINGANGSBEFUNDUNG && eingangsLage.erlaubt) ? 'checked' :
+                (!isUI && code === POD_BEFUNDPAUSCHALE && !eingangsLage.erlaubt) ? 'checked' :
                 (isHausbesuch && code === '79933') ? 'checked' : '';
               return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
                 <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${autoChecked}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}
@@ -1195,28 +1285,23 @@ async function loadPodologieBilling() {
     if (err) { errEl.textContent = err; errEl.style.display = 'block'; return; }
     errEl.style.display = 'none';
 
-    // 78040 Lebenszeit-Check: Einmalig je Patient (patientenübergreifend, alle Verordnungen)
-    if (checks.includes('78040') && (vord?.lead_id || vord?.patient_name)) {
-      let query = ctx.supabase.from('verordnungen').select('id').eq('owner_id', ctx.getOwnerId());
-      if (vord.lead_id) {
-        query = query.eq('lead_id', vord.lead_id);
-      } else {
-        query = query.eq('patient_name', vord.patient_name);
-      }
-      const { data: allVords } = await query;
-      if (allVords?.length) {
-        const { data: prev78040 } = await ctx.supabase
-          .from('podologie_behandlungen').select('id, behandlungsdatum')
-          .eq('owner_id', ctx.getOwnerId())
-          .contains('hpnr_codes', ['78040'])
-          .in('verordnung_id', allVords.map(v => v.id))
-          .limit(1);
-        if (prev78040?.length) {
-          const prevDate = new Date(prev78040[0].behandlungsdatum).toLocaleDateString('de-DE');
-          errEl.textContent = `Eingangsbefundung (78040) wurde für ${vord.patient_name} bereits am ${prevDate} abgerechnet – Lebenszeit-Leistung, nicht wiederholbar.`;
-          errEl.style.display = 'block';
-          return;
-        }
+    // 78040 gehört einmalig VOR die erste podologische Leistung des Patienten —
+    // begründet in podEingangsbefundungLage(). Zwei getrennte Sperren, damit die
+    // Meldung sagt, was der Fall ist: schon abgerechnet vs. zu spät in der Serie.
+    if (checks.includes(POD_EINGANGSBEFUNDUNG)) {
+      const lage = await podEingangsbefundungLage(vord, datum);
+      if (!lage.erlaubt) {
+        const name = vord?.patient_name || 'diesen Patienten';
+        errEl.textContent = lage.grund === 'schon_abgerechnet'
+          ? `Eingangsbefundung (78040) wurde für ${name} bereits am `
+            + `${new Date(lage.schonAm).toLocaleDateString('de-DE')} abgerechnet — sie ist einmalig `
+            + `und wird auch bei einer neuen Verordnung nicht erneut abgerechnet.`
+          : `Eingangsbefundung (78040) gehört vor die erste podologische Leistung. `
+            + `${name} wurde in dieser Praxis bereits am `
+            + `${new Date(lage.ersteAm).toLocaleDateString('de-DE')} behandelt — sie kann jetzt `
+            + `nicht mehr nachgeholt werden (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2).`;
+        errEl.style.display = 'block';
+        return;
       }
     }
 

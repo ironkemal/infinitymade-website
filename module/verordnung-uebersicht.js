@@ -127,9 +127,45 @@ export function physioZaehler(rx) {
  */
 export function podoZaehler(vord, behs) {
   return {
-    erbracht: Array.isArray(behs) ? behs.length : 0,
+    erbracht: Array.isArray(behs) ? behs.filter(istBehandlungseinheit).length : 0,
     verordnet: Number(vord?.behandlungseinheiten) || 0,
   };
+}
+
+// 78010/78020 podologische Behandlung, 78610 Nagelspangenbehandlung. Befundung
+// (78030/78040/78100/78110), Kontrolle (78510), Abschluss (78520), Bericht
+// (78530), Zuschlag (78620) und Hausbesuch (79933/79934) sind KEINE Einheiten.
+const POD_BEHANDLUNGSPOSITIONEN = new Set(['78010', '78020', '78610']);
+
+/**
+ * Zaehlt diese Zeile gegen die verordnete Menge?
+ *
+ * Nicht jede Zeile in `podologie_behandlungen` ist eine Behandlungseinheit.
+ * Anlage 1a i.d.F. 17.06.2024, Teil 2 Ziffer 4.1 sagt ausdruecklich:
+ * "Die Eingangsbefundung ist: - keine Behandlungseinheit im Sinne der
+ * Heilmittel-Richtlinie". Dasselbe gilt fuer Befundung, Kontrolle und
+ * Abschluss — bezahlt werden sie, verbraucht wird durch sie nichts.
+ *
+ * Sichtbar wird das nur, wenn so eine Position ALLEIN auf einem Tag steht:
+ * eine Erstbefundung ohne anschliessende Therapie etwa ist ausdruecklich
+ * zulaessig (ZFD-FAK Podologie, Stand Juli 2024). Vorher zaehlte diese Zeile
+ * als verbrauchte Einheit, die Verordnung galt eine Sitzung zu frueh als
+ * ausgeschoepft — verschenkte Leistung statt Absetzung, aber ebenso Geld.
+ * Im Normalfall (78040 zusammen mit 78010 am selben Tag, eine Zeile) aendert
+ * sich nichts.
+ *
+ * Gezaehlt wird positiv: eine Zeile ist eine Einheit, wenn eine echte
+ * Behandlungsposition drin steht. Zeilen ohne HPNR-Codes (Altbestand, bevor
+ * die Codes gepflegt wurden) zaehlen weiterhin mit — sonst schrumpfte
+ * rueckwirkend jeder alte Zaehler.
+ *
+ * @param {object} beh  Zeile aus `podologie_behandlungen`
+ * @returns {boolean}
+ */
+export function istBehandlungseinheit(beh) {
+  const codes = beh?.hpnr_codes;
+  if (!Array.isArray(codes) || codes.length === 0) return true;
+  return codes.some(c => POD_BEHANDLUNGSPOSITIONEN.has(String(c)));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

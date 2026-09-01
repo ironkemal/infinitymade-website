@@ -23,7 +23,7 @@ export const PODOLOGIE_POSITIONS_2025 = Object.freeze([
   { hpnr: '78020', label: 'Podologische Behandlung (groß)',    diagnosegruppen: ['DF','NF','QF'], preis: 50.55, zuzahlung: 5.06,  dauer: '50', gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30' },
   { hpnr: '78030', label: 'Podologische Befundung',           diagnosegruppen: ['DF','NF','QF'], preis:  3.47, zuzahlung: 0.35,  dauer: null, gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30' },
   { hpnr: '78040', label: 'Eingangsbefundung',                diagnosegruppen: ['DF','NF','QF'], preis: 22.48, zuzahlung: 2.25,  dauer: '20', gueltig_ab: '2025-07-01', gueltig_bis: '2026-06-30',
-    notiz: 'Einmalig je Patient (Lebenszeit). Nicht am selben Tag wie 78030.' },
+    notiz: 'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.' },
 
   // ── b) UI1/UI2 – alte Nagelspange (Verordnungsdatum bis 30.09.2025) ─────
   { hpnr: '78210', label: 'Anpassung Ross-Fraser-Spange (einteilig)',   diagnosegruppen: ['UI1','UI2'], preis:  99.04, zuzahlung:  9.90, dauer: '90', gueltig_ab: '2025-07-01', gueltig_bis: '2025-09-30',
@@ -65,7 +65,7 @@ export const PODOLOGIE_POSITIONS_2026 = Object.freeze([
   { hpnr: '78020', label: 'Podologische Behandlung (groß)',    diagnosegruppen: ['DF','NF','QF'], preis: 51.92, zuzahlung: 5.19,  dauer: '50', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
   { hpnr: '78030', label: 'Podologische Befundung',           diagnosegruppen: ['DF','NF','QF'], preis:  3.57, zuzahlung: 0.36,  dauer: null, gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31' },
   { hpnr: '78040', label: 'Eingangsbefundung',                diagnosegruppen: ['DF','NF','QF'], preis: 23.11, zuzahlung: 2.31,  dauer: '20', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31',
-    notiz: 'Einmalig je Patient (Lebenszeit). Nicht am selben Tag wie 78030.' },
+    notiz: 'Einmalig bei Erstinanspruchnahme ab 01.11.2023 (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2) — nicht je Verordnung. Nicht am selben Tag wie 78030; mit 78010/78020 am selben Tag erlaubt. Keine Behandlungseinheit i.S.d. HeilM-RL.' },
   { hpnr: '78210', label: 'Anpassung Ross-Fraser-Spange (einteilig)',   diagnosegruppen: ['UI1','UI2'], preis: 101.65, zuzahlung: 10.17, dauer: '90', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31',
     deprecated: true, ungueltig_ab: '2025-10-01' },
   { hpnr: '78220', label: 'Fertigung Ross-Fraser-Spange (einteilig)',   diagnosegruppen: ['UI1','UI2'], preis:  55.66, zuzahlung: null,  dauer: '45', gueltig_ab: '2026-07-01', gueltig_bis: '9999-12-31',

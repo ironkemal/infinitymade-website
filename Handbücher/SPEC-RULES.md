@@ -8,7 +8,7 @@
 > neyin yeniden kontrol edileceği belli olmaz.
 >
 > Sahibi: `gkv-302` ajanı · Arşiv haritası: `Handbücher/INDEX.md`
-> Son güncelleme: 2026-08-04
+> Son güncelleme: 2026-08-31
 
 ---
 
@@ -115,6 +115,116 @@
 
 ---
 
+### Podologie: 78040 Eingangsbefundung — aynı gün kombinasyonu
+- **Kural:** 78040 aynı Behandlungstag'da **78010/78020 ile birlikte abrechenbar'dır** — bu
+  normal hâldir, istisna değil. Yasak olan tek kombinasyon **78040 + 78030**'dur.
+- **Kaynak:** Anlage 1a Leistungsbeschreibung i.d.F. **17.06.2024** (Vertrag § 125 Abs. 1 SGB V
+  Podologie i.d.F. 30.11.2020), Teil 1 Nr. 2 — *"Die podologische Eingangsbefundung erfolgt vor
+  der ersten Abgabe einer podologischen Leistung und **kann am gleichen Tag wie die podologische
+  Leistung durchgeführt werden**."* (`Podoloji/Leistungen/20240725_Anlage_1a_Leistungsbeschreibung_lesefassung_b.txt`
+  Z.80-84); Teil 2 Ziffer 4.1 „Besonderheiten" — *"**zusätzlich zur podologischen Behandlung**
+  einmalig eine podologische Eingangsbefundung … **Die podologische Befundung nach Teil 2
+  Ziffer 4.2 ist für diese Behandlung nicht abrechnungsfähig.**"* (Z.458-462). Dışlanan pozisyon
+  adıyla anılıyor: Teil 2 Ziff. 4.2 = **78030**. Karşı yönden teyit: ZFD FAK Podologie Stand
+  Juli 2024, Bölüm 2 — *"die Befundposition 78030 ist zu jeder der Abrechnungspositionen …
+  **- außer an dem Tag der Eingangsbefundung -** abzurechnen"*
+- **Geçerlilik:** 01.11.2023'ten beri
+- **Kodda:** `module/podologie-abrechnung.js:1184` (78040+78030 bloklu — **doğru, dokunma**);
+  78040+78010/78020 serbest bırakılmış — **doğru, dokunma**
+- **Kapsam:** Podologie, Diagnosegruppen DF/NF/QF
+- ⚠️ Beta-1'in 31.08.2026'daki „Erstbehandlung mit Befundung und Behandlung zusammen" itirazı
+  **78030**'u kastediyor, 78010/78020'yi değil. Kod bu ayrımı zaten doğru yapıyordu.
+
+### Podologie: 78040 — hak koşulu Erstinanspruchnahme, Verordnung başına DEĞİL
+- **Kural:** 78040 **„einmalig"**'dir ve dayanağı **Verordnung değil, hastanın podolojiyi ilk
+  kez kullanması**dır: yalnızca **01.11.2023 tarihinde veya sonrasında** ilk kez podolojik
+  leistung alan hastaya verilir. Her yeni Verordnung'da yeniden alınmaz — ne seri başına,
+  ne takvim yılı başına. Ayrıca 78040 **Behandlungseinheit sayılmaz**: Höchstmenge/seans
+  sayımına katılmaz, ve Muster 13 arkasına „Eing. Bef." olarak yazılıp hastaya imzalatılır
+  (78030 ise Verordnung'a **yazılmaz**).
+- **Kaynak:** Anlage 1a i.d.F. **17.06.2024**, Teil 1 Nr. 2 + Teil 2 Ziffer 4.1 — *"Bei Patienten
+  die **ab dem 01.11.2023 erstmalig** eine podologische Leistung … in Anspruch nehmen … ist
+  ohne gesonderte Verordnung … **einmalig** eine podologische Eingangsbefundung … durchzuführen"*
+  (Z.80-82, 458-460); *"Die Eingangsbefundung ist: - **keine Behandlungseinheit im Sinne der
+  Heilmittel-Richtlinie** - eine eigenständige Leistung und ist somit vom Versicherten zu
+  bestätigen."* (Z.463-466). 78030'un Verordnung'a yazılmaması: GKV-SV FAK Podologie Stand
+  **24.05.2023** Nr. 5 (`Podoloji/20230524_Podologie_FAK_bf.txt` Z.38-41)
+- **Negatif kanıt:** „je Verordnung" / „je Behandlungsserie" / „Kalenderjahr" ifadeleri 78040
+  bağlamında Anlage 1a, Anlage 2 (i.d.F. 01.07.2025), Anlage 3, Änderungsvereinbarung 16.06.2025,
+  GKV-SV FAK 24.05.2023, ZFD FAK Juli 2024 ve HeilM-RL'de **hiç geçmiyor**. HeilM-RL § 27b'deki
+  „Eingangsdiagnostik" **hekimin** işidir, 78040 değildir — karıştırma.
+- **Geçerlilik:** 01.11.2023'ten beri
+- **Kodda:** `module/podologie-abrechnung.js:1198-1246` — önceki 78040 kaydı **ve** önceki
+  herhangi bir Behandlung kontrolü uygulanmış (2026-08-31). **01.11.2023 öncesi Altbestand
+  kapısı hâlâ UYGULANMAMIŞ** — aşağıya bak.
+- **Kapsam:** Podologie, DF/NF/QF (UI1/UI2'de 78040 yoktur)
+- 🔴 **Açık — para kaybettiren boşluk:** 01.11.2023'ten **önce** podolojiye başlamış hasta
+  78040 hakkı **kazanmaz**. Yeni kurulan bir praxis'te bu geçmiş veritabanında yoktur, yani
+  kod bunu kendi başına bilemez → hastaya sorulup **kalıcı olarak** işaretlenmesi gerekir
+  (uçucu diyalog yetmez, kasa karşısında belge odur). Şema gerektirdiği için ayrı iş.
+- ⚠️ **Belgelenemedi — praxis mi, hasta mı:** Sözleşme metni *"bei einem zugelassenen
+  Leistungserbringer"* diyor; bu hem „her praxis'te bir kez" hem „hayatta bir kez" okunabilir.
+  Arşivde ve erişilebilir kaynaklarda karar veren metin **yok**; cevabı **20.10.2023 tarihli
+  Änderungsvereinbarung / konsolide sözleşme § 3a** taşır (GKV-SV sunucusu otomatik indirmeye
+  PDF vermiyor, elle indirilmeli). Kod bugün `owner_id` kapsamında kilitliyor — iki okumanın
+  **temkinli** olanı, bu açıklığa kavuşana kadar böyle kalmalı. Yazılımla çözülemeyen artık
+  risk: hasta 78040'ı **başka** bir praxis'te almışsa bunu göremeyiz; Absetzung riski
+  abrechnung yapan Leistungserbringer'dedir (itiraz süresi 9 ay, § 45 SGB I hâlinde 4 yıl).
+
+### Podologie: 78030 her Behandlung'un öncesinde, seri başına değil
+- **Kural:** DF/NF/QF'te 78030 **her** Behandlungstag'da 78010/78020 yanında abrechenbar'dır —
+  tek istisna 78040'ın işaretlendiği gündür. Seri başına bir kez **değildir**. UI1/UI2'de
+  78030 hiç abrechenbar değildir.
+- **Kaynak:** Anlage 1a i.d.F. **17.06.2024**, Teil 2 Ziffer 4.2 „Besonderheiten" — *"Bei
+  Maßnahmen der Podologie in den Diagnosegruppen DF, NF, und QF **im Vorfeld jeder Behandlung**
+  (mit Ausnahme der Regelungen zur podologischen Eingangsbefundung in Teil 2 Nr. 4.1)."*
+  (Z.490-493); GKV-SV FAK Stand **24.05.2023** Nr. 6 (Z.42-47) — UI1/UI2 yasağı orada
+- **Geçerlilik:** yürürlükte
+- **Kodda:** `dashboard.js:9753` (hinweis metni doğru); `module/podologie-abrechnung.js:1178`
+  (UI1/UI2 bloğu) + otomatik işaretleme `module/podologie-abrechnung.js:396-420`
+- **Kapsam:** Podologie, DF/NF/QF
+
+### Podologie: 6 seanslık serinin hangi Termin'ine hangi befundung
+- **Kural:** Yukarıdaki üç kuralın seri üzerindeki sonucu:
+
+  | Durum | Termin 1 | Termin 2-6 |
+  |---|---|---|
+  | Hasta podolojiye **ilk kez** geliyor (ve ilk kez 01.11.2023+) | **78040** + 78010/78020 — **78030 YOK** | 78030 + 78010/78020 |
+  | Hasta zaten hastaysa / 78040 alınmışsa | 78030 + 78010/78020 | 78030 + 78010/78020 |
+
+  78040 **yalnız ilk serinin ilk Behandlungstag'ında** olur; „nasılsa hiç almadık" diye 3.
+  Termin'e sonradan konması sözleşmeye aykırıdır (*"erfolgt **vor der ersten Abgabe** einer
+  podologischen Leistung"*).
+- **Kaynak:** Anlage 1a i.d.F. 17.06.2024 Teil 1 Nr. 2 (Z.80-84) + Teil 2 Ziff. 4.1/4.2
+- **Geçerlilik:** 01.11.2023'ten beri
+- **Kodda:** `module/podologie-abrechnung.js:396-420` (otomatik işaretleme) +
+  `:1198-1246` (doğrulama)
+- **Kapsam:** Podologie, DF/NF/QF
+
+### Podologie: 78100/78110 Erstbefundung (Nagelspange) — 78040'tan FARKLI bezugsgröße
+- **Kural:** Üç ayrı ölçü var, karıştırılmaz: **(1)** Erstbefundung (78110 klein / 78100 groß)
+  **her Nagel-Behandlungsserie'nin başında bir kez** — bir seri **birden çok Verordnung**
+  kapsayabilir, yani Verordnung başına sıfırlanmaz. **(2)** 78100 „groß" ayrıca **hasta başına
+  takvim yılında 1×** ile sınırlıdır. **(3)** 78040 ise ne seriye ne yıla bağlıdır, ilk
+  kullanıma bağlıdır. Ayrıca her Zehennagel **kendi Verordnungsfall'ıdır**; Erstbefundung
+  tedavi çıkmazsa **tek başına** da abrechenbar'dır.
+- **Kaynak:** Anlage 1c Leistungsbeschreibung i.d.F. **01.07.2025**, Teil 1 Nr. 5 I.1 — *"Die
+  Erbringung der „Erstbefundung groß" ist auf eine **einmalige Abgabe je Patient im
+  Kalenderjahr** beschränkt."* (`Podoloji/Leistungen/20250617_Podologie_Anlage_1c_Leistungsbeschreibung.txt`
+  Z.236-239); Änderungsvereinbarung vom **16.06.2025** Nr. 5, yeni **§ 3b lit. a)** — *"Die
+  Leistung nach Anlage 1c Teil 2 Ziffer I.1 (Erstbefundung) kann **einmalig zu Beginn einer
+  Nagelspangenbehandlungsserie** erfolgen. Eine Behandlungsserie bezieht sich stets auf einen
+  zu behandelnden Nagel und **kann mehrere Verordnungen umfassen**."*
+  (`Podoloji/Leistungen/20250617_Podologie_Aenderungsvereinbarung.txt` Z.57-59); tek başına
+  abrechenbar: ZFD FAK Juli 2024 Bölüm 2
+- **Geçerlilik:** 01.07.2025; § 3b yalnız **01.10.2025'ten itibaren verordnet** edilmiş NSB'ler için
+- **Kodda:** katalog `api-backend/billing/codes/podologie_positions.js:83-84` ve
+  `dashboard.js:9759-9763` — pozisyonlar var, **frekans denetimi uygulanmamış**
+- **Kapsam:** Podologie, Diagnosegruppen UI1/UI2
+- ⚠️ `dashboard.js:9761`'deki „auch bei Wiedervorstellung" ibaresi **hiçbir sözleşme metninde
+  geçmiyor** — içerik olarak yanlış değil ama alıntılanabilir değil, 2026-08-31'de sözleşme
+  lafzıyla değiştirildi.
+
 # §302 Abrechnung / Korrekturverfahren
 
 ### Verarbeitungskennzeichen (VKZ) değerleri
@@ -173,6 +283,17 @@
       sözleşme yok, 40 hafta ileriye dönük hüküm. Konsey kararı → guard eklenecek, tablo yapılmayacak.
 - [ ] 🔴 **Ergotherapie Blanko desteklenmiyor** — sözleşme 01.04.2024'ten beri var, kod reddediyor.
       `heilmittel-diagnoseliste.txt` Bölüm 2 Ergo listesi + Diagnosegruppe'ler okunmalı. **Gelir kaybı.**
+- [ ] 🔴 **Podologie 78040 — 01.11.2023 Altbestand kapısı yok.** O tarihten önce podolojiye
+      başlamış hasta 78040 hakkı kazanmaz; kod bunu bilmiyor ve izin veriyor → seri hâlinde
+      Absetzung (22,48 € / 23,11 €). Yeni praxis'te geçmiş DB'de olmadığı için hastaya sorulup
+      kalıcı işaretlenmeli (şema işi → db-ustasi).
+- [ ] 🔴 **78040 praxis mi hasta mı — sözleşme metni iki okumaya açık.** Cevap 20.10.2023
+      tarihli Änderungsvereinbarung / konsolide sözleşme § 3a'da; GKV-SV sunucusu PDF'i
+      otomatik indirmeye vermiyor, **elle indirilip arşive konmalı.** O gelene kadar kod
+      owner_id kapsamında (temkinli okuma) kalır.
+- [ ] 🟠 **78100/78110 frekans denetimi yok** — 78100 hasta başına takvim yılında 1×;
+      Erstbefundung Nagel-serisi başına 1× (seri birden çok VO kapsayabilir). Katalogda
+      pozisyon var, kural uygulanmamış.
 - [ ] 28 gün başlama süresi — HeilM-RL § 15'ten teyit (şu an kaynak NOVENTI = ticari yayın)
 - [ ] `blankoRules.js:124-132` — `ok !== true` iken bonuslar yine hesaplanıyor (`total_bonuses_eur`
       dolu dönüyor). Sessiz yanlış fatura riski.
