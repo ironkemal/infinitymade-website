@@ -1,8 +1,15 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-08-30 (Fussbefund: Versionen statt Ueberschreiben)
--- LETZTE MIGRATION:  pat_fussbefund_versionierung_und_serie
+-- ERZEUGT AM:        2026-09-01 (Zuzahlung: Guthaben + Korrekturprotokoll)
+-- LETZTE MIGRATION:  20260901094002_zuzahlung_korrektur_business_id_trigger
+--                    davor: 20260901093344_zuzahlung_korrektur_search_path_haerten
+--                    davor: 20260901093310_zuzahlung_korrektur
+--                    (Zeitstempel aus supabase_migrations.schema_migrations.
+--                     Die Repo-Dateien heissen 20260831120000_…,
+--                     20260901093500_… und 20260901094500_… — die DB ist die
+--                     Wahrheit.)
+--                    davor: pat_fussbefund_versionierung_und_serie
 --                    davor: business_services_droppen_spiegeltabelle
 --                    davor: prescription_sessions_booking_unique
 --                    davor: leads_geschlecht_kodierung_dokumentieren
@@ -20,7 +27,7 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            152 RLS-Policies · 288 Indizes · 58 Trigger · 61 Funktionen
+-- UMFANG:            155 RLS-Policies · 295 Indizes · 60 Trigger · 63 Funktionen
 --                    (Zählweise siehe Kopf von db/SCHEMA.sql. Die alten
 --                     Werte „60 Trigger · 54 Funktionen" widersprachen dort
 --                     „58 Trigger · 60 Funktionen" — am 28.08.2026 gegen die
@@ -71,7 +78,7 @@
 
 
 -- =====================================================================
--- 2. RLS-POLICIES (152)
+-- 2. RLS-POLICIES (155)
 -- =====================================================================
 
 -- abrechnung
@@ -357,6 +364,17 @@
 -- zuzahlung_befreiung
 --   befreiung_owner_all [ALL] owner + Team
 
+-- zuzahlung_guthaben
+--   Guthaben owner scoping [ALL] owner + Team (USING = WITH CHECK, Schreibweise a)
+
+-- zuzahlung_korrekturen
+--   Korrekturen select scoping [SELECT] owner + Team
+--   Korrekturen insert scoping [INSERT] WITH CHECK owner + Team
+--   ⚠️ Bewusst KEINE UPDATE/DELETE-Policy: das Korrekturprotokoll ist
+--      unveraenderlich (GoBD). Zweite Verteidigungslinie ist der Trigger
+--      trg_prevent_zuzahlung_korrekturen_mod — Policy allein wuerde den
+--      service_role-Schluessel im Backend nicht bremsen.
+
 -- HINWEIS zu den fünf mit "⚠️ ohne Team-Zugriff" markierten Tabellen
 -- (fußstatus, patient_notes, podologie_behandlungen, verordnungen, warteliste):
 -- Nur der Inhaber sieht die Daten, angestellte Therapeuten nicht. Für die
@@ -365,7 +383,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (61 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (63 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -502,6 +520,16 @@ $function$;
 --   Rufen sie auf. Wechselt die Verordnung den Patienten, wird die Nummer
 --   verworfen und neu vergeben; die eingereichte `belegnummer` bleibt stehen.
 -- prevent_belegliste_mod() -> trigger   GoBD: blockt UPDATE/DELETE auf belegliste.
+-- prevent_zuzahlung_korrekturen_mod() -> trigger
+--   GoBD, gleiche Absicht wie oben, fuer zuzahlung_korrekturen. Eigene Funktion,
+--   damit die Fehlermeldung den richtigen Weg nennt: neue Korrektur statt Aenderung.
+-- fn_zuzahlung_guthaben_status() -> trigger
+--   Leitet zuzahlung_guthaben.status aus rest_eur ab (0 = verrechnet,
+--   < betrag_eur = teilweise_verrechnet, sonst offen) und setzt updated_at.
+--   'ausgezahlt' und 'verfallen' sind Endzustaende und bleiben stehen.
+--   Deshalb braucht die Tabelle KEINEN eigenen updated_at-Trigger.
+--   Beide sind SECURITY INVOKER mit SET search_path = public (nachgezogen am
+--   01.09.2026, der Advisor function_search_path_mutable hatte angeschlagen).
 
 
 -- --- Einwilligung / Nachweis --------------------------------------------
@@ -555,14 +583,15 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (58)
+-- 4. TRIGGER (62)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
 --        chatbot_usage, custom_days, email_logs, employee_services, fahrten,
 --        feedbacks, invoices, leads, patient_notes, prescriptions, referral_drafts,
 --        scraper_data, services, terapeut_zertifikat, time_offs, ueberweisungen,
---        vehicles, working_hours, zuzahlung_befreiung
+--        vehicles, working_hours, zuzahlung_befreiung, zuzahlung_guthaben (01.09.2026),
+--        zuzahlung_korrekturen (01.09.2026)
 --   bookings nutzt die eigene Variante set_bookings_business_id_default().
 --
 -- Fachlich relevante Trigger:
@@ -599,6 +628,11 @@ $function$;
 --                           issued_at und steuerhinweis_text gesperrt.
 --   prescriptions         trg_prescriptions_set_befreit  BEFORE INSERT/UPDATE OF patient_id, ausstellungsdatum
 --   zuzahlung_befreiung   trg_befreiung_backfill_prescriptions AFTER INSERT/UPDATE/DELETE
+--   zuzahlung_guthaben    trg_zuzahlung_guthaben_status  BEFORE INSERT/UPDATE
+--                         → fn_zuzahlung_guthaben_status(): status folgt rest_eur,
+--                           updated_at wird mitgesetzt.
+--   zuzahlung_korrekturen trg_prevent_zuzahlung_korrekturen_mod BEFORE UPDATE/DELETE (GoBD)
+--                         → prevent_zuzahlung_korrekturen_mod(): wirft immer.
 --   feedbacks             trg_feedback_telegram          AFTER INSERT
 --   referral_drafts       trigger_notify_new_referral_draft AFTER INSERT
 --
@@ -800,3 +834,11 @@ CREATE INDEX idx_zaa_fehler_abrechnung ON public.zaa_fehler USING btree (abrechn
 CREATE INDEX idx_zaa_fehler_prescription ON public.zaa_fehler USING btree (prescription_id) WHERE (prescription_id IS NOT NULL);
 CREATE INDEX idx_befreiung_patient_jahr ON public.zuzahlung_befreiung USING btree (patient_id, jahr);
 CREATE INDEX idx_zuzahlung_befreiung_business ON public.zuzahlung_befreiung USING btree (business_id);
+CREATE INDEX idx_zuzahlung_guthaben_owner ON public.zuzahlung_guthaben USING btree (owner_id, created_at DESC);
+-- Partiell: die Patientenkarte fragt nur nach noch verrechenbaren Guthaben.
+CREATE INDEX idx_zuzahlung_guthaben_patient_offen ON public.zuzahlung_guthaben USING btree (patient_id) WHERE (status = ANY (ARRAY['offen'::text, 'teilweise_verrechnet'::text]));
+CREATE INDEX idx_zuzahlung_korrekturen_owner ON public.zuzahlung_korrekturen USING btree (owner_id, erfasst_am DESC);
+CREATE INDEX idx_zuzahlung_korrekturen_rezept ON public.zuzahlung_korrekturen USING btree (prescription_id, erfasst_am DESC);
+CREATE INDEX idx_zuzahlung_korrekturen_verordnung ON public.zuzahlung_korrekturen USING btree (verordnung_id, erfasst_am DESC);
+-- Zwei getrennte Indizes, weil die zwei Verordnungstoepfe getrennt bleiben
+-- (prescriptions: Physio/Ergo/Logo · verordnungen: Podologie).

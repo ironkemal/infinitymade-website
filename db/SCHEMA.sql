@@ -1,8 +1,16 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-08-30 (Fussbefund: Versionen statt Ueberschreiben)
--- LETZTE MIGRATION:  pat_fussbefund_versionierung_und_serie
+-- ERZEUGT AM:        2026-09-01 (Zuzahlung: Guthaben + Korrekturprotokoll)
+-- LETZTE MIGRATION:  20260901094002_zuzahlung_korrektur_business_id_trigger
+--                    davor: 20260901093344_zuzahlung_korrektur_search_path_haerten
+--                    davor: 20260901093310_zuzahlung_korrektur
+--                    (Zeitstempel stammen aus supabase_migrations.schema_migrations.
+--                     Die Dateien im Repo heissen 20260831120000_zuzahlung_korrektur.sql,
+--                     20260901093500_zuzahlung_korrektur_search_path_haerten.sql und
+--                     20260901094500_zuzahlung_korrektur_business_id_trigger.sql —
+--                     die DB ist die Wahrheit, die Dateinamen sind nur Ablage.)
+--                    davor: pat_fussbefund_versionierung_und_serie
 --                    davor: business_services_droppen_spiegeltabelle
 --                    davor: prescription_sessions_booking_unique
 --                    davor: leads_geschlecht_kodierung_dokumentieren
@@ -19,8 +27,8 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            80 Tabellen · 1182 Spalten · 152 RLS-Policies
---                    288 Indizes · 58 Trigger · 61 Funktionen · 4 Views
+-- UMFANG:            82 Tabellen · 1210 Spalten · 155 RLS-Policies
+--                    295 Indizes · 60 Trigger · 63 Funktionen · 4 Views
 -- ZÄHLWEISE:         Tabellen = BASE TABLE in `public` · Spalten =
 --                    information_schema.columns in `public` (Views
 --                    eingeschlossen) · Funktionen und Indizes OHNE die
@@ -1855,6 +1863,75 @@ CREATE TABLE zuzahlung_befreiung (
 --   FK patient_id -> leads(id) ON DELETE CASCADE
 --   PK (id) · UNIQUE (patient_id, jahr)
 --   TRIGGER fn_befreiung_backfill_prescriptions() aktualisiert bestehende Rezepte.
+
+CREATE TABLE zuzahlung_guthaben (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  owner_id uuid NOT NULL
+  business_id uuid
+  patient_id uuid NOT NULL
+  quelle_prescription_id uuid
+  quelle_verordnung_id uuid
+  betrag_eur numeric(10,2) NOT NULL
+  rest_eur numeric(10,2) NOT NULL
+  status text NOT NULL DEFAULT 'offen'::text
+  notiz text
+  created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+  created_by uuid
+  updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+--   CHECK betrag_eur > 0 · rest_eur >= 0 · rest_eur <= betrag_eur
+--   CHECK status IN (offen, teilweise_verrechnet, verrechnet, ausgezahlt, verfallen)
+--   CHECK NOT (quelle_prescription_id IS NOT NULL AND quelle_verordnung_id IS NOT NULL)
+--        Ein Guthaben haengt an genau EINEM Topf: prescriptions ODER verordnungen.
+--   FK owner_id -> profiles(id) ON DELETE RESTRICT
+--   FK patient_id -> leads(id) ON DELETE CASCADE
+--   FK quelle_prescription_id -> prescriptions(id) ON DELETE SET NULL
+--   FK quelle_verordnung_id -> verordnungen(id) ON DELETE SET NULL
+--   FK created_by -> auth.users(id) ON DELETE SET NULL
+--   PK (id)
+--   TRIGGER trg_zuzahlung_guthaben_status leitet status aus rest_eur ab. Was der
+--     Client in status schickt, wird ueberschrieben — ausser 'ausgezahlt' und
+--     'verfallen', das sind Endzustaende.
+--   TRIGGER trg_set_business_id (BEFORE INSERT, set_business_id_default()) —
+--     nachgezogen 01.09.2026. Greift nur, wenn business_id noch NULL ist; ein
+--     von der Route explizit mitgegebener Wert bleibt unberuehrt.
+--   Zuviel kassierte Zuzahlung als Patientenguthaben. Warum: db/REGISTER.md
+
+CREATE TABLE zuzahlung_korrekturen (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  owner_id uuid NOT NULL
+  business_id uuid
+  patient_id uuid
+  prescription_id uuid
+  verordnung_id uuid
+  alt_betrag_eur numeric(10,2)
+  neu_betrag_eur numeric(10,2) NOT NULL
+  alt_einheiten integer
+  neu_einheiten integer
+  grund_code text NOT NULL
+  grund text NOT NULL
+  guthaben_id uuid
+  erfasst_von uuid
+  erfasst_am timestamptz NOT NULL DEFAULT timezone('utc', now())
+);
+--   CHECK grund_code IN (abbruch, korrektur_soll, guthaben_verrechnung,
+--                        befreiung_nachgereicht, sonstiges)
+--   CHECK length(btrim(grund)) >= 3 · neu_betrag_eur >= 0
+--   CHECK neu_einheiten IS NULL OR neu_einheiten >= 0
+--   CHECK NOT (prescription_id IS NOT NULL AND verordnung_id IS NOT NULL)
+--   FK owner_id -> profiles(id) ON DELETE RESTRICT
+--   FK patient_id -> leads(id) ON DELETE SET NULL
+--   FK prescription_id -> prescriptions(id) ON DELETE SET NULL
+--   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL
+--   FK guthaben_id -> zuzahlung_guthaben(id) ON DELETE SET NULL
+--   FK erfasst_von -> auth.users(id) ON DELETE SET NULL
+--   PK (id)
+--   ⚠️ UNVERAENDERLICH (GoBD): TRIGGER trg_prevent_zuzahlung_korrekturen_mod
+--     blockt jedes UPDATE und DELETE, und es gibt bewusst KEINE UPDATE/DELETE-Policy.
+--     Eine falsche Korrektur wird durch eine NEUE Korrektur richtiggestellt — genau
+--     wie bei belegliste. Kein UPDATE in den Code schreiben, er bekommt eine Exception.
+--   TRIGGER trg_set_business_id — wie zuzahlung_guthaben, nachgezogen 01.09.2026.
+
 
 
 -- =====================================================================

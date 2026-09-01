@@ -97,12 +97,12 @@ website/                          ← BU DİZİN (Claude Code burada açılır)
 │
 ├── db/                            ★ Şema + tablo kaydı — SQL yazmadan ÖNCE oku
 │   ├── README.md                  Yönelim + 7 tuzak + tazeleme kuralı
-│   ├── SCHEMA.sql                 80 tablo · 1182 kolon, constraint'ler, view'lar
-│   ├── SCHEMA-RLS.sql             152 RLS policy · 61 fonksiyon · 58 trigger · 288 index
+│   ├── SCHEMA.sql                 82 tablo · 1210 kolon, constraint'ler, view'lar
+│   ├── SCHEMA-RLS.sql             155 RLS policy · 63 fonksiyon · 62 trigger · 295 index
 │   │                              (rakamlar dökümün kendi başlığından — orası kaynaktır.
 │   │                               30.08.2026: burada iki kez ve yanlış duruyorlardı —
 │   │                               mükerrer blok silindi, sayılar canlıya karşı sayıldı)
-│   ├── REGISTER.md                ★ NİYE açıldı — 80/80 tablo, elle bakımlı (db-ustasi)
+│   ├── REGISTER.md                ★ NİYE açıldı — 82/82 tablo, elle bakımlı (db-ustasi)
 │   └── NUTZUNG.json/.md           KİM okuyor/yazıyor — üretilir (tools/tabellenkarte.mjs)
 │
 ├── module/                        ★ YENİ FRONTEND KODUNUN YERİ (Konsey 2026-08-13)
