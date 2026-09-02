@@ -284,7 +284,7 @@ function cardHTML(t) {
         ? `<span class="t-progress ${kidsDone === kids.length ? 'is-full' : ''}">${kidsDone}/${kids.length}</span>`
         : `<input type="checkbox" class="t-check" ${t.done ? 'checked' : ''} aria-label="erledigt">`}
       <div class="t-body">
-        <div class="t-title">${esc(t.title)}</div>
+        <div class="t-title">${t.seq_no ? `<span class="t-num">#${t.seq_no}</span> ` : ''}${esc(t.title)}</div>
         <div class="t-meta">
           ${t.category ? `<span class="pill">${esc(t.category)}</span>` : ''}
           ${author}

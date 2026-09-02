@@ -201,6 +201,7 @@ a { color: var(--blue); }
 
 .t-body { min-width: 0; }
 .t-title { word-break: break-word; }
+.t-num { color: var(--text-mute); font-weight: 400; font-variant-numeric: tabular-nums; }
 .t-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; font-size: 11px; color: var(--text-mute); }
 .pill {
   border: 1px solid var(--line); border-radius: 20px;
