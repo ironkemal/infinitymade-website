@@ -17,7 +17,7 @@
  * Warum es trotzdem schon ohne die neue Spalte läuft
  * ─────────────────────────────────────────────────
  * `services.kostentraeger_typ` kommt per Migration
- * (`sql-melih/2026-08-25-kostentraeger-typ.sql`). Bis die gelaufen ist, ist die
+ * (`supabase/migrations/20260902090000_services_kostentraeger_typ.sql`). Bis die gelaufen ist, ist die
  * Spalte nicht da und jeder Datensatz liefert `undefined`. Deshalb entscheidet
  * `kostentraegerTyp()` mit Rückfall auf die alte, implizite Regel: die Ansicht
  * funktioniert vorher und nachher, und die Migration verbessert sie, statt sie
@@ -305,4 +305,29 @@ export function renderGkvKatalog({
   });
 
   if (dividerEl) dividerEl.hidden = false;
+}
+
+/**
+ * Die vier abrechenbaren Typen — dieselbe Liste, die das DB-CHECK erlaubt.
+ * `intern` fehlt hier bewusst: darueber entscheidet `is_internal`, nicht diese
+ * Spalte. Zwei Spalten, die dasselbe behaupten koennen, widersprechen sich
+ * irgendwann.
+ */
+export const ABRECHENBARE_TYPEN = TYP_GRUPPEN
+  .filter(g => g.typ !== 'intern')
+  .map(g => g.typ);
+
+/**
+ * Macht aus dem Wert des Auswahlfeldes entweder einen erlaubten Typ oder
+ * `null` ("automatisch bestimmen").
+ *
+ * Warum nicht einfach der Feldwert: das DB-CHECK laesst nur die vier Typen zu.
+ * Kaeme aus einem veralteten DOM irgendetwas anderes, wiese PostgREST das
+ * ganze Speichern ab — und der Anwender saehe nur "Fehler", ohne zu erfahren,
+ * welches Feld schuld ist. Lieber hier still auf `null` fallen: die Leistung
+ * wird dann hergeleitet statt gar nicht gespeichert.
+ */
+export function normalisiereTyp(wert) {
+  const w = String(wert ?? '').trim().toLowerCase();
+  return ABRECHENBARE_TYPEN.includes(w) ? w : null;
 }

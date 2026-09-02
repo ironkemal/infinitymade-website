@@ -1,8 +1,8 @@
 {
- "erzeugt": "2026-09-01",
+ "erzeugt": "2026-09-02",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-01)",
-  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-08-31)",
+  "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-02)",
   "register": "db/REGISTER.md"
  },
  "anzahl": 82,
@@ -21,6 +21,7 @@
    "erwaehnt": [
     "api-backend/_lib/access-log.js",
     "api/dsgvo.js",
+    "module/nav-registry.test.js",
     "nav-registry.js"
    ],
    "register": true,
@@ -32,7 +33,7 @@
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
-     "start": 19584,
+     "start": 19576,
      "module": [
       "abrechnung",
       "kunden",
@@ -47,7 +48,7 @@
     {
      "name": "openDasGuideModal",
      "file": "dashboard.js",
-     "start": 13451,
+     "start": 13450,
      "module": [
       "abrechnung",
       "kunden",
@@ -62,7 +63,7 @@
     {
      "name": "renderExportStep",
      "file": "dashboard.js",
-     "start": 19514,
+     "start": 19506,
      "module": [
       "abrechnung",
       "kunden",
@@ -79,7 +80,7 @@
     {
      "name": "downloadAbrechnungFile",
      "file": "dashboard.js",
-     "start": 20150,
+     "start": 20142,
      "module": [
       "abrechnung",
       "kunden",
@@ -149,7 +150,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 17715,
+     "start": 17714,
      "module": [],
      "uiPfad": []
     },
@@ -209,14 +210,14 @@
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15594,
+     "start": 15593,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16812,
+     "start": 16811,
      "module": [
       "abrechnung",
       "kunden",
@@ -233,7 +234,7 @@
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 16350,
+     "start": 16349,
      "module": [
       "abrechnung",
       "anamnese",
@@ -286,7 +287,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 16409,
+     "start": 16408,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -296,7 +297,7 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 16418,
+     "start": 16417,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -375,7 +376,7 @@
     {
      "name": "fillAnamneseForm",
      "file": "dashboard.js",
-     "start": 15825,
+     "start": 15824,
      "module": [
       "abrechnung",
       "anamnese",
@@ -407,14 +408,14 @@
     {
      "name": "printAnamnese",
      "file": "dashboard.js",
-     "start": 15937,
+     "start": 15936,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "printAnamneseInline",
      "file": "dashboard.js",
-     "start": 15885,
+     "start": 15884,
      "module": [],
      "uiPfad": []
     }
@@ -423,7 +424,7 @@
     {
      "name": "saveAnamnese",
      "file": "dashboard.js",
-     "start": 16009,
+     "start": 16008,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -550,7 +551,7 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 11893,
+     "start": 11892,
      "module": [
       "abrechnung",
       "b2b",
@@ -569,7 +570,7 @@
     {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 11900,
+     "start": 11899,
      "module": [
       "abrechnung",
       "b2b",
@@ -711,7 +712,7 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 3211,
+     "start": 3212,
      "module": [],
      "uiPfad": []
     },
@@ -732,7 +733,7 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2531,
+     "start": 2532,
      "module": [],
      "uiPfad": []
     },
@@ -785,7 +786,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1941,
+     "start": 1942,
      "module": [
       "abrechnung",
       "kunden",
@@ -800,7 +801,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11581,
+     "start": 11580,
      "module": [
       "abrechnung",
       "kunden",
@@ -845,7 +846,7 @@
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1700,
+     "start": 1701,
      "module": [
       "abrechnung",
       "hours",
@@ -862,7 +863,7 @@
     {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 22715,
+     "start": 22707,
      "module": [
       "abrechnung",
       "kunden",
@@ -896,7 +897,7 @@
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2685,
+     "start": 2686,
      "module": [
       "abrechnung",
       "kunden",
@@ -911,14 +912,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1544,
+     "start": 1545,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1624,
+     "start": 1625,
      "module": [
       "abrechnung",
       "hours",
@@ -935,7 +936,7 @@
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 14794,
+     "start": 14793,
      "module": [
       "abrechnung",
       "hours",
@@ -952,7 +953,7 @@
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 14699,
+     "start": 14698,
      "module": [
       "abrechnung",
       "hours",
@@ -997,7 +998,7 @@
     {
      "name": "doMoveBooking",
      "file": "dashboard.js",
-     "start": 5457,
+     "start": 5458,
      "module": [
       "abrechnung",
       "kunden",
@@ -1015,7 +1016,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4477,
+     "start": 4478,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1025,7 +1026,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3886,
+     "start": 3887,
      "module": [
       "abrechnung",
       "kunden",
@@ -1043,7 +1044,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4387,
+     "start": 4388,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1053,7 +1054,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4994,
+     "start": 4995,
      "module": [
       "abrechnung",
       "kunden",
@@ -1071,7 +1072,7 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4892,
+     "start": 4893,
      "module": [
       "abrechnung",
       "kunden",
@@ -1089,7 +1090,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 4249,
+     "start": 4250,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1099,7 +1100,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4293,
+     "start": 4294,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1109,7 +1110,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4166,
+     "start": 4167,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1178,7 +1179,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11641,
+     "start": 11640,
      "module": [
       "abrechnung",
       "kunden",
@@ -1197,7 +1198,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10387,
+     "start": 10386,
      "module": [
       "abrechnung",
       "hours",
@@ -1250,7 +1251,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 17137,
+     "start": 17136,
      "module": [],
      "uiPfad": []
     },
@@ -1308,7 +1309,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 17573,
+     "start": 17572,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1318,7 +1319,7 @@
     {
      "name": "ensureBusinessCoords",
      "file": "dashboard.js",
-     "start": 22952,
+     "start": 22944,
      "module": [
       "abrechnung",
       "kunden",
@@ -1336,7 +1337,7 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 10363,
+     "start": 10362,
      "module": [
       "abrechnung",
       "hours",
@@ -1356,7 +1357,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 17490,
+     "start": 17489,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1411,7 +1412,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11350,
+     "start": 11349,
      "module": [
       "abrechnung",
       "kunden",
@@ -1438,7 +1439,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12454,
+     "start": 12453,
      "module": [
       "abrechnung",
       "kunden",
@@ -1581,7 +1582,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10480,
+     "start": 10479,
      "module": [
       "abrechnung",
       "hours",
@@ -1600,7 +1601,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 10585,
+     "start": 10584,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1676,7 +1677,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 17694,
+     "start": 17693,
      "module": [],
      "uiPfad": []
     }
@@ -1685,7 +1686,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 17336,
+     "start": 17335,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1806,7 +1807,7 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 12744,
+     "start": 12743,
      "module": [
       "abrechnung",
       "kunden",
@@ -1823,7 +1824,7 @@
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 13185,
+     "start": 13184,
      "module": [
       "abrechnung",
       "kunden",
@@ -1842,7 +1843,7 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 13103,
+     "start": 13102,
      "module": [
       "abrechnung",
       "kunden",
@@ -1862,7 +1863,7 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 13335,
+     "start": 13334,
      "module": [
       "abrechnung",
       "kunden",
@@ -1882,7 +1883,7 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 13303,
+     "start": 13302,
      "module": [
       "abrechnung",
       "kunden",
@@ -1902,7 +1903,7 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 13312,
+     "start": 13311,
      "module": [
       "abrechnung",
       "kunden",
@@ -1922,7 +1923,7 @@
     {
      "name": "openVorlagenAnsicht",
      "file": "dashboard.js",
-     "start": 13013,
+     "start": 13012,
      "module": [
       "abrechnung",
       "kunden",
@@ -1942,7 +1943,7 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 13273,
+     "start": 13272,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1953,7 +1954,7 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 13371,
+     "start": 13370,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1963,7 +1964,7 @@
     {
      "name": "seedMissingVorlagen",
      "file": "dashboard.js",
-     "start": 13377,
+     "start": 13376,
      "module": [
       "abrechnung",
       "kunden",
@@ -1983,7 +1984,7 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 13328,
+     "start": 13327,
      "module": [
       "abrechnung",
       "kunden",
@@ -2104,7 +2105,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 17137,
+     "start": 17136,
      "module": [],
      "uiPfad": []
     },
@@ -2125,7 +2126,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 11154,
+     "start": 11153,
      "module": [
       "abrechnung",
       "kunden",
@@ -2140,7 +2141,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10688,
+     "start": 10687,
      "module": [
       "abrechnung",
       "kunden",
@@ -2157,7 +2158,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 11196,
+     "start": 11195,
      "module": [
       "abrechnung",
       "kunden",
@@ -2176,7 +2177,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 11049,
+     "start": 11048,
      "module": [
       "abrechnung",
       "kunden",
@@ -2194,7 +2195,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11297,
+     "start": 11296,
      "module": [
       "abrechnung",
       "kunden",
@@ -2243,7 +2244,7 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 11154,
+     "start": 11153,
      "module": [
       "abrechnung",
       "kunden",
@@ -2258,7 +2259,7 @@
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 11196,
+     "start": 11195,
      "module": [
       "abrechnung",
       "kunden",
@@ -2273,7 +2274,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 11049,
+     "start": 11048,
      "module": [
       "abrechnung",
       "kunden",
@@ -2316,7 +2317,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 11263,
+     "start": 11262,
      "module": [
       "abrechnung",
       "kunden",
@@ -2333,7 +2334,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11297,
+     "start": 11296,
      "module": [
       "abrechnung",
       "kunden",
@@ -2397,7 +2398,7 @@
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 17991,
+     "start": 17990,
      "module": [],
      "uiPfad": []
     }
@@ -2406,7 +2407,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11733,
+     "start": 11732,
      "module": [
       "abrechnung",
       "kunden",
@@ -2483,7 +2484,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1941,
+     "start": 1942,
      "module": [
       "abrechnung",
       "kunden",
@@ -2498,7 +2499,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 20521,
+     "start": 20513,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -2517,7 +2518,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4293,
+     "start": 4294,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2527,7 +2528,7 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4166,
+     "start": 4167,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2568,7 +2569,7 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 14968,
+     "start": 14967,
      "module": [
       "abrechnung",
       "feedback",
@@ -2638,7 +2639,7 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 11263,
+     "start": 11262,
      "module": [
       "abrechnung",
       "kunden",
@@ -2653,7 +2654,7 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11297,
+     "start": 11296,
      "module": [
       "abrechnung",
       "kunden",
@@ -2855,14 +2856,14 @@
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15594,
+     "start": 15593,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1941,
+     "start": 1942,
      "module": [
       "abrechnung",
       "kunden",
@@ -2892,7 +2893,7 @@
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 15040,
+     "start": 15039,
      "module": [
       "abrechnung",
       "kunden",
@@ -2921,7 +2922,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 15438,
+     "start": 15437,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2987,7 +2988,7 @@
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
-     "start": 19584,
+     "start": 19576,
      "module": [
       "abrechnung",
       "kunden",
@@ -3038,7 +3039,7 @@
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 18830,
+     "start": 18829,
      "module": [
       "abrechnung",
       "kunden",
@@ -3089,21 +3090,21 @@
     {
      "name": "ausfallVereinbarungDatum",
      "file": "dashboard.js",
-     "start": 4702,
+     "start": 4703,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15594,
+     "start": 15593,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16812,
+     "start": 16811,
      "module": [
       "abrechnung",
       "kunden",
@@ -3120,7 +3121,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3886,
+     "start": 3887,
      "module": [
       "abrechnung",
       "kunden",
@@ -3135,14 +3136,14 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4387,
+     "start": 4388,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5202,
+     "start": 5203,
      "module": [
       "abrechnung",
       "kunden",
@@ -3157,7 +3158,7 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4994,
+     "start": 4995,
      "module": [
       "abrechnung",
       "kunden",
@@ -3172,7 +3173,7 @@
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3681,
+     "start": 3682,
      "module": [
       "abrechnung",
       "kunden",
@@ -3187,7 +3188,7 @@
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 21911,
+     "start": 21903,
      "module": [],
      "uiPfad": []
     },
@@ -3218,7 +3219,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1941,
+     "start": 1942,
      "module": [
       "abrechnung",
       "kunden",
@@ -3233,7 +3234,7 @@
     {
      "name": "loadAnamnese",
      "file": "dashboard.js",
-     "start": 15675,
+     "start": 15674,
      "module": [
       "abrechnung",
       "anamnese",
@@ -3250,7 +3251,7 @@
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 11983,
+     "start": 11982,
      "module": [
       "abrechnung",
       "b2c",
@@ -3267,7 +3268,7 @@
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 5212,
+     "start": 5213,
      "module": [
       "abrechnung",
       "kunden",
@@ -3282,7 +3283,7 @@
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 15286,
+     "start": 15285,
      "module": [
       "abrechnung",
       "kunden",
@@ -3312,7 +3313,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 14162,
+     "start": 14161,
      "module": [
       "abrechnung",
       "kunden",
@@ -3344,7 +3345,7 @@
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 22667,
+     "start": 22659,
      "module": [
       "abrechnung",
       "kunden",
@@ -3378,7 +3379,7 @@
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 5117,
+     "start": 5118,
      "module": [
       "abrechnung",
       "kunden",
@@ -3393,7 +3394,7 @@
     {
      "name": "openInvView",
      "file": "dashboard.js",
-     "start": 15088,
+     "start": 15087,
      "module": [
       "abrechnung",
       "kunden",
@@ -3410,7 +3411,7 @@
     {
      "name": "openRezeptModal",
      "file": "dashboard.js",
-     "start": 16877,
+     "start": 16876,
      "module": [
       "abrechnung",
       "kunden",
@@ -3434,28 +3435,28 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 3985,
+     "start": 3986,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4293,
+     "start": 4294,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4166,
+     "start": 4167,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 20093,
+     "start": 20085,
      "module": [
       "abrechnung",
       "kunden",
@@ -3472,7 +3473,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4527,
+     "start": 4528,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3482,7 +3483,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 21605,
+     "start": 21597,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3492,7 +3493,7 @@
     {
      "name": "saveRezept",
      "file": "dashboard.js",
-     "start": 16968,
+     "start": 16967,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3642,7 +3643,7 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 907,
+     "start": 908,
      "module": [
       "abrechnung",
       "kunden",
@@ -3909,7 +3910,7 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1941,
+     "start": 1942,
      "module": [
       "abrechnung",
       "kunden",
@@ -3924,7 +3925,7 @@
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 14162,
+     "start": 14161,
      "module": [
       "abrechnung",
       "kunden",
@@ -3956,7 +3957,7 @@
     {
      "name": "loadPatientNotes",
      "file": "dashboard.js",
-     "start": 14226,
+     "start": 14225,
      "module": [
       "abrechnung",
       "kunden",
@@ -4166,7 +4167,7 @@
     {
      "name": "uploadRxNachweise",
      "file": "dashboard.js",
-     "start": 18561,
+     "start": 18560,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4200,7 +4201,7 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 7486,
+     "start": 7487,
      "module": [
       "abrechnung",
       "kunden",
@@ -4215,7 +4216,7 @@
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3833,
+     "start": 3834,
      "module": [
       "abrechnung",
       "kunden",
@@ -4230,14 +4231,14 @@
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6328,
+     "start": 6329,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "openInvView",
      "file": "dashboard.js",
-     "start": 15088,
+     "start": 15087,
      "module": [
       "abrechnung",
       "kunden",
@@ -4270,7 +4271,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4477,
+     "start": 4478,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4280,7 +4281,7 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3886,
+     "start": 3887,
      "module": [
       "abrechnung",
       "kunden",
@@ -4298,7 +4299,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7499,
+     "start": 7500,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4309,7 +4310,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 7466,
+     "start": 7467,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4384,7 +4385,7 @@
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5202,
+     "start": 5203,
      "module": [
       "abrechnung",
       "kunden",
@@ -4423,14 +4424,14 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7499,
+     "start": 7500,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
-     "start": 19584,
+     "start": 19576,
      "module": [
       "abrechnung",
       "kunden",
@@ -4445,7 +4446,7 @@
     {
      "name": "loadAnamneseRxContext",
      "file": "dashboard.js",
-     "start": 15770,
+     "start": 15769,
      "module": [
       "abrechnung",
       "anamnese",
@@ -4462,7 +4463,7 @@
     {
      "name": "loadBkVerordnungen",
      "file": "dashboard.js",
-     "start": 5269,
+     "start": 5270,
      "module": [
       "abrechnung",
       "kunden",
@@ -4477,7 +4478,7 @@
     {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3796,
+     "start": 3797,
      "module": [],
      "uiPfad": []
     },
@@ -4499,7 +4500,7 @@
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 22500,
+     "start": 22492,
      "module": [
       "abrechnung",
       "kunden",
@@ -4514,21 +4515,21 @@
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 2240,
+     "start": 2241,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6328,
+     "start": 6329,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 22602,
+     "start": 22594,
      "module": [
       "abrechnung",
       "kunden",
@@ -4545,7 +4546,7 @@
     {
      "name": "openInvView",
      "file": "dashboard.js",
-     "start": 15088,
+     "start": 15087,
      "module": [
       "abrechnung",
       "kunden",
@@ -4562,7 +4563,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 20093,
+     "start": 20085,
      "module": [
       "abrechnung",
       "kunden",
@@ -4623,7 +4624,7 @@
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15594,
+     "start": 15593,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4661,7 +4662,7 @@
     {
      "name": "renderAbrechnungHistory",
      "file": "dashboard.js",
-     "start": 19926,
+     "start": 19918,
      "module": [
       "abrechnung",
       "kunden",
@@ -4679,7 +4680,7 @@
     {
      "name": "renderAbrechnungReady",
      "file": "dashboard.js",
-     "start": 19699,
+     "start": 19691,
      "module": [
       "abrechnung",
       "kunden",
@@ -4697,7 +4698,7 @@
     {
      "name": "saveRezept",
      "file": "dashboard.js",
-     "start": 16968,
+     "start": 16967,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4707,7 +4708,7 @@
     {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 21030,
+     "start": 21022,
      "module": [
       "abrechnung",
       "belegliste",
@@ -4800,7 +4801,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4527,
+     "start": 4528,
      "module": [],
      "uiPfad": []
     },
@@ -4824,14 +4825,14 @@
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 828,
+     "start": 829,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10898,
+     "start": 10897,
      "module": [
       "abrechnung",
       "kunden",
@@ -4846,7 +4847,7 @@
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 20461,
+     "start": 20453,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -4863,7 +4864,7 @@
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 20521,
+     "start": 20513,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -4880,7 +4881,7 @@
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 20843,
+     "start": 20835,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -4897,7 +4898,7 @@
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 10278,
+     "start": 10277,
      "module": [
       "abrechnung",
       "hours",
@@ -4936,7 +4937,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10688,
+     "start": 10687,
      "module": [
       "abrechnung",
       "kunden",
@@ -4951,7 +4952,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 22741,
+     "start": 22733,
      "module": [
       "abrechnung",
       "kunden",
@@ -4968,7 +4969,7 @@
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4560,
+     "start": 4561,
      "module": [],
      "uiPfad": []
     },
@@ -4982,7 +4983,7 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 11049,
+     "start": 11048,
      "module": [
       "abrechnung",
       "kunden",
@@ -4997,7 +4998,7 @@
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 975,
+     "start": 976,
      "module": [
       "abrechnung",
       "kunden",
@@ -5137,7 +5138,7 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 13729,
+     "start": 13728,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5147,7 +5148,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 5780,
+     "start": 5781,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5157,7 +5158,7 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 13712,
+     "start": 13711,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5187,7 +5188,7 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 23464,
+     "start": 23456,
      "module": [
       "abrechnung",
       "anfragen",
@@ -5217,7 +5218,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11350,
+     "start": 11349,
      "module": [
       "abrechnung",
       "kunden",
@@ -5235,7 +5236,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 2303,
+     "start": 2304,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5255,7 +5256,7 @@
     {
      "name": "saveAusfallSettings",
      "file": "dashboard.js",
-     "start": 17258,
+     "start": 17257,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5265,7 +5266,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 14421,
+     "start": 14420,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5362,7 +5363,7 @@
     {
      "name": "loadDoctors",
      "file": "dashboard.js",
-     "start": 13792,
+     "start": 13791,
      "module": [
       "abrechnung",
       "doctors",
@@ -5404,6 +5405,8 @@
     "dashboard.html",
     "index-old.html",
     "index.html",
+    "module/kostentraeger-spalte.test.js",
+    "module/nav-registry.test.js",
     "nav-registry.js",
     "onboarding.html"
    ],
@@ -5423,14 +5426,14 @@
     {
      "name": "baseQuery",
      "file": "dashboard.js",
-     "start": 19100,
+     "start": 19099,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3867,
+     "start": 3868,
      "module": [
       "abrechnung",
       "kunden",
@@ -5452,14 +5455,14 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2531,
+     "start": 2532,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11733,
+     "start": 11732,
      "module": [
       "abrechnung",
       "kunden",
@@ -5515,9 +5518,26 @@
     {
      "name": "populateRxcServiceSelect",
      "file": "dashboard.js",
-     "start": 19076,
+     "start": 19075,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "sondiere",
+     "file": "module/kostentraeger-spalte.js",
+     "start": 86,
+     "module": [
+      "abrechnung",
+      "kunden",
+      "services",
+      "team"
+     ],
+     "uiPfad": [
+      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
+      "Sidebar → Patienten",
+      "Sidebar → Leistungen",
+      "Sidebar → Team"
+     ]
     },
     {
      "name": "stammdatenLaden",
@@ -5539,7 +5559,7 @@
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 5548,
+     "start": 5549,
      "module": [
       "abrechnung",
       "kunden",
@@ -5556,7 +5576,7 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 9661,
+     "start": 9662,
      "module": [
       "abrechnung",
       "kunden",
@@ -5576,7 +5596,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 7688,
+     "start": 7689,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5598,7 +5618,7 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 9857,
+     "start": 9858,
      "module": [
       "abrechnung",
       "kunden",
@@ -5630,7 +5650,7 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 10044,
+     "start": 10045,
      "module": [
       "abrechnung",
       "kunden",
@@ -5662,7 +5682,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 17490,
+     "start": 17489,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5679,6 +5699,7 @@
     "kalender.js",
     "module/anfrage-bearbeiten.js",
     "module/kalender-blocker.js",
+    "module/kostentraeger-spalte.js",
     "onboarding.js"
    ],
    "module": [
@@ -5737,7 +5758,7 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12454,
+     "start": 12453,
      "module": [
       "abrechnung",
       "kunden",
@@ -5754,7 +5775,7 @@
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1363,
+     "start": 1364,
      "module": [],
      "uiPfad": []
     }
@@ -5793,7 +5814,7 @@
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
-     "start": 19584,
+     "start": 19576,
      "module": [
       "abrechnung",
       "kunden",
@@ -5808,7 +5829,7 @@
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11733,
+     "start": 11732,
      "module": [
       "abrechnung",
       "kunden",
@@ -5825,7 +5846,7 @@
     {
      "name": "loadEmpCertificates",
      "file": "dashboard.js",
-     "start": 11819,
+     "start": 11818,
      "module": [
       "abrechnung",
       "kunden",
@@ -5889,7 +5910,7 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11581,
+     "start": 11580,
      "module": [
       "abrechnung",
       "kunden",
@@ -5904,7 +5925,7 @@
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10898,
+     "start": 10897,
      "module": [
       "abrechnung",
       "kunden",
@@ -5919,7 +5940,7 @@
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 22741,
+     "start": 22733,
      "module": [
       "abrechnung",
       "kunden",
@@ -5936,14 +5957,14 @@
     {
      "name": "loadUrlaubListe",
      "file": "dashboard.js",
-     "start": 10999,
+     "start": 10998,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2685,
+     "start": 2686,
      "module": [
       "abrechnung",
       "kunden",
@@ -5960,7 +5981,7 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 10954,
+     "start": 10953,
      "module": [
       "abrechnung",
       "kunden",
@@ -5978,7 +5999,7 @@
     {
      "name": "deleteUrlaub",
      "file": "dashboard.js",
-     "start": 11028,
+     "start": 11027,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5988,7 +6009,7 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10688,
+     "start": 10687,
      "module": [
       "abrechnung",
       "kunden",
@@ -6006,7 +6027,7 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11350,
+     "start": 11349,
      "module": [
       "abrechnung",
       "kunden",
@@ -6024,7 +6045,7 @@
     {
      "name": "saveUrlaub",
      "file": "dashboard.js",
-     "start": 10970,
+     "start": 10969,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6171,14 +6192,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 17137,
+     "start": 17136,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 14568,
+     "start": 14567,
      "module": [],
      "uiPfad": []
     }
@@ -6187,7 +6208,7 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 14647,
+     "start": 14646,
      "module": [
       "abrechnung",
       "hours",
@@ -6207,7 +6228,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 17652,
+     "start": 17651,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6249,14 +6270,14 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 4094,
+     "start": 4095,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "q",
      "file": "dashboard.js",
-     "start": 20679,
+     "start": 20671,
      "module": [
       "abrechnung",
       "kunden",
@@ -6273,14 +6294,14 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4293,
+     "start": 4294,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4166,
+     "start": 4167,
      "module": [],
      "uiPfad": []
     }
@@ -6289,7 +6310,7 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 20705,
+     "start": 20697,
      "module": [
       "abrechnung",
       "fahrtenbuch",
@@ -6307,7 +6328,7 @@
     {
      "name": "saveQuickVehicleHandler",
      "file": "dashboard.js",
-     "start": 4143,
+     "start": 4144,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6317,7 +6338,7 @@
     {
      "name": "saveVehicleEdit",
      "file": "dashboard.js",
-     "start": 20808,
+     "start": 20800,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6489,7 +6510,7 @@
     {
      "name": "reportSidebarVisibility",
      "file": "dashboard.js",
-     "start": 927,
+     "start": 928,
      "module": [
       "abrechnung",
       "kunden",
@@ -6548,7 +6569,7 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 21770,
+     "start": 21762,
      "module": [
       "abrechnung",
       "kunden",
@@ -6567,7 +6588,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 21941,
+     "start": 21933,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6623,7 +6644,7 @@
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2452,
+     "start": 2453,
      "module": [
       "abrechnung",
       "kunden",
@@ -6669,14 +6690,14 @@
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1544,
+     "start": 1545,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1624,
+     "start": 1625,
      "module": [
       "abrechnung",
       "hours",
@@ -6693,7 +6714,7 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10387,
+     "start": 10386,
      "module": [
       "abrechnung",
       "hours",
@@ -6710,7 +6731,7 @@
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10480,
+     "start": 10479,
      "module": [
       "abrechnung",
       "hours",
@@ -6740,7 +6761,7 @@
     {
      "name": "loadEmpHours",
      "file": "dashboard.js",
-     "start": 11641,
+     "start": 11640,
      "module": [
       "abrechnung",
       "kunden",
@@ -6795,7 +6816,7 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 20093,
+     "start": 20085,
      "module": [
       "abrechnung",
       "kunden",
@@ -6859,7 +6880,7 @@
     {
      "name": "uploadRxNachweise",
      "file": "dashboard.js",
-     "start": 18561,
+     "start": 18560,
      "module": [],
      "uiPfad": [],
      "ops": [

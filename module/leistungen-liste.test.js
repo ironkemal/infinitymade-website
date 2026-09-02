@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
-import { kostentraegerTyp, gruppiereLeistungen, TYP_GRUPPEN } from './leistungen-liste.js';
+import { kostentraegerTyp, gruppiereLeistungen, TYP_GRUPPEN, normalisiereTyp, ABRECHENBARE_TYPEN } from './leistungen-liste.js';
 
 test('gepflegte Spalte gewinnt', () => {
   assert.equal(kostentraegerTyp({ kostentraeger_typ: 'bg', gkv_position_nr: 'X0501' }), 'bg');
@@ -76,7 +77,58 @@ test('die Gruppendefinitionen sind vollstaendig', () => {
     assert.ok(g.typ && g.label && g.hinweis, g.typ);
   }
   // Die vier abrechenbaren Typen müssen exakt denen des DB-Constraints
-  // entsprechen (sql-melih/2026-08-25-kostentraeger-typ.sql).
+  // entsprechen (supabase/migrations/20260902090000_services_kostentraeger_typ.sql).
   const abrechenbar = TYP_GRUPPEN.map(g => g.typ).filter(t => t !== 'intern');
   assert.deepEqual(abrechenbar, ['gkv', 'privat', 'selbstzahler', 'bg']);
+});
+
+test('normalisiereTyp laesst nur die vier abrechenbaren Typen durch', () => {
+  assert.equal(normalisiereTyp('gkv'), 'gkv');
+  assert.equal(normalisiereTyp('privat'), 'privat');
+  assert.equal(normalisiereTyp('selbstzahler'), 'selbstzahler');
+  assert.equal(normalisiereTyp('bg'), 'bg');
+});
+
+test('normalisiereTyp macht aus allem Unbrauchbaren null', () => {
+  // null heisst "automatisch bestimmen" — die Leistung wird gespeichert und
+  // hergeleitet, statt dass PostgREST das ganze UPDATE abweist.
+  assert.equal(normalisiereTyp(''), null);
+  assert.equal(normalisiereTyp('   '), null);
+  assert.equal(normalisiereTyp(null), null);
+  assert.equal(normalisiereTyp(undefined), null);
+  assert.equal(normalisiereTyp('quatsch'), null);
+});
+
+test('normalisiereTyp laesst intern NICHT durch', () => {
+  // Das DB-CHECK kennt 'intern' nicht — darueber entscheidet is_internal.
+  assert.equal(normalisiereTyp('intern'), null);
+});
+
+test('normalisiereTyp fasst Gross- und Kleinschreibung zusammen', () => {
+  assert.equal(normalisiereTyp('GKV'), 'gkv');
+  assert.equal(normalisiereTyp(' Selbstzahler '), 'selbstzahler');
+});
+
+test('ABRECHENBARE_TYPEN deckt sich mit dem DB-CHECK', () => {
+  // Aendert sich eine der beiden Seiten, muss die andere mit —
+  // supabase/migrations/20260902090000_services_kostentraeger_typ.sql
+  assert.deepEqual(ABRECHENBARE_TYPEN, ['gkv', 'privat', 'selbstzahler', 'bg']);
+});
+
+test('die <option>-Liste in dashboard.html deckt sich mit ABRECHENBARE_TYPEN', () => {
+  // Dritte Kopie derselben Werteliste: TYP_GRUPPEN (hier), das DB-CHECK (in der
+  // Migration) und das Auswahlfeld in dashboard.html. Die ersten beiden pinnt
+  // der Test darueber. Diese Kopie sah bisher niemand.
+  //
+  // Was passiert, wenn sie driftet: openServiceEdit setzt `select.value` auf
+  // einen Wert ohne passende Option, der Browser macht daraus still '', und der
+  // naechste Speichervorgang schreibt null. Der gepflegte Typ waere ohne jede
+  // Meldung weg.
+  const html = readFileSync(new URL('../dashboard.html', import.meta.url), 'utf8');
+  const block = html.slice(html.indexOf('id="srvKostentraegerTyp"'));
+  const select = block.slice(0, block.indexOf('</select>'));
+  const werte = [...select.matchAll(/<option value="([^"]*)"/g)].map(m => m[1]);
+
+  assert.deepEqual(werte, ['', ...ABRECHENBARE_TYPEN],
+    'erste Option ist "automatisch" (leer), danach exakt die abrechenbaren Typen');
 });

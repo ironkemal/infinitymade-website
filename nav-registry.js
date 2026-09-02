@@ -12,8 +12,22 @@
 //
 // roles: kod-default'u. Gerçek görünürlük module_visibility
 // tablosundaki toggle'dan gelir; DB satırı yoksa buraya düşülür.
-
-export const REGISTRY_VERSION = '20260825';
+//
+// ── Cache-Busting: hier steht KEINE Versionsnummer ──────────────────────────
+// Bis zum 03.09.2026 stand hier `export const REGISTRY_VERSION`. Sie wurde bei
+// jeder Aenderung brav hochgezaehlt — und von niemandem gelesen. Sie KONNTE
+// auch nichts bewirken: der Cache-Buster steht im Import-Pfad
+//
+//     import { NAV_REGISTRY } from './nav-registry.js?v=20260903';
+//
+// und ein Import-Pfad ist ein statischer String. Er kann unmoeglich eine
+// Konstante aus genau der Datei benutzen, die er erst laedt.
+//
+// Wer diese Datei aendert, zieht deshalb ZWEI Glieder hoch, nicht eins:
+//   1. `?v=` an jedem Import von nav-registry.js (dashboard.js, admin.js,
+//      module/fussbefund.js, komponenten.html)
+//   2. `?v=` an `dashboard.js` selbst in dashboard.html — sonst laedt der
+//      Browser die alte dashboard.js und kommt nie zur neuen Modulzeile.
 
 export const NAV_REGISTRY = {
   default: [

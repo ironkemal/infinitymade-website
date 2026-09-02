@@ -2,7 +2,7 @@ import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { mountCalendar } from './calendar-widget.js?v=20260512h';
 import { attachDiagnoseSearch, attachHeilmittelSearch, searchHeilmittel, heilmittelOptionsHtml } from './katalog-suche.js?v=20260817';
-import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260830';
+import { NAV_REGISTRY, resolveSector } from './nav-registry.js?v=20260903';
 import { attachPatientSearch } from './patient-suche.js?v=20260817';
 import { emit, on } from './module/signal.js?v=20260815';
 import { attachKvnrPruefung } from './module/kvnr.js?v=20260814';
@@ -49,7 +49,8 @@ import { alsISODatum as toISODate } from './module/datum.js?v=20260831';
 import { terminFarben, mitDeckkraft, LEISTUNG_FARBEN } from './module/kalender-farben.js?v=20260830';
 import { farbwahlFuer } from './module/leistung-farbwahl.js?v=20260830';
 import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blocker.js?v=20260830';
-import { renderLeistungenListe, renderGkvKatalog } from './module/leistungen-liste.js?v=20260830';
+import { renderLeistungenListe, renderGkvKatalog, normalisiereTyp } from './module/leistungen-liste.js?v=20260903';
+import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kostentraeger-spalte.js?v=20260903';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
 import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260830';
 import {
@@ -9642,8 +9643,9 @@ async function loadServices() {
     .select('*,employee_services(employee_id),price_config,code')
     .or(`owner_id.eq.${getOwnerId()},user_id.eq.${getOwnerId()}`);
   q = bizScope(q, 'services');
-  const { data } = await q;
+  const { data, error: ladeFehler } = await q;
   servicesCache = data || [];
+  if (!ladeFehler) await ermittleKostentraegerSpalte(servicesCache, supabase);
 
   // Önce eski uydurma podoloji kodlarını gerçek HPNR'lere taşı, sonra seed et —
   // ters sırada olsaydı hem eskisi hem yenisi listede durur, mükerrer görünürdü.
@@ -10076,7 +10078,7 @@ function resetServiceForm() {
   document.getElementById('srvCode').value = '';
   document.getElementById('srvGkvPosition').value = '';
   document.getElementById('srvKostentraegerTyp').value = '';
-  document.getElementById('srvKostentraegerRow').hidden = !spalteKostentraegerDa();
+  document.getElementById('srvKostentraegerRow').hidden = !kostentraegerSpalteDa();
   document.getElementById('srvDur').value = '30';
   document.getElementById('srvPrice').value = '0';
   document.getElementById('srvEmpAll').checked = true;
@@ -10090,10 +10092,6 @@ function resetServiceForm() {
 }
 
 const gkvFarbwahl = () => farbwahlFuer('gkv', { behaelter: document.getElementById('gkvFarbfelder'), eingabe: document.getElementById('gkvFormColor'), farben: LEISTUNG_FARBEN });
-
-function spalteKostentraegerDa() {
-  return servicesCache.some(s => Object.prototype.hasOwnProperty.call(s, 'kostentraeger_typ'));
-}
 
 // Die Farbfelder werden einmal gebaut und danach nur noch gesetzt.
 const srvFarbwahl = () => farbwahlFuer('srv', { behaelter: document.getElementById('srvFarbfelder'), eingabe: document.getElementById('srvColor'), farben: LEISTUNG_FARBEN });
@@ -10109,7 +10107,9 @@ function openServiceEdit(id) {
   document.getElementById('srvTitle').value = s.title;
   document.getElementById('srvCode').value = s.code || '';
   srvFarbwahl().setze(s.color);
-  document.getElementById('srvKostentraegerTyp').value = s.kostentraeger_typ || '';
+  // Interne Leistungen tragen keine Abrechnungsart — das entscheidet is_internal.
+  document.getElementById('srvKostentraegerTyp').value = s.is_internal ? '' : (s.kostentraeger_typ || '');
+  if (s.is_internal) document.getElementById('srvKostentraegerRow').hidden = true;
 
   // If price_config exists, use it. Otherwise build one from legacy duration_minutes+price.
   let durations = s.price_config?.durations;
@@ -10233,12 +10233,12 @@ document.getElementById('srvSaveBtn').addEventListener('click', async () => {
     price: activeDurs[0].price,
     color: document.getElementById('srvColor').value || '#22c55e'
   };
-  // Die Spalte kommt erst mit sql-melih/2026-08-25-kostentraeger-typ.sql. Vorher
-  // wuerde PostgREST das ganze INSERT/UPDATE abweisen und das Speichern einer
-  // Leistung waere kaputt. loadServices() liest mit select('*') — kennt der
-  // geladene Datensatz den Schluessel, gibt es die Spalte.
-  if (spalteKostentraegerDa()) {
-    payload.kostentraeger_typ = document.getElementById('srvKostentraegerTyp').value || null;
+  // Die Spalte kommt erst mit der Migration 20260902090000_services_kostentraeger_typ.
+  // Vorher wuerde PostgREST das ganze INSERT/UPDATE abweisen und das Speichern
+  // einer Leistung waere kaputt. Wie die Erkennung funktioniert und wann sie
+  // wieder verschwinden darf: module/kostentraeger-spalte.js.
+  if (kostentraegerSpalteDa()) {
+    payload.kostentraeger_typ = normalisiereTyp(document.getElementById('srvKostentraegerTyp').value);
   }
 
   if (mode === 'edit') {
