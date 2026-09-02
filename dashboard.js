@@ -17829,7 +17829,7 @@ const FREQUENZ_OPTIONS = [
   { label: 'Wöchentlich', items: ['1x pro Woche', '2x pro Woche', '3x pro Woche', '4x pro Woche', '5x pro Woche'] },
   { label: 'Frequenzspanne', items: ['1–2x pro Woche', '1–3x pro Woche', '2–3x pro Woche', '3–4x pro Woche', '4–5x pro Woche'] },
   { label: 'Intensiv', items: ['Täglich', '2x täglich'] },
-  { label: 'Größere Abstände', items: ['1x alle 2 Wochen', '1x alle 3 Wochen', '1x alle 4 Wochen', '1x alle 6 Wochen', '1x alle 8 Wochen'] },
+  { label: 'Größere Abstände', items: ['1x alle 2 Wochen', '1x alle 3 Wochen', '1x alle 4 Wochen', '1x alle 4–6 Wochen', '1x alle 6 Wochen', '1x alle 8 Wochen', 'Flex (1–8 Wochen)'] },
 ];
 
 function frequenzOptionsHtml() {
@@ -17862,7 +17862,7 @@ function populateFrequenzSelects() {
 function frequenzToSeries(freq) {
   const f = (freq || '').toLowerCase();
   if (/t[äa]gl/.test(f)) return { recurrence: 'daily', intervalDays: 1 };
-  const m = f.match(/alle\s*(\d+)\s*wochen/);
+  const m = f.match(/alle\s*(\d+)\s*(?:[-–—]\s*\d+\s*)?wochen/);   // Spanne „alle 4–6 Wochen": das untere Ende planen
   if (m) {
     const w = parseInt(m[1], 10) || 1;
     return { recurrence: w === 2 ? 'biweekly' : 'weekly', intervalDays: w * 7 };

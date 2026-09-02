@@ -28,6 +28,15 @@ test('Spanne „alle 4-6 Wochen"', () => {
   assert.deepEqual(sollAbstand('4 – 6 wöchig'), { min: 28, max: 42, label: 'alle 4-6 Wochen' });
 });
 
+// Die beiden Einträge, die seit dem 31.08.2026 im Frequenz-Dropdown stehen
+// (`FREQUENZ_OPTIONS` in dashboard.js) — genau in der Schreibweise, in der sie
+// dort gespeichert werden. „Flex" gibt es, weil der Abstand bei der
+// Nagelspange real zwischen 1 und 8 Wochen schwankt.
+test('die Dropdown-Werte „alle 4–6 Wochen" und „Flex" werden gelesen', () => {
+  assert.deepEqual(sollAbstand('1x alle 4–6 Wochen'), { min: 28, max: 42, label: 'alle 4-6 Wochen' });
+  assert.deepEqual(sollAbstand('Flex (1–8 Wochen)'), { min: 7, max: 56, label: 'alle 1-8 Wochen' });
+});
+
 test('Angaben pro Woche', () => {
   assert.deepEqual(sollAbstand('1x wöchentlich'), { min: 7, max: 7, label: '1× wöchentlich' });
   assert.deepEqual(sollAbstand('2x wöchentlich'), { min: 4, max: 4, label: '2× wöchentlich' });
@@ -144,6 +153,17 @@ test('sauberer Wochentakt meldet nichts', async () => {
   const supabase = doppel([sitzung(1, '2026-08-03T09:00:00Z')]);
   const r = await pruefeFrequenz({ supabase, rx: rxWoche, neuesDatum: new Date('2026-08-10T09:00:00Z') });
   assert.equal(r.ok, true);
+});
+
+// Der Grund für „Flex": bei der Spangenbehandlung sind 8 Wochen Abstand
+// genauso richtig wie eine Woche. Beides darf nicht beanstandet werden.
+test('„Flex" beanstandet weder eine noch acht Wochen Abstand', async () => {
+  const rxFlex = { id: 'rx-flex', frequenz: 'Flex (1–8 Wochen)' };
+  const supabase = doppel([sitzung(1, '2026-08-03T09:00:00Z')]);
+  for (const datum of ['2026-08-10T09:00:00Z', '2026-09-28T09:00:00Z']) {
+    const r = await pruefeFrequenz({ supabase, rx: rxFlex, neuesDatum: new Date(datum) });
+    assert.equal(r.ok, true, datum);
+  }
 });
 
 test('Pause über 12 Wochen bekommt eine eigene Überschrift', async () => {
