@@ -17,7 +17,7 @@ import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, no
 import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260830';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
-import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260828';
+import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260901';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
@@ -9771,12 +9771,12 @@ const GKV_LEISTUNGSKATALOG = {
       hinweis: 'Bei DF/NF/QF im Vorfeld jeder Behandlung (Anlage 1a Teil 2 Nr. 4.2), nicht je Serie. Bei UI1/UI2 nicht abrechenbar. Nicht am selben Tag wie die Eingangsbefundung (78040).' },
     { code: '78040', kuerzel: 'Eing.-Bef.', title: 'Eingangsbefundung', duration: 20, price: 22.48, price_min: 22.48, price_max: 22.48, locked: true,
       preise: { '2025-07-01': 22.48, '2026-07-01': 23.11 },
-      hinweis: 'Einmalig je Patient (lebenslang). Nicht am selben Tag wie 78030.' },
+      hinweis: 'Einmalig — nur bei Patienten, die ab dem 01.11.2023 erstmalig podologisch behandelt werden (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2). Nicht je Verordnung. Nicht am selben Tag wie 78030; zusammen mit 78010/78020 am selben Tag dagegen erlaubt. Keine Behandlungseinheit — zaehlt nicht gegen die verordnete Menge. Auf Muster 13 als Eing. Bef. vom Versicherten zu bestaetigen.' },
 
     // Nagelkorrekturspange (Diagnosegruppen UI1/UI2)
     { code: '78100', kuerzel: 'Erstbef. gr.', title: 'Erstbefundung groß (Nagelspange)', duration: 45, price: 56.00, price_min: 56.00, price_max: 56.00, locked: true,
       preise: { '2025-07-01': 56.00, '2026-07-01': 57.52 },
-      hinweis: 'Einmal je Kalenderjahr, auch bei Wiedervorstellung.' },
+      hinweis: 'Erstbefundung gross ist auf eine einmalige Abgabe je Patient im Kalenderjahr beschraenkt (Anlage 1c i.d.F. 01.07.2025, Teil 1 Nr. 5 I.1) — Standard ist 78110 klein, gross nur bei Bedarf (z. B. multimorbide Patienten). Zusaetzlich: Erstbefundung einmalig je Nagel-Behandlungsserie, eine Serie kann mehrere Verordnungen umfassen (Paragraf 3b lit. a).' },
     { code: '78110', kuerzel: 'Erstbef. kl.', title: 'Erstbefundung klein (Nagelspange)', duration: 20, price: 27.90, price_min: 27.90, price_max: 27.90, locked: true,
       preise: { '2025-07-01': 27.90, '2026-07-01': 28.63 } },
     { code: '78610', kuerzel: 'NSP', title: 'Nagelspangenbehandlung', duration: 45, price: 55.90, price_min: 55.90, price_max: 55.90, locked: true,
@@ -19470,8 +19470,7 @@ function renderTaxierungList() {
                   : null;
               return tpl ? _abState.positions.find(p => p.x === tpl) : null;
             })();
-            // Zentral über module/zuzahlung-rechnen.js — vorher rechnete diese Vorschau
-            // (wie die Taxierung) mit der VERORDNETEN statt der erbrachten Menge.
+            // Zentral über module/zuzahlung-rechnen.js — derselbe Weg wie Rechnung/DTA.
             const zz = zuzahlungFuerRezept(rx, _posLookup);
             const zu = rx.zuzahlung_befreit
               ? `<span style="color:#15803d;font-weight:600;">${t('ab_zuzahlung_befreit')}</span>`
