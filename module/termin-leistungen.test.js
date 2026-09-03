@@ -6,7 +6,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   neueZeile, gesamtDauer, begrenzeAnzahl, fuegeZeileHinzu, entferneZeile,
-  hpnrVonDienst, mitBefundungsvorschlag, STANDARD_DAUER_MIN, MAX_ANZAHL,
+  setzeZeilenService, hpnrVonDienst, mitBefundungsvorschlag,
+  STANDARD_DAUER_MIN, MAX_ANZAHL,
 } from './termin-leistungen.js';
 
 // Ein kleiner Katalog, wie ihn `servicesCache` fuehrt.
@@ -78,6 +79,69 @@ test('Hinzufuegen laesst die Eingabeliste unberuehrt', () => {
   const vorher = [neueZeile('s-beh-kl')];
   fuegeZeileHinzu(vorher, 's-eing');
   assert.equal(vorher.length, 1, 'kein verstecktes Mutieren');
+});
+
+// ── Zeile aendern ────────────────────────────────────────────────────────────
+// Der Fall aus der Praxis: die Software schlaegt die Eingangsbefundung selbst
+// vor, der Anwender drueckt „+" und waehlt sie daneben noch einmal von Hand.
+// Ohne Zusammenlegung stehen zwei identische Zeilen: der Block wird zu lang,
+// und `UNIQUE (booking_id, service_id)` laesst den Termin nicht speichern.
+
+test('dieselbe Leistung in eine zweite Zeile zu waehlen legt sie zusammen', () => {
+  const zeilen = [neueZeile('s-beh-gr'), neueZeile('s-eing'), neueZeile(null)];
+  const neu = setzeZeilenService(zeilen, 2, 's-eing');
+  assert.equal(neu.length, 2, 'keine dritte Zeile');
+  assert.equal(neu[1].serviceId, 's-eing');
+  assert.equal(neu[1].anzahl, 2, '1 + 1');
+});
+
+test('zusammengelegt wird nach oben — Zeile 0 verschwindet nie', () => {
+  const zeilen = [neueZeile('s-beh-gr'), neueZeile(null)];
+  const neu = setzeZeilenService(zeilen, 1, 's-beh-gr');
+  assert.equal(neu.length, 1);
+  assert.equal(neu[0].serviceId, 's-beh-gr', 'die Hauptleistung steht noch');
+  assert.equal(neu[0].anzahl, 2);
+});
+
+test('eine zusammengelegte Zeile gilt als Handauswahl, nicht mehr als Vorschlag', () => {
+  const zeilen = [neueZeile('s-beh-gr'), { ...neueZeile('s-eing'), auto: true }, neueZeile(null)];
+  const neu = setzeZeilenService(zeilen, 2, 's-eing');
+  assert.equal(neu[1].auto, false, 'ein neuer Vorschlag darf sie nicht mehr wegraeumen');
+});
+
+test('eine noch nicht vorhandene Leistung bekommt einfach ihre Zeile', () => {
+  const zeilen = [neueZeile('s-beh-gr'), { ...neueZeile('s-eing'), auto: true }];
+  const neu = setzeZeilenService(zeilen, 1, 's-bef');
+  assert.equal(neu.length, 2);
+  assert.equal(neu[1].serviceId, 's-bef');
+  assert.equal(neu[1].auto, false);
+});
+
+test('die Auswahl zuruecknehmen leert die Zeile, statt sie zu verschieben', () => {
+  const zeilen = [neueZeile('s-beh-gr'), neueZeile('s-eing')];
+  const neu = setzeZeilenService(zeilen, 1, '');
+  assert.equal(neu.length, 2);
+  assert.equal(neu[1].serviceId, null);
+});
+
+test('auch beim Zusammenlegen bleibt die Anzahl begrenzt', () => {
+  const zeilen = [{ ...neueZeile('s-beh-kl'), anzahl: MAX_ANZAHL }, neueZeile(null)];
+  const neu = setzeZeilenService(zeilen, 1, 's-beh-kl');
+  assert.equal(neu[0].anzahl, MAX_ANZAHL);
+});
+
+test('Aendern laesst die Eingabeliste unberuehrt und ignoriert unsinnige Indizes', () => {
+  const zeilen = [neueZeile('s-beh-gr'), neueZeile('s-eing')];
+  setzeZeilenService(zeilen, 1, 's-beh-gr');
+  assert.equal(zeilen.length, 2, 'Original unveraendert');
+  assert.equal(zeilen[1].serviceId, 's-eing');
+  assert.deepEqual(setzeZeilenService(zeilen, 9, 's-bef').length, 2);
+});
+
+test('die zusammengelegte Zeile verkuerzt den Block auf die richtige Dauer', () => {
+  const zeilen = [neueZeile('s-beh-gr'), neueZeile('s-eing'), neueZeile(null)];
+  const neu = setzeZeilenService(zeilen, 2, 's-eing');
+  assert.equal(gesamtDauer(neu, DIENSTE), 90, '50 + 2x20 — nicht 3 Zeilen');
 });
 
 test('die erste Zeile laesst sich nicht entfernen — service_id ist Pflicht', () => {

@@ -61,6 +61,35 @@ await page.check('#bkIsGroup');
 p('„+" ist im Gruppenmodus ausgeblendet', await page.evaluate(() => document.getElementById('bkLeistungAdd').hidden));
 p('und die Zusatzzeile ist weg', await zeilen() === 0, `${await zeilen()}`);
 
+console.log('\n══ „+" UND DANN DIESELBE LEISTUNG NOCH EINMAL');
+// Der Klickweg aus der Praxis — und zugleich die Regressionsprobe auf das
+// Einfrieren vom 03.09.2026: „+" druecken und in der neuen Zeile die Leistung
+// waehlen, die die Software oben schon vorgeschlagen hat. Zwei Fragen auf
+// einmal: haengt der Hauptthread wieder (dann laeuft der Schritt in den
+// Timeout, statt still zu bestehen), und entstehen zwei identische Zeilen
+// (die `UNIQUE (booking_id, service_id)` beim Speichern abweist)?
+//
+// Steht am Ende, weil der Abschnitt eine Handauswahl hinterlaesst: die
+// bleibt absichtlich stehen, wenn spaeter die Hauptleistung wechselt, und
+// haette dem Nagelzweig-Abschnitt darueber die Grundlage entzogen.
+await page.uncheck('#bkIsGroup');
+await page.evaluate(() => { document.getElementById('bookingModal').hidden = true; });
+await page.evaluate(() => { document.getElementById('bookingModal').hidden = false; });
+await page.waitForTimeout(100);
+await page.selectOption('#bkService', 's-beh-gr');
+await page.waitForTimeout(300);
+p('frische Maske, Vorschlag steht wieder', await zeilen() === 1, `${await zeilen()}`);
+await page.click('#bkLeistungAdd');
+p('„+" legt daneben eine leere Zeile an', await zeilen() === 2, `${await zeilen()}`);
+await page.selectOption('#bkLeistungExtra > div:last-child select', 's-eing');
+await page.waitForTimeout(250);
+const nachDoppel = await page.evaluate(() => window.__probe.leseLeistungen());
+p('die Seite reagiert noch', await page.evaluate(() => document.title) === 'fertig');
+p('keine zweite identische Zeile', nachDoppel.length === 2, `${nachDoppel.length} Zeilen`);
+p('stattdessen zaehlt die Menge', nachDoppel[1]?.anzahl === 2, `Anzahl ${nachDoppel[1]?.anzahl}`);
+p('und der Block waechst mit', await dauer() === 90, `${await dauer()} Min (50 + 2x20)`);
+
+
 console.log(fehler.length ? `\n   ✗ Konsolenfehler:\n     ${fehler.join('\n     ')}` : '\n   keine Konsolenfehler');
 await browser.close();
 process.exit(schlecht || fehler.length ? 1 : 0);

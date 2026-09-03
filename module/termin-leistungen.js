@@ -108,6 +108,52 @@ export function fuegeZeileHinzu(zeilen, serviceId = null) {
 }
 
 /**
+ * Die Leistung EINER Zeile aendern — und dabei dieselbe Regel anwenden wie
+ * beim Hinzufuegen: dieselbe Leistung nicht zweimal.
+ *
+ * `fuegeZeileHinzu()` hatte diese Sperre von Anfang an, der Aenderungsweg
+ * nicht. Wer also eine zweite Zeile aufmachte und dort die Leistung waehlte,
+ * die oben schon stand — in der Podologie genau der haeufige Fall, weil die
+ * Software die Eingangsbefundung von selbst vorschlaegt und der Anwender sie
+ * daneben noch einmal von Hand waehlt —, bekam zwei identische Zeilen. Der
+ * Kalenderblock wurde dadurch zu lang, und beim Speichern schlug
+ * `UNIQUE (booking_id, service_id)` zu.
+ *
+ * Zusammengelegt wird immer auf die WEITER OBEN stehende Zeile, die untere
+ * faellt weg. Damit kann Zeile 0 (`#bkService`) nie verschwinden.
+ *
+ * @param {Array} zeilen
+ * @param {number} index
+ * @param {?string} serviceId
+ * @returns {Array} neue Liste (die Eingabe bleibt unberuehrt)
+ */
+export function setzeZeilenService(zeilen, index, serviceId) {
+  const liste = (zeilen || []).map(z => ({ ...z }));
+  if (!liste[index]) return liste;
+
+  if (!serviceId) {
+    liste[index].serviceId = null;
+    liste[index].auto = false;
+    return liste;
+  }
+
+  const andere = liste.findIndex((z, i) => i !== index && z.serviceId === serviceId);
+  if (andere === -1) {
+    liste[index].serviceId = serviceId;
+    liste[index].auto = false;   // von Hand bestaetigt, kein Vorschlag mehr
+    return liste;
+  }
+
+  const bleibt = Math.min(andere, index);
+  const geht   = Math.max(andere, index);
+  liste[bleibt].serviceId = serviceId;
+  liste[bleibt].anzahl = begrenzeAnzahl(liste[andere].anzahl + liste[index].anzahl);
+  liste[bleibt].auto = false;
+  liste.splice(geht, 1);
+  return liste;
+}
+
+/**
  * Zeile entfernen. Die erste Zeile bleibt immer stehen — sie ist
  * `#bkService`, und `service_id` ist Pflicht.
  *
@@ -234,6 +280,24 @@ export function leseLeistungen() {
 }
 
 /**
+ * Eine ganze Zeilenliste uebernehmen.
+ *
+ * Zeile 0 lebt im DOM (`#bkService` + `#bkMenge`), der Rest in `_extra`. Wer
+ * das vergisst, verliert stillschweigend die Menge der Hauptleistung: legt
+ * `setzeZeilenService()` zwei Zeilen auf Zeile 0 zusammen, steht die neue
+ * Anzahl im Modell, aber `#bkMenge` zeigt weiter die alte — und gespeichert
+ * wird, was im Feld steht.
+ *
+ * @param {Array} alle  vollstaendige Liste, Zeile 0 zuerst
+ */
+function uebernehmeZeilen(alle) {
+  const liste = alle || [];
+  const menge = document.getElementById('bkMenge');
+  if (menge && liste[0]) menge.value = String(begrenzeAnzahl(liste[0].anzahl));
+  _extra = liste.slice(1).map(z => ({ ...z }));
+}
+
+/**
  * Zeilen von aussen setzen — der Weg aus dem Seitenbereich, wenn mehrere
  * Sitzungen einer Verordnung zusammen auf den Kalender gezogen werden.
  * Die erste Leistung bleibt `#bkService` (dashboard.js hat sie schon gesetzt),
@@ -285,11 +349,19 @@ export function setzeLeistungenZurueck() {
 /**
  * Die Zeilen dieses Termins speichern.
  *
- * Erst loeschen, dann schreiben — beim Bearbeiten eines Termins kann eine Zeile
- * weggefallen sein, und ein reines Upsert liesse sie stehen. `service_id` auf
- * `bookings` wird NICHT geschrieben: das erledigt trg_booking_hauptleistung
- * aus der Zeile mit sort_order 0. Zwei Schreiber auf dasselbe Feld waeren zwei
- * Wahrheiten.
+ * Erst schreiben, dann aufraeumen — nicht umgekehrt. Bis zum 04.09.2026 stand
+ * hier ein `delete` ueber den ganzen Termin und danach ein `insert`. Scheiterte
+ * der zweite Schritt (Netz weg, RLS, oder eine doppelte Zeile gegen
+ * `UNIQUE (booking_id, service_id)`), war der Termin danach OHNE Leistungen —
+ * und das faellt nicht auf: die Terminmaske zeigt dann eine Zeile, und die
+ * podologische Abrechnung (`module/podologie-abrechnung.js`, liest
+ * `booking_leistungen(services(gkv_position_nr))`) sieht den Termin als leer.
+ * Ein `upsert` kann nichts wegnehmen; scheitert das nachfolgende Aufraeumen,
+ * bleibt hoechstens eine Zeile zu viel stehen — sichtbar und behebbar.
+ *
+ * `bookings.service_id` steht ausserdem im Speicher-Payload von dashboard.js
+ * und wird gleich darauf von trg_booking_hauptleistung aus Zeile 0
+ * ueberschrieben — dasselbe Ergebnis, der Payload ist der Rueckfall.
  *
  * @param {string} bookingId
  * @returns {Promise<{ok:boolean, error:?string}>}
@@ -299,20 +371,23 @@ export async function speichereLeistungen(bookingId) {
   const zeilen = leseLeistungen().filter(z => z.serviceId);
   if (!zeilen.length) return { ok: false, error: 'keine Leistung' };
 
-  const { error: delErr } = await ctx.supabase
-    .from('booking_leistungen').delete().eq('booking_id', bookingId);
-  if (delErr) return { ok: false, error: delErr.message };
+  const reihen = zeilen.map((z, i) => ({
+    booking_id: bookingId,
+    service_id: z.serviceId,
+    owner_id: ctx.getOwnerId(),
+    anzahl: begrenzeAnzahl(z.anzahl),
+    sort_order: i,
+  }));
 
-  const { error } = await ctx.supabase.from('booking_leistungen').insert(
-    zeilen.map((z, i) => ({
-      booking_id: bookingId,
-      service_id: z.serviceId,
-      owner_id: ctx.getOwnerId(),
-      anzahl: begrenzeAnzahl(z.anzahl),
-      sort_order: i,
-    })),
-  );
-  return error ? { ok: false, error: error.message } : { ok: true, error: null };
+  const { error } = await ctx.supabase.from('booking_leistungen')
+    .upsert(reihen, { onConflict: 'booking_id,service_id' });
+  if (error) return { ok: false, error: error.message };
+
+  // Was der Anwender weggenommen hat, faellt jetzt weg — und nur das.
+  const bleiben = reihen.map(r => `"${r.service_id}"`).join(',');
+  const { error: delErr } = await ctx.supabase.from('booking_leistungen')
+    .delete().eq('booking_id', bookingId).not('service_id', 'in', `(${bleiben})`);
+  return delErr ? { ok: false, error: delErr.message } : { ok: true, error: null };
 }
 
 /** Zusatzzeilen zeichnen. Optionen werden aus `#bkService` geklont. */
@@ -465,8 +540,9 @@ export function mountTerminLeistungen(deps) {
     const i = Number(reihe.dataset.index) - 1;
     if (!_extra[i]) return;
     if (e.target.dataset.rolle === 'leistung') {
-      _extra[i].serviceId = e.target.value || null;
-      _extra[i].auto = false;   // von Hand bestaetigt, kein Vorschlag mehr
+      // ueber das Modell, nicht per Zuweisung: waehlt der Anwender hier die
+      // Leistung, die schon oben steht, werden die Zeilen zusammengelegt.
+      uebernehmeZeilen(setzeZeilenService(leseLeistungen(), i + 1, e.target.value || null));
     } else if (e.target.dataset.rolle === 'menge') {
       _extra[i].anzahl = begrenzeAnzahl(e.target.value);
     }
