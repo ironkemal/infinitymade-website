@@ -6343,8 +6343,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
   }
 
   // Die Leistungszeilen des Termins (Ops 235). Erst hier, weil sie die Id
-  // brauchen. bookings.service_id wird NICHT mitgeschrieben — das erledigt
-  // trg_booking_hauptleistung aus der Zeile mit sort_order 0.
+  // brauchen. `service_id` im payload ueberschreibt trg_booking_hauptleistung
+  // gleich darauf aus Zeile 0 — es bleibt als Rueckfall, falls dies fehlschlaegt.
   if (savedBookingId) {
     const lg = await speichereLeistungen(savedBookingId);
     if (!lg.ok) showToast(`Leistungen nicht gespeichert: ${lg.error}`, 'error');

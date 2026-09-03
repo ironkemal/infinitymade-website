@@ -224,8 +224,6 @@ export function mitBefundungsvorschlag({
 let ctx = null;
 /** Zusatzzeilen; Zeile 0 lebt im DOM und wird bei Bedarf gelesen. */
 let _extra = [];
-/** Verhindert, dass die eigene Dauer-Schreibung sich selbst wieder anstoesst. */
-let _schreibtDauer = false;
 
 /** Alle Zeilen: Zeile 0 aus dem DOM, danach die Zusatzzeilen. */
 export function leseLeistungen() {
@@ -244,6 +242,33 @@ export function leseLeistungen() {
 export function setzeLeistungen(serviceIds) {
   const ids = (serviceIds || []).filter(Boolean);
   _extra = ids.slice(1).map(id => ({ serviceId: id, anzahl: 1, auto: false, grund: '' }));
+  zeichneZeilen();
+  aktualisiereDauer();
+}
+
+/**
+ * Die gespeicherten Zeilen eines Termins holen.
+ *
+ * Ohne diesen Weg war das Speichern ein Datenverlust: die Maske startet leer,
+ * `speichereLeistungen()` loescht erst alles und schreibt dann, was sie sieht —
+ * wer einen zweizeiligen Termin oeffnete und nur die Uhrzeit aendert, verlor die
+ * zweite Leistung wortlos. Zeile 0 setzt dashboard.js ohnehin (`#bkService`),
+ * hier kommen die uebrigen dazu.
+ *
+ * @param {string} bookingId
+ */
+export async function ladeLeistungen(bookingId) {
+  if (!ctx?.supabase || !bookingId) return;
+  const { data } = await ctx.supabase
+    .from('booking_leistungen')
+    .select('service_id, anzahl, sort_order')
+    .eq('booking_id', bookingId)
+    .order('sort_order', { ascending: true });
+  _extra = (data || []).slice(1).map(z => ({
+    serviceId: z.service_id, anzahl: begrenzeAnzahl(z.anzahl), auto: false, grund: '',
+  }));
+  const menge = document.getElementById('bkMenge');
+  if (menge && data?.length) menge.value = String(begrenzeAnzahl(data[0].anzahl));
   zeichneZeilen();
   aktualisiereDauer();
 }
@@ -362,14 +387,27 @@ function aktualisiereDauer() {
   if (!optionen) return;
 
   const minuten = gesamtDauer(zeilen, ctx?.getServices?.() || []);
-  _schreibtDauer = true;
+
+  // Nur schreiben, wenn sich wirklich etwas aendert. Der Beobachter unten
+  // haengt an genau diesem Knoten, und sein Rueckruf laeuft NACH der aktuellen
+  // Aufgabe — ein Merker, den man um die Schreibung herum setzt und sofort
+  // wieder loescht, ist zum Zeitpunkt des Rueckrufs laengst zurueckgesetzt.
+  // Genau so entstand hier eine Endlosschleife: schreiben → Beobachter →
+  // schreiben. Die browser-probe hat sie gefunden, bevor sie jemand geklickt
+  // hat. Idempotenz schlaegt Merker.
+  const schon = optionen.querySelector("input[type=radio]:checked");
+  if (schon && Number(schon.value) === minuten) {
+    window._selectedBkDuration = minuten;
+    if (gruppe) gruppe.hidden = false;
+    return;
+  }
+
   optionen.innerHTML = `<label class="bk-dur-option">
     <input type="radio" name="bkDuration" value="${minuten}" checked>
     <span>${minuten} Min (kombiniert)</span>
   </label>`;
   if (gruppe) gruppe.hidden = false;
   window._selectedBkDuration = minuten;
-  _schreibtDauer = false;
 }
 
 /** Historie des gewaehlten Patienten — Grundlage des Befundungsvorschlags. */
@@ -476,7 +514,13 @@ export function mountTerminLeistungen(deps) {
     let warOffen = !modal.hidden;
     new MutationObserver(() => {
       const offen = !modal.hidden;
-      if (offen && !warOffen) setzeLeistungenZurueck();
+      if (offen && !warOffen) {
+        setzeLeistungenZurueck();
+        // Bestehender Termin: seine Zeilen nachladen. Sonst zeigt die Maske
+        // eine Zeile, und das Speichern macht daraus die Wahrheit.
+        const id = document.getElementById('bk-id')?.value || '';
+        if (id) ladeLeistungen(id);
+      }
       warOffen = offen;
     }).observe(modal, { attributes: true, attributeFilter: ['hidden'] });
   }
@@ -497,7 +541,6 @@ export function mountTerminLeistungen(deps) {
   const optionen = document.getElementById('bkDurationOptions');
   if (optionen && typeof MutationObserver === 'function') {
     new MutationObserver(() => {
-      if (_schreibtDauer) return;
       if (leseLeistungen().filter(z => z.serviceId).length > 1) aktualisiereDauer();
     }).observe(optionen, { childList: true });
   }

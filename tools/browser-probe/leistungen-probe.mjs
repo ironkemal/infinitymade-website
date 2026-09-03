@@ -8,6 +8,7 @@ import { chromium } from 'playwright';
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+page.setDefaultTimeout(8000);   // haengende Schritte sollen scheitern, nicht warten
 const fehler = [];
 page.on('pageerror', e => fehler.push(String(e.message)));
 page.on('console', m => { if (m.type() === 'error') fehler.push(m.text()); });
