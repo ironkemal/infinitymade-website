@@ -3073,10 +3073,38 @@
           <div id="bkSessionDots" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
           <div id="bkSessionPickerInfo" style="font-size:11px;color:var(--text-muted);"></div>
         </div>
+        <!-- Leistungen des Termins (Ops 235). Beta-1, 31.08.2026: „wenn man
+             es nicht vollstopfen will, kann man auch einfach nur [ein]
+             Pluszeichen drücken. Dann kommt noch ein Tab, kann man noch [eins
+             wählen] … und die Anzahl". In der Podologie ist die Kombination
+             der Normalfall: Behandlung + Eingangsbefundung oder + Befundung.
+
+             #bkService bleibt bewusst die ERSTE Zeile: `bookings.service_id`
+             ist die Hauptleistung, und die rund fünfzehn Stellen in
+             dashboard.js, die dieses Feld lesen (Kalenderfarbe, Dauer,
+             Qualifikationsprüfung, Serienvorschau), lesen unverändert weiter.
+             Zusatzzeilen entstehen daneben in #bkLeistungExtra.
+
+             „Menge" heisst hier bewusst nicht „Anzahl": #bkAnzahl weiter
+             unten zählt TERMINE („3x Podologie"), dieses Feld zählt die
+             Position innerhalb EINES Termins. Zwei „Anzahl" in einer Maske
+             wären zwei verschiedene Dinge mit demselben Namen.
+             Code: module/termin-leistungen.js -->
         <div class="form-group" id="bkServiceGroup">
           <label class="form-label" data-i18n="lbl_manual_service">Dienstleistung</label>
-          <select class="form-select" id="bkService"></select>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <select class="form-select" id="bkService" style="flex:1;min-width:0;"></select>
+            <input class="form-input" id="bkMenge" type="number" min="1" max="20" value="1"
+                   title="Menge dieser Position in diesem Termin"
+                   style="width:74px;flex:0 0 auto;text-align:center;" />
+          </div>
         </div>
+        <div id="bkLeistungExtra" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <button type="button" id="bkLeistungAdd" class="btn-ghost"
+                style="align-self:flex-start;font-size:12px;padding:6px 12px;margin-bottom:8px;">
+          + Leistung</button>
+        <div id="bkLeistungHinweis" hidden
+          style="font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:6px 10px;border-left:2px solid var(--accent,#b1891b);"></div>
         <div id="bkServiceAusVerordnung" hidden
           style="font-size:12px;color:var(--text-muted);margin-bottom:12px;padding:6px 10px;border-left:2px solid var(--accent,#b1891b);"></div>
         <!-- Gruppentermin UI -->

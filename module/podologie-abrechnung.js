@@ -219,6 +219,44 @@ async function podEingangsbefundungLage(vord, datum) {
 }
 
 /**
+ * Welche Positionen wurden fuer diesen Tag schon im TERMIN geplant?
+ *
+ * Seit Ops-Karte 235 traegt ein Termin mehrere Leistungen (`booking_leistungen`),
+ * und jede Leistung traegt ueber `services.gkv_position_nr` ihre HPNR. Wer am
+ * Telefon „Behandlung + Eingangsbefundung" gebucht hat, soll die Kaestchen hier
+ * nicht ein zweites Mal suchen.
+ *
+ * ⚠️ Das ist eine VORBELEGUNG, kein zweiter Schreibweg. Geschrieben wird weiter
+ * nur ueber `checks` beim Speichern — nur so laufen alle Sperren mit. Der
+ * Podologe darf jedes Kaestchen aendern: geplant und tatsaechlich erbracht sind
+ * nicht dasselbe.
+ *
+ * @param {object} vord   Zeile aus `verordnungen`
+ * @param {string} datum  `YYYY-MM-DD`
+ * @returns {Promise<Set<string>>} HPNR der geplanten Leistungen
+ */
+async function podGeplanteHpnr(vord, datum) {
+  if (!vord?.id || !datum) return new Set();
+  const { data } = await ctx.supabase
+    .from('bookings')
+    .select('start_time, booking_leistungen(services(gkv_position_nr))')
+    .eq('owner_id', ctx.getOwnerId())
+    .eq('verordnung_id', vord.id)
+    .neq('status', 'cancelled');
+  const treffer = new Set();
+  for (const b of data || []) {
+    // Tagesvergleich in Berlin, nicht per toISOString() — sonst faellt ein
+    // Termin um Mitternacht auf den Vortag (derselbe Grund wie bei todayStr).
+    if (!b.start_time || alsISODatum(new Date(b.start_time)) !== datum) continue;
+    for (const zeile of b.booking_leistungen || []) {
+      const code = String(zeile?.services?.gkv_position_nr || '').trim();
+      if (code) treffer.add(code);
+    }
+  }
+  return treffer;
+}
+
+/**
  * Darf am `datum` noch die Erstbefundung gross (78100) gesetzt werden?
  * Regel und Fundstelle in `eingangsbefundung-regel.js` → `darf78100`.
  *
@@ -497,6 +535,9 @@ async function loadPodologieBilling() {
     ? await podEingangsbefundungLage(selectedVord, todayStr)
     : { erlaubt: false };
 
+  // Was am Telefon fuer heute gebucht wurde (Ops 235) — nur Vorbelegung.
+  const geplanteHpnr = selectedVord ? await podGeplanteHpnr(selectedVord, todayStr) : new Set();
+
   const behandlungFormHtml = selectedVord ? `
     <div class="card" style="margin-top:0;background:var(--bg-card);border:1px solid var(--border-subtle,var(--border));border-radius:10px;padding:18px;">
       <h4 style="margin:0 0 14px;color:var(--text-main);font-size:15px;">${ctx.t('pod_tagesbehandlung')} — ${ctx.escapeHtml(selectedVord.patient_name || '—')}</h4>
@@ -515,8 +556,14 @@ async function loadPodologieBilling() {
                 (!isUI && code === POD_EINGANGSBEFUNDUNG && eingangsLage.erlaubt) ? 'checked' :
                 (!isUI && code === POD_BEFUNDPAUSCHALE && !eingangsLage.erlaubt) ? 'checked' :
                 (isHausbesuch && code === '79933') ? 'checked' : '';
+              // Die im Termin geplanten Positionen ankreuzen — aber NICHT die
+              // beiden Befundungen: welche davon auf diesen Tag gehoert,
+              // entscheidet oben die Vertragsregel, nicht der Terminplan.
+              const geplant = (!autoChecked
+                && code !== POD_EINGANGSBEFUNDUNG && code !== POD_BEFUNDPAUSCHALE
+                && geplanteHpnr.has(code)) ? 'checked' : '';
               return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:var(--bg-card-solid,#1f2937);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
-                <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${autoChecked}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}
+                <input type="checkbox" class="pod-hpnr-cb" value="${ctx.escapeHtml(code)}" ${autoChecked || geplant}> ${ctx.escapeHtml(code)} – ${ctx.escapeHtml(r.label)}
               </label>`;
             }).join('')}
           </div>

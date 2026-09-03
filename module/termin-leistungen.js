@@ -13,12 +13,15 @@
  * einzelnes `<select>`), also wurden entweder zwei Termine angelegt oder die
  * zweite Leistung hinterher von Hand in die Abrechnung getippt.
  *
- * ── Warum hier nur die Rechnerei steht ──────────────────────────────────────
- * Diese Datei enthaelt bewusst KEIN DOM. Sie ist das Modell hinter den Zeilen:
- * hinzufuegen, entfernen, aendern, Dauer summieren, Befundung vorschlagen. So
- * laesst sich jede Regel mit `node --test` pruefen — und an diesen Zeilen haengt
- * die Slotlaenge, also die Frage, ob zwei Termine aufeinander fallen.
- * Die Darstellung liegt beim Aufrufer.
+ * ── Zwei Haelften, und die Trennung ist Absicht ─────────────────────────────
+ * OBEN steht das Modell, ohne eine Zeile DOM: hinzufuegen, entfernen, aendern,
+ * Dauer summieren, Befundung vorschlagen. Es laesst sich mit `node --test`
+ * pruefen, und das muss es — an diesen Zeilen haengt die Slotlaenge und damit
+ * die Frage, ob zwei Termine aufeinander fallen.
+ *
+ * UNTEN, ab „Die Maske", steht die Verdrahtung: Zeilen zeichnen, Ereignisse,
+ * die Abfrage der Patientenhistorie, das Speichern. Wer eine Regel aendern
+ * will, aendert oben; wer am Aussehen dreht, unten.
  *
  * ── Die erste Zeile ist `#bkService` ────────────────────────────────────────
  * Absichtlich: `bookings.service_id` bleibt die Hauptleistung, und die rund
@@ -207,4 +210,295 @@ export function mitBefundungsvorschlag({
 
   liste.push({ serviceId: befundDienst.id, anzahl: 1, auto: true, grund: urteil.grund });
   return { zeilen: liste, hinweis: urteil.hinweis, rueckfrage: urteil.rueckfrage, grund: urteil.grund };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Die Maske. Ab hier DOM — alles darueber ist geprueft, alles hier ist Draht.
+//
+// Zeile 0 ist `#bkService` + `#bkMenge` und bleibt, wo sie war. Zusatzzeilen
+// entstehen in `#bkLeistungExtra` und tragen dieselben Optionen, geklont aus
+// `#bkService` — dann muss dieses Modul nicht wissen, wie dashboard.js die
+// Liste zusammenstellt (GKV-Gruppe, private Gruppe, Mitarbeiterfilter).
+// ─────────────────────────────────────────────────────────────────────────────
+
+let ctx = null;
+/** Zusatzzeilen; Zeile 0 lebt im DOM und wird bei Bedarf gelesen. */
+let _extra = [];
+/** Verhindert, dass die eigene Dauer-Schreibung sich selbst wieder anstoesst. */
+let _schreibtDauer = false;
+
+/** Alle Zeilen: Zeile 0 aus dem DOM, danach die Zusatzzeilen. */
+export function leseLeistungen() {
+  const haupt = document.getElementById('bkService')?.value || null;
+  const menge = begrenzeAnzahl(document.getElementById('bkMenge')?.value);
+  return [{ serviceId: haupt || null, anzahl: menge, auto: false, grund: '' },
+          ..._extra.map(z => ({ ...z }))];
+}
+
+/**
+ * Zeilen von aussen setzen — der Weg aus dem Seitenbereich, wenn mehrere
+ * Sitzungen einer Verordnung zusammen auf den Kalender gezogen werden.
+ * Die erste Leistung bleibt `#bkService` (dashboard.js hat sie schon gesetzt),
+ * der Rest wird zu Zusatzzeilen.
+ */
+export function setzeLeistungen(serviceIds) {
+  const ids = (serviceIds || []).filter(Boolean);
+  _extra = ids.slice(1).map(id => ({ serviceId: id, anzahl: 1, auto: false, grund: '' }));
+  zeichneZeilen();
+  aktualisiereDauer();
+}
+
+/** Beim Oeffnen der Maske: alles zurueck auf eine Zeile. */
+export function setzeLeistungenZurueck() {
+  _extra = [];
+  const menge = document.getElementById('bkMenge');
+  if (menge) menge.value = '1';
+  zeichneZeilen();
+  zeigeHinweis('');
+}
+
+/**
+ * Die Zeilen dieses Termins speichern.
+ *
+ * Erst loeschen, dann schreiben — beim Bearbeiten eines Termins kann eine Zeile
+ * weggefallen sein, und ein reines Upsert liesse sie stehen. `service_id` auf
+ * `bookings` wird NICHT geschrieben: das erledigt trg_booking_hauptleistung
+ * aus der Zeile mit sort_order 0. Zwei Schreiber auf dasselbe Feld waeren zwei
+ * Wahrheiten.
+ *
+ * @param {string} bookingId
+ * @returns {Promise<{ok:boolean, error:?string}>}
+ */
+export async function speichereLeistungen(bookingId) {
+  if (!ctx || !bookingId) return { ok: false, error: 'kein Termin' };
+  const zeilen = leseLeistungen().filter(z => z.serviceId);
+  if (!zeilen.length) return { ok: false, error: 'keine Leistung' };
+
+  const { error: delErr } = await ctx.supabase
+    .from('booking_leistungen').delete().eq('booking_id', bookingId);
+  if (delErr) return { ok: false, error: delErr.message };
+
+  const { error } = await ctx.supabase.from('booking_leistungen').insert(
+    zeilen.map((z, i) => ({
+      booking_id: bookingId,
+      service_id: z.serviceId,
+      owner_id: ctx.getOwnerId(),
+      anzahl: begrenzeAnzahl(z.anzahl),
+      sort_order: i,
+    })),
+  );
+  return error ? { ok: false, error: error.message } : { ok: true, error: null };
+}
+
+/** Zusatzzeilen zeichnen. Optionen werden aus `#bkService` geklont. */
+function zeichneZeilen() {
+  const wrap = document.getElementById('bkLeistungExtra');
+  const quelle = document.getElementById('bkService');
+  if (!wrap || !quelle) return;
+
+  wrap.innerHTML = '';
+  _extra.forEach((z, i) => {
+    const reihe = document.createElement('div');
+    reihe.style.cssText = 'display:flex;gap:8px;align-items:flex-start;';
+    reihe.dataset.index = String(i + 1);
+
+    const sel = document.createElement('select');
+    sel.className = 'form-select';
+    sel.style.cssText = 'flex:1;min-width:0;';
+    sel.innerHTML = quelle.innerHTML;
+    sel.value = z.serviceId || '';
+    sel.dataset.rolle = 'leistung';
+
+    const menge = document.createElement('input');
+    menge.className = 'form-input';
+    menge.type = 'number'; menge.min = '1'; menge.max = String(MAX_ANZAHL);
+    menge.value = String(begrenzeAnzahl(z.anzahl));
+    menge.title = 'Menge dieser Position in diesem Termin';
+    menge.style.cssText = 'width:74px;flex:0 0 auto;text-align:center;';
+    menge.dataset.rolle = 'menge';
+
+    const weg = document.createElement('button');
+    weg.type = 'button';
+    weg.className = 'btn-ghost';
+    weg.textContent = '✕';
+    weg.title = 'Leistung entfernen';
+    weg.style.cssText = 'flex:0 0 auto;padding:6px 10px;';
+    weg.dataset.rolle = 'entfernen';
+
+    // Eine vorgeschlagene Zeile sieht anders aus als eine gewaehlte — sonst
+    // weiss der Podologe nicht, was die Software von sich aus getan hat.
+    if (z.auto) {
+      reihe.style.cssText += 'border-left:2px solid var(--accent,#b1891b);padding-left:8px;';
+      sel.title = 'Von der Software vorgeschlagen — Auswahl ändern hebt den Vorschlag auf.';
+    }
+
+    reihe.append(sel, menge, weg);
+    wrap.appendChild(reihe);
+  });
+}
+
+function zeigeHinweis(text, rueckfrage = null) {
+  const el = document.getElementById('bkLeistungHinweis');
+  if (!el) return;
+  const stuecke = [text, rueckfrage].filter(Boolean);
+  el.textContent = stuecke.join(' — ');
+  el.hidden = stuecke.length === 0;
+}
+
+/**
+ * Dauer neu rechnen und in die Dauerauswahl schreiben.
+ *
+ * Bei einer einzigen Zeile bleibt `updateBkDuration()` aus dashboard.js
+ * zustaendig — dort haengen die Preisstufen aus `price_config`. Erst ab zwei
+ * Zeilen uebernimmt die Summe, in derselben Form, die der Speicherpfad ohnehin
+ * liest (das angehakte Radio in `#bkDurationOptions`).
+ */
+function aktualisiereDauer() {
+  const zeilen = leseLeistungen().filter(z => z.serviceId);
+  if (zeilen.length < 2) return;
+
+  const optionen = document.getElementById('bkDurationOptions');
+  const gruppe = document.getElementById('bkDurationGroup');
+  if (!optionen) return;
+
+  const minuten = gesamtDauer(zeilen, ctx?.getServices?.() || []);
+  _schreibtDauer = true;
+  optionen.innerHTML = `<label class="bk-dur-option">
+    <input type="radio" name="bkDuration" value="${minuten}" checked>
+    <span>${minuten} Min (kombiniert)</span>
+  </label>`;
+  if (gruppe) gruppe.hidden = false;
+  window._selectedBkDuration = minuten;
+  _schreibtDauer = false;
+}
+
+/** Historie des gewaehlten Patienten — Grundlage des Befundungsvorschlags. */
+async function patientenBehandlungen() {
+  const leadId = document.getElementById('bkCustomerId')?.value || '';
+  if (!ctx?.supabase || !leadId) return [];
+  const { data: vords } = await ctx.supabase.from('verordnungen')
+    .select('id').eq('owner_id', ctx.getOwnerId()).eq('lead_id', leadId);
+  if (!vords?.length) return [];
+  const { data: behs } = await ctx.supabase.from('podologie_behandlungen')
+    .select('behandlungsdatum, hpnr_codes')
+    .eq('owner_id', ctx.getOwnerId())
+    .in('verordnung_id', vords.map(v => v.id));
+  return behs || [];
+}
+
+/** Befundung vorschlagen — der Telefonablauf aus Karte 221. */
+async function schlageBefundungVor() {
+  if (!ctx) return;
+  const datum = (document.getElementById('bkStart')?.value || '').slice(0, 10)
+             || new Date().toISOString().slice(0, 10);
+  const behandlungen = await patientenBehandlungen();
+  const selbstzahler = document.getElementById('bkIsSelbstzahler')?.value === '1';
+
+  const ergebnis = mitBefundungsvorschlag({
+    zeilen: leseLeistungen(),
+    dienste: ctx.getServices?.() || [],
+    behandlungen, datum, selbstzahler,
+  });
+
+  _extra = ergebnis.zeilen.slice(1);
+  zeichneZeilen();
+  aktualisiereDauer();
+  zeigeHinweis(ergebnis.hinweis, ergebnis.rueckfrage);
+}
+
+/**
+ * Verdrahtung. Wird einmal aus dashboard.js gerufen.
+ *
+ * @param {object} deps  { supabase, getOwnerId, getServices }
+ */
+export function mountTerminLeistungen(deps) {
+  ctx = deps;
+
+  document.getElementById('bkLeistungAdd')?.addEventListener('click', () => {
+    const alle = fuegeZeileHinzu(leseLeistungen());
+    _extra = alle.slice(1);
+    zeichneZeilen();
+    aktualisiereDauer();
+  });
+
+  document.getElementById('bkLeistungExtra')?.addEventListener('change', e => {
+    const reihe = e.target.closest('[data-index]');
+    if (!reihe) return;
+    const i = Number(reihe.dataset.index) - 1;
+    if (!_extra[i]) return;
+    if (e.target.dataset.rolle === 'leistung') {
+      _extra[i].serviceId = e.target.value || null;
+      _extra[i].auto = false;   // von Hand bestaetigt, kein Vorschlag mehr
+    } else if (e.target.dataset.rolle === 'menge') {
+      _extra[i].anzahl = begrenzeAnzahl(e.target.value);
+    }
+    zeichneZeilen();
+    aktualisiereDauer();
+  });
+
+  document.getElementById('bkLeistungExtra')?.addEventListener('click', e => {
+    if (e.target.dataset.rolle !== 'entfernen') return;
+    const i = Number(e.target.closest('[data-index]')?.dataset.index || 0);
+    _extra = entferneZeile(leseLeistungen(), i).slice(1);
+    zeichneZeilen();
+    aktualisiereDauer();
+  });
+
+  document.getElementById('bkMenge')?.addEventListener('input', aktualisiereDauer);
+
+  // Gruppentermine bleiben einzeilig — und das ist kein Versaeumnis.
+  // Die Kind-Synchronisierung in dashboard.js schreibt ueber
+  // `.eq('group_parent_id', …)` nur Felder der Buchung und kopiert diese
+  // Zeilen NICHT mit; der Elterntermin truege dann „78010+78030", die Kinder
+  // nur „78010". Dazu kommt, dass Kinder vom no_overlapping_bookings-EXCLUDE
+  // ausgenommen sind, laengere Bloecke dort also ungebremst kollidieren.
+  // Lieber die Kombination hier zumachen als eine stille Abweichung erzeugen.
+  const gruppe = document.getElementById('bkIsGroup');
+  const knopfAdd = document.getElementById('bkLeistungAdd');
+  function pruefeGruppenmodus() {
+    const an = !!gruppe?.checked;
+    if (knopfAdd) knopfAdd.hidden = an;
+    if (an && _extra.length) {
+      _extra = [];
+      zeichneZeilen();
+      zeigeHinweis('Gruppentermine tragen genau eine Leistung.');
+    }
+  }
+  gruppe?.addEventListener('change', pruefeGruppenmodus);
+  pruefeGruppenmodus();
+
+  // Beim Oeffnen der Maske zuruecksetzen. Bewusst hier und nicht in
+  // dashboard.js: die Datei darf nicht wachsen (tools/check-dashboard-size.sh),
+  // und ein vergessener Aufruf haette die Zeilen des vorigen Patienten in den
+  // naechsten Termin getragen — still und teuer.
+  const modal = document.getElementById('bookingModal');
+  if (modal && typeof MutationObserver === 'function') {
+    let warOffen = !modal.hidden;
+    new MutationObserver(() => {
+      const offen = !modal.hidden;
+      if (offen && !warOffen) setzeLeistungenZurueck();
+      warOffen = offen;
+    }).observe(modal, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  // Nach dashboard.js laufen: dessen Zuhoerer am selben Feld ruft
+  // updateBkDuration() und schreibt `#bkDurationOptions` neu, teils verzoegert.
+  // Wer hier sofort rechnet, wird gleich darauf ueberschrieben.
+  document.getElementById('bkService')?.addEventListener('change', () => {
+    setTimeout(() => { schlageBefundungVor(); }, 60);
+  });
+  document.getElementById('bkCustomerId')?.addEventListener('change', () => {
+    schlageBefundungVor();
+  });
+
+  // Falls dashboard.js die Dauer spaeter noch einmal neu setzt (Preisstufen
+  // einer einzelnen Leistung), die Summe zurueckholen — sonst buchte die Maske
+  // zwei Leistungen und blockte die Zeit fuer eine.
+  const optionen = document.getElementById('bkDurationOptions');
+  if (optionen && typeof MutationObserver === 'function') {
+    new MutationObserver(() => {
+      if (_schreibtDauer) return;
+      if (leseLeistungen().filter(z => z.serviceId).length > 1) aktualisiereDauer();
+    }).observe(optionen, { childList: true });
+  }
 }

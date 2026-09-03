@@ -41,6 +41,7 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260903';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816b';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen } from './module/termin-leistungen.js?v=20260903';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -3028,23 +3029,11 @@ async function handleRxSessionDropToModal(sessionData, timeStr, empId) {
   }
   zeigeDienstleistungsfeld(!primarySrvId);
 
-  // Kombi-Termin: Dauer = Summe der Dauern aller gematchten Dienstleistungen
-  if (sessions.length > 1) {
-    const sumMin = matchedSrvIds.reduce((acc, mid) => {
-      const srv = (ownerServices || []).find(x => x.id === mid);
-      return acc + (parseInt(srv?.duration_minutes) || 30);
-    }, 0);
-    const durOptions = document.getElementById('bkDurationOptions');
-    const durGroup = document.getElementById('bkDurationGroup');
-    if (durOptions) {
-      durOptions.innerHTML = `<label class="bk-dur-option">
-        <input type="radio" name="bkDuration" value="${sumMin}" checked>
-        <span>${sumMin} Min (kombiniert)</span>
-      </label>`;
-      if (durGroup) durGroup.hidden = false;
-      window._selectedBkDuration = sumMin;
-    }
-  }
+  // Kombi-Termin: die gematchten Leistungen werden zu Zeilen, das Modul
+  // rechnet die Summe. Hier stand bis zum 03.09.2026 eine zweite,
+  // ungetestete Summenrechnung — module/termin-leistungen.js macht dasselbe
+  // und wird geprueft (Ops 235).
+  if (sessions.length > 1) setzeLeistungen(matchedSrvIds);
 
   // Rezeptart + Heilmittel ausblenden (Folgetermin, keine neue Verordnung)
   const rxGroup = document.getElementById('bkRezeptartGroup');
@@ -5656,6 +5645,8 @@ async function updateBkDuration(srvId, defaultValue = null) {
   }
 }
 
+mountTerminLeistungen({ supabase, getOwnerId, getServices: () => servicesCache });
+
 document.getElementById('bkService').addEventListener('change', (e) => {
   updateBkDuration(e.target.value);
   refreshBkGroupPanel(e.target.value);
@@ -6348,6 +6339,14 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
       if (!linkErr) emit('verordnungen:changed');
       window._pendingRxSession = null;
     }
+  }
+
+  // Die Leistungszeilen des Termins (Ops 235). Erst hier, weil sie die Id
+  // brauchen. bookings.service_id wird NICHT mitgeschrieben — das erledigt
+  // trg_booking_hauptleistung aus der Zeile mit sort_order 0.
+  if (savedBookingId) {
+    const lg = await speichereLeistungen(savedBookingId);
+    if (!lg.ok) showToast(`Leistungen nicht gespeichert: ${lg.error}`, 'error');
   }
 
   closeModal('bookingModal');
