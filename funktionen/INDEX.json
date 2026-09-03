@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-03",
- "dateien": 184,
- "funktionen": 1874,
+ "dateien": 185,
+ "funktionen": 1881,
  "module": [
   "abrechnung",
   "anamnese",
@@ -41127,7 +41127,9 @@
     "darf78040",
     "nichts"
    ],
-   "calledBy": [],
+   "calledBy": [
+    "mitBefundungsvorschlag"
+   ],
    "modules": [],
    "gemeinsam": false,
    "uiPfad": []
@@ -54173,6 +54175,147 @@
    ]
   },
   {
+   "name": "neueZeile",
+   "kind": "function",
+   "file": "module/termin-leistungen.js",
+   "start": 46,
+   "end": 48,
+   "lines": 3,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "fuegeZeileHinzu"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "gesamtDauer",
+   "kind": "function",
+   "file": "module/termin-leistungen.js",
+   "start": 64,
+   "end": 73,
+   "lines": 10,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "begrenzeAnzahl"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "begrenzeAnzahl",
+   "kind": "function",
+   "file": "module/termin-leistungen.js",
+   "start": 76,
+   "end": 80,
+   "lines": 5,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "fuegeZeileHinzu",
+    "gesamtDauer"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "fuegeZeileHinzu",
+   "kind": "function",
+   "file": "module/termin-leistungen.js",
+   "start": 93,
+   "end": 105,
+   "lines": 13,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "begrenzeAnzahl",
+    "neueZeile"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "entferneZeile",
+   "kind": "function",
+   "file": "module/termin-leistungen.js",
+   "start": 115,
+   "end": 120,
+   "lines": 6,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "hpnrVonDienst",
+   "kind": "function",
+   "file": "module/termin-leistungen.js",
+   "start": 129,
+   "end": 131,
+   "lines": 3,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "mitBefundungsvorschlag"
+   ],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "mitBefundungsvorschlag",
+   "kind": "function",
+   "file": "module/termin-leistungen.js",
+   "start": 159,
+   "end": 210,
+   "lines": 52,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "befundungFuerLeistung",
+    "hpnrVonDienst"
+   ],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "escapeHtml",
    "kind": "function",
    "file": "module/termin-panel-patient.js",
@@ -55892,8 +56035,8 @@
    "kind": "function",
    "file": "module/verordnung-einheiten.js",
    "start": 120,
-   "end": 131,
-   "lines": 12,
+   "end": 146,
+   "lines": 27,
    "tables": [
     "verordnungen"
    ],
@@ -56851,8 +56994,8 @@
    "kind": "function",
    "file": "module/verordnung-termine.js",
    "start": 121,
-   "end": 127,
-   "lines": 7,
+   "end": 129,
+   "lines": 9,
    "tables": [
     "bookings"
    ],
@@ -56890,9 +57033,9 @@
    "name": "loeseTermin",
    "kind": "function",
    "file": "module/verordnung-termine.js",
-   "start": 130,
-   "end": 136,
-   "lines": 7,
+   "start": 132,
+   "end": 140,
+   "lines": 9,
    "tables": [
     "bookings"
    ],
@@ -56930,8 +57073,8 @@
    "name": "fehlerText",
    "kind": "function",
    "file": "module/verordnung-termine.js",
-   "start": 146,
-   "end": 153,
+   "start": 160,
+   "end": 167,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -67188,8 +67331,8 @@
        "name": "bindeTermin",
        "file": "module/verordnung-termine.js",
        "start": 121,
-       "end": 127,
-       "lines": 7,
+       "end": 129,
+       "lines": 9,
        "writes": [
         "bookings:update"
        ],
@@ -67217,9 +67360,9 @@
       {
        "name": "loeseTermin",
        "file": "module/verordnung-termine.js",
-       "start": 130,
-       "end": 136,
-       "lines": 7,
+       "start": 132,
+       "end": 140,
+       "lines": 9,
        "writes": [
         "bookings:update"
        ],
@@ -69285,8 +69428,8 @@
        "name": "speichereEinheiten",
        "file": "module/verordnung-einheiten.js",
        "start": 120,
-       "end": 131,
-       "lines": 12,
+       "end": 146,
+       "lines": 27,
        "writes": [
         "verordnungen:update"
        ],

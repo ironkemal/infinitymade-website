@@ -3,7 +3,7 @@
 > Üretim: 2026-09-03 · `node tools/funktionskarte.mjs`
 > **Elle düzenleme.** Script üretir; fonksiyon eklendiğinde "harita güncelle" ile tazelenir.
 
-**1874 fonksiyon** · 184 dosya · 39 sidebar modülü
+**1881 fonksiyon** · 185 dosya · 39 sidebar modülü
 
 ## Kopya adayları — aynı tabloya yazan, birbirini çağırmayan fonksiyonlar
 
@@ -47,10 +47,10 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `absageTerminMitGrund()` — [dashboard.js:8019](dashboard.js#L8019-L8055) · 37 satır · bookings:update, bookings:delete
 
 **Yol 12 — `bindeTermin()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `bindeTermin()` — [module/verordnung-termine.js:121](module/verordnung-termine.js#L121-L127) · 7 satır · bookings:update
+- `bindeTermin()` — [module/verordnung-termine.js:121](module/verordnung-termine.js#L121-L129) · 9 satır · bookings:update
 
 **Yol 13 — `loeseTermin()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `loeseTermin()` — [module/verordnung-termine.js:130](module/verordnung-termine.js#L130-L136) · 7 satır · bookings:update
+- `loeseTermin()` — [module/verordnung-termine.js:132](module/verordnung-termine.js#L132-L140) · 9 satır · bookings:update
 
 **Yol 14 — `uebernimmSlot()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
 - `uebernimmSlot()` — [module/warteliste-nachruecker.js:195](module/warteliste-nachruecker.js#L195-L231) · 37 satır · bookings:insert
@@ -311,7 +311,7 @@ Bu bir suçlama listesi değil, **inceleme kuyruğu**. Projede bilinçli katmanl
 - `loadPodologieBilling()` — [module/podologie-abrechnung.js:357](module/podologie-abrechnung.js#L357-L1410) · 1054 satır · verordnungen:update, verordnungen:insert
 
 **Yol 2 — `speichereEinheiten()`** · Ekran: ortak yardımcı — 10 modülden çağrılıyor
-- `speichereEinheiten()` — [module/verordnung-einheiten.js:120](module/verordnung-einheiten.js#L120-L131) · 12 satır · verordnungen:update
+- `speichereEinheiten()` — [module/verordnung-einheiten.js:120](module/verordnung-einheiten.js#L120-L146) · 27 satır · verordnungen:update
 
 ### `visibility_reports` — 2 bağımsız yazma yolu
 
