@@ -10,23 +10,46 @@ import {
 
 beforeEach(() => _spaltenwissenZuruecksetzen());
 
-/** Ein Supabase-Doppel, das nur `from().select().limit()` kann. */
+/**
+ * Ein Supabase-Doppel, das nur `from().select().limit()` kann — und dabei das
+ * ECHTE PostgREST nachahmt, nicht ein bequemes Wunschbild.
+ *
+ * Der Unterschied ist nicht akademisch: die erste Fassung dieses Doppels gab
+ * bei jedem Aufruf brav `{ code: '42703' }` zurueck, egal wie gefragt wurde.
+ * Damit sah eine Sonde mit `{ head: true }` gruen aus, die gegen echtes
+ * PostgREST NIE einen Code bekommt (HEAD-Antworten haben keinen Rumpf). Am
+ * 03.09.2026 gegen ein PostgREST im Docker gemessen:
+ *
+ *   HEAD + fehlende Spalte -> 400, error = { message: '' }  ← kein code
+ *   GET  + fehlende Spalte -> 400, error.code = '42703'
+ *
+ * Deshalb verschluckt das Doppel den Code bei `head`, genau wie das Original.
+ */
 function clientDoppel({ fehler = null, verzoegern = false } = {}) {
   const aufrufe = [];
+  const optionen = [];
+  const grenzen = [];
   let loesen;
   const tor = verzoegern ? new Promise(r => { loesen = r; }) : null;
   return {
-    aufrufe,
+    aufrufe, optionen, grenzen,
     freigeben: () => loesen && loesen(),
     from(tabelle) {
       aufrufe.push(tabelle);
       return {
-        select: () => ({
-          limit: async () => {
-            if (tor) await tor;
-            return { data: fehler ? null : [], error: fehler };
-          },
-        }),
+        select: (spalten, opt) => {
+          optionen.push(opt);
+          return {
+            limit: async (n) => {
+              grenzen.push(n);
+              if (tor) await tor;
+              if (!fehler) return { data: [], error: null };
+              // HEAD liefert keinen Rumpf -> der Client sieht keinen Code.
+              const durchgereicht = opt && opt.head ? { message: '' } : fehler;
+              return { data: null, error: durchgereicht };
+            },
+          };
+        },
       };
     },
   };
@@ -150,4 +173,31 @@ test('eine spaete Sonde ueberschreibt kein bereits richtiges Ergebnis', async ()
   client.freigeben();
   await spaet;
   assert.equal(kostentraegerSpalteDa(), true, 'die Sonde hat es NICHT gekippt');
+});
+
+// ── Falle (c): die Aufrufform der Sonde ist nicht beliebig ──────────────────
+
+test('die Sonde fragt per GET mit limit(0) — nicht mit head', async () => {
+  // Beides zusammen ist noetig und beides hat einen Grund:
+  //   limit(0)  -> PostgREST prueft die Spaltenliste, liefert aber keine Zeile.
+  //               Ohne das laese die Sonde bei leerer Praxis den Datensatz
+  //               einer FREMDEN Praxis (Policy "Public read services").
+  //   kein head -> HEAD-Antworten haben keinen Rumpf, also kaeme der Fehlercode
+  //               nie beim Client an, und nichts wuerde je gemerkt.
+  const client = clientDoppel();
+  await ermittleKostentraegerSpalte([], client);
+  assert.deepEqual(client.grenzen, [0], 'limit(0), nicht limit(1)');
+  assert.ok(!client.optionen[0] || !client.optionen[0].head, 'kein head:true');
+});
+
+test('mit head:true waere die Erkennung kaputt — der Nachweis', async () => {
+  // Kein Vorwurf an die Zukunft, sondern eine Falle mit Schild: wer hier
+  // head:true einbaut, bekommt einen Fehler ohne Code. Das Doppel bildet das
+  // nach (gegen echtes PostgREST gemessen). Der Test zeigt, was dann passiert.
+  const client = clientDoppel({ fehler: { code: '42703', message: 'column ... does not exist' } });
+  const ohneCode = await client.from('services').select('kostentraeger_typ', { head: true }).limit(0);
+  assert.equal(ohneCode.error.code, undefined, 'HEAD verschluckt den Code');
+
+  const mitCode = await client.from('services').select('kostentraeger_typ').limit(0);
+  assert.equal(mitCode.error.code, '42703', 'GET liefert ihn');
 });

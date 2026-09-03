@@ -46,8 +46,22 @@
  * (c) **`services` ist oeffentlich lesbar** (Policy "Public read services", fuer
  *     die Buchungsseite). Eine Sonde ohne Mandantenfilter bekaeme die Zeile
  *     einer fremden Praxis zurueck. Uns interessiert nur, ob die Abfrage
- *     ueberhaupt zulaessig ist — deshalb `head: true`: PostgREST prueft die
- *     Spaltenliste, sendet aber keinen Rumpf.
+ *     ueberhaupt zulaessig ist — deshalb `.limit(0)`: PostgREST prueft die
+ *     Spaltenliste und antwortet mit einer leeren Liste.
+ *
+ *     ⛔ NICHT `{ head: true }` benutzen, so naheliegend es aussieht. Gegen ein
+ *        echtes PostgREST gemessen (03.09.2026, Docker):
+ *
+ *          HEAD     + fehlende Spalte -> 400, error = { message: '' }  KEIN code
+ *          GET      + fehlende Spalte -> 400, error.code = '42703'     ✓
+ *          limit(0) + Spalte da       -> 200, 0 Zeilen                 ✓
+ *
+ *        HEAD-Antworten haben keinen Rumpf, also kann der Client den Fehlercode
+ *        nicht lesen — er steht nur in einem `Proxy-Status`-Header, den
+ *        supabase-js nicht auswertet. Mit `head: true` liefe jede Sonde in
+ *        "unklar", nichts wuerde je gemerkt, und das Feld bliebe bei einer
+ *        leeren Praxis fuer immer verborgen: genau der Fehler, den diese Datei
+ *        beheben soll. Zwei Tests halten die Aufrufform jetzt fest.
  *
  * BEFRISTET. Diese Datei darf verschwinden, sobald die Migration gelaufen ist —
  * es gibt nur eine Produktionsdatenbank, also unmittelbar danach. Dann wird
@@ -85,8 +99,8 @@ export function spalteAusZeilen(zeilen) {
  */
 async function sondiere(client) {
   const { error } = await client.from('services')
-    .select('kostentraeger_typ', { head: true })
-    .limit(1);
+    .select('kostentraeger_typ')
+    .limit(0);
   if (!error) return true;
   if (error.code === '42703') return false;
   return null;
