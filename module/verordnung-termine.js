@@ -119,21 +119,35 @@ export function terminZaehler(vord, vergeben) {
  * @returns {Promise<{ok:boolean, fehler?:string}>}
  */
 export async function bindeTermin(sb, { bookingId, vordId }) {
-  const { error } = await sb.from('bookings')
+  const { data, error } = await sb.from('bookings')
     .update({ verordnung_id: vordId })
-    .eq('id', bookingId);
+    .eq('id', bookingId)
+    .select('id');
   if (error) return { ok: false, fehler: fehlerText(error) };
+  if (!data?.length) return { ok: false, fehler: NICHT_GESCHRIEBEN };
   return { ok: true };
 }
 
 /** Die Zuordnung wieder lösen — eine Fehlzuordnung muss ohne Umweg korrigierbar sein. */
 export async function loeseTermin(sb, { bookingId }) {
-  const { error } = await sb.from('bookings')
+  const { data, error } = await sb.from('bookings')
     .update({ verordnung_id: null })
-    .eq('id', bookingId);
+    .eq('id', bookingId)
+    .select('id');
   if (error) return { ok: false, fehler: fehlerText(error) };
+  if (!data?.length) return { ok: false, fehler: NICHT_GESCHRIEBEN };
   return { ok: true };
 }
+
+/**
+ * Ein UPDATE, das die Zeilensicherheit nicht passieren darf, wirft KEINEN
+ * Fehler — PostgREST meldet Erfolg mit null betroffenen Zeilen. Ohne die
+ * Rückgabe aus `.select()` stünde in der Oberfläche „zugeordnet", während in
+ * der Datenbank nichts passiert wäre. Dasselbe gilt, wenn der Termin
+ * inzwischen gelöscht wurde.
+ */
+const NICHT_GESCHRIEBEN =
+  'Der Termin wurde nicht geändert — er existiert nicht mehr, oder die Berechtigung fehlt.';
 
 /**
  * Datenbankfehler in einen Satz übersetzen, den der Anwender lesen kann.

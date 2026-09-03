@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { istVergeben, terminZaehler } from './verordnung-termine.js';
+import { istVergeben, terminZaehler, bindeTermin, loeseTermin } from './verordnung-termine.js';
 
 // Warum es diese Datei gibt:
 // Beim Entwurf der Spalte `bookings.verordnung_id` (03.09.2026) hat `db-ustasi`
@@ -61,4 +61,46 @@ test('mehr Termine als verordnet ergibt keine negative Restmenge', () => {
   ]);
   assert.equal(z.belegt, 3);
   assert.equal(z.offen, 0);
+});
+
+/* ── Falle 3: das UPDATE, das nichts tut und Erfolg meldet ────────────────── */
+// Ein UPDATE, das die Zeilensicherheit nicht passieren darf, wirft KEINEN
+// Fehler — PostgREST meldet Erfolg mit null betroffenen Zeilen. Das wird real,
+// sobald Angestellte `verordnungen` lesen, aber nicht schreiben dürfen: die
+// Oberfläche sagte „gespeichert", die Datenbank hatte nichts getan.
+
+
+/** Supabase-Ersatz, der genau das zurückgibt, was PostgREST zurückgäbe. */
+function fakeUpdate({ rows = [], error = null } = {}) {
+  const kette = {
+    update: () => kette,
+    eq: () => kette,
+    select: () => Promise.resolve({ data: rows, error }),
+  };
+  return { from: () => kette };
+}
+
+test('zugeordnet gilt nur, wenn die Datenbank eine Zeile zurückgibt', async () => {
+  const gut = await bindeTermin(fakeUpdate({ rows: [{ id: 'b1' }] }), { bookingId: 'b1', vordId: 'v1' });
+  assert.equal(gut.ok, true);
+});
+
+test('null betroffene Zeilen ist ein Fehler, kein Erfolg', async () => {
+  const leer = await bindeTermin(fakeUpdate({ rows: [] }), { bookingId: 'b1', vordId: 'v1' });
+  assert.equal(leer.ok, false);
+  assert.match(leer.fehler, /nicht geändert/);
+
+  const geloest = await loeseTermin(fakeUpdate({ rows: [] }), { bookingId: 'b1' });
+  assert.equal(geloest.ok, false);
+});
+
+test('der Owner-Riegel der Datenbank wird im Klartext durchgereicht', async () => {
+  // `trg_booking_verordnung_owner` wirft 42501 mit fertigem deutschem Satz.
+  // Ihn durch einen eigenen zu ersetzen hiesse, die genauere Meldung wegzuwerfen.
+  const res = await bindeTermin(
+    fakeUpdate({ error: { code: '42501', message: 'Diese Verordnung gehoert zu einer anderen Praxis.' } }),
+    { bookingId: 'b1', vordId: 'v1' },
+  );
+  assert.equal(res.ok, false);
+  assert.match(res.fehler, /anderen Praxis/);
 });

@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (Podologie: Termin ↔ Verordnung)
--- LETZTE MIGRATION:  20260903075503_pruefe_booking_verordnung_owner_execute_revoke
+-- ERZEUGT AM:        2026-09-03 (GoBD-Riegel verordnungen)
+-- LETZTE MIGRATION:  20260903132042_verordnungen_gobd_festschreibung
+--                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
 --                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
 --                    davor: 20260901094002_zuzahlung_korrektur_business_id_trigger
 --                    davor: 20260901093344_zuzahlung_korrektur_search_path_haerten
@@ -29,7 +30,7 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            155 RLS-Policies · 297 Indizes · 63 Trigger · 64 Funktionen
+-- UMFANG:            155 RLS-Policies · 297 Indizes · 64 Trigger · 65 Funktionen
 --                    (03.09.2026 gegen die Live-DB nachgezaehlt. Dabei fiel auf,
 --                     dass in Abschnitt 5 zwei Indizes vom 16.08.2026 FEHLTEN:
 --                     idx_invoices_verordnung_id und idx_pod_behandlungen_invoice_id.
@@ -390,7 +391,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (64 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (65 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -547,6 +548,13 @@ $function$;
 -- prevent_zuzahlung_korrekturen_mod() -> trigger
 --   GoBD, gleiche Absicht wie oben, fuer zuzahlung_korrekturen. Eigene Funktion,
 --   damit die Fehlermeldung den richtigen Weg nennt: neue Korrektur statt Aenderung.
+-- verordnung_festschreibung() -> trigger
+--   GoBD, gleiche Absicht wie prevent_belegliste_mod()/invoice_festschreibung(),
+--   fuer verordnungen (Podologie-Topf). Sobald belegnummer gesetzt ist, sperrt
+--   sie NUR die Spalten, die tatsaechlich in die DTA-Datei eingehen
+--   (mapVerordnungToDtaShape()) — nicht die ganze Zeile wie bei belegliste/
+--   invoices. status/absetzung_*/storno_*/abrechnung_id bleiben offen, das ist
+--   der Korrekturweg selbst. Details + Spaltenliste: db/REGISTER.md, verordnungen.
 -- fn_zuzahlung_guthaben_status() -> trigger
 --   Leitet zuzahlung_guthaben.status aus rest_eur ab (0 = verrechnet,
 --   < betrag_eur = teilweise_verrechnet, sonst offen) und setzt updated_at.
@@ -607,7 +615,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (63)
+-- 4. TRIGGER (64)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -631,6 +639,9 @@ $function$;
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
 --   verordnungen          trg_verordnungen_verordnungsnummer  BEFORE INSERT/UPDATE OF lead_id
+--                         trg_verordnungen_festschreibung BEFORE UPDATE          (GoBD)
+--                         → verordnung_festschreibung(): sobald belegnummer gesetzt ist,
+--                           sind die DTA-relevanten Felder gesperrt (Liste: REGISTER.md).
 --                         trg_sync_leads_location        BEFORE INSERT/UPDATE OF lat, lng
 --   profiles              trg_sync_profiles_clinic_location BEFORE INSERT/UPDATE OF clinic_lat, clinic_lng
 --   businesses            trg_seed_default_groups        AFTER INSERT

@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (Podologie: Termin ↔ Verordnung)
--- LETZTE MIGRATION:  20260903075503_pruefe_booking_verordnung_owner_execute_revoke
+-- ERZEUGT AM:        2026-09-03 (GoBD-Riegel verordnungen)
+-- LETZTE MIGRATION:  20260903132042_verordnungen_gobd_festschreibung
+--                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
 --                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
 --                    davor: 20260901094002_zuzahlung_korrektur_business_id_trigger
 --                    davor: 20260901093344_zuzahlung_korrektur_search_path_haerten
@@ -30,7 +31,7 @@
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
 -- UMFANG:            82 Tabellen · 1211 Spalten · 155 RLS-Policies
---                    297 Indizes · 63 Trigger · 64 Funktionen · 4 Views
+--                    297 Indizes · 64 Trigger · 65 Funktionen · 4 Views
 --                    (03.09.2026: die Triggerzahl stand hier auf 60 und war
 --                     seit zwei Migrationen zu niedrig — gegen die Live-DB
 --                     nachgezählt, nicht fortgeschrieben.)
@@ -1808,6 +1809,14 @@ CREATE TABLE verordnungen (
 --      Wird bei der DTA-Erzeugung EINMAL geschrieben und danach nie geaendert
 --      (Anlage 1 TP5 V21 Kap. 7.3) — sonst findet eine spaete Kassenrueckmeldung
 --      ihren Beleg nicht mehr. Leer = noch nie abgerechnet.
+--   ⚠️ GoBD-Riegel seit 03.09.2026 (`verordnungen_gobd_festschreibung`):
+--      Trigger trg_verordnungen_festschreibung sperrt, sobald belegnummer
+--      gesetzt ist, per UPDATE genau die Spalten, die in die DTA-Datei
+--      eingehen (ausstellungsdatum, diagnosegruppe, icd10, leitsymptomatik,
+--      pat_leitsymptomatik, dringend, hausbesuch, therapiefrequenz, rezeptart,
+--      zuzahlung_befreit, kostentraeger_ik, versichertennummer, lead_id,
+--      arzt_id, belegnummer selbst). status/absetzung_*/storno_*/abrechnung_id
+--      bleiben offen — das ist der Korrekturweg. Details: db/REGISTER.md.
 
 CREATE TABLE visibility_reports (
   sector text NOT NULL

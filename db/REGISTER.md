@@ -319,10 +319,30 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 
 ### `verordnungen`
 - **Warum:** Die podologische Verordnung. Eigener Topf, weil Podologie andere Pflichtfelder hat (Wagner-Armstrong-Grad, Fußstatus-Bezug) und die Abrechnung über HPNR 78xxx läuft.
-- **Seit:** 13.06.2026 · `create_verordnungen`
+- **Seit:** 13.06.2026 · `create_verordnungen` (GoBD-Riegel nachgezogen: 03.09.2026 · `verordnungen_gobd_festschreibung`)
 - **Status:** aktiv
 - **Wer:** `module/podologie-abrechnung.js`, `verordnung-uebersicht.js`, `abrechnungsstatus.js`, Backend-Abrechnung und Verordnungsstatus.
 - **Achtung:** `icd10` ist ein `text[]` (bei `prescriptions` zwei Einzelspalten). Ohne Team-Zugriff — nur der Inhaber sieht sie.
+- **Achtung — GoBD-Riegel seit 03.09.2026:** Trigger `trg_verordnungen_festschreibung` →
+  `verordnung_festschreibung()`. Sobald `belegnummer` gesetzt ist (einmalig bei der
+  DTA-Erzeugung, `/abrechnung/create-podologie`), sperrt er per `UPDATE` genau die Spalten,
+  die in `mapVerordnungToDtaShape()` tatsächlich in die DTA-Datei eingehen:
+  `ausstellungsdatum, diagnosegruppe, icd10, leitsymptomatik, pat_leitsymptomatik, dringend,
+  hausbesuch, therapiefrequenz, rezeptart, zuzahlung_befreit, kostentraeger_ik,
+  versichertennummer, lead_id, arzt_id, belegnummer` selbst. Vergleicht `NEW` gegen `OLD`
+  (`IS DISTINCT FROM`) — ein unveränderter Re-Save (der Podologie-Bearbeiten-Dialog schreibt
+  beim Speichern pauschal alle Formularfelder) geht durch, nur eine echte Änderung wirft
+  `check_violation` mit Verweis auf das Korrekturverfahren.
+  Bewusst **nicht** gesperrt, weil nicht Teil der DTA bzw. weiter gebraucht:
+  `status, absetzung_betrag, absetzung_grund, absetzung_am, storno_grund, storno_am,
+  abrechnung_id` (das ist der Korrekturweg selbst — `PATCH /verordnung/:id/abrechnungsstatus`,
+  ZAA-Import), `patient_name` (DTA nimmt den Namen immer aus `leads`), `behandlungseinheiten`
+  (kommt in keiner Zeile der Backend-Abrechnungskette vor — nur Arbeitslisten-Anzeige,
+  siehe `module/verordnung-einheiten.js`), `heilmittel_items` (speist nur
+  `statistik.routes.js`), `wagner_grad, behandlungsanlass, notizen, behandlungsstart,
+  beginn_spaetestens, therapiebericht`. Gegenstück zu `invoice_festschreibung()` bei
+  `invoices`, andere Spaltenliste. Löschung (`DELETE`, `api/dsgvo.js`) ist von diesem Trigger
+  nicht betroffen — er hängt nur an `BEFORE UPDATE`.
 
 ### `podologie_behandlungen`
 - **Warum:** Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions` im anderen Topf.

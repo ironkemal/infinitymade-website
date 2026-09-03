@@ -118,14 +118,29 @@ export function pruefeNeueMenge(neu, erbracht) {
  * @returns {Promise<{ok:boolean, fehler?:string}>}
  */
 export async function speichereEinheiten(supabase, { vordId, neu }) {
-  const { error } = await supabase
+  // `.select()` ist hier kein Luxus, sondern der Fehlernachweis.
+  //
+  // Ein UPDATE, das die Zeilensicherheit (RLS) nicht passieren darf, wirft
+  // KEINEN Fehler — PostgREST meldet Erfolg mit null betroffenen Zeilen. Ohne
+  // die Rückgabe stünde in der Oberfläche „gespeichert", während in der
+  // Datenbank nichts passiert ist. Genau dieser Fall wird ab jetzt real:
+  // Angestellte dürfen `verordnungen` lesen, aber nicht schreiben.
+  const { data, error } = await supabase
     .from('verordnungen')
     .update({ behandlungseinheiten: neu })
-    .eq('id', vordId);
+    .eq('id', vordId)
+    .select('id, behandlungseinheiten');
 
   if (error) {
     console.error('[verordnung-einheiten]', error);
     return { ok: false, fehler: error.message };
+  }
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      fehler: 'Die Änderung wurde nicht gespeichert — vermutlich fehlt die Berechtigung. '
+            + 'Das Ändern der verordneten Menge ist Sache der Praxisinhaberin oder des Praxisinhabers.',
+    };
   }
   return { ok: true };
 }
