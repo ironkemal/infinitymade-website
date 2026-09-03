@@ -222,10 +222,18 @@
   abrechenbar: ZFD FAK Juli 2024 Bölüm 2
 - **Geçerlilik:** 01.07.2025; § 3b yalnız **01.10.2025'ten itibaren verordnet** edilmiş NSB'ler için
 - **Kodda:** katalog `api-backend/billing/codes/podologie_positions.js:83-84` ve
-  `dashboard.js:9759-9763` — pozisyonlar var, **frekans denetimi uygulanmamış**.
-  `module/eingangsbefundung-regel.js` → `befundungFuerLeistung()` (2026-09-03) Nagel
-  zweiginde **hiçbir şey önermez**, sadece hinweis döner — Serie ve hangi Nagel olduğu
-  Termin maskesinde bilinmediği için otomatik öneri yanlış olurdu.
+  `dashboard.js:9759-9763`. Frekans denetiminin **iki yarısından biri uygulandı**
+  (2026-09-03):
+  - ✅ **takvim yılı sınırı** — `module/eingangsbefundung-regel.js` → `darf78100()`,
+    kapı `module/podologie-abrechnung.js` → `podErstbefundungGrossLage()`; aynı yıl
+    ikinci bir 78100 kaydedilemiyor, mesaj 78110'a yönlendiriyor.
+  - ❌ **seri/nagel sınırı** — § 3b lit. a'nın „einmalig zu Beginn einer
+    Nagelspangenbehandlungsserie, je Nagel" kuralı **hâlâ uygulanmadı**: bir
+    `podologie_behandlungen` satırı hangi seriye ait olduğunu taşımıyor,
+    `lokalisation` serbest metin. Bilerek açık — rasgele bir eşleme yanlış sperre
+    üretirdi.
+  Ayrıca `befundungFuerLeistung()` (2026-09-03) Nagel zweiginde **hiçbir şey önermez**,
+  sadece hinweis döner — Serie ve hangi Nagel olduğu Termin maskesinde bilinmiyor.
 - **Kapsam:** Podologie, Diagnosegruppen UI1/UI2
 - ⚠️ `dashboard.js:9761`'deki „auch bei Wiedervorstellung" ibaresi **hiçbir sözleşme metninde
   geçmiyor** — içerik olarak yanlış değil ama alıntılanabilir değil, 2026-08-31'de sözleşme
@@ -297,9 +305,12 @@
       tarihli Änderungsvereinbarung / konsolide sözleşme § 3a'da; GKV-SV sunucusu PDF'i
       otomatik indirmeye vermiyor, **elle indirilip arşive konmalı.** O gelene kadar kod
       owner_id kapsamında (temkinli okuma) kalır.
-- [ ] 🟠 **78100/78110 frekans denetimi yok** — 78100 hasta başına takvim yılında 1×;
-      Erstbefundung Nagel-serisi başına 1× (seri birden çok VO kapsayabilir). Katalogda
-      pozisyon var, kural uygulanmamış.
+- [x] 🟠 ~~**78100 takvim yılı sınırı uygulanmamış**~~ — **kapandı 03.09.2026.**
+      `darf78100()` + `podErstbefundungGrossLage()`; 9 test.
+- [ ] 🟠 **Erstbefundung seri/nagel sınırı yok** — § 3b lit. a: Erstbefundung Nagel-
+      **serisi** başına 1×, bir seri tek bir nagele aittir ve birden çok Verordnung
+      kapsayabilir. `podologie_behandlungen` bugün seri kimliği taşımıyor,
+      `lokalisation` serbest metin — önce şema kararı gerek (→ db-ustasi), sonra kural.
 - [ ] 28 gün başlama süresi — HeilM-RL § 15'ten teyit (şu an kaynak NOVENTI = ticari yayın)
 - [ ] `blankoRules.js:124-132` — `ok !== true` iken bonuslar yine hesaplanıyor (`total_bonuses_eur`
       dolu dönüyor). Sessiz yanlış fatura riski.

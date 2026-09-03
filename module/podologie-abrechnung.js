@@ -59,8 +59,9 @@ import { standortZuschnitt, istPraxisweit } from './standort-zuschnitt.js?v=2026
 import { alsISODatum } from './datum.js?v=20260901';
 // 78030/78040: Regel und Begruendung liegen in eingangsbefundung-regel.js,
 // dort neben ihrem Test — diese Datei laesst sich in node nicht importieren.
-import { darf78040, POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE }
-  from './eingangsbefundung-regel.js?v=20260901';
+import { darf78040, darf78100, POD_EINGANGSBEFUNDUNG, POD_BEFUNDPAUSCHALE,
+         POD_ERSTBEFUNDUNG_GROSS }
+  from './eingangsbefundung-regel.js?v=20260903';
 
 let ctx = null;                 // Abhängigkeiten aus dashboard.js, gesetzt in mountPodologieAbrechnung()
 
@@ -173,36 +174,62 @@ const POD_HEILMITTEL_DGS  = ['DF', 'NF', 'QF'];  // UI1/UI2 haben keinen a/b/c-K
  * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
  * @returns {Promise<{erlaubt:boolean, grund:string, schonAm:?string, ersteAm:?string}>}
  */
-async function podEingangsbefundungLage(vord, datum) {
-  const offen = { erlaubt: true, grund: '', schonAm: null, ersteAm: null };
-  if (!vord || !(vord.lead_id || vord.patient_name)) return offen;
+/**
+ * Alle Behandlungen dieses Patienten — ueber ALLE seine Verordnungen, auch
+ * abgeschlossene. Die Grundlage jeder Frequenzregel (78040, 78100).
+ *
+ * Kein Standort-Zuschnitt: die Verordnung gehoert der Praxis, nicht der
+ * Filiale (standort-zuschnitt.js) — und `verordnungen` fuehrt ohnehin kein
+ * `business_id`. Die Sperren muessen praxisweit greifen, sonst umgeht ein
+ * Standortwechsel sie.
+ *
+ * ⚠️ Der `patient_name`-Zweig ist ein reiner Zeichenkettenvergleich und
+ * greift nur bei Verordnungen ohne `lead_id` (Altbestand). Zwei gleichnamige
+ * Patienten derselben Praxis sperren sich damit gegenseitig. Bewusst so
+ * gelassen: die Meldung nennt Name und Datum, der Podologe sieht den Irrtum
+ * sofort — eine faelschlich DURCHGELASSENE Position faellt dagegen erst als
+ * Absetzung auf, Monate spaeter.
+ *
+ * @param {object} vord  Zeile aus `verordnungen` (braucht lead_id ODER patient_name)
+ * @returns {Promise<Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>>}
+ */
+async function podPatientBehandlungen(vord) {
+  if (!vord || !(vord.lead_id || vord.patient_name)) return [];
 
-  // Kein Standort-Zuschnitt: die Verordnung gehoert der Praxis, nicht der
-  // Filiale (standort-zuschnitt.js) — und `verordnungen` fuehrt ohnehin kein
-  // `business_id`. Die Sperre muss praxisweit greifen, sonst umgeht ein
-  // Standortwechsel sie.
-  //
-  // ⚠️ Der `patient_name`-Zweig ist ein reiner Zeichenkettenvergleich und
-  // greift nur bei Verordnungen ohne `lead_id` (Altbestand). Zwei gleichnamige
-  // Patienten derselben Praxis sperren sich damit gegenseitig. Bewusst so
-  // gelassen: die Meldung nennt Name und Datum, der Podologe sieht den Irrtum
-  // sofort — ein faelschlich DURCHGELASSENES 78040 faellt dagegen erst als
-  // Absetzung auf, Monate spaeter.
   let q = ctx.supabase.from('verordnungen').select('id').eq('owner_id', ctx.getOwnerId());
   q = vord.lead_id ? q.eq('lead_id', vord.lead_id) : q.eq('patient_name', vord.patient_name);
   const { data: allVords } = await q;
-  if (!allVords?.length) return offen;
+  if (!allVords?.length) return [];
 
-  // Eine Abfrage für beide Sperren — hpnr_codes wird hier ausgewertet, nicht
-  // per `.contains()` gefiltert, sonst bräuchte es zwei Rundreisen.
+  // Eine Abfrage für alle Sperren — hpnr_codes wird von den Regeln
+  // ausgewertet, nicht per `.contains()` gefiltert, sonst braeuchte jede
+  // Regel ihre eigene Rundreise.
   const { data: behs } = await ctx.supabase
     .from('podologie_behandlungen').select('behandlungsdatum, hpnr_codes')
     .eq('owner_id', ctx.getOwnerId())
     .in('verordnung_id', allVords.map(v => v.id))
     .order('behandlungsdatum', { ascending: true });
-  if (!behs?.length) return offen;
+  return behs || [];
+}
 
+async function podEingangsbefundungLage(vord, datum) {
+  const behs = await podPatientBehandlungen(vord);
+  if (!behs.length) return { erlaubt: true, grund: '', schonAm: null, ersteAm: null };
   return darf78040(behs, datum);
+}
+
+/**
+ * Darf am `datum` noch die Erstbefundung gross (78100) gesetzt werden?
+ * Regel und Fundstelle in `eingangsbefundung-regel.js` → `darf78100`.
+ *
+ * @param {object} vord   Zeile aus `verordnungen`
+ * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
+ * @returns {Promise<{erlaubt:boolean, grund:string, schonAm:?string}>}
+ */
+async function podErstbefundungGrossLage(vord, datum) {
+  const behs = await podPatientBehandlungen(vord);
+  if (!behs.length) return { erlaubt: true, grund: '', schonAm: null };
+  return darf78100(behs, datum);
 }
 
 /**
@@ -1300,6 +1327,24 @@ async function loadPodologieBilling() {
             + `${name} wurde in dieser Praxis bereits am `
             + `${new Date(lage.ersteAm).toLocaleDateString('de-DE')} behandelt — sie kann jetzt `
             + `nicht mehr nachgeholt werden (Anlage 1a i.d.F. 17.06.2024, Teil 1 Nr. 2).`;
+        errEl.style.display = 'block';
+        return;
+      }
+    }
+
+    // Erstbefundung gross (78100) ist auf eine Abgabe je Patient und
+    // Kalenderjahr beschraenkt (Anlage 1c i.d.F. 01.07.2025, Teil 1 Nr. 5 I.1).
+    // Bis zum 03.09.2026 stand das nur als Hinweistext im Katalog — ankreuzen
+    // liess es sich beliebig oft, abgesetzt wurde es hinterher.
+    if (checks.includes(POD_ERSTBEFUNDUNG_GROSS)) {
+      const lage = await podErstbefundungGrossLage(vord, datum);
+      if (!lage.erlaubt) {
+        const name = vord?.patient_name || 'diesen Patienten';
+        errEl.textContent = `Erstbefundung gross (78100) wurde für ${name} am `
+          + `${new Date(lage.schonAm).toLocaleDateString('de-DE')} bereits abgerechnet — sie ist `
+          + `auf eine Abgabe je Patient im Kalenderjahr beschränkt `
+          + `(Anlage 1c i.d.F. 01.07.2025, Teil 1 Nr. 5 I.1). Für eine weitere `
+          + `Befundung in diesem Jahr ist 78110 „klein" vorgesehen.`;
         errEl.style.display = 'block';
         return;
       }

@@ -243,3 +243,45 @@ export function befundungFuerLeistung({
       : null,
   };
 }
+
+/**
+ * Darf am `datum` noch die „Erstbefundung gross" (78100) abgerechnet werden?
+ *
+ * Eigene Regel, nicht mit 78040 verwandt — nur die Verwechslungsgefahr ist
+ * gross. 78040 haengt an der Erstinanspruchnahme, 78100 am Kalenderjahr:
+ *
+ *   Anlage 1c Leistungsbeschreibung i.d.F. 01.07.2025, Teil 1 Nr. 5 I.1:
+ *   „Die Erbringung der ‚Erstbefundung gross' ist auf eine EINMALIGE ABGABE
+ *    JE PATIENT IM KALENDERJAHR beschraenkt."
+ *
+ * Bis zum 03.09.2026 stand dieser Satz an drei Stellen als Hinweistext und an
+ * keiner als Pruefung — der Podologe konnte 78100 im selben Jahr ein zweites
+ * Mal ankreuzen, und die Kasse setzte es ab.
+ *
+ * ⚠️ Die zweite Grenze aus § 3b lit. a — Erstbefundung einmalig zu Beginn
+ * einer Nagelspangen-Serie, und eine Serie gehoert zu EINEM Nagel und kann
+ * mehrere Verordnungen umfassen — ist hier NICHT geprueft. Dafuer muesste die
+ * Behandlung wissen, zu welcher Serie sie gehoert; `lokalisation` ist ein
+ * freies Textfeld und traegt das nicht verlaesslich. Bewusst offen gelassen:
+ * lieber eine Regel, die stimmt, als zwei, von denen eine raet.
+ *
+ * @param {Array<{behandlungsdatum:string, hpnr_codes:?Array<string>}>} behandlungen
+ *        alle `podologie_behandlungen` des Patienten, ueber alle Verordnungen
+ * @param {string} datum  geplanter Behandlungstag, `YYYY-MM-DD`
+ * @returns {{erlaubt:boolean, grund:string, schonAm:?string}}
+ *   `grund`: `''` wenn erlaubt, sonst `'kalenderjahr_verbraucht'`.
+ */
+export function darf78100(behandlungen, datum) {
+  const jahr = String(datum || '').slice(0, 4);
+  if (!/^\d{4}$/.test(jahr)) return { erlaubt: true, grund: '', schonAm: null };
+
+  const schon = (behandlungen || [])
+    .filter(b => b && b.behandlungsdatum)
+    .filter(b => String(b.behandlungsdatum).slice(0, 4) === jahr)
+    .filter(b => (b.hpnr_codes || []).includes(POD_ERSTBEFUNDUNG_GROSS))
+    .sort((a, b) => String(a.behandlungsdatum).localeCompare(String(b.behandlungsdatum)))[0];
+
+  return schon
+    ? { erlaubt: false, grund: 'kalenderjahr_verbraucht', schonAm: schon.behandlungsdatum }
+    : { erlaubt: true, grund: '', schonAm: null };
+}

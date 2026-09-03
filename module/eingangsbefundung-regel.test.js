@@ -186,3 +186,77 @@ test('fremde Sektoren und leere Eingabe kippen nicht um', () => {
   assert.equal(befundungFuerLeistung({ hpnr: '', datum: '2026-09-03' }).grund, 'keine_leistung');
   assert.equal(befundungFuerLeistung().grund, 'keine_leistung');
 });
+
+// ── darf78100: Erstbefundung gross, einmal je Patient und Kalenderjahr ───────
+// Anlage 1c i.d.F. 01.07.2025, Teil 1 Nr. 5 I.1. Stand bis zum 03.09.2026 nur
+// als Hinweistext im Katalog — ankreuzen liess es sich beliebig oft.
+import { darf78100 } from './eingangsbefundung-regel.js';
+
+test('Patient ohne Vorgeschichte — 78100 erlaubt', () => {
+  assert.equal(darf78100([], '2026-09-03').erlaubt, true);
+  assert.equal(darf78100(null, '2026-09-03').erlaubt, true);
+});
+
+test('zweite 78100 im selben Kalenderjahr wird gesperrt', () => {
+  const r = darf78100(
+    [{ behandlungsdatum: '2026-02-10', hpnr_codes: ['78100', '78610'] }],
+    '2026-11-02',
+  );
+  assert.equal(r.erlaubt, false);
+  assert.equal(r.grund, 'kalenderjahr_verbraucht');
+  assert.equal(r.schonAm, '2026-02-10', 'die Meldung nennt den Tag der ersten Abgabe');
+});
+
+test('am selben Tag ein zweites Mal ist ebenfalls gesperrt', () => {
+  const r = darf78100(
+    [{ behandlungsdatum: '2026-02-10', hpnr_codes: ['78100'] }],
+    '2026-02-10',
+  );
+  assert.equal(r.erlaubt, false);
+});
+
+test('neues Kalenderjahr gibt den Anspruch frei — anders als bei 78040', () => {
+  const behs = [{ behandlungsdatum: '2026-02-10', hpnr_codes: ['78100'] }];
+  assert.equal(darf78100(behs, '2027-01-05').erlaubt, true);
+  // Gegenprobe: 78040 waere hier weiterhin gesperrt, weil die Serie laeuft.
+  assert.equal(darf78040(behs, '2027-01-05').erlaubt, false);
+});
+
+test('Jahresgrenze wird auf den Tag genau gezogen', () => {
+  const behs = [{ behandlungsdatum: '2025-12-31', hpnr_codes: ['78100'] }];
+  assert.equal(darf78100(behs, '2026-01-01').erlaubt, true);
+  assert.equal(darf78100([{ behandlungsdatum: '2026-01-01', hpnr_codes: ['78100'] }], '2026-12-31').erlaubt, false);
+});
+
+test('78110 klein sperrt die grosse nicht', () => {
+  const r = darf78100(
+    [{ behandlungsdatum: '2026-02-10', hpnr_codes: ['78110', '78610'] }],
+    '2026-11-02',
+  );
+  assert.equal(r.erlaubt, true, 'die Grenze gilt nur der grossen Form');
+});
+
+test('mehrere Abgaben im Jahr — gemeldet wird die frueheste', () => {
+  const r = darf78100(
+    [
+      { behandlungsdatum: '2026-07-01', hpnr_codes: ['78100'] },
+      { behandlungsdatum: '2026-02-10', hpnr_codes: ['78100'] },
+    ],
+    '2026-11-02',
+  );
+  assert.equal(r.schonAm, '2026-02-10');
+});
+
+test('kaputtes Datum sperrt nicht — lieber durchlassen als grundlos blockieren', () => {
+  const behs = [{ behandlungsdatum: '2026-02-10', hpnr_codes: ['78100'] }];
+  assert.equal(darf78100(behs, '').erlaubt, true);
+  assert.equal(darf78100(behs, undefined).erlaubt, true);
+});
+
+test('Zeilen ohne Datum oder ohne hpnr_codes kippen nicht um', () => {
+  const r = darf78100(
+    [null, { behandlungsdatum: null, hpnr_codes: ['78100'] }, { behandlungsdatum: '2026-02-10' }],
+    '2026-11-02',
+  );
+  assert.equal(r.erlaubt, true);
+});
