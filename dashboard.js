@@ -14,7 +14,7 @@ import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage
 import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260815';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260902';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260830';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260901';
@@ -22,10 +22,10 @@ import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagn
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260817';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260817';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260902';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260902';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
-import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260831';
+import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
 import { fuelleBelegPositionen } from './module/rechnung-druck.js?v=20260816';
 import { oeffneBelegDruck, abrechnungsprofilCacheLeeren, fehlendePflichtangaben } from './module/beleg-druck.js?v=20260827';

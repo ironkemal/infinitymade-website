@@ -1,8 +1,10 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-01 (Zuzahlung: Guthaben + Korrekturprotokoll)
--- LETZTE MIGRATION:  20260901094002_zuzahlung_korrektur_business_id_trigger
+-- ERZEUGT AM:        2026-09-03 (Podologie: Termin ↔ Verordnung)
+-- LETZTE MIGRATION:  20260903075503_pruefe_booking_verordnung_owner_execute_revoke
+--                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
+--                    davor: 20260901094002_zuzahlung_korrektur_business_id_trigger
 --                    davor: 20260901093344_zuzahlung_korrektur_search_path_haerten
 --                    davor: 20260901093310_zuzahlung_korrektur
 --                    (Zeitstempel aus supabase_migrations.schema_migrations.
@@ -27,7 +29,12 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            155 RLS-Policies · 295 Indizes · 60 Trigger · 63 Funktionen
+-- UMFANG:            155 RLS-Policies · 297 Indizes · 63 Trigger · 64 Funktionen
+--                    (03.09.2026 gegen die Live-DB nachgezaehlt. Dabei fiel auf,
+--                     dass in Abschnitt 5 zwei Indizes vom 16.08.2026 FEHLTEN:
+--                     idx_invoices_verordnung_id und idx_pod_behandlungen_invoice_id.
+--                     Beide sind jetzt eingetragen — der Abschnitt ist gegen
+--                     pg_class abgeglichen, nicht fortgeschrieben.)
 --                    (Zählweise siehe Kopf von db/SCHEMA.sql. Die alten
 --                     Werte „60 Trigger · 54 Funktionen" widersprachen dort
 --                     „58 Trigger · 60 Funktionen" — am 28.08.2026 gegen die
@@ -383,7 +390,7 @@
 
 
 -- =====================================================================
--- 3. FUNKTIONEN (63 eigene = alles in `public`, was keiner Extension gehört;
+-- 3. FUNKTIONEN (64 eigene = alles in `public`, was keiner Extension gehört;
 --    PostGIS-Funktionen sind deshalb ausgelassen)
 -- =====================================================================
 
@@ -519,6 +526,23 @@ $function$;
 -- vergebe_verordnungsnummer_rx() / _vo() -> trigger        [SECURITY DEFINER]
 --   Rufen sie auf. Wechselt die Verordnung den Patienten, wird die Nummer
 --   verworfen und neu vergeben; die eingereichte `belegnummer` bleibt stehen.
+-- pruefe_booking_verordnung_owner() -> trigger             [SECURITY DEFINER]
+--   Owner-Riegel fuer bookings.verordnung_id (seit 03.09.2026): vergleicht
+--   verordnungen.owner_id mit bookings.owner_id und wirft 42501, wenn sie
+--   auseinanderfallen. Noetig, weil ein FREMDSCHLUESSEL KEINE RLS PRUEFT — ohne
+--   den Riegel liesse sich die Id einer fremden Verordnung in einen eigenen
+--   Termin schreiben (lesbar waere sie nicht, die Zuordnung aber verschmutzt).
+--   SECURITY DEFINER ist hier kein Komfort: ein SELECT im Rumpf unterlaege
+--   sonst der RLS des Aufrufers, die fremde Zeile waere unsichtbar, NOT FOUND
+--   griffe — und der Riegel fiele genau im Angriffsfall offen auf.
+--   Existiert die Verordnung gar nicht, laesst er durch: das ist Sache des
+--   Fremdschluessels und ergibt die bessere Fehlermeldung.
+--   ⚠️ EXECUTE ist anon/authenticated/PUBLIC ENTZOGEN (Migration
+--      20260903075503). CREATE FUNCTION vergibt es per Default an PUBLIC, und
+--      der Advisor meldete die Funktion prompt als ueber /rest/v1/rpc/
+--      aufrufbaren SECURITY DEFINER. Wer sie per DROP+CREATE ersetzt, MUSS den
+--      REVOKE mitnehmen — er kommt sonst still nicht wieder. (Dieselbe Klasse
+--      wie der offene get_gmail_token-Befund.)
 -- prevent_belegliste_mod() -> trigger   GoBD: blockt UPDATE/DELETE auf belegliste.
 -- prevent_zuzahlung_korrekturen_mod() -> trigger
 --   GoBD, gleiche Absicht wie oben, fuer zuzahlung_korrekturen. Eigene Funktion,
@@ -583,7 +607,7 @@ $function$;
 
 
 -- =====================================================================
--- 4. TRIGGER (62)
+-- 4. TRIGGER (63)
 -- =====================================================================
 -- Am häufigsten: trg_set_business_id BEFORE INSERT -> set_business_id_default()
 --   auf: abrechnung, aerzte, anamnese, b2b_contacts, breaks, calendar_integrations,
@@ -597,6 +621,12 @@ $function$;
 -- Fachlich relevante Trigger:
 --   bookings              trg_check_booking_closed_day   BEFORE INSERT/UPDATE OF start_time, business_id
 --                         trg_normalize_booking_phone    BEFORE INSERT/UPDATE
+--                         trg_booking_verordnung_owner   BEFORE INSERT/UPDATE OF verordnung_id, owner_id
+--                         → pruefe_booking_verordnung_owner(): Mandantenriegel
+--                           auf die Podologie-Bindung Termin ↔ Verordnung.
+--                           Auch bei UPDATE OF owner_id, sonst liesse sich ein
+--                           Termin nachtraeglich umhaengen und die Verordnung
+--                           bliebe fremd.
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
@@ -674,6 +704,9 @@ CREATE INDEX idx_bookings_service ON public.bookings USING btree (service_id);
 CREATE INDEX idx_bookings_start ON public.bookings USING btree (start_time);
 CREATE INDEX idx_bookings_user ON public.bookings USING btree (user_id);
 CREATE INDEX idx_bookings_user_start ON public.bookings USING btree (user_id, start_time);
+-- Podologie-Bindung Termin ↔ Verordnung. Partiell, weil die grosse Mehrheit
+-- der Termine keine Verordnung traegt.
+CREATE INDEX idx_bookings_verordnung ON public.bookings USING btree (verordnung_id) WHERE (verordnung_id IS NOT NULL);
 CREATE INDEX idx_breaks_business ON public.breaks USING btree (business_id);
 CREATE INDEX idx_breaks_user ON public.breaks USING btree (user_id);
 CREATE INDEX idx_businesses_owner ON public.businesses USING btree (owner_id);
@@ -733,6 +766,7 @@ CREATE INDEX idx_invoices_invoice_type ON public.invoices USING btree (owner_id,
 CREATE INDEX idx_invoices_owner ON public.invoices USING btree (owner_id);
 CREATE INDEX idx_invoices_patient ON public.invoices USING btree (patient_id);
 CREATE INDEX idx_invoices_prescription ON public.invoices USING btree (prescription_id) WHERE (prescription_id IS NOT NULL);
+CREATE INDEX idx_invoices_verordnung_id ON public.invoices USING btree (verordnung_id) WHERE (verordnung_id IS NOT NULL);
 CREATE INDEX idx_kostentraeger_active ON public.kostentraeger USING btree (active, payer_type) WHERE (active = true);
 CREATE INDEX idx_kostentraeger_das ON public.kostentraeger USING btree (das_ik) WHERE (das_ik IS NOT NULL);
 CREATE INDEX idx_leads_business ON public.leads USING btree (business_id);
@@ -768,6 +802,11 @@ CREATE INDEX patient_consents_owner_idx ON public.patient_consents USING btree (
 CREATE INDEX patient_consents_type_idx ON public.patient_consents USING btree (patient_id, consent_type, consented_at DESC);
 CREATE INDEX idx_patient_notes_business ON public.patient_notes USING btree (business_id);
 CREATE INDEX idx_patient_notes_lead ON public.patient_notes USING btree (lead_id);
+-- `invoice_id IS NOT NULL` = schon berechnet; `verordnung_id` filtert JEDE
+-- Lesestelle dieser Tabelle (Abrechnung, Statuswechsel, Rechnungsbruecke,
+-- 78040-Regel) — der zweite Index fehlte bis 03.09.2026.
+CREATE INDEX idx_pod_behandlungen_invoice_id ON public.podologie_behandlungen USING btree (invoice_id) WHERE (invoice_id IS NOT NULL);
+CREATE INDEX idx_pod_behandlungen_verordnung_id ON public.podologie_behandlungen USING btree (verordnung_id) WHERE (verordnung_id IS NOT NULL);
 CREATE INDEX prescription_documents_owner_idx ON public.prescription_documents USING btree (owner_id, created_at DESC);
 CREATE INDEX prescription_documents_rx_idx ON public.prescription_documents USING btree (prescription_id);
 CREATE INDEX idx_prescription_sessions_prescription ON public.prescription_sessions USING btree (prescription_id, session_number);

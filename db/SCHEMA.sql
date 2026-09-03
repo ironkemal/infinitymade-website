@@ -1,8 +1,10 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-01 (Zuzahlung: Guthaben + Korrekturprotokoll)
--- LETZTE MIGRATION:  20260901094002_zuzahlung_korrektur_business_id_trigger
+-- ERZEUGT AM:        2026-09-03 (Podologie: Termin ↔ Verordnung)
+-- LETZTE MIGRATION:  20260903075503_pruefe_booking_verordnung_owner_execute_revoke
+--                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
+--                    davor: 20260901094002_zuzahlung_korrektur_business_id_trigger
 --                    davor: 20260901093344_zuzahlung_korrektur_search_path_haerten
 --                    davor: 20260901093310_zuzahlung_korrektur
 --                    (Zeitstempel stammen aus supabase_migrations.schema_migrations.
@@ -27,8 +29,11 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            82 Tabellen · 1210 Spalten · 155 RLS-Policies
---                    295 Indizes · 60 Trigger · 63 Funktionen · 4 Views
+-- UMFANG:            82 Tabellen · 1211 Spalten · 155 RLS-Policies
+--                    297 Indizes · 63 Trigger · 64 Funktionen · 4 Views
+--                    (03.09.2026: die Triggerzahl stand hier auf 60 und war
+--                     seit zwei Migrationen zu niedrig — gegen die Live-DB
+--                     nachgezählt, nicht fortgeschrieben.)
 -- ZÄHLWEISE:         Tabellen = BASE TABLE in `public` · Spalten =
 --                    information_schema.columns in `public` (Views
 --                    eingeschlossen) · Funktionen und Indizes OHNE die
@@ -369,11 +374,13 @@ CREATE TABLE bookings (
   cancellation_reason text
   rezeptart text
   payment_method text
+  verordnung_id uuid
 );
 --   CHECK status IN (confirmed, cancelled, completed, pending, no_show)
 --   CHECK fahrt_status IN (fahrt_started, fahrt_arrived, fahrt_return_pending, fahrt_completed)
 --   FK group_parent_id -> bookings(id) ON DELETE CASCADE (Gruppentermine)
 --   FK lead_id -> leads(id) · vehicle_id -> vehicles(id) · service_id -> services(id)
+--   FK verordnung_id -> verordnungen(id) ON DELETE SET NULL   (Podologie, 03.09.2026)
 --   PK (id)
 --   ★ EXCLUDE no_overlapping_bookings USING gist
 --       (user_id WITH =, tstzrange(start_time, end_time, '[)') WITH &&)
@@ -381,6 +388,23 @@ CREATE TABLE bookings (
 --     → Doppelbuchung ist auf DB-Ebene unmöglich. Nicht im Code nachbauen.
 --   ★ In der Realtime-Publication (Übersicht aktualisiert sich ohne Reload).
 --   TRIGGER: fn_check_booking_closed_day() · Telefon-Normalisierung · business_id-Default
+--            · pruefe_booking_verordnung_owner() (Owner-Riegel, siehe unten)
+--   ★ verordnung_id — PODOLOGIE-Topf. Bindet den Termin an die podologische
+--     Verordnung (seit 03.09.2026).
+--     ⚠️ Hier gehoert NIE eine `prescriptions.id` hinein — Physio/Ergo/Logo
+--        verknuepfen ueber `prescription_sessions.booking_id`, weil es dort
+--        ein Einheiten-Hauptbuch gibt und die Frage „welche der 18 Einheiten
+--        hat dieser Termin erfuellt?" an `bookings` gar nicht ausdrueckbar
+--        waere. Begruendung ausfuehrlich in db/REGISTER.md.
+--     ⚠️ SET NULL ist Pflicht: api/dsgvo.js loescht `verordnungen` VOR
+--        `bookings`; mit RESTRICT braeche die DSGVO-Loeschkette.
+--     ⚠️ Owner-Riegel noetig, weil ein Fremdschluessel KEINE RLS prueft:
+--        trg_booking_verordnung_owner vergleicht verordnungen.owner_id mit
+--        bookings.owner_id. Ohne ihn liesse sich die Id einer fremden
+--        Verordnung in einen eigenen Termin schreiben.
+--     ⚠️ Sichtbarkeit ist asymmetrisch: `bookings` hat Team-Zugriff,
+--        `verordnungen` nicht. Angestellte sehen die Spalte, aber nicht die
+--        Verordnung dahinter (bekannte offene Produktfrage, db/README.md).
 
 CREATE TABLE breaks (
   id uuid NOT NULL DEFAULT gen_random_uuid()

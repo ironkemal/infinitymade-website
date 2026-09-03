@@ -1,5 +1,5 @@
 /**
- * verordnung-liste.js — die Seite „Verordnungen".
+ * verordnung-liste.js — die obere Hälfte der Seite „Verordnungen".
  *
  * Kommt aus `dashboard.js` (`loadVerordnungen`) hierher, weil dort zwei Dinge
  * dazukommen mussten und die Datei nicht wachsen darf (Konsey 2026-08-13):
@@ -14,27 +14,54 @@
  *
  *   2. Der Klick auf die Zeile. Eine gespeicherte Verordnung liess sich nicht
  *      mehr aufmachen; was in der Muster-13-Maske eingetragen worden war, war
- *      nach dem Speichern nur noch auf dem Papier zu finden. Die Zeile öffnet
- *      jetzt `module/verordnung-detail.js`.
+ *      nach dem Speichern nur noch auf dem Papier zu finden.
  *
- * Topf: `prescriptions` (Physio · Ergo · Logopädie). Podologie hat mit
- * `verordnungen` einen eigenen Topf und eine eigene Liste in der
- * Podologie-Abrechnung — die beiden werden bewusst nicht zusammengelegt.
+ * Umbau in zwei Hälften (Kemal, 31.08.2026)
+ * ─────────────────────────────────────────
+ *   „Wir brauchen eine ganz große Reform, wir müssen die Seite in zwei Hälften
+ *    teilen. Über der Hälfte soll in der Reihe Nachname, Vorname [stehen],
+ *    Datum, Rezeptnummer … dann Status bereit"
+ *
+ * Diese Datei ist die obere Hälfte: eine Zeile je Verordnung mit genau den
+ * genannten Feldern. Die untere Hälfte — Verordnungsdaten, Verschreibung,
+ * Termine — steht in `module/verordnung-detail.js`; hier wird sie nur
+ * angestossen. Die Auswahl bleibt sichtbar markiert, damit oben und unten
+ * erkennbar dasselbe gemeint ist.
+ *
+ * Beide Töpfe, nicht einer
+ * ────────────────────────
+ * Bis zum Umbau las diese Seite ausschliesslich `prescriptions` (Physio · Ergo
+ * · Logopädie). Für einen Podologen war sie damit LEER — seine Verordnungen
+ * liegen in `verordnungen` und waren nur über die Podologie-Abrechnung
+ * erreichbar. Genau deshalb kannte die Seite auch die Zustände nicht, nach
+ * denen gefragt wurde („in Behandlung" / „bereit zur Abrechnung"): das sind
+ * Werte des Podologie-Topfes.
+ *
+ * Geladen wird über `ladeAktiveVerordnungen` (module/verordnung-uebersicht.js),
+ * die beide Töpfe schon zusammenführt — hier praxisweit und ohne Filter auf
+ * „läuft noch". Eine vierte Ladefunktion wäre die dritte Stelle gewesen, an der
+ * dieselbe Zusammenführung steht.
  */
 
-import { belegnummerRosette } from './belegnummer.js?v=20260817';
-import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260817';
-
-const STATUS_LABEL = {
-  parsed: 'Erfasst', confirmed: 'Bestätigt', in_therapy: 'In Therapie',
-  completed: 'Abgeschlossen', billed: 'Abgerechnet', cancelled: 'Storniert'
-};
-const STATUS_COLOR = {
-  parsed: '#f59e0b', confirmed: '#22c55e', in_therapy: '#38bdf8',
-  completed: '#64748b', billed: '#3b82f6', cancelled: '#ef4444'
-};
+import { ladeAktiveVerordnungen } from './verordnung-uebersicht.js?v=20260902';
+import { statusBadgeGross } from './abrechnungsstatus.js?v=20260902';
+import { zeigeVerordnungDetail } from './verordnung-detail.js?v=20260902';
+import { on } from './signal.js?v=20260813';
 
 const SPALTEN = 7;
+
+const QUELLE_LABEL = { physio: 'Heilmittel', podologie: 'Podologie' };
+const QUELLE_FARBE = { physio: '#7c3aed', podologie: '#15803d' };
+
+/**
+ * Die aktuell aufgeschlagene Verordnung. Modulweit, weil es genau EINE untere
+ * Hälfte gibt; nach dem Neuladen der Liste wird sie wieder markiert, damit ein
+ * Speichern die Auswahl nicht wegwirft.
+ */
+let _auswahl = null;   // { quelle, id } | null
+
+/** Der Zuhörer auf `verordnungen:changed` wird genau einmal registriert. */
+let _hoertZu = false;
 
 /**
  * Verordnungsliste laden und zeichnen.
@@ -55,69 +82,103 @@ export async function verordnungenListeLaden(ctx) {
 
   const btn = document.getElementById('vordNeueBtn');
   if (btn && ctx.onNeu) btn.onclick = ctx.onNeu;
+
+  // Wer schreibt, meldet — hier wird zugehört. Ändert jemand die verordnete
+  // Menge in der unteren Hälfte oder den Status aus der Patientenliste heraus,
+  // zieht die Liste von selbst nach, statt bis zum nächsten Panelwechsel das
+  // Alte zu zeigen. Einmal registrieren, nicht bei jedem Laden.
+  if (!_hoertZu) {
+    _hoertZu = true;
+    on('verordnungen:changed', () => {
+      if (document.getElementById('vordTbody')?.isConnected) verordnungenListeLaden(ctx);
+    });
+  }
   // Einmal verdrahten, nicht bei jedem Laden erneut — sonst sammeln sich
   // Handler auf demselben Knopf an.
   const zu = document.getElementById('vordDetailClose');
   if (zu && !zu.dataset.verdrahtet) {
     zu.dataset.verdrahtet = '1';
-    zu.addEventListener('click', () => {
-      const p = document.getElementById('vordDetailPanel');
-      if (p) p.hidden = true;
-    });
+    zu.addEventListener('click', () => auswahlAufheben(escapeHtml));
   }
 
-  // `patientennummer` gehört in den Join — ohne sie liesse sich die Nummer
-  // nicht zusammensetzen, und `belegnummer` ist bei jeder noch nicht
-  // abgerechneten Verordnung leer.
-  const { data, error } = await supabase
-    .from('prescriptions')
-    .select('id, patient_id, ausstellungsdatum, icd10, heilmittel, anzahl_einheiten, status, gueltig_bis, belegnummer, verordnungsnummer, leads!patient_id(first_name, last_name, patientennummer)')
-    .eq('owner_id', ownerId)
-    .order('ausstellungsdatum', { ascending: false })
-    .limit(200);
+  const liste = await ladeAktiveVerordnungen(supabase, { ownerId, nurAktive: false });
 
-  if (error) { console.error('[verordnungenListeLaden]', error); tbody.innerHTML = ''; return; }
-
-  if (!data || data.length === 0) {
+  if (!liste.length) {
     tbody.innerHTML = '';
     if (empty) empty.hidden = false;
     return;
   }
   if (empty) empty.hidden = true;
 
-  tbody.innerHTML = data.map(rx => {
-    const patName = escapeHtml(
-      `${rx.leads?.first_name || ''} ${rx.leads?.last_name || ''}`.trim() || '—'
-    );
-    const rosette = belegnummerRosette(rx, {
-      patientennummer: rx.leads?.patientennummer,
-      escapeHtml,
-      titel: 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei'
-    });
-    const date = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
-    const gueltig = rx.gueltig_bis ? new Date(rx.gueltig_bis).toLocaleDateString('de-DE') : '—';
-    const st = rx.status || 'parsed';
-    const stLabel = STATUS_LABEL[st] || st;
-    const stColor = STATUS_COLOR[st] || '#94a3b8';
-    return `<tr class="vord-row" data-rx-id="${rx.id}" style="cursor:pointer" title="Verordnung öffnen">
-      <td><span style="display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;"><span style="font-weight:600;color:var(--text-main)">${patName}</span>${rosette}</span></td>
-      <td style="white-space:nowrap">${date}</td>
-      <td><code style="font-size:12px">${escapeHtml(rx.icd10 || '—')}</code></td>
-      <td>${escapeHtml(rx.heilmittel || '—')}</td>
-      <td style="text-align:center">${rx.anzahl_einheiten ?? '—'}</td>
-      <td style="white-space:nowrap">${gueltig}</td>
-      <td><span style="font-size:11px;font-weight:600;color:${stColor}">${escapeHtml(stLabel)}</span></td>
-    </tr>`;
-  }).join('');
+  tbody.innerHTML = liste.map(v => zeileHtml(v, escapeHtml)).join('');
 
   tbody.querySelectorAll('.vord-row').forEach(row => {
-    row.addEventListener('click', () => zeigeVerordnungDetail({
-      supabase,
-      rxId: row.dataset.rxId,
-      panel: document.getElementById('vordDetailPanel'),
-      titel: document.getElementById('vordDetailName'),
-      inhalt: document.getElementById('vordDetailContent'),
-      escapeHtml
-    }));
+    row.addEventListener('click', () => {
+      oeffne({ supabase, escapeHtml, quelle: row.dataset.quelle, id: row.dataset.vordId });
+    });
+  });
+
+  // Nach einem Neuladen die vorherige Auswahl wieder anzeichnen. Ohne das
+  // stünde unten weiter eine Verordnung, die oben nicht mehr markiert ist.
+  if (_auswahl) markiere(_auswahl);
+}
+
+function zeileHtml(v, esc) {
+  const datum = v.datum ? new Date(v.datum).toLocaleDateString('de-DE') : '—';
+  const farbe = QUELLE_FARBE[v.quelle] || 'var(--text-muted)';
+  const gewaehlt = _auswahl && _auswahl.id === v.id && _auswahl.quelle === v.quelle;
+
+  // Ohne Belegnummer bleibt die Zelle leer statt „—": eine Verordnung ohne
+  // Patientenakte hat wirklich keine Nummer (der Trigger vergibt sie erst mit
+  // `lead_id`), und ein Platzhalter läse sich wie eine vorhandene.
+  const nummer = v.nummerText
+    ? `<code style="font-size:12px;color:var(--text-main);">${esc(v.nummerText)}</code>`
+    : `<span style="font-size:11px;color:var(--warning,#f59e0b);" title="Diese Verordnung hängt an keiner Patientenakte — deshalb vergibt die Datenbank keine Nummer.">ohne Akte</span>`;
+
+  const zaehler = v.verordnet
+    ? `${v.erbracht} / ${v.verordnet}`
+    : '—';
+
+  return `<tr class="vord-row${gewaehlt ? ' vord-row-gewaehlt' : ''}"
+      data-vord-id="${esc(v.id)}" data-quelle="${esc(v.quelle)}"
+      style="cursor:pointer;${gewaehlt ? 'background:var(--bg-card);' : ''}" title="Verordnung öffnen">
+    <td style="font-weight:600;color:var(--text-main);">${esc(v.nachname || '—')}</td>
+    <td style="color:var(--text-main);">${esc(v.vorname || '—')}</td>
+    <td style="white-space:nowrap;">${datum}</td>
+    <td style="white-space:nowrap;">${nummer}</td>
+    <td><span style="font-size:11px;font-weight:700;color:${farbe};text-transform:uppercase;letter-spacing:.04em;">${QUELLE_LABEL[v.quelle] || ''}</span></td>
+    <td style="text-align:center;white-space:nowrap;color:var(--text-muted);">${zaehler}</td>
+    <td>${statusBadgeGross(v.quelle, v.status)}</td>
+  </tr>`;
+}
+
+/** Eine Verordnung in der unteren Hälfte aufschlagen. */
+function oeffne({ supabase, escapeHtml, quelle, id }) {
+  _auswahl = { quelle, id };
+  markiere(_auswahl);
+  return zeigeVerordnungDetail({
+    supabase,
+    quelle,
+    verordnungId: id,
+    titel: document.getElementById('vordDetailName'),
+    inhalt: document.getElementById('vordDetailContent'),
+    escapeHtml,
+  });
+}
+
+function auswahlAufheben(esc) {
+  _auswahl = null;
+  markiere(null);
+  const titel = document.getElementById('vordDetailName');
+  const inhalt = document.getElementById('vordDetailContent');
+  if (titel) titel.textContent = 'Verordnung';
+  if (inhalt) inhalt.innerHTML = '<span style="color:var(--text-muted);">Wählen Sie oben eine Verordnung aus.</span>';
+}
+
+function markiere(auswahl) {
+  document.querySelectorAll('#vordTbody .vord-row').forEach(r => {
+    const treffer = !!auswahl && r.dataset.vordId === auswahl.id && r.dataset.quelle === auswahl.quelle;
+    r.classList.toggle('vord-row-gewaehlt', treffer);
+    r.style.background = treffer ? 'var(--bg-card)' : '';
   });
 }

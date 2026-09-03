@@ -62,7 +62,7 @@
 
 'use strict';
 
-import { belegnummerRosette } from './belegnummer.js?v=20260817';
+import { belegnummerRosette, belegnummerText } from './belegnummer.js?v=20260817';
 
 /** Physio-Sitzungen mit diesem Status gelten als erbracht. */
 const PHYSIO_ERBRACHT = ['done', 'completed'];
@@ -173,18 +173,34 @@ export function istBehandlungseinheit(beh) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * Alle laufenden Verordnungen eines Patienten — aus BEIDEN Töpfen.
+ * Alle Verordnungen aus BEIDEN Töpfen — je nach Aufruf für einen Patienten
+ * oder für die ganze Praxis.
+ *
+ * Zwei Betriebsarten, EINE Funktion
+ * ─────────────────────────────────
+ * Ursprünglich beantwortete diese Funktion genau eine Frage: „was läuft bei
+ * DIESEM Patienten?" (Akte). Seit dem Umbau der Seite „Verordnungen"
+ * (Kemal, 31.08.2026) wird dieselbe Zusammenführung ein zweites Mal gebraucht,
+ * nur praxisweit und ohne Filter auf „aktiv". Das ist keine zweite Frage,
+ * sondern dieselbe mit weiterem Ausschnitt — deshalb zwei Parameter statt
+ * einer vierten Ladefunktion. Die drei bestehenden Lader und warum sie sich
+ * unterscheiden, stehen im Kopf dieser Datei.
  *
  * @param {object} sb        Supabase-Client
  * @param {object} opts
  * @param {string} opts.ownerId
- * @param {string} opts.leadId   Patient (`leads.id`)
+ * @param {string} [opts.leadId]   Patient (`leads.id`). Fehlt er, wird
+ *        praxisweit geladen — dann tragen die Zeilen den Patientennamen.
+ * @param {boolean} [opts.nurAktive=true]  `false` lädt auch abgeschlossene,
+ *        abgerechnete und stornierte Verordnungen (Seite „Verordnungen").
+ * @param {number} [opts.limit=200]  greift nur praxisweit.
  * @returns {Promise<Array>} normalisierte Liste, neueste zuerst:
  *   [{ id, quelle:'physio'|'podologie', datum, titel, diagnose, nummer,
- *      erbracht, verordnet, status, dringend, hausbesuch, ziel, _row }]
+ *      nachname, vorname, patientennummer, leadId,
+ *      erbracht, verordnet, status, dringend, hausbesuch, ziel }]
  */
-export async function ladeAktiveVerordnungen(sb, { ownerId, leadId } = {}) {
-  if (!sb || !ownerId || !leadId) return [];
+export async function ladeAktiveVerordnungen(sb, { ownerId, leadId, nurAktive = true, limit = 200 } = {}) {
+  if (!sb || !ownerId) return [];
 
   const frag = async (q) => {
     const { data, error } = await q;
@@ -192,38 +208,63 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId } = {}) {
     return data || [];
   };
 
-  // Beide Töpfe parallel. `patientennummer` kommt mit, weil die Belegnummer
-  // (<Patienten-Nr.>-<Verordnungs-Nr.>) sonst nicht zusammengesetzt werden kann
-  // — sie steht bis zur ersten Abrechnung nicht in der Zeile.
+  // Beide Töpfe parallel. Der `leads`-Verbund kommt IMMER mit, aus zwei
+  // Gründen: praxisweit steht der Name in der Zeile (die Liste zeigt Nachname
+  // und Vorname getrennt), und die Belegnummer (<Patienten-Nr.>-<Verordnungs-
+  // Nr.>) lässt sich ohne `patientennummer` nicht zusammensetzen — sie steht
+  // bis zur ersten Abrechnung nicht in der Zeile.
+  let rxQ = sb.from('prescriptions')
+    .select('id, patient_id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
+            'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
+            'belegnummer, verordnungsnummer, prescription_sessions(id, status), ' +
+            'leads!patient_id(first_name, last_name, patientennummer)')
+    .eq('owner_id', ownerId);
+  let voQ = sb.from('verordnungen')
+    .select('id, lead_id, patient_name, ausstellungsdatum, diagnosegruppe, icd10, behandlungseinheiten, ' +
+            'therapiefrequenz, status, dringend, hausbesuch, rezeptart, behandlungsanlass, ' +
+            'heilmittel_items, belegnummer, verordnungsnummer, ' +
+            'leads!lead_id(first_name, last_name, patientennummer)')
+    .eq('owner_id', ownerId);
+
+  if (leadId) {
+    rxQ = rxQ.eq('patient_id', leadId);
+    voQ = voQ.eq('lead_id', leadId);
+  } else {
+    rxQ = rxQ.limit(limit);
+    voQ = voQ.limit(limit);
+  }
+
+  // Der Filter „läuft noch" gilt nur in der Akte. Die Seite „Verordnungen"
+  // zeigt auch Abgerechnetes — dort ist gerade der Statuswechsel die
+  // Information, und eine Verordnung, die nach der Abrechnung aus der Liste
+  // verschwindet, sieht aus wie ein Datenverlust.
+  if (nurAktive) {
+    rxQ = rxQ.not('status', 'in', `(${PHYSIO_ABGESCHLOSSEN.map(s => `"${s}"`).join(',')})`);
+    voQ = voQ.in('status', PODO_AKTIV);
+  }
+
   const [rxs, vords, lead] = await Promise.all([
-    frag(sb.from('prescriptions')
-      .select('id, ausstellungsdatum, gueltig_bis, diagnosegruppe, icd10, heilmittel, ' +
-              'anzahl_einheiten, frequenz, status, is_dringend, hausbesuch, ' +
-              'belegnummer, verordnungsnummer, prescription_sessions(id, status)')
-      .eq('owner_id', ownerId)
-      .eq('patient_id', leadId)
-      .not('status', 'in', `(${PHYSIO_ABGESCHLOSSEN.map(s => `"${s}"`).join(',')})`)
-      .order('ausstellungsdatum', { ascending: false })),
-    frag(sb.from('verordnungen')
-      .select('id, ausstellungsdatum, diagnosegruppe, icd10, behandlungseinheiten, ' +
-              'therapiefrequenz, status, dringend, hausbesuch, rezeptart, behandlungsanlass, ' +
-              'heilmittel_items, belegnummer, verordnungsnummer')
-      .eq('owner_id', ownerId)
-      .eq('lead_id', leadId)
-      .in('status', PODO_AKTIV)
-      .order('ausstellungsdatum', { ascending: false })),
-    (async () => {
-      const { data } = await sb.from('leads').select('patientennummer').eq('id', leadId).maybeSingle();
-      return data || null;
-    })(),
+    frag(rxQ.order('ausstellungsdatum', { ascending: false })),
+    frag(voQ.order('ausstellungsdatum', { ascending: false })),
+    leadId
+      ? (async () => {
+          const { data } = await sb.from('leads').select('patientennummer').eq('id', leadId).maybeSingle();
+          return data || null;
+        })()
+      : Promise.resolve(null),
   ]);
 
   // Behandlungen erst jetzt, denn sie hängen an der Verordnung und nicht am
   // Patienten — `podologie_behandlungen` führt kein lead_id.
   let behsProVord = new Map();
   if (vords.length) {
+    // `hpnr_codes` MUSS mitkommen: `istBehandlungseinheit` entscheidet daran,
+    // ob eine Zeile gegen die verordnete Menge zählt (eine Eingangsbefundung
+    // allein tut das nicht). Ohne die Spalte sah die Funktion immer `undefined`
+    // und zählte jede Zeile mit — die Regel war zwar geschrieben, wirkte hier
+    // aber nie. Gefunden beim Umbau der Seite „Verordnungen" (02.09.2026).
     const behs = await frag(sb.from('podologie_behandlungen')
-      .select('id, verordnung_id, behandlungsdatum')
+      .select('id, verordnung_id, behandlungsdatum, hpnr_codes')
       .eq('owner_id', ownerId)
       .in('verordnung_id', vords.map(v => v.id)));
     for (const b of behs) {
@@ -236,6 +277,8 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId } = {}) {
 
   const ausPhysio = rxs.map(rx => {
     const { erbracht, verordnet } = physioZaehler(rx);
+    const p = rx.leads || {};
+    const pnr = p.patientennummer ?? patientennummer;
     return {
       id: rx.id,
       quelle: 'physio',
@@ -244,7 +287,12 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId } = {}) {
       titel: rx.heilmittel || rx.diagnosegruppe || 'Verordnung',
       diagnose: [rx.icd10, rx.diagnosegruppe].filter(Boolean).join(' · '),
       frequenz: rx.frequenz || '',
-      nummer: belegnummerRosette(rx, { patientennummer, escapeHtml: esc, titel: BELEG_TITEL }),
+      nummer: belegnummerRosette(rx, { patientennummer: pnr, escapeHtml: esc, titel: BELEG_TITEL }),
+      nummerText: belegnummerText(rx, { patientennummer: pnr }),
+      nachname: p.last_name || '',
+      vorname: p.first_name || '',
+      patientennummer: pnr ?? null,
+      leadId: rx.patient_id || null,
       erbracht, verordnet,
       status: rx.status,
       dringend: !!rx.is_dringend,
@@ -257,6 +305,9 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId } = {}) {
     // `icd10` ist im Podologie-Topf ein text[], im Physio-Topf eine Spalte —
     // beim Umschreiben leicht zu verwechseln (db/SCHEMA.sql, Warnung dort).
     const icd = Array.isArray(v.icd10) ? v.icd10.filter(Boolean).join(', ') : (v.icd10 || '');
+    const p = v.leads || {};
+    const pnr = p.patientennummer ?? patientennummer;
+    const ausName = p.last_name ? null : nameAusFreitext(v.patient_name);
     return {
       id: v.id,
       quelle: 'podologie',
@@ -265,7 +316,12 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId } = {}) {
       titel: podoTitel(v),
       diagnose: [icd, v.diagnosegruppe].filter(Boolean).join(' · '),
       frequenz: v.therapiefrequenz || '',
-      nummer: belegnummerRosette(v, { patientennummer, escapeHtml: esc, titel: BELEG_TITEL }),
+      nummer: belegnummerRosette(v, { patientennummer: pnr, escapeHtml: esc, titel: BELEG_TITEL }),
+      nummerText: belegnummerText(v, { patientennummer: pnr }),
+      nachname: p.last_name || ausName?.nachname || '',
+      vorname:  p.first_name || ausName?.vorname  || '',
+      patientennummer: pnr ?? null,
+      leadId: v.lead_id || null,
       erbracht, verordnet,
       status: v.status,
       dringend: !!v.dringend,
@@ -278,6 +334,29 @@ export async function ladeAktiveVerordnungen(sb, { ownerId, leadId } = {}) {
 }
 
 const BELEG_TITEL = 'Patientennummer-Verordnungsnummer — dieselbe Nummer steht auf Rechnung und Abrechnungsdatei';
+
+/**
+ * Notbehelf für Podologie-Verordnungen OHNE Patientenakte.
+ *
+ * `verordnungen.patient_name` ist ein Freitextfeld aus der Zeit, als eine
+ * Verordnung ohne `lead_id` angelegt werden konnte; es steht dort in der Form
+ * „Werner Müller" oder „Werner Müller · 1955-12-19". Getrennte Spalten für
+ * Nach- und Vorname gibt es dort nicht.
+ *
+ * Geraten wird bewusst nur das Nötigste — letztes Wort = Nachname, Rest =
+ * Vorname. Bei „von der Heide" ist das falsch, und das ist hinnehmbar: die
+ * Zeile ist ohnehin ein Altfall, der an eine Akte gebunden gehört (ohne
+ * `lead_id` vergibt der Trigger auch keine Verordnungsnummer, die Belegnummer
+ * bleibt dann leer). Neu entstehen solche Zeilen nicht mehr —
+ * `podologie-abrechnung.js` verlangt bei GKV die Auswahl aus der Kartei.
+ */
+function nameAusFreitext(roh) {
+  const text = String(roh || '').split('·')[0].trim();
+  if (!text) return null;
+  const teile = text.split(/\s+/);
+  if (teile.length === 1) return { nachname: teile[0], vorname: '' };
+  return { nachname: teile[teile.length - 1], vorname: teile.slice(0, -1).join(' ') };
+}
 
 /**
  * Überschrift einer Podologie-Verordnung. Die Diagnosegruppe ist das, worüber

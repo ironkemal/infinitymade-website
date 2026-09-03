@@ -103,6 +103,116 @@ export function statusInfo(key) {
   return BY_KEY.get(key) || BY_KEY.get('aktiv');
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Der zweite Topf: `prescriptions` (Physio · Ergo · Logopädie)
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Anlass: Beim Umbau der Seite „Verordnungen" in zwei Hälften (Kemal,
+   31.08.2026) stehen beide Töpfe erstmals in EINER Liste untereinander. Vorher
+   wurde `prescriptions.status` an zwei Stellen getrennt übersetzt —
+   `verordnung-liste.js` kannte 6 Zustände mit Farben, `verordnung-detail.js`
+   kannte 8 ohne Farben. Dieselbe Verordnung konnte oben in der Zeile und unten
+   im Detail verschieden heissen.
+
+   Warum die Zustände NICHT in STATUS oben einsortiert werden: STATUS ist die
+   Zustandsmaschine des Podologie-Topfes; `UEBERGAENGE` und der Statusdialog
+   hängen daran, und der Server (`verordnung-status.routes.js`) kennt genau
+   diese Schlüssel. Ein `parsed` dort hinein würde im Statusdialog einer
+   Podologie-Verordnung als anklickbares Ziel auftauchen, das der Server
+   ablehnt. Zwei Vokabulare, eine Darstellung — deshalb dieselbe Form
+   ({key,label,kurz,farbe,bg,hilfe}) und ein gemeinsamer Zeichner.
+
+   Die Beschriftungen sind bewusst an den Podologie-Topf angeglichen, wo die
+   Bedeutung dieselbe ist: `in_therapy` heisst „In Behandlung" wie `aktiv`,
+   `completed` heisst „Bereit zur Abrechnung" wie `abrechenbar`. Für den
+   Anwender ist es dieselbe Lage, nur ein anderer Fachbereich.
+*/
+const PHYSIO_STATUS = [
+  {
+    key: 'parsed', label: 'Erfasst', kurz: 'Erfasst',
+    farbe: '#b45309', bg: 'rgba(180,83,9,0.14)',
+    hilfe: 'Aus dem Rezept gelesen, noch nicht geprüft und bestätigt.',
+  },
+  {
+    key: 'confirmed', label: 'Bestätigt', kurz: 'Bestätigt',
+    farbe: '#0f766e', bg: 'rgba(15,118,110,0.14)',
+    hilfe: 'Geprüft und übernommen. Die Behandlungsserie hat noch nicht begonnen.',
+  },
+  {
+    key: 'in_therapy', label: 'In Behandlung', kurz: 'In Behandlung',
+    farbe: '#2563eb', bg: 'rgba(37,99,235,0.14)',
+    hilfe: 'Die Behandlungsserie läuft noch.',
+  },
+  {
+    // Altbestand: dieselbe Bedeutung wie `in_therapy`, nur ältere Schreibweise.
+    key: 'active', label: 'In Behandlung', kurz: 'In Behandlung',
+    farbe: '#2563eb', bg: 'rgba(37,99,235,0.14)',
+    hilfe: 'Die Behandlungsserie läuft noch.',
+  },
+  {
+    key: 'completed', label: 'Bereit zur Abrechnung', kurz: 'Bereit',
+    farbe: '#15803d', bg: 'rgba(21,128,61,0.14)',
+    hilfe: 'Alle Einheiten sind erbracht. Die Verordnung wartet auf die Abrechnung.',
+  },
+  {
+    key: 'billed', label: 'Abgerechnet', kurz: 'Abgerechnet',
+    farbe: '#7c3aed', bg: 'rgba(124,58,237,0.14)',
+    hilfe: 'Eingereicht. Rückmeldung der Kasse steht aus oder war fehlerfrei.',
+  },
+  {
+    // NICHT dasselbe wie eine Absetzung: hier hat die Praxis das erfasste
+    // Rezept verworfen, die Kasse hat gar nichts gesehen.
+    key: 'rejected', label: 'Abgelehnt', kurz: 'Abgelehnt',
+    farbe: '#b91c1c', bg: 'rgba(185,28,28,0.14)',
+    hilfe: 'Beim Prüfen verworfen — nicht zu verwechseln mit einer Absetzung durch die Kasse.',
+  },
+  {
+    key: 'cancelled', label: 'Storniert', kurz: 'Storniert',
+    farbe: '#6b7280', bg: 'rgba(107,114,128,0.14)',
+    hilfe: 'Von der Praxis zurückgezogen.',
+  },
+];
+
+const PHYSIO_BY_KEY = new Map(PHYSIO_STATUS.map(s => [s.key, s]));
+
+/**
+ * Statusbeschreibung für eine Verordnung aus BEIDEM Topf.
+ *
+ * @param {string} quelle  'physio' | 'podologie'
+ * @param {string} status  der rohe Spaltenwert
+ * @returns {{key:string,label:string,kurz:string,farbe:string,bg:string,hilfe:string}|null}
+ *          `null`, wenn gar kein Status vorliegt — dann bleibt die Zelle leer
+ *          statt „unbekannt" zu behaupten.
+ */
+export function verordnungStatusInfo(quelle, status) {
+  if (!status) return null;
+  const tabelle = quelle === 'podologie' ? BY_KEY : PHYSIO_BY_KEY;
+  return tabelle.get(status)
+      // Ein unbekannter Wert wird gezeigt, wie er in der Spalte steht. Ihn auf
+      // „In Behandlung" zu schönen wäre die gefährlichere Lüge: dann sähe eine
+      // Verordnung in unbekanntem Zustand wie eine laufende aus.
+      || { key: status, label: status, kurz: status,
+           farbe: 'var(--text-muted)', bg: 'transparent',
+           hilfe: 'Unbekannter Status — steht so in der Datenbank.' };
+}
+
+/**
+ * Die grosse Statusrosette für den Kopf der Verordnungsansicht.
+ *
+ * Kemal, 31.08.2026: „dann Status bereit" — aus zwei Metern Abstand muss ohne
+ * Hinsehen erkennbar sein, ob eine Verordnung noch läuft oder abgerechnet
+ * werden kann. Deshalb hier grösser und mit Rand, nicht die 11px-Variante der
+ * Listenzeile.
+ */
+export function statusBadgeGross(quelle, status) {
+  const s = verordnungStatusInfo(quelle, status);
+  if (!s) return '';
+  return `<span title="${escapeAttr(s.hilfe)}" style="display:inline-flex;align-items:center;`
+       + `font-size:13px;font-weight:700;padding:5px 14px;border-radius:14px;`
+       + `background:${s.bg};color:${s.farbe};border:1px solid ${s.farbe};white-space:nowrap;">`
+       + `${escapeHtml(s.label)}</span>`;
+}
+
 export function statusLabel(key) {
   return statusInfo(key).label;
 }

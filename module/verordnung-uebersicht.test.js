@@ -20,6 +20,7 @@ function fakeSb(tabellen) {
       eq: () => selbst,
       in: () => selbst,
       not: () => selbst,
+      limit: () => selbst,
       order: () => Promise.resolve(antwort),
       maybeSingle: () => Promise.resolve({ data: (tabellen[tabelle] || [])[0] || null, error: null }),
       then: (res) => res(antwort),
@@ -66,9 +67,57 @@ test('Podologie: erbracht ist die Zahl der dokumentierten Behandlungen', () => {
 
 /* ── Laden ────────────────────────────────────────────────────────────────── */
 
-test('ohne owner oder Patient wird gar nicht erst abgefragt', async () => {
-  assert.deepEqual(await ladeAktiveVerordnungen(fakeSb({}), { ownerId: 'o1' }), []);
+test('ohne owner wird gar nicht erst abgefragt', async () => {
+  // `leadId` ist seit dem Umbau der Seite „Verordnungen" (31.08.2026) optional:
+  // ohne ihn wird praxisweit geladen. Ohne `ownerId` dagegen fehlt die
+  // Mandantengrenze — dann wird nicht gefragt, nicht „alles" geliefert.
+  assert.deepEqual(await ladeAktiveVerordnungen(fakeSb({}), {}), []);
   assert.deepEqual(await ladeAktiveVerordnungen(null, OPTS), []);
+});
+
+test('praxisweit: ohne leadId kommen die Zeilen mit Nach- und Vorname', async () => {
+  // Die obere Hälfte der neuen Seite zeigt Nachname und Vorname in getrennten
+  // Spalten (Kemal, 31.08.2026) — beide müssen aus dem Verbund kommen.
+  const liste = await ladeAktiveVerordnungen(fakeSb({
+    prescriptions: [{
+      id: 'rx1', patient_id: 'p1', ausstellungsdatum: '2026-08-01', anzahl_einheiten: 6,
+      status: 'in_therapy', verordnungsnummer: 3,
+      leads: { first_name: 'Anna', last_name: 'Berger', patientennummer: 12 },
+    }],
+  }), { ownerId: 'o1' });
+
+  assert.equal(liste.length, 1);
+  assert.equal(liste[0].nachname, 'Berger');
+  assert.equal(liste[0].vorname, 'Anna');
+  assert.equal(liste[0].leadId, 'p1');
+  assert.equal(liste[0].nummerText, '12-3');
+});
+
+test('Podologie ohne Patientenakte: Name aus dem Freitextfeld, Nummer bleibt leer', async () => {
+  // Altbestand: `verordnungen.lead_id` ist NULL (2 von 4 Zeilen, Stand
+  // 02.09.2026). Dann vergibt der Trigger keine Verordnungsnummer — die
+  // Belegnummer muss LEER bleiben und darf nichts erfinden.
+  const [v] = await ladeAktiveVerordnungen(fakeSb({
+    verordnungen: [{
+      id: 'v1', lead_id: null, patient_name: 'Werner Müller · 1955-12-19',
+      ausstellungsdatum: '2026-08-02', behandlungseinheiten: 4, diagnosegruppe: 'DF2',
+      verordnungsnummer: null, belegnummer: null,
+    }],
+  }), { ownerId: 'o1' });
+
+  assert.equal(v.nachname, 'Müller');
+  assert.equal(v.vorname, 'Werner');
+  assert.equal(v.nummerText, '');
+  assert.equal(v.leadId, null);
+});
+
+test('nurAktive:false lädt auch Abgerechnetes — sonst sieht es wie Datenverlust aus', async () => {
+  const liste = await ladeAktiveVerordnungen(fakeSb({
+    prescriptions: [{ id: 'rx1', ausstellungsdatum: '2026-07-01', status: 'billed', anzahl_einheiten: 6 }],
+    verordnungen: [{ id: 'v1', ausstellungsdatum: '2026-07-02', status: 'abgerechnet', behandlungseinheiten: 4 }],
+  }), { ownerId: 'o1', nurAktive: false });
+
+  assert.equal(liste.length, 2);
 });
 
 test('beide Töpfe kommen in EINE Liste, neueste zuerst', async () => {

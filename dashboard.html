@@ -1398,7 +1398,18 @@
           </div>
         </section>
 
-        <!-- ===== PANEL: VERORDNUNGEN (Physio / Praxis) ===== -->
+        <!-- ===== PANEL: VERORDNUNGEN =====
+             Zwei Hälften (Kemal, 31.08.2026): oben die Liste — Nachname,
+             Vorname, Datum, Belegnummer, grosse Statusrosette. Unten die
+             ausgewählte Verordnung: links ihre Daten, rechts (~25 %) die
+             Verschreibung und darunter die Termine.
+
+             Beide Verordnungstöpfe stehen hier zusammen: `prescriptions`
+             (Physio · Ergo · Logopädie) und `verordnungen` (Podologie). Bis
+             31.08.2026 zeigte die Seite nur den ersten — für einen Podologen
+             war sie deshalb leer. Die Töpfe bleiben in der Datenbank getrennt
+             (db/README.md §2), zusammengelegt ist nur die Ansicht.
+             Code: module/verordnung-liste.js + module/verordnung-detail.js -->
         <section class="panel" id="panel-verordnungen">
           <div class="panel-header">
             <div>
@@ -1407,17 +1418,19 @@
             </div>
             <button class="btn-primary" id="vordNeueBtn" style="flex-shrink:0;">+ Neue Verordnung</button>
           </div>
+
+          <!-- Obere Hälfte: die Liste -->
           <div class="card">
             <div class="table-wrap">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Patient</th>
+                    <th>Nachname</th>
+                    <th>Vorname</th>
                     <th>Datum</th>
-                    <th>ICD-10</th>
-                    <th>Heilmittel</th>
+                    <th>Belegnummer</th>
+                    <th>Bereich</th>
                     <th>Einheiten</th>
-                    <th>Gültig bis</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -1425,13 +1438,18 @@
               </table>
             </div>
             <div id="vordListEmpty" class="table-empty" hidden>Keine Verordnungen vorhanden.</div>
-            <!-- Detailansicht: öffnet sich beim Klick auf eine Zeile (module/verordnung-detail.js) -->
-            <div id="vordDetailPanel" hidden style="margin-top:12px;background:var(--bg-card-solid);border:1px solid var(--border);border-radius:12px;padding:18px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
-                <h3 id="vordDetailName" style="margin:0;font-size:16px;font-weight:700;color:var(--text-main);">—</h3>
-                <button id="vordDetailClose" class="btn-ghost btn-sm">✕ Schließen</button>
-              </div>
-              <div id="vordDetailContent" style="font-size:13px;color:var(--text-muted);">Laden…</div>
+          </div>
+
+          <!-- Untere Hälfte: die ausgewählte Verordnung.
+               Steht dauerhaft da (nicht `hidden`), damit die Seite beim
+               Auswählen nicht springt; ohne Auswahl trägt sie einen Hinweis. -->
+          <div class="card" id="vordDetailPanel" style="margin-top:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+              <h3 id="vordDetailName" style="margin:0;font-size:16px;font-weight:700;color:var(--text-main);">Verordnung</h3>
+              <button id="vordDetailClose" class="btn-ghost btn-sm">✕ Auswahl aufheben</button>
+            </div>
+            <div id="vordDetailContent" style="font-size:13px;color:var(--text-muted);">
+              Wählen Sie oben eine Verordnung aus.
             </div>
           </div>
         </section>

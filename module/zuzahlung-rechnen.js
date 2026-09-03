@@ -98,19 +98,57 @@ export function berechneZuzahlung({
 }) {
   const n = Math.max(0, Math.floor(Number(einheiten) || 0));
   const preis = Number(preisProEinheit) || 0;
-  const brutto = r2(n * preis);
+
+  // n gleiche Posten — das ist der Sonderfall der allgemeinen Rechnung unten.
+  // Vorher stand die Formel hier ein zweites Mal; sie steht jetzt nur noch an
+  // einer Stelle, damit die Podologie (mehrere verschiedene Positionen je
+  // Verordnung) nicht ihren eigenen Rechenweg bekommt.
+  const posten = Array.from({ length: n }, () => ({
+    preis,
+    zuzahlung: positionFrei ? null : zuzahlungProEinheit,
+    frei: positionFrei,
+  }));
+
+  return berechneZuzahlungAusPosten({ posten, befreit });
+}
+
+/**
+ * Zuzahlung aus einer Liste einzelner Posten.
+ *
+ * Spiegelt `calcAbrechnungsfallZuzahlung` aus dem Backend-Calculator: dort ist
+ * ein „Posten" ein Eintrag in `sessions` mit eigenem Preis und eigener
+ * Positions-Zuzahlung. Für Physio ist das n-mal dieselbe Position; in der
+ * Podologie stehen an einem Behandlungstag mehrere VERSCHIEDENE Positionen
+ * (78010 Behandlung + 78030 Befundung), jede mit eigenem Katalogbetrag.
+ * Genau deshalb reicht dort „Preis × Einheiten" nicht.
+ *
+ * Anlass: Beta-1, 31.08.2026 — „dass er die Summe schon automatisch ausrechnet".
+ *
+ * @param {object} opts
+ * @param {Array<{preis:number, zuzahlung:number|null, frei?:boolean}>} opts.posten
+ *        `zuzahlung: null` heisst NICHT „frei", sondern „unbekannt" ⇒ 10 %
+ *        Ersatzrechnung. Zuzahlungsfrei wird über `frei: true` gesagt — dieselbe
+ *        Dreiteilung wie in `resolvePositionZuzahlung` (Position gefunden mit
+ *        Betrag · gefunden und frei · gar nicht gefunden).
+ * @param {boolean} [opts.befreit]
+ * @returns {{brutto:number, prozent:number, pauschale:number, gesamt:number, befreit:boolean}}
+ */
+export function berechneZuzahlungAusPosten({ posten, befreit = false }) {
+  const liste = Array.isArray(posten) ? posten : [];
+  const brutto = r2(liste.reduce((s, p) => s + (Number(p?.preis) || 0), 0));
 
   if (befreit) {
     return { brutto, prozent: 0, pauschale: 0, gesamt: 0, befreit: true };
   }
 
-  // Je Sitzung runden und dann summieren — nicht summieren und dann runden.
+  // Je Posten runden und dann summieren — nicht summieren und dann runden.
   // Der Calculator tut es genauso (`sessions.reduce(… calcSessionZuzahlung)`);
   // bei halben Cents je Einheit laufen die beiden Reihenfolgen auseinander.
-  const jeEinheit = positionFrei
-    ? 0
-    : (zuzahlungProEinheit != null ? r2(zuzahlungProEinheit) : r2(preis * 0.10));
-  const prozent = r2(n * jeEinheit);
+  const prozent = r2(liste.reduce((s, p) => {
+    if (p?.frei) return s;
+    const preis = Number(p?.preis) || 0;
+    return s + (p?.zuzahlung != null ? r2(p.zuzahlung) : r2(preis * 0.10));
+  }, 0));
 
   // ⚠️ Offen (aus calculator.js übernommen, nicht hier entschieden): ob eine
   // ausschliesslich zuzahlungsfreie Verordnung die 10-€-Pauschale trotzdem
@@ -149,6 +187,62 @@ export function zuzahlungFuerRezept(rx, position) {
     befreit: !!rx?.zuzahlung_befreit,
   });
   return { ...betrag, einheiten, erbracht, verordnet: Number(rx?.anzahl_einheiten) || 0 };
+}
+
+/**
+ * Adapter für den Podologie-Topf: eine `verordnungen`-Zeile plus ihre
+ * dokumentierten Behandlungen ergeben Summe und Zuzahlung.
+ *
+ * Beta-1, 31.08.2026: „so hinbekommen, dass die Daten direkt auch mit dieser
+ * Datenbank verbunden sind und dass er die Summe schon automatisch ausrechnet."
+ * Gemeint ist der Kontrollblick VOR der Abrechnung: kommen an einem Tag
+ * podologische Behandlung und Befundung zusammen, stand der Gesamtbetrag
+ * bisher nirgends.
+ *
+ * Anders als im Physio-Topf wird hier NICHT über Einheiten gerechnet, sondern
+ * über die tatsächlich dokumentierten Positionen — `podologie_behandlungen`
+ * entsteht erst beim Behandeln und trägt die erbrachten HPNR-Codes. Das ist
+ * derselbe Weg, den das Backend beim Aufbau der DTA-Positionen geht
+ * (`mapVerordnungToDtaShape`: Behandlung × `hpnr_codes` flachklopfen).
+ *
+ * @param {object} vord   Zeile aus `verordnungen` (gelesen wird `zuzahlung_befreit`)
+ * @param {Array}  behandlungen  Zeilen aus `podologie_behandlungen`
+ * @param {(code:string, datum:string) => ({preis:number, zuzahlung:number|null, label?:string}|null)} findePosition
+ *        Katalogauflösung zum Behandlungsdatum. Der Katalog wird bewusst NICHT
+ *        hier geladen: diese Datei bleibt rein rechnend und damit testbar gegen
+ *        den Backend-Calculator.
+ * @returns {{brutto:number, prozent:number, pauschale:number, gesamt:number,
+ *           befreit:boolean, zeilen:Array, unbekannt:Array<string>}}
+ */
+export function zuzahlungFuerPodoVerordnung(vord, behandlungen, findePosition) {
+  const behs = Array.isArray(behandlungen) ? behandlungen : [];
+  const posten = [];
+  const proCode = new Map();
+  const unbekannt = new Set();
+
+  for (const b of behs) {
+    const codes = Array.isArray(b?.hpnr_codes) ? b.hpnr_codes.filter(Boolean) : [];
+    for (const rohCode of codes) {
+      const code = String(rohCode);
+      const pos = findePosition ? findePosition(code, b?.behandlungsdatum) : null;
+      if (!pos) unbekannt.add(code);
+
+      const preis = Number(pos?.preis) || 0;
+      // `zuzahlung: null` bei GEFUNDENER Position heisst zuzahlungsfrei
+      // (78220, 78530). Bei nicht gefundener Position heisst es „unbekannt"
+      // und die 10-%-Ersatzrechnung greift — die Unterscheidung stammt aus
+      // `resolvePositionZuzahlung` und ist bares Geld für den Patienten.
+      posten.push({ preis, zuzahlung: pos ? pos.zuzahlung : null, frei: !!pos && pos.zuzahlung == null });
+
+      const vorher = proCode.get(code) || { code, label: pos?.label || '', anzahl: 0, einzelpreis: preis, summe: 0, unbekannt: !pos };
+      vorher.anzahl += 1;
+      vorher.summe = r2(vorher.summe + preis);
+      proCode.set(code, vorher);
+    }
+  }
+
+  const betrag = berechneZuzahlungAusPosten({ posten, befreit: !!vord?.zuzahlung_befreit });
+  return { ...betrag, zeilen: [...proCode.values()], unbekannt: [...unbekannt] };
 }
 
 /**

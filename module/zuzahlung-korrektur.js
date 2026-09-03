@@ -31,7 +31,7 @@
  * — wer, wann, alter Wert, neuer Wert, Grund. Das ist Geld und GoBD.
  */
 
-import { korrekturErlaubt } from './zuzahlung-rechnen.js?v=20260901';
+import { korrekturErlaubt } from './zuzahlung-rechnen.js?v=20260902';
 
 const GRUENDE = [
   ['abbruch',                'Behandlung abgebrochen'],

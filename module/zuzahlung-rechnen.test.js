@@ -6,6 +6,7 @@ import {
   guthabenAus,
   korrekturErlaubt,
   zuzahlungFuerRezept,
+  zuzahlungFuerPodoVerordnung,
 } from './zuzahlung-rechnen.js';
 
 // Die Gegenprobe: dieselbe Frage an das Backend. Der Import greift über die
@@ -272,3 +273,108 @@ for (const fall of RIEGEL_FAELLE) {
     );
   });
 }
+
+/* ── Podologie: mehrere verschiedene Positionen an einem Tag ──────────────── */
+// Anlass: Beta-1, 31.08.2026 — podologische Behandlung + Befundung zusammen,
+// und nirgends stand die Summe. Im Physio-Topf ist eine Verordnung „n mal
+// dieselbe Position"; hier ist sie es nicht, und genau daran scheitert die
+// Rechnung „Preis × Einheiten".
+
+// Auszug aus api-backend/billing/codes/podologie_positions.js (ab 01.07.2025).
+const PODO_KATALOG = {
+  '78010': { preis: 35.16, zuzahlung: 3.52, label: 'Podologische Behandlung (klein)' },
+  '78030': { preis: 3.47,  zuzahlung: 0.35, label: 'Podologische Befundung' },
+  '78040': { preis: 22.48, zuzahlung: 2.25, label: 'Eingangsbefundung' },
+  // Zuzahlungsfrei laut Katalog — `zuzahlung: null` heisst hier FREI, nicht
+  // „unbekannt". Die Unterscheidung ist bares Geld für den Patienten.
+  '78530': { preis: 8.62,  zuzahlung: null, label: 'Therapiebericht' },
+};
+const findePodoPosition = (code) => PODO_KATALOG[code] || null;
+
+test('Podologie: Behandlung + Befundung an einem Tag ergeben eine Summe', () => {
+  const r = zuzahlungFuerPodoVerordnung(
+    { zuzahlung_befreit: false },
+    [{ behandlungsdatum: '2026-08-03', hpnr_codes: ['78010', '78030'] }],
+    findePodoPosition,
+  );
+  assert.equal(r.brutto, 38.63);          // 35,16 + 3,47
+  assert.equal(r.prozent, 3.87);          //  3,52 + 0,35
+  assert.equal(r.pauschale, 10.00);       // je Verordnung, gedeckelt
+  assert.equal(r.gesamt, 13.87);
+});
+
+test('Podologie: dieselbe Rechnung wie das Backend', () => {
+  // Zwei Behandlungstage, beim ersten zusätzlich die Eingangsbefundung.
+  const behs = [
+    { behandlungsdatum: '2026-08-03', hpnr_codes: ['78010', '78040'] },
+    { behandlungsdatum: '2026-08-17', hpnr_codes: ['78010', '78030'] },
+  ];
+  const vorne = zuzahlungFuerPodoVerordnung({ zuzahlung_befreit: false }, behs, findePodoPosition);
+
+  // So klopft das Backend Behandlung × hpnr_codes flach (mapVerordnungToDtaShape).
+  const sessions = behs.flatMap(b => b.hpnr_codes.map(c => ({
+    preis_eur: PODO_KATALOG[c].preis,
+    zuzahlung_eur_position: PODO_KATALOG[c].zuzahlung,
+    position_frei: PODO_KATALOG[c].zuzahlung == null,
+  })));
+  const hinten = calcAbrechnungsfallZuzahlung({
+    sessions,
+    patient: { geburtsdatum: '1970-01-01', befreit_im_jahr: false },
+    behandlungsende: '2026-08-17',
+    verordnung_zuzahlungsfrei: false,
+  });
+
+  assert.equal(vorne.brutto, hinten.brutto);
+  assert.equal(vorne.prozent, hinten.prozZuzahlung);
+  assert.equal(vorne.pauschale, hinten.pauschZuzahlung);
+  assert.equal(vorne.gesamt, hinten.gesZuzahlung);
+});
+
+test('Podologie: zuzahlungsfreie Position zählt zum Brutto, nicht zum Prozentanteil', () => {
+  const r = zuzahlungFuerPodoVerordnung(
+    { zuzahlung_befreit: false },
+    [{ behandlungsdatum: '2026-08-03', hpnr_codes: ['78010', '78530'] }],
+    findePodoPosition,
+  );
+  assert.equal(r.brutto, 43.78);   // 35,16 + 8,62
+  assert.equal(r.prozent, 3.52);   // nur 78010 — 78530 ist frei
+});
+
+test('Podologie: unbekannter Code wird gemeldet, nicht still mit 0 gerechnet', () => {
+  // Ein Code ohne Katalogtreffer bekommt Preis 0 und die 10-%-Ersatzrechnung
+  // (also ebenfalls 0). Das Ergebnis ist dasselbe wie „vergessen" — deshalb
+  // MUSS er in `unbekannt` auftauchen, sonst sieht die Oberfläche eine
+  // vollständige Summe, die keine ist.
+  const r = zuzahlungFuerPodoVerordnung(
+    { zuzahlung_befreit: false },
+    [{ behandlungsdatum: '2026-08-03', hpnr_codes: ['78010', '79999'] }],
+    findePodoPosition,
+  );
+  assert.deepEqual(r.unbekannt, ['79999']);
+  assert.equal(r.brutto, 35.16);
+});
+
+test('Podologie: Befreiung setzt alles auf 0, das Brutto bleibt sichtbar', () => {
+  const r = zuzahlungFuerPodoVerordnung(
+    { zuzahlung_befreit: true },
+    [{ behandlungsdatum: '2026-08-03', hpnr_codes: ['78010', '78030'] }],
+    findePodoPosition,
+  );
+  assert.equal(r.brutto, 38.63);
+  assert.equal(r.gesamt, 0);
+  assert.equal(r.befreit, true);
+});
+
+test('Podologie: gleiche Position an zwei Tagen wird in der Zeile gezählt', () => {
+  const r = zuzahlungFuerPodoVerordnung(
+    { zuzahlung_befreit: false },
+    [
+      { behandlungsdatum: '2026-08-03', hpnr_codes: ['78010'] },
+      { behandlungsdatum: '2026-08-17', hpnr_codes: ['78010'] },
+    ],
+    findePodoPosition,
+  );
+  const zeile = r.zeilen.find(z => z.code === '78010');
+  assert.equal(zeile.anzahl, 2);
+  assert.equal(zeile.summe, 70.32);
+});
