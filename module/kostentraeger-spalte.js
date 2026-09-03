@@ -41,9 +41,16 @@
  *     Absicherung feuern beide eine Sonde, und die spaeter zurueckkehrende
  *     ueberschreibt bedingungslos — auch ein bereits aus Zeilen abgeleitetes
  *     `true`. Deshalb: eine gemeinsame laufende Promise, die ihr Ergebnis noch
- *     im selben synchronen Block auswertet und freigibt. Ein `.finally()` haette
- *     dafuer nicht gereicht — sein Rueckruf laeuft VOR den Awaitern, und in
- *     diesem Spalt kann ein dritter Aufruf eine zweite Sonde starten.
+ *     im selben Block auswertet.
+ *
+ *     ✏️ Berichtigung 03.09.2026: hier stand, ein `.finally()` haette dafuer
+ *        nicht gereicht, weil sein Rueckruf vor den Awaitern laeuft. Das war
+ *        FALSCH und nie gemessen. Nachgemessen sind beide Formen gleichwertig —
+ *        dritter Aufruf auf Microtask-Tiefe 0 bis 12 eingeschossen, beide Male
+ *        genau eine Sonde. Grund: `bekannt` wird in beiden Formen gesetzt, BEVOR
+ *        die Promise aufloest; wer in den Spalt faellt, findet `bekannt !== null`
+ *        und kehrt sofort zurueck. Die jetzige Form bleibt, weil sie kuerzer und
+ *        direkter zu lesen ist — nicht, weil die andere kaputt waere.
  *
  * (c) **`services` ist oeffentlich lesbar** (Policy "Public read services", fuer
  *     die Buchungsseite). Eine Sonde ohne Mandantenfilter bekaeme die Zeile
@@ -64,6 +71,28 @@
  *        "unklar", nichts wuerde je gemerkt, und das Feld bliebe bei einer
  *        leeren Praxis fuer immer verborgen: genau der Fehler, den diese Datei
  *        beheben soll. Zwei Tests halten die Aufrufform jetzt fest.
+ *
+ * ⚠️ ZWEI RESTRISIKEN, die bleiben — bewusst, nicht uebersehen
+ * ────────────────────────────────────────────────────────────
+ * (1) **404 mit JSON-Array-Rumpf ist nicht von Erfolg zu unterscheiden.** Der
+ *     vendorte Client schreibt das um; im Bundle steht woertlich
+ *     `Array.isArray(r)&&t.status===404&&(s=[],r=null,i=200,o="OK")`. Gemessen:
+ *
+ *       404 + Rumpf "[]"  ->  error=null, status=200, data=[]
+ *       200 + Rumpf "[]"  ->  error=null, status=200, data=[]
+ *
+ *     Signatur identisch. Ueber supabase-js nicht aufloesbar — nur ein rohes
+ *     `fetch` gegen `/rest/v1/...` saehe den echten Status. Nicht gebaut, weil
+ *     ein Proxy dafuer 404 MIT Array-Rumpf liefern muesste (der 404-mit-leerem-
+ *     Rumpf-Fall ist abgedeckt) und diese Datei ohnehin befristet ist.
+ *
+ * (2) **Lesen und Schreiben werden verschieden geprueft.** Dass die fehlende
+ *     Spalte als `42703` ankommt (ein Postgres-SQLSTATE, kein PGRST-Code) zeigt,
+ *     dass `select` bis in die Datenbank durchlaeuft. `INSERT`/`UPDATE` prueft
+ *     PostgREST dagegen gegen seinen SCHEMA-CACHE (`PGRST204`). Unmittelbar nach
+ *     der Migration kann die Sonde also zu Recht "Spalte da" sagen, waehrend das
+ *     Speichern noch abgewiesen wird — bis der Cache neu geladen ist. Sekunden,
+ *     einmalig, konstruktionsbedingt nicht abdeckbar.
  *
  * BEFRISTET. Diese Datei darf verschwinden, sobald die Migration gelaufen ist —
  * es gibt nur eine Produktionsdatenbank, also unmittelbar danach. Dann wird
@@ -111,10 +140,22 @@ async function sondiere(client) {
   // Speichern `kostentraeger_typ` mit. PostgREST wiese es ab: genau der
   // Schaden, den diese Datei verhindern soll, nur andersherum.
   // Ein echter Erfolg ist 200 MIT Liste (bei limit(0) eine leere).
-  if (!error) return (status === 200 && Array.isArray(data)) ? true : null;
+  //
+  // 206 steht mit da, obwohl es heute nicht vorkommen kann: der vendorte Client
+  // kennt `Range` gar nicht, `limit()` ist ein Query-Parameter, und PostgREST
+  // liefert 206 nur mit `Prefer: count=…`. Ergaenzt jemand spaeter `.range()`
+  // oder `{ count: 'exact' }`, wuerde die Sonde sonst still und dauerhaft
+  // aussagelos — ein Fehler, der niemandem auffiele.
+  if (!error) return ((status === 200 || status === 206) && Array.isArray(data)) ? true : null;
   if (error.code === '42703') return false;
   return null;
 }
+
+// Eine haengende Sonde blockiert sonst nicht nur sich selbst: `loadServices()`
+// wartet sie ab, BEVOR gerendert wird — der ganze Leistungen-Bildschirm stuende.
+// Und weil alle spaeteren Aufrufe auf dieselbe `laufendeSonde` warten, waere die
+// Sitzung mit vergiftet. Nach der Frist gilt "unklar", also wird neu versucht.
+let sondeFristMs = 5000;
 
 /**
  * Stellt einmal je Sitzung fest, ob es die Spalte gibt, und merkt sich das.
@@ -138,7 +179,11 @@ export async function ermittleKostentraegerSpalte(zeilen, client) {
   if (!laufendeSonde) {
     laufendeSonde = (async () => {
       let antwort = null;
-      try { antwort = await sondiere(client); } catch (_) { /* Netzfehler: unklar */ }
+      let uhr;
+      const frist = new Promise(r => { uhr = setTimeout(() => r(null), sondeFristMs); });
+      try { antwort = await Promise.race([sondiere(client), frist]); }
+      catch (_) { /* Netzfehler: unklar */ }
+      finally { clearTimeout(uhr); }
 
       // Waehrend die Sonde lief, kann ein anderer Ladevorgang die Antwort schon
       // aus echten Zeilen gehabt haben. Die ist besser als unsere.
@@ -165,8 +210,21 @@ export function kostentraegerSpalteDa() {
   return bekannt === true;
 }
 
-/** Nur fuer Tests — setzt das Gemerkte zurueck. */
+/**
+ * Nur fuer Tests — setzt das Gemerkte zurueck.
+ *
+ * ⚠️ Bricht eine BEREITS LAUFENDE Sonde nicht ab. Startet ein Test eine Sonde,
+ *    wartet sie nicht ab und setzt zurueck, schreibt die alte Sonde danach noch
+ *    in den neuen Zustand und nullt die neue `laufendeSonde`. Alle Tests hier
+ *    warten ab, deshalb kein Wachhund dagegen — aber wer einen Test ohne `await`
+ *    schreibt, sollte es wissen.
+ */
 export function _spaltenwissenZuruecksetzen() {
   bekannt = null;
   laufendeSonde = null;
+}
+
+/** Nur fuer Tests — verkuerzt die Frist, damit ein Timeout pruefbar ist. */
+export function _fristSetzen(ms) {
+  sondeFristMs = ms;
 }

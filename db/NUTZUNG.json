@@ -1,5 +1,5 @@
 {
- "erzeugt": "2026-09-02",
+ "erzeugt": "2026-09-03",
  "quellen": {
   "schema": "db/SCHEMA.sql (Stand 2026-09-01)",
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-02)",
@@ -5405,7 +5405,6 @@
     "dashboard.html",
     "index-old.html",
     "index.html",
-    "module/kostentraeger-spalte.test.js",
     "module/nav-registry.test.js",
     "nav-registry.js",
     "onboarding.html"
@@ -5700,6 +5699,7 @@
     "module/anfrage-bearbeiten.js",
     "module/kalender-blocker.js",
     "module/kostentraeger-spalte.js",
+    "module/kostentraeger-spalte.test.js",
     "onboarding.js"
    ],
    "module": [

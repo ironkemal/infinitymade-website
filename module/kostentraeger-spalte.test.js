@@ -6,9 +6,10 @@ import {
   ermittleKostentraegerSpalte,
   kostentraegerSpalteDa,
   _spaltenwissenZuruecksetzen,
+  _fristSetzen,
 } from './kostentraeger-spalte.js';
 
-beforeEach(() => _spaltenwissenZuruecksetzen());
+beforeEach(() => { _spaltenwissenZuruecksetzen(); _fristSetzen(5000); });
 
 /**
  * Ein Supabase-Doppel, das nur `from().select().limit()` kann — und dabei das
@@ -29,15 +30,17 @@ function clientDoppel({ fehler = null, verzoegern = false, antwort = null } = {}
   const aufrufe = [];
   const optionen = [];
   const grenzen = [];
+  const spalten = [];
   let loesen;
   const tor = verzoegern ? new Promise(r => { loesen = r; }) : null;
   return {
-    aufrufe, optionen, grenzen,
+    aufrufe, optionen, grenzen, spalten,
     freigeben: () => loesen && loesen(),
     from(tabelle) {
       aufrufe.push(tabelle);
       return {
-        select: (spalten, opt) => {
+        select: (spaltenliste, opt) => {
+          spalten.push(spaltenliste);
           optionen.push(opt);
           return {
             limit: async (n) => {
@@ -46,7 +49,14 @@ function clientDoppel({ fehler = null, verzoegern = false, antwort = null } = {}
               // Frei gesetzte Rohantwort — fuer die Faelle, die weder sauberer
               // Erfolg noch sauberer PostgREST-Fehler sind (Proxy, Fehlseite).
               if (antwort) return antwort;
-              if (!fehler) return { data: [], error: null, status: 200 };
+              // ⚠️ Wie eine echte Tabelle: 42703 kommt NUR, wenn die fehlende
+              // Spalte auch erfragt wurde. Frueher antwortete das Doppel
+              // unabhaengig von der Frage — dadurch ueberlebte die Mutation
+              // `.select('kostentraeger_typ')` -> `.select('*')` jeden Test,
+              // obwohl sie die Sonde blind macht: '*' gibt nie ein 42703, also
+              // haette sie immer "Spalte da" gesagt und jedes Speichern zerlegt.
+              const fragtNachDerSpalte = String(spaltenliste || '').includes('kostentraeger_typ');
+              if (!fehler || !fragtNachDerSpalte) return { data: [], error: null, status: 200 };
               // HEAD liefert keinen Rumpf -> der Client sieht keinen Code.
               const durchgereicht = opt && opt.head ? { message: '' } : fehler;
               return { data: null, error: durchgereicht, status: 400 };
@@ -225,4 +235,46 @@ test('Erfolg heisst 200 MIT Liste, nicht irgendein fehlerfreier Status', async (
   _spaltenwissenZuruecksetzen();
   const ohneListe = clientDoppel({ antwort: { data: null, error: null, status: 200 } });
   assert.equal(await ermittleKostentraegerSpalte([], ohneListe), false, 'kein Rumpf = kein Beweis');
+});
+
+test('die Sonde fragt genau nach kostentraeger_typ — nicht nach *', async () => {
+  // Die wichtigste Eigenschaft der Sonde, und sie war ungesichert: mit
+  // `.select('*')` gaebe es nie ein 42703, die Antwort waere immer 200 + [],
+  // die Sonde saegte "Spalte da" — und ab da wiese PostgREST jedes Speichern ab.
+  // Das ist der schlimmste Fall, den diese Datei verhindern soll.
+  const client = clientDoppel();
+  await ermittleKostentraegerSpalte([], client);
+  assert.deepEqual(client.spalten, ['kostentraeger_typ']);
+});
+
+test('ein 206 gilt auch als Erfolg', async () => {
+  // Heute nicht auslösbar (der vendorte Client sendet kein Range), aber ein
+  // spaeter ergaenztes .range() oder { count: 'exact' } wuerde die Sonde sonst
+  // still und dauerhaft aussagelos machen.
+  const client = clientDoppel({ antwort: { data: [], error: null, status: 206 } });
+  assert.equal(await ermittleKostentraegerSpalte([], client), true);
+});
+
+test('ein 204 MIT Liste gilt nicht als Erfolg', async () => {
+  // Nagelt die Statuspruefung selbst fest. Ohne diesen Test traegt allein
+  // `Array.isArray(data)` die beiden anderen Statustests — man koennte
+  // `status === 200` ersatzlos streichen und niemand merkte es.
+  const client = clientDoppel({ antwort: { data: [], error: null, status: 204 } });
+  assert.equal(await ermittleKostentraegerSpalte([], client), false);
+  assert.equal(kostentraegerSpalteDa(), false, 'nicht gemerkt');
+});
+
+test('eine haengende Sonde vergiftet nicht die ganze Sitzung', async () => {
+  // Ohne Frist wartet nicht nur der erste Aufruf ewig — jeder spaetere haengt
+  // an derselben `laufendeSonde`, auch mit gesundem Client. Und weil
+  // `loadServices()` die Sonde VOR dem Rendern abwartet (dashboard.js:9648),
+  // stuende der ganze Leistungen-Bildschirm.
+  _fristSetzen(30);
+  const haengt = { from: () => ({ select: () => ({ limit: () => new Promise(() => {}) }) }) };
+  assert.equal(await ermittleKostentraegerSpalte([], haengt), false, 'gibt auf statt zu haengen');
+  assert.equal(kostentraegerSpalteDa(), false, 'Zeitueberschreitung heisst unklar, nicht "fehlt"');
+
+  // Entscheidend: die Sitzung ist danach nicht verdorben.
+  const gesund = clientDoppel();
+  assert.equal(await ermittleKostentraegerSpalte([], gesund), true, 'naechster Versuch geht durch');
 });

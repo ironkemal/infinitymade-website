@@ -3,7 +3,7 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-02 · 82 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-01), funktionen/INDEX.json (erzeugt 2026-09-02)
+**Erzeugt:** 2026-09-03 · 82 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-01), funktionen/INDEX.json (erzeugt 2026-09-02)
 
 ## Kayıt durumu
 
@@ -51,7 +51,7 @@ Referenztabellen ohne Personendaten. Die Entscheidung gehört ins Register.
 | `bookings` | 10 | 21 | 19 | abrechnung, fussstatus, hours, kunden, services, team, ueberblick |
 | `document_vorlagen` | 9 | 2 | 3 | abrechnung, kunden, team, vorlagen |
 | `prescriptions` | 8 | 17 | 17 | abrechnung, anamnese, belegliste, doctors, kunden, podologie-billing, rechnungen, settings, team, ueberblick, verordnungen |
-| `services` | 8 | 13 | 10 | abrechnung, anfragen, kunden, services, team |
+| `services` | 8 | 13 | 11 | abrechnung, anfragen, kunden, services, team |
 | `businesses` | 5 | 5 | 8 | abrechnung, hours, kunden, services, team |
 | `time_offs` | 5 | 7 | 3 | abrechnung, kunden, team, ueberblick |
 | `prescription_sessions` | 4 | 6 | 8 | abrechnung, kunden, rechnungen, team |
@@ -703,7 +703,7 @@ Warum: Was die Praxis anbietet, mit Dauer und Preis. Grundlage für Slot-Berechn
 
 **Liest (13):** `anfrageKorrekturenPruefen()`, `baseQuery()`, `findMatchingServiceId()`, `getAvailableSlots()`, `initCalendar()`, `loadEmpServices()`, `loadProfile()`, `loadServices()`, `loadServices()`, `populateRxcServiceSelect()`, `sondiere()`, `stammdatenLaden()`, `updateBkDuration()`
 
-**Dateien:** `api-backend/booking/from-request.js`, `api-backend/check_db.js`, `api-backend/server.js`, `api/stripe/webhook.js`, `dashboard.js`, `kalender.js`, `module/anfrage-bearbeiten.js`, `module/kalender-blocker.js`, `module/kostentraeger-spalte.js`, `onboarding.js`
+**Dateien:** `api-backend/booking/from-request.js`, `api-backend/check_db.js`, `api-backend/server.js`, `api/stripe/webhook.js`, `dashboard.js`, `kalender.js`, `module/anfrage-bearbeiten.js`, `module/kalender-blocker.js`, `module/kostentraeger-spalte.js`, `module/kostentraeger-spalte.test.js`, `onboarding.js`
 
 **Module:** abrechnung, anfragen, kunden, services, team
 
