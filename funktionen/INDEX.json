@@ -1,7 +1,7 @@
 {
  "erzeugt": "2026-09-03",
- "dateien": 185,
- "funktionen": 1893,
+ "dateien": 186,
+ "funktionen": 1899,
  "module": [
   "abrechnung",
   "anamnese",
@@ -14230,8 +14230,8 @@
    "name": "employeeLimit",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 86,
-   "end": 86,
+   "start": 87,
+   "end": 87,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -14250,8 +14250,8 @@
    "name": "loadAusfallConfig",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 835,
-   "end": 846,
+   "start": 836,
+   "end": 847,
    "lines": 12,
    "tables": [
     "profiles"
@@ -14274,8 +14274,8 @@
    "name": "t",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 849,
-   "end": 849,
+   "start": 850,
+   "end": 850,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -14371,8 +14371,8 @@
    "name": "escapeHtml",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 850,
-   "end": 853,
+   "start": 851,
+   "end": 854,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -14563,8 +14563,8 @@
    "name": "getOwnerId",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 854,
-   "end": 854,
+   "start": 855,
+   "end": 855,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -14709,8 +14709,8 @@
    "name": "getSector",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 856,
-   "end": 861,
+   "start": 857,
+   "end": 862,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -14767,8 +14767,8 @@
    "name": "isPraxisSector",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 863,
-   "end": 865,
+   "start": 864,
+   "end": 866,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -14811,8 +14811,8 @@
    "name": "getSidebarItems",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 866,
-   "end": 869,
+   "start": 867,
+   "end": 870,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -14848,8 +14848,8 @@
    "name": "has302Access",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 872,
-   "end": 875,
+   "start": 873,
+   "end": 876,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -14881,8 +14881,8 @@
    "name": "applyI18n",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 877,
-   "end": 882,
+   "start": 878,
+   "end": 883,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -14893,18 +14893,32 @@
     "t"
    ],
    "calledBy": [
+    "fmt",
     "init"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "loadModulePermissions",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 887,
-   "end": 899,
+   "start": 888,
+   "end": 900,
    "lines": 13,
    "tables": [],
    "rpcs": [
@@ -14938,8 +14952,8 @@
    "name": "hasModuleAccess",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 901,
-   "end": 906,
+   "start": 902,
+   "end": 907,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -14971,8 +14985,8 @@
    "name": "loadVisibilityMatrix",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 914,
-   "end": 929,
+   "start": 915,
+   "end": 930,
    "lines": 16,
    "tables": [
     "module_visibility"
@@ -15009,8 +15023,8 @@
    "name": "reportSidebarVisibility",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 934,
-   "end": 958,
+   "start": 935,
+   "end": 959,
    "lines": 25,
    "tables": [
     "visibility_reports"
@@ -15049,8 +15063,8 @@
    "name": "renderSidebar",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 982,
-   "end": 1073,
+   "start": 983,
+   "end": 1074,
    "lines": 92,
    "tables": [
     "profiles"
@@ -15070,6 +15084,7 @@
     "t"
    ],
    "calledBy": [
+    "fmt",
     "init",
     "switchPanel"
    ],
@@ -15094,8 +15109,8 @@
    "name": "buildBookingUrl",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1075,
-   "end": 1088,
+   "start": 1076,
+   "end": 1089,
    "lines": 14,
    "tables": [],
    "rpcs": [],
@@ -15130,8 +15145,8 @@
    "name": "showMyBookingLink",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1090,
-   "end": 1104,
+   "start": 1091,
+   "end": 1105,
    "lines": 15,
    "tables": [],
    "rpcs": [],
@@ -15167,8 +15182,8 @@
    "name": "gehZuEinstellung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1110,
-   "end": 1114,
+   "start": 1111,
+   "end": 1115,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -15203,8 +15218,8 @@
    "name": "switchPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1117,
-   "end": 1182,
+   "start": 1118,
+   "end": 1183,
    "lines": 66,
    "tables": [],
    "rpcs": [],
@@ -15297,8 +15312,8 @@
    "name": "openSidebar",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1184,
-   "end": 1187,
+   "start": 1185,
+   "end": 1188,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -15315,8 +15330,8 @@
    "name": "closeSidebar",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1188,
-   "end": 1191,
+   "start": 1189,
+   "end": 1192,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -15348,8 +15363,8 @@
    "name": "updateSidebarCollapseBtn",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1199,
-   "end": 1205,
+   "start": 1200,
+   "end": 1206,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -15366,8 +15381,8 @@
    "name": "applyTheme",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1230,
-   "end": 1236,
+   "start": 1231,
+   "end": 1237,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -15384,8 +15399,8 @@
    "name": "isBkActionOpen",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1272,
-   "end": 1275,
+   "start": 1273,
+   "end": 1276,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -15402,8 +15417,8 @@
    "name": "openModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1277,
-   "end": 1277,
+   "start": 1278,
+   "end": 1278,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -15488,8 +15503,8 @@
    "name": "closeBkActionPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1283,
-   "end": 1290,
+   "start": 1284,
+   "end": 1291,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -15541,8 +15556,8 @@
    "name": "closeModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1292,
-   "end": 1304,
+   "start": 1293,
+   "end": 1305,
    "lines": 13,
    "tables": [],
    "rpcs": [],
@@ -15618,8 +15633,8 @@
    "name": "showToast",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1306,
-   "end": 1312,
+   "start": 1307,
+   "end": 1313,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -15799,8 +15814,8 @@
    "name": "showQualWarningToast",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1314,
-   "end": 1343,
+   "start": 1315,
+   "end": 1344,
    "lines": 30,
    "tables": [],
    "rpcs": [],
@@ -15836,8 +15851,8 @@
    "name": "bookingErrMsg",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1346,
-   "end": 1352,
+   "start": 1347,
+   "end": 1353,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -15871,8 +15886,8 @@
    "name": "fmtTime",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1354,
-   "end": 1357,
+   "start": 1355,
+   "end": 1358,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -15907,8 +15922,8 @@
    "name": "fmtDate",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1358,
-   "end": 1361,
+   "start": 1359,
+   "end": 1362,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -15973,8 +15988,8 @@
    "name": "statusBadge",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1363,
-   "end": 1368,
+   "start": 1364,
+   "end": 1369,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -16007,8 +16022,8 @@
    "name": "renderOverview",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1370,
-   "end": 1492,
+   "start": 1371,
+   "end": 1493,
    "lines": 123,
    "tables": [
     "terapeut_zertifikat"
@@ -16037,8 +16052,8 @@
    "name": "hexToHSL",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1496,
-   "end": 1513,
+   "start": 1497,
+   "end": 1514,
    "lines": 18,
    "tables": [],
    "rpcs": [],
@@ -16073,8 +16088,8 @@
    "name": "hslToHex",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1514,
-   "end": 1521,
+   "start": 1515,
+   "end": 1522,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -16112,8 +16127,8 @@
    "name": "k",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 1516,
-   "end": 1522,
+   "start": 1517,
+   "end": 1523,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -16153,8 +16168,8 @@
    "name": "f",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 1518,
-   "end": 1522,
+   "start": 1519,
+   "end": 1523,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -16195,8 +16210,8 @@
    "name": "toHex",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 1519,
-   "end": 1522,
+   "start": 1520,
+   "end": 1523,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -16236,8 +16251,8 @@
    "name": "shiftColorForTime",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1522,
-   "end": 1529,
+   "start": 1523,
+   "end": 1530,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -16275,8 +16290,8 @@
    "name": "findGaps",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1531,
-   "end": 1549,
+   "start": 1532,
+   "end": 1550,
    "lines": 19,
    "tables": [],
    "rpcs": [],
@@ -16309,8 +16324,8 @@
    "name": "renderGaps",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1551,
-   "end": 1629,
+   "start": 1552,
+   "end": 1630,
    "lines": 79,
    "tables": [
     "working_hours",
@@ -16336,8 +16351,8 @@
    "name": "renderGapsForDate",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1631,
-   "end": 1705,
+   "start": 1632,
+   "end": 1706,
    "lines": 75,
    "tables": [
     "working_hours",
@@ -16378,8 +16393,8 @@
    "name": "loadScheduleBookings",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1707,
-   "end": 1883,
+   "start": 1708,
+   "end": 1884,
    "lines": 177,
    "tables": [
     "bookings"
@@ -16426,8 +16441,8 @@
    "name": "loadTodayBookings",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1885,
-   "end": 1885,
+   "start": 1886,
+   "end": 1886,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -16463,8 +16478,8 @@
    "name": "refreshBookingViews",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1891,
-   "end": 1899,
+   "start": 1892,
+   "end": 1900,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -16501,8 +16516,8 @@
    "name": "formatActivityTimestamp",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1917,
-   "end": 1946,
+   "start": 1918,
+   "end": 1947,
    "lines": 30,
    "tables": [],
    "rpcs": [],
@@ -16534,8 +16549,8 @@
    "name": "loadActivityFeed",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 1948,
-   "end": 2094,
+   "start": 1949,
+   "end": 2095,
    "lines": 147,
    "tables": [
     "patient_notes",
@@ -16580,8 +16595,8 @@
    "name": "renderBookingSlotInner",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2100,
-   "end": 2211,
+   "start": 2101,
+   "end": 2212,
    "lines": 112,
    "tables": [],
    "rpcs": [],
@@ -16618,8 +16633,8 @@
    "name": "hmColor",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 2113,
-   "end": 2169,
+   "start": 2114,
+   "end": 2170,
    "lines": 57,
    "tables": [],
    "rpcs": [],
@@ -16639,8 +16654,8 @@
    "name": "loadPhysioRezKpis",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2247,
-   "end": 2276,
+   "start": 2248,
+   "end": 2277,
    "lines": 30,
    "tables": [
     "prescriptions"
@@ -16666,8 +16681,8 @@
    "name": "_doStripePortalRedirect",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2300,
-   "end": 2308,
+   "start": 2301,
+   "end": 2309,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -16692,8 +16707,8 @@
    "name": "openStripePortal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2310,
-   "end": 2420,
+   "start": 2311,
+   "end": 2421,
    "lines": 111,
    "tables": [
     "profiles"
@@ -16717,8 +16732,8 @@
    "name": "renderCalEmpList",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2422,
-   "end": 2442,
+   "start": 2423,
+   "end": 2443,
    "lines": 21,
    "tables": [],
    "rpcs": [],
@@ -16753,8 +16768,8 @@
    "name": "renderCalEmpChips",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2444,
-   "end": 2457,
+   "start": 2445,
+   "end": 2458,
    "lines": 14,
    "tables": [],
    "rpcs": [],
@@ -16792,8 +16807,8 @@
    "name": "getEmployeeWorkingHours",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2459,
-   "end": 2467,
+   "start": 2460,
+   "end": 2468,
    "lines": 9,
    "tables": [
     "working_hours"
@@ -16830,8 +16845,8 @@
    "name": "updateCalendarForEmployee",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2469,
-   "end": 2479,
+   "start": 2470,
+   "end": 2480,
    "lines": 11,
    "tables": [],
    "rpcs": [],
@@ -16865,8 +16880,8 @@
    "name": "loadSlots",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2481,
-   "end": 2512,
+   "start": 2482,
+   "end": 2513,
    "lines": 32,
    "tables": [],
    "rpcs": [],
@@ -16891,8 +16906,8 @@
    "name": "prefillBookingModalFromSlot",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2514,
-   "end": 2536,
+   "start": 2515,
+   "end": 2537,
    "lines": 23,
    "tables": [],
    "rpcs": [],
@@ -16918,8 +16933,8 @@
    "name": "initCalendar",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2538,
-   "end": 2655,
+   "start": 2539,
+   "end": 2656,
    "lines": 118,
    "tables": [
     "services",
@@ -16955,8 +16970,8 @@
    "name": "formatDateDE",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2667,
-   "end": 2670,
+   "start": 2668,
+   "end": 2671,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -16990,8 +17005,8 @@
    "name": "renderCalendarView",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2675,
-   "end": 2679,
+   "start": 2676,
+   "end": 2680,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -17037,8 +17052,8 @@
    "name": "setCalendarView",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2681,
-   "end": 2690,
+   "start": 2682,
+   "end": 2691,
    "lines": 10,
    "tables": [],
    "rpcs": [],
@@ -17074,8 +17089,8 @@
    "name": "renderDayView",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2692,
-   "end": 2881,
+   "start": 2693,
+   "end": 2882,
    "lines": 190,
    "tables": [
     "bookings",
@@ -17124,8 +17139,8 @@
    "name": "renderWeekView",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2885,
-   "end": 2909,
+   "start": 2886,
+   "end": 2910,
    "lines": 25,
    "tables": [],
    "rpcs": [],
@@ -17165,8 +17180,8 @@
    "name": "renderMonthView",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2913,
-   "end": 2926,
+   "start": 2914,
+   "end": 2927,
    "lines": 14,
    "tables": [],
    "rpcs": [],
@@ -17206,8 +17221,8 @@
    "name": "kalenderBlaettern",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2930,
-   "end": 2940,
+   "start": 2931,
+   "end": 2941,
    "lines": 11,
    "tables": [],
    "rpcs": [],
@@ -17226,8 +17241,8 @@
    "name": "mitTermin",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 2946,
-   "end": 3058,
+   "start": 2947,
+   "end": 3059,
    "lines": 113,
    "tables": [],
    "rpcs": [],
@@ -17261,8 +17276,8 @@
    "name": "handleRxSessionDropToModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 2964,
-   "end": 3058,
+   "start": 2965,
+   "end": 3059,
    "lines": 95,
    "tables": [],
    "rpcs": [],
@@ -17303,8 +17318,8 @@
    "name": "prefillBookingModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3060,
-   "end": 3158,
+   "start": 3061,
+   "end": 3159,
    "lines": 99,
    "tables": [],
    "rpcs": [],
@@ -17356,8 +17371,8 @@
    "name": "computeSeriesPreview",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3160,
-   "end": 3194,
+   "start": 3161,
+   "end": 3195,
    "lines": 35,
    "tables": [],
    "rpcs": [],
@@ -17380,8 +17395,8 @@
    "name": "addDays",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3171,
-   "end": 3175,
+   "start": 3172,
+   "end": 3176,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -17404,8 +17419,8 @@
    "name": "dayOfWeek",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3176,
-   "end": 3179,
+   "start": 3177,
+   "end": 3180,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -17424,8 +17439,8 @@
    "name": "updateBkSeriesPreview",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3196,
-   "end": 3204,
+   "start": 3197,
+   "end": 3205,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -17444,8 +17459,8 @@
    "name": "calculateSessionInfo",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3206,
-   "end": 3220,
+   "start": 3207,
+   "end": 3221,
    "lines": 15,
    "tables": [
     "bookings"
@@ -17466,8 +17481,8 @@
    "name": "updateNoShowButton",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3222,
-   "end": 3228,
+   "start": 3223,
+   "end": 3229,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -17499,8 +17514,8 @@
    "name": "openBookingActionModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3230,
-   "end": 3699,
+   "start": 3231,
+   "end": 3700,
    "lines": 470,
    "tables": [
     "bookings",
@@ -17578,8 +17593,8 @@
    "name": "aRow",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 3622,
-   "end": 3639,
+   "start": 3623,
+   "end": 3640,
    "lines": 18,
    "tables": [],
    "rpcs": [],
@@ -17613,8 +17628,8 @@
    "name": "initCalRightPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3703,
-   "end": 3737,
+   "start": 3704,
+   "end": 3738,
    "lines": 35,
    "tables": [
     "leads"
@@ -17656,8 +17671,8 @@
    "name": "openCalRightPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3739,
-   "end": 3741,
+   "start": 3740,
+   "end": 3742,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -17694,8 +17709,8 @@
    "name": "closeCalRightPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3743,
-   "end": 3750,
+   "start": 3744,
+   "end": 3751,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -17712,8 +17727,8 @@
    "name": "uebernimmVerordnungAlsVorlage",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3755,
-   "end": 3765,
+   "start": 3756,
+   "end": 3766,
    "lines": 11,
    "tables": [],
    "rpcs": [],
@@ -17749,8 +17764,8 @@
    "name": "selectVerordnung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3767,
-   "end": 3773,
+   "start": 3768,
+   "end": 3774,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -17770,8 +17785,8 @@
    "name": "uebernimmSerienfrequenzAusRx",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3782,
-   "end": 3796,
+   "start": 3783,
+   "end": 3797,
    "lines": 15,
    "tables": [],
    "rpcs": [],
@@ -17795,8 +17810,8 @@
    "name": "uebernehmeDienstleistungAusRx",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3801,
-   "end": 3819,
+   "start": 3802,
+   "end": 3820,
    "lines": 19,
    "tables": [],
    "rpcs": [],
@@ -17818,8 +17833,8 @@
    "name": "loadCalRpRezeptInfo",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3821,
-   "end": 3856,
+   "start": 3822,
+   "end": 3857,
    "lines": 36,
    "tables": [
     "prescriptions"
@@ -17842,8 +17857,8 @@
    "name": "fmt",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 3838,
-   "end": 3858,
+   "start": 3839,
+   "end": 3859,
    "lines": 21,
    "tables": [],
    "rpcs": [],
@@ -17892,8 +17907,8 @@
    "name": "loadCalRpUnverga",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3858,
-   "end": 3890,
+   "start": 3859,
+   "end": 3891,
    "lines": 33,
    "tables": [
     "prescription_sessions"
@@ -17930,8 +17945,8 @@
    "name": "findMatchingServiceId",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3892,
-   "end": 3909,
+   "start": 3893,
+   "end": 3910,
    "lines": 18,
    "tables": [
     "services"
@@ -17971,8 +17986,8 @@
    "name": "handleSessionDrop",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 3911,
-   "end": 4007,
+   "start": 3912,
+   "end": 4008,
    "lines": 97,
    "tables": [
     "prescription_sessions",
@@ -18018,8 +18033,8 @@
    "name": "renderBkActionFahrtState",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4010,
-   "end": 4116,
+   "start": 4011,
+   "end": 4117,
    "lines": 107,
    "tables": [
     "leads"
@@ -18058,8 +18073,8 @@
    "name": "loadVehiclesForPicker",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4119,
-   "end": 4131,
+   "start": 4120,
+   "end": 4132,
    "lines": 13,
    "tables": [
     "vehicles"
@@ -18082,8 +18097,8 @@
    "name": "openFahrtStartModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4133,
-   "end": 4157,
+   "start": 4134,
+   "end": 4158,
    "lines": 25,
    "tables": [],
    "rpcs": [],
@@ -18105,8 +18120,8 @@
    "name": "openQuickVehicleModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4161,
-   "end": 4166,
+   "start": 4162,
+   "end": 4167,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -18125,8 +18140,8 @@
    "name": "saveQuickVehicleHandler",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4168,
-   "end": 4189,
+   "start": 4169,
+   "end": 4190,
    "lines": 22,
    "tables": [
     "vehicles"
@@ -18152,8 +18167,8 @@
    "name": "saveFahrtStartHandler",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4191,
-   "end": 4257,
+   "start": 4192,
+   "end": 4258,
    "lines": 67,
    "tables": [
     "bookings",
@@ -18183,8 +18198,8 @@
    "name": "copyHausbesuchAddress",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4259,
-   "end": 4272,
+   "start": 4260,
+   "end": 4273,
    "lines": 14,
    "tables": [],
    "rpcs": [],
@@ -18203,8 +18218,8 @@
    "name": "markArrivedHandler",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4274,
-   "end": 4288,
+   "start": 4275,
+   "end": 4289,
    "lines": 15,
    "tables": [
     "bookings"
@@ -18229,8 +18244,8 @@
    "name": "openFahrtEndModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4290,
-   "end": 4298,
+   "start": 4291,
+   "end": 4299,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -18250,8 +18265,8 @@
    "name": "updateEndKmPreview",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4300,
-   "end": 4316,
+   "start": 4301,
+   "end": 4317,
    "lines": 17,
    "tables": [],
    "rpcs": [],
@@ -18268,8 +18283,8 @@
    "name": "saveFahrtEndHandler",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4318,
-   "end": 4410,
+   "start": 4319,
+   "end": 4411,
    "lines": 93,
    "tables": [
     "bookings",
@@ -18300,8 +18315,8 @@
    "name": "handleTerminStarten",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4412,
-   "end": 4480,
+   "start": 4413,
+   "end": 4481,
    "lines": 69,
    "tables": [
     "bookings",
@@ -18336,8 +18351,8 @@
    "name": "triggerNoShowBot",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4482,
-   "end": 4485,
+   "start": 4483,
+   "end": 4486,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -18356,8 +18371,8 @@
    "name": "checkPlanActive",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4487,
-   "end": 4500,
+   "start": 4488,
+   "end": 4501,
    "lines": 14,
    "tables": [],
    "rpcs": [],
@@ -18393,8 +18408,8 @@
    "name": "handlePatientNichtErschienen",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4502,
-   "end": 4550,
+   "start": 4503,
+   "end": 4551,
    "lines": 49,
    "tables": [
     "bookings",
@@ -18428,8 +18443,8 @@
    "name": "handleDirectAusfallrechnung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4552,
-   "end": 4698,
+   "start": 4553,
+   "end": 4699,
    "lines": 147,
    "tables": [
     "leads",
@@ -18460,8 +18475,8 @@
    "name": "proceedToOwnerCheck",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 4585,
-   "end": 4611,
+   "start": 4586,
+   "end": 4612,
    "lines": 27,
    "tables": [
     "profiles"
@@ -18487,8 +18502,8 @@
    "name": "ausfallBizForBooking",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4707,
-   "end": 4709,
+   "start": 4708,
+   "end": 4710,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -18522,8 +18537,8 @@
    "name": "ausfallSuggestedAmount",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4711,
-   "end": 4719,
+   "start": 4712,
+   "end": 4720,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -18542,8 +18557,8 @@
    "name": "ausfallVereinbarungDatum",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4727,
-   "end": 4738,
+   "start": 4728,
+   "end": 4739,
    "lines": 12,
    "tables": [
     "leads"
@@ -18564,8 +18579,8 @@
    "name": "offerAusfallrechnung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4740,
-   "end": 4844,
+   "start": 4741,
+   "end": 4845,
    "lines": 105,
    "tables": [],
    "rpcs": [],
@@ -18599,8 +18614,8 @@
    "name": "done",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 4788,
-   "end": 4788,
+   "start": 4789,
+   "end": 4789,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -18621,8 +18636,8 @@
    "name": "refreshBkGroupPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4853,
-   "end": 4915,
+   "start": 4854,
+   "end": 4916,
    "lines": 63,
    "tables": [],
    "rpcs": [],
@@ -18655,8 +18670,8 @@
    "name": "loadGroupParticipants",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4917,
-   "end": 4995,
+   "start": 4918,
+   "end": 4996,
    "lines": 79,
    "tables": [
     "bookings"
@@ -18702,8 +18717,8 @@
    "name": "renderLocalGroupParticipants",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 4997,
-   "end": 5031,
+   "start": 4998,
+   "end": 5032,
    "lines": 35,
    "tables": [],
    "rpcs": [],
@@ -18737,8 +18752,8 @@
    "name": "initBkGroupPatientAutocomplete",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5033,
-   "end": 5154,
+   "start": 5034,
+   "end": 5155,
    "lines": 122,
    "tables": [
     "leads",
@@ -18786,8 +18801,8 @@
    "name": "openBookingModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5156,
-   "end": 5239,
+   "start": 5157,
+   "end": 5240,
    "lines": 84,
    "tables": [
     "leads"
@@ -18841,8 +18856,8 @@
    "name": "initBkCustomerAutocomplete",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5241,
-   "end": 5416,
+   "start": 5242,
+   "end": 5417,
    "lines": 176,
    "tables": [
     "leads",
@@ -18894,8 +18909,8 @@
    "name": "loadBkLeads",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5251,
-   "end": 5259,
+   "start": 5252,
+   "end": 5260,
    "lines": 9,
    "tables": [
     "leads"
@@ -18933,8 +18948,8 @@
    "name": "openNewLeadFlow",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5266,
-   "end": 5290,
+   "start": 5267,
+   "end": 5291,
    "lines": 25,
    "tables": [],
    "rpcs": [],
@@ -18966,8 +18981,8 @@
    "name": "applyLeadById",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5296,
-   "end": 5306,
+   "start": 5297,
+   "end": 5307,
    "lines": 11,
    "tables": [],
    "rpcs": [],
@@ -19004,8 +19019,8 @@
    "name": "loadBkVerordnungen",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5308,
-   "end": 5337,
+   "start": 5309,
+   "end": 5338,
    "lines": 30,
    "tables": [
     "prescriptions"
@@ -19045,8 +19060,8 @@
    "name": "selectLead",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5390,
-   "end": 5398,
+   "start": 5391,
+   "end": 5399,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -19081,8 +19096,8 @@
    "name": "startMoveBooking",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5418,
-   "end": 5430,
+   "start": 5419,
+   "end": 5431,
    "lines": 13,
    "tables": [],
    "rpcs": [],
@@ -19121,8 +19136,8 @@
    "name": "cancelMoveBooking",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5435,
-   "end": 5441,
+   "start": 5436,
+   "end": 5442,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -19157,8 +19172,8 @@
    "name": "updateMoveBanner",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5443,
-   "end": 5458,
+   "start": 5444,
+   "end": 5459,
    "lines": 16,
    "tables": [],
    "rpcs": [],
@@ -19192,8 +19207,8 @@
    "name": "placeGhost",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5467,
-   "end": 5494,
+   "start": 5468,
+   "end": 5495,
    "lines": 28,
    "tables": [],
    "rpcs": [],
@@ -19230,8 +19245,8 @@
    "name": "doMoveBooking",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5496,
-   "end": 5525,
+   "start": 5497,
+   "end": 5526,
    "lines": 30,
    "tables": [
     "bookings"
@@ -19273,8 +19288,8 @@
    "name": "populateEmpSelects",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5527,
-   "end": 5544,
+   "start": 5528,
+   "end": 5545,
    "lines": 18,
    "tables": [],
    "rpcs": [],
@@ -19310,8 +19325,8 @@
    "name": "populateSrvSelect",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5546,
-   "end": 5585,
+   "start": 5547,
+   "end": 5586,
    "lines": 40,
    "tables": [],
    "rpcs": [],
@@ -19355,8 +19370,8 @@
    "name": "makeOption",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 5573,
-   "end": 5579,
+   "start": 5574,
+   "end": 5580,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -19375,8 +19390,8 @@
    "name": "updateBkDuration",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5587,
-   "end": 5646,
+   "start": 5588,
+   "end": 5647,
    "lines": 60,
    "tables": [
     "services"
@@ -19417,8 +19432,8 @@
    "name": "getSelectedBkLead",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5689,
-   "end": 5693,
+   "start": 5690,
+   "end": 5694,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -19450,8 +19465,8 @@
    "name": "getBkServiceDurationMin",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5695,
-   "end": 5702,
+   "start": 5696,
+   "end": 5703,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -19483,8 +19498,8 @@
    "name": "refreshBkHausbesuchPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5704,
-   "end": 5759,
+   "start": 5705,
+   "end": 5760,
    "lines": 56,
    "tables": [],
    "rpcs": [],
@@ -19522,8 +19537,8 @@
    "name": "invokeFahrtenbuchFn",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5803,
-   "end": 5819,
+   "start": 5804,
+   "end": 5820,
    "lines": 17,
    "tables": [],
    "rpcs": [],
@@ -19544,8 +19559,8 @@
    "name": "ensureClinicLocation",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5821,
-   "end": 5847,
+   "start": 5822,
+   "end": 5848,
    "lines": 27,
    "tables": [
     "profiles"
@@ -19570,8 +19585,8 @@
    "name": "resetBkAnzahl",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5922,
-   "end": 5927,
+   "start": 5923,
+   "end": 5928,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -19605,8 +19620,8 @@
    "name": "setzeBlockerModus",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 5929,
-   "end": 5934,
+   "start": 5930,
+   "end": 5935,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -19638,8 +19653,8 @@
    "name": "verteileOffeneEinheiten",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6359,
-   "end": 6367,
+   "start": 6360,
+   "end": 6368,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -19675,8 +19690,8 @@
    "name": "loadRxSessionsPanel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6377,
-   "end": 6562,
+   "start": 6378,
+   "end": 6563,
    "lines": 186,
    "tables": [
     "prescription_sessions",
@@ -19727,8 +19742,8 @@
    "name": "getHmName",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 6424,
-   "end": 6440,
+   "start": 6425,
+   "end": 6441,
    "lines": 17,
    "tables": [],
    "rpcs": [],
@@ -19763,8 +19778,8 @@
    "name": "getHmKuerzel",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 6425,
-   "end": 6440,
+   "start": 6426,
+   "end": 6441,
    "lines": 16,
    "tables": [],
    "rpcs": [],
@@ -19798,8 +19813,8 @@
    "name": "buildSess",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 6472,
-   "end": 6480,
+   "start": 6473,
+   "end": 6481,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -19818,8 +19833,8 @@
    "name": "showSeriterminConfirmDialog",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6564,
-   "end": 6622,
+   "start": 6565,
+   "end": 6623,
    "lines": 59,
    "tables": [],
    "rpcs": [],
@@ -19840,8 +19855,8 @@
    "name": "printSeriterminConfirmation",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6629,
-   "end": 6646,
+   "start": 6630,
+   "end": 6647,
    "lines": 18,
    "tables": [],
    "rpcs": [],
@@ -19865,8 +19880,8 @@
    "name": "terminzettelPraxis",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6649,
-   "end": 6661,
+   "start": 6650,
+   "end": 6662,
    "lines": 13,
    "tables": [],
    "rpcs": [],
@@ -19886,8 +19901,8 @@
    "name": "showAiLoading",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6670,
-   "end": 6682,
+   "start": 6671,
+   "end": 6683,
    "lines": 13,
    "tables": [],
    "rpcs": [],
@@ -19906,8 +19921,8 @@
    "name": "hideAiLoading",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6684,
-   "end": 6689,
+   "start": 6685,
+   "end": 6690,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -19926,8 +19941,8 @@
    "name": "aiFmtWd",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 6780,
-   "end": 6785,
+   "start": 6781,
+   "end": 6786,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -19946,8 +19961,8 @@
    "name": "aiAddDaysISO",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 6781,
-   "end": 6785,
+   "start": 6782,
+   "end": 6786,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -19966,8 +19981,8 @@
    "name": "aiFreeTimesFor",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6789,
-   "end": 6796,
+   "start": 6790,
+   "end": 6797,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -19988,8 +20003,8 @@
    "name": "aiSlotIsValid",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6798,
-   "end": 6800,
+   "start": 6799,
+   "end": 6801,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -20010,8 +20025,8 @@
    "name": "aiNextDayWithSlots",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6803,
-   "end": 6812,
+   "start": 6804,
+   "end": 6813,
    "lines": 10,
    "tables": [],
    "rpcs": [],
@@ -20031,8 +20046,8 @@
    "name": "renderAiSuggestions",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6814,
-   "end": 6823,
+   "start": 6815,
+   "end": 6824,
    "lines": 10,
    "tables": [],
    "rpcs": [],
@@ -20054,8 +20069,8 @@
    "name": "renderAiSlotRows",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6825,
-   "end": 6890,
+   "start": 6826,
+   "end": 6891,
    "lines": 66,
    "tables": [],
    "rpcs": [],
@@ -20080,8 +20095,8 @@
    "name": "aiEditSlot",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6894,
-   "end": 6903,
+   "start": 6895,
+   "end": 6904,
    "lines": 10,
    "tables": [],
    "rpcs": [],
@@ -20100,8 +20115,8 @@
    "name": "nearestTimeIn",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6960,
-   "end": 6965,
+   "start": 6961,
+   "end": 6966,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -20120,8 +20135,8 @@
    "name": "toMin",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 6962,
-   "end": 6967,
+   "start": 6963,
+   "end": 6968,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -20142,8 +20157,8 @@
    "name": "aiRetryRequest",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 6967,
-   "end": 7006,
+   "start": 6968,
+   "end": 7007,
    "lines": 40,
    "tables": [],
    "rpcs": [],
@@ -20169,8 +20184,8 @@
    "name": "showConfirmModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7089,
-   "end": 7112,
+   "start": 7090,
+   "end": 7113,
    "lines": 24,
    "tables": [],
    "rpcs": [],
@@ -20238,8 +20253,8 @@
    "name": "cleanup",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 7102,
-   "end": 7106,
+   "start": 7103,
+   "end": 7107,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -20286,8 +20301,8 @@
    "name": "showInputModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7114,
-   "end": 7143,
+   "start": 7115,
+   "end": 7144,
    "lines": 30,
    "tables": [],
    "rpcs": [],
@@ -20302,6 +20317,7 @@
    ],
    "calledBy": [
     "editAerzte",
+    "fmt",
     "handleTerminStarten",
     "storniereZuzahlung",
     "triggerStorno"
@@ -20328,8 +20344,8 @@
    "name": "cleanup",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 7131,
-   "end": 7135,
+   "start": 7132,
+   "end": 7136,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -20376,8 +20392,8 @@
    "name": "showAbsagegrundModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7159,
-   "end": 7223,
+   "start": 7160,
+   "end": 7224,
    "lines": 65,
    "tables": [],
    "rpcs": [],
@@ -20401,8 +20417,8 @@
    "name": "cleanup",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 7207,
-   "end": 7214,
+   "start": 7208,
+   "end": 7215,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -20448,8 +20464,8 @@
    "name": "zahlartLabel",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7244,
-   "end": 7247,
+   "start": 7245,
+   "end": 7248,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -20487,8 +20503,8 @@
    "name": "belegDruckDeps",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7251,
-   "end": 7257,
+   "start": 7252,
+   "end": 7258,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -20524,8 +20540,8 @@
    "name": "openZuzahlungsrechnung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7264,
-   "end": 7266,
+   "start": 7265,
+   "end": 7267,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -20562,8 +20578,8 @@
    "name": "openKassierenDialog",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7272,
-   "end": 7339,
+   "start": 7273,
+   "end": 7340,
    "lines": 68,
    "tables": [],
    "rpcs": [],
@@ -20602,8 +20618,8 @@
    "name": "cleanup",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 7311,
-   "end": 7317,
+   "start": 7312,
+   "end": 7318,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -20649,8 +20665,8 @@
    "name": "onEsc",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7318,
-   "end": 7318,
+   "start": 7319,
+   "end": 7319,
    "lines": 1,
    "tables": [],
    "rpcs": [],
@@ -20687,8 +20703,8 @@
    "name": "kassiereZuzahlung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7342,
-   "end": 7414,
+   "start": 7343,
+   "end": 7415,
    "lines": 73,
    "tables": [
     "prescriptions"
@@ -20736,8 +20752,8 @@
    "name": "storniereZuzahlung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7417,
-   "end": 7485,
+   "start": 7418,
+   "end": 7486,
    "lines": 69,
    "tables": [
     "belegliste",
@@ -20770,8 +20786,8 @@
    "name": "openMailOfferModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7487,
-   "end": 7545,
+   "start": 7488,
+   "end": 7546,
    "lines": 59,
    "tables": [],
    "rpcs": [],
@@ -20795,8 +20811,8 @@
    "name": "cleanupNo",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 7513,
-   "end": 7517,
+   "start": 7514,
+   "end": 7518,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -20817,8 +20833,8 @@
    "name": "markPrescriptionSession",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7547,
-   "end": 7565,
+   "start": 7548,
+   "end": 7566,
    "lines": 19,
    "tables": [
     "prescription_sessions"
@@ -20844,8 +20860,8 @@
    "name": "decorateBookingTitleWithSession",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7567,
-   "end": 7578,
+   "start": 7568,
+   "end": 7579,
    "lines": 12,
    "tables": [
     "prescription_sessions"
@@ -20881,8 +20897,8 @@
    "name": "linkBookingsToPrescriptionSessions",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7580,
-   "end": 7670,
+   "start": 7581,
+   "end": 7671,
    "lines": 91,
    "tables": [
     "prescriptions",
@@ -20909,8 +20925,8 @@
    "name": "maybeOfferAppointmentConfirmEmail",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7672,
-   "end": 7759,
+   "start": 7673,
+   "end": 7760,
    "lines": 88,
    "tables": [
     "leads"
@@ -20942,8 +20958,8 @@
    "name": "ensureBlankoBonusServices",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7769,
-   "end": 7808,
+   "start": 7770,
+   "end": 7809,
    "lines": 40,
    "tables": [
     "services"
@@ -20970,8 +20986,8 @@
    "name": "proceedToRechnungForPhysio",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 7810,
-   "end": 7857,
+   "start": 7811,
+   "end": 7858,
    "lines": 48,
    "tables": [],
    "rpcs": [],
@@ -20998,8 +21014,8 @@
    "name": "exists",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 7841,
-   "end": 7849,
+   "start": 7842,
+   "end": 7850,
    "lines": 9,
    "tables": [],
    "rpcs": [],
@@ -21022,8 +21038,8 @@
    "name": "therapeutName",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 7944,
-   "end": 8018,
+   "start": 7945,
+   "end": 8019,
    "lines": 75,
    "tables": [
     "prescriptions"
@@ -21054,8 +21070,8 @@
    "name": "absageTerminMitGrund",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8018,
-   "end": 8054,
+   "start": 8019,
+   "end": 8055,
    "lines": 37,
    "tables": [
     "bookings"
@@ -21092,8 +21108,8 @@
    "name": "biteNachrueckerAn",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8065,
-   "end": 8086,
+   "start": 8066,
+   "end": 8087,
    "lines": 22,
    "tables": [],
    "rpcs": [],
@@ -21134,8 +21150,8 @@
    "name": "displayName",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8113,
-   "end": 8120,
+   "start": 8114,
+   "end": 8121,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -21174,8 +21190,8 @@
    "name": "leadBirthDate",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8121,
-   "end": 8124,
+   "start": 8122,
+   "end": 8125,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -21210,8 +21226,8 @@
    "name": "displayNameWithBirth",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8125,
-   "end": 8129,
+   "start": 8126,
+   "end": 8130,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -21258,8 +21274,8 @@
    "name": "patientMatchesQuery",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8132,
-   "end": 8134,
+   "start": 8133,
+   "end": 8135,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -21297,8 +21313,8 @@
    "name": "ensureLeadsCache",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8140,
-   "end": 8143,
+   "start": 8141,
+   "end": 8144,
    "lines": 4,
    "tables": [],
    "rpcs": [],
@@ -21317,8 +21333,8 @@
    "name": "loadLeads",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8145,
-   "end": 8168,
+   "start": 8146,
+   "end": 8169,
    "lines": 24,
    "tables": [
     "leads",
@@ -21362,8 +21378,8 @@
    "name": "normalize_phone_js",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8170,
-   "end": 8179,
+   "start": 8171,
+   "end": 8180,
    "lines": 10,
    "tables": [],
    "rpcs": [],
@@ -21380,8 +21396,8 @@
    "name": "renderLeads",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8181,
-   "end": 8199,
+   "start": 8182,
+   "end": 8200,
    "lines": 19,
    "tables": [],
    "rpcs": [],
@@ -21419,8 +21435,8 @@
    "name": "pdSpringeZu",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8205,
-   "end": 8216,
+   "start": 8206,
+   "end": 8217,
    "lines": 12,
    "tables": [],
    "rpcs": [],
@@ -21443,8 +21459,8 @@
    "name": "openPatientDetailModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8218,
-   "end": 8267,
+   "start": 8219,
+   "end": 8268,
    "lines": 50,
    "tables": [],
    "rpcs": [],
@@ -21495,8 +21511,8 @@
    "name": "computeRxDeadlineAlerts",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8269,
-   "end": 8316,
+   "start": 8270,
+   "end": 8317,
    "lines": 48,
    "tables": [],
    "rpcs": [],
@@ -21530,8 +21546,8 @@
    "name": "loadPatientDetailRezepte",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8318,
-   "end": 8633,
+   "start": 8319,
+   "end": 8634,
    "lines": 316,
    "tables": [
     "prescriptions",
@@ -21588,8 +21604,8 @@
    "name": "makeBar",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 8424,
-   "end": 8436,
+   "start": 8425,
+   "end": 8437,
    "lines": 13,
    "tables": [],
    "rpcs": [],
@@ -21623,8 +21639,8 @@
    "name": "_druckenOutsideHandler",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 8627,
-   "end": 8629,
+   "start": 8628,
+   "end": 8630,
    "lines": 3,
    "tables": [],
    "rpcs": [],
@@ -21641,8 +21657,8 @@
    "name": "flipAbrechnungStatus",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8635,
-   "end": 8671,
+   "start": 8636,
+   "end": 8672,
    "lines": 37,
    "tables": [
     "prescriptions"
@@ -21685,8 +21701,8 @@
    "name": "renderBefreiungCard",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8675,
-   "end": 8706,
+   "start": 8676,
+   "end": 8707,
    "lines": 32,
    "tables": [],
    "rpcs": [],
@@ -21721,8 +21737,8 @@
    "name": "fmt",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 8680,
-   "end": 8685,
+   "start": 8681,
+   "end": 8686,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -21767,8 +21783,8 @@
    "name": "wireBefreiungCard",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8708,
-   "end": 8747,
+   "start": 8709,
+   "end": 8748,
    "lines": 40,
    "tables": [
     "zuzahlung_befreiung"
@@ -21813,8 +21829,8 @@
    "name": "oeffnen",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 8713,
-   "end": 8723,
+   "start": 8714,
+   "end": 8724,
    "lines": 11,
    "tables": [],
    "rpcs": [],
@@ -21850,8 +21866,8 @@
    "name": "loadMessreihen",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8755,
-   "end": 8779,
+   "start": 8756,
+   "end": 8780,
    "lines": 25,
    "tables": [],
    "rpcs": [],
@@ -21886,8 +21902,8 @@
    "name": "refreshMessreihen",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8781,
-   "end": 8854,
+   "start": 8782,
+   "end": 8855,
    "lines": 74,
    "tables": [
     "messreihen"
@@ -21929,8 +21945,8 @@
    "name": "renderMessreihenChart",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8856,
-   "end": 8903,
+   "start": 8857,
+   "end": 8904,
    "lines": 48,
    "tables": [],
    "rpcs": [],
@@ -21966,8 +21982,8 @@
    "name": "xOf",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 8866,
-   "end": 8898,
+   "start": 8867,
+   "end": 8899,
    "lines": 33,
    "tables": [],
    "rpcs": [],
@@ -22003,8 +22019,8 @@
    "name": "yOf",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 8867,
-   "end": 8898,
+   "start": 8868,
+   "end": 8899,
    "lines": 32,
    "tables": [],
    "rpcs": [],
@@ -22040,8 +22056,8 @@
    "name": "saveMessung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8905,
-   "end": 8942,
+   "start": 8906,
+   "end": 8943,
    "lines": 38,
    "tables": [
     "messreihen"
@@ -22081,8 +22097,8 @@
    "name": "zeigeFussbefundArchiv",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8953,
-   "end": 8960,
+   "start": 8954,
+   "end": 8961,
    "lines": 8,
    "tables": [],
    "rpcs": [],
@@ -22118,8 +22134,8 @@
    "name": "loadPatientDetailNotes",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8967,
-   "end": 8990,
+   "start": 8968,
+   "end": 8991,
    "lines": 24,
    "tables": [
     "patient_notes"
@@ -22155,8 +22171,8 @@
    "name": "loadPatientDetailAnamnese",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 8992,
-   "end": 9054,
+   "start": 8993,
+   "end": 9055,
    "lines": 63,
    "tables": [
     "anamnese",
@@ -22196,8 +22212,8 @@
    "name": "loadPatientDetailMails",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9056,
-   "end": 9092,
+   "start": 9057,
+   "end": 9093,
    "lines": 37,
    "tables": [
     "leads",
@@ -22239,8 +22255,8 @@
    "name": "loadPatientDetailUeberweisung",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9094,
-   "end": 9114,
+   "start": 9095,
+   "end": 9115,
    "lines": 21,
    "tables": [
     "ueberweisungen"
@@ -22277,8 +22293,8 @@
    "name": "loadPatientDetailRechnungen",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9116,
-   "end": 9154,
+   "start": 9117,
+   "end": 9155,
    "lines": 39,
    "tables": [
     "invoices"
@@ -22319,8 +22335,8 @@
    "name": "loadPatientDetailTermine",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9156,
-   "end": 9197,
+   "start": 9157,
+   "end": 9198,
    "lines": 42,
    "tables": [
     "bookings"
@@ -22361,8 +22377,8 @@
    "name": "openLeadModal",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9261,
-   "end": 9367,
+   "start": 9262,
+   "end": 9368,
    "lines": 107,
    "tables": [],
    "rpcs": [],
@@ -22410,8 +22426,8 @@
    "name": "parseAdresseString",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9371,
-   "end": 9388,
+   "start": 9372,
+   "end": 9389,
    "lines": 18,
    "tables": [],
    "rpcs": [],
@@ -22444,8 +22460,8 @@
    "name": "toggleLeadHausbesuchUI",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9390,
-   "end": 9394,
+   "start": 9391,
+   "end": 9395,
    "lines": 5,
    "tables": [],
    "rpcs": [],
@@ -22477,9 +22493,9 @@
    "name": "loadServices",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9647,
-   "end": 9665,
-   "lines": 19,
+   "start": 9648,
+   "end": 9667,
+   "lines": 20,
    "tables": [
     "services"
    ],
@@ -22490,6 +22506,7 @@
    "calls": [
     "autoSeedGkvServices",
     "bizScope",
+    "ermittleKostentraegerSpalte",
     "getOwnerId",
     "migratePodologieLegacyServices",
     "renderGkvCatalog",
@@ -22527,8 +22544,8 @@
    "name": "autoSeedGkvServices",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9667,
-   "end": 9694,
+   "start": 9669,
+   "end": 9696,
    "lines": 28,
    "tables": [
     "services"
@@ -22569,8 +22586,8 @@
    "name": "applyGueltigePreise",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9831,
-   "end": 9841,
+   "start": 9833,
+   "end": 9843,
    "lines": 11,
    "tables": [],
    "rpcs": [],
@@ -22587,8 +22604,8 @@
    "name": "migratePodologieLegacyServices",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9863,
-   "end": 9898,
+   "start": 9865,
+   "end": 9900,
    "lines": 36,
    "tables": [
     "services"
@@ -22627,8 +22644,8 @@
    "name": "renderGkvCatalog",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9901,
-   "end": 9910,
+   "start": 9903,
+   "end": 9912,
    "lines": 10,
    "tables": [],
    "rpcs": [],
@@ -22664,8 +22681,8 @@
    "name": "renderGkvEmpCheckboxes",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9913,
-   "end": 9923,
+   "start": 9915,
+   "end": 9925,
    "lines": 11,
    "tables": [],
    "rpcs": [],
@@ -22699,8 +22716,8 @@
    "name": "openGkvEditForm",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9925,
-   "end": 9971,
+   "start": 9927,
+   "end": 9973,
    "lines": 47,
    "tables": [],
    "rpcs": [],
@@ -22737,8 +22754,8 @@
    "name": "toggleGkvEmpCheckboxes",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 9973,
-   "end": 9979,
+   "start": 9975,
+   "end": 9981,
    "lines": 7,
    "tables": [],
    "rpcs": [],
@@ -22770,8 +22787,8 @@
    "name": "renderServices",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 10050,
-   "end": 10074,
+   "start": 10052,
+   "end": 10076,
    "lines": 25,
    "tables": [
     "services"
@@ -22815,8 +22832,8 @@
    "name": "resetServiceForm",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 10077,
-   "end": 10097,
+   "start": 10079,
+   "end": 10099,
    "lines": 21,
    "tables": [],
    "rpcs": [],
@@ -22824,14 +22841,15 @@
    "endpoints": [],
    "storage": [],
    "calls": [
+    "kostentraegerSpalteDa",
     "renderPhysioServiceCards",
     "renderSrvEmpCheckboxes",
-    "spalteKostentraegerDa",
     "srvFarbwahl",
     "t",
     "toggleEmpCheckboxes"
    ],
    "calledBy": [
+    "gkvFarbwahl",
     "openServiceEdit",
     "renderServices",
     "srvFarbwahl"
@@ -22857,9 +22875,9 @@
    "name": "gkvFarbwahl",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 10099,
-   "end": 10103,
-   "lines": 5,
+   "start": 10101,
+   "end": 10144,
+   "lines": 44,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -22867,7 +22885,11 @@
    "storage": [],
    "calls": [
     "farbwahlFuer",
-    "spalteKostentraegerDa"
+    "openServiceEdit",
+    "renderPhysioServiceCards",
+    "resetServiceForm",
+    "srvFarbwahl",
+    "toggleEmpCheckboxes"
    ],
    "calledBy": [
     "openGkvEditForm"
@@ -22890,46 +22912,12 @@
    ]
   },
   {
-   "name": "spalteKostentraegerDa",
-   "kind": "function",
-   "file": "dashboard.js",
-   "start": 10101,
-   "end": 10103,
-   "lines": 3,
-   "tables": [],
-   "rpcs": [],
-   "writes": [],
-   "endpoints": [],
-   "storage": [],
-   "calls": [],
-   "calledBy": [
-    "gkvFarbwahl",
-    "resetServiceForm"
-   ],
-   "modules": [
-    "abrechnung",
-    "fussstatus",
-    "hours",
-    "kunden",
-    "podologie-billing",
-    "rechnungen",
-    "services",
-    "team",
-    "ueberblick",
-    "verordnungen"
-   ],
-   "gemeinsam": true,
-   "uiPfad": [
-    "ortak yardımcı — 10 modülden çağrılıyor"
-   ]
-  },
-  {
    "name": "srvFarbwahl",
    "kind": "arrow",
    "file": "dashboard.js",
-   "start": 10106,
+   "start": 10104,
    "end": 10144,
-   "lines": 39,
+   "lines": 41,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -22943,6 +22931,7 @@
     "toggleEmpCheckboxes"
    ],
    "calledBy": [
+    "gkvFarbwahl",
     "openServiceEdit",
     "resetServiceForm"
    ],
@@ -22967,9 +22956,9 @@
    "name": "openServiceEdit",
    "kind": "function",
    "file": "dashboard.js",
-   "start": 10108,
+   "start": 10106,
    "end": 10144,
-   "lines": 37,
+   "lines": 39,
    "tables": [],
    "rpcs": [],
    "writes": [],
@@ -22982,6 +22971,7 @@
     "toggleEmpCheckboxes"
    ],
    "calledBy": [
+    "gkvFarbwahl",
     "renderServices",
     "srvFarbwahl"
    ],
@@ -23018,6 +23008,7 @@
     "round"
    ],
    "calledBy": [
+    "gkvFarbwahl",
     "openServiceEdit",
     "resetServiceForm",
     "srvFarbwahl"
@@ -23053,6 +23044,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "gkvFarbwahl",
     "openServiceEdit",
     "resetServiceForm",
     "srvFarbwahl"
@@ -23777,8 +23769,8 @@
    "kind": "arrow",
    "file": "dashboard.js",
    "start": 11024,
-   "end": 13555,
-   "lines": 2532,
+   "end": 14025,
+   "lines": 3002,
    "tables": [
     "time_offs",
     "profiles",
@@ -23799,7 +23791,8 @@
     "email_logs",
     "terapeut_zertifikat",
     "document_vorlagen",
-    "abrechnung"
+    "abrechnung",
+    "scraper_data"
    ],
    "rpcs": [],
    "writes": [
@@ -23825,12 +23818,16 @@
     "document_vorlagen:update",
     "document_vorlagen:insert",
     "document_vorlagen:delete",
-    "terapeut_zertifikat:upsert"
+    "terapeut_zertifikat:upsert",
+    "scraper_data:insert"
    ],
    "endpoints": [
     "https://n8n.infinitymade.de/api/gmail/send",
     "${AI_GATEWAY_BASE}/b2c-draft",
-    "${API}/billing/abrechnung/${id}/mark-sent"
+    "${API}/billing/abrechnung/${id}/mark-sent",
+    "/api/dsgvo?action=export",
+    "/api/dsgvo?action=delete",
+    "/api/apify/search"
    ],
    "storage": [
     "avatars"
@@ -23842,7 +23839,9 @@
     "_enterAnsichtEditMode",
     "_exitAnsichtEditMode",
     "_resizeVorlagenIframe",
+    "abrechnungsprofilCacheLeeren",
     "aiAddMsg",
+    "applyI18n",
     "b2bStatusBadge",
     "bizScope",
     "buildBookingUrl",
@@ -23850,6 +23849,7 @@
     "buildVorlagenPreview",
     "checkB2bSetup",
     "checkB2cSetup",
+    "cleanBookingSlug",
     "close",
     "closeCropModal",
     "closeModal",
@@ -23860,13 +23860,18 @@
     "deleteVorlage",
     "downloadAbrechnungFile",
     "duplicateVorlage",
+    "ensureBookingSlug",
+    "ensureCompanyCode",
     "escHTML",
     "escapeHtml",
+    "filterDocsCache",
     "fmtTime",
     "fn",
     "getOwnerId",
     "getSector",
+    "getTaxExemptValue",
     "getVorlagenSampleHtml",
+    "hideDocProgress",
     "initEmpCalTab",
     "initTaxExemptDropdown",
     "isEnterprise",
@@ -23876,6 +23881,8 @@
     "loadAerzte",
     "loadB2B",
     "loadB2C",
+    "loadBeispielmodus_SVG",
+    "loadDoctors",
     "loadEmpCertificates",
     "loadEmpDaySchedule",
     "loadEmpHours",
@@ -23886,6 +23893,7 @@
     "loadTeam",
     "loadUrlaubListe",
     "loadVorlagenPanel",
+    "makeShape",
     "markActiveShape",
     "openB2BModal",
     "openBookingModal",
@@ -23901,10 +23909,12 @@
     "prefillBookingModal",
     "renderB2B",
     "renderB2C",
+    "renderDocTable",
     "renderEmpAvatar",
     "renderEmpPermGrid",
     "renderEmpStandortList",
     "renderOtherStandortEmps",
+    "renderSidebar",
     "renderVorlagenContentForm",
     "round",
     "runMailDraft",
@@ -23914,10 +23924,13 @@
     "seedDefaultVorlagen",
     "seedMissingVorlagen",
     "set",
+    "setDocProgress",
     "setGmailUI",
     "showConfirmModal",
+    "showInputModal",
     "showQualWarningToast",
     "showToast",
+    "sortDocsCache",
     "start",
     "startGmailOAuth",
     "startVorlagenInlineRename",
@@ -23927,7 +23940,8 @@
     "updateB2cSetupFinishBtn",
     "updateBrandingLogoPreview",
     "updateCount",
-    "updateSetupFinishBtn"
+    "updateSetupFinishBtn",
+    "v"
    ],
    "calledBy": [
     "euroZustand",
@@ -26571,11 +26585,25 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "fmt",
     "wireBusinessModal"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "v",
@@ -26593,11 +26621,25 @@
     "getTaxExemptValue"
    ],
    "calledBy": [
+    "fmt",
     "wireBusinessModal"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "v",
@@ -26613,11 +26655,25 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "fmt",
     "wireBusinessModal"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "ensureCompanyCode",
@@ -26639,11 +26695,25 @@
     "update"
    ],
    "calledBy": [
+    "fmt",
     "init"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "cleanBookingSlug",
@@ -26661,11 +26731,25 @@
    "calledBy": [
     "bindBusiness",
     "ensureBookingSlug",
+    "fmt",
     "saveEmployee"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "ensureBookingSlug",
@@ -26688,11 +26772,25 @@
     "update"
    ],
    "calledBy": [
+    "fmt",
     "init"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "renderDocTable",
@@ -26708,6 +26806,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "fmt",
     "loadDoctors"
    ],
    "modules": [
@@ -26742,6 +26841,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "fmt",
     "loadDoctors"
    ],
    "modules": [
@@ -26776,6 +26876,7 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "fmt",
     "loadDoctors"
    ],
    "modules": [
@@ -26817,6 +26918,7 @@
     "sortDocsCache"
    ],
    "calledBy": [
+    "fmt",
     "switchPanel"
    ],
    "modules": [
@@ -26850,10 +26952,25 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "calledBy": [
+    "fmt"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "hideDocProgress",
@@ -26868,10 +26985,25 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "calledBy": [
+    "fmt"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "loadBeispielmodus_SVG",
@@ -26891,10 +27023,25 @@
     "onZoneClick",
     "render"
    ],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "calledBy": [
+    "fmt"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "makeShape",
@@ -26911,6 +27058,7 @@
    "calls": [],
    "calledBy": [
     "buildSVG",
+    "fmt",
     "loadBeispielmodus_SVG"
    ],
    "modules": [
@@ -30517,11 +30665,25 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "fmt",
     "wireBusinessModal"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "deleteBusiness",
@@ -40354,10 +40516,25 @@
    "endpoints": [],
    "storage": [],
    "calls": [],
-   "calledBy": [],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "calledBy": [
+    "fmt"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "ladePraxisAbrechnungsProfil",
@@ -46435,6 +46612,179 @@
    "uiPfad": []
   },
   {
+   "name": "spalteAusZeilen",
+   "kind": "function",
+   "file": "module/kostentraeger-spalte.js",
+   "start": 121,
+   "end": 124,
+   "lines": 4,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "ermittleKostentraegerSpalte"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "sondiere",
+   "kind": "function",
+   "file": "module/kostentraeger-spalte.js",
+   "start": 131,
+   "end": 152,
+   "lines": 22,
+   "tables": [
+    "services"
+   ],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "ermittleKostentraegerSpalte"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "ermittleKostentraegerSpalte",
+   "kind": "function",
+   "file": "module/kostentraeger-spalte.js",
+   "start": 167,
+   "end": 200,
+   "lines": 34,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [
+    "sondiere",
+    "spalteAusZeilen"
+   ],
+   "calledBy": [
+    "loadServices"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "kostentraegerSpalteDa",
+   "kind": "function",
+   "file": "module/kostentraeger-spalte.js",
+   "start": 209,
+   "end": 211,
+   "lines": 3,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [
+    "resetServiceForm"
+   ],
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
+  },
+  {
+   "name": "_spaltenwissenZuruecksetzen",
+   "kind": "function",
+   "file": "module/kostentraeger-spalte.js",
+   "start": 222,
+   "end": 225,
+   "lines": 4,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
+   "name": "_fristSetzen",
+   "kind": "function",
+   "file": "module/kostentraeger-spalte.js",
+   "start": 228,
+   "end": 230,
+   "lines": 3,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
+  },
+  {
    "name": "ladeKassen",
    "kind": "function",
    "file": "module/krankenkasse-suche.js",
@@ -47731,6 +48081,24 @@
    "uiPfad": [
     "ortak yardımcı — 10 modülden çağrılıyor"
    ]
+  },
+  {
+   "name": "normalisiereTyp",
+   "kind": "function",
+   "file": "module/leistungen-liste.js",
+   "start": 330,
+   "end": 333,
+   "lines": 4,
+   "tables": [],
+   "rpcs": [],
+   "writes": [],
+   "endpoints": [],
+   "storage": [],
+   "calls": [],
+   "calledBy": [],
+   "modules": [],
+   "gemeinsam": false,
+   "uiPfad": []
   },
   {
    "name": "d",
@@ -51732,11 +52100,25 @@
    "storage": [],
    "calls": [],
    "calledBy": [
+    "fmt",
     "v"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "_datumDE",
@@ -59862,8 +60244,8 @@
    "name": "resolveSector",
    "kind": "function",
    "file": "nav-registry.js",
-   "start": 117,
-   "end": 122,
+   "start": 140,
+   "end": 145,
    "lines": 6,
    "tables": [],
    "rpcs": [],
@@ -60497,11 +60879,25 @@
    "calledBy": [
     "bindBusiness",
     "ensureBookingSlug",
+    "fmt",
     "saveEmployee"
    ],
-   "modules": [],
-   "gemeinsam": false,
-   "uiPfad": []
+   "modules": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
+   "gemeinsam": true,
+   "uiPfad": [
+    "ortak yardımcı — 10 modülden çağrılıyor"
+   ]
   },
   {
    "name": "bindPlan",
@@ -67496,8 +67892,8 @@
       {
        "name": "openBookingActionModal",
        "file": "dashboard.js",
-       "start": 3230,
-       "end": 3699,
+       "start": 3231,
+       "end": 3700,
        "lines": 470,
        "writes": [
         "bookings:update"
@@ -67526,8 +67922,8 @@
       {
        "name": "handleSessionDrop",
        "file": "dashboard.js",
-       "start": 3911,
-       "end": 4007,
+       "start": 3912,
+       "end": 4008,
        "lines": 97,
        "writes": [
         "bookings:insert"
@@ -67556,8 +67952,8 @@
       {
        "name": "saveFahrtStartHandler",
        "file": "dashboard.js",
-       "start": 4191,
-       "end": 4257,
+       "start": 4192,
+       "end": 4258,
        "lines": 67,
        "writes": [
         "bookings:update"
@@ -67573,8 +67969,8 @@
       {
        "name": "markArrivedHandler",
        "file": "dashboard.js",
-       "start": 4274,
-       "end": 4288,
+       "start": 4275,
+       "end": 4289,
        "lines": 15,
        "writes": [
         "bookings:update"
@@ -67590,8 +67986,8 @@
       {
        "name": "saveFahrtEndHandler",
        "file": "dashboard.js",
-       "start": 4318,
-       "end": 4410,
+       "start": 4319,
+       "end": 4411,
        "lines": 93,
        "writes": [
         "bookings:update"
@@ -67607,8 +68003,8 @@
       {
        "name": "handleTerminStarten",
        "file": "dashboard.js",
-       "start": 4412,
-       "end": 4480,
+       "start": 4413,
+       "end": 4481,
        "lines": 69,
        "writes": [
         "bookings:update"
@@ -67624,8 +68020,8 @@
       {
        "name": "handlePatientNichtErschienen",
        "file": "dashboard.js",
-       "start": 4502,
-       "end": 4550,
+       "start": 4503,
+       "end": 4551,
        "lines": 49,
        "writes": [
         "bookings:update"
@@ -67641,8 +68037,8 @@
       {
        "name": "loadGroupParticipants",
        "file": "dashboard.js",
-       "start": 4917,
-       "end": 4995,
+       "start": 4918,
+       "end": 4996,
        "lines": 79,
        "writes": [
         "bookings:update"
@@ -67666,8 +68062,8 @@
       {
        "name": "initBkGroupPatientAutocomplete",
        "file": "dashboard.js",
-       "start": 5033,
-       "end": 5154,
+       "start": 5034,
+       "end": 5155,
        "lines": 122,
        "writes": [
         "bookings:insert"
@@ -67696,8 +68092,8 @@
       {
        "name": "doMoveBooking",
        "file": "dashboard.js",
-       "start": 5496,
-       "end": 5525,
+       "start": 5497,
+       "end": 5526,
        "lines": 30,
        "writes": [
         "bookings:update"
@@ -67726,8 +68122,8 @@
       {
        "name": "absageTerminMitGrund",
        "file": "dashboard.js",
-       "start": 8018,
-       "end": 8054,
+       "start": 8019,
+       "end": 8055,
        "lines": 37,
        "writes": [
         "bookings:update",
@@ -67840,8 +68236,8 @@
       {
        "name": "kassiereZuzahlung",
        "file": "dashboard.js",
-       "start": 7342,
-       "end": 7414,
+       "start": 7343,
+       "end": 7415,
        "lines": 73,
        "writes": [
         "prescriptions:update"
@@ -67865,8 +68261,8 @@
       {
        "name": "flipAbrechnungStatus",
        "file": "dashboard.js",
-       "start": 8635,
-       "end": 8671,
+       "start": 8636,
+       "end": 8672,
        "lines": 37,
        "writes": [
         "prescriptions:update"
@@ -67895,8 +68291,8 @@
       {
        "name": "storniereZuzahlung",
        "file": "dashboard.js",
-       "start": 7417,
-       "end": 7485,
+       "start": 7418,
+       "end": 7486,
        "lines": 69,
        "writes": [
         "prescriptions:update"
@@ -68094,7 +68490,7 @@
   },
   {
    "tabelle": "profiles",
-   "anzahl": 8,
+   "anzahl": 7,
    "pfade": [
     {
      "leitfunktion": "openStripePortal",
@@ -68102,8 +68498,8 @@
       {
        "name": "openStripePortal",
        "file": "dashboard.js",
-       "start": 2310,
-       "end": 2420,
+       "start": 2311,
+       "end": 2421,
        "lines": 111,
        "writes": [
         "profiles:update"
@@ -68119,8 +68515,8 @@
       {
        "name": "ensureClinicLocation",
        "file": "dashboard.js",
-       "start": 5821,
-       "end": 5847,
+       "start": 5822,
+       "end": 5848,
        "lines": 27,
        "writes": [
         "profiles:update"
@@ -68137,8 +68533,8 @@
        "name": "fmt",
        "file": "dashboard.js",
        "start": 11024,
-       "end": 13555,
-       "lines": 2532,
+       "end": 14025,
+       "lines": 3002,
        "writes": [
         "profiles:update"
        ],
@@ -68182,12 +68578,7 @@
        "uiPfad": [
         "ortak yardımcı — 10 modülden çağrılıyor"
        ]
-      }
-     ]
-    },
-    {
-     "leitfunktion": "bindPlan",
-     "funktionen": [
+      },
       {
        "name": "ensureCompanyCode",
        "file": "dashboard.js",
@@ -68197,8 +68588,21 @@
        "writes": [
         "profiles:update"
        ],
-       "modules": [],
-       "uiPfad": []
+       "modules": [
+        "abrechnung",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "team",
+        "ueberblick",
+        "verordnungen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 10 modülden çağrılıyor"
+       ]
       },
       {
        "name": "ensureBookingSlug",
@@ -68209,8 +68613,21 @@
        "writes": [
         "profiles:update"
        ],
-       "modules": [],
-       "uiPfad": []
+       "modules": [
+        "abrechnung",
+        "fussstatus",
+        "hours",
+        "kunden",
+        "podologie-billing",
+        "rechnungen",
+        "services",
+        "team",
+        "ueberblick",
+        "verordnungen"
+       ],
+       "uiPfad": [
+        "ortak yardımcı — 10 modülden çağrılıyor"
+       ]
       },
       {
        "name": "init",
@@ -68416,8 +68833,8 @@
       {
        "name": "ensureBlankoBonusServices",
        "file": "dashboard.js",
-       "start": 7769,
-       "end": 7808,
+       "start": 7770,
+       "end": 7809,
        "lines": 40,
        "writes": [
         "services:update",
@@ -68434,8 +68851,8 @@
       {
        "name": "autoSeedGkvServices",
        "file": "dashboard.js",
-       "start": 9667,
-       "end": 9694,
+       "start": 9669,
+       "end": 9696,
        "lines": 28,
        "writes": [
         "services:insert"
@@ -68492,8 +68909,8 @@
       {
        "name": "migratePodologieLegacyServices",
        "file": "dashboard.js",
-       "start": 9863,
-       "end": 9898,
+       "start": 9865,
+       "end": 9900,
        "lines": 36,
        "writes": [
         "services:update"
@@ -68522,8 +68939,8 @@
       {
        "name": "renderServices",
        "file": "dashboard.js",
-       "start": 10050,
-       "end": 10074,
+       "start": 10052,
+       "end": 10076,
        "lines": 25,
        "writes": [
         "services:delete"
@@ -68712,8 +69129,8 @@
       {
        "name": "handleDirectAusfallrechnung",
        "file": "dashboard.js",
-       "start": 4552,
-       "end": 4698,
+       "start": 4553,
+       "end": 4699,
        "lines": 147,
        "writes": [
         "leads:update"
@@ -68729,8 +69146,8 @@
       {
        "name": "maybeOfferAppointmentConfirmEmail",
        "file": "dashboard.js",
-       "start": 7672,
-       "end": 7759,
+       "start": 7673,
+       "end": 7760,
        "lines": 88,
        "writes": [
         "leads:update"
@@ -68786,8 +69203,8 @@
       {
        "name": "handleSessionDrop",
        "file": "dashboard.js",
-       "start": 3911,
-       "end": 4007,
+       "start": 3912,
+       "end": 4008,
        "lines": 97,
        "writes": [
         "prescription_sessions:update"
@@ -68816,8 +69233,8 @@
       {
        "name": "handlePatientNichtErschienen",
        "file": "dashboard.js",
-       "start": 4502,
-       "end": 4550,
+       "start": 4503,
+       "end": 4551,
        "lines": 49,
        "writes": [
         "prescription_sessions:update"
@@ -68833,8 +69250,8 @@
       {
        "name": "markPrescriptionSession",
        "file": "dashboard.js",
-       "start": 7547,
-       "end": 7565,
+       "start": 7548,
+       "end": 7566,
        "lines": 19,
        "writes": [
         "prescription_sessions:update"
@@ -68850,8 +69267,8 @@
       {
        "name": "linkBookingsToPrescriptionSessions",
        "file": "dashboard.js",
-       "start": 7580,
-       "end": 7670,
+       "start": 7581,
+       "end": 7671,
        "lines": 91,
        "writes": [
         "prescription_sessions:update",
@@ -68957,8 +69374,8 @@
       {
        "name": "saveFahrtStartHandler",
        "file": "dashboard.js",
-       "start": 4191,
-       "end": 4257,
+       "start": 4192,
+       "end": 4258,
        "lines": 67,
        "writes": [
         "fahrten:upsert"
@@ -68974,8 +69391,8 @@
       {
        "name": "saveFahrtEndHandler",
        "file": "dashboard.js",
-       "start": 4318,
-       "end": 4410,
+       "start": 4319,
+       "end": 4411,
        "lines": 93,
        "writes": [
         "fahrten:upsert"
@@ -69131,8 +69548,8 @@
        "name": "fmt",
        "file": "dashboard.js",
        "start": 11024,
-       "end": 13555,
-       "lines": 2532,
+       "end": 14025,
+       "lines": 3002,
        "writes": [
         "breaks:insert",
         "breaks:delete"
@@ -69194,8 +69611,8 @@
        "name": "fmt",
        "file": "dashboard.js",
        "start": 11024,
-       "end": 13555,
-       "lines": 2532,
+       "end": 14025,
+       "lines": 3002,
        "writes": [
         "calendar_integrations:delete"
        ],
@@ -69272,8 +69689,8 @@
       {
        "name": "loadPatientDetailMails",
        "file": "dashboard.js",
-       "start": 9056,
-       "end": 9092,
+       "start": 9057,
+       "end": 9093,
        "lines": 37,
        "writes": [
         "email_logs:update"
@@ -69303,8 +69720,8 @@
        "name": "fmt",
        "file": "dashboard.js",
        "start": 11024,
-       "end": 13555,
-       "lines": 2532,
+       "end": 14025,
+       "lines": 3002,
        "writes": [
         "email_logs:insert"
        ],
@@ -69339,8 +69756,8 @@
        "name": "fmt",
        "file": "dashboard.js",
        "start": 11024,
-       "end": 13555,
-       "lines": 2532,
+       "end": 14025,
+       "lines": 3002,
        "writes": [
         "employee_services:insert",
         "employee_services:delete"
@@ -69587,8 +70004,8 @@
        "name": "fmt",
        "file": "dashboard.js",
        "start": 11024,
-       "end": 13555,
-       "lines": 2532,
+       "end": 14025,
+       "lines": 3002,
        "writes": [
         "time_offs:delete",
         "time_offs:insert"
@@ -69743,8 +70160,8 @@
       {
        "name": "saveQuickVehicleHandler",
        "file": "dashboard.js",
-       "start": 4168,
-       "end": 4189,
+       "start": 4169,
+       "end": 4190,
        "lines": 22,
        "writes": [
         "vehicles:insert"
@@ -69894,8 +70311,8 @@
       {
        "name": "reportSidebarVisibility",
        "file": "dashboard.js",
-       "start": 934,
-       "end": 958,
+       "start": 935,
+       "end": 959,
        "lines": 25,
        "writes": [
         "visibility_reports:upsert"
@@ -69931,8 +70348,8 @@
        "name": "fmt",
        "file": "dashboard.js",
        "start": 11024,
-       "end": 13555,
-       "lines": 2532,
+       "end": 14025,
+       "lines": 3002,
        "writes": [
         "working_hours:upsert"
        ],
@@ -70009,8 +70426,8 @@
       {
        "name": "wireBefreiungCard",
        "file": "dashboard.js",
-       "start": 8708,
-       "end": 8747,
+       "start": 8709,
+       "end": 8748,
        "lines": 40,
        "writes": [
         "zuzahlung_befreiung:delete"
@@ -70091,7 +70508,7 @@
     "api-backend/billing/pdf/rezeptvorderseite.template.js:6",
     "api-backend/billing/pdf/rzg-quittung.template.js:6",
     "api-backend/billing/pdf/zuzahlungsrechnung.template.js:9",
-    "dashboard.js:850",
+    "dashboard.js:851",
     "module/abrechnungsstatus.js:500",
     "module/diagnosegruppen-regeln.js:30",
     "module/fussbefund.js:179",
@@ -70110,8 +70527,8 @@
   {
    "name": "fmt",
    "orte": [
-    "dashboard.js:3838",
-    "dashboard.js:8680",
+    "dashboard.js:3839",
+    "dashboard.js:8681",
     "dashboard.js:10657",
     "dashboard.js:10946",
     "dashboard.js:11024",
@@ -70155,7 +70572,7 @@
     "api-backend/billing/pdf/rezeptvorderseite.template.js:10",
     "api-backend/billing/pdf/rzg-quittung.template.js:11",
     "api-backend/billing/pdf/zuzahlungsrechnung.template.js:14",
-    "dashboard.js:1358",
+    "dashboard.js:1359",
     "ops/app.js:84"
    ]
   },
@@ -70198,7 +70615,7 @@
     "api-backend/billing/api/mahnwesen.routes.js:45",
     "api-backend/server.js:263",
     "api-backend/server.js:1207",
-    "dashboard.js:3171"
+    "dashboard.js:3172"
    ]
   },
   {
@@ -70271,10 +70688,10 @@
   {
    "name": "cleanup",
    "orte": [
-    "dashboard.js:7102",
-    "dashboard.js:7131",
-    "dashboard.js:7207",
-    "dashboard.js:7311",
+    "dashboard.js:7103",
+    "dashboard.js:7132",
+    "dashboard.js:7208",
+    "dashboard.js:7312",
     "dashboard.js:23110"
    ]
   },
@@ -70320,7 +70737,7 @@
    "orte": [
     "booking-request.js:419",
     "booking.js:193",
-    "dashboard.js:9647",
+    "dashboard.js:9648",
     "kalender.js:567"
    ]
   },
@@ -70336,7 +70753,7 @@
   {
    "name": "closeModal",
    "orte": [
-    "dashboard.js:1292",
+    "dashboard.js:1293",
     "dashboard.js:12637",
     "dashboard.js:13056",
     "ops/app.js:162"
@@ -70345,7 +70762,7 @@
   {
    "name": "onEsc",
    "orte": [
-    "dashboard.js:7318",
+    "dashboard.js:7319",
     "module/rechnung-leistung-picker.js:42",
     "module/zuzahlung-befreiung.js:155",
     "module/zuzahlung-korrektur.js:214"
@@ -70390,7 +70807,7 @@
    "name": "showToast",
    "orte": [
     "admin.js:22",
-    "dashboard.js:1306",
+    "dashboard.js:1307",
     "module/kiosk.js:46"
    ]
   },
@@ -70422,7 +70839,7 @@
    "name": "initCalendar",
    "orte": [
     "booking-request.js:562",
-    "dashboard.js:2538",
+    "dashboard.js:2539",
     "kalender.js:245"
    ]
   },
@@ -70576,7 +70993,7 @@
    "name": "fmtTime",
    "orte": [
     "api-backend/billing/pdf/ausfallrechnung.template.js:25",
-    "dashboard.js:1354"
+    "dashboard.js:1355"
    ]
   },
   {
@@ -70660,7 +71077,7 @@
    "name": "formatDateDE",
    "orte": [
     "booking-request.js:178",
-    "dashboard.js:2667"
+    "dashboard.js:2668"
    ]
   },
   {
@@ -70701,35 +71118,35 @@
   {
    "name": "t",
    "orte": [
-    "dashboard.js:849",
+    "dashboard.js:850",
     "module/kiosk.js:47"
    ]
   },
   {
    "name": "openModal",
    "orte": [
-    "dashboard.js:1277",
+    "dashboard.js:1278",
     "ops/app.js:136"
    ]
   },
   {
    "name": "statusBadge",
    "orte": [
-    "dashboard.js:1363",
+    "dashboard.js:1364",
     "module/abrechnungsstatus.js:221"
    ]
   },
   {
    "name": "f",
    "orte": [
-    "dashboard.js:1518",
+    "dashboard.js:1519",
     "module/kiosk.js:175"
    ]
   },
   {
    "name": "renderServices",
    "orte": [
-    "dashboard.js:10050",
+    "dashboard.js:10052",
     "onboarding.js:553"
    ]
   },

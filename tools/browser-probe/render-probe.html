@@ -91,6 +91,10 @@ renderLeistungenListe({
     { id: 's2', title: 'Pause', code: 'BLOCK_PAUSE', is_internal: true, color: '#94a3b8', duration_minutes: 30 },
     { id: 's3', title: 'Beratung', color: '#3b82f6', duration_minutes: 20, price: '25' },
     { id: 's4', title: 'BG-Behandlung', kostentraeger_typ: 'bg', color: '#a855f7', duration_minutes: 30, price: '40' },
+    // Selbstzahler und BG sind die zwei Gruppen, die es ohne die Spalte
+    // `services.kostentraeger_typ` gar nicht geben kann. Beide gehoeren in die
+    // Probe, sonst beweist sie nur den Zustand vor der Migration.
+    { id: 's5', title: 'Fusspflege kosmetisch', kostentraeger_typ: 'selbstzahler', color: '#f59e0b', duration_minutes: 45, price: '35' },
   ],
   teamMembers: TEAM,
   formatEur: (v) => '€' + Number(v).toFixed(2),

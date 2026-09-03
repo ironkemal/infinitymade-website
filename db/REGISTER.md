@@ -172,6 +172,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** spätestens 06.05.2026 · `extend_profiles_for_multi_tenant`
 - **Status:** aktiv
 - **Wer:** Onboarding (`autoSeedGkvServices`), Kalender-Einstellungen, Buchungsseite, Backend.
+- **⏳ Ausstehend:** Spalte `kostentraeger_typ text` — Migration `supabase/migrations/20260902090000_services_kostentraeger_typ.sql` liegt fertig, ist am 03.09.2026 **noch nicht gelaufen**. Bis dahin wird die Abrechnungsart implizit aus `gkv_position_nr` hergeleitet, und **Selbstzahler/BG sind gar nicht abbildbar**. Warum `text` + CHECK statt ENUM und warum NULL erlaubt bleibt: im Kopf der Migrationsdatei.
 - **Achtung:** Öffentlich lesbar (Buchungsseite). Die frühere Spiegeltabelle `business_services` wurde am 28.08.2026 gedroppt (`20260828202843_business_services_droppen_spiegeltabelle`) — nicht wiederbeleben. Ihr Inhalt liegt vor dem DROP gesichert außerhalb des Repos: `Ops-Drive/infra/db-sicherung/2026-08-28_business_services_vor_drop.json`. Warum sie weg musste: ihre Policies verglichen `auth.uid()` mit `business_id`, in der Spalte stand aber eine `businesses.id` — keine ihrer Zeilen war je für die zugehörige Praxis sichtbar, und `onboarding.js` konnte gar nicht hineinschreiben (Spalte `code` existierte dort nicht, und der FK zeigte auf `businesses`). Beschluss: `konsey/tutanak/2026-08-28-business-services.md`.
 
 ### `employee_services`

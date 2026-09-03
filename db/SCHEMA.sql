@@ -1653,6 +1653,12 @@ CREATE TABLE services (
 --     jene Spiegeltabelle ist gedroppt, `services` ist seither die einzige.
 --   ⚠️ Policy "Public read services" erlaubt SELECT für alle (Booking-Seite).
 --   ⚠️ price ist text, nicht numeric. Struktur steckt in price_config jsonb.
+--   ⏳ AUSSTEHEND: Spalte `kostentraeger_typ text` (CHECK: gkv/privat/
+--     selbstzahler/bg, NULL erlaubt). Migration liegt fertig unter
+--     supabase/migrations/20260902090000_services_kostentraeger_typ.sql,
+--     war am 03.09.2026 noch nicht ausgefuehrt. Dieser Dump ist bis dahin
+--     korrekt — die Spalte gibt es wirklich noch nicht. Nach dem Lauf:
+--     „Schema aktualisieren" und diesen ganzen ⏳-Block loeschen.
 
 CREATE TABLE spatial_ref_sys (
   srid integer NOT NULL

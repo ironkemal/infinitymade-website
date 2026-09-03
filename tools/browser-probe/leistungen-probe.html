@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- Nur zum Pruefen. Baut den Leistungsteil der Terminmaske nach und laesst
+     module/termin-leistungen.js sich daran verdrahten — ohne Login, ohne
+     Datenbank. Damit ist die Frage „erscheint die zweite Zeile wirklich?"
+     pruefbar, statt nur „laedt das Modul?".
+
+     Die Supabase-Attrappe liefert eine leere Historie: das ist der Fall aus
+     Karte 221, der neue Patient am Telefon. -->
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../dashboard.css">
+  <title>Leistungen-Probe</title>
+</head>
+<body>
+  <div class="modal-overlay" id="bookingModal" hidden>
+    <div class="form-group" id="bkServiceGroup">
+      <div style="display:flex;gap:8px;">
+        <select class="form-select" id="bkService"></select>
+        <input class="form-input" id="bkMenge" type="number" min="1" max="20" value="1">
+      </div>
+    </div>
+    <div id="bkLeistungExtra" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button type="button" id="bkLeistungAdd" class="btn-ghost">+ Leistung</button>
+    <div id="bkLeistungHinweis" hidden></div>
+
+    <div class="form-group" id="bkDurationGroup" hidden>
+      <div id="bkDurationOptions"></div>
+    </div>
+
+    <input id="bkStart" type="datetime-local" value="2026-09-03T09:00">
+    <input id="bkCustomerId" type="hidden" value="lead-1">
+    <input id="bkIsSelbstzahler" type="hidden" value="">
+    <label><input type="checkbox" id="bkIsGroup"> Gruppentermin</label>
+  </div>
+
+<script type="module">
+import { mountTerminLeistungen, leseLeistungen } from '../../module/termin-leistungen.js';
+
+// Katalog wie in `servicesCache` — echte HPNR, damit die Regel greift.
+const DIENSTE = [
+  { id: 's-beh-gr', gkv_position_nr: '78020', duration_minutes: 50, title: 'Podologische Behandlung (groß)' },
+  { id: 's-eing',   gkv_position_nr: '78040', duration_minutes: 20, title: 'Eingangsbefundung' },
+  { id: 's-bef',    gkv_position_nr: '78030', duration_minutes: null, title: 'Podologische Befundung' },
+  { id: 's-nsp',    gkv_position_nr: '78610', duration_minutes: 45, title: 'Nagelspangenbehandlung' },
+];
+
+// Optionen so aufbauen, wie populateSrvSelect() es tut — die Zusatzzeilen
+// klonen genau dieses innerHTML.
+document.getElementById('bkService').innerHTML =
+  '<option value="">— Dienstleistung wählen —</option>'
+  + DIENSTE.map(s => `<option value="${s.id}" data-duration="${s.duration_minutes || 30}">${s.title}</option>`).join('');
+
+// Attrappe: leere Historie = neuer Patient.
+const leer = { data: [] };
+const kette = () => {
+  const k = {};
+  for (const m of ['select', 'eq', 'in', 'neq', 'order', 'delete', 'insert']) k[m] = () => k;
+  k.then = (aufl) => Promise.resolve(leer).then(aufl);
+  return k;
+};
+const supabase = { from: () => kette() };
+
+mountTerminLeistungen({ supabase, getOwnerId: () => 'owner-1', getServices: () => DIENSTE });
+
+window.__probe = { leseLeistungen };
+document.getElementById('bookingModal').hidden = false;
+document.title = 'fertig';
+</script>
+</body>
+</html>

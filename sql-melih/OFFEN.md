@@ -5,6 +5,34 @@
 
 ---
 
+## 0. 🟡 `services.kostentraeger_typ` anlegen — nachgetragen 03.09.2026
+
+Supabase-SQL-Editor, Projekt **`njvuclullotbksskpwgk`** (Produkt).
+
+```
+supabase/migrations/20260902090000_services_kostentraeger_typ.sql
+```
+
+Hängt an nichts, Reihenfolge egal. **Kein Notfall:** ohne das Skript ist nichts
+kaputt, die Leistungsübersicht fällt auf die alte implizite Regel zurück
+(`gkv_position_nr` gefüllt → GKV, leer → Privat). Es fehlt nur die Fähigkeit —
+**Selbstzahler und BG lassen sich bis dahin gar nicht abbilden**, obwohl der
+gesamte Code dafür schon steht und getestet ist.
+
+Legt eine Spalte an, setzt ein CHECK und trägt den Bestand nach. Verändert
+keine Anzeige — der Backfill schreibt genau das, was die Ansicht heute schon
+herleitet. Gegen eine echte Postgres 16 durchgespielt (03.09.2026): vorwärts,
+Kontrollen, zweiter Lauf, Rückbau.
+
+⚠️ Am besten **einmal** laufen lassen. Ein zweiter Lauf überschreibt zwar keine
+gepflegten Werte, wandelt aber Leistungen um, die jemand bewusst auf
+„— automatisch —" gestellt hat.
+
+**Danach:** Kontrollblock 4 am Dateiende separat laufen lassen — Abfrage (c)
+muss `0` ergeben. Dann „Schema aktualisieren" für `db/SCHEMA.sql`.
+
+---
+
 ## 1. 🔴 `SUPABASE-JETZT-AUSFUEHREN.sql` ausführen — dringend
 
 Supabase-SQL-Editor, Projekt **`njvuclullotbksskpwgk`** (Produkt, **nicht** das

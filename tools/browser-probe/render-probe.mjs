@@ -47,8 +47,8 @@ p('volle Wochen (durch 7 teilbar)', d.monatsZellen % 7 === 0, `${d.monatsZellen}
 p('Termin-Pillen gezeichnet', d.monatsPillen > 0, String(d.monatsPillen));
 
 console.log('\n══ LEISTUNGSLISTE');
-p('nach Kostenträger gruppiert', JSON.stringify(d.gruppen) === JSON.stringify(['gkv','privat','bg','intern']), d.gruppen.join(' · '));
-p('alle 4 Leistungen als Zeile', d.zeilen === 4, String(d.zeilen));
+p('nach Kostenträger gruppiert', JSON.stringify(d.gruppen) === JSON.stringify(['gkv','privat','selbstzahler','bg','intern']), d.gruppen.join(' · '));
+p('alle 5 Leistungen als Zeile', d.zeilen === 5, String(d.zeilen));
 
 console.log('\n══ GKV-KATALOG');
 p('2 Katalogzeilen + 1 Hinweiszeile', d.gkvZeilen === 3, String(d.gkvZeilen));
