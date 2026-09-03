@@ -35,6 +35,10 @@ import { waehleLeistung } from './module/rechnung-leistung-picker.js?v=20260815b
 import { initTaxExemptDropdown, getTaxExemptValue, berechneSteuer, steuerhinweisText, steuerStatusVon, leistungszeitraum, leistungsartVorschlag, mountLeistungsart } from './module/rechnung-steuer.js?v=20260816';
 import { behandlungenVerknuepfen, rechnungButtonHtml, starteRechnungAusVerordnung } from './module/rechnung-bruecke.js?v=20260816';
 import { oeffneBefreiungsFormular } from './module/zuzahlung-befreiung.js?v=20260814';
+import { zeigeSitzungsSeiten, verdrahteSitzungsUmschalter } from './module/sitzungen-ansicht.js?v=20260903';
+import { findePosition as findeRxPosition, ermittleGeldstand, verdrahteGeldzeile } from './module/rezeptinfo-geld.js?v=20260903c';
+import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902';
+import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260903';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
@@ -52,6 +56,8 @@ import { ensureBlockerServices, istBlockerLeistung } from './module/kalender-blo
 import { renderLeistungenListe, renderGkvKatalog } from './module/leistungen-liste.js?v=20260830';
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
 import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260830';
+import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
+import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260903';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
   setzePatientenKarte, waehleVerordnungFuerPanel, rendereVerordnungsNavigation, uebernimmVerordnung,
@@ -3236,7 +3242,13 @@ async function openBookingActionModal(booking, opts = {}) {
   // Der Seitenbereich geht auch aus dem Tagesplan auf, nicht nur aus dem
   // Kalender — die Patientensuche im Kopf muss dann trotzdem verdrahtet sein.
   if (!window._calRpInited) { window._calRpInited = true; initCalRightPanel(); }
+  zeigeTerminModus();   // nimmt zurueck, was der Patientenmodus geschlossen hat
   bkActionBookingCache = booking;
+  // Der Kassenstatus steht am Patienten, und der wird erst weiter unten geladen.
+  // Die Geldzeile zeichnet deshalb zweimal: sofort (noch ohne Zahler) und
+  // erneut, sobald `lead` da ist. Ohne das zweite Zeichnen fragt der €-Knopf
+  // beim Privatpatienten nach, obwohl die Antwort im Patientenstamm steht.
+  let bkGeldNeuZeichnen = null;
   verdrahteFussbefundKnopf(fussbefundCtx(), booking);
   setzeTerminAuswahlLabel(booking);
   if (booking.status === 'confirmed') {
@@ -3301,9 +3313,10 @@ async function openBookingActionModal(booking, opts = {}) {
   const rx = rxWahl.rx;
   if (rxCard && rx && rx.anzahl_einheiten) {
     const total = rx.anzahl_einheiten;
-    // ?? statt ||: bei einer durchgeblätterten Verordnung sind 0 erbrachte
-    // Sitzungen ein gültiger Stand und dürfen nicht zu 1 werden.
-    const current = rxWahl.aktuelleSitzung ?? 1;
+    // ?? statt ||: 0 erbrachte Sitzungen sind ein gültiger Stand und dürfen
+    // nicht zu 1 werden. `current` zählt seit 02.09.2026 erbrachte Sitzungen
+    // (status `done`), nicht mehr die Nummer des angeklickten Termins.
+    const current = rxWahl.aktuelleSitzung ?? 0;
     const remaining = Math.max(0, total - current);
     const pct = Math.round((current / total) * 100);
     document.getElementById('bkRxRemainingFill').style.width = pct + '%';
@@ -3319,15 +3332,48 @@ async function openBookingActionModal(booking, opts = {}) {
       aufUebernehmen: () => uebernimmVerordnungAlsVorlage(rx),
     });
 
-    // Rezeptinfo structured fields
-    const shortId = rx.id ? rx.id.slice(-4).toUpperCase() : '—';
-    const icdPart = rx.icd10 ? ` (${rx.icd10})` : '';
-    const nummerEl = document.getElementById('bkRxNummer');
-    if (nummerEl) nummerEl.textContent = `${shortId}-${current}${icdPart}`;
+    // Geldzeile statt Nummer/Arzt/Datum. Der ganze Ablauf — rechnen,
+    // kassieren, Beleg, Privatrechnung, Rueckfrage beim unbekannten Zahler —
+    // liegt in module/rezeptinfo-geld.js; hier steht nur, womit er arbeitet.
+    const geldZeile = verdrahteGeldzeile({
+      el: document.getElementById('bkRxGeldZeile'),
+      rx, booking, erbracht: current,
+      deps: {
+        sb: supabase, ownerId, sector: getSector(), patientName,
+        katalog: GKV_LEISTUNGSKATALOG[getSector()] || [],
+        ladePodoPositionen: (datum) => ladePodoPositionen(supabase, datum),
+        kassieren: kassiereZuzahlung,
+        belegOeffnen: openZuzahlungsrechnung,
+        rechnungAusVerordnung,
+        panelSchliessen: closeBkActionPanel,
+        rechnungsEditorFuerPatient: async (pid) => {
+          switchPanel('rechnungen');
+          await openInvEditor(null);
+          const sel = document.getElementById('invPatientSelect');
+          if (sel && pid) { sel.value = pid; sel.dispatchEvent(new Event('change')); }
+        },
+        frage: (name) => showConfirmModal({
+          title: 'Wer zahlt diese Behandlung?',
+          message: `Für ${name || 'diesen Patienten'} ist kein Kassenstatus hinterlegt.
 
-    const datumEl = document.getElementById('bkRxDatum');
-    if (datumEl) datumEl.textContent = rx.ausstellungsdatum ? new Date(rx.ausstellungsdatum).toLocaleDateString('de-DE') : '—';
+„Privat" erstellt eine Rechnung über die volle Leistung.
+„Gesetzlich" kassiert nur die Zuzahlung (10 % + 10 € Pauschale).
 
+Dauerhaft hinterlegen lässt sich das in den Patientendaten.`,
+          confirmText: 'Privat', cancelText: 'Gesetzlich',
+        }),
+        nachKassieren: async (rxId) => {
+          const { data: frisch } = await supabase.from('prescriptions')
+            .select('zuzahlung_kassiert_am, zuzahlung_kassiert_von, zuzahlung_zahlart')
+            .eq('id', rxId).maybeSingle();
+          const ps = Array.isArray(bkActionBookingCache?.prescription_sessions)
+            ? bkActionBookingCache.prescription_sessions[0] : null;
+          if (frisch && ps?.prescriptions) Object.assign(ps.prescriptions, frisch);
+          if (bkActionBookingCache) await openBookingActionModal(bkActionBookingCache, opts);
+        },
+      },
+    });
+    bkGeldNeuZeichnen = (lead) => geldZeile.patientGesetzt(lead);
     const verordnungEl = document.getElementById('bkRxVerordnung');
     if (verordnungEl) {
       const hm = rx.heilmittel_feld_text || rx.heilmittel || '—';
@@ -3338,16 +3384,6 @@ async function openBookingActionModal(booking, opts = {}) {
     const mandantEl = document.getElementById('bkRxMandant');
     if (mandantEl) mandantEl.textContent = empName || '—';
 
-    // Das Feld gab es schon, gefüllt wurde es nie — im Seitenbereich stand
-    // deshalb immer „Arzt: leer", obwohl in der Verordnung ein Arzt hinterlegt
-    // war (Beta-2, 12.08.2026). Quelle ist `prescriptions.arzt_id` → `aerzte`.
-    const arztEl = document.getElementById('bkRxArzt');
-    if (arztEl) {
-      const arzt = rx.aerzte;
-      arztEl.textContent = arzt
-        ? arzt.arzt_name + (arzt.fachrichtung ? ` · ${arzt.fachrichtung}` : '')
-        : '—';
-    }
 
     const statusBadge = document.getElementById('bkRxStatusBadge');
     if (statusBadge) {
@@ -3368,7 +3404,17 @@ async function openBookingActionModal(booking, opts = {}) {
     // Bezahlt = dieselbe Zeile in Grün, mit Zahlart und Link auf die Rechnung.
     const rzgWarnEl = document.getElementById('bkRxZuzahlungWarn');
     if (rzgWarnEl) {
-      const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur) : null;
+      // Quelle ist der GERECHNETE Betrag, nicht `rx.zuzahlung_eur`: die Spalte
+      // ist in der Datenbank durchgaengig NULL, und diese Zeile war damit fuer
+      // jede Verordnung unsichtbar — samt „Rueckgaengig" und „Korrektur". Wer
+      // kassiert, muss auch stornieren koennen; sonst haengt eine Fehlbuchung
+      // im Kassenbuch fest, das per Trigger unveraenderlich ist.
+      const gerechnet = ermittleGeldstand({
+        rx, erbracht: current, zahler: 'gkv',
+        position: findeRxPosition(rx, { katalog: GKV_LEISTUNGSKATALOG[getSector()] || [] }),
+      });
+      const betrag = rx.zuzahlung_eur != null ? Number(rx.zuzahlung_eur)
+                   : (gerechnet.unbekannt ? null : gerechnet.gesamt);
       const befreit = !!rx.zuzahlung_befreit;
       const bezahlt = !!rx.zuzahlung_kassiert_am;
 
@@ -3398,14 +3444,17 @@ async function openBookingActionModal(booking, opts = {}) {
           const am = new Date(rx.zuzahlung_kassiert_am)
             .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
           const art = rx.zuzahlung_zahlart ? ` · ${zahlartLabel(rx.zuzahlung_zahlart)}` : '';
+          // Der Betrag steht seit 03.09.2026 in der Geldzeile oben; hier stand
+          // er ein zweites Mal, zwei Zeilen darunter. Was diese Zeile trägt und
+          // die Geldzeile nicht, sind die Handlungen — die bleiben.
           rzgWarnEl.innerHTML =
-            `${escapeHtml(t('kass_bezahlt'))}: ${escapeHtml(fmtEur(betrag))} · ${escapeHtml(am)}${escapeHtml(art)}`
+            `${escapeHtml(t('kass_bezahlt'))} · ${escapeHtml(am)}${escapeHtml(art)}`
             + ` <button type="button" data-zuzahl="rechnung" style="margin-left:6px;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_rechnung'))}</button>`
             + ` <button type="button" data-zuzahl="undo" style="margin-left:4px;background:none;border:0;color:inherit;opacity:0.75;text-decoration:underline;cursor:pointer;font-size:11px;font-family:inherit;">${escapeHtml(t('kass_undo'))}</button>`
             + druckKnopf + KORREKTUR_KNOPF;
         } else {
           rzgWarnEl.innerHTML =
-            `${escapeHtml(t('kass_offen'))}: ${escapeHtml(fmtEur(betrag))}`
+            `${escapeHtml(t('kass_offen'))}`
             + ` <button type="button" data-zuzahl="pay" style="margin-left:6px;background:var(--warning-dim);border:1px solid var(--warning);color:inherit;border-radius:5px;padding:1px 7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;">${escapeHtml(t('kass_btn'))}</button>`
             + druckKnopf + KORREKTUR_KNOPF;
         }
@@ -3414,14 +3463,12 @@ async function openBookingActionModal(booking, opts = {}) {
       }
     }
 
+    // „Letzte Behandlung": genau eine Einheit ist noch offen — also ist die
+    // hier gerade offene die letzte. Vorher stand hier `current === total`, was
+    // mit der Terminnummer stimmte; seit `current` die erbrachten Sitzungen
+    // zählt, wäre die Verordnung dann bereits aufgebraucht.
     const letzterWarnEl = document.getElementById('bkRxLetzterTermin');
-    if (letzterWarnEl) {
-      if (current === total) {
-        letzterWarnEl.hidden = false;
-      } else {
-        letzterWarnEl.hidden = true;
-      }
-    }
+    if (letzterWarnEl) letzterWarnEl.hidden = remaining !== 1;
 
     // Die „Sitzungsübersicht" stand hier als eigene Tabelle und lud dafür alle
     // Sitzungen der Verordnung ein zweites Mal nach. Entfallen: der Block
@@ -3524,6 +3571,9 @@ async function openBookingActionModal(booking, opts = {}) {
       // Stammdaten stehen nicht mehr im Panel — beide Knöpfe öffnen die
       // Patientenakte, die sie vollständig zeigt. Siehe module/termin-aktionen.js.
       setzePatientenKarte({ lead, booking, oeffneAkte: () => openPatientDetailModal(lead) });
+      // Jetzt erst steht der Kassenstatus fest — die Geldzeile hat bis hierher
+      // „Zahler ?" gezeigt und richtet sich nun nach dem Patienten.
+      bkGeldNeuZeichnen?.(lead);
 
       // Zuzahlungsbefreiung badge + management
       const zbBadge = document.getElementById('bkZuzahlungBadge');
@@ -3574,11 +3624,6 @@ async function openBookingActionModal(booking, opts = {}) {
       patientCard.hidden = false;
     }
 
-    // --- Rezeptinfo: Arzt alanını anamnese'den doldur ---
-    const arztEl = document.getElementById('bkRxArzt');
-    if (arztEl && anamneseData?.arzt_name) arztEl.textContent = anamneseData.arzt_name;
-    else if (arztEl && !arztEl.textContent) arztEl.textContent = '—';
-
     // --- Anamnese özeti ---
     const anamCard = document.getElementById('bkAnamneseCard');
     const anamContent = document.getElementById('bkAnamneseContent');
@@ -3609,22 +3654,10 @@ async function openBookingActionModal(booking, opts = {}) {
       }
     }
 
-    // --- Therapeuten-/Arztnotizen ---
-    const patNotCard = document.getElementById('bkPatNotesCard');
-    const patNotContent = document.getElementById('bkPatNotesContent');
-    if (patNotCard && patNotContent) {
-      if (patNotesData && (patNotesData.doctor_notes || patNotesData.therapist_notes || patNotesData.ai_summary)) {
-        const noteBlock = (label, text, color) => text ? `<div><div style="font-size:10px;font-weight:600;color:${color};text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">${label}</div><div style="color:var(--text-main);font-size:12px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(text)}</div></div>` : '';
-        patNotContent.innerHTML = [
-          noteBlock('Arztnotizen', patNotesData.doctor_notes, 'var(--accent,#b1891b)'),
-          noteBlock('Therapeutennotizen', patNotesData.therapist_notes, '#60a5fa'),
-          noteBlock('KI-Zusammenfassung', patNotesData.ai_summary, 'var(--text-muted)'),
-        ].filter(Boolean).join('');
-        patNotCard.hidden = false;
-      } else {
-        patNotCard.hidden = true;
-      }
-    }
+    // --- Therapeuten-/Arztnotizen --- (Renderer: module/termin-panel-patient.js,
+    // damit Termin- und Patientenmodus dieselben drei Bloecke zeichnen)
+    rendereNotizen(document.getElementById('bkPatNotesCard'),
+                   document.getElementById('bkPatNotesContent'), patNotesData);
 
     // Aktive Verordnungen
     const rezWrap = document.getElementById('bkRezepteWrap');
@@ -3697,15 +3730,18 @@ function initCalRightPanel() {
     // etwas zu tun — genau dafür wurde die Suche gebaut. Direkt in die
     // Terminanlage mit vorausgewähltem Patienten; die Verordnungskarten laden
     // sich dort mit, also lässt sich die Sitzung sofort zuordnen.
+    // Ohne kommenden Termin sprang hier die Maske „Neuer Termin" auf. Das
+    // Panel bleibt jetzt offen und zeigt den Patienten — Ablauf in
+    // module/termin-panel-patient.js (Kemal, 31.08.2026).
     onOhneTermin: async (lead) => {
-      closeBkActionPanel();
-      const jetzt = new Date();
-      jetzt.setMinutes(jetzt.getMinutes() + 30 - (jetzt.getMinutes() % 30), 0, 0);
-      const iso = new Date(jetzt.getTime() - jetzt.getTimezoneOffset() * 60000)
-        .toISOString().substring(0, 16);
-      await prefillBookingModal(iso);
-      if (typeof window._bkApplyLead === 'function') window._bkApplyLead(lead.id);
-      showToast('Kein kommender Termin — neuer Termin für diesen Patienten.', 'info');
+      bkActionBookingCache = null;
+      await zeigePatientOhneTermin({
+        sb: supabase, ownerId: getOwnerId(), lead,
+        setzeKopf: setzeAktionsKopf, setzeKarte: setzePatientenKarte,
+        setzeAuswahlLabel: setzeTerminAuswahlLabel,
+        oeffneAkte: () => openPatientDetailModal(lead),
+        aufSprung: pdSpringeZu,
+      });
     },
     toast: showToast,
   });
@@ -4950,6 +4986,20 @@ async function loadGroupParticipants(parentId, maxCapacity) {
         await loadGroupParticipants(parentId, maxCapacity);
         if (window.calendar) { await window.calendar.reloadMonth(); window.calendar.refresh(); }
         if (activePanel === 'calendar') await renderCalendarView();
+
+        // Auch hier ist ein Platz frei geworden — dieselbe Frage wie bei jeder
+        // anderen Absage. Anders als beim Löschen darf der Abgleich hier NACH
+        // dem Schreiben laufen: die Zeile bleibt stehen, nur ihr Status wechselt.
+        // Der Termin wird vollständig nachgeladen, weil die Teilnehmerliste nur
+        // Name und Telefon kennt — `group_parent_id`, Uhrzeit und
+        // Mitarbeiter:in braucht der Nachrücker aber alle.
+        const frei = await ladeTerminVollstaendig(supabase, { id: childId });
+        const token = (await supabase.auth.getSession()).data.session?.access_token;
+        const treffer = await holeNachruecker({ apiBase: API, token, bookingId: childId })
+          .catch(err => { console.error('[warteliste-match/gruppe]', err); return null; });
+        await biteNachrueckerAn(frei, treffer, {
+          nachVergabe: () => loadGroupParticipants(parentId, maxCapacity),
+        });
       }
     });
   });
@@ -6477,6 +6527,38 @@ async function loadRxSessionsPanel(booking, rxId = null) {
     }
   }
 
+  // Eine Liste über die volle Breite statt zwei enger Spalten — der
+  // Umschalter darüber entscheidet welche (module/sitzungen-ansicht.js).
+  verdrahteSitzungsUmschalter(() => ({ offen: unvergebene.length, vergeben: vergebene.length }));
+  zeigeSitzungsSeiten({ offen: unvergebene.length, vergeben: vergebene.length });
+
+  // „Leistungen des Tages": springt in die vorhandene Behandlungsdokumentation
+  // statt eine zweite Maske aufzumachen — dort hängen die Prüfungen (78040 /
+  // 78100 / Behandlungsbeginn). Podologie führt ihre Behandlungen in
+  // `verordnungen` + `podologie_behandlungen`; die Verordnung des Patienten
+  // wird über den Patienten gefunden, nicht über die hier gezeigte Zeile:
+  // zwischen `prescriptions` und `verordnungen` gibt es keine Verbindung.
+  const leistBtn = document.getElementById('bkRxLeistungenBtn');
+  if (leistBtn) {
+    const istPodo = getSector() === 'podologie';
+    leistBtn.hidden = !istPodo || !booking.lead_id;
+    leistBtn.onclick = !istPodo ? null : async () => {
+      const { data: vords } = await supabase.from('verordnungen')
+        .select('id, status, ausstellungsdatum')
+        .eq('owner_id', getOwnerId()).eq('lead_id', booking.lead_id)
+        .in('status', ['aktiv', 'abrechenbar'])
+        .order('ausstellungsdatum', { ascending: false }).limit(1);
+      const vord = vords?.[0];
+      if (!vord) {
+        showToast('Für diesen Patienten ist keine laufende Podologie-Verordnung angelegt.', 'warning');
+        return;
+      }
+      closeBkActionPanel();
+      setPodVorwahl(vord.id);
+      await switchPanel('podologie-billing');
+    };
+  }
+
   panel.hidden = false;
 }
 
@@ -7775,144 +7857,33 @@ async function proceedToRechnungForPhysio({ patientId, patientName }) {
   }
 }
 
+// „Löschen" in der Terminmaske und „Absagen" im Seitenbereich sind derselbe
+// Vorgang — waren aber zwei Codewege mit je einer Lücke: hier kam die
+// Warteliste und die Ausfallrechnung fiel aus, dort genau umgekehrt. Welchen
+// Knopf jemand traf, entschied also über Geld. Seit 03.09.2026 gibt es einen
+// Weg. Die Maske kennt nur die ID, `absageTerminMitGrund` braucht den ganzen
+// Datensatz (hausbesuch, service_id, lead_id — siehe module/termin-laden.js).
 document.getElementById('bkDeleteBtn').addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   if (!id) return;
-  const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin löschen' });
-  if (reason === null) return;
-  if (reason && reason.trim()) {
-    await supabase.from('bookings').update({ cancellation_reason: reason.trim() }).eq('id', id);
-  }
-
-  // 1. Pre-trigger the match API call before deletion so the backend can fetch the booking details
-  let matchPromise = null;
-  try {
-    const token = (await supabase.auth.getSession()).data.session?.access_token;
-    matchPromise = fetch(`${API}/warteliste/match`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ booking_id: id })
-    }).then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    });
-  } catch (err) {
-    console.error('[warteliste-match pre-trigger error]', err);
-  }
-
-  // 2. Perform the deletion
-  const { error: delErr } = await supabase.from('bookings').delete().eq('id', id);
-  if (delErr) {
-    showToast('Fehler beim Löschen des Termins: ' + delErr.message, 'error');
-    return;
-  }
-
-  // 3. Complete the UI cancel flow
-  closeModal('bookingModal');
-  await refreshBookingViews();
-  showToast(t('saved'));
-
-  // 4. Await and process match results asynchronously (guaranteed not to block the cancel flow)
-  if (matchPromise) {
-    try {
-      const matchRes = await matchPromise;
-      const { candidates, total } = matchRes;
-      if (total > 0) {
-        showWaitlistMatchModal(candidates);
-      } else {
-        showToast("Keine passenden Warteliste-Patienten.", "info");
-      }
-    } catch (err) {
-      console.error('[warteliste-match fetch error]', err);
-      showToast("Keine passenden Warteliste-Patienten.", "info");
-    }
-  }
+  await absageTerminMitGrund(await ladeTerminVollstaendig(supabase, { id }));
 });
 
-// Click handler for search button in edit/details modal
+// Nachschlagen bei einem Termin, der noch steht: nur Kandidaten zeigen, keinen
+// Platz vergeben — frei ist ja nichts.
 document.getElementById('bkWlMatchBtn')?.addEventListener('click', async () => {
   const id = document.getElementById('bk-id').value;
   if (!id) return;
   try {
     const token = (await supabase.auth.getSession()).data.session?.access_token;
-    const res = await fetch(`${API}/warteliste/match`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ booking_id: id })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const { candidates, total } = await res.json();
-    if (total > 0) {
-      showWaitlistMatchModal(candidates);
-    } else {
-      showToast("Keine passenden Warteliste-Patienten.", "info");
-    }
+    const { candidates, total } = await holeNachruecker({ apiBase: API, token, bookingId: id });
+    if (total > 0) zeigeNachrueckerModal({ candidates });
+    else showToast('Keine passenden Warteliste-Patienten.', 'info');
   } catch (err) {
-    console.error('[bkWlMatchBtn error]', err);
-    showToast("Warteliste-Abgleich fehlgeschlagen: " + err.message, "error");
+    console.error('[bkWlMatchBtn]', err);
+    showToast('Warteliste-Abgleich fehlgeschlagen: ' + err.message, 'error');
   }
 });
-
-// Render matched candidates in the wlMatchModal
-function showWaitlistMatchModal(candidates) {
-  const listEl = document.getElementById('wlMatchList');
-  if (!listEl) return;
-
-  listEl.innerHTML = candidates.map(c => {
-    const firstName = c.leads?.first_name || '';
-    const lastName = c.leads?.last_name || '';
-    const name = (firstName + ' ' + lastName).trim() || 'Unbekannter Patient';
-    const phone = c.leads?.phone || '';
-    const email = c.leads?.email || '';
-    const priority = c.priority || 1;
-    const notes = c.notes || '';
-
-    let priorityBadge = '';
-    if (priority === 3) {
-      priorityBadge = `<span class="badge badge-red">Dringend</span>`;
-    } else if (priority === 2) {
-      priorityBadge = `<span class="badge badge-yellow">Hoch</span>`;
-    } else {
-      priorityBadge = `<span class="badge badge-gray">Normal</span>`;
-    }
-
-    const contactMethods = [];
-    if (phone) {
-      contactMethods.push(`<a href="tel:${escapeHtml(phone)}" style="color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:500;">📞 ${escapeHtml(phone)}</a>`);
-    }
-    if (email) {
-      contactMethods.push(`<a href="mailto:${escapeHtml(email)}" style="color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-weight:500;">✉️ ${escapeHtml(email)}</a>`);
-    }
-    const contactsHtml = contactMethods.length > 0
-      ? `<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;">${contactMethods.join('')}</div>`
-      : `<div style="color:var(--text-muted);font-size:12px;margin-top:8px;">Keine Kontaktdaten vorhanden.</div>`;
-
-    const notesHtml = notes
-      ? `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);word-break:break-word;">
-           <strong>Notiz:</strong> ${escapeHtml(notes)}
-         </div>`
-      : '';
-
-    return `
-      <div class="wl-candidate-card" style="border:1px solid var(--border);background:var(--bg-card);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-          <strong style="font-size:14px;color:var(--text);">${escapeHtml(name)}</strong>
-          ${priorityBadge}
-        </div>
-        ${contactsHtml}
-        ${notesHtml}
-      </div>
-    `;
-  }).join('');
-
-  openModal('wlMatchModal');
-}
 
 (function bindSeriesEvents() {
   const toggle = document.getElementById('bkSeriesToggle');
@@ -7940,10 +7911,12 @@ document.getElementById('bkActionStartBtn').addEventListener('click', handleTerm
 document.getElementById('bkActionNoShowBtn').addEventListener('click', handlePatientNichtErschienen);
 document.getElementById('bkActionAusfallBtn').addEventListener('click', handleDirectAusfallrechnung);
 
-document.getElementById('bkActionEditBtn').addEventListener('click', () => {
+// Zwei Einstiege, ein Weg: der Stift oben in der Terminkarte und „Bearbeiten"
+// unten oeffnen dieselbe Maske (Kemal, 31.08.2026).
+['bkActionEditBtn', 'bkDetailEditBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', () => {
   if (!bkActionBookingCache) return;
   openBookingModal(bkActionBookingCache);
-});
+}));
 
 // Terminzettel A5: alle kommenden Termine dieses Patienten auf einen Zettel
 // zum Mitgeben. Vorlage und Druck liegen in module/termin-druck.js.
@@ -8042,12 +8015,6 @@ document.getElementById('bkRxZuzahlungWarn')?.addEventListener('click', async (e
 // Einheiten per Ziehen und "Serientermine verteilen" — beide mit Bezug zur
 // Verordnung, den der Folgetermin nie hatte.
 
-// Verschieben: derselbe Geistermodus wie im Termin-Dialog (startMoveBooking).
-// Er fehlte im Seitenbereich, obwohl man den Termin genau dort offen hat.
-document.getElementById('bkActionMoveBtn')?.addEventListener('click', () => {
-  if (!bkActionBookingCache) return;
-  startMoveBooking(bkActionBookingCache);
-});
 // Absagen aus Seitenbereich UND Kontextmenue — ein Weg, nicht zwei.
 async function absageTerminMitGrund(b) {
   if (!b) return;
@@ -8067,15 +8034,56 @@ async function absageTerminMitGrund(b) {
     }
   }
 
+  // Die Warteliste NOCH vor dem Löschen fragen: der Abgleich liest den Termin
+  // über seine ID, nach dem Löschen gäbe es weder Wochentag noch Uhrzeit zum
+  // Filtern. Gewartet wird erst danach, damit die Absage nicht an einer
+  // langsamen Leitung hängt.
+  const token = (await supabase.auth.getSession()).data.session?.access_token;
+  const nachruecker = holeNachruecker({ apiBase: API, token, bookingId: b.id })
+    .catch(err => { console.error('[warteliste-match]', err); return null; });
+
   const { error } = await supabase.from('bookings').delete().eq('id', b.id);
   if (error) { showToast('Fehler beim Löschen: ' + error.message, 'error'); return; }
-  const modal = document.getElementById('bkActionModal');
-  if (modal) { modal.style.display = 'none'; }
-  document.getElementById('mainArea')?.style.removeProperty('padding-right');
+  closeModal('bookingModal');
+  closeBkActionPanel();
   showToast('Termin gelöscht.', 'success');
   // Vorher: `renderDayView()` OHNE Datum -> Label "Invalid Date", danach
   // RangeError im toISOString(); der Kalender blieb nach dem Absagen leer.
   refreshBookingViews().catch(() => {});
+
+  await biteNachrueckerAn(b, await nachruecker);
+}
+
+/**
+ * Zeigt den Wartelisten-Vorschlag zum frei gewordenen Platz und vergibt ihn auf
+ * Klick. Steht getrennt, damit `absageTerminMitGrund` die Absage bleibt und
+ * nicht zusätzlich zur Terminvergabe wird.
+ *
+ * Wartet niemand, passiert nichts — kein Hinweis. Eine Praxis sagt am Tag
+ * mehrfach ab; „keine passenden Patienten" wäre nach der dritten Meldung nur
+ * noch Rauschen. Gemeldet wird, wenn jemand wartet.
+ */
+async function biteNachrueckerAn(abgesagt, treffer, { nachVergabe = null } = {}) {
+  if (!treffer?.total) return;
+  zeigeNachrueckerModal({
+    candidates: treffer.candidates,
+    slot: abgesagt,
+    uebernehmen: async (eintrag) => {
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const r = await uebernimmSlot({
+        supabase, apiBase: API, token, eintrag, slot: abgesagt, ownerId: getOwnerId(),
+      });
+      if (!r.ok) { showToast(bookingErrMsg(r.error), 'error'); return; }
+      if (r.warnung) console.warn('[warteliste] Eintrag nicht abgehakt:', r.warnung);
+      closeModal('wlMatchModal');
+      const name = `${eintrag.leads?.first_name || ''} ${eintrag.leads?.last_name || ''}`.trim();
+      showToast(`Termin an ${name || 'den Nachrücker'} vergeben.`, 'success');
+      emit('bookings:changed', { id: r.bookingId, quelle: 'warteliste' });
+      // Der Aufrufer weiss, welche Liste ausser dem Kalender noch veraltet ist
+      // (bei einer Gruppe die Teilnehmerliste im offenen Terminfenster).
+      if (nachVergabe) await nachVergabe(r.bookingId);
+    },
+  });
 }
 document.getElementById('bkActionDeleteBtn')
   .addEventListener('click', () => absageTerminMitGrund(bkActionBookingCache));
@@ -21760,66 +21768,52 @@ if (document.readyState === 'loading') {
 // WARTELISTE — Bekleme Listesi Yönetimi
 // =====================================================================
 async function loadWarteliste() {
-  const tbody = document.getElementById('wlTableBody');
-  const emptyEl = document.getElementById('wlEmpty');
-  const summaryEl = document.getElementById('wlSummary');
-  if (!tbody) return;
+  if (!document.getElementById('wlTableBody')) return;
+  const status = wartelisteStatus();
 
-  const ownerId = getOwnerId();
   const { data: entries, error } = await supabase
     .from('warteliste')
     .select(`
       id, preferred_days, preferred_time_from, preferred_time_to,
-      priority, status, created_at, notes,
+      priority, status, created_at, notified_at, notes,
       leads:lead_id(id, title, first_name, last_name),
       services:service_id(id, title)
     `)
-    .eq('owner_id', ownerId)
-    .eq('status', 'waiting')
+    .eq('owner_id', getOwnerId())
+    .eq('status', status)
     .order('priority', { ascending: false })
     .order('created_at', { ascending: true });
 
   if (error) { showToast('Fehler beim Laden der Warteliste: ' + error.message, 'error'); return; }
 
-  const rows = entries || [];
-  if (summaryEl) {
-    summaryEl.innerHTML = `<span style="font-size:13px;"><strong>${rows.length}</strong> Patient${rows.length !== 1 ? 'en' : ''} auf der Warteliste</span>`;
-  }
-
-  if (rows.length === 0) {
-    tbody.innerHTML = '';
-    if (emptyEl) emptyEl.hidden = false;
-    return;
-  }
-  if (emptyEl) emptyEl.hidden = true;
-
-  const PRIORITY_LABELS = { 1: 'Normal', 2: '<span style="color:#f59e0b;font-weight:600;">Hoch</span>', 3: '<span style="color:#dc2626;font-weight:700;">Dringend</span>' };
-
-  tbody.innerHTML = rows.map(e => {
-    const patName = e.leads ? `${e.leads.first_name || ''} ${e.leads.last_name || ''}`.trim() || e.leads.title : '—';
-    const srvName = e.services?.title || '—';
-    const days = Array.isArray(e.preferred_days) ? e.preferred_days.join(', ') || 'Egal' : 'Egal';
-    const time = (e.preferred_time_from && e.preferred_time_to)
-      ? `${e.preferred_time_from.slice(0,5)} – ${e.preferred_time_to.slice(0,5)}`
-      : 'Egal';
-    const prio = PRIORITY_LABELS[e.priority] || 'Normal';
-    const since = new Date(e.created_at).toLocaleDateString('de-DE');
-    return `<tr>
-      <td><strong>${patName}</strong></td>
-      <td>${srvName}</td>
-      <td>${days}</td>
-      <td>${time}</td>
-      <td>${prio}</td>
-      <td style="color:var(--text-muted);font-size:12px;">${since}</td>
-      <td>
-        <button class="btn-ghost" style="font-size:12px;padding:3px 8px;" onclick="openWlEntry('${e.id}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Bearbeiten
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
+  rendereWarteliste({
+    rows: entries || [],
+    status,
+    aufZurueck: async (id) => {
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      try {
+        await machtWiederWartend({ apiBase: API, token, eintragId: id });
+      } catch (e) {
+        showToast('Zurücklegen fehlgeschlagen: ' + e.message, 'error');
+        return;
+      }
+      // Der zugehörige Termin bleibt bewusst stehen — absagen ist eine eigene
+      // Handlung mit eigener Frage nach dem Grund. Deshalb sagt die Meldung
+      // ausdrücklich, was NICHT passiert ist.
+      showToast('Wieder auf der Warteliste. Der Termin steht weiterhin — ggf. getrennt absagen.', 'success');
+      await loadWarteliste();
+    },
+  });
 }
+
+// Reiter „Wartend" / „Vermittelt". Der gewählte Stand steht im DOM, damit ihn
+// niemand zusätzlich in einer Variablen mitführen muss.
+document.getElementById('wlStatusTabs')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-wl-status]');
+  if (!btn) return;
+  setzeWartelisteStatus(btn.dataset.wlStatus);
+  loadWarteliste();
+});
 
 window.openWlEntry = async function(id) {
   const modal = document.getElementById('wlModal');

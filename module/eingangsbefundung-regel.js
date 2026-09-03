@@ -140,6 +140,19 @@ const IST_BEFUNDUNG = new Set(['78030', '78040', '78100', '78110']);
 const ZUSCHLAEGE = new Set(['79933', '79934']);
 
 /**
+ * Positionsnummern aus der Zeit vor den echten HPNR. In `services` einer Beta-
+ * Praxis stehen sie teils heute noch; `migratePodologieLegacyServices()` in
+ * dashboard.js zieht sie nach, aber nur wenn der Sektor podologie ist UND der
+ * Cache geladen war. Wer hier durchrutscht, bekaeme sonst wortlos keinen
+ * Vorschlag — und niemand wuesste warum. Spiegel von GKV_PODO_LEGACY_MAP und
+ * GKV_PODO_LEGACY_PRIVAT (dashboard.js).
+ */
+const LEGACY_POSITIONEN = new Set([
+  'P01', 'P02', 'P-HB',                    // -> 78020 / 78010 / 79933
+  'P03a', 'P03b', 'P03c', 'P04',           // waren privat, kein GKV-Gegenstueck
+]);
+
+/**
  * Welche Befundung gehoert unter die gewaehlte Leistung?
  *
  * Reine Entscheidung, kein DOM und keine Abfrage — die Historie wird
@@ -154,6 +167,13 @@ const ZUSCHLAEGE = new Set(['79933', '79934']);
  * @param {?boolean} [opt.podologieVor2023] war der Patient schon VOR dem
  *        01.11.2023 in podologischer Behandlung? `true` = ja (kein Anspruch),
  *        `false` = nein, `null`/undefined = nicht beantwortet
+ * @param {?Array<string>} [opt.diagnosegruppen] Diagnosegruppen der Katalog-
+ *        zeile (`heilmittel_katalog.diagnosegruppen`), falls der Aufrufer sie
+ *        ohnehin geladen hat. Sie kann nur BREMSEN, nie oeffnen: enthaelt sie
+ *        UI1/UI2, gilt der Nagelzweig auch fuer eine Position, die die feste
+ *        Liste unten noch nicht kennt. Einen Vorschlag ausloesen kann sie
+ *        nicht — dafuer bleibt die Positivliste massgeblich, weil ein zu
+ *        Unrecht vorgeschlagener Code Geld kostet.
  * @returns {{code:?string, automatisch:boolean, grund:string, hinweis:string,
  *           rueckfrage:?string}}
  *   `code` = vorzuschlagende HPNR oder `null`. `automatisch` = darf ohne
@@ -166,6 +186,7 @@ export function befundungFuerLeistung({
   datum,
   selbstzahler = false,
   podologieVor2023 = null,
+  diagnosegruppen = null,
 } = {}) {
   const nichts = (grund, hinweis = '') => ({
     code: null, automatisch: false, grund, hinweis, rueckfrage: null,
@@ -184,8 +205,25 @@ export function befundungFuerLeistung({
   // die mitgebucht wird, nicht am Wegegeld.
   if (ZUSCHLAEGE.has(code)) return nichts('zuschlag_ohne_zweig');
 
+  // Alte Positionsnummer im `services`-Satz: nicht schweigen, sondern sagen,
+  // dass die Leistung noch keine gueltige HPNR traegt.
+  if (LEGACY_POSITIONEN.has(code)) {
+    return nichts(
+      'legacy_positionsnummer',
+      `Die Leistung traegt noch die alte Positionsnummer „${code}" statt einer `
+      + 'Heilmittelpositionsnummer. Solange das so ist, kann keine Befundung '
+      + 'vorgeschlagen werden — bitte die Leistung in den Einstellungen auf die '
+      + 'GKV-Position umstellen.',
+    );
+  }
+
   // ── Nagelzweig UI1/UI2 — hier gibt es die Eingangsbefundung nicht ─────────
-  if (NAGEL_POSITIONEN.has(code)) {
+  // Die Katalogzeile hat Vorrang vor der festen Liste: kommt eine neue
+  // UI1/UI2-Position dazu, schweigt die Regel sofort richtig, statt sie fuer
+  // unbekannt zu halten.
+  const dgs = (diagnosegruppen || []).map(d => String(d || '').trim().toUpperCase());
+  const istNagel = dgs.includes('UI1') || dgs.includes('UI2') || NAGEL_POSITIONEN.has(code);
+  if (istNagel) {
     return nichts(
       'nagelzweig',
       'Im Nagelzweig (UI1/UI2) gibt es keine Eingangsbefundung (78040). '

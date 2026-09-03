@@ -18,6 +18,19 @@
   <div id="gkvCatalogSection"></div>
   <div id="privatSrvDivider" hidden></div>
 
+  <!-- Warteliste: Tabelle mit Reiterpaar + Nachruecker-Dialog -->
+  <div id="wlSummary"></div>
+  <div id="wlStatusTabs">
+    <button type="button" class="btn-primary" data-wl-status="waiting">Wartend</button>
+    <button type="button" class="btn-ghost" data-wl-status="matched">Vermittelt</button>
+  </div>
+  <table class="data-table"><tbody id="wlTableBody"></tbody></table>
+  <div id="wlEmpty" hidden><span id="wlEmptyText">Platzhalter</span></div>
+  <div id="wlMatchModal" hidden>
+    <p id="wlMatchSlot" hidden></p>
+    <div id="wlMatchList"></div>
+  </div>
+
 <script type="module">
 import { renderWoche } from '../../module/kalender-woche.js';
 import { renderMonat } from '../../module/kalender-monat.js';
@@ -25,6 +38,8 @@ import { alsISODatum } from '../../module/datum.js';
 import { renderLeistungenListe, renderGkvKatalog } from '../../module/leistungen-liste.js';
 import { terminFarben } from '../../module/kalender-farben.js';
 import { verdrahteKontextmenue } from '../../module/kalender-kontextmenue.js';
+import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from '../../module/warteliste-ansicht.js';
+import { zeigeNachrueckerModal } from '../../module/warteliste-nachruecker.js';
 
 const TEAM = [{ id: 'e1', business_name: 'Anna' }, { id: 'e2', business_name: 'Bert' }];
 const EMP_COLORS = ['#22c55e', '#3b82f6'];
@@ -100,6 +115,49 @@ verdrahteKontextmenue({
   wahrgenommen: () => ereignisse.push({ was: 'menue-wahrgenommen' }),
   nichtErschienen: () => {}, verschieben: () => {}, absagen: () => {},
   oeffnen: () => ereignisse.push({ was: 'menue-oeffnen' }),
+});
+
+// ── Warteliste ───────────────────────────────────────────────────────────
+const WARTEND = [
+  { id: 'w1', priority: 3, created_at: '2026-08-01T09:00:00Z', notified_at: null,
+    preferred_days: ['Mo', 'Di'], preferred_time_from: '08:00:00', preferred_time_to: '12:00:00',
+    leads: { first_name: 'Anna', last_name: 'Bauer' }, services: { title: 'Podologie' } },
+  { id: 'w2', priority: 1, created_at: '2026-08-05T09:00:00Z', notified_at: '2026-09-01T10:00:00Z',
+    preferred_days: [], leads: { first_name: 'Bert', last_name: 'Cem' }, services: null },
+];
+
+rendereWarteliste({ rows: WARTEND, status: 'waiting' });
+window.__wlWartend = {
+  zeilen: document.querySelectorAll('#wlTableBody tr').length,
+  zurueckKnoepfe: document.querySelectorAll('#wlTableBody [data-wl-zurueck]').length,
+  status: wartelisteStatus(),
+};
+
+// Umschalten auf „Vermittelt": nur dort gibt es den Weg zurueck, und dort
+// zaehlt das Vermittlungsdatum statt des Eintragsdatums.
+setzeWartelisteStatus('matched');
+rendereWarteliste({
+  rows: [WARTEND[1]], status: 'matched',
+  aufZurueck: (id) => ereignisse.push({ was: 'wl-zurueck', id }),
+});
+window.__wlVermittelt = {
+  status: wartelisteStatus(),
+  zurueckKnoepfe: document.querySelectorAll('#wlTableBody [data-wl-zurueck]').length,
+  datum: document.querySelector('#wlTableBody tr td:nth-child(6)')?.textContent.trim(),
+};
+
+// Leermeldung folgt dem Reiter.
+rendereWarteliste({ rows: [], status: 'matched' });
+window.__wlLeer = { text: document.getElementById('wlEmptyText').textContent, sichtbar: !document.getElementById('wlEmpty').hidden };
+rendereWarteliste({ rows: [WARTEND[1]], status: 'matched', aufZurueck: (id) => ereignisse.push({ was: 'wl-zurueck', id }) });
+
+zeigeNachrueckerModal({
+  candidates: [
+    { id: 'w1', priority: 3, notes: 'Nur vormittags', leads: { first_name: 'Anna', last_name: 'Bauer', phone: '0221 1', email: 'a@b.de' } },
+    { id: 'w2', priority: 1, leads: { first_name: 'Bert', last_name: 'Cem' } },
+  ],
+  slot: { start_time: '2026-09-10T08:00:00', end_time: '2026-09-10T08:20:00', user_id: 'e1', service_id: 's1' },
+  uebernehmen: (eintrag) => ereignisse.push({ was: 'wl-uebernehmen', id: eintrag.id }),
 });
 
 window.__ereignisse = ereignisse;

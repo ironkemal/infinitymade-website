@@ -1,5 +1,6 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot } from './module/warteliste-nachruecker.js?v=20260903b';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let session = null;
@@ -412,6 +413,70 @@ function closeBookingPanel() {
   activePanelBookingId = null;
 }
 
+const API_BASIS = 'https://n8n.infinitymade.de/api';
+
+/**
+ * Nach einer Stornierung auf dieser Seite denselben Wartelisten-Vorschlag
+ * anbieten wie im Dashboard.
+ *
+ * Heisst absichtlich anders als das Gegenstueck `biteNachrueckerAn()` in
+ * dashboard.js: die Funktionskarte fuehrt Funktionen ueber ihren Namen, und
+ * bei zwei gleichnamigen laufen die Aufrufer beider Dateien zusammen. Wer
+ * spaeter fragt „wer ruft das hier?", bekaeme dann die falsche Antwort.
+ *
+ * Diese Seite hatte bisher als einzige gar keinen Bezug zur Warteliste — sie
+ * storniert weich und ohne Nachfrage. Wer hier absagt, verlor den Platz also
+ * still. Die Anzeige und das Vergeben liegen im gemeinsamen Modul
+ * `module/warteliste-nachruecker.js`; hier steht nur, woher die Daten kommen.
+ *
+ * Der Termin wird nachgeladen, weil das Kalender-Ereignis Mitarbeiter:in,
+ * Leistung und Endzeit nicht vollstaendig fuehrt — genau die drei Angaben, aus
+ * denen der neue Termin gebaut wird.
+ */
+async function frageNachrueckerAb(bookingId) {
+  const ownerId = profile.role === 'owner' ? session.user.id : profile.owner_id;
+  const token = session.access_token;
+
+  let treffer;
+  try {
+    treffer = await holeNachruecker({ apiBase: API_BASIS, token, bookingId });
+  } catch (err) {
+    console.error('[warteliste-match/kalender]', err);
+    return;
+  }
+  if (!treffer.total) return;   // wartet niemand, dann auch keine Meldung
+
+  const { data: frei } = await supabase
+    .from('bookings')
+    .select('id,user_id,service_id,start_time,end_time,group_parent_id')
+    .eq('id', bookingId)
+    .maybeSingle();
+  if (!frei) return;
+
+  zeigeNachrueckerModal({
+    candidates: treffer.candidates,
+    slot: frei,
+    uebernehmen: async (eintrag) => {
+      const r = await uebernimmSlot({
+        supabase, apiBase: API_BASIS, token, eintrag, slot: frei, ownerId,
+      });
+      if (!r.ok) { showKalToast(r.error.message || 'Termin konnte nicht angelegt werden', 'error'); return; }
+      if (r.warnung) console.warn('[warteliste] Eintrag nicht abgehakt:', r.warnung);
+      document.getElementById('wlMatchModal').hidden = true;
+      const name = `${eintrag.leads?.first_name || ''} ${eintrag.leads?.last_name || ''}`.trim();
+      showKalToast(`Termin an ${name || 'den Nachruecker'} vergeben.`);
+      calendar.refetchEvents();
+    },
+  });
+}
+
+// Schliessen: Kreuz, Fusszeile und Klick auf den Hintergrund.
+document.getElementById('wlMatchModal')?.addEventListener('click', (e) => {
+  if (e.target.closest('[data-wl-close]') || e.target.id === 'wlMatchModal') {
+    document.getElementById('wlMatchModal').hidden = true;
+  }
+});
+
 function setupBookingPanel() {
   document.getElementById('bp-close').addEventListener('click', closeBookingPanel);
   document.getElementById('booking-panel-overlay').addEventListener('click', closeBookingPanel);
@@ -449,11 +514,16 @@ function setupBookingPanel() {
   document.getElementById('bp-cancel-booking').addEventListener('click', async () => {
     if (!activePanelBookingId) return;
     if (!confirm('Termin wirklich stornieren?')) return;
+    const storniert = activePanelBookingId;
     try {
-      await patchBooking(activePanelBookingId, { status: 'cancelled' });
+      await patchBooking(storniert, { status: 'cancelled' });
       document.getElementById('bp-status').textContent = '🔴 Storniert';
       calendar.refetchEvents();
-    } catch(err) { showKalToast(err.message, 'error'); }
+    } catch(err) { showKalToast(err.message, 'error'); return; }
+    // Dieselbe Frage wie im Dashboard: hier wird genauso ein Platz frei.
+    // Anders als dort bleibt die Zeile stehen (weiche Stornierung), der
+    // Abgleich darf deshalb NACH dem Schreiben laufen.
+    await frageNachrueckerAb(storniert);
   });
 
   document.getElementById('pending-move-cancel').addEventListener('click', () => {

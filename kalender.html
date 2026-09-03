@@ -63,6 +63,22 @@
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 50; display: none; justify-content: center; align-items: center; }
     .modal-backdrop.show { display: flex; }
     .modal-card { background: #1a1d24; border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; width: 100%; max-width: 500px; }
+
+    /* Warteliste-Nachruecker (03.09.2026). Bewusst NICHT .modal-backdrop:
+       das gemeinsame Modul in module/warteliste-nachruecker.js schaltet ueber
+       das `hidden`-Attribut, waehrend .modal-backdrop ueber .show arbeitet.
+       Zwei Schaltwege an einem Element heben sich gegenseitig auf. */
+    #wlMatchModal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 60; display: flex; justify-content: center; align-items: center; padding: 16px; }
+    #wlMatchModal[hidden] { display: none; }
+    #wlMatchModal .wl-card { background: #1a1d24; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 520px; }
+    #wlMatchModal .badge { font-size: 11px; padding: 2px 9px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+    #wlMatchModal .badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
+    #wlMatchModal .badge-yellow { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    #wlMatchModal .badge-gray { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+    /* .btn-primary holt seinen Innenabstand sonst aus .btn — die Knoepfe im
+       Modul werden ohne diese Klasse erzeugt, weil das Dashboard sie dort
+       nicht braucht. */
+    #wlMatchModal .btn-primary { padding: 9px 14px; border-radius: 8px; border: none; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 13px; }
     .lang-switch { display: flex; gap: 10px; margin-bottom: 20px; }
     .lang-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 12px; }
     .lang-btn.active { background: var(--primary); color: #000; border-color: var(--primary); font-weight: bold; }
@@ -384,6 +400,23 @@
     </div>
   </div>
 
-  <script type="module" src="kalender.js?v=20260625c"></script>
+  <!-- WARTELISTE-NACHRUECKER -->
+  <div id="wlMatchModal" hidden>
+    <div class="wl-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;">
+        <strong style="font-size:16px;">Passende Warteliste-Patienten</strong>
+        <button type="button" data-wl-close style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;line-height:1;">&#10005;</button>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">
+        Diese Patienten warten auf einen Platz wie den frei gewordenen (nach Leistung, Wochentag und Uhrzeit gefiltert).
+      </p>
+      <p id="wlMatchSlot" hidden style="font-size:13px;font-weight:600;margin-bottom:14px;"></p>
+      <div id="wlMatchList" style="display:flex;flex-direction:column;gap:12px;max-height:340px;overflow-y:auto;padding-right:4px;"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+        <button type="button" class="btn btn-outline" data-wl-close>Schliessen</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="kalender.js?v=20260903"></script>
 </body>
 </html>

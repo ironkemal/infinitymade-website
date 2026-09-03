@@ -216,7 +216,9 @@ const RX_FELDER = 'id,heilmittel,heilmittel_feld_text,heilmittel_position,diagno
 export async function waehleVerordnungFuerPanel({ supabase, booking, verknuepfteSession, gewuenschteRxId }) {
   const verknuepfteRx = verknuepfteSession?.prescriptions || null;
   const patientId = verknuepfteRx?.patient_id || booking?.lead_id || null;
-  const leer = { rx: verknuepfteRx, liste: verknuepfteRx ? [verknuepfteRx] : [], aktuelleSitzung: verknuepfteSession?.session_number || 1 };
+  // aktuelleSitzung: 0 statt der Terminnummer — im Ausnahmefall lieber nichts
+  // behaupten als eine Zahl, die „erbracht“ meint und Terminnummer ist.
+  const leer = { rx: verknuepfteRx, liste: verknuepfteRx ? [verknuepfteRx] : [], aktuelleSitzung: 0 };
   if (!patientId) return leer;
   // Hängt an diesem Termin keine Verordnung (Selbstzahler, freier Termin) und
   // wurde auch keine angefragt, bleibt die Rezeptinfo leer — wie bisher. Sonst
@@ -239,15 +241,24 @@ export async function waehleVerordnungFuerPanel({ supabase, booking, verknuepfte
     || verknuepfteRx
     || liste[0];
 
-  // Sitzungszahl: beim verknüpften Termin ist es „diese Sitzung". Bei einer
-  // anderen Verordnung gibt es keinen „diesen" Termin — dort zählt, wie viel
-  // schon erbracht ist.
-  let aktuelleSitzung = verknuepfteSession?.session_number || 1;
-  if (gewaehlt?.id && gewaehlt.id !== verknuepfteRx?.id) {
+  // Gezählt wird, was erbracht IST — nicht, die wievielte Sitzung der
+  // angeklickte Termin wäre. Beta-1 will im Panel „2 von 6" lesen und die Zahl
+  // bei einer Absage zurückspringen sehen (31.08.2026). Mit `session_number`
+  // stand dort die Nummer des angeklickten Termins: sie zählte hoch, sobald
+  // ein Termin existierte, und blieb bei einer Absage stehen.
+  //
+  // `done` ist der einzige Wert, der „erbracht" bedeutet — die Spalte kennt
+  // laut Schema nur planned|done|cancelled|no_show. Von der alten Liste traf
+  // `completed` nie zu (tote Bedingung) und `no_show` traf zu und war falsch:
+  // der nicht erschienene Patient wurde als behandelt gezählt. Es ist dieselbe
+  // Regel wie in module/sitzungsfortschritt.js — beide Sichten müssen dieselbe
+  // Zahl nennen, sonst widersprechen sich Panel und Abrechnungsreife.
+  let aktuelleSitzung = 0;
+  if (gewaehlt?.id) {
     const { count } = await supabase.from('prescription_sessions')
       .select('id', { count: 'exact', head: true })
       .eq('prescription_id', gewaehlt.id)
-      .in('status', ['completed', 'done', 'no_show']);
+      .eq('status', 'done');
     aktuelleSitzung = count || 0;
   }
 
@@ -423,7 +434,7 @@ export async function verteileOffeneSitzungen({
  * @param {object|null} booking  null → Patientenmodus, Knöpfe werden gesperrt
  */
 export function setzeTerminAuswahlLabel(booking) {
-  const knoepfe = ['bkActionMoveBtn', 'bkActionEditBtn', 'bkActionDeleteBtn']
+  const knoepfe = ['bkActionEditBtn', 'bkActionDeleteBtn', 'bkDetailEditBtn']
     .map(id => document.getElementById(id)).filter(Boolean);
   const zeile = document.getElementById('bkActionAuswahlZeile');
   if (!knoepfe.length) return;

@@ -1728,9 +1728,15 @@
           </div>
 
           <!-- Özet bar -->
-          <div class="card" style="margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;background:var(--bg-card);border:1px solid var(--border);">
+          <div class="card" style="margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;background:var(--bg-card);border:1px solid var(--border);">
             <div id="wlSummary" style="display:flex;gap:24px;flex-wrap:wrap;padding:4px 0;">
               <span style="color:var(--text-muted);font-size:13px;">Lade…</span>
+            </div>
+            <!-- Wer vermittelt wurde, verschwand bisher aus der Liste. Sagt er
+                 danach ab, muss man ihn wiederfinden — dafür der zweite Reiter. -->
+            <div id="wlStatusTabs" style="display:flex;gap:6px;margin-left:auto;">
+              <button type="button" class="btn-primary" data-wl-status="waiting" style="font-size:12px;padding:5px 12px;">Wartend</button>
+              <button type="button" class="btn-ghost" data-wl-status="matched" style="font-size:12px;padding:5px 12px;">Vermittelt</button>
             </div>
           </div>
 
@@ -1752,7 +1758,7 @@
               </table>
               <div id="wlEmpty" class="table-empty" style="padding:32px;text-align:center;color:var(--text-muted);" hidden>
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;display:block;margin:0 auto 12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Keine Patienten auf der Warteliste.
+                <span id="wlEmptyText">Keine Patienten auf der Warteliste.</span>
               </div>
             </div>
           </div>
@@ -4786,7 +4792,22 @@
     <div class="modal-body">
         <!-- Detaylı Termin-Info -->
         <div id="bkDetailCard" style="background:rgba(255,255,255,0.04);border:1px solid var(--border,#374151);border-radius:8px;padding:12px;margin-bottom:12px;">
-          <div id="bkDetailService" style="font-size:13px;color:var(--text-muted);margin-bottom:4px;"></div>
+          <!-- Der Stift sitzt neben dem Namen der Leistung, weil man beim
+               Aufschlagen des Panels ohnehin dorthin sieht. Er öffnet
+               dieselbe Terminmaske wie „Bearbeiten" weiter unten — Uhrzeit
+               ändern oder eine andere Leistung zuweisen, ohne den Kalender
+               zu verlassen (Kemal, 31.08.2026: „hier ein Editor, also
+               ändern, direkt ganz oben neben der Podologischen Behandlung").
+               Ein Weg, zwei Einstiege: verdrahtet ist er zusammen mit
+               #bkActionEditBtn. -->
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:4px;">
+            <div id="bkDetailService" style="font-size:13px;color:var(--text-muted);flex:1;min-width:0;"></div>
+            <button class="btn-ghost btn-sm" id="bkDetailEditBtn" type="button"
+                    title="Termin ändern — Uhrzeit oder Leistung"
+                    style="flex-shrink:0;font-size:11px;padding:2px 8px;color:var(--text-main);">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Ändern
+            </button>
+          </div>
           <div id="bkDetailDateTime" style="font-size:15px;font-weight:600;color:var(--text-main);margin-bottom:4px;"></div>
           <div id="bkDetailTherapist" style="font-size:12px;color:var(--text-muted);"></div>
           <div id="bkDetailDuration" style="font-size:12px;color:var(--text-muted);"></div>
@@ -4829,50 +4850,23 @@
           </div>
         </div>
 
+        <!-- Verlauf — NUR im Patientenmodus, also wenn jemand einen Patienten
+             ohne kommenden Termin gewählt hat. Bei einem Termin bleibt die
+             Karte zu: dort ist der Verlauf einen Knopfdruck entfernt
+             („Patientendaten →"), und ausgebreitet war er einmal der längste
+             Block im Panel. Gefüllt aus module/patientenkarte.js
+             (ladeVerlauf/renderVerlauf) über module/termin-panel-patient.js. -->
+        <div id="bkVerlaufCard" hidden style="border:1px solid var(--border,#374151);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+          <div style="padding:7px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;">Verlauf</div>
+          </div>
+          <div id="bkVerlaufContent" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+
         <!-- Booking Termin-Notiz -->
         <div id="bkBookingNotesCard" hidden style="background:rgba(177,137,27,0.06);border:1px solid rgba(177,137,27,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
           <div style="font-size:10px;font-weight:600;color:var(--accent,#b1891b);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Termin-Notiz</div>
           <div id="bkBookingNotesText" style="font-size:12px;color:var(--text-main);white-space:pre-wrap;line-height:1.5;"></div>
-        </div>
-
-        <!-- Heilmittel / Rezept Bilgisi -->
-        <div id="bkRxInfoCard" hidden style="border:1px solid rgba(177,137,27,0.3);border-radius:8px;margin-bottom:12px;overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(177,137,27,0.08);border-bottom:1px solid rgba(177,137,27,0.2);">
-            <div style="font-size:11px;font-weight:600;color:var(--accent,#b1891b);text-transform:uppercase;letter-spacing:.05em;">Rezeptinfo</div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <!-- Blättern zwischen den Verordnungen des Patienten + „übernehmen".
-                   Beides füllt module/termin-aktionen.js; leer, solange der
-                   Patient nur eine Verordnung hat. -->
-              <span id="bkRxNav" style="display:flex;align-items:center;gap:2px;"></span>
-              <span id="bkRxStatusBadge" style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;"></span>
-            </div>
-          </div>
-          <div style="padding:8px 12px;display:grid;grid-template-columns:76px 1fr;gap:4px 8px;font-size:12px;">
-            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Nummer</div>
-            <div id="bkRxNummer" style="color:var(--text-main);font-weight:500;"></div>
-            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Arzt</div>
-            <div id="bkRxArzt" style="color:var(--text-main);font-weight:500;"></div>
-            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Datum</div>
-            <div id="bkRxDatum" style="color:var(--text-main);font-weight:500;"></div>
-            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Verordnung</div>
-            <div id="bkRxVerordnung" style="color:var(--text-main);font-weight:500;line-height:1.4;"></div>
-            <!-- Die Zeile "RZG" ist entfallen: sie zeigte denselben Betrag noch
-                 einmal als Abkuerzung. Die Zuzahlung steht jetzt nur noch in der
-                 farbigen Zeile weiter unten (#bkRxZuzahlungWarn). -->
-            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Mandant</div>
-            <div id="bkRxMandant" style="color:var(--text-main);font-weight:500;"></div>
-          </div>
-          <div style="padding:0 12px 10px;">
-            <div id="bkRxRemainingBar" style="background:rgba(255,255,255,0.08);border-radius:4px;height:5px;margin-bottom:5px;overflow:hidden;">
-              <div id="bkRxRemainingFill" style="height:100%;background:var(--accent,#b1891b);border-radius:4px;width:0%;transition:width 0.4s;"></div>
-            </div>
-            <div id="bkRxRemainingText" style="font-size:11px;color:var(--text-muted);"></div>
-          </div>
-          <div id="bkRxZuzahlungWarn" hidden style="margin:6px 12px 8px;padding:5px 10px;background:var(--warning-dim);border:1px solid var(--warning);border-radius:6px;font-size:11px;color:var(--warning-text);font-weight:600;"></div>
-          <div id="bkRxLetzterTermin" hidden style="margin:6px 12px 8px;padding:6px 10px;background:var(--success-dim);border:1px solid var(--success);border-radius:6px;font-size:11px;color:var(--success);font-weight:600;display:flex;align-items:center;justify-content:space-between;">
-            <span>🎯 Letzte Behandlung dieser Verordnung</span>
-            <span style="font-size:10px;opacity:0.8;">→ Abrechnung prüfen</span>
-          </div>
         </div>
 
         <!-- Der Block „Sitzungsübersicht" stand hier: eine Tabelle aller
@@ -4977,14 +4971,17 @@
         <!-- „Bearbeiten" und „Löschen" nannten ihr Ziel nicht. Bei einem
              Patienten mit sechs Terminen sieht man dem Knopf nicht an, welchen
              er trifft — deshalb steht der gewählte Termin darüber.
-             Gefüllt in module/termin-aktionen.js. -->
+             Gefüllt in module/termin-aktionen.js.
+
+             „Verschieben" stand hier als dritter Knopf und ist am 31.08.2026
+             entfallen: Verschieben geht seit dem Kontextmenü per Rechtsklick
+             direkt am Termin im Kalender — dort, wo man ihn ohnehin greift.
+             Zwei Wege für dieselbe Handlung sind einer zu viel. „Bearbeiten"
+             bleibt (Kemal, ausdrücklich). -->
         <div id="bkActionAuswahlZeile" hidden
              style="font-size:11px;color:var(--text-muted);margin-bottom:6px;text-align:center;"></div>
 
-        <div class="form-group" style="display:flex;gap:8px;margin-bottom:8px;">
-          <button class="btn-ghost" id="bkActionMoveBtn" type="button" style="flex:1;justify-content:center;font-size:13px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>Verschieben
-          </button>
+        <div class="form-group" id="bkActionTerminButtons" style="display:flex;gap:8px;margin-bottom:8px;">
           <button class="btn-ghost" id="bkActionEditBtn" style="flex:1;justify-content:center;font-size:13px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Bearbeiten
           </button>
@@ -4993,7 +4990,7 @@
           </button>
         </div>
 
-        <div class="form-group" style="margin-bottom:0;">
+        <div class="form-group" id="bkActionNoShowGroup" style="margin-bottom:0;">
           <!-- Kein `disabled` mehr: der Countdown ("ab 3 Min. nach Terminbeginn") ist
                entfallen, updateNoShowButton() schaltet den Knopf ohnehin immer frei.
                Das Attribut blieb als Rest liegen und liess die Handlung aus dem
@@ -5017,9 +5014,61 @@
              Bewusst ÜBER `#bkRxSessionsPanel` und nicht darin: das Panel ist
              ausgeblendet, solange keine Verordnung am Termin hängt — im Panel
              wäre der Knopf beim Selbstzahler spurlos verschwunden. -->
-        <div style="margin-top:16px;border-top:2px solid var(--border);padding-top:14px;">
+        <div id="bkActionTerminzettelWrap" style="margin-top:16px;border-top:2px solid var(--border);padding-top:14px;">
           <button class="btn-ghost" id="bkActionTerminzettelBtn" type="button"
                   style="width:100%;justify-content:center;font-size:13px;color:var(--text-main);">🖨 Termine drucken (A5)</button>
+        </div>
+
+        <!-- Rezeptinfo und „Aktive Verordnung" stehen bewusst als Paar ganz
+             unten, in dieser Reihenfolge. Vorher stand die Rezeptinfo weit
+             oben, vier Bloecke von der Sitzungsliste entfernt — man las die
+             Verordnung an einer Stelle und arbeitete sie an einer anderen ab
+             und musste dazwischen scrollen.
+
+             Kemal, 31.08.2026: „Rezept-Info ziehen wir ganz nach unten, aber
+             immer noch ueber die aktive Verordnung, dass man beide in einem
+             Blick sieht." Wer die Reihenfolge aendert, nimmt genau diesen
+             einen Blick wieder weg. -->
+        <!-- Heilmittel / Rezept Bilgisi -->
+        <div id="bkRxInfoCard" hidden style="border:1px solid rgba(177,137,27,0.3);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(177,137,27,0.08);border-bottom:1px solid rgba(177,137,27,0.2);">
+            <div style="font-size:11px;font-weight:600;color:var(--accent,#b1891b);text-transform:uppercase;letter-spacing:.05em;">Rezeptinfo</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <!-- Blättern zwischen den Verordnungen des Patienten + „übernehmen".
+                   Beides füllt module/termin-aktionen.js; leer, solange der
+                   Patient nur eine Verordnung hat. -->
+              <span id="bkRxNav" style="display:flex;align-items:center;gap:2px;"></span>
+              <span id="bkRxStatusBadge" style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;"></span>
+            </div>
+          </div>
+          <!-- Die Geldzeile steht ZUERST: Zuzahlung, erbrachte Summe, Status
+               und der €-Knopf. Sie hat die Zeilen „Nummer", „Arzt" und
+               „Datum" ersetzt — Angaben, die man beim Anlegen der Verordnung
+               braucht und danach nie wieder, die aber jeden Tag Platz
+               nahmen (Kemal, 31.08.2026). Sie stehen weiterhin vollständig
+               in der Verordnungsansicht.
+               Inhalt und Regeln: module/rezeptinfo-geld.js -->
+          <div id="bkRxGeldZeile" style="padding:9px 12px;border-bottom:1px solid rgba(177,137,27,0.15);"></div>
+          <div style="padding:8px 12px;display:grid;grid-template-columns:76px 1fr;gap:4px 8px;font-size:12px;">
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Verordnung</div>
+            <div id="bkRxVerordnung" style="color:var(--text-main);font-weight:500;line-height:1.4;"></div>
+            <!-- Die Zeile "RZG" ist entfallen: sie zeigte denselben Betrag noch
+                 einmal als Abkuerzung. Die Zuzahlung steht jetzt nur noch in der
+                 farbigen Zeile weiter unten (#bkRxZuzahlungWarn). -->
+            <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;align-self:start;padding-top:1px;">Mandant</div>
+            <div id="bkRxMandant" style="color:var(--text-main);font-weight:500;"></div>
+          </div>
+          <div style="padding:0 12px 10px;">
+            <div id="bkRxRemainingBar" style="background:rgba(255,255,255,0.08);border-radius:4px;height:5px;margin-bottom:5px;overflow:hidden;">
+              <div id="bkRxRemainingFill" style="height:100%;background:var(--accent,#b1891b);border-radius:4px;width:0%;transition:width 0.4s;"></div>
+            </div>
+            <div id="bkRxRemainingText" style="font-size:11px;color:var(--text-muted);"></div>
+          </div>
+          <div id="bkRxZuzahlungWarn" hidden style="margin:6px 12px 8px;padding:5px 10px;background:var(--warning-dim);border:1px solid var(--warning);border-radius:6px;font-size:11px;color:var(--warning-text);font-weight:600;"></div>
+          <div id="bkRxLetzterTermin" hidden style="margin:6px 12px 8px;padding:6px 10px;background:var(--success-dim);border:1px solid var(--success);border-radius:6px;font-size:11px;color:var(--success);font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+            <span>🎯 Letzte Behandlung dieser Verordnung</span>
+            <span style="font-size:10px;opacity:0.8;">→ Abrechnung prüfen</span>
+          </div>
         </div>
 
         <!-- ===== VERORDNUNG SESSIONS PANEL ===== -->
@@ -5037,29 +5086,50 @@
                   style="width:100%;justify-content:center;font-size:12px;color:var(--text-main);margin-bottom:10px;">
             🗓 Offene Einheiten als Serie verteilen
           </button>
-          <!-- Zwei feste Spalten liefen auf schmalen Panels aus dem Bild und
-               erzwangen waagerechtes Schieben. `auto-fit` mit Mindestbreite
-               stellt sie nebeneinander, solange sie passen, und stapelt sie
-               sonst — geschoben wird nie. -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">
-            <!-- Unvergebene Heilmittel -->
-            <div style="background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.06);border:1px solid var(--border);border-radius:10px;padding:10px;">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Unvergebene</div>
-              <div id="bkRxUnvergebeneList" style="display:flex;flex-direction:column;gap:6px;min-height:40px;">
-                <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine offen</span>
-              </div>
+          <!-- Umschalter statt zwei Spalten. Nebeneinander blieben je Spalte
+               rund 190 px, und der Heilmittelname — das, was man vergibt —
+               war fast immer abgeschnitten. Jetzt eine Liste über die volle
+               Panelbreite; die Zahlen stehen im Umschalter, damit man auch
+               von der anderen Seite aus sieht, wie viel offen ist.
+               Logik: module/sitzungen-ansicht.js (Kemal, 31.08.2026). -->
+          <!-- Leistungen des Tages korrigieren, BEVOR die Sitzung zugemacht
+               wird (Kemal/Beta-1, 31.08.2026: „dass man die Dienstleistungen
+               anpassen kann, bevor man abmacht — wegmachen oder hinzufügen").
+
+               Bewusst KEINE zweite Maske: der Knopf springt in die vorhandene
+               Behandlungsdokumentation und wählt die Verordnung des Patienten
+               vor. Dort hängen die Prüfungen, die Geld kosten, wenn man sie
+               umgeht — 78040 nicht neben 78030, 78100 einmal je Kalenderjahr,
+               Behandlungsbeginn innerhalb der Frist. Ein eigener Editor hier
+               wäre ein zweiter Schreibweg in `podologie_behandlungen` und
+               würde genau daran vorbeilaufen.
+
+               Nur Podologie: in den übrigen Fachbereichen trägt eine Sitzung
+               keine eigenen Positionen, dort gibt es nichts anzupassen.
+               Sichtbarkeit setzt dashboard.js. -->
+          <button class="btn-ghost" id="bkRxLeistungenBtn" type="button" hidden
+                  style="width:100%;justify-content:center;font-size:12px;color:var(--text-main);margin-bottom:10px;">
+            ✎ Leistungen des Tages dokumentieren
+          </button>
+          <div id="bkRxSitzungTabs" role="tablist" style="display:flex;gap:6px;margin-bottom:10px;">
+            <button type="button" class="bk-sitz-tab is-active" data-ziel="unvergeben" role="tab" aria-selected="true">Unvergebene</button>
+            <button type="button" class="bk-sitz-tab" data-ziel="vergeben" role="tab" aria-selected="false">Termine</button>
+          </div>
+          <!-- Unvergebene Heilmittel -->
+          <div id="bkRxUnvergebeneBox" style="background:hsla(var(--primary-h),var(--primary-s),var(--primary-l),0.06);border:1px solid var(--border);border-radius:10px;padding:10px;">
+            <div id="bkRxUnvergebeneList" style="display:flex;flex-direction:column;gap:6px;min-height:40px;">
+              <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine offen</span>
             </div>
-            <!-- Liste der Termine -->
-            <div style="background:hsla(140,60%,50%,0.06);border:1px solid var(--border);border-radius:10px;padding:10px;">
-              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Termine</div>
-              <div id="bkRxTermineList" style="display:flex;flex-direction:column;gap:6px;min-height:40px;">
-                <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine</span>
-              </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;">
+              Auf den Kalender ziehen → Termin erstellen.<br>
+              Mehrere per Checkbox anhaken und ziehen → gemeinsamer Kombi-Termin.
             </div>
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;">
-            Unvergebene Einheiten auf den Kalender ziehen → Termin erstellen.<br>
-            Mehrere per Checkbox anhaken und ziehen → gemeinsamer Kombi-Termin.
+          <!-- Liste der Termine -->
+          <div id="bkRxVergebeneBox" hidden style="background:hsla(140,60%,50%,0.06);border:1px solid var(--border);border-radius:10px;padding:10px;">
+            <div id="bkRxTermineList" style="display:flex;flex-direction:column;gap:6px;min-height:40px;">
+              <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Keine</span>
+            </div>
           </div>
         </div>
       </div>
@@ -5488,9 +5558,12 @@
         <button class="modal-close" data-modal="wlMatchModal">✕</button>
       </div>
       <div class="modal-body">
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:15px;line-height:1.5;">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">
           Folgende Patienten aus der Warteliste passen auf den stornierten/freien Termin (nach Dienstleistung, Wochentag und Uhrzeit gefiltert):
         </p>
+        <!-- Welcher Platz vergeben wird — ohne diese Zeile weiss man beim Klick
+             auf „Diesen Termin geben" nicht, welchen Termin man verschenkt. -->
+        <p id="wlMatchSlot" hidden style="font-size:13px;font-weight:600;color:var(--text-main);margin-bottom:15px;"></p>
         <div id="wlMatchList" style="display:flex;flex-direction:column;gap:12px;max-height:350px;overflow-y:auto;padding-right:4px;">
           <!-- Dynamically populated -->
         </div>
@@ -5733,7 +5806,7 @@
     </div>
   </div>
 
-  <script type="module" src="dashboard.js?v=20260901"></script>
+  <script type="module" src="dashboard.js?v=20260903"></script>
 </body>
 
 </html>

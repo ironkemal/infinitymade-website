@@ -86,6 +86,33 @@ p('GKV "+ Einrichten" meldet Code', hat('gkv-einrichten'));
 p('Rechtsklick öffnet Menü', menueOffen, eintraege.join(' | '));
 p('Escape schließt Menü', menueOffen && menueZu, menueOffen ? '' : 'nicht pruefbar — Menü ging nicht auf');
 
+console.log('');
+console.log('══ WARTELISTE');
+const wl = await page.evaluate(() => ({
+  wartend: window.__wlWartend, vermittelt: window.__wlVermittelt, leer: window.__wlLeer,
+  modalOffen: !document.getElementById('wlMatchModal').hidden,
+  karten: document.querySelectorAll('#wlMatchList .wl-candidate-card').length,
+  vergebenKnoepfe: document.querySelectorAll('#wlMatchList [data-nachruecker]').length,
+  slotZeile: document.getElementById('wlMatchSlot').hidden ? null : document.getElementById('wlMatchSlot').textContent,
+}));
+p('wartende Eintraege als Zeile', wl.wartend.zeilen === 2, String(wl.wartend.zeilen));
+p('in der Wartend-Ansicht kein Weg zurueck', wl.wartend.zurueckKnoepfe === 0, String(wl.wartend.zurueckKnoepfe));
+p('Reiter meldet den gewaehlten Stand', wl.wartend.status === 'waiting' && wl.vermittelt.status === 'matched', `${wl.wartend.status} → ${wl.vermittelt.status}`);
+p('vermittelter Eintrag bietet den Weg zurueck', wl.vermittelt.zurueckKnoepfe === 1, String(wl.vermittelt.zurueckKnoepfe));
+// Dort zaehlt, WANN vermittelt wurde (01.09.), nicht wann eingetragen (05.08.).
+p('vermittelte Ansicht zeigt das Vermittlungsdatum', wl.vermittelt.datum === '1.9.2026', String(wl.vermittelt.datum));
+p('Leermeldung folgt dem Reiter', wl.leer.sichtbar && /vermittelt/.test(wl.leer.text), wl.leer.text);
+p('Nachruecker-Dialog offen mit beiden Kandidaten', wl.modalOffen && wl.karten === 2, `offen=${wl.modalOffen}, Karten=${wl.karten}`);
+p('jede Karte kann den Platz bekommen', wl.vergebenKnoepfe === 2, String(wl.vergebenKnoepfe));
+p('der frei gewordene Platz steht im Dialog', /10\.09/.test(wl.slotZeile || ''), wl.slotZeile ?? '— nicht sichtbar');
+
+await page.click('#wlMatchList [data-nachruecker="0"]');
+await page.click('#wlTableBody [data-wl-zurueck]');
+await page.waitForTimeout(200);
+const ev2 = await page.evaluate(() => window.__ereignisse);
+p('„Diesen Termin geben" meldet den Eintrag', ev2.some(e => e.was === 'wl-uebernehmen' && e.id === 'w1'));
+p('„Zurueck auf die Warteliste" meldet den Eintrag', ev2.some(e => e.was === 'wl-zurueck' && e.id === 'w2'));
+
 await browser.close();
 if (fehler.length) { console.log('\n   ⚠ Konsolenfehler:'); [...new Set(fehler)].forEach(f => console.log('     · ' + f.slice(0,200))); }
 else console.log('\n   keine Konsolenfehler');

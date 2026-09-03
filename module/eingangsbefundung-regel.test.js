@@ -260,3 +260,80 @@ test('Zeilen ohne Datum oder ohne hpnr_codes kippen nicht um', () => {
   );
   assert.equal(r.erlaubt, true);
 });
+
+// ── Zwei Loecher, die erst beim Verdrahten weh getan haetten ─────────────────
+// Beide von `fonksiyon-ustasi` beim Melden der Funktion angezeigt (03.09.2026).
+
+test('alte Positionsnummer schweigt nicht mehr, sie nennt den Grund', () => {
+  // Bei einer Beta-Praxis steht in `services.gkv_position_nr` teils noch P01/P02.
+  // Vorher fiel das auf `kein_podologie_zweig` — der Podologe haette am Telefon
+  // keinen Vorschlag gesehen und keinen Hinweis, warum nicht.
+  for (const hpnr of ['P01', 'P02', 'P-HB', 'P03a', 'P03b', 'P03c', 'P04']) {
+    const r = befundungFuerLeistung({ hpnr, behandlungen: [], datum: '2026-09-03' });
+    assert.equal(r.code, null);
+    assert.equal(r.grund, 'legacy_positionsnummer', `${hpnr} muss als Altlast erkannt werden`);
+    assert.match(r.hinweis, new RegExp(hpnr.replace('-', '\\-')), 'die Meldung nennt die Nummer');
+  }
+});
+
+test('alte Nummer wird NICHT stillschweigend auf die neue HPNR umgedeutet', () => {
+  // P01 zeigt laut GKV_PODO_LEGACY_MAP auf 78020. Trotzdem darf hier kein 78040
+  // herauskommen — sonst lebt die alte Nummer weiter und die Migration wird nie
+  // gemacht.
+  const r = befundungFuerLeistung({ hpnr: 'P01', behandlungen: [], datum: '2026-09-03' });
+  assert.notEqual(r.code, '78040');
+});
+
+test('Katalogzeile erkennt eine unbekannte Nagel-Position als Nagel', () => {
+  // Kaeme morgen eine neue UI1/UI2-Position dazu, kennt die feste Liste sie
+  // nicht. Mit den Diagnosegruppen der Katalogzeile schweigt die Regel trotzdem
+  // richtig, statt die Position fuer sektorfremd zu halten.
+  const r = befundungFuerLeistung({
+    hpnr: '78699', behandlungen: [], datum: '2026-09-03', diagnosegruppen: ['UI1', 'UI2'],
+  });
+  assert.equal(r.code, null);
+  assert.equal(r.grund, 'nagelzweig');
+});
+
+test('Diagnosegruppen bremsen auch eine bekannte DF-Behandlung aus', () => {
+  // Steht in der Katalogzeile UI1, gilt der Nagelzweig — auch wenn die HPNR
+  // nach DF aussieht. Die Zeile ist naeher an der Wahrheit als unsere Liste.
+  const r = befundungFuerLeistung({
+    hpnr: '78010', behandlungen: [], datum: '2026-09-03', diagnosegruppen: ['UI1'],
+  });
+  assert.equal(r.grund, 'nagelzweig');
+});
+
+test('Diagnosegruppen koennen einen Vorschlag NICHT ausloesen', () => {
+  // Nur die Positivliste 78010/78020 darf 78040 ausloesen. „DF" an einer
+  // unbekannten Position reicht nicht — ein zu Unrecht vorgeschlagener Code
+  // kostet Geld, ein fehlender kostet einen Klick.
+  const r = befundungFuerLeistung({
+    hpnr: '78777', behandlungen: [], datum: '2026-09-03', diagnosegruppen: ['DF', 'NF', 'QF'],
+  });
+  assert.equal(r.code, null);
+  assert.equal(r.grund, 'kein_podologie_zweig');
+});
+
+test('DF-Katalogzeile aendert am Normalfall nichts', () => {
+  const r = befundungFuerLeistung({
+    hpnr: '78010', behandlungen: [], datum: '2026-09-03',
+    diagnosegruppen: ['DF', 'NF', 'QF'], podologieVor2023: false,
+  });
+  assert.equal(r.code, '78040');
+  assert.equal(r.automatisch, true);
+});
+
+test('leere, kaputte oder fehlende Diagnosegruppen fallen auf die feste Liste zurueck', () => {
+  for (const dg of [null, undefined, [], [null, ''], ['  ui2  ']]) {
+    const r = befundungFuerLeistung({
+      hpnr: '78610', behandlungen: [], datum: '2026-09-03', diagnosegruppen: dg,
+    });
+    assert.equal(r.grund, 'nagelzweig', 'die feste Liste kennt 78610 ohnehin');
+  }
+  // Kleinschreibung und Leerzeichen werden erkannt, nicht verworfen.
+  const r = befundungFuerLeistung({
+    hpnr: '78699', behandlungen: [], datum: '2026-09-03', diagnosegruppen: [' ui1 '],
+  });
+  assert.equal(r.grund, 'nagelzweig');
+});

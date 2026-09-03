@@ -8025,3 +8025,41 @@ textarea:focus-visible,
 .gkv-td-fix {
   color: var(--text-muted);
 }
+
+/* Umschalter „Unvergebene / Termine" im Block „Aktive Verordnung" des
+   Seitenbereichs. Er ersetzt die zwei Spalten, in denen der Heilmittelname
+   nie ganz passte — Logik in module/sitzungen-ansicht.js.
+
+   Beide Knöpfe teilen sich die Breite (flex:1), damit der Umschalter beim
+   Wechseln nicht springt: „Unvergebene (12)" und „Termine (2)" sind
+   unterschiedlich lang, und eine wandernde Trennlinie liest sich wie ein
+   Fehler. */
+.bk-sitz-tab {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.bk-sitz-tab:hover {
+  color: var(--text-main);
+  border-color: var(--text-muted);
+}
+
+.bk-sitz-tab.is-active {
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.14);
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.bk-sitz-tab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
