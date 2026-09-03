@@ -322,7 +322,7 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 - **Seit:** 13.06.2026 · `create_verordnungen` (GoBD-Riegel nachgezogen: 03.09.2026 · `verordnungen_gobd_festschreibung`)
 - **Status:** aktiv
 - **Wer:** `module/podologie-abrechnung.js`, `verordnung-uebersicht.js`, `abrechnungsstatus.js`, Backend-Abrechnung und Verordnungsstatus.
-- **Achtung:** `icd10` ist ein `text[]` (bei `prescriptions` zwei Einzelspalten). Ohne Team-Zugriff — nur der Inhaber sieht sie.
+- **Achtung:** `icd10` ist ein `text[]` (bei `prescriptions` zwei Einzelspalten). Team darf seit 03.09.2026 LESEN (Policy `Employees can view team verordnungen`), Schreiben bleibt beim Inhaber — `status` haengt an der serverseitigen Uebergangspruefung in `verordnung-status.routes.js`, ein direkter Team-Schreibzugriff wuerde daran vorbei gehen.
 - **Achtung — GoBD-Riegel seit 03.09.2026:** Trigger `trg_verordnungen_festschreibung` →
   `verordnung_festschreibung()`. Sobald `belegnummer` gesetzt ist (einmalig bei der
   DTA-Erzeugung, `/abrechnung/create-podologie`), sperrt er per `UPDATE` genau die Spalten,
@@ -346,10 +346,10 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 
 ### `podologie_behandlungen`
 - **Warum:** Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions` im anderen Topf.
-- **Seit:** 13.06.2026 · `create_podologie_behandlungen`
+- **Seit:** 13.06.2026 · `create_podologie_behandlungen` (Team-SELECT nachgezogen: 03.09.2026 · `verordnungen_podologie_behandlungen_team_select`)
 - **Status:** aktiv
 - **Wer:** `loadPodologieBilling()`, Patientenkarte, Rechnungsbrücke, Backend-Abrechnung.
-- **Achtung:** Ohne Team-Zugriff.
+- **Achtung:** Team darf seit 03.09.2026 LESEN (Policy `Employees can view team podologie_behandlungen`), Schreiben bleibt beim Inhaber — die Tabelle hat keine Spalte fuer den behandelnden Mitarbeiter, teamweites Schreiben waere die falsche Granularitaet fuer eine Dokumentation nach § 630f BGB. Kein UI dafuer: `podologie-billing` ist in `nav-registry.js` `roles: ['owner']`.
 
 ### `pat_fussbefund`
 - **Warum:** Der podologische Fußbefund samt Fußkarte. Ersetzt fachlich `fußstatus`. Seit 30.08.2026 hält die Tabelle nicht mehr nur den *aktuellen* Befund, sondern seinen **Verlauf**.

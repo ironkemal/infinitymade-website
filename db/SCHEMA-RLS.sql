@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (GoBD-Riegel verordnungen)
--- LETZTE MIGRATION:  20260903132042_verordnungen_gobd_festschreibung
+-- ERZEUGT AM:        2026-09-03 (Team-SELECT verordnungen/podologie_behandlungen)
+-- LETZTE MIGRATION:  20260903165452_verordnungen_podologie_behandlungen_team_select
+--                    davor: 20260903132042_verordnungen_gobd_festschreibung
 --                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
 --                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
 --                    davor: 20260901094002_zuzahlung_korrektur_business_id_trigger
@@ -30,7 +31,7 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            155 RLS-Policies · 297 Indizes · 64 Trigger · 65 Funktionen
+-- UMFANG:            157 RLS-Policies · 297 Indizes · 64 Trigger · 65 Funktionen
 --                    (03.09.2026 gegen die Live-DB nachgezaehlt. Dabei fiel auf,
 --                     dass in Abschnitt 5 zwei Indizes vom 16.08.2026 FEHLTEN:
 --                     idx_invoices_verordnung_id und idx_pod_behandlungen_invoice_id.
@@ -288,7 +289,10 @@
 --   user_select/delete_own_pending_employee — email = eigene auth.users-Mail
 
 -- podologie_behandlungen
---   owner_behandlungen [ALL] USING (owner_id = auth.uid())   ⚠️ ohne Team-Zugriff
+--   owner_behandlungen [ALL] USING (owner_id = auth.uid())
+--   Employees can view team podologie_behandlungen [SELECT]
+--     EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.owner_id = podologie_behandlungen.owner_id)
+--   ⚠️ Team darf seit 03.09.2026 LESEN, Schreiben bleibt beim Inhaber (kein behandelnder-Mitarbeiter-Feld, kein UI dafuer).
 
 -- prescription_documents
 --   prescription_documents_owner_all [ALL] owner + Team
@@ -351,7 +355,10 @@
 --   → Privatfahrzeuge eines Mitarbeiters bleiben vor Kollegen verborgen.
 
 -- verordnungen
---   owner_verordnungen [ALL] USING (owner_id = auth.uid())   ⚠️ ohne Team-Zugriff
+--   owner_verordnungen [ALL] USING (owner_id = auth.uid())
+--   Employees can view team verordnungen [SELECT]
+--     EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.owner_id = verordnungen.owner_id)
+--   ⚠️ Team darf seit 03.09.2026 LESEN, Schreiben bleibt beim Inhaber (verordnungen.status haengt an der serverseitigen Uebergangspruefung in verordnung-status.routes.js, kein direktes Schreiben via PostgREST vorgesehen).
 
 -- visibility_reports
 --   vr_admin_read [SELECT] is_admin() · vr_admin_delete [DELETE] is_admin()
@@ -383,11 +390,14 @@
 --      trg_prevent_zuzahlung_korrekturen_mod — Policy allein wuerde den
 --      service_role-Schluessel im Backend nicht bremsen.
 
--- HINWEIS zu den fünf mit "⚠️ ohne Team-Zugriff" markierten Tabellen
--- (fußstatus, patient_notes, podologie_behandlungen, verordnungen, warteliste):
--- Nur der Inhaber sieht die Daten, angestellte Therapeuten nicht. Für die
--- Podologie-Tabellen ist das noch nicht entschieden — nicht stillschweigend
--- „korrigieren“, das ist eine Produktfrage.
+-- HINWEIS zu den drei verbleibenden "⚠️ ohne Team-Zugriff" markierten Tabellen
+-- (fußstatus, patient_notes, warteliste):
+-- Nur der Inhaber sieht die Daten, angestellte Therapeuten nicht — bewusst offen
+-- gelassene Produktfrage, nicht stillschweigend "korrigieren".
+-- Die Podologie-Tabellen (podologie_behandlungen, verordnungen) sind seit
+-- 03.09.2026 kein Sonderfall mehr: Team-SELECT hinzugefuegt (Migration
+-- verordnungen_podologie_behandlungen_team_select), Schreiben bleibt weiter
+-- beim Inhaber — Details bei den beiden Tabellen oben.
 
 
 -- =====================================================================

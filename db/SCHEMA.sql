@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (GoBD-Riegel verordnungen)
--- LETZTE MIGRATION:  20260903132042_verordnungen_gobd_festschreibung
+-- ERZEUGT AM:        2026-09-03 (Team-SELECT verordnungen/podologie_behandlungen)
+-- LETZTE MIGRATION:  20260903165452_verordnungen_podologie_behandlungen_team_select
+--                    davor: 20260903132042_verordnungen_gobd_festschreibung
 --                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
 --                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
 --                    davor: 20260901094002_zuzahlung_korrektur_business_id_trigger
@@ -30,7 +31,7 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            82 Tabellen · 1211 Spalten · 155 RLS-Policies
+-- UMFANG:            82 Tabellen · 1211 Spalten · 157 RLS-Policies
 --                    297 Indizes · 64 Trigger · 65 Funktionen · 4 Views
 --                    (03.09.2026: die Triggerzahl stand hier auf 60 und war
 --                     seit zwei Migrationen zu niedrig — gegen die Live-DB

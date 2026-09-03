@@ -1544,7 +1544,7 @@
     {
      "name": "loeseTermin",
      "file": "module/verordnung-termine.js",
-     "start": 130,
+     "start": 132,
      "module": [
       "abrechnung",
       "fussstatus",
@@ -5712,7 +5712,7 @@
    "register": true,
    "status": "aktiv",
    "warum": "Die Behandlung zur podologischen Verordnung — das Gegenstück zu `prescription_sessions` im anderen Topf.",
-   "seit": "13.06.2026 · `create_podologie_behandlungen`",
+   "seit": "13.06.2026 · `create_podologie_behandlungen` (Team-SELECT nachgezogen: 03.09.2026 · `verordnungen_podologie_behandlungen_team_select`)",
    "ungeklaert": false,
    "leser": [
     {
@@ -5889,7 +5889,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 4,
+   "sqlTreffer": 7,
    "codeStumm": false
   },
   {
@@ -7617,7 +7617,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 33,
+   "sqlTreffer": 35,
    "codeStumm": false
   },
   {
@@ -9258,7 +9258,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 15,
+   "sqlTreffer": 18,
    "codeStumm": false
   },
   {
