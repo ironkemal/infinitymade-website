@@ -3311,24 +3311,39 @@
             <input class="form-input" id="sfNachname" type="text" autocomplete="off" placeholder="z. B. Müller" />
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Geburtsdatum</label>
-            <input class="form-input" id="sfGeburt" type="date" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Telefon</label>
-            <input class="form-input" id="sfTelefon" type="tel" placeholder="+49…" />
-          </div>
-        </div>
         <div class="form-group">
-          <label class="form-label">Geschlecht</label>
-          <!-- Optionen füllt module/geschlecht.js. Hier standen bis zum
-               16.08.2026 die ausgeschriebenen Wörter als Werte — damit
-               scheiterte jede Schnellanlage mit Geschlechtsangabe am CHECK
-               der Spalte (m/f/d). -->
-          <select class="form-select" id="sfGeschlecht"></select>
+          <label class="form-label">Telefon</label>
+          <input class="form-input" id="sfTelefon" type="tel" placeholder="+49…" />
         </div>
+
+        <!-- Am Telefon fragt der Podologe genau drei Dinge ab: Vorname,
+             Nachname, Telefonnummer — „mehr nicht" (Beta-1, 31.08.2026).
+             Geburtsdatum und Geschlecht waren hier nie Pflichtfelder, standen
+             bis zum 03.09.2026 aber gleichberechtigt im Formular und machten
+             die Maske schwerer als das Gespräch.
+
+             Bewusst ein reines <details> ohne JavaScript: dashboard.js waechst
+             nicht (tools/check-dashboard-size.sh), und der Bereich bleibt
+             offen, wenn ihn jemand aufgeklappt hat. Geleert werden die Felder
+             beim Schliessen des Modals wie bisher — sie stehen unveraendert in
+             derselben Liste (dashboard.js, closeSchnellModal). -->
+        <details id="sfMehr" style="margin-top:2px;">
+          <summary style="cursor:pointer;font-size:13px;color:var(--text-muted);padding:6px 0;">Weitere Felder</summary>
+          <div class="form-row" style="margin-top:10px;">
+            <div class="form-group">
+              <label class="form-label">Geburtsdatum</label>
+              <input class="form-input" id="sfGeburt" type="date" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Geschlecht</label>
+              <!-- Optionen füllt module/geschlecht.js. Hier standen bis zum
+                   16.08.2026 die ausgeschriebenen Wörter als Werte — damit
+                   scheiterte jede Schnellanlage mit Geschlechtsangabe am CHECK
+                   der Spalte (m/f/d). -->
+              <select class="form-select" id="sfGeschlecht"></select>
+            </div>
+          </div>
+        </details>
         <div id="sfError" style="color:#dc2626;font-size:13px;margin-top:8px;display:none;"></div>
       </div>
       <div class="modal-footer">

@@ -157,6 +157,9 @@
 - **Kodda:** `module/podologie-abrechnung.js:1198-1246` — önceki 78040 kaydı **ve** önceki
   herhangi bir Behandlung kontrolü uygulanmış (2026-08-31). **01.11.2023 öncesi Altbestand
   kapısı hâlâ UYGULANMAMIŞ** — aşağıya bak.
+  Terminmaske tarafı: `module/eingangsbefundung-regel.js` → `befundungFuerLeistung()`
+  (2026-09-03) — hangi Leistung seçilirse hangi Befundung önerilir. Altbestand sorusunu
+  kapatmaz ama `rueckfrage` alanıyla **görünür** kılar, sessizce „hayır" saymaz.
 - **Kapsam:** Podologie, DF/NF/QF (UI1/UI2'de 78040 yoktur)
 - 🔴 **Açık — para kaybettiren boşluk:** 01.11.2023'ten **önce** podolojiye başlamış hasta
   78040 hakkı **kazanmaz**. Yeni kurulan bir praxis'te bu geçmiş veritabanında yoktur, yani
@@ -219,7 +222,10 @@
   abrechenbar: ZFD FAK Juli 2024 Bölüm 2
 - **Geçerlilik:** 01.07.2025; § 3b yalnız **01.10.2025'ten itibaren verordnet** edilmiş NSB'ler için
 - **Kodda:** katalog `api-backend/billing/codes/podologie_positions.js:83-84` ve
-  `dashboard.js:9759-9763` — pozisyonlar var, **frekans denetimi uygulanmamış**
+  `dashboard.js:9759-9763` — pozisyonlar var, **frekans denetimi uygulanmamış**.
+  `module/eingangsbefundung-regel.js` → `befundungFuerLeistung()` (2026-09-03) Nagel
+  zweiginde **hiçbir şey önermez**, sadece hinweis döner — Serie ve hangi Nagel olduğu
+  Termin maskesinde bilinmediği için otomatik öneri yanlış olurdu.
 - **Kapsam:** Podologie, Diagnosegruppen UI1/UI2
 - ⚠️ `dashboard.js:9761`'deki „auch bei Wiedervorstellung" ibaresi **hiçbir sözleşme metninde
   geçmiyor** — içerik olarak yanlış değil ama alıntılanabilir değil, 2026-08-31'de sözleşme
