@@ -71,11 +71,37 @@ const DEF_PATTERNS = [
 ];
 
 /** Açılış satırından itibaren süslü parantez dengeleyerek gövde sonunu bulur. */
+/**
+ * Fonksiyon gövdesinin bittiği satır.
+ *
+ * ⚠️ Parametre listesindeki süslü parantezler SAYILMAZ (03.09.2026).
+ * Bunlar destructuring'dir, gövde değildir:
+ *
+ *     export async function bindeTermin(sb, { bookingId, vordId }) {
+ *
+ * Eski sayım burada `{` görüp `seen = true`, hemen ardından `}` görüp
+ * `depth === 0` diyordu ve fonksiyonu **imza satırında** bitiriyordu. Sonuç:
+ * `lines: 1`, gövde hiç okunmadığı için `writes`/`tables`/`calls` boş. Yani
+ * harita, o fonksiyonun hangi tabloya YAZDIĞINI göstermiyordu — `bindeTermin`
+ * ve `loeseTermin` `bookings`'e yazdıkları hâlde `writes: []` görünüyordu.
+ * Bu desen projede 149 fonksiyonu etkiliyordu.
+ *
+ * Düzeltme dar tutuldu: parantez sayımı YALNIZCA gövde açılmadan önce
+ * (`seen === false`) uygulanır. Gövde bir kez açıldıktan sonra sayım eskisiyle
+ * bire bir aynıdır — böylece gövde içindeki nesne literalleri, geri çağrılar
+ * ve düzenli ifadeler için davranış değişmez.
+ */
 function bodyEnd(lines, start) {
-  let depth = 0, seen = false;
+  let depth = 0, paren = 0, seen = false;
   for (let i = start; i < lines.length; i++) {
     const line = stripNoise(lines[i]);
     for (const ch of line) {
+      if (!seen) {
+        // Parametre listesi: aç/kapa izlenir, içindeki süslüler yok sayılır.
+        if (ch === '(') { paren++; continue; }
+        if (ch === ')') { if (paren > 0) paren--; continue; }
+        if (paren > 0) continue;
+      }
       if (ch === '{') { depth++; seen = true; }
       else if (ch === '}') { depth--; if (seen && depth === 0) return i; }
     }

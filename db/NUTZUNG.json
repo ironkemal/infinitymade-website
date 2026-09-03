@@ -30,48 +30,83 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "loadAbrechnung",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 19497,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadAbrechnung",
+     "file": "dashboard.js",
+     "start": 19519,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openDasGuideModal",
      "file": "dashboard.js",
-     "start": 13371,
+     "start": 13393,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderExportStep",
      "file": "dashboard.js",
-     "start": 19427,
+     "start": 19449,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -79,16 +114,21 @@
     {
      "name": "downloadAbrechnungFile",
      "file": "dashboard.js",
-     "start": 20063,
+     "start": 20085,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -102,8 +142,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 9,
    "codeStumm": false
@@ -149,7 +196,7 @@
     {
      "name": "init",
      "file": "dashboard.js",
-     "start": 17635,
+     "start": 17657,
      "module": [],
      "uiPfad": []
     },
@@ -209,76 +256,91 @@
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15514,
+     "start": 15536,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16732,
+     "start": 16754,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
       "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAerzte",
      "file": "dashboard.js",
-     "start": 16270,
+     "start": 16292,
      "module": [
       "abrechnung",
       "anamnese",
       "doctors",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
+      "rechnungen",
+      "services",
       "settings",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 7 modülden çağrılıyor"
+      "ortak yardımcı — 13 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 330,
+     "start": 357,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
-      "team"
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Podologie-Abrechnung (podologie)",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "podFillEditForm",
      "file": "module/podologie-abrechnung.js",
-     "start": 1097,
+     "start": 1124,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
-      "team"
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Podologie-Abrechnung (podologie)",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -286,7 +348,7 @@
     {
      "name": "deleteAerzte",
      "file": "dashboard.js",
-     "start": 16329,
+     "start": 16351,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -296,10 +358,21 @@
     {
      "name": "editAerzte",
      "file": "dashboard.js",
-     "start": 16338,
+     "start": 16360,
      "module": [],
      "uiPfad": [],
      "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "resolveOrCreateArzt",
+     "file": "api-backend/lib/arzt-registry.js",
+     "start": 55,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
       "update"
      ]
     }
@@ -314,10 +387,15 @@
     "abrechnung",
     "anamnese",
     "doctors",
+    "fussstatus",
+    "hours",
     "kunden",
     "podologie-billing",
+    "rechnungen",
+    "services",
     "settings",
     "team",
+    "ueberblick",
     "verordnungen"
    ],
    "sqlTreffer": 8,
@@ -341,7 +419,18 @@
    "seit": "16.05.2026 · `v9_ai_audit_log`",
    "ungeklaert": false,
    "leser": [],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "logCall",
+     "file": "api-backend/ai/audit.js",
+     "start": 21,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    }
+   ],
    "dateien": [
     "api-backend/ai/audit.js",
     "api/admin/data.js"
@@ -375,46 +464,75 @@
     {
      "name": "fillAnamneseForm",
      "file": "dashboard.js",
-     "start": 15745,
+     "start": 15767,
      "module": [
       "abrechnung",
       "anamnese",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Anamnese (physiotherapy/podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailAnamnese",
      "file": "dashboard.js",
-     "start": 8906,
+     "start": 8928,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "openBookingActionModal",
+     "file": "dashboard.js",
+     "start": 3240,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "printAnamnese",
      "file": "dashboard.js",
-     "start": 15857,
+     "start": 15879,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "printAnamneseInline",
      "file": "dashboard.js",
-     "start": 15805,
+     "start": 15827,
      "module": [],
      "uiPfad": []
     }
@@ -423,7 +541,7 @@
     {
      "name": "saveAnamnese",
      "file": "dashboard.js",
-     "start": 15929,
+     "start": 15951,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -439,8 +557,15 @@
    "module": [
     "abrechnung",
     "anamnese",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -493,7 +618,19 @@
      "uiPfad": []
     }
    ],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "toRad",
+     "file": "api-backend/server.js",
+     "start": 3138,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert",
+      "update"
+     ]
+    }
+   ],
    "dateien": [
     "api-backend/server.js",
     "attendance.js"
@@ -550,37 +687,70 @@
     {
      "name": "loadB2B",
      "file": "dashboard.js",
-     "start": 11813,
+     "start": 11835,
      "module": [
       "abrechnung",
       "b2b",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Zuweiser",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
     {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10960,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert",
+      "update"
+     ]
+    },
+    {
      "name": "renderB2B",
      "file": "dashboard.js",
-     "start": 11820,
+     "start": 11842,
      "module": [
       "abrechnung",
       "b2b",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Zuweiser",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -594,8 +764,15 @@
    "module": [
     "abrechnung",
     "b2b",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 4,
    "codeStumm": false
@@ -623,22 +800,34 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8232,
+     "start": 8254,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "saldoFuerRezept",
      "file": "api-backend/billing/api/zuzahlung.routes.js",
      "start": 71,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "storniereZuzahlung",
+     "file": "dashboard.js",
+     "start": 7356,
      "module": [],
      "uiPfad": []
     }
@@ -654,8 +843,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 4,
    "codeStumm": false
@@ -701,6 +897,7 @@
    "erwaehnt": [
     "api-backend/booking/from-request.test.js",
     "api/dsgvo.js",
+    "module/warteliste-nachruecker.test.js",
     "onboarding.js"
    ],
    "register": true,
@@ -712,16 +909,49 @@
     {
      "name": "calculateSessionInfo",
      "file": "dashboard.js",
-     "start": 3215,
+     "start": 3216,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10960,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "frag",
      "file": "module/patientenkarte.js",
      "start": 140,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "getAvailableSlots",
@@ -731,9 +961,16 @@
      "uiPfad": []
     },
     {
+     "name": "horizonDays",
+     "file": "api-backend/server.js",
+     "start": 1502,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2535,
+     "start": 2536,
      "module": [],
      "uiPfad": []
     },
@@ -745,20 +982,50 @@
      "uiPfad": []
     },
     {
+     "name": "ladeKommendeTermineDesPatienten",
+     "file": "module/termin-patient-bezug.js",
+     "start": 130,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "ladePatientenkontext",
      "file": "module/fussbefund.js",
      "start": 480,
      "module": [
       "abrechnung",
       "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fußbefund (podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladePodoTermine",
+     "file": "module/verordnung-termine.js",
+     "start": 67,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -767,115 +1034,166 @@
      "start": 54,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
      "start": 139,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1945,
+     "start": 1946,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11501,
+     "start": 11523,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 8059,
+     "start": 8081,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailTermine",
      "file": "dashboard.js",
-     "start": 9070,
+     "start": 9092,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadScheduleBookings",
      "file": "dashboard.js",
-     "start": 1704,
+     "start": 1705,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickNoShows",
      "file": "dashboard.js",
-     "start": 22628,
+     "start": 22650,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
-      "ueberblick"
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Überblick"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "nurZiffern",
+     "file": "module/termin-patient-bezug.js",
+     "start": 52,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "renderBookingCalendar",
@@ -883,89 +1201,153 @@
      "start": 324,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2689,
+     "start": 2690,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1548,
+     "start": 1549,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1628,
+     "start": 1629,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "renderMonat",
+     "file": "module/kalender-monat.js",
+     "start": 100,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewMonthly",
      "file": "dashboard.js",
-     "start": 14714,
+     "start": 14736,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverviewWeekly",
      "file": "dashboard.js",
-     "start": 14619,
+     "start": 14641,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "renderWoche",
+     "file": "module/kalender-woche.js",
+     "start": 108,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "terminAuswahlLaden",
+     "file": "module/rechnung-editor.js",
+     "start": 27,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "verdrahteAktionsPatientensuche",
@@ -973,21 +1355,33 @@
      "start": 77,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "verordnungenLaden",
+     "file": "module/rechnung-verordnung.js",
+     "start": 143,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
      "name": "absageTerminMitGrund",
      "file": "dashboard.js",
-     "start": 7935,
+     "start": 7957,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -996,18 +1390,56 @@
      ]
     },
     {
-     "name": "doMoveBooking",
-     "file": "dashboard.js",
-     "start": 5449,
+     "name": "bindeTermin",
+     "file": "module/verordnung-termine.js",
+     "start": 121,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "createBookingsFromRequestFactory",
+     "file": "api-backend/booking/from-request.js",
+     "start": 17,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "doMoveBooking",
+     "file": "dashboard.js",
+     "start": 5472,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1016,7 +1448,7 @@
     {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4469,
+     "start": 4492,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1026,16 +1458,21 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3878,
+     "start": 3901,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -1044,7 +1481,7 @@
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4379,
+     "start": 4402,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1054,16 +1491,21 @@
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4986,
+     "start": 5009,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -1072,16 +1514,44 @@
     {
      "name": "loadGroupParticipants",
      "file": "dashboard.js",
-     "start": 4884,
+     "start": 4907,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "loeseTermin",
+     "file": "module/verordnung-termine.js",
+     "start": 130,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1090,7 +1560,7 @@
     {
      "name": "markArrivedHandler",
      "file": "dashboard.js",
-     "start": 4241,
+     "start": 4264,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1098,9 +1568,32 @@
      ]
     },
     {
+     "name": "openBookingActionModal",
+     "file": "dashboard.js",
+     "start": 3240,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4285,
+     "start": 4308,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1110,11 +1603,21 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4158,
+     "start": 4181,
      "module": [],
      "uiPfad": [],
      "ops": [
       "update"
+     ]
+    },
+    {
+     "name": "uebernimmSlot",
+     "file": "module/warteliste-nachruecker.js",
+     "start": 195,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "insert"
      ]
     }
    ],
@@ -1146,9 +1649,12 @@
     "fussstatus",
     "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
     "services",
     "team",
-    "ueberblick"
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 20,
    "codeStumm": false
@@ -1175,22 +1681,58 @@
      "start": 515,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "horizonDays",
+     "file": "api-backend/server.js",
+     "start": 1502,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
-     "name": "loadEmpHours",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11561,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "loadEmpHours",
+     "file": "dashboard.js",
+     "start": 11583,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -1200,18 +1742,21 @@
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10307,
+     "start": 10329,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -1225,9 +1770,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
     "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 7,
    "codeStumm": false
@@ -1253,7 +1804,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 17057,
+     "start": 17079,
      "module": [],
      "uiPfad": []
     },
@@ -1284,16 +1835,26 @@
      "start": 324,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "toRad",
+     "file": "api-backend/server.js",
+     "start": 3138,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
@@ -1311,7 +1872,7 @@
     {
      "name": "deleteBusiness",
      "file": "dashboard.js",
-     "start": 17493,
+     "start": 17515,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1321,16 +1882,21 @@
     {
      "name": "ensureBusinessCoords",
      "file": "dashboard.js",
-     "start": 22865,
+     "start": 22887,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1339,18 +1905,21 @@
     {
      "name": "toggleStandortDay",
      "file": "dashboard.js",
-     "start": 10283,
+     "start": 10305,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1359,7 +1928,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 17410,
+     "start": 17432,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1380,10 +1949,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
     "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
     "services",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 13,
    "codeStumm": false
@@ -1414,20 +1988,48 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11270,
+     "start": 11292,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10960,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete"
+     ]
+    },
     {
      "name": "loadIntegrations",
      "file": "kalender.js",
@@ -1441,18 +2043,22 @@
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12374,
+     "start": 12396,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "settings",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Einstellungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -1467,9 +2073,16 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
     "settings",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -1548,20 +2161,30 @@
      "uiPfad": []
     },
     {
+     "name": "horizonDays",
+     "file": "api-backend/server.js",
+     "start": 1502,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "loadBookingSlots",
      "file": "booking.js",
      "start": 246,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -1570,32 +2193,38 @@
      "start": 324,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10400,
+     "start": 10422,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -1603,7 +2232,7 @@
     {
      "name": "saveSpecialDays",
      "file": "dashboard.js",
-     "start": 10505,
+     "start": 10527,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1618,10 +2247,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
     "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
     "services",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -1679,7 +2313,7 @@
     {
      "name": "loadDataSharing",
      "file": "dashboard.js",
-     "start": 17614,
+     "start": 17636,
      "module": [],
      "uiPfad": []
     }
@@ -1688,7 +2322,7 @@
     {
      "name": "saveDataSharing",
      "file": "dashboard.js",
-     "start": 17256,
+     "start": 17278,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -1745,23 +2379,39 @@
      "start": 43,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
-      "team"
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Podologie-Abrechnung (podologie)",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "podRegelnLaden",
      "file": "module/verordnung-podo.js",
      "start": 304,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     }
    ],
    "schreiber": [
@@ -1783,9 +2433,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
     "podologie-billing",
-    "team"
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 7,
    "codeStumm": false
@@ -1809,35 +2465,43 @@
     {
      "name": "loadVorlagenPanel",
      "file": "dashboard.js",
-     "start": 12664,
+     "start": 12686,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "openVorlagenEdit",
      "file": "dashboard.js",
-     "start": 13105,
+     "start": 13127,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -1845,18 +2509,22 @@
     {
      "name": "_enterAnsichtEditMode",
      "file": "dashboard.js",
-     "start": 13023,
+     "start": 13045,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1865,18 +2533,22 @@
     {
      "name": "commit",
      "file": "dashboard.js",
-     "start": 13255,
+     "start": 13277,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1885,18 +2557,22 @@
     {
      "name": "deleteVorlage",
      "file": "dashboard.js",
-     "start": 13223,
+     "start": 13245,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -1905,38 +2581,71 @@
     {
      "name": "duplicateVorlage",
      "file": "dashboard.js",
-     "start": 13232,
+     "start": 13254,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
      ]
     },
     {
-     "name": "openVorlagenAnsicht",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 12933,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "openVorlagenAnsicht",
+     "file": "dashboard.js",
+     "start": 12955,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -1945,9 +2654,22 @@
     {
      "name": "saveVorlage",
      "file": "dashboard.js",
-     "start": 13193,
-     "module": [],
-     "uiPfad": [],
+     "start": 13215,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "insert",
       "update"
@@ -1956,9 +2678,22 @@
     {
      "name": "seedDefaultVorlagen",
      "file": "dashboard.js",
-     "start": 13291,
-     "module": [],
-     "uiPfad": [],
+     "start": 13313,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "insert"
      ]
@@ -1966,18 +2701,22 @@
     {
      "name": "seedMissingVorlagen",
      "file": "dashboard.js",
-     "start": 13297,
+     "start": 13319,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -1986,18 +2725,22 @@
     {
      "name": "startVorlagenInlineRename",
      "file": "dashboard.js",
-     "start": 13248,
+     "start": 13270,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "vorlagen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Vorlagen"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -2011,8 +2754,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
     "team",
+    "ueberblick",
+    "verordnungen",
     "vorlagen"
    ],
    "sqlTreffer": 2,
@@ -2056,18 +2806,46 @@
    "leser": [],
    "schreiber": [
     {
-     "name": "loadPatientDetailMails",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 8970,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "insert"
+     ]
+    },
+    {
+     "name": "loadPatientDetailMails",
+     "file": "dashboard.js",
+     "start": 8992,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -2080,8 +2858,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -2107,7 +2892,7 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 17057,
+     "start": 17079,
      "module": [],
      "uiPfad": []
     },
@@ -2128,48 +2913,87 @@
     {
      "name": "loadEmpPermissions",
      "file": "dashboard.js",
-     "start": 11074,
+     "start": 11096,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10608,
+     "start": 10630,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
     {
-     "name": "renderEmpStandortList",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11116,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "upsert"
+     ]
+    },
+    {
+     "name": "renderEmpStandortList",
+     "file": "dashboard.js",
+     "start": 11138,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2179,16 +3003,21 @@
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10969,
+     "start": 10991,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -2197,16 +3026,21 @@
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11217,
+     "start": 11239,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -2221,8 +3055,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -2244,48 +3085,83 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "loadEmpPermissions",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11074,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "loadEmpPermissions",
+     "file": "dashboard.js",
+     "start": 11096,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderEmpStandortList",
      "file": "dashboard.js",
-     "start": 11116,
+     "start": 11138,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10969,
+     "start": 10991,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -2296,8 +3172,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -2319,33 +3202,67 @@
     {
      "name": "renderEmpPermGrid",
      "file": "dashboard.js",
-     "start": 11183,
+     "start": 11205,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
     {
-     "name": "saveEmpPermissions",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11217,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "saveEmpPermissions",
+     "file": "dashboard.js",
+     "start": 11239,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2358,8 +3275,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -2386,39 +3310,71 @@
      "start": 193,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingFromRxPreset",
      "file": "dashboard.js",
-     "start": 17911,
+     "start": 17933,
      "module": [],
      "uiPfad": []
     }
    ],
    "schreiber": [
     {
-     "name": "loadEmpServices",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11653,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "loadEmpServices",
+     "file": "dashboard.js",
+     "start": 11675,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -2456,9 +3412,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
     "services",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 7,
    "codeStumm": false
@@ -2486,33 +3448,42 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1945,
+     "start": 1946,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 20434,
+     "start": 20456,
      "module": [
       "abrechnung",
       "fahrtenbuch",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fahrtenbuch (physiotherapy)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -2520,7 +3491,7 @@
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4285,
+     "start": 4308,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2530,11 +3501,36 @@
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4158,
+     "start": 4181,
      "module": [],
      "uiPfad": [],
      "ops": [
       "upsert"
+     ]
+    },
+    {
+     "name": "toLocal",
+     "file": "dashboard.js",
+     "start": 20541,
+     "module": [
+      "abrechnung",
+      "fahrtenbuch",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "update"
      ]
     }
    ],
@@ -2544,8 +3540,15 @@
    "module": [
     "abrechnung",
     "fahrtenbuch",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 8,
    "codeStumm": false
@@ -2571,18 +3574,22 @@
     {
      "name": "loadFeedbacks",
      "file": "dashboard.js",
-     "start": 14888,
+     "start": 14910,
      "module": [
       "abrechnung",
       "feedback",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Bewertungen",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -2594,8 +3601,15 @@
    "module": [
     "abrechnung",
     "feedback",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -2639,33 +3653,63 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "renderEmpPermGrid",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11183,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "renderEmpPermGrid",
+     "file": "dashboard.js",
+     "start": 11205,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveEmpPermissions",
      "file": "dashboard.js",
-     "start": 11217,
+     "start": 11239,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -2675,8 +3719,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -2858,59 +3909,92 @@
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15514,
+     "start": 15536,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1945,
+     "start": 1946,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailRechnungen",
      "file": "dashboard.js",
-     "start": 9030,
+     "start": 9052,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRechnungen",
      "file": "dashboard.js",
-     "start": 14960,
+     "start": 14982,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
       "rechnungen",
-      "team"
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Rechnungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
+    {
+     "name": "dialog",
+     "file": "module/rechnung-zahlung.js",
+     "start": 129,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "frageZahlungsstatus",
+     "file": "module/rechnung-zahlung.js",
+     "start": 68,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
     {
      "name": "markiereRechnungBezahlt",
      "file": "module/rechnung-zahlung.js",
@@ -2924,7 +4008,7 @@
     {
      "name": "saveInvoice",
      "file": "dashboard.js",
-     "start": 15358,
+     "start": 15380,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -2939,9 +4023,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
     "rechnungen",
-    "team"
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 10,
    "codeStumm": false
@@ -2990,16 +4080,21 @@
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
-     "start": 19497,
+     "start": 19519,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -3011,8 +4106,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -3035,23 +4137,48 @@
      "name": "ladeKassen",
      "file": "module/krankenkasse-suche.js",
      "start": 48,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "loadKkList",
      "file": "dashboard.js",
-     "start": 18750,
+     "start": 18772,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
       "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 5 modülden çağrılıyor"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "toRad",
+     "file": "api-backend/server.js",
+     "start": 3138,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [],
@@ -3063,9 +4190,14 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
     "podologie-billing",
+    "rechnungen",
+    "services",
     "team",
+    "ueberblick",
     "verordnungen"
    ],
    "sqlTreffer": 2,
@@ -3092,114 +4224,197 @@
     {
      "name": "ausfallVereinbarungDatum",
      "file": "dashboard.js",
-     "start": 4694,
+     "start": 4717,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15514,
+     "start": 15536,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "fillRzPatientFromLead",
      "file": "dashboard.js",
-     "start": 16732,
+     "start": 16754,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
       "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "findeLeadIdZuTermin",
+     "file": "module/termin-patient-bezug.js",
+     "start": 73,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10960,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3878,
+     "start": 3901,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "handleTerminStarten",
      "file": "dashboard.js",
-     "start": 4379,
+     "start": 4402,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "initBkCustomerAutocomplete",
      "file": "dashboard.js",
-     "start": 5194,
+     "start": 5217,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "initBkGroupPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 4986,
+     "start": 5009,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "initCalRightPanel",
      "file": "dashboard.js",
-     "start": 3670,
+     "start": 3693,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "initWlPatientAutocomplete",
      "file": "dashboard.js",
-     "start": 21824,
+     "start": 21846,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "ladeAktiveVerordnungen",
+     "file": "module/verordnung-uebersicht.js",
+     "start": 202,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "ladeKassen",
      "file": "module/krankenkasse-suche.js",
      "start": 48,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "ladePatienten",
@@ -3208,157 +4423,209 @@
      "module": [
       "abrechnung",
       "anamnese",
+      "anfragen",
+      "b2b",
+      "belegliste",
       "doctors",
+      "fahrtenbuch",
+      "fussstatus",
+      "hours",
       "kunden",
+      "mahnwesen",
       "podologie-billing",
+      "rechnungen",
+      "services",
       "settings",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen",
+      "vorlagen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 7 modülden çağrılıyor"
+      "ortak yardımcı — 19 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1945,
+     "start": 1946,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAnamnese",
      "file": "dashboard.js",
-     "start": 15595,
+     "start": 15617,
      "module": [
       "abrechnung",
       "anamnese",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Anamnese (physiotherapy/podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadB2C",
      "file": "dashboard.js",
-     "start": 11903,
+     "start": 11925,
      "module": [
       "abrechnung",
       "b2c",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patientenpost",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadBkLeads",
      "file": "dashboard.js",
-     "start": 5204,
+     "start": 5227,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadInvPatients",
      "file": "dashboard.js",
-     "start": 15206,
+     "start": 15228,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadLeads",
      "file": "dashboard.js",
-     "start": 8059,
+     "start": 8081,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 14082,
+     "start": 14104,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "notizen",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Notizen (physiotherapy/podologie/praxis)",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailMails",
      "file": "dashboard.js",
-     "start": 8970,
+     "start": 8992,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickBirthdays",
      "file": "dashboard.js",
-     "start": 22580,
+     "start": 22602,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
-      "ueberblick"
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Überblick"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -3368,63 +4635,124 @@
      "module": [
       "abrechnung",
       "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fußbefund (podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "nurZiffern",
+     "file": "module/termin-patient-bezug.js",
+     "start": 52,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "openBookingActionModal",
+     "file": "dashboard.js",
+     "start": 3240,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openBookingModal",
      "file": "dashboard.js",
-     "start": 5109,
+     "start": 5132,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "openEinwilligungFlow",
+     "file": "module/patienten-einwilligung.js",
+     "start": 105,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openInvView",
      "file": "dashboard.js",
-     "start": 15008,
+     "start": 15030,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
       "rechnungen",
-      "team"
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Rechnungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openRezeptModal",
      "file": "dashboard.js",
-     "start": 16797,
+     "start": 16819,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
       "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Verordnungen (physiotherapy/podologie/praxis)"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -3437,45 +4765,70 @@
     {
      "name": "renderBkActionFahrtState",
      "file": "dashboard.js",
-     "start": 3977,
-     "module": [],
-     "uiPfad": []
+     "start": 4000,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4285,
+     "start": 4308,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4158,
+     "start": 4181,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 20006,
+     "start": 20028,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "terminAuswahlLaden",
+     "file": "module/rechnung-editor.js",
+     "start": 27,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4519,
+     "start": 4542,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3485,7 +4838,7 @@
     {
      "name": "initSchnellerfassung",
      "file": "dashboard.js",
-     "start": 21518,
+     "start": 21540,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3493,9 +4846,19 @@
      ]
     },
     {
+     "name": "maybeOfferAppointmentConfirmEmail",
+     "file": "dashboard.js",
+     "start": 7611,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "saveRezept",
      "file": "dashboard.js",
-     "start": 16888,
+     "start": 16910,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -3518,17 +4881,25 @@
    "module": [
     "abrechnung",
     "anamnese",
+    "anfragen",
+    "b2b",
     "b2c",
+    "belegliste",
     "doctors",
+    "fahrtenbuch",
     "fussstatus",
+    "hours",
     "kunden",
+    "mahnwesen",
     "notizen",
     "podologie-billing",
     "rechnungen",
+    "services",
     "settings",
     "team",
     "ueberblick",
-    "verordnungen"
+    "verordnungen",
+    "vorlagen"
    ],
    "sqlTreffer": 16,
    "codeStumm": false
@@ -3581,16 +4952,21 @@
     {
      "name": "refreshMessreihen",
      "file": "dashboard.js",
-     "start": 8695,
+     "start": 8717,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -3599,16 +4975,21 @@
     {
      "name": "saveMessung",
      "file": "dashboard.js",
-     "start": 8819,
+     "start": 8841,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -3620,8 +5001,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -3645,16 +5033,21 @@
     {
      "name": "loadVisibilityMatrix",
      "file": "dashboard.js",
-     "start": 911,
+     "start": 912,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -3686,8 +5079,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 1,
    "codeStumm": false
@@ -3737,28 +5137,64 @@
    "ungeklaert": false,
    "leser": [
     {
+     "name": "frag",
+     "file": "module/patientenkarte.js",
+     "start": 140,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "ladePatientenkontext",
      "file": "module/fussbefund.js",
      "start": 480,
      "module": [
       "abrechnung",
       "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fußbefund (podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
      "start": 139,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "renderFussbefundArchiv",
@@ -3766,21 +5202,39 @@
      "start": 92,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "verdrahteFussbefundKnopf",
      "file": "module/fussbefund.js",
      "start": 1549,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     }
    ],
    "schreiber": [
@@ -3791,14 +5245,17 @@
      "module": [
       "abrechnung",
       "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fußbefund (podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -3808,8 +5265,21 @@
      "name": "speichern",
      "file": "module/fussbefund.js",
      "start": 679,
-     "module": [],
-     "uiPfad": [],
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "insert"
      ]
@@ -3823,8 +5293,14 @@
    "module": [
     "abrechnung",
     "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 7,
    "codeStumm": false
@@ -3853,15 +5329,41 @@
      "name": "kopieOeffnen",
      "file": "module/patienten-einwilligung.js",
      "start": 559,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "renderEinwilligungListe",
      "file": "module/patienten-einwilligung.js",
      "start": 445,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     }
    ],
    "schreiber": [
@@ -3869,8 +5371,21 @@
      "name": "speichereEinwilligung",
      "file": "module/patienten-einwilligung.js",
      "start": 295,
-     "module": [],
-     "uiPfad": [],
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "insert"
      ]
@@ -3879,8 +5394,21 @@
      "name": "widerrufen",
      "file": "module/patienten-einwilligung.js",
      "start": 535,
-     "module": [],
-     "uiPfad": [],
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "update"
      ]
@@ -3889,7 +5417,18 @@
    "dateien": [
     "module/patienten-einwilligung.js"
    ],
-   "module": [],
+   "module": [
+    "abrechnung",
+    "fussstatus",
+    "hours",
+    "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
+   ],
    "sqlTreffer": 6,
    "codeStumm": false
   },
@@ -3912,65 +5451,123 @@
     {
      "name": "loadActivityFeed",
      "file": "dashboard.js",
-     "start": 1945,
+     "start": 1946,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadNotizen",
      "file": "dashboard.js",
-     "start": 14082,
+     "start": 14104,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "notizen",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Notizen (physiotherapy/podologie/praxis)",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailNotes",
      "file": "dashboard.js",
-     "start": 8881,
+     "start": 8903,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientNotes",
      "file": "dashboard.js",
-     "start": 14146,
+     "start": 14168,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "notizen",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Notizen (physiotherapy/podologie/praxis)",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "openBookingActionModal",
+     "file": "dashboard.js",
+     "start": 3240,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "zeigePatientOhneTermin",
+     "file": "module/termin-panel-patient.js",
+     "start": 135,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -3981,9 +5578,16 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
     "notizen",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -4008,7 +5612,15 @@
    "warum": "Der Anfragende ist noch kein Patient der Praxis. Er darf nicht in die echte Akte (`leads`) geschrieben werden, bevor jemand die Anfrage angenommen hat.",
    "seit": "28.06.2026 · `booking_request_system`",
    "ungeklaert": false,
-   "leser": [],
+   "leser": [
+    {
+     "name": "toRad",
+     "file": "api-backend/server.js",
+     "start": 3138,
+     "module": [],
+     "uiPfad": []
+    }
+   ],
    "schreiber": [],
    "dateien": [
     "api-backend/server.js"
@@ -4084,49 +5696,142 @@
    "ungeklaert": false,
    "leser": [
     {
+     "name": "frag",
+     "file": "module/patientenkarte.js",
+     "start": 140,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladeAktiveVerordnungen",
+     "file": "module/verordnung-uebersicht.js",
+     "start": 202,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
      "start": 139,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "offeneBehandlungen",
+     "file": "module/rechnung-bruecke.js",
+     "start": 63,
      "module": [],
      "uiPfad": []
     },
     {
-     "name": "podEingangsbefundungLage",
+     "name": "podPatientBehandlungen",
      "file": "module/podologie-abrechnung.js",
-     "start": 176,
+     "start": 196,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
-      "team"
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Podologie-Abrechnung (podologie)",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "verordnungenLaden",
+     "file": "module/rechnung-verordnung.js",
+     "start": 143,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
+     "name": "behandlungenVerknuepfen",
+     "file": "module/rechnung-bruecke.js",
+     "start": 165,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 330,
+     "start": 357,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
-      "team"
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Podologie-Abrechnung (podologie)",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
+     ]
+    },
+    {
+     "name": "verknuepfungLoesen",
+     "file": "module/rechnung-bruecke.js",
+     "start": 182,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
      ]
     }
    ],
@@ -4141,9 +5846,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
     "podologie-billing",
-    "team"
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 4,
    "codeStumm": false
@@ -4170,7 +5881,7 @@
     {
      "name": "uploadRxNachweise",
      "file": "dashboard.js",
-     "start": 18481,
+     "start": 18503,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4204,63 +5915,89 @@
     {
      "name": "decorateBookingTitleWithSession",
      "file": "dashboard.js",
-     "start": 7483,
+     "start": 7506,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
-    },
-    {
-     "name": "ladeErbrachteSumme",
-     "file": "module/rezeptinfo-geld.js",
-     "start": 88,
-     "module": [],
-     "uiPfad": []
     },
     {
      "name": "loadCalRpUnverga",
      "file": "dashboard.js",
-     "start": 3825,
+     "start": 3848,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6320,
-     "module": [],
-     "uiPfad": []
+     "start": 6343,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "openInvView",
      "file": "dashboard.js",
-     "start": 15008,
+     "start": 15030,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
       "rechnungen",
-      "team"
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Rechnungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "pruefeFrequenz",
+     "file": "module/frequenz-pruefung.js",
+     "start": 235,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "pruefeVerordnungsfortschritt",
@@ -4268,6 +6005,33 @@
      "start": 82,
      "module": [],
      "uiPfad": []
+    },
+    {
+     "name": "terminAuswahlLaden",
+     "file": "module/rechnung-editor.js",
+     "start": 27,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "waehleVerordnungFuerPanel",
+     "file": "module/termin-aktionen.js",
+     "start": 216,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "zaehler",
@@ -4279,9 +6043,32 @@
    ],
    "schreiber": [
     {
+     "name": "gleicheSitzungenAb",
+     "file": "module/sitzung-abgleich.js",
+     "start": 86,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
      "name": "handlePatientNichtErschienen",
      "file": "dashboard.js",
-     "start": 4469,
+     "start": 4492,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4291,16 +6078,21 @@
     {
      "name": "handleSessionDrop",
      "file": "dashboard.js",
-     "start": 3878,
+     "start": 3901,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4309,7 +6101,7 @@
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7496,
+     "start": 7519,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4320,7 +6112,7 @@
     {
      "name": "markPrescriptionSession",
      "file": "dashboard.js",
-     "start": 7463,
+     "start": 7486,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4334,16 +6126,21 @@
     "dashboard.js",
     "module/frequenz-pruefung.js",
     "module/rechnung-editor.js",
-    "module/rezeptinfo-geld.js",
     "module/sitzung-abgleich.js",
     "module/sitzungsfortschritt.js",
     "module/termin-aktionen.js"
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
     "rechnungen",
-    "team"
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -4395,26 +6192,118 @@
    "ungeklaert": false,
    "leser": [
     {
-     "name": "initBkCustomerAutocomplete",
+     "name": "aufEuro",
      "file": "dashboard.js",
-     "start": 5194,
+     "start": 3335,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "frag",
+     "file": "module/patientenkarte.js",
+     "start": 140,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "frageZahlungsstatus",
+     "file": "module/rechnung-zahlung.js",
+     "start": 68,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "initBkCustomerAutocomplete",
+     "file": "dashboard.js",
+     "start": 5217,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "korrekturAusPanel",
+     "file": "module/zuzahlung-korrektur.js",
+     "start": 304,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "ladeAktiveVerordnungen",
+     "file": "module/verordnung-uebersicht.js",
+     "start": 202,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
      "start": 139,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "ladeZuweisungen",
@@ -4424,167 +6313,282 @@
       "abrechnung",
       "anamnese",
       "doctors",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
+      "rechnungen",
+      "services",
       "settings",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 7 modülden çağrılıyor"
+      "ortak yardımcı — 13 modülden çağrılıyor"
      ]
     },
     {
      "name": "linkBookingsToPrescriptionSessions",
      "file": "dashboard.js",
-     "start": 7496,
+     "start": 7519,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
-     "start": 19497,
+     "start": 19519,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAnamneseRxContext",
      "file": "dashboard.js",
-     "start": 15690,
+     "start": 15712,
      "module": [
       "abrechnung",
       "anamnese",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Anamnese (physiotherapy/podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadBkVerordnungen",
      "file": "dashboard.js",
-     "start": 5261,
+     "start": 5284,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadCalRpRezeptInfo",
      "file": "dashboard.js",
-     "start": 3788,
+     "start": 3811,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8232,
+     "start": 8254,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatRxTable",
      "file": "dashboard.js",
-     "start": 22413,
+     "start": 22435,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPhysioRezKpis",
      "file": "dashboard.js",
-     "start": 2244,
+     "start": 2245,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadRxSessionsPanel",
      "file": "dashboard.js",
-     "start": 6320,
-     "module": [],
-     "uiPfad": []
+     "start": 6343,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "loadUeberblickDeadlines",
      "file": "dashboard.js",
-     "start": 22515,
+     "start": 22537,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
-      "ueberblick"
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Überblick"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "oeffneZuzahlungKorrektur",
+     "file": "module/zuzahlung-korrektur.js",
+     "start": 76,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "openBookingActionModal",
+     "file": "dashboard.js",
+     "start": 3240,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "openInvView",
      "file": "dashboard.js",
-     "start": 15008,
+     "start": 15030,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
       "rechnungen",
-      "team"
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Rechnungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 20006,
+     "start": 20028,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "therapeutName",
+     "file": "dashboard.js",
+     "start": 7883,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "verordnungenLaden",
+     "file": "module/rechnung-verordnung.js",
+     "start": 143,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "waehleVerordnungFuerPanel",
+     "file": "module/termin-aktionen.js",
+     "start": 216,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -4593,8 +6597,21 @@
      "name": "betragNullsetzen",
      "file": "module/zuzahlung-befreiung.js",
      "start": 249,
-     "module": [],
-     "uiPfad": [],
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "update"
      ]
@@ -4602,7 +6619,7 @@
     {
      "name": "downloadDmrzForInvoice",
      "file": "dashboard.js",
-     "start": 15514,
+     "start": 15536,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4612,16 +6629,44 @@
     {
      "name": "flipAbrechnungStatus",
      "file": "dashboard.js",
-     "start": 8549,
+     "start": 8571,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "kassiereZuzahlung",
+     "file": "dashboard.js",
+     "start": 7281,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4640,16 +6685,21 @@
     {
      "name": "renderAbrechnungHistory",
      "file": "dashboard.js",
-     "start": 19839,
+     "start": 19861,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4658,16 +6708,21 @@
     {
      "name": "renderAbrechnungReady",
      "file": "dashboard.js",
-     "start": 19612,
+     "start": 19634,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -4676,7 +6731,7 @@
     {
      "name": "saveRezept",
      "file": "dashboard.js",
-     "start": 16888,
+     "start": 16910,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -4684,21 +6739,45 @@
      ]
     },
     {
+     "name": "storniereZuzahlung",
+     "file": "dashboard.js",
+     "start": 7356,
+     "module": [],
+     "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
      "name": "triggerStorno",
      "file": "dashboard.js",
-     "start": 20943,
+     "start": 20965,
      "module": [
       "abrechnung",
       "belegliste",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Kassenbuch (physiotherapy/podologie/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "zaehler",
+     "file": "module/sitzungsfortschritt.js",
+     "start": 85,
+     "module": [],
+     "uiPfad": [],
      "ops": [
       "update"
      ]
@@ -4726,12 +6805,16 @@
     "anamnese",
     "belegliste",
     "doctors",
+    "fussstatus",
+    "hours",
     "kunden",
     "podologie-billing",
     "rechnungen",
+    "services",
     "settings",
     "team",
-    "ueberblick"
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 22,
    "codeStumm": false
@@ -4776,7 +6859,7 @@
     {
      "name": "handleDirectAusfallrechnung",
      "file": "dashboard.js",
-     "start": 4519,
+     "start": 4542,
      "module": [],
      "uiPfad": []
     },
@@ -4787,119 +6870,167 @@
      "module": [
       "abrechnung",
       "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fußbefund (podologie)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladePraxisAbrechnungsProfil",
+     "file": "module/beleg-druck.js",
+     "start": 78,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadAusfallConfig",
      "file": "dashboard.js",
-     "start": 832,
+     "start": 833,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10818,
+     "start": 10840,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFahrtenbuchPanel",
      "file": "dashboard.js",
-     "start": 20374,
+     "start": 20396,
      "module": [
       "abrechnung",
       "fahrtenbuch",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fahrtenbuch (physiotherapy)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbFahrten",
      "file": "dashboard.js",
-     "start": 20434,
+     "start": 20456,
      "module": [
       "abrechnung",
       "fahrtenbuch",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fahrtenbuch (physiotherapy)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadFbReports",
      "file": "dashboard.js",
-     "start": 20756,
+     "start": 20778,
      "module": [
       "abrechnung",
       "fahrtenbuch",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Fahrtenbuch (physiotherapy)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadHoursPanel",
      "file": "dashboard.js",
-     "start": 10198,
+     "start": 10220,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadPatientDetailAnamnese",
      "file": "dashboard.js",
-     "start": 8906,
+     "start": 8928,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -4912,39 +7043,47 @@
     {
      "name": "loadTeam",
      "file": "dashboard.js",
-     "start": 10608,
+     "start": 10630,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 22654,
+     "start": 22676,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
-      "ueberblick"
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Überblick"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "proceedToOwnerCheck",
      "file": "dashboard.js",
-     "start": 4552,
+     "start": 4575,
      "module": [],
      "uiPfad": []
     },
@@ -4954,43 +7093,58 @@
      "start": 45,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOtherStandortEmps",
      "file": "dashboard.js",
-     "start": 10969,
+     "start": 10991,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderSidebar",
      "file": "dashboard.js",
-     "start": 979,
+     "start": 980,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5006,13 +7160,18 @@
      "start": 26,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5021,13 +7180,18 @@
      "start": 22,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5036,13 +7200,18 @@
      "start": 18,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5051,13 +7220,18 @@
      "start": 32,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5066,13 +7240,18 @@
      "start": 21,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5081,13 +7260,18 @@
      "start": 47,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5104,15 +7288,26 @@
      "module": [
       "abrechnung",
       "anfragen",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Termin-Anfragen",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "toRad",
+     "file": "api-backend/server.js",
+     "start": 3138,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
@@ -5169,7 +7364,7 @@
     {
      "name": "ensureBookingSlug",
      "file": "dashboard.js",
-     "start": 13649,
+     "start": 13671,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5179,7 +7374,7 @@
     {
      "name": "ensureClinicLocation",
      "file": "dashboard.js",
-     "start": 5772,
+     "start": 5795,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5189,9 +7384,32 @@
     {
      "name": "ensureCompanyCode",
      "file": "dashboard.js",
-     "start": 13632,
+     "start": 13654,
      "module": [],
      "uiPfad": [],
+     "ops": [
+      "update"
+     ]
+    },
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10960,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "update"
      ]
@@ -5219,18 +7437,22 @@
     {
      "name": "initAnfragenPanel",
      "file": "dashboard.js",
-     "start": 23377,
+     "start": 23399,
      "module": [
       "abrechnung",
       "anfragen",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Termin-Anfragen",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5249,16 +7471,21 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11270,
+     "start": 11292,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5267,7 +7494,7 @@
     {
      "name": "openStripePortal",
      "file": "dashboard.js",
-     "start": 2307,
+     "start": 2308,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5287,7 +7514,7 @@
     {
      "name": "saveAusfallSettings",
      "file": "dashboard.js",
-     "start": 17178,
+     "start": 17200,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5297,7 +7524,7 @@
     {
      "name": "saveEmployee",
      "file": "dashboard.js",
-     "start": 14341,
+     "start": 14363,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5349,8 +7576,12 @@
     "fussstatus",
     "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
     "team",
-    "ueberblick"
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 33,
    "codeStumm": false
@@ -5394,18 +7625,22 @@
     {
      "name": "loadDoctors",
      "file": "dashboard.js",
-     "start": 13712,
+     "start": 13734,
      "module": [
       "abrechnung",
       "doctors",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Ärzte (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -5416,8 +7651,15 @@
    "module": [
     "abrechnung",
     "doctors",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -5455,23 +7697,55 @@
     {
      "name": "baseQuery",
      "file": "dashboard.js",
-     "start": 19020,
+     "start": 19042,
+     "module": [],
+     "uiPfad": []
+    },
+    {
+     "name": "createBookingsFromRequestFactory",
+     "file": "api-backend/booking/from-request.js",
+     "start": 17,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "findMatchingServiceId",
      "file": "dashboard.js",
-     "start": 3859,
+     "start": 3882,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10960,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5484,23 +7758,28 @@
     {
      "name": "initCalendar",
      "file": "dashboard.js",
-     "start": 2535,
+     "start": 2536,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11653,
+     "start": 11675,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5513,18 +7792,21 @@
     {
      "name": "loadServices",
      "file": "dashboard.js",
-     "start": 9561,
+     "start": 9583,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
@@ -5533,21 +7815,24 @@
      "start": 497,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "populateRxcServiceSelect",
      "file": "dashboard.js",
-     "start": 18996,
+     "start": 19018,
      "module": [],
      "uiPfad": []
     },
@@ -5558,29 +7843,45 @@
      "module": [
       "abrechnung",
       "anfragen",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Termin-Anfragen",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "toRad",
+     "file": "api-backend/server.js",
+     "start": 3138,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "updateBkDuration",
      "file": "dashboard.js",
-     "start": 5540,
+     "start": 5563,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -5588,18 +7889,21 @@
     {
      "name": "autoSeedGkvServices",
      "file": "dashboard.js",
-     "start": 9581,
+     "start": 9603,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -5608,7 +7912,7 @@
     {
      "name": "ensureBlankoBonusServices",
      "file": "dashboard.js",
-     "start": 7685,
+     "start": 7708,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5630,18 +7934,21 @@
     {
      "name": "migratePodologieLegacyServices",
      "file": "dashboard.js",
-     "start": 9777,
+     "start": 9799,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "update"
@@ -5662,18 +7969,21 @@
     {
      "name": "renderServices",
      "file": "dashboard.js",
-     "start": 9964,
+     "start": 9986,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -5694,7 +8004,7 @@
     {
      "name": "wireBusinessModal",
      "file": "dashboard.js",
-     "start": 17410,
+     "start": 17432,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -5716,9 +8026,15 @@
    "module": [
     "abrechnung",
     "anfragen",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
     "services",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 11,
    "codeStumm": false
@@ -5763,35 +8079,76 @@
      "name": "ikVorbelegen",
      "file": "module/verordnung-podo.js",
      "start": 268,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "loadSettings",
      "file": "dashboard.js",
-     "start": 12374,
+     "start": 12396,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "settings",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Einstellungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderOverview",
      "file": "dashboard.js",
-     "start": 1367,
+     "start": 1368,
      "module": [],
      "uiPfad": []
     }
    ],
-   "schreiber": [],
+   "schreiber": [
+    {
+     "name": "fmt",
+     "file": "dashboard.js",
+     "start": 10960,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    }
+   ],
    "dateien": [
     "api-backend/billing/api/abrechnung.routes.js",
     "dashboard.js",
@@ -5799,9 +8156,16 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
     "settings",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -5825,48 +8189,87 @@
     {
      "name": "loadAbrechnung",
      "file": "dashboard.js",
-     "start": 19497,
+     "start": 19519,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpServices",
      "file": "dashboard.js",
-     "start": 11653,
+     "start": 11675,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
     {
-     "name": "loadEmpCertificates",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11739,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "loadEmpCertificates",
+     "file": "dashboard.js",
+     "start": 11761,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete",
@@ -5880,8 +8283,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 1,
    "codeStumm": false
@@ -5912,6 +8322,13 @@
      "uiPfad": []
     },
     {
+     "name": "horizonDays",
+     "file": "api-backend/server.js",
+     "start": 1502,
+     "module": [],
+     "uiPfad": []
+    },
+    {
      "name": "initCalendar",
      "file": "kalender.js",
      "start": 244,
@@ -5921,70 +8338,101 @@
     {
      "name": "loadEmpDaySchedule",
      "file": "dashboard.js",
-     "start": 11501,
+     "start": 11523,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadEmpUrlaubSection",
      "file": "dashboard.js",
-     "start": 10818,
+     "start": 10840,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUeberblickVacations",
      "file": "dashboard.js",
-     "start": 22654,
+     "start": 22676,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
-      "ueberblick"
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Überblick"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "loadUrlaubListe",
      "file": "dashboard.js",
-     "start": 10919,
-     "module": [],
-     "uiPfad": []
+     "start": 10941,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "renderDayView",
      "file": "dashboard.js",
-     "start": 2689,
+     "start": 2690,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -5992,16 +8440,21 @@
     {
      "name": "deleteEmpTimeOff",
      "file": "dashboard.js",
-     "start": 10874,
+     "start": 10896,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -6010,26 +8463,68 @@
     {
      "name": "deleteUrlaub",
      "file": "dashboard.js",
-     "start": 10948,
-     "module": [],
-     "uiPfad": [],
+     "start": 10970,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
      "ops": [
       "delete"
      ]
     },
     {
-     "name": "loadTeam",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 10608,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "insert"
+     ]
+    },
+    {
+     "name": "loadTeam",
+     "file": "dashboard.js",
+     "start": 10630,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -6038,16 +8533,21 @@
     {
      "name": "openEmpDetail",
      "file": "dashboard.js",
-     "start": 11270,
+     "start": 11292,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert"
@@ -6056,7 +8556,7 @@
     {
      "name": "saveUrlaub",
      "file": "dashboard.js",
-     "start": 10890,
+     "start": 10912,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6071,9 +8571,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
     "team",
-    "ueberblick"
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -6139,16 +8645,21 @@
     {
      "name": "loadPatientDetailUeberweisung",
      "file": "dashboard.js",
-     "start": 9008,
+     "start": 9030,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -6158,8 +8669,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 5,
    "codeStumm": false
@@ -6203,14 +8721,14 @@
     {
      "name": "bootBusinessSwitcher",
      "file": "dashboard.js",
-     "start": 17057,
+     "start": 17079,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "bootScheduleViewToggle",
      "file": "dashboard.js",
-     "start": 14488,
+     "start": 14510,
      "module": [],
      "uiPfad": []
     }
@@ -6219,18 +8737,21 @@
     {
      "name": "saveUserPref",
      "file": "dashboard.js",
-     "start": 14567,
+     "start": 14589,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -6239,7 +8760,7 @@
     {
      "name": "switchBusiness",
      "file": "dashboard.js",
-     "start": 17572,
+     "start": 17594,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6254,9 +8775,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
     "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 2,
    "codeStumm": false
@@ -6281,38 +8808,42 @@
     {
      "name": "loadVehiclesForPicker",
      "file": "dashboard.js",
-     "start": 4086,
+     "start": 4109,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "q",
      "file": "dashboard.js",
-     "start": 20592,
+     "start": 20614,
      "module": [
       "abrechnung",
+      "fahrtenbuch",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     },
     {
      "name": "saveFahrtEndHandler",
      "file": "dashboard.js",
-     "start": 4285,
+     "start": 4308,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "saveFahrtStartHandler",
      "file": "dashboard.js",
-     "start": 4158,
+     "start": 4181,
      "module": [],
      "uiPfad": []
     }
@@ -6321,16 +8852,22 @@
     {
      "name": "loadFbVehicles",
      "file": "dashboard.js",
-     "start": 20618,
+     "start": 20640,
      "module": [
       "abrechnung",
       "fahrtenbuch",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 5 modülden çağrılıyor"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -6339,7 +8876,7 @@
     {
      "name": "saveQuickVehicleHandler",
      "file": "dashboard.js",
-     "start": 4135,
+     "start": 4158,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6349,7 +8886,7 @@
     {
      "name": "saveVehicleEdit",
      "file": "dashboard.js",
-     "start": 20721,
+     "start": 20743,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6364,9 +8901,15 @@
    "module": [
     "abrechnung",
     "fahrtenbuch",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
     "services",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 9,
    "codeStumm": false
@@ -6394,26 +8937,84 @@
    "ungeklaert": false,
    "leser": [
     {
+     "name": "frag",
+     "file": "module/patientenkarte.js",
+     "start": 140,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "ladeAktiveVerordnungen",
+     "file": "module/verordnung-uebersicht.js",
+     "start": 202,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
      "name": "ladeStatusJePatient",
      "file": "module/abrechnungsstatus.js",
      "start": 269,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "ladeVerlauf",
      "file": "module/patientenkarte.js",
      "start": 139,
-     "module": [],
-     "uiPfad": []
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
     },
     {
      "name": "ladeZuweisungen",
@@ -6423,52 +9024,114 @@
       "abrechnung",
       "anamnese",
       "doctors",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
+      "rechnungen",
+      "services",
       "settings",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "ortak yardımcı — 7 modülden çağrılıyor"
+      "ortak yardımcı — 13 modülden çağrılıyor"
      ]
     },
     {
-     "name": "podEingangsbefundungLage",
-     "file": "module/podologie-abrechnung.js",
-     "start": 176,
+     "name": "oeffneStatusDialogFuer",
+     "file": "module/abrechnungsstatus.js",
+     "start": 485,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
-      "team"
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Podologie-Abrechnung (podologie)",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "podPatientBehandlungen",
+     "file": "module/podologie-abrechnung.js",
+     "start": 196,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "verordnungenLaden",
+     "file": "module/rechnung-verordnung.js",
+     "start": 143,
+     "module": [],
+     "uiPfad": []
     }
    ],
    "schreiber": [
     {
      "name": "loadPodologieBilling",
      "file": "module/podologie-abrechnung.js",
-     "start": 330,
+     "start": 357,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
       "podologie-billing",
-      "team"
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Podologie-Abrechnung (podologie)",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "insert",
+      "update"
+     ]
+    },
+    {
+     "name": "speichereEinheiten",
+     "file": "module/verordnung-einheiten.js",
+     "start": 120,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
       "update"
      ]
     }
@@ -6489,10 +9152,16 @@
     "abrechnung",
     "anamnese",
     "doctors",
+    "fussstatus",
+    "hours",
     "kunden",
     "podologie-billing",
+    "rechnungen",
+    "services",
     "settings",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 12,
    "codeStumm": false
@@ -6523,16 +9192,21 @@
     {
      "name": "reportSidebarVisibility",
      "file": "dashboard.js",
-     "start": 931,
+     "start": 932,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -6555,8 +9229,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 1,
    "codeStumm": false
@@ -6582,18 +9263,22 @@
     {
      "name": "loadWarteliste",
      "file": "dashboard.js",
-     "start": 21683,
+     "start": 21705,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
       "team",
+      "ueberblick",
+      "verordnungen",
       "warteliste"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team",
-      "Sidebar → Warteliste (physiotherapy/podologie/praxis)"
+      "ortak yardımcı — 11 modülden çağrılıyor"
      ]
     }
    ],
@@ -6601,7 +9286,7 @@
     {
      "name": "initWlModal",
      "file": "dashboard.js",
-     "start": 21854,
+     "start": 21876,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6618,8 +9303,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
+    "services",
     "team",
+    "ueberblick",
+    "verordnungen",
     "warteliste"
    ],
    "sqlTreffer": 6,
@@ -6658,17 +9350,29 @@
     {
      "name": "getEmployeeWorkingHours",
      "file": "dashboard.js",
-     "start": 2456,
+     "start": 2457,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
+    },
+    {
+     "name": "horizonDays",
+     "file": "api-backend/server.js",
+     "start": 1502,
+     "module": [],
+     "uiPfad": []
     },
     {
      "name": "initWorkingHours",
@@ -6690,73 +9394,85 @@
      "start": 324,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
+      "podologie-billing",
+      "rechnungen",
       "services",
-      "team"
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Leistungen",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderGaps",
      "file": "dashboard.js",
-     "start": 1548,
+     "start": 1549,
      "module": [],
      "uiPfad": []
     },
     {
      "name": "renderGapsForDate",
      "file": "dashboard.js",
-     "start": 1628,
+     "start": 1629,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursGrid",
      "file": "dashboard.js",
-     "start": 10307,
+     "start": 10329,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     },
     {
      "name": "renderHoursMiniCal",
      "file": "dashboard.js",
-     "start": 10400,
+     "start": 10422,
      "module": [
       "abrechnung",
+      "fussstatus",
       "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Verfügbarkeit",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -6773,18 +9489,46 @@
      ]
     },
     {
-     "name": "loadEmpHours",
+     "name": "fmt",
      "file": "dashboard.js",
-     "start": 11561,
+     "start": 10960,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "upsert"
+     ]
+    },
+    {
+     "name": "loadEmpHours",
+     "file": "dashboard.js",
+     "start": 11583,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "upsert"
@@ -6803,10 +9547,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
     "hours",
     "kunden",
+    "podologie-billing",
+    "rechnungen",
     "services",
-    "team"
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 6,
    "codeStumm": false
@@ -6830,16 +9579,21 @@
     {
      "name": "showZaaErrors",
      "file": "dashboard.js",
-     "start": 20006,
+     "start": 20028,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
@@ -6850,8 +9604,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 3,
    "codeStumm": false
@@ -6877,24 +9638,73 @@
     {
      "name": "loadPatientDetailRezepte",
      "file": "dashboard.js",
-     "start": 8232,
+     "start": 8254,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ]
+    },
+    {
+     "name": "openBookingActionModal",
+     "file": "dashboard.js",
+     "start": 3240,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ]
     }
    ],
    "schreiber": [
     {
+     "name": "oeffneBefreiungsFormular",
+     "file": "module/zuzahlung-befreiung.js",
+     "start": 62,
+     "module": [
+      "abrechnung",
+      "fussstatus",
+      "hours",
+      "kunden",
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
+     ],
+     "uiPfad": [
+      "ortak yardımcı — 10 modülden çağrılıyor"
+     ],
+     "ops": [
+      "delete",
+      "upsert"
+     ]
+    },
+    {
      "name": "uploadRxNachweise",
      "file": "dashboard.js",
-     "start": 18481,
+     "start": 18503,
      "module": [],
      "uiPfad": [],
      "ops": [
@@ -6905,16 +9715,21 @@
     {
      "name": "wireBefreiungCard",
      "file": "dashboard.js",
-     "start": 8622,
+     "start": 8644,
      "module": [
       "abrechnung",
+      "fussstatus",
+      "hours",
       "kunden",
-      "team"
+      "podologie-billing",
+      "rechnungen",
+      "services",
+      "team",
+      "ueberblick",
+      "verordnungen"
      ],
      "uiPfad": [
-      "Sidebar → §302-Abrechnung (physiotherapy/praxis)",
-      "Sidebar → Patienten",
-      "Sidebar → Team"
+      "ortak yardımcı — 10 modülden çağrılıyor"
      ],
      "ops": [
       "delete"
@@ -6927,8 +9742,15 @@
    ],
    "module": [
     "abrechnung",
+    "fussstatus",
+    "hours",
     "kunden",
-    "team"
+    "podologie-billing",
+    "rechnungen",
+    "services",
+    "team",
+    "ueberblick",
+    "verordnungen"
    ],
    "sqlTreffer": 6,
    "codeStumm": false
