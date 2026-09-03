@@ -23,11 +23,20 @@
 // und ein Import-Pfad ist ein statischer String. Er kann unmoeglich eine
 // Konstante aus genau der Datei benutzen, die er erst laedt.
 //
-// Wer diese Datei aendert, zieht deshalb ZWEI Glieder hoch, nicht eins:
-//   1. `?v=` an jedem Import von nav-registry.js (dashboard.js, admin.js,
-//      module/fussbefund.js, komponenten.html)
-//   2. `?v=` an `dashboard.js` selbst in dashboard.html — sonst laedt der
-//      Browser die alte dashboard.js und kommt nie zur neuen Modulzeile.
+// Wer diese Datei aendert, zieht deshalb die ganze KETTE hoch, nicht ein Glied.
+// Sie ist bei einem der vier Importeure drei Glieder lang:
+//   1. `?v=` an jedem Import von nav-registry.js — dashboard.js:5, admin.js:3,
+//      module/fussbefund.js:92, komponenten.html:167
+//   2. `?v=` an den Dateien, die DIESE importieren — dashboard.js:18 laedt
+//      module/fussbefund.js. Wird das vergessen, holt der Browser die alte
+//      fussbefund.js und kommt nie zur neuen Registry-Zeile darin.
+//   3. `?v=` am aeussersten Glied — dashboard.html:5703 (dashboard.js) und
+//      admin.html:183 (admin.js).
+//
+// Am 03.09.2026 waren Glied 2 und ein Teil von Glied 3 vergessen worden. Ohne
+// Folgen, weil vercel.json alle `.js` mit `max-age=0, must-revalidate`
+// ausliefert und der Registry-INHALT in dem Commit gleich blieb — beim
+// naechsten echten Umbau waere es aufgefallen.
 
 export const NAV_REGISTRY = {
   default: [

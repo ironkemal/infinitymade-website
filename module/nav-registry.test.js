@@ -3,8 +3,9 @@
  *
  * Warum diese Datei in `module/` liegt, obwohl `nav-registry.js` in der Wurzel
  * steht: `npm test` sucht nach `module/ * * / *.test.js`. Die Registry selbst
- * bleibt, wo sie ist — dashboard.js, admin.js, kalender und komponenten.html
- * importieren sie von dort.
+ * bleibt, wo sie ist — vier Dateien importieren sie von dort: `dashboard.js`,
+ * `admin.js`, `module/fussbefund.js` und `komponenten.html`. (`kalender.js`
+ * gehoert NICHT dazu, auch wenn der Name es nahelegt.)
  *
  * Warum es sie ueberhaupt gibt: „Leistungen" wurde am 25.08.2026 von der
  * Gruppe `team` nach `abrechnung` verschoben (Meeting 30.08.2026,
@@ -50,13 +51,19 @@ test('der Umzug hat die Rechte nicht angefasst', () => {
   }
 });
 
-test('Leistungen und die §302-Abrechnung sind zwei verschiedene Eintraege', () => {
+test('nur die §302-Abrechnung traegt die id "abrechnung"', () => {
   // Wichtig, weil dashboard.js die Plan-Sperre an `item.id === 'abrechnung'`
   // haengt. Bekaeme "Leistungen" jemals diese id, waere es fuer jede Praxis
   // ohne §302-Zugang unsichtbar.
-  const mit302 = ['physiotherapy', 'praxis'];
-  for (const profil of mit302) {
-    assert.notEqual(eintrag(profil, 'services').id, eintrag(profil, 'abrechnung').id);
+  //
+  // Frueher stand hier `notEqual(eintrag(p,'services').id, eintrag(p,'abrechnung').id)`.
+  // Das war tautologisch: beide Seiten wurden UEBER die id gesucht, verglichen
+  // wurde also immer 'services' mit 'abrechnung'. Der Test konnte gar nicht
+  // fehlschlagen. Jetzt wird die Menge geprueft, nicht die Suche.
+  for (const profil of ['physiotherapy', 'praxis']) {
+    const traeger = NAV_REGISTRY[profil].filter(e => e.id === 'abrechnung');
+    assert.equal(traeger.length, 1, `${profil}: genau ein Eintrag mit id "abrechnung"`);
+    assert.equal(traeger[0].label, '§302-Abrechnung', `${profil}: und das ist nicht die Leistungsliste`);
   }
 });
 

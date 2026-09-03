@@ -155,6 +155,11 @@ WHERE kostentraeger_typ IS NULL
 -- Der Code ueberlebt den Rueckbau ohne Aenderung: `kostentraeger-spalte.js`
 -- stellt die fehlende Spalte wieder fest, das Auswahlfeld blendet sich aus,
 -- und `kostentraegerTyp()` faellt auf die implizite Regel zurueck.
+--
+-- ⚠️ ABER: erst nach einem Neuladen. `bekannt` klebt an der Sitzung. Ein Tab,
+--    der vor dem DROP schon "Spalte da" gemerkt hat, schickt `kostentraeger_typ`
+--    weiter mit, und jedes Speichern schlaegt fehl. Nach einem Rueckbau also
+--    allen offenen Tabs einen Neuladen verordnen.
 
 -- =====================================================================
 -- DANACH NICHT VERGESSEN

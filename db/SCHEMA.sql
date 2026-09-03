@@ -1593,7 +1593,7 @@ CREATE TABLE services (
 --     supabase/migrations/20260902090000_services_kostentraeger_typ.sql,
 --     war am 03.09.2026 noch nicht ausgefuehrt. Dieser Dump ist bis dahin
 --     korrekt — die Spalte gibt es wirklich noch nicht. Nach dem Lauf:
---     „Schema aktualisieren" und diese vier Zeilen loeschen.
+--     „Schema aktualisieren" und diesen ganzen ⏳-Block loeschen.
 
 CREATE TABLE spatial_ref_sys (
   srid integer NOT NULL

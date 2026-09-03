@@ -37,11 +37,13 @@
  *     naechsten Mal neu versucht.
  *
  * (b) **Zwei Ladevorgaenge koennen sich ueberholen.** `loadServices()` wird an
- *     zwei Stellen ohne `await` gestartet (`dashboard.js:1154`, `:17367`). Ohne
+ *     zwei Stellen ohne `await` gestartet (`dashboard.js:1154`, `:17369`). Ohne
  *     Absicherung feuern beide eine Sonde, und die spaeter zurueckkehrende
  *     ueberschreibt bedingungslos — auch ein bereits aus Zeilen abgeleitetes
- *     `true`. Deshalb: eine gemeinsame laufende Promise, und nach dem `await`
- *     wird erneut geprueft, ob inzwischen jemand die bessere Antwort hatte.
+ *     `true`. Deshalb: eine gemeinsame laufende Promise, die ihr Ergebnis noch
+ *     im selben synchronen Block auswertet und freigibt. Ein `.finally()` haette
+ *     dafuer nicht gereicht — sein Rueckruf laeuft VOR den Awaitern, und in
+ *     diesem Spalt kann ein dritter Aufruf eine zweite Sonde starten.
  *
  * (c) **`services` ist oeffentlich lesbar** (Policy "Public read services", fuer
  *     die Buchungsseite). Eine Sonde ohne Mandantenfilter bekaeme die Zeile
@@ -98,10 +100,18 @@ export function spalteAusZeilen(zeilen) {
  *   NICHT "Spalte fehlt". Der Unterschied ist der ganze Punkt (Falle a).
  */
 async function sondiere(client) {
-  const { error } = await client.from('services')
+  const { data, error, status } = await client.from('services')
     .select('kostentraeger_typ')
     .limit(0);
-  if (!error) return true;
+
+  // `!error` allein reicht NICHT als Beweis. Am vendorten Client gemessen
+  // (03.09.2026): eine 404-Antwort mit leerem Rumpf — wie sie ein Proxy oder
+  // eine Fehlerseite liefert — kommt als `error: null, status: 204` an. Das
+  // hiesse faelschlich "Spalte da", wuerde gemerkt, und ab da schickte jedes
+  // Speichern `kostentraeger_typ` mit. PostgREST wiese es ab: genau der
+  // Schaden, den diese Datei verhindern soll, nur andersherum.
+  // Ein echter Erfolg ist 200 MIT Liste (bei limit(0) eine leere).
+  if (!error) return (status === 200 && Array.isArray(data)) ? true : null;
   if (error.code === '42703') return false;
   return null;
 }
@@ -127,16 +137,21 @@ export async function ermittleKostentraegerSpalte(zeilen, client) {
   if (!client) return false;
   if (!laufendeSonde) {
     laufendeSonde = (async () => {
-      try { return await sondiere(client); } catch (_) { return null; }
-    })().finally(() => { laufendeSonde = null; });
-  }
-  const antwort = await laufendeSonde;
+      let antwort = null;
+      try { antwort = await sondiere(client); } catch (_) { /* Netzfehler: unklar */ }
 
-  // Waehrend die Sonde lief, kann ein anderer Ladevorgang die Antwort schon aus
-  // echten Zeilen gehabt haben. Die ist besser als unsere — nicht ueberschreiben.
-  if (bekannt !== null) return bekannt;
-  if (antwort !== null) bekannt = antwort;
-  return bekannt === true;
+      // Waehrend die Sonde lief, kann ein anderer Ladevorgang die Antwort schon
+      // aus echten Zeilen gehabt haben. Die ist besser als unsere.
+      if (bekannt === null && antwort !== null) bekannt = antwort;
+
+      // Synchron im selben Block wie das Ergebnis freigeben. Stuende das in
+      // einem `.finally()`, liefe der Rueckruf VOR den Awaitern — dann koennte
+      // ein dritter Aufruf in genau diesem Spalt eine zweite Sonde starten.
+      laufendeSonde = null;
+      return bekannt === true;
+    })();
+  }
+  return laufendeSonde;
 }
 
 /**

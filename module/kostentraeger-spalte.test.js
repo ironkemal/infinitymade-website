@@ -25,7 +25,7 @@ beforeEach(() => _spaltenwissenZuruecksetzen());
  *
  * Deshalb verschluckt das Doppel den Code bei `head`, genau wie das Original.
  */
-function clientDoppel({ fehler = null, verzoegern = false } = {}) {
+function clientDoppel({ fehler = null, verzoegern = false, antwort = null } = {}) {
   const aufrufe = [];
   const optionen = [];
   const grenzen = [];
@@ -43,10 +43,13 @@ function clientDoppel({ fehler = null, verzoegern = false } = {}) {
             limit: async (n) => {
               grenzen.push(n);
               if (tor) await tor;
-              if (!fehler) return { data: [], error: null };
+              // Frei gesetzte Rohantwort — fuer die Faelle, die weder sauberer
+              // Erfolg noch sauberer PostgREST-Fehler sind (Proxy, Fehlseite).
+              if (antwort) return antwort;
+              if (!fehler) return { data: [], error: null, status: 200 };
               // HEAD liefert keinen Rumpf -> der Client sieht keinen Code.
               const durchgereicht = opt && opt.head ? { message: '' } : fehler;
-              return { data: null, error: durchgereicht };
+              return { data: null, error: durchgereicht, status: 400 };
             },
           };
         },
@@ -150,7 +153,7 @@ test('nur 42703 heisst wirklich "Spalte fehlt" — und wird gemerkt', async () =
 
 test('gleichzeitige Aufrufe teilen sich EINE Sonde', async () => {
   // loadServices() wird an zwei Stellen ohne await gestartet
-  // (dashboard.js:1154, :17367) — Ueberlappung ist real, nicht theoretisch.
+  // (dashboard.js:1154, :17369) — Ueberlappung ist real, nicht theoretisch.
   const client = clientDoppel({ verzoegern: true });
   const beide = Promise.all([
     ermittleKostentraegerSpalte([], client),
@@ -175,7 +178,7 @@ test('eine spaete Sonde ueberschreibt kein bereits richtiges Ergebnis', async ()
   assert.equal(kostentraegerSpalteDa(), true, 'die Sonde hat es NICHT gekippt');
 });
 
-// ── Falle (c): die Aufrufform der Sonde ist nicht beliebig ──────────────────
+// ── Aufrufform der Sonde — gehoert zu Falle (c) im Modulkopf ───────────────
 
 test('die Sonde fragt per GET mit limit(0) — nicht mit head', async () => {
   // Beides zusammen ist noetig und beides hat einen Grund:
@@ -190,14 +193,36 @@ test('die Sonde fragt per GET mit limit(0) — nicht mit head', async () => {
   assert.ok(!client.optionen[0] || !client.optionen[0].head, 'kein head:true');
 });
 
-test('mit head:true waere die Erkennung kaputt — der Nachweis', async () => {
-  // Kein Vorwurf an die Zukunft, sondern eine Falle mit Schild: wer hier
-  // head:true einbaut, bekommt einen Fehler ohne Code. Das Doppel bildet das
-  // nach (gegen echtes PostgREST gemessen). Der Test zeigt, was dann passiert.
+test('das Doppel verschluckt bei head den Code — wie echtes PostgREST', async () => {
+  // ⚠️ Dieser Test prueft NUR die Treue des Doppels, nicht das Modul. Er ist
+  // die Begruendung dafuer, dass der Test darueber (`grenzen === [0]`, kein
+  // head) ueberhaupt etwas wert ist. Der echte Waechter ist jener, nicht dieser.
   const client = clientDoppel({ fehler: { code: '42703', message: 'column ... does not exist' } });
   const ohneCode = await client.from('services').select('kostentraeger_typ', { head: true }).limit(0);
   assert.equal(ohneCode.error.code, undefined, 'HEAD verschluckt den Code');
 
   const mitCode = await client.from('services').select('kostentraeger_typ').limit(0);
   assert.equal(mitCode.error.code, '42703', 'GET liefert ihn');
+});
+
+test('eine 404-Antwort ohne Rumpf gilt NICHT als "Spalte da"', async () => {
+  // Am vendorten Client gemessen: 404 + leerer Rumpf kommt als
+  // { error: null, status: 204 } an. Wuerde `!error` allein entscheiden,
+  // hiesse das faelschlich "Spalte da" — und ab da schickte jedes Speichern
+  // kostentraeger_typ mit, das PostgREST dann abweist. Ein Proxy oder eine
+  // Fehlerseite reicht, um das auszuloesen.
+  const client = clientDoppel({ antwort: { data: null, error: null, status: 204 } });
+  assert.equal(await ermittleKostentraegerSpalte([], client), false);
+  assert.equal(kostentraegerSpalteDa(), false, 'nicht gemerkt');
+  await ermittleKostentraegerSpalte([], client);
+  assert.equal(client.aufrufe.length, 2, 'unklar -> wird erneut versucht');
+});
+
+test('Erfolg heisst 200 MIT Liste, nicht irgendein fehlerfreier Status', async () => {
+  const ok = clientDoppel({ antwort: { data: [], error: null, status: 200 } });
+  assert.equal(await ermittleKostentraegerSpalte([], ok), true);
+
+  _spaltenwissenZuruecksetzen();
+  const ohneListe = clientDoppel({ antwort: { data: null, error: null, status: 200 } });
+  assert.equal(await ermittleKostentraegerSpalte([], ohneListe), false, 'kein Rumpf = kein Beweis');
 });
