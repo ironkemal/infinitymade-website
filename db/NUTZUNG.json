@@ -5,7 +5,7 @@
   "funktionskarte": "funktionen/INDEX.json (erzeugt 2026-09-03)",
   "register": "db/REGISTER.md"
  },
- "anzahl": 82,
+ "anzahl": 83,
  "tabellen": [
   {
    "name": "abrechnung",
@@ -857,6 +857,32 @@
    "codeStumm": false
   },
   {
+   "name": "booking_leistungen",
+   "spalten": 7,
+   "fkRaus": [
+    "bookings",
+    "services",
+    "profiles"
+   ],
+   "dsgvoAuskunft": true,
+   "dsgvoLoeschung": true,
+   "dsgvoAnonymisiert": false,
+   "erwaehnt": [
+    "api/dsgvo.js"
+   ],
+   "register": true,
+   "status": "aktiv",
+   "warum": "Ein Termin trägt in der Podologie fast immer mehr als eine Leistung — „Podologische Behandlung + Eingangsbefundung\" ist der Normalfall, nicht die Ausnahme (Beta-1, 31.08.2026: „wenn man es nicht vollstopfen will, kann man auch einfach nur [ein] Pluszeichen drücken … und die Anzahl\"). `bookings.service_id` konnte genau eine halten; der Kalenderblock war deshalb systematisch zu kurz und die zweite Leistung fiel aus der Abrechnung.",
+   "seit": "03.09.2026 · `20260903170448_booking_leistungen` · Ops-Karte 235",
+   "ungeklaert": false,
+   "leser": [],
+   "schreiber": [],
+   "dateien": [],
+   "module": [],
+   "sqlTreffer": 6,
+   "codeStumm": true
+  },
+  {
    "name": "booking_requests",
    "spalten": 37,
    "fkRaus": [
@@ -1676,7 +1702,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 20,
+   "sqlTreffer": 24,
    "codeStumm": false
   },
   {
@@ -5889,7 +5915,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 7,
+   "sqlTreffer": 6,
    "codeStumm": false
   },
   {
@@ -8070,7 +8096,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 11,
+   "sqlTreffer": 12,
    "codeStumm": false
   },
   {
@@ -9258,7 +9284,7 @@
     "ueberblick",
     "verordnungen"
    ],
-   "sqlTreffer": 18,
+   "sqlTreffer": 17,
    "codeStumm": false
   },
   {
@@ -9927,6 +9953,11 @@
    "status": "fremd"
   },
   {
+   "name": "booking_leistungen",
+   "sql": 6,
+   "status": "aktiv"
+  },
+  {
    "name": "dta_schluessel",
    "sql": 4,
    "status": "Referenz, im Code ungenutzt"
@@ -9997,6 +10028,7 @@
    "ausfallrechnungen",
    "b2b_contacts",
    "belegliste",
+   "booking_leistungen",
    "booking_requests",
    "bookings",
    "breaks",
@@ -10051,6 +10083,7 @@
    "attendance",
    "ausfallrechnungen",
    "b2b_contacts",
+   "booking_leistungen",
    "booking_requests",
    "bookings",
    "breaks",

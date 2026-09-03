@@ -66,6 +66,10 @@ const USER_TABLES = [
   { table: 'custom_days',                  filter: 'owner_id'  },
   { table: 'time_offs',                    filter: 'owner_id'  },
   { table: 'bookings',                     filter: 'owner_id'  },
+  // Die Leistungen eines Termins (Ops 235). Für sich nur Fremdschlüssel und
+  // eine Menge — über die Verknüpfung aber „dieser Patient bekam an diesem
+  // Tag diese Behandlung". Gehört damit in die Auskunft nach Art. 15.
+  { table: 'booking_leistungen',           filter: 'owner_id'  },
   { table: 'patient_notes',                filter: 'owner_id'  },
   { table: 'anamnese',                     filter: 'owner_id'  },
   { table: 'prescriptions',                filter: 'owner_id'  },
@@ -227,6 +231,10 @@ const DELETE_TABLES = [
   'prescriptions', 'zuzahlung_befreiung', 'zuzahlung_guthaben',
   'referral_drafts', 'ueberweisungen',
   'aerzte', 'b2b_contacts', 'leads', 'fahrten', 'vehicles', 'terapeut_zertifikat',
+  // `booking_leistungen` vor `bookings` UND vor `services` — CASCADE räumt es
+  // ohnehin ab, aber eine stille Lücke in dieser Liste war am 28.08.2026 schon
+  // einmal der Fehler.
+  'booking_leistungen',
   'bookings', 'time_offs', 'breaks', 'custom_days', 'working_hours',
   'employee_services', 'services', 'calendar_integrations',
 

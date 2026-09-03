@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — RLS-Policies, Funktionen, Trigger, Indizes
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (Team-SELECT verordnungen/podologie_behandlungen)
--- LETZTE MIGRATION:  20260903165452_verordnungen_podologie_behandlungen_team_select
+-- ERZEUGT AM:        2026-09-03 (booking_leistungen — mehrere Leistungen je Termin)
+-- LETZTE MIGRATION:  20260903170448_booking_leistungen
+--                    davor: 20260903165452_verordnungen_podologie_behandlungen_team_select
 --                    davor: 20260903132042_verordnungen_gobd_festschreibung
 --                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
 --                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
@@ -31,7 +32,7 @@
 --                    (danach am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — keine Migrationszeile, aber in
 --                     der DB vorhanden)
--- UMFANG:            157 RLS-Policies · 297 Indizes · 64 Trigger · 65 Funktionen
+-- UMFANG:            158 RLS-Policies · 301 Indizes · 66 Trigger · 67 Funktionen
 --                    (03.09.2026 gegen die Live-DB nachgezaehlt. Dabei fiel auf,
 --                     dass in Abschnitt 5 zwei Indizes vom 16.08.2026 FEHLTEN:
 --                     idx_invoices_verordnung_id und idx_pod_behandlungen_invoice_id.
@@ -137,6 +138,11 @@
 --   Belegliste select scoping [SELECT] owner + Team
 --   Belegliste insert scoping [INSERT] owner + Team
 --   ⚠️ KEIN UPDATE/DELETE — GoBD. Trigger prevent_belegliste_mod() blockt zusätzlich.
+
+-- booking_leistungen
+--   booking_leistungen_owner_all [ALL] owner + Team (eigene owner_id, kein Join
+--   auf bookings — dort liegen acht ueberlappende Policies, die hier niemand
+--   erben soll). Fuer anon NIE lesbar, anders als `services`.
 
 -- booking_requests
 --   owner sees own requests [ALL] owner + Team
@@ -537,6 +543,16 @@ $function$;
 -- vergebe_verordnungsnummer_rx() / _vo() -> trigger        [SECURITY DEFINER]
 --   Rufen sie auf. Wechselt die Verordnung den Patienten, wird die Nummer
 --   verworfen und neu vergeben; die eingereichte `belegnummer` bleibt stehen.
+-- pruefe_booking_leistung_owner() -> trigger               [SECURITY DEFINER]
+--   Owner-Riegel fuer booking_leistungen (seit 03.09.2026, Ops-Karte 235):
+--   vergleicht bookings.owner_id mit der owner_id der Zeile und wirft 42501,
+--   wenn sie auseinanderfallen. Derselbe Grund wie unten — ein Fremdschluessel
+--   prueft KEINE RLS.
+-- sync_booking_hauptleistung() -> trigger                  [SECURITY DEFINER]
+--   Spiegelt die Zeile mit sort_order 0 nach `bookings.service_id`. Damit gibt
+--   es EINEN Schreibweg (die Tabelle) und trotzdem eine Hauptleistung fuer die
+--   sieben Leser, die service_id brauchen. Laeuft AFTER INSERT/UPDATE/DELETE
+--   und schreibt nur, wenn sich der Wert wirklich aendert.
 -- pruefe_booking_verordnung_owner() -> trigger             [SECURITY DEFINER]
 --   Owner-Riegel fuer bookings.verordnung_id (seit 03.09.2026): vergleicht
 --   verordnungen.owner_id mit bookings.owner_id und wirft 42501, wenn sie
@@ -645,6 +661,10 @@ $function$;
 --                           Auch bei UPDATE OF owner_id, sonst liesse sich ein
 --                           Termin nachtraeglich umhaengen und die Verordnung
 --                           bliebe fremd.
+--   booking_leistungen    trg_booking_leistung_owner     BEFORE INSERT/UPDATE OF booking_id, owner_id
+--                         trg_booking_hauptleistung      AFTER INSERT/UPDATE/DELETE
+--                         → spiegelt Zeile 0 nach bookings.service_id.
+--                           Deshalb service_id NIE von Hand schreiben.
 --   leads                 trg_normalize_lead_phone       BEFORE INSERT/UPDATE
 --                         trg_leads_patientennummer      BEFORE INSERT (Nummernvergabe)
 --   prescriptions         trg_prescriptions_verordnungsnummer BEFORE INSERT/UPDATE OF patient_id
@@ -717,6 +737,8 @@ CREATE INDEX idx_b2b_contacts_owner ON public.b2b_contacts USING btree (owner_id
 CREATE INDEX idx_belegliste_owner_time ON public.belegliste USING btree (owner_id, created_at DESC);
 CREATE INDEX idx_bookings_business ON public.bookings USING btree (business_id);
 CREATE INDEX idx_bookings_group_parent_id ON public.bookings USING btree (group_parent_id);
+CREATE INDEX idx_booking_leistungen_booking ON public.booking_leistungen USING btree (booking_id, sort_order);
+CREATE INDEX idx_booking_leistungen_service ON public.booking_leistungen USING btree (service_id);
 CREATE INDEX idx_bookings_lead_id ON public.bookings USING btree (lead_id);
 CREATE INDEX idx_bookings_owner ON public.bookings USING btree (owner_id);
 CREATE INDEX idx_bookings_owner_status ON public.bookings USING btree (owner_id, status);

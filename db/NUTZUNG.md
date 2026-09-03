@@ -3,11 +3,11 @@
 > ÜRETİLEN DOSYA — elle düzenleme. `node tools/tabellenkarte.mjs`
 > NİYE açıldıkları: `db/REGISTER.md` · YAPILARI: `db/SCHEMA.sql`
 
-**Erzeugt:** 2026-09-03 · 82 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-03), funktionen/INDEX.json (erzeugt 2026-09-03)
+**Erzeugt:** 2026-09-03 · 83 Tabellen · Quelle: db/SCHEMA.sql (Stand 2026-09-03), funktionen/INDEX.json (erzeugt 2026-09-03)
 
 ## Kayıt durumu
 
-- Register kaydı olan: **82/82**
+- Register kaydı olan: **83/83**
 
 ## Kodda hiç çağrılmayan tablolar
 
@@ -19,6 +19,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 |---|---|---|
 | `accommodations` | 2 | fremd |
 | `applications` | 2 | fremd |
+| `booking_leistungen` | 6 | aktiv |
 | `dta_schluessel` | 4 | Referenz, im Code ungenutzt |
 | `fußstatus` | 2 | veraltet |
 | `heilmittel_catalog` | 2 | veraltet |
@@ -34,7 +35,7 @@ içindeki geçiş sayısıdır: 0 ise gerçekten şüphelidir.
 
 ## DSGVO-Abdeckung (`api/dsgvo.js`)
 
-Auskunft (Art. 15): **54** · Löschung (Art. 17): **49** · anonymisiert statt gelöscht: **1**
+Auskunft (Art. 15): **55** · Löschung (Art. 17): **50** · anonymisiert statt gelöscht: **1**
 
 ⚠️ Personenbezug (FK auf `leads`/`profiles`/`auth.users`) aber **nicht** in der Auskunftsliste:
 
@@ -183,6 +184,11 @@ Warum: GoBD-Belegjournal: jeder Geldvorgang lückenlos und unveränderlich.
 **Dateien:** `api-backend/billing/api/abrechnung.routes.js`, `api-backend/billing/api/ausfall.routes.js`, `api-backend/billing/api/mahnwesen.routes.js`, `api-backend/billing/api/statistik.routes.js`, `api-backend/billing/api/zuzahlung.routes.js`, `dashboard.js`
 
 **Module:** abrechnung, fussstatus, hours, kunden, podologie-billing, rechnungen, services, team, ueberblick, verordnungen
+
+### `booking_leistungen`
+
+7 Spalten · Status: aktiv
+Warum: Ein Termin trägt in der Podologie fast immer mehr als eine Leistung — „Podologische Behandlung + Eingangsbefundung" ist der Normalfall, nicht die Ausnahme (Beta-1, 31.08.2026: „wenn man es nicht vollstopfen will, kann man auch einfach nur [ein] Pluszeichen drücken … und die Anzahl"). `bookings.service_id` konnte genau eine halten; der Kalenderblock war deshalb systematisch zu kurz und die zweite Leistung fiel aus der Abrechnung.
 
 ### `booking_requests`
 

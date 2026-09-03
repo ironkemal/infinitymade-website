@@ -142,6 +142,17 @@ Das „Warum" in diesem Register ist an dieser Stelle die einzige Quelle, die es
 
 ## 2. Termin, Kalender, Buchung
 
+### `booking_leistungen`
+- **Warum:** Ein Termin trägt in der Podologie fast immer mehr als eine Leistung — „Podologische Behandlung + Eingangsbefundung" ist der Normalfall, nicht die Ausnahme (Beta-1, 31.08.2026: „wenn man es nicht vollstopfen will, kann man auch einfach nur [ein] Pluszeichen drücken … und die Anzahl"). `bookings.service_id` konnte genau eine halten; der Kalenderblock war deshalb systematisch zu kurz und die zweite Leistung fiel aus der Abrechnung.
+- **Seit:** 03.09.2026 · `20260903170448_booking_leistungen` · Ops-Karte 235
+- **Status:** aktiv
+- **Wer:** Termin-Fenster (die „+"-Zeilen, `module/termin-leistungen.js`) schreibt; die Abrechnungsmaske liest, um die HPNR-Kästchen vorzubelegen.
+- **Warum kein JSONB auf `bookings`:** drei Gründe, alle geprüft. `bookings` liegt in der Realtime-Publication — jede Schreibung ginge als volle Zeile an jeden offenen Kalender. Ein JSON-Feld trägt keinen Fremdschlüssel, eine gelöschte Leistung ließe eine tote uuid zurück. Und es wäre die **vierte** Darstellung desselben Gedankens neben `hpnr_codes`, `heilmittel_items` und `prescription_sessions` — dieselbe Falle wie `heilmittel_catalog` ↔ `heilmittel_katalog`.
+- **Achtung — `bookings.service_id` ist ab jetzt ABGELEITET:** `trg_booking_hauptleistung` setzt sie auf die Zeile mit `sort_order = 0`. **Nicht von Hand schreiben**, sonst gibt es zwei Wahrheiten. Sie bleibt, weil sieben Leser daran hängen: Kalenderfarbe (`module/kalender-farben.js`), `ausfallSuggestedAmount()` — fällt ohne sie **still** auf den Pauschalbetrag zurück (`module/termin-laden.js`) —, `warteliste.routes.js`, `booking/from-request.js`, `rechnung-editor.js`, `abrechnung.routes.js`, `idx_bookings_service`. Backfill am 03.09.2026: 287 Termine, eine Zeile je Termin, keine Abweichung.
+- **Achtung — kein zweiter Schreibweg in die Abrechnung.** Die Leistungen werden über `services.gkv_position_nr` (= HPNR, deckungsgleich mit den Kästchen in `module/podologie-abrechnung.js`) nur **vorangekreuzt**. Der einzige INSERT in `podologie_behandlungen` bleibt der dortige — nur so laufen alle Sperren mit: 78040+78030 am selben Tag, 78100 je Kalenderjahr, UI1/UI2→L60.0, 78020-Komplexbehandlung, 78610/78620 nur UI2. Der Podologe darf das Kästchen außerdem ändern: geplante und tatsächlich erbrachte Leistung sind nicht dasselbe.
+- **Achtung — Gruppentermine:** die Kind-Synchronisierung in `dashboard.js` läuft über `.eq('group_parent_id', id)` und kopiert diese Zeilen **nicht** mit. Wer hier schreibt, muss die Kinder mitnehmen, sonst trägt der Elterntermin „78010+78030" und die Kinder nur „78010". Kinder sind zudem vom `no_overlapping_bookings`-EXCLUDE ausgenommen — längere Blöcke kollidieren dort ungebremst.
+- **DSGVO:** in `USER_TABLES` mit `filter: 'owner_id'`; in `DELETE_TABLES` **vor** `bookings` und vor `services`. Für sich genommen stehen dort nur Fremdschlüssel und eine Menge — über die Verknüpfung aber „dieser Patient bekam an diesem Tag diese Behandlung", also Gesundheitsdatum. CASCADE räumt ohnehin ab; der Eintrag steht, damit die Auskunft nach Art. 15 vollständig ist.
+
 ### `bookings`
 - **Warum:** Der Termin selbst. Alles andere im Kalender hängt daran.
 - **Seit:** spätestens 10.05.2026 · `phone_normalization_and_merge`

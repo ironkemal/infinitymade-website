@@ -1,8 +1,9 @@
 -- =====================================================================
 -- Praxura — Produktions-Datenbankschema (Supabase njvuclullotbksskpwgk)
 -- =====================================================================
--- ERZEUGT AM:        2026-09-03 (Team-SELECT verordnungen/podologie_behandlungen)
--- LETZTE MIGRATION:  20260903165452_verordnungen_podologie_behandlungen_team_select
+-- ERZEUGT AM:        2026-09-03 (booking_leistungen — mehrere Leistungen je Termin)
+-- LETZTE MIGRATION:  20260903170448_booking_leistungen
+--                    davor: 20260903165452_verordnungen_podologie_behandlungen_team_select
 --                    davor: 20260903132042_verordnungen_gobd_festschreibung
 --                    davor: 20260903075503_pruefe_booking_verordnung_owner_execute_revoke
 --                    davor: 20260903074810_bookings_verordnung_id_podologie_termin_bindung
@@ -31,8 +32,8 @@
 --                    (davor am 11.08. sql-melih/SUPABASE-JETZT-AUSFUEHREN.sql
 --                     im SQL-Editor gelaufen — steht deshalb in KEINER
 --                     Migrationszeile, ist in der DB aber vorhanden)
--- UMFANG:            82 Tabellen · 1211 Spalten · 157 RLS-Policies
---                    297 Indizes · 64 Trigger · 65 Funktionen · 4 Views
+-- UMFANG:            83 Tabellen · 1219 Spalten · 158 RLS-Policies
+--                    301 Indizes · 66 Trigger · 67 Funktionen · 4 Views
 --                    (03.09.2026: die Triggerzahl stand hier auf 60 und war
 --                     seit zwei Migrationen zu niedrig — gegen die Live-DB
 --                     nachgezählt, nicht fortgeschrieben.)
@@ -296,6 +297,44 @@ CREATE TABLE belegliste (
 --   PK (id) · UNIQUE (owner_id, beleg_nr)
 --   ⚠️ GoBD: TRIGGER prevent_belegliste_mod() blockt UPDATE und DELETE.
 --      Korrektur nur durch neuen Beleg mit type='storno'.
+
+CREATE TABLE booking_leistungen (
+  id uuid NOT NULL DEFAULT gen_random_uuid()
+  booking_id uuid NOT NULL
+  service_id uuid NOT NULL
+  owner_id uuid NOT NULL
+  anzahl smallint NOT NULL DEFAULT 1
+  sort_order smallint NOT NULL DEFAULT 0
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+--   CHECK anzahl BETWEEN 1 AND 20
+--   FK booking_id -> bookings(id) ON DELETE CASCADE
+--   FK service_id -> services(id) ON DELETE RESTRICT
+--   FK owner_id   -> profiles(id)
+--   PK (id) · UNIQUE (booking_id, service_id)
+--   INDEX idx_booking_leistungen_booking (booking_id, sort_order) · _service (service_id)
+--   TRIGGER: trg_booking_leistung_owner (Mandantenriegel)
+--            trg_booking_hauptleistung  (spiegelt Zeile 0 nach bookings.service_id)
+--   ★ Die Leistungen EINES Termins (seit 03.09.2026, Ops-Karte 235).
+--     In der Podologie ist die Kombination der Normalfall — „Behandlung +
+--     Eingangsbefundung" —, und `bookings.service_id` konnte genau eine
+--     halten. Der Kalenderblock war deshalb systematisch zu kurz und die
+--     zweite Leistung fiel aus der Abrechnung.
+--     ⚠️ `bookings.service_id` ist ab jetzt ABGELEITET: der Trigger setzt
+--        sie auf die Zeile mit sort_order 0. NICHT von Hand schreiben —
+--        sonst gibt es zwei Wahrheiten. Sie bleibt, weil sieben Leser
+--        daran haengen (Kalenderfarbe, ausfallSuggestedAmount(),
+--        warteliste.routes.js, booking/from-request.js, rechnung-editor.js,
+--        abrechnung.routes.js, idx_bookings_service).
+--     ⚠️ KEIN zweiter Schreibweg in die Abrechnung: die Zeilen werden ueber
+--        `services.gkv_position_nr` (= HPNR) in der Abrechnungsmaske nur
+--        VORANGEKREUZT. Der einzige INSERT in `podologie_behandlungen`
+--        bleibt der dortige — nur so laufen alle Sperren mit.
+--     ⚠️ Gruppentermine: die Kind-Synchronisierung in dashboard.js laeuft
+--        ueber `.eq(group_parent_id, …)` und kopiert diese Zeilen NICHT
+--        mit. Wer hier schreibt, muss die Kinder mitnehmen.
+--     ⚠️ ON DELETE RESTRICT auf service_id ist Absicht: eine geloeschte
+--        Leistung darf keine Terminhistorie zerreissen.
 
 CREATE TABLE booking_requests (
   id uuid NOT NULL DEFAULT gen_random_uuid()
