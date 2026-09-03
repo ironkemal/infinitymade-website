@@ -61,8 +61,24 @@ Eine SaaS-Plattform für Praxen (Physiotherapie, Heilmittelerbringer) zur:
 | R13 | Unterschriftenerfassung auf einem an Patient*innen übergebenen Gerät — Einblick in andere Patientendaten über den Kiosk-Modus hinweg | 2 | 4 | 8 | **teilmitigiert → siehe Maßnahmen R13** |
 | R14 | Fremdes CDN liefert Programmcode in den Anwendungskontext → bei Kompromittierung beliebiger Code im Browser der Praxis mit Zugriff auf die gesamte Sitzung (Lieferkette) | 2 | 5 | 10 | **mitigiert (14.08.2026) → Restpunkte siehe Maßnahmen R14** |
 | R15 | Ausfall eines fremden CDN macht die Anwendung startunfähig (Verfügbarkeit) | 3 | 3 | 9 | **mitigiert (14.08.2026)** |
+| R16 | Angestellte lesen Verordnungen und Behandlungsdokumentation aller Patient*innen ihrer Praxis, nicht nur der selbst behandelten | 2 | 3 | 6 | **bewertet und akzeptiert (03.09.2026)** — siehe unten |
+| R17 | Direktzugriffe des Dashboards auf die Datenbank erscheinen in keinem Zugriffsprotokoll | 2 | 3 | 6 | **offen** — Umfang in TOM.md §1.3 richtiggestellt, lückenlose Protokollierung erfasst |
 
 Score-Skala: 1-4 niedrig · 5-9 mittel · 10-14 hoch · 15-25 sehr hoch.
+
+**R16 — Begründung der Annahme.** Der Zugriff bleibt strikt innerhalb desselben
+Auftraggebers (RLS-Vergleich gegen `profiles.owner_id`), die Mandantentrennung ist
+unberührt. Rechtsgrundlage trägt (Art. 9 Abs. 3 DSGVO, § 203 Abs. 1 Nr. 1 und Abs. 3
+StGB — Therapeut*innen sind über ihr Berufsgesetz selbst Geheimnisträger). Eine
+Einschränkung auf „nur selbst behandelte Patient*innen" wäre datensparsamer, ist aber
+in einer kleinen Praxis nicht praktikabel: Vertretung bei Krankheit und Urlaub ist der
+Normalfall, und der Physio-Verordnungstopf (`prescriptions`) arbeitet seit jeher so.
+Gegenrechnung: die vorherige Sperre führte dazu, dass die behandelnde Person ihre eigene
+Behandlung **nicht** dokumentieren konnte — mit Blick auf § 630f Abs. 2 BGB (Zeitnähe)
+und § 630h Abs. 3 BGB (Beweislast) war das das größere Risiko.
+**Neubewertung ausgelöst durch:** ersten Kunden mit mehreren Standorten (die
+Standorttrennung ist keine RLS-Zusicherung, siehe TOM.md §1.3), oder wenn die Rolle
+`employee` auch an nicht-klinisches Personal (Empfang) vergeben wird.
 
 ### Maßnahmen zu offenen Risiken
 

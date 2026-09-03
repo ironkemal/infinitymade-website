@@ -37,7 +37,25 @@ Anhang 2 zum Auftragsverarbeitungsvertrag (AVV) zwischen InfinityMade und den Au
     Tabelle diese Spalte führt; der Podologie-Verordnungstopf leitet den Standort
     stattdessen über den Patienten ab (Konsey 2026-08-28, siehe LEGAL_DECISIONS.md)
 - Role-Based Access Control: `owner` / `employee` mit Modul-Berechtigungen (Faz Multi-Business)
-- Audit-Log jedes Patient-Datenzugriffs (Tabelle `data_access_log`, ≥ 12 Monate)
+  - Angestellte (`employee`) sehen die Daten **ihres** Inhabers, nie die eines anderen
+    Auftraggebers — auch die Rollentrennung läuft innerhalb der RLS-Policy, nicht in der
+    Oberfläche
+  - Verordnungen und Behandlungsdokumentation sind für Angestellte **lesend** freigegeben
+    (03.09.2026, siehe LEGAL_DECISIONS.md); Anlegen, Ändern und der Abrechnungsstatus
+    bleiben beim Inhaber
+- Zugriffsprotokoll `data_access_log` (≥ 12 Monate)
+  - ⚠️ **Umfang, damit die Zusicherung stimmt (geprüft 03.09.2026):** protokolliert werden
+    die Zugriffe über die Backend-API (`api-backend`, Middleware `accessLogger` auf allen
+    `/api`-Routen — Rezept-Upload und OCR, § 302-Abrechnung, Terminanfragen, Export) sowie
+    die DSGVO-Vorgänge aus `api/dsgvo.js`.
+  - **Nicht** protokolliert sind die Lesezugriffe, die das Dashboard direkt gegen die
+    Datenbank fährt (Supabase/PostgREST aus dem Browser) — das ist der überwiegende Teil
+    der Anzeige im Alltag. Ein Satz wie „Audit-Log jedes Patient-Datenzugriffs" stand hier
+    bis 03.09.2026 und war in diesem Umfang **nicht zutreffend**; eine zu weit gefasste
+    Zusicherung in einem TOM-Dokument ist selbst ein Mangel.
+  - Der Schutz gegen fremden Zugriff liegt an dieser Stelle bei RLS (§ 1.3 oben), nicht
+    beim Protokoll. Lückenlose Zugriffsprotokollierung auch für die Direktzugriffe ist
+    offen und als Aufgabe erfasst.
 - AI-Aufrufe protokolliert in `ai_audit_log` mit User-ID, Modell, Tokens, Kosten
 
 ### 1.4 Trennungskontrolle

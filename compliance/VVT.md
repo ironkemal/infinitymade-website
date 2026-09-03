@@ -60,6 +60,7 @@ InfinityMade tritt **doppelt** in Erscheinung:
 | **Rechtsgrundlage** | Art. 9 Abs. 2 lit. h + § 22 Abs. 1 Nr. 1 lit. b BDSG (Gesundheitsvorsorge) |
 | **Datenkategorien** | ICD-10-Diagnose, Diagnosetext, Diagnosegruppe, Heilmittel-Positionsnummern, Verordnungsart, Leitsymptomatik, Therapiefrequenz, Behandlungssitzungen mit Datum |
 | **Betroffene** | Patient*innen |
+| **Zugriff innerhalb der Praxis** | Inhaber*in vollständig; angestellte Therapeut*innen derselben Praxis **lesend** auf Verordnungen und Behandlungsdokumentation, im Umfang der Behandlungsdurchführung (Art. 9 Abs. 3 DSGVO — Personal unter Geheimhaltungspflicht; § 203 Abs. 1 Nr. 1 und Abs. 3 StGB). Technisch über RLS erzwungen, nicht über die Oberfläche. Entscheidung 03.09.2026, siehe LEGAL_DECISIONS.md |
 | **Empfänger** | Microsoft Azure OpenAI (Region Sweden Central, EU) — nur für OCR/Strukturierung mit Zero-Data-Retention-Vertrag; Datenannahmestelle (DMRZ o.ä.) als gesetzlich vorgesehener Empfänger |
 | **Drittland-Übermittlung** | Keine (Azure Sweden Central = EU) |
 | **Speicherdauer** | Behandlung + 10 Jahre (Heilberufe-Aufbewahrung); EDIFACT-Rohfiles 90 Tage nach Annahme-Bestätigung durch DMRZ, dann automatisch gelöscht |

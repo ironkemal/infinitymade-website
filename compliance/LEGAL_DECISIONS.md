@@ -82,3 +82,67 @@ Mitgründer). Das Fehlen einer schriftlichen Vereinbarung mit Beta-Kunden ist
 separat zu prüfen.
 
 Tutanak: `konsey/tutanak/2026-08-27-klarnamen-public-repo.md`
+
+## 2026-09-03 — Angestellte dürfen Verordnungen und Behandlungsdokumentation lesen
+
+**Ausgangslage.** Angestellte (`profiles.role = 'employee'`, verknüpft über
+`profiles.owner_id`) durften die Termine ihrer Praxis lesen, die Verordnungen
+(`verordnungen`) und die Behandlungsdokumentation (`podologie_behandlungen`) dagegen
+nicht — die Policies verglichen `owner_id = auth.uid()`. Das war **keine Entscheidung**,
+sondern eine nie geschlossene Lücke: der Menüpunkt „Verordnungen" ist in
+`nav-registry.js` seit jeher auch für `employee` freigegeben, die Seite blieb für sie
+aber leer. Der Physio-Verordnungstopf (`prescriptions`, `prescription_sessions`,
+`prescription_documents`) arbeitet seit jeher mit Team-Zugriff; nur der Podologie-Topf
+war der Ausreißer.
+
+**Einordnung (legal-de).**
+- **Art. 9 Abs. 2 lit. h i. V. m. Abs. 3 DSGVO, § 22 Abs. 1 Nr. 1 lit. b BDSG** tragen
+  die Verarbeitung: der behandelnde Therapeut ist Personal unter Geheimhaltungspflicht,
+  die Behandlung ist der Zweck selbst. Eine gesonderte Einwilligung ist nicht nötig.
+- **§ 203 Abs. 3 S. 1 StGB:** kein Offenbaren, wenn Geheimnisse den „berufsmäßig tätigen
+  Gehilfen" zugänglich gemacht werden. Physio-, Ergo-, Logopädie- und Podologie-Berufe
+  sind über ihr jeweiliges Berufsgesetz (MPhG, ErgThG, LogopG, PodG) darüber hinaus
+  **selbst** Geheimnisträger nach § 203 Abs. 1 Nr. 1. Die Lage des Inhabers verschlechtert
+  sich durch den Zugriff nicht. Die bereits unterschriebene Verpflichtung auf das
+  Datengeheimnis genügt.
+- **§ 630f Abs. 2, § 630h Abs. 3 BGB:** die bisherige Sperre war rechtlich das größere
+  Risiko. Wer nicht schreiben darf, dokumentiert nicht zeitnah und nicht aus erster Hand;
+  eine unzureichende Dokumentation kehrt im Streitfall die Beweislast um.
+- **AVV/DPA bleibt unberührt** — die Rollenverteilung innerhalb der Praxis ist eine
+  Organisationsentscheidung des Verantwortlichen (Art. 32 Abs. 4 DSGVO), keine Frage der
+  Auftragsverarbeitung.
+
+**Entschieden.** Angestellte bekommen **Leserecht** auf `verordnungen` und
+`podologie_behandlungen` ihres Inhabers, umgesetzt als zusätzliche SELECT-Policy nach dem
+bestehenden `bookings`-Muster (Vergleich gegen `profiles.owner_id`, strikt innerhalb
+desselben Mandanten). **Schreiben bleibt beim Inhaber**, aus drei Gründen:
+1. `podologie_behandlungen` führt keine Spalte, die die behandelnde Person benennt — ein
+   Schreibrecht ließe sich heute nur praxisweit erteilen, jeder könnte die Dokumentation
+   jedes Kollegen ändern. Bei einer Dokumentation nach § 630f BGB die falsche Granularität.
+2. Es gibt dafür keinen Bildschirm: die Podologie-Abrechnung ist owner-only.
+3. `verordnungen.status` steuert die § 302-Kette und hat serverseitig eine
+   Übergangsprüfung, an der ein Direktschreiben vorbeiginge.
+Das Schreibrecht wird nachgezogen, sobald eine Spalte für die behandelnde Person
+existiert (als Aufgabe erfasst).
+
+**Sicherheitsvotum (guvenlik).** Kein Veto — die Mandantengrenze bleibt unberührt, es ist
+eine Grenze *innerhalb* eines Auftraggebers. Registereintrag A-06 („fünf Tabellen ohne
+Team-Zugriff") ist damit für zwei der fünf Tabellen geschlossen; `fußstatus`,
+`patient_notes` und `warteliste` bleiben offen.
+
+**Nebenbefund, mitentschieden.** Bei der Prüfung stellte sich heraus, dass `TOM.md` mit
+„Audit-Log jedes Patient-Datenzugriffs" mehr zusicherte, als das Produkt leistet:
+protokolliert werden die Zugriffe über die Backend-API und die DSGVO-Vorgänge, **nicht**
+die Direktzugriffe des Dashboards auf die Datenbank. Der Umfang ist in TOM.md §1.3
+richtiggestellt und als Risiko R17 in der DSFA erfasst. Eine zu weit gefasste Zusicherung
+in einem TOM-Dokument ist selbst ein Mangel — deshalb korrigiert und nicht stehen gelassen.
+
+**Mitlaufende Dokumentation.** `TOM.md` §1.3 (Rollen + Protokollumfang), `VVT.md`
+Verarbeitung 3 (Zeile „Zugriff innerhalb der Praxis"), `DSFA.md` R16 und R17.
+Eine neue DSFA nach Art. 35 wird nicht ausgelöst: weder neue Technologie noch neuer
+Zweck noch neue Empfänger.
+
+**Neubewertung ausgelöst durch:** ersten Kunden mit mehreren Standorten (die
+Standorttrennung ist keine RLS-Zusicherung), oder wenn die Rolle `employee` auch an
+nicht-klinisches Personal (Empfang) vergeben wird. Beide Auslöser sind identisch mit
+denen des Eintrags vom 28.08.2026.
