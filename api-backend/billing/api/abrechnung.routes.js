@@ -32,6 +32,7 @@ import {
   legsFuer, LEGS_BY_FACHBEREICH,
   abrechnungscodeAusLegs, tarifkennzeichenAusLegs,
 } from '../codes/legs.js';
+import { bundeslandFuerPlz, bundeslandFehlerText } from '../codes/plz-bundesland.js';
 
 const router = express.Router();
 const supabase = createClient(
@@ -59,29 +60,28 @@ function nameParts(lead) {
   return { vorname: lead?.first_name || '', nachname: lead?.last_name || '' };
 }
 
-function getBundeslandFromPlz(plz) {
-  if (!plz || typeof plz !== 'string') return 'NW';
-  const prefix = plz.substring(0, 2);
-  const prefixMap = {
-    '68': 'BW', '69': 'BW', '70': 'BW', '71': 'BW', '72': 'BW', '73': 'BW', '74': 'BW', '75': 'BW', '76': 'BW', '77': 'BW', '78': 'BW', '79': 'BW', '88': 'BW', '89': 'BW',
-    '63': 'BY', '80': 'BY', '81': 'BY', '82': 'BY', '83': 'BY', '84': 'BY', '85': 'BY', '86': 'BY', '87': 'BY', '90': 'BY', '91': 'BY', '92': 'BY', '93': 'BY', '94': 'BY', '95': 'BY', '96': 'BY', '97': 'BY',
-    '10': 'BE', '13': 'BE',
-    '14': 'BB', '15': 'BB', '16': 'BB', '19': 'BB',
-    '27': 'HB', '28': 'HB',
-    '20': 'HH', '21': 'HH', '22': 'HH',
-    '34': 'HE', '35': 'HE', '36': 'HE', '60': 'HE', '61': 'HE', '63': 'HE', '64': 'HE', '65': 'HE',
-    '17': 'MV', '18': 'MV', '19': 'MV',
-    '21': 'NI', '26': 'NI', '27': 'NI', '29': 'NI', '30': 'NI', '31': 'NI', '37': 'NI', '38': 'NI', '49': 'NI',
-    '32': 'NW', '33': 'NW', '40': 'NW', '41': 'NW', '42': 'NW', '44': 'NW', '45': 'NW', '46': 'NW', '47': 'NW', '48': 'NW', '50': 'NW', '51': 'NW', '52': 'NW', '53': 'NW', '57': 'NW', '58': 'NW', '59': 'NW',
-    '54': 'RP', '55': 'RP', '56': 'RP', '67': 'RP',
-    '66': 'SL',
-    '01': 'SN', '02': 'SN', '03': 'SN', '04': 'SN', '07': 'SN', '08': 'SN', '09': 'SN',
-    '06': 'ST', '38': 'ST', '39': 'ST',
-    '21': 'SH', '22': 'SH', '23': 'SH', '24': 'SH', '25': 'SH',
-    '07': 'TH', '36': 'TH', '37': 'TH', '98': 'TH', '99': 'TH'
-  };
-  if (plz.startsWith('10') || plz.startsWith('13') || (plz.startsWith('14') && parseInt(plz) <= 14199)) return 'BE';
-  return prefixMap[prefix] || 'NW';
+// Bundesland der Praxis — für die Preisabfrage `heilmittel_tarif.bundesland`.
+//
+// Bis 04.09.2026 stand hier eine Tabelle aus PLZ-Präfixen mit neun doppelten
+// Schlüsseln; JavaScript behielt still den letzten, und ein `|| 'NW'` am Ende
+// machte aus jeder unbekannten PLZ Nordrhein-Westfalen. Beides schlug in Geld
+// um, ohne eine Zeile Fehlermeldung. Jetzt: vollständige Tabelle, kein
+// Vorgabewert — siehe ../codes/plz-bundesland.js.
+//
+// Gibt die PLZ keine eindeutige Antwort her, liefert diese Funktion null und
+// der Aufrufer bricht mit 422 ab, statt mit einem geratenen Preis zu senden.
+function bundeslandDerPraxis(profile) {
+  return bundeslandFuerPlz(profile?.zip || profile?.plz);
+}
+
+// 422-Antwort, wenn das Bundesland nicht feststeht. Ein falscher Preis fällt
+// erst bei der Kasse auf (Absetzung); ein Abbruch fällt sofort auf.
+function bundeslandFehler(res, profile) {
+  return res.status(422).json({
+    error: bundeslandFehlerText(profile?.zip || profile?.plz),
+    code: 'BUNDESLAND_UNBEKANNT',
+    plz: profile?.zip || profile?.plz || null,
+  });
 }
 
 // findPriceForDate() ist nach billing/preise/resolver.js gewandert (findTarifForDate)
@@ -539,7 +539,8 @@ router.post('/abrechnung/create', async (req, res) => {
     const sammelRechnungsnummer = buildSammelRechnungsnummer(year, week, datennummer);
 
     // ---- fetch tariffs for bundesland ----
-    const bundesland = getBundeslandFromPlz(profile.zip || profile.plz);
+    const bundesland = bundeslandDerPraxis(profile);
+    if (!bundesland) return bundeslandFehler(res, profile);
     const { data: tariffs } = await supabase
       .from('heilmittel_tarif')
       .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
@@ -1954,7 +1955,8 @@ router.post('/abrechnung/preflight', async (req, res) => {
     let dasName = kk?.name || 'Krankenkasse';
 
     // ---- fetch tariffs for bundesland ----
-    const bundesland = getBundeslandFromPlz(profile.zip || profile.plz);
+    const bundesland = bundeslandDerPraxis(profile);
+    if (!bundesland) return bundeslandFehler(res, profile);
     const { data: tariffs } = await supabase
       .from('heilmittel_tarif')
       .select('position_nr, heilmittel_code, preis_eur, zuzahlung_pflicht, gueltig_ab, gueltig_bis')
@@ -1984,7 +1986,12 @@ router.post('/abrechnung/preflight', async (req, res) => {
 //   Reads from verordnungen + podologie_behandlungen (NOT prescriptions).
 //   Existing /abrechnung/create (Physio) is untouched.
 
-function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen, bundesland = 'NW') {
+// `bundesland` war hier ein Parameter mit Vorgabewert 'NW' — benutzt hat ihn
+// der Rumpf nie. Podologie kennt keinen regionalen Tarif-Override
+// (preise/resolver.js: „Podologie kennt keinen Tarif-Override"), es gibt hier
+// also nichts, was am Bundesland haengt. Am 04.09.2026 mit der PLZ-Praefix-
+// Tabelle zusammen entfernt: ein totes 'NW' ist der naechste stille Fehler.
+function mapVerordnungToDtaShape(vord, lead, arzt, behandlungen) {
   if (!vord.kostentraeger_ik) {
     const e = new Error('Verordnung hat keine Krankenkasse (kostentraeger_ik fehlt).');
     e.status = 422; throw e;
@@ -2259,9 +2266,8 @@ router.post('/abrechnung/create-podologie', async (req, res) => {
     }
 
     // ---- map to DTA shape ----
-    const bundesland = getBundeslandFromPlz(profile.zip || profile.plz || '');
     const prescriptions = (vords || []).map(v =>
-      mapVerordnungToDtaShape(v, v.leads, v.aerzte, behByVord[v.id] || [], bundesland)
+      mapVerordnungToDtaShape(v, v.leads, v.aerzte, behByVord[v.id] || [])
     );
 
     // ---- numbering ----

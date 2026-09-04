@@ -155,13 +155,14 @@ test('BAUART: routes leitet nichts mehr aus dem Bundesland ins Tarifkennzeichen'
     'buildTarifkennzeichen ist entfernt — sie erzeugte den ungueltigen LEGS "7108000".');
 });
 
-test('BAUART: getBundeslandFromPlz speist NUR die Preisabfrage', () => {
-  // Die Funktion darf leben — Verguetungen sind regional, der LEGS ist es nicht.
+test('BAUART: das Bundesland speist NUR die Preisabfrage', () => {
+  // Die Zuordnung darf leben — Verguetungen sind regional, der LEGS ist es nicht.
+  // (04.09.2026 umbenannt: getBundeslandFromPlz → bundeslandDerPraxis, Karte 178.)
   // Jede Verwendung muss aber in einer heilmittel_tarif-Abfrage landen.
   const zeilen = routesQuelle.split('\n');
   const treffer = zeilen
     .map((z, i) => ({ z, i }))
-    .filter(({ z, i }) => z.includes('getBundeslandFromPlz(') && !zeilen[i].includes('function getBundeslandFromPlz'));
+    .filter(({ z }) => z.includes('bundeslandDerPraxis(') && !z.includes('function bundeslandDerPraxis'));
 
   assert.ok(treffer.length > 0, 'Erwartet Aufrufe fuer die Preisabfrage');
   for (const { z, i } of treffer) {

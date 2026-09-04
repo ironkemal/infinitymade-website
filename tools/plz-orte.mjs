@@ -78,7 +78,7 @@ if (iPlz < 0 || iOrt < 0 || iLandKrz < 0) {
 
 /** @type {Map<string, Set<string>>} */
 const karte = new Map();
-/** @type {Map<string, string>} */
+/** @type {Map<string, Set<string>>} */
 const bundesland = new Map();
 let verworfen = 0;
 
@@ -97,7 +97,14 @@ for (let n = 1; n < zeilen.length; n++) {
 
   if (!karte.has(plz)) karte.set(plz, new Set());
   karte.get(plz).add(ort);
-  if (iLand >= 0 && !bundesland.has(plz)) bundesland.set(plz, (f[iLand] || '').trim());
+  // Bundesland ueber `state_code` (BW/BY/…), nicht ueber den ausgeschriebenen
+  // Namen: das ist der Schluessel, mit dem `heilmittel_tarif.bundesland` gefuellt
+  // ist. Und alle Werte sammeln statt nur den ersten — elf PLZ liegen wirklich
+  // auf einer Landesgrenze; daraus still einen Wert zu waehlen waere genau der
+  // Fehler, der hier abgestellt wird.
+  const blKuerzel = (f[iLandKrz] || '').trim();
+  if (!bundesland.has(plz)) bundesland.set(plz, new Set());
+  bundesland.get(plz).add(blKuerzel);
 }
 
 // Ein PLZ-Gebiet kann echt mehrere Orte haben (laendlicher Raum). Mehrere Werte
@@ -117,14 +124,32 @@ const ausgabe = {
   orte: daten,
 };
 
-// Die Bundesland-Zuordnung verdoppelt die Datei und hat im Frontend keinen
-// Abnehmer. Sie waere die saubere Grundlage fuer das Tarifkennzeichen der
-// §302-Datei (heute in abrechnung.routes.js ueber PLZ-Praefixe geraten) —
-// dafuer dann mit `--bundesland` erzeugen.
+// Die Bundesland-Zuordnung hat im Frontend keinen Abnehmer und wuerde
+// module/plz-orte.json nur verdoppeln. Sie wird deshalb getrennt und nur auf
+// Anforderung erzeugt — und zwar nach api-backend/, weil das Dockerfile des
+// Backends kein "COPY . ." hat und nur eigene Verzeichnisse ins Image nimmt.
+//
+// Abnehmer: api-backend/billing/codes/plz-bundesland.js. Dort haengt die
+// Preisabfrage `heilmittel_tarif.bundesland` dran (Ops-Karte 178). NICHT das
+// Tarifkennzeichen — das kommt aus dem Vertrag, siehe billing/codes/legs.js.
 if (process.argv.includes('--bundesland')) {
-  const bl = Object.fromEntries([...bundesland].filter(([p]) => daten[p]));
-  writeFileSync(new URL('../module/plz-bundesland.json', import.meta.url), JSON.stringify(bl));
-  console.log(`→ module/plz-bundesland.json (${(JSON.stringify(bl).length / 1024).toFixed(0)} KB)`);
+  const bl = {};
+  let grenzfaelle = 0;
+  for (const [plz, kuerzel] of [...bundesland].sort((a, b) => a[0].localeCompare(b[0]))) {
+    if (!daten[plz]) continue;
+    const liste = [...kuerzel].sort();
+    if (liste.length > 1) grenzfaelle++;
+    bl[plz] = liste.length === 1 ? liste[0] : liste;
+  }
+  const ziel = new URL('../api-backend/billing/codes/plz-bundesland.json', import.meta.url);
+  const inhalt = {
+    quelle: 'zauberware/postal-codes-json-xml-csv (GeoNames), CC BY 4.0',
+    erzeugt: new Date().toISOString().slice(0, 10),
+    hinweis: 'Erzeugt mit tools/plz-orte.mjs --bundesland — nicht von Hand bearbeiten.',
+    bundesland: bl,
+  };
+  writeFileSync(ziel, JSON.stringify(inhalt));
+  console.log(`→ api-backend/billing/codes/plz-bundesland.json (${(JSON.stringify(inhalt).length / 1024).toFixed(0)} KB, ${Object.keys(bl).length} PLZ, ${grenzfaelle} Grenzfaelle)`);
 }
 
 const ziel = new URL('../module/plz-orte.json', import.meta.url);
