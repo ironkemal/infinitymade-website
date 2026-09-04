@@ -125,3 +125,25 @@ bağlansaydı çelişirlerdi; arşivlenmesi bu yüzden ayrıca doğru oldu.
 
 `PLAN_FEATURES` (`dashboard.js:664` → tek kullanım `:12656`) gerçekten kilit değil,
 sadece "paketiniz şunları içerir" metin listesi — o kısım doğruydu.
+
+---
+
+## `supabase-migrations-vor-baseline/` (14 dosya, taşındı 04.09.2026)
+
+Eskiden `supabase/migrations/`. **Silinmedi, taşındı** — tarih olarak duruyor.
+
+**Niye taşındı:** bu klasör hiçbir zaman şemanın kaynağı olmadı ve olduğu sanılıyordu.
+İçinde 14 dosya vardı, canlı veritabanında ise **227** migration kayıtlıydı; 14'ün
+yalnız **3'ü** canlıdaki kayıtla birebir eşleşiyordu. Yani buraya bakan biri şemanın
+ne olduğu konusunda yanlış bilgi alıyordu.
+
+04.09.2026'da şema dağıtımı için **baseline** kararı alındı: zincir bugünden başlıyor,
+geçmiş migration'lar tarih sayılıyor. Yeni ve tek geçerli zincir
+`api-backend/db/migrations/` altında. İki dizin bırakmak "iki gerçek" demek olurdu —
+bu hata bu depoda bir kez yapıldı (`onprem/schema/` iki ay bayat kaldı ve otorite
+sanıldı), tekrarlanmadı.
+
+**Buradan bir şey kurtarılabilir mi:** hayır, aksiyon için değil. Bir kolonun ne zaman
+eklendiği sorusu artık `db/REGISTER.md` ve `fortschritte/` üzerinden cevaplanıyor.
+
+Karar ve gerekçesi: `onprem/SCHEMA-VERTEILUNG.md` §5 ve §11.
