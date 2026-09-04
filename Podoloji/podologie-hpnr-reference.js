@@ -116,6 +116,10 @@ export const HPNR_PODOLOGIE = {
     gueltig_bis: '9999-12-31',
     grundlage: '§125 Abs. 1 SGB V',
     quelle: 'GKV-SV',
+    // ⛔ Momentaufnahme, NICHT AUTORITATIV (04.09.2026) — diese Datei wird von
+    //   preise_pruefen.mjs/preise_autoupdate.mjs NICHT geprüft und bleibt nach
+    //   der nächsten Preisrunde stumm veraltet. Maßgeblich ist immer
+    //   api-backend/billing/codes/podologie_positions.js.
     verguetung: { ab_2025_07_01: 35.16, ab_2026_07_01: 36.10 },
     quelle_detail: 'Anlage 1a Teil 2 Ziff. 1/2/3; Anlage 2 §2 Z.72, §3 Z.321',
     notiz: 'Standardposition für ALLE drei Maßnahmen. Hornhautabtragung ODER Nagelbearbeitung allein => IMMER 78010 + 78030, auch bei >20 Min Therapiezeit (FAK Q25).',
@@ -138,6 +142,7 @@ export const HPNR_PODOLOGIE = {
     gueltig_bis: '9999-12-31',
     grundlage: '§125 Abs. 1 SGB V',
     quelle: 'GKV-SV',
+    // ⛔ Momentaufnahme, NICHT AUTORITATIV — siehe Hinweis bei 78010 oben.
     verguetung: { ab_2025_07_01: 50.55, ab_2026_07_01: 51.92 },
     quelle_detail: 'Anlage 1a Z.167-171 + Teil 2 Ziff. 3 (Z.348-372); Anlage 2 §2 Z.82, §3 Z.332',
     notiz: 'NUR wenn Arzt die Komplexbehandlung (Heilmittel c) verordnet hat UND Therapiezeit >20 Min. Bei Einzelmaßnahme (Heilmittel a oder b) NICHT abrechenbar — sonst Retaxation.',

@@ -55,11 +55,24 @@ export const BEREICHE = {
     datei: join(__dirname, 'billing/codes/podologie_positions.js'),
     codeFeld: 'hpnr',
     importName: 'PODOLOGIE_PREISFENSTER',
+    autoWrite: true,
   },
   physiotherapie: {
     datei: join(__dirname, 'billing/codes/physio_positions.js'),
     codeFeld: 'x',
     importName: 'PHYSIO_PREISFENSTER',
+    // NICHT automatisch schreiben (04.09.2026, fonksiyon-ustasi): resolver.js
+    // lässt bei Physio einen `heilmittel_tarif`-Eintrag den Katalogpreis
+    // übersteuern (`!istPodologie && tariffs && datum`, resolver.js:81).
+    // 928 Zeilen in `heilmittel_tarif` sind heute unbefristet (gueltig_bis IS
+    // NULL, ab 2026-01-01) — ein automatisch geschriebenes neues Preisfenster
+    // hätte auf den Wegen, die `tariffs` mitgeben, KEINE reale Wirkung auf die
+    // Abrechnung. Ein "✅ automatisch aktualisiert" wäre dort eine falsche
+    // Zusicherung. Podologie kennt diesen Override nicht (siehe Kommentar in
+    // resolver.js) und bleibt automatisierbar. Sobald die `heilmittel_tarif`-
+    // Frage geklärt ist (Zeilen befristen oder Override abschaffen — offene
+    // Entscheidung aus resolver.js selbst), kann autoWrite hier auf true.
+    autoWrite: false,
   },
 };
 
@@ -117,7 +130,12 @@ export async function versucheBereich(codeFeld, datei, neuePreisrundeEintraege, 
     const neuerPreis = preisByCode.get(p[codeFeld]);
     return formatEntry(p, {
       preis: neuerPreis,
-      zuzahlung: p.zuzahlung == null ? null : Number((neuerPreis * 0.10).toFixed(2)),
+      // Kaufmännische Rundung, NICHT .toFixed(2): `50.55 * 0.10` ist binär
+      // 5.054999999999999…, .toFixed(2) rundet das fälschlich zu 5.05 ab statt
+      // zu 5.06 auf (fonksiyon-ustasi, 04.09.2026 — 78020 wäre beim ersten
+      // Auto-Update 1 Cent zu niedrig gewesen). Dieselbe Formel wie r2() in
+      // billing/preise/resolver.js und billing/zuzahlung/calculator.js.
+      zuzahlung: p.zuzahlung == null ? null : Math.round(neuerPreis * 0.10 * 100) / 100,
       gueltig_ab: neuesGueltigAb,
       gueltig_bis: '9999-12-31',
     });
@@ -184,6 +202,13 @@ async function main() {
         : bereichSchluessel;
       const cfg = BEREICHE[bereich];
       if (!cfg) { bericht.needsReview.push({ grund: `unbekannter Bereich: ${bereichSchluessel}`, details: eintraege }); continue; }
+      if (!cfg.autoWrite) {
+        bericht.needsReview.push({
+          grund: `${bereich}: neue Preisrunde erkannt, aber Auto-Write für diesen Bereich deaktiviert (siehe BEREICHE-Kommentar in preise_autoupdate.mjs)`,
+          details: eintraege,
+        });
+        continue;
+      }
 
       const mod = await import(`${pathToFileURL(cfg.datei).href}?t=${Date.now()}`);
       const fenster = mod[cfg.importName];

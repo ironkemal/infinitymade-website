@@ -33,6 +33,17 @@ function tempKopie() {
 const aktuellesFenster = PODOLOGIE_PREISFENSTER.find(f => f.gueltig_bis === '9999-12-31');
 const alleCodes = aktuellesFenster.positionen.map(p => p.hpnr);
 
+// heilmittel_tarif kann bei Physio den Katalogpreis übersteuern (resolver.js:81,
+// 928 unbefristete Zeilen laut DB-Check am 04.09.2026) — ein automatisch
+// geschriebenes Physio-Preisfenster hätte dort keine reale Wirkung. Solange das
+// nicht geklärt ist, MUSS Physio manuell bleiben; dieser Test verhindert, dass
+// jemand versehentlich autoWrite:true zurückflippt, ohne die DB-Frage zu klären.
+test('Physio bleibt manuell (heilmittel_tarif-Override), Podologie bleibt automatisierbar', () => {
+  assert.equal(BEREICHE.physiotherapie.autoWrite, false,
+    'Physio-autoWrite darf erst auf true, wenn heilmittel_tarif keinen Preis mehr übersteuern kann');
+  assert.equal(BEREICHE.podologie.autoWrite, true);
+});
+
 // ── Fall 1: sicher — exakt dieselbe Code-Menge, ein neues Datum ─────────────
 {
   const { dir, ziel } = tempKopie();
@@ -62,6 +73,32 @@ const alleCodes = aktuellesFenster.positionen.map(p => p.hpnr);
   test('sicherer Fall: geschriebene Datei bleibt syntaktisch gültiges JS', () => {
     // new Function statt eval — reiner Parse-Check, kein Ausführen von Modul-Semantik nötig
     assert.doesNotThrow(() => new Function(geschrieben.replace(/^export /gm, '')));
+  });
+}
+
+// ── Regressionstest: kaufmännische Rundung, NICHT .toFixed(2) ───────────────
+// fonksiyon-ustasi, 04.09.2026: `50.55 * 0.10` ist binär 5.054999999999999…,
+// .toFixed(2) rundet das fälschlich zu 5.05 ab statt zu 5.06 auf. 78020 kostet
+// heute exakt 50.55 € mit veröffentlichter Zuzahlung 5.06 € — genau der Fall,
+// der beim ersten Auto-Update-Lauf 1 Cent zu wenig erzeugt hätte.
+{
+  const { dir, ziel } = tempKopie();
+  const grenzfall = aktuellesFenster.positionen.find(p => p.hpnr === '78020');
+  assert.ok(grenzfall, 'Testvoraussetzung: 78020 muss im aktuellen Fenster existieren');
+  const ergebnis = await versucheBereich('hpnr', ziel, [{ code: '78020', xmlPreis: 50.55, xmlGueltigAb: '2099-07-01' }]
+      .concat(alleCodes.filter(c => c !== '78020').map(c => ({
+        code: c, xmlPreis: aktuellesFenster.positionen.find(p => p.hpnr === c).preis, xmlGueltigAb: '2099-07-01',
+      }))),
+    aktuellesFenster, false);
+  const geschrieben = readFileSync(ziel, 'utf8');
+  rmSync(dir, { recursive: true, force: true });
+
+  test('Rundungs-Grenzfall 50,55 € → Zuzahlung 5,06 € (nicht 5,05 €)', () => {
+    assert.equal(ergebnis.ok, true, 'sollte ok:true liefern — ' + ergebnis.grund);
+    const idx = geschrieben.lastIndexOf(`hpnr: '78020'`);
+    const zeile = geschrieben.slice(idx, idx + 200);
+    assert.ok(zeile.includes('zuzahlung: 5.06'), `erwartet "zuzahlung: 5.06" in: ${zeile}`);
+    assert.ok(!zeile.includes('zuzahlung: 5.05'), 'darf NICHT auf 5.05 abrunden');
   });
 }
 
