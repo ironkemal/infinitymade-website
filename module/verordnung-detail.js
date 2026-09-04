@@ -356,21 +356,33 @@ function _terminePodo(rx, esc, termine) {
               <span style="font-size:11px;color:var(--text-muted);"> unvergeben</span></div>
        </div>`;
 
+  // Kemal, 04.09.2026: der Stift soll VOR und NACH dem Zuordnen greifen — ein
+  // falsch gebuchter Termin (Leistung, Uhrzeit) korrigiert sich sonst nur über
+  // den Umweg Kalender/Tagesplan, obwohl er hier schon vor Augen steht.
+  const stift = (b) => `<button type="button" data-termin-bearbeiten="${esc(b.id)}" title="Termin bearbeiten (Leistungen, Uhrzeit, verschieben)"
+        style="${knopfStil}padding:2px 6px;">✏️</button>`;
+
   const zeile = (b) => {
     const abgesagt = !istVergeben(b);
     return `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;">
       <span style="font-size:11px;color:${abgesagt ? 'var(--text-muted)' : 'var(--text-main)'};${abgesagt ? 'text-decoration:line-through;' : ''}">
         ${esc(_datumZeit(b.start_time))}${abgesagt ? ' · abgesagt' : ''}
       </span>
-      <button type="button" data-termin-loesen="${esc(b.id)}" title="Zuordnung zu dieser Verordnung aufheben"
-        style="${knopfStil}">lösen</button>
+      <span style="display:flex;gap:4px;flex-shrink:0;">
+        ${stift(b)}
+        <button type="button" data-termin-loesen="${esc(b.id)}" title="Zuordnung zu dieser Verordnung aufheben"
+          style="${knopfStil}">lösen</button>
+      </span>
     </div>`;
   };
 
   const vorschlag = (b) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;">
       <span style="font-size:11px;color:var(--text-main);">${esc(_datumZeit(b.start_time))}</span>
-      <button type="button" data-termin-binden="${esc(b.id)}" title="Diesen einen Termin dieser Verordnung zuordnen"
-        style="${knopfStil}">zuordnen</button>
+      <span style="display:flex;gap:4px;flex-shrink:0;">
+        ${stift(b)}
+        <button type="button" data-termin-binden="${esc(b.id)}" title="Diesen einen Termin dieser Verordnung zuordnen"
+          style="${knopfStil}">zuordnen</button>
+      </span>
     </div>`;
 
   const inhalt = `
@@ -735,6 +747,28 @@ function _verdrahteEinheiten(wurzel, { supabase, vord, ctx }) {
 }
 
 /**
+ * Den Termin unter dem Stift im bestehenden Terminbearbeiten-Dialog öffnen —
+ * demselben, den Kalender und Tagesplan schon verwenden (Leistungen
+ * hinzufügen/entfernen, Uhrzeit, „Verschieben"). Kein neuer Dialog: dieser hier
+ * ruft nur `window.openBookingModal()` an, ANGESTOSSEN statt neu gebaut.
+ *
+ * `window.openBookingModal` statt eines Imports, weil `dashboard.js` als
+ * `<script type="module">` läuft — Top-Level-Funktionen werden dort nicht von
+ * selbst global (CLAUDE.md „Inline onclick ES-module içinden çalışmaz").
+ * `select('*')`, weil der Dialog mehr Felder erwartet (Notizen, Telefon,
+ * Zahlart, Hausbesuch …) als `ladePodoTermine()` für die Spalte lädt — die
+ * lädt bewusst schlank, weil sie nur die Liste zeichnet, nicht den Dialog.
+ */
+async function _terminBearbeiten(sb, bookingId) {
+  const { data, error } = await sb.from('bookings').select('*').eq('id', bookingId).maybeSingle();
+  if (error || !data) {
+    console.error('[verordnung-detail] Termin laden:', error);
+    return;
+  }
+  if (typeof window.openBookingModal === 'function') window.openBookingModal(data);
+}
+
+/**
  * Zuordnen und Lösen einzelner Termine.
  *
  * Ein Klick betrifft genau EINEN Termin — das ist der Punkt der Karte
@@ -772,6 +806,14 @@ function _verdrahteTermine(wurzel, { supabase, vord, ctx }) {
   wurzel.querySelectorAll('[data-termin-loesen]').forEach(b => {
     b.addEventListener('click', () => lauf(b, () =>
       loeseTermin(supabase, { bookingId: b.dataset.terminLoesen })));
+  });
+
+  // Stift: öffnet nur den Dialog, schreibt hier nichts — kein `lauf()`. Das
+  // Panel selbst zieht nach, sobald der Dialog speichert: `bookings:changed`
+  // kommt schon aus der Realtime-Verbindung auf `bookings` (kein eigenes
+  // `emit()` hier nötig), und `module/verordnung-liste.js` hört genau darauf.
+  wurzel.querySelectorAll('[data-termin-bearbeiten]').forEach(b => {
+    b.addEventListener('click', () => _terminBearbeiten(supabase, b.dataset.terminBearbeiten));
   });
 }
 

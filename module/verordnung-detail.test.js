@@ -159,6 +159,20 @@ test('Podologie: zugeordnete und zuordenbare Termine bekommen je einen eigenen K
   assert.equal((html.match(/data-termin-loesen=/g) || []).length, 1);
 });
 
+test('Podologie: der Stift zum Bearbeiten steht bei vergebenen UND unvergebenen Terminen', () => {
+  // Kemal, 04.09.2026: „ikisinide zuordnen yapilmadan öncede degistirilebilir
+  // olsun yapildiktan sonrada" — ein Termin lässt sich unabhängig davon
+  // bearbeiten, ob er dieser Verordnung schon zugeordnet ist.
+  const html = verordnungDetailHtml(PODO, {
+    escapeHtml: esc, quelle: 'podologie',
+    termine: {
+      vergeben:   [{ id: 'b1', start_time: '2026-08-10T08:00:00Z', status: 'confirmed' }],
+      kandidaten: [{ id: 'b2', start_time: '2026-08-17T08:00:00Z', status: 'confirmed' }],
+    },
+  });
+  assert.equal((html.match(/data-termin-bearbeiten=/g) || []).length, 2);
+});
+
 /* ── Der Riegel ───────────────────────────────────────────────────────────── */
 
 test('abgerechnete Verordnung bietet kein Ändern der Menge an', () => {

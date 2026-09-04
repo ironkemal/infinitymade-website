@@ -20776,7 +20776,7 @@ window.deleteAerzte = deleteAerzte;
 window.renderVorlagenContentForm = renderVorlagenContentForm;
 window._abState = _abState;
 window.openRezeptModal = openRezeptModal;
-window.openRezeptConfirmModal = openRezeptConfirmModal;
+window.openRezeptConfirmModal = openRezeptConfirmModal; window.openBookingModal = openBookingModal;
 
 // ============================================================================
 // GoBD-Kassenbuch (Belegliste) UI Mechanics (Feature 4)

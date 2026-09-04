@@ -89,6 +89,16 @@ export async function verordnungenListeLaden(ctx) {
     on('verordnungen:changed', () => {
       if (document.getElementById('vordTbody')?.isConnected) verordnungenListeLaden(ctx);
     });
+    // Der Stift in der Termine-Spalte (module/verordnung-detail.js) öffnet den
+    // Terminbearbeiten-Dialog aus dashboard.js — der schreibt an `bookings`,
+    // nicht an `verordnungen:changed`. Ohne diesen Zuhörer zeigte die
+    // aufgeschlagene Verordnung nach dem Speichern weiter den alten Termin,
+    // bis man sie manuell neu öffnete.
+    on('bookings:changed', () => {
+      if (_auswahl && document.getElementById('vordDetailContent')?.isConnected) {
+        oeffne({ supabase: ctx.supabase, escapeHtml: ctx.escapeHtml, quelle: _auswahl.quelle, id: _auswahl.id });
+      }
+    });
   }
   // Einmal verdrahten, nicht bei jedem Laden erneut — sonst sammeln sich
   // Handler auf demselben Knopf an.
