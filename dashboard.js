@@ -14,16 +14,17 @@ import { initAnfrageBearbeiten, oeffneAnfrageBearbeiten } from './module/anfrage
 import { checkPrescriptionCompliance, istBerichtOffen, istHarterRiegel, frageBerichtFreigabe } from './module/abrechnung-freigabe.js?v=20260826';
 import { renderPatientenliste, patientPasstZurSuche } from './module/patientenliste.js?v=20260815c';
 import { parseIcdList, matchIcdToDg, autoSelectDg, soleIcdForDg, dgVorschlag, normDgCode } from './icd-dg-match.js?v=20260831a';
-import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260902';
+import { statusBadge as abrStatusBadge, ladeStatusJePatient, oeffneStatusDialogFuer } from './module/abrechnungsstatus.js?v=20260903';
 import { mountFussbefund, renderLegendeSettings, verdrahteFussbefundKnopf, oeffneFussbefundFuerTermin, oeffneFussbefundEintrag } from './module/fussbefund.js?v=20260903';
 import { renderFussbefundArchiv } from './module/fussbefund-archiv.js?v=20260830';
 import { mountPodologieAbrechnung, setPodVorwahl, getPodVerordnung } from './module/podologie-abrechnung.js?v=20260901';
 import { loadDgIcdRules, getDgIcdRules, dgOptionenSperren } from './module/diagnosegruppen-regeln.js?v=20260831a';
 import { mountVerordnungPodo } from './module/verordnung-podo.js?v=20260815a';
+import { montiereVerordnungPruefen } from './module/verordnung-pruefen-knopf.js?v=20260903';
 import { behandlungsbeginnFrist } from './module/heilmittel-fristen.js?v=20260814';
 import { belegnummerRosette, belegnummerText } from './module/belegnummer.js?v=20260817';
-import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260902';
-import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260902';
+import { verordnungenListeLaden } from './module/verordnung-liste.js?v=20260903';
+import { zeigeVerordnungDetail } from './module/verordnung-detail.js?v=20260903';
 import { frageZahlungsstatus } from './module/rechnung-zahlung.js?v=20260814';
 import { zuzahlungFuerRezept } from './module/zuzahlung-rechnen.js?v=20260902';
 import { korrekturAusPanel, KORREKTUR_KNOPF } from './module/zuzahlung-korrektur.js?v=20260901';
@@ -41,7 +42,8 @@ import { ladePodoPositionen } from './module/podologie-positionen.js?v=20260902'
 import { zeigePatientOhneTermin, zeigeTerminModus, rendereNotizen } from './module/termin-panel-patient.js?v=20260903';
 import { initKioskMode as mountKiosk } from './module/kiosk.js?v=20260814';
 import { rendereVeroKarten, waehleVerordnung, zeigeDienstleistungsfeld } from './module/termin-verordnung.js?v=20260816b';
-import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen } from './module/termin-leistungen.js?v=20260903b';
+import { mountTerminLeistungen, setzeLeistungen, speichereLeistungen, leseLeistungen } from './module/termin-leistungen.js?v=20260903b';
+import { leseDauer, setzeDauer, gelernteDauer, STANDARD_DAUER_MIN, mountTerminDauer, uebernehmeDauerQuelle, dauerQuelle, setzeDauerQuelleZurueck } from './module/termin-dauer.js?v=20260903b';
 import { pruefeFrequenz, sitzungenProWoche, verteileWochentage } from './module/frequenz-pruefung.js?v=20260816a';
 import { druckeTerminzettel, anredeAusGeschlecht } from './module/termin-druck.js?v=20260816b';
 import { parseNameMitGeburt, findeLeadIdZuTermin, ladeKommendeTermineDesPatienten } from './module/termin-patient-bezug.js?v=20260817';
@@ -59,6 +61,8 @@ import { ermittleKostentraegerSpalte, kostentraegerSpalteDa } from './module/kos
 import { verdrahteKontextmenue } from './module/kalender-kontextmenue.js?v=20260830';
 import { TERMIN_SELECT, ladeTerminVollstaendig } from './module/termin-laden.js?v=20260830';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot, machtWiederWartend } from './module/warteliste-nachruecker.js?v=20260903b';
+import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
+import { offerAusfallrechnung as offerAusfallrechnungModal } from './module/ausfallrechnung.js?v=20260904';
 import { rendereWarteliste, wartelisteStatus, setzeWartelisteStatus } from './module/warteliste-ansicht.js?v=20260903';
 import {
   BK_PANEL_OFFSET, setzeAktionsKopf, verdrahteAktionsPatientensuche, setzeTerminAuswahlLabel,
@@ -66,6 +70,12 @@ import {
   verteileOffeneSitzungen,
 } from './module/termin-aktionen.js?v=20260817';
 import { gleicheSitzungenAb } from './module/sitzung-abgleich.js?v=20260816';
+// Seit der Zusammenlegung der zwei Verordnungstöpfe (04.09.2026): Podologie
+// steht in derselben Tabelle wie Physio/Ergo/Logo, führt aber bewusst KEIN
+// Einheiten-Hauptbuch (Begründung: module/verordnung-termine.js). Jeder Aufruf
+// von gleicheSitzungenAb() muss diese Bremse respektieren, sonst legt er
+// podologischen Verordnungen ein Sitzungsbuch an, das niemand pflegt.
+import { fuehrtSitzungsbuch } from './module/verordnung-topf.js?v=20260904';
 import { mountEinwilligung, openEinwilligungFlow, renderEinwilligungListe } from './module/patienten-einwilligung.js?v=20260814';
 import { initArztRegister, wireArztFeld, renderArztRegister, mountArztPanel } from './module/arzt-register.js?v=20260816';
 
@@ -1725,7 +1735,7 @@ async function loadScheduleBookings(date) {
   const ownerId = getOwnerId();
 
   const { data: bookings } = await supabase.from('bookings')
-    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
+    .select('id,user_id,service_id,start_time,end_time,customer_name,customer_phone,status,hausbesuch,notes,owner_id,fahrt_status,vehicle_id,start_km,end_km,fahrt_started_at,fahrt_arrived_at,fahrt_ended_at,is_group,group_capacity,group_parent_id,lead_id,dauer_quelle,services(title,color,code),prescription_sessions(id,session_number,prescriptions(id,heilmittel,heilmittel_feld_text,heilmittel_position,diagnosegruppe,anzahl_einheiten,icd10,rezept_typ,ausstellungsdatum,status,zuzahlung_befreit,zuzahlung_eur,zuzahlung_kassiert_am,zuzahlung_zahlart,patient_id,is_dringend,is_blanko,is_lhb_bvb,abrechnung_status,frequenz,arzt_id,aerzte(arzt_name,fachrichtung)))')
     .eq('owner_id', ownerId)
     .gte('start_time', dStart).lte('start_time', dEnd)
     .neq('status', 'cancelled');
@@ -2530,6 +2540,7 @@ async function prefillBookingModalFromSlot(dateStr, timeStr, empId, serviceId, s
   document.getElementById('bkSeriesToggle').checked = false;
   resetBkAnzahl();
   document.getElementById('bkSeriesFields').hidden = true;
+  setzeDauerQuelleZurueck();
   populateEmpSelects(empId);
   await populateSrvSelect(serviceId);
   openModal('bookingModal');
@@ -3080,6 +3091,7 @@ async function prefillBookingModal(startStr) {
   document.getElementById('bkSeriesFields').hidden = true;
   document.getElementById('bkSpecialBanner').hidden = true;
   document.getElementById('bkDocAssignHint').hidden = true;
+  setzeDauerQuelleZurueck();
   
   // Group Appointments Reset
   const isGrpCheckbox = document.getElementById('bkIsGroup');
@@ -4709,138 +4721,24 @@ function ausfallBizForBooking(_booking) {
   return ausfallConfig?.ausfall_enabled ? ausfallConfig : null;
 }
 
-function ausfallSuggestedAmount(cfg, booking) {
-  if (cfg.ausfall_mode === 'percent' && cfg.ausfall_percent > 0) {
-    const srv = (ownerServices || []).find(s => s.id === booking.service_id);
-    const price = srv ? parseFloat(String(srv.price || '').replace(',', '.')) : NaN;
-    if (price > 0) return +(price * cfg.ausfall_percent / 100).toFixed(2);
-    return null; // percent mode but no service price — manual entry
-  }
-  return cfg.ausfall_amount_eur > 0 ? Number(cfg.ausfall_amount_eur) : null;
-}
-
-// Shows the offer modal if the business has Ausfallgebühr enabled.
-// Resolves when the user has decided (created or dismissed) — callers that
-// delete the booking afterwards must await this.
-// Liest, ob der Patient eine Ausfallvereinbarung unterschrieben hat. Fehlt sie,
-// warnt der Dialog sichtbar — blockiert aber nicht, weil viele Praxen die
-// Vereinbarung auf Papier führen (Entscheidung Melih, 10.08.2026).
-async function ausfallVereinbarungDatum(leadId) {
-  if (!leadId) return null;
-  try {
-    const { data } = await supabase.from('leads')
-      .select('ausfallvereinbarung_am')
-      .eq('id', leadId).maybeSingle();
-    return data?.ausfallvereinbarung_am || null;
-  } catch (e) {
-    console.warn('[ausfallVereinbarungDatum]', e);
-    return null;
-  }
-}
-
+// Dialog + Anfrage an /billing/ausfall/create — geteilt mit `kalender.js`,
+// siehe module/ausfallrechnung.js. Preis für den Prozent-Modus kommt aus
+// `ownerServices`, das nur diese Seite kennt.
 function offerAusfallrechnung(booking, reason) {
-  return new Promise(resolve => {
-    if (!booking) return resolve(false);
-    const biz = ausfallBizForBooking(booking);
-    if (!biz) return resolve(false);
-
-    const suggested = ausfallSuggestedAmount(biz, booking);
-    const reasonLabel = reason === 'late_cancel' ? 'Kurzfristige Absage' : 'Patient nicht erschienen';
-
-    const existing = document.getElementById('_ausfallModal');
-    if (existing) existing.remove();
-    const overlay = document.createElement('div');
-    overlay.id = '_ausfallModal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-    overlay.innerHTML = `
-      <div style="background:var(--bg-card-solid,#1e293b);color:var(--text-main,#e2e8f0);border-radius:12px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.4);">
-        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Ausfallrechnung erstellen?</div>
-        <div style="font-size:13px;color:var(--text-muted,#94a3b8);margin-bottom:14px;">
-          ${reasonLabel} — ${escapeHtml(booking.customer_name || '')}${booking.start_time ? ', ' + new Date(booking.start_time).toLocaleDateString('de-DE') : ''}
-        </div>
-        <label style="font-size:12px;color:var(--text-muted,#94a3b8);display:block;margin-bottom:4px;">Betrag (€)</label>
-        <input id="_afAmount" type="number" min="0.01" step="0.01" value="${suggested != null ? suggested.toFixed(2) : ''}"
-          style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border,#334155);background:transparent;color:inherit;font-size:14px;margin-bottom:6px;" />
-        <div id="_afErr" style="color:var(--danger,#f87171);font-size:12px;display:none;margin-bottom:6px;"></div>
-        <div id="_afVereinbarung" style="font-size:12px;margin-bottom:10px;" hidden></div>
-        <div style="font-size:11px;color:var(--text-muted,#94a3b8);margin-bottom:16px;">Private Rechnung an den Patienten (Schadensersatz, umsatzsteuerfrei). Setzt eine unterschriebene Ausfallvereinbarung voraus.</div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;">
-          <button id="_afSkip" class="btn-secondary">Nicht berechnen</button>
-          <button id="_afCreate" class="btn-primary">Rechnung erstellen</button>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-
-    // Ausfallvereinbarung nachladen — die Rechnung nimmt im Text darauf Bezug,
-    // deshalb muss sichtbar sein, ob sie überhaupt vorliegt.
-    ausfallVereinbarungDatum(booking.lead_id).then(datum => {
-      const box = overlay.querySelector('#_afVereinbarung');
-      if (!box) return;
-      box.hidden = false;
-      if (datum) {
-        box.style.color = 'var(--text-muted, #94a3b8)';
-        box.textContent = `✓ ${t('af_vereinbarung_seit')} ${new Date(datum).toLocaleDateString('de-DE')}`;
-      } else {
-        box.style.color = 'var(--warning-text, #b45309)';
-        box.textContent = `⚠ ${t('af_keine_vereinbarung')}`;
-      }
-    });
-
-    const done = (created) => { overlay.remove(); resolve(created); };
-    overlay.onclick = e => { if (e.target === overlay) done(false); };
-    overlay.querySelector('#_afSkip').onclick = () => done(false);
-    // Wird auf true gesetzt, sobald der Server gesperrt hat und der Praxisinhaber
-    // bewusst übersteuern will. Der Server protokolliert das dann in notes.
-    let uebersteuern = false;
-
-    overlay.querySelector('#_afCreate').onclick = async () => {
-      const btn = overlay.querySelector('#_afCreate');
-      const errEl = overlay.querySelector('#_afErr');
-      const amount = parseFloat(overlay.querySelector('#_afAmount').value.replace(',', '.'));
-      if (!(amount > 0)) { errEl.textContent = 'Bitte gültigen Betrag eingeben.'; errEl.style.display = ''; return; }
-      btn.disabled = true;
-      btn.textContent = 'Erstelle…';
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const res = await fetch(`${API}/billing/ausfall/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-          body: JSON.stringify({ bookingId: booking.id, amountEur: amount, reason, override: uebersteuern }),
-        });
-        if (!res.ok) {
-          let msg = await res.text();
-          let payload = null;
-          try { payload = JSON.parse(msg); msg = payload.error || msg; } catch (_) {}
-          // 422 = Absagefrist nicht verletzt oder Funktion aus. Ist der Fall
-          // übersteuerbar, bekommt die Praxis einen zweiten, bewussten Klick.
-          if (res.status === 422 && payload?.uebersteuerbar && !uebersteuern) {
-            uebersteuern = true;
-            errEl.innerHTML = `<strong>${escapeHtml(t('af_gesperrt_titel'))}:</strong> ${escapeHtml(msg)}`;
-            errEl.style.display = '';
-            btn.disabled = false;
-            btn.textContent = t('af_trotzdem_erstellen');
-            return;
-          }
-          throw new Error(msg);
-        }
-        const html = await res.text();
-        const w = window.open('', '_blank');
-        if (w) {
-          w.document.write(html);
-          w.document.close();
-          w.onload = () => w.print();
-        } else {
-          showToast('Popup-Blocker aktiv — Rechnung unter Mahnwesen → Ausfallrechnungen abrufbar.', 'error');
-        }
-        showToast('Ausfallrechnung erstellt ✓');
-        done(true);
-      } catch (e) {
-        errEl.textContent = 'Fehler: ' + e.message;
-        errEl.style.display = '';
-        btn.disabled = false;
-        btn.textContent = 'Rechnung erstellen';
-      }
-    };
+  if (!booking) return Promise.resolve(false);
+  const biz = ausfallBizForBooking(booking);
+  const srv = (ownerServices || []).find(s => s.id === booking.service_id);
+  const price = srv ? parseFloat(String(srv.price || '').replace(',', '.')) : NaN;
+  return offerAusfallrechnungModal({
+    supabase, apiBase: API, booking, reason, config: biz,
+    priceEur: price > 0 ? price : null,
+    showToast,
+    texts: {
+      vereinbarungSeit: t('af_vereinbarung_seit'),
+      keineVereinbarung: t('af_keine_vereinbarung'),
+      gesperrtTitel: t('af_gesperrt_titel'),
+      trotzdemErstellen: t('af_trotzdem_erstellen'),
+    },
   });
 }
 
@@ -5232,7 +5130,10 @@ async function openBookingModal(b) {
   
   if (b.service_id && b.start_time && b.end_time) {
     const actualDur = Math.round((new Date(b.end_time) - new Date(b.start_time)) / 60000);
-    updateBkDuration(b.service_id, actualDur);
+    // Erst abwarten, dann die gespeicherte Herkunft uebernehmen — setzeDauer()
+    // innerhalb von updateBkDuration() setzt "manuell" sonst wieder zurueck.
+    await updateBkDuration(b.service_id, actualDur);
+    uebernehmeDauerQuelle(b.dauer_quelle);
   }
   openModal('bookingModal');
   document.getElementById('bkMoveBtn').onclick = () => startMoveBooking(b);
@@ -5585,11 +5486,24 @@ async function populateSrvSelect(selectedId = null, employeeId = null) {
   if (selectedId) updateBkDuration(selectedId);
 }
 
+/** Mehr als eine Leistungszeile? Dann besitzt aktualisiereDauer() (termin-leistungen.js) das Feld. */
+function istKombinierterTermin() {
+  return leseLeistungen().filter(z => z.serviceId).length > 1;
+}
+
+/**
+ * Dauer-Feld fuellen — Warum ueberhaupt ein Zahlenfeld und was "gelernt" heisst:
+ * module/termin-dauer.js. `istKombinierterTermin()` wird HIER dreimal geprueft
+ * (nicht einmal am Anfang): die Funktion ist async, und in genau der Wartezeit
+ * kann `schlageBefundungVor()` (termin-leistungen.js) eine zweite Zeile
+ * vorschlagen und die Summe schon gesetzt haben — ohne erneute Pruefung kaeme
+ * hier eine zu spaete Einzel-Schaetzung an und ueberschriebe sie.
+ */
 async function updateBkDuration(srvId, defaultValue = null) {
   const durGroup = document.getElementById('bkDurationGroup');
-  const durOptions = document.getElementById('bkDurationOptions');
-  if (!durGroup || !durOptions) return;
+  if (!durGroup) return;
   if (!srvId) { durGroup.hidden = true; return; }
+  if (istKombinierterTermin()) return;
 
   // First check local cache
   let srv = ownerServices.find(s => s.id === srvId);
@@ -5604,64 +5518,37 @@ async function updateBkDuration(srvId, defaultValue = null) {
       if (idx >= 0) ownerServices[idx] = srv;
     }
   }
+  if (istKombinierterTermin()) return;
 
-  const defaultDur = parseInt(defaultValue) || parseInt(srv?.duration_minutes) || 30;
+  if (defaultValue) {
+    setzeDauer(parseInt(defaultValue, 10));
+    return;
+  }
 
-  // Get available durations from price_config
-  let durations = [];
+  const gelernte = await gelernteDauer({ supabase, ownerId: getOwnerId(), serviceId: srvId });
+  if (istKombinierterTermin()) return;
+  if (gelernte) {
+    setzeDauer(gelernte.minuten, `aus ${gelernte.anzahl} bisherigen Terminen`);
+    return;
+  }
+
+  // Keine Historie: aus price_config die erste aktive Dauer, sonst duration_minutes.
+  let fallback = parseInt(srv?.duration_minutes) || STANDARD_DAUER_MIN;
   if (srv?.price_config?.durations) {
-    durations = Object.entries(srv.price_config.durations)
+    const aktive = Object.entries(srv.price_config.durations)
       .filter(([_, v]) => v && v.active)
-      .map(([k, v]) => ({ minutes: parseInt(k), price: v.price }))
-      .sort((a, b) => a.minutes - b.minutes);
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+    if (aktive.length) fallback = parseInt(aktive[0][0]);
   }
-
-  if (durations.length > 1) {
-    // Multiple active durations → show radio buttons
-    const hasDefault = durations.some(d => d.minutes === defaultDur);
-    const selected = hasDefault ? defaultDur : durations[0].minutes;
-    durOptions.innerHTML = durations.map(d => `
-      <label class="bk-dur-option">
-        <input type="radio" name="bkDuration" value="${d.minutes}" ${d.minutes === selected ? 'checked' : ''}>
-        <span>${d.minutes} Min${d.price ? ' · ' + formatEur(d.price) : ''}</span>
-      </label>
-    `).join('');
-    durGroup.hidden = false;
-  } else if (durations.length === 1) {
-    // Single configured duration → hide radio group, single value applied automatically
-    const d = durations[0];
-    durOptions.innerHTML = `<input type="radio" name="bkDuration" value="${d.minutes}" checked hidden>`;
-    durGroup.hidden = true;
-  } else {
-    // No price_config → fall back to the service's single duration_minutes
-    const single = parseInt(srv?.duration_minutes) || defaultDur;
-    durOptions.innerHTML = `<input type="radio" name="bkDuration" value="${single}" checked hidden>`;
-    durGroup.hidden = true;
-  }
-
-  // Set initial value
-  const checked = durOptions.querySelector('input[type="radio"]:checked');
-  if (checked) {
-    window._selectedBkDuration = parseInt(checked.value);
-  }
+  setzeDauer(fallback, 'geschätzt');
 }
 
 mountTerminLeistungen({ supabase, getOwnerId, getServices: () => servicesCache });
+mountTerminDauer();
 
 document.getElementById('bkService').addEventListener('change', (e) => {
   updateBkDuration(e.target.value);
   refreshBkGroupPanel(e.target.value);
-  // Add listeners for new radio buttons after duration group is populated
-  setTimeout(() => {
-    const durGroup = document.getElementById('bkDurationGroup');
-    if (durGroup) {
-      durGroup.querySelectorAll('input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', (ev) => {
-          window._selectedBkDuration = parseInt(ev.target.value);
-        });
-      });
-    }
-  }, 10);
 });
 
 document.getElementById('bkIsGroup')?.addEventListener('change', () => {
@@ -5694,12 +5581,10 @@ function getSelectedBkLead() {
 }
 
 function getBkServiceDurationMin() {
-  const durOptions = document.getElementById('bkDurationOptions');
-  const durGroup = document.getElementById('bkDurationGroup');
-  const checkedRadio = (durOptions || durGroup)?.querySelector('input[type="radio"]:checked');
-  if (checkedRadio) return parseInt(checkedRadio.value, 10) || 30;
+  const gelesen = leseDauer();
+  if (gelesen) return gelesen;
   const srvId = document.getElementById('bkService')?.value;
-  return (ownerServices || []).find(s => s.id === srvId)?.duration_minutes || 30;
+  return (ownerServices || []).find(s => s.id === srvId)?.duration_minutes || STANDARD_DAUER_MIN;
 }
 
 function refreshBkHausbesuchPanel() {
@@ -6112,12 +5997,9 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     }
   }
 
-  const durGroup = document.getElementById('bkDurationGroup');
-  const durOptions = document.getElementById('bkDurationOptions');
-  let dur = ownerServices.find(s => s.id === srvId)?.duration_minutes || 30;
-  // Read from radio whether group is hidden or visible (single-option case keeps the radio)
-  const checkedRadio = (durOptions || durGroup)?.querySelector('input[type="radio"]:checked');
-  if (checkedRadio) dur = parseInt(checkedRadio.value);
+  // Dauer-Feld ist frei editierbar (Beta-Feedback 03.09.2026) — sein Wert
+  // gewinnt, sonst der Katalogwert der Leistung.
+  let dur = leseDauer() || ownerServices.find(s => s.id === srvId)?.duration_minutes || STANDARD_DAUER_MIN;
 
   // Fahrtenbuch: Hausbesuch ise end_time = gidiş + seans + dönüş + 10 dk buffer
   const isHausbesuch = document.getElementById('bkHausbesuch').checked;
@@ -6206,7 +6088,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         end_time: endIso,
         notes: notes || null,
         hausbesuch: document.getElementById('bkHausbesuch').checked || false,
-        group_capacity: groupCapacity
+        group_capacity: groupCapacity,
+        dauer_quelle: dauerQuelle()
       };
       
       const { error: upErr } = await supabase
@@ -6251,7 +6134,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
         hausbesuch: document.getElementById('bkHausbesuch').checked || false,
         status: 'confirmed',
         is_group: true,
-        group_capacity: groupCapacity
+        group_capacity: groupCapacity,
+        dauer_quelle: dauerQuelle()
       };
       
       const { data: parentBooking, error: pErr } = await supabase
@@ -6312,7 +6196,8 @@ document.getElementById('bkSaveBtn').addEventListener('click', async () => {
     status: 'confirmed',
     lead_id: custId || null,
     rezeptart: rezeptart || null,
-    payment_method: paymentMethod || null
+    payment_method: paymentMethod || null,
+    dauer_quelle: dauerQuelle()
   };
 
   // For update: keep existing insert logic; for insert: need to get the new booking id
@@ -6395,10 +6280,14 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   const linkedSession = { prescription_id: prescriptionId };
 
   const { data: rx } = await supabase.from('prescriptions')
-    .select('id,heilmittel,heilmittel_items,heilmittel_position,anzahl_einheiten,status,rezept_typ,frequenz')
+    .select('id,heilmittel,heilmittel_items,heilmittel_position,anzahl_einheiten,status,rezept_typ,frequenz,therapie_bereich')
     .eq('id', prescriptionId)
     .maybeSingle();
   if (!rx) return;
+  // Zweite Bremse (die erste sitzt an der Quelle, waehleVerordnungFuerPanel):
+  // dieses Panel legt gleich ein Sitzungs-Hauptbuch an, das die Podologie
+  // bewusst nicht fuehrt (module/verordnung-topf.js, fuehrtSitzungsbuch).
+  if (rx.therapie_bereich === 'podo') return;
 
   // Fehlende Sitzungszeilen ergänzen, BEVOR gelesen wird — sonst zeigt der
   // Seitenbereich weniger Einheiten an, als verordnet sind, und die fehlenden
@@ -6535,18 +6424,21 @@ async function loadRxSessionsPanel(booking, rxId = null) {
   // „Leistungen des Tages": springt in die vorhandene Behandlungsdokumentation
   // statt eine zweite Maske aufzumachen — dort hängen die Prüfungen (78040 /
   // 78100 / Behandlungsbeginn). Podologie führt ihre Behandlungen in
-  // `verordnungen` + `podologie_behandlungen`; die Verordnung des Patienten
-  // wird über den Patienten gefunden, nicht über die hier gezeigte Zeile:
-  // zwischen `prescriptions` und `verordnungen` gibt es keine Verbindung.
+  // `prescriptions` (therapie_bereich='podo', seit 04.09.2026 EIN Topf) +
+  // `podologie_behandlungen`; die Verordnung des Patienten wird über den
+  // Patienten gefunden, nicht über die hier gezeigte Zeile.
   const leistBtn = document.getElementById('bkRxLeistungenBtn');
   if (leistBtn) {
     const istPodo = getSector() === 'podologie';
     leistBtn.hidden = !istPodo || !booking.lead_id;
     leistBtn.onclick = !istPodo ? null : async () => {
-      const { data: vords } = await supabase.from('verordnungen')
-        .select('id, status, ausstellungsdatum')
-        .eq('owner_id', getOwnerId()).eq('lead_id', booking.lead_id)
-        .in('status', ['aktiv', 'abrechenbar'])
+      // aktiv→NULL, abrechenbar→bereit (verordnung-topf.js). `.or()` statt
+      // `.in()`: `aktiv` ist in der Spalte NULL, `.in()` trifft NULL nicht.
+      const { data: vords } = await supabase.from('prescriptions')
+        .select('id, abrechnung_status, ausstellungsdatum')
+        .eq('owner_id', getOwnerId()).eq('patient_id', booking.lead_id)
+        .eq('therapie_bereich', 'podo')
+        .or('abrechnung_status.is.null,abrechnung_status.eq.bereit')
         .order('ausstellungsdatum', { ascending: false }).limit(1);
       const vord = vords?.[0];
       if (!vord) {
@@ -7143,85 +7035,8 @@ function showInputModal({ title = 'Eingabe', message = '', placeholder = '', def
   });
 }
 
-const ABSAGE_GRUENDE = [
-  'Patient hat abgesagt',
-  'Patient krank',
-  'Patient vergessen',
-  'Urlaub (Patient)',
-  'Persönliche Gründe (Patient)',
-  'Therapeut krank',
-  'Therapeut verhindert',
-  'Urlaub (Therapeut)',
-  'Notfall',
-  'Terminkonflikt',
-  'Sonstiges…',
-];
-
-function showAbsagegrundModal({ title = 'Termin absagen', confirmText = 'Bestätigen', cancelText = 'Abbrechen', variant = 'danger' } = {}) {
-  return new Promise(resolve => {
-    const existing = document.getElementById('_absageModal');
-    if (existing) existing.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = '_absageModal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-
-    const box = document.createElement('div');
-    box.style.cssText = 'background:var(--bg-card-solid,#1f2937);border:1px solid var(--border,#374151);border-radius:12px;padding:24px;width:100%;max-width:420px;';
-
-    const optionsHtml = ABSAGE_GRUENDE.map(g =>
-      `<option value="${g}" style="background:#1f2937;color:#f9fafb;">${g}</option>`
-    ).join('');
-
-    box.innerHTML = `
-      <h3 style="margin:0 0 8px;font-size:16px;font-weight:700;color:var(--text-main,#f9fafb);">${title}</h3>
-      <p style="margin:0 0 14px;font-size:13px;color:var(--text-muted,#9ca3af);">Absagegrund auswählen (optional)</p>
-      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);margin-bottom:6px;">Grund</label>
-      <select id="_absageSelect" style="width:100%;padding:9px 12px;background:#1f2937;border:1px solid var(--border,#374151);border-radius:8px;color:#f9fafb;font-size:13px;box-sizing:border-box;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;">
-        <option value="" style="background:#1f2937;color:#9ca3af;">— Kein Grund angeben —</option>
-        ${optionsHtml}
-      </select>
-      <div id="_absageCustomWrap" style="display:none;margin-top:10px;">
-        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-muted,#9ca3af);margin-bottom:6px;">Eigener Grund</label>
-        <input id="_absageCustom" type="text" placeholder="Freitext…"
-          style="width:100%;padding:9px 12px;background:var(--bg-input,#111827);border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-main,#f9fafb);font-size:13px;box-sizing:border-box;outline:none;" />
-      </div>
-      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
-        <button id="_absageCancel" style="padding:8px 16px;background:none;border:1px solid var(--border,#374151);border-radius:8px;color:var(--text-muted,#9ca3af);cursor:pointer;font-size:13px;">${cancelText}</button>
-        <button id="_absageConfirm" style="padding:8px 16px;background:${variant === 'danger' ? '#dc2626' : 'var(--accent,#b1891b)'};border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">${confirmText}</button>
-      </div>
-    `;
-
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    const sel = document.getElementById('_absageSelect');
-    const customWrap = document.getElementById('_absageCustomWrap');
-    const customField = document.getElementById('_absageCustom');
-
-    sel.addEventListener('change', () => {
-      const isSonstiges = sel.value === 'Sonstiges…';
-      customWrap.style.display = isSonstiges ? 'block' : 'none';
-      if (isSonstiges) setTimeout(() => customField.focus(), 50);
-    });
-
-    const cleanup = (cancelled) => {
-      overlay.remove();
-      if (cancelled) { resolve(null); return; }
-      const selected = sel.value;
-      if (!selected) { resolve(''); return; }
-      if (selected === 'Sonstiges…') { resolve(customField.value.trim() || ''); return; }
-      resolve(selected);
-    };
-
-    document.getElementById('_absageCancel').addEventListener('click', () => cleanup(true));
-    document.getElementById('_absageConfirm').addEventListener('click', () => cleanup(false));
-    overlay.addEventListener('click', e => { if (e.target === overlay) cleanup(true); });
-    document.addEventListener('keydown', function esc(e) {
-      if (e.key === 'Escape') { document.removeEventListener('keydown', esc); cleanup(true); }
-    });
-  });
-}
+// ABSAGE_GRUENDE + showAbsagegrundModal → module/absagegrund-modal.js
+// (geteilt mit kalender.js, siehe Import oben)
 
 // ─── Kassieren: Zahlart wählen → Beleg buchen → Quittung drucken ─────────────
 //
@@ -14727,7 +14542,7 @@ async function renderOverviewWeekly(date) {
   // (çalışan çakışmalarının görünür olması için)
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('id, start_time, end_time, user_id, status, service_id, business_id, hausbesuch, services(title, color)')
+    .select('id, start_time, end_time, user_id, status, service_id, business_id, hausbesuch, dauer_quelle, services(title, color)')
     .eq('owner_id', getOwnerId())
     .gte('start_time', weekStart.toISOString())
     .lte('start_time', weekEnd.toISOString())
@@ -17089,7 +16904,14 @@ async function saveRezept() {
     // Vorher stand hier ein eigenes .insert() mit derselben Regel; zwei
     // Umsetzungen derselben Regel heisst, dass eine Korrektur zweimal gemacht
     // werden muss und einmal vergessen wird. Siehe module/sitzung-abgleich.js.
-    await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl });
+    //
+    // Podologie fehlt hier bewusst: sie zählt Einheiten über
+    // `bookings.verordnung_id` (module/verordnung-termine.js), nicht über ein
+    // Sitzungs-Hauptbuch. Vor der Zusammenlegung der Verordnungstöpfe konnte
+    // diese Bremse gar nicht fehlen — Podologie schrieb in eine andere Tabelle.
+    if (fuehrtSitzungsbuch(getSector())) {
+      await gleicheSitzungenAb({ supabase, prescriptionId: rx.id, anzahlEinheiten: anzahl });
+    }
 
     // 6. Fehlende Patientenstammdaten zurückschreiben (nur leere Felder, nie überschreiben)
     try {
@@ -17779,6 +17601,7 @@ async function init() {
     document.getElementById('rzSaveBtn')?.addEventListener('click', saveRezept);
     // Podologie-Feinschliff der Muster-13-Maske (greift nur bei Bereich "podo").
     mountVerordnungPodo(supabase, { getOwnerId, getProfile: () => currentProfile });
+    montiereVerordnungPruefen(supabase, 'muster13');   // Knopf "Verordnung pruefen" (Ops-Karte 76)
     document.getElementById('anamRezeptBtn')?.addEventListener('click', () => {
       const sel = document.getElementById('anamPatientSelect');
       if (!sel || !sel.value) { showToast('Bitte zuerst einen Patienten auswählen.', 'error'); return; }
@@ -19601,6 +19424,17 @@ async function loadAbrechnung() {
       `)
       .eq('owner_id', ownerId)
       .eq('abrechnung_status', 'bereit')
+      // ⚠️ Podologie ausgeschlossen: seit der Zusammenlegung der zwei
+      // Verordnungstöpfe (04.09.2026) stehen podologische Zeilen in derselben
+      // Tabelle und können `abrechnung_status = 'bereit'` genauso tragen. Sie
+      // liefen bisher durch `mapPrescriptionToDtaShape()` — das ist der
+      // FALSCHE Mapper (physiotherapeutische HPNR/Positionsnummern statt
+      // podologischer 78xxx). Live schon eingetreten: eine podologische
+      // Verordnung stand mit `bereit` in der DB, bevor dieser Filter kam.
+      // `.or()` statt `.neq()`: die meisten physio-Zeilen führen
+      // `therapie_bereich = NULL` (Altbestand vor Einführung des Felds) —
+      // `<> 'podo'` liesse NULL-Zeilen in SQL aus dem Ergebnis fallen.
+      .or('therapie_bereich.is.null,therapie_bereich.neq.podo')
       .order('ausstellungsdatum', { ascending: true }),
     supabase.from('kostentraeger').select('ik, name, das_ik, active'),
     supabase.from('abrechnung')

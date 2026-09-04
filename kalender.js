@@ -1,6 +1,8 @@
 import { createClient } from './vendor/supabase-js.js?v=20260813';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 import { holeNachruecker, zeigeNachrueckerModal, uebernimmSlot } from './module/warteliste-nachruecker.js?v=20260903b';
+import { showAbsagegrundModal } from './module/absagegrund-modal.js?v=20260904';
+import { offerAusfallrechnung } from './module/ausfallrechnung.js?v=20260904';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let session = null;
@@ -10,6 +12,12 @@ let calendar = null;
 let workingHours = [];
 let pendingMoveBooking = null;
 let activePanelBookingId = null;
+// Ausfallgebühr-Einstellung des Owners (aus profiles.ausfall_*), siehe
+// loadAusfallConfig(). Owner-Level, gilt auch für Angestellte dieses Owners.
+let ausfallConfig = {
+  ausfall_enabled: false, ausfall_mode: 'fixed', ausfall_amount_eur: null,
+  ausfall_percent: null, ausfall_cutoff_hours: 24,
+};
 
 function showKalToast(msg, type = 'success') {
   let container = document.getElementById('kal-toast-container');
@@ -185,10 +193,45 @@ async function init() {
     initCalendar(),
     loadServices(),
     loadHours(),
-    loadIntegrations()
+    loadIntegrations(),
+    loadAusfallConfig()
   ]);
 
   document.getElementById('loader').style.display = 'none';
+}
+
+// `profile` trägt bei einem Owner bereits alle Spalten (select('*') oben) —
+// bei einem Angestellten ist es die EIGENE profiles-Zeile, die
+// Ausfallgebühr-Einstellung gehört aber dem Owner und muss extra geholt werden.
+async function loadAusfallConfig() {
+  try {
+    if (profile.role === 'owner') {
+      ausfallConfig = { ...ausfallConfig, ...profile };
+      return;
+    }
+    if (!profile.owner_id) return;
+    const { data } = await supabase.from('profiles')
+      .select('ausfall_enabled, ausfall_mode, ausfall_amount_eur, ausfall_percent, ausfall_cutoff_hours')
+      .eq('id', profile.owner_id).maybeSingle();
+    if (data) ausfallConfig = { ...ausfallConfig, ...data };
+  } catch (e) {
+    console.warn('[loadAusfallConfig]', e);
+  }
+}
+
+// Preis der Leistung für den Prozent-Modus — kalender.js hält Dienstleistungen
+// nicht in einem Cache (loadServices() rendert direkt ins DOM), deshalb wird
+// hier gezielt nachgeschlagen statt ein Array mitzuführen.
+async function ausfallPriceEur(serviceId) {
+  if (!serviceId) return null;
+  try {
+    const { data } = await supabase.from('services').select('price').eq('id', serviceId).maybeSingle();
+    const price = data ? parseFloat(String(data.price || '').replace(',', '.')) : NaN;
+    return price > 0 ? price : null;
+  } catch (e) {
+    console.warn('[ausfallPriceEur]', e);
+    return null;
+  }
 }
 
 // ================= TEAM =================
@@ -513,13 +556,37 @@ function setupBookingPanel() {
 
   document.getElementById('bp-cancel-booking').addEventListener('click', async () => {
     if (!activePanelBookingId) return;
-    if (!confirm('Termin wirklich stornieren?')) return;
+    // Derselbe Grund-Dialog wie im Dashboard (module/absagegrund-modal.js) —
+    // vorher stand hier ein blosses confirm() ohne Grund und ohne
+    // Ausfallrechnung-Angebot, der dritte, abweichende Absageweg (Ops #249).
+    const reason = await showAbsagegrundModal({ title: 'Termin absagen', confirmText: 'Termin stornieren' });
+    if (reason === null) return;
+
     const storniert = activePanelBookingId;
+    const event = calendar.getEventById(storniert);
+    const booking = { id: storniert, ...(event ? event.extendedProps : {}) };
+
     try {
-      await patchBooking(storniert, { status: 'cancelled' });
+      const updates = { status: 'cancelled' };
+      if (reason && reason.trim()) updates.cancellation_reason = reason.trim();
+      await patchBooking(storniert, updates);
       document.getElementById('bp-status').textContent = '🔴 Storniert';
       calendar.refetchEvents();
     } catch(err) { showKalToast(err.message, 'error'); return; }
+
+    // Kurzfristige Absage innerhalb der Absagefrist → Ausfallrechnung anbieten,
+    // dieselbe Regel wie im Dashboard (module/ausfallrechnung.js).
+    if (ausfallConfig.ausfall_enabled && booking.start_time) {
+      const hoursUntil = (new Date(booking.start_time) - Date.now()) / 3600000;
+      if (hoursUntil > 0 && hoursUntil < (ausfallConfig.ausfall_cutoff_hours ?? 24)) {
+        const priceEur = await ausfallPriceEur(booking.service_id);
+        await offerAusfallrechnung({
+          supabase, apiBase: API_BASIS, booking, reason: 'late_cancel', config: ausfallConfig,
+          priceEur, showToast: showKalToast,
+        });
+      }
+    }
+
     // Dieselbe Frage wie im Dashboard: hier wird genauso ein Platz frei.
     // Anders als dort bleibt die Zeile stehen (weiche Stornierung), der
     // Abgleich darf deshalb NACH dem Schreiben laufen.

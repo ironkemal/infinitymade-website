@@ -2035,13 +2035,14 @@ app.post('/api/booking/manual-create', requireAuthAI, async (req, res) => {
 app.patch('/api/booking/:id', requireAuthAI, async (req, res) => {
   try {
     const bookingId = req.params.id;
-    const { status, start_time, end_time } = req.body;
+    const { status, start_time, end_time, cancellation_reason } = req.body;
     const ownerId = req.auth.tenantId;
 
     const updates = {};
     if (status !== undefined) updates.status = status;
     if (start_time !== undefined) updates.start_time = start_time;
     if (end_time !== undefined) updates.end_time = end_time;
+    if (cancellation_reason !== undefined) updates.cancellation_reason = cancellation_reason;
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'Keine Felder zum Aktualisieren angegeben.' });
