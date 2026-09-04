@@ -751,6 +751,21 @@ function initStep4() {
   document.getElementById('step4Back').addEventListener('click', prevStep);
   document.getElementById('step4Next').addEventListener('click', nextStep);
 
+  // GKV Unterschrift toggle — ohne Unterschrift keine Anfrage
+  document.querySelectorAll('input[name="gkvUnterschrift"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const block = document.getElementById('gkvUnterschriftBlock');
+      const rest = document.getElementById('gkvRestFields');
+      if (radio.value === 'nein' && radio.checked) {
+        show(block);
+        hide(rest);
+      } else if (radio.value === 'ja' && radio.checked) {
+        hide(block);
+        show(rest);
+      }
+    });
+  });
+
   // PKV ueberweisung toggle
   document.querySelectorAll('input[name="pkvUeberweisung"]').forEach(radio => {
     radio.addEventListener('change', () => {
@@ -824,6 +839,17 @@ function validateStep4() {
   clearAllErrors();
 
   if (state.payment_type === 'gkv') {
+    const usR = document.querySelector('input[name="gkvUnterschrift"]:checked');
+    if (!usR) {
+      showFieldError('gkvUnterschriftError', 'Bitte auswählen.');
+      document.getElementById('gkvUnterschriftError').style.display = 'block';
+      return false;
+    }
+    if (usR.value === 'nein') {
+      // Anfrage bewusst blockiert — Erklärtext ist bereits sichtbar (gkvUnterschriftBlock).
+      return false;
+    }
+
     const kk = document.getElementById('gkvKrankenkasse');
     const kkText = document.getElementById('gkvKrankenkasseText');
     const kkVal = (kkText && kkText.style.display !== 'none') ? kkText.value.trim() : kk.value;

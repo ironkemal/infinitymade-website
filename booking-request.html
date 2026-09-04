@@ -277,6 +277,21 @@
         <div id="fields-gkv" hidden>
           <div class="br-form">
             <div class="br-field">
+              <label>Unterschrift des Arztes auf der Verordnung vorhanden? <span class="req">*</span></label>
+              <div class="br-radio-group">
+                <label><input type="radio" name="gkvUnterschrift" value="ja" id="gkvUnterschriftJa" /> Ja</label>
+                <label><input type="radio" name="gkvUnterschrift" value="nein" id="gkvUnterschriftNein" /> Nein</label>
+              </div>
+              <span class="br-field-error" id="gkvUnterschriftError"></span>
+            </div>
+
+            <div class="br-info-box" id="gkvUnterschriftBlock" hidden>
+              <span class="info-icon">⚠️</span>
+              <span>Ohne Unterschrift des Arztes können wir Ihre Anfrage leider nicht annehmen. Bitte gehen Sie zunächst zu Ihrem Arzt und lassen sich eine unterschriebene Verordnung ausstellen — danach können Sie hier einen Termin anfragen.</span>
+            </div>
+
+            <div id="gkvRestFields" hidden>
+            <div class="br-field">
               <label for="gkvKrankenkasse">Krankenkasse <span class="req">*</span></label>
               <select id="gkvKrankenkasse">
                 <option value="">Bitte wählen…</option>
@@ -369,6 +384,7 @@
                 <input type="checkbox" id="gkvDoppelbehandlung" />
                 <span>Doppelbehandlung laut Verordnung</span>
               </label>
+            </div>
             </div>
           </div>
         </div>
@@ -634,7 +650,7 @@
 
 </div><!-- /#app -->
 
-<script type="module" src="booking-request.js?v=20260831"></script>
+<script type="module" src="booking-request.js?v=20260904"></script>
 <script type="module">
   import { createClient } from './vendor/supabase-js.js?v=20260813';
   import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js?v=20260701';
