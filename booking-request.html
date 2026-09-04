@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="theme-color" content="#FFFEFB" />
   <link rel="stylesheet" href="fonts/system-fonts.css" />
-  <link rel="stylesheet" href="booking-request.css?v=20260827" />
+  <link rel="stylesheet" href="booking-request.css?v=20260904" />
 </head>
 <body>
 
@@ -277,7 +277,19 @@
         <div id="fields-gkv" hidden>
           <div class="br-form">
             <div class="br-field">
-              <label>Unterschrift des Arztes auf der Verordnung vorhanden? <span class="req">*</span></label>
+              <div class="br-label-row">
+                <label>Unterschrift des Arztes auf der Verordnung vorhanden? <span class="req">*</span></label>
+                <details class="br-info-pop">
+                  <summary aria-label="Was ist damit gemeint?">i</summary>
+                  <div class="br-info-pop-content">
+                    Gemeint ist die handschriftliche Original-Unterschrift des Arztes auf dem
+                    Papier — nicht ein Stempel oder eine Kopie. Manche Ärzte vergessen das
+                    Unterschreiben; ohne sie ist die Verordnung ungültig und die Krankenkasse
+                    erkennt sie nicht an. Deshalb fragen wir vorab, statt dass Sie erst in der
+                    Praxis davon erfahren.
+                  </div>
+                </details>
+              </div>
               <div class="br-radio-group">
                 <label><input type="radio" name="gkvUnterschrift" value="ja" id="gkvUnterschriftJa" /> Ja</label>
                 <label><input type="radio" name="gkvUnterschrift" value="nein" id="gkvUnterschriftNein" /> Nein</label>

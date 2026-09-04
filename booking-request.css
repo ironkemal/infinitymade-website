@@ -332,6 +332,52 @@ html, body {
   line-height: 1.4;
 }
 
+.br-label-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.br-label-row label { margin-bottom: 0; }
+
+.br-info-pop summary {
+  list-style: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-hover);
+  color: var(--text-muted);
+  font: 700 0.72rem/18px system-ui, sans-serif;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+.br-info-pop summary::-webkit-details-marker { display: none; }
+.br-info-pop summary:hover,
+.br-info-pop[open] summary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.br-info-pop-content {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  width: auto;
+  max-width: 320px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.7rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
 .br-field-error {
   font-size: 0.82rem;
   color: var(--error);
