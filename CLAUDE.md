@@ -46,7 +46,9 @@ Hosting:     Vercel (bu klasör) — ⚠️ serverless fonksiyon limiti, bkz. Ku
 Auth:        Supabase Auth (email + Google OAuth)
 Database:    Supabase PostgreSQL (project: njvuclullotbksskpwgk)
 Backend:     Node.js Express, VPS'te Docker container — `api-backend/server.js`
-AI:          Azure AI gateway (n8n üzerinden) — rezept OCR, b2c-draft → api-backend/ai/router.js
+AI:          Azure OpenAI — DOĞRUDAN, n8n aradan çıktı (api-backend/ai/azureClient.js).
+             Rezept OCR, b2c-draft → api-backend/ai/router.js. EU Data Boundary kontrolü kodda.
+             ⚠️ On-prem'de IONOS BYO-key olacak (playbook K4) — sağlayıcı-bağımsız katman Faz 1.3
 Payments:    Stripe LIVE (2026-06-11'den beri gerçek ödeme)
 Monitoring:  Sentry — frontend (sentry-init.js) + backend (api-backend/instrument.js)
 Mail:        nodemailer + SMTP  ⛔ Resend/Postmark KULLANMA
@@ -262,8 +264,19 @@ stripe_price_id, billing_interval, current_period_end
 
 ## 🤖 n8n
 
-Bugün **tek iş** yapıyor: **Azure AI gateway** (rezept OCR, b2c-draft) → `api-backend/ai/router.js`.
-Ayrıca `gkv-datenaustausch.de` izleme workflow'u Telegram bildirimi atıyor.
+⚠️ **04.09.2026 düzeltmesi — burada "Azure AI gateway" yazıyordu, artık doğru değil.**
+Azure çağrısı n8n'den geçmiyor; `api-backend/ai/azureClient.js` doğrudan gidiyor.
+
+Kodda kalan **gerçek** n8n bağı iki satır, ikisi de env-guard'lı:
+- `server.js:1053` — `N8N_WEBHOOK_URL`, booking bildirimi (env yoksa sessizce atlanıyor)
+- `server.js:1806` — `N8N_AI_SERIES_URL`, seri planlayıcı (deterministik fallback var)
+
+İkisi de playbook Faz 1.2'de Express'e taşınacak; kabul kriteri `grep N8N_` → sıfır.
+Ayrıca `gkv-datenaustausch.de` izleme workflow'u Telegram bildirimi atıyor (merkez tarafı,
+kutuya girmez).
+
+⛔ n8n **on-prem pakete konmaz** (playbook K8 — Sustainable Use License ücretli müşteriye
+dağıtımı yasaklıyor). Bu `onprem` ajanının sert veto konularından biri (G3).
 
 WhatsApp / Twilio / AI resepsiyonist **2026-05-20'de raflandı ve geri gelmiyor** — tablolar
 DROP'lu. Pazarlama metinlerinde kullanma, `business_lookup_for_twilio` RPC'sine dokunma.
@@ -617,6 +630,7 @@ ajana sor** — hepsi kendi alanının belgelerini zaten biliyor.
 | `legal-de` | DSGVO/BDSG, §203 StGB, MDR, EU AI Act, AGB/Impressum/UWG. Startup bütçesine kalibreli. **"Başımız derde girer mi?"** | ❌ |
 | `guvenlik` | ★ Güvenlik sorumlusu + kurumsal güvenlik hafızası. Sızıntı, mandant sınırı, açık yüzey. Sicili `guvenlik/REGISTER.md` tutar — neyin ÇÜRÜTÜLDÜĞÜNÜ de bilir. Konseyin daimi üyesi, dört konuda sert veto | ❌ |
 | `podoloji` | Podolog'un gerçek iş günü, Fußbefund/Wagner-Armstrong, HPNR 78xxx, tık-ekonomisi | ❌ |
+| `onprem` | ★ İki dağıtım bekçisi + on-prem geçişin kurumsal hafızası. Tek soru: "bu değişiklik müşterinin kutusunda ne yapar, merkezden oraya nasıl varır?" Sicili `onprem/REGISTER.md`. Dış çağrı · şema · env var · zamanlanmış iş · sabit adres · yetki kontrolü yazılmadan ÖNCE sor. Dört korkulukta sert veto (G1/G2/G3/G8) | ❌ (sicil + kapı hariç) |
 | `mobil-ui` | Küçük ekran: üst üste binme, yatay taşma, dokunma hedefi, breakpoint çakışması. Playwright ile **ölçer**, sonra sadece CSS'te düzeltir | ✅ (yalnız CSS) |
 | `muhalif` | Yapıcı muhalif — fikir nerede kırılır, gizli maliyet ne. Alternatifsiz itiraz yasak | ❌ |
 | `todo-maker` | Ham girdiyi (toplantı dökümü, transkript, hata raporu) zengin pano kartlarına çevirir — hangi ekran, hangi dosya, kim istedi, bitti sayılır ölçütü, gerekirse kopyala-yapıştır Fix-Prompt | ❌ (JSON üretir) |

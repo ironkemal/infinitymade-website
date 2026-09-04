@@ -26,6 +26,9 @@ import { run as rezeptNormalizeRun } from './ai/tasks/rezept-normalize.js';
 import { validateRezept } from './ai/validators/validate.js';
 import { logCall as aiLogCall, hashRequest as aiHashRequest } from './ai/audit.js';
 import { logAccess, accessLogger } from './_lib/access-log.js';
+import { runMigrations } from './db/migrate.js';
+import { fileURLToPath } from 'node:url';
+import { dirname, join as pfadJoin } from 'node:path';
 import crypto from 'crypto';
 import { encryptPHI, encryptionAvailable } from './lib/phi-encrypt.js';
 import { resolveOrCreateArzt } from './lib/arzt-registry.js';
@@ -272,8 +275,66 @@ function generateRecurringDates(startDate, recurrence, count) {
 
 // --- ROUTES ---
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+// --- Health checks: Leben und Bereitschaft sind ZWEI Fragen ----------------
+//
+// Bis 04.09.2026 stand hier eine einzige Zeile: res.json({ status: 'ok' }) —
+// sie prüfte nichts. Bei abgestürzter DB antwortete sie genauso fröhlich wie im
+// Normalbetrieb. Damit war sie als Healthcheck wertlos: Docker, Watchtower und
+// jeder Mensch, der sie aufrief, bekamen "ok" von einem kaputten Container.
+//
+// Warum getrennt:
+//   /health        Lebt der Prozess? -> antwortet IMMER 200, solange Node läuft.
+//                  Das ist die Frage des Docker-HEALTHCHECK und des CI-Smoke-Tests:
+//                  "startet das Image mit seinem echten CMD überhaupt?" Genau diese
+//                  Klasse ist hier zweimal in die Produktion gegangen (booking/ fehlte
+//                  im Dockerfile 11.08.2026; SUPABASE_SERVICE_KEY-Tippfehler davor).
+//                  Sie darf NICHT von der DB abhängen — sonst schlägt sie beim
+//                  Smoke-Test mit Dummy-Credentials fehl und beim DB-Wackler würde
+//                  ein gesunder Container neu gestartet.
+//   /health/ready  Kann er arbeiten? -> prüft die DB, 200 oder 503.
+//                  Das ist die Frage für On-Prem: die Box muss dem Betreiber sagen
+//                  können, dass sie steht (RELEASE-STANDARD.md).
+//
+// Beide liegen unter / (nicht /api) und sind deshalb von aussen NICHT erreichbar:
+// Traefik leitet nur PathPrefix(`/api`) hierher. Sie sind für Container und
+// Diagnose da, nicht für Kunden.
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    version: process.env.IMAGE_VERSION || 'dev',
+    uptime_s: Math.round(process.uptime())
+  });
+});
+
+app.get('/health/ready', async (req, res) => {
+  const start = Date.now();
+
+  // Wartungsmodus schlägt die DB-Prüfung: die Verbindung kann tadellos sein,
+  // während das Schema halb aktuell ist. "ready" wäre dann eine Lüge.
+  // (`wartungsmodus` wird weiter unten deklariert und erst beim Request gelesen.)
+  if (wartungsmodus) {
+    return res.status(503).json({ status: 'not_ready', grund: 'schema_migration', detail: wartungsmodus });
+  }
+
+  try {
+    // Billigste erreichbare Abfrage: nur der Kopf, keine Zeilen, kein PHI.
+    const probe = supabase.from('profiles').select('id', { head: true, count: 'planned' }).limit(1);
+    // Ein hängender DB-Socket darf den Healthcheck nicht blockieren.
+    const { error } = await Promise.race([
+      probe,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+    ]);
+    if (error) throw error;
+    res.json({ status: 'ready', db_ms: Date.now() - start });
+  } catch (err) {
+    res.status(503).json({
+      status: 'not_ready',
+      grund: 'datenbank',
+      detail: err.message,
+      db_ms: Date.now() - start
+    });
+  }
+});
 
 // DSGVO Art. 32 access audit — auto-log every authenticated /api request.
 // Anonymous endpoints (booking flow) log explicitly from their handlers.
@@ -4108,8 +4169,56 @@ function createSMTPTransport() {
 }
 
 const PORT = process.env.PORT || 3000;
+// ============================================================================
+// SCHEMA-MIGRATIONEN — laufen VOR app.listen()
+// ============================================================================
+//
+// Entwurf: onprem/SCHEMA-VERTEILUNG.md §4. Kurz:
+// Das Schema muss denselben Weg nehmen wie der Code (Image -> Watchtower -> Box),
+// weil wir auf Kundenboxen keinen Zugriff haben (K10).
+//
+// ⚠️ Verhalten heute im SaaS: `DATABASE_URL` ist dort (noch) NICHT gesetzt, also
+// meldet der Runner "übersprungen" und der Start läuft exakt wie bisher weiter.
+// Diese Datei kann deshalb gefahrlos live gehen, bevor die Variable existiert.
+//
+// Scheitert eine Migration, wird NICHT beendet (Register O-28: exit(1) + Watchtower
+// = Neustart alle 60 s, der Kunde sieht nie etwas). Stattdessen: Wartungsmodus —
+// der Prozess bleibt oben, beantwortet /health und die Fehlerseite, und liefert
+// sonst 503. So bleibt die Box diagnostizierbar.
+let wartungsmodus = null;
+
+{
+  const ergebnis = await runMigrations({
+    databaseUrl: process.env.DATABASE_URL,
+    verzeichnis: pfadJoin(dirname(fileURLToPath(import.meta.url)), 'db', 'migrations'),
+    appVersion: process.env.IMAGE_VERSION || null
+  });
+
+  if (ergebnis.status === 'fehler') {
+    wartungsmodus = ergebnis.fehler;
+    console.error('[migrate] FEHLGESCHLAGEN:', JSON.stringify(ergebnis.fehler, null, 2));
+    Sentry.captureMessage(`Migration fehlgeschlagen: ${ergebnis.fehler.art}`, 'fatal');
+  } else if (ergebnis.angewandt.length > 0) {
+    console.log(`[migrate] ${ergebnis.angewandt.length} Migration(en) angewandt.`);
+  }
+}
+
+// Im Wartungsmodus wird nichts ausser Diagnose beantwortet. Steht bewusst NACH
+// allen Routen: greift nur, wenn tatsächlich ein Migrationsfehler vorliegt.
+app.use((req, res, next) => {
+  if (!wartungsmodus) return next();
+  if (req.path === '/health' || req.path === '/health/ready') return next();
+  res.status(503).json({
+    status: 'wartung',
+    grund: 'schema_migration',
+    fehler: wartungsmodus,
+    hinweis: 'Die Datenbank konnte nicht aktualisiert werden. Bitte das Diagnose-Paket senden.'
+  });
+});
+
 const server = app.listen(PORT, () => {
   console.log(`Calendar API running on port ${PORT}`);
+  if (wartungsmodus) console.error('[start] WARTUNGSMODUS — nur /health beantwortet.');
 });
 
 // Asılı soketlerin birikmesini önle (yavaş/zombi client'lar event-loop'u tüketmesin).

@@ -1,0 +1,29 @@
+# On-prem tutarlılık kapısı — taban değerleri (tools/check-onprem.sh)
+#
+# Kural: bu sayılar ARTAMAZ. Azalırsa kapı tabanı kendisi sıkıştırır.
+# Her satırın niye burada olduğu: onprem/REGISTER.md §8
+#
+# Ölçüm: 2026-09-04, index üzerinden (git grep --cached), eşleşen SATIR sayısı.
+# Yükseltmek bilinçli bir karardır — gerekçesi sicile yazılır.
+
+# Backend adresi koda gömülü — 13 dosya. Hedef: config'ten okunması, taban 0'a inmesi.
+n8n_host=26
+
+# app.praxura.de, yalnız uygulama yüzeyi (pazarlama sayfaları hariç — Faz 2.0).
+app_host=19
+
+# Vercel serverless limiti. 12 = TAVAN, artış deploy'u patlatır.
+vercel_fn=12
+
+# Üçüncü-parti <script src>. Bugün yalnız Sentry loader. Faz 2.6 koşullu yapacak.
+ext_script=11
+
+# N8N_ env referansı. Hedef 0 (Faz 1.2 kabul kriteri).
+n8n_env=3
+
+# Sabit Supabase proje adresi. 1 = api-backend/test_schema.js:5 (env fallback'i).
+# Sicil bunu 0 sanıyordu; 04.09. ölçümünde çıktı — test dosyası, düşük risk, kayıtlı.
+supabase_co=1
+
+# CDN host'ları. 0 ve 0 kalmalı (Konsey 2026-08-13 S3, yerelleştirme geri alınamaz).
+cdn_host=0
