@@ -1787,6 +1787,14 @@ textarea {
   color: var(--primary);
 }
 
+/* Gleiche Groesse wie die Tag/Woche/Monat-Pillen daneben — .btn-ghost allein
+   waere hier deutlich groesser (13px/8px 16px). */
+#calTodayBtn {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 5px;
+}
+
 .day-view-grid,
 .week-view-grid {
   display: flex;
